@@ -306,7 +306,9 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Load object to R
   fun <- .fnCleanup(out$fun, callingFun = "prepInputs", ...)
-  suppressWarnings(naFun <- all(is.na(out$fun)))
+  suppressWarnings({
+    naFun <- all(is.na(out$fun))
+  })
 
   ## dots will contain too many things for some functions
   ## -- need to remove those that are known going into prepInputs
@@ -786,14 +788,14 @@ extractFromArchive <- function(archive,
           pathToFile <-  normPath(file.path(args$exdir, args[[1]]))
         } else {
           warning(mess)
-          stop("prepInputs cannot find the file ", basename(args[[1]]),
-               ". The file might have been moved during unzipping or is corrupted")
+          stop("prepInputs cannot find the file ", basename(args[[1]]), ".",
+               " The file might have been moved during unzipping or is corrupted.")
         }
       }
       unz <- Sys.which("unzip")
       sZip <- Sys.which("7z")
       if (nchar(sZip) > 0) {
-        messagePrepInputs("Using 7zip.exe")
+        messagePrepInputs("Using '7zip'")
         op <- setwd(.tempPath)
         on.exit({
           setwd(op)
@@ -804,14 +806,16 @@ extractFromArchive <- function(archive,
                 stdout = NULL)
 
       } else if (nchar(unz) > 0) {
-        messagePrepInputs("Using unzip.exe")
+        messagePrepInputs("Using 'unzip'")
         system2(unz,
                 args = paste0(pathToFile," -d ", .tempPath),
                 wait = TRUE,
                 stdout = NULL)
       } else {
         if (nchar(unz) == 0) {
-          stop("unzip command cannot be found. Please try reinstalling Rtools and/or adding it to system path (see 'https://cran.r-project.org/bin/windows/Rtools/')")
+          stop("unzip command cannot be found.",
+               " Please try reinstalling Rtools if on Windows, and/or add unzip to system path",
+               " (e.g., see 'https://cran.r-project.org/bin/windows/Rtools/'.)")
         }
         stop("There was no way to unzip all files; try manually. The file is located at: \n",
              pathToFile)
@@ -827,7 +831,9 @@ extractFromArchive <- function(archive,
       }, add = TRUE)
       to <- file.path(args$exdir, extractedFiles)
 
-      suppressWarnings(out <- try(file.link(from, to)))
+      suppressWarnings({
+        out <- try(file.link(from, to))
+      })
 
       if (!isTRUE(all(out))) {
         out <- try(file.move(from, to, overwrite))
