@@ -403,7 +403,7 @@ setGeneric(
            showSimilar = getOption("reproducible.showSimilar", FALSE),
            drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL)) {
     standardGeneric("Cache")
-  })
+})
 
 #' @export
 #' @rdname Cache
@@ -433,10 +433,8 @@ setMethod(
     skipCacheDueToNumeric <- is.numeric(useCache) && useCache <= (fnDetails$nestLevel)
 
     if (isFALSE(useCache) || isTRUE(0 == useCache) || skipCacheDueToNumeric) {
-      nestedLev <- as.numeric(fnDetails$nestLevel)
-      spacing <- paste(collapse = "",
-                       rep("  ", nestedLev)
-      )
+      nestedLev <- max(0, as.numeric(fnDetails$nestLevel)) ## nestedLev >= 0
+      spacing <- paste(collapse = "", rep("  ", nestedLev))
       messageCache(spacing, "useCache is ", useCache,
                    "; skipping Cache on function ", fnDetails$functionName,
                    if (nestedLev > 0) paste0(" (currently running nested Cache level ", nestedLev + 1),
