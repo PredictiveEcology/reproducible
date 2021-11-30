@@ -743,7 +743,7 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
   return(x)
 }
 
-#' Project \code{Raster*} or {Spatial*} or \code{sf} objects
+#' Project \code{Raster*} or \code{Spatial*} or \code{sf} objects
 #'
 #' A simple wrapper around the various different tools for these GIS types.
 #'
@@ -758,10 +758,10 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
 #'                      resolution and projection of \code{x}.
 #'                      See details in \code{\link{postProcess}}.
 #'
-#' @param cores An \code{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
-#'                      triggered. \code{'AUTO'*} will calculate 90% of the total
-#'                      number of cores in the system, while an integer or rounded
-#'                      float will be passed as the exact number of cores to be used.
+#' @param cores An \code{integer*} or \code{'AUTO'}. This will be used if \code{gdalwarp} is
+#'              triggered. \code{'AUTO'*} will calculate 90% of the total
+#'              number of cores in the system, while an integer or rounded
+#'              float will be passed as the exact number of cores to be used.
 #'
 #' @return A file of the same type as starting, but with projection (and possibly
 #' other characteristics, including resolution, origin, extent if changed).
