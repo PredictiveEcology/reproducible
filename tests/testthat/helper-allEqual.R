@@ -442,4 +442,4 @@ theRasterTestZip <- theRasterTestFilename(theRasterTests, "zip") # "https://gith
 theRasterTestRar <- theRasterTestFilename(theRasterTests, "rar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
 theRasterTestTar <- theRasterTestFilename(theRasterTests, "tar")
 
-shapefileClassDefault <- if (getOption("reproducible.shapefileRead") == "raster::shapefile") "SpatialPolygons" else "sf"
+shapefileClassDefault <- if (getOption("reproducible.shapefileRead", 'raster::shapefile') == "raster::shapefile") "SpatialPolygons" else "sf"
