@@ -604,6 +604,9 @@ extractFromArchive <- function(archive,
   #   stop("fun must be a character string, not the function")
   # }
   possibleFiles <- unique(.basename(c(targetFilePath, filesExtracted)))
+  whichPossFile <- possibleFiles %in% basename2(targetFilePath)
+  if (isTRUE(any(whichPossFile)))
+    possibleFiles <- possibleFiles[whichPossFile]
   isShapefile <- FALSE
   isRaster <- FALSE
   isRDS <- FALSE
@@ -626,8 +629,10 @@ extractFromArchive <- function(archive,
   }
   if (is.null(fun)) {
     fun <- unique(funPoss[, "fun"])
-    if (length(fun) > 1) stop("more than one file; can't guess at function to load with; ",
-                              "please supply 'fun' argument")
+    if (length(fun) > 1) {
+      stop("more than one file; can't guess at function to load with; ",
+                              "please supply 'fun' or 'targetFile' argument to reduce ambiguity")
+    }
     if (length(fun) == 0) stop("Can't guess at which function to use to read in the object; please supply 'fun'")
   }
   if (is.null(targetFilePath)) {
