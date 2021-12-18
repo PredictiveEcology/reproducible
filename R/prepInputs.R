@@ -630,6 +630,13 @@ extractFromArchive <- function(archive,
   if (is.null(fun)) {
     fun <- unique(funPoss[, "fun"])
     if (length(fun) > 1) {
+      if (sum(isRaster) > 0 && sum(isShapefile) > 0) {
+        isRaster[isRaster] <- FALSE
+        funPoss <- funPoss[funPoss$type == "shapefile", ]
+        fun <- unique(funPoss[, "fun"])
+        message("The archive has both a shapefile and a raster; selecting the shapefile. If this is incorrect, specify targetFile")
+      }
+      else
       stop("more than one file; can't guess at function to load with; ",
                               "please supply 'fun' or 'targetFile' argument to reduce ambiguity")
     }
