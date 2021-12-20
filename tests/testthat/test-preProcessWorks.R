@@ -354,7 +354,7 @@ test_that("message when doesn't know the targetFile extension", {
   url <- "https://github.com/tati-micheletti/host/raw/master/data/unknownTargetFile.zip"
   noisyOutput <- capture.output(
     ccc <- testthat::capture_output(
-      testthat::expect_message(regexp = "does not unambiguously specify", {
+      testthat::expect_error(regexp = "guess at which function to use to read", {
         ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
       })
     )
