@@ -37,7 +37,7 @@ test_that("prepInputs doesn't work (part 1)", {
   expect_true(any(grepl(mess, pattern = "ecozone_shp.zip")))
   expect_true(any(grepl(mess, pattern = "Appending")))
   expect_true(any(grepl(mess, pattern = "Finished")))
-  expect_true(is(shpEcozone, shapefileClassDefault))
+  expect_true(is(shpEcozone, shapefileClassDefault()))
 
   # Robust to partial file deletions:
   unlink(dir(dPath, full.names = TRUE)[1:3])
@@ -46,7 +46,7 @@ test_that("prepInputs doesn't work (part 1)", {
   noisyOutput <- capture.output({
     shpEcozone1 <- prepInputs(destinationPath = dPath, url = url)
   })
-  expect_true(is(shpEcozone1, shapefileClassDefault))
+  expect_true(is(shpEcozone1, shapefileClassDefault()))
   unlink(dPath, recursive = TRUE)
 
   #######################################
@@ -224,7 +224,7 @@ test_that("prepInputs doesn't work (part 1)", {
     shpEcozone <- prepInputs(destinationPath = dPath,
                              archive = file.path(dPath, "ecozone_shp.zip"), purge = TRUE)
   })
-  expect_true(is(shpEcozone, shapefileClassDefault))
+  expect_true(is(shpEcozone, shapefileClassDefault()))
 
   #######################################
   ### archive, alsoExtract char    ######
@@ -233,7 +233,7 @@ test_that("prepInputs doesn't work (part 1)", {
                            archive = file.path(dPath, "ecozone_shp.zip"),
                            alsoExtract = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn",
                                            "ecozones.sbx", "ecozones.shp", "ecozones.shx"))
-  expect_true(is(shpEcozone, shapefileClassDefault))
+  expect_true(is(shpEcozone, shapefileClassDefault()))
 
   rm(shpEcozone)
   expect_false(exists("shpEcozone", inherits = FALSE))
@@ -249,7 +249,7 @@ test_that("prepInputs doesn't work (part 1)", {
                            archive = file.path(dPath, "ecozone_shp.zip"),
                            alsoExtract = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn",
                                            "ecozones.sbx", "ecozones.shp", "ecozones.shx"))
-  expect_true(is(shpEcozone, shapefileClassDefault))
+  expect_true(is(shpEcozone, shapefileClassDefault()))
 
   # lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
   # url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
@@ -332,7 +332,7 @@ test_that("interactive prepInputs", {
   })
   files <- dir(tmpdir, pattern = "FMA_Boundary")
   expect_true(length(files) == 9)
-  expect_is(test, shapefileClassDefault)
+  expect_is(test, shapefileClassDefault())
 
   #######################################
   ### url, targetFile              ######
@@ -350,7 +350,7 @@ test_that("interactive prepInputs", {
   # There is a meaningless warning for this unit test -- ignore it :
   # In rgdal::readOGR(dirname(x), fn, stringsAsFactors = stringsAsFactors,  :
   #                  Z-dimension discarded
-  expect_is(test, shapefileClassDefault)
+  expect_is(test, shapefileClassDefault())
 
   # From Bird/Tati project
   testOnExit(testInitOut)
@@ -490,7 +490,7 @@ test_that("preProcess doesn't work", {
     })
   })
 
-  runTest("1_2_3_4_5_6_7_10_12_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_3_4_5_6_7_10_12_13", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
@@ -499,7 +499,7 @@ test_that("preProcess doesn't work", {
       test <- prepInputs( url = urlShapefiles1Zip, destinationPath = tmpdir)
     })
   })
-  runTest("1_2_5_6_8_9_10_12", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8_9_10_12", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -533,7 +533,7 @@ test_that("preProcess doesn't work", {
                          destinationPath = tmpdir)
     })
   })
-  runTest("1_2_3_4_5_6_7_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_3_4_5_6_7_13", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   ## 2nd time; can checksums
@@ -543,7 +543,7 @@ test_that("preProcess doesn't work", {
                          destinationPath = tmpdir)
     })
   })
-  runTest("1_2_5_6_8_9", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8_9", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -584,7 +584,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_3_4_5_6_7_10_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_3_4_5_6_7_10_13", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can't checksums because no targetfile
@@ -597,7 +597,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6_8_9_10", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8_9_10", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -617,7 +617,7 @@ test_that("preProcess doesn't work", {
       })
     })
   })
-  runTest("1_2_3_4_5_6_7_10_12_13", shapefileClassDefault, 9, mess, expectedMess = expectedMessage,
+  runTest("1_2_3_4_5_6_7_10_12_13", shapefileClassDefault(), 9, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
@@ -630,7 +630,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6_8_9_10_12", shapefileClassDefault, 9, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8_9_10_12", shapefileClassDefault(), 9, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -648,7 +648,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_3_4_5_6_7_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_3_4_5_6_7_13", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
@@ -662,7 +662,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6_8_9", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8_9", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -680,7 +680,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_3_4_5_6_7_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_3_4_5_6_7_13", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
@@ -694,7 +694,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6_8", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -709,7 +709,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_3_4_5_6_7_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_3_4_5_6_7_13", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   noisyOutput <- capture.output({
     mess <- capture_messages({
@@ -741,7 +741,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_3_4_5_6_7_10_12_13", shapefileClassDefault, 9, mess, expectedMess = expectedMessage,
+  runTest("1_2_3_4_5_6_7_10_12_13", shapefileClassDefault(), 9, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
@@ -755,7 +755,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6_8_9_10_12", shapefileClassDefault, 9, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8_9_10_12", shapefileClassDefault(), 9, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   unlink(dir(tmpdir, full.names = TRUE))
@@ -788,7 +788,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_3_4_5_6_7_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_3_4_5_6_7_13", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   mess <- capture_messages({
     warns <- capture_warnings({
@@ -800,7 +800,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6_8_9", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8_9", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -815,7 +815,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_3_4_5_6_7_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_3_4_5_6_7_13", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
@@ -829,7 +829,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6_8", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -848,7 +848,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_3_4_5_6_7_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_3_4_5_6_7_13", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
@@ -863,7 +863,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6_8_9", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8_9", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   ################################################################
@@ -880,7 +880,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_6_9_10_12_13", shapefileClassDefault, 9, mess, expectedMess = expectedMessage,
+  runTest("1_2_4_5_6_9_10_12_13", shapefileClassDefault(), 9, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
@@ -892,7 +892,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6_9_10_12", shapefileClassDefault, 9, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_9_10_12", shapefileClassDefault(), 9, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   ################################################################
@@ -911,7 +911,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_6_9_13", shapefileClassDefault, 9, mess, expectedMess = expectedMessage,
+  runTest("1_2_4_5_6_9_13", shapefileClassDefault(), 9, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
@@ -924,7 +924,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6_9", shapefileClassDefault, 9, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_9", shapefileClassDefault(), 9, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   ################################################################
@@ -944,7 +944,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_6_9_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_4_5_6_9_13", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
@@ -958,7 +958,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6_9", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_9", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   file.remove(grep(dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))],
@@ -975,7 +975,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_6_9_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_4_5_6_9_13", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
@@ -989,7 +989,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6_9", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_9", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   ################################################################
@@ -1001,14 +1001,14 @@ test_that("preProcess doesn't work", {
       test <- prepInputs(targetFile = "Shapefile1.shp", destinationPath = tmpdir)
     })
   })
-  runTest("1_2_5_6", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   mess <- capture_messages({
     warns <- capture_warnings({
       test <- prepInputs(targetFile = "Shapefile1.shp", destinationPath = tmpdir)
     })
   })
-  runTest("1_2_5_6", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   ################################################################
@@ -1025,7 +1025,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   mess <- capture_messages({
     warns <- capture_warnings({
@@ -1036,7 +1036,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   ################################################################
@@ -1073,7 +1073,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_6_9_10_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_4_5_6_9_10_13", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
@@ -1086,7 +1086,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6_9_10", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_9_10", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # Try without .shp -- fail
@@ -1118,7 +1118,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_6_9_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_4_5_6_9_13", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
@@ -1132,7 +1132,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_6_9", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_9", shapefileClassDefault(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 })
 

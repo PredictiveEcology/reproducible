@@ -183,7 +183,7 @@ reproducibleOptions <- function() {
     reproducible.overwrite = FALSE,
     reproducible.polygonShortcut = FALSE,
     reproducible.quick = FALSE,
-    reproducible.shapefileRead = "raster::shapefile", # TODO: change in next release
+    reproducible.shapefileRead = NULL, # TODO: change in next release
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = .reproducibleTempPath(),
