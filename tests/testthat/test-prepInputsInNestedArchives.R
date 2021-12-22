@@ -80,7 +80,7 @@ test_that(
       })
     )
     expect_true(exists("testZip6"))
-    expect_is(testZip6, shapefileClassDefault)
+    expect_is(testZip6, shapefileClassDefault())
   })
 
 test_that(

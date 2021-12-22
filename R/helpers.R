@@ -454,3 +454,20 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   }
   genFormals
 }
+
+
+.fileExtsKnown <- function() {
+  shpFile <- getOption("reproducible.shapefileRead")
+  if (is.null(shpFile)) shpFile <- "sf::st_read"
+
+  df <- data.frame(
+    rbind(
+      c("rds", "base::readRDS", "binary"),
+      c("qs", "qs::qread", "qs"),
+      cbind(c("asc", "grd", "tif"), c("raster::raster"), "Raster"),
+      cbind(c("shp", "gdb"), shpFile, "shapefile")
+    )
+  )
+  colnames(df) <- c("extension", "fun", "type")
+  df
+}

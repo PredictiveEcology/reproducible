@@ -345,21 +345,30 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         } else {
           # browser(expr = exists("._prepInputs_3"))
           #err <- tryCatch(error = function(xx) xx,
-          withRestarts(
+          useCache2 <- useCache
+          if (fileExt(out$targetFilePath) %in% c("qs", "rds") &&
+              !isTRUE(getOption("reproducible.useMemoise"))) {
+            useCache2 <- FALSE
+            messagePrepInputs("targetFile is already a binary; skipping Cache while loading")
+          }
+          withCallingHandlers(
             if (is.call(out$fun)) {
               # put `targetFilePath` in the first position -- allows quoted call to use first arg
               out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
                                    out[-which(names(out) == "targetFilePath")]),
                             args)
               out[[fun[["functionName"]]]] <- fun$FUN
-              obj <- Cache(eval, out$fun, envir = out, useCache = useCache)
+              obj <- Cache(eval, out$fun, envir = out, useCache = useCache2)
             } else {
               obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
-                           useCache = useCache)
+                           useCache = useCache2)
             }, message = function(m) {
-              m <- grep("No cacheRepo supplied", m, invert = TRUE, value = TRUE)
-              if (length(m))
-                messagePrepInputs(m)
+              m$message <- grep("No cacheRepo supplied|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
+              if (length(m$message)) {
+                mm <- gsub("(.*)\n$", "\\1", m$message)
+                messagePrepInputs(mm)
+              }
+              tryInvokeRestart("muffleMessage")
             })
           obj
         }
@@ -595,32 +604,42 @@ extractFromArchive <- function(archive,
   #   stop("fun must be a character string, not the function")
   # }
   possibleFiles <- unique(.basename(c(targetFilePath, filesExtracted)))
+  whichPossFile <- possibleFiles %in% basename2(targetFilePath)
+  if (isTRUE(any(whichPossFile)))
+    possibleFiles <- possibleFiles[whichPossFile]
+  isShapefile <- FALSE
+  isRaster <- FALSE
+  isRDS <- FALSE
   fileExt <- fileExt(possibleFiles)
-  isShapefile <- grepl("shp$|gdb$", fileExt)
-  isRaster <- fileExt %in% c("asc", "grd", "tif")
-  isRDS <- fileExt %in% c("rds")
-  if (is.null(fun)) { #i.e., the default
-    fun <- if (any(isShapefile)) {
-      funPoss <- getOption('reproducible.shapefileRead')
-      if (is.null(funPoss)) {
-        funPoss <- if (requireNamespace("sf", quietly = TRUE)) {
-          messagePrepInputs("Using sf::st_read because sf package is available; to force old ",
+  feKnown <- .fileExtsKnown() # An object in helpers.R
+  funPoss <- lapply(fileExt, function(fe) feKnown[startsWith(prefix = feKnown[[1]], fe), ])
+  funPoss <- do.call(rbind, funPoss)
+  if (length(funPoss)) {
+    isShapefile <- fileExt %in% funPoss[funPoss[, "type"] == "shapefile", "extension"]
+    isRaster <- fileExt %in% funPoss[funPoss[, "type"] == "Raster", "extension"]
+    isRDS <- fileExt %in% funPoss[funPoss[, "extension"] == "rds", "extension"]
+    if (any(isShapefile)) {
+      if (requireNamespace("sf", quietly = TRUE) ) {
+        if (!isTRUE(grepl("st_read", fun)))
+          messagePrepInputs("Using sf::st_read on shapefile because sf package is available; to force old ",
                             "behaviour with 'raster::shapefile' use fun = 'raster::shapefile' or ",
                             "options('reproducible.shapefileRead' = 'raster::shapefile')")
-          "sf::st_read"
-        } else {
-          "raster::shapefile"
-        }
       }
-      funPoss
-    } else if (any(isRaster)) {
-      "raster::raster"
-    } else if (any(isRDS)) {
-      "base::readRDS"
-    } else {
-      NULL
-      #stop("Don't know what fun to use for loading targetFile. Please supply a 'fun'", call. = FALSE)
     }
+  }
+  if (is.null(fun)) {
+    fun <- unique(funPoss[, "fun"])
+    if (length(fun) > 1) {
+      if (sum(isRaster) > 0 && sum(isShapefile) > 0) {
+        isRaster[isRaster] <- FALSE
+        funPoss <- funPoss[funPoss$type == "shapefile", ]
+        fun <- unique(funPoss[, "fun"])
+        message("The archive has both a shapefile and a raster; selecting the shapefile. If this is incorrect, specify targetFile")
+      } else
+        stop("more than one file; can't guess at function to load with; ",
+             "please supply 'fun' or 'targetFile' argument to reduce ambiguity")
+    }
+    if (length(fun) == 0) stop("Can't guess at which function to use to read in the object; please supply 'fun'")
   }
   if (is.null(targetFilePath)) {
     secondPartOfMess <- if (any(isShapefile)) {
