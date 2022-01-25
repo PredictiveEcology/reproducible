@@ -7,7 +7,6 @@ inst/doc
 /revdep/.cache.rds
 vignettes/Intro-to-Cache\.html
 vignettes/Intro-to-Cache\.R
-
 #################
 ## LaTeX
 *.acn
@@ -42,5 +41,7 @@ vignettes/Intro-to-Cache\.R
 *.vrb
 *.xdy
 *.tdo
-
 VEG_COMP_LYR_L1_POLY_2015.gdb.zip
+.secret
+
+.Rprofile

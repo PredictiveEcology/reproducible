@@ -205,7 +205,6 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       }
     }
   } else {
-    messagePrepInputs("This function is using raster::mask")
     if (is(x, "RasterStack") || is(x, "RasterBrick")) {
       messagePrepInputs(" because fastMask doesn't have a specific method ",
               "for these RasterStack or RasterBrick yet")
@@ -216,11 +215,23 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
               "on your system. Then, 'install.packages(\"sf\")",
               "; install.packages(\"fasterize\")')")
     }
-    if (is(x, "RasterStack")) {
-      raster::stack(raster::mask(x, y))
+    isRasterStack <- is(x, "RasterStack")
+    isRasterBrick <- is(x, "RasterBrick")
+    if (requireNamespace("terra")) {
+      messagePrepInputs("      Using terra::mask for masking")
+      x <- terra::mask(terra::rast(x), terra::vect(y))
+      x <- if (isRasterStack) {
+        raster::stack(x)
+      } else if (isRasterBrick) {
+        raster::brick(x)
+      } else { raster::raster(x)}
     } else {
-      raster::mask(x, y)
+      messagePrepInputs("This function is using raster::mask")
+      x <- raster::mask(x, y)
+      if (isRasterStack) x <- raster::stack(x)
+      x
     }
+
   }
 }
 

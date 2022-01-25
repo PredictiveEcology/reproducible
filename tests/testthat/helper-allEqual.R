@@ -33,9 +33,9 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     if (!requireNamespace("googledrive"))
       stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
-    if (utils::packageVersion("googledrive") >= "1.0.0")
-      googledrive::drive_deauth()
-    else
+    if (!utils::packageVersion("googledrive") >= "1.0.0")
+      # googledrive::drive_deauth()
+    #else
       googledrive::drive_auth_config(active = TRUE)
 
     if (.isRstudioServer()) {
@@ -46,8 +46,9 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     ## #119 changed use of .httr-oauth (i.e., no longer used)
     ## instead, uses ~/.R/gargle/gargle-oauth/long_random_token_name_with_email
     if (interactive()) {
+      options(gargle_oauth_cache = ".secret")
       if (utils::packageVersion("googledrive") >= "1.0.0") {
-        googledrive::drive_deauth()
+        # googledrive::drive_deauth()
       } else {
         if (file.exists("~/.httr-oauth")) {
           linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
@@ -147,7 +148,7 @@ testOnExit <- function(testInitOut) {
 runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpdir, test) {
   files <- dir(tmpdir, pattern = filePattern, full.names = TRUE)
   expect_true(length(files) == numFiles)
-  expect_is(test, class)
+  expect_true(inherits(test, class))
   messagePrepInputs(mess)
   hasMessageNum <- paste(collapse = "_", which(unlist(
     lapply(strsplit(expectedMess, "\\|")[[1]], function(m)
@@ -156,6 +157,7 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
 
   isOK <- hasMessageNum == prod
   if (!isOK) {
+    browser()
     expe <- as.numeric(strsplit(prod, split = "_")[[1]])
     getting <- as.numeric(strsplit(hasMessageNum, split = "_")[[1]])
 

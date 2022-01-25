@@ -959,15 +959,37 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
         messagePrepInputs("      reprojecting using ", dots$method, "...", verbose = verbose)
 
         falseWarns <- paste0(projNotWKT2warn, "|input and ouput crs|no non-missing arguments")
-        if (is.null(rasterToMatch)) {
-          Args <- append(dots, list(from = x, crs = targetCRS))
-          x <- # captureWarningsToAttr( Eliot
-            suppressWarningsSpecific(do.call(projectRaster, args = Args),
-                                     falseWarnings = falseWarns)
-          #)
-          #warn <- attr(x, "warning")
-          #attr(x, "warning") <- NULL
 
+        if (requireNamespace("terra")) {
+          m1 <- methodFormals(terra::project, "SpatRaster")
+          m2 <- methodFormals(terra::writeRaster, signature = c("SpatRaster", "character"))
+        }
+
+        if (is.null(rasterToMatch)) {
+          if (requireNamespace("terra")) {
+            if (!is.null(dots$method)) {
+              if (identical(dots$method, "ngb"))
+                dots$method <- "near"
+            }
+            messagePrepInputs("Using terra::project for reprojection")
+            Args <- append(dots, list(x = terra::rast(x), y = targetCRS))
+            keepers <- na.omit(match(union(names(m1), names(m2)), names(Args)))
+            if (length(keepers))
+              Args <- Args[keepers]
+
+            x1 <- # captureWarningsToAttr( Eliot
+              suppressWarningsSpecific(falseWarnings = falseWarns,
+                                       do.call(terra::project, args = Args), verbose = verbose)
+            x <- if (terra::nlyr(x1) > 1) raster::stack(x1) else raster::raster(x1)
+          } else {
+            Args <- append(dots, list(from = x, crs = targetCRS))
+            x <- # captureWarningsToAttr( Eliot
+              suppressWarningsSpecific(do.call(projectRaster, args = Args),
+                                       falseWarnings = falseWarns)
+            #)
+            #warn <- attr(x, "warning")
+            #attr(x, "warning") <- NULL
+          }
         } else {
           # projectRaster does silly things with integers, i.e., it converts to numeric
           if (is.na(targetCRS))
@@ -979,19 +1001,25 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
               if (identical(dots$method, "ngb"))
                 dots$method <- "near"
             }
-            messagePrepInputs("Using terra::project for reprojection")
+            messagePrepInputs("      Using terra::project for reprojection")
             Args <- append(dots, list(x = terra::rast(x), y = terra::rast(tempRas)))
+
+            keepers <- na.omit(match(union(names(m1), names(m2)), names(Args)))
+            if (length(keepers))
+              Args <- Args[keepers]
+
             x1 <- # captureWarningsToAttr( Eliot
               suppressWarningsSpecific(falseWarnings = falseWarns,
                                        do.call(terra::project, args = Args), verbose = verbose)
             x <- if (terra::nlyr(x1) > 1) raster::stack(x1) else raster::raster(x1)
           } else {
 
-          Args <- append(dots, list(from = x, to = tempRas))
-          x <- # captureWarningsToAttr( Eliot
-            suppressWarningsSpecific(falseWarnings = falseWarns,
-                                     do.call(projectRaster, args = Args), verbose = verbose)
-          #)
+            Args <- append(dots, list(from = x, to = tempRas))
+            x <- # captureWarningsToAttr( Eliot
+              suppressWarningsSpecific(falseWarnings = falseWarns,
+                                       do.call(projectRaster, args = Args), verbose = verbose)
+            #)
+          }
           if (isStack)
             if (!is(x, "RasterStack")) x <- raster::stack(x)
           # check for faulty datatype --> namely if it is an integer but classified as flt because of floating point problems
@@ -1012,7 +1040,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
             }
           }
         }
-        if (!identical(.crs(x), targetCRS)) {
+        if (!compareCRS(x, targetCRS)) {
           crs(x) <- targetCRS # sometimes the proj4string is rearranged, so they are not identical:
           #  they should be
         }

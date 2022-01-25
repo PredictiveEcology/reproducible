@@ -56,20 +56,21 @@ test_that("prepInputs doesn't work (part 3)", {
 
   b <- raster::brick(r1, r2)
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE)
-  expect_is(b1, "RasterBrick")
+  expect_true(inherits(b1, "RasterBrick"))
 
   s <- raster::stack(r1, r2)
   s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE)
-  expect_is(s1, "RasterStack")
-  expect_equivalent(s1, b1)
+  expect_true(inherits(s1, "RasterStack"))
+  expect_equal(s1[], b1[], ignore_attr = TRUE)
+  # expect_equivalent(s1, b1) # deprecated in testthat
 
   b <- writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
-  expect_is(b1, "RasterBrick")
+  expect_true(inherits(b1, "RasterBrick"))
 
   s <- raster::stack(writeRaster(s, filename = tmpfile[1], overwrite = TRUE))
   s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
-  expect_is(s1, "RasterStack")
+  expect_true(inherits(s1, "RasterStack"))
 
   # Test datatype setting
   dt1 <- "INT2U"

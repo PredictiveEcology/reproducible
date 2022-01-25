@@ -238,8 +238,8 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
           stop("exprBetween must have an assignment operator <- with a object on",
                "the LHS that is used on the RHS of expr ")
         objName <- as.character(exprBetween[[2]])
-        result <- try(expr = eval(exprBetween, envir = envir), silent = silent)
-        assign(objName, result, envir = envir)
+        result1 <- try(expr = eval(exprBetween, envir = envir), silent = silent)
+        assign(objName, result1, envir = envir)
       }
       backoff <- sample(1:1000/1000, size = 1) * (exponentialDecayBase^i - 1)
       if (backoff > 3) {

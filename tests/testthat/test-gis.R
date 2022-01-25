@@ -111,7 +111,6 @@ test_that("testing prepInputs with deauthorized googledrive", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  googledrive::drive_deauth()
   testthat::with_mock(
     "reproducible::isInteractive" = function() {
       FALSE
