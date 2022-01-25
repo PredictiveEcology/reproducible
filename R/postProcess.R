@@ -974,6 +974,19 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
             stop("rasterToMatch needs to have a projection (crs)")
           tempRas <- suppressWarningsSpecific(
             projectExtent(object = rasterToMatch, crs = targetCRS), projNotWKT2warn)
+          if (requireNamespace("terra")) {
+            if (!is.null(dots$method)) {
+              if (identical(dots$method, "ngb"))
+                dots$method <- "near"
+            }
+            messagePrepInputs("Using terra::project for reprojection")
+            Args <- append(dots, list(x = terra::rast(x), y = terra::rast(tempRas)))
+            x1 <- # captureWarningsToAttr( Eliot
+              suppressWarningsSpecific(falseWarnings = falseWarns,
+                                       do.call(terra::project, args = Args), verbose = verbose)
+            x <- if (terra::nlyr(x1) > 1) raster::stack(x1) else raster::raster(x1)
+          } else {
+
           Args <- append(dots, list(from = x, to = tempRas))
           x <- # captureWarningsToAttr( Eliot
             suppressWarningsSpecific(falseWarnings = falseWarns,
