@@ -963,14 +963,14 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
         if (requireNamespace("terra")) {
           m1 <- methodFormals(terra::project, "SpatRaster")
           m2 <- methodFormals(terra::writeRaster, signature = c("SpatRaster", "character"))
+          if (!is.null(dots$method)) {
+            if (identical(dots$method, "ngb"))
+              dots$method <- "near"
+          }
         }
 
         if (is.null(rasterToMatch)) {
           if (requireNamespace("terra")) {
-            if (!is.null(dots$method)) {
-              if (identical(dots$method, "ngb"))
-                dots$method <- "near"
-            }
             messagePrepInputs("Using terra::project for reprojection")
             Args <- append(dots, list(x = terra::rast(x), y = targetCRS))
             keepers <- na.omit(match(union(names(m1), names(m2)), names(Args)))
@@ -997,10 +997,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
           tempRas <- suppressWarningsSpecific(
             projectExtent(object = rasterToMatch, crs = targetCRS), projNotWKT2warn)
           if (requireNamespace("terra")) {
-            if (!is.null(dots$method)) {
-              if (identical(dots$method, "ngb"))
-                dots$method <- "near"
-            }
             messagePrepInputs("      Using terra::project for reprojection")
             Args <- append(dots, list(x = terra::rast(x), y = terra::rast(tempRas)))
 
