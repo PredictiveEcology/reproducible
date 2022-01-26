@@ -13,17 +13,19 @@ postProcessTerra(
   writeTo = NULL,
   method = "bilinear",
   datatype = "FLT4S",
-  overwrite = TRUE
+  overwrite = TRUE,
+  ...
 )
 }
 \arguments{
 \item{from}{A RasterLayer, RasterStack, RasterBrick, SpatRaster to do one or more of:
 crop, project, mask, and write}
 
-\item{to}{A \code{Raster*} or \code{SpatRaster} class object which is the object
+\item{to}{A gridded (\code{Raster*} or \code{SpatRaster}) or polygonal
+(\code{Spatial*}, \code{sf} or \code{Spat*}) class object which is the object
 whose metadata will be the target for cropping, projecting, and masking of \code{from}.}
 
-\item{cropTo}{Optional \code{Spatial*}, \code{Raster*}, \code{sf} or \code{Spat*} which,
+\item{cropTo}{Optional \code{Raster*}, \code{Spatial*}, \code{sf} or \code{Spat*} which,
 if supplied, will supply the extent with which to crop \code{from}. To omit
 cropping completed, set this to \code{NULL}. If supplied, this will be used instead of \code{to}
 for the cropping step. Defaults to \code{to}}
@@ -48,7 +50,35 @@ interpolation. See \code{terra::project}}
 \item{datatype}{A character string, used if \code{writeTo} is not \code{NULL}. See \code{raster::writeRaster}}
 
 \item{overwrite}{Logical. Used if \code{writeTo} is not \code{NULL}}
+
+\item{...}{Currently can be either \code{rasterToMatch}, \code{studyArea}, \code{filename2}
+to allow backwards
+compatibility with \code{postProcess}. \code{rasterToMatch} will be assigned to \code{to}
+and \code{studyArea} will be assigned to \code{cropTo} & \code{maskTo}. These will override any values
+passed to \code{to} or \code{maskTo}. \code{filename2} will be passed to \code{writeTo}.}
 }
 \description{
-This is still experimental. Use with caution.
+This function provides a single step to achieve the GIS operations "crop", "project",
+"mask" and possibly "write". It will use the \code{terra} and \code{sf} and \code{raster}
+packages internally in an attempt to be as efficient as possible.
+}
+\details{
+Currently, this will only work when \code{from} is a gridded object
+ (either \code{Raster*} from raster or \code{Spat*} from terra).
+
+Use case one is supply 2 gridded objects, \code{from} and \code{to}. This function
+will make \code{from} look like \code{to}, i.e., the extent, projection, origin, and masking
+where there are \code{NA} in the {to} will be the same as \code{from}.
+
+Use case two is there is
+a Vector gis dataset (e.g., \code{Spatial*} from \code{sp}, \code{sf} from \code{sf}, or
+\code{SpatVector} from \code{terra}) that has information we want to impose on \code{from}.
+Because a Vector dataset does not fully define the requirements for a gridded dataset,
+i.e., it is missing origin and resolution, it cannot be passed to \code{to} or \code{projectTo}.
+However, if supplied to \code{cropTo} or \code{maskTo}, it will be projected into the
+projection of \code{from} and will be used to crop and mask the \code{from}.
+
+Use case three is a hybrid of use case 1 and 2: \code{to} is supplied, but a user
+wants to override the extent and/or mask. These two can be supplied to \code{cropTo} and/or
+\code{maskTo} and these will be used instead of \code{to}.
 }

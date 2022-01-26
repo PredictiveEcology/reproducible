@@ -2464,13 +2464,38 @@ switchDataTypes <- function(datatype, type) {
 
 #' Alternative to \code{postProcess} that can accept and use \code{terra}
 #'
-#' This is still experimental. Use with caution.
+#' This function provides a single step to achieve the GIS operations "crop", "project",
+#' "mask" and possibly "write". It will use the \code{terra} and \code{sf} and \code{raster}
+#' packages internally in an attempt to be as efficient as possible.
+#'
+#' Currently, this will only work when \code{from} is a gridded object
+#'  (either \code{Raster*} from raster or \code{Spat*} from terra).
+#'
+#' Use case one is supply 2 gridded objects, \code{from} and \code{to}. This function
+#' will make \code{from} look like \code{to}, i.e., the extent, projection, origin, and masking
+#' where there are \code{NA} in the {to} will be the same as \code{from}.
+#'
+#' Use case two is there is a Vector gis dataset
+#' (e.g., \code{Spatial*} from \code{sp}, \code{sf} from \code{sf}, or
+#' \code{SpatVector} from \code{terra}) that has information we want to impose on \code{from}.
+#' It can be supplied as \code{to}, \code{projectTo}, \code{cropTo} or \code{maskTo}.
+#'
+#' Use case three is a hybrid of use case 1 and 2: when \code{to} is supplied
+#' but one or more of the other \code{*To} arguments, but a user
+#' wants to override individual components of \code{to}.
+#' When anything is supplied to one of the \code{*To} arguments, it will override
+#' the \code{to} object for the specific step.
+#'
+#' @return
+#' An object of the same class as \code{from}, but potentially cropped, projected, masked,
+#' and written to disk.
 #'
 #' @param from A RasterLayer, RasterStack, RasterBrick, SpatRaster to do one or more of:
 #'   crop, project, mask, and write
-#' @param to A \code{Raster*} or \code{SpatRaster} class object which is the object
+#' @param to A gridded (\code{Raster*} or \code{SpatRaster}) or polygonal
+#'   (\code{Spatial*}, \code{sf} or \code{Spat*}) class object which is the object
 #'   whose metadata will be the target for cropping, projecting, and masking of \code{from}.
-#' @param cropTo Optional \code{Spatial*}, \code{Raster*}, \code{sf} or \code{Spat*} which,
+#' @param cropTo Optional \code{Raster*}, \code{Spatial*}, \code{sf} or \code{Spat*} which,
 #'   if supplied, will supply the extent with which to crop \code{from}. To omit
 #'   cropping completed, set this to \code{NULL}. If supplied, this will be used instead of \code{to}
 #'   for the cropping step. Defaults to \code{to}
@@ -2489,21 +2514,40 @@ switchDataTypes <- function(datatype, type) {
 #'   interpolation. See \code{terra::project}
 #' @param datatype A character string, used if \code{writeTo} is not \code{NULL}. See \code{raster::writeRaster}
 #' @param overwrite Logical. Used if \code{writeTo} is not \code{NULL}
+#' @param ... Currently can be either \code{rasterToMatch}, \code{studyArea}, \code{filename2}
+#'   to allow backwards
+#'   compatibility with \code{postProcess}. \code{rasterToMatch} will be assigned to \code{to}
+#'   and \code{studyArea} will be assigned to \code{cropTo} & \code{maskTo}. These will override any values
+#'   passed to \code{to} or \code{maskTo}. \code{filename2} will be passed to \code{writeTo}.
 #' @export
 postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
                              writeTo = NULL, method = "bilinear", datatype = "FLT4S",
-                             overwrite = TRUE) {
+                             overwrite = TRUE, ...) {
+
+  dots <- list(...)
+  if (!is.null(dots$rasterToMatch)) to <- dots$rasterToMatch
+  if (!is.null(dots$studyArea)) {
+    maskTo <- dots$studyArea
+    cropTo <- dots$studyArea
+  }
+  if (!is.null(dots$filename2)) to <- dots$writeTo
 
   # Assertions
-  if (requireNamespace("terra")) stop("Need terra and sf: Require::Require(c('terra', 'sf'), require = FALSE)")
+  if (!requireNamespace("terra")) stop("Need terra and sf: Require::Require(c('terra', 'sf'), require = FALSE)")
   if (!(is(from, "Raster") || is(from, "SpatRaster"))) stop("from must be a Raster* or SpatRaster")
-  if (!(is(to, "Raster") || is(to, "SpatRaster")
+
+  if (!missing(to))
+    if (!(is(to, "Raster") || is(to, "SpatRaster")
         || is(to, "Spatial") || is(to, "sf"))) stop("to must be a Raster*, Spat*, sf or Spatial object")
-  if (!(is(cropTo, "Raster") || is(cropTo, "SpatRaster")
+  if (!missing(cropTo))
+    if (!(is(cropTo, "Raster") || is(cropTo, "SpatRaster")
         || is(cropTo, "Spatial") || is(cropTo, "sf"))) stop("cropTo must be a Raster*, Spat*, sf or Spatial object")
-  if (!(is(maskTo, "Raster") || is(maskTo, "SpatRaster")
+  if (!missing(maskTo))
+    if (!(is(maskTo, "Raster") || is(maskTo, "SpatRaster")
         || is(maskTo, "Spatial") || is(maskTo, "sf"))) stop("maskTo must be a Raster*, Spat*, sf or Spatial object")
-  if (!(is(projectTo, "Raster") || is(projectTo, "SpatRaster"))) stop("projectTo must be a Raster* or SpatRaster")
+  if (!missing(projectTo))
+    if (!(is(projectTo, "Raster") || is(projectTo, "SpatRaster")
+        || is(projectTo, "Spatial") || is(projectTo, "sf"))) stop("projectTo must be a Raster*, Spat*, sf or Spatial object")
 
   message("Using terra and sf to postProcess")
   if (missing(to)) {
@@ -2513,8 +2557,12 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
   }
 
   isRaster <- is(from, "Raster")
+  isRasterLayer <- is(from, "RasterLayer")
   isStack <- is(from, "RasterStack")
   isBrick <- is(from, "RasterBrick")
+  isSpatRaster <- is(from, "SpatRaster")
+  isSpatVector <- is(from, "SpatVector")
+
   if (isRaster) {
     from <- terra::rast(from)
   }
@@ -2530,9 +2578,11 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
   }
 
   projectToIsMaskTo <- identical(projectTo, maskTo)
+  if (projectToIsMaskTo) projectToOrig <- projectTo
   if (!is.null(projectTo)) {
     if (is(projectTo, "SpatVector") || is(projectTo, "sf") || is(projectTo, "SpatialPolygons")) {
-      stop("projectTo must be a Raster or SpatRast object")
+      projectTo <- sf::st_crs(projectTo)$wkt
+      projectToIsMaskTo <- FALSE
     }
     if (is(projectTo, "Raster"))
       projectTo <- terra::rast(projectTo)
@@ -2543,32 +2593,46 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
     message("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
   }
   if (!is.null(maskTo)) {
-    if (projectToIsMaskTo)
+    if (projectToIsMaskTo) {
       maskTo <- projectTo
-    else
+    } else {
       if (is(maskTo, "Raster"))
         maskTo <- terra::rast(maskTo)
-      if (is(maskTo, "Spatial"))
-        maskTo <- sf::st_as_sf(maskTo)
-      if (is(maskTo, "sf"))
-        maskTo <- terra::vect(maskTo)
+    }
+    if (is(maskTo, "Spatial"))
+      maskTo <- sf::st_as_sf(maskTo)
+    if (is(maskTo, "sf"))
+      maskTo <- terra::vect(maskTo)
 
-      if (!sf::st_crs(from) == sf::st_crs(maskTo))
-        maskTo <- terra::project(maskTo, from)
-      message("  masking...")
-      st <- Sys.time()
-      from <- terra::mask(from, maskTo)
-      message("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+    if (!sf::st_crs(from) == sf::st_crs(maskTo))
+      maskTo <- terra::project(maskTo, from)
+    message("  masking...")
+    st <- Sys.time()
+    from <- terra::mask(from, maskTo)
+    message("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
   }
 
   from <- terra::setMinMax(from)
+
   # convert to RasterStack prior to writing to disk because setMinMax didn't work with terra
   if (isStack) from <- raster::stack(from)
   if (isBrick) from <- raster::brick(from)
 
-  if (!is.null(writeTo))
-    from <- raster::writeRaster(from, filename = writeTo, overwrite = overwrite,
-                                datatype = datatype)
+  if (!is.null(writeTo)) {
+    message("  writing...")
+    st <- Sys.time()
+    if (isRaster)
+      from <- raster::writeRaster(from, filename = writeTo, overwrite = overwrite,
+                                  datatype = datatype)
+    if (isSpatRaster)
+      from <- terra::writeRaster(from, filename = writeTo, overwrite = overwrite,
+                                  datatype = datatype)
+    message("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+
+  }
+
   if (isStack && !is(from, "RasterStack")) from <- raster::stack(from) # coming out of writeRaster, becomes brick
+  if (isBrick && !is(from, "RasterBrick")) from <- raster::brick(from) # coming out of writeRaster, becomes brick
+  if (isRasterLayer && !is(from, "RasterLayer")) from <- raster::raster(from) # coming out of writeRaster, becomes brick
   from
 }
