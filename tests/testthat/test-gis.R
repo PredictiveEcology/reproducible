@@ -236,6 +236,37 @@ test_that("testing terra", {
     vv <- vect(tf1)
     expect_identical(terra::wrap(vv), terra::wrap(t11))
 
+    # Test fixErrorTerra
+    v1 <- terra::simplify(v)
+    gv1 <- geom(v1)
+    gv1[gv1[, "geom"] == 2, "geom"] <- 1
+    # gv1[9,"y"] <- 51
+    v2 <- vect(gv1, "polygons")
+    # plot(v2)
+    # v2 <- is.valid(v2)
+
+    crs(v2) <- crs(v)
+    t10 <- try(postProcessTerra(xVect, v2))
+    expect_true(!is(t10, "try-error"))
+
+    # Projection -->
+    albers <- sf::st_crs("epsg:5070")$wkt
+    valbers <- project(v, albers)
+
+
+    t11 <- postProcessTerra(x, valbers)
+    expect_true(sf::st_crs(t11) == sf::st_crs(valbers))
+
+    # no projection
+    t12 <- postProcessTerra(x, cropTo = valbers, maskTo = valbers)
+    expect_true(sf::st_crs(t12) != sf::st_crs(valbers))
+
+    # projection with errors
+    valbersErrors <- project(v2, albers)
+    mess <- capture_messages(t13 <- postProcessTerra(xVect, valbersErrors))
+    expect_true(sum(grepl("error", mess)) == 2)
+    expect_true(sum(grepl("fixed", mess)) == 2)
+    expect_true(is(t13, "SpatVector"))
 
   }
 })
