@@ -57,6 +57,10 @@ compatibility with \code{postProcess}. \code{rasterToMatch} will be assigned to 
 and \code{studyArea} will be assigned to \code{cropTo} & \code{maskTo}. These will override any values
 passed to \code{to} or \code{maskTo}. \code{filename2} will be passed to \code{writeTo}.}
 }
+\value{
+An object of the same class as \code{from}, but potentially cropped, projected, masked,
+and written to disk.
+}
 \description{
 This function provides a single step to achieve the GIS operations "crop", "project",
 "mask" and possibly "write". It will use the \code{terra} and \code{sf} and \code{raster}
@@ -70,15 +74,14 @@ Use case one is supply 2 gridded objects, \code{from} and \code{to}. This functi
 will make \code{from} look like \code{to}, i.e., the extent, projection, origin, and masking
 where there are \code{NA} in the {to} will be the same as \code{from}.
 
-Use case two is there is
-a Vector gis dataset (e.g., \code{Spatial*} from \code{sp}, \code{sf} from \code{sf}, or
+Use case two is there is a Vector gis dataset
+(e.g., \code{Spatial*} from \code{sp}, \code{sf} from \code{sf}, or
 \code{SpatVector} from \code{terra}) that has information we want to impose on \code{from}.
-Because a Vector dataset does not fully define the requirements for a gridded dataset,
-i.e., it is missing origin and resolution, it cannot be passed to \code{to} or \code{projectTo}.
-However, if supplied to \code{cropTo} or \code{maskTo}, it will be projected into the
-projection of \code{from} and will be used to crop and mask the \code{from}.
+It can be supplied as \code{to}, \code{projectTo}, \code{cropTo} or \code{maskTo}.
 
-Use case three is a hybrid of use case 1 and 2: \code{to} is supplied, but a user
-wants to override the extent and/or mask. These two can be supplied to \code{cropTo} and/or
-\code{maskTo} and these will be used instead of \code{to}.
+Use case three is a hybrid of use case 1 and 2: when \code{to} is supplied
+but one or more of the other \code{*To} arguments, but a user
+wants to override individual components of \code{to}.
+When anything is supplied to one of the \code{*To} arguments, it will override
+the \code{to} object for the specific step.
 }

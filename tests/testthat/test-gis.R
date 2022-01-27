@@ -162,3 +162,64 @@ test_that("testing rebuildColors", {
   origColors <- list(origColors = character(0), origMinValue = 0, origMaxValue = 197.100006103516)
   expect_is(rebuildColors(x, origColors), "Raster")
 })
+
+
+test_that("testing terra", {
+  testInitOut <- testInit(needGoogle = FALSE, "raster",
+                          opts = list(reproducible.useMemoise = TRUE))
+
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  if (requireNamespace("terra")) {
+    f <- system.file("ex/elev.tif", package="terra")
+    tf <- tempfile()
+    file.copy(f, tf)
+    r <- rast(list(rast(f), rast(tf)))
+    b <- Cache(fn, r)
+
+    f <- system.file("ex/lux.shp", package="terra")
+    v <- vect(f)
+    v <- v[1:2,]
+    rf <- system.file("ex/elev.tif", package="terra")
+    x <- rast(rf)
+    y <- copy(x)
+    y[y > 200 & y < 300] <- NA
+    x[] <- 1
+    vRast <- rast(v, res = 0.008333333)
+
+    # SR, SR
+    t1 <- postProcessTerra(x, y)
+    expect_true(sum(is.na(t1[]) != is.na(y[])) == 0)
+
+    t7 <- postProcessTerra(x, projectTo = y)
+    expect_true(identical(t7, x))
+
+    t8 <- postProcessTerra(x, maskTo = y)
+    expect_true(all.equal(t8, t1))
+
+    t9 <- postProcessTerra(x, cropTo = vRast)
+    expect_true(ext(v) <= ext(t9))
+
+
+    # SR, SV
+    t2 <- postProcessTerra(x, v)
+    plot(t2)
+
+    # No crop
+    t3 <- postProcessTerra(x, maskTo = v)
+    expect_true(ext(t3) == ext(x))
+
+    t4 <- postProcessTerra(x, cropTo = v, maskTo = v)
+    expect_true(ext(t4) == ext(t2))
+
+    t5 <- postProcessTerra(x, cropTo = v, maskTo = v, projectTo = v)
+    expect_true(identical(t5[],t2[]))
+
+
+    t6 <- extract(x, v, mean, na.rm=TRUE)
+    expect_true(all(t6$elevation == 1))
+    expect_true(NROW(t6) == 2)
+
+  }
+})
