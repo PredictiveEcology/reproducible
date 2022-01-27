@@ -61,7 +61,7 @@ setMethod(
     if (isTRUE(fromMemoise)) {
       messageCache(.loadedCacheMsg(.loadedMemoisedResultMsg, functionName), verbose = verbose)
     } else if (!is.na(fromMemoise)) {
-      messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName),
+      messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName), " ",
                    .addingToMemoisedMsg, sep = "", verbose = verbose)
     } else {
       messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName), verbose = verbose)
