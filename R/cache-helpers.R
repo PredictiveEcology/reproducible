@@ -1227,6 +1227,10 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
     }
 
   }
+
+  if (is(obj, "list")) {
+    obj <- lapply(obj, function(o) dealWithClass(o, cachePath, drv, conn))
+  }
   if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
     if (!requireNamespace("terra")) stop("Please install terra package")
 

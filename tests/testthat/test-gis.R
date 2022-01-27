@@ -165,7 +165,7 @@ test_that("testing rebuildColors", {
 
 
 test_that("testing terra", {
-  testInitOut <- testInit(needGoogle = FALSE, "raster",
+  testInitOut <- testInit(needGoogle = FALSE,
                           opts = list(reproducible.useMemoise = TRUE))
 
   on.exit({
@@ -175,14 +175,39 @@ test_that("testing terra", {
     f <- system.file("ex/elev.tif", package="terra")
     tf <- tempfile()
     file.copy(f, tf)
-    r <- rast(list(rast(f), rast(tf)))
+    r <- list(terra::rast(f), terra::rast(tf))
+    r1 <- list(terra::rast(f), terra::rast(tf))
+
+    fn <- function(listOf) {
+      listOf
+    }
+
+    # Test Cache of various nested and non nested SpatRaster
+    # double nest
+    b <- Cache(fn, list(r, r1))
+    expect_true(is(b, "list"))
+    expect_true(is(b[[1]], "list"))
+    expect_true(is(b[[1]][[1]], "SpatRaster"))
+
+    # Single nest
     b <- Cache(fn, r)
+    expect_true(is(b, "list"))
+    expect_true(is(b[[1]], "SpatRaster"))
+
+    # mixed nest
+    b <- Cache(fn, list(r[[1]], r1))
+    expect_true(is(b, "list"))
+    expect_true(is(b[[1]], "SpatRaster"))
+    expect_true(is(b[[2]][[1]], "SpatRaster"))
+
+
+
 
     f <- system.file("ex/lux.shp", package="terra")
     v <- vect(f)
     v <- v[1:2,]
     rf <- system.file("ex/elev.tif", package="terra")
-    xOrig <- rast(rf)
+    xOrig <- terra::rast(rf)
     x <- xOrig
     xCut <- classify(xOrig, rcl = 5)
     xVect <- as.polygons(xCut)
@@ -190,7 +215,7 @@ test_that("testing terra", {
     y <- copy(x)
     y[y > 200 & y < 300] <- NA
     x[] <- 1
-    vRast <- rast(v, res = 0.008333333)
+    vRast <- terra::rast(v, res = 0.008333333)
 
     # SR, SR
     t1 <- postProcessTerra(x, y)
