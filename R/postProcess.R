@@ -2534,22 +2534,18 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
 
   # Assertions
   if (!requireNamespace("terra")) stop("Need terra and sf: Require::Require(c('terra', 'sf'), require = FALSE)")
+  if (!requireNamespace("sf")) stop("Need sf: Require::Require(c('sf'), require = FALSE)")
   if (!(is(from, "Raster") || is(from, "SpatRaster"))) stop("from must be a Raster* or SpatRaster")
 
   if (!missing(to))
-    if (!(is(to, "Raster") || is(to, "SpatRaster")
-        || is(to, "Spatial") || is(to, "sf"))) stop("to must be a Raster*, Spat*, sf or Spatial object")
+    if (!isSpatialAny(to)) stop("to must be a Raster*, Spat*, sf or Spatial object")
   if (!missing(cropTo))
-    if (!(is(cropTo, "Raster") || is(cropTo, "SpatRaster")
-        || is(cropTo, "Spatial") || is(cropTo, "sf"))) stop("cropTo must be a Raster*, Spat*, sf or Spatial object")
+    if (!isSpatialAny(cropTo)) stop("cropTo must be a Raster*, Spat*, sf or Spatial object")
   if (!missing(maskTo))
-    if (!(is(maskTo, "Raster") || is(maskTo, "SpatRaster")
-        || is(maskTo, "Spatial") || is(maskTo, "sf"))) stop("maskTo must be a Raster*, Spat*, sf or Spatial object")
+    if (!isSpatialAny(maskTo)) stop("maskTo must be a Raster*, Spat*, sf or Spatial object")
   if (!missing(projectTo))
-    if (!(is(projectTo, "Raster") || is(projectTo, "SpatRaster")
-        || is(projectTo, "Spatial") || is(projectTo, "sf"))) stop("projectTo must be a Raster*, Spat*, sf or Spatial object")
+    if (!isSpatialAny(projectTo)) stop("projectTo must be a Raster*, Spat*, sf or Spatial object")
 
-  message("Using terra and sf to postProcess")
   if (missing(to)) {
     if (missing(cropTo)) cropTo <- NULL
     if (missing(maskTo)) maskTo <- NULL
@@ -2561,16 +2557,15 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
   isStack <- is(from, "RasterStack")
   isBrick <- is(from, "RasterBrick")
   isSpatRaster <- is(from, "SpatRaster")
-  isSpatVector <- is(from, "SpatVector")
 
   if (isRaster) {
     from <- terra::rast(from)
   }
   if (!is.null(cropTo)) {
-    ext <- st_as_sfc(st_bbox(cropTo)) # create extent as an object; keeps crs correctly
+    ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
     # ext <- terra::vect(ext)
     if (!sf::st_crs(from) == sf::st_crs(ext)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
-      ext <- sf::st_transform(ext, st_crs(from))
+      ext <- sf::st_transform(ext, sf::st_crs(from))
     }
     message("  cropping...")
     from <- terra::crop(from, ext)
@@ -2578,23 +2573,27 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
   }
 
   projectToIsMaskTo <- identical(projectTo, maskTo)
-  if (projectToIsMaskTo) projectToOrig <- projectTo
   if (!is.null(projectTo)) {
-    if (is(projectTo, "SpatVector") || is(projectTo, "sf") || is(projectTo, "SpatialPolygons")) {
-      projectTo <- sf::st_crs(projectTo)$wkt
-      projectToIsMaskTo <- FALSE
-    }
-    if (is(projectTo, "Raster"))
-      projectTo <- terra::rast(projectTo)
+    if (sf::st_crs(projectTo) == sf::st_crs(from)) {
+      message("projection of from is same as projectTo, not projecting")
+    } else {
+      if (is(projectTo, "Raster"))
+        projectTo <- terra::rast(projectTo)
+      if (projectToIsMaskTo) projectToRast <- projectTo
+      if (is(projectTo, "SpatVector") || is(projectTo, "sf") || is(projectTo, "SpatialPolygons")) {
+        projectTo <- sf::st_crs(projectTo)$wkt
+        projectToIsMaskTo <- FALSE
+      }
 
-    message("  projecting...")
-    st <- Sys.time()
-    from <- terra::project(from, projectTo, method = method)
-    message("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+      message("  projecting...")
+      st <- Sys.time()
+      from <- terra::project(from, projectTo, method = method)
+      message("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+    }
   }
   if (!is.null(maskTo)) {
     if (projectToIsMaskTo) {
-      maskTo <- projectTo
+      maskTo <- projectToRast
     } else {
       if (is(maskTo, "Raster"))
         maskTo <- terra::rast(maskTo)
@@ -2612,7 +2611,7 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
     message("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
   }
 
-  from <- terra::setMinMax(from)
+  # from <- terra::setMinMax(from)
 
   # convert to RasterStack prior to writing to disk because setMinMax didn't work with terra
   if (isStack) from <- raster::stack(from)
@@ -2636,3 +2635,10 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
   if (isRasterLayer && !is(from, "RasterLayer")) from <- raster::raster(from) # coming out of writeRaster, becomes brick
   from
 }
+
+isSpat <- function(x) is(x, "SpatRaster") || is(x, "SpatVector")
+isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
+isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || is(x, "sf")
+isSpatialAny <- function(x) isGridded(x) || isVector(x)
+
+
