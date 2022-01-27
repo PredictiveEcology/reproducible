@@ -234,10 +234,19 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
     result <- try(expr = eval(expr, envir = envir), silent = silent)
     if (inherits(result, "try-error")) {
       if (!is.null(exprBetween)) {
-        if (!identical(as.character(exprBetween[[1]]), "<-"))
+        finalPart <- length(format(exprBetween))
+
+        # The expression is different if it is 1 line vs >1 line
+        exprBetweenTail <- if (finalPart > 1) {
+          finalPart <- length(exprBetween)
+          exprBetween[[finalPart]]
+        } else {
+          exprBetween
+        }
+        if (!identical(as.character(exprBetweenTail)[[1]], "<-"))
           stop("exprBetween must have an assignment operator <- with a object on",
                "the LHS that is used on the RHS of expr ")
-        objName <- as.character(exprBetween[[2]])
+        objName <- as.character(exprBetweenTail[[2]])
         result1 <- try(expr = eval(exprBetween, envir = envir), silent = silent)
         assign(objName, result1, envir = envir)
       }
