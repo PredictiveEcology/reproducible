@@ -196,12 +196,12 @@ setMethod(
         rasterObjSizes <- as.numeric(objsDT[get(.cacheTableHashColName()) %in%
                                               rastersInRepo[[.cacheTableHashColName()]] &
                                               tagKey == "object.size"]$tagValue)
-        fileBackedRastersInRepo <- rastersInRepo[[.cacheTableHashColName()]][rasterObjSizes < 1e5]
+        fileBackedRastersInRepo <- rastersInRepo[[.cacheTableHashColName()]]# [rasterObjSizes < 1e5]
         filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
           if (useDBI()) {
             r <- loadFromCache(x, ras)
           }
-          tryCatch(filename(r), error = function(e) NULL)
+          tryCatch(Filenames(r), error = function(e) NULL)
         })
 
         if (length(filesToRemove)) {
