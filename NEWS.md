@@ -7,10 +7,10 @@ Version 1.2.9
 * Drop support for R 3.6 (#230)
 
 ## Enhancements
-none
+* New version of `postProcess` called `postProcessTerra`. This will eventually replace `postProcess` as it is much faster in all cases and simpler code base thanks to the fantastic work of Robert Hijmans (`terra`) and all the upstream work that `terra` relies on
 
 ## Bug fixes
-* `data.table` objects appear to not be recovered correctly from disk. We have added `data.table::copy` when recovering from Cache repository
+* `data.table` objects appear to not be recovered correctly from disk (e.g., from Cache repository. We have added `data.table::copy` when recovering from Cache repository
 
 Version 1.2.8
 =============
