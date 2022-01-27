@@ -1227,7 +1227,7 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
     }
 
   }
-  if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRast"))) {
+  if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
     if (!requireNamespace("terra")) stop("Please install terra package")
 
     obj <- terra::wrap(obj)
