@@ -163,36 +163,40 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                           format = getOption("reproducible.cacheSaveFormat", "rds"),
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
                           conn = getOption("reproducible.conn", NULL) ) {
+  isMemoised <- FALSE
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     if (is.null(.pkgEnv[[cachePath]]))
       .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
     isMemoised <- exists(cacheId, envir = .pkgEnv[[cachePath]])
-    if (isTRUE(isMemoised))
-      return(get(cacheId, envir = .pkgEnv[[cachePath]]))
-  }
-  f <- CacheStoredFile(cachePath, cacheId, format)
-
-  # First test if it is correct format
-  if (!file.exists(f)) {
-    sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
-    if (length(sameCacheID)) {
-      messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
-              fileExt(f), ")")
-      obj <- loadFromCache(cachePath = cachePath, cacheId = cacheId,
-                           format = fileExt(sameCacheID))
-      fs <- saveToCache(obj = obj, cachePath = cachePath, drv = drv, conn = conn,
-                        cacheId = cacheId)
-      rmFromCache(cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
-                  format = fileExt(sameCacheID))
-      return(fs)
+    if (isTRUE(isMemoised)) {
+      obj <- get(cacheId, envir = .pkgEnv[[cachePath]])
     }
   }
-  obj <- loadFile(f, format = format)
+  if (!isTRUE(isMemoised)) {
+    f <- CacheStoredFile(cachePath, cacheId, format)
+
+    # First test if it is correct format
+    if (!file.exists(f)) {
+      sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
+      if (length(sameCacheID)) {
+        messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
+                     fileExt(f), ")")
+        obj <- loadFromCache(cachePath = cachePath, cacheId = cacheId,
+                             format = fileExt(sameCacheID))
+        fs <- saveToCache(obj = obj, cachePath = cachePath, drv = drv, conn = conn,
+                          cacheId = cacheId)
+        rmFromCache(cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+                    format = fileExt(sameCacheID))
+        return(fs)
+      }
+    }
+    obj <- loadFile(f, format = format)
+  }
   obj <- dealWithClassOnRecovery(obj, cacheRepo = cachePath,
                                  cacheId = cacheId,
                                  drv = drv, conn = conn)
 
-  if (isTRUE(getOption("reproducible.useMemoise"))) {
+  if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
     assign(cacheId, obj, envir = .pkgEnv[[cachePath]])
   }
   obj
