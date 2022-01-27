@@ -1184,6 +1184,7 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
   } else {
     rasters <- is(obj, "Raster")
   }
+  isFromDisk <- FALSE # Default --> this will be updated
   if (any(rasters)) {
     objOrig <- obj
     atts <- attributes(obj)
