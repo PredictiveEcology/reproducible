@@ -1,6 +1,6 @@
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
-Version 1.2.8.9000
+Version 1.2.9
 =============
 
 ## Dependency changes
@@ -10,7 +10,7 @@ Version 1.2.8.9000
 none
 
 ## Bug fixes
-none
+* `data.table` objects appear to not be recovered correctly from disk. We have added `data.table::copy` when recovering from Cache repository
 
 Version 1.2.8
 =============
