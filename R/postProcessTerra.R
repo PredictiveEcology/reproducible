@@ -73,6 +73,7 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
                              writeTo = NULL, method = "bilinear", datatype = "FLT4S",
                              overwrite = TRUE, ...) {
 
+  startTime <- Sys.time()
   dots <- list(...)
   if (!is.null(dots$rasterToMatch)) to <- dots$rasterToMatch
   if (!is.null(dots$studyArea)) {
@@ -240,6 +241,8 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
   if (isStack && !is(from, "RasterStack")) from <- raster::stack(from) # coming out of writeRaster, becomes brick
   if (isBrick && !is(from, "RasterBrick")) from <- raster::brick(from) # coming out of writeRaster, becomes brick
   if (isRasterLayer && !is(from, "RasterLayer")) from <- raster::raster(from) # coming out of writeRaster, becomes brick
+  messagePrepInputs("  postProcessTerra done in ", format(difftime(Sys.time(), startTime),
+                                                               units = "secs", digits = 3))
   from
 }
 
