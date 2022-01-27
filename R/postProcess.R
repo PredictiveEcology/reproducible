@@ -2462,29 +2462,42 @@ switchDataTypes <- function(datatype, type) {
   return(datatype)
 }
 
-#' Alternative to \code{postProcess} that can accept and use \code{terra}
+#' Transform a GIS dataset to have the metadata of another
 #'
 #' This function provides a single step to achieve the GIS operations "crop", "project",
-#' "mask" and possibly "write". It will use the \code{terra} and \code{sf} and \code{raster}
-#' packages internally in an attempt to be as efficient as possible.
+#' "mask" and possibly "write". It uses primarily the \code{terra} package internally
+#' (with some minor functions from \code{sf} and \code{raster})
+#' in an attempt to be as efficient as possible.
 #'
-#' Currently, this will only work when \code{from} is a gridded object
-#'  (either \code{Raster*} from raster or \code{Spat*} from terra).
+#' @details
 #'
+#' Below, "gridded" means a \code{Raster*} or \code{SpatRaster} class object.
+#' "Vector" means \code{Spatial*} from \code{sp}, \code{sf} from \code{sf}, or
+#' \code{SpatVector} from \code{terra}.
+#'
+#' @section \code{from} and \code{to} are both gridded:
 #' Use case one is supply 2 gridded objects, \code{from} and \code{to}. This function
 #' will make \code{from} look like \code{to}, i.e., the extent, projection, origin, and masking
 #' where there are \code{NA} in the {to} will be the same as \code{from}.
 #'
-#' Use case two is there is a Vector gis dataset
+#' @section \code{from} is gridded, \code{to} is Vector:
+#' Use case two is \code{from} is a gridded dataset (\code{Raster*} or \code{SpatRaster})
+#' and \code{to} is a Vector gis dataset (specifically:
 #' (e.g., \code{Spatial*} from \code{sp}, \code{sf} from \code{sf}, or
 #' \code{SpatVector} from \code{terra}) that has information we want to impose on \code{from}.
 #' It can be supplied as \code{to}, \code{projectTo}, \code{cropTo} or \code{maskTo}.
 #'
-#' Use case three is a hybrid of use case 1 and 2: when \code{to} is supplied
-#' but one or more of the other \code{*To} arguments, but a user
-#' wants to override individual components of \code{to}.
-#' When anything is supplied to one of the \code{*To} arguments, it will override
-#' the \code{to} object for the specific step.
+#' @section any of \code{*To} arguments:
+#' if one or more of the \code{*To} arguments are supplied, these will
+#' override individual components of \code{to}. If \code{to} is omitted, then only
+#' the \code{*To} arguments that are used will be performed.
+#'
+#' @section \code{from} and \code{to} are both Vector:
+#' Use case four is when \code{from} is a Vector dataset and \code{to} or any of the \code{*To}
+#' arguments are also Vector datasets. Similar to case 2 above, it will convert the \code{from}
+#' by doing one or more of crop, project, mask, and write to disk. In the case of the
+#' mask step, it will first aggregate (dissolve) all polygons so it is one single
+#' polygon prior to doing the mask (which is actually \code{terra::intersect})
 #'
 #' @return
 #' An object of the same class as \code{from}, but potentially cropped, projected, masked,
@@ -2535,7 +2548,8 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
   # Assertions
   if (!requireNamespace("terra")) stop("Need terra and sf: Require::Require(c('terra', 'sf'), require = FALSE)")
   if (!requireNamespace("sf")) stop("Need sf: Require::Require(c('sf'), require = FALSE)")
-  if (!(is(from, "Raster") || is(from, "SpatRaster"))) stop("from must be a Raster* or SpatRaster")
+
+  if (!(isSpatialAny(from))) stop("from must be a Raster* or SpatRaster")
 
   if (!missing(to))
     if (!isSpatialAny(to)) stop("to must be a Raster*, Spat*, sf or Spatial object")
@@ -2552,6 +2566,7 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
     if (missing(projectTo)) projectTo <- NULL
   }
 
+  # Get the original class of from so that it can be recovered
   isRaster <- is(from, "Raster")
   isRasterLayer <- is(from, "RasterLayer")
   isStack <- is(from, "RasterStack")
@@ -2561,36 +2576,53 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
   if (isRaster) {
     from <- terra::rast(from)
   }
+
+  # check validities
+  if (isVector(from)) {
+    fromValids <- terra::is.valid(from)
+    if (any(!fromValids))
+      from <- terra::makeValid(from)
+  }
+
+  if (!missing(to))
+    if (isVector(to)) {
+      toValids <- terra::is.valid(to)
+      if (any(!toValids))
+        to <- terra::makeValid(to)
+    }
+
   if (!is.null(cropTo)) {
     ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
-    # ext <- terra::vect(ext)
     if (!sf::st_crs(from) == sf::st_crs(ext)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
       ext <- sf::st_transform(ext, sf::st_crs(from))
     }
-    message("  cropping...")
+    if (isVector(from))
+      ext <- terra::vect(ext)
+    message("  cropping...", appendLF = FALSE)
     from <- terra::crop(from, ext)
     message("       done!")
   }
 
   projectToIsMaskTo <- identical(projectTo, maskTo)
   if (!is.null(projectTo)) {
+    if (is(projectTo, "Raster"))
+      projectTo <- terra::rast(projectTo)
+    if (projectToIsMaskTo) projectToRast <- projectTo
     if (sf::st_crs(projectTo) == sf::st_crs(from)) {
-      message("projection of from is same as projectTo, not projecting")
+      message("  projection of from is same as projectTo, not projecting")
     } else {
-      if (is(projectTo, "Raster"))
-        projectTo <- terra::rast(projectTo)
-      if (projectToIsMaskTo) projectToRast <- projectTo
       if (is(projectTo, "SpatVector") || is(projectTo, "sf") || is(projectTo, "SpatialPolygons")) {
         projectTo <- sf::st_crs(projectTo)$wkt
         projectToIsMaskTo <- FALSE
       }
 
-      message("  projecting...")
+      message("  projecting...", appendLF = FALSE)
       st <- Sys.time()
       from <- terra::project(from, projectTo, method = method)
       message("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
     }
   }
+
   if (!is.null(maskTo)) {
     if (projectToIsMaskTo) {
       maskTo <- projectToRast
@@ -2605,9 +2637,13 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
 
     if (!sf::st_crs(from) == sf::st_crs(maskTo))
       maskTo <- terra::project(maskTo, from)
-    message("  masking...")
+    message("  masking...", appendLF = FALSE)
     st <- Sys.time()
-    from <- terra::mask(from, maskTo)
+    if (isVector(maskTo) && isVector(from)) {
+      from <- terra::intersect(from, terra::aggregate(maskTo))
+    } else {
+      from <- terra::mask(from, maskTo)
+    }
     message("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
   }
 
@@ -2618,7 +2654,7 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
   if (isBrick) from <- raster::brick(from)
 
   if (!is.null(writeTo)) {
-    message("  writing...")
+    message("  writing...", appendLF = FALSE)
     st <- Sys.time()
     if (isRaster)
       from <- raster::writeRaster(from, filename = writeTo, overwrite = overwrite,
@@ -2626,6 +2662,8 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
     if (isSpatRaster)
       from <- terra::writeRaster(from, filename = writeTo, overwrite = overwrite,
                                   datatype = datatype)
+    if (is(from, "SpatVector"))
+      written <- terra::writeVector(from, filename = writeTo, overwrite = overwrite)
     message("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
 
   }

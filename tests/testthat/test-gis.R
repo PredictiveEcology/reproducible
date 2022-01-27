@@ -182,7 +182,11 @@ test_that("testing terra", {
     v <- vect(f)
     v <- v[1:2,]
     rf <- system.file("ex/elev.tif", package="terra")
-    x <- rast(rf)
+    xOrig <- rast(rf)
+    x <- xOrig
+    xCut <- classify(xOrig, rcl = 5)
+    xVect <- as.polygons(xCut)
+
     y <- copy(x)
     y[y > 200 & y < 300] <- NA
     x[] <- 1
@@ -204,7 +208,6 @@ test_that("testing terra", {
 
     # SR, SV
     t2 <- postProcessTerra(x, v)
-    plot(t2)
 
     # No crop
     t3 <- postProcessTerra(x, maskTo = v)
@@ -221,5 +224,19 @@ test_that("testing terra", {
     expect_true(all(t6$elevation == 1))
     expect_true(NROW(t6) == 2)
 
+
+    ################
+
+    t10 <- postProcessTerra(xVect, v)
+    expect_true(ext(t10) < ext(xVect))
+
+    ################
+    tf1 <- tempfile(fileext = ".shp")
+    t11 <- postProcessTerra(xVect, v, writeTo = tf1)
+    vv <- vect(tf1)
+    expect_identical(terra::wrap(vv), terra::wrap(t11))
+
+
   }
 })
+
