@@ -62,7 +62,7 @@ setMethod(
       messageCache(.loadedCacheMsg(.loadedMemoisedResultMsg, functionName), verbose = verbose)
     } else if (!is.na(fromMemoise)) {
       messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName),
-                   "adding to memoised copy...", sep = "", verbose = verbose)
+                   .addingToMemoisedMsg, sep = "", verbose = verbose)
     } else {
       messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName), verbose = verbose)
     }
@@ -1243,8 +1243,10 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
 
 .loadedMemoisedResultMsg <- "loaded memoised result from previous"
 
+.addingToMemoisedMsg <- "(and added a memoised copy)"
+
 .loadedCacheMsg <- function(root, functionName) {
-  paste0("     ", root," ", functionName, " call, ")
+  paste0("     ", root," ", functionName, " call")
 }
 
 

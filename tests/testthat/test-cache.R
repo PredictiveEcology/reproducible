@@ -318,8 +318,9 @@ test_that("test 'quick' argument", {
   mess1 <- capture_messages({
     out1c <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = TRUE)
   })
-  expect_true(sum(grepl(paste0(paste(.loadedCacheResultMsg, "quickFun call, adding to memoised copy"),"|",
-                               paste(.loadedMemoisedResultMsg, "quickFun call")),
+
+  expect_true(sum(grepl(paste0(paste(.loadedCacheMsg(.loadedCacheResultMsg, "quickFun"), .addingToMemoisedMsg),"|",
+                               .loadedCacheMsg(.loadedMemoisedResultMsg, "quickFun")),
                         mess1)) == 1)
   # expect_true(any(grepl(paste(.loadedCacheResultMsg, "quickFun call, adding to memoised copy"), mess1 )))
   expect_silent({
@@ -337,7 +338,7 @@ test_that("test 'quick' argument", {
   mess1 <- capture_messages({
     out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE)
   })
-  expect_true(sum(grepl(paste0(paste(.loadedCacheResultMsg, "quickFun call, adding to memoised copy"),"|",
+  expect_true(sum(grepl(paste0(paste(.loadedCacheMsg(.loadedCacheResultMsg, "quickFun"), .addingToMemoisedMsg),"|",
                                paste(.loadedMemoisedResultMsg, "quickFun call")),
                     mess1)) == 1)
 
