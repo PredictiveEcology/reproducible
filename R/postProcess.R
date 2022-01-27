@@ -960,7 +960,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
 
         falseWarns <- paste0(projNotWKT2warn, "|input and ouput crs|no non-missing arguments")
 
-        browser()
+        #browser()
         if (requireNamespace("terra")) {
           m1 <- methodFormals(terra::project, "SpatRaster")
           m2 <- methodFormals(terra::writeRaster, signature = c("SpatRaster", "character"))
