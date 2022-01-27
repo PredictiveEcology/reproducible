@@ -1855,8 +1855,10 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
                                      newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
     output <- newOutput
     .setSubAttrInList(output, ".Cache", "newCache", FALSE)
+  } else if (is(output, "list")) {
+    output <- lapply(output, function(out) dealWithClassOnRecovery(out, cacheRepo, cacheId,
+                                                                    drv, conn))
   }
-
   if (any(inherits(output, "PackedSpatVector"))) {
     if (!requireNamespace("terra")) stop("Please install terra package")
     output <- terra::vect(output)
@@ -1865,7 +1867,9 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
     if (!requireNamespace("terra")) stop("Please install terra package")
     output <- terra::rast(output)
   }
-
+  if (any(inherits(output, "data.table"))) {
+    output <- data.table::copy(output)
+  }
 
   output
 }
