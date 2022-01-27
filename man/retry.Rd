@@ -10,7 +10,8 @@ retry(
   retries = 5,
   exponentialDecayBase = 1.3,
   silent = TRUE,
-  exprBetween = NULL
+  exprBetween = NULL,
+  messageFn = message
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ where \code{i} is the retry number (i.e., follows \code{seq_len(retries)})}
 of the `expr`. It must include an assignment operator, specifying what
 object (that is used in `expr`) will be updated prior to running
 the `expr` again.}
+
+\item{messageFn}{A function for messaging to console. Defaults to \code{message}}
 }
 \description{
 This is useful for functions that are "flaky", such as \code{curl}, which may fail for unknown

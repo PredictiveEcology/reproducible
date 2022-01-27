@@ -318,11 +318,12 @@ isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
 #'   column names even if there aren't any in the \code{df} (i.e., they will)
 #'   be \code{V1} etc., \code{NULL} will print them if they exist, and \code{FALSE}
 #'   which will omit them.
+#' @inheritParams base::message
 #'
 #' @export
 #' @importFrom data.table is.data.table as.data.table
 #' @importFrom utils capture.output
-messageDF <- function(df, round, colour = NULL, colnames = NULL) {
+messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE) {
   origColNames <- if (is.null(colnames) | isTRUE(colnames)) colnames(df) else NULL
 
   if (is.matrix(df))
@@ -343,9 +344,9 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL) {
   if (skipColNames) outMess <- outMess[-1]
   out <- lapply(outMess, function(x) {
     if (!is.null(colour)) {
-      messageColoured(x, colour = colour)
+      messageColoured(x, colour = colour, appendLF = appendLF)
     } else {
-      message(x)
+      message(x, appendLF = appendLF)
     }
   })
 }
@@ -410,22 +411,25 @@ isAbsolutePath <- function(pathnames) {
 isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
 
 
-messagePrepInputs <- function(...) {
-  messageColoured(..., colour = getOption("reproducible.messageColourPrepInputs"))
+messagePrepInputs <- function(..., appendLF = TRUE) {
+  messageColoured(..., colour = getOption("reproducible.messageColourPrepInputs"),
+                  appendLF = appendLF)
 }
 
-messageCache <- function(..., colour = getOption("reproducible.messageColourCache")) {
-  messageColoured(..., colour = colour)
+messageCache <- function(..., colour = getOption("reproducible.messageColourCache"),
+                         appendLF = TRUE) {
+  messageColoured(..., colour = colour, appendLF = appendLF)
 }
 
-messageQuestion <- function(..., verboseLevel = 0) {
+messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
   # force this message to print
   messageColoured(..., colour = getOption("reproducible.messageColourQuestion"),
-                  verboseLevel = verboseLevel, verbose = 0)
+                  verboseLevel = verboseLevel, verbose = 0, appendLF = appendLF)
 }
 
 messageColoured <- function(..., colour = NULL, verboseLevel = 1,
-                            verbose = getOption("reproducible.verbose", 1)) {
+                            verbose = getOption("reproducible.verbose", 1),
+                            appendLF = TRUE) {
   if (isTRUE(verboseLevel <= verbose)) {
     needCrayon <- FALSE
     if (!is.null(colour)) {
@@ -433,13 +437,13 @@ messageColoured <- function(..., colour = NULL, verboseLevel = 1,
         needCrayon <- TRUE
     }
     if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
-      message(getFromNamespace(colour, "crayon")(paste0(...)))
+      message(getFromNamespace(colour, "crayon")(paste0(...)), appendLF = appendLF)
     } else {
       if (!isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("crayon")) {
-        message("To add colours to messages, install.packages('crayon')")
+        message("To add colours to messages, install.packages('crayon')", appendLF = appendLF)
         .pkgEnv$.checkedCrayon <- TRUE
       }
-      message(paste0(...))
+      message(paste0(...), appendLF = appendLF)
     }
   }
 
