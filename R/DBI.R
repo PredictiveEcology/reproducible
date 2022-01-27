@@ -188,6 +188,10 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     }
   }
   obj <- loadFile(f, format = format)
+  obj <- dealWithClassOnRecovery(obj, cacheRepo = cachePath,
+                                 cacheId = cacheId,
+                                 drv = drv, conn = conn)
+
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     assign(cacheId, obj, envir = .pkgEnv[[cachePath]])
   }

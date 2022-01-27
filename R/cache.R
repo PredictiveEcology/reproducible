@@ -754,8 +754,8 @@ setMethod(
                                      preDigest = preDigest, startCacheTime = startCacheTime,
                                      drv = drv, conn = conn,
                                      ...), silent = TRUE)
-          output <- dealWithClassOnRecovery(output, cacheRepo = cacheRepo, cacheId = isInRepo$cacheId,
-                                            drv = drv, conn = conn) # returns just the "original" filenames in metadata & copies file-backed
+          #output <- dealWithClassOnRecovery(output, cacheRepo = cacheRepo, cacheId = isInRepo$cacheId,
+          #                                  drv = drv, conn = conn) # returns just the "original" filenames in metadata & copies file-backed
           postLoadTime <- Sys.time()
           elapsedTimeLoad <- postLoadTime - preLoadTime
 
