@@ -222,11 +222,12 @@ basename2 <- function(x) {
 #'   of the `expr`. It must include an assignment operator, specifying what
 #'   object (that is used in `expr`) will be updated prior to running
 #'   the `expr` again.
+#' @param messageFn A function for messaging to console. Defaults to \code{message}
 #'
 #' @export
 retry <- function(expr, envir = parent.frame(), retries = 5,
                   exponentialDecayBase = 1.3, silent = TRUE,
-                  exprBetween = NULL) {
+                  exprBetween = NULL, messageFn = message) {
   if (exponentialDecayBase < 1)
     stop("exponentialDecayBase must be equal to or greater than 1")
   for (i in seq_len(retries)) {
@@ -252,10 +253,12 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
       }
       backoff <- sample(1:1000/1000, size = 1) * (exponentialDecayBase^i - 1)
       if (backoff > 3) {
-        message("Waiting for ", round(backoff, 1), " seconds to retry; the attempt is failing")
+        messageFn("Waiting for ", round(backoff, 1), " seconds to retry; the attempt is failing")
       }
       Sys.sleep(backoff)
     } else {
+      if (exists("result1", inherits = FALSE))
+        messageFn("    ...fixed!")
       break
     }
   }
