@@ -75,42 +75,28 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
 
   startTime <- Sys.time()
   dots <- list(...)
-  if (!is.null(dots$rasterToMatch)) to <- dots$rasterToMatch
+  if (!is.null(dots$rasterToMatch)) {
+    messagePrepInputs("rasterToMatch is supplied (deprecated); assigning it to `to`")
+    to <- dots$rasterToMatch
+  }
   if (!is.null(dots$studyArea)) {
+    messagePrepInputs("studyArea is supplied (deprecated); assigning it to `cropTo` & `maskTo`")
     maskTo <- dots$studyArea
     cropTo <- dots$studyArea
+    if (dots$useSAcrs) {
+      messagePrepInputs("useSAcrs is supplied (deprecated); assigning it to `projectTo`")
+      projectTo <- dots$studyArea
+    }
   }
   if (!is.null(dots$filename2)) to <- dots$writeTo
 
   # ASSERTION STEP
-  if (!requireNamespace("terra")) stop("Need terra and sf: Require::Require(c('terra', 'sf'), require = FALSE)")
-  if (!requireNamespace("sf")) stop("Need sf: Require::Require(c('sf'), require = FALSE)")
-
-  if (!(isSpatialAny(from))) stop("from must be a Raster* or SpatRaster")
-
-  if (!missing(to)) {
-    if (!isSpatialAny(to)) stop("to must be a Raster*, Spat*, sf or Spatial object")
-    if (isVector(from)) if (!isVector(to)) stop("if from is a Vector object, to must also be a Vector object")
-  }
-  if (!missing(cropTo)) {
-    if (!isSpatialAny(cropTo)) stop("cropTo must be a Raster*, Spat*, sf or Spatial object")
-    if (isVector(from)) if (!isVector(cropTo)) stop("if from is a Vector object, cropTo must also be a Vector object")
-  }
-  if (!missing(maskTo)) {
-    if (!isSpatialAny(maskTo)) stop("maskTo must be a Raster*, Spat*, sf or Spatial object")
-    if (isVector(from)) if (!isVector(maskTo)) stop("if from is a Vector object, maskTo must also be a Vector object")
-  }
-  if (!missing(projectTo)) {
-    if (!isSpatialAny(projectTo)) stop("projectTo must be a Raster*, Spat*, sf or Spatial object")
-    if (isVector(from)) if (!isVector(projectTo)) stop("if from is a Vector object, projectTo must also be a Vector object")
-  }
+  postProcessTerraAssertions(from, to, cropTo, maskTo, projectTo)
 
   if (missing(to)) {
     if (missing(cropTo)) cropTo <- NULL
     if (missing(maskTo)) maskTo <- NULL
     if (missing(projectTo)) projectTo <- NULL
-  } else {
-
   }
 
   # Get the original class of from so that it can be recovered
@@ -124,7 +110,116 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
     from <- terra::rast(from)
   }
 
-  # CROP STEP
+  #############################################################
+  # crop project mask sequence ################################
+  #############################################################
+  from <- cropTo(from, cropTo)
+  # It is quick and non-lossy to project a Vector dataset...so mask first even if maskTo
+  #    is currently wrong projection, then project.
+  #    If maskTo is a gridded object it doesn't make sense to mask first,
+  #    as maskTo would have to be projected to from then from to projectTo ... 2 lossy steps
+  if (isVector(maskTo)) {
+    from <- maskTo(from, maskTo)
+    from <- projectTo(from, projectTo, method = method)
+  } else {
+    from <- projectTo(from, projectTo, method = method)
+    from <- maskTo(from, maskTo)
+  }
+
+  # from <- terra::setMinMax(from)
+
+  # WRITE STEP
+  from <- writeTo(from, writeTo, overwrite, isStack, isBrick, isRaster, isSpatRaster)
+
+  if (isStack && !is(from, "RasterStack")) from <- raster::stack(from) # coming out of writeRaster, becomes brick
+  if (isBrick && !is(from, "RasterBrick")) from <- raster::brick(from) # coming out of writeRaster, becomes brick
+  if (isRasterLayer && !is(from, "RasterLayer")) from <- raster::raster(from) # coming out of writeRaster, becomes brick
+  messagePrepInputs("  postProcessTerra done in ", format(difftime(Sys.time(), startTime),
+                                                          units = "secs", digits = 3))
+  from
+}
+
+isSpat <- function(x) is(x, "SpatRaster") || is(x, "SpatVector")
+isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
+isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || is(x, "sf")
+isSpatialAny <- function(x) isGridded(x) || isVector(x)
+
+
+fixErrorsTerra <- function(x) {
+  if (isVector(x)) {
+    xValids <- terra::is.valid(x)
+    if (any(!xValids))
+      x <- terra::makeValid(x)
+  }
+}
+
+maskTo <- function(from, maskTo) {
+  if (!is.null(maskTo)) {
+    if (is(maskTo, "Raster"))
+      maskTo <- terra::rast(maskTo)
+    if (is(maskTo, "Spatial"))
+      maskTo <- sf::st_as_sf(maskTo)
+    if (is(maskTo, "sf"))
+      maskTo <- terra::vect(maskTo)
+
+    if (!sf::st_crs(from) == sf::st_crs(maskTo))
+      maskTo <- terra::project(maskTo, from)
+    messagePrepInputs("    masking...", appendLF = FALSE)
+    st <- Sys.time()
+
+    fromInt <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
+                     messageFn = messagePrepInputs,
+                     expr = quote(
+                       {
+                         if (isVector(maskTo))
+                           maskTo <- terra::aggregate(maskTo)
+                         if (isVector(from)) {
+                           terra::intersect(from, maskTo)
+                         } else {
+                           terra::mask(from, maskTo)
+                         }
+                       }
+                     ),
+                     exprBetween = quote({
+                       messagePrepInputs("    Mask results in an error; attempting to fix",
+                                         appendLF = FALSE)
+                       maskTo <- fixErrorsTerra(maskTo)
+                     }))
+    from <- fromInt
+    messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+  }
+
+  from
+}
+
+projectTo <- function(from, projectTo, method) {
+  if (!is.null(projectTo)) {
+    if (is(projectTo, "Raster"))
+      projectTo <- terra::rast(projectTo)
+    if (sf::st_crs(projectTo) == sf::st_crs(from)) {
+      messagePrepInputs("    projection of from is same as projectTo, not projecting")
+    } else {
+      messagePrepInputs("    projecting...", appendLF = FALSE)
+      st <- Sys.time()
+      if (isVector(projectTo)) {
+        projectTo <- sf::st_crs(projectTo)$wkt
+        # projectToIsMaskTo <- FALSE
+      }
+
+
+      # Since we only use the crs when projectTo is a Vector, no need to "fixErrorsTerra"
+      from <- if (isVector(from)) {
+        terra::project(from, projectTo)
+      } else {
+        terra::project(from, projectTo, method = method)
+      }
+      messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+    }
+  }
+  from
+}
+
+cropTo <- function(from, cropTo) {
   if (!is.null(cropTo)) {
     ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
     if (!sf::st_crs(from) == sf::st_crs(ext)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
@@ -148,78 +243,11 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
     from <- fromInt
     messagePrepInputs("       done!")
   }
+  from
+}
 
-  #  PROJECTION STEP
-  projectToIsMaskTo <- identical(projectTo, maskTo)
-  if (!is.null(projectTo)) {
-    if (is(projectTo, "Raster"))
-      projectTo <- terra::rast(projectTo)
-    if (projectToIsMaskTo) projectToRast <- projectTo
-    if (sf::st_crs(projectTo) == sf::st_crs(from)) {
-      messagePrepInputs("    projection of from is same as projectTo, not projecting")
-    } else {
-      if (isVector(projectTo)) {
-        projectTo <- sf::st_crs(projectTo)$wkt
-        projectToIsMaskTo <- FALSE
-      }
-
-      messagePrepInputs("    projecting...", appendLF = FALSE)
-      st <- Sys.time()
-
-      # Since we only use the crs when projectTo is a Vector, no need to "fixErrorsTerra"
-      from <- if (isVector(from)) {
-        terra::project(from, projectTo)
-      } else {
-        terra::project(from, projectTo, method = method)
-      }
-      messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
-    }
-  }
-
-  # MASK STEP
-  if (!is.null(maskTo)) {
-    if (projectToIsMaskTo) {
-      maskTo <- projectToRast
-    } else {
-      if (is(maskTo, "Raster"))
-        maskTo <- terra::rast(maskTo)
-    }
-    if (is(maskTo, "Spatial"))
-      maskTo <- sf::st_as_sf(maskTo)
-    if (is(maskTo, "sf"))
-      maskTo <- terra::vect(maskTo)
-
-    if (!sf::st_crs(from) == sf::st_crs(maskTo))
-      maskTo <- terra::project(maskTo, from)
-    messagePrepInputs("    masking...", appendLF = FALSE)
-    st <- Sys.time()
-
-    fromInt <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
-                     messageFn = messagePrepInputs,
-                     expr = quote(
-                       {
-                         if (isVector(maskTo))
-                          maskTo <- terra::aggregate(maskTo)
-                         if (isVector(from)) {
-                           terra::intersect(from, maskTo)
-                         } else {
-                           terra::mask(from, maskTo)
-                         }
-                       }
-                     ),
-                     exprBetween = quote({
-                       messagePrepInputs("    Mask results in an error; attempting to fix",
-                                         appendLF = FALSE)
-                       maskTo <- fixErrorsTerra(maskTo)
-                     }))
-    from <- fromInt
-    messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
-  }
-
-  # from <- terra::setMinMax(from)
-
-  # WRITE STEP
-  # convert to RasterStack prior to writing to disk because setMinMax didn't work with terra
+writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, isRaster = FALSE,
+                    isSpatRaster = FALSE) {
   if (isStack) from <- raster::stack(from)
   if (isBrick) from <- raster::brick(from)
 
@@ -238,24 +266,31 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
 
   }
 
-  if (isStack && !is(from, "RasterStack")) from <- raster::stack(from) # coming out of writeRaster, becomes brick
-  if (isBrick && !is(from, "RasterBrick")) from <- raster::brick(from) # coming out of writeRaster, becomes brick
-  if (isRasterLayer && !is(from, "RasterLayer")) from <- raster::raster(from) # coming out of writeRaster, becomes brick
-  messagePrepInputs("  postProcessTerra done in ", format(difftime(Sys.time(), startTime),
-                                                               units = "secs", digits = 3))
   from
 }
 
-isSpat <- function(x) is(x, "SpatRaster") || is(x, "SpatVector")
-isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
-isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || is(x, "sf")
-isSpatialAny <- function(x) isGridded(x) || isVector(x)
+postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
+  if (!requireNamespace("terra")) stop("Need terra and sf: Require::Require(c('terra', 'sf'), require = FALSE)")
+  if (!requireNamespace("sf")) stop("Need sf: Require::Require(c('sf'), require = FALSE)")
 
+  if (!(isSpatialAny(from))) stop("from must be a Raster* or SpatRaster")
 
-fixErrorsTerra <- function(x) {
-  if (isVector(x)) {
-    xValids <- terra::is.valid(x)
-    if (any(!xValids))
-      x <- terra::makeValid(x)
+  if (!missing(to)) {
+    if (!isSpatialAny(to)) stop("to must be a Raster*, Spat*, sf or Spatial object")
+    if (isVector(from)) if (!isVector(to)) stop("if from is a Vector object, to must also be a Vector object")
   }
+  if (!missing(cropTo)) {
+    if (!isSpatialAny(cropTo)) stop("cropTo must be a Raster*, Spat*, sf or Spatial object")
+    if (isVector(from)) if (!isVector(cropTo)) stop("if from is a Vector object, cropTo must also be a Vector object")
+  }
+  if (!missing(maskTo)) {
+    if (!isSpatialAny(maskTo)) stop("maskTo must be a Raster*, Spat*, sf or Spatial object")
+    if (isVector(from)) if (!isVector(maskTo)) stop("if from is a Vector object, maskTo must also be a Vector object")
+  }
+  if (!missing(projectTo)) {
+    if (!isSpatialAny(projectTo)) stop("projectTo must be a Raster*, Spat*, sf or Spatial object")
+    if (isVector(from)) if (!isVector(projectTo)) stop("if from is a Vector object, projectTo must also be a Vector object")
+  }
+
+  return(invisible())
 }
