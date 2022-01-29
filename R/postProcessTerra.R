@@ -113,18 +113,10 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
   #############################################################
   # crop project mask sequence ################################
   #############################################################
-  from <- cropTo(from, cropTo)
-  # It is quick and non-lossy to project a Vector dataset...so mask first even if maskTo
-  #    is currently wrong projection, then project.
-  #    If maskTo is a gridded object it doesn't make sense to mask first,
-  #    as maskTo would have to be projected to from then from to projectTo ... 2 lossy steps
-  if (isVector(maskTo)) {
-    from <- maskTo(from, maskTo)
-    from <- projectTo(from, projectTo, method = method)
-  } else {
-    from <- projectTo(from, projectTo, method = method)
-    from <- maskTo(from, maskTo)
-  }
+  from <- cropTo(from, cropTo, needBuffer = TRUE) # crop first for speed
+  from <- projectTo(from, projectTo, method = method) # need to project with edges intact
+  from <- maskTo(from, maskTo)
+  from <- cropTo(from, cropTo) # need to recrop to trim excess pixels in new projection
 
   # from <- terra::setMinMax(from)
 
@@ -196,13 +188,29 @@ projectTo <- function(from, projectTo, method) {
   if (!is.null(projectTo)) {
     if (is(projectTo, "Raster"))
       projectTo <- terra::rast(projectTo)
+
+    projectToOrig <- projectTo # keep for below
+
     if (sf::st_crs(projectTo) == sf::st_crs(from)) {
       messagePrepInputs("    projection of from is same as projectTo, not projecting")
     } else {
       messagePrepInputs("    projecting...", appendLF = FALSE)
       st <- Sys.time()
       if (isVector(projectTo)) {
-        projectTo <- sf::st_crs(projectTo)$wkt
+        if (isGridded(from)) {
+          if (!isSpat(projectTo))
+            projectTo <- terra::vect(projectTo)
+          projectTo <- terra::rast(projectTo, resolution = res(from))
+
+          messagePrepInputs("        projectTo is a vector dataset, which does not define all")
+          messagePrepInputs("        metadata required. Using resolution from `from`,")
+          messagePrepInputs("        origin and extent from `ext(projectTo)`, and projection from `projectTo`.")
+          messagePrepInputs("        If this is not correct, create a template gridded object and pass that to projectTo")
+
+        } else {
+          projectTo <- sf::st_crs(projectTo)$wkt
+        }
+        #
         # projectToIsMaskTo <- FALSE
       }
 
@@ -219,7 +227,7 @@ projectTo <- function(from, projectTo, method) {
   from
 }
 
-cropTo <- function(from, cropTo) {
+cropTo <- function(from, cropTo, needBuffer = FALSE) {
   if (!is.null(cropTo)) {
     ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
     if (!sf::st_crs(from) == sf::st_crs(ext)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
@@ -228,6 +236,16 @@ cropTo <- function(from, cropTo) {
     if (isVector(from))
       ext <- terra::vect(ext)
     messagePrepInputs("    cropping...", appendLF = FALSE)
+
+    # This is only needed if crop happens before a projection... need to cells beyond edges so projection is accurate
+    if (needBuffer)
+      if (isGridded(from)) {
+        res <- res(from)
+        if (!isSpat(ext))
+          ext <- terra::vect(ext)
+        extTmp <- terra::ext(ext)
+        ext <- terra::extend(extTmp, res[1] * 2)
+      }
 
     fromInt <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
                      messageFn = messagePrepInputs,
