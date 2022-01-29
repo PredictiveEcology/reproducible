@@ -125,7 +125,20 @@ setMethod(
 
     if (any(inherits(object, "SpatVector"), inherits(object, "SpatRaster"))) {
       if (!requireNamespace("terra")) stop("Please install terra package")
+      if (nchar(terra::sources(object)) > 0) {
+        out <- lapply(terra::sources(object), function(x)
+          digest(file = x, length = length, algo = algo))
+        dig <- .robustDigest(append(
+          list(terra::nrow(object), terra::ncol(object), terra::nlyr(object),
+               terra::res(object), terra::crs(object),
+               terra::ext(object)), object@ptr$names, ),
+          length = length, quick = quick,
+          algo = algo) # don't include object@data -- these are volatile
+        out <- .doDigest(list(out, dig), algo = algo)
+      } else {
         out <- .doDigest(terra::wrap(object), algo)
+      }
+
       return(out)
     }
 
