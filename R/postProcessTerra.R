@@ -200,10 +200,20 @@ projectTo <- function(from, projectTo, method) {
         if (isGridded(from)) {
           if (!isSpat(projectTo))
             projectTo <- terra::vect(projectTo)
-          projectTo <- terra::rast(projectTo, resolution = res(from))
 
-          messagePrepInputs("        projectTo is a vector dataset, which does not define all")
-          messagePrepInputs("        metadata required. Using resolution from `from`,")
+          if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
+            projectTo <- terra::rast(projectTo, resolution = res(from))
+          }
+          messagePrepInputs("        projectTo is a vector dataset, which does not define")
+          messagePrepInputs("        all metadata required. ")
+          if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
+            newRes <- res(from)
+            messagePrepInputs("        Using resolution of ",newRes,"m; ")
+          } else {
+            newRes <- 250
+            messagePrepInputs("        projectTo also is longlat; projecting to 250m resolution; ")
+          }
+          projectTo <- terra::rast(projectTo, resolution = newRes)
           messagePrepInputs("        origin and extent from `ext(projectTo)`, and projection from `projectTo`.")
           messagePrepInputs("        If this is not correct, create a template gridded object and pass that to projectTo")
 

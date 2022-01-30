@@ -132,10 +132,18 @@ test_that("testing terra", {
     # Projection -->
     albers <- sf::st_crs("epsg:5070")$wkt
     valbers <- terra::project(v, albers)
+    ralbers <- terra::rast(valbers, res = 100)
 
 
+    # use vector dataset -- force the 250m resolution
     t11 <- postProcessTerra(x, valbers)
+    expect_true(identical(res(t11)[1], 250))
     expect_true(sf::st_crs(t11) == sf::st_crs(valbers))
+
+    # use raster dataset -- take the projectTo resolution, i.e., 100
+    t13 <- postProcessTerra(x, ralbers)
+    expect_true(identical(res(t13)[1], 100))
+    expect_true(sf::st_crs(t13) == sf::st_crs(valbers))
 
     # no projection
     t12 <- postProcessTerra(x, cropTo = valbers, maskTo = valbers)
