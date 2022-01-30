@@ -769,7 +769,7 @@ test_that("test future", {
         options(optsFuture)
       }, add = TRUE)
 
-      options("reproducible.futurePlan" = "multiprocess")
+      options("reproducible.futurePlan" = "multicore")
       on.exit({
         options("reproducible.futurePlan" = FALSE)
       }, add = TRUE)

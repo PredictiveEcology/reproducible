@@ -121,7 +121,8 @@ postProcessTerra <- function(from, to, cropTo = to, projectTo = to, maskTo = to,
   # from <- terra::setMinMax(from)
 
   # WRITE STEP
-  from <- writeTo(from, writeTo, overwrite, isStack, isBrick, isRaster, isSpatRaster)
+  from <- writeTo(from, writeTo, overwrite, isStack, isBrick, isRaster, isSpatRaster,
+                  datatype = datatype)
 
   if (isStack && !is(from, "RasterStack")) from <- raster::stack(from) # coming out of writeRaster, becomes brick
   if (isBrick && !is(from, "RasterBrick")) from <- raster::brick(from) # coming out of writeRaster, becomes brick
@@ -275,7 +276,7 @@ cropTo <- function(from, cropTo, needBuffer = FALSE) {
 }
 
 writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, isRaster = FALSE,
-                    isSpatRaster = FALSE) {
+                    isSpatRaster = FALSE, datatype = "FLT4S") {
   if (isStack) from <- raster::stack(from)
   if (isBrick) from <- raster::brick(from)
 

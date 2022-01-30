@@ -795,6 +795,7 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #'     use GDAL regardless of the memory test described here.
 #'
 #' @importFrom fpCompare %==%
+#' @importFrom stats na.omit
 #' @importFrom raster crs dataType res res<- dataType<-
 projectInputs.Raster <- function(x, targetCRS = NULL,
                                  verbose = getOption("reproducible.verbose", 1),
