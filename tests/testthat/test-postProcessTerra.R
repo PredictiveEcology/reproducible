@@ -1,5 +1,5 @@
 test_that("testing terra", {
-  if (interactive()) {
+  #if (interactive()) {
     testInitOut <- testInit(needGoogle = FALSE,
                             opts = list(reproducible.useMemoise = TRUE))
 
@@ -67,6 +67,7 @@ test_that("testing terra", {
       x <- xOrig
       xCut <- terra::classify(xOrig, rcl = 5)
       xVect <- terra::as.polygons(xCut)
+      xVect2 <- terra::deepcopy(xVect)
 
       y <- copy(x)
       y[y > 200 & y < 300] <- NA
@@ -157,7 +158,26 @@ test_that("testing terra", {
       expect_true(sum(grepl("fixed", mess)) == 2)
       expect_true(is(t13, "SpatVector"))
 
+      t14 <- postProcessTerra(xVect2, valbers, projectTo = NA)
+      expect_true(sf::st_crs(t14) == sf::st_crs(xVect2))
+      expect_true(sf::st_crs(t14) != sf::st_crs(valbers))
+
+      t15 <- postProcessTerra(xVect2, valbers, maskTo = NA)
+      expect_true(sf::st_crs(t15) != sf::st_crs(xVect2))
+      expect_true(sf::st_crs(t15) == sf::st_crs(valbers))
+
+      t16 <- postProcessTerra(x, ralbers, cropTo = NA)
+      expect_true(sf::st_crs(t16) != sf::st_crs(x))
+      expect_true(sf::st_crs(t16) == sf::st_crs(ralbers))
+      expect_true(terra::ext(t16) >= terra::ext(ralbers))
+
+      t17 <- postProcessTerra(x, ralbers, projectTo = NA)
+      expect_true(sf::st_crs(t17) == sf::st_crs(x))
+      expect_true(sf::st_crs(t17) != sf::st_crs(ralbers))
+
+
+
     }
-  }
+#  }
 })
 
