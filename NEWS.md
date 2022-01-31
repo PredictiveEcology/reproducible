@@ -5,6 +5,7 @@ Version 1.2.9
 
 ## Dependency changes
 * Drop support for R 3.6 (#230)
+* Added minimum versions of `raster` and `terra`, because previous versions were causing collisions.
 
 ## Enhancements
 * New version of `postProcess` called `postProcessTerra`. This will eventually replace `postProcess` as it is much faster in all cases and simpler code base thanks to the fantastic work of Robert Hijmans (`terra`) and all the upstream work that `terra` relies on

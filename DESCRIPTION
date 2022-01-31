@@ -17,7 +17,7 @@ URL:
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
 Date: 2022-01-27
-Version: 1.2.8.9025
+Version: 1.2.8.9026
 Authors@R: 
     c(person(given = "Eliot J B",
              family = "McIntire",
@@ -58,7 +58,7 @@ Imports:
     magrittr,
     methods,
     Require,
-    raster,
+    raster (>= 3.5-15),
     RSQLite,
     rlang,
     sp (>= 1.4-2),
@@ -82,7 +82,7 @@ Suggests:
     rmarkdown,
     sf,
     stats,
-    terra,
+    terra (>= 1.5-17),
     testthat
 Encoding: UTF-8
 Language: en-CA
