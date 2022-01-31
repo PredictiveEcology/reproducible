@@ -136,9 +136,9 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   from <- cropTo(from, cropTo) # need to recrop to trim excess pixels in new projection
 
   # Put this message near the end so doesn't get lost
-  if (is.naSpatial(cropTo) && isVector(from) && isVector(maskTo))  {
-    messagePrepInputs("    ** cropTo is NA, but masking with 2 vectors (`from` & `maskTo`)")
-    messagePrepInputs("      has the effect of cropping because it uses terra::intersect")
+  if (is.naSpatial(cropTo) && isVector(maskTo))  {
+    messagePrepInputs("    ** cropTo is NA, but maskTo is a Vector dataset; ")
+    messagePrepInputs("      this has the effect of cropping anyway")
   }
 
   # from <- terra::setMinMax(from)

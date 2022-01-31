@@ -153,11 +153,13 @@ test_that("testing terra", {
 
       # projection with errors
       valbersErrors <- terra::project(v2, albers)
-      mess <- capture_messages(t13 <- postProcessTerra(xVect, valbersErrors))
+      mess <- capture_messages(t13a <- postProcessTerra(xVect, valbersErrors))
       expect_true(sum(grepl("error", mess)) == 2)
       expect_true(sum(grepl("fixed", mess)) == 2)
-      expect_true(is(t13, "SpatVector"))
+      expect_true(is(t13a, "SpatVector"))
 
+      # try NA to *To
+      # Vectors
       t14 <- postProcessTerra(xVect2, valbers, projectTo = NA)
       expect_true(sf::st_crs(t14) == sf::st_crs(xVect2))
       expect_true(sf::st_crs(t14) != sf::st_crs(valbers))
@@ -166,6 +168,12 @@ test_that("testing terra", {
       expect_true(sf::st_crs(t15) != sf::st_crs(xVect2))
       expect_true(sf::st_crs(t15) == sf::st_crs(valbers))
 
+      t18 <- postProcessTerra(xVect2, valbers, cropTo = NA)
+      expect_true(sf::st_crs(t18) != sf::st_crs(xVect2))
+      expect_true(sf::st_crs(t18) == sf::st_crs(valbers))
+
+
+      # Rasters
       t16 <- postProcessTerra(x, ralbers, cropTo = NA)
       expect_true(sf::st_crs(t16) != sf::st_crs(x))
       expect_true(sf::st_crs(t16) == sf::st_crs(ralbers))
@@ -174,6 +182,28 @@ test_that("testing terra", {
       t17 <- postProcessTerra(x, ralbers, projectTo = NA)
       expect_true(sf::st_crs(t17) == sf::st_crs(x))
       expect_true(sf::st_crs(t17) != sf::st_crs(ralbers))
+
+      t19 <- postProcessTerra(x, ralbers, maskTo = NA)
+      expect_true(sf::st_crs(t19) != sf::st_crs(x))
+      expect_true(sf::st_crs(t19) == sf::st_crs(valbers))
+      sum(terra::values(t19), na.rm = TRUE) >
+        sum(terra::values(t13), na.rm = TRUE)
+
+
+      # Raster with Vector
+      t16 <- postProcessTerra(x, valbers, cropTo = NA)
+      expect_true(sf::st_crs(t16) != sf::st_crs(x))
+      expect_true(sf::st_crs(t16) == sf::st_crs(valbers))
+
+      t17 <- postProcessTerra(x, valbers, projectTo = NA)
+      expect_true(sf::st_crs(t17) == sf::st_crs(x))
+      expect_true(sf::st_crs(t17) != sf::st_crs(valbers))
+
+      t19 <- postProcessTerra(x, valbers, maskTo = NA)
+      expect_true(sf::st_crs(t19) != sf::st_crs(x))
+      expect_true(sf::st_crs(t19) == sf::st_crs(valbers))
+      sum(terra::values(t19), na.rm = TRUE) >
+        sum(terra::values(t13), na.rm = TRUE)
 
 
 
