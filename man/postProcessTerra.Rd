@@ -7,55 +7,59 @@
 postProcessTerra(
   from,
   to,
-  cropTo = to,
-  projectTo = to,
-  maskTo = to,
+  cropTo = NULL,
+  projectTo = NULL,
+  maskTo = NULL,
   writeTo = NULL,
-  method = "bilinear",
+  method = NULL,
   datatype = "FLT4S",
   overwrite = TRUE,
   ...
 )
 }
 \arguments{
-\item{from}{A RasterLayer, RasterStack, RasterBrick, SpatRaster to do one or more of:
+\item{from}{A Gridded or Vector dataset on which to do one or more of:
 crop, project, mask, and write}
 
-\item{to}{A gridded (\code{Raster*} or \code{SpatRaster}) or polygonal
-(\code{Spatial*}, \code{sf} or \code{Spat*}) class object which is the object
+\item{to}{A Gridded or Vector dataset which is the object
 whose metadata will be the target for cropping, projecting, and masking of \code{from}.}
 
-\item{cropTo}{Optional \code{Raster*}, \code{Spatial*}, \code{sf} or \code{Spat*} which,
+\item{cropTo}{Optional Gridded or Vector dataset which,
 if supplied, will supply the extent with which to crop \code{from}. To omit
-cropping completed, set this to \code{NULL}. If supplied, this will be used instead of \code{to}
-for the cropping step. Defaults to \code{to}}
+cropping completely, set this to \code{NA}. If supplied, this will override \code{to}
+for the cropping step. Defaults to \code{NULL}, which means use \code{to}}
 
-\item{projectTo}{Optional \code{Raster*} or \code{SpatRaster} which,
-if supplied, will supply the \code{crs}, \code{extent}, \code{res}, and \code{origin}
-to project the \code{from} to. To omit projecting, set this to NULL.
-If supplied, this will be used instead of \code{to}
-for the projecting step. Defaults to \code{to}.}
+\item{projectTo}{Optional Gridded or Vector dataset, or \code{crs} object (e.g., sf::st_crs).
+If Gridded it will supply
+the \code{crs}, \code{extent}, \code{res}, and \code{origin}
+to project the \code{from} to. If Vector, it will provide the \code{crs} only.
+The resolution and extent will be taken from \code{res(from)} (i.e. \code{ncol(from)*nrow(from)}).
+If a Vector, the extent of the \code{projectTo} is not used (unless it is also passed to \code{cropTo}.
+To omit projecting, set this to \code{NA}.
+If supplied, this will override \code{to}
+for the projecting step. Defaults to \code{NULL}, which means use \code{to}}
 
-\item{maskTo}{Optional \code{Spatial*}, \code{Raster*}, \code{sf} or \code{Spat*} which,
-if supplied, will supply the extent with which to mask \code{from}. To omit
-masking completed, set this to \code{NULL}. If supplied, this will be used instead of \code{to}
-for the masking step. Defaults to \code{to}}
+\item{maskTo}{Optional Gridded or Vector dataset which,
+if supplied, will supply the extent with which to mask \code{from}. If Gridded,
+it will mask with the \code{NA} values on the \code{maskTo}; if Vector, it will
+mask on the \code{terra::aggregate(maskTo)}. To omit
+masking completely, set this to \code{NA}. If supplied,
+this will override \code{to} for the masking step.
+Defaults to \code{NULL}, which means use \code{to}}
 
 \item{writeTo}{Optional character string of a filename to use `writeRaster` to save the final
 object. Default is \code{NULL}, which means there is no `writeRaster`}
 
 \item{method}{Used if \code{projectTo} is not \code{NULL}, and is the method used for
-interpolation. See \code{terra::project}}
+interpolation. See \code{terra::project}. Defaults to \code{"bilinear"}}
 
 \item{datatype}{A character string, used if \code{writeTo} is not \code{NULL}. See \code{raster::writeRaster}}
 
 \item{overwrite}{Logical. Used if \code{writeTo} is not \code{NULL}}
 
-\item{...}{Currently can be either \code{rasterToMatch}, \code{studyArea}, \code{filename2}
-to allow backwards
-compatibility with \code{postProcess}. \code{rasterToMatch} will be assigned to \code{to}
-and \code{studyArea} will be assigned to \code{cropTo} & \code{maskTo}. These will override any values
-passed to \code{to} or \code{maskTo}. \code{filename2} will be passed to \code{writeTo}.}
+\item{...}{Currently can be either \code{rasterToMatch}, \code{studyArea}, \code{filename2},
+\code{useSAcrs}, or \code{targetCRS} to allow backwards
+compatibility with \code{postProcess}. See section below for details.}
 }
 \value{
 An object of the same class as \code{from}, but potentially cropped, projected, masked,
@@ -66,41 +70,71 @@ This function provides a single step to achieve the GIS operations "crop", "proj
 "mask" and possibly "write". It uses primarily the \code{terra} package internally
 (with some minor functions from \code{sf} and \code{raster})
 in an attempt to be as efficient as possible.
+For this function, Gridded means a \code{Raster*} class object from \code{raster} or
+a \code{SpatRaster} class object from \code{terra}.
+Vector means a \code{Spatial*} class object from \code{sp}, a \code{sf} class object
+from \code{sf}, or a \code{SpatVector} class object from \code{terra}.
 }
 \details{
-Below, "gridded" means a \code{Raster*} or \code{SpatRaster} class object.
-"Vector" means \code{Spatial*} from \code{sp}, \code{sf} from \code{sf}, or
-\code{SpatVector} from \code{terra}.
+
 }
-\section{\code{from} and \code{to} are both gridded}{
+\section{Use Cases}{
 
-Use case one is supply 2 gridded objects, \code{from} and \code{to}. This function
-will make \code{from} look like \code{to}, i.e., the extent, projection, origin, and masking
-where there are \code{NA} in the {to} will be the same as \code{from}.
-}
 
-\section{\code{from} is gridded, \code{to} is Vector}{
+The table below shows what will result from passing different classes to \code{from}
+and \code{to}:
 
-Use case two is \code{from} is a gridded dataset (\code{Raster*} or \code{SpatRaster})
-and \code{to} is a Vector gis dataset (specifically:
-(e.g., \code{Spatial*} from \code{sp}, \code{sf} from \code{sf}, or
-\code{SpatVector} from \code{terra}) that has information we want to impose on \code{from}.
-It can be supplied as \code{to}, \code{projectTo}, \code{cropTo} or \code{maskTo}.
+\tabular{lll}{
+  \code{from}\tab \code{to}\tab \code{from} will have:\cr
+  \code{Gridded}\tab \code{Gridded} \tab the extent, projection, origin, resolution and
+                        masking where there are \code{NA} from the {to}\cr
+  \code{Gridded}\tab \code{Vector} \tab the projection, origin, and mask from \code{to}, and extent will
+                       be a round number of pixels that fit within the extent
+                       of \code{to}. Resolution will be the same as \code{from} \cr
+  \code{Vector}\tab \code{Vector} \tab the projection, origin, extent and mask from \code{to}\cr
 }
 
-\section{any of \code{*To} arguments}{
 
-if one or more of the \code{*To} arguments are supplied, these will
-override individual components of \code{to}. If \code{to} is omitted, then only
-the \code{*To} arguments that are used will be performed.
+If one or more of the \code{*To} arguments are supplied, these will
+override individual components of \code{to}. If \code{to} is omitted or \code{NULL},
+then only the \code{*To} arguments that are used will be performed. In all cases,
+setting a \code{*To} argument to \code{NA} will prevent that step from happening.
 }
 
-\section{\code{from} and \code{to} are both Vector}{
+\section{Backwards compatibility with \code{postProcess}}{
 
-Use case four is when \code{from} is a Vector dataset and \code{to} or any of the \code{*To}
-arguments are also Vector datasets. Similar to case 2 above, it will convert the \code{from}
-by doing one or more of crop, project, mask, and write to disk. In the case of the
-mask step, it will first aggregate (dissolve) all polygons so it is one single
-polygon prior to doing the mask (which is actually \code{terra::intersect})
+
+\subsection{\code{rasterToMatch} and \code{studyArea}:}{
+
+  If these are supplied, \code{postProcessTerra} will use them instead
+  of \code{to}. If only \code{rasterToMatch} is supplied, it will be assigned to
+  \code{to}. If only \code{studyArea} is supplied, it will be used for \code{cropTo}
+  and \code{maskTo}; it will only be used for \code{projectTo} if \code{useSAcrs = TRUE}.
+  If both \code{rasterToMatch} and \code{studyArea} are supplied,
+  these same rules will be applied, but in order, with \code{rasterToMatch}
+  first, then \code{studyArea} (i.e., replacing \code{rasterToMatch} in 2 or optionally 3
+  of the arguments).
+}
+
+\subsection{\code{targetCRS}, \code{filename2}, \code{useSAcrs}:}{
+
+  \code{targetCRS} if supplied will be assigned to \code{projectTo}. \code{filename2} will
+  be assigned to \code{writeTo}. If \code{useSAcrs} is set, then the \code{studyArea}
+  will be assigned to \code{projectTo}. All of these will override any existing values
+  for these arguments.
+}
+}
+
+\section{Cropping}{
+
+If `cropTo` is not `NA`, postProcessTerra does cropping twice, both the first and last steps.
+It does it first for speed, as cropping is a very fast algorithm. This will quickly remove
+a bunch of pixels that are not necessary. But, to not create bias, this first crop is padded
+by  \code{2 * res(from)[1]}), so that edge cells still have a complete set of neighbours.
+The second crop is at the end, after projecting and masking. After the projection step,
+the crop is no longer tight. Under some conditions, masking will effectively mask and crop in
+on step, but under some conditions, this is not true, and the mask leaves padded NAs out to
+the extent of the \code{from} (as it is after crop, project, mask). Thus the second
+crop removes all NA cells so they are tight to the mask.
 }
 

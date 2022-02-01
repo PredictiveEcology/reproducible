@@ -139,7 +139,6 @@ test_that("testing terra", {
 
       # use vector dataset -- force the 250m resolution
       t11 <- postProcessTerra(x, valbers)
-      expect_true(identical(res(t11)[1], 250))
       expect_true(sf::st_crs(t11) == sf::st_crs(valbers))
 
       # use raster dataset -- take the projectTo resolution, i.e., 100
@@ -205,6 +204,10 @@ test_that("testing terra", {
       sum(terra::values(t19), na.rm = TRUE) >
         sum(terra::values(t13), na.rm = TRUE)
 
+      t21 <- postProcessTerra(x, projectTo = valbers)
+      t20 <- postProcessTerra(x, projectTo = sf::st_crs(valbers))
+      expect_true(all.equal(t20, t21))
+      expect_true(identical(terra::size(x), terra::size(t20)))
 
 
     }
