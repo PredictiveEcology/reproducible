@@ -116,8 +116,9 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
     maskTo <- dots$studyArea
     cropTo <- dots$studyArea
   }
+
   if (!is.null(dots$rasterToMatch)) {
-    messagePrepInputs("rasterToMatch is supplied (deprecated); assigning it to `to`")
+    messagePrepInputs("rasterToMatch is supplied (deprecated); assigning it to `projectTo` and `cropTo`")
     to <- dots$rasterToMatch
     projectTo <- dots$rasterToMatch # be explicit here in case studyArea is supplied
     cropTo <- dots$rasterToMatch # be explicit here in case studyArea is supplied

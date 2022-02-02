@@ -123,7 +123,7 @@ setMethod(
       return(out)
     }
 
-    if (any(inherits(object, "SpatVector"), inherits(object, "SpatRaster"))) {
+    if (inherits(object, "SpatRaster")) {
       if (!requireNamespace("terra")) stop("Please install terra package")
       if (nchar(terra::sources(object)) > 0) {
         out <- lapply(terra::sources(object), function(x)
@@ -139,6 +139,12 @@ setMethod(
         out <- .doDigest(terra::wrap(object), algo)
       }
 
+      return(out)
+    }
+
+    if (any(inherits(object, "SpatVector"), inherits(object, "SpatRaster"))) {
+      if (!requireNamespace("terra")) stop("Please install terra package")
+      out <- .doDigest(terra::wrap(object), algo)
       return(out)
     }
 
