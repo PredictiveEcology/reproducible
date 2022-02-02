@@ -162,6 +162,8 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   isRasterLayer <- is(from, "RasterLayer")
   isStack <- is(from, "RasterStack")
   isBrick <- is(from, "RasterBrick")
+  isSF <- is(from, "sf")
+  isSpatial <- is(from, "Spatial")
   isSpatRaster <- is(from, "SpatRaster")
   isVectorNonTerra <- isVector(from) && !isSpat(from)
 
@@ -206,9 +208,16 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   from <- writeTo(from, writeTo, overwrite, isStack, isBrick, isRaster, isSpatRaster,
                   datatype = datatype)
 
+  # REVERT TO ORIGINAL INPUT CLASS
   if (isStack && !is(from, "RasterStack")) from <- raster::stack(from) # coming out of writeRaster, becomes brick
   if (isBrick && !is(from, "RasterBrick")) from <- raster::brick(from) # coming out of writeRaster, becomes brick
   if (isRasterLayer && !is(from, "RasterLayer")) from <- raster::raster(from) # coming out of writeRaster, becomes brick
+  if (isSF || isSpatial) {
+    from <- sf::st_as_sf(from)
+    if (isSpatial) {
+      from <- sf::as_Spatial(from)
+    }
+  }
   messagePrepInputs("  postProcessTerra done in ", format(difftime(Sys.time(), startTime),
                                                           units = "secs", digits = 3))
   from
