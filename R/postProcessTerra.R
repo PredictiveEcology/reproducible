@@ -42,9 +42,8 @@
 #'   \code{to}. If only \code{studyArea} is supplied, it will be used for \code{cropTo}
 #'   and \code{maskTo}; it will only be used for \code{projectTo} if \code{useSAcrs = TRUE}.
 #'   If both \code{rasterToMatch} and \code{studyArea} are supplied,
-#'   these same rules will be applied, but in order, with \code{rasterToMatch}
-#'   first, then \code{studyArea} (i.e., replacing \code{rasterToMatch} in 2 or optionally 3
-#'   of the arguments).
+#'   \code{studyArea} will only be applied to \code{maskTo} (and optionally \code{projectTo} if
+#'   \code{useSAcrs = TRUE}); everything else will be from \code{rasterToMatch}.
 #' }
 #'
 #' \subsection{\code{targetCRS}, \code{filename2}, \code{useSAcrs}:}{
@@ -112,14 +111,16 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
 
   startTime <- Sys.time()
   dots <- list(...)
-  if (!is.null(dots$rasterToMatch)) {
-    messagePrepInputs("rasterToMatch is supplied (deprecated); assigning it to `to`")
-    to <- dots$rasterToMatch
-  }
   if (!is.null(dots$studyArea)) {
     messagePrepInputs("studyArea is supplied (deprecated); assigning it to `cropTo` & `maskTo`")
     maskTo <- dots$studyArea
     cropTo <- dots$studyArea
+  }
+  if (!is.null(dots$rasterToMatch)) {
+    messagePrepInputs("rasterToMatch is supplied (deprecated); assigning it to `to`")
+    to <- dots$rasterToMatch
+    projectTo <- dots$rasterToMatch # be explicit here in case studyArea is supplied
+    cropTo <- dots$rasterToMatch # be explicit here in case studyArea is supplied
   }
 
   # These are unambiguous
