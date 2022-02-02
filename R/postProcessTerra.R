@@ -120,16 +120,21 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
     messagePrepInputs("studyArea is supplied (deprecated); assigning it to `cropTo` & `maskTo`")
     maskTo <- dots$studyArea
     cropTo <- dots$studyArea
-    if (dots$useSAcrs) {
-      messagePrepInputs("useSAcrs is supplied (deprecated); assigning studyArea to `projectTo`")
-      projectTo <- dots$studyArea
-    }
   }
 
   # These are unambiguous
-  if (!is.null(dots$filename2)) writeTo <- dots$filename2
-  if (!is.null(dots$targetCRS)) projectTo <- dots$targetCRS
-  if (!is.null(dots$useSAcrs)) projectTo <- dots$studyArea
+  if (!is.null(dots$filename2)) {
+    messagePrepInputs("filename2 is supplied (deprecated); assigning it to `writeTo`")
+    writeTo <- dots$filename2
+  }
+  if (!is.null(dots$targetCRS)) {
+    messagePrepInputs("targetCRS is supplied (deprecated); assigning it to `projectTo`")
+    projectTo <- dots$targetCRS
+  }
+  if (isTRUE(dots$useSAcrs)) {
+    messagePrepInputs("useSAcrs is supplied (deprecated); assigning studyArea to `projectTo`")
+    projectTo <- dots$studyArea
+  }
 
   if (is.null(method)) method <- "bilinear"
 
@@ -470,7 +475,7 @@ is.naSpatial <- function(x) {
 cropSF <- function(from, cropToVect) {
   if (is(from, "sf") && (is(cropToVect, "sf") || is(cropToVect, "Spatial"))) {
     messagePrepInputs("    pre-cropping because `from` is sf and cropTo is sf/Spatial*")
-    from2 <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
+    from2 <- try(retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
                    messageFn = messagePrepInputs,
                    expr = quote(
                      {
@@ -479,8 +484,9 @@ cropSF <- function(from, cropToVect) {
                    ),
                    exprBetween = quote({
                      from <- fixErrors(from, useCache = FALSE)
-                   }))
-    from <- from2
+                   })))
+    if (!is(from2, "try-error"))
+      from <- from2
   }
   from
 }
