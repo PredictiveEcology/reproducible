@@ -121,7 +121,7 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
     maskTo <- dots$studyArea
     cropTo <- dots$studyArea
     if (dots$useSAcrs) {
-      messagePrepInputs("useSAcrs is supplied (deprecated); assigning it to `projectTo`")
+      messagePrepInputs("useSAcrs is supplied (deprecated); assigning studyArea to `projectTo`")
       projectTo <- dots$studyArea
     }
   }
@@ -158,10 +158,25 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   isSpatRaster <- is(from, "SpatRaster")
   isVectorNonTerra <- isVector(from) && !isSpat(from)
 
+  # converting sf to terra then cropping is slower than cropping then converting to terra
+  #    so if both are vector datasets, and sf format, crop first
+  from <- cropSF(from, cropTo)
+
   if (isRaster) {
     from <- terra::rast(from)
   } else if (isVectorNonTerra) {
+    osFrom <- object.size(from)
+    lg <- osFrom > 5e8
+    if (lg) {
+      st <- Sys.time()
+      messagePrepInputs("  `from` is large, converting to terra object will take some time ...")
+    }
     from <- terra::vect(from)
+    if (lg) {
+      messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
+                                             units = "secs", digits = 3))
+
+    }
   }
 
   #############################################################
@@ -450,4 +465,22 @@ is.naSpatial <- function(x) {
       if (is.na(x)) isna <- TRUE
     }
   isna
+}
+
+cropSF <- function(from, cropToVect) {
+  if (is(from, "sf") && (is(cropToVect, "sf") || is(cropToVect, "Spatial"))) {
+    messagePrepInputs("    pre-cropping because `from` is sf and cropTo is sf/Spatial*")
+    from2 <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
+                   messageFn = messagePrepInputs,
+                   expr = quote(
+                     {
+                       sf::st_crop(from, sf::st_transform(sf::st_as_sfc(sf::st_bbox(cropToVect)), sf::st_crs(from)))
+                     }
+                   ),
+                   exprBetween = quote({
+                     from <- fixErrors(from, useCache = FALSE)
+                   }))
+    from <- from2
+  }
+  from
 }

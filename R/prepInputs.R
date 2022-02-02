@@ -391,7 +391,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       argsHere <- union(argsPostProcessTerra, argsOldPostProcess)
       argsHere <- setdiff(argsHere, "...")
       for (ar in argsHere) {
-        print(ar)
+        # print(ar)
         if (!exists(ar, envir = envHere, inherits = FALSE)) {
           assign(ar, out$dots[[ar]], envHere)
         }

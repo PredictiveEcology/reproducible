@@ -209,6 +209,9 @@ test_that("testing terra", {
       expect_true(all.equal(t20, t21))
       expect_true(identical(terra::size(x), terra::size(t20)))
 
+      valbersSF <- sf::st_as_sf(valbers)
+      xVectSF <- sf::st_as_sf(xVect)
+      t22 <- postProcessTerra(xVectSF, valbersSF)
 
     }
 #  }
