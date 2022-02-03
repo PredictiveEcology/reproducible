@@ -369,13 +369,15 @@ cropTo <- function(from, cropTo, needBuffer = FALSE) {
       if (is.na(cropTo)) omit <- TRUE
 
     if (!omit) {
+      messagePrepInputs("    cropping...")
+      st <- Sys.time()
+
       ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
       if (!sf::st_crs(from) == sf::st_crs(ext)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
         ext <- sf::st_transform(ext, sf::st_crs(from))
       }
       if (isVector(from))
         ext <- terra::vect(ext)
-      messagePrepInputs("    cropping...")
 
       # This is only needed if crop happens before a projection... need to cells beyond edges so projection is accurate
       if (needBuffer)
@@ -399,7 +401,7 @@ cropTo <- function(from, cropTo, needBuffer = FALSE) {
                          from <- fixErrorsTerra(from)
                        }))
       from <- fromInt
-      messagePrepInputs("       done!")
+      messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
     }
   }
   from
