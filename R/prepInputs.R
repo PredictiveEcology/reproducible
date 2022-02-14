@@ -396,12 +396,19 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           assign(ar, out$dots[[ar]], envHere)
         }
       }
+      if (is.null(filename2)) {
+        writeTo <- determineFilename(destinationPath = destinationPath, filename2 = writeTo, verbose = verbose)
+      } else {
+        filename2 <- determineFilename(destinationPath = destinationPath, filename2 = filename2, verbose = verbose)
+      }
+
       # pass everything, including NULL where it was NULL. This means don't have to deal with
       #    rlang quo issues
       x <- postProcessTerra(from = x, to = to, rasterToMatch = rasterToMatch, studyArea = studyArea,
                             cropTo = cropTo, projectTo = projectTo, maskTo = maskTo, writeTo = writeTo,
                             method = method, targetCRS = targetCRS, useSAcrs = useSAcrs,
-                            filename2 = filename2, overwrite = overwrite)
+                            filename2 = filename2,
+                            overwrite = overwrite)
 
     }
   } else {
