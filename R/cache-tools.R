@@ -188,30 +188,27 @@ setMethod(
     }
 
     if (NROW(objsDT)) {
-      rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
-                                grepl(pattern = "Raster", get(.cacheTableTagColName()))]
-      hasARaster <- all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(rastersInRepo) > 0 # nolint
+      filesToRemove <- objsDT[grepl(pattern = "cacheRaster", tagKey)][[.cacheTableTagColName()]]
+      # filebackedInRepo <- objsDT[grepl(pattern = "fromDisk", tagKey) &
+      #                           grepl(pattern = "TRUE", get(.cacheTableTagColName()))]
+      #
+      # rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
+      #                           grepl(pattern = "Raster", get(.cacheTableTagColName()))]
+      # listsInRepo <-  objsDT[grepl(pattern = "class", tagKey) &
+      #                          grepl(pattern = "list", get(.cacheTableTagColName()))]
+      # hasARaster <- all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(rastersInRepo) > 0 # nolint
+      # hasAList <- all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(listsInRepo) > 0 # nolint
 
-      if (hasARaster) {
-        rasterObjSizes <- as.numeric(objsDT[get(.cacheTableHashColName()) %in%
-                                              rastersInRepo[[.cacheTableHashColName()]] &
-                                              tagKey == "object.size"]$tagValue)
-        fileBackedRastersInRepo <- rastersInRepo[[.cacheTableHashColName()]]# [rasterObjSizes < 1e5]
-        filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
-          if (useDBI()) {
-            r <- loadFromCache(x, ras)
-          }
-          tryCatch(Filenames(r), error = function(e) NULL)
-        })
-
-        if (length(filesToRemove)) {
+      if (NROW(filesToRemove)) {
+        # fileBackedRastersInRepo <- filebackedInRepo[[.cacheTableHashColName()]]# [rasterObjSizes < 1e5]
+        #if (NROW(fileBackedRastersInRepo)) {
           filesToRemove <- unlist(filesToRemove)
           if (isInteractive()) {
             dirLs <- dir(unique(dirname(filesToRemove)), full.names = TRUE)
             dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )
             cacheSize <- sum(cacheSize, file.size(dirLs))
           }
-        }
+        #}
       }
 
       if (isInteractive()) {
@@ -229,7 +226,7 @@ setMethod(
       }
 
       # remove file-backed files
-      if (all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(rastersInRepo) > 0) {
+      if (NROW(filesToRemove) > 0) {
         unlink(filesToRemove)
       }
 

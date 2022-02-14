@@ -1004,6 +1004,7 @@ setMethod(
                     paste0("elapsedTimeDigest:", format(elapsedTimeCacheDigest, units = "secs")),
                     paste0("elapsedTimeFirstRun:", format(elapsedTimeFUN, units = "secs")),
                     paste0(otherFns),
+                    grep("cacheId", attr(outputToSave, "tags"), invert = TRUE, value = TRUE),
                     paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":")
       )
 

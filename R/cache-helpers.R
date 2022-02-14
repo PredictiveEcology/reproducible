@@ -1224,7 +1224,10 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
       } else {
         obj <- list(origRaster = Filenames(objOrig), cacheRaster = obj)
       }
-
+      setattr(obj, "tags",
+              c(attributes(obj$cacheRaster)$tags,
+              paste0("origRaster:", obj$origRaster),
+              paste0("cacheRaster:", Filenames(obj))))
     }
 
   }
