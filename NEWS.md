@@ -13,6 +13,7 @@ Version 1.2.9
  
 ## Bug fixes
 * `data.table` objects appear to not be recovered correctly from disk (e.g., from Cache repository. We have added `data.table::copy` when recovering from Cache repository
+* `clearCache` and `cc` did not correctly remove file-backed raster files (when not clearing whole CacheRepo); this may have resulted in a proliferation of files, each a filename with an underscore and a new higher number. This fix should eliminate this problem.
 
 Version 1.2.8
 =============
