@@ -344,7 +344,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 }
 
 .ignoreTagKeys <- function() {
-  c("preDigest", "otherFunctions", "accessed", "elapsedTimeLoad")
+  c("preDigest", "otherFunctions", "accessed", "elapsedTimeLoad", "fromDisk", "origRaster", "cacheRaster")
 }
 
 .cacheTableHashColName <- function() {
