@@ -1292,11 +1292,13 @@ moveAttributes <- function(source, receiving, attrs = NULL) {
 hardLinkOrCopy <- function(from, to, overwrite = FALSE, verbose = TRUE) {
   outFL <- rep(FALSE, length(from))
 
+  overwriteMess <- ""
   if (length(from)) {
     if (isTRUE(overwrite)) {
       fe <- file.exists(to)
       if (any(fe)) {
         unlinkOut <- unlink(to[fe])
+        overwriteMess <- paste0(to[fe], " exists; overwrite = TRUE; removing first; ")
       }
     }
     # Basically -- all warnings are irrelevant; if fails, it will return FALSE, then it will try the file.copy
@@ -1304,7 +1306,7 @@ hardLinkOrCopy <- function(from, to, overwrite = FALSE, verbose = TRUE) {
     if (any(outFL)) {
       toCollapsed <- paste(to[outFL], collapse = ", ")
       fromCollapsed <- paste(from[outFL], collapse = ", ")
-      messagePrepInputs(hardlinkMessagePrefix, ": ", toCollapsed, ", ",whPointsToMess," "
+      messagePrepInputs(overwriteMess, hardlinkMessagePrefix, ": ", toCollapsed, ", ",whPointsToMess," "
                         , fromCollapsed, "; no copy/copies made.", verbose = verbose)
     }
     if (any(!outFL)) {
