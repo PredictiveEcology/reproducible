@@ -1095,8 +1095,8 @@ test_that("test .defaultUserTags", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  b <- Cache(rnorm, 1)
-  sc <- showCache()
+  b <- Cache(rnorm, 1, cacheRepo = tmpCache)
+  sc <- showCache(tmpCache)
   actualTags <- sc$tagKey %in% .defaultUserTags
   anyNewTags <- any(!actualTags)
   if (isTRUE(anyNewTags)) stop("A new default userTag was added; please update .defaultUserTags")
@@ -1334,8 +1334,8 @@ test_that("List of Rasters", {
     }
     )
   }
-  a <- Cache(writeRasterList, listOfRas)
-  b <- Cache(writeRasterList, listOfRas)
+  a <- Cache(writeRasterList, listOfRas, cacheRepo = tmpCache)
+  b <- Cache(writeRasterList, listOfRas, cacheRepo = tmpCache)
   expect_false(isTRUE(attr(b, ".Cache")$newCache))
   expect_true(isTRUE(attr(a, ".Cache")$newCache))
 })

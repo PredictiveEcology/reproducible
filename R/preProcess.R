@@ -1307,7 +1307,7 @@ hardLinkOrCopy <- function(from, to, overwrite = FALSE, verbose = TRUE) {
       toCollapsed <- paste(to[outFL], collapse = ", ")
       fromCollapsed <- paste(from[outFL], collapse = ", ")
       messagePrepInputs(overwriteMess, hardlinkMessagePrefix, ": ", toCollapsed, ", ",whPointsToMess," "
-                        , fromCollapsed, "; no copy/copies made.", verbose = verbose)
+                        , fromCollapsed, "; no copy/copies made.", verbose = verbose, collapse = "\n")
     }
     if (any(!outFL)) {
       outFL <- copyFile(to = to[!outFL], from = from[!outFL], overwrite = overwrite, silent = TRUE)
