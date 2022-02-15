@@ -76,6 +76,8 @@ checkGDALVersion <- function(version) {
 #' @importFrom gdalUtilities gdalwarp
 #'
 #' @examples
+#'
+#' # This function is mostly superfluous as terra::mask is fast
 #' library(sp)
 #' library(raster)
 #'
@@ -94,19 +96,23 @@ checkGDALVersion <- function(version) {
 #' poly[[1]] <- raster(raster::extent(shp), vals = 0, res = c(1, 1))
 #' poly[[2]] <- raster(raster::extent(shp), vals = 1, res = c(1, 1))
 #' origStack <- stack(poly)
-#' # original mask function in raster
-#' newStack1 <- mask(x= origStack, mask = shp)
-#' newStack2 <- fastMask(x = origStack, y = shp)
+#'
+#' # during transition from raster to terra, the following requires terra to run
+#' if (requireNamespace("terra", silent = TRUE)) {
+#'   newStack1 <- mask(x= terra::rast(origStack), mask = terra::vect(sf::st_as_sf(shp)))
+#'   newStack2 <- fastMask(x = origStack, y = sf::st_as_sf(shp))
 #'
 #' # test all equal
-#' all.equal(newStack1, newStack2)
+#'   all.equal(newStack1, newStack2)
 #'
-#' newStack1 <- stack(newStack1)
-#' newStack2 <- stack(newStack2)
+#'   newStack1 <- stack(newStack1)
+#'   newStack2 <- stack(newStack2)
 #'
-#' if (interactive()) {
+#'  if (interactive()) {
 #'   plot(newStack2[[1]])
 #'   plot(shp, add = TRUE)
+#'  }
+#'
 #' }
 #'
 fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE),
@@ -219,7 +225,15 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     isRasterBrick <- is(x, "RasterBrick")
     if (requireNamespace("terra")) {
       messagePrepInputs("      Using terra::mask for masking")
-      x <- terra::mask(terra::rast(x), terra::vect(y))
+      if (!is(x, "SpatRaster"))
+        x <- terra::rast(x)
+      if (!is(y, "SpatVector")) {
+        if (!is(y, "sf"))
+          y <- sf::st_as_sf(y)
+        y <- terra::vect(y)
+      }
+
+      x <- terra::mask(x, y)
       x <- if (isRasterStack) {
         raster::stack(x)
       } else if (isRasterBrick) {
