@@ -8,9 +8,6 @@
 #' a \code{SpatRaster} class object from \code{terra}.
 #' Vector means a \code{Spatial*} class object from \code{sp}, a \code{sf} class object
 #' from \code{sf}, or a \code{SpatVector} class object from \code{terra}.
-
-#'
-#' @details
 #'
 #' @section Use Cases:
 #'
