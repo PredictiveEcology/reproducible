@@ -309,6 +309,7 @@ test_that("cropInputs crops too closely when input projections are different", {
 
 test_that("maskInputs errors when x is Lat-Long", {
   skip_on_cran()
+  skip_on_ci()
   skip_if_not(requireNamespace("sf", quietly = TRUE))
 
   testInitOut <- testInit("raster", opts = list(
