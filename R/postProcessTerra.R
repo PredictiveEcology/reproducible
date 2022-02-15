@@ -396,6 +396,7 @@ cropTo <- function(from, cropTo, needBuffer = FALSE) {
                          messagePrepInputs("    Crop results in an error; attempting to fix",
                                            appendLF = FALSE)
                          from <- fixErrorsTerra(from)
+                         return(list(from = from))
                        }))
       from <- fromInt
       messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
