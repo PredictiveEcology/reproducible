@@ -435,7 +435,7 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
 }
 
 postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
-  if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
+  if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
     stop("Need terra and sf: Require::Require(c('terra', 'sf'), require = FALSE)")
   if (!requireNamespace("sf")) stop("Need sf: Require::Require(c('sf'), require = FALSE)")
 
