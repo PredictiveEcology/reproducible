@@ -219,9 +219,11 @@ basename2 <- function(x) {
 #'   where \code{i} is the retry number (i.e., follows \code{seq_len(retries)})
 #' @param silent   Logical indicating whether to \code{try} silently.
 #' @param exprBetween Another expression that should be run after a failed attempt
-#'   of the `expr`. It must include an assignment operator, specifying what
-#'   object (that is used in `expr`) will be updated prior to running
-#'   the `expr` again.
+#'   of the `expr`. This should return a named list, where the names indicate the object names
+#'   to update in the main expr, and the return value is the new value. (previous versions allowed
+#'   a non-list return, but where the final line had to be an assignment operator,
+#'   specifying what object (that is used in `expr`) will be updated prior to running
+#'   the `expr` again. For backwards compabitility, this still works).
 #' @param messageFn A function for messaging to console. Defaults to \code{message}
 #'
 #' @export
@@ -244,12 +246,25 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
         } else {
           exprBetween
         }
-        if (!identical(as.character(exprBetweenTail)[[1]], "<-"))
-          stop("exprBetween must have an assignment operator <- with a object on",
-               "the LHS that is used on the RHS of expr ")
+        # if (!identical(as.character(exprBetweenTail)[[1]], "<-"))
+        #   stop("exprBetween must have an assignment operator <- with a object on",
+        #        "the LHS that is used on the RHS of expr ")
         objName <- as.character(exprBetweenTail[[2]])
-        result1 <- try(expr = eval(exprBetween, envir = envir), silent = silent)
-        assign(objName, result1, envir = envir)
+        result1 <-
+          try(expr = eval(exprBetween, envir = envir), silent = silent)
+        if (is.list(result1)) {
+          if (!is.null(names(result1))) {
+            objName <- names(result1)
+          } else {
+            stop("The return object from exprBetween must be a named list, with names being objects to overwrite")
+          }
+        } else {
+          result1b <- list(result1)
+          names(result1b) <- objName
+        }
+
+        lapply(objName, function(objNam) assign(objNam, result1[[objNam]], envir = envir))
+
       }
       backoff <- sample(1:1000/1000, size = 1) * (exponentialDecayBase^i - 1)
       if (backoff > 3) {
