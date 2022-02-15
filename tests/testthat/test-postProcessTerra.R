@@ -119,7 +119,7 @@ test_that("testing terra", {
       expect_identical(terra::wrap(vv), terra::wrap(t11))
 
       # Test fixErrorTerra
-      v1 <- terra::simplify(v)
+      v1 <- terra::simplifyGeom(v)
       gv1 <- terra::geom(v1)
       gv1[gv1[, "geom"] == 2, "geom"] <- 1
       # gv1[9,"y"] <- 51
