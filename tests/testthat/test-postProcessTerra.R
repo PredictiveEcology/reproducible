@@ -1,12 +1,13 @@
 test_that("testing terra", {
   #if (interactive()) {
     testInitOut <- testInit(needGoogle = FALSE,
-                            opts = list(reproducible.useMemoise = TRUE))
+                            opts = list(reproducible.useMemoise = TRUE,
+                                        reproducible.useTerra = TRUE))
 
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
-    if (requireNamespace("terra")) {
+    if (requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
       f <- system.file("ex/elev.tif", package="terra")
       tf <- tempfile(fileext = ".tif")
       tf1 <- tempfile(fileext = ".tif")

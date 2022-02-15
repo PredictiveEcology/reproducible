@@ -223,7 +223,8 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     }
     isRasterStack <- is(x, "RasterStack")
     isRasterBrick <- is(x, "RasterBrick")
-    if (requireNamespace("terra")) {
+    if (requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
+
       messagePrepInputs("      Using terra::mask for masking")
       if (!is(x, "SpatRaster"))
         x <- terra::rast(x)

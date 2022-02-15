@@ -124,7 +124,8 @@ setMethod(
     }
 
     if (inherits(object, "SpatRaster")) {
-      if (!requireNamespace("terra")) stop("Please install terra package")
+      if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+        stop("Please install terra package")
       if (nchar(terra::sources(object)) > 0) {
         out <- lapply(terra::sources(object), function(x)
           digest(file = x, length = length, algo = algo))
@@ -143,7 +144,8 @@ setMethod(
     }
 
     if (any(inherits(object, "SpatVector"), inherits(object, "SpatRaster"))) {
-      if (!requireNamespace("terra")) stop("Please install terra package")
+      if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
+        stop("Please install terra package")
       out <- .doDigest(terra::wrap(object), algo)
       return(out)
     }

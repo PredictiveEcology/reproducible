@@ -1865,11 +1865,13 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
 
   }
   if (any(inherits(output, "PackedSpatVector"))) {
-    if (!requireNamespace("terra")) stop("Please install terra package")
+    if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+      stop("Please install terra package")
     output <- terra::vect(output)
   }
   if (any(inherits(output, "PackedSpatRaster"))) {
-    if (!requireNamespace("terra")) stop("Please install terra package")
+    if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+      stop("Please install terra package")
     output <- terra::rast(output)
   }
   if (any(inherits(output, "data.table"))) {

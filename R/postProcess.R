@@ -962,7 +962,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
         falseWarns <- paste0(projNotWKT2warn, "|input and ouput crs|no non-missing arguments")
 
         #browser()
-        if (requireNamespace("terra")) {
+        if (requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
           m1 <- methodFormals(terra::project, "SpatRaster")
           m2 <- methodFormals(terra::writeRaster, signature = c("SpatRaster", "character"))
           if (!is.null(dots$method)) {
@@ -972,7 +972,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
         }
 
         if (is.null(rasterToMatch)) {
-          if (requireNamespace("terra")) {
+          if (requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
             messagePrepInputs("Using terra::project for reprojection")
             Args <- append(dots, list(x = terra::rast(x), y = targetCRS))
             keepers <- na.omit(match(union(names(m1), names(m2)), names(Args)))
@@ -998,7 +998,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
             stop("rasterToMatch needs to have a projection (crs)")
           tempRas <- suppressWarningsSpecific(
             projectExtent(object = rasterToMatch, crs = targetCRS), projNotWKT2warn)
-          if (requireNamespace("terra")) {
+          if (requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
             messagePrepInputs("      Using terra::project for reprojection")
             Args <- append(dots, list(x = terra::rast(x), y = terra::rast(tempRas)))
 
