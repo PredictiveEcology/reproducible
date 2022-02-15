@@ -1,447 +1,447 @@
-# test_that("prepInputs doesn't work (part 1)", {
-#   skip_on_cran()
-#   skip_on_ci()
-#
-#   testInitOut <- testInit("raster", opts = list(
-#     "rasterTmpDir" = tempdir2(rndstr(1,6)),
-#     "reproducible.inputPaths" = NULL,
-#     "reproducible.overwrite" = TRUE)
-#   )
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
-#
-#   options("reproducible.cachePath" = tmpdir)
-#
-#   # Add a study area to Crop and Mask to
-#   # Create a "study area"
-#   coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-#                       .Dim = c(5L, 2L))
-#   Sr1 <- Polygon(coords)
-#   Srs1 <- Polygons(list(Sr1), "s1")
-#   StudyArea <- SpatialPolygons(list(Srs1), 1L)
-#   crs(StudyArea) <- crsToUse
-#
-#   dPath <- file.path(tmpdir, "ecozones")
-#
-#   #######################################
-#   ### url  ######
-#   #######################################
-#   url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
-#
-#   noisyOutput <- capture.output({
-#     mess <- capture_messages({
-#       shpEcozone <- prepInputs(destinationPath = dPath, url = url)
-#     })
-#   })
-#   expect_true(any(grepl(mess, pattern = "ecozone_shp.zip")))
-#   expect_true(any(grepl(mess, pattern = "Appending")))
-#   expect_true(any(grepl(mess, pattern = "Finished")))
-#   expect_true(is(shpEcozone, shapefileClassDefault()))
-#
-#   # Robust to partial file deletions:
-#   unlink(dir(dPath, full.names = TRUE)[1:3])
-#   expect_error(raster::shapefile(file.path(dPath, "ecozone_shp.zip")))
-#   rm(shpEcozone)
-#   noisyOutput <- capture.output({
-#     shpEcozone1 <- prepInputs(destinationPath = dPath, url = url)
-#   })
-#   expect_true(is(shpEcozone1, shapefileClassDefault()))
-#   unlink(dPath, recursive = TRUE)
-#
-#   #######################################
-#   ### url, targetFile, alsoExtract ######
-#   #######################################
-#   # Once this is done, can be more precise in operational code:
-#   #  specify targetFile, alsoExtract, and fun, wrap with Cache
-#   ecozoneFilename <- file.path(dPath, "ecozones.shp")
-#   ecozoneFiles <- c(
-#     "ecozones.dbf",
-#     "ecozones.prj",
-#     "ecozones.sbn",
-#     "ecozones.sbx",
-#     "ecozones.shp",
-#     "ecozones.shx"
-#   )
-#   noisyOutput <- capture.output({
-#     shpEcozone2 <- prepInputs(
-#       targetFile = ecozoneFilename,
-#       url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-#       alsoExtract = ecozoneFiles,
-#       fun = "shapefile",
-#       destinationPath = dPath
-#     )
-#   })
-#
-#   expect_true(is(shpEcozone2, "SpatialPolygons"))
-#   testObj <- if (!is(shpEcozone1, "Spatial")) as(shpEcozone1, "Spatial") else shpEcozone1
-#
-#   # As of Jan 2022 -- these objects are very different; character encoding of accents, numbers interpretted as character
-#   # expect_equivalent(testObj, shpEcozone2) # different attribute newCache
-#
-#   #######################################
-#   ### url, targetFile, alsoExtract -- with Cache ######
-#   #######################################
-#   # specify targetFile, alsoExtract, and fun, wrap with Cache
-#   ecozoneFilename <- file.path(dPath, "ecozones.shp")
-#   # Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the
-#   #   targetFile is there, it will not redownload the archive.
-#   ecozoneFiles <- c(
-#     "ecozones.dbf",
-#     "ecozones.prj",
-#     "ecozones.sbn",
-#     "ecozones.sbx",
-#     "ecozones.shp",
-#     "ecozones.shx"
-#   )
-#   oldPolyOption <- getOption("reproducible.polygonShortcut")
-#   options("reproducible.polygonShortcut" = TRUE)
-#   warn <- suppressWarningsSpecific(
-#     falseWarnings = "attribute variables are assumed to be spatially constant", {
-#     shpEcozoneSm <- Cache(
-#       prepInputs,
-#       url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-#       targetFile = reproducible::asPath(ecozoneFilename),
-#       alsoExtract = reproducible::asPath(ecozoneFiles),
-#       studyArea = StudyArea,
-#       fun = "shapefile",
-#       destinationPath = dPath,
-#       filename2 = "EcozoneFile.shp"
-#     )
-#   })
-#   options("reproducible.polygonShortcut" = oldPolyOption)
-#   expect_true(is(shpEcozoneSm, "SpatialPolygons"))
-#   expect_true(isTRUE(all.equal(extent(shpEcozoneSm), extent(StudyArea)))) ## TODO: fix #222
-#
-#   unlink(dirname(ecozoneFilename), recursive = TRUE)
-#   # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
-#   noisyOutput <- capture.output({
-#     warn <- suppressWarningsSpecific(
-#     falseWarnings = "attribute variables are assumed to be spatially constant", {
-#     mess <- capture_messages({
-#       shpEcozoneSm <- Cache(
-#         prepInputs,
-#         url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-#         targetFile = reproducible::asPath(ecozoneFilename),
-#         alsoExtract = reproducible::asPath(ecozoneFiles),
-#         studyArea = StudyArea,
-#         fun = "shapefile",
-#         destinationPath = dPath,
-#         filename2 = "EcozoneFile.shp",
-#         useCache = FALSE
-#       )
-#     })
-#     })
-#   })
-#   expect_false(all(grepl("loading", mess)))
-#
-#   # Test useCache -- doesn't error and loads from cache
-#   mess <- capture_messages({
-#     shpEcozoneSm <- Cache(
-#       prepInputs,
-#       url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-#       targetFile = reproducible::asPath(ecozoneFilename),
-#       alsoExtract = reproducible::asPath(ecozoneFiles),
-#       studyArea = StudyArea,
-#       fun = "shapefile",
-#       destinationPath = dPath,
-#       filename2 = "EcozoneFile.shp",
-#       useCache = TRUE
-#     )
-#   })
-#   expect_true(any(grepl("loaded", mess)))
-#
-#   # # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
-#   # #   but the StudyArea does get reprojected, need to use rasterToMatch
-#   # lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
-#   # url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
-#   #                  "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
-#   #
-#   # #######################################
-#   # ### url                          ######
-#   # #######################################
-#   # # messages received below may help for filling in more arguments in the subsequent call
-#   # noisyOutput <- capture.output({
-#   #   LCC2005 <- prepInputs(
-#   #     url = url,
-#   #     destinationPath = asPath(dPath),
-#   #     studyArea = StudyArea,
-#   #     useCache = FALSE
-#   #   ) ## TODO: searching for GDAL is slow on Windows
-#   # })
-#   # # The above studyArea is "buffered" before spTransform because it is "unprojected". This means
-#   # #  we make it a bit bigger so it doesn't crop the edges of the raster
-#   # expect_is(LCC2005, "Raster")
-#   #
-#   # StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
-#   # expect_true(all(abs(extent(LCC2005)[1:4] -
-#   #                       round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
-#   #
-#   # lcc <- LCC2005[] # speeds up the next line -- used to be maxValue and minValue -- but now these are
-#   #                  #  incorrect due to changes in prepInputs that preserves original colortable
-#   # expect_equal(length(which(LCC2005@legend@colortable != "#000000")),
-#   #              max(lcc, na.rm = TRUE) - min(lcc, na.rm = TRUE) + 1)
-#   #
-#   # #######################################
-#   # ### url, targetFile, archive     ######
-#   # #######################################
-#   # # if wrapped with Cache, will be very fast second time (via memoised copy)
-#   # LCC2005_2 <- Cache(
-#   #   prepInputs,
-#   #   url = url,
-#   #   targetFile = lcc2005Filename,
-#   #   archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
-#   #   destinationPath = asPath(dPath),
-#   #   studyArea = StudyArea
-#   # )
-#   #
-#   # # Test the no allow overwrite if two functions (here postProcess and prepInputs)
-#   # #  return same file-backed raster
-#   # reproducible::clearCache(userTags = "prepInputs", ask = FALSE)
-#   # # previously, this would cause an error because prepInputs file is gone b/c of previous
-#   # #  line, but postProcess is still in a Cache recovery situation, to same file, which is
-#   # #  not there. Now should be no error.
-#   # mess <- capture_messages({
-#   #   LCC2005_2 <- Cache(
-#   #     prepInputs,
-#   #     url = url,
-#   #     targetFile = lcc2005Filename,
-#   #     archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
-#   #     destinationPath = asPath(dPath),
-#   #     studyArea = StudyArea
-#   #   )
-#   # })
-#   # expect_true(isTRUE(any(grepl(pattern = "Loading", mess))))
-#   #
-#   # expect_is(LCC2005_2, "Raster")
-#   # names(LCC2005) <- names(LCC2005_2) <- "LCC2005" ## workaround names mismatch
-#   # expect_equivalent(LCC2005, LCC2005_2)
-#
-#   ######################################
-#   ##  archive                     ######
-#   ######################################
-#   ## don't pass url -- use local copy of archive only
-#   ## use purge = TRUE to rm checksums file, rewrite it here
-#   noisyOutput <- capture.output({
-#     shpEcozone <- prepInputs(destinationPath = dPath,
-#                              archive = file.path(dPath, "ecozone_shp.zip"), purge = TRUE)
-#   })
-#   expect_true(is(shpEcozone, shapefileClassDefault()))
-#
-#   #######################################
-#   ### archive, alsoExtract char    ######
-#   #######################################
-#   shpEcozone <- prepInputs(destinationPath = dPath,
-#                            archive = file.path(dPath, "ecozone_shp.zip"),
-#                            alsoExtract = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn",
-#                                            "ecozones.sbx", "ecozones.shp", "ecozones.shx"))
-#   expect_true(is(shpEcozone, shapefileClassDefault()))
-#
-#   rm(shpEcozone)
-#   expect_false(exists("shpEcozone", inherits = FALSE))
-#
-#   #######################################
-#   ### url, alsoExtract, archive    ######
-#   #######################################
-#   # try again with url - should *not* download, even though checksums came from the
-#   #   prepInputs that had locally generated -- confirming that checksums with a manually copied file will work
-#   #   instead of forcing prepInputs to get the file.
-#   shpEcozone <- prepInputs(destinationPath = dPath,
-#                            url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-#                            archive = file.path(dPath, "ecozone_shp.zip"),
-#                            alsoExtract = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn",
-#                                            "ecozones.sbx", "ecozones.shp", "ecozones.shx"))
-#   expect_true(is(shpEcozone, shapefileClassDefault()))
-#
-#   # lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
-#   # url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
-#   #                  "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
-#   #
-#   # #######################################
-#   # ### archive                     ######
-#   # #######################################
-#   # # only archive -- i.e., skip download, but do extract and postProcess
-#   # rm(LCC2005)
-#   # mess <- capture_messages({
-#   #   LCC2005 <- prepInputs(archive = "LandCoverOfCanada2005_V1_4.zip",
-#   #                         destinationPath = asPath(dPath),
-#   #                         studyArea = StudyArea,
-#   #                         purge = TRUE)
-#   # })
-#   # expect_true(any(grepl("From:LandCoverOfCanada2005_V1_4.zip", mess)))
-#   # expect_true(is(LCC2005, "Raster"))
-#   #
-#   # #######################################
-#   # ### archive                      ######
-#   # #######################################
-#   # rm(LCC2005)
-#   # mess <- capture_messages({
-#   #   LCC2005 <- prepInputs(
-#   #     archive = "LandCoverOfCanada2005_V1_4.zip",
-#   #     destinationPath = asPath(dPath),
-#   #     studyArea = StudyArea
-#   #   )
-#   # })
-#   # expect_true(any(grepl("No targetFile supplied. Extracting all files from archive", mess)))
-#   # expect_true(is(LCC2005, "Raster"))
-#   #
-#   # #######################################
-#   # ### targetFile                   ######
-#   # #######################################
-#   # # only targetFile -- i.e., skip download, extract ... but do postProcess
-#   # rm(LCC2005)
-#   # mess <- capture_messages({
-#   #   LCC2005 <- prepInputs(
-#   #     targetFile = lcc2005Filename,
-#   #     destinationPath = asPath(dPath),
-#   #     studyArea = StudyArea,
-#   #     purge = TRUE
-#   #   )
-#   # })
-#   # expect_false(any(grepl("extract", mess))) # nothing that talks about extracting ...
-#   # #which means no extractFromArchive or even skipping extract
-#   #
-#   # expect_true(is(LCC2005, "Raster"))
-#   # StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
-#   # # crop and mask worked -- remember the buffering that happens when it is longlat
-#   # expect_true(all(abs(extent(LCC2005)[1:4] -
-#   #                       round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
-# })
+test_that("prepInputs doesn't work (part 1)", {
+  skip_on_cran()
+  skip_on_ci()
 
-# test_that("interactive prepInputs", {
-#   testInitOut <- testInit("raster",
-#                           opts = list(
-#                             "rasterTmpDir" = tempdir2(rndstr(1,6)),
-#                             "reproducible.overwrite" = TRUE,
-#                             "reproducible.inputPaths" = NULL
-#                           ),
-#                           needGoogle = FALSE)
-#
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
-#   skip_if_not(isInteractive())
-#   #######################################
-#   ### url                          ######
-#   #######################################
-#   #tmpdir <- "data/FMA"
-#   #checkPath(tmpdir, create = TRUE)
-#
-#   warns <- capture_warnings({
-#     test <- prepInputs(
-#       url = "https://drive.google.com/file/d/1BNsUiMqENJa0I8gzhO68K307ySPHbdGk/view?usp=sharing",
-#       destinationPath = tmpdir
-#     )
-#   })
-#   files <- dir(tmpdir, pattern = "FMA_Boundary")
-#   expect_true(length(files) == 9)
-#   expect_true(inherits(test, shapefileClassDefault()))
-#
-#   #######################################
-#   ### url, targetFile              ######
-#   #######################################
-#   # need authentication for this
-#   #tmpdir <- "data/FMA"
-#   #checkPath(tmpdir, create = TRUE)
-#   warns <- capture_warnings({
-#     test <- prepInputs(
-#       targetFile = "FMA_Boundary_Updated.shp",
-#       url = "https://drive.google.com/file/d/1BNsUiMqENJa0I8gzhO68K307ySPHbdGk",
-#       destinationPath = tmpdir
-#     )
-#   })
-#   # There is a meaningless warning for this unit test -- ignore it :
-#   # In rgdal::readOGR(dirname(x), fn, stringsAsFactors = stringsAsFactors,  :
-#   #                  Z-dimension discarded
-#   expect_true(inherits(test, shapefileClassDefault()))
-#
-#   # From Bird/Tati project
-#   testOnExit(testInitOut)
-#   testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
-#                                                 "reproducible.inputPaths" = NULL),
-#                           needGoogle = TRUE)
-#   birdSpecies <- c("BBWA", "YRWA")
-#   urls <- c("https://drive.google.com/open?id=1CmzYNpxwWr82PoRSbHWG8yg2cC3hncfb",
-#             "https://drive.google.com/open?id=11Hxk0CcwJsoAnUgfrwbJhXBJNM5Xbd9e")
-#
-#   #######################################
-#   ### url, targetFile, archive     ######
-#   #######################################
-#   outsideModule <- Map(x = birdSpecies, url = urls,
-#                        MoreArgs = list(tmpdir = tmpdir),
-#                        function(x, url, tmpdir) {
-#                          ras <- prepInputs(
-#                            targetFile = paste0(x, "_currmean.asc"),
-#                            archive = paste0(x, "_current.zip"),
-#                            fun = "raster::raster",
-#                            url = url,
-#                            destinationPath = tmpdir,
-#                            overwrite = TRUE
-#                          )
-#                        })
-#   expect_true(inherits(outsideModule[[1]], "Raster"))
-#   expect_true(inherits(outsideModule[[2]], "Raster"))
-#   expect_true(inherits(crs(outsideModule[[2]]), "CRS"))
-#   expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
-#   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
-#
-#   # remove the .prj files -- test "similar"
-#   #######################################
-#   ### url, targetFile, archive, alsoExtract similar ######
-#   #######################################
-#   file.remove(grep(pattern = "asc|zip|CHECK",
-#                    invert = TRUE, value = TRUE,
-#                    dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))]))
-#
-#   outsideModule <- Map(x = birdSpecies, url = urls,
-#                        MoreArgs = list(tmpdir = tmpdir),
-#                        function(x, url, tmpdir, purge) {
-#                          ras <- prepInputs(
-#                            targetFile = paste0(x, "_currmean.asc"),
-#                            archive = paste0(x, "_current.zip"),
-#                            url = url,
-#                            fun = "raster::raster",
-#                            alsoExtract = "similar",
-#                            destinationPath = tmpdir,
-#                            overwrite = TRUE
-#                          )
-#                        })
-#   expect_true(inherits(outsideModule[[1]], "Raster"))
-#   expect_true(inherits(outsideModule[[2]], "Raster"))
-#   expect_true(inherits(crs(outsideModule[[2]]), "CRS"))
-#   expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
-#   expect_true(!is.na(crs(outsideModule[[1]])))
-#   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
-#
-#   # remove the .prj files -- test "similar"
-#   file.remove(grep(pattern = "asc|zip|CHECK",
-#                    invert = TRUE, value = TRUE,
-#                    dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))]))
-#
-#   #######################################
-#   ### url, targetFile, archive, alsoExtract NA ######
-#   #######################################
-#   # because alsoExtract is NA ... no other files are unzipped, so no .prj and so no CRS
-#   outsideModule <- Map(x = birdSpecies, url = urls,
-#                        MoreArgs = list(tmpdir = tmpdir),
-#                        function(x, url, tmpdir, purge) {
-#                          ras <- prepInputs(
-#                            targetFile = paste0(x, "_currmean.asc"),
-#                            archive = paste0(x, "_current.zip"),
-#                            url = url,
-#                            fun = "raster::raster",
-#                            alsoExtract = NA,
-#                            destinationPath = tmpdir,
-#                            overwrite = TRUE
-#                          )
-#                        })
-#   expect_true(inherits(outsideModule[[1]], "Raster"))
-#   expect_true(inherits(outsideModule[[2]], "Raster"))
-#   expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
-#   expect_true(is.na(crs(outsideModule[[1]])))
-#   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
-#
-# })
+  testInitOut <- testInit("raster", opts = list(
+    "rasterTmpDir" = tempdir2(rndstr(1,6)),
+    "reproducible.inputPaths" = NULL,
+    "reproducible.overwrite" = TRUE)
+  )
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  options("reproducible.cachePath" = tmpdir)
+
+  # Add a study area to Crop and Mask to
+  # Create a "study area"
+  coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+                      .Dim = c(5L, 2L))
+  Sr1 <- Polygon(coords)
+  Srs1 <- Polygons(list(Sr1), "s1")
+  StudyArea <- SpatialPolygons(list(Srs1), 1L)
+  crs(StudyArea) <- crsToUse
+
+  dPath <- file.path(tmpdir, "ecozones")
+
+  #######################################
+  ### url  ######
+  #######################################
+  url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
+
+  noisyOutput <- capture.output({
+    mess <- capture_messages({
+      shpEcozone <- prepInputs(destinationPath = dPath, url = url)
+    })
+  })
+  expect_true(any(grepl(mess, pattern = "ecozone_shp.zip")))
+  expect_true(any(grepl(mess, pattern = "Appending")))
+  expect_true(any(grepl(mess, pattern = "Finished")))
+  expect_true(is(shpEcozone, shapefileClassDefault()))
+
+  # Robust to partial file deletions:
+  unlink(dir(dPath, full.names = TRUE)[1:3])
+  expect_error(raster::shapefile(file.path(dPath, "ecozone_shp.zip")))
+  rm(shpEcozone)
+  noisyOutput <- capture.output({
+    shpEcozone1 <- prepInputs(destinationPath = dPath, url = url)
+  })
+  expect_true(is(shpEcozone1, shapefileClassDefault()))
+  unlink(dPath, recursive = TRUE)
+
+  #######################################
+  ### url, targetFile, alsoExtract ######
+  #######################################
+  # Once this is done, can be more precise in operational code:
+  #  specify targetFile, alsoExtract, and fun, wrap with Cache
+  ecozoneFilename <- file.path(dPath, "ecozones.shp")
+  ecozoneFiles <- c(
+    "ecozones.dbf",
+    "ecozones.prj",
+    "ecozones.sbn",
+    "ecozones.sbx",
+    "ecozones.shp",
+    "ecozones.shx"
+  )
+  noisyOutput <- capture.output({
+    shpEcozone2 <- prepInputs(
+      targetFile = ecozoneFilename,
+      url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+      alsoExtract = ecozoneFiles,
+      fun = "shapefile",
+      destinationPath = dPath
+    )
+  })
+
+  expect_true(is(shpEcozone2, "SpatialPolygons"))
+  testObj <- if (!is(shpEcozone1, "Spatial")) as(shpEcozone1, "Spatial") else shpEcozone1
+
+  # As of Jan 2022 -- these objects are very different; character encoding of accents, numbers interpretted as character
+  # expect_equivalent(testObj, shpEcozone2) # different attribute newCache
+
+  #######################################
+  ### url, targetFile, alsoExtract -- with Cache ######
+  #######################################
+  # specify targetFile, alsoExtract, and fun, wrap with Cache
+  ecozoneFilename <- file.path(dPath, "ecozones.shp")
+  # Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the
+  #   targetFile is there, it will not redownload the archive.
+  ecozoneFiles <- c(
+    "ecozones.dbf",
+    "ecozones.prj",
+    "ecozones.sbn",
+    "ecozones.sbx",
+    "ecozones.shp",
+    "ecozones.shx"
+  )
+  oldPolyOption <- getOption("reproducible.polygonShortcut")
+  options("reproducible.polygonShortcut" = TRUE)
+  warn <- suppressWarningsSpecific(
+    falseWarnings = "attribute variables are assumed to be spatially constant", {
+    shpEcozoneSm <- Cache(
+      prepInputs,
+      url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+      targetFile = reproducible::asPath(ecozoneFilename),
+      alsoExtract = reproducible::asPath(ecozoneFiles),
+      studyArea = StudyArea,
+      fun = "shapefile",
+      destinationPath = dPath,
+      filename2 = "EcozoneFile.shp"
+    )
+  })
+  options("reproducible.polygonShortcut" = oldPolyOption)
+  expect_true(is(shpEcozoneSm, "SpatialPolygons"))
+  expect_true(isTRUE(all.equal(extent(shpEcozoneSm), extent(StudyArea)))) ## TODO: fix #222
+
+  unlink(dirname(ecozoneFilename), recursive = TRUE)
+  # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
+  noisyOutput <- capture.output({
+    warn <- suppressWarningsSpecific(
+    falseWarnings = "attribute variables are assumed to be spatially constant", {
+    mess <- capture_messages({
+      shpEcozoneSm <- Cache(
+        prepInputs,
+        url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+        targetFile = reproducible::asPath(ecozoneFilename),
+        alsoExtract = reproducible::asPath(ecozoneFiles),
+        studyArea = StudyArea,
+        fun = "shapefile",
+        destinationPath = dPath,
+        filename2 = "EcozoneFile.shp",
+        useCache = FALSE
+      )
+    })
+    })
+  })
+  expect_false(all(grepl("loading", mess)))
+
+  # Test useCache -- doesn't error and loads from cache
+  mess <- capture_messages({
+    shpEcozoneSm <- Cache(
+      prepInputs,
+      url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+      targetFile = reproducible::asPath(ecozoneFilename),
+      alsoExtract = reproducible::asPath(ecozoneFiles),
+      studyArea = StudyArea,
+      fun = "shapefile",
+      destinationPath = dPath,
+      filename2 = "EcozoneFile.shp",
+      useCache = TRUE
+    )
+  })
+  expect_true(any(grepl("loaded", mess)))
+
+  # # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
+  # #   but the StudyArea does get reprojected, need to use rasterToMatch
+  # lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
+  # url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
+  #                  "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
+  #
+  # #######################################
+  # ### url                          ######
+  # #######################################
+  # # messages received below may help for filling in more arguments in the subsequent call
+  # noisyOutput <- capture.output({
+  #   LCC2005 <- prepInputs(
+  #     url = url,
+  #     destinationPath = asPath(dPath),
+  #     studyArea = StudyArea,
+  #     useCache = FALSE
+  #   ) ## TODO: searching for GDAL is slow on Windows
+  # })
+  # # The above studyArea is "buffered" before spTransform because it is "unprojected". This means
+  # #  we make it a bit bigger so it doesn't crop the edges of the raster
+  # expect_is(LCC2005, "Raster")
+  #
+  # StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
+  # expect_true(all(abs(extent(LCC2005)[1:4] -
+  #                       round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
+  #
+  # lcc <- LCC2005[] # speeds up the next line -- used to be maxValue and minValue -- but now these are
+  #                  #  incorrect due to changes in prepInputs that preserves original colortable
+  # expect_equal(length(which(LCC2005@legend@colortable != "#000000")),
+  #              max(lcc, na.rm = TRUE) - min(lcc, na.rm = TRUE) + 1)
+  #
+  # #######################################
+  # ### url, targetFile, archive     ######
+  # #######################################
+  # # if wrapped with Cache, will be very fast second time (via memoised copy)
+  # LCC2005_2 <- Cache(
+  #   prepInputs,
+  #   url = url,
+  #   targetFile = lcc2005Filename,
+  #   archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
+  #   destinationPath = asPath(dPath),
+  #   studyArea = StudyArea
+  # )
+  #
+  # # Test the no allow overwrite if two functions (here postProcess and prepInputs)
+  # #  return same file-backed raster
+  # reproducible::clearCache(userTags = "prepInputs", ask = FALSE)
+  # # previously, this would cause an error because prepInputs file is gone b/c of previous
+  # #  line, but postProcess is still in a Cache recovery situation, to same file, which is
+  # #  not there. Now should be no error.
+  # mess <- capture_messages({
+  #   LCC2005_2 <- Cache(
+  #     prepInputs,
+  #     url = url,
+  #     targetFile = lcc2005Filename,
+  #     archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
+  #     destinationPath = asPath(dPath),
+  #     studyArea = StudyArea
+  #   )
+  # })
+  # expect_true(isTRUE(any(grepl(pattern = "Loading", mess))))
+  #
+  # expect_is(LCC2005_2, "Raster")
+  # names(LCC2005) <- names(LCC2005_2) <- "LCC2005" ## workaround names mismatch
+  # expect_equivalent(LCC2005, LCC2005_2)
+
+  ######################################
+  ##  archive                     ######
+  ######################################
+  ## don't pass url -- use local copy of archive only
+  ## use purge = TRUE to rm checksums file, rewrite it here
+  noisyOutput <- capture.output({
+    shpEcozone <- prepInputs(destinationPath = dPath,
+                             archive = file.path(dPath, "ecozone_shp.zip"), purge = TRUE)
+  })
+  expect_true(is(shpEcozone, shapefileClassDefault()))
+
+  #######################################
+  ### archive, alsoExtract char    ######
+  #######################################
+  shpEcozone <- prepInputs(destinationPath = dPath,
+                           archive = file.path(dPath, "ecozone_shp.zip"),
+                           alsoExtract = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn",
+                                           "ecozones.sbx", "ecozones.shp", "ecozones.shx"))
+  expect_true(is(shpEcozone, shapefileClassDefault()))
+
+  rm(shpEcozone)
+  expect_false(exists("shpEcozone", inherits = FALSE))
+
+  #######################################
+  ### url, alsoExtract, archive    ######
+  #######################################
+  # try again with url - should *not* download, even though checksums came from the
+  #   prepInputs that had locally generated -- confirming that checksums with a manually copied file will work
+  #   instead of forcing prepInputs to get the file.
+  shpEcozone <- prepInputs(destinationPath = dPath,
+                           url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+                           archive = file.path(dPath, "ecozone_shp.zip"),
+                           alsoExtract = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn",
+                                           "ecozones.sbx", "ecozones.shp", "ecozones.shx"))
+  expect_true(is(shpEcozone, shapefileClassDefault()))
+
+  # lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
+  # url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
+  #                  "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
+  #
+  # #######################################
+  # ### archive                     ######
+  # #######################################
+  # # only archive -- i.e., skip download, but do extract and postProcess
+  # rm(LCC2005)
+  # mess <- capture_messages({
+  #   LCC2005 <- prepInputs(archive = "LandCoverOfCanada2005_V1_4.zip",
+  #                         destinationPath = asPath(dPath),
+  #                         studyArea = StudyArea,
+  #                         purge = TRUE)
+  # })
+  # expect_true(any(grepl("From:LandCoverOfCanada2005_V1_4.zip", mess)))
+  # expect_true(is(LCC2005, "Raster"))
+  #
+  # #######################################
+  # ### archive                      ######
+  # #######################################
+  # rm(LCC2005)
+  # mess <- capture_messages({
+  #   LCC2005 <- prepInputs(
+  #     archive = "LandCoverOfCanada2005_V1_4.zip",
+  #     destinationPath = asPath(dPath),
+  #     studyArea = StudyArea
+  #   )
+  # })
+  # expect_true(any(grepl("No targetFile supplied. Extracting all files from archive", mess)))
+  # expect_true(is(LCC2005, "Raster"))
+  #
+  # #######################################
+  # ### targetFile                   ######
+  # #######################################
+  # # only targetFile -- i.e., skip download, extract ... but do postProcess
+  # rm(LCC2005)
+  # mess <- capture_messages({
+  #   LCC2005 <- prepInputs(
+  #     targetFile = lcc2005Filename,
+  #     destinationPath = asPath(dPath),
+  #     studyArea = StudyArea,
+  #     purge = TRUE
+  #   )
+  # })
+  # expect_false(any(grepl("extract", mess))) # nothing that talks about extracting ...
+  # #which means no extractFromArchive or even skipping extract
+  #
+  # expect_true(is(LCC2005, "Raster"))
+  # StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
+  # # crop and mask worked -- remember the buffering that happens when it is longlat
+  # expect_true(all(abs(extent(LCC2005)[1:4] -
+  #                       round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
+})
+
+test_that("interactive prepInputs", {
+  testInitOut <- testInit("raster",
+                          opts = list(
+                            "rasterTmpDir" = tempdir2(rndstr(1,6)),
+                            "reproducible.overwrite" = TRUE,
+                            "reproducible.inputPaths" = NULL
+                          ),
+                          needGoogle = FALSE)
+
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  skip_if_not(isInteractive())
+  #######################################
+  ### url                          ######
+  #######################################
+  #tmpdir <- "data/FMA"
+  #checkPath(tmpdir, create = TRUE)
+
+  warns <- capture_warnings({
+    test <- prepInputs(
+      url = "https://drive.google.com/file/d/1BNsUiMqENJa0I8gzhO68K307ySPHbdGk/view?usp=sharing",
+      destinationPath = tmpdir
+    )
+  })
+  files <- dir(tmpdir, pattern = "FMA_Boundary")
+  expect_true(length(files) == 9)
+  expect_true(inherits(test, shapefileClassDefault()))
+
+  #######################################
+  ### url, targetFile              ######
+  #######################################
+  # need authentication for this
+  #tmpdir <- "data/FMA"
+  #checkPath(tmpdir, create = TRUE)
+  warns <- capture_warnings({
+    test <- prepInputs(
+      targetFile = "FMA_Boundary_Updated.shp",
+      url = "https://drive.google.com/file/d/1BNsUiMqENJa0I8gzhO68K307ySPHbdGk",
+      destinationPath = tmpdir
+    )
+  })
+  # There is a meaningless warning for this unit test -- ignore it :
+  # In rgdal::readOGR(dirname(x), fn, stringsAsFactors = stringsAsFactors,  :
+  #                  Z-dimension discarded
+  expect_true(inherits(test, shapefileClassDefault()))
+
+  # From Bird/Tati project
+  testOnExit(testInitOut)
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
+  birdSpecies <- c("BBWA", "YRWA")
+  urls <- c("https://drive.google.com/open?id=1CmzYNpxwWr82PoRSbHWG8yg2cC3hncfb",
+            "https://drive.google.com/open?id=11Hxk0CcwJsoAnUgfrwbJhXBJNM5Xbd9e")
+
+  #######################################
+  ### url, targetFile, archive     ######
+  #######################################
+  outsideModule <- Map(x = birdSpecies, url = urls,
+                       MoreArgs = list(tmpdir = tmpdir),
+                       function(x, url, tmpdir) {
+                         ras <- prepInputs(
+                           targetFile = paste0(x, "_currmean.asc"),
+                           archive = paste0(x, "_current.zip"),
+                           fun = "raster::raster",
+                           url = url,
+                           destinationPath = tmpdir,
+                           overwrite = TRUE
+                         )
+                       })
+  expect_true(inherits(outsideModule[[1]], "Raster"))
+  expect_true(inherits(outsideModule[[2]], "Raster"))
+  expect_true(inherits(crs(outsideModule[[2]]), "CRS"))
+  expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
+  expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
+
+  # remove the .prj files -- test "similar"
+  #######################################
+  ### url, targetFile, archive, alsoExtract similar ######
+  #######################################
+  file.remove(grep(pattern = "asc|zip|CHECK",
+                   invert = TRUE, value = TRUE,
+                   dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))]))
+
+  outsideModule <- Map(x = birdSpecies, url = urls,
+                       MoreArgs = list(tmpdir = tmpdir),
+                       function(x, url, tmpdir, purge) {
+                         ras <- prepInputs(
+                           targetFile = paste0(x, "_currmean.asc"),
+                           archive = paste0(x, "_current.zip"),
+                           url = url,
+                           fun = "raster::raster",
+                           alsoExtract = "similar",
+                           destinationPath = tmpdir,
+                           overwrite = TRUE
+                         )
+                       })
+  expect_true(inherits(outsideModule[[1]], "Raster"))
+  expect_true(inherits(outsideModule[[2]], "Raster"))
+  expect_true(inherits(crs(outsideModule[[2]]), "CRS"))
+  expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
+  expect_true(!is.na(crs(outsideModule[[1]])))
+  expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
+
+  # remove the .prj files -- test "similar"
+  file.remove(grep(pattern = "asc|zip|CHECK",
+                   invert = TRUE, value = TRUE,
+                   dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))]))
+
+  #######################################
+  ### url, targetFile, archive, alsoExtract NA ######
+  #######################################
+  # because alsoExtract is NA ... no other files are unzipped, so no .prj and so no CRS
+  outsideModule <- Map(x = birdSpecies, url = urls,
+                       MoreArgs = list(tmpdir = tmpdir),
+                       function(x, url, tmpdir, purge) {
+                         ras <- prepInputs(
+                           targetFile = paste0(x, "_currmean.asc"),
+                           archive = paste0(x, "_current.zip"),
+                           url = url,
+                           fun = "raster::raster",
+                           alsoExtract = NA,
+                           destinationPath = tmpdir,
+                           overwrite = TRUE
+                         )
+                       })
+  expect_true(inherits(outsideModule[[1]], "Raster"))
+  expect_true(inherits(outsideModule[[2]], "Raster"))
+  expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
+  expect_true(is.na(crs(outsideModule[[1]])))
+  expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
+
+})
 
 test_that("preProcess doesn't work", {
   testInitOut <- testInit("raster", opts = list(
