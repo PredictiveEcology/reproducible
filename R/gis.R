@@ -233,7 +233,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
         y <- terra::vect(y)
       }
 
-      x <- terra::mask(x, y)
+      x <- terra::mask(x, y, touches = FALSE) # that was previous default in raster::mask
       x <- if (isRasterStack) {
         raster::stack(x)
       } else if (isRasterBrick) {

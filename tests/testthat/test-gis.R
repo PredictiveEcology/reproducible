@@ -25,7 +25,7 @@ test_that("fastMask produces correct results", {
   newStack2 <- fastMask(x = origStack, y = shp)
   expect_equal(newStack1, newStack2)
 
-  newStack1 <- mask(origStack[[2]], mask = shpDF)
+  newStack1 <- raster::mask(origStack[[2]], mask = shp)
   newStack2 <- fastMask(x = origStack[[2]], y = shpDF)
   expect_equivalent(newStack1, newStack2)
 
@@ -63,19 +63,18 @@ test_that("fastMask produces correct results", {
   })
   expect_true(any(grepl("useGDAL is TRUE, but problem is small enough for RA", mess)))
 
-  crs(shpDF) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
   crs(shp) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
   crs(origStack[[2]]) <- "+proj=lcc +lat_1=49 +lat_2=33 +lon_0=-100 +ellps=WGS84"
 
   # Test "force" even for a small problem
   warn <- capture_warnings({
     mess <- capture_messages({
-      out <- fastMask(x = origStack[[2]], y = shpDF, useGDAL = "force")
+      out <- fastMask(x = origStack[[2]], y = shp, useGDAL = "force")
     })
   })
   expect_false(any(grepl("useGDAL is TRUE, but problem is small enough for RA", mess)))
 
-  newStack2 <- fastMask(x = origStack[[2]], y = shpDF)
+  newStack2 <- fastMask(x = origStack[[2]], y = shp)
 
   # test non-spatial polygons data frame
   newStack2 <- fastMask(x = origStack[[2]], y = shp)
