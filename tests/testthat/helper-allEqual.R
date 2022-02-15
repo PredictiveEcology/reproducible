@@ -157,7 +157,6 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
 
   isOK <- hasMessageNum == prod
   if (!isOK) {
-    browser()
     expe <- as.numeric(strsplit(prod, split = "_")[[1]])
     getting <- as.numeric(strsplit(hasMessageNum, split = "_")[[1]])
 
