@@ -1328,9 +1328,10 @@ test_that("List of Rasters", {
   writeRasterList <- function(rasList) {
     lapply(rasList, function(ras) {
       filename <- paste0(Filenames(ras), rndstr(1, 6), ".tif")
+      ras[] <- ras[]
       ranRas <- suppressWarningsSpecific(
         falseWarnings = proj6Warn,
-        writeRaster(ras, filename = filename, overwrite = TRUE))
+        writeRaster(ras, filename = filename, overwrite = FALSE))
     }
     )
   }

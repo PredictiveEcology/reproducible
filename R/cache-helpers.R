@@ -1179,26 +1179,23 @@ nextNumericName <- function(string) {
 dealWithClass <- function(obj, cachePath, drv, conn) {
   # browser(expr = exists("._dealWithClass_1"))
   outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
+
   if (outputToSaveIsList) {
-    rasters <- unlist(lapply(obj, is, "Raster"))
-  } else {
-    rasters <- is(obj, "Raster")
+    obj <- lapply(obj, dealWithClass, cachePath = cachePath, drv = drv, conn = conn)
+    innerTags <- lapply(obj, function(o) attr(o, "tags"))
+    innerTags <- unique(unlist(innerTags))
+    setattr(obj, "tags", innerTags)
   }
+
+
+  rasters <- is(obj, "Raster")
   isFromDisk <- FALSE # Default --> this will be updated
   if (any(rasters)) {
     objOrig <- obj
     atts <- attributes(obj)
-    # browser(expr = exists("._dealWithClass_2"))
-    if (outputToSaveIsList) {
-      obj[rasters] <- lapply(obj[rasters], function(x)
-        .prepareFileBackedRaster(x, repoDir = cachePath, overwrite = FALSE, drv = drv, conn = conn))
-      isFromDisk <- any(unlist(lapply(obj, function(x)
-        if (is(x, "Raster")) fromDisk(x) else FALSE)))
-    } else {
-      obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,
-                                      overwrite = FALSE, drv = drv, conn = conn)
-      isFromDisk <- fromDisk(obj)
-    }
+    obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,
+                                    overwrite = FALSE, drv = drv, conn = conn)
+    isFromDisk <- fromDisk(obj)
 
     # have to reset all these attributes on the rasters as they were undone in prev steps
     atts$tags <- c(atts$tags, paste("fromDisk", sep = ":", isFromDisk))
@@ -1228,15 +1225,6 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
               c(attributes(obj$cacheRaster)$tags,
               paste0("origRaster:", obj$origRaster),
               paste0("cacheRaster:", Filenames(obj))))
-    }
-
-  }
-
-  if (outputToSaveIsList) {
-    if (isFromDisk) {
-      obj$cacheRaster <- lapply(obj$cacheRaster, function(o) dealWithClass(o, cachePath, drv, conn))
-    } else {
-      obj <- lapply(obj, function(o) dealWithClass(o, cachePath, drv, conn))
     }
 
   }
