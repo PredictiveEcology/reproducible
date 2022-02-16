@@ -1,5 +1,7 @@
 if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c("expectedFile", "objName", "V1"))
+  utils::globalVariables(c("expectedFile", "objName", "V1",
+                           "method", "rasterToMatch", "studyArea", "targetCRS",
+                           "to", "useSAcrs"))
 }
 
 #' Download and optionally post-process files
@@ -380,39 +382,74 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     messagePrepInputs("No loading of object into R; fun = ", out$fun, verbose = verbose)
     x <- out
   }
+  if (requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
+    if (!(all(is.null(out$dots$studyArea),
+              is.null(out$dots$rasterToMatch),
+              is.null(out$dots$targetCRS))) || !(all(is.null(out$dots$to)))) {
+      argsPostProcessTerra <- formalArgs(postProcessTerra)
+      argsOldPostProcess <- c("rasterToMatch", "studyArea", "targetCRS", "useSAcrs", "filename2",
+                              "overwrite")
+      envHere <- environment()
+      argsHere <- union(argsPostProcessTerra, argsOldPostProcess)
+      argsHere <- setdiff(argsHere, "...")
+      for (ar in argsHere) {
+        # print(ar)
+        if (!exists(ar, envir = envHere, inherits = FALSE)) {
+          assign(ar, out$dots[[ar]], envHere)
+        }
+      }
+      if (is.null(filename2)) {
+        writeTo <- determineFilename(destinationPath = destinationPath, filename2 = writeTo, verbose = verbose)
+      } else {
+        filename2 <- determineFilename(destinationPath = destinationPath, filename2 = filename2, verbose = verbose)
+      }
 
-  ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise
-  if (!(all(is.null(out$dots$studyArea),
-            is.null(out$dots$rasterToMatch),
-            is.null(out$dots$targetCRS)))) {
-    messagePrepInputs("Running postProcess", verbose = verbose, verboseLevel = 0)
+      # pass everything, including NULL where it was NULL. This means don't have to deal with
+      #    rlang quo issues
+      x <- postProcessTerra(from = x, to = to, rasterToMatch = rasterToMatch, studyArea = studyArea,
+                            cropTo = cropTo, projectTo = projectTo, maskTo = maskTo, writeTo = writeTo,
+                            method = method, targetCRS = targetCRS, useSAcrs = useSAcrs,
+                            filename2 = filename2,
+                            overwrite = overwrite)
 
-    # The do.call doesn't quote its arguments, so it doesn't work for "debugging"
-    #  This rlang stuff is a way to pass through objects without evaluating them
+    }
+  } else {
 
-    # argList <- append(list(x = x, filename1 = out$targetFilePath,
-    #                        overwrite = overwrite,
-    #                        destinationPath = out$destinationPath,
-    #                        useCache = useCache), # passed into postProcess
-    #                   out$dots)
-    # rdal <- .robustDigest(argList)
-    # browser(expr = exists("._prepInputs_2"))
+    ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise
+    if (!(all(is.null(out$dots$studyArea),
+              is.null(out$dots$rasterToMatch),
+              is.null(out$dots$targetCRS)))) {
+      messagePrepInputs("Running postProcess", verbose = verbose, verboseLevel = 0)
 
-    # make quosure out of all spatial objects and x
-    spatials <- sapply(out$dots, function(x) is(x, "Raster") || is(x, "Spatial") || is(x, "sf"))
-    out$dots[spatials] <- lapply(out$dots[spatials], function(x) rlang::quo(x))
-    xquo <- rlang::quo(x)
+      # The do.call doesn't quote its arguments, so it doesn't work for "debugging"
+      #  This rlang stuff is a way to pass through objects without evaluating them
 
-    x <- Cache(
-      do.call, postProcess, modifyList(list(x = xquo, filename1 = out$targetFilePath,
-                                        overwrite = overwrite,
-                                        destinationPath = out$destinationPath,
-                                        useCache = useCache,
-                                        verbose = verbose), # passed into postProcess
-                                   out$dots),
-      useCache = useCache, verbose = verbose # used here
-    )
+      # argList <- append(list(x = x, filename1 = out$targetFilePath,
+      #                        overwrite = overwrite,
+      #                        destinationPath = out$destinationPath,
+      #                        useCache = useCache), # passed into postProcess
+      #                   out$dots)
+      # rdal <- .robustDigest(argList)
+      # browser(expr = exists("._prepInputs_2"))
+
+      # make quosure out of all spatial objects and x
+      spatials <- sapply(out$dots, function(x) is(x, "Raster") || is(x, "Spatial") || is(x, "sf"))
+      out$dots[spatials] <- lapply(out$dots[spatials], function(x) rlang::quo(x))
+      xquo <- rlang::quo(x)
+
+      x <- Cache(
+        do.call, postProcess, modifyList(list(x = xquo, filename1 = out$targetFilePath,
+                                              overwrite = overwrite,
+                                              destinationPath = out$destinationPath,
+                                              useCache = useCache,
+                                              verbose = verbose), # passed into postProcess
+                                         out$dots),
+        useCache = useCache, verbose = verbose # used here
+      )
+    }
+
   }
+
 
   return(x)
 }
@@ -1045,7 +1082,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         }
       } else {
         if (grepl(x = extractSystemCallPath, pattern = "7z")) {
-          extractSystemCall <- paste0("\"", extractSystemCallPath, "\"", " l ", archive[1])
+          extractSystemCall <- paste0("\"", extractSystemCallPath, "\"", " l ", path.expand(archive[1]))
           if (isWindows()) {
             filesOutput <- captureWarningsToAttr(
                              system(extractSystemCall, show.output.on.console = FALSE, intern = TRUE)

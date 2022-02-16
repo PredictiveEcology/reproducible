@@ -754,8 +754,8 @@ setMethod(
                                      preDigest = preDigest, startCacheTime = startCacheTime,
                                      drv = drv, conn = conn,
                                      ...), silent = TRUE)
-          output <- dealWithClassOnRecovery(output, cacheRepo = cacheRepo, cacheId = isInRepo$cacheId,
-                                            drv = drv, conn = conn) # returns just the "original" filenames in metadata & copies file-backed
+          #output <- dealWithClassOnRecovery(output, cacheRepo = cacheRepo, cacheId = isInRepo$cacheId,
+          #                                  drv = drv, conn = conn) # returns just the "original" filenames in metadata & copies file-backed
           postLoadTime <- Sys.time()
           elapsedTimeLoad <- postLoadTime - preLoadTime
 
@@ -1004,6 +1004,7 @@ setMethod(
                     paste0("elapsedTimeDigest:", format(elapsedTimeCacheDigest, units = "secs")),
                     paste0("elapsedTimeFirstRun:", format(elapsedTimeFUN, units = "secs")),
                     paste0(otherFns),
+                    grep("cacheId", attr(outputToSave, "tags"), invert = TRUE, value = TRUE),
                     paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":")
       )
 
@@ -1826,45 +1827,51 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
                                     drv, conn))
   }
 
-  if (is(output, "list") && !is.null(output$origRaster) && !is.null(output$cacheRaster)) {
-    origFilenames <- if (is(output$origRaster, "Raster")) {
-      Filenames(output$origRaster) # This is legacy piece which allows backwards compatible
+  if (is(output, "list")) {
+    if (!"cacheRaster" %in% names(output)) { # recursive up until a list has cacheRaster name
+      output <- lapply(output, function(out) dealWithClassOnRecovery(out, cacheRepo, cacheId,
+                                                                   drv, conn))
     } else {
-      output$origRaster
-    }
-
-    filesExist <- file.exists(origFilenames)
-    cacheFilenames <- Filenames(output$cacheRaster)
-    filesExistInCache <- file.exists(cacheFilenames)
-    if (any(!filesExistInCache)) {
-      fileTails <- gsub("^.+(rasters.+)$", "\\1", cacheFilenames)
-      correctFilenames <- file.path(cacheRepo, fileTails)
-      filesExistInCache <- file.exists(correctFilenames)
-      if (all(filesExistInCache)) {
-        cacheFilenames <- correctFilenames
+      origFilenames <- if (is(output, "Raster")) {
+        Filenames(output) # This is legacy piece which allows backwards compatible
       } else {
-        stop("File-backed raster files in the cache are corrupt for cacheId: ", cacheId)
+        output$origRaster
       }
 
-    }
-    out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
-                          origFilenames[filesExistInCache], overwrite = TRUE)
+      filesExist <- file.exists(origFilenames)
+      cacheFilenames <- Filenames(output)
+      filesExistInCache <- file.exists(cacheFilenames)
+      if (any(!filesExistInCache)) {
+        fileTails <- gsub("^.+(rasters.+)$", "\\1", cacheFilenames)
+        correctFilenames <- file.path(cacheRepo, fileTails)
+        filesExistInCache <- file.exists(correctFilenames)
+        if (all(filesExistInCache)) {
+          cacheFilenames <- correctFilenames
+        } else {
+          stop("File-backed raster files in the cache are corrupt for cacheId: ", cacheId)
+        }
 
-    newOutput <- updateFilenameSlots(output$cacheRaster,
-                                     Filenames(output$cacheRaster, allowMultiple = FALSE),
-                                     newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
-    output <- newOutput
-    .setSubAttrInList(output, ".Cache", "newCache", FALSE)
-  } else if (is(output, "list")) {
-    output <- lapply(output, function(out) dealWithClassOnRecovery(out, cacheRepo, cacheId,
-                                                                    drv, conn))
+      }
+      out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
+                            origFilenames[filesExistInCache], overwrite = TRUE)
+
+      newOutput <- updateFilenameSlots(output$cacheRaster,
+                                       Filenames(output, allowMultiple = FALSE),
+                                       newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
+      output <- newOutput
+      .setSubAttrInList(output, ".Cache", "newCache", FALSE)
+
+    }
+
   }
   if (any(inherits(output, "PackedSpatVector"))) {
-    if (!requireNamespace("terra")) stop("Please install terra package")
+    if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+      stop("Please install terra package")
     output <- terra::vect(output)
   }
   if (any(inherits(output, "PackedSpatRaster"))) {
-    if (!requireNamespace("terra")) stop("Please install terra package")
+    if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+      stop("Please install terra package")
     output <- terra::rast(output)
   }
   if (any(inherits(output, "data.table"))) {

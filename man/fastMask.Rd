@@ -50,6 +50,8 @@ A \code{Raster*} object, masked (i.e., smaller extent and/or
 This alternative to \code{raster::mask} is included here.
 }
 \examples{
+
+# This function is mostly superfluous as terra::mask is fast
 library(sp)
 library(raster)
 
@@ -68,19 +70,23 @@ poly <- list()
 poly[[1]] <- raster(raster::extent(shp), vals = 0, res = c(1, 1))
 poly[[2]] <- raster(raster::extent(shp), vals = 1, res = c(1, 1))
 origStack <- stack(poly)
-# original mask function in raster
-newStack1 <- mask(x= origStack, mask = shp)
-newStack2 <- fastMask(x = origStack, y = shp)
+
+# during transition from raster to terra, the following requires terra to run
+if (requireNamespace("terra", silent = TRUE)) {
+  newStack1 <- mask(x= terra::rast(origStack), mask = terra::vect(sf::st_as_sf(shp)))
+  newStack2 <- fastMask(x = origStack, y = sf::st_as_sf(shp))
 
 # test all equal
-all.equal(newStack1, newStack2)
+  all.equal(newStack1, newStack2)
 
-newStack1 <- stack(newStack1)
-newStack2 <- stack(newStack2)
+  newStack1 <- stack(newStack1)
+  newStack2 <- stack(newStack2)
 
-if (interactive()) {
+ if (interactive()) {
   plot(newStack2[[1]])
   plot(shp, add = TRUE)
+ }
+
 }
 
 }

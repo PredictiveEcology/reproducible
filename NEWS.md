@@ -5,12 +5,16 @@ Version 1.2.9
 
 ## Dependency changes
 * Drop support for R 3.6 (#230)
+* Added minimum versions of `raster` and `terra`, because previous versions were causing collisions.
 
 ## Enhancements
-none
-
+* New version of `postProcess` called `postProcessTerra`. This will eventually replace `postProcess` as it is much faster in all cases and simpler code base thanks to the fantastic work of Robert Hijmans (`terra`) and all the upstream work that `terra` relies on
+* Minor message updates, especially for "adding to memoised copy...". The three dots made it seem like it was taking a long time. When in reality, it is instantaneous and is the last thing that happens in the `Cache` call. If there is a delay after this message, then it is the code following the `Cache` call that is (silently) slow.
+* `retry` can now return a named list for the `exprBetween`, which allows for more than one object to be modified between retries.
+ 
 ## Bug fixes
-* `data.table` objects appear to not be recovered correctly from disk. We have added `data.table::copy` when recovering from Cache repository
+* `data.table` objects appear to not be recovered correctly from disk (e.g., from Cache repository. We have added `data.table::copy` when recovering from Cache repository
+* `clearCache` and `cc` did not correctly remove file-backed raster files (when not clearing whole CacheRepo); this may have resulted in a proliferation of files, each a filename with an underscore and a new higher number. This fix should eliminate this problem.
 
 Version 1.2.8
 =============

@@ -219,14 +219,17 @@ basename2 <- function(x) {
 #'   where \code{i} is the retry number (i.e., follows \code{seq_len(retries)})
 #' @param silent   Logical indicating whether to \code{try} silently.
 #' @param exprBetween Another expression that should be run after a failed attempt
-#'   of the `expr`. It must include an assignment operator, specifying what
-#'   object (that is used in `expr`) will be updated prior to running
-#'   the `expr` again.
+#'   of the `expr`. This should return a named list, where the names indicate the object names
+#'   to update in the main expr, and the return value is the new value. (previous versions allowed
+#'   a non-list return, but where the final line had to be an assignment operator,
+#'   specifying what object (that is used in `expr`) will be updated prior to running
+#'   the `expr` again. For backwards compabitility, this still works).
+#' @param messageFn A function for messaging to console. Defaults to \code{message}
 #'
 #' @export
 retry <- function(expr, envir = parent.frame(), retries = 5,
                   exponentialDecayBase = 1.3, silent = TRUE,
-                  exprBetween = NULL) {
+                  exprBetween = NULL, messageFn = message) {
   if (exponentialDecayBase < 1)
     stop("exponentialDecayBase must be equal to or greater than 1")
   for (i in seq_len(retries)) {
@@ -234,19 +237,43 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
     result <- try(expr = eval(expr, envir = envir), silent = silent)
     if (inherits(result, "try-error")) {
       if (!is.null(exprBetween)) {
-        if (!identical(as.character(exprBetween[[1]]), "<-"))
-          stop("exprBetween must have an assignment operator <- with a object on",
-               "the LHS that is used on the RHS of expr ")
-        objName <- as.character(exprBetween[[2]])
-        result <- try(expr = eval(exprBetween, envir = envir), silent = silent)
-        assign(objName, result, envir = envir)
+        finalPart <- length(format(exprBetween))
+
+        # The expression is different if it is 1 line vs >1 line
+        exprBetweenTail <- if (finalPart > 1) {
+          finalPart <- length(exprBetween)
+          exprBetween[[finalPart]]
+        } else {
+          exprBetween
+        }
+        # if (!identical(as.character(exprBetweenTail)[[1]], "<-"))
+        #   stop("exprBetween must have an assignment operator <- with a object on",
+        #        "the LHS that is used on the RHS of expr ")
+        objName <- as.character(exprBetweenTail[[2]])
+        result1 <-
+          try(expr = eval(exprBetween, envir = envir), silent = silent)
+        if (is.list(result1)) {
+          if (!is.null(names(result1))) {
+            objName <- names(result1)
+          } else {
+            stop("The return object from exprBetween must be a named list, with names being objects to overwrite")
+          }
+        } else {
+          result1 <- list(result1)
+          names(result1) <- objName
+        }
+
+        lapply(objName, function(objNam) assign(objNam, result1[[objNam]], envir = envir))
+
       }
       backoff <- sample(1:1000/1000, size = 1) * (exponentialDecayBase^i - 1)
       if (backoff > 3) {
-        message("Waiting for ", round(backoff, 1), " seconds to retry; the attempt is failing")
+        messageFn("Waiting for ", round(backoff, 1), " seconds to retry; the attempt is failing")
       }
       Sys.sleep(backoff)
     } else {
+      if (exists("result1", inherits = FALSE))
+        messageFn("    ...fixed!")
       break
     }
   }
@@ -309,11 +336,12 @@ isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
 #'   column names even if there aren't any in the \code{df} (i.e., they will)
 #'   be \code{V1} etc., \code{NULL} will print them if they exist, and \code{FALSE}
 #'   which will omit them.
+#' @inheritParams base::message
 #'
 #' @export
 #' @importFrom data.table is.data.table as.data.table
 #' @importFrom utils capture.output
-messageDF <- function(df, round, colour = NULL, colnames = NULL) {
+messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE) {
   origColNames <- if (is.null(colnames) | isTRUE(colnames)) colnames(df) else NULL
 
   if (is.matrix(df))
@@ -334,9 +362,9 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL) {
   if (skipColNames) outMess <- outMess[-1]
   out <- lapply(outMess, function(x) {
     if (!is.null(colour)) {
-      messageColoured(x, colour = colour)
+      messageColoured(x, colour = colour, appendLF = appendLF)
     } else {
-      message(x)
+      message(x, appendLF = appendLF)
     }
   })
 }
@@ -401,22 +429,25 @@ isAbsolutePath <- function(pathnames) {
 isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
 
 
-messagePrepInputs <- function(...) {
-  messageColoured(..., colour = getOption("reproducible.messageColourPrepInputs"))
+messagePrepInputs <- function(..., appendLF = TRUE) {
+  messageColoured(..., colour = getOption("reproducible.messageColourPrepInputs"),
+                  appendLF = appendLF)
 }
 
-messageCache <- function(..., colour = getOption("reproducible.messageColourCache")) {
-  messageColoured(..., colour = colour)
+messageCache <- function(..., colour = getOption("reproducible.messageColourCache"),
+                         appendLF = TRUE) {
+  messageColoured(..., colour = colour, appendLF = appendLF)
 }
 
-messageQuestion <- function(..., verboseLevel = 0) {
+messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
   # force this message to print
   messageColoured(..., colour = getOption("reproducible.messageColourQuestion"),
-                  verboseLevel = verboseLevel, verbose = 0)
+                  verboseLevel = verboseLevel, verbose = 0, appendLF = appendLF)
 }
 
 messageColoured <- function(..., colour = NULL, verboseLevel = 1,
-                            verbose = getOption("reproducible.verbose", 1)) {
+                            verbose = getOption("reproducible.verbose", 1),
+                            appendLF = TRUE) {
   if (isTRUE(verboseLevel <= verbose)) {
     needCrayon <- FALSE
     if (!is.null(colour)) {
@@ -424,13 +455,13 @@ messageColoured <- function(..., colour = NULL, verboseLevel = 1,
         needCrayon <- TRUE
     }
     if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
-      message(getFromNamespace(colour, "crayon")(paste0(...)))
+      message(getFromNamespace(colour, "crayon")(paste0(...)), appendLF = appendLF)
     } else {
       if (!isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("crayon")) {
-        message("To add colours to messages, install.packages('crayon')")
+        message("To add colours to messages, install.packages('crayon')", appendLF = appendLF)
         .pkgEnv$.checkedCrayon <- TRUE
       }
-      message(paste0(...))
+      message(paste0(...), appendLF = appendLF)
     }
   }
 

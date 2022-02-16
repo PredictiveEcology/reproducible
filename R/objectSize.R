@@ -53,7 +53,14 @@ objSize <- function(x, quick, enclosingEnvs, .prevEnvirs, ...) {
 #' @rdname objSize
 objSize.default <- function(x, quick = getOption("reproducible.quick", FALSE),
                             enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
-  object.size(x)
+  if (any(inherits(x, "SpatVector"), inherits(x, "SpatRaster"))) {
+    if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+      stop("Please install terra package")
+      os <- object.size(terra::wrap(x))
+  } else {
+    os <- object.size(x)
+  }
+  os
 }
 
 #' @export
