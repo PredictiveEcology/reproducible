@@ -279,26 +279,14 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
 
-    if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
-      if (is(object, "RasterStack")) {
-        # have to do one file at a time with Stack
-        dig <- suppressWarnings(
-          lapply(object@layers, function(yy) {
-            .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
-          })
-        )
-      } else {
-        # Brick and Layers have only one file
-        dig <- suppressWarnings(
-          .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-      }
-    } else {
-      dig <- suppressWarnings(
-        .digestRasterLayer(object, length = length, algo = algo, quick = quick))
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
+      warning("reproducible.useNewDigestAlgorithm must be 2 now; proceeding")
     }
+    dig <- suppressWarnings(
+      .digestRasterLayer(object, length = length, algo = algo, quick = quick))
     dig <- .doDigest(unlist(dig))
     return(dig)
-})
+  })
 
 #' @rdname robustDigest
 #' @export

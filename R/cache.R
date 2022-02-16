@@ -1823,8 +1823,7 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
                                     drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                     conn = getOption("reproducible.conn", NULL)) {
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-    return(dealWithClassOnRecovery2(output, cacheRepo, cacheId,
-                                    drv, conn))
+    warning("reproducible.useNewDigestAlgorithm must be 2 now; proceeding")
   }
 
   if (is(output, "list")) {
