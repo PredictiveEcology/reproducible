@@ -259,8 +259,8 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
             stop("The return object from exprBetween must be a named list, with names being objects to overwrite")
           }
         } else {
-          result1b <- list(result1)
-          names(result1b) <- objName
+          result1 <- list(result1)
+          names(result1) <- objName
         }
 
         lapply(objName, function(objNam) assign(objNam, result1[[objNam]], envir = envir))
