@@ -13,6 +13,10 @@ getGDALVersion <-  function() {
         strsplit(., split = " ") %>%
         `[[`(1) %>%
         `[`(2) %>%
+        strsplit(., "-") %>% ## deal with devel versions (#239)
+        `[[`(1) %>%
+        `[`(1) %>%
+        gsub("[a-zA-Z]", "", .) %>%
         as.numeric_version(.)
     }
   } else {
