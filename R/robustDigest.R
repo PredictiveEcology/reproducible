@@ -294,8 +294,8 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    # From ad hoc tests, 7 was the highest I could go to maintain consistent between Linux and Windows
-    .doDigest(round(object, 7), algo = algo)
+    # From ad hoc tests, 6 was the highest I could go to maintain consistent between Linux and Windows
+    .doDigest(round(object, getOption("reproducible.digestDigits", 6)), algo = algo)
   })
 
 #' @rdname robustDigest
