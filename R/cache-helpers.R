@@ -891,15 +891,11 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     ))]
     dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
     names(dataSlotsToDigest) <- sn
-    theData <- if (is.numeric(object@data@values)) {
-      round(object@data@values, 6) # cross platform
-    } else {
-      object@data@values
-    }
-    dataSlotsToDigest$values <- theData
+    theData <- .robustDigest(object@data@values)
+    dataSlotsToDigest$values <- NULL
     if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") > 0))
       dig <- .robustDigest(append(list(dim(object), res(object), crs(object),
-                                       extent(object)), dataSlotsToDigest), length = length, quick = quick,
+                                       extent(object), theData), dataSlotsToDigest), length = length, quick = quick,
                            algo = algo) # don't include object@data -- these are volatile
     else {
       if (!requireNamespace("fastdigest", quietly = TRUE))
