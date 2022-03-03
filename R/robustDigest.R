@@ -295,7 +295,7 @@ setMethod(
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
     # From ad hoc tests, 6 was the highest I could go to maintain consistent between Linux and Windows
-    .doDigest(round(object, getOption("reproducible.digestDigits", 6)), algo = algo)
+    .doDigest(round(object, getOption("reproducible.digestDigits", 7)), algo = algo)
   })
 
 #' @rdname robustDigest
