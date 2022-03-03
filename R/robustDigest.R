@@ -113,7 +113,6 @@ setMethod(
   signature = "ANY",
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
-    browser()
     # browser(expr = exists("._robustDigest_1"))
     if (is(object, "quosure")) {# can't get this class from rlang via importClass rlang quosure
       object <- eval_tidy(object)
@@ -163,7 +162,6 @@ setMethod(
   ".robustDigest",
   signature = "function",
   definition = function(object, .objects, length, algo, quick, classOptions) {
-    browser()
     .robustDigestFormatOnly(object, algo = algo)
 })
 
@@ -173,7 +171,6 @@ setMethod(
   ".robustDigest",
   signature = "expression",
   definition = function(object, .objects, length, algo, quick, classOptions) {
-    browser()
     .robustDigestFormatOnly(object, algo = algo)
 })
 
@@ -349,7 +346,6 @@ setMethod(
   ".robustDigest",
   signature = "Spatial",
   definition = function(object, .objects, length, algo, quick, classOptions) {
-    browser()
     object <- .removeCacheAtts(object)
 
   if (is(object, "SpatialPoints")) {
@@ -418,7 +414,6 @@ setMethod(
 
 .robustDigestFormatOnly <- function(object, .objects, length, algo, quick,
                                classOptions) {
-  browser()
   object <- .removeCacheAtts(object)
   .doDigest(format(object), algo = algo)
 }
