@@ -181,30 +181,43 @@ setMethod(
 #' @export
 setMethod(
   ".robustDigest",
+  signature = "language",
+  definition = function(object, .objects, length, algo, quick, classOptions) {
+    .robustDigestFormatOnly(object, algo = algo)
+  })
+
+#' @rdname robustDigest
+#' @export
+setMethod(
+  ".robustDigest",
   signature = "character",
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
 
+    simpleDigest <- TRUE
     if (!quick) {
-        if (any(unlist(lapply(object, file.exists)))) {
-          # browser(expr = exists("hhhh"))
-          unlist(lapply(object, function(x) {
-            # browser(expr = exists("hhhh"))
-            if (dir.exists(x)) {
-              .doDigest(basename(x), algo)
-            } else if (file.exists(x)) {
-                digest(file = x, length = length, algo = algo)
-            } else {
-              .doDigest(x, algo)
-            }
-          }))
+      if (any(unlist(lapply(object, file.exists)))) {
+        simpleDigest <- FALSE
+      }}
+    if (!simpleDigest) {
+      # browser(expr = exists("hhhh"))
+      unlist(lapply(object, function(x) {
+        # browser(expr = exists("hhhh"))
+        if (dir.exists(x)) {
+          .doDigest(basename(x), algo)
+        } else if (file.exists(x)) {
+          digest(file = x, length = length, algo = algo)
         } else {
-          .doDigest(object, algo = algo)
+          .doDigest(x, algo)
         }
-      } else {
-        .doDigest(object, algo = algo)
-      }
-})
+      }))
+      #} else {
+      #.doDigest(object, algo = algo)
+      #}
+    } else {
+      .doDigest(object, algo = algo)
+    }
+  })
 
 #' @rdname robustDigest
 #' @export
@@ -243,9 +256,9 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
     .robustDigest(as.list(object, all.names = TRUE), .objects = .objects,
-                 length = length,
-                 algo = algo, quick = quick)
-})
+                  length = length,
+                  algo = algo, quick = quick)
+  })
 
 #' @rdname robustDigest
 #' @export
@@ -269,11 +282,36 @@ setMethod(
   ".robustDigest",
   signature = "data.frame",
   definition = function(object, .objects, length, algo, quick, classOptions) {
-    browser()
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    .doDigest(object, algo = algo)
+    dig <- lapply(object, .robustDigest, algo = algo)
+    .robustDigest(unlist(dig), quick = TRUE, algo = algo)
 })
+
+
+#' @rdname robustDigest
+#' @export
+setMethod(
+  ".robustDigest",
+  signature = "numeric",
+  definition = function(object, .objects, length, algo, quick, classOptions) {
+    #  Need a specific method for data.frame or else it get "list" method, which is wrong
+    object <- .removeCacheAtts(object)
+    # From ad hoc tests, 7 was the highest I could go to maintain consistent between Linux and Windows
+    .doDigest(round(object, 7), algo = algo)
+  })
+
+#' @rdname robustDigest
+#' @export
+setMethod(
+  ".robustDigest",
+  signature = "integer",
+  definition = function(object, .objects, length, algo, quick, classOptions) {
+    #  Need a specific method for data.frame or else it get "list" method, which is wrong
+    object <- .removeCacheAtts(object)
+    # From ad hoc tests, 7 was the highest I could go to maintain consistent between Linux and Windows
+    .doDigest(round(object, 7), algo = algo)
+  })
 
 #' @rdname robustDigest
 #' @export
@@ -281,7 +319,6 @@ setMethod(
   ".robustDigest",
   signature = "Raster",
   definition = function(object, .objects, length, algo, quick, classOptions) {
-    browser()
     object <- .removeCacheAtts(object)
 
     if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
@@ -304,6 +341,7 @@ setMethod(
     dig <- .doDigest(unlist(dig))
     return(dig)
 })
+
 
 #' @rdname robustDigest
 #' @export
