@@ -123,6 +123,33 @@ setMethod(
       return(out)
     }
 
+    if (inherits(object, "SpatRaster")) {
+      if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+        stop("Please install terra package")
+      if (nchar(terra::sources(object)) > 0) {
+        out <- lapply(terra::sources(object), function(x)
+          digest(file = x, length = length, algo = algo))
+        dig <- .robustDigest(append(
+          list(terra::nrow(object), terra::ncol(object), terra::nlyr(object),
+               terra::res(object), terra::crs(object),
+               terra::ext(object)), object@ptr$names, ),
+          length = length, quick = quick,
+          algo = algo) # don't include object@data -- these are volatile
+        out <- .doDigest(list(out, dig), algo = algo)
+      } else {
+        out <- .doDigest(terra::wrap(object), algo)
+      }
+
+      return(out)
+    }
+
+    if (any(inherits(object, "SpatVector"), inherits(object, "SpatRaster"))) {
+      if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+        stop("Please install terra package")
+      out <- .doDigest(terra::wrap(object), algo)
+      return(out)
+    }
+
     # passByReference -- while doing pass by reference attribute setting is faster, is
     #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
     object1 <- .removeCacheAtts(object, passByReference = FALSE)

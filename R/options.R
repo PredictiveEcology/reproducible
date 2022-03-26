@@ -119,8 +119,9 @@
 #'   \item{\code{useMemoise}}{
 #'     Default: \code{FALSE}. Used in \code{\link{Cache}}. If \code{TRUE}, recovery of cached
 #'     elements from the \code{cacheRepo} will use \code{memoise::memoise}.
-#'     This means that the 3rd time running a function will be much faster than the first (create
-#'     cache entry) or second (recover from the SQLite database on disk).
+#'     This means that the 2nd time running a function will be much faster than the first
+#'     in a session (which either will create a new cache entry to disk or read a cached
+#'     entry from disk).
 #'     \emph{NOTE: memoised values are removed when the R session is restarted}.
 #'     \strong{This option will use more RAM} and so may need to be turned off if RAM is limiting.
 #'     \code{clearCache} of any sort will cause all memoising to be 'forgotten' (\code{memoise::forget}).
@@ -133,6 +134,12 @@
 #'     \code{1} and \code{2} will make \code{Cache} less sensitive to minor but irrelevant changes
 #'     (like changing the order of arguments) and will work successfully across operating systems
 #'     (especially relevant for the new \code{cloudCache} function.
+#'   }
+#'   \item{\code{useTerra}}{
+#'     Default: \code{FALSE}. The GIS operations in postProcess, by default use primarily
+#'     the Raster package. The newer terra package does similar operations, but usually
+#'     faster. A user can now set this option to \code{TRUE} and \code{prepInputs}
+#'     and several components of \code{postProcess} will use \code{terra} internally.
 #'   }
 #'   \item{\code{verbose}}{
 #'     Default: \code{FALSE}. If set to \code{TRUE} then every \code{Cache} call will show a
@@ -182,7 +189,7 @@ reproducibleOptions <- function() {
     reproducible.overwrite = FALSE,
     reproducible.polygonShortcut = FALSE,
     reproducible.quick = FALSE,
-    reproducible.shapefileRead = "raster::shapefile", # TODO: change in next release
+    reproducible.shapefileRead = NULL, # TODO: change in next release
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = .reproducibleTempPath(),
@@ -192,6 +199,7 @@ reproducibleOptions <- function() {
     reproducible.useGDAL = TRUE, #
     reproducible.useMemoise = FALSE, #memoise
     reproducible.useNewDigestAlgorithm = 2, # TODO: change in next release
+    reproducible.useTerra = FALSE, # Default for now
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1
   )

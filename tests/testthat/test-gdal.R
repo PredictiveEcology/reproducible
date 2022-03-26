@@ -1,7 +1,4 @@
 test_that("GDAL doesn't work (part 3)", {
-  hasGDAL <- findGDAL()
-  if (!isTRUE(hasGDAL))
-    skip("no GDAL installation found")
 
   #if (requireNamespace("rgeos")) {
   #testInitOut <- testInit(c("raster", "sf", "rgeos"), tmpFileExt = c(".grd", ".tif"),
@@ -82,6 +79,20 @@ test_that("GDAL doesn't work (part 3)", {
                               dots = list(),
                               cores = 1)
   expect_true(raster::compareRaster(out4, rasterSmall))
+
+  out5a <- cropInputs(rasterBigOnDisk, rasterToMatch = rasterSmall,
+                      useGDAL = "force")
+  out5b <- projectInputs(out5a, rasterToMatch = rasterSmall,
+                         method = "ngb", useGDAL = "force")
+
+  #AFAIK no gdalwarp method to mask rasters with another raster
+  out5c <- raster::mask(out5b, mask = rasterSmall)
+
+  expect_true(raster::compareRaster(out5c, rasterSmall))
+  #compare raster does not assess NA
+  expect_true(sum(!is.na(out5c[])) == sum(!is.na(rasterSmall[])))
+
+
 
   #  }
 })

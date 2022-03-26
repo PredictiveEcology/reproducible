@@ -53,7 +53,14 @@ objSize <- function(x, quick, enclosingEnvs, .prevEnvirs, ...) {
 #' @rdname objSize
 objSize.default <- function(x, quick = getOption("reproducible.quick", FALSE),
                             enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
-  object.size(x)
+  if (any(inherits(x, "SpatVector"), inherits(x, "SpatRaster"))) {
+    if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+      stop("Please install terra package")
+      os <- object.size(terra::wrap(x))
+  } else {
+    os <- object.size(x)
+  }
+  os
 }
 
 #' @export
@@ -158,9 +165,16 @@ objSizeSession <- function(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = l
     # Update the object in the function so next lapply has access to the updated version
     .prevEnvirs <<- unique(append(.prevEnvirs, as.environment(x)))
     out <- if (!any(unlist(doneAlready))) {
-      tryCatch(objSize(as.environment(x), enclosingEnvs = enclosingEnvs,
-                  .prevEnvirs = .prevEnvirs), error = function(x) NULL,
-               warning = function(y) NULL)
+      xAsEnv <- as.environment(x)
+      if (!identical(xAsEnv, globalenv())) {
+        xAsEnv <- tryCatch(asNamespace(gsub("package:", "", x)), error = function(x) xAsEnv)
+      }
+      tryCatch(
+        objSize(xAsEnv, enclosingEnvs = enclosingEnvs,
+                  .prevEnvirs = .prevEnvirs)
+        , error = function(x) NULL,
+              warning = function(y) NULL
+        )
     } else {
       NULL
     }

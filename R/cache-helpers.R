@@ -61,8 +61,8 @@ setMethod(
     if (isTRUE(fromMemoise)) {
       messageCache(.loadedCacheMsg(.loadedMemoisedResultMsg, functionName), verbose = verbose)
     } else if (!is.na(fromMemoise)) {
-      messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName),
-                   "adding to memoised copy...", sep = "", verbose = verbose)
+      messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName), " ",
+                   .addingToMemoisedMsg, sep = "", verbose = verbose)
     } else {
       messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName), verbose = verbose)
     }
@@ -212,38 +212,38 @@ setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
   standardGeneric(".prepareOutput")
 })
 
-#' @export
-#' @rdname prepareOutput
-#' @importFrom Require normPath
-#' @importFrom RSQLite SQLite
-setMethod(
-  ".prepareOutput",
-  signature = "Raster",
-  definition = function(object, cacheRepo, drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                        conn = getOption("reproducible.conn", NULL), ...) {
-    # with this call to .prepareFileBackedRaster, it is from the same function call as a previous time
-    #  overwrite is ok
-    # .prepareFileBackedRaster(object, repoDir = cacheRepo, drv = drv, conn = conn, ...)
-    # browser(expr = exists("._prepareOutputs_1"))
-    if (isTRUE(fromDisk(object))) {
-      fns <- Filenames(object, allowMultiple = FALSE)
-      fpShould <- normPath(file.path(cacheRepo, "rasters"))
-      isCorrect <- unlist(lapply(normPath(file.path(fpShould, basename(fns))),
-                                 function(x) any(grepl(x, fns))))
-      if (!any(isCorrect)) {
-        if (is(object, "RasterStack")) {
-          # browser(expr = exists("._prepareOutputs_2"))
-          for (i in seq(nlayers(object))) {
-            object@layers[[i]]@file@name <- gsub(dirname(object@layers[[i]]@file@name),
-                                                 fpShould, object@layers[[i]]@file@name)
-          }
-        } else {
-          object@file@name <- gsub(unique(dirname(fns)), fpShould, fns)
-        }
-      }
-    }
-    object
-  })
+# @export
+# @rdname prepareOutput
+# @importFrom Require normPath
+# @importFrom RSQLite SQLite
+# setMethod(
+#   ".prepareOutput",
+#   signature = "Raster",
+#   definition = function(object, cacheRepo, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+#                         conn = getOption("reproducible.conn", NULL), ...) {
+#     # with this call to .prepareFileBackedRaster, it is from the same function call as a previous time
+#     #  overwrite is ok
+#     # .prepareFileBackedRaster(object, repoDir = cacheRepo, drv = drv, conn = conn, ...)
+#     # browser(expr = exists("._prepareOutputs_1"))
+#     if (isTRUE(fromDisk(object))) {
+#       fns <- Filenames(object, allowMultiple = FALSE)
+#       fpShould <- normPath(file.path(cacheRepo, "rasters"))
+#       isCorrect <- unlist(lapply(normPath(file.path(fpShould, basename(fns))),
+#                                  function(x) any(grepl(x, fns))))
+#       if (!any(isCorrect)) {
+#         if (is(object, "RasterStack")) {
+#           # browser(expr = exists("._prepareOutputs_2"))
+#           for (i in seq(nlayers(object))) {
+#             object@layers[[i]]@file@name <- gsub(dirname(object@layers[[i]]@file@name),
+#                                                  fpShould, object@layers[[i]]@file@name)
+#           }
+#         } else {
+#           object@file@name <- gsub(unique(dirname(fns)), fpShould, fns)
+#         }
+#       }
+#     }
+#     object
+#   })
 
 #' @export
 #' @rdname prepareOutput
@@ -443,7 +443,7 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
     functionName <- NA_character_
 
   nestLevel <- length(grep(lapply(scalls, function(x) x[1:2]),
-                           pattern = "standardGeneric.+Cache"))
+                           pattern = "^Cache"))/2
 
   return(list(functionName = functionName, .FUN = .FUN, nestLevel = nestLevel - 1))#, callIndex = callIndex))
 }
@@ -1176,28 +1176,26 @@ nextNumericName <- function(string) {
 }
 
 #' @importFrom raster fromDisk
-dealWithRasters <- function(obj, cachePath, drv, conn) {
-  # browser(expr = exists("._dealWithRasters_1"))
+dealWithClass <- function(obj, cachePath, drv, conn) {
+  # browser(expr = exists("._dealWithClass_1"))
   outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
+
   if (outputToSaveIsList) {
-    rasters <- unlist(lapply(obj, is, "Raster"))
-  } else {
-    rasters <- is(obj, "Raster")
+    obj <- lapply(obj, dealWithClass, cachePath = cachePath, drv = drv, conn = conn)
+    innerTags <- lapply(obj, function(o) attr(o, "tags"))
+    innerTags <- unique(unlist(innerTags))
+    setattr(obj, "tags", innerTags)
   }
+
+
+  rasters <- is(obj, "Raster")
+  isFromDisk <- FALSE # Default --> this will be updated
   if (any(rasters)) {
     objOrig <- obj
     atts <- attributes(obj)
-    # browser(expr = exists("._dealWithRasters_2"))
-    if (outputToSaveIsList) {
-      obj[rasters] <- lapply(obj[rasters], function(x)
-        .prepareFileBackedRaster(x, repoDir = cachePath, overwrite = FALSE, drv = drv, conn = conn))
-      isFromDisk <- any(unlist(lapply(obj, function(x)
-        if (is(x, "Raster")) fromDisk(x) else FALSE)))
-    } else {
-      obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,
-                                      overwrite = FALSE, drv = drv, conn = conn)
-      isFromDisk <- fromDisk(obj)
-    }
+    obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,
+                                    overwrite = FALSE, drv = drv, conn = conn)
+    isFromDisk <- fromDisk(obj)
 
     # have to reset all these attributes on the rasters as they were undone in prev steps
     atts$tags <- c(atts$tags, paste("fromDisk", sep = ":", isFromDisk))
@@ -1223,9 +1221,20 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
       } else {
         obj <- list(origRaster = Filenames(objOrig), cacheRaster = obj)
       }
-
+      setattr(obj, "tags",
+              c(attributes(obj$cacheRaster)$tags,
+              paste0("origRaster:", obj$origRaster),
+              paste0("cacheRaster:", Filenames(obj))))
     }
 
+  }
+
+
+  if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
+    if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+      stop("Please install terra package")
+
+    obj <- terra::wrap(obj)
   }
   obj
 }
@@ -1234,8 +1243,10 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
 
 .loadedMemoisedResultMsg <- "loaded memoised result from previous"
 
+.addingToMemoisedMsg <- "(and added a memoised copy)"
+
 .loadedCacheMsg <- function(root, functionName) {
-  paste0("     ", root," ", functionName, " call, ")
+  paste0("     ", root," ", functionName, " call")
 }
 
 

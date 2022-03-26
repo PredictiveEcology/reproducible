@@ -144,6 +144,14 @@ test_that("check GDAL version", {
       expect_false(checkGDALVersion("3.0"))
     }
   )
+
+  ## test with devel version
+  testthat::with_mock(
+    "reproducible::getGDALVersion" = function() "GDAL 3.5.0dev-805b2bbca3, released 2022/02/17",
+    {
+      expect_true(checkGDALVersion("3.5"))
+    }
+  )
 })
 
 test_that("test miscellaneous fns (part 2)", {

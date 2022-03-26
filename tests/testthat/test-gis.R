@@ -25,7 +25,7 @@ test_that("fastMask produces correct results", {
   newStack2 <- fastMask(x = origStack, y = shp)
   expect_equal(newStack1, newStack2)
 
-  newStack1 <- mask(origStack[[2]], mask = shpDF)
+  newStack1 <- raster::mask(origStack[[2]], mask = shp)
   newStack2 <- fastMask(x = origStack[[2]], y = shpDF)
   expect_equivalent(newStack1, newStack2)
 
@@ -42,12 +42,6 @@ test_that("fastMask produces correct results", {
   names(newStack3) <- names(newStack1)
   expect_equivalent(newStack1, newStack3)
   # Run same as above but with different internal pathway
-  hasGDAL <- findGDAL()
-  if (!isTRUE(hasGDAL))
-    skip("no GDAL installation found")
-
-  # if it doesn't find gdal installed
-  hasGDALInstalled <- !is.null(getOption("gdalUtils_gdalPath"))
 
   testthat::with_mock(
     "raster::canProcessInMemory" = function(x, n) {
@@ -58,12 +52,10 @@ test_that("fastMask produces correct results", {
     },
     # The warning is "data type "LOG" is not available in GDAL -- not relevant here
     {
-      if (hasGDALInstalled) {
-        mess <- capture_messages({
-          out <- fastMask(x = origStack[[2]], y = shpDF)
-        })
-        expect_true(any(grepl("GDAL because crs", mess)))
-      }
+      mess <- capture_messages({
+        out <- fastMask(x = origStack[[2]], y = shpDF)
+      })
+      expect_true(any(grepl("GDAL because crs", mess)))
     }
   )
   mess <- capture_messages({
@@ -71,19 +63,18 @@ test_that("fastMask produces correct results", {
   })
   expect_true(any(grepl("useGDAL is TRUE, but problem is small enough for RA", mess)))
 
-  crs(shpDF) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
   crs(shp) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
   crs(origStack[[2]]) <- "+proj=lcc +lat_1=49 +lat_2=33 +lon_0=-100 +ellps=WGS84"
 
   # Test "force" even for a small problem
   warn <- capture_warnings({
     mess <- capture_messages({
-      out <- fastMask(x = origStack[[2]], y = shpDF, useGDAL = "force")
+      out <- fastMask(x = origStack[[2]], y = shp, useGDAL = "force")
     })
   })
   expect_false(any(grepl("useGDAL is TRUE, but problem is small enough for RA", mess)))
 
-  newStack2 <- fastMask(x = origStack[[2]], y = shpDF)
+  newStack2 <- fastMask(x = origStack[[2]], y = shp)
 
   # test non-spatial polygons data frame
   newStack2 <- fastMask(x = origStack[[2]], y = shp)
@@ -112,39 +103,38 @@ test_that("checkGDALVersion", {
 })
 
 test_that("testing prepInputs with deauthorized googledrive", {
-  if (!requireNamespace("googledrive", quietly = TRUE))
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
-  testInitOut <- testInit(needGoogle = FALSE, "googledrive")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  googledrive::drive_deauth()
-  testthat::with_mock(
-    "reproducible::isInteractive" = function() {
-      FALSE
-    }, {
-      noisyOutput <- capture.output(
-        warn <- capture_warnings({
-          BCR6_VT <- prepInputs(
-            url = "https://drive.google.com/open?id=1sEiXKnAOCi-f1BF7b4kTg-6zFlGr0YOH",
-            targetFile = "BCR6.shp",
-            overwrite = TRUE
-          )
-        })
-      )
-  })
-  expect_true(is(BCR6_VT, shapefileClassDefault))
-
   if (interactive()) {
+    if (!requireNamespace("googledrive", quietly = TRUE))
+      stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+    testInitOut <- testInit(needGoogle = FALSE, "googledrive")
+    on.exit({
+      testOnExit(testInitOut)
+    }, add = TRUE)
+
+    testthat::with_mock(
+      "reproducible::isInteractive" = function() {
+        FALSE
+      }, {
+        noisyOutput <- capture.output(
+          warn <- capture_warnings({
+            BCR6_VT <- prepInputs(
+              url = "https://drive.google.com/open?id=1sEiXKnAOCi-f1BF7b4kTg-6zFlGr0YOH",
+              targetFile = "BCR6.shp",
+              overwrite = TRUE
+            )
+          })
+        )
+      })
+    expect_true(is(BCR6_VT, shapefileClassDefault()))
+
     NFDB_PT <- #Cache(
       prepInputs(
-      url = "http://cwfis.cfs.nrcan.gc.ca/downloads/nfdb/fire_pnt/current_version/NFDB_point.zip",
-      overwrite = TRUE,
-      #targetFile = "NFDB_point_20181129.shp",
-    #  alsoExtract = "similar",
-      fun = "sf::st_read"
-    )
+        url = "http://cwfis.cfs.nrcan.gc.ca/downloads/nfdb/fire_pnt/current_version/NFDB_point.zip",
+        overwrite = TRUE,
+        #targetFile = "NFDB_point_20181129.shp",
+        #  alsoExtract = "similar",
+        fun = "sf::st_read"
+      )
     expect_is(NFDB_PT, "sf")
     expect_true(all(c("zip", "sbx", "shp", "xml", "shx", "sbn") %in%
                       fileExt(dir(pattern = "NFDB_point"))))
@@ -171,3 +161,5 @@ test_that("testing rebuildColors", {
   origColors <- list(origColors = character(0), origMinValue = 0, origMaxValue = 197.100006103516)
   expect_is(rebuildColors(x, origColors), "Raster")
 })
+
+

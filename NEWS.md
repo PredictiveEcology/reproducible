@@ -1,14 +1,37 @@
-Known issues: https://github.com/PredictiveEcology/reproducible/issues
+Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
+
+Version 1.2.9
+=============
+
+## Dependency changes
+* Drop support for R 3.6 (#230)
+* Added minimum versions of `raster` and `terra`, because previous versions were causing collisions.
+
+## Enhancements
+* New version of `postProcess` called `postProcessTerra`. This will eventually replace `postProcess` as it is much faster in all cases and simpler code base thanks to the fantastic work of Robert Hijmans (`terra`) and all the upstream work that `terra` relies on
+* Minor message updates, especially for "adding to memoised copy...". The three dots made it seem like it was taking a long time. When in reality, it is instantaneous and is the last thing that happens in the `Cache` call. If there is a delay after this message, then it is the code following the `Cache` call that is (silently) slow.
+* `retry` can now return a named list for the `exprBetween`, which allows for more than one object to be modified between retries.
+ 
+## Bug fixes
+* `data.table` objects appear to not be recovered correctly from disk (e.g., from Cache repository. We have added `data.table::copy` when recovering from Cache repository
+* `clearCache` and `cc` did not correctly remove file-backed raster files (when not clearing whole CacheRepo); this may have resulted in a proliferation of files, each a filename with an underscore and a new higher number. This fix should eliminate this problem.
+* deal with development versions of GDAL in `getGDALVersion()` (#239)
 
 Version 1.2.8
 =============
+
+## Dependency changes
+* `lwgeom` now a suggested package
+
 ## Enhancements
+* `terra` class objects can now be correctly saved and recovered by `Cache`
 * `fixErrors` can now distinguish `testValidity = NA` meaning don't fix errors and `testValidity = FALSE` run buffering which fixes many errors, but don't test whether there are any invalid polygons first (maybe slow), or `testValidity = TRUE` meaning test for validity, then if some are invalid, then run buffer.
 * Change default option to `reproducible.useNewDigestAlgorithm = 2` which will have user visible changes. To keep old behaviour, set `options(reproducible.useNewDigestAlgorithm = 1)`
-
+* minor changes to messaging when `options(reproducible.showSimilar)` is set. It is now more compact e.g., 3 lines instead of 5.
+* added `sf` methods to `studyAreaName`
 
 ## Bug fixes
-* A small, but very impactful bug that created false positive `Cache` returns; i.e., a 2nd time through a Cache would return a cached copy, when some of the arguments were different. It occured for when the differences were in unnamed arguments only.
+* A small, but very impactful bug that created false positive `Cache` returns; i.e., a 2nd time through a Cache would return a cached copy, when some of the arguments were different. It occurred for when the differences were in unnamed arguments only.
 
 Version 1.2.7
 =============
@@ -20,7 +43,7 @@ There is a large user-visible change that will come (in the next release), which
 * default `fun` in `prepInputs` for shapefiles (`.shp`) is now `sf::st_read` if the system has `sf` installed. This can be overridden with `options("reproducible.shapefileRead" = "raster::shapefile")`, and this is indicated with a message at the moment this is occurring, as it will cause different behaviour.
 * `quick` argument in `Cache` can now be a character vector, allowing individual character arguments to be digested as character vectors and others to be digested as files located at the specified path as represented by the character vector.
 * `objSize` previously included objects in `namespaces`, `baseenv` and `emptyenv`, so it was generally too large. Now uses the same criteria as `pryr::object_size`
-* improvements with messaging when `unzip` missing (thanks to C. Barros #202)
+* improvements with messaging when `unzip` missing (thanks to @CeresBarros #202)
 * while unzipping, will also search for `7z.exe` on Windows if the object is larger than 2GB, if can't find `unzip`.
 * `fun` argument in `prepInputs` and family can now be a quoted expression.
 * `archive` argument in `prepInputs` can now be `NA` which means to treat the file downloaded not as an archive, even if it has a `.zip` file extension

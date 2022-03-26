@@ -6,7 +6,7 @@
 \alias{projectInputs.Raster}
 \alias{projectInputs.sf}
 \alias{projectInputs.Spatial}
-\title{Project \code{Raster*} or {Spatial*} or \code{sf} objects}
+\title{Project \code{Raster*} or \code{Spatial*} or \code{sf} objects}
 \usage{
 projectInputs(
   x,
@@ -59,7 +59,7 @@ option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 resolution and projection of \code{x}.
 See details in \code{\link{postProcess}}.}
 
-\item{cores}{An \code{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
+\item{cores}{An \code{integer*} or \code{'AUTO'}. This will be used if \code{gdalwarp} is
 triggered. \code{'AUTO'*} will calculate 90% of the total
 number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.}
