@@ -252,9 +252,26 @@ setMethod(
   signature = "environment",
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
-    .robustDigest(as.list(object, all.names = TRUE), .objects = .objects,
-                  length = length,
+    if (is.null(classOptions[["prevEnvir"]])) {
+      classOptions[["prevEnvir"]] <- list()
+      doneAlready <- list(FALSE)
+    } else {
+      doneAlready <- lapply(classOptions[["prevEnvir"]], function(pe) identical(pe, object))
+    }
+    classOptions[["prevEnvir"]] <- unique(append(classOptions[["prevEnvir"]], object))
+
+    if (!any(unlist(doneAlready))) {
+      asList <- as.list(object, all.names = TRUE)
+      da <- which(unlist(doneAlready))
+      if (length(da))
+        asList <- asList[-da]
+      rd <- .robustDigest(asList, .objects = .objects,
+                          length = length,
                           algo = algo, quick = quick, classOptions = classOptions)
+    } else {
+      rd <- NULL
+    }
+    return(rd)
   })
 
 #' @rdname robustDigest
