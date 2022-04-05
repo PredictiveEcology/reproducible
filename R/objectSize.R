@@ -51,6 +51,14 @@ objSize <- function(x, quick, enclosingEnvs, .prevEnvirs, ...) {
 #' @export
 #' @importFrom utils object.size
 #' @rdname objSize
+#' @details
+#' For functions, a user can include the enclosing environment as described
+#' \url{https://www.r-bloggers.com/2015/03/using-closures-as-objects-in-r/} and
+#' \url{http://adv-r.had.co.nz/memory.html}.
+#' It is not entirely clear which estimate is better.
+#' However, if the enclosing environment is the \code{.GlobalEnv}, it will
+#' not be included even though \code{enclosingEnvs = TRUE}.
+#'
 objSize.default <- function(x, quick = getOption("reproducible.quick", FALSE),
                             enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
   if (any(inherits(x, "SpatVector"), inherits(x, "SpatRaster"))) {
@@ -58,8 +66,31 @@ objSize.default <- function(x, quick = getOption("reproducible.quick", FALSE),
       stop("Please install terra package")
       os <- object.size(terra::wrap(x))
   } else {
+    varName <- deparse(substitute(x))
+
+    hasEnclEnv <- if ((is(x, "function") && !is.primitive(x)) ||
+                      is(x, "formula") || is(x, "expression")) {
+      TRUE
+    } else {
+      FALSE
+    }
+
     os <- object.size(x)
+
+    if (hasEnclEnv) {
+      browser()
+      curEnvYYY <- environment(x)
+      osEnv <- objSize(curEnvYYY, quick = quick, enclosingEnvs = enclosingEnvs, .prevEnvirs = .prevEnvirs)
+      names(osEnv) <- gsub("curEnvYYY", paste0(varName, "_enclEnvir"), names(osEnv))
+      os <- list(os)
+      names(os) <- varName
+      os <- append(os, osEnv)
+    }
+
   }
+  total <- sum(unlist(os))
+  class(total) <- "object_size"
+  attr(os, "total") <- noquote(format(total, units = "auto"))
   os
 }
 
@@ -70,23 +101,154 @@ objSize.list <- function(x, quick = getOption("reproducible.quick", FALSE),
   TandC <- grepl(".__[TC]__", names(x))
   if (sum(TandC) > 0)
     x <- x[!TandC]
-  osList <- lapply(x, function(y) {
-    if (!is.function(y)) {
-      os <- objSize(y, quick = quick, enclosingEnvs = enclosingEnvs, .prevEnvirs = .prevEnvirs)
-    } else {
-      doneAlready <- lapply(.prevEnvirs, function(pe) identical(pe, environment(y)))
-      .prevEnvirs <<- unique(append(.prevEnvirs, environment(y)))
+  osList <- lapply(x, function(yyyy) {
+
+    hasEnclEnv <- (is(yyyy, "function") && !is.primitive(yyyy)) ||
+                      is(yyyy, "formula") || is(yyyy, "expression")
+    isEnv <- is(yyyy, "environment")
+    if (hasEnclEnv) {
+      browser()
+      localEnv <- environment(yyyy)
+      if (length(.prevEnvirs) == 0) {
+        doneAlready <- list(FALSE)
+      } else {
+        doneAlready <- lapply(.prevEnvirs, function(pe) identical(pe, localEnv))
+      }
+      .prevEnvirs <<- unique(append(.prevEnvirs, localEnv))
+
+      browser()
       if (!any(unlist(doneAlready))) {
-        os <- objSize(y, quick = quick, enclosingEnvs = enclosingEnvs, .prevEnvirs = .prevEnvirs)
+        os <- objSize(yyyy, quick, enclosingEnvs)#, .prevEnvirs)
       } else {
         os <- NULL
       }
+    } else {
+      os <- object.size(yyyy)
+    }
+
+
+
+    # This strips the `yyyy` from the naming... automatically done with the lapply
+    if (length(names(os)) > 0) {
+      names(os) <- gsub("yyyy(_)*", "", names(os))
     }
     return(os)
   })
   if (length(osList) > 0)
     osList <- osList[!unlist(lapply(osList, function(x) is.null(x) || length(x) == 0))]
+
+  total <- sum(unlist(osList))
+  class(total) <- "object_size"
+  attr(osList, "total") <- noquote(format(total, units = "auto"))
+
   osList
+}
+
+#' @export
+objsize <- function(x, quick, enclosingEnvs, .prevEnvirs, ...) {
+  UseMethod("objsize", x)
+}
+
+#' @export
+#' @importFrom utils object.size
+objsize.default <- function(x, quick = getOption("reproducible.quick", FALSE),
+                            enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
+
+  .prevEnvirs <- list()
+  os <- objsizeInner(x, outerEnv = environment())
+
+  total <- sum(unlist(os))
+  class(total) <- "object_size"
+  attr(os, "total") <- noquote(format(total, units = "auto", digits = 2))
+
+  return(os)
+
+}
+
+#' @export
+objsize.simList <- function(x, quick = getOption("reproducible.quick", FALSE),
+                            enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
+
+  aa <- objsize(x@.xData, quick, enclosingEnvs, .prevEnvirs)
+
+  theSimEnvItself <- names(aa) == "x@.xData"
+  names(aa)[theSimEnvItself] <- "simEnv"
+  aa <- lapply(aa, function(a) {
+    ss <- sum(unlist(a))
+    class(ss) <- "object_size"
+    ss
+  })
+  names(aa) <- gsub("x@.xData\\$*", "", names(aa))
+  simSlots <- grep("^\\.envir$|^\\.xData$", slotNames(x), value = TRUE, invert = TRUE)
+  names(simSlots) <- simSlots
+  otherParts <- objsize(lapply(simSlots, function(slotNam) slot(x, slotNam)))
+  other <- lapply(otherParts, function(op) {
+    ss <- sum(unlist(op))
+    class(ss) <- "object_size"
+    ss
+  })
+
+  aa <- list(sim = aa, other = other)
+  total <- sum(unlist(aa))
+  class(total) <- "object_size"
+  attr(aa, "total") <- noquote(format(total, units = "auto"))
+
+  return(aa)
+}
+
+objsizeInner <- function(x, quick, outerEnv) {
+
+  if (!is.null(x)) {
+    os <- 0
+    xEnv <- environment(x)
+    hasEnv <- !is.null(xEnv)
+    isEnv <- is.environment(x)
+    if (hasEnv || isEnv) {
+      peHere <- if (hasEnv) xEnv else x
+      if (hasEnv)
+        osHasEnv <- object.size(x)
+      osEnv <- sum(object.size(peHere), object.size(attributes(peHere)))
+      isGlobal <- identical(.GlobalEnv, peHere)
+
+      if (!isGlobal) {
+        peOuter <- get(".prevEnvirs", envir = outerEnv)
+        doneAlready <- lapply(peOuter, function(pe) identical(pe, peHere))
+
+        if (!any(unlist(doneAlready))) {
+          newPe <- append(peOuter, peHere)
+          assign(".prevEnvirs", newPe, outerEnv)
+          if (length(ls(peHere, all.names = TRUE)) > 0)
+            x <- as.list(peHere, all.names = TRUE)
+        }
+      }
+    }
+
+    if (is(x, "list")) {
+      anyNested <- lapply(x, function(xInner) is(xInner, "list") || is(xInner, "environment"))
+      if (any(unlist(anyNested))) {
+        osInner <- if (length(x) > 1)
+          lapply(x, function(xx) objsizeInner(xx, quick, outerEnv))
+        else
+          list(objsizeInner(x[[1]], quick, outerEnv))
+      } else {
+        osInner <- object.size(x)
+      }
+      os <- osInner
+      if (exists("osEnv", inherits = FALSE))
+        os <- append(list(osEnv), os)
+      if (exists("osHasEnv", inherits = FALSE))
+        os <- append(list(osHasEnv), os)
+
+    } else {
+      os <- object.size(x)
+    }
+  } else {
+    os <- NULL
+  }
+
+  return(os)
+
+
 }
 
 #' @export
@@ -95,14 +257,34 @@ objSize.list <- function(x, quick = getOption("reproducible.quick", FALSE),
 objSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE),
                                 enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
   xName <- deparse(substitute(x))
-  # print(format(x))
-  os <- objSize(as.list(x, all.names = TRUE), enclosingEnvs = enclosingEnvs,
-                .prevEnvirs = .prevEnvirs)
+
+  if (length(.prevEnvirs) == 0) {
+    doneAlready <- list(FALSE)
+  } else {
+    doneAlready <- lapply(.prevEnvirs, function(pe) identical(pe, x))
+  }
+  .prevEnvirs <- unique(append(.prevEnvirs, x))
+
+  lsEnv <- ls(x, all.names = TRUE)
+
+  if (!any(unlist(doneAlready)) && length(lsEnv) > 0) {
+    browser()
+    asList <- as.list(x, all.names = TRUE)
+    os <- objSize(asList, enclosingEnvs = enclosingEnvs,
+            .prevEnvirs = .prevEnvirs)
+
+  } else {
+    os <- NULL
+  }
   if (length(os) > 0)
     names(os) <- paste0(xName, "$", names(os))
   osCur <- list(object.size(x))
   names(osCur) <- xName
   os <- append(os, osCur)
+
+  total <- sum(unlist(os))
+  class(total) <- "object_size"
+  attr(os, "total") <- noquote(format(total, units = "auto"))
   return(os)
 }
 
@@ -118,31 +300,6 @@ objSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE),
   }
 }
 
-#' @details
-#' For functions, a user can include the enclosing environment as described
-#' \url{https://www.r-bloggers.com/2015/03/using-closures-as-objects-in-r/} and
-#' \url{http://adv-r.had.co.nz/memory.html}.
-#' It is not entirely clear which estimate is better.
-#' However, if the enclosing environment is the \code{.GlobalEnv}, it will
-#' not be included even though \code{enclosingEnvs = TRUE}.
-#'
-#' @export
-#' @rdname objSize
-objSize.function <- function(x, quick = getOption("reproducible.quick", FALSE),
-                             enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
-  varName <- deparse(substitute(x))
-  if (isTRUE(enclosingEnvs) && (!isTopLevelEnv(environment(x)))) {
-    if (is.primitive(x)) {
-      os <- list(object.size(x))
-    } else {
-      x <- mget(ls(envir = environment(x)), envir = environment(x))
-      os <- lapply(x, function(xx) object.size(xx))
-    }
-  } else {
-    os <- object.size(x)
-  }
-  return(os)
-}
 
 #' @param sumLevel Numeric, indicating at which depth in the list of objects should the
 #'   object sizes be summed (summarized). Default is \code{Inf}, meaning no sums. Currently,
