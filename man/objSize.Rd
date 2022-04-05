@@ -6,7 +6,6 @@
 \alias{objSize.list}
 \alias{objSize.environment}
 \alias{objSize.Path}
-\alias{objSize.function}
 \alias{objSizeSession}
 \title{Recursive \code{object.size}}
 \usage{
@@ -37,14 +36,6 @@ objSize(x, quick, enclosingEnvs, .prevEnvirs, ...)
 )
 
 \method{objSize}{Path}(
-  x,
-  quick = getOption("reproducible.quick", FALSE),
-  enclosingEnvs = TRUE,
-  .prevEnvirs = list(),
-  ...
-)
-
-\method{objSize}{`function`}(
   x,
   quick = getOption("reproducible.quick", FALSE),
   enclosingEnvs = TRUE,
