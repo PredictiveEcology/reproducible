@@ -134,7 +134,7 @@ setMethod(
                terra::res(object), terra::crs(object),
                terra::ext(object)), object@ptr$names, ),
           length = length, quick = quick,
-          algo = algo) # don't include object@data -- these are volatile
+          algo = algo, classOptions = classOptions) # don't include object@data -- these are volatile
         out <- .doDigest(list(out, dig), algo = algo)
       } else {
         out <- .doDigest(terra::wrap(object), algo)
@@ -254,7 +254,7 @@ setMethod(
     object <- .removeCacheAtts(object)
     .robustDigest(as.list(object, all.names = TRUE), .objects = .objects,
                   length = length,
-                  algo = algo, quick = quick)
+                          algo = algo, quick = quick, classOptions = classOptions)
   })
 
 #' @rdname robustDigest
@@ -268,10 +268,10 @@ setMethod(
     if (!is.null(.objects)) object <- object[.objects]
     lapply(.sortDotsUnderscoreFirst(object), function(x) {
       .robustDigest(object = x, .objects = .objects,
-                   length = length,
-                   algo = algo, quick = quick)
+                    length = length,
+                    algo = algo, quick = quick, classOptions = classOptions)
     })
-})
+  })
 
 #' @rdname robustDigest
 #' @export
@@ -281,8 +281,8 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    dig <- lapply(object, .robustDigest, algo = algo)
-    .robustDigest(unlist(dig), quick = TRUE, algo = algo)
+    dig <- lapply(object, .robustDigest, algo = algo, classOptions = classOptions)
+    .robustDigest(unlist(dig), quick = TRUE, algo = algo, classOptions = classOptions)
 })
 
 
@@ -307,7 +307,7 @@ setMethod(
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
     dim(object) <- NULL
-    .robustDigest(object)
+    .robustDigest(object, classOptions = classOptions)
     # From ad hoc tests, 6 was the highest I could go to maintain consistent between Linux and Windows
   })
 
