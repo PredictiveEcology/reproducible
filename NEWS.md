@@ -15,6 +15,7 @@ Version 1.2.9
 * `retry` can now return a named list for the `exprBetween`, which allows for more than one object to be modified between retries.
  
 ## Bug fixes
+* `.robustDigest` was removing Cache attributes from objects under many conditions, when it should have left them there. It is unclear what the issues were, as this would likely not have impacted `Cache`. Now these attributes are left on.
 * `data.table` objects appear to not be recovered correctly from disk (e.g., from Cache repository. We have added `data.table::copy` when recovering from Cache repository
 * `clearCache` and `cc` did not correctly remove file-backed raster files (when not clearing whole CacheRepo); this may have resulted in a proliferation of files, each a filename with an underscore and a new higher number. This fix should eliminate this problem.
 * deal with development versions of GDAL in `getGDALVersion()` (#239)
