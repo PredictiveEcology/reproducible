@@ -3,25 +3,19 @@
 \name{objSize}
 \alias{objSize}
 \alias{objSizeSession}
-\title{Recursive \code{object.size}}
+\title{Wrapper around \code{lobstr::obj_size}}
 \usage{
-objSize(x, quick, enclosingEnvs, .prevEnvirs, ...)
+objSize(x, quick = TRUE, ...)
 
 objSizeSession(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = list())
 }
 \arguments{
 \item{x}{An object}
 
-\item{quick}{Logical. Only some methods use this. e.g.,
-\code{Path} class objects. In which case, \code{file.size} will be
-used instead of \code{object.size}.}
+\item{quick}{Logical. If \code{FALSE}, then an attribute, "objSize" will be added to
+the returned value, with each of the elements' object size returned also.}
 
-\item{enclosingEnvs}{Logical indicating whether to include enclosing environments.
-Default \code{TRUE}.}
-
-\item{.prevEnvirs}{For internal account keeping to identify and prevent duplicate counting}
-
-\item{...}{Additional arguments (currently unused)}
+\item{...}{Additional arguments (currently unused), enables backwards compatible use.}
 
 \item{sumLevel}{Numeric, indicating at which depth in the list of objects should the
 object sizes be summed (summarized). Default is \code{Inf}, meaning no sums. Currently,
@@ -29,12 +23,13 @@ the only option other than Inf is 1: \code{objSizeSession(1)},
 which gives the size of each package.}
 }
 \description{
-This has methods for various types of things that may not correctly report
-their object size using \code{object.size}.
-Also, for lists and environments, it will return the object size separately for each element.
-These are estimates only, and could be inaccurate.
-Alternative, similar functions include \code{object.size} and \code{pryr::object_size}.
-See Details for the special case of functions and their enclosing environments.
+This will return the result from \code{lobstr::obj_size}, i.e., a \code{lobstr_bytes}
+which is a \code{numeric}. If \code{quick = FALSE}, it will also have an attribute,
+"objSize", which will
+be a list with each element being the \code{objSize} of the individual elements of \code{x}.
+This is particularly useful if \code{x} is a \code{list} or \code{environment}.
+However, because of the potential for shared memory, the sum of the individual
+elements will generally not equal the value returned from this function.
 }
 \details{
 For functions, a user can include the enclosing environment as described
