@@ -55,6 +55,7 @@ Imports:
     fpCompare,
     gdalUtilities,
     glue,
+    lobstr,
     magrittr,
     methods,
     Require,
