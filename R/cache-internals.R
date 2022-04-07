@@ -12,7 +12,7 @@
   )
 
   hashObjectSize <- unlist(lapply(modifiedDots[!dotPipe], function(x) {
-    objSize <- lobstr::obj_size(x, quick = quick)
+    objSize <- objSize(x, quick = quick)
   }))
 
   lengths <- unlist(lapply(preDigestUnlist, function(x) length(unlist(x))))

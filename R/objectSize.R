@@ -77,6 +77,22 @@ objSize.list <- function(x, quick = TRUE, ...) {
 
 #' @export
 #' @importFrom lobstr obj_size
+objSize.Path <- function(x, quick = TRUE, ...) {
+  if (quick) {
+    os <- obj_size(x)
+  } else {
+    os <- file.size(x)
+  }
+
+  if (!quick) {
+    out <- lapply(x, lobstr::obj_size, quick = quick)
+    attr(os, "objSize") <- out
+  }
+  os
+}
+
+#' @export
+#' @importFrom lobstr obj_size
 objSize.environment <- function(x, quick = TRUE, ...) {
   os <- obj_size(x)
   if (!quick) {
