@@ -44,11 +44,6 @@
 #' sum(unlist(os2)) # around 13 MB, with all functions, objects
 #'                  # and imported functions
 #'
-objSize <- function(x, quick, enclosingEnvs, .prevEnvirs, ...) {
-  UseMethod("objSize", x)
-}
-
-#' @export
 #' @importFrom utils object.size
 #' @rdname objSize
 #' @details
@@ -59,154 +54,126 @@ objSize <- function(x, quick, enclosingEnvs, .prevEnvirs, ...) {
 #' However, if the enclosing environment is the \code{.GlobalEnv}, it will
 #' not be included even though \code{enclosingEnvs = TRUE}.
 #'
-objSize.default <- function(x, quick = getOption("reproducible.quick", FALSE),
-                            enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
-  if (any(inherits(x, "SpatVector"), inherits(x, "SpatRaster"))) {
-    if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
-      stop("Please install terra package")
-      os <- object.size(terra::wrap(x))
-  } else {
-    varName <- deparse(substitute(x))
-
-    hasEnclEnv <- if ((is(x, "function") && !is.primitive(x)) ||
-                      is(x, "formula") || is(x, "expression")) {
-      TRUE
-    } else {
-      FALSE
-    }
-
-    os <- object.size(x)
-
-    if (hasEnclEnv) {
-      browser()
-      curEnvYYY <- environment(x)
-      osEnv <- objSize(curEnvYYY, quick = quick, enclosingEnvs = enclosingEnvs, .prevEnvirs = .prevEnvirs)
-      names(osEnv) <- gsub("curEnvYYY", paste0(varName, "_enclEnvir"), names(osEnv))
-      os <- list(os)
-      names(os) <- varName
-      os <- append(os, osEnv)
-    }
-
-  }
-  total <- sum(unlist(os))
-  class(total) <- "object_size"
-  attr(os, "total") <- noquote(format(total, units = "auto"))
-  os
-}
 
 #' @export
-#' @rdname objSize
-objSize.list <- function(x, quick = getOption("reproducible.quick", FALSE),
-                         enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
-  TandC <- grepl(".__[TC]__", names(x))
-  if (sum(TandC) > 0)
-    x <- x[!TandC]
-  osList <- lapply(x, function(yyyy) {
-
-    hasEnclEnv <- (is(yyyy, "function") && !is.primitive(yyyy)) ||
-                      is(yyyy, "formula") || is(yyyy, "expression")
-    isEnv <- is(yyyy, "environment")
-    if (hasEnclEnv) {
-      browser()
-      localEnv <- environment(yyyy)
-      if (length(.prevEnvirs) == 0) {
-        doneAlready <- list(FALSE)
-      } else {
-        doneAlready <- lapply(.prevEnvirs, function(pe) identical(pe, localEnv))
-      }
-      .prevEnvirs <<- unique(append(.prevEnvirs, localEnv))
-
-      browser()
-      if (!any(unlist(doneAlready))) {
-        os <- objSize(yyyy, quick, enclosingEnvs)#, .prevEnvirs)
-      } else {
-        os <- NULL
-      }
-    } else {
-      os <- object.size(yyyy)
-    }
-
-
-
-    # This strips the `yyyy` from the naming... automatically done with the lapply
-    if (length(names(os)) > 0) {
-      names(os) <- gsub("yyyy(_)*", "", names(os))
-    }
-    return(os)
-  })
-  if (length(osList) > 0)
-    osList <- osList[!unlist(lapply(osList, function(x) is.null(x) || length(x) == 0))]
-
-  total <- sum(unlist(osList))
-  class(total) <- "object_size"
-  attr(osList, "total") <- noquote(format(total, units = "auto"))
-
-  osList
-}
-
-#' @export
-objsize <- function(x, quick, enclosingEnvs, .prevEnvirs, ...) {
-  UseMethod("objsize", x)
+objSize <- function(x, quick, enclosingEnvs, .prevEnvirs, ...) {
+  UseMethod("objSize", x)
 }
 
 #' @export
 #' @importFrom utils object.size
-objsize.default <- function(x, quick = getOption("reproducible.quick", FALSE),
+#' @importFrom data.table setorderv
+objSize.default <- function(x, quick = getOption("reproducible.quick", FALSE),
                             enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
 
   .prevEnvirs <- list()
-  os <- objsizeInner(x, outerEnv = environment())
+  .ord <- 0
 
-  total <- sum(unlist(os))
+  .objSizeObj <- list()
+
+  parentObjName <- deparse(substitute(x))
+  if (is.environment(x)) {
+    envName <- environmentName(x)
+    if (nchar(envName) > 0) parentObjName <- envName
+  }
+
+  os <- objsizeInner(x, quick = quick, outerEnv = environment(),
+                     parentObjName = parentObjName, parentAddress = "")
+
+  browser()
+
+  os3 <- data.table(object = names(os), bytes = unlist(os))
+  # set(os4, NULL, "object", names(os))
+  #
+  # # browser()
+  # os2 <- rbindlist(.objSizeObj)
+  # setorderv(os2, "order")
+  # #
+  # keepCols <- c("parentName", "os")
+  # os3 <- unique(os2, by = "add")
+  # # setnames(os3, old = keepCols, c("object", "bytes"))
+  #
+  # if (NROW(os3) > 1) {
+  #   osTop <- os3[1]
+  #   setnames(osTop, "os", "bytes")
+  #
+  #   addsByLevel <- list(os3$add[1])
+  #   indices <- list(1)
+  #   for(lev in 2:NROW(os3)) {
+  #     index <- which(os3$parentAdd %in% addsByLevel[[lev - 1]])
+  #     val <- os3$add[index]
+  #     if (length(val) == 0) break
+  #     addsByLevel[[lev]] <- val
+  #     indices[[lev]] <- index
+  #   }
+  #
+  #   if (lev > 2) {
+  #     os5 <- os3[indices[[lev - 1]]]
+  #     set(os5, NULL, "V1", 0)
+  #     for (lev2 in rev(3:length(indices))) {
+  #       os4 <- os5[, sum(c(V1, os), na.rm = TRUE), by = "parentAdd"]
+  #       os5 <- os4[os3[indices[[lev2 - 1]]], on = c("parentAdd" = "add")]
+  #       set(os5, NULL, "parentAdd", NULL)
+  #       setnames(os5, "i.parentAdd", "parentAdd")
+  #     }
+  #     os5[!is.na(V1), os := V1 + os]
+  #     setnames(os5, "os", "bytes")
+  #     os6 <- rbindlist(list(osTop, os5), fill = TRUE)
+  #     if (is.na(os6$parentName[1]))
+  #       os6[1, parentName := "Top"]
+  #     os3 <- os6
+  #   }
+  #
+  # } else {
+  #   setnames(os3, "os", "bytes")
+  # }
+
+  #colsToDel <- setdiff(colnames(os3), c("parentName", "bytes"))
+  #set(os3, NULL, colsToDel, NULL)
+
+  # setnames(os3, old = "parentName", "object")
+  total <- sum(unlist(os3$bytes), na.rm = TRUE)
   class(total) <- "object_size"
-  attr(os, "total") <- noquote(format(total, units = "auto", digits = 2))
 
-  return(os)
+  bb <- list(objects = os3, total = total)
+
+  return(bb)
 
 }
 
-#' @export
-objsize.simList <- function(x, quick = getOption("reproducible.quick", FALSE),
-                            enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
-
-  aa <- objsize(x@.xData, quick, enclosingEnvs, .prevEnvirs)
-
-  theSimEnvItself <- names(aa) == "x@.xData"
-  names(aa)[theSimEnvItself] <- "simEnv"
-  aa <- lapply(aa, function(a) {
-    ss <- sum(unlist(a))
-    class(ss) <- "object_size"
-    ss
-  })
-  names(aa) <- gsub("x@.xData\\$*", "", names(aa))
-  simSlots <- grep("^\\.envir$|^\\.xData$", slotNames(x), value = TRUE, invert = TRUE)
-  names(simSlots) <- simSlots
-  otherParts <- objsize(lapply(simSlots, function(slotNam) slot(x, slotNam)))
-  other <- lapply(otherParts, function(op) {
-    ss <- sum(unlist(op))
-    class(ss) <- "object_size"
-    ss
-  })
-
-  aa <- list(sim = aa, other = other)
-  total <- sum(unlist(aa))
-  class(total) <- "object_size"
-  attr(aa, "total") <- noquote(format(total, units = "auto"))
-
-  return(aa)
+sizeInner <- function(os) {
+  if (length(os) > 1) {
+    out <- lapply(os, sizeInner)
+  } else {
+    out <- as.list(os)
+  }
+  out
 }
 
-objsizeInner <- function(x, quick, outerEnv) {
+addressInner <- function(os) {
+  if (length(os) > 1) {
+    out <- lapply(os, addressInner)
+  } else {
+    out <- list(attr(os, "add"))
+  }
+  out
+}
 
+objsizeInner <- function(x, quick, outerEnv, parentObjName, parentAddress) {
+  xClass <- class(x)[1]
+  .ord <- get(".ord", envir = outerEnv)
+  .ord <- .ord + 1
+  assign(".ord", .ord, envir = outerEnv)
+
+  add <- if (quick) rndstr(1) else .address(x)
   if (!is.null(x)) {
     os <- 0
+
     xEnv <- environment(x)
     hasEnv <- !is.null(xEnv)
     isEnv <- is.environment(x)
     if (hasEnv || isEnv) {
       peHere <- if (hasEnv) xEnv else x
-      if (hasEnv)
-        osHasEnv <- object.size(x)
       osEnv <- sum(object.size(peHere), object.size(attributes(peHere)))
       isGlobal <- identical(.GlobalEnv, peHere)
 
@@ -222,84 +189,123 @@ objsizeInner <- function(x, quick, outerEnv) {
         }
       }
     }
+    # if (add == "0x19b83007c70") browser()
 
-    if (is(x, "list")) {
-      anyNested <- lapply(x, function(xInner) is(xInner, "list") || is(xInner, "environment"))
-      if (any(unlist(anyNested))) {
-        osInner <- if (length(x) > 1)
-          lapply(x, function(xx) objsizeInner(xx, quick, outerEnv))
-        else
-          list(objsizeInner(x[[1]], quick, outerEnv))
-      } else {
-        osInner <- object.size(x)
+    # if ( (is(x, "list") && !quick) || (quick & (isEnv || hasEnv)) && length(x) > 1) {
+    if ( (is(x, "list") && (!quick || identical(outerEnv, parent.frame()))) && length(x) > 1) {
+
+      # if (identical(outerEnv, parent.frame())) browser()
+      if (length(x) > 0) {
+        parentObjNames <- if (is.null(names(x))) {
+          paste0("y", seq(x))
+        } else {
+          names(x)
+        }
+        if ("paths" %in% parentObjNames) browser()
+        osInner <-
+          Map(xx = x, parentObjName = parentObjNames,
+              function(xx, parentObjName) objsizeInner(xx, quick = quick, outerEnv,
+                                                       parentObjName = parentObjName,
+                                                       parentAddress = add))
+        os <- osInner
       }
-      os <- osInner
-      if (exists("osEnv", inherits = FALSE))
-        os <- append(list(osEnv), os)
-      if (exists("osHasEnv", inherits = FALSE))
-        os <- append(list(osHasEnv), os)
+      if (exists("osEnv", inherits = FALSE)) {
+        attr(osEnv, "add") <- add
+        osEnvList <- list(osEnv)
+        names(osEnvList) <- parentObjName
+        os <- append(osEnvList, os)
+
+      }
 
     } else {
-      os <- object.size(x)
+      os <- list(object.size(x))
+      if (hasEnv) {
+        os <- list(unlist(os) + object.size(attributes(x)))
+      }
     }
+
+    if (length(os) == 0) {
+      os <- list(0)
+      # names(os) <- varName
+    }
+
+    if (quick) {
+      if (is.null(names(os)))
+        varNames <- "yy"
+      else
+        varNames <- names(unlist(os))
+      oses <- unlist(os)
+    } else {
+      if (is.null(names(os)))
+        varNames <- "yy"
+      else
+        varNames <- names(unlist(os))[1]
+      oses <- unlist(os)[1]
+    }
+
+
+    .objSizeObj <- get(".objSizeObj", envir = outerEnv)
+    if (is.null(os)) os <- 0
+    # os <- lapply(os, function(x) sum(unlist(x)))
+
+    if (quick) {
+      .objSizeObj <- append(.objSizeObj,
+                            list(list(parentName = parentObjName, varName = varNames,
+                                            os = oses, add = add, parentAdd = parentAddress,
+                                            class = xClass, order = .ord)))
+    } else {
+      .objSizeObj <- append(.objSizeObj,
+                            list(list(parentName = parentObjName, varName = varNames,
+                                      os = oses, add = add, parentAdd = parentAddress,
+                                      class = xClass, order = .ord)))
+    }
+    assign(".objSizeObj", .objSizeObj, envir = outerEnv)
+
+
   } else {
-    os <- NULL
+    os <- list(0)
   }
+  attr(os, "add") <- add
 
-  return(os)
-
-
-}
-
-#' @export
-#' @importFrom utils object.size
-#' @rdname objSize
-objSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE),
-                                enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
-  xName <- deparse(substitute(x))
-
-  if (length(.prevEnvirs) == 0) {
-    doneAlready <- list(FALSE)
-  } else {
-    doneAlready <- lapply(.prevEnvirs, function(pe) identical(pe, x))
-  }
-  .prevEnvirs <- unique(append(.prevEnvirs, x))
-
-  lsEnv <- ls(x, all.names = TRUE)
-
-  if (!any(unlist(doneAlready)) && length(lsEnv) > 0) {
+  if (identical(outerEnv, parent.frame())) {
     browser()
-    asList <- as.list(x, all.names = TRUE)
-    os <- objSize(asList, enclosingEnvs = enclosingEnvs,
-            .prevEnvirs = .prevEnvirs)
-
-  } else {
-    os <- NULL
+    ad <- unlist(addressInner(os))
+    si <- unlist(sizeInner(os))
+    lengths <- lapply(os, function(x) length(unlist(x)))
+    lengths[lengths == 0] <- 1
+    lengths <- rep(names(lengths), lengths)
+    dt <- data.table(object = lengths, object2 = names(ad),
+                     bytes = si[names(ad)], address = ad)
+    dt <- unique(dt, by = "address")
+    dt[is.na(bytes), bytes := 0]
+    dt <- dt[, list(bytes = sum(bytes)), by = "object"]
+    os <- as.list(dt$bytes)
+    names(os) <- dt$object
   }
-  if (length(os) > 0)
-    names(os) <- paste0(xName, "$", names(os))
-  osCur <- list(object.size(x))
-  names(osCur) <- xName
-  os <- append(os, osCur)
 
-  total <- sum(unlist(os))
-  class(total) <- "object_size"
-  attr(os, "total") <- noquote(format(total, units = "auto"))
   return(os)
+
+
 }
 
-#' @export
-#' @importFrom utils object.size
-#' @rdname objSize
-objSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE),
-                         enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
-  if (quick) {
-    object.size(x)
+#' Get memory address using .Internal(inspect(obj))
+#'
+#' Not intended for user use.
+#'
+#' @param obj An R object
+address <- function(obj) {
+  objName <- deparse(substitute(obj))
+  if (is(obj, "list")) {
+    out <- lapply(obj, address)
+    outer <- capture.output(.Internal(inspect(obj)))
+    outer <- substr(outer[1], 1, 19)
+    out <- append(list(outer), out)
   } else {
-    file.size(x)
+    out <- capture.output(.Internal(inspect(obj)))
+    out <- substr(out, 1, 19)
   }
+  out
 }
-
 
 #' @param sumLevel Numeric, indicating at which depth in the list of objects should the
 #'   object sizes be summed (summarized). Default is \code{Inf}, meaning no sums. Currently,
@@ -370,4 +376,21 @@ isTopLevelEnv <- function(x) {
        isNamespace(x) ||
        identical(emptyenv(), x) ||
        identical(baseenv(), x)
+}
+
+.address <- function(x) {
+  add <- capture.output(.Internal(inspect(x)))
+  add <- paste0(substr(add[1], 2, 3),
+                substr(add[1], 9, 19))
+  add
+}
+
+length2 <- function(os) {
+  if (length(os) > 1) {
+    out <- lapply(os, length2)
+    browser()
+  } else {
+    out <- length(os)
+  }
+  out
 }

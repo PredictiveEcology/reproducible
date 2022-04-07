@@ -2,46 +2,10 @@
 % Please edit documentation in R/objectSize.R
 \name{objSize}
 \alias{objSize}
-\alias{objSize.default}
-\alias{objSize.list}
-\alias{objSize.environment}
-\alias{objSize.Path}
 \alias{objSizeSession}
 \title{Recursive \code{object.size}}
 \usage{
 objSize(x, quick, enclosingEnvs, .prevEnvirs, ...)
-
-\method{objSize}{default}(
-  x,
-  quick = getOption("reproducible.quick", FALSE),
-  enclosingEnvs = TRUE,
-  .prevEnvirs = list(),
-  ...
-)
-
-\method{objSize}{list}(
-  x,
-  quick = getOption("reproducible.quick", FALSE),
-  enclosingEnvs = TRUE,
-  .prevEnvirs = list(),
-  ...
-)
-
-\method{objSize}{environment}(
-  x,
-  quick = getOption("reproducible.quick", FALSE),
-  enclosingEnvs = TRUE,
-  .prevEnvirs = list(),
-  ...
-)
-
-\method{objSize}{Path}(
-  x,
-  quick = getOption("reproducible.quick", FALSE),
-  enclosingEnvs = TRUE,
-  .prevEnvirs = list(),
-  ...
-)
 
 objSizeSession(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = list())
 }
