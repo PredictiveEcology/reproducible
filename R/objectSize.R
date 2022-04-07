@@ -57,7 +57,7 @@ objSize <- function(x, quick = TRUE, ...) {
 
 #' @export
 #' @importFrom lobstr obj_size
-objSize.default <- function(x, quick, ...) {
+objSize.default <- function(x, quick = TRUE, ...) {
   out <- obj_size(x)
   if (!quick)
     attr(out, "objSize") <- list(obj = out)
@@ -66,7 +66,7 @@ objSize.default <- function(x, quick, ...) {
 
 #' @export
 #' @importFrom lobstr obj_size
-objSize.list <- function(x, quick, ...) {
+objSize.list <- function(x, quick = TRUE, ...) {
   os <- obj_size(x)
   if (!quick) {
     out <- lapply(x, lobstr::obj_size, quick = quick)
@@ -77,7 +77,7 @@ objSize.list <- function(x, quick, ...) {
 
 #' @export
 #' @importFrom lobstr obj_size
-objSize.environment <- function(x, quick, ...) {
+objSize.environment <- function(x, quick = TRUE, ...) {
   os <- obj_size(x)
   if (!quick) {
     out <- lapply(as.list(x, all.names = TRUE), lobstr::obj_size, quick = quick)
@@ -91,6 +91,10 @@ objSize.environment <- function(x, quick, ...) {
 #'   object sizes be summed (summarized). Default is \code{Inf}, meaning no sums. Currently,
 #'   the only option other than Inf is 1: \code{objSizeSession(1)},
 #'   which gives the size of each package.
+#' @param enclosingEnvs Logical indicating whether to include enclosing environments.
+#'                      Default \code{TRUE}.
+#' @param .prevEnvirs For internal account keeping to identify and prevent duplicate counting
+#'
 #'
 #' @details \code{objSizeSession} will give the size of the whole session, including loaded packages.
 #' Because of the difficulties in calculating the object size of \code{base}
