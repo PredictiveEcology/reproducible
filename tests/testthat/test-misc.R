@@ -15,8 +15,8 @@ test_that("test miscellaneous fns (part 1)", {
   a <- 1
   b <- tempfile()
   saveRDS(a, b)
-  expect_is(objSize(asPath(b)), "numeric")
-  expect_is(objSize(asPath(b), quick = TRUE), "object_size")
+  expect_true(is.numeric(objSize(asPath(b))))
+  expect_true(is(objSize(asPath(b)), "lobstr_bytes"))
 
   # objSizeSession
   mess <- capture.output({d <- objSizeSession()})

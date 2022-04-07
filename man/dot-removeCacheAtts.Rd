@@ -4,7 +4,7 @@
 \alias{.removeCacheAtts}
 \title{Remove attributes that are highly varying}
 \usage{
-.removeCacheAtts(x, passByReference = TRUE)
+.removeCacheAtts(x, passByReference = FALSE)
 }
 \arguments{
 \item{x}{Any arbitrary R object that could have attributes}

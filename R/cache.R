@@ -975,7 +975,7 @@ setMethod(
       # This is for write conflicts to the SQLite database
       #   (i.e., keep trying until it is written)
 
-      objSize <- sum(unlist(objSize(outputToSave)))
+      objSize <- lobstr::obj_size(outputToSave)
       resultHash <- ""
       linkToCacheId <- NULL
       if (objSize > 1e6) {

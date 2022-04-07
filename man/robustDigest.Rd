@@ -5,11 +5,15 @@
 \alias{.robustDigest,ANY-method}
 \alias{.robustDigest,function-method}
 \alias{.robustDigest,expression-method}
+\alias{.robustDigest,language-method}
 \alias{.robustDigest,character-method}
 \alias{.robustDigest,Path-method}
 \alias{.robustDigest,environment-method}
 \alias{.robustDigest,list-method}
 \alias{.robustDigest,data.frame-method}
+\alias{.robustDigest,numeric-method}
+\alias{.robustDigest,matrix-method}
+\alias{.robustDigest,integer-method}
 \alias{.robustDigest,Raster-method}
 \alias{.robustDigest,Spatial-method}
 \title{Create reproducible digests of objects in R}
@@ -30,6 +34,8 @@
 
 \S4method{.robustDigest}{expression}(object, .objects, length, algo, quick, classOptions)
 
+\S4method{.robustDigest}{language}(object, .objects, length, algo, quick, classOptions)
+
 \S4method{.robustDigest}{character}(object, .objects, length, algo, quick, classOptions)
 
 \S4method{.robustDigest}{Path}(object, .objects, length, algo, quick, classOptions)
@@ -39,6 +45,12 @@
 \S4method{.robustDigest}{list}(object, .objects, length, algo, quick, classOptions)
 
 \S4method{.robustDigest}{data.frame}(object, .objects, length, algo, quick, classOptions)
+
+\S4method{.robustDigest}{numeric}(object, .objects, length, algo, quick, classOptions)
+
+\S4method{.robustDigest}{matrix}(object, .objects, length, algo, quick, classOptions)
+
+\S4method{.robustDigest}{integer}(object, .objects, length, algo, quick, classOptions)
 
 \S4method{.robustDigest}{Raster}(object, .objects, length, algo, quick, classOptions)
 

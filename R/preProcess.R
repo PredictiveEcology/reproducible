@@ -323,7 +323,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   # browser(expr = exists("._preProcess_6"))
-
   filesToChecksum <- if (is.null(archive) || isTRUE(is.na(archive))) {
     NULL
   } else {
@@ -874,7 +873,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           filesInHandIP <- checkSumsIPOnlyNeeded$expectedFile
           filesInHandIPLogical <- neededFiles %in% filesInHandIP
           if (any(filesInHandIPLogical)) {
-            outHLC <- hardLinkOrCopy(file.path(dirNameOPFiles, filesInHandIP),
+            outHLC <- hardLinkOrCopy(file.path(dirNameOPFiles[filesInHandIPLogical], filesInHandIP),
                           file.path(destinationPath, filesInHandIP))
             checkSums <- rbindlist(list(checkSumsIPOnlyNeeded, checkSums))
             checkSums <- unique(checkSums, by = "expectedFile")
