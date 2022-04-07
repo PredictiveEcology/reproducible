@@ -152,7 +152,7 @@ setMethod(
 
     # passByReference -- while doing pass by reference attribute setting is faster, is
     #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
-    object1 <- .removeCacheAtts(object, passByReference = FALSE)
+    object1 <- .removeCacheAtts(object)
     .doDigest(object1, algo)
 })
 
@@ -376,7 +376,7 @@ setMethod(
   ".robustDigest",
   signature = "Spatial",
   definition = function(object, .objects, length, algo, quick, classOptions) {
-    object <- .removeCacheAtts(object)
+    object <- .removeCacheAtts(object, passByReference = FALSE)
 
   if (is(object, "SpatialPoints")) {
       aaa <- as.data.frame(object)
@@ -426,7 +426,7 @@ setMethod(
 #' @param passByReference Logical. If \code{TRUE}, the default, this uses \code{data.table::setattr}
 #'   to remove several attributes that are unnecessary for digesting, specifically \code{tags},
 #'   \code{.Cache} and \code{call}
-.removeCacheAtts <- function(x, passByReference = TRUE) {
+.removeCacheAtts <- function(x, passByReference = FALSE) {
   if (passByReference) {
     setattr(x, "tags", NULL)
     setattr(x, ".Cache", NULL)
