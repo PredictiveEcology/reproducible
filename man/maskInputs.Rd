@@ -12,7 +12,7 @@ maskInputs(x, studyArea, ...)
 \method{maskInputs}{Raster}(
   x,
   studyArea,
-  rasterToMatch,
+  rasterToMatch = NULL,
   maskWithRTM = NULL,
   verbose = getOption("reproducible.verbose", 1),
   ...
@@ -21,7 +21,7 @@ maskInputs(x, studyArea, ...)
 \method{maskInputs}{Spatial}(
   x,
   studyArea,
-  rasterToMatch,
+  rasterToMatch = NULL,
   maskWithRTM = FALSE,
   verbose = getOption("reproducible.verbose", 1),
   useCache = getOption("reproducible.useCache", FALSE),

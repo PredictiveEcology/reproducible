@@ -1168,7 +1168,7 @@ maskInputs <- function(x, studyArea, ...) {
 #' @export
 #' @importFrom raster stack
 #' @rdname maskInputs
-maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = NULL,
+maskInputs.Raster <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = NULL,
                               verbose = getOption("reproducible.verbose", 1), ...) {
   messagePrepInputs("    masking ...", verbose = verbose, verboseLevel = 0)
   # browser(expr = exists("._maskInputs_1"))
@@ -1197,7 +1197,7 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = NULL,
 
 #' @export
 #' @rdname maskInputs
-maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
+maskInputs.Spatial <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = FALSE,
                                verbose = getOption("reproducible.verbose", 1),
                                useCache = getOption("reproducible.useCache", FALSE),
                                ...) {
