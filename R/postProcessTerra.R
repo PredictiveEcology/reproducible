@@ -177,7 +177,7 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
       st <- Sys.time()
       messagePrepInputs("  `from` is large, converting to terra object will take some time ...")
     }
-    from <- terra::vect(from)
+    from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
     if (lg) {
       messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
                                              units = "secs", digits = 3))
@@ -348,7 +348,12 @@ projectTo <- function(from, projectTo, method) {
 
         # Since we only use the crs when projectTo is a Vector, no need to "fixErrorsTerra"
         from <- if (isVector(from)) {
-          terra::project(from, projectTo)
+          isSpatial <- is(from, "Spatial")
+          if (isSpatial)
+            from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
+          from <- terra::project(from, projectTo)
+          if (isSpatial) from <- as(from, "Spatial")
+          from
         } else {
           terra::project(from, projectTo, method = method)
         }
@@ -502,3 +507,5 @@ cropSF <- function(from, cropToVect) {
   }
   from
 }
+
+shldBeChar <- "should be a character value"

@@ -156,11 +156,63 @@ postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = NULL,
 
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
   # browser(expr = exists("._postProcess.spatialClasses_1"))
-  x1 <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
-                              rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
+  if (isTRUE(getOption("reproducible.useTerra"))) {
+    x1 <- postProcessTerra(from = x, studyArea = studyArea,
+                                rasterToMatch = rasterToMatch, useCache = useCache,
+                                filename1 = filename1, filename2 = filename2,
+                                useSAcrs = useSAcrs, overwrite = overwrite,
+                                verbose = verbose, ...)
+  } else {
+    x1 <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
+                                rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
+                                filename1 = filename1, filename2 = filename2,
+                                useSAcrs = useSAcrs, overwrite = overwrite,
+                                verbose = verbose, ...)
+  }
+
+  return(x1)
+}
+
+#' @export
+postProcess.SpatRaster <- function(x, filename1 = NULL, filename2 = NULL,
+                                       studyArea = NULL, rasterToMatch = NULL,
+                                       overwrite = getOption("reproducible.overwrite", TRUE),
+                                       useSAcrs = FALSE,
+                                       useCache = getOption("reproducible.useCache", FALSE),
+                                       verbose = getOption("reproducible.verbose", 1),
+                                       ...) {
+
+  browser()
+  on.exit(removeTmpFiles(h = 0), add = TRUE)
+
+  # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
+  # browser(expr = exists("._postProcess.spatialClasses_1"))
+  x1 <- postProcessTerra(from = x, studyArea = studyArea,
+                              rasterToMatch = rasterToMatch, useCache = useCache,
                               filename1 = filename1, filename2 = filename2,
                               useSAcrs = useSAcrs, overwrite = overwrite,
                               verbose = verbose, ...)
+  return(x1)
+}
+
+#' @export
+postProcess.SpatVector <- function(x, filename1 = NULL, filename2 = NULL,
+                                   studyArea = NULL, rasterToMatch = NULL,
+                                   overwrite = getOption("reproducible.overwrite", TRUE),
+                                   useSAcrs = FALSE,
+                                   useCache = getOption("reproducible.useCache", FALSE),
+                                   verbose = getOption("reproducible.verbose", 1),
+                                   ...) {
+
+  on.exit(removeTmpFiles(h = 0), add = TRUE)
+
+  # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
+  # browser(expr = exists("._postProcess.spatialClasses_1"))
+  x1 <- postProcessTerra(from = x, studyArea = studyArea,
+                         rasterToMatch = rasterToMatch, useCache = useCache,
+                         filename1 = filename1, filename2 = filename2,
+                         useSAcrs = useSAcrs, overwrite = overwrite,
+                         verbose = verbose, ...)
   return(x1)
 }
 
@@ -961,7 +1013,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
 
         falseWarns <- paste0(projNotWKT2warn, "|input and ouput crs|no non-missing arguments")
 
-        #browser()
         if (requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
           m1 <- methodFormals(terra::project, "SpatRaster")
           m2 <- methodFormals(terra::writeRaster, signature = c("SpatRaster", "character"))
@@ -1072,25 +1123,56 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
   x
 }
 
+
+#' @export
+#' @rdname projectInputs
+projectInputs.SpatVector <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
+  projectTo(from = x, projectTo = targetCRS)
+
+}
+
+#' @export
+#' @rdname projectInputs
+projectInputs.SpatRaster <- function(x, targetCRS = NULL,
+                                     verbose = getOption("reproducible.verbose", 1),
+                                     rasterToMatch = NULL, cores = NULL,
+                                     useGDAL = getOption("reproducible.useGDAL", TRUE),
+                                     ...) {
+  if (!is.null(targetCRS)) {
+    if (terra::crs(rasterToMatch) != targetCRS)
+      message("both rasterToMatch and targetCRS are supplied to projectInputs and they are different; using rasterToMatch")
+  }
+  projectTo(from = x, projectTo = rasterToMatch)
+
+}
+
 #' @export
 #' @rdname projectInputs
 projectInputs.sf <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
   messagePrepInputs("    reprojecting ...", verbose = verbose, verboseLevel = 0)
   .requireNamespace("sf", stopOnFALSE = TRUE)
   if (!is.null(targetCRS)) {
-    warning("sf class objects not fully tested Use with caution.")
-    .requireNamespace("sf", stopOnFALSE = TRUE)
-    isValid <- sf::st_is_valid(x)
-    if (any(sf::st_is(x, c("POLYGON", "MULTIPOLYGON"))) && !any(isValid)) {
-      x[!isValid] <- sf::st_buffer(x[!isValid], dist = 0, ...)
-    }
+    browser()
+    if (isTRUE(getOption("reproducible.useTerra"))) {
+      x <- projectTo(from = suppressWarningsSpecific(terra::vect(x), shldBeChar),
+                     projectTo = targetCRS)
+      browser()
+    } else {
 
-    if ("projargs" %in% slotNames(targetCRS) )
-      targetCRS <- sf::st_crs(targetCRS@projargs)
-    x <- sf::st_transform(x = x, crs = targetCRS, ...)
-    if (!identical(sf::st_crs(x), targetCRS)) {
-      ## sometimes the proj4string is rearranged, so they are not identical; they should be
-      sf::st_crs(x) <- targetCRS
+      warning("sf class objects not fully tested Use with caution.")
+      .requireNamespace("sf", stopOnFALSE = TRUE)
+      isValid <- sf::st_is_valid(x)
+      if (any(sf::st_is(x, c("POLYGON", "MULTIPOLYGON"))) && !any(isValid)) {
+        x[!isValid] <- sf::st_buffer(x[!isValid], dist = 0, ...)
+      }
+
+      if ("projargs" %in% slotNames(targetCRS) )
+        targetCRS <- sf::st_crs(targetCRS@projargs)
+      x <- sf::st_transform(x = x, crs = targetCRS, ...)
+      if (!identical(sf::st_crs(x), targetCRS)) {
+        ## sometimes the proj4string is rearranged, so they are not identical; they should be
+        sf::st_crs(x) <- targetCRS
+      }
     }
   }
   x
@@ -1102,20 +1184,27 @@ projectInputs.sf <- function(x, targetCRS, verbose = getOption("reproducible.ver
 projectInputs.Spatial <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
   messagePrepInputs("    reprojecting ...", verbose = verbose, verboseLevel = 0)
   if (!is.null(targetCRS)) {
-    if (!is(targetCRS, "CRS")) {
-      if (!is.character(targetCRS)) {
-        if (is(targetCRS, "spatialClasses")) {
-          targetCRS <- .crs(targetCRS)
-        } else {
-          stop("targetCRS in projectInputs must be a CRS object or a class from",
-               " which a crs can be extracted with raster::crs")
+    browser()
+
+    if (isTRUE(getOption("reproducible.useTerra"))) {
+      x <- projectTo(from = suppressWarningsSpecific(x, shldBeChar),
+                     projectTo = targetCRS)
+    } else {
+      if (!is(targetCRS, "CRS")) {
+        if (!is.character(targetCRS)) {
+          if (is(targetCRS, "spatialClasses")) {
+            targetCRS <- .crs(targetCRS)
+          } else {
+            stop("targetCRS in projectInputs must be a CRS object or a class from",
+                 " which a crs can be extracted with raster::crs")
+          }
         }
       }
-    }
-    x <- spTransform(x = x, CRSobj = targetCRS)
-    if (!identical(.crs(x), targetCRS)) {
-      ## sometimes the proj4string is rearranged, so they are not identical; they should be
-      crs(x) <- targetCRS
+      x <- spTransform(x = x, CRSobj = targetCRS)
+      if (!identical(.crs(x), targetCRS)) {
+        ## sometimes the proj4string is rearranged, so they are not identical; they should be
+        crs(x) <- targetCRS
+      }
     }
   }
   x
@@ -1202,18 +1291,48 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM =
                                useCache = getOption("reproducible.useCache", FALSE),
                                ...) {
 
-  x <- sf::st_as_sf(x)
+  if (isTRUE(getOption("reproducible.useTerra"))) {
+    to <- if (isTRUE(maskWithRTM)) rasterToMatch else studyArea
+    maskTo(from = suppressWarningsSpecific(terra::vect(x), shldBeChar),
+           maskTo = to)
+  } else {
+    x <- sf::st_as_sf(x)
 
-  x <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
-             expr = quote(
-               maskInputs(x, studyArea, rasterToMatch, maskWithRTM, verbose = verbose)
-             ),
-             exprBetween = quote(
-               x <- fixErrors(x, testValidity = NA, useCache = useCache)
-             ))
+    x <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
+               expr = quote(
+                 maskInputs(x, studyArea, rasterToMatch, maskWithRTM, verbose = verbose)
+               ),
+               exprBetween = quote(
+                 x <- fixErrors(x, testValidity = NA, useCache = useCache)
+               ))
 
-  as(x, "Spatial")
+    as(x, "Spatial")
+  }
+
 }
+
+#' @export
+#' @rdname maskInputs
+maskInputs.SpatVector <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = FALSE,
+                               verbose = getOption("reproducible.verbose", 1),
+                               useCache = getOption("reproducible.useCache", FALSE),
+                               ...) {
+  to <- if (isTRUE(maskWithRTM)) rasterToMatch else studyArea
+  maskTo(from = x, maskTo = to)
+
+}
+
+#' @export
+#' @rdname maskInputs
+maskInputs.SpatRaster <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = FALSE,
+                                  verbose = getOption("reproducible.verbose", 1),
+                                  useCache = getOption("reproducible.useCache", FALSE),
+                                  ...) {
+  to <- if (isTRUE(maskWithRTM)) rasterToMatch else studyArea
+  maskTo(from = x, maskTo = to)
+
+}
+
 
 #' @export
 #' @rdname maskInputs
