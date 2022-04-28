@@ -182,7 +182,6 @@ postProcess.SpatRaster <- function(x, filename1 = NULL, filename2 = NULL,
                                        verbose = getOption("reproducible.verbose", 1),
                                        ...) {
 
-  browser()
   on.exit(removeTmpFiles(h = 0), add = TRUE)
 
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
@@ -1152,11 +1151,9 @@ projectInputs.sf <- function(x, targetCRS, verbose = getOption("reproducible.ver
   messagePrepInputs("    reprojecting ...", verbose = verbose, verboseLevel = 0)
   .requireNamespace("sf", stopOnFALSE = TRUE)
   if (!is.null(targetCRS)) {
-    browser()
     if (isTRUE(getOption("reproducible.useTerra"))) {
       x <- projectTo(from = suppressWarningsSpecific(terra::vect(x), shldBeChar),
                      projectTo = targetCRS)
-      browser()
     } else {
 
       warning("sf class objects not fully tested Use with caution.")
@@ -1184,7 +1181,6 @@ projectInputs.sf <- function(x, targetCRS, verbose = getOption("reproducible.ver
 projectInputs.Spatial <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
   messagePrepInputs("    reprojecting ...", verbose = verbose, verboseLevel = 0)
   if (!is.null(targetCRS)) {
-    browser()
 
     if (isTRUE(getOption("reproducible.useTerra"))) {
       x <- projectTo(from = suppressWarningsSpecific(x, shldBeChar),
