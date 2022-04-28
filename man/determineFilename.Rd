@@ -143,17 +143,20 @@ shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
 if (require("terra")) {
   opts <- options("reproducible.useTerra" = TRUE)
   vectEcozone <- terra::vect(sf::st_as_sf(shpEcozone)) # direct conversion throws warning
+
   # If input is Spatial object --> return will also be Spatial
   shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
-  # If input is Spat object --> return will also be Spat
-  vectEcozonePostProcessed <- postProcess(vectEcozone, studyArea = StudyArea)
-
   # Try manually, individual pieces -- Note functions are different
   shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
+  shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
+
+  # If input is Spat object --> return will also be Spat
+  vectEcozonePostProcessed <- postProcess(vectEcozone, studyArea = StudyArea)
+  # Try manually, individual pieces -- Note functions are different
+  shpEcozoneMasked <- maskInputs(vectEcozone, StudyArea)
   VectEcozoneReprojected <- projectInputs(vectEcozone, StudyArea)
 
-  shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
-  shpEcozoneMasked <- maskInputs(vectEcozone, StudyArea)
+
 
   # Note these two have different function names --> methods for cropInputs and fixErrors
   #    are not implemented yet
