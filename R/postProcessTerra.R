@@ -1,4 +1,4 @@
-#' Transform a GIS dataset to have the metadata of another
+#' Transform a GIS dataset so it has the properties (extent, projection, mask) of another
 #'
 #' This function provides a single step to achieve the GIS operations "crop", "project",
 #' "mask" and possibly "write". It uses primarily the \code{terra} package internally
@@ -155,13 +155,14 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   postProcessTerraAssertions(from, to, cropTo, maskTo, projectTo)
 
   # Get the original class of from so that it can be recovered
-  isRaster <- is(from, "Raster")
-  isRasterLayer <- is(from, "RasterLayer")
-  isStack <- is(from, "RasterStack")
-  isBrick <- is(from, "RasterBrick")
-  isSF <- is(from, "sf")
-  isSpatial <- is(from, "Spatial")
-  isSpatRaster <- is(from, "SpatRaster")
+  origFromClass <- is(from)
+  isRaster <- any(origFromClass == "Raster")
+  isRasterLayer <- any(origFromClass == "RasterLayer")
+  isStack <- any(origFromClass == "RasterStack")
+  isBrick <- any(origFromClass == "RasterBrick")
+  isSF <- any(origFromClass == "sf")
+  isSpatial <- any(startsWith(origFromClass, "Spatial"))
+  isSpatRaster <- any(origFromClass == "SpatRaster")
   isVectorNonTerra <- isVector(from) && !isSpat(from)
 
   # converting sf to terra then cropping is slower than cropping then converting to terra
@@ -206,21 +207,14 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
                   datatype = datatype)
 
   # REVERT TO ORIGINAL INPUT CLASS
-  if (isStack && !is(from, "RasterStack")) from <- raster::stack(from) # coming out of writeRaster, becomes brick
-  if (isBrick && !is(from, "RasterBrick")) from <- raster::brick(from) # coming out of writeRaster, becomes brick
-  if (isRasterLayer && !is(from, "RasterLayer")) from <- raster::raster(from) # coming out of writeRaster, becomes brick
-  if (isSF || isSpatial) {
-    from <- sf::st_as_sf(from)
-    if (isSpatial) {
-      from <- sf::as_Spatial(from)
-    }
-  }
+  from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial)
   messagePrepInputs("  postProcessTerra done in ", format(difftime(Sys.time(), startTime),
                                                           units = "secs", digits = 3))
   from
 }
 
 isSpat <- function(x) is(x, "SpatRaster") || is(x, "SpatVector")
+isSpat2 <- function(origClass) any(origClass %in% c("SpatVector", "SpatRaster"))
 isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
 isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || is(x, "sf")
 isSpatialAny <- function(x) isGridded(x) || isVector(x)
@@ -238,6 +232,7 @@ fixErrorsTerra <- function(x) {
 maskTo <- function(from, maskTo) {
   if (!is.null(maskTo)) {
     if (!is.naSpatial(maskTo)) {
+      origFromClass <- class(from)
 
       if (is(maskTo, "Raster"))
         maskTo <- terra::rast(maskTo)
@@ -245,9 +240,18 @@ maskTo <- function(from, maskTo) {
         maskTo <- sf::st_as_sf(maskTo)
       if (is(maskTo, "sf"))
         maskTo <- terra::vect(maskTo)
+      if (!isSpat(from)) {
+        if (isVector(from)) {
+          from <- terra::vect(from)
+        } else {
+          from <- terra::rast(from)
+        }
+      }
 
-      if (!sf::st_crs(from) == sf::st_crs(maskTo))
+
+      if (!sf::st_crs(from) == sf::st_crs(maskTo)) {
         maskTo <- terra::project(maskTo, from)
+      }
       messagePrepInputs("    masking...")
       st <- Sys.time()
 
@@ -291,12 +295,14 @@ maskTo <- function(from, maskTo) {
       messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
     }
   }
+  from <- revertClass(from, origFromClass = origFromClass)
 
   from
 }
 
 projectTo <- function(from, projectTo, method) {
   if (!is.null(projectTo)) {
+    origFromClass <- is(from)
     if (!is.naSpatial(projectTo)) {
       if (is(projectTo, "Raster"))
         projectTo <- terra::rast(projectTo)
@@ -361,12 +367,19 @@ projectTo <- function(from, projectTo, method) {
       }
     }
   }
+  from <- revertClass(from, origFromClass = origFromClass)
   from
 }
 
-cropTo <- function(from, cropTo, needBuffer = FALSE) {
+#' @rdname postProcessTerra
+#' @param cropTo A Vector dataset
+#' @inheritParams postProcessTerra
+#' @export
+cropTo <- function(from, cropTo = NULL, needBuffer = FALSE) {
   if (!is.null(cropTo)) {
     omit <- FALSE
+    origFromClass <- is(from)
+
     if (!isSpatialAny(cropTo))
       if (is.na(cropTo)) omit <- TRUE
 
@@ -407,6 +420,7 @@ cropTo <- function(from, cropTo, needBuffer = FALSE) {
       messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
     }
   }
+  from <- revertClass(from, origFromClass = origFromClass)
   from
 }
 
@@ -509,3 +523,29 @@ cropSF <- function(from, cropToVect) {
 }
 
 shldBeChar <- "should be a character value"
+
+revertClass <- function(from, isStack = FALSE, isBrick = FALSE, isRasterLayer = FALSE,
+                        isSF = FALSE, isSpatial = FALSE, origFromClass = NULL) {
+  browser()
+  if (!isSpat2(origFromClass)) {
+    if (!is.null(origFromClass)) {
+      # overrides all others!
+      isStack <- any(origFromClass == "RasterStack")
+      isBrick <- any(origFromClass == "RasterBrick")
+      isRasterLayer <- any(origFromClass == "RasterLayer")
+      isSF <- any(origFromClass == "sf")
+      isSpatial <- any(startsWith(origFromClass, "Spatial"))
+
+    }
+    if (isStack && !is(from, "RasterStack")) from <- raster::stack(from) # coming out of writeRaster, becomes brick
+    if (isBrick && !is(from, "RasterBrick")) from <- raster::brick(from) # coming out of writeRaster, becomes brick
+    if (isRasterLayer && !is(from, "RasterLayer")) from <- raster::raster(from) # coming out of writeRaster, becomes brick
+    if (isSF || isSpatial) {
+      from <- sf::st_as_sf(from)
+      if (isSpatial) {
+        from <- sf::as_Spatial(from)
+      }
+    }
+  }
+  from
+}

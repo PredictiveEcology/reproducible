@@ -2,7 +2,8 @@
 % Please edit documentation in R/postProcessTerra.R
 \name{postProcessTerra}
 \alias{postProcessTerra}
-\title{Transform a GIS dataset to have the metadata of another}
+\alias{cropTo}
+\title{Transform a GIS dataset so it has the properties (extent, projection, mask) of another}
 \usage{
 postProcessTerra(
   from,
@@ -16,6 +17,8 @@ postProcessTerra(
   overwrite = TRUE,
   ...
 )
+
+cropTo(from, cropTo = NULL, needBuffer = FALSE)
 }
 \arguments{
 \item{from}{A Gridded or Vector dataset on which to do one or more of:
@@ -24,10 +27,7 @@ crop, project, mask, and write}
 \item{to}{A Gridded or Vector dataset which is the object
 whose metadata will be the target for cropping, projecting, and masking of \code{from}.}
 
-\item{cropTo}{Optional Gridded or Vector dataset which,
-if supplied, will supply the extent with which to crop \code{from}. To omit
-cropping completely, set this to \code{NA}. If supplied, this will override \code{to}
-for the cropping step. Defaults to \code{NULL}, which means use \code{to}}
+\item{cropTo}{A Vector dataset}
 
 \item{projectTo}{Optional Gridded or Vector dataset, or \code{crs} object (e.g., sf::st_crs).
 If Gridded it will supply

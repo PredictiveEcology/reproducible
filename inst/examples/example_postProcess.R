@@ -42,18 +42,19 @@ if (require("terra")) {
   # Try manually, individual pieces -- Note functions are different
   shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
   shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
+  shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
 
   # If input is Spat object --> return will also be Spat
   vectEcozonePostProcessed <- postProcess(vectEcozone, studyArea = StudyArea)
   # Try manually, individual pieces -- Note functions are different
-  shpEcozoneMasked <- maskInputs(vectEcozone, StudyArea)
+  vectEcozoneMasked <- maskInputs(vectEcozone, StudyArea)
   VectEcozoneReprojected <- projectInputs(vectEcozone, StudyArea)
+  vectEcozoneCropped <- cropInputs(vectEcozone, StudyArea)
 
 
 
   # Note these two have different function names --> methods for cropInputs and fixErrors
   #    are not implemented yet
-  shpEcozoneCropped <- cropTo(vectEcozone, StudyArea)
   shpEcozoneClean <- fixErrorsTerra(vectEcozone)
 
   options(opts)
