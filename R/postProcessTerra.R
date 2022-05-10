@@ -366,8 +366,8 @@ projectTo <- function(from, projectTo, method) {
         messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
       }
     }
+    from <- revertClass(from, origFromClass = origFromClass)
   }
-  from <- revertClass(from, origFromClass = origFromClass)
   from
 }
 
@@ -526,7 +526,6 @@ shldBeChar <- "should be a character value"
 
 revertClass <- function(from, isStack = FALSE, isBrick = FALSE, isRasterLayer = FALSE,
                         isSF = FALSE, isSpatial = FALSE, origFromClass = NULL) {
-  browser()
   if (!isSpat2(origFromClass)) {
     if (!is.null(origFromClass)) {
       # overrides all others!
