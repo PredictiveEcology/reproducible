@@ -288,7 +288,7 @@ if (getRversion() >= "3.1.0") {
 #' }
 #'
 #' # Using quoted dlFun and fun
-#' \code{dontrun} {
+#' \dontrun {
 #'   prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun).
 #'   # or more complex
 #'   test5 <- prepInputs(

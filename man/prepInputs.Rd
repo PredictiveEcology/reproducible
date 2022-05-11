@@ -307,7 +307,7 @@ test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify current
 }
 
 # Using quoted dlFun and fun
-\code{dontrun} {
+\dontrun {
   prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun).
   # or more complex
   test5 <- prepInputs(
