@@ -32,16 +32,6 @@ downloadFile <- function(archive, targetFile, neededFiles,
   if (!is.null(url) || !is.null(dlFun)) {
     missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile)
 
-    # if (is.null(neededFiles)) {
-    #   result <- unique(checkSums$result)
-    # } else {
-    #   result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
-    # }
-    # if (length(result) == 0) result <- NA
-    #
-    # missingNeededFiles <- (!(all(compareNA(result, "OK")) && all(neededFiles %in% checkSums$expectedFile)) ||
-    #                          is.null(targetFile) || is.null(neededFiles))
-
     if (missingNeededFiles) { # needed may be missing, but maybe can skip download b/c archive exists
       if (!is.null(archive)) {
         localArchivesExist <- file.exists(archive)
@@ -460,7 +450,14 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             fileInfo <- file.info(dir(destinationPath))
           }
           # browser(expr = exists("._downloadRemote_1"))
-          out <- do.call(dlFun, args = args)
+          out <- if (is.call(dlFun)) {
+            env1 <- new.env()
+            list2env(args, env1)
+            eval(dlFun, envir = env1)
+          } else {
+            do.call(dlFun, args = args)
+          }
+
           needSave <- TRUE
           if (is.null(targetFile)) {
             fileInfoAfter <- file.info(dir(destinationPath))
