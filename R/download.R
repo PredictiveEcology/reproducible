@@ -136,6 +136,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
             Sys.sleep(0.5)
           }
         } else {
+          # This is so that we essentially treat it as a file, not an object, which means
+          #   the second time we try this call, we can access the file locally, without needed to download
           if (is(downloadResults$out, "Spatial")) downloadResults$out <- NULL # TODO This appears to be a bug
           failed <- 0
         }
@@ -433,7 +435,11 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         if (!is.null(dlFun)) {
           dlFunName <- dlFun
           dlFun <- .extractFunction(dlFun)
-          fun <- .fnCleanup(dlFun, callingFun = "downloadRemote")
+          fun <- if (is(dlFun, "call")) {
+            .fnCleanup(dlFun, callingFun = "downloadRemote")
+          } else {
+            NULL
+          }
           forms <- .argsToRemove
           #dots <- list(...)
           overlappingForms <- fun$formalArgs[fun$formalArgs %in% forms]

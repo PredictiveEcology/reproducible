@@ -92,9 +92,8 @@ if (getRversion() >= "3.1.0") {
 #'   only option.
 #'
 #'   If there is a custom function call, is not in a package, `prepInputs` may not find it. In such
-#'   cases, simply pass the function as a named argument (with same name as function) to `prepInputs`
-#'   e.g.,
-#'   `prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun)`.
+#'   cases, simply pass the function as a named argument (with same name as function) to `prepInputs`.
+#'   See examples.
 #'   NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
 #'   replicate the functionality of simply calling \code{preProcess} directly.
 #'
@@ -288,6 +287,22 @@ if (getRversion() >= "3.1.0") {
 #'                     path = dPath)
 #' }
 #'
+#' # Using quoted dlFun and fun
+#' \code{dontrun} {
+#'   prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun).
+#'   # or more complex
+#'   test5 <- prepInputs(
+#'     targetFile = targetFileLuxRDS,
+#'     dlFun = quote({
+#'       getDataFn(name = "GADM", country = "LUX", level = 0) # preProcess keeps file from this!
+#'     }),
+#'     fun = quote({
+#'       out <- readRDS(targetFilePath)
+#'       out <- as(out, "SpatialPolygonsDataFrame")
+#'       sf::st_as_sf(out)})
+#'    )
+#'    }
+#'
 prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = getOption("reproducible.destinationPath", "."),
                        fun = NULL,
@@ -326,7 +341,13 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   )
 
   # Load object to R
-  fun <- .fnCleanup(out$fun, callingFun = "prepInputs", ...)
+  # If it is simple call, then we can extract stuff from the function call; otherwise all bets off
+  fun <- if (is(out$fun, "call")) {
+    .fnCleanup(out$fun, callingFun = "prepInputs", ...)
+  } else {
+    NULL
+  }
+
   suppressWarnings({
     naFun <- all(is.na(out$fun))
   })
@@ -378,7 +399,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
               out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
                                    out[-which(names(out) == "targetFilePath")]),
                             args)
-              out[[fun[["functionName"]]]] <- fun$FUN
+              if (length(fun[["functionName"]]) == 1)
+                out[[fun[["functionName"]]]] <- fun$FUN
               obj <- Cache(eval, out$fun, envir = out, useCache = useCache2)
             } else {
               obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),

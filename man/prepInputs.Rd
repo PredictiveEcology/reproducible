@@ -196,9 +196,8 @@ See \code{\link{preProcess}} for combinations of arguments.
   only option.
 
   If there is a custom function call, is not in a package, `prepInputs` may not find it. In such
-  cases, simply pass the function as a named argument (with same name as function) to `prepInputs`
-  e.g.,
-  `prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun)`.
+  cases, simply pass the function as a named argument (with same name as function) to `prepInputs`.
+  See examples.
   NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
   replicate the functionality of simply calling \code{preProcess} directly.
 }
@@ -306,6 +305,22 @@ test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify current
                     dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
                     path = dPath)
 }
+
+# Using quoted dlFun and fun
+\code{dontrun} {
+  prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun).
+  # or more complex
+  test5 <- prepInputs(
+    targetFile = targetFileLuxRDS,
+    dlFun = quote({
+      getDataFn(name = "GADM", country = "LUX", level = 0) # preProcess keeps file from this!
+    }),
+    fun = quote({
+      out <- readRDS(targetFilePath)
+      out <- as(out, "SpatialPolygonsDataFrame")
+      sf::st_as_sf(out)})
+   )
+   }
 
 }
 \seealso{
