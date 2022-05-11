@@ -22,11 +22,11 @@ test_that("fastMask produces correct results", {
 
   ## mask
   newStack1 <- raster::stack(raster::mask(origStack, mask = shp))
-  newStack2 <- fastMask(x = origStack, y = shp)
+  newStack2 <- fastMask(x = origStack, y = shp, touches = FALSE)
   expect_equal(newStack1, newStack2)
 
   newStack1 <- raster::mask(origStack[[2]], mask = shp)
-  newStack2 <- fastMask(x = origStack[[2]], y = shpDF)
+  newStack2 <- fastMask(x = origStack[[2]], y = shpDF, touches = FALSE)
   expect_equivalent(newStack1, newStack2)
 
   # Run same as above but with different internal pathway
@@ -43,25 +43,25 @@ test_that("fastMask produces correct results", {
   expect_equivalent(newStack1, newStack3)
   # Run same as above but with different internal pathway
 
-  testthat::with_mock(
-    "raster::canProcessInMemory" = function(x, n) {
-      FALSE
-    },
-    "reproducible::isWindows" = function() {
-      TRUE
-    },
-    # The warning is "data type "LOG" is not available in GDAL -- not relevant here
-    {
-      mess <- capture_messages({
-        out <- fastMask(x = origStack[[2]], y = shpDF)
-      })
-      expect_true(any(grepl("GDAL because crs", mess)))
-    }
-  )
+  # testthat::with_mock(
+  #   "raster::canProcessInMemory" = function(x, n) {
+  #     FALSE
+  #   },
+  #   "reproducible::isWindows" = function() {
+  #     TRUE
+  #   },
+  #   # The warning is "data type "LOG" is not available in GDAL -- not relevant here
+  #   {
+  #     mess <- capture_messages({
+  #       out <- fastMask(x = origStack[[2]], y = shpDF)
+  #     })
+  #     expect_true(any(grepl("GDAL because crs", mess)))
+  #   }
+  # )
   mess <- capture_messages({
     out <- fastMask(x = origStack[[2]], y = shpDF, cores = "none")
   })
-  expect_true(any(grepl("useGDAL is TRUE, but problem is small enough for RA", mess)))
+  # expect_true(any(grepl("useGDAL is TRUE, but problem is small enough for RA", mess)))
 
   crs(shp) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
   crs(origStack[[2]]) <- "+proj=lcc +lat_1=49 +lat_2=33 +lon_0=-100 +ellps=WGS84"

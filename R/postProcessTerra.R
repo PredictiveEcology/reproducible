@@ -229,7 +229,7 @@ fixErrorsTerra <- function(x) {
   x
 }
 
-maskTo <- function(from, maskTo) {
+maskTo <- function(from, maskTo, touches = FALSE) {
   if (!is.null(maskTo)) {
     if (!is.naSpatial(maskTo)) {
       origFromClass <- class(from)
@@ -274,7 +274,7 @@ maskTo <- function(from, maskTo) {
                                  if (isVector(from)) {
                                    terra::intersect(from, maskTo)
                                  } else {
-                                   terra::mask(from, maskTo)
+                                   terra::mask(from, maskTo, touches = touches)
                                  }
                                }
                              ),
