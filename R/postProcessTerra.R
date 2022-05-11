@@ -274,6 +274,7 @@ maskTo <- function(from, maskTo, touches = FALSE) {
                                  if (isVector(from)) {
                                    terra::intersect(from, maskTo)
                                  } else {
+                                   browser()
                                    terra::mask(from, maskTo, touches = touches)
                                  }
                                }

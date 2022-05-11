@@ -1949,89 +1949,89 @@ test_that("System call gdal works", {
   on.exit(raster::rasterOptions(todisk = FALSE))
 })
 
-test_that("gdalUtilities works using multicores for both projecting and masking", {
-  skip_on_cran()
+# test_that("gdalUtilities works using multicores for both projecting and masking", {
+#   skip_on_cran()
+#
+#   testInitOut <- testInit("raster")
+#   on.exit({
+#     testOnExit(testInitOut)
+#   }, add = TRUE)
+#
+#   ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
+#   crs(ras) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#   rnStr <- rndstr(1, 6)
+#   ras <- suppressWarningsSpecific(writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff"),
+#                                   proj6Warn)
+#
+#   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
+#   crs(ras2) <- crsToUse
+#
+#   coords <- structure(c(2, 6, 8, 6, 2, 2.2, 4, 5, 4.6, 2.2), .Dim = c(5L, 2L))
+#   Sr1 <- Polygon(coords)
+#   Srs1 <- Polygons(list(Sr1), "s1")
+#   StudyArea <- SpatialPolygons(list(Srs1), 1L)
+#   # crs(StudyArea) <- crsToUse
+#   crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
+#
+#   # Passing a specific integer for cores
+#   test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
+#                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2, filename2 = TRUE)
+#   expect_true(file.exists(test1@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
+#   # Passing as float for cores
+#   test2 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
+#                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2.3, filename2 = TRUE)
+#   expect_true(file.exists(test2@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
+#   # Not passing cores
+#   test3 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
+#                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, filename2 = TRUE)
+#   expect_true(file.exists(test3@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
+#   # Passing cores as AUTO
+#   test4 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
+#                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "AUTO", filename2 = TRUE)
+#   expect_true(file.exists(test4@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
+#   # Passing cores as any other character than 'AUTO'
+#   expect_error({
+#     test5 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
+#                         rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "BLA")
+#   })
+#
+#   on.exit(raster::rasterOptions(todisk = FALSE))
+# })
 
-  testInitOut <- testInit("raster")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
-  crs(ras) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  rnStr <- rndstr(1, 6)
-  ras <- suppressWarningsSpecific(writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff"),
-                                  proj6Warn)
-
-  ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
-  crs(ras2) <- crsToUse
-
-  coords <- structure(c(2, 6, 8, 6, 2, 2.2, 4, 5, 4.6, 2.2), .Dim = c(5L, 2L))
-  Sr1 <- Polygon(coords)
-  Srs1 <- Polygons(list(Sr1), "s1")
-  StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  # crs(StudyArea) <- crsToUse
-  crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  raster::rasterOptions(todisk = TRUE) #to trigger GDAL
-
-  # Passing a specific integer for cores
-  test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2, filename2 = TRUE)
-  expect_true(file.exists(test1@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
-  # Passing as float for cores
-  test2 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2.3, filename2 = TRUE)
-  expect_true(file.exists(test2@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
-  # Not passing cores
-  test3 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, filename2 = TRUE)
-  expect_true(file.exists(test3@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
-  # Passing cores as AUTO
-  test4 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "AUTO", filename2 = TRUE)
-  expect_true(file.exists(test4@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
-  # Passing cores as any other character than 'AUTO'
-  expect_error({
-    test5 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                        rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "BLA")
-  })
-
-  on.exit(raster::rasterOptions(todisk = FALSE))
-})
-
-test_that("System call gdal will make the rasters match for rasterStack", {
-  skip_on_cran()
-
-  testInitOut <- testInit("raster")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  ras <- raster(extent(0, 4, 0, 4), res = 2, vals = 1:4)
-  crs(ras) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-
-  #next line generates intermittent error: In .Internal(gc(verbose, reset, full)) :
-  #closing unused connection 3 (C:/Temp/RtmpU5EOTS/raster/r_tmp_2018-12-03_143339_14468_30160.gri)
-  ras1 <- suppressWarnings(raster::projectRaster(from = ras, crs = "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0", method = "ngb"))
-
-  rnStr <- rndstr(1, 6)
-  ras1 <- suppressWarningsSpecific(writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff"),
-                                   proj6Warn)
-
-  ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
-  crs(ras2) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-
-  raster::rasterOptions(todisk = TRUE) #to trigger GDAL
-
-  test1 <- prepInputs(targetFile = ras1@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, method = 'ngb', filename2 = TRUE)
-
-  expect_true(file.exists(test1@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
-  expect_true(dataType(test1) == "INT1U")
-  expect_identical(raster::res(ras2), raster::res(test1))
-  expect_identical(raster::extent(ras2), raster::extent(test1))
-  expect_true(compareCRS(ras2, test1))
-
-  on.exit(raster::rasterOptions(todisk = FALSE))
-})
+# test_that("System call gdal will make the rasters match for rasterStack", {
+#   skip_on_cran()
+#
+#   testInitOut <- testInit("raster")
+#   on.exit({
+#     testOnExit(testInitOut)
+#   }, add = TRUE)
+#
+#   ras <- raster(extent(0, 4, 0, 4), res = 2, vals = 1:4)
+#   crs(ras) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#
+#   #next line generates intermittent error: In .Internal(gc(verbose, reset, full)) :
+#   #closing unused connection 3 (C:/Temp/RtmpU5EOTS/raster/r_tmp_2018-12-03_143339_14468_30160.gri)
+#   ras1 <- suppressWarnings(raster::projectRaster(from = ras, crs = "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0", method = "ngb"))
+#
+#   rnStr <- rndstr(1, 6)
+#   ras1 <- suppressWarningsSpecific(writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff"),
+#                                    proj6Warn)
+#
+#   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
+#   crs(ras2) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#
+#   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
+#
+#   test1 <- prepInputs(targetFile = ras1@file@name, destinationPath = tempdir2(rnStr),
+#                       rasterToMatch = ras2, useCache = FALSE, method = 'ngb', filename2 = TRUE)
+#
+#   expect_true(file.exists(test1@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
+#   expect_true(dataType(test1) == "INT1U")
+#   expect_identical(raster::res(ras2), raster::res(test1))
+#   expect_identical(raster::extent(ras2), raster::extent(test1))
+#   expect_true(compareCRS(ras2, test1))
+#
+#   on.exit(raster::rasterOptions(todisk = FALSE))
+# })
 

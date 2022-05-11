@@ -2192,6 +2192,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
           ##################################
           # maskInputs
           ##################################
+          browser()
           yy <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
                       expr = quote(
                         maskInputs(x = x, studyArea = studyArea,

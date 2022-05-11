@@ -123,7 +123,9 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
                      verbose = getOption("reproducible.verbose", 1), ..., skipDeprecastedMsg = FALSE) {
   if (!skipDeprecastedMsg)
     .Deprecated("mask", "terra", "fastMask is deprecasted; using maskTo and terra")
-  maskTo(from = x, maskTo = y, ...)
+  browser()
+  touches <- list(...)$touches
+  maskTo(from = x, maskTo = y, touches = isTRUE(touches))
 #   if (!identical(.crs(y), .crs(x))) {
 #     if (!is(y, "sf")) {
 #       y <- spTransform(x = y, CRSobj = .crs(x))
