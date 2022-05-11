@@ -70,7 +70,6 @@ Suggests:
     fastdigest,
     fasterize,
     future,
-    gdalUtils,
     googledrive,
     httr,
     lwgeom,

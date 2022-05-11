@@ -883,25 +883,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
         cores <- dealWithCores(cores)
         prll <- paste0("-wo NUM_THREADS=", cores, " ")
 
-        # browser(expr = exists("._projectInputs_2"))
-        # This will clear the Windows error that sometimes occurs:
-        #  ERROR 1: PROJ: pj_obj_create: Cannot find proj.db ## Eliot Jan 22, 2020
-        #IE commented this out -
-        #TODO: review if this is necessary
-        # if (identical(.Platform[["OS.type"]], "windows")) {
-        #   oldProjLib <- Sys.getenv("PROJ_LIB")
-        #   if (!isTRUE(grepl("proj.db", dir(oldProjLib)))) {
-        #     possNewDir <- dir(file.path(dirname(getOption("gdalUtils_gdalPath")[[1]]$path), "share", "proj"),
-        #                       recursive = TRUE, pattern = "proj.db", full.names = TRUE)
-        #     if (length(possNewDir)) {
-        #       Sys.setenv(PROJ_LIB = dirname(possNewDir))
-        #       on.exit(add = TRUE, {
-        #         Sys.setenv(PROJ_LIB = oldProjLib)
-        #       })
-        #     }
-        #   }
-        # }
-
         targCRS <- as.character(targetCRS)
         if (FALSE) {
           # There is a new-ish warning " +init=epsg:XXXX syntax is deprecated. It might return a CRS with a non-EPSG compliant axis order."
@@ -1692,7 +1673,7 @@ writeOutputs.default <- function(x, filename2, ...) {
 #'
 #' @param ras  The \code{RasterLayer} or \code{RasterStack} for which data type will be assessed.
 #' @param type Character. \code{"writeRaster"} (default) or \code{"GDAL"} to return the recommended
-#'             data type for writing from the raster and gdalUtils packages, respectively, or
+#'             data type for writing from the raster packages, respectively, or
 #'             \code{"projectRaster"} to return recommended resampling type.
 #' @return The appropriate data type for the range of values in \code{ras}.
 #'         See \code{\link[raster]{dataType}} for details.
