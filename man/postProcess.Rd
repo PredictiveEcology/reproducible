@@ -230,7 +230,7 @@ if (require("terra")) {
   # If input is Spat object --> return will also be Spat
   vectEcozonePostProcessed <- postProcess(vectEcozone, studyArea = StudyArea)
   # Try manually, individual pieces -- Note functions are different
-  shpEcozoneMasked <- maskInputs(vectEcozone, StudyArea)
+  vectEcozoneMasked <- maskInputs(vectEcozone, StudyArea)
   VectEcozoneReprojected <- projectInputs(vectEcozone, StudyArea)
   vectEcozoneCropped <- cropInputs(vectEcozone, StudyArea)
 
@@ -293,7 +293,7 @@ if (require("terra")) {
   # If input is Spat object --> return will also be Spat
   vectEcozonePostProcessed <- postProcess(vectEcozone, studyArea = StudyArea)
   # Try manually, individual pieces -- Note functions are different
-  shpEcozoneMasked <- maskInputs(vectEcozone, StudyArea)
+  vectEcozoneMasked <- maskInputs(vectEcozone, StudyArea)
   VectEcozoneReprojected <- projectInputs(vectEcozone, StudyArea)
   vectEcozoneCropped <- cropInputs(vectEcozone, StudyArea)
 
