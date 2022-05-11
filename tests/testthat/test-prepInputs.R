@@ -1159,69 +1159,83 @@ test_that("prepInputs doesn't work (part 2)", {
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
   crs(StudyArea) <- crsToUse
 
-  if (requireNamespace("RCurl")) {
-    if (RCurl::url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds",
-                   timeout = 1)) {
-      noisyOutput <- capture.output(type = "message", {
-        mess1 <- capture_messages({
-          test1 <- prepInputs(
-            #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
-            targetFile = targetFileLuxRDS,
-            #destinationPath = ".",
-            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-            #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-            path = tmpdir)
-        })
+  noisyOutput <- capture.output(type = "message", {
+    mess1 <- capture_messages({
+      test1 <- try(silent = TRUE, {
+        prepInputs(
+          #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
+          targetFile = targetFileLuxRDS,
+          #destinationPath = ".",
+          dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
+          #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+          path = tmpdir)
       })
-      mess2 <- capture_messages({
-        test2 <- prepInputs(targetFile = targetFileLuxRDS,
-                            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                            path = tmpdir)
-      })
+    })
+  })
+  if (!is(test1, "try-error")) {
 
-      runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
-      runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
+    # test quoted version of `dlFun`
+    noisyOutput3 <- capture.output(type = "message", {
+      mess3 <- capture_messages({
+        test3 <- prepInputs(
+          #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
+          targetFile = targetFileLuxRDS,
+          #destinationPath = ".",
+          dlFun = quote(getDataFn(name = "GADM", country = "LUX", level = 0)),
+          #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+          path = tmpdir)
+      })
+    })
+
+    mess2 <- capture_messages({
+      test2 <- prepInputs(targetFile = targetFileLuxRDS,
+                          dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
+                          path = tmpdir)
+    })
+
+    runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
+            filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
+    runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+            filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
+    mess2 <- capture_messages({
+      warn <- capture_warnings({
+        test3 <- prepInputs(targetFile = targetFileLuxRDS,
+                            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
+                            path = tmpdir, filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
+      })
+    })
+    # Why is no longer "although coordinates are longitude"?
+    runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
+            filePattern = targetFileLuxRDS, tmpdir = tmpdir,
+            test = test3)
+
+    testOnExit(testInitOut)
+    testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
+                                                  "reproducible.overwrite" = TRUE),
+                            needGoogle = TRUE)
+    noisyOutput <- capture.output(type = "message", {
       mess2 <- capture_messages({
         warn <- capture_warnings({
-          test3 <- prepInputs(targetFile = targetFileLuxRDS,
-                              dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                              path = tmpdir, filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
+          test3 <- prepInputs(targetFile = targetFileLuxRDS, dlFun = getDataFn, name = "GADM",
+                              country = "LUX", level = 0, path = tmpdir,
+                              filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
         })
       })
-      # Why is no longer "although coordinates are longitude"?
-      runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir,
-              test = test3)
+    })
+    runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
+            filePattern = targetFileLuxRDS, tmpdir = tmpdir,
+            test = test3)
 
-      testOnExit(testInitOut)
-      testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
-                                                    "reproducible.overwrite" = TRUE),
-                              needGoogle = TRUE)
-      noisyOutput <- capture.output(type = "message", {
-        mess2 <- capture_messages({
-          warn <- capture_warnings({
-            test3 <- prepInputs(targetFile = targetFileLuxRDS, dlFun = getDataFn, name = "GADM",
-                                country = "LUX", level = 0, path = tmpdir,
-                                filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
-          })
-        })
-      })
-      runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir,
-              test = test3)
+    runTest("1_2_3_4", "SpatialPolygonsDataFrame", 5, mess2,
+            expectedMess = expectedMessagePostProcess,
+            filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
 
-      runTest("1_2_3_4", "SpatialPolygonsDataFrame", 5, mess2,
-              expectedMess = expectedMessagePostProcess,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
-
-      testOnExit(testInitOut)
-      testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
-                                                    "reproducible.inputPaths" = NULL),
-                              needGoogle = TRUE)
-    }
+    testOnExit(testInitOut)
+    testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                  "reproducible.inputPaths" = NULL),
+                            needGoogle = TRUE)
   }
+
   # Add a study area to Crop and Mask to
   # Create a "study area"
   coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5), .Dim = c(5L, 2L))
