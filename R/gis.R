@@ -147,51 +147,53 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     messagePrepInputs("fastMask is using sf and fasterize")
 
 
-    if (attemptGDAL) {
-      # call gdal
-      messagePrepInputs("fastMask is using gdalwarp")
-
-      # rasters need to go to same directory that can be unlinked at end without losing other temp files
-      tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
-      tempSrcRaster <- bigRastersTmpFile()
-      tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_mask", ".tif"))
-
-      # GDAL will to a reprojection without an explicit crop
-      cropExtent <- extent(x)
-      te <- paste(c(cropExtent[1], cropExtent[3],
-                    cropExtent[2], cropExtent[4]))
-      # cropExtentRounded <- roundToRes(cropExtent, x)
-      # the raster could be in memory if it wasn't reprojected
-      if (inMemory(x)) {
-        dType <- assessDataType(x, type = "writeRaster")
-        dTypeGDAL <- assessDataType(x, type = "GDAL")
-        x <- writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
-        gc()
-      } else {
-        tempSrcRaster <- x@file@name #Keep original raster.
-        dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
-      }
-
-      ## GDAL requires file path to cutline - write to disk
-      tempSrcShape <- normPath(file.path(tempfile(tmpdir = raster::tmpDir()), ".shp", fsep = ""))
-      ysf <- sf::st_as_sf(y)
-      sf::st_write(ysf, tempSrcShape)
-      tr <- res(x)
-
-      cores <- dealWithCores(cores)
-      prll <- paste0("-wo NUM_THREADS=", cores, " ")
-      srcCRS <- as.character(.crs(raster::raster(tempSrcRaster)))
-      targCRS <- srcCRS
-
-      gdalUtilities::gdalwarp(srcfile = tempSrcRaster, dstfile = tempDstRaster,
-                              s_srs = srcCRS, t_srs = targCRS,
-                              cutline = tempSrcShape, crop_to_cutline = FALSE,
-                              srcnodata = NA, dstnodata = NA, tr = tr,
-                              te = te, ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
-
-      x <- raster(tempDstRaster)
-      x <- setMinMaxIfNeeded(x)
-    } else {
+     if (attemptGDAL) {
+       message("GDAL is deprecated in fastMask")
+     }
+#       # call gdal
+#       messagePrepInputs("fastMask is using gdalwarp")
+#
+#       # rasters need to go to same directory that can be unlinked at end without losing other temp files
+#       tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
+#       tempSrcRaster <- bigRastersTmpFile()
+#       tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_mask", ".tif"))
+#
+#       # GDAL will to a reprojection without an explicit crop
+#       cropExtent <- extent(x)
+#       te <- paste(c(cropExtent[1], cropExtent[3],
+#                     cropExtent[2], cropExtent[4]))
+#       # cropExtentRounded <- roundToRes(cropExtent, x)
+#       # the raster could be in memory if it wasn't reprojected
+#       if (inMemory(x)) {
+#         dType <- assessDataType(x, type = "writeRaster")
+#         dTypeGDAL <- assessDataType(x, type = "GDAL")
+#         x <- writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
+#         gc()
+#       } else {
+#         tempSrcRaster <- x@file@name #Keep original raster.
+#         dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
+#       }
+#
+#       ## GDAL requires file path to cutline - write to disk
+#       tempSrcShape <- normPath(file.path(tempfile(tmpdir = raster::tmpDir()), ".shp", fsep = ""))
+#       ysf <- sf::st_as_sf(y)
+#       sf::st_write(ysf, tempSrcShape)
+#       tr <- res(x)
+#
+#       cores <- dealWithCores(cores)
+#       prll <- paste0("-wo NUM_THREADS=", cores, " ")
+#       srcCRS <- as.character(.crs(raster::raster(tempSrcRaster)))
+#       targCRS <- srcCRS
+#
+#       gdalUtilities::gdalwarp(srcfile = tempSrcRaster, dstfile = tempDstRaster,
+#                               s_srs = srcCRS, t_srs = targCRS,
+#                               cutline = tempSrcShape, crop_to_cutline = FALSE,
+#                               srcnodata = NA, dstnodata = NA, tr = tr,
+#                               te = te, ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
+#
+#       x <- raster(tempDstRaster)
+#       x <- setMinMaxIfNeeded(x)
+#     } else {
       # Eliot removed this because fasterize::fasterize will handle cases where x[[1]] is too big
       #extentY <- extent(y)
       #resX <- res(x) * 2 # allow a fuzzy interpretation -- the cropInputs here won't make it perfect anyway
@@ -213,7 +215,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       } else {
         x
       }
-    }
+    # }
   } else {
     if (is(x, "RasterStack") || is(x, "RasterBrick")) {
       messagePrepInputs(" because fastMask doesn't have a specific method ",

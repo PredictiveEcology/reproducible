@@ -158,10 +158,10 @@ postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = NULL,
   # browser(expr = exists("._postProcess.spatialClasses_1"))
   if (isTRUE(getOption("reproducible.useTerra"))) {
     x1 <- postProcessTerra(from = x, studyArea = studyArea,
-                                rasterToMatch = rasterToMatch, useCache = useCache,
-                                filename1 = filename1, filename2 = filename2,
-                                useSAcrs = useSAcrs, overwrite = overwrite,
-                                verbose = verbose, ...)
+                           rasterToMatch = rasterToMatch, useCache = useCache,
+                           filename1 = filename1, filename2 = filename2,
+                           useSAcrs = useSAcrs, overwrite = overwrite,
+                           verbose = verbose, ...)
   } else {
     x1 <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
                                 rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
@@ -175,22 +175,22 @@ postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = NULL,
 
 #' @export
 postProcess.SpatRaster <- function(x, filename1 = NULL, filename2 = NULL,
-                                       studyArea = NULL, rasterToMatch = NULL,
-                                       overwrite = getOption("reproducible.overwrite", TRUE),
-                                       useSAcrs = FALSE,
-                                       useCache = getOption("reproducible.useCache", FALSE),
-                                       verbose = getOption("reproducible.verbose", 1),
-                                       ...) {
+                                   studyArea = NULL, rasterToMatch = NULL,
+                                   overwrite = getOption("reproducible.overwrite", TRUE),
+                                   useSAcrs = FALSE,
+                                   useCache = getOption("reproducible.useCache", FALSE),
+                                   verbose = getOption("reproducible.verbose", 1),
+                                   ...) {
 
   on.exit(removeTmpFiles(h = 0), add = TRUE)
 
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
   # browser(expr = exists("._postProcess.spatialClasses_1"))
   x1 <- postProcessTerra(from = x, studyArea = studyArea,
-                              rasterToMatch = rasterToMatch, useCache = useCache,
-                              filename1 = filename1, filename2 = filename2,
-                              useSAcrs = useSAcrs, overwrite = overwrite,
-                              verbose = verbose, ...)
+                         rasterToMatch = rasterToMatch, useCache = useCache,
+                         filename1 = filename1, filename2 = filename2,
+                         useSAcrs = useSAcrs, overwrite = overwrite,
+                         verbose = verbose, ...)
   return(x1)
 }
 
@@ -291,11 +291,11 @@ cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
 
 #' @export
 cropInputs.SpatVector <- function(x, studyArea = NULL, rasterToMatch = NULL,
-                                      verbose = getOption("reproducible.verbose", 1),
-                                      extentToMatch = NULL, extentCRS = NULL,
-                                      useGDAL = getOption("reproducible.useGDAL", TRUE),
-                                      useCache = getOption("reproducible.useCache", FALSE),
-                                      ...) {
+                                  verbose = getOption("reproducible.verbose", 1),
+                                  extentToMatch = NULL, extentCRS = NULL,
+                                  useGDAL = getOption("reproducible.useGDAL", TRUE),
+                                  useCache = getOption("reproducible.useCache", FALSE),
+                                  ...) {
   if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(extentToMatch)) {
     isX_Sp <- is(x, "Spatial")
     isX_Sf <- is(x, "sf")
@@ -1375,9 +1375,9 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM =
 #' @export
 #' @rdname maskInputs
 maskInputs.SpatVector <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = FALSE,
-                               verbose = getOption("reproducible.verbose", 1),
-                               useCache = getOption("reproducible.useCache", FALSE),
-                               ...) {
+                                  verbose = getOption("reproducible.verbose", 1),
+                                  useCache = getOption("reproducible.useCache", FALSE),
+                                  ...) {
   to <- if (isTRUE(maskWithRTM)) rasterToMatch else studyArea
   maskTo(from = x, maskTo = to)
 
@@ -2502,7 +2502,7 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
     )
 
   } else if (!is.null(rasterToMatch)) {
-   targCRS <- .crs(rasterToMatch)
+    targCRS <- .crs(rasterToMatch)
   }
 
   if (isTRUE(useSAcrs) | is.null(rasterToMatch)) {
