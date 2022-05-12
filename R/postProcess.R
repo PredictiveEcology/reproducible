@@ -679,7 +679,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #'
 #' These must be very common for this function to be useful. Currently, the only
 #' meaningful method is on \code{SpatialPolygons}, and it runs \code{sf::st_is_valid}.
-#' If \code{FALSE}, then it runs  \code{st_make_valid} or \code{raster::buffer},
+#' If \code{FALSE}, then it runs  \code{st_make_valid} or \code{terra::buffer},
 #' depending on whether x is \code{sf} or \code{SpatialPolygons*}, respectively.
 #'
 #' @param x A \code{SpatialPolygons*} or \code{sf} object.
@@ -689,10 +689,10 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #'
 #' @param attemptErrorFixes Will attempt to fix known errors. Currently only some failures
 #'        for \code{SpatialPolygons*} are attempted.
-#'        Notably with \code{raster::buffer(..., width = 0)}.
+#'        Notably with \code{terra::buffer(..., width = 0)}.
 #'        Default \code{TRUE}, though this may not be the right action for all cases.
 #' @param useCache Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
-#'                 Cache is used on the internal \code{raster::buffer} command.
+#'                 Cache is used on the internal \code{terra::buffer} command.
 #' @param testValidity Logical. If \code{TRUE}, the a test for validity will happen
 #'                 before actually running buffering (which is the solution in most
 #'                 cases). However, sometimes it takes longer to test for validity
@@ -760,7 +760,7 @@ fixErrors.Raster <- function(x, objectName, attemptErrorFixes = TRUE,
 
 #' Fix \code{sf::st_is_valid} failures in \code{SpatialPolygons}
 #'
-#' This uses \code{raster::buffer(..., width = 0)} internally, which fixes some
+#' This uses \code{terra::buffer(..., width = 0)} internally, which fixes some
 #' failures to \code{sf::st_is_valid}
 #'
 #' @export
@@ -797,12 +797,14 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
         x1 <-
           suppressWarningsSpecific(falseWarnings = paste("Spatial object is not projected;",
                                                          "GEOS expects planar coordinates"),
-                                   try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache))#,
+                                   try(as(Cache(terra::buffer, terra::vect(x), width = 0,
+                                             # dissolve = FALSE,
+                                             useCache = useCache), "Spatial")#,
           )
 
         x <- bufferWarningSuppress(#warn = attr(x1, "warning"),
           objectName = objectName,
-          x1 = x1, bufferFn = "raster::buffer")
+          x1 = x1, bufferFn = "terra::buffer")
       } else {
         messagePrepInputs("  Found no errors.", verbose = verbose)
       }
@@ -2103,10 +2105,10 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
         if (!is.null(rasterToMatch)) {
           #reproject rasterToMatch, extend by res
           newExtent <- suppressWarningsSpecific(projectExtent(rasterToMatch, crs = .crs(x)), projNotWKT2warn)
-          tempPoly <- as(extent(newExtent), "SpatialPolygons")
-          crs(tempPoly) <- .crs(x)
+          tempPoly <- terra::vect(as(extent(newExtent), "SpatialPolygons"))
+          crs(tempPoly) <- attr(bbb, "comment")#.crs(x)
           #buffer the new polygon by 1.5 the resolution of X so edges aren't cropped out
-          tempPoly <- raster::buffer(tempPoly, width = max(res(x))*1.5)
+          tempPoly <- as(terra::buffer(tempPoly, width = max(res(x))*1.5), "Spatial")
           extRTM <- tempPoly
           crsRTM <- suppressWarningsSpecific(falseWarnings = "CRS object has comment", .crs(tempPoly))
         } else {
@@ -2116,7 +2118,9 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
           crsX <- .crs(x)
           if (!is(studyArea, "sf")) {
             studyArea <- sp::spTransform(studyArea, CRSobj = crsX)
-            studyArea <- raster::buffer(studyArea, width = bufferWidth)
+            studyArea <- terra::vect(studyArea)
+            studyArea <- terra::buffer(studyArea, width = bufferWidth)
+            studyArea <- as(studyArea, "Spatial")
           } else {
             .requireNamespace("sf", stopOnFALSE = TRUE)
             studyArea <- sf::st_transform(studyArea, crs = crsX)

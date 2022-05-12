@@ -132,28 +132,6 @@ test_that("unrar is working as expected", {
   )
 })
 
-test_that("check GDAL version", {
-  testInitOut <- testInit()
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  testthat::with_mock(
-    "reproducible::getGDALVersion" = function() NA,
-    {
-      expect_false(checkGDALVersion("3.0"))
-    }
-  )
-
-  ## test with devel version
-  testthat::with_mock(
-    "reproducible::getGDALVersion" = function() "GDAL 3.5.0dev-805b2bbca3, released 2022/02/17",
-    {
-      expect_true(checkGDALVersion("3.5"))
-    }
-  )
-})
-
 test_that("test miscellaneous fns (part 2)", {
   if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   skip_if_no_token()
