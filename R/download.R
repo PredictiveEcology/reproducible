@@ -109,7 +109,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
             messCommon <- paste0("Download of ", targetFile, " from ", url, " failed. Please check the url that it is correct.\n",
                                          "If the url is correct, it is possible that manually downloading it will work. ",
                                          "To try this, with your browser, go to\n",
-                                         url, ",\n ... then download it manually, give it this name: '", basename(fileToDownload),
+                                         url, ",\n ... then download it manually, give it this name: '", .basename(fileToDownload),
                                          "', and place file here: ", destinationPath)
             if (isInteractive() && getOption('reproducible.interactiveOnDownloadFail', TRUE)) {
               mess <- paste0(messCommon,

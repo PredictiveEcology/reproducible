@@ -66,11 +66,11 @@ to user will mention this.}
 
 \item{attemptErrorFixes}{Will attempt to fix known errors. Currently only some failures
 for \code{SpatialPolygons*} are attempted.
-Notably with \code{raster::buffer(..., width = 0)}.
+Notably with \code{terra::buffer(..., width = 0)}.
 Default \code{TRUE}, though this may not be the right action for all cases.}
 
 \item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
-Cache is used on the internal \code{raster::buffer} command.}
+Cache is used on the internal \code{terra::buffer} command.}
 
 \item{testValidity}{Logical. If \code{TRUE}, the a test for validity will happen
 before actually running buffering (which is the solution in most
@@ -85,10 +85,10 @@ If \code{NA}, then all testing and buffering will be skipped.}
 \description{
 These must be very common for this function to be useful. Currently, the only
 meaningful method is on \code{SpatialPolygons}, and it runs \code{sf::st_is_valid}.
-If \code{FALSE}, then it runs  \code{st_make_valid} or \code{raster::buffer},
+If \code{FALSE}, then it runs  \code{st_make_valid} or \code{terra::buffer},
 depending on whether x is \code{sf} or \code{SpatialPolygons*}, respectively.
 
-This uses \code{raster::buffer(..., width = 0)} internally, which fixes some
+This uses \code{terra::buffer(..., width = 0)} internally, which fixes some
 failures to \code{sf::st_is_valid}
 }
 \examples{

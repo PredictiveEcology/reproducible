@@ -288,8 +288,8 @@ if (getRversion() >= "3.1.0") {
 #' }
 #'
 #' # Using quoted dlFun and fun
-#' \dontrun {
-#'   prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun).
+#' \dontrun{
+#'   prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun)
 #'   # or more complex
 #'   test5 <- prepInputs(
 #'     targetFile = targetFileLuxRDS,
@@ -301,7 +301,7 @@ if (getRversion() >= "3.1.0") {
 #'       out <- as(out, "SpatialPolygonsDataFrame")
 #'       sf::st_as_sf(out)})
 #'    )
-#'    }
+#' }
 #'
 prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = getOption("reproducible.destinationPath", "."),

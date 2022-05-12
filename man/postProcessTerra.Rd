@@ -18,7 +18,7 @@ postProcessTerra(
   ...
 )
 
-cropTo(from, cropTo = NULL, needBuffer = FALSE)
+cropTo(from, cropTo = NULL, needBuffer = TRUE)
 }
 \arguments{
 \item{from}{A Gridded or Vector dataset on which to do one or more of:
@@ -60,6 +60,11 @@ interpolation. See \code{terra::project}. Defaults to \code{"bilinear"}}
 \item{...}{Currently can be either \code{rasterToMatch}, \code{studyArea}, \code{filename2},
 \code{useSAcrs}, or \code{targetCRS} to allow backwards
 compatibility with \code{postProcess}. See section below for details.}
+
+\item{needBuffer}{Logical. Defaults to \code{TRUE}, meaning nothing is done out
+of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
+has to happen on the `cropTo` prior to using it as a crop layer, then a buffer
+of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.}
 }
 \value{
 An object of the same class as \code{from}, but potentially cropped, projected, masked,

@@ -376,9 +376,13 @@ projectTo <- function(from, projectTo, method) {
 
 #' @rdname postProcessTerra
 #' @param cropTo A Vector dataset
+#' @param needBuffer Logical. Defaults to \code{TRUE}, meaning nothing is done out
+#'   of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
+#'   has to happen on the `cropTo` prior to using it as a crop layer, then a buffer
+#'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
 #' @inheritParams postProcessTerra
 #' @export
-cropTo <- function(from, cropTo = NULL, needBuffer = FALSE) {
+cropTo <- function(from, cropTo = NULL, needBuffer = TRUE) {
   if (!is.null(cropTo)) {
     omit <- FALSE
     origFromClass <- is(from)

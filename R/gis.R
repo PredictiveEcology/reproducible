@@ -1,4 +1,4 @@
-#' Faster operations on rasters
+#' Faster operations on rasters (DEPRECATED as \code{terra::mask} is fast)
 #'
 #' This alternative to \code{raster::mask} is included here.
 #'
@@ -11,6 +11,9 @@
 #'           triggered. \code{'AUTO'} will calculate 90% of the total
 #'           number of cores in the system, while an integer or rounded
 #'           float will be passed as the exact number of cores to be used.
+#' @param skipDeprecastedMsg Logical. If \code{TRUE}, then the message about this function
+#'   being deprecated will be suppressed.
+#'
 #' @param ... Currently unused.
 #'
 #' @return A \code{Raster*} object, masked (i.e., smaller extent and/or
