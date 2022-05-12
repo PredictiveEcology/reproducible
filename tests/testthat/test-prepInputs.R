@@ -1202,7 +1202,7 @@ test_that("prepInputs doesn't work (part 2)", {
           targetFile = targetFileLuxRDS,
           #destinationPath = ".",
           dlFun = quote(gdf()),
-          fun = quote(fn11(targetFilePath)),
+          fun = quote(fn11(targetFilePath)), fn11 = fn11,
           path = tmpdir)      })
     })
 
