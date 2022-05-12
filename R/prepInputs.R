@@ -342,7 +342,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Load object to R
   # If it is simple call, then we can extract stuff from the function call; otherwise all bets off
-  fun <- if (is(out$fun, "call") || is(out$fun, "function")) {
+  fun <- if (is(out$fun, "call") || is(out$fun, "function") && is.null(out$object) && is.null(fun)) {
     .fnCleanup(out$fun, callingFun = "prepInputs", ...)
   } else {
     NULL
