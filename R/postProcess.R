@@ -1878,7 +1878,7 @@ writeOutputs.default <- function(x, filename2, ...) {
 #'
 #' @param ras  The \code{RasterLayer} or \code{RasterStack} for which data type will be assessed.
 #' @param type Character. \code{"writeRaster"} (default) or \code{"GDAL"} to return the recommended
-#'             data type for writing from the raster and gdalUtils packages, respectively, or
+#'             data type for writing from the raster packages, respectively, or
 #'             \code{"projectRaster"} to return recommended resampling type.
 #' @return The appropriate data type for the range of values in \code{ras}.
 #'         See \code{\link[raster]{dataType}} for details.
