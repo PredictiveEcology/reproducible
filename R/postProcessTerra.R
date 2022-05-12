@@ -274,7 +274,11 @@ maskTo <- function(from, maskTo, touches = FALSE) {
                                  if (isVector(from)) {
                                    terra::intersect(from, maskTo)
                                  } else {
-                                   terra::mask(from, maskTo, touches = touches)
+                                   if (isGridded(maskTo)) {
+                                     terra::mask(from, maskTo)
+                                   } else {
+                                     terra::mask(from, maskTo, touches = touches)
+                                   }
                                  }
                                }
                              ),
@@ -293,10 +297,9 @@ maskTo <- function(from, maskTo, touches = FALSE) {
                        }))
       from <- fromInt
       messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+      from <- revertClass(from, origFromClass = origFromClass)
     }
   }
-  from <- revertClass(from, origFromClass = origFromClass)
-
   from
 }
 
@@ -419,8 +422,8 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE) {
       from <- fromInt
       messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
     }
+    from <- revertClass(from, origFromClass = origFromClass)
   }
-  from <- revertClass(from, origFromClass = origFromClass)
   from
 }
 
