@@ -1,8 +1,6 @@
 test_that("prepInputs doesn't work (part 3)", {
-  # if (requireNamespace("rgeos")) {
   testInitOut <- testInit(c("raster", "sf"), tmpFileExt = c(".tif", ".tif"),
                           opts = list(
-    #  testInitOut <- testInit(c("raster", "sf", "rgeos"), opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.inputPaths" = NULL,
     "reproducible.overwrite" = TRUE)
@@ -133,16 +131,6 @@ test_that("prepInputs doesn't work (part 3)", {
     expect_true(any(grepl("polygons do not intersect", mess)))
     # expect_true(any(grepl("with no data", mess)))
 
-    #LINEARRING Example
-    if (requireNamespace("rgeos", quietly = TRUE)) {
-      p6 = rgeos::readWKT("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
-      mess <- capture_messages({
-        p6a <- fixErrors(p6, verbose = 2)
-      })
-      expect_true(any(grepl("Found errors", mess)))
-      expect_true(any(grepl("Some or all of the errors fixed", mess)))
-    }
-
     # cropInputs.sf
     nc3 <- st_transform(nc1, crs = CRS(nonLatLongProj2))
     nc4 <- cropInputs(nc3, studyArea = ncSmall)
@@ -174,16 +162,11 @@ test_that("prepInputs doesn't work (part 3)", {
     expect_true(any(grepl("polygons do not intersect", mess)))
 
     # LINEARRING Example
-    if (requireNamespace("rgeos", quietly = TRUE)) {
-      p6 = rgeos::readWKT("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
-      mess <- capture_messages({
-        p6a <- fixErrors(st_as_sf(p6))
-      })
-      expect_true(any(grepl("Checking for errors", mess)))
-      expect_true(any(grepl("Found errors", mess)))
-      expect_true(any(grepl("errors fixed", mess)))
-    }
-    # projectInputs pass through
+    p6 = terra::vect("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
+    p6a <- fixErrorsTerra(p6)
+    expect_true(terra::is.valid(p6a))
+    expect_false(terra::is.valid(p6))
+  # projectInputs pass through
     nc5 <- projectInputs(x = 1)
     expect_identical(nc5, 1)
   }
@@ -318,7 +301,6 @@ test_that("maskInputs errors when x is Lat-Long", {
 
 test_that("prepInputs doesn't work (part 3)", {
   if (interactive()) {
-    # if (requireNamespace("rgeos")) {
     testInitOut <- testInit()
     on.exit({
       testOnExit(testInitOut)
