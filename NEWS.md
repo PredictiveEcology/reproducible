@@ -5,7 +5,7 @@ Version 1.2.9
 
 ## Dependency changes
 * Drop support for R 3.6 (#230)
-* remove `gdalUtils`, `gdalUtilities`, and `rgdal` from `Suggests`
+* remove `gdalUtilities`, `gdalUtils`, `rgdal` and `rgeos` from `Suggests`
 * Added minimum versions of `raster` and `terra`, because previous versions were causing collisions.
 
 ## Enhancements

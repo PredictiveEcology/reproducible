@@ -793,7 +793,7 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
       }
 
       if (runBuffer) {
-        if (!requireNamespace("rgeos", quietly = TRUE)) stop(messageRgeosMissing)
+        # if (!requireNamespace("rgeos", quietly = TRUE)) stop(messageRgeosMissing)
         messagePrepInputs("      Trying the buffer = 0 trick", verbose = verbose, verboseLevel = 2)
         # prevent the warning about not projected, because we are buffering 0, which doesn't matter
         x1 <-
@@ -2101,7 +2101,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
 
       if (useBuffer) {
         #replace extentRTM and crsRTM, because they will supersede all arguments
-        if (!requireNamespace("rgeos", quietly = TRUE)) stop(messageRgeosMissing)
+        #if (!requireNamespace("rgeos", quietly = TRUE)) stop(messageRgeosMissing)
         if (!is.null(rasterToMatch)) {
           #reproject rasterToMatch, extend by res
           newExtent <- suppressWarningsSpecific(projectExtent(rasterToMatch, crs = .crs(x)), projNotWKT2warn)
@@ -2621,7 +2621,7 @@ isProjected <- function(x) {
   out
 }
 
-messageRgeosMissing <- "Please run install.packages('rgeos') to address minor GIS issues"
+# messageRgeosMissing <- "Please run install.packages('rgeos') to address minor GIS issues"
 
 switchDataTypes <- function(datatype, type) {
   datatype <- switch(type,
