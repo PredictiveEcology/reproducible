@@ -2418,173 +2418,173 @@ projNotWKT2warn <- "Using PROJ not WKT2"
 # }
 
 
-#' @importFrom raster extension
-#' @importFrom gdalUtilities gdalwarp
-cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
-                                targetCRS, cores = 1, dots = list(), filename2, useSAcrs = FALSE,
-                                destinationPath = getOption("reproducible.destinationPath", "."),
-                                verbose = getOption("reproducible.verbose", 1),
-                                ...) {
-  messagePrepInputs("crop, reproject, mask is using one-step gdalwarp")
-
-  if (!is.null(studyArea)) {
-    studyArea <- fixErrors(x = studyArea)
-  }
-
-  # browser(expr = exists("._cropReprojMaskWGDAL_1"))
-
-  # rasters need to go to same directory that can be unlinked at end without losing other temp files
-  tempSrcRaster <- bigRastersTmpFile()
-  returnToRAM <- FALSE
-  if (missing(filename2)) filename2 <- NULL
-  if (!isFALSE(filename2)) {
-    filename2 <- determineFilename(filename2, destinationPath = destinationPath, verbose = verbose)
-  }
-
-  if (is.null(filename2) | isFALSE(filename2)) {
-    returnToRAM <- TRUE
-    tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
-    filename2 <- file.path(tmpRasPath, paste0(x@data@names, "_", rndstr(1, 8)))
-    layerName <- names(x)
-  }
-  if (nchar(extension(filename2)) == 0)
-    filename2 <- paste0(filename2, ".tif")
-  filename2 <- normPath(filename2)
-
-  # GDAL can't deal with grd filename extensions (and possibly others) --> go with .tif and update at end
-  filename2Orig <- filename2
-  if (!grepl(".tif$", filename2)) filename2 <- paste0(filename2, ".tif")
-  needRenameAtEnd <- !identical(filename2Orig, filename2)
-
-  isFactor <- raster::is.factor(x)
-  if (isFactor) {
-    factorDF <- raster::levels(x)
-  }
-  # GDAL will to a reprojection without an explicit crop
-  # the raster could be in memory if it wasn't reprojected
-  if (inMemory(x)) {
-    dType <- assessDataType(x, type = "writeRaster")
-    dTypeGDAL <- assessDataType(x, type = "GDAL")
-
-    x <- progressBarCode(writeRaster(x, filename = tempSrcRaster,
-                                     datatype = dType, overwrite = TRUE),
-                         doProgress = ncell(x) > 2e6,
-                         message = "Writing temporary raster to disk for GDAL ...",
-                         colour = getOption("reproducible.messageColourPrepInputs"),
-                         verbose = verbose)
-    gc()
-  } else {
-    tempSrcRaster <- x@file@name #Keep original raster.
-    dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
-  }
-  tempSrcRaster <- normPath(tempSrcRaster)
-
-  srcCRS <- as.character(.crs(raster::raster(tempSrcRaster)))
-
-  needCutline <- NULL
-  needReproject <- FALSE
-  needNewRes <- FALSE
-  tempSrcShape <- NULL
-  cropExtent <- extent(raster::raster(tempSrcRaster)) #default
-
-  if (!is.null(studyArea)) {
-    # studyAreaCRSx <- spTransform(studyArea, crs(x))
-    needCutline <- TRUE
-    tempSrcShape <- normPath(file.path(tempfile(tmpdir = raster::tmpDir()), ".shp", fsep = ""))
-
-    studyAreasf <- sf::st_as_sf(studyArea)
-    if (isTRUE(useSAcrs)) {
-      targCRS <- .crs(studyArea)
-    } else {
-      if (!is.null(rasterToMatch)) {
-        targCRS <- crs(rasterToMatch)
-      } else {
-        targCRS <- srcCRS
-      }
-      studyAreasf <- sf::st_transform(studyAreasf, crs = targCRS)
-    }
-    # write the studyArea to disk -- go via sf because faster
-    muffld <- capture.output(
-      sf::st_write(studyAreasf, tempSrcShape)
-    )
-
-  } else if (!is.null(rasterToMatch)) {
-    targCRS <- .crs(rasterToMatch)
-  }
-
-  if (isTRUE(useSAcrs) | is.null(rasterToMatch)) {
-    cropExtent <- extent(studyAreasf)
-    if (!(grepl("longlat", targCRS)))
-      cropExtent <- roundToRes(cropExtent, x = x)
-  } else if (!is.null(rasterToMatch)) {
-    cropExtent <- extent(rasterToMatch)
-  } # else keep extent the original extent (ie SA provided, but useSACRS = FALSE)
-
-  dontSpecifyResBCLongLat <- isLongLat(targCRS, srcCRS)
-
-  if (!is.null(rasterToMatch)) {
-    needNewRes <- !identical(res(x), res(rasterToMatch))
-  } else if (isTRUE(useSAcrs) ) {
-    if (!isProjected(x))
-      stop("Cannot set useSAcrs to TRUE if x is longitude and latitude; please provide a rasterToMatch")
-  }
-
-  ## GDAL requires file path to cutline - write to disk
-  tr <- if (needNewRes) res(rasterToMatch) else res(x)
-
-  if (!compareCRS(srcCRS, targCRS) ) {
-    needReproject <- TRUE
-  }
-
-  if (is.null(dots$method)) {
-    dots$method <- assessDataType(x, type = "projectRaster")
-  }
-  if (dots$method == "ngb") {
-    dots$method <- "near"
-  }
-
-  if (!is.character(targCRS)) {
-    targCRS <- as.character(targCRS)
-  }
-
-  ## convert extent to string
-  te <- paste(c(cropExtent[1], cropExtent[3], cropExtent[2], cropExtent[4]))
-  cores <- dealWithCores(cores)
-  prll <- paste0("-wo NUM_THREADS=", cores, " ")
-
-  ## this is a workaround to passing NULL arguments to gdal_warp, which does not work
-  gdalArgs <- list(srcfile = tempSrcRaster, dstfile = filename2, s_srs = srcCRS, te = te,
-                   t_srs = targCRS, cutline = tempSrcShape, crop_to_cutline = NULL, srcnodata = NA,
-                   dstnodata = NA, tr = tr, ot = dTypeGDAL,
-                   multi = TRUE, wo = prll,
-                   overwrite = TRUE)
-  gdalArgs[["r"]] <- dots$method ## keep 'r' separate in case it's NULL (so it won't be added)
-  gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))]
-  do.call(gdalUtilities::gdalwarp, gdalArgs)
-
-  x <- raster(filename2)
-
-  x <- setMinMaxIfNeeded(x)
-  if (returnToRAM) {
-    origColors <- checkColors(x)
-    x[] <- x[]
-    x <- rebuildColors(x, origColors)
-    names(x) <- layerName
-  }
-  if (needRenameAtEnd) {
-    x <- progressBarCode(writeRaster(x, filename = filename2Orig, overwrite = TRUE),
-                         doProgress = ncell(x) > 2e6,
-                         message = "Writing correct raster file to disk following GDAL ...",
-                         colour = getOption("reproducible.messageColourPrepInputs"),
-                         verbose = verbose)
-  }
-
-  if (isFactor) {
-    levels(x) <- factorDF[[1]]
-  }
-
-  x
-}
+# @importFrom raster extension
+# @importFrom gdalUtilities gdalwarp
+# cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
+#                                 targetCRS, cores = 1, dots = list(), filename2, useSAcrs = FALSE,
+#                                 destinationPath = getOption("reproducible.destinationPath", "."),
+#                                 verbose = getOption("reproducible.verbose", 1),
+#                                 ...) {
+#   messagePrepInputs("crop, reproject, mask is using one-step gdalwarp")
+#
+#   if (!is.null(studyArea)) {
+#     studyArea <- fixErrors(x = studyArea)
+#   }
+#
+#   # browser(expr = exists("._cropReprojMaskWGDAL_1"))
+#
+#   # rasters need to go to same directory that can be unlinked at end without losing other temp files
+#   tempSrcRaster <- bigRastersTmpFile()
+#   returnToRAM <- FALSE
+#   if (missing(filename2)) filename2 <- NULL
+#   if (!isFALSE(filename2)) {
+#     filename2 <- determineFilename(filename2, destinationPath = destinationPath, verbose = verbose)
+#   }
+#
+#   if (is.null(filename2) | isFALSE(filename2)) {
+#     returnToRAM <- TRUE
+#     tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
+#     filename2 <- file.path(tmpRasPath, paste0(x@data@names, "_", rndstr(1, 8)))
+#     layerName <- names(x)
+#   }
+#   if (nchar(extension(filename2)) == 0)
+#     filename2 <- paste0(filename2, ".tif")
+#   filename2 <- normPath(filename2)
+#
+#   # GDAL can't deal with grd filename extensions (and possibly others) --> go with .tif and update at end
+#   filename2Orig <- filename2
+#   if (!grepl(".tif$", filename2)) filename2 <- paste0(filename2, ".tif")
+#   needRenameAtEnd <- !identical(filename2Orig, filename2)
+#
+#   isFactor <- raster::is.factor(x)
+#   if (isFactor) {
+#     factorDF <- raster::levels(x)
+#   }
+#   # GDAL will to a reprojection without an explicit crop
+#   # the raster could be in memory if it wasn't reprojected
+#   if (inMemory(x)) {
+#     dType <- assessDataType(x, type = "writeRaster")
+#     dTypeGDAL <- assessDataType(x, type = "GDAL")
+#
+#     x <- progressBarCode(writeRaster(x, filename = tempSrcRaster,
+#                                      datatype = dType, overwrite = TRUE),
+#                          doProgress = ncell(x) > 2e6,
+#                          message = "Writing temporary raster to disk for GDAL ...",
+#                          colour = getOption("reproducible.messageColourPrepInputs"),
+#                          verbose = verbose)
+#     gc()
+#   } else {
+#     tempSrcRaster <- x@file@name #Keep original raster.
+#     dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
+#   }
+#   tempSrcRaster <- normPath(tempSrcRaster)
+#
+#   srcCRS <- as.character(.crs(raster::raster(tempSrcRaster)))
+#
+#   needCutline <- NULL
+#   needReproject <- FALSE
+#   needNewRes <- FALSE
+#   tempSrcShape <- NULL
+#   cropExtent <- extent(raster::raster(tempSrcRaster)) #default
+#
+#   if (!is.null(studyArea)) {
+#     # studyAreaCRSx <- spTransform(studyArea, crs(x))
+#     needCutline <- TRUE
+#     tempSrcShape <- normPath(file.path(tempfile(tmpdir = raster::tmpDir()), ".shp", fsep = ""))
+#
+#     studyAreasf <- sf::st_as_sf(studyArea)
+#     if (isTRUE(useSAcrs)) {
+#       targCRS <- .crs(studyArea)
+#     } else {
+#       if (!is.null(rasterToMatch)) {
+#         targCRS <- crs(rasterToMatch)
+#       } else {
+#         targCRS <- srcCRS
+#       }
+#       studyAreasf <- sf::st_transform(studyAreasf, crs = targCRS)
+#     }
+#     # write the studyArea to disk -- go via sf because faster
+#     muffld <- capture.output(
+#       sf::st_write(studyAreasf, tempSrcShape)
+#     )
+#
+#   } else if (!is.null(rasterToMatch)) {
+#     targCRS <- .crs(rasterToMatch)
+#   }
+#
+#   if (isTRUE(useSAcrs) | is.null(rasterToMatch)) {
+#     cropExtent <- extent(studyAreasf)
+#     if (!(grepl("longlat", targCRS)))
+#       cropExtent <- roundToRes(cropExtent, x = x)
+#   } else if (!is.null(rasterToMatch)) {
+#     cropExtent <- extent(rasterToMatch)
+#   } # else keep extent the original extent (ie SA provided, but useSACRS = FALSE)
+#
+#   dontSpecifyResBCLongLat <- isLongLat(targCRS, srcCRS)
+#
+#   if (!is.null(rasterToMatch)) {
+#     needNewRes <- !identical(res(x), res(rasterToMatch))
+#   } else if (isTRUE(useSAcrs) ) {
+#     if (!isProjected(x))
+#       stop("Cannot set useSAcrs to TRUE if x is longitude and latitude; please provide a rasterToMatch")
+#   }
+#
+#   ## GDAL requires file path to cutline - write to disk
+#   tr <- if (needNewRes) res(rasterToMatch) else res(x)
+#
+#   if (!compareCRS(srcCRS, targCRS) ) {
+#     needReproject <- TRUE
+#   }
+#
+#   if (is.null(dots$method)) {
+#     dots$method <- assessDataType(x, type = "projectRaster")
+#   }
+#   if (dots$method == "ngb") {
+#     dots$method <- "near"
+#   }
+#
+#   if (!is.character(targCRS)) {
+#     targCRS <- as.character(targCRS)
+#   }
+#
+#   ## convert extent to string
+#   te <- paste(c(cropExtent[1], cropExtent[3], cropExtent[2], cropExtent[4]))
+#   cores <- dealWithCores(cores)
+#   prll <- paste0("-wo NUM_THREADS=", cores, " ")
+#
+#   ## this is a workaround to passing NULL arguments to gdal_warp, which does not work
+#   gdalArgs <- list(srcfile = tempSrcRaster, dstfile = filename2, s_srs = srcCRS, te = te,
+#                    t_srs = targCRS, cutline = tempSrcShape, crop_to_cutline = NULL, srcnodata = NA,
+#                    dstnodata = NA, tr = tr, ot = dTypeGDAL,
+#                    multi = TRUE, wo = prll,
+#                    overwrite = TRUE)
+#   gdalArgs[["r"]] <- dots$method ## keep 'r' separate in case it's NULL (so it won't be added)
+#   gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))]
+#   do.call(gdalUtilities::gdalwarp, gdalArgs)
+#
+#   x <- raster(filename2)
+#
+#   x <- setMinMaxIfNeeded(x)
+#   if (returnToRAM) {
+#     origColors <- checkColors(x)
+#     x[] <- x[]
+#     x <- rebuildColors(x, origColors)
+#     names(x) <- layerName
+#   }
+#   if (needRenameAtEnd) {
+#     x <- progressBarCode(writeRaster(x, filename = filename2Orig, overwrite = TRUE),
+#                          doProgress = ncell(x) > 2e6,
+#                          message = "Writing correct raster file to disk following GDAL ...",
+#                          colour = getOption("reproducible.messageColourPrepInputs"),
+#                          verbose = verbose)
+#   }
+#
+#   if (isFactor) {
+#     levels(x) <- factorDF[[1]]
+#   }
+#
+#   x
+# }
 
 isLongLat <- function(targCRS, srcCRS = targCRS) {
   if (grepl("longlat", targCRS)) !grepl("longlat", srcCRS) else FALSE

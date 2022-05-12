@@ -10,7 +10,8 @@ fastMask(
   cores = NULL,
   useGDAL = getOption("reproducible.useGDAL", TRUE),
   verbose = getOption("reproducible.verbose", 1),
-  ...
+  ...,
+  skipDeprecastedMsg = FALSE
 )
 }
 \arguments{

@@ -77,7 +77,6 @@ checkGDALVersion <- function(version) {
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
 #' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
-#' @importFrom gdalUtilities gdalwarp
 #'
 #' @examples
 #'

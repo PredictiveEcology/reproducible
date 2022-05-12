@@ -53,7 +53,6 @@ Imports:
     DBI,
     digest,
     fpCompare,
-    gdalUtilities,
     glue,
     lobstr,
     magrittr,
