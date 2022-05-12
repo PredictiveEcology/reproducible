@@ -799,7 +799,7 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
                                                          "GEOS expects planar coordinates"),
                                    try(as(Cache(terra::buffer, terra::vect(x), width = 0,
                                              # dissolve = FALSE,
-                                             useCache = useCache), "Spatial")#,
+                                             useCache = useCache), "Spatial"))#,
           )
 
         x <- bufferWarningSuppress(#warn = attr(x1, "warning"),
