@@ -2106,7 +2106,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
           #reproject rasterToMatch, extend by res
           newExtent <- suppressWarningsSpecific(projectExtent(rasterToMatch, crs = .crs(x)), projNotWKT2warn)
           tempPoly <- terra::vect(as(extent(newExtent), "SpatialPolygons"))
-          crs(tempPoly) <- attr(x, "comment")#.crs(x)
+          crs(tempPoly) <- sp::wkt(x)
           #buffer the new polygon by 1.5 the resolution of X so edges aren't cropped out
           tempPoly <- as(terra::buffer(tempPoly, width = max(res(x))*1.5), "Spatial")
           extRTM <- tempPoly
@@ -2592,7 +2592,7 @@ isLongLat <- function(targCRS, srcCRS = targCRS) {
 }
 
 .crs <- function(x, ...) {
-  suppressWarningsSpecific(falseWarnings = "CRS object has comment",
+  a <- suppressWarningsSpecific(falseWarnings = "CRS object has comment",
                            raster::crs(x, ...))
 }
 
