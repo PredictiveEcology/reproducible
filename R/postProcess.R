@@ -329,7 +329,6 @@ cropInputs.SpatRaster <- function(x, studyArea = NULL, rasterToMatch = NULL,
       rasterToMatch <- suppressWarningsSpecific(falseWarnings = "CRS object has comment",
                                                 raster(extentToMatch, crs = extentCRS))
     }
-    browser()
     cropTo <- if (!is.null(rasterToMatch)) {
       rasterToMatch
     } else {
@@ -627,7 +626,6 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
       studyArea
     }
 
-    browser()
     if (isTRUE(getOption("reproducible.useTerra"))) {
       x <- cropTo(from = suppressWarningsSpecific(terra::vect(x), shldBeChar),
                   cropTo = cropTo)
@@ -2192,7 +2190,6 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
           ##################################
           # maskInputs
           ##################################
-          browser()
           yy <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
                       expr = quote(
                         maskInputs(x = x, studyArea = studyArea,
