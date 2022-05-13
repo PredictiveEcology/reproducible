@@ -220,6 +220,13 @@ isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || is(x, "sf")
 isSpatialAny <- function(x) isGridded(x) || isVector(x)
 
 
+#' Fix common errors in GIS layers, using \code{terra}
+#'
+#' Currently, this only tests for validity of a SpatVect file, then if there is a problem,
+#' it will run `terra::makeValid`
+#' @export
+#' @param x The SpatStat or SpatVect object to try to fix.
+#'
 fixErrorsTerra <- function(x) {
   if (isVector(x)) {
     xValids <- terra::is.valid(x)
@@ -380,7 +387,6 @@ projectTo <- function(from, projectTo, method) {
 #'   of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
 #'   has to happen on the `cropTo` prior to using it as a crop layer, then a buffer
 #'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
-#' @inheritParams postProcessTerra
 #' @export
 cropTo <- function(from, cropTo = NULL, needBuffer = TRUE) {
   if (!is.null(cropTo)) {
