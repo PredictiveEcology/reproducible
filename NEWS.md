@@ -5,10 +5,11 @@ Version 1.2.9
 
 ## Dependency changes
 * Drop support for R 3.6 (#230)
-* remove `gdalUtilities`, `gdalUtils`, `rgdal` and `rgeos` from `Suggests`
+* remove `gdalUtilities`, `gdalUtils`, and `rgeos` from `Suggests`
 * Added minimum versions of `raster` and `terra`, because previous versions were causing collisions.
 
 ## Enhancements
+* all direct calls to GDAL are removed: only `terra` and `sf` are used throughout
 * `prepInputs` can now take `fun` as a quoted expression on `x`, the object loaded by `dlFun` in `preProcess`
 * `preProcess` arg `dlFun` can now be a quoted expression
 * changes to the internals and outputs of `objSize`; now is primarily a wrapper around `lobstr::obj_size`, but has an option to get more detail for lists and environments.
