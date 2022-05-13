@@ -1226,18 +1226,20 @@ test_that("prepInputs doesn't work (part 2)", {
     })
     expect_true(identical(test5, test4))
 
-    noisyOutput6 <- capture.output(type = "message", {
-      mess6 <- capture_messages({
-        test6 <- prepInputs(
-          # targetFile = targetFileLuxRDS,
-          dlFun = quote({
-            out <- getDataFn(name = "GADM", country = "LUX", level = 0)
-            out <- as(out, "SpatialPolygonsDataFrame")
-            sf::st_as_sf(out)
-          }),
-          path = tmpdir)          })
-    })
-    expect_true(all(sf::st_bbox(test5) == sf::st_bbox(test6)))
+    if (interactive()) {
+      noisyOutput6 <- capture.output(type = "message", {
+        mess6 <- capture_messages({
+          test6 <- prepInputs(
+            # targetFile = targetFileLuxRDS,
+            dlFun = quote({
+              out <- getDataFn(name = "GADM", country = "LUX", level = 0)
+              out <- as(out, "SpatialPolygonsDataFrame")
+              sf::st_as_sf(out)
+            }),
+            path = tmpdir)          })
+      })
+      expect_true(all(sf::st_bbox(test5) == sf::st_bbox(test6)))
+    }
 
 #
 #     mess2 <- capture_messages({
