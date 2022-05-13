@@ -1,8 +1,6 @@
 test_that("prepInputs doesn't work (part 3)", {
-  # if (requireNamespace("rgeos")) {
   testInitOut <- testInit(c("raster", "sf"), tmpFileExt = c(".tif", ".tif"),
                           opts = list(
-    #  testInitOut <- testInit(c("raster", "sf", "rgeos"), opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.inputPaths" = NULL,
     "reproducible.overwrite" = TRUE)
@@ -133,16 +131,6 @@ test_that("prepInputs doesn't work (part 3)", {
     expect_true(any(grepl("polygons do not intersect", mess)))
     # expect_true(any(grepl("with no data", mess)))
 
-    #LINEARRING Example
-    if (requireNamespace("rgeos", quietly = TRUE)) {
-      p6 = rgeos::readWKT("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
-      mess <- capture_messages({
-        p6a <- fixErrors(p6, verbose = 2)
-      })
-      expect_true(any(grepl("Found errors", mess)))
-      expect_true(any(grepl("Some or all of the errors fixed", mess)))
-    }
-
     # cropInputs.sf
     nc3 <- st_transform(nc1, crs = CRS(nonLatLongProj2))
     nc4 <- cropInputs(nc3, studyArea = ncSmall)
@@ -174,16 +162,11 @@ test_that("prepInputs doesn't work (part 3)", {
     expect_true(any(grepl("polygons do not intersect", mess)))
 
     # LINEARRING Example
-    if (requireNamespace("rgeos", quietly = TRUE)) {
-      p6 = rgeos::readWKT("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
-      mess <- capture_messages({
-        p6a <- fixErrors(st_as_sf(p6))
-      })
-      expect_true(any(grepl("Checking for errors", mess)))
-      expect_true(any(grepl("Found errors", mess)))
-      expect_true(any(grepl("errors fixed", mess)))
-    }
-    # projectInputs pass through
+    p6 = terra::vect("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
+    p6a <- fixErrorsTerra(p6)
+    expect_true(terra::is.valid(p6a))
+    expect_false(terra::is.valid(p6))
+  # projectInputs pass through
     nc5 <- projectInputs(x = 1)
     expect_identical(nc5, 1)
   }
@@ -211,64 +194,6 @@ test_that("writeOutputs with non-matching filename2", {
   expect_true(identical(normPath(filename(r2)), normPath(filename(r1))))
 })
 
-test_that("new gdalwarp all in one with grd with factor", {
-  skip_on_cran()
-  testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                      .Dim = c(5L, 2L))
-  Sr1 <- Polygon(coords)
-  Srs1 <- Polygons(list(Sr1), "s1")
-  StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- crsToUse
-
-  r <- raster(extent(-130, -110, 55, 65), res = 1)
-  crs(r) <- crsToUse
-  r[] <- sample(0:10, size = ncell(r), replace = TRUE)
-  df <- data.frame(ID = 0:10, label = LETTERS[1:11])
-  levels(r) <- df
-
-  # Check that the file-backed location is NOT in the cacheRepo for 1st or 2nd time.
-  #  This invokes the new dealWithRastersOnRecovery fn
-  rr <- postProcess(r, destinationPath = tmpdir,
-                    studyArea = StudyArea, useCache = TRUE, useGDAL = "force", filename2 = TRUE)
-  rr1 <- Cache(postProcess, r, destinationPath = tmpdir,
-               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache, filename2 = TRUE)
-  rr3 <- Cache(postProcess, r, destinationPath = tmpdir,
-               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache, filename2 = TRUE)
-  expect_true(identical(dirname(Filenames(rr)), dirname(Filenames(rr1))))
-  expect_true(identical(Filenames(rr1), Filenames(rr3)))
-  expect_true(!identical(dirname(Filenames(rr)), tmpCache)) # used to be that the recovery path was Cache file
-
-  expect_true(identical(raster::levels(rr), raster::levels(r)))
-  expect_true(sum(abs(raster::extent(rr)[1:4] - raster::extent(StudyArea)[1:4])) < 1)
-  expect_true(sum(abs(raster::extent(r)[1:4] - raster::extent(StudyArea)[1:4])) > 1)
-  rr2 <- postProcess(r, studyArea = StudyArea, useCache = FALSE, useGDAL = "force", filename2 = "out.grd")
-  expect_true(identical(raster::levels(rr2), raster::levels(r)))
-  expect_true(sum(abs(raster::extent(rr2)[1:4] - raster::extent(StudyArea)[1:4])) < 1)
-  expect_true(!identical(filename(rr), filename(rr2)))
-
-  expect_true(grepl(".tif$", filename(rr))) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
-  expect_true(grepl(".grd$", filename(rr2)))
-
-  # Try to move cache -- see if rasters in Cache recover
-  tmpCache2 <- file.path(dirname(tmpCache), "testCache2")
-  files <- dir(tmpCache, full.names = TRUE, recursive = TRUE)
-  newFiles <- gsub(basename(tmpCache), basename(tmpCache2), files)
-  nnn <- lapply(dirname(newFiles), checkPath, create = TRUE)
-  mmm <- Map(ff = files, nf = newFiles, function(ff, nf) file.link(ff, nf))
-  unlink(files)
-  expect_true(all(file.exists(newFiles)))
-  expect_warning(regexp = "being updated automatically", {
-    rr4 <- Cache(postProcess, r, destinationPath = tmpdir,
-                 studyArea = StudyArea, useCache = TRUE, useGDAL = "force",
-                 cacheRepo = tmpCache2, filename2 = TRUE)
-  })
-  expect_identical(rr3, rr4)
-})
 
 test_that("cropInputs crops too closely when input projections are different", {
   skip_on_cran()
@@ -376,7 +301,6 @@ test_that("maskInputs errors when x is Lat-Long", {
 
 test_that("prepInputs doesn't work (part 3)", {
   if (interactive()) {
-    # if (requireNamespace("rgeos")) {
     testInitOut <- testInit()
     on.exit({
       testOnExit(testInitOut)

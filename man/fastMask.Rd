@@ -2,7 +2,7 @@
 % Please edit documentation in R/gis.R
 \name{fastMask}
 \alias{fastMask}
-\title{Faster operations on rasters}
+\title{Faster operations on rasters (DEPRECATED as \code{terra::mask} is fast)}
 \usage{
 fastMask(
   x,
@@ -10,7 +10,8 @@ fastMask(
   cores = NULL,
   useGDAL = getOption("reproducible.useGDAL", TRUE),
   verbose = getOption("reproducible.verbose", 1),
-  ...
+  ...,
+  skipDeprecastedMsg = FALSE
 )
 }
 \arguments{
@@ -41,6 +42,9 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{...}{Currently unused.}
+
+\item{skipDeprecastedMsg}{Logical. If \code{TRUE}, then the message about this function
+being deprecated will be suppressed.}
 }
 \value{
 A \code{Raster*} object, masked (i.e., smaller extent and/or

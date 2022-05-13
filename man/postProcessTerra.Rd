@@ -2,7 +2,8 @@
 % Please edit documentation in R/postProcessTerra.R
 \name{postProcessTerra}
 \alias{postProcessTerra}
-\title{Transform a GIS dataset to have the metadata of another}
+\alias{cropTo}
+\title{Transform a GIS dataset so it has the properties (extent, projection, mask) of another}
 \usage{
 postProcessTerra(
   from,
@@ -16,6 +17,8 @@ postProcessTerra(
   overwrite = TRUE,
   ...
 )
+
+cropTo(from, cropTo = NULL, needBuffer = TRUE)
 }
 \arguments{
 \item{from}{A Gridded or Vector dataset on which to do one or more of:
@@ -24,10 +27,7 @@ crop, project, mask, and write}
 \item{to}{A Gridded or Vector dataset which is the object
 whose metadata will be the target for cropping, projecting, and masking of \code{from}.}
 
-\item{cropTo}{Optional Gridded or Vector dataset which,
-if supplied, will supply the extent with which to crop \code{from}. To omit
-cropping completely, set this to \code{NA}. If supplied, this will override \code{to}
-for the cropping step. Defaults to \code{NULL}, which means use \code{to}}
+\item{cropTo}{A Vector dataset}
 
 \item{projectTo}{Optional Gridded or Vector dataset, or \code{crs} object (e.g., sf::st_crs).
 If Gridded it will supply
@@ -60,6 +60,11 @@ interpolation. See \code{terra::project}. Defaults to \code{"bilinear"}}
 \item{...}{Currently can be either \code{rasterToMatch}, \code{studyArea}, \code{filename2},
 \code{useSAcrs}, or \code{targetCRS} to allow backwards
 compatibility with \code{postProcess}. See section below for details.}
+
+\item{needBuffer}{Logical. Defaults to \code{TRUE}, meaning nothing is done out
+of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
+has to happen on the `cropTo` prior to using it as a crop layer, then a buffer
+of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.}
 }
 \value{
 An object of the same class as \code{from}, but potentially cropped, projected, masked,

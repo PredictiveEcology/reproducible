@@ -1,4 +1,4 @@
-#' Transform a GIS dataset to have the metadata of another
+#' Transform a GIS dataset so it has the properties (extent, projection, mask) of another
 #'
 #' This function provides a single step to achieve the GIS operations "crop", "project",
 #' "mask" and possibly "write". It uses primarily the \code{terra} package internally
@@ -155,13 +155,14 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   postProcessTerraAssertions(from, to, cropTo, maskTo, projectTo)
 
   # Get the original class of from so that it can be recovered
-  isRaster <- is(from, "Raster")
-  isRasterLayer <- is(from, "RasterLayer")
-  isStack <- is(from, "RasterStack")
-  isBrick <- is(from, "RasterBrick")
-  isSF <- is(from, "sf")
-  isSpatial <- is(from, "Spatial")
-  isSpatRaster <- is(from, "SpatRaster")
+  origFromClass <- is(from)
+  isRaster <- any(origFromClass == "Raster")
+  isRasterLayer <- any(origFromClass == "RasterLayer")
+  isStack <- any(origFromClass == "RasterStack")
+  isBrick <- any(origFromClass == "RasterBrick")
+  isSF <- any(origFromClass == "sf")
+  isSpatial <- any(startsWith(origFromClass, "Spatial"))
+  isSpatRaster <- any(origFromClass == "SpatRaster")
   isVectorNonTerra <- isVector(from) && !isSpat(from)
 
   # converting sf to terra then cropping is slower than cropping then converting to terra
@@ -177,7 +178,7 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
       st <- Sys.time()
       messagePrepInputs("  `from` is large, converting to terra object will take some time ...")
     }
-    from <- terra::vect(from)
+    from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
     if (lg) {
       messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
                                              units = "secs", digits = 3))
@@ -206,26 +207,26 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
                   datatype = datatype)
 
   # REVERT TO ORIGINAL INPUT CLASS
-  if (isStack && !is(from, "RasterStack")) from <- raster::stack(from) # coming out of writeRaster, becomes brick
-  if (isBrick && !is(from, "RasterBrick")) from <- raster::brick(from) # coming out of writeRaster, becomes brick
-  if (isRasterLayer && !is(from, "RasterLayer")) from <- raster::raster(from) # coming out of writeRaster, becomes brick
-  if (isSF || isSpatial) {
-    from <- sf::st_as_sf(from)
-    if (isSpatial) {
-      from <- sf::as_Spatial(from)
-    }
-  }
+  from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial)
   messagePrepInputs("  postProcessTerra done in ", format(difftime(Sys.time(), startTime),
                                                           units = "secs", digits = 3))
   from
 }
 
 isSpat <- function(x) is(x, "SpatRaster") || is(x, "SpatVector")
+isSpat2 <- function(origClass) any(origClass %in% c("SpatVector", "SpatRaster"))
 isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
 isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || is(x, "sf")
 isSpatialAny <- function(x) isGridded(x) || isVector(x)
 
 
+#' Fix common errors in GIS layers, using \code{terra}
+#'
+#' Currently, this only tests for validity of a SpatVect file, then if there is a problem,
+#' it will run `terra::makeValid`
+#' @export
+#' @param x The SpatStat or SpatVect object to try to fix.
+#'
 fixErrorsTerra <- function(x) {
   if (isVector(x)) {
     xValids <- terra::is.valid(x)
@@ -235,9 +236,10 @@ fixErrorsTerra <- function(x) {
   x
 }
 
-maskTo <- function(from, maskTo) {
+maskTo <- function(from, maskTo, touches = FALSE) {
   if (!is.null(maskTo)) {
     if (!is.naSpatial(maskTo)) {
+      origFromClass <- class(from)
 
       if (is(maskTo, "Raster"))
         maskTo <- terra::rast(maskTo)
@@ -245,9 +247,18 @@ maskTo <- function(from, maskTo) {
         maskTo <- sf::st_as_sf(maskTo)
       if (is(maskTo, "sf"))
         maskTo <- terra::vect(maskTo)
+      if (!isSpat(from)) {
+        if (isVector(from)) {
+          from <- terra::vect(from)
+        } else {
+          from <- terra::rast(from)
+        }
+      }
 
-      if (!sf::st_crs(from) == sf::st_crs(maskTo))
+
+      if (!sf::st_crs(from) == sf::st_crs(maskTo)) {
         maskTo <- terra::project(maskTo, from)
+      }
       messagePrepInputs("    masking...")
       st <- Sys.time()
 
@@ -270,7 +281,11 @@ maskTo <- function(from, maskTo) {
                                  if (isVector(from)) {
                                    terra::intersect(from, maskTo)
                                  } else {
-                                   terra::mask(from, maskTo)
+                                   if (isGridded(maskTo)) {
+                                     terra::mask(from, maskTo)
+                                   } else {
+                                     terra::mask(from, maskTo, touches = touches)
+                                   }
                                  }
                                }
                              ),
@@ -289,14 +304,15 @@ maskTo <- function(from, maskTo) {
                        }))
       from <- fromInt
       messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+      from <- revertClass(from, origFromClass = origFromClass)
     }
   }
-
   from
 }
 
 projectTo <- function(from, projectTo, method) {
   if (!is.null(projectTo)) {
+    origFromClass <- is(from)
     if (!is.naSpatial(projectTo)) {
       if (is(projectTo, "Raster"))
         projectTo <- terra::rast(projectTo)
@@ -348,20 +364,35 @@ projectTo <- function(from, projectTo, method) {
 
         # Since we only use the crs when projectTo is a Vector, no need to "fixErrorsTerra"
         from <- if (isVector(from)) {
-          terra::project(from, projectTo)
+          isSpatial <- is(from, "Spatial")
+          if (isSpatial)
+            from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
+          from <- terra::project(from, projectTo)
+          if (isSpatial) from <- as(from, "Spatial")
+          from
         } else {
           terra::project(from, projectTo, method = method)
         }
         messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
       }
     }
+    from <- revertClass(from, origFromClass = origFromClass)
   }
   from
 }
 
-cropTo <- function(from, cropTo, needBuffer = FALSE) {
+#' @rdname postProcessTerra
+#' @param cropTo A Vector dataset
+#' @param needBuffer Logical. Defaults to \code{TRUE}, meaning nothing is done out
+#'   of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
+#'   has to happen on the `cropTo` prior to using it as a crop layer, then a buffer
+#'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
+#' @export
+cropTo <- function(from, cropTo = NULL, needBuffer = TRUE) {
   if (!is.null(cropTo)) {
     omit <- FALSE
+    origFromClass <- is(from)
+
     if (!isSpatialAny(cropTo))
       if (is.na(cropTo)) omit <- TRUE
 
@@ -401,6 +432,7 @@ cropTo <- function(from, cropTo, needBuffer = FALSE) {
       from <- fromInt
       messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
     }
+    from <- revertClass(from, origFromClass = origFromClass)
   }
   from
 }
@@ -499,6 +531,33 @@ cropSF <- function(from, cropToVect) {
                    })))
     if (!is(from2, "try-error"))
       from <- from2
+  }
+  from
+}
+
+shldBeChar <- "should be a character value"
+
+revertClass <- function(from, isStack = FALSE, isBrick = FALSE, isRasterLayer = FALSE,
+                        isSF = FALSE, isSpatial = FALSE, origFromClass = NULL) {
+  if (!isSpat2(origFromClass)) {
+    if (!is.null(origFromClass)) {
+      # overrides all others!
+      isStack <- any(origFromClass == "RasterStack")
+      isBrick <- any(origFromClass == "RasterBrick")
+      isRasterLayer <- any(origFromClass == "RasterLayer")
+      isSF <- any(origFromClass == "sf")
+      isSpatial <- any(startsWith(origFromClass, "Spatial"))
+
+    }
+    if (isStack && !is(from, "RasterStack")) from <- raster::stack(from) # coming out of writeRaster, becomes brick
+    if (isBrick && !is(from, "RasterBrick")) from <- raster::brick(from) # coming out of writeRaster, becomes brick
+    if (isRasterLayer && !is(from, "RasterLayer")) from <- raster::raster(from) # coming out of writeRaster, becomes brick
+    if (isSF || isSpatial) {
+      from <- sf::st_as_sf(from)
+      if (isSpatial) {
+        from <- sf::as_Spatial(from)
+      }
+    }
   }
   from
 }

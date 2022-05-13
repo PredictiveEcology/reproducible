@@ -5,9 +5,12 @@ Version 1.2.9
 
 ## Dependency changes
 * Drop support for R 3.6 (#230)
+* remove `gdalUtilities`, `gdalUtils`, `rgdal` and `rgeos` from `Suggests`
 * Added minimum versions of `raster` and `terra`, because previous versions were causing collisions.
 
 ## Enhancements
+* `prepInputs` can now take `fun` as a quoted expression on `x`, the object loaded by `dlFun` in `preProcess`
+* `preProcess` arg `dlFun` can now be a quoted expression
 * changes to the internals and outputs of `objSize`; now is primarily a wrapper around `lobstr::obj_size`, but has an option to get more detail for lists and environments.
 * `.robustDigest` now deals explicitly with numerics, which digest differently on different OSs. Namely, they get rounded prior to digesting. Through trial and error, it was found that setting `options("reproducible.digestDigits" = 7)` was sufficient for all known cases. Rounding to deeper than 7 decimal places was insufficient. There are also new methods for `language`, `integer`, `data.frame` (which does each column one at a time to address the numeric issue)
 * New version of `postProcess` called `postProcessTerra`. This will eventually replace `postProcess` as it is much faster in all cases and simpler code base thanks to the fantastic work of Robert Hijmans (`terra`) and all the upstream work that `terra` relies on

@@ -4,6 +4,8 @@
 \alias{projectInputs}
 \alias{projectInputs.default}
 \alias{projectInputs.Raster}
+\alias{projectInputs.SpatVector}
+\alias{projectInputs.SpatRaster}
 \alias{projectInputs.sf}
 \alias{projectInputs.Spatial}
 \title{Project \code{Raster*} or \code{Spatial*} or \code{sf} objects}
@@ -18,6 +20,23 @@ projectInputs(
 \method{projectInputs}{default}(x, targetCRS, ...)
 
 \method{projectInputs}{Raster}(
+  x,
+  targetCRS = NULL,
+  verbose = getOption("reproducible.verbose", 1),
+  rasterToMatch = NULL,
+  cores = NULL,
+  useGDAL = getOption("reproducible.useGDAL", TRUE),
+  ...
+)
+
+\method{projectInputs}{SpatVector}(
+  x,
+  targetCRS,
+  verbose = getOption("reproducible.verbose", 1),
+  ...
+)
+
+\method{projectInputs}{SpatRaster}(
   x,
   targetCRS = NULL,
   verbose = getOption("reproducible.verbose", 1),
@@ -102,16 +121,47 @@ coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58,
 Sr1 <- Polygon(coords)
 Srs1 <- Polygons(list(Sr1), "s1")
 StudyArea <- SpatialPolygons(list(Srs1), 1L)
-crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+crs(StudyArea) <- crs(shpEcozone)
+projString <- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
+StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
 
 ##########
 shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
+
 
 # Try manually, individual pieces
 shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
 shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
 shpEcozoneClean <- fixErrors(shpEcozone)
 shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
+
+# With terra
+if (require("terra")) {
+  opts <- options("reproducible.useTerra" = TRUE)
+  vectEcozone <- terra::vect(sf::st_as_sf(shpEcozone)) # direct conversion throws warning
+
+  # If input is Spatial object --> return will also be Spatial
+  shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
+  # Try manually, individual pieces -- Note functions are different
+  shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
+  shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
+  shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
+
+  # If input is Spat object --> return will also be Spat
+  vectEcozonePostProcessed <- postProcess(vectEcozone, studyArea = StudyArea)
+  # Try manually, individual pieces -- Note functions are different
+  vectEcozoneMasked <- maskInputs(vectEcozone, StudyArea)
+  VectEcozoneReprojected <- projectInputs(vectEcozone, StudyArea)
+  vectEcozoneCropped <- cropInputs(vectEcozone, StudyArea)
+
+
+
+  # Note these two have different function names --> methods for cropInputs and fixErrors
+  #    are not implemented yet
+  shpEcozoneClean <- fixErrorsTerra(vectEcozone)
+
+  options(opts)
+}
 
 setwd(ow)
 }
