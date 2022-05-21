@@ -1,7 +1,18 @@
+options("reproducible.drv" = RSQLite::SQLite())
+options("reproducible.drv" = "fst")
 test_that("test file-backed raster caching", {
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd")
+                          # , opts = list(reproducible.drv = duckdb::duckdb(),
+                          #               reproducible.keepCacheDBConnected = TRUE)
+                          )
+  # cdbf <- CacheDBFile(tmpCache, drv = duckdb::duckdb(), conn = NULL)
+  # dd <- duckdb::duckdb(cdbf)
+  # connn <- dbConnect(dd)
+  # opts1 <- options(reproducible.cachePath = tmpCache, reproducible.con = connn)
+
   on.exit({
     testOnExit(testInitOut)
+    # options(opts1)
   }, add = TRUE)
 
   nOT <- Sys.time()
@@ -98,7 +109,7 @@ test_that("test file-backed raster caching", {
   expect_silent(bb[] <- bb[])
 
   ###############
-  clearCache(tmpCache)
+  clearCache(tmpCache) # no longer a Cache repo
   clearCache(tmpdir)
   cc <- Cache(randomPolyToDisk, tmpfile[2], cacheRepo = tmpCache, userTags = "something2",
               quick = TRUE)
@@ -117,11 +128,12 @@ test_that("test file-backed raster caching", {
   checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
   file.copy(from = froms, overwrite = TRUE,
             to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
-  if (!isSQLite) {
-    DBI::dbRemoveTable(conn, CacheDBTableName(tmpdir))
+  if (is(getOption("reproducible.drv"), "PqDriver")) {
+    DBI::dbRemoveTable(getOption("reproducible.conn"), CacheDBTableName(tmpdir))
   }
   movedCache(tmpdir, tmpCache)
   out <- Cache(fn2, bbS, cacheRepo = tmpdir, userTags = "something2")
+  expect_false(attr(out, ".Cache")$newCache) # because it used moved cache
 
   clearCache(tmpdir)
   clearCache(tmpCache)
@@ -139,6 +151,7 @@ test_that("test file-backed raster caching", {
 
   # changed behaviour as of reproducible 1.2.0.9020
   #  -- now Cache doesn't protect user from filename collisions if user makes them
+  # rechanged behaviour -- as of reproducible 1.2.9 -- using harlinks
   expect_true(identical(filename(a), filename(b)))
 
   # Caching a raster as an input works
@@ -1072,8 +1085,8 @@ test_that("test cc", {
 test_that("test pre-creating conn", {
   testInitOut <- testInit(ask = FALSE, tmpFileExt = c(".tif", ".tif"))
   on.exit({
+    dbDisconnectAll(conn)
     testOnExit(testInitOut)
-    dbDisconnect(conn)
   }, add = TRUE)
 
   conn <- dbConnectAll(cachePath = tmpdir, conn = NULL)
@@ -1184,7 +1197,7 @@ test_that("test file link with duplicate Cache", {
     g <- Cache(sam1, N, cacheRepo = tmpCache)
   })
 
-  expect_true(grepl("A file with identical", mess3))
+  expect_true(sum(grepl("A file with identical", mess3)) == 1)
 
   set.seed(123)
   mess1 <- capture_messages({b <- Cache(sam, N, cacheRepo = tmpCache)})
@@ -1211,7 +1224,7 @@ test_that("test file link with duplicate Cache", {
   set.seed(1234)
   mess2 <- capture_messages({d <- Cache(sample, N, cacheRepo = tmpCache)})
   # Different inputs AND different output -- so no cache recovery and no file link
-  expect_true(length(mess2) == 0)
+  expect_true(sum(grepl("loaded cache", mess2) | grepl("link", mess2)) == 0)
   out2 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
   if (!is(out2, "try-error")) {
     fs2 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out2))

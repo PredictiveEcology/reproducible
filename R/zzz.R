@@ -29,6 +29,14 @@
   }
 }
 
+.onDetach <- function(libname, pkgname) {
+  connsToDisconnect <- grep("_conn", ls(.pkgEnv), value = TRUE)
+  if (length(connsToDisconnect))
+    disConnected <- lapply(mget(connsToDisconnect, envir = .pkgEnv), dbDisconnectAll,
+                           shutdown = TRUE)
+  return(invisible(NULL))
+}
+
 .onUnload <- function(libpath) {
   ## unset reproducible options on unload
   o <- options()

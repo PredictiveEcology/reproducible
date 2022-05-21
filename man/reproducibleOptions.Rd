@@ -114,10 +114,6 @@ The following options are likely of interest to most users:
   \item{\code{useCloud}}{
     Default \code{FALSE}. Passed to \code{Cache}.
   }
-  \item{\code{useDBI}}{
-    Default: \code{TRUE}. As of version 0.3, the backend is now \pkg{DBI} instead of
-    \pkg{archivist}.
-  }
   \item{\code{useGDAL}}{
     Default \code{TRUE}. Passed to \code{useGDAL} in \code{projectInputs.Raster}.
   }

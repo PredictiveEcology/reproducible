@@ -454,7 +454,7 @@ funnyData <- c(1, 1, 1, 1, 10)
 uniqueUserTags <- c("thisIsUnique", "reallyUnique")
 ranNumsB <- Cache(centralTendency, funnyData, cacheRepo = tmpDir,
                   userTags = uniqueUserTags) # sets new value to Cache
-showCache(tmpDir) # 1 unique artifact -- cacheId is 8be9cf2a072bdbb0515c5f0b3578f474
+showCache(tmpDir) # 1 unique artifact -- cacheId is 71cd24ec3b0d0cac
 
 # During development, we often redefine function internals
 centralTendency <- function(x)

@@ -263,10 +263,9 @@
     #if (is(output, "simList_")) output <- as(output, "simList")
   } else {
     loadFromMgs <- "Loading from repo"
-    if (useDBI()) {
-      output <- loadFromCache(cacheRepo, isInRepo[[.cacheTableHashColName()[lastOne]]],
-                              drv = drv, conn = conn)
-    }
+    output <- loadFromCache(cacheRepo, isInRepo[[.cacheTableHashColName()[lastOne]]],
+                            drv = drv, conn = conn)
+
   }
 
   if (verbose > 3) {

@@ -117,7 +117,6 @@ setMethod(
     clearWholeCache <- all(missing(userTags), is.null(after), is.null(before))
 
     if (isTRUEorForce(useCloud) || !clearWholeCache) {
-      if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
       # browser(expr = exists("._clearCache_2"))
       # if (missing(after)) after <- NA # "1970-01-01"
@@ -128,12 +127,9 @@ setMethod(
 
       objsDT <- do.call(showCache, args = args, quote = TRUE)
       if (isTRUE(useCloud) && NROW(objsDT) > 0 || identical(useCloud, "force")) {
+        if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
         # browser(expr = exists("._clearCache_3"))
-        if (useDBI()) {
-          cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
-        } else {
-          cacheIds <- objsDT[tagKey == "cacheId", tagValue]
-        }
+        cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
         if (identical(useCloud, "force")) {
           gdriveLs <- driveLs(cloudFolderID, pattern = userTags)
           cacheIds <- c(cacheIds, gsub("\\..*$", "", gdriveLs$name))
@@ -145,10 +141,8 @@ setMethod(
     }
 
     # browser(expr = exists("rrrr"))
-    if (useDBI()) {
-      if (!CacheIsACache(x, drv = drv, conn = conn))
-        return(invisible(.emptyCacheTable))
-    }
+    if (!CacheIsACache(x, drv = drv, conn = conn))
+      return(invisible(.emptyCacheTable))
 
     if (clearWholeCache) {
       if (isInteractive()) {
@@ -171,9 +165,7 @@ setMethod(
       unlink(CacheDBFile(x, drv = drv, conn = conn), recursive = TRUE, force = TRUE)
 
       checkPath(x, create = TRUE)
-      if (useDBI()) {
-        createCache(x, drv = drv, force = TRUE)
-      }
+      createCache(x, drv = drv, force = TRUE)
       if (isTRUE(getOption("reproducible.useMemoise"))) {
         if (exists(x, envir = .pkgEnv))
           rm(list = x, envir = .pkgEnv)
@@ -231,18 +223,19 @@ setMethod(
       }
 
       objToGet <- unique(objsDT[[.cacheTableHashColName()]])
-      if (useDBI()) {
-        if (is.null(conn)) {
-          conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
-          on.exit({dbDisconnect(conn)})
-        }
-        rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
-        if (isTRUE(getOption("reproducible.useMemoise")))
-          if (exists(x, envir = .pkgEnv))
-            suppressWarnings(rm(list = objToGet, envir = .pkgEnv[[x]]))
-
-        # browser(expr = exists("rmFC"))
+      if (is.null(conn)) {
+        conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
+        on.exit({
+          if (!keepDBConnected(drv))
+            dbDisconnectAll(conn, shutdown = TRUE)})
       }
+      rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
+      if (isTRUE(getOption("reproducible.useMemoise")))
+        if (exists(x, envir = .pkgEnv))
+          suppressWarnings(rm(list = objToGet, envir = .pkgEnv[[x]]))
+
+      # browser(expr = exists("rmFC"))
+
     }
     # memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
@@ -335,22 +328,17 @@ setMethod(
       x <- getOption("reproducible.cachePath")[1]
     }
     # browser(expr = exists("jjjj"))
-    if (useDBI()) {
-      afterNA <- FALSE
-      if (is.null(after)) {
-        afterNA <- TRUE
-        after <- NA
-      }
-      # "1970-01-01"
-      beforeNA <- FALSE
-      if (is.null(before)) {
-        beforeNA <- TRUE
-        before <- NA
-      } # Sys.time() + 1e5
-    } else {
-      if (is.null(after)) after <- "1970-01-01"
-      if (is.null(before)) before <- Sys.time() + 1e5
+    afterNA <- FALSE
+    if (is.null(after)) {
+      afterNA <- TRUE
+      after <- NA
     }
+    # "1970-01-01"
+    beforeNA <- FALSE
+    if (is.null(before)) {
+      beforeNA <- TRUE
+      before <- NA
+    } # Sys.time() + 1e5
     # if (is(x, "simList")) x <- x@paths$cachePath
 
     # not seeing userTags
@@ -366,48 +354,44 @@ setMethod(
         }
     }
 
-    if (useDBI()) {
+    if (is.null(conn)) {
+      conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
       if (is.null(conn)) {
-        conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
-        if (is.null(conn)) {
-          return(invisible(.emptyCacheTable))
-        }
+        return(invisible(.emptyCacheTable))
+      }
+      if (!keepDBConnected(drv))
         on.exit({
-          dbDisconnect(conn)
-        })
-      }
-      if (useDBI()) {
-        if (!CacheIsACache(x, drv = drv, conn = conn))
-          return(invisible(.emptyCacheTable))
-      }
-
-      dbTabNam <- CacheDBTableName(x, drv = drv)
-      # tab <- dbReadTable(conn, dbTabNam)
-      res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-        dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
-      tab <- dbFetch(res)
-      dbClearResult(res)
-      if (is(tab, "try-error"))
-        objsDT <- .emptyCacheTable
-      else
-        objsDT <- setDT(tab)
-      #setkeyv(objsDT, "cacheId")
+          dbDisconnectAll(conn, shutdown = TRUE)
+        }, add = TRUE)
     }
+    if (!CacheIsACache(x, drv = drv, conn = conn))
+      return(invisible(.emptyCacheTable))
+
+    objsDT <- showCacheAll(x, drv, conn)
+    # dbTabNam <- CacheDBTableName(x, drv = drv)
+    # # tab <- dbReadTable(conn, dbTabNam)
+    # res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
+    #   dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
+    # tab <- dbFetch(res)
+    # dbClearResult(res)
+    # if (is(tab, "try-error"))
+    #   objsDT <- .emptyCacheTable
+    # else
+    #   objsDT <- setDT(tab)
+    #setkeyv(objsDT, "cacheId")
 
     if (NROW(objsDT) > 0) {
-      if (useDBI()) {
-        if (!afterNA || !beforeNA) {
-          objsDT3 <- objsDT[tagKey == "accessed"]
-          if (!beforeNA)
-            objsDT3 <- objsDT3[(tagValue <= before)]
-          if ( !afterNA)
-            objsDT3 <- objsDT3[(tagValue >= after)]
-          # objsDT3 <- objsDT3[!duplicated(cacheId)]
-          # browser(expr = exists("zzzz"))
-          # objsDT <- objsDT[cacheId %in% objsDT3$cacheId]
-          objsDT <- objsDT[objsDT[[.cacheTableHashColName()]] %in%
-                             unique(objsDT3[[.cacheTableHashColName()]])] # faster than data.table join
-        }
+      if (!afterNA || !beforeNA) {
+        objsDT3 <- objsDT[tagKey == "accessed"]
+        if (!beforeNA)
+          objsDT3 <- objsDT3[(tagValue <= before)]
+        if ( !afterNA)
+          objsDT3 <- objsDT3[(tagValue >= after)]
+        # objsDT3 <- objsDT3[!duplicated(cacheId)]
+        # browser(expr = exists("zzzz"))
+        # objsDT <- objsDT[cacheId %in% objsDT3$cacheId]
+        objsDT <- objsDT[objsDT[[.cacheTableHashColName()]] %in%
+                           unique(objsDT3[[.cacheTableHashColName()]])] # faster than data.table join
       }
       if (length(userTags) > 0) {
         if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
@@ -423,17 +407,11 @@ setMethod(
             objsDT <- if (NROW(shortDT)) objsDT[shortDT, on = .cacheTableHashColName()] else objsDT[0] # merge each userTags
           }
         } else {
-          if (useDBI()) {
-            objsDT2 <- objsDT[cacheId %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
-            setkeyv(objsDT2, "cacheId")
-            shortDT <- unique(objsDT2, by = "cacheId")[, cacheId]
-            objsDT <- if (NROW(shortDT)) objsDT[shortDT, on = .cacheTableHashColName()] else objsDT[0] # merge each userTags
-          } else {
-            objsDT2 <- objsDT[artifact %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
-            setkeyv(objsDT2, "artifact")
-            shortDT <- unique(objsDT2, by = "artifact")[, artifact]
-            objsDT <- if (NROW(shortDT)) objsDT[shortDT, on = .cacheTableHashColName()] else objsDT[0] # merge each userTags
-          }
+          objsDT2 <- objsDT[cacheId %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
+          setkeyv(objsDT2, "cacheId")
+          shortDT <- unique(objsDT2, by = "cacheId")[, cacheId]
+          objsDT <- if (NROW(shortDT)) objsDT[shortDT, on = .cacheTableHashColName()] else objsDT[0] # merge each userTags
+
         }
       }
     }
@@ -446,7 +424,7 @@ setMethod(
     if (verboseMessaging)
       .messageCacheSize(x, artifacts = unique(objsDT[[.cacheTableHashColName()]]),
                         cacheTable = objsDT)
-    objsDT
+    objsDT[]
 })
 
 #' @rdname viewCache
@@ -525,12 +503,14 @@ setMethod(
   definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom) {
     if (is.null(connTo)) {
       connTo <- dbConnectAll(drvTo, cachePath = cacheTo)
-      on.exit(dbDisconnect(connTo), add = TRUE)
+      if (!keepDBConnected(drvTo))
+        on.exit(dbDisconnectAll(connTo, shutdown = TRUE), add = TRUE)
     }
 
     if (is.null(connFrom)) {
       connFrom <- dbConnectAll(drvFrom, cachePath = cacheFrom)
-      on.exit(dbDisconnect(connFrom), add = TRUE)
+      if (!keepDBConnected(drvFrom))
+        on.exit(dbDisconnectAll(connFrom, shutdown = TRUE), add = TRUE)
     }
 
     suppressMessages({
@@ -546,9 +526,8 @@ setMethod(
       # browser(expr = exists("gggg"))
       if (!(artifact %in% cacheToList[[.cacheTableHashColName()]])) {
         # browser(expr = exists("gggg"))
-        outputToSave <- if (useDBI()) {
-          try(loadFromCache(cacheFrom, artifact))
-        }
+        outputToSave <- try(loadFromCache(cacheFrom, artifact))
+
         if (is(outputToSave, "try-error")) {
           messageCache("Continuing to load others")
           outputToSave <- NULL
@@ -557,9 +536,7 @@ setMethod(
         ## Save it
         userTags <- cacheFromList[artifact, on = .cacheTableHashColName()][
           !tagKey %in% c("format", "name", "date", "cacheId"), list(tagKey, tagValue)]
-        if (useDBI()) {
-          output <- saveToCache(cacheTo, userTags = userTags, obj = outputToSave, cacheId = artifact) # nolint
-        }
+        output <- saveToCache(cacheTo, userTags = userTags, obj = outputToSave, cacheId = artifact) # nolint
         messageCache(artifact, " copied")
         outputToSave
       } else {
@@ -577,9 +554,7 @@ setMethod(
 
   tagCol <- "tagValue"
   if (missing(cacheTable)) {
-    if (useDBI()) {
-      a <- showCache(x, verboseMessaging = FALSE)
-    }
+    a <- showCache(x, verboseMessaging = FALSE)
 
   } else {
     a <- cacheTable
@@ -726,14 +701,6 @@ getArtifact <- function(cacheRepo, shownCache, cacheId) {
   shownCache[tagKey == "cacheId", artifact]
 }
 
-useDBI <- function() {
-  ud <- getOption("reproducible.useDBI", TRUE)
-  if (isFALSE(ud)) {
-    stop("options('reproducible.useDBI') can only be TRUE in this and future versions of reproducible",
-         call. = FALSE)
-  }
-  ud
-}
 
 rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
   if (is.null(cloudFolderID)) {
@@ -769,4 +736,24 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
 
 isTRUEorForce <- function(cond) {
   isTRUE(cond) || identical(cond, "force")
+}
+
+
+showCacheAll <- function(x, drv, conn) {
+  if (is(conn, "DBIConnection")) {
+    dbTabNam <- CacheDBTableName(x, drv = drv)
+    res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
+      dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
+    tab <- dbFetch(res)
+    dbClearResult(res)
+  } else {
+    objName <- objNameFromConn(conn)
+    tab <- readFilebasedConn(objName, conn)
+  }
+  if (is(tab, "try-error")) {
+    objsDT <- .emptyCacheTable
+  } else {
+    objsDT <- setDT(tab)
+  }
+  objsDT
 }

@@ -127,11 +127,7 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
   # browser(expr = exists("._cloudUpload_1"))
   artifactFileName <- CacheStoredFile(cacheRepo, hash = artifact)
   #artifactFileName <- paste0(artifact, ".rda")
-  if (useDBI()) {
-    newFileName <- basename2(artifactFileName)
-  } else {
-    newFileName <- paste0(outputHash,".rda")
-  }
+  newFileName <- basename2(artifactFileName)
   isInCloud <- gsub(gdriveLs$name,
                     pattern = paste0("\\.", fileExt(CacheStoredFile(cacheRepo, outputHash))),
                     replacement = "") %in% outputHash
@@ -181,13 +177,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
   retry(quote(googledrive::drive_download(file = googledrive::as_id(gdriveLs$id[isInCloud][1]),
                              path = localNewFilename, # take first if there are duplicates
                              overwrite = TRUE)))
-  if (useDBI()) {
-    output <- loadFile(localNewFilename)
-  } else {
-    ee <- new.env(parent = emptyenv())
-    loadedObjName <- load(localNewFilename)
-    output <- get(loadedObjName, inherits = FALSE)
-  }
+  output <- loadFile(localNewFilename)
   output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID, drv = drv)
   output
 }
@@ -212,9 +202,8 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cacheRepo, cloudFolderID
   #browser(expr = exists("._cloudUploadFromCache_1"))
   if (!any(isInCloud)) {
     cacheIdFileName <- CacheStoredFile(cacheRepo, outputHash)
-    newFileName <- if (useDBI()) {
-      basename2(cacheIdFileName)
-    }
+    newFileName <- basename2(cacheIdFileName)
+
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
     messageCache("Uploading new cached object ", newFileName,", with cacheId: ",
             outputHash," to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id)

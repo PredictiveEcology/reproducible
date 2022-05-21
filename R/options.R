@@ -109,10 +109,6 @@
 #'   \item{\code{useCloud}}{
 #'     Default \code{FALSE}. Passed to \code{Cache}.
 #'   }
-#'   \item{\code{useDBI}}{
-#'     Default: \code{TRUE}. As of version 0.3, the backend is now \pkg{DBI} instead of
-#'     \pkg{archivist}.
-#'   }
 #'   \item{\code{useGDAL}}{
 #'     Default \code{TRUE}. Passed to \code{useGDAL} in \code{projectInputs.Raster}.
 #'   }
@@ -195,7 +191,6 @@ reproducibleOptions <- function() {
     reproducible.tempPath = .reproducibleTempPath(),
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
-    reproducible.useDBI = TRUE,
     reproducible.useGDAL = TRUE, #
     reproducible.useMemoise = FALSE, #memoise
     reproducible.useNewDigestAlgorithm = 2, # TODO: change in next release
