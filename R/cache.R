@@ -1911,10 +1911,11 @@ checkInRepo <- function(conn, dbTabNam, outputHash) {
     isInRepo <- setDT(dbFetch(res))
     dbClearResult(res)
   } else {
-    out <- read_fst(conn, columns = .cacheTableHashColName())
+    out <- readFilebasedConn(conn = conn, columns = .cacheTableHashColName())
     whInRepo <- which(out$cacheId == outputHash)
     isInRepo <- if (length(whInRepo)) {
-      read_fst(conn, from = min(whInRepo), to = max(whInRepo))
+      readFilebasedConn(conn = conn, from = min(whInRepo), to = max(whInRepo))
+      # read_fst(conn, from = min(whInRepo), to = max(whInRepo))
     } else {
       character()
     }
