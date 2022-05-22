@@ -12,7 +12,7 @@
 #' @rdname cache-tools
 #' @export
 createCache <- function(cachePath = getOption("reproducible.cachePath"),
-                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        drv = getOption("reproducible.drv"),
                         conn = getOption("reproducible.conn", NULL), force = FALSE) {
   # browser(expr = exists("aaaa"))
   alreadyExists <- CacheIsACache(cachePath, drv = drv, conn = conn, create = TRUE)
@@ -52,7 +52,7 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
 #'   will be made to the file with that \code{cacheId} name in the cache repo.
 #'   This is used when identical outputs exist in the cache. This will save disk space.
 saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
-                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        drv = getOption("reproducible.drv"),
                         conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId,
                         linkToCacheId = NULL) {
   # browser(expr = exists("._saveToCache_1"))
@@ -162,7 +162,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                           cacheId,
                           format = getOption("reproducible.cacheSaveFormat", "rds"),
-                          drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                          drv = getOption("reproducible.drv"),
                           conn = getOption("reproducible.conn", NULL) ) {
   isMemoised <- FALSE
   if (isTRUE(getOption("reproducible.useMemoise"))) {
@@ -210,7 +210,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 #' @export
 #' @rdname cache-tools
 rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
-                        cacheId, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        cacheId, drv = getOption("reproducible.drv"),
                         conn = getOption("reproducible.conn", NULL),
                         format = getOption("reproducible.cacheSaveFormat", "rds")) {
   if (is.null(conn)) {
@@ -239,7 +239,7 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   unlink(CacheStoredFile(cachePath, hash = cacheId, format = format))
 }
 
-dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
+dbConnectAll <- function(drv = getOption("reproducible.drv"),
                          cachePath = getOption("reproducible.cachePath"),
                          conn = getOption("reproducible.conn", NULL), create = TRUE,
                          read_only = FALSE) {
@@ -308,7 +308,7 @@ connObject <- function(cachePath) {
 #' @importFrom DBI dbSendStatement dbClearResult
 .addTagsRepo <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
                          tagKey = character(), tagValue = character(),
-                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                         drv = getOption("reproducible.drv"),
                          conn = getOption("reproducible.conn", NULL)) {
   # browser(expr = exists("._addTagsRepo_1"))
   if (length(cacheId) > 0) {
@@ -339,7 +339,7 @@ connObject <- function(cachePath) {
 .updateTagsRepo <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
                             tagKey = character(), tagValue = character(),
                             add = TRUE,
-                            drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                            drv = getOption("reproducible.drv"),
                             conn = getOption("reproducible.conn", NULL)) {
   # browser(expr = exists("._updateTagsRepo_1"))
   if (length(cacheId) > 0) {
@@ -399,7 +399,7 @@ connObject <- function(cachePath) {
 #' @details
 #' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
 CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
-                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        drv = getOption("reproducible.drv"),
                         conn = getOption("reproducible.conn", NULL)) {
 
   type <- gsub("Driver", "", class(drv))
@@ -447,7 +447,7 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), has
 #' @rdname CacheHelpers
 #' @export
 CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
-                             drv = getOption("reproducible.drv", RSQLite::SQLite())) {
+                             drv = getOption("reproducible.drv")) {
   if (!is(cachePath, "Path")) {
     cachePath <- asPath(cachePath, nParentDirs = 2)
   }
@@ -473,7 +473,7 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
 #' \code{CacheIsACache} returns a logical of whether the specified cachePath
 #'   is actually a functioning cache.
 CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), create = FALSE,
-                          drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                          drv = getOption("reproducible.drv"),
                           conn = getOption("reproducible.conn", NULL)) {
   checkPath(cachePath, create = TRUE)
   # browser(expr = exists("._CacheIsACache_1"))
@@ -544,7 +544,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 #' movedCache(new = tmpdir, old = tmpCache)
 #' bb <- Cache(rnorm, 1, cacheRepo = tmpdir) # should recover the previous call
 #'
-movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+movedCache <- function(new, old, drv = getOption("reproducible.drv"),
                        conn = getOption("reproducible.conn", NULL)) {
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = new)

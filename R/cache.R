@@ -401,7 +401,7 @@ setGeneric(
            useCloud = FALSE,
            cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
            showSimilar = getOption("reproducible.showSimilar", FALSE),
-           drv = getOption("reproducible.drv", RSQLite::SQLite()),
+           drv = getOption("reproducible.drv"),
            conn = getOption("reproducible.conn", NULL)) {
     standardGeneric("Cache")
 })
@@ -491,6 +491,7 @@ setMethod(
       if (is.null(conn)) {
         conn <- dbConnectAll(drv, cachePath = cacheRepo)
         if (is(drv, "SQLiteDriver")) {
+          if (!requireNamespace("RSQLite")) stop("To use RSQLite::SQLite driver, please install.packages('RSQLite')")
           RSQLite::dbClearResult(RSQLite::dbSendQuery(conn, "PRAGMA busy_timeout=5000;"))
           RSQLite::dbClearResult(RSQLite::dbSendQuery(conn, "PRAGMA journal_mode=WAL;"))
         }
@@ -1163,7 +1164,7 @@ unmakeMemoisable.default <- function(x) {
 #' @inheritParams Cache
 #' @inheritParams saveToCache
 writeFuture <- function(written, outputToSave, cacheRepo, userTags,
-                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        drv = getOption("reproducible.drv"),
                         conn = getOption("reproducible.conn", NULL),
                         cacheId, linkToCacheId = NULL) {
   counter <- 0
@@ -1783,7 +1784,7 @@ cloudFolderFromCacheRepo <- function(cacheRepo)
 
 
 dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
-                                    drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                    drv = getOption("reproducible.drv"),
                                     conn = getOption("reproducible.conn", NULL)) {
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
     return(dealWithClassOnRecovery2(output, cacheRepo, cacheId,
@@ -1846,7 +1847,7 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
 
 # This one is old, overly complicated; defunct
 dealWithClassOnRecovery2 <- function(output, cacheRepo, cacheId,
-                                     drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                     drv = getOption("reproducible.drv"),
                                      conn = getOption("reproducible.conn", NULL)) {
   # This function is because the user doesn't want the path of the file-backed raster to
   #   be in the cacheRepo --> they want it in its original file location

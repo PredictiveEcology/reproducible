@@ -38,16 +38,19 @@ The following options are likely of interest to most users:
   \item{\code{conn}}{
     Default: \code{NULL}. Sets a specific connection to a database, e.g.,
     \code{dbConnect(drv = RSQLite::SQLite())} or \code{dbConnect(drv = RPostgres::Postgres()}.
-    For remote database servers, setting one connection may be far faster than using
-    \code{drv} which must make a new connection every time.
+    When using the default, file-backed cache repository, \code{conn} is simply the
+    file for the \code{data.frame} that maintains the information about the stored
+    files and attributes, e.g., visible with `showCache()`.
   }
   \item{\code{destinationPath}}{
     Default: \code{NULL}. Used in \code{\link{prepInputs}} and \code{\link{preProcess}}.
     Can be set globally here.
   }
   \item{\code{drv}}{
-    Default: \code{RSQLite::SQLite()}. Sets the default driver for the backend database system.
-    Only tested with \code{RSQLite::SQLite()} and \code{RPostgres::Postgres()}.
+    Default: \code{"fst"} for a single file-backed cache repository using the package
+    and format, \code{"fst"}. Alternatives are\code{RSQLite::SQLite()}.
+    Sets the driver for the backend database system.
+    Only tested with \code{"fst"}, \code{RSQLite::SQLite()} and \code{RPostgres::Postgres()}.
   }
   \item{\code{futurePlan}}{
     Default: \code{FALSE}. On Linux OSes, \code{Cache} and \code{cloudCache} have some

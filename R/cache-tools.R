@@ -87,7 +87,7 @@ setGeneric("clearCache", function(x, userTags = character(), after = NULL, befor
                                   ask = getOption("reproducible.ask"),
                                   useCloud = FALSE,
                                   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-                                  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                  drv = getOption("reproducible.drv"),
                                   conn = getOption("reproducible.conn", NULL), ...) {
   standardGeneric("clearCache")
 })
@@ -98,7 +98,7 @@ setMethod(
   "clearCache",
   definition = function(x, userTags, after = NULL, before = NULL, ask, useCloud = FALSE,
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        drv = getOption("reproducible.drv"),
                         conn = getOption("reproducible.conn", NULL), ...) {
     # isn't clearing the raster bacekd file
     # browser(expr = exists("._clearCache_1"))
@@ -312,7 +312,7 @@ cc <- function(secs, ...) {
 #' in \code{\link{Cache}}.
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
-                                 drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                 drv = getOption("reproducible.drv"),
                                  conn = getOption("reproducible.conn", NULL), ...) {
   standardGeneric("showCache")
 })
@@ -430,7 +430,7 @@ setMethod(
 #' @rdname viewCache
 setGeneric("keepCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  ask  = getOption("reproducible.ask"),
-                                 drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                 drv = getOption("reproducible.drv"),
                                  conn = getOption("reproducible.conn", NULL), ...) {
   standardGeneric("keepCache")
 })
@@ -490,8 +490,8 @@ setMethod(
 #'
 #' @rdname mergeCache
 setGeneric("mergeCache", function(cacheTo, cacheFrom,
-                                  drvTo = getOption("reproducible.drv", RSQLite::SQLite()),
-                                  drvFrom = getOption("reproducible.drv", RSQLite::SQLite()),
+                                  drvTo = getOption("reproducible.drv"),
+                                  drvFrom = getOption("reproducible.drv"),
                                   connTo = NULL, connFrom = NULL) {
   standardGeneric("mergeCache")
 })

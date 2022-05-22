@@ -3,7 +3,6 @@
 \name{Copy}
 \alias{Copy}
 \alias{Copy,ANY-method}
-\alias{Copy,SQLiteConnection-method}
 \alias{Copy,data.table-method}
 \alias{Copy,list-method}
 \alias{Copy,refClass-method}
@@ -14,8 +13,6 @@
 Copy(object, ...)
 
 \S4method{Copy}{ANY}(object, ...)
-
-\S4method{Copy}{SQLiteConnection}(object, ...)
 
 \S4method{Copy}{data.table}(object, ...)
 
@@ -28,7 +25,7 @@ Copy(object, ...)
 \S4method{Copy}{Raster}(
   object,
   filebackedDir,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
   ...
 )

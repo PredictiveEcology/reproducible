@@ -212,38 +212,6 @@ setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
   standardGeneric(".prepareOutput")
 })
 
-# @export
-# @rdname prepareOutput
-# @importFrom Require normPath
-# @importFrom RSQLite SQLite
-# setMethod(
-#   ".prepareOutput",
-#   signature = "Raster",
-#   definition = function(object, cacheRepo, drv = getOption("reproducible.drv", RSQLite::SQLite()),
-#                         conn = getOption("reproducible.conn", NULL), ...) {
-#     # with this call to .prepareFileBackedRaster, it is from the same function call as a previous time
-#     #  overwrite is ok
-#     # .prepareFileBackedRaster(object, repoDir = cacheRepo, drv = drv, conn = conn, ...)
-#     # browser(expr = exists("._prepareOutputs_1"))
-#     if (isTRUE(fromDisk(object))) {
-#       fns <- Filenames(object, allowMultiple = FALSE)
-#       fpShould <- normPath(file.path(cacheRepo, "rasters"))
-#       isCorrect <- unlist(lapply(normPath(file.path(fpShould, basename(fns))),
-#                                  function(x) any(grepl(x, fns))))
-#       if (!any(isCorrect)) {
-#         if (is(object, "RasterStack")) {
-#           # browser(expr = exists("._prepareOutputs_2"))
-#           for (i in seq(nlayers(object))) {
-#             object@layers[[i]]@file@name <- gsub(dirname(object@layers[[i]]@file@name),
-#                                                  fpShould, object@layers[[i]]@file@name)
-#           }
-#         } else {
-#           object@file@name <- gsub(unique(dirname(fns)), fpShould, fns)
-#         }
-#       }
-#     }
-#     object
-#   })
 
 #' @export
 #' @rdname prepareOutput
@@ -522,7 +490,7 @@ setAs(from = "character", to = "Path", function(from) {
 
 # Old one
 .prepareFileBackedRaster2 <- function(obj, repoDir = NULL, overwrite = FALSE,
-                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                      drv = getOption("reproducible.drv"),
                                       conn = getOption("reproducible.conn", NULL),
                                       ...) {
   isRasterLayer <- TRUE
@@ -1449,7 +1417,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' r # now in "rasters" subfolder of tempdir()
 #'
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
-                                     drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                     drv = getOption("reproducible.drv"),
                                      conn = getOption("reproducible.conn", NULL),
                                      ...) {
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {

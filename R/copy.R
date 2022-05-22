@@ -111,6 +111,12 @@ setMethod(
               "a Copy method for this class. See ?Copy")
 
     }
+    if (is(object, "SQLiteConnetion")) {
+      con <- dbConnect(RSQLite::SQLite(), ":memory:")
+      messageCache("Making a copy of the entire SQLite database: ",object@dbname,
+                   "; this may not be desireable ...")
+      object <- RSQLite::sqliteCopyDatabase(object, con)
+    }
     if (is.environment(object)) {
       # if (missing(filebackedDir)) {
       #   filebackedDir <- tempdir2(rndstr(1, 9))
@@ -130,15 +136,6 @@ setMethod(
 })
 
 
-#' @rdname Copy
-setMethod("Copy",
-          signature(object = "SQLiteConnection"),
-          definition = function(object, ...) {
-            con <- dbConnect(RSQLite::SQLite(), ":memory:")
-            messageCache("Making a copy of the entire SQLite database: ",object@dbname,
-                    "; this may not be desireable ...")
-            RSQLite::sqliteCopyDatabase(object, con)
-})
 
 #' @rdname Copy
 setMethod("Copy",
@@ -184,7 +181,7 @@ setMethod("Copy",
 setMethod("Copy",
           signature(object = "Raster"),
           definition = function(object, filebackedDir,
-                                drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                drv = getOption("reproducible.drv"),
                                 conn = getOption("reproducible.conn", NULL), ...) {
             # raster::fromDisk fails when only some of the RasterLayers in a RasterStack are fromDisk
             #  --> changing to Filenames

@@ -172,7 +172,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
     "dda1fbb70d256e6b3b696ef0176c63de"
   expect_true(identical(comp,
                         writeFuture(1, "sdf", cacheRepo = tmpCache, userTags = "",
-                                    drv = RSQLite::SQLite())))
+                                    drv = "fst"))) # RSQLite::SQLite()
   expect_error(writeFuture(1, "sdf", cacheRepo = "sdfd", userTags = ""))
 
   if (interactive()) {

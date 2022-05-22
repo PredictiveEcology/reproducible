@@ -10,7 +10,7 @@
 \usage{
 CacheDBFile(
   cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL)
 )
 
@@ -24,13 +24,13 @@ CacheStoredFile(
 
 CacheDBTableName(
   cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite())
+  drv = getOption("reproducible.drv")
 )
 
 CacheIsACache(
   cachePath = getOption("reproducible.cachePath"),
   create = FALSE,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL)
 )
 }

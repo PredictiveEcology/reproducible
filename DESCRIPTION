@@ -77,6 +77,7 @@ Suggests:
     parallel,
     RCurl (>= 1.95-4.8),
     rgdal,
+    RSQLite,
     rmarkdown,
     sf,
     stats,

@@ -9,14 +9,14 @@
 \usage{
 createCache(
   cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
   force = FALSE
 )
 
 saveToCache(
   cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
   obj,
   userTags,
@@ -28,14 +28,14 @@ loadFromCache(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
   format = getOption("reproducible.cacheSaveFormat", "rds"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL)
 )
 
 rmFromCache(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
   format = getOption("reproducible.cacheSaveFormat", "rds")
 )

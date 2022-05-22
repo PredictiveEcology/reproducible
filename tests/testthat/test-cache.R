@@ -1,4 +1,4 @@
-options("reproducible.drv" = RSQLite::SQLite())
+# options("reproducible.drv" = RSQLite::SQLite())
 options("reproducible.drv" = "fst")
 test_that("test file-backed raster caching", {
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd")

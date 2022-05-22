@@ -8,7 +8,7 @@
   obj,
   repoDir = NULL,
   overwrite = FALSE,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
   ...
 )
