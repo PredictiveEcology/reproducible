@@ -243,7 +243,7 @@ setMethod(
     }
     # memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
-    return(invisible(objsDT))
+    return(objsDT)
 })
 
 #' @details
@@ -360,7 +360,7 @@ setMethod(
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
       if (is.null(conn)) {
-        return(invisible(.emptyCacheTable))
+        return(.emptyCacheTable)
       }
       if (!keepDBConnected(drv))
         on.exit({
@@ -368,7 +368,7 @@ setMethod(
         }, add = TRUE)
     }
     if (!CacheIsACache(x, drv = drv, conn = conn))
-      return(invisible(.emptyCacheTable))
+      return(.emptyCacheTable)
 
     objsDT <- showCacheAll(x, drv, conn)
 
