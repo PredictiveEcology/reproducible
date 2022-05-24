@@ -306,7 +306,6 @@ cc <- function(secs, ...) {
 #' @inheritParams clearCache
 #'
 #' @export
-#' @importFrom DBI dbSendQuery dbFetch dbClearResult
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
 #' @seealso \code{\link{mergeCache}}. Many more examples
@@ -369,17 +368,6 @@ setMethod(
       return(invisible(.emptyCacheTable))
 
     objsDT <- showCacheAll(x, drv, conn)
-    # dbTabNam <- CacheDBTableName(x, drv = drv)
-    # # tab <- dbReadTable(conn, dbTabNam)
-    # res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-    #   dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
-    # tab <- dbFetch(res)
-    # dbClearResult(res)
-    # if (is(tab, "try-error"))
-    #   objsDT <- .emptyCacheTable
-    # else
-    #   objsDT <- setDT(tab)
-    #setkeyv(objsDT, "cacheId")
 
     if (NROW(objsDT) > 0) {
       if (!afterNA || !beforeNA) {
@@ -741,12 +729,12 @@ isTRUEorForce <- function(cond) {
 
 
 showCacheAll <- function(x, drv, conn) {
-  if (is(conn, "DBIConnection")) {
+  if (useSQL(conn)) {
     dbTabNam <- CacheDBTableName(x, drv = drv)
     res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-      dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
-    tab <- dbFetch(res)
-    dbClearResult(res)
+      DBI::dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
+    tab <- DBI::dbFetch(res)
+    DBI::dbClearResult(res)
   } else {
     objName <- objNameFromConn(conn)
     tab <- readFilebasedConn(objName, conn)

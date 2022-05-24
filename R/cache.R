@@ -373,10 +373,8 @@ utils::globalVariables(c(
 #' @importClassesFrom sp SpatialPointsDataFrame
 #' @importClassesFrom sp SpatialPolygons
 #' @importClassesFrom sp SpatialPolygonsDataFrame
-#' @importFrom DBI SQL
 #' @importFrom digest digest
 #' @importFrom data.table setDT := setkeyv .N .SD setattr
-#' @importFrom glue glue_sql double_quote
 #' @importFrom magrittr %>%
 #' @importFrom utils object.size tail methods
 #' @importFrom methods formalArgs
@@ -961,13 +959,6 @@ setMethod(
       if (objSize > 1e6) {
         resultHash <- CacheDigest(list(outputToSave), .objects = .objects)$outputHash
         allCache <- showCache(cacheRepo, drv = drv, conn = conn)
-        # qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))}",
-        #                       dbTabName = dbTabNam,
-        #                       .con = conn)
-        # res <- retry(retries = 15, exponentialDecayBase = 1.01,
-        #              quote(dbSendQuery(conn, qry)))
-        # allCache <- setDT(dbFetch(res))
-        # dbClearResult(res)
         if (NROW(allCache)) {
           alreadyExists <- allCache[allCache$tagKey == "resultHash" & allCache$tagValue %in% resultHash]
           if (NROW(alreadyExists)) {
@@ -1901,15 +1892,15 @@ keepDBConnected <- function(drv) {
 }
 
 checkInRepo <- function(conn, dbTabNam, outputHash) {
-  if (is(conn, "DBIConnection")) {
+  if (useSQL(conn)) {
     qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
                           dbTabName = dbTabNam,
                           outputHash = outputHash,
                           .con = conn)
     res <- retry(retries = 15, exponentialDecayBase = 1.01,
-                 quote(dbSendQuery(conn, qry)))
-    isInRepo <- setDT(dbFetch(res))
-    dbClearResult(res)
+                 quote(DBI::dbSendQuery(conn, qry)))
+    isInRepo <- setDT(DBI::dbFetch(res))
+    DBI::dbClearResult(res)
   } else {
     out <- readFilebasedConn(conn = conn, columns = .cacheTableHashColName())
     whInRepo <- which(out$cacheId == outputHash)

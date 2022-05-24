@@ -111,12 +111,13 @@ setMethod(
               "a Copy method for this class. See ?Copy")
 
     }
-    if (is(object, "SQLiteConnetion")) {
-      con <- dbConnect(RSQLite::SQLite(), ":memory:")
-      messageCache("Making a copy of the entire SQLite database: ",object@dbname,
-                   "; this may not be desireable ...")
-      object <- RSQLite::sqliteCopyDatabase(object, con)
-    }
+    if (useSQL(object))
+      if (is(object, "SQLiteConnetion")) {
+        con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+        messageCache("Making a copy of the entire SQLite database: ",object@dbname,
+                     "; this may not be desireable ...")
+        object <- RSQLite::sqliteCopyDatabase(object, con)
+      }
     if (is.environment(object)) {
       # if (missing(filebackedDir)) {
       #   filebackedDir <- tempdir2(rndstr(1, 9))

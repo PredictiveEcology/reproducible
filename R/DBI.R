@@ -6,7 +6,6 @@
 #' @param force Logical. Should it create a cache in the \code{cachePath},
 #'   even if it already exists, overwriting.
 #' @importFrom data.table data.table
-#' @importFrom DBI dbConnect dbDisconnect dbWriteTable
 #' @inheritParams DBI::dbConnect
 #' @inheritParams DBI::dbWriteTable
 #' @rdname cache-tools
@@ -30,18 +29,6 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
   }
 
   createEmptyTable(conn, cachePath, drv)
-  # dt <- .emptyCacheTable
-  #
-  # # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
-  # a <- retry(retries = 250, exponentialDecayBase = 1.01,
-  #       quote(dbListTables(conn)))
-  #
-  # if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
-  #   #retry(retries = 5, exponentialDecayBase = 1.5, quote(
-  #     try(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
-  #                  field.types = c(cacheId = "text", tagKey = "text",
-  #                                  tagValue = "text", createdDate = "text")), silent = TRUE)
-  #   #)
 }
 
 #' @rdname cache-tools
@@ -206,7 +193,6 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
 #' Low level tools to work with Cache
 #'
-#' @importFrom DBI dbClearResult dbSendStatement dbBind dbAppendTable
 #' @export
 #' @rdname cache-tools
 rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
@@ -266,7 +252,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv"),
     }
   }
   # other types of drv, e.g., Postgres can be done via env vars
-  conn <- do.call(dbConnect, args)
+  conn <- do.call(DBI::dbConnect, args)
   if (stayConnected) {
     assign(connObject(cachePath), conn, envir = .pkgEnv)
   }
@@ -274,8 +260,8 @@ dbConnectAll <- function(drv = getOption("reproducible.drv"),
 }
 
 dbDisconnectAll <- function(conn = getOption("reproducible.conn", NULL), ...) {
-  if (is(conn, "DBIConnection"))
-    dbDisconnect(conn, ...)
+  if (useSQL(conn))
+    DBI::dbDisconnect(conn, ...)
   else {
     objName <- objNameFromConn(conn)
     tab <- readFilebasedConn(objName, conn)
@@ -297,7 +283,6 @@ connObject <- function(cachePath) {
 .length1CacheTable <- data.table::data.table(cacheId = "a", tagKey = "a",
                                            tagValue = "a", createdDate = "a")
 
-#' @importFrom DBI dbSendStatement dbClearResult
 .addTagsRepo <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
                          tagKey = character(), tagValue = character(),
                          drv = getOption("reproducible.drv"),
@@ -317,11 +302,6 @@ connObject <- function(cachePath) {
       tagValue <- curTime
 
     # This is what the next code pair of lines does
-    # dt <- data.table("cacheId" = cacheId, "tagKey" = "accessed",
-    #                 "tagValue" = as.character(Sys.time()),
-    #                 "createdDate" = as.character(Sys.time()))
-    #
-    # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
     rs <- addTagsAll(conn, cachePath, drv, cacheId, tagKey, tagValue, curTime)
 
 
@@ -347,12 +327,6 @@ connObject <- function(cachePath) {
       return(invisible())
     }
 
-    # This is what the next code pair of lines does
-    # dt <- data.table("cacheId" = cacheId, "tagKey" = "accessed",
-    #                 "tagValue" = as.character(Sys.time()),
-    #                 "createdDate" = as.character(Sys.time()))
-    #
-    # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
     affectedAnyRows <- updateTagsAll(conn, cachePath, drv, tagValue, cacheId, tagKey)
     if (!affectedAnyRows) {
       if (isTRUE(add)) {
@@ -459,7 +433,6 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
 #' @rdname CacheHelpers
 #' @param create Logical. Currently only affects non RQSLite default drivers. If this
 #'   is \code{TRUE} and there is no Cache database, the function will create one.
-#' @importFrom DBI dbListTables
 #' @export
 #' @details
 #' \code{CacheIsACache} returns a logical of whether the specified cachePath
@@ -481,9 +454,9 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   ret <- FALSE
   ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
                list.files(cachePath))
-  if (ret && is(conn, "DBIConnection")) {
+  if (ret && useSQL(conn)) {
     tablesInDB <- retry(retries = 250, exponentialDecayBase = 1.01,
-                        quote(dbListTables(conn)))
+                        quote(DBI::dbListTables(conn)))
     tableShouldBe <- CacheDBTableName(cachePath)
     if (length(tablesInDB) == 1) {
       if (!any(tablesInDB %in% tableShouldBe) && grepl(type, "SQLite")) {
@@ -520,7 +493,6 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 #'   Either the path of the previous \code{cachePath} where the cache was moved or copied from, or
 #'   the old DB Table Name
 #' @inheritParams Cache
-#' @importFrom DBI dbListTables
 #' @export
 #' @examples
 #' tmpCache <- file.path(tempdir(), "tmpCache")
@@ -588,9 +560,9 @@ saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
 }
 
 appendAll <- function(conn, cachePath, drv, dt) {
-  a <- if (is(conn, "DBIConnection"))
+  a <- if (useSQL(conn))
     retry(retries = 250, exponentialDecayBase = 1.01, quote(
-      dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
+      DBI::dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
   else {
     objName <- objNameFromConn(conn)
     fsTab <- readFilebasedConn(objName, conn)
@@ -600,9 +572,9 @@ appendAll <- function(conn, cachePath, drv, dt) {
 }
 
 addTagsAll <- function(conn, cachePath, drv, cacheId, tagKey, tagValue, curTime) {
-  if (is(conn, "DBIConnection")) {
+  if (useSQL(conn)) {
     rs <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-      dbSendStatement(
+      DBI::dbSendStatement(
         conn,
         paste0("insert into \"", CacheDBTableName(cachePath, drv), "\"",
                " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
@@ -610,7 +582,7 @@ addTagsAll <- function(conn, cachePath, drv, cacheId, tagKey, tagValue, curTime)
                "', '", tagKey, "', '", tagValue, "', '", curTime, "')"))
     ))
 
-    dbClearResult(rs)
+    DBI::dbClearResult(rs)
   } else {
     dt <- setDT(list(cacheId = cacheId, tagKey = tagKey, tagValue = tagValue, createdDate = curTime))
     appendAll(conn, cachePath, drv, dt)
@@ -618,16 +590,16 @@ addTagsAll <- function(conn, cachePath, drv, cacheId, tagKey, tagValue, curTime)
 }
 
 updateTagsAll <- function(conn, cachePath, drv, tagValue, cacheId, tagKey) {
-  if (is(conn, "DBIConnection")) {
+  if (useSQL(conn)) {
     rs <- #retry(retries = 250, exponentialDecayBase = 1.01, quote(
-      dbSendStatement(
+      DBI::dbSendStatement(
         conn,
         paste0("update \"", CacheDBTableName(cachePath, drv), "\"",
                " set \"tagValue\" = '",tagValue,"' where ",
                " \"cacheId\" = '",cacheId, "'", " AND \"tagKey\" = '",tagKey, "'"))
     #))
     affectedAnyRows <- DBI::dbGetRowsAffected(rs) > 0
-    dbClearResult(rs)
+    DBI::dbClearResult(rs)
   } else {
     # dt <- as.data.table(list(cacheId = cacheId, tagKey = cacheId, tagValue = tagValue, createdDate = curTime))
 
@@ -687,13 +659,13 @@ writeFilebasedConn <- function(cachePath, drv, conn, dt, objName) {
 
 createEmptyTable <- function(conn, cachePath, drv) {
   dt <- .emptyCacheTable
-  if (is(conn, "DBIConnection")) {
+  if (useSQL(conn)) {
   # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
   a <- retry(retries = 250, exponentialDecayBase = 1.01,
-             quote(dbListTables(conn)))
+             quote(DBI::dbListTables(conn)))
 
   if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
-    try(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
+    try(DBI::dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
                      field.types = c(cacheId = "text", tagKey = "text",
                                      tagValue = "text", createdDate = "text")), silent = TRUE)
   } else {
@@ -704,7 +676,7 @@ createEmptyTable <- function(conn, cachePath, drv) {
 }
 
 rmFromCacheAll <- function(cachePath, drv, cacheId, conn) {
-  if (is(conn, "DBIConnection")) {
+  if (useSQL(conn)) {
     query <- glue::glue_sql(
       "DELETE FROM {DBI::SQL(double_quote(dbTabName))} WHERE \"cacheId\" IN ({cacheId*})",
       dbTabName = CacheDBTableName(cachePath, drv),
@@ -714,11 +686,11 @@ rmFromCacheAll <- function(cachePath, drv, cacheId, conn) {
 
     if (FALSE)   { # this is the "unsafe" version
       query <- paste0("DELETE FROM \"", CacheDBTableName(cachePath, drv), "\" WHERE \"cacheId\" = $1")
-      res <- dbSendStatement(conn, query)
-      dbBind(res, list(cacheId))
+      res <- DBI::dbSendStatement(conn, query)
+      DBI::dbBind(res, list(cacheId))
     }
 
-    dbClearResult(res)
+    DBI::dbClearResult(res)
   } else {
     objDT <- readFilebasedConn(conn = conn)
     wh <- which(!objDT$cacheId %in% cacheId)
@@ -731,9 +703,8 @@ rmFromCacheAll <- function(cachePath, drv, cacheId, conn) {
 }
 
 renameCacheAll <- function(new, old, drv, conn) {
-  if (is(conn, "DBIConnection")) {
-
-    tables <- dbListTables(conn)
+  if (useSQL(conn)) {
+    tables <- DBI::dbListTables(conn)
     # browser(expr = exists("._movedCache_2"))
     if (missing(old)) {
       if (length(tables) == 1) {
@@ -761,6 +732,15 @@ renameCacheAll <- function(new, old, drv, conn) {
                           .con = conn)
     res <- retry(retries = 15, exponentialDecayBase = 1.01, quote(dbSendQuery(conn, qry)))
     # dbFetch(res)
-    dbClearResult(res)
+    DBI::dbClearResult(res)
   } # fst does not need to rename a table, as there are no tables
+}
+
+useSQL <- function(conn) {
+  if (useSQL(conn)) {
+    if (!requireNamespace("RSQLite")) stop("to use an SQL database, you must also install.packages(c('RSQLite', 'DBI'))")
+    TRUE
+  } else {
+    FALSE
+  }
 }
