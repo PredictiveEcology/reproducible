@@ -141,11 +141,12 @@ setMethod(
 
     }
 
+    returnEmptyCache <- FALSE
     # browser(expr = exists("rrrr"))
     if (!CacheIsACache(x, drv = drv, conn = conn))
-      return(invisible(.emptyCacheTable))
+      returnEmptyCache <- TRUE
 
-    if (clearWholeCache) {
+    if (clearWholeCache && !returnEmptyCache) {
       if (isInteractive()) {
         if (isTRUE(ask)) {
           cacheSize <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
@@ -172,8 +173,10 @@ setMethod(
           rm(list = x, envir = .pkgEnv)
       }
       # memoise::forget(.loadFromLocalRepoMem)
-      return(invisible())
+      returnEmptyCache <- TRUE
     }
+    if (isTRUE(returnEmptyCache))
+      return(.emptyCacheTable)
 
     if (isInteractive()) {
       objSizes <- as.numeric(objsDT[tagKey == "object.size"][[.cacheTableTagColName()]])
