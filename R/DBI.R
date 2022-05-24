@@ -628,9 +628,14 @@ readFilebasedConn <- function(objName, conn, columns = NULL, from = 1, to = NULL
     fsTab <- get(objName, envir = .pkgEnv, inherits = FALSE)
   } else {
     # Read from disk, then assign right away for all future reads
-    fsTab <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-      read_fst(conn)))
-    writeFilebasedConnToMemory(objName = objName, dt = fsTab, conn = conn)
+    if (file.exists(conn)) {
+      fsTab <- retry(retries = 1, exponentialDecayBase = 1.01, quote(
+        read_fst(conn)))
+      writeFilebasedConnToMemory(objName = objName, dt = fsTab, conn = conn)
+    } else {
+      fsTab <- NULL
+    }
+
   }
   if (!is.null(columns))
     fsTab <- fsTab[, columns, drop = FALSE]
