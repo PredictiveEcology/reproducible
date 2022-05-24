@@ -156,16 +156,9 @@ test_that("test miscellaneous fns (part 2)", {
   testthat::with_mock(
     "reproducible::retry" = function(..., retries = 1) TRUE,
     {
-      if (useDBI()) {
-
         mess1 <- capture_messages(expect_error(
           cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
                       gdriveLs = gdriveLs1, cacheRepo = tmpCache)))
-      } else {
-        mess1 <- capture_messages(expect_error(
-          cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
-                      gdriveLs = gdriveLs1, cacheRepo = tmpCache)))
-      }
     })
   expect_true(grepl("Uploading local copy of", mess1))
   expect_true(grepl("cacheId\\: sdfsiodfja to cloud folder", mess1))
