@@ -442,18 +442,19 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
                           conn = getOption("reproducible.conn", NULL)) {
   checkPath(cachePath, create = TRUE)
   # browser(expr = exists("._CacheIsACache_1"))
-  if (is.null(conn)) {
+  ret <- FALSE
+  connIsNull <- is.null(conn)
+  if (connIsNull) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
-    ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
-                 list.files(cachePath))
-    if (!keepDBConnected(drv) && isTRUE(ret))
-      on.exit(dbDisconnectAll(conn, shutdown = TRUE))
   }
+
   type <- gsub("Connection", "", class(conn))
 
-  ret <- FALSE
   ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
                list.files(cachePath))
+  if (!keepDBConnected(drv) && isTRUE(ret) && connIsNull)
+    on.exit(dbDisconnectAll(conn, shutdown = TRUE))
+
   if (ret && useSQL(conn)) {
     tablesInDB <- retry(retries = 250, exponentialDecayBase = 1.01,
                         quote(DBI::dbListTables(conn)))
@@ -737,7 +738,7 @@ renameCacheAll <- function(new, old, drv, conn) {
 }
 
 useSQL <- function(conn) {
-  if (useSQL(conn)) {
+  if (is(conn, "DBIConnection")) {
     if (!requireNamespace("RSQLite")) stop("to use an SQL database, you must also install.packages(c('RSQLite', 'DBI'))")
     TRUE
   } else {
