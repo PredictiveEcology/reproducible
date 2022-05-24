@@ -1418,7 +1418,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", q
     }
     .robustDigest(x, algo = algo, quick = FALSE, ...)
   })
-  if (is.character(quick)) {
+  if (is.character(quick) || isTRUE(quick)) {
     preDigest <- append(preDigest, preDigestQuick)
   }
 
