@@ -122,7 +122,8 @@ setMethod(
       # if (missing(after)) after <- NA # "1970-01-01"
       # if (missing(before)) before <- NA # Sys.time() + 1e5
 
-      args <- append(list(x = x, after = after, before = before, userTags = userTags),
+      args <- append(list(x = x, after = after, before = before, userTags = userTags,
+                          conn = conn, drv = drv),
                      list(...))
 
       objsDT <- do.call(showCache, args = args, quote = TRUE)
@@ -751,7 +752,7 @@ showCacheAll <- function(x, drv, conn) {
     tab <- readFilebasedConn(objName, conn)
   }
   if (is(tab, "try-error")) {
-    objsDT <- .emptyCacheTable
+    objsDT <- setDF(.emptyCacheTable)
   } else {
     objsDT <- setDT(tab)
   }

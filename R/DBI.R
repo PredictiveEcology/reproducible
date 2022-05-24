@@ -471,7 +471,9 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   # browser(expr = exists("._CacheIsACache_1"))
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
-    if (!keepDBConnected(drv))
+    ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
+                 list.files(cachePath))
+    if (!keepDBConnected(drv) && isTRUE(ret))
       on.exit(dbDisconnectAll(conn, shutdown = TRUE))
   }
   type <- gsub("Connection", "", class(conn))
@@ -678,7 +680,7 @@ writeFilebasedConnToMemory <- function(cachePath, drv, conn, dt, objName) {
 writeFilebasedConn <- function(cachePath, drv, conn, dt, objName) {
   if (missing(conn))
     conn <- CacheDBFile(cachePath, drv = drv, conn = conn)
-   retry(retries = 250, exponentialDecayBase = 1.01,
+  retry(retries = 250, exponentialDecayBase = 1.01,
         quote(write_fst(dt, conn)))
   return(invisible())
 }
@@ -695,6 +697,7 @@ createEmptyTable <- function(conn, cachePath, drv) {
                      field.types = c(cacheId = "text", tagKey = "text",
                                      tagValue = "text", createdDate = "text")), silent = TRUE)
   } else {
+    setDF(dt)
     writeFilebasedConnToMemory(cachePath, drv, conn, dt = dt)
   }
   return(invisible())
@@ -720,7 +723,7 @@ rmFromCacheAll <- function(cachePath, drv, cacheId, conn) {
     objDT <- readFilebasedConn(conn = conn)
     wh <- which(!objDT$cacheId %in% cacheId)
     if (length(wh) == 0)
-      objDT <- .emptyCacheTable
+      objDT <- setDF(.emptyCacheTable)
     else
       objDT <- objDT[wh, ]
     writeFilebasedConnToMemory(cachePath, drv, conn, dt = objDT)

@@ -62,16 +62,16 @@ newCRS <- "+init=epsg:4326" # A longlat crs
 # No Cache
 system.time(suppressWarnings(map1 <- projectRaster(ras, crs = newCRS))) # Warnings due to new PROJ
 
-# Try with memoise for this example -- for many simple cases, memoising will not be faster
-opts <- options("reproducible.useMemoise" = TRUE)
 # With Cache -- a little slower the first time because saving to disk
 system.time(suppressWarnings(map1 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir,
                          notOlderThan = Sys.time())))
 
 # vastly faster the second time
+opts <- options("reproducible.useMemoise" = FALSE) # make sure memoising is off (a RAM copy)
 system.time(map2 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir))
 
-# may be faster the third time because of memoise; but this example is too simple to show
+# Try with memoise for this example -- for many simple cases, memoising will not be faster
+options("reproducible.useMemoise" = TRUE)
 system.time(map3 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir))
 options(opts)
 
@@ -115,30 +115,7 @@ showCache(tmpDir) # only those made during rnorm call
 clearCache(tmpDir, ask = FALSE)
 ```
 
-## Example 2: using the "accessed" tag
-
-```{r accessed-tag}
-ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
-
-# access it again, from Cache
-Sys.sleep(1)
-ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-wholeCache <- showCache(tmpDir)
-
-# keep only items accessed "recently" (i.e., only objectName:a)
-onlyRecentlyAccessed <- showCache(tmpDir, userTags = max(wholeCache[tagKey == "accessed"]$tagValue))
-
-# inverse join with 2 data.tables ... using: a[!b]
-# i.e., return all of wholeCache that was not recently accessed
-#   Note: the two different ways to access -- old way with "artifact" will be deprecated
-toRemove <- unique(wholeCache[!onlyRecentlyAccessed, on = "cacheId"], by = "cacheId")$cacheId
-clearCache(tmpDir, toRemove, ask = FALSE) # remove ones not recently accessed
-showCache(tmpDir) # still has more recently accessed
-
-```
-
-## Example 3: using keepCache
+## Example 2: using keepCache & userTags
 
 ```{r keepCache}
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
@@ -273,7 +250,8 @@ showCache(tmpdir1) # rnorm function has outerTag and innerTag, inner and outer o
 ## cacheId
 
 Sometimes, it is not absolutely desirable to maintain the work flow intact because changes that are irrelevant to the analysis, such as changing messages sent to a user, may be changed, without a desire to rerun functions.
-The `cacheId` argument is for this.
+In addition to using the `omitArgs` to indicate, "don't Cache based on this/these arguments", 
+the `cacheId` argument can also be used for this. This will be a manual override no matter what!
 Once a piece of code is run, then the `cacheId` can be manually extracted (it is reported at the end of a Cache call) and manually placed in the code, passed in as, say, `cacheId = "ad184ce64541972b50afd8e7b75f821b"`.
 
 ```{r selective-cacheId}
@@ -282,7 +260,8 @@ set.seed(1)
 Cache(rnorm, 1, cacheRepo = tmpdir1)
 # manually look at output attribute which shows cacheId: 7072c305d8c69df0
 Cache(rnorm, 1, cacheRepo = tmpdir1, cacheId = "7072c305d8c69df0") # same value
-# override even with different inputs:
+
+# override even with different inputs ... obviously, this can go very wrong!
 Cache(rnorm, 2, cacheRepo = tmpdir1, cacheId = "7072c305d8c69df0")
 
 ```
