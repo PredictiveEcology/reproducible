@@ -121,16 +121,22 @@ test_that("test file-backed raster caching", {
     stk
   }
   out <- Cache(fn2, bbS, cacheRepo = tmpCache, userTags = "something2")
+  tmpdir2 <- file.path(tmpdir, "newCache")
+
+  # Behaviour of Rasters within Cache has changed ... now, the Filenames(ras) returns
+  #   the non-cache directory -- so this test doesn't work anymore
   froms <- normPath(dir(tmpCache, recursive = TRUE, full.names = TRUE))
-  checkPath(file.path(tmpdir, "rasters"), create = TRUE)
-  checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
+  checkPath(file.path(tmpdir2, "rasters"), create = TRUE)
+  checkPath(file.path(tmpdir2, "cacheOutputs"), create = TRUE)
   file.copy(from = froms, overwrite = TRUE,
-            to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
+            to = gsub(normPath(tmpCache), normPath(tmpdir2), froms))
+  # file.copy(from = froms, overwrite = TRUE,
+  #           to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
   if (is(getOption("reproducible.drv"), "PqDriver")) {
     DBI::dbRemoveTable(getOption("reproducible.conn"), CacheDBTableName(tmpdir))
   }
   movedCache(tmpdir, tmpCache)
-  out <- Cache(fn2, bbS, cacheRepo = tmpdir, userTags = "something2")
+  out <- Cache(fn2, bbS, cacheRepo = tmpdir2, userTags = "something2")
   expect_false(attr(out, ".Cache")$newCache) # because it used moved cache
 
   clearCache(tmpdir)
