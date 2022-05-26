@@ -9,6 +9,8 @@ Version 1.2.9
 * Added minimum versions of `raster` and `terra`, because previous versions were causing collisions.
 
 ## Enhancements
+* `Cache` backend now defaults to `fst`, instead of `RSQLite` as it is faster for all test cases and also has fewer package dependencies
+* 10 fewer direct and indirect dependencies by removing `RSQLite` as a package dependency. Total recursive dependencies is now 15, down from 25. 
 * all direct calls to GDAL are removed: only `terra` and `sf` are used throughout
 * `prepInputs` can now take `fun` as a quoted expression on `x`, the object loaded by `dlFun` in `preProcess`
 * `preProcess` arg `dlFun` can now be a quoted expression

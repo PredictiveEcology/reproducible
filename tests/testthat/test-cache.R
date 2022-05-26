@@ -1,12 +1,5 @@
 test_that("test file-backed raster caching", {
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd")
-                          # , opts = list(reproducible.drv = duckdb::duckdb(),
-                          #               reproducible.keepCacheDBConnected = TRUE)
-                          )
-  # cdbf <- CacheDBFile(tmpCache, drv = duckdb::duckdb(), conn = NULL)
-  # dd <- duckdb::duckdb(cdbf)
-  # connn <- dbConnect(dd)
-  # opts1 <- options(reproducible.cachePath = tmpCache, reproducible.con = connn)
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
 
   on.exit({
     testOnExit(testInitOut)

@@ -230,8 +230,7 @@ setMethod(
       if (is.null(conn)) {
         conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
         on.exit({
-          if (!keepDBConnected(drv))
-            dbDisconnectAll(conn, shutdown = TRUE)})
+          dbDisconnectAll(conn, shutdown = TRUE)})
       }
       rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
       if (isTRUE(getOption("reproducible.useMemoise")))
@@ -362,10 +361,9 @@ setMethod(
       if (is.null(conn)) {
         return(.emptyCacheTable)
       }
-      if (!keepDBConnected(drv))
-        on.exit({
-          dbDisconnectAll(conn, shutdown = TRUE)
-        }, add = TRUE)
+      on.exit({
+        dbDisconnectAll(conn, shutdown = TRUE)
+      }, add = TRUE)
     }
     if (!CacheIsACache(x, drv = drv, conn = conn))
       return(.emptyCacheTable)
@@ -495,14 +493,12 @@ setMethod(
   definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom) {
     if (is.null(connTo)) {
       connTo <- dbConnectAll(drvTo, cachePath = cacheTo)
-      if (!keepDBConnected(drvTo))
-        on.exit(dbDisconnectAll(connTo, shutdown = TRUE), add = TRUE)
+      on.exit(dbDisconnectAll(connTo, shutdown = TRUE), add = TRUE)
     }
 
     if (is.null(connFrom)) {
       connFrom <- dbConnectAll(drvFrom, cachePath = cacheFrom)
-      if (!keepDBConnected(drvFrom))
-        on.exit(dbDisconnectAll(connFrom, shutdown = TRUE), add = TRUE)
+      on.exit(dbDisconnectAll(connFrom, shutdown = TRUE), add = TRUE)
     }
 
     suppressMessages({

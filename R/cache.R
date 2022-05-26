@@ -493,10 +493,9 @@ setMethod(
           RSQLite::dbClearResult(RSQLite::dbSendQuery(conn, "PRAGMA busy_timeout=5000;"))
           RSQLite::dbClearResult(RSQLite::dbSendQuery(conn, "PRAGMA journal_mode=WAL;"))
         }
-        if (!keepDBConnected(drv))
-          on.exit({
-            dbDisconnectAll(conn, shutdown = TRUE)
-            }, add = TRUE)
+        on.exit({
+          dbDisconnectAll(conn, shutdown = TRUE)
+        }, add = TRUE)
       }
 
       if (fnDetails$isPipe) {
@@ -525,8 +524,7 @@ setMethod(
       conns <- list()
       on.exit({done <- lapply(conns, function(co) {
         if (!identical(co, conns[[1]])) {
-          if (!keepDBConnected(drv))
-            try(dbDisconnectAll(co, shutdown = TRUE), silent = TRUE)
+          try(dbDisconnectAll(co, shutdown = TRUE), silent = TRUE)
         }})}, add = TRUE)
       isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
         # browser(expr = exists("._Cache_18"))
@@ -1885,11 +1883,6 @@ dealWithClassOnRecovery2 <- function(output, cacheRepo, cacheId,
   output
 }
 
-keepDBConnected <- function(drv) {
-  stayConnected <- getOption("reproducible.keepCacheDBConnected", FALSE)
-  if (is(drv, "duckdb_driver")) stayConnected <- TRUE
-  stayConnected
-}
 
 checkInRepo <- function(conn, dbTabNam, outputHash) {
   if (useSQL(conn)) {

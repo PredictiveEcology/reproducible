@@ -24,8 +24,7 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
   checkPath(CacheStorageDir(cachePath), create = TRUE)
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
-    if (!keepDBConnected(drv))
-      on.exit(dbDisconnectAll(conn, shutdown = TRUE))
+    on.exit(dbDisconnectAll(conn, shutdown = TRUE))
   }
 
   createEmptyTable(conn, cachePath, drv)
@@ -45,8 +44,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   # browser(expr = exists("._saveToCache_1"))
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
-    if (!keepDBConnected(drv))
-      on.exit(dbDisconnectAll(conn, shutdown = TRUE))
+    on.exit(dbDisconnectAll(conn, shutdown = TRUE))
   }
 
   if (missing(userTags)) userTags = "otherFunctions"
@@ -201,8 +199,7 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                         format = getOption("reproducible.cacheSaveFormat", "rds")) {
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
-    if (!keepDBConnected(drv))
-      on.exit(dbDisconnectAll(conn, shutdown = TRUE))
+    on.exit(dbDisconnectAll(conn, shutdown = TRUE))
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
   # query <- glue::glue_sql(
@@ -282,8 +279,7 @@ connObject <- function(cachePath) {
     if (length(cacheId) > 1) stop(".addTagsRepo can only handle appending 1 tag at a time")
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
-      if (!keepDBConnected(drv))
-        on.exit(dbDisconnectAll(conn, shutdown = TRUE))
+      on.exit(dbDisconnectAll(conn, shutdown = TRUE))
     }
     curTime <- as.character(Sys.time())
     if (length(tagKey) < length(cacheId))
@@ -308,8 +304,7 @@ connObject <- function(cachePath) {
     if (length(cacheId) > 1) stop(".updateTagsRepo can only handle updating 1 tag at a time")
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
-      if (!keepDBConnected(drv))
-        on.exit(dbDisconnectAll(conn, shutdown = TRUE))
+      on.exit(dbDisconnectAll(conn, shutdown = TRUE))
     }
     curTime <- as.character(Sys.time())
     if (length(tagKey) < length(cacheId)) {
@@ -732,7 +727,6 @@ finalizeDTtoWrite <- function(conn, dt, objName) {
     ToUpdate <- get0(objNameToUpdate, envir = .pkgEnv)
     if (!is.null(ToUpdate)) {
       if (length(ToUpdate) > 1) {
-        browser()
         ToUpdate <- rbindlist(ToUpdate)
       } else {
         ToUpdate <- ToUpdate[[1]]
