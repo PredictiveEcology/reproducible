@@ -345,10 +345,16 @@ CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
 
   if (grepl(type, "SQLite")) {
     file.path(cachePath, "cache.db")
-  } else {
-    file.path(cachePath, "cache_dbOther")
+  } else if (grepl(type, "character")) {
+    if (identical(drv, "fst")) {
+      file.path(cachePath, "cache.fst")
+    } else {
+      stop(errMessWrongDrv)
+    }
   }
 }
+
+errMessWrongDrv <- "Currently can only use 'fst', RSQLite::SQLite(), or RPostgres::Postgres()"
 
 #' @rdname CacheHelpers
 #' @export
