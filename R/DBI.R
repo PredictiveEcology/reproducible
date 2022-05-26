@@ -805,7 +805,7 @@ createEmptyTable <- function(conn, cachePath, drv) {
 rmFromCacheAll <- function(cachePath, drv, cacheId, conn) {
   if (useSQL(conn)) {
     query <- glue::glue_sql(
-      "DELETE FROM {DBI::SQL(double_quote(dbTabName))} WHERE \"cacheId\" IN ({cacheId*})",
+      "DELETE FROM {DBI::SQL(glue::double_quote(dbTabName))} WHERE \"cacheId\" IN ({cacheId*})",
       dbTabName = CacheDBTableName(cachePath, drv),
       cacheId = cacheId,
       .con = conn)

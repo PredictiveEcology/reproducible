@@ -1893,7 +1893,7 @@ keepDBConnected <- function(drv) {
 
 checkInRepo <- function(conn, dbTabNam, outputHash) {
   if (useSQL(conn)) {
-    qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
+    qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(glue::double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
                           dbTabName = dbTabNam,
                           outputHash = outputHash,
                           .con = conn)
@@ -1908,7 +1908,7 @@ checkInRepo <- function(conn, dbTabNam, outputHash) {
       readFilebasedConn(conn = conn, from = min(whInRepo), to = max(whInRepo))
       # read_fst(conn, from = min(whInRepo), to = max(whInRepo))
     } else {
-      character()
+      as.data.frame(.emptyCacheTable)
     }
   }
   isInRepo
