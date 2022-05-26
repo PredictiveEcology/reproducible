@@ -124,7 +124,7 @@ test_that("test file-backed raster caching", {
   file.copy(from = froms, overwrite = TRUE,
             to = gsub(normPath(tmpCache), normPath(tmpdir2), froms))
   # file.copy(from = froms, overwrite = TRUE,
-  #           to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
+  #            to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
   if (is(getOption("reproducible.drv"), "PqDriver")) {
     DBI::dbRemoveTable(getOption("reproducible.conn"), CacheDBTableName(tmpdir))
   }
@@ -493,53 +493,50 @@ test_that("test asPath", {
   }, add = TRUE)
 
   obj <- sample(1e5,10)
-  #origDir <- getwd()
-  #on.exit(setwd(origDir), add = TRUE)
-  #setwd(tmpdir)
-  # xxxx <<- ssss <<- jjjj <<- aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
   # First -- has no filename.RData
-  a1 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
+  fn <- file.path(tempdir(), "filename.RData")
+  on.exit(unlink(fn), add = TRUE)
+  a1 <- capture_messages(Cache(saveRDS, obj, file = fn, cacheRepo = tmpdir))
   # Second -- has a filename.RData, and passing a character string,
   #           it tries to see if it is a file, if yes, it digests it
-  a2 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
+  a2 <- capture_messages(Cache(saveRDS, obj, file = fn, cacheRepo = tmpdir))
   # Third -- finally has all same as second time
-  a3 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
+  a3 <- capture_messages(Cache(saveRDS, obj, file = fn, cacheRepo = tmpdir))
 
   expect_true(length(a1) == 0)
   expect_true(length(a2) == 0)
   expect_true(sum(grepl(paste(.loadedMemoisedResultMsg, "|",
                               .loadedCacheResultMsg), a3)) == 1)
 
-  unlink("filename.RData")
+  unlink(fn)
   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
-  a1 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
+  a1 <- capture_messages(Cache(saveRDS, obj, file = asPath(fn),
                                quick = TRUE, cacheRepo = tmpdir))
-  a2 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
+  a2 <- capture_messages(Cache(saveRDS, obj, file = asPath(fn),
                                quick = TRUE, cacheRepo = tmpdir))
-  a3 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
+  a3 <- capture_messages(Cache(saveRDS, obj, file = asPath(fn),
                                quick = TRUE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
   expect_true(sum(grepl(paste(.loadedCacheResultMsg, "|",
                               .loadedMemoisedResultMsg), a2)) == 1)
   expect_true(sum(grepl(paste(.loadedMemoisedResultMsg, "saveRDS call"), a3)) == 1)
 
-  unlink("filename.RData")
-  try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
-  a1 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
+  unlink(fn)
+  #aaa <<- 1
+  tmpdir2 <- tmpdir
+  try(clearCache(tmpdir2, ask = FALSE), silent = TRUE)
+  #rm(aaa, envir = .GlobalEnv)
+  a1 <- capture_messages(Cache(saveRDS, obj, file = as(fn, "Path"),
                                quick = TRUE, cacheRepo = tmpdir))
-  a2 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
+  a2 <- capture_messages(Cache(saveRDS, obj, file = as(fn, "Path"),
                                quick = TRUE, cacheRepo = tmpdir))
-  a3 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
+  a3 <- capture_messages(Cache(saveRDS, obj, file = as(fn, "Path"),
                                quick = TRUE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
   expect_true(sum(grepl(paste(.loadedCacheResultMsg, "|",
                               .loadedMemoisedResultMsg), a2)) == 1)
   expect_true(sum(grepl(paste(.loadedMemoisedResultMsg, "saveRDS call"), a3)) == 1)
 
-  # setwd(origDir)
-  # unlink(tmpdir, recursive = TRUE)
-
-  # make several unique environments
 })
 
 test_that("test wrong ways of calling Cache", {
