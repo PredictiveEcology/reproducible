@@ -232,28 +232,12 @@ dbConnectAll <- function(drv = getOption("reproducible.drv"),
     return(conn)
   }
   args <- list(drv = drv)
-  stayConnected <- keepDBConnected(drv)
-  if (stayConnected) {
-    conn <- try(get(connObject(cachePath), envir = .pkgEnv), silent = TRUE)
-    if (!is(conn, "try-error")) {
-      isValid <- DBI::dbIsValid(conn)
-      if (isValid)
-        return(conn)
-    }
-  }
-  if (is(drv, "SQLiteDriver") || is(drv, "duckdb_driver")) {
+  if (is(drv, "SQLiteDriver")) {
     args <- append(args, list(dbname = CacheDBFile(cachePath, drv = drv, conn = conn),
                               synchronous = NULL))
-    if (is(drv, "duckdb_driver")) {
-      if (!requireNamespace("duckdb", quietly = TRUE)) stop("To use duckdb, please install.packages('duckdb')")
-      args <- list(duckdb::duckdb(args$dbname, read_only = read_only))
-    }
   }
   # other types of drv, e.g., Postgres can be done via env vars
   conn <- do.call(DBI::dbConnect, args)
-  if (stayConnected) {
-    assign(connObject(cachePath), conn, envir = .pkgEnv)
-  }
   return(conn)
 }
 
