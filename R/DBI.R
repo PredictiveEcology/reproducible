@@ -248,6 +248,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv"),
     args <- append(args, list(dbname = CacheDBFile(cachePath, drv = drv, conn = conn),
                               synchronous = NULL))
     if (is(drv, "duckdb_driver")) {
+      if (!requireNamespace("duckdb", quietly = TRUE)) stop("To use duckdb, please install.packages('duckdb')")
       args <- list(duckdb::duckdb(args$dbname, read_only = read_only))
     }
   }
@@ -809,7 +810,7 @@ rmFromCacheAll <- function(cachePath, drv, cacheId, conn) {
       dbTabName = CacheDBTableName(cachePath, drv),
       cacheId = cacheId,
       .con = conn)
-    res <- dbSendQuery(conn, query)
+    res <- DBI::dbSendQuery(conn, query)
 
     if (FALSE)   { # this is the "unsafe" version
       query <- paste0("DELETE FROM \"", CacheDBTableName(cachePath, drv), "\" WHERE \"cacheId\" = $1")
