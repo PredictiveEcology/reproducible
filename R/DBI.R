@@ -623,13 +623,13 @@ readFilebasedConn <- function(objName, conn, columns = NULL, from = 1, to = NULL
     if (file.exists(conn)) {
       tf <- tempfile()
       on.exit({if (file.exists(tf)) file.remove(tf)})
-      fsTab <- try(retry(retries = 11, exponentialDecayBase = 1.01, quote({
+      fsTab <- try(retry(retries = 11, exponentialDecayBase = 1.01, silent = TRUE, quote({
         file.copy(conn, tf, overwrite = TRUE)
         fsTab <- read_fst(tf)
       }
       )))
       if (is(fsTab, "try-error"))
-        warning("readFilebasedConn failed 1x also")
+        stop("Something went wrong with accessing the Cache 2")
 
       if (!is(fsTab, "try-error")) {
         dig <- digest::digest(file = tf, algo = "xxhash64")
@@ -689,56 +689,56 @@ writeFilebasedConnToMemory <- function(cachePath, drv, conn, dt, objName, dig = 
 
 finalizeDTtoWrite <- function(conn, dt, objName) {
 
+
   objNameDig <- objNameWithDig(objName)
   digPre <- get0(objNameDig, envir = .pkgEnv)
-  tf <- tempfile()
+  if (!is.null(digPre)) {
+    tf <- tempfile()
+    on.exit({if (file.exists(tf)) file.remove(tf)})
 
-  dt <- try(
-    retry(retries = 10, exponentialDecayBase = 1.01, quote({
-      on.exit({if (file.exists(tf)) file.remove(tf)})
-      file.copy(conn, tf, overwrite = TRUE)
+    dt <- try(
+      retry(retries = 10, exponentialDecayBase = 1.01, silent = TRUE, quote({
+        file.copy(conn, tf, overwrite = TRUE)
 
-      digPost <- digest::digest(file = tf, algo = "xxhash64")
-      if (!identical(digPost, digPre)) {
-        dt <- try(readFilebasedConn(conn = tf), silent = FALSE)
-        if (is(dt, "try-error")) {
-          warning("finalizeDTtoWrite failed 1x")
+        digPost <- digest::digest(file = tf, algo = "xxhash64")
+        if (!identical(digPost, digPre)) {
+          dt <- try(readFilebasedConn(conn = tf), silent = FALSE)
         }
+        if (file.exists(tf)) file.remove(tf)
+        return(dt)
       }
-      if (file.exists(tf)) file.remove(tf)
-      return(dt)
+      )))
+    if (is(dt, "try-error"))
+      stop("Something went wrong with accessing the Cache 1")
+
+
+    objNameRm <- objNameWithRm(objName)
+    toRm <- get0(objNameRm, envir = .pkgEnv)
+    if (!is.null(toRm)) {
+      wh <- which(!dt$cacheId %in% toRm)
+      if (length(wh) == 0)
+        dt <- setDF(.emptyCacheTable)
+      else
+        dt <- dt[wh, ]
     }
-    )))
-  if (is(dt, "try-error"))
-    warning("finalizeDTtoWrite failed External")
 
-
-  objNameRm <- objNameWithRm(objName)
-  toRm <- get0(objNameRm, envir = .pkgEnv)
-  if (!is.null(toRm)) {
-    wh <- which(!dt$cacheId %in% toRm)
-    if (length(wh) == 0)
-      dt <- setDF(.emptyCacheTable)
-    else
-      dt <- dt[wh, ]
-  }
-
-  objNameToAdd <- objNameWithToAdd(objName)
-  ToAdd <- get0(objNameToAdd, envir = .pkgEnv)
-  if (!is.null(ToAdd)) {
-    dt <- rbindlist(append(list(dt), ToAdd))
-  }
-  objNameToUpdate <- objNameWithToUpdate(objName)
-  ToUpdate <- get0(objNameToUpdate, envir = .pkgEnv)
-  if (!is.null(ToUpdate)) {
-    if (length(ToUpdate) > 1) {
-      browser()
-      ToUpdate <- rbindlist(ToUpdate)
-    } else {
-      ToUpdate <- ToUpdate[[1]]
+    objNameToAdd <- objNameWithToAdd(objName)
+    ToAdd <- get0(objNameToAdd, envir = .pkgEnv)
+    if (!is.null(ToAdd)) {
+      dt <- rbindlist(append(list(dt), ToAdd))
     }
-    dt$tagValue[ToUpdate$cacheId == dt$cacheId & ToUpdate$tagKey == dt$tagKey] <- ToUpdate$tagValue
+    objNameToUpdate <- objNameWithToUpdate(objName)
+    ToUpdate <- get0(objNameToUpdate, envir = .pkgEnv)
+    if (!is.null(ToUpdate)) {
+      if (length(ToUpdate) > 1) {
+        browser()
+        ToUpdate <- rbindlist(ToUpdate)
+      } else {
+        ToUpdate <- ToUpdate[[1]]
+      }
+      dt$tagValue[ToUpdate$cacheId == dt$cacheId & ToUpdate$tagKey == dt$tagKey] <- ToUpdate$tagValue
 
+    }
   }
 
   # In parallel calculations, the original table may be old and incorrect
@@ -759,25 +759,28 @@ dbDisconnectAll <- function(conn = getOption("reproducible.conn", NULL), ...) {
 }
 
 writeFilebasedConn <- function(cachePath, drv, conn, dt, objName) {
-  if (missing(conn))
-    conn <- CacheDBFile(cachePath, drv = drv, conn = conn)
-  tf <- tempfile()
-  on.exit({if (file.exists(tf)) file.remove(tf)})
+  if (!is.null(dt)) { # basically, if there was an error in the Cache function, there won't be anything here
+    if (missing(conn))
+      conn <- CacheDBFile(cachePath, drv = drv, conn = conn)
+    tf <- tempfile()
+    on.exit({if (file.exists(tf)) file.remove(tf)})
 
-  # objNameDig <- objNameWithDig(objName)
-  # digPre <- get(objNameDig, envir = .pkgEnv)
-  #
-  # # In parallel calculations, the original table may be old and incorrect
-  # tf <- tempfile()
-  # retry(retries = 2, exponentialDecayBase = 1.01, quote(file.copy(conn, tf)))
-  # digPost <- digest::digest(file = tf, algo = "xxhash64")
-  # if (!identical(digPost, digPre)) {
-  #   fsTab <- read_fst(tf)
-  #
-  # }
-  fsTab <- write_fst(dt, tf)
-  retry(retries = 2, exponentialDecayBase = 1.01, quote(file.rename(tf, conn)))
-  if (file.exists(tf)) file.remove(tf)
+    # objNameDig <- objNameWithDig(objName)
+    # digPre <- get(objNameDig, envir = .pkgEnv)
+    #
+    # # In parallel calculations, the original table may be old and incorrect
+    # tf <- tempfile()
+    # retry(retries = 2, exponentialDecayBase = 1.01, quote(file.copy(conn, tf)))
+    # digPost <- digest::digest(file = tf, algo = "xxhash64")
+    # if (!identical(digPost, digPre)) {
+    #   fsTab <- read_fst(tf)
+    #
+    # }
+    fsTab <- write_fst(dt, tf)
+    retry(retries = 2, exponentialDecayBase = 1.01, silent = TRUE,
+          quote(file.rename(tf, conn)))
+    if (file.exists(tf)) file.remove(tf)
+  }
   return(invisible())
 }
 
