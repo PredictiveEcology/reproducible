@@ -501,8 +501,7 @@ movedCache <- function(new, old, drv = getOption("reproducible.drv"),
                        conn = getOption("reproducible.conn", NULL)) {
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = new)
-    if (!keepDBConnected(drv))
-      on.exit(dbDisconnectAll(conn, shutdown = TRUE))
+    on.exit(dbDisconnectAll(conn, shutdown = TRUE))
   }
   renameCacheAll(new, old, drv = drv, conn = conn)
 }
@@ -853,7 +852,7 @@ renameCacheAll <- function(new, old, drv, conn) {
                           old = oldTable,
                           new = newTable,
                           .con = conn)
-    res <- retry(retries = 15, exponentialDecayBase = 1.01, quote(dbSendQuery(conn, qry)))
+    res <- retry(retries = 15, exponentialDecayBase = 1.01, quote(DBI::dbSendQuery(conn, qry)))
     # dbFetch(res)
     DBI::dbClearResult(res)
   } # fst does not need to rename a table, as there are no tables
