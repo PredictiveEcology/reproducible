@@ -128,7 +128,7 @@ test_that("test file-backed raster caching", {
   if (is(getOption("reproducible.drv"), "PqDriver")) {
     DBI::dbRemoveTable(getOption("reproducible.conn"), CacheDBTableName(tmpdir))
   }
-  movedCache(tmpdir, tmpCache)
+  movedCache(tmpdir2, tmpCache)
   out <- Cache(fn2, bbS, cacheRepo = tmpdir2, userTags = "something2")
   expect_false(attr(out, ".Cache")$newCache) # because it used moved cache
 
