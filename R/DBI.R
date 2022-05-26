@@ -74,7 +74,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
       linkToCacheId <- NULL
     else {
       messageCache("  (A file with identical properties already exists in the Cache: ",basename(ftL),"; ",
-              "The newly added (",basename(fts),") is a file.link to that file)")
+                   "The newly added (",basename(fts),") is a file.link to that file)")
     }
     fs <- file.size(fts)
   }
@@ -127,13 +127,13 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     if (isTRUE(fsBig)) {
       # browser(expr = exists("._saveToCache_3"))
       messageCache("Object with cacheId ", cacheId, " appears to have a much larger size ",
-              "on disk than in memory. ",
-              "This usually means that the object has captured an environment with ",
-              "many objects due to how a function or a formula is defined. ",
-              "Usually, a solution involves using quote and eval around the formulas ",
-              "and defining functions in a package or otherwise clean space, ",
-              "i.e., not inside another function.\n",
-              "See http://adv-r.had.co.nz/memory.html#gc and 'capturing environments'.")
+                   "on disk than in memory. ",
+                   "This usually means that the object has captured an environment with ",
+                   "many objects due to how a function or a formula is defined. ",
+                   "Usually, a solution involves using quote and eval around the formulas ",
+                   "and defining functions in a package or otherwise clean space, ",
+                   "i.e., not inside another function.\n",
+                   "See http://adv-r.had.co.nz/memory.html#gc and 'capturing environments'.")
     }
   }
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
@@ -259,17 +259,6 @@ dbConnectAll <- function(drv = getOption("reproducible.drv"),
   return(conn)
 }
 
-dbDisconnectAll <- function(conn = getOption("reproducible.conn", NULL), ...) {
-  if (useSQL(conn))
-    DBI::dbDisconnect(conn, ...)
-  else {
-    objName <- objNameFromConn(conn)
-    tab <- readFilebasedConn(objName, conn)
-    rm(list = objName, envir = .pkgEnv)
-    writeFilebasedConn(conn = conn, dt = tab, objName = objName)
-  }
-
-}
 
 connObject <- function(cachePath) {
   cp <- gsub("/", "_", cachePath)
@@ -278,10 +267,10 @@ connObject <- function(cachePath) {
 }
 
 .emptyCacheTable <- data.table::data.table(cacheId = character(), tagKey = character(),
-                               tagValue = character(), createdDate = character())
+                                           tagValue = character(), createdDate = character())
 
 .length1CacheTable <- data.table::data.table(cacheId = "a", tagKey = "a",
-                                           tagValue = "a", createdDate = "a")
+                                             tagValue = "a", createdDate = "a")
 
 .addTagsRepo <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
                          tagKey = character(), tagValue = character(),
@@ -346,7 +335,7 @@ connObject <- function(cachePath) {
 }
 
 .cacheTableHashColName <- function() {
-    "cacheId"
+  "cacheId"
 }
 
 .cacheTableTagColName <- function(option = NULL) {
@@ -560,17 +549,6 @@ saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
   fs
 }
 
-appendAll <- function(conn, cachePath, drv, dt) {
-  a <- if (useSQL(conn))
-    retry(retries = 250, exponentialDecayBase = 1.01, quote(
-      DBI::dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
-  else {
-    objName <- objNameFromConn(conn)
-    fsTab <- readFilebasedConn(objName, conn)
-    fsTab <- rbindlist(list(fsTab, dt))
-    writeFilebasedConnToMemory(conn = conn, dt = fsTab, objName = objName, dtRowsAdded = dt)
-  }
-}
 
 addTagsAll <- function(conn, cachePath, drv, cacheId, tagKey, tagValue, curTime) {
   if (useSQL(conn)) {
@@ -590,6 +568,18 @@ addTagsAll <- function(conn, cachePath, drv, cacheId, tagKey, tagValue, curTime)
   }
 }
 
+appendAll <- function(conn, cachePath, drv, dt) {
+  a <- if (useSQL(conn))
+    retry(retries = 250, exponentialDecayBase = 1.01, quote(
+      DBI::dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
+  else {
+    objName <- objNameFromConn(conn)
+    fsTab <- readFilebasedConn(objName, conn)
+    # fsTab <- rbindlist(list(fsTab, dt))
+    writeFilebasedConnToMemory(conn = conn, dt = fsTab, objName = objName, dtRowsAdded = dt)
+  }
+}
+
 updateTagsAll <- function(conn, cachePath, drv, tagValue, cacheId, tagKey) {
   if (useSQL(conn)) {
     rs <- #retry(retries = 250, exponentialDecayBase = 1.01, quote(
@@ -606,11 +596,11 @@ updateTagsAll <- function(conn, cachePath, drv, tagValue, cacheId, tagKey) {
 
     objName <- objNameFromConn(conn)
     fsTab <- readFilebasedConn(objName, conn)
-    browser()
     affectedAnyRows <- which(fsTab$cacheId == cacheId & fsTab$tagKey == tagKey)
-    if (length(affectedAnyRows))
-      fsTab[affectedAnyRows, tagValue := tagValue]
-    writeFilebasedConnToMemory(conn = conn, objName = objName, dt = fsTab)
+    if (length(affectedAnyRows)) {
+      # fsTab[affectedAnyRows, tagValue := tagValue]
+      writeFilebasedConnToMemory(conn = conn, objName = objName, dt = fsTab, update = fsTab[affectedAnyRows,])
+    }
     affectedAnyRows <- length(affectedAnyRows) > 0
   }
   return(affectedAnyRows)
@@ -625,16 +615,27 @@ readFilebasedConn <- function(objName, conn, columns = NULL, from = 1, to = NULL
   if (missing(objName)) {
     objName <- objNameFromConn(conn)
   }
+  fsTab <- NULL
   if (exists(objName, envir = .pkgEnv, inherits = FALSE)) {
     fsTab <- get(objName, envir = .pkgEnv, inherits = FALSE)
   } else {
     # Read from disk, then assign right away to memory for all future reads
     if (file.exists(conn)) {
       tf <- tempfile()
-      retry(retries = 2, exponentialDecayBase = 1.01, quote(file.copy(conn, tf)))
-      fsTab <- read_fst(tf)
-      dig <- digest::digest(file = tf, algo = "xxhash64")
-      writeFilebasedConnToMemory(objName = objName, dt = fsTab, conn = conn, dig = dig)
+      on.exit({if (file.exists(tf)) file.remove(tf)})
+      fsTab <- try(retry(retries = 11, exponentialDecayBase = 1.01, quote({
+        file.copy(conn, tf, overwrite = TRUE)
+        fsTab <- read_fst(tf)
+      }
+      )))
+      if (is(fsTab, "try-error"))
+        warning("readFilebasedConn failed 1x also")
+
+      if (!is(fsTab, "try-error")) {
+        dig <- digest::digest(file = tf, algo = "xxhash64")
+        writeFilebasedConnToMemory(objName = objName, dt = fsTab, conn = conn, dig = dig)
+      }
+      if (file.exists(tf)) file.remove(tf)
     } else {
       fsTab <- NULL
     }
@@ -650,57 +651,150 @@ readFilebasedConn <- function(objName, conn, columns = NULL, from = 1, to = NULL
 
 #' @importFrom fst write_fst
 writeFilebasedConnToMemory <- function(cachePath, drv, conn, dt, objName, dig = NULL,
-                                       dtRowsAdded = NULL) {
+                                       dtRowsAdded = NULL, rm = NULL, update = NULL) {
   if (missing(conn))
     conn <- CacheDBFile(cachePath, drv = drv, conn = conn)
   if (missing(objName))
     objName <- objNameFromConn(conn)
   assign(objName, dt, envir = .pkgEnv)
-  browser()
   if (!is.null(dig)) {
     objNameDig <- objNameWithDig(objName)
     assign(objNameDig, dig, envir = .pkgEnv)
   }
+  if (!is.null(rm)) {
+    objNameRm <- objNameWithRm(objName)
+    assign(objNameRm, rm, envir = .pkgEnv)
+  }
+  if (!is.null(dtRowsAdded)) {
+    objNameToAdd <- objNameWithToAdd(objName)
+    alreadyThere <- get0(objNameToAdd, envir = .pkgEnv)
+    dtRowsAdded <- list(dtRowsAdded)
+    if (!is.null(alreadyThere)) {
+      dtRowsAdded <- append(dtRowsAdded, alreadyThere)
+    }
+    assign(objNameToAdd, dtRowsAdded, envir = .pkgEnv)
+  }
+  if (!is.null(update)) {
+    objNameToUpdate <- objNameWithToUpdate(objName)
+    alreadyThere <- get0(objNameToUpdate, envir = .pkgEnv)
+    update <- list(update)
+    if (!is.null(alreadyThere)) {
+      update <- append(update, alreadyThere)
+    }
+    assign(objNameToUpdate, update, envir = .pkgEnv)
+  }
+
   return(invisible())
+}
+
+finalizeDTtoWrite <- function(conn, dt, objName) {
+
+  objNameDig <- objNameWithDig(objName)
+  digPre <- get0(objNameDig, envir = .pkgEnv)
+  tf <- tempfile()
+
+  dt <- try(
+    retry(retries = 10, exponentialDecayBase = 1.01, quote({
+      on.exit({if (file.exists(tf)) file.remove(tf)})
+      file.copy(conn, tf, overwrite = TRUE)
+
+      digPost <- digest::digest(file = tf, algo = "xxhash64")
+      if (!identical(digPost, digPre)) {
+        dt <- try(readFilebasedConn(conn = tf), silent = FALSE)
+        if (is(dt, "try-error")) {
+          warning("finalizeDTtoWrite failed 1x")
+        }
+      }
+      if (file.exists(tf)) file.remove(tf)
+      return(dt)
+    }
+    )))
+  if (is(dt, "try-error"))
+    warning("finalizeDTtoWrite failed External")
+
+
+  objNameRm <- objNameWithRm(objName)
+  toRm <- get0(objNameRm, envir = .pkgEnv)
+  if (!is.null(toRm)) {
+    wh <- which(!dt$cacheId %in% toRm)
+    if (length(wh) == 0)
+      dt <- setDF(.emptyCacheTable)
+    else
+      dt <- dt[wh, ]
+  }
+
+  objNameToAdd <- objNameWithToAdd(objName)
+  ToAdd <- get0(objNameToAdd, envir = .pkgEnv)
+  if (!is.null(ToAdd)) {
+    dt <- rbindlist(append(list(dt), ToAdd))
+  }
+  objNameToUpdate <- objNameWithToUpdate(objName)
+  ToUpdate <- get0(objNameToUpdate, envir = .pkgEnv)
+  if (!is.null(ToUpdate)) {
+    if (length(ToUpdate) > 1) {
+      browser()
+      ToUpdate <- rbindlist(ToUpdate)
+    } else {
+      ToUpdate <- ToUpdate[[1]]
+    }
+    dt$tagValue[ToUpdate$cacheId == dt$cacheId & ToUpdate$tagKey == dt$tagKey] <- ToUpdate$tagValue
+
+  }
+
+  # In parallel calculations, the original table may be old and incorrect
+  return(dt)
+}
+
+dbDisconnectAll <- function(conn = getOption("reproducible.conn", NULL), ...) {
+  if (useSQL(conn))
+    DBI::dbDisconnect(conn, ...)
+  else {
+    objName <- objNameFromConn(conn)
+    tab <- readFilebasedConn(objName, conn)
+    tab <- finalizeDTtoWrite(conn = conn, dt = tab, objName = objName)
+    rm(list = ls(.pkgEnv, pattern = objName), envir = .pkgEnv)
+    writeFilebasedConn(conn = conn, dt = tab, objName = objName)
+  }
+
 }
 
 writeFilebasedConn <- function(cachePath, drv, conn, dt, objName) {
   if (missing(conn))
     conn <- CacheDBFile(cachePath, drv = drv, conn = conn)
   tf <- tempfile()
-  browser()
-  # on.exit(file.remove(tf))
-  objNameDig <- objNameWithDig(objName)
-  digPre <- get(objNameDig, envir = .pkgEnv)
+  on.exit({if (file.exists(tf)) file.remove(tf)})
 
-  # In parallel calculations, the original table may be old and incorrect
-  tf <- tempfile()
-  retry(retries = 2, exponentialDecayBase = 1.01, quote(file.copy(conn, tf)))
-  digPost <- digest::digest(file = tf, algo = "xxhash64")
-  if (!identical(digPost, digPre)) {
-    fsTab <- read_fst(tf)
-
-  }
+  # objNameDig <- objNameWithDig(objName)
+  # digPre <- get(objNameDig, envir = .pkgEnv)
+  #
+  # # In parallel calculations, the original table may be old and incorrect
+  # tf <- tempfile()
+  # retry(retries = 2, exponentialDecayBase = 1.01, quote(file.copy(conn, tf)))
+  # digPost <- digest::digest(file = tf, algo = "xxhash64")
+  # if (!identical(digPost, digPre)) {
+  #   fsTab <- read_fst(tf)
+  #
+  # }
   fsTab <- write_fst(dt, tf)
-  retry(retries = 250, exponentialDecayBase = 1.01, quote(file.rename(tf, conn)))
+  retry(retries = 2, exponentialDecayBase = 1.01, quote(file.rename(tf, conn)))
+  if (file.exists(tf)) file.remove(tf)
   return(invisible())
 }
 
 createEmptyTable <- function(conn, cachePath, drv) {
   dt <- .emptyCacheTable
   if (useSQL(conn)) {
-  # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
-  a <- retry(retries = 250, exponentialDecayBase = 1.01,
-             quote(DBI::dbListTables(conn)))
+    # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
+    a <- retry(retries = 250, exponentialDecayBase = 1.01,
+               quote(DBI::dbListTables(conn)))
 
-  if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
-    try(DBI::dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
-                     field.types = c(cacheId = "text", tagKey = "text",
-                                     tagValue = "text", createdDate = "text")), silent = TRUE)
+    if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
+      try(DBI::dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
+                            field.types = c(cacheId = "text", tagKey = "text",
+                                            tagValue = "text", createdDate = "text")), silent = TRUE)
   } else {
     setDF(dt)
-    browser()
-    writeFilebasedConnToMemory(cachePath, drv, conn, dt = dt)
+    writeFilebasedConn(cachePath, drv, conn, dt = dt)
   }
   return(invisible())
 }
@@ -723,12 +817,12 @@ rmFromCacheAll <- function(cachePath, drv, cacheId, conn) {
     DBI::dbClearResult(res)
   } else {
     objDT <- readFilebasedConn(conn = conn)
-    wh <- which(!objDT$cacheId %in% cacheId)
-    if (length(wh) == 0)
-      objDT <- setDF(.emptyCacheTable)
-    else
-      objDT <- objDT[wh, ]
-    writeFilebasedConnToMemory(cachePath, drv, conn, dt = objDT)
+    # wh <- which(!objDT$cacheId %in% cacheId)
+    # if (length(wh) == 0)
+    #   objDT <- setDF(.emptyCacheTable)
+    # else
+    #   objDT <- objDT[wh, ]
+    writeFilebasedConnToMemory(cachePath, drv, conn, dt = objDT, rm = cacheId)
   }
 }
 
@@ -777,4 +871,8 @@ useSQL <- function(conn) {
 
 objNameWithDig <- function(objName) paste0(objName, "_dig")
 
-objNameDTRowsAdded <- function(objName) paste0(objName, "_dtRowsAdded")
+objNameWithToAdd <- function(objName) paste0(objName, "_dtRowsAdded")
+
+objNameWithRm <- function(objName) paste0(objName, "_rm")
+
+objNameWithToUpdate <- function(objName) paste0(objName, "_update")
