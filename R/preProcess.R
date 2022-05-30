@@ -1330,8 +1330,10 @@ hardlinkMessagePrefixForGrep <- escapeRegexChars(hardlinkMessagePrefix)
 
 whPointsToMess <- "which point(s) to"
 whPointsToMessForGrep <- escapeRegexChars(whPointsToMess)
+
+
 isGoogle <- function(url){
-  if (requireNamespace("googledrive"))
+  if (.requireNamespace("googledrive", stopOnFALSE = FALSE))
     grepl("drive.google.com", url)
   else
     FALSE
