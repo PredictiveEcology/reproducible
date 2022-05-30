@@ -422,11 +422,13 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
   dots <- list(...)
 
-  teamDrive <- if (packageVersion("googledrive") < "2.0.0") {
-    dots[["team_drive"]]
-  } else {
-    dots[["shared_drive"]]
-  }
+  teamDrive <- NULL
+  if (isGoogle(url))
+    teamDrive <- if (packageVersion("googledrive") < "2.0.0") {
+      dots[["team_drive"]]
+    } else {
+      dots[["shared_drive"]]
+    }
 
   if (!is.null(url) || !is.null(dlFun)) { # if no url, no download
     #if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
@@ -485,7 +487,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
               saveRDS(out, file = destFile)
           }
           downloadResults <- list(out = out, destFile = normPath(destFile), needChecksums = 2)
-        } else if (grepl("drive.google.com", url)) {
+        } else if (isGoogle(url)) {
           #browser(expr = exists("._downloadRemote_2"))
           if (!requireNamespace("googledrive", quietly = TRUE))
             stop(requireNamespaceMsg("googledrive", "to use google drive files"))

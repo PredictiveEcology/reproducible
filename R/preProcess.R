@@ -152,11 +152,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   fun <- .checkFunInDots(fun = fun, dots = dots)
   dots <- .checkDeprecated(dots, verbose = verbose)
 
-  teamDrive <- if (packageVersion("googledrive") < "2.0.0") {
-    dots[["team_drive"]]
-  } else {
-    dots[["shared_drive"]]
-  }
+  teamDrive <- NULL
+  if (isGoogle(url))
+    teamDrive <- if (packageVersion("googledrive") < "2.0.0") {
+      dots[["team_drive"]]
+    } else {
+      dots[["shared_drive"]]
+    }
+
 
   # remove trailing slash -- causes unzip fail if it is there
   destinationPath <- gsub("\\\\$|/$", "", destinationPath)
@@ -715,7 +718,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 .guessAtFile <- function(url, archive, targetFile, destinationPath,
                          verbose = getOption("reproducible.verbose", 1), team_drive = NULL) {
   guessedFile <- if (!is.null(url)) {
-    if (grepl("drive.google.com", url)) {
+    if (isGoogle(url)) {
       ie <- isTRUE(internetExists())
       if (ie) {
         assessGoogle(url = url, archive = archive, targetFile = targetFile,
@@ -1327,3 +1330,9 @@ hardlinkMessagePrefixForGrep <- escapeRegexChars(hardlinkMessagePrefix)
 
 whPointsToMess <- "which point(s) to"
 whPointsToMessForGrep <- escapeRegexChars(whPointsToMess)
+isGoogle <- function(url){
+  if (requireNamespace("googledrive"))
+    grepl("drive.google.com", url)
+  else
+    FALSE
+}
