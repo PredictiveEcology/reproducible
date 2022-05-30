@@ -28,7 +28,6 @@
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @export
-#' @importFrom fpCompare %==%
 #' @rdname paddedFloatToChar
 #'
 #' @examples
@@ -38,7 +37,9 @@
 paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "0") {
   xf <- x %% 1
   numDecimals <- nchar(gsub("(.*)(\\.)|([0]*$)","",xf))
-  newPadR <- ifelse(xf %==% 0, 0, pmax(numDecimals, padR))
+
+  # this == used to be fpCompare -- but this function is more or less deprecated
+  newPadR <- ifelse(abs(xf - 0) < sqrt(.Machine$double.eps), 0, pmax(numDecimals, padR))
   xFCEnd <- sprintf(paste0("%0", padL+newPadR+1*(newPadR > 0),".", newPadR, "f"), x)
   return(xFCEnd)
 }

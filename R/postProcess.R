@@ -914,7 +914,6 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #'     there may be different projection results. \code{"force"} will cause it to
 #'     use GDAL regardless of the memory test described here.
 #'
-#' @importFrom fpCompare %==%
 #' @importFrom stats na.omit
 #' @importFrom raster crs dataType res res<- dataType<-
 projectInputs.Raster <- function(x, targetCRS = NULL,
@@ -1144,7 +1143,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
             if (!is(x, "RasterStack")) x <- raster::stack(x)
           # check for faulty datatype --> namely if it is an integer but classified as flt because of floating point problems
           if (isTRUE(grepl("FLT", dataType(x)))) {
-            rrr <- round(x[], 0) %==% x[]
+            rrr <- round(x[], 0) == x[]  # this == used to be fpCompare -- but this function is more or less deprecated
             if (isTRUE(sum(!rrr[!is.na(rrr)]) == 0)) # if (isTRUE(sum(!na.omit(rrr)) == 0))
               x[] <- round(x[], 0)
           }
@@ -1152,7 +1151,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
           #attr(x, "warning") <- NULL
 
           if (identical(.crs(x), .crs(rasterToMatch)) & any(res(x) != res(rasterToMatch))) {
-            if (all(res(x) %==% res(rasterToMatch))) {
+            if (all(res(x) == res(rasterToMatch))) { # this == used to be fpCompare -- but this function is more or less deprecated
               res(x) <- res(rasterToMatch) # TODO: This is irrelevant. Should not happen. TO Omit.
             } else {
               stop("Error: input and output resolutions are not similar after using projectRaster.",

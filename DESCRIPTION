@@ -50,9 +50,7 @@ Depends:
     R (>= 4.0)
 Imports:
     data.table (>= 1.10.4),
-    DBI,
     digest,
-    fpCompare,
     fst,
     lobstr,
     magrittr,
@@ -65,6 +63,7 @@ Imports:
 Suggests:
     covr,
     crayon,
+    DBI,
     fastdigest,
     fasterize,
     future,
@@ -77,8 +76,8 @@ Suggests:
     parallel,
     RCurl (>= 1.95-4.8),
     rgdal,
-    RSQLite,
     rmarkdown,
+    RSQLite,
     sf,
     stats,
     terra (>= 1.5-17),
