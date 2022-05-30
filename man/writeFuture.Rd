@@ -26,12 +26,14 @@ Should be 0 to start.}
 \item{userTags}{Character string of tags to attach to this \code{outputToSave} in
 the \code{CacheRepo}}
 
-\item{drv}{an object that inherits from \linkS4class{DBIDriver},
-or an existing \linkS4class{DBIConnection}
-object (in order to clone an existing connection).}
+\item{drv}{Either \code{"fst"} (the character string) the default as of reproducible V 1.2.9,
+or an object that inherits from \code{DBIDriver}, or an existing \code{DBIConnection} object
+(in order to clone an existing connection). For these last two, user requires \code{DBI}
+and a DB backend such as \code{RSQLite} to be installed.}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{Either the character string of the path to the `fst` file that is the
+cacheRepo file, or optionally (requires \code{DBI} and a DB backend such as \code{RSQLite})
+a DBIConnection object, as returned by \code{dbConnect()}}
 
 \item{cacheId}{Character string. If passed, this will override the calculated hash
 of the inputs, and return the result from this cacheId in the cacheRepo.

@@ -118,12 +118,14 @@ This \code{cloudFolderID} will be added to \code{options("reproducible.cloudFold
 but this will not persist across sessions. If this is a character string, it will
 treat this as a folder name to create or use on GoogleDrive.}
 
-\item{drv}{an object that inherits from \linkS4class{DBIDriver},
-or an existing \linkS4class{DBIConnection}
-object (in order to clone an existing connection).}
+\item{drv}{Either \code{"fst"} (the character string) the default as of reproducible V 1.2.9,
+or an object that inherits from \code{DBIDriver}, or an existing \code{DBIConnection} object
+(in order to clone an existing connection). For these last two, user requires \code{DBI}
+and a DB backend such as \code{RSQLite} to be installed.}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{Either the character string of the path to the `fst` file that is the
+cacheRepo file, or optionally (requires \code{DBI} and a DB backend such as \code{RSQLite})
+a DBIConnection object, as returned by \code{dbConnect()}}
 
 \item{...}{Other arguments. Currently, \code{regexp}, a logical, can be provided.
 This must be \code{TRUE} if the use is passing a regular expression.

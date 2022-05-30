@@ -46,8 +46,9 @@ the database file(s)}
 
 \item{drv}{A driver, passed to \code{dbConnect}}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{Either the character string of the path to the `fst` file that is the
+cacheRepo file, or optionally (requires \code{DBI} and a DB backend such as \code{RSQLite})
+a DBIConnection object, as returned by \code{dbConnect()}}
 
 \item{force}{Logical. Should it create a cache in the \code{cachePath},
 even if it already exists, overwriting.}

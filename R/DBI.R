@@ -6,8 +6,6 @@
 #' @param force Logical. Should it create a cache in the \code{cachePath},
 #'   even if it already exists, overwriting.
 #' @importFrom data.table data.table
-#' @inheritParams DBI::dbConnect
-#' @inheritParams DBI::dbWriteTable
 #' @rdname cache-tools
 #' @export
 createCache <- function(cachePath = getOption("reproducible.cachePath"),
