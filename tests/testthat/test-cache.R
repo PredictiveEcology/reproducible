@@ -1431,3 +1431,25 @@ test_that("change to 'fst'", {
 
 })
 
+test_that("testing parallel", {
+  skip()
+
+
+  # Set running on one R session in background
+  repo <- "~/tmp/test"
+  checkPath(repo, create = TRUE)
+
+  options(reproducible.verbose = 0)
+  out = lapply(1:20000, function(x) Cache(rnorm, sample(1, 1), cacheRepo = repo))
+
+  # Run this in foreground
+  options(reproducible.verbose = 0)
+  outs <- lapply(1:100, function(yy) {
+    outs <- lapply(1:2, function(x) Cache(rnorm, 3456 + yy, cacheRepo = repo))
+    sum(sapply(outs, function(x) attr(x, ".Cache")$newCache)) == 1
+  })
+  sum(unlist(outs)) # should be 100 if no write problems occurred
+
+  unlink(repo, recursive = TRUE)
+
+})

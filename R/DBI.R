@@ -660,11 +660,11 @@ readFilebasedConn <- function(objName, conn, columns = NULL, from = 1, to = NULL
     if (file.exists(conn)) {
       tf <- tempfile()
       on.exit({if (file.exists(tf)) file.remove(tf)})
-      fsTab <- try(retry(retries = 11, exponentialDecayBase = 1.01, silent = TRUE, quote({
+      fsTab <- try(retry(retries = 12, exponentialDecayBase = 1.01, silent = TRUE, quote({
         file.copy(conn, tf, overwrite = TRUE)
         fsTab <- read_fst(tf)
       }
-      )))
+      )), silent = TRUE)
       if (is(fsTab, "try-error"))
         stop("Something went wrong with accessing the Cache 2")
 
@@ -739,7 +739,7 @@ finalizeDTtoWrite <- function(conn, dt, objName) {
 
         digPost <- digest::digest(file = tf, algo = "xxhash64")
         if (!identical(digPost, digPre)) {
-          dt <- try(readFilebasedConn(conn = tf), silent = FALSE)
+          dt <- try(readFilebasedConn(conn = tf), silent = TRUE)
         }
         if (file.exists(tf)) file.remove(tf)
         return(dt)
