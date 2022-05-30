@@ -426,28 +426,81 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 
   type <- gsub("Connection", "", class(conn))
 
-  ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
-               list.files(cachePath))
+  filesPresent <- list.files(cachePath)
+  dbFile <- CacheDBFile(cachePath, drv, conn)
+  storageDir <- CacheStorageDir(cachePath)
+  filesNeededArePresent <- basename2(c(dbFile, storageDir)) %in% filesPresent
+  if (filesNeededArePresent[2] && !filesNeededArePresent[1]) {
+    # means a switched backend -- folder of storage files exist, but no db frontend
+    if (identical(drv, "fst")) {
+      if (!requireNamespace("RSQLite")) {
+        stop("It looks like this Cache database used to be an RSQLite database, but RSQLite is not installed; please install.packages('RSQLite')")
+      }
+      drvOther <- RSQLite::SQLite()
+      tmpConn <- dbConnectAll(drv = drvOther, cachePath = cachePath)
+      on.exit({
+        dbDisconnectAll(tmpConn)
+      }
+        , add = TRUE)
+      sc <- suppressMessages(showCache(x = cachePath, conn = tmpConn))
+      fileOther <- CacheDBFile(cachePath, conn = tmpConn)
+      on.exit({
+        file.remove(fileOther)
+      }
+      , add = TRUE)
+      writeFilebasedConn(cachePath = cachePath, conn = conn, dt = sc, drv = drv)
+    }
+    filesNeededArePresent[1] <- file.exists(dbFile)
+  }
+
+  ret <- all(filesNeededArePresent)
+
   if (isTRUE(ret) && connIsNull)
-    on.exit(dbDisconnectAll(conn, shutdown = TRUE))
+    on.exit(dbDisconnectAll(conn, shutdown = TRUE), add = TRUE)
 
   if (ret && useSQL(conn)) {
-    tablesInDB <- retry(retries = 250, exponentialDecayBase = 1.01,
-                        quote(DBI::dbListTables(conn)))
-    tableShouldBe <- CacheDBTableName(cachePath)
-    if (length(tablesInDB) == 1) {
-      if (!any(tablesInDB %in% tableShouldBe) && grepl(type, "SQLite")) {
-        warning(paste0("The table in the Cache repo does not match the cacheRepo. ",
-                       "If this is because of a moved repository (i.e., files ",
-                       "copied), then it is being updated automatically. ",
-                       "If not, cache is in an error state. ",
-                       "You may need to delete the Cache"))
-        movedCache(cachePath, #old = tablesInDB,
-                   drv = drv, conn = conn)
-      }
+    retOrig <- ret
+    for (i in 1:2) {
+      # This length-2 loop is for cases where the backend db changes;
+      # if it is intact, will break and only do 1
+      tablesInDB <- retry(retries = 250, exponentialDecayBase = 1.01,
+                          quote(DBI::dbListTables(conn)))
+      tableShouldBe <- CacheDBTableName(cachePath)
+      if (length(tablesInDB) == 1) {
+        if (!any(tablesInDB %in% tableShouldBe) && grepl(type, "SQLite")) {
+          warning(paste0("The table in the Cache repo does not match the cacheRepo. ",
+                         "If this is because of a moved repository (i.e., files ",
+                         "copied), then it is being updated automatically. ",
+                         "If not, cache is in an error state. ",
+                         "You may need to delete the Cache"))
+          movedCache(cachePath, #old = tablesInDB,
+                     drv = drv, conn = conn)
+        }
 
+      }
+      ret <- retOrig && any(grepl(tableShouldBe, tablesInDB))
+      if (isFALSE(ret)) {
+        # the files all existed, but there is no db Table; likely from a conversion from fst to SQLite
+        createEmptyTable(conn, cachePath, drv)
+        drvOther <- "fst"
+        tmpConn <- dbConnectAll(drv = drvOther, cachePath = cachePath)
+        on.exit({
+          dbDisconnectAll(tmpConn)
+        }
+        , add = TRUE)
+        sc <- suppressMessages(showCache(x = cachePath, drv = drvOther, conn = tmpConn))
+        appendAll(conn, cachePath, drv, sc)
+        fileOther <- CacheDBFile(cachePath, drv = drvOther, conn = tmpConn)
+        on.exit({
+          file.remove(fileOther)
+        }
+        , add = TRUE)
+
+      } else {
+        break
+      }
     }
-    ret <- ret && any(grepl(tableShouldBe, tablesInDB))
+
   }
 
   if (isFALSE(ret) && isTRUE(create)) {

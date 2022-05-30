@@ -1386,3 +1386,48 @@ test_that("Cache the dots; .cacheExtra", {
   expect_equivalent(out5, out6) # the attributes will be different because one is a recovery of the other
 
 })
+
+test_that("change to 'fst'", {
+  if (!requireNamespace("RSQLite")) skip()
+
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  drv1 <- RSQLite::SQLite()
+  drv2 <- 'fst'
+  clearCache(drv = drv1, x = tmpCache)
+  clearCache(drv = drv2, x = tmpCache)
+
+  out <- Cache(rnorm, 1, drv = drv1, cacheRepo = tmpCache)
+  expect_true(identical(attr(out, ".Cache")$newCache, TRUE))
+  out <- Cache(rnorm, 1, drv = drv1, cacheRepo = tmpCache)
+  expect_false(identical(attr(out, ".Cache")$newCache, TRUE))
+  expect_true(file.exists(CacheDBFile(tmpCache, drv1)))
+
+  # Now convert
+  out <- Cache(rnorm, 1, drv = drv2, cacheRepo = tmpCache)
+  expect_true(identical(attr(out, ".Cache")$newCache, FALSE))
+  expect_true(!file.exists(CacheDBFile(tmpCache, drv1)))
+
+  # Now convert back
+  out <- Cache(rnorm, 1, drv = drv1, cacheRepo = tmpCache)
+  expect_true(identical(attr(out, ".Cache")$newCache, FALSE))
+  expect_true(!file.exists(CacheDBFile(tmpCache, drv2)))
+
+  # Now convert to orig
+  out <- Cache(rnorm, 1, drv = drv2, cacheRepo = tmpCache)
+  expect_true(identical(attr(out, ".Cache")$newCache, FALSE))
+  expect_true(!file.exists(CacheDBFile(tmpCache, drv1)))
+
+  sc2 <- showCache(drv = drv2, tmpCache)
+  expect_true(file.exists(CacheDBFile(tmpCache, drv = drv2)))
+  expect_false(file.exists(CacheDBFile(tmpCache, drv = drv1)))
+  sc1 <- showCache(drv = drv1, tmpCache)
+  expect_true(identical(sc2, sc1)) # because it switches backend seamlessly
+  expect_true(file.exists(CacheDBFile(tmpCache, drv = drv1)))
+  expect_false(file.exists(CacheDBFile(tmpCache, drv = drv2)))
+
+})
+
