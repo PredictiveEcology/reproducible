@@ -1432,7 +1432,7 @@ test_that("change to 'fst'", {
 })
 
 test_that("testing parallel", {
-  skip()
+  skip("Parallel test must be run manually")
 
 
   # Set running on one R session in background

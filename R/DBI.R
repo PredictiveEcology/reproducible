@@ -443,7 +443,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
       sc <- suppressMessages(showCache(x = cachePath, conn = tmpConn))
       fileOther <- CacheDBFile(cachePath, conn = tmpConn)
       on.exit({
-        file.remove(fileOther)
+        try(file.remove(fileOther), silent = TRUE)
       }
       , add = TRUE)
       writeFilebasedConn(cachePath = cachePath, conn = conn, dt = sc, drv = drv)
@@ -669,7 +669,8 @@ readFilebasedConn <- function(objName, conn, columns = NULL, from = 1, to = NULL
         stop("Something went wrong with accessing the Cache 2")
 
       if (!is(fsTab, "try-error")) {
-        dig <- digest::digest(file = tf, algo = "xxhash64")
+        dig <- file.mtime(conn)
+        # dig <- digest::digest(file = tf, algo = "xxhash64")
         writeFilebasedConnToMemory(objName = objName, dt = fsTab, conn = conn, dig = dig)
       }
       if (file.exists(tf)) file.remove(tf)
@@ -735,10 +736,11 @@ finalizeDTtoWrite <- function(conn, dt, objName) {
 
     dt <- try(
       retry(retries = 10, exponentialDecayBase = 1.01, silent = TRUE, quote({
-        file.copy(conn, tf, overwrite = TRUE)
 
-        digPost <- digest::digest(file = tf, algo = "xxhash64")
+        digPost <- file.mtime(conn)
+        # digPost <- digest::digest(file = tf, algo = "xxhash64")
         if (!identical(digPost, digPre)) {
+          file.copy(conn, tf, overwrite = TRUE)
           dt <- try(readFilebasedConn(conn = tf), silent = TRUE)
         }
         if (file.exists(tf)) file.remove(tf)
@@ -806,22 +808,25 @@ writeFilebasedConn <- function(cachePath, drv, conn, dt, objName) {
     retry(retries = 30, exponentialDecayBase = 1.01, silent = TRUE,
           quote({
 
-            if (!rend || !file.exists(tf))
+            if (!rend || !file.exists(tf)) {
               fsTab <- write_fst(dt, tf)
-            rend <- file.rename(tf, conn)
+            }
+            rend <- file.copy(tf, conn, overwrite = TRUE)
             if (!rend) {
               tf <- tempfile()
             }
 
             ## CHECK IT WORKED
-            objName <- objNameFromConn(conn)
-            rm(list = ls(.pkgEnv, pattern = objName), envir = .pkgEnv)
-            check1 <- readFilebasedConn(conn = conn)
-            un1 <- unique(dt$cacheId);
-            un2 <- unique(check1$cacheId)
-            aa <- un1[!un1 %in% un2]
-            if (length(aa) != 0) {
-              stop("Cache 3")
+            if (TRUE) {
+              objName <- objNameFromConn(conn)
+              rm(list = ls(.pkgEnv, pattern = objName), envir = .pkgEnv)
+              check1 <- readFilebasedConn(conn = conn)
+              un1 <- unique(dt$cacheId);
+              un2 <- unique(check1$cacheId)
+              aa <- un1[!un1 %in% un2]
+              if (length(aa) != 0) {
+                stop("Cache 3")
+              }
             }
 
           }))
