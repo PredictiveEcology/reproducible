@@ -105,10 +105,8 @@ setMethod(
   signature = "Raster",
   definition = function(obj, allowMultiple = TRUE) {
     fn <- filename(obj)
-    if (exists("._Filenames_1")) browser()
     if (length(fn) == 0)
       fn <- ""
-    # browser(expr = exists("._Filenames_1"))
     if (isTRUE(allowMultiple))
       if (endsWith(fn, suffix = "grd"))
         fn <- c(fn, gsub("grd$", "gri", fn))
@@ -159,7 +157,6 @@ setMethod(
     #
     #     names(rasterNames) <- rasterNames
     #     rasterFilename <- if (sum(diskBacked) > 0) {
-    #       browser()
     #       lapply(mget(rasterNames[diskBacked], envir = obj), Filenames,
     #              allowMultiple = allowMultiple)
     #     } else {

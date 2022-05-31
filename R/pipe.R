@@ -159,7 +159,7 @@
     env[["_fseq"]]
   } else {
     # reproducible package code here until end of if statement
-    browser()
+    stop("%C% Cache pipe is not sufficiently tested; please avoid using")
     #rhss[[1]] <- rhss[[1]][-2]
 
     args <- list(eval(lhs[[1]]),
