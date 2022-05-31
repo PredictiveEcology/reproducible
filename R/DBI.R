@@ -801,20 +801,31 @@ writeFilebasedConn <- function(cachePath, drv, conn, dt, objName) {
     tf <- tempfile()
     on.exit({if (file.exists(tf)) file.remove(tf)})
 
-    # objNameDig <- objNameWithDig(objName)
-    # digPre <- get(objNameDig, envir = .pkgEnv)
-    #
-    # # In parallel calculations, the original table may be old and incorrect
-    # tf <- tempfile()
-    # retry(retries = 2, exponentialDecayBase = 1.01, quote(file.copy(conn, tf)))
-    # digPost <- digest::digest(file = tf, algo = "xxhash64")
-    # if (!identical(digPost, digPre)) {
-    #   fsTab <- read_fst(tf)
-    #
-    # }
-    fsTab <- write_fst(dt, tf)
-    retry(retries = 2, exponentialDecayBase = 1.01, silent = TRUE,
-          quote(file.rename(tf, conn)))
+    rend <- FALSE
+    retry(retries = 30, exponentialDecayBase = 1.01, silent = TRUE,
+          quote({
+
+            if (!rend || !file.exists(tf))
+              fsTab <- write_fst(dt, tf)
+            rend <- file.rename(tf, conn)
+            if (!rend) {
+              tf <- tempfile()
+            }
+
+            ## CHECK IT WORKED
+            objName <- objNameFromConn(conn)
+            rm(list = ls(.pkgEnv, pattern = objName), envir = .pkgEnv)
+            check1 <- readFilebasedConn(conn = conn)
+            un1 <- unique(dt$cacheId);
+            un2 <- unique(check1$cacheId)
+            aa <- un1[!un1 %in% un2]
+            if (length(aa) != 0) {
+              stop("Cache 3")
+            }
+
+          }))
+
+
     if (file.exists(tf)) file.remove(tf)
   }
   return(invisible())
