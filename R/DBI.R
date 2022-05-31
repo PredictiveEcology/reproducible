@@ -670,7 +670,6 @@ readFilebasedConn <- function(objName, conn, columns = NULL, from = 1, to = NULL
 
       if (!is(fsTab, "try-error")) {
         dig <- file.mtime(conn)
-        # dig <- digest::digest(file = tf, algo = "xxhash64")
         writeFilebasedConnToMemory(objName = objName, dt = fsTab, conn = conn, dig = dig)
       }
       if (file.exists(tf)) file.remove(tf)
@@ -738,7 +737,6 @@ finalizeDTtoWrite <- function(conn, dt, objName) {
       retry(retries = 10, exponentialDecayBase = 1.01, silent = TRUE, quote({
 
         digPost <- file.mtime(conn)
-        # digPost <- digest::digest(file = tf, algo = "xxhash64")
         if (!identical(digPost, digPre)) {
           file.copy(conn, tf, overwrite = TRUE)
           dt <- try(readFilebasedConn(conn = tf), silent = TRUE)
