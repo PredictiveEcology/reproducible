@@ -1334,7 +1334,7 @@ whPointsToMessForGrep <- escapeRegexChars(whPointsToMess)
 
 isGoogle <- function(url){
   if (.requireNamespace("googledrive", stopOnFALSE = FALSE))
-    grepl("drive.google.com", url)
+    isTRUE(grepl("drive.google.com", url))
   else
     FALSE
 }
