@@ -242,6 +242,7 @@ setMethod(
     }
     # memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
+    setkeyv(objsDT, colnames(objsDT))
     return(objsDT)
 })
 
@@ -348,12 +349,11 @@ setMethod(
     .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
       !isFALSE(getOption("reproducible.futurePlan"))
     if (.onLinux) {
-      if (exists("futureEnv", envir = .reproEnv))
-        hasFuture <- .requireNamespace("future",
-                                       messageStart = "To use reproducible.futurePlan, ")
-        if (hasFuture) {
-          checkFutures()
-        }
+      hasFuture <- exists("futureEnv", envir = .reproEnv)
+      .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")
+      if (hasFuture) {
+        checkFutures()
+      }
     }
 
     if (is.null(conn)) {
@@ -414,6 +414,7 @@ setMethod(
     if (verboseMessaging)
       .messageCacheSize(x, artifacts = unique(objsDT[[.cacheTableHashColName()]]),
                         cacheTable = objsDT)
+    setkeyv(objsDT, colnames(objsDT))
     objsDT[]
 })
 
@@ -434,9 +435,6 @@ setMethod(
       messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
       x <- getOption("reproducible.cachePath")[1]
     }
-    # if (missing(after)) after <- NA # "1970-01-01"
-    # if (missing(before)) before <- NA # Sys.time() + 1e5
-    # if (is(x, "simList")) x <- x@paths$cachePath
 
     args <- append(list(x = x, after = after, before = before, userTags = userTags), list(...))
 
@@ -450,6 +448,7 @@ setMethod(
       #eliminate <- paste(eliminate, collapse = "|") ## TODO: remove
       clearCache(x, eliminate, verboseMessaging = FALSE, regexp = FALSE, ask = ask)
     }
+    setkeyv(objsDT, colnames(objsDT))
     return(objsDT)
 })
 
@@ -601,8 +600,10 @@ checkFutures <- function() {
       resol1 <- resol[!startsWith(names(resol), "cloudCheckSums")]
     }
     # browser(expr = exists("aaaa"))
-    if (length(resol) > 0)
-      .reproEnv$futureEnv[[lsFutureEnv]] <- NULL
+    if (length(resol[resol]) > 0)
+      # for (v in names(resol)[resol])
+        rm(list = names(resol)[resol], envir = .reproEnv$futureEnv)
+
   }
 }
 

@@ -996,26 +996,34 @@ setMethod(
         }
       }
       if (useFuture) {
-        if (exists("futureEnv", envir = .reproEnv))
+        if (!exists("futureEnv", envir = .reproEnv))
           .reproEnv$futureEnv <- new.env(parent = emptyenv())
 
+        if (!identical(getOption("reproducible.futurePlan"), "multicore")) {
+          message("Cache currently only tested with futurePlan = multicore; ",
+                  "please set options(reproducible.futurePlan = 'multicore') or ",
+                  "options(reproducible.futurePlan = FALSE) to turn it off. ",
+                  "setting options(reproducible.futurePlan = FALSE) now")
+          options(reproducible.futurePlan = FALSE)
+        }
         if (isTRUE(getOption("reproducible.futurePlan"))) {
-          messageCache('options("reproducible.futurePlan") is TRUE. Setting it to "multiprocess".\n',
+          messageCache('options("reproducible.futurePlan") is TRUE. Setting it to "multicore".\n',
                        'Please specify a plan by name, e.g.,\n',
-                       '  options("reproducible.futurePlan" = "multiprocess")',
+                       '  options("reproducible.futurePlan" = "multicore")',
                        verbose = verbose)
-          future::plan("multiprocess", workers = 2)
+          future::plan("multicore", workers = 2)
         } else {
           if (!is(future::plan(), getOption("reproducible.futurePlan"))) {
             thePlan <- getOption("reproducible.futurePlan")
             future::plan(thePlan, workers = 2)
           }
         }
+        browser()
         .reproEnv$futureEnv[[paste0("future_", rndstr(1,10))]] <-
           #saved <-
           future::futureCall(
             FUN = writeFuture,
-            args = list(written, outputToSave, cacheRepo, userTags, drv, conn, cacheId, linkToCacheId),
+            args = list(written, outputToSave, cacheRepo, userTags, drv, conn, outputHash, linkToCacheId),
             globals = list(written = written,
                            outputToSave = outputToSave,
                            cacheRepo = cacheRepo,
@@ -1038,7 +1046,6 @@ setMethod(
         otsObjSize <- as.numeric(otsObjSize)
         class(otsObjSize) <- "object_size"
         isBig <- otsObjSize > 1e7
-        # browser(expr = exists("._Cache_13"))
         outputToSave <- progressBarCode(
           saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
                       conn = conn, obj = outputToSave, cacheId = outputHash,
@@ -1172,6 +1179,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
   if (missing(cacheId)) {
     cacheId <- .robustDigest(outputToSave)
   }
+
   output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
                         conn = conn, obj = outputToSave, cacheId = cacheId,
                         linkToCacheId = linkToCacheId)

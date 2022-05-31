@@ -177,7 +177,7 @@ reproducibleOptions <- function() {
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
     reproducible.drv = "fst", #RSQLite::SQLite(),
-    reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
+    reproducible.futurePlan = FALSE, #future::plan("multicore"), #memoise
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
     reproducible.length = Inf,
