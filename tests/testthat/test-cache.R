@@ -769,38 +769,37 @@ test_that("test future", {
   skip_on_os("windows")
   skip_on_os("mac")
   skip_on_os("solaris")
+  if (interactive()) {
 
-  # .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
-  # if (.onLinux) {
-  if (requireNamespace("future")) {
-    testInitOut <- testInit("raster", verbose = TRUE, tmpFileExt = ".rds",
-                            opts = list("future.supportsMulticore.unstable" = "quiet",
-                                        "reproducible.futurePlan" = "multicore"))
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
+    if (requireNamespace("future")) {
+      testInitOut <- testInit("raster", verbose = TRUE, tmpFileExt = ".rds",
+                              opts = list("future.supportsMulticore.unstable" = "quiet",
+                                          "reproducible.futurePlan" = "multicore"))
+      on.exit({
+        testOnExit(testInitOut)
+      }, add = TRUE)
 
-    # There is now a warning with future package
-    a <- d <- list()
-    clearCache(tmpCache)
-    (aa <- system.time({for (i in c(1:3)) a[[i]] <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
-    sc1 <- showCache(tmpCache)
-    expect_true(length(unique(sc1$cacheId)) == 3)
+      # There is now a warning with future package
+      a <- d <- list()
+      clearCache(tmpCache)
+      (aa <- system.time({for (i in c(1:3)) a[[i]] <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
+      sc1 <- showCache(tmpCache)
+      expect_true(length(unique(sc1$cacheId)) == 3)
 
-    # Future ones show up in same Cache repo as non-future
-    options("reproducible.futurePlan" = FALSE)
-    (aa <- system.time({for (i in c(1:3)) d[[i]] <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
-    sc2 <- showCache(tmpCache)
-    expect_true(length(unique(sc1$cacheId)) == 3)
-    expect_true(sum(sapply(d, function(dd) attr(dd, ".Cache")$newCache)) == 0)
+      # Future ones show up in same Cache repo as non-future
+      options("reproducible.futurePlan" = FALSE)
+      (aa <- system.time({for (i in c(1:3)) d[[i]] <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
+      sc2 <- showCache(tmpCache)
+      expect_true(length(unique(sc1$cacheId)) == 3)
+      expect_true(sum(sapply(d, function(dd) attr(dd, ".Cache")$newCache)) == 0)
 
-    options("reproducible.futurePlan" = "multicore")
-    a <- d <- list()
-    (aa <- system.time({for (i in c(1:3)) a[[i]] <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i + 1)}))
-    expect_true(sum(sapply(a, function(aa) attr(aa, ".Cache")$newCache)) == 1)
+      options("reproducible.futurePlan" = "multicore")
+      a <- d <- list()
+      (aa <- system.time({for (i in c(1:3)) a[[i]] <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i + 1)}))
+      expect_true(sum(sapply(a, function(aa) attr(aa, ".Cache")$newCache)) == 1)
 
+    }
   }
-  # }
 })
 
 ##########################
