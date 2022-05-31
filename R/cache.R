@@ -1018,7 +1018,6 @@ setMethod(
             future::plan(thePlan, workers = 2)
           }
         }
-        browser()
         .reproEnv$futureEnv[[paste0("future_", rndstr(1,10))]] <-
           #saved <-
           future::futureCall(
