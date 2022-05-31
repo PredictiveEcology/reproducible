@@ -50,20 +50,21 @@ Depends:
     R (>= 4.0)
 Imports:
     data.table (>= 1.10.4),
+    DBI,
     digest,
     fst,
     lobstr,
     magrittr,
     methods,
-    Require,
     raster (>= 3.5-15),
+    Require,
     rlang,
+    RSQLite,
     sp (>= 1.4-2),
     utils
 Suggests:
     covr,
     crayon,
-    DBI,
     fastdigest,
     fasterize,
     future,
@@ -77,7 +78,6 @@ Suggests:
     RCurl (>= 1.95-4.8),
     rgdal,
     rmarkdown,
-    RSQLite,
     sf,
     stats,
     terra (>= 1.5-17),

@@ -176,7 +176,7 @@ reproducibleOptions <- function() {
     reproducible.cacheSpeed = "slow",
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
-    reproducible.drv = "fst", #RSQLite::SQLite(),
+    reproducible.drv = RSQLite::SQLite(), # "fst",
     reproducible.futurePlan = FALSE, #future::plan("multicore"), #memoise
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
