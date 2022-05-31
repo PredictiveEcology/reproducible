@@ -788,7 +788,8 @@ dbDisconnectAll <- function(conn = getOption("reproducible.conn", NULL), ...) {
     objName <- objNameFromConn(conn)
     tab <- readFilebasedConn(objName, conn)
     tab <- finalizeDTtoWrite(conn = conn, dt = tab, objName = objName)
-    rm(list = ls(.pkgEnv, pattern = objName), envir = .pkgEnv)
+    lss <- ls(.pkgEnv);
+    rm(list = lss[startsWith(lss, objName)], envir = .pkgEnv)
     writeFilebasedConn(conn = conn, dt = tab, objName = objName)
   }
 
