@@ -419,7 +419,9 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   connIsNull <- is.null(conn)
   if (connIsNull) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
-    on.exit(dbDisconnectAll(conn, shutdown = TRUE), add = TRUE)
+    on.exit({
+      dbDisconnectAll(conn, shutdown = TRUE)
+      }, add = TRUE)
   }
 
   type <- gsub("Connection", "", class(conn))
@@ -452,9 +454,6 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   }
 
   ret <- all(filesNeededArePresent)
-
-  if (isTRUE(ret) && connIsNull)
-    on.exit(dbDisconnectAll(conn, shutdown = TRUE), add = TRUE)
 
   if (ret && useSQL(conn)) {
     retOrig <- ret
