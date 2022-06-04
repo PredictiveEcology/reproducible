@@ -649,6 +649,10 @@ setMethod(
 
       # Check if it is in repository
       needDisconnect <- FALSE
+      waiting <- getOption("reproducible.cachePrerunExistsWait", FALSE)
+      if (length(waiting) == 1) waiting <- c(waiting, Inf)
+      isFirstTimeWaiting <- TRUE
+
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
         # browser(expr = exists("._Cache_3"))
@@ -658,14 +662,34 @@ setMethod(
           conn <- dbConnectAll(drv, cachePath = repo)
         }
         isInRepo <- checkInRepo(conn, dbTabNam, outputHash)
-        fullCacheTableForObj <- isInRepo
-        if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
-        if (NROW(isInRepo) > 0) {
-          # browser(expr = exists("._Cache_4"))
-          cacheRepo <- repo
-          break
+        if ("prerun" %in% isInRepo$tagKey && NROW(isInRepo) == 1)  {
+          if (waiting[1] && waiting[2]) {           # Here, another process has started this Cache entry, but isn't finished
+            if (isFirstTimeWaiting) {
+              message("Waiting ", waiting[2] * waiting[1], " seconds, trying every ",waiting[1]," seconds for Cache entry to exist; it has ",
+                      "been started in another R session, but is not finished yet")
+              isFirstTimeWaiting <- FALSE
+            }
+            Sys.sleep(waiting[1])
+            waiting[2] <- waiting[2] - 1 # count down to 0 then break out because of this "if"
+            tries <- tries - 1 # stop the count up if there is a vector of CacheRepositories; keep on this one
+          }
+          if (waiting[2] <= 0 || waiting[1] == 0) {
+            isInRepo <- isInRepo[0]
+          }
+
+        }
+
+        if (isFALSE(waiting[1]) || waiting[1] == 0 || tail(waiting, 1) <= 0 || NROW(isInRepo) > 1) {
+          fullCacheTableForObj <- isInRepo
+          if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
+          if (NROW(isInRepo) > 0) {
+            # browser(expr = exists("._Cache_4"))
+            cacheRepo <- repo
+            break
+          }
         }
         tries <- tries + 1
+
       }
 
       userTags <- c(userTags, if (!is.na(fnDetails$functionName))
@@ -831,6 +855,15 @@ setMethod(
             messageCache("Cache and ", fnDetails$functionName, " have 1 or more common arguments: ", commonArgs,
                          "\nSending the argument(s) to both ", verboseLevel = 2, verbose = verbose)
           }
+
+          # This will put a single line in the cache repo under this outputHash, indicating
+          #   that it has begun. This will be useful for systems that have a shared Cache across
+          #   multiple R sessions.
+          .updateTagsRepo(outputHash, cacheRepo, "prerun",
+                          "prerun",
+                          add = TRUE,
+                          drv = drv, conn = conn)
+
           output <- if (length(commonArgs) == 0) {
             FUN(...)
           } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
