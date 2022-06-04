@@ -46,8 +46,8 @@
   options(o)
 }
 
-.reproducibleTempPath <- function() Require::tempdir2()
-.reproducibleTempCacheDir <- function() Require::tempdir2("cache")
+.reproducibleTempPath <- function(sub) Require::tempdir2(sub = "", tempdir = file.path(tempdir(), "reproducible"))
+.reproducibleTempCacheDir <- function() .reproducibleTempPath("cache")
 .reproducibleTempInputDir <- function() Require::tempdir2("inputs")
 
 .argsToRemove <- argsToRemove <- unique(c(names(formals(prepInputs)),

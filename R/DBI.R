@@ -437,15 +437,16 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
         stop("It looks like this Cache database used to be an RSQLite database, but RSQLite is not installed; please install.packages('RSQLite')")
       }
       drvOther <- RSQLite::SQLite()
-      tmpConn <- dbConnectAll(drv = drvOther, cachePath = cachePath)
+      tmpConn_db <- dbConnectAll(drv = drvOther, cachePath = cachePath)
       on.exit({
-        dbDisconnectAll(tmpConn)
+        dbDisconnectAll(tmpConn_db, shutdown = TRUE)
       }
         , add = TRUE)
-      sc <- suppressMessages(showCache(x = cachePath, conn = tmpConn))
-      fileOther <- CacheDBFile(cachePath, conn = tmpConn)
+      sc <- suppressMessages(showCache(x = cachePath, conn = tmpConn_db))
+      fileOther_db <- CacheDBFile(cachePath, conn = tmpConn_db)
       on.exit({
-        try(file.remove(fileOther), silent = TRUE)
+        if (file.exists(fileOther_db))
+          try(file.remove(fileOther_db), silent = TRUE)
       }
       , add = TRUE)
       writeFilebasedConn(cachePath = cachePath, conn = conn, dt = sc, drv = drv)
@@ -482,14 +483,15 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
         drvOther <- "fst"
         tmpConn <- dbConnectAll(drv = drvOther, cachePath = cachePath)
         on.exit({
-          dbDisconnectAll(tmpConn)
+          dbDisconnectAll(tmpConn, shutdown = TRUE)
         }
         , add = TRUE)
         sc <- suppressMessages(showCache(x = cachePath, drv = drvOther, conn = tmpConn))
         appendAll(conn, cachePath, drv, sc)
         fileOther <- CacheDBFile(cachePath, drv = drvOther, conn = tmpConn)
         on.exit({
-          file.remove(fileOther)
+          if (file.exists(fileOther))
+            file.remove(fileOther)
         }
         , add = TRUE)
 
