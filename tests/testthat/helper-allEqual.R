@@ -19,6 +19,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   else
     list()
 
+  assign(value = "testsForPkgs",  "testsForPkgs", envir = .pkgEnv)
+
   optsVerbose <- if (verbose)
     options(reproducible.verbose = verbose)
   else
@@ -110,6 +112,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
 }
 
 testOnExit <- function(testInitOut) {
+  rm(list = "testsForPkgs", envir = .pkgEnv)
   if (length(testInitOut$optsVerbose))
     options("reproducible.verbose" = testInitOut$optsVerbose[[1]])
   if (length(testInitOut$optsAsk))
@@ -282,6 +285,10 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   mc <- match.call()
   r1Orig <- raster(extent(0,200, 0, 200), vals = 1, res = 1)
   r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  r2Orig <- raster(extent(0,200, 0, 200), vals = 1, res = 1)
+  r2Orig <- writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  names(r1Orig) <- "layer1"
+  names(r2Orig) <- "layer1"
 
 
   if (mc$type == "Stack") {
@@ -310,8 +317,6 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   ####################################################
   # cloud copy exists only -- should download to local copy
   ####################################################
-  r2Orig <- raster(extent(0,200, 0, 200), vals = 1, res = 1)
-  r2Orig <- writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
   if (mc$type == "Stack") {
     r2Orig2 <- writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
     r2Orig <- stack(r2Orig, r2Orig2)
