@@ -1843,7 +1843,8 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
         if (dir.exists(dirname(orig)))
           orig
         else
-          normalizePath(file.path(getwd(), output$origRasterRelativePath, basename(orig)), winslash = "/")
+          normalizePath(file.path(getwd(), output$origRasterRelativePath, basename(orig)),
+                        winslash = "/", mustWork = FALSE)
       }
 
       filesExist <- file.exists(origFilenames)
