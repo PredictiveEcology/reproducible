@@ -1187,10 +1187,14 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
         stop("There is an unknown error 04")
     }
     if (isFromDisk) {
+      curDir <- normalizePath(getwd(), winslash = "/")
+      filesDirs <- normalizePath(dirname(Filenames(objOrig)), winslash = "/")
+      origRasterRelativePath <- gsub(curDir, "", filesDirs)
       if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
         obj <- list(origRaster = objOrig, cacheRaster = obj)
       } else {
-        obj <- list(origRaster = Filenames(objOrig), cacheRaster = obj)
+        obj <- list(origRaster = Filenames(objOrig), cacheRaster = obj,
+                    origRasterRelativePath = origRasterRelativePath)
       }
       setattr(obj, "tags",
               c(attributes(obj$cacheRaster)$tags,

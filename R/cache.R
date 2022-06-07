@@ -1835,10 +1835,15 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
       output <- lapply(output, function(out) dealWithClassOnRecovery(out, cacheRepo, cacheId,
                                                                    drv, conn))
     } else {
+      browser()
       origFilenames <- if (is(output, "Raster")) {
         Filenames(output) # This is legacy piece which allows backwards compatible
       } else {
-        output$origRaster
+        orig <- output$origRaster
+        if (dir.exists(dirname(orig)))
+          orig
+        else
+          normalizePath(file.path(getwd(), output$origRasterRelativePath, basename(orig)), winslash = "/")
       }
 
       filesExist <- file.exists(origFilenames)

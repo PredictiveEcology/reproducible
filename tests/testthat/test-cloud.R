@@ -161,7 +161,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
 
     opts <- options("reproducible.cachePath" = tmpdir)
     suppressWarnings(rm(list = "aaa", envir = .GlobalEnv))
-    testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = .pkgEnv$testsForPkgs, overwrite = TRUE)))
+    testsForPkgsDir <- try(googledrive::drive_mkdir(name = .pkgEnv$testsForPkgs, overwrite = FALSE), silent = TRUE)
     clearCache(x = tmpCache)
     clearCache(x = tmpdir)
     newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
