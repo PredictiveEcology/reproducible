@@ -46,7 +46,8 @@
   options(o)
 }
 
-.reproducibleTempPath <- function(sub) Require::tempdir2(sub = "", tempdir = file.path(tempdir(), "reproducible"))
+.reproducibleTempPath <- function(sub = "")
+  Require::tempdir2(sub = sub, tempdir = file.path(tempdir(), "reproducible"))
 .reproducibleTempCacheDir <- function() .reproducibleTempPath("cache")
 .reproducibleTempInputDir <- function() Require::tempdir2("inputs")
 
