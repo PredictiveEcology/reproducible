@@ -1487,3 +1487,68 @@ test_that("testing parallel", {
 
 
 })
+
+test_that("testing parallel", {
+  skip("Parallel test must be run manually")
+
+
+  # Set running on one R session in background
+  fn1 <- function(x) for (i in 1:1e6) rnorm(1e5)
+  fn2 <- function(x) for (i in 1:1e6) rnorm(1e5)
+  if (requireNamespace("future"))
+    a <- future::future(fn1(1), globals = list(fn1))
+
+      getFromNamespace("ongoingMemoryThisPid", "SpaDES.core")(seconds = seconds,
+                                                              interval = interval,
+                                                              thisPid = thisPid,
+                                                              outputFile = outputFile),
+      globals = list(memoryUseThisSession = memoryUseThisSession,
+                     outputFile = outputFile, thisPid = thisPid,
+                     seconds = seconds, interval = interval))
+
+
+
+
+
+  drvs <- list("fst", RSQLite::SQLite())
+  i <- 1
+  options("reproducible.drv" = drvs[[i]])
+  repo <- "~/tmp/test"
+  unlink(repo, recursive = TRUE)
+  checkPath(repo, create = TRUE)
+
+  options(reproducible.verbose = 0)
+  out = lapply(1:20000, function(x) Cache(rnorm, sample(1, 1), cacheRepo = repo))
+
+  # Run this in foreground
+  options(reproducible.verbose = 0)
+  st1 <- system.time(
+    outs <- lapply(1:100, function(yy) {
+      outs <- lapply(1:2, function(x) Cache(rnorm, 3456 + yy, cacheRepo = repo))
+      sum(sapply(outs, function(x) attr(x, ".Cache")$newCache)) == 1
+    })
+  )
+  sum(unlist(outs)) # should be 100 if no write problems occurred
+
+  i <- 2
+  options("reproducible.drv" = drvs[[i]])
+  repo <- "~/tmp/test"
+  unlink(repo, recursive = TRUE)
+  checkPath(repo, create = TRUE)
+
+  options(reproducible.verbose = 0)
+  out = lapply(1:20000, function(x) Cache(rnorm, sample(1, 1), cacheRepo = repo))
+
+  # Run this in foreground
+  options(reproducible.verbose = 0)
+  st2 <- system.time(
+    outs <- lapply(1:100, function(yy) {
+      outs <- lapply(1:2, function(x) Cache(rnorm, 3456 + yy, cacheRepo = repo))
+      sum(sapply(outs, function(x) attr(x, ".Cache")$newCache)) == 1
+    })
+  )
+  sum(unlist(outs)) # should be 100 if no write problems occurred
+
+
+
+})
