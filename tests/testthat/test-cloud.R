@@ -8,34 +8,41 @@ test_that("test Cache(useCloud=TRUE, ...)", {
       c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
       #needGoogle = TRUE,
       opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
-                  "reproducible.ask" = FALSE)
+                  "reproducible.ask" = FALSE,
+                  "reproducible.cloudFolderID" = "tmp_CacheForTesting")
     )
     # googledrive::drive_auth("predictiveecology@gmail.com")
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
-    clearCache(x = tmpCache)
-    testsForPkgs <- "testsForPkgs"
-    if (packageVersion("googledrive") < "2.0.0") {
-      df <- googledrive::drive_find(pattern = testsForPkgs, team_drive = NULL)
-    } else {
-      df <- googledrive::drive_find(pattern = testsForPkgs, shared_drive = NULL)
-    }
-    if (NROW(df) == 0)
-      testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = testsForPkgs)))
-    newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = testsForPkgs)))
-    cloudFolderID = newDir
+    clearCache(x = tmpCache, useCloud = TRUE)
+    # if (packageVersion("googledrive") < "2.0.0") {
+    #   df <- googledrive::drive_find(pattern = testsForPkgs, team_drive = NULL)
+    # } else {
+    #   df <- googledrive::drive_find(pattern = testsForPkgs, shared_drive = NULL)
+    # }
+    #if (NROW(df) == 0)
+    testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = .pkgEnv$testsForPkgs, overwrite = TRUE)))
     on.exit({
-      retry(quote(googledrive::drive_rm(cloudFolderID)))
+      retry(quote(googledrive::drive_rm(.pkgEnv$testsForPkgs)))
     }, add = TRUE)
 
+    newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
+    cloudFolderID = newDir
+    # on.exit({
+    #   retry(quote(googledrive::drive_rm(cloudFolderID)))
+    # }, add = TRUE)
+
+    messLoadedCached <- "loaded cached"
+    messUploaded <- "Uploading"
+    messDownload <- "Download"
     #######################################
     # local absent, cloud absent
     #######################################
     mess1 <- capture_messages({
       a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
     })
-    expect_true(any(grepl("uploaded", mess1)))
+    expect_true(any(grepl(messUploaded, mess1)))
 
     #######################################
     # local present, cloud present
@@ -43,9 +50,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     mess2 <- capture_messages({
       a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
     })
-    expect_true(any(grepl("loading cached", mess2)))
-    expect_false(all(grepl("uploaded", mess2)))
-    expect_false(all(grepl("download", mess2)))
+    expect_true(any(grepl(messLoadedCached, mess2)))
+    expect_false(all(grepl(messUploaded, mess2)))
+    expect_false(all(grepl(messDownload, mess2)))
 
     #######################################
     # local absent, cloud present
@@ -56,9 +63,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     mess3 <- capture_messages({
       a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
     })
-    expect_false(any(grepl("loading cached", mess3)))
-    expect_false(any(grepl("uploaded", mess3)))
-    expect_true(any(grepl("download", mess3)))
+    expect_false(any(grepl(messLoadedCached, mess3)))
+    expect_false(any(grepl(messUploaded, mess3)))
+    expect_true(any(grepl(messDownload, mess3)))
 
     #######################################
     # local present, cloud absent
@@ -69,9 +76,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
       a2 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
     })
 
-    expect_true(any(grepl("loading cached", mess4)))
-    expect_true(any(grepl("uploaded", mess4)))
-    expect_false(any(grepl("download", mess4)))
+    expect_true(any(grepl(messLoadedCached, mess4)))
+    expect_true(any(grepl(messUploaded, mess4)))
+    expect_false(any(grepl(messDownload, mess4)))
 
     #######################################
     # cloudFolderID missing
@@ -89,9 +96,8 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     # on.exit({
     #   retry(quote(googledrive::drive_rm(googledrive::as_id(cloudFolderID))))
     # }, add = TRUE)
-    expect_true(any(grepl("Created Drive file", mess5)))
-    expect_true(any(grepl("Uploading", mess5)))
-    expect_false(any(grepl("download", mess5)))
+    expect_true(any(grepl(messUploaded, mess5)))
+    expect_false(any(grepl(messDownload, mess5)))
     # expect_true(any(grepl("No cloudFolderID", warn5)))
 
     warn6 <- capture_warnings({
@@ -101,9 +107,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     })
 
     expect_false(any(grepl("Folder created", mess6)))
-    expect_false(any(grepl("Uploading", mess6)))
-    expect_false(any(grepl("download", mess6)))
-    expect_true(any(grepl("loading cached", mess6)))
+    expect_false(any(grepl(messUploaded, mess6)))
+    expect_false(any(grepl(messDownload, mess6)))
+    expect_true(any(grepl(messLoadedCached, mess6)))
     expect_true(isTRUE(all.equal(length(warn6), 0)))
 
     ########
@@ -143,6 +149,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     gdriveLs <- googledrive::drive_ls(path = cloudFolderFromCacheRepo(tmpCache))
     expect_true(NROW(gdriveLs) == 1)
     expect_true(grepl(unique(showCache(tmpCache)[[.cacheTableHashColName()]]), gdriveLs$name))
+    retry(quote(googledrive::drive_rm(getOption("reproducible.cloudFolderID"))))
   }
 })
 
@@ -154,20 +161,20 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
 
     opts <- options("reproducible.cachePath" = tmpdir)
     suppressWarnings(rm(list = "aaa", envir = .GlobalEnv))
-
-    # googledrive::drive_auth("predictiveecology@gmail.com")
-    on.exit({
-      testOnExit(testInitOut)
-      retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
-      options(opts)
-    }, add = TRUE)
+    testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = .pkgEnv$testsForPkgs, overwrite = TRUE)))
     clearCache(x = tmpCache)
     clearCache(x = tmpdir)
-    newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
-    cloudFolderID = newDir
-
+    newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
     on.exit({
+      retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
+      options(opts)
+      retry(quote(googledrive::drive_rm(.pkgEnv$testsForPkgs)))
+      testOnExit(testInitOut)
     }, add = TRUE)
+
+    # googledrive::drive_auth("predictiveecology@gmail.com")
+
+    cloudFolderID = newDir
 
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
                       type = "Raster")
@@ -196,7 +203,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
     }, add = TRUE)
     clearCache(x = tmpCache)
     clearCache(x = tmpdir)
-    newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
+    newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
     cloudFolderID = newDir
 
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
@@ -223,7 +230,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
     newDir <- #if (Sys.info()[["user"]] == "emcintir") {
       #  list(id = "1vKImpt2FQLmdDzA7atwhz9B-6Er26rka")
       #} else { # this is slow for emcintir because googledrive is large
-      retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
+      retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
     #}
     cloudFolderID = newDir
 
