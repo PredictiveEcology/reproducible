@@ -339,8 +339,8 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   expect_true(attr(r2End, ".Cache")$newCache == FALSE)
   filnames2End <- unique(dir(dirname(Filenames(r2End)), pattern = paste(collapse = "|", basename(filePathSansExt(Filenames(r2End))))))
   filnames1End <- unique(dir(dirname(r1EndFilename), pattern = paste(collapse = "|", basename(filePathSansExt(r1EndFilename)))))
-  expect_true(NROW(filnames1End) == numRasterFiles) # both sets because of the _1 -- a bit of an artifact due to same folder
-  expect_true(NROW(filnames2End) == numRasterFiles) # both sets because of the _1
+  expect_true(length(grep(".tif$", filnames1End)) == numRasterFiles) # both sets because of the _1 -- a bit of an artifact due to same folder
+  expect_true(length(grep(".tif$", filnames2End)) == numRasterFiles) # both sets because of the _1
 
 
   ####################################################

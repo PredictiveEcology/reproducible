@@ -1840,11 +1840,12 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
         Filenames(output) # This is legacy piece which allows backwards compatible
       } else {
         orig <- output$origRaster
-        if (dir.exists(dirname(orig)))
+        if (dir.exists(dirname(orig))) {
           orig
-        else
+        } else {
           normalizePath(file.path(getwd(), output$origRasterRelativePath, basename(orig)),
                         winslash = "/", mustWork = FALSE)
+        }
       }
 
       filesExist <- file.exists(origFilenames)
