@@ -822,8 +822,11 @@ setMethod(
                           pattern = paste0("\\.", fileExt(CacheStoredFile(cacheRepo, outputHash))),
                           replacement = "") %in% outputHash
         if (any(isInCloud)) {
-          output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
+          outputFromCloud <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
                                   drv = drv)
+          output <- dealWithClassOnRecovery(outputFromCloud, cacheRepo = cacheRepo,
+                                         cacheId = outputHash,
+                                         drv = drv, conn = conn)
           if (is.null(output)) {
             retry(quote(googledrive::drive_rm(gdriveLs[isInCloud,])))
             isInCloud[isInCloud] <- FALSE
