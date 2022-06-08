@@ -643,7 +643,7 @@ setMethod(
           cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, create = TRUE,
                                                      overwrite = FALSE)
         }
-        gdriveLs <- retry(quote(driveLs(cloudFolderID, pattern = outputHash,
+        gdriveLs <- retry(quote(cloudDriveLs(cloudFolderID, pattern = outputHash,
                                         verbose = verbose)))
       }
 

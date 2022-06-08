@@ -132,10 +132,10 @@ setMethod(
         # browser(expr = exists("._clearCache_3"))
         cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
         if (identical(useCloud, "force")) {
-          gdriveLs <- driveLs(cloudFolderID, pattern = userTags)
+          gdriveLs <- cloudDriveLs(cloudFolderID, pattern = userTags)
           cacheIds <- c(cacheIds, gsub("\\..*$", "", gdriveLs$name))
         }
-        rmFromCloudFolder(cloudFolderID, x, cacheIds, cacheDT = objsDT)
+        cloudRemove(cloudFolderID, x, cacheIds, cacheDT = objsDT)
 
       }
 

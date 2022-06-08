@@ -346,7 +346,7 @@ test_that("test individual useCloud family", {
   expect_warning({
     tmpCloudFolderID <- checkAndMakeCloudFolderID(create = TRUE)
   }, "No cloudFolderID supplied")
-  gdriveLs <- driveLs(cloudFolderID = NULL, "sdfsdf")
+  gdriveLs <- cloudDriveLs(cloudFolderID = NULL, "sdfsdf")
   expect_true(NROW(gdriveLs) == 0)
   expect_is(checkAndMakeCloudFolderID("testy"), "character")
   cloudFolderID <- checkAndMakeCloudFolderID("testy", create = TRUE)
