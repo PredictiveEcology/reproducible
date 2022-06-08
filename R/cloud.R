@@ -144,6 +144,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
   output
 }
 
+
 #' Upload a file to cloud directly from local \code{cacheRepo}
 #'
 #' Meant for internal use, as there are internal objects as arguments.
@@ -151,13 +152,11 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
 #' @param isInCloud     A logical indicating whether an \code{outputHash} is in the cloud already.
 #' @param outputToSave  Only required if \code{any(rasters) == TRUE}.
 #'                      This is the \code{Raster*} object.
-#' @param rasters       A logical vector of length >= 1 indicating which elements in
-#'                      \code{outputToSave} are \code{Raster*} objects.
 #' @inheritParams cloudUpload
 #'
 #' @keywords internal
 cloudUploadFromCache <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
-                                 outputToSave, rasters, drv = getOption("reproducible.drv"),
+                                 outputToSave, drv = getOption("reproducible.drv"),
                                  conn = getOption("reproducible.conn", NULL)) {
   if (!requireNamespace("googledrive", quietly = TRUE))
     stop(requireNamespaceMsg("googledrive", "to use google drive files"))
@@ -171,25 +170,21 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cacheRepo, cloudFolderID
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
     messageCache("Uploading new cached object ", newFileName,", with cacheId: ",
             outputHash," to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id)
-    du <- try(retry(quote(googledrive::drive_upload(media = CacheStoredFile(cacheRepo, outputHash),
+    du <- try(retry(quote(googledrive::drive_upload(media = cacheIdFileName,
                                        path = googledrive::as_id(cloudFolderID), name = newFileName,
                                        overwrite = FALSE))))
     if (is(du, "try-error")) {
       return(du)
     }
+    cu <- cloudUploadRasterBackends(obj = outputToSave, cloudFolderID)
+    if (NROW(cu)) {
+      du <- rbind(du, cu)
+    }
+
+    .addTagsRepoCloudDribble(drib = du, outputHash, cacheRepo, drv = drv, conn = conn)
   }
 
-  cu <- cloudUploadRasterBackends(obj = outputToSave, cloudFolderID)
-  if (NROW(cu))
-    du <- rbind(du, cu[[1]])
-
-  .addTagsRepoCloudDribble(drib = du, outputHash, cacheRepo, drv = drv, conn = conn)
-  # lapply(du$name, function(nam) .addTagsRepo(outputHash, cacheRepo, "inCloudFile",
-  #                                            nam, drv = drv, conn = conn))
-  # lapply(du$id, function(id) .addTagsRepo(outputHash, cacheRepo, "inCloudID",
-  #                                         id, drv = drv, conn = conn))
-
-  du
+  return(du)
 }
 
 cloudUploadRasterBackends <- function(obj, cloudFolderID) {
@@ -206,6 +201,7 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
                                                 name = basename(file), overwrite = FALSE))))
     })
   }
+  out <- do.call(rbind, out)
   return(invisible(out))
 }
 
