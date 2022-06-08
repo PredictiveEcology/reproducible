@@ -212,7 +212,7 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
   #browser(expr = exists("._cloudUploadRasterBackends_1"))
   rasterFilename <- Filenames(obj)
   out <- NULL
-  if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0) {
+  if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0 && all(nchar(rasterFilename) > 0)) {
     allRelevantFiles <- unique(rasterFilename)
     out <- lapply(allRelevantFiles, function(file) {
       try(retry(quote(googledrive::drive_upload(media = file,  path = cloudFolderID,
@@ -229,9 +229,8 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, outputH
   if (!requireNamespace("googledrive", quietly = TRUE))
     stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
-  #browser(expr = exists("._cloudDownloadRasterBackend_1"))
   rasterFilename <- Filenames(output)
-  if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0) {
+  if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0 && all(nchar(rasterFilename) > 0)) {
     gdriveLs2 <- NULL
     cacheRepoRasterDir <- file.path(cacheRepo, "rasters")
     checkPath(cacheRepoRasterDir, create = TRUE)
