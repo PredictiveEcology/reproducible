@@ -115,32 +115,47 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL,
 #'
 #' Meant for internal use, as there are internal objects as arguments.
 #'
-#' @param newFileName The character string of the local filename that the downloaded object will have
 #' @inheritParams cloudUpload
 #' @inheritParams Cache
-cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
+cloudDownload <- function(outputHash, gdriveLs, cacheRepo, cloudFolderID,
                           drv = getOption("reproducible.drv"),
                           conn = getOption("reproducible.conn", NULL)) {
-  if (!requireNamespace("googledrive", quietly = TRUE))
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
-  #browser(expr = exists("._cloudDownload_1"))
-  messageCache("Downloading cloud copy of ", newFileName,", with cacheId: ", outputHash)
-  localNewFilename <- file.path(tempdir2(), basename2(newFileName))
+  newFileName <- CacheStoredFile(cacheRepo, outputHash) # paste0(outputHash,".rda")
   isInCloud <- gsub(gdriveLs$name,
-                    pattern = paste0("\\.", fileExt(CacheStoredFile(cacheRepo, outputHash))),
+                    pattern = paste0("\\.", fileExt(newFileName)),
                     replacement = "") %in% outputHash
+  output <- NULL
+  if (any(isInCloud)) {
 
-  du <- retry(quote(googledrive::drive_download(file = googledrive::as_id(gdriveLs$id[isInCloud][1]),
-                             path = localNewFilename, # take first if there are duplicates
-                             overwrite = TRUE)))
-  .addTagsRepoCloudDribble(du, outputHash, cacheRepo, drv, conn)
-  output <- loadFile(localNewFilename)
-  output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID, outputHash = outputHash, drv = drv)
-  output <- dealWithClassOnRecovery(output, cacheRepo = cacheRepo,
-                                    cacheId = outputHash,
-                                    drv = drv, conn = conn)
+    if (!requireNamespace("googledrive", quietly = TRUE))
+      stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
+    #browser(expr = exists("._cloudDownload_1"))
+    messageCache("Downloading cloud copy of ", newFileName,", with cacheId: ", outputHash)
+    localNewFilename <- file.path(tempdir2(), basename2(newFileName))
+    # isInCloud <- gsub(gdriveLs$name,
+    #                   pattern = paste0("\\.", fileExt(CacheStoredFile(cacheRepo, outputHash))),
+    #                   replacement = "") %in% outputHash
+
+    du <- retry(quote(googledrive::drive_download(file = googledrive::as_id(gdriveLs$id[isInCloud][1]),
+                                                  path = localNewFilename, # take first if there are duplicates
+                                                  overwrite = TRUE)))
+    # if (is.null(du)) {
+    #   retry(quote(googledrive::drive_rm(gdriveLs[isInCloud,])))
+    #   isInCloud[isInCloud] <- FALSE
+    # } else {
+    #   .CacheIsNew <- FALSE
+    # }
+
+    .addTagsRepoCloudDribble(du, outputHash, cacheRepo, drv, conn)
+    output <- loadFile(localNewFilename)
+    output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID, outputHash = outputHash, drv = drv)
+    output <- dealWithClassOnRecovery(output, cacheRepo = cacheRepo,
+                                      cacheId = outputHash,
+                                      drv = drv, conn = conn)
+
+  }
   output
 }
 
@@ -156,19 +171,22 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
 #'
 #' @keywords internal
 cloudUploadFromCache <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
-                                 outputToSave, drv = getOption("reproducible.drv"),
+                                 outputToSave, gdriveLs, drv = getOption("reproducible.drv"),
                                  conn = getOption("reproducible.conn", NULL)) {
   if (!requireNamespace("googledrive", quietly = TRUE))
     stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
+  cacheIdFileName <- CacheStoredFile(cacheRepo, outputHash)
+  isInCloud <- gsub(gdriveLs$name,
+                    pattern = paste0("\\.", fileExt(cacheIdFileName)),
+                    replacement = "") %in% outputHash
   #browser(expr = exists("._cloudUploadFromCache_1"))
   du <- emptyDribble()
   if (!any(isInCloud)) {
-    cacheIdFileName <- CacheStoredFile(cacheRepo, outputHash)
     newFileName <- basename2(cacheIdFileName)
 
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
-    messageCache("Uploading new cached object ", newFileName,", with cacheId: ",
+    messageCache("Uploading object ", newFileName,", with cacheId: ",
             outputHash," to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id)
     du <- try(retry(quote(googledrive::drive_upload(media = cacheIdFileName,
                                        path = googledrive::as_id(cloudFolderID), name = newFileName,

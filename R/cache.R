@@ -787,14 +787,10 @@ setMethod(
                           add = TRUE,
                           drv = drv, conn = conn)
           if (useCloud) {
-            # browser(expr = exists("._Cache_7b"))
             # Here, upload local copy to cloud folder
-            browser()
             cloudDribble <- try(cloudUploadFromCache(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
-                                                     output, drv = drv, conn = conn))
+                                                     output, gdriveLs = gdriveLs, drv = drv, conn = conn))
 
-            # cloudDribble <- try(retry(quote(cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo,
-            #                                                cloudFolderID, output, drv = drv, conn = conn))))
           }
 
           return(output)
@@ -820,23 +816,10 @@ setMethod(
       if (useCloud) {
         # browser(expr = exists("._Cache_9"))
         # Here, download cloud copy to local folder, skip the running of FUN
-        newFileName <- CacheStoredFile(cacheRepo, outputHash) # paste0(outputHash,".rda")
-        isInCloud <- gsub(gdriveLs$name,
-                          pattern = paste0("\\.", fileExt(CacheStoredFile(cacheRepo, outputHash))),
-                          replacement = "") %in% outputHash
-        if (any(isInCloud)) {
-          output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
-                                  drv = drv)
-          # output <- dealWithClassOnRecovery(outputFromCloud, cacheRepo = cacheRepo,
-          #                                cacheId = outputHash,
-          #                                drv = drv, conn = conn)
-          if (is.null(output)) {
-            retry(quote(googledrive::drive_rm(gdriveLs[isInCloud,])))
-            isInCloud[isInCloud] <- FALSE
-          } else {
-            .CacheIsNew <- FALSE
-          }
-        }
+        output <- cloudDownload(outputHash, gdriveLs, cacheRepo, cloudFolderID,
+                                drv = drv, conn = conn)
+        if (!is.null(output))
+          .CacheIsNew <- FALSE
       }
 
       # check that it didn't come from cloud or failed to find complete cloud (i.e., output is NULL)
@@ -1100,7 +1083,7 @@ setMethod(
         # Here, upload local copy to cloud folder if it isn't already there
         # browser(expr = exists("._Cache_15"))
         cloudDribble <- try(cloudUploadFromCache(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
-                                         outputToSave, rasters, drv = drv, conn = conn))
+                                         outputToSave, gdriveLs = gdriveLs, drv = drv, conn = conn))
 
       }
 
