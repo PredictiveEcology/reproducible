@@ -181,7 +181,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
 
     retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
     clearCache(x = tmpdir)
-    newDir <- retry(quote(googledrive::drive_mkdir(rndstr(1,6))))
+    newDir <- retry(quote(googledrive::drive_mkdir(rndstr(1,6), path = .pkgEnv$testsForPkgs)))
     cloudFolderID = newDir
 
     testRasterInCloud(".grd", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
