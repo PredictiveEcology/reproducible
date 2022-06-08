@@ -185,7 +185,6 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
     testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
                             opts = list("reproducible.ask" = FALSE))
 
-    # googledrive::drive_auth("predictiveecology@gmail.com")
     on.exit({
       try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
       try(googledrive::drive_rm(testsForPkgsDir), silent = TRUE)
@@ -265,5 +264,54 @@ test_that("prepInputs works with team drives", {
       wb <- prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
                        alsoExtract = "similar", fun = "shapefile", shared_drive = TRUE)
     }
+    expect_true(is(wb, "Spatial"))
+
   }
+})
+
+test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
+  skip_if_no_token()
+  if (interactive()) {
+    testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
+                            opts = list("reproducible.ask" = FALSE))
+
+    opts <- options("reproducible.cachePath" = tmpdir)
+    on.exit({
+      try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
+      try(googledrive::drive_rm(testsForPkgsDir), silent = TRUE)
+      options(opts)
+      testOnExit(testInitOut)
+    }, add = TRUE)
+    clearCache(x = tmpCache)
+    clearCache(x = tmpdir)
+    sharedDriveFolder <- googledrive::as_id("1vuXsTRma-vySEAvkofP8aTUqZhUVsxd0")
+    testsForPkgsDir <- try(googledrive::drive_mkdir(sharedDriveFolder, overwrite = FALSE), silent = TRUE)
+
+    # sharedDriveFolder <- as_id("1egHoGCBEV137aQroaz1yPFmYQ24enKdJ")
+    newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = sharedDriveFolder)))
+
+
+
+    if (FALSE) {
+      testsForPkgsDir <- try(googledrive::drive_mkdir(name = .pkgEnv$testsForPkgs, overwrite = FALSE), silent = TRUE)
+
+      newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
+    }
+
+    cloudFolderID = newDir
+
+    a <- Cache(rnorm, 17, useCloud = TRUE, cloudFolderID = cloudFolderID)
+    gdriveLs1 <- googledrive::drive_ls(cloudFolderID)
+
+    b <- Cache(rnorm, 16, useCloud = TRUE, cloudFolderID = cloudFolderID)
+    gdriveLs2 <- googledrive::drive_ls(cloudFolderID)
+
+    d <- Cache(runif, 16, useCloud = TRUE, cloudFolderID = cloudFolderID)
+    gdriveLs3 <- googledrive::drive_ls(cloudFolderID)
+
+    clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID, userTags = "rnorm")
+    gdriveLs4 <- googledrive::drive_ls(cloudFolderID)
+
+    clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
+
 })
