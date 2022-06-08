@@ -159,6 +159,7 @@ cloudDownload <- function(outputHash, gdriveLs, cacheRepo, cloudFolderID,
 #' @inheritParams cloudUpload
 #'
 #' @keywords internal
+#'
 cloudUpload <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
                                  outputToSave, gdriveLs, drv = getOption("reproducible.drv"),
                                  conn = getOption("reproducible.conn", NULL)) {
@@ -313,5 +314,28 @@ cloudCacheClearAll <- function(cloudFolderID = getOption("reproducible.cloudFold
     googledrive::drive_trash(gdriveLs)
   } else {
     message("No cloudFolderID supplied; nothing to do")
+  }
+}
+
+#' @rdname cloudCache
+#' @inheritParams Cache
+#' @export
+#'
+#' @details
+#' \code{cloudCacheBrowse} will open up a browser at the current cloudFolderID.
+#'
+cloudCacheBrowse <- function(cloudFolderID = getOption("reproducible.cloudFolderID", NULL)) {
+  if (!is.null(cloudFolderID)) {
+    cfid <- if (is(cloudFolderID, "dribble")) {
+      cloudFolderID$id
+    } else if (is(cloudFolderID, "drive_id")) {
+      cloudFolderID
+    } else if (is(cloudFolderID, "character")) {
+      googledrive::as_id(cloudFolderID)
+    } else {
+      stop("cloudFolderID must be a dribble, drive_id or character string")
+    }
+
+    browseURL(file.path("https://drive.google.com/drive/folders/", cfid))
   }
 }
