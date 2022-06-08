@@ -789,9 +789,8 @@ setMethod(
           if (useCloud) {
             # browser(expr = exists("._Cache_7b"))
             # Here, upload local copy to cloud folder
-            cu <- try(retry(quote(isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo,
-                                                           cloudFolderID, output))))
-            .updateTagsRepo(outputHash, cacheRepo, "inCloud", "TRUE", drv = drv, conn = conn)
+            cloudDribble <- try(retry(quote(cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo,
+                                                           cloudFolderID, output, drv = drv, conn = conn))))
           }
 
           return(output)
@@ -822,11 +821,11 @@ setMethod(
                           pattern = paste0("\\.", fileExt(CacheStoredFile(cacheRepo, outputHash))),
                           replacement = "") %in% outputHash
         if (any(isInCloud)) {
-          outputFromCloud <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
+          output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
                                   drv = drv)
-          output <- dealWithClassOnRecovery(outputFromCloud, cacheRepo = cacheRepo,
-                                         cacheId = outputHash,
-                                         drv = drv, conn = conn)
+          # output <- dealWithClassOnRecovery(outputFromCloud, cacheRepo = cacheRepo,
+          #                                cacheId = outputHash,
+          #                                drv = drv, conn = conn)
           if (is.null(output)) {
             retry(quote(googledrive::drive_rm(gdriveLs[isInCloud,])))
             isInCloud[isInCloud] <- FALSE
@@ -1096,10 +1095,9 @@ setMethod(
       if (useCloud && .CacheIsNew) {
         # Here, upload local copy to cloud folder if it isn't already there
         # browser(expr = exists("._Cache_15"))
-        cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
-                                         outputToSave, rasters))
-        if (is(cufc, "try-error"))
-          .updateTagsRepo(outputHash, cacheRepo, "inCloud", "FALSE", drv = drv, conn = conn)
+        cloudDribble <- try(cloudUploadFromCache(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
+                                         outputToSave, rasters, drv = drv, conn = conn))
+
       }
 
       verboseDF2(verbose, fnDetails$functionName, startSaveTime)
@@ -1835,7 +1833,6 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
       output <- lapply(output, function(out) dealWithClassOnRecovery(out, cacheRepo, cacheId,
                                                                    drv, conn))
     } else {
-      browser()
       origFilenames <- if (is(output, "Raster")) {
         Filenames(output) # This is legacy piece which allows backwards compatible
       } else {

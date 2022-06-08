@@ -119,7 +119,9 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL,
 #' @param gdriveLs The result of \code{googledrive::drive_ls(googledrive::as_id(cloudFolderID), pattern = "outputHash")}
 #' @param output The output object of FUN that was run in \code{Cache}
 #' @inheritParams Cache
-cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output) {
+cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output,
+                        drv = getOption("reproducible.drv"),
+                        conn = getOption("reproducible.conn", NULL)) {
   if (!requireNamespace("googledrive", quietly = TRUE))
       stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
@@ -132,6 +134,7 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
                     pattern = paste0("\\.", fileExt(CacheStoredFile(cacheRepo, outputHash))),
                     replacement = "") %in% outputHash
 
+  du <- emptyDribble()
   if (!any(isInCloud)) {
     messageCache("Uploading local copy of ", artifactFileName,", with cacheId: ",
                  outputHash," to cloud folder")
@@ -150,8 +153,18 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
         numRetries <- 6
       }
     }
-    cloudUploadRasterBackends(obj = output, cloudFolderID)
+    cu <- cloudUploadRasterBackends(obj = output, cloudFolderID)
+    if (NROW(cu))
+      du <- rbind(du, cu[[1]])
+    # .updateTagsRepo(outputHash, cacheRepo, "inCloud", "TRUE", drv = drv, conn = conn)
+    .addTagsRepoCloudDribble(drib = du, outputHash, cacheRepo, drv = drv, conn = conn)
+    # lapply(du$name, function(nam) .addTagsRepo(outputHash, cacheRepo, "inCloudFile",
+    #                                                      nam, drv = drv, conn = conn))
+    # lapply(du$id, function(id) .addTagsRepo(outputHash, cacheRepo, "inCloudID",
+    #                                                   id, drv = drv, conn = conn))
+
   }
+  return(du)
 }
 
 #' Download from cloud, if necessary
@@ -174,11 +187,16 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
                     pattern = paste0("\\.", fileExt(CacheStoredFile(cacheRepo, outputHash))),
                     replacement = "") %in% outputHash
 
-  retry(quote(googledrive::drive_download(file = googledrive::as_id(gdriveLs$id[isInCloud][1]),
+  du <- retry(quote(googledrive::drive_download(file = googledrive::as_id(gdriveLs$id[isInCloud][1]),
                              path = localNewFilename, # take first if there are duplicates
                              overwrite = TRUE)))
+  .addTagsRepoCloudDribble(du, outputHash, cacheRepo, drv, conn)
   output <- loadFile(localNewFilename)
-  output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID, drv = drv)
+  output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID, outputHash = outputHash, drv = drv)
+  output <- dealWithClassOnRecovery(output, cacheRepo = cacheRepo,
+                                    cacheId = outputHash,
+                                    drv = drv, conn = conn)
+
   output
 }
 
@@ -195,11 +213,13 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
 #'
 #' @keywords internal
 cloudUploadFromCache <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
-                                 outputToSave, rasters) {
+                                 outputToSave, rasters, drv = getOption("reproducible.drv"),
+                                 conn = getOption("reproducible.conn", NULL)) {
   if (!requireNamespace("googledrive", quietly = TRUE))
     stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
   #browser(expr = exists("._cloudUploadFromCache_1"))
+  du <- emptyDribble()
   if (!any(isInCloud)) {
     cacheIdFileName <- CacheStoredFile(cacheRepo, outputHash)
     newFileName <- basename2(cacheIdFileName)
@@ -214,7 +234,18 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cacheRepo, cloudFolderID
       return(du)
     }
   }
-  cloudUploadRasterBackends(obj = outputToSave, cloudFolderID)
+
+  cu <- cloudUploadRasterBackends(obj = outputToSave, cloudFolderID)
+  if (NROW(cu))
+    du <- rbind(du, cu[[1]])
+
+  .addTagsRepoCloudDribble(drib = du, outputHash, cacheRepo, drv = drv, conn = conn)
+  # lapply(du$name, function(nam) .addTagsRepo(outputHash, cacheRepo, "inCloudFile",
+  #                                            nam, drv = drv, conn = conn))
+  # lapply(du$id, function(id) .addTagsRepo(outputHash, cacheRepo, "inCloudID",
+  #                                         id, drv = drv, conn = conn))
+
+  du
 }
 
 cloudUploadRasterBackends <- function(obj, cloudFolderID) {
@@ -234,7 +265,7 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
   return(invisible(out))
 }
 
-cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID,
+cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, outputHash,
                                        drv = getOption("reproducible.drv"),
                                        conn = getOption("reproducible.conn", NULL)) {
   if (!requireNamespace("googledrive", quietly = TRUE))
@@ -256,9 +287,10 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID,
       filenameMismatches <- unlist(lapply(seq_len(NROW(gdriveLs2)), function(idRowNum) {
         localNewFilename <- file.path(cacheRepoRasterDir, basename2(gdriveLs2$name[idRowNum]))
         filenameMismatch <- identical(localNewFilename, rasterFilename)
-        retry(quote(googledrive::drive_download(file = gdriveLs2[idRowNum,],
+        du <- retry(quote(googledrive::drive_download(file = gdriveLs2[idRowNum,],
                                    path = localNewFilename, # take first if there are duplicates
                                    overwrite = TRUE)))
+        .addTagsRepoCloudDribble(drib = du, outputHash, cacheRepo, drv = drv, conn = conn)
         return(filenameMismatch)
 
       }))
@@ -296,4 +328,17 @@ isOrHasRaster <- function(obj) {
     is(obj, "Raster")
   }
   return(rasters)
+}
+
+emptyDribble <- function() {
+  data.frame(name = character(), id = character(), class = I(list()))
+}
+
+.addTagsRepoCloudDribble <- function(drib, outputHash, cacheRepo, drv, conn) {
+  .updateTagsRepo(outputHash, cacheRepo, "inCloud", "TRUE", drv = drv, conn = conn)
+  lapply(drib$name, function(nam) .addTagsRepo(outputHash, cacheRepo, "inCloudFile",
+                                             nam, drv = drv, conn = conn))
+  lapply(drib$id, function(id) .addTagsRepo(outputHash, cacheRepo, "inCloudID",
+                                          id, drv = drv, conn = conn))
+
 }

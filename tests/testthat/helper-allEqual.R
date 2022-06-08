@@ -391,6 +391,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
     r1Orig <- brick(r1Orig, r1Orig2)
     r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
   }
+  names(r1Orig) <- "layer1"
   r1End <- Cache(fn, r1Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   on.exit({
     clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
@@ -402,6 +403,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   driveLsBefore <- googledrive::drive_ls(cloudFolderID)
   r5Orig <- raster(extent(0,200, 0, 200), vals = 5, res = 1)
   r5Orig <- writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  names(r5Orig) <- "layer1"
   if (mc$type == "Stack") {
     r5Orig2 <- writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
     r5Orig <- stack(r5Orig, r5Orig2)
