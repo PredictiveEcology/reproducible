@@ -237,8 +237,9 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, outputH
     checkPath(cacheRepoRasterDir, create = TRUE)
     simpleFilenames <- unique(filePathSansExt(basename2(unlist(rasterFilename))))
     retry(quote({
-      gdriveLs2 <- googledrive::drive_ls(path = as_id(cloudFolderID),
-                            pattern = paste(collapse = "|", simpleFilenames))
+      gdriveLs2 <- googledrive::drive_ls(
+        path = googledrive::as_id(cloudFolderID),
+        pattern = paste(collapse = "|", simpleFilenames))
     }))
 
     if (all(simpleFilenames %in% filePathSansExt(gdriveLs2$name))) {
@@ -305,9 +306,8 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds, cacheDT) {
   if (is.null(cloudFolderID)) {
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cacheRepo = x)
   }
-  browser()
   cloudIDs <- cacheDT[cacheId %in% cacheIds & tagKey %in% c("inCloudFile", "inCloudID")]
-  du <- googledrive::as_dribble(as_id(cloudIDs$tagValue[cloudIDs$tagKey == "inCloudID"]))
-  retry(quote(googledrive::drive_rm(du$id)))
+  du <- googledrive::as_dribble(googledrive::as_id(cloudIDs$tagValue[cloudIDs$tagKey == "inCloudID"]))
+  retry(quote(googledrive::drive_trash(du$id)))
 }
 

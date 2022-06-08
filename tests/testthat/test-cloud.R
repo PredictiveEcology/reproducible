@@ -313,5 +313,17 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
     gdriveLs4 <- googledrive::drive_ls(cloudFolderID)
 
     clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
+    gdriveLs5 <- googledrive::drive_ls(cloudFolderID)
+
+    ras <- raster::raster(extent(c(0, 10, 0, 10)), vals = 1:100)
+    ras <- .writeRaster(ras, "hi.grd")
+
+    fn <- function(raster) {
+      return(raster)
+    }
+
+    rasOut <- Cache(fn, ras, useCloud = TRUE, cloudFolderID = cloudFolderID)
+
+
 
 })
