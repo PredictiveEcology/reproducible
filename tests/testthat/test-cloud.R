@@ -313,18 +313,37 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
     expect_true(NROW(gdriveLs5) == 0)
 
     # Now try a raster
-    ras <- raster::raster(extent(c(0, 10, 0, 10)), vals = 1:100)
-    ras <- .writeRaster(ras, "hi.grd", overwrite = TRUE)
 
-    fn <- function(raster) {
-      return(raster)
+    fn <- function(seed) {
+      ras <- raster::raster(extent(c(0, 10, 0, 10)), vals = sample(100))
+      ras <- .writeRaster(ras, "hi.grd", overwrite = TRUE)
+      return(ras)
     }
 
-    rasOut <- Cache(fn, ras, useCloud = TRUE, cloudFolderID = cloudFolderID)
+    rasOut <- Cache(fn, seed = 123, useCloud = TRUE, cloudFolderID = cloudFolderID)
+    expect_true(attr(rasOut, ".Cache")$newCache)
+
+    if (FALSE) {
+      dput(as.character(cloudFolderID$id)) # copy this to next line ...
+      # On a different machine -- run this:
+      cfid <- "1gPa1aeRF8e6nxZ-fIqY6qj3SJ_4Q2YxK"
+      clearCache(useCloud = FALSE)
+      fn <- function(seed) {
+        ras <- raster::raster(extent(c(0, 10, 0, 10)), vals = sample(100))
+        ras <- .writeRaster(ras, "hi.grd", overwrite = TRUE)
+        return(ras)
+      }
+      rasOut <- Cache(fn, seed = 123, useCloud = TRUE, cloudFolderID = cfid)
+
+    }
+
+
+    # now move to a new folder so it isn't "getting it right" for the wrong reasons (i.e., files already in place)
     setwd(tempdir())
     clearCache(useCloud = FALSE)
-    rasOut <- Cache(fn, ras, useCloud = TRUE, cloudFolderID = cloudFolderID)
-    expect_true(all(Filenames(rasOut) != Filenames(ras)))
+    rasOut <- Cache(fn, seed = 123, useCloud = TRUE, cloudFolderID = cloudFolderID)
+    expect_true(length(Filenames(rasOut)) == 2)
+    expect_false(attr(rasOut, ".Cache")$newCache)
 
     try(googledrive::drive_trash(cloudFolderID))
   }
