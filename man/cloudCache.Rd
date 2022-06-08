@@ -3,6 +3,7 @@
 \name{cloudDownload}
 \alias{cloudDownload}
 \alias{cloudCacheClearAll}
+\alias{cloudCacheBrowse}
 \title{Download from cloud, if necessary}
 \usage{
 cloudDownload(
@@ -17,6 +18,8 @@ cloudDownload(
 cloudCacheClearAll(
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL)
 )
+
+cloudCacheBrowse(cloudFolderID = getOption("reproducible.cloudFolderID", NULL))
 }
 \arguments{
 \item{cacheRepo}{A repository used for storing cached objects.
@@ -45,4 +48,7 @@ Meant for internal use, as there are internal objects as arguments.
 This is a convenience function that removes all the files in \code{cloudFolderID}.
 To fully remove the entire \code{cloudFolderID} directory, use
 \code{googledrive::drive_trash(cloudFolderID)}.
+}
+\details{
+\code{cloudCacheBrowse} will open up a browser at the current cloudFolderID.
 }
