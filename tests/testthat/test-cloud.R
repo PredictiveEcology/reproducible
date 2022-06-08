@@ -195,7 +195,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
     testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
                             opts = list("reproducible.ask" = FALSE))
 
-    googledrive::drive_auth("predictiveecology@gmail.com")
+    # googledrive::drive_auth("predictiveecology@gmail.com")
     on.exit({
       testOnExit(testInitOut)
       retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
@@ -203,6 +203,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
     }, add = TRUE)
     clearCache(x = tmpCache)
     clearCache(x = tmpdir)
+    testsForPkgsDir <- try(googledrive::drive_mkdir(name = .pkgEnv$testsForPkgs, overwrite = FALSE), silent = TRUE)
     newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
     cloudFolderID = newDir
 
