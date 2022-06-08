@@ -30,6 +30,10 @@
 #'     systems, but much slower than \code{fastdigest::fastdigest}.
 #'     So, if all caching is happening on a single machine, \code{"fast"} would be a good setting.
 #'   }
+#'   \item{\code{cloudFolderID}}{
+#'     Default \code{NULL}. A character string which is the "google id" of a folder where
+#'     the cloud caching will occur. This will only be used if `useCloud = TRUE`.
+#'   }
 #'   \item{\code{conn}}{
 #'     Default: \code{NULL}. Sets a specific connection to a database, e.g.,
 #'     \code{dbConnect(drv = RSQLite::SQLite())} or \code{dbConnect(drv = RPostgres::Postgres()}.
@@ -174,6 +178,7 @@ reproducibleOptions <- function() {
     reproducible.cachePath = .reproducibleTempCacheDir(),
     reproducible.cacheSaveFormat = "rds",
     reproducible.cacheSpeed = "slow",
+    reproducible.cloudFolderID = NULL,
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
     reproducible.drv = RSQLite::SQLite(), # "fst",
