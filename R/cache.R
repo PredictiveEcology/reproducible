@@ -1837,7 +1837,7 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
         Filenames(output) # This is legacy piece which allows backwards compatible
       } else {
         orig <- output$origRaster
-        if (dir.exists(dirname(orig))) {
+        if (dir.exists(unique(dirname(orig)))) {
           orig
         } else {
           normalizePath(file.path(getwd(), output$origRasterRelativePath, basename(orig)),
