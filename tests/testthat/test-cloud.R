@@ -287,7 +287,7 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
     opts <- options("reproducible.cachePath" = tmpdir, "reproducible.cloudFolderID" = cloudFolderID)
     on.exit({
       try(googledrive::drive_trash(googledrive::as_id(newDir$id)), silent = TRUE)
-      try(googledrive::drive_trash(testsForPkgsDir), silent = TRUE)
+      # try(googledrive::drive_trash(testsForPkgsDir), silent = TRUE)
       options(opts)
       testOnExit(testInitOut)
     }, add = TRUE)
@@ -301,11 +301,16 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
     d <- Cache(runif, 16, useCloud = TRUE, cloudFolderID = cloudFolderID)
     gdriveLs3 <- googledrive::drive_ls(cloudFolderID)
 
+    expect_true(NROW(gdriveLs1) == 1)
+    expect_true(NROW(gdriveLs2) == 2)
+    expect_true(NROW(gdriveLs3) == 3)
     clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID, userTags = "rnorm")
     gdriveLs4 <- googledrive::drive_ls(cloudFolderID)
+    expect_true(NROW(gdriveLs4) == 1)
 
     clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
     gdriveLs5 <- googledrive::drive_ls(cloudFolderID)
+    expect_true(NROW(gdriveLs5) == 0)
 
     # Now try a raster
     ras <- raster::raster(extent(c(0, 10, 0, 10)), vals = 1:100)
@@ -321,7 +326,7 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
     rasOut <- Cache(fn, ras, useCloud = TRUE, cloudFolderID = cloudFolderID)
     expect_true(all(Filenames(rasOut) != Filenames(ras)))
 
-    try(googledrive::drive_trash())
+    try(googledrive::drive_trash(cloudFolderID))
   }
 
 
