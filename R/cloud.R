@@ -117,6 +117,8 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL,
 #'
 #' @inheritParams cloudUpload
 #' @inheritParams Cache
+#' @rdname cloudCache
+#' @export
 cloudDownload <- function(outputHash, gdriveLs, cacheRepo, cloudFolderID,
                           drv = getOption("reproducible.drv"),
                           conn = getOption("reproducible.conn", NULL)) {
@@ -170,7 +172,7 @@ cloudDownload <- function(outputHash, gdriveLs, cacheRepo, cloudFolderID,
 #' @inheritParams cloudUpload
 #'
 #' @keywords internal
-cloudUploadFromCache <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
+cloudUpload <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
                                  outputToSave, gdriveLs, drv = getOption("reproducible.drv"),
                                  conn = getOption("reproducible.conn", NULL)) {
   if (!requireNamespace("googledrive", quietly = TRUE))
@@ -301,6 +303,7 @@ emptyDribble <- function() {
 
 }
 
+
 rmFromCloudFolder <- function(cloudFolderID, x, cacheIds, cacheDT) {
   if (is.null(cloudFolderID)) {
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cacheRepo = x)
@@ -310,3 +313,21 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds, cacheDT) {
   retry(quote(googledrive::drive_trash(du$id)))
 }
 
+
+#' Clear the cloudFolderID
+#'
+#' This is a convenience function that removes all the files in \code{cloudFolderID}.
+#' To fully remove the entire \code{cloudFolderID} directory, use
+#' \code{googledrive::drive_trash(cloudFolderID)}.
+#'
+#' @inheritParams Cache
+#' @export
+#' @rdname cloudCache
+cloudCacheClearAll <- function(cloudFolderID = getOption("reproducible.cloudFolderID", NULL)) {
+  if (!is.null(cloudFolderID)) {
+    gdriveLs <- googledrive::drive_ls(cloudFolderID)
+    googledrive::drive_trash(gdriveLs)
+  } else {
+    message("No cloudFolderID supplied; nothing to do")
+  }
+}

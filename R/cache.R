@@ -788,7 +788,7 @@ setMethod(
                           drv = drv, conn = conn)
           if (useCloud) {
             # Here, upload local copy to cloud folder
-            cloudDribble <- try(cloudUploadFromCache(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
+            cloudDribble <- try(cloudUpload(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
                                                      output, gdriveLs = gdriveLs, drv = drv, conn = conn))
 
           }
@@ -1082,7 +1082,7 @@ setMethod(
       if (useCloud && .CacheIsNew) {
         # Here, upload local copy to cloud folder if it isn't already there
         # browser(expr = exists("._Cache_15"))
-        cloudDribble <- try(cloudUploadFromCache(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
+        cloudDribble <- try(cloudUpload(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
                                          outputToSave, gdriveLs = gdriveLs, drv = drv, conn = conn))
 
       }
@@ -1823,13 +1823,15 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
       origFilenames <- if (is(output, "Raster")) {
         Filenames(output) # This is legacy piece which allows backwards compatible
       } else {
+        # This is trying to be a relative path
         orig <- output$origRaster
-        if (dir.exists(unique(dirname(orig)))) {
-          orig
-        } else {
-          normalizePath(file.path(getwd(), output$origRasterRelativePath, basename(orig)),
+        browser()
+        #if (dir.exists(unique(dirname(orig)))) {
+        #  orig
+        #} else {
+        normalizePath(file.path(getwd(), output$origRasterRelativePath, basename(orig)),
                         winslash = "/", mustWork = FALSE)
-        }
+        #}
       }
 
       filesExist <- file.exists(origFilenames)

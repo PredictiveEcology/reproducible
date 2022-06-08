@@ -2,25 +2,23 @@
 % Please edit documentation in R/cloud.R
 \name{cloudDownload}
 \alias{cloudDownload}
+\alias{cloudCacheClearAll}
 \title{Download from cloud, if necessary}
 \usage{
 cloudDownload(
   outputHash,
-  newFileName,
   gdriveLs,
   cacheRepo,
   cloudFolderID,
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL)
 )
+
+cloudCacheClearAll(
+  cloudFolderID = getOption("reproducible.cloudFolderID", NULL)
+)
 }
 \arguments{
-\item{outputHash}{The \code{cacheId} of the object to upload}
-
-\item{newFileName}{The character string of the local filename that the downloaded object will have}
-
-\item{gdriveLs}{The result of \code{googledrive::drive_ls(googledrive::as_id(cloudFolderID), pattern = "outputHash")}}
-
 \item{cacheRepo}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
@@ -43,4 +41,8 @@ a DBIConnection object, as returned by \code{dbConnect()}}
 }
 \description{
 Meant for internal use, as there are internal objects as arguments.
+
+This is a convenience function that removes all the files in \code{cloudFolderID}.
+To fully remove the entire \code{cloudFolderID} directory, use
+\code{googledrive::drive_trash(cloudFolderID)}.
 }

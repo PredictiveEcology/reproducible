@@ -2,30 +2,26 @@
 % Please edit documentation in R/cloud.R
 \name{cloudUpload}
 \alias{cloudUpload}
-\title{Upload to cloud, if necessary}
+\title{Upload a file to cloud directly from local \code{cacheRepo}}
 \usage{
-cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output)
+cloudUpload(
+  isInCloud,
+  outputHash,
+  cacheRepo,
+  cloudFolderID,
+  outputToSave,
+  gdriveLs,
+  drv = getOption("reproducible.drv"),
+  conn = getOption("reproducible.conn", NULL)
+)
 }
 \arguments{
-\item{isInRepo}{A data.table with the information about an object that is in the local cacheRepo}
+\item{isInCloud}{A logical indicating whether an \code{outputHash} is in the cloud already.}
 
-\item{outputHash}{The \code{cacheId} of the object to upload}
-
-\item{gdriveLs}{The result of \code{googledrive::drive_ls(googledrive::as_id(cloudFolderID), pattern = "outputHash")}}
-
-\item{cacheRepo}{A repository used for storing cached objects.
-This is optional if \code{Cache} is used inside a SpaDES module.}
-
-\item{cloudFolderID}{A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
-If left as \code{NULL}, the function will create a cloud folder with name from last
-two folder levels of the \code{cacheRepo} path, :
-\code{paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))}.
-This \code{cloudFolderID} will be added to \code{options("reproducible.cloudFolderID")},
-but this will not persist across sessions. If this is a character string, it will
-treat this as a folder name to create or use on GoogleDrive.}
-
-\item{output}{The output object of FUN that was run in \code{Cache}}
+\item{outputToSave}{Only required if \code{any(rasters) == TRUE}.
+This is the \code{Raster*} object.}
 }
 \description{
 Meant for internal use, as there are internal objects as arguments.
 }
+\keyword{internal}
