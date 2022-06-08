@@ -789,8 +789,12 @@ setMethod(
           if (useCloud) {
             # browser(expr = exists("._Cache_7b"))
             # Here, upload local copy to cloud folder
-            cloudDribble <- try(retry(quote(cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo,
-                                                           cloudFolderID, output, drv = drv, conn = conn))))
+            browser()
+            cloudDribble <- try(cloudUploadFromCache(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
+                                                     output, drv = drv, conn = conn))
+
+            # cloudDribble <- try(retry(quote(cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo,
+            #                                                cloudFolderID, output, drv = drv, conn = conn))))
           }
 
           return(output)
