@@ -324,8 +324,11 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
     expect_true(attr(rasOut, ".Cache")$newCache)
 
     if (FALSE) {
+      # 1. make sure reproducible is up to date
+      # 2. run this here to get a character string to put in next line
       dput(as.character(cloudFolderID$id)) # copy this to next line ...
       # On a different machine -- run this:
+      Require::Require("PredictiveEcology/reproducible@fst (> 1.2.9.9000)")
       cfid <- "1gPa1aeRF8e6nxZ-fIqY6qj3SJ_4Q2YxK"
       clearCache(useCloud = FALSE)
       fn <- function(seed) {
@@ -334,6 +337,8 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
         return(ras)
       }
       rasOut <- Cache(fn, seed = 123, useCloud = TRUE, cloudFolderID = cfid)
+      raster::plot(rasOut) # should show a raster with random colours
+      Filenames(rasOut)    # should be length 2
 
     }
 
