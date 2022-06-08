@@ -275,14 +275,6 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
     testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
                             opts = list("reproducible.ask" = FALSE))
 
-    opts <- options("reproducible.cachePath" = tmpdir)
-    on.exit({
-      try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
-      try(googledrive::drive_rm(testsForPkgsDir), silent = TRUE)
-      options(opts)
-      testOnExit(testInitOut)
-    }, add = TRUE)
-    clearCache(x = tmpCache)
     clearCache(x = tmpdir)
     sharedDriveFolder <- googledrive::as_id("1vuXsTRma-vySEAvkofP8aTUqZhUVsxd0")
     testsForPkgsDir <- try(googledrive::drive_mkdir(sharedDriveFolder, overwrite = FALSE), silent = TRUE)
@@ -290,15 +282,15 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
     # sharedDriveFolder <- as_id("1egHoGCBEV137aQroaz1yPFmYQ24enKdJ")
     newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = sharedDriveFolder)))
 
-
-
-    if (FALSE) {
-      testsForPkgsDir <- try(googledrive::drive_mkdir(name = .pkgEnv$testsForPkgs, overwrite = FALSE), silent = TRUE)
-
-      newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
-    }
-
     cloudFolderID = newDir
+
+    opts <- options("reproducible.cachePath" = tmpdir, "reproducible.cloudFolderID" = cloudFolderID)
+    on.exit({
+      try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
+      try(googledrive::drive_rm(testsForPkgsDir), silent = TRUE)
+      options(opts)
+      testOnExit(testInitOut)
+    }, add = TRUE)
 
     a <- Cache(rnorm, 17, useCloud = TRUE, cloudFolderID = cloudFolderID)
     gdriveLs1 <- googledrive::drive_ls(cloudFolderID)
@@ -315,15 +307,88 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
     clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
     gdriveLs5 <- googledrive::drive_ls(cloudFolderID)
 
+    # Now try a raster
     ras <- raster::raster(extent(c(0, 10, 0, 10)), vals = 1:100)
-    ras <- .writeRaster(ras, "hi.grd")
+    ras <- .writeRaster(ras, "hi.grd", overwrite = TRUE)
 
     fn <- function(raster) {
       return(raster)
     }
 
     rasOut <- Cache(fn, ras, useCloud = TRUE, cloudFolderID = cloudFolderID)
+    setwd(tempdir())
+    clearCache(useCloud = FALSE)
+    rasOut <- Cache(fn, ras, useCloud = TRUE, cloudFolderID = cloudFolderID)
+    expect_true(all(Filenames(rasOut) != Filenames(ras)))
 
 
 
+})
+
+
+test_that("test individual useCloud family", {
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  skip_if_no_token()
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  on.exit({
+    testOnExit(testInitOut)
+    googledrive::drive_rm(googledrive::as_id(cloudFolderID))
+    googledrive::drive_rm(googledrive::as_id(tmpCloudFolderID))
+  }, add = TRUE)
+
+  ras <- raster(extent(0,1,0,1), res  = 1, vals = 1)
+  ras <- writeRaster(ras, file = tmpfile[1], overwrite = TRUE)
+
+  gdriveLs1 <- data.frame(name = "GADM", id = "sdfsd", drive_resource = list(sdfsd = 1))
+  expect_warning({
+    tmpCloudFolderID <- checkAndMakeCloudFolderID(create = TRUE)
+  }, "No cloudFolderID supplied")
+  gdriveLs <- driveLs(cloudFolderID = NULL, "sdfsdf")
+  expect_true(NROW(gdriveLs) == 0)
+  expect_is(checkAndMakeCloudFolderID("testy"), "character")
+  cloudFolderID <- checkAndMakeCloudFolderID("testy", create = TRUE)
+  # testthat::with_mock(
+  #   "reproducible::retry" = function(..., retries = 1) TRUE,
+  #   {
+  #       mess1 <- capture_messages(expect_error(
+  #         cloudUploadFromCache( isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
+  #                     gdriveLs = gdriveLs1, cacheRepo = tmpCache)))
+  #   })
+  # expect_true(grepl("Uploading local copy of", mess1))
+  # expect_true(grepl("cacheId\\: sdfsiodfja to cloud folder", mess1))
+
+  a <- cloudUploadRasterBackends(ras, cloudFolderID = cloudFolderID)
+  mess1 <- capture_messages(expect_error(expect_warning({
+    a <- cloudDownload(outputHash = "sdfsd", newFileName = "test.tif",
+                       gdriveLs = gdriveLs1, cloudFolderID = "testy")
+  })))
+  expect_true(grepl("Downloading cloud copy of test\\.tif", mess1))
+  testthat::with_mock(
+    "reproducible::retry" = function(..., retries = 1) TRUE,
+    {
+      # cloudFolderID can't be meaningless "character", but retry is TRUE
+      warns <- capture_warnings({
+        err <- capture_error({
+          cloudDownloadRasterBackend(output = ras, cacheRepo = tmpCache, cloudFolderID = "character")
+        })
+      })
+      expect_true(is.null(err))
+    })
+
+  testthat::with_mock(
+    "reproducible::retry" = function(..., retries = 1) TRUE,
+    {
+      mess1 <- capture_messages({
+        err <- capture_error({
+          cloudUpload(isInCloud = FALSE, outputHash = "sdsdfs", saved = "life",
+                               cacheRepo = tmpCache)
+        })
+      })
+      expect_true(all(grepl("cloudFolderID.*is missing, with no default", err)))
+    })
+  expect_true(grepl("Uploading new cached object|with cacheId", mess1))
+
+  a <- new.env(parent = emptyenv())
+  a$a = list(ras, ras)
+  expect_true(all(unlist(isOrHasRaster(a))))
 })
