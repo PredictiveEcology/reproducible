@@ -1825,13 +1825,8 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
       } else {
         # This is trying to be a relative path
         orig <- output$origRaster
-        browser()
-        #if (dir.exists(unique(dirname(orig)))) {
-        #  orig
-        #} else {
         normalizePath(file.path(getwd(), output$origRasterRelativePath, basename(orig)),
                         winslash = "/", mustWork = FALSE)
-        #}
       }
 
       filesExist <- file.exists(origFilenames)
