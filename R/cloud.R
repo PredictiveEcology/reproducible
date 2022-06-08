@@ -218,8 +218,8 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
       try(retry(quote(googledrive::drive_upload(media = file,  path = cloudFolderID,
                                                 name = basename(file), overwrite = FALSE))))
     })
+    out <- do.call(rbind, out)
   }
-  out <- do.call(rbind, out)
   return(invisible(out))
 }
 

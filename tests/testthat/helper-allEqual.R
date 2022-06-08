@@ -287,17 +287,21 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   r1Orig <- .writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
   r2Orig <- raster(extent(0,200, 0, 200), vals = 1, res = 1)
   r2Orig <- .writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-  names(r1Orig) <- "layer1"
-  names(r2Orig) <- "layer1"
+  layer1Name <- "layer1"
+  layer2Name <- "layer2"
+  names(r1Orig) <- layer1Name
+  names(r2Orig) <- layer1Name
 
 
   if (mc$type == "Stack") {
     r1Orig2 <- .writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    names(r1Orig2) <- c(layer2Name)
     r1Orig <- stack(r1Orig, r1Orig2)
   } else if (mc$type == "Brick") {
     r1Orig2 <- r1Orig
-    r1Orig <- brick(r1Orig, r1Orig2)
+    r1Orig <- raster::brick(r1Orig, r1Orig2)
     r1Orig <- .writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    names(r1Orig) <- c(layer1Name, layer2Name)
   }
 
   # ._clearCache_3 <<- ._cloudUpload_1 <<- ._cloudDownloadRasterBackend_1 <<- 1
@@ -319,11 +323,13 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   ####################################################
   if (mc$type == "Stack") {
     r2Orig2 <- .writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    names(r2Orig2) <- c(layer2Name)
     r2Orig <- stack(r2Orig, r2Orig2)
   } else if (mc$type == "Brick") {
     r2Orig2 <- r2Orig
-    r2Orig <- brick(r2Orig, r2Orig2)
+    r2Orig <- raster::brick(r2Orig, r2Orig2)
     r2Orig <- .writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    names(r2Orig) <- c(layer1Name, layer2Name)
   }
   r2End <- Cache(fn, r2Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   cloudFolderID2 <- cloudFolderID
@@ -350,15 +356,18 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   r1Orig <- .writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
   if (mc$type == "Stack") {
     r1Orig2 <- .writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    names(r2Orig2) <- c(layer2Name)
     r1Orig <- stack(r1Orig, r1Orig2)
   } else if (mc$type == "Brick") {
     r1Orig2 <- r1Orig
-    r1Orig <- brick(r1Orig, r1Orig2)
+    r1Orig <- raster::brick(r1Orig, r1Orig2)
     r1Orig <- .writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    names(r1Orig) <- c(layer1Name, layer2Name)
+
   }
   r1End <- Cache(fn, r1Orig, useCloud = FALSE, cloudFolderID = cloudFolderID)
 
-  expect_true(attr(r1End, ".Cache")$newCache == TRUE) # new to local cache
+  expect_true(attr(r1End, ".Cache")$newCache) # new to local cache
 
   r4End <- Cache(fn, r1Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   cloudFolderID3 <- cloudFolderID
@@ -366,7 +375,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
     clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID3)
   })
 
-  expect_true(attr(r4End, ".Cache")$newCache == FALSE) # new to local cache
+  expect_false(attr(r4End, ".Cache")$newCache) # new to local cache
   driveLs <- googledrive::drive_ls(cloudFolderID)
   data.table::setDT(driveLs)
   expect_true(all(basename(Filenames(r4End)) %in% driveLs$name))
@@ -382,15 +391,18 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
   r1Orig <- raster(extent(0,200, 0, 200), vals = 5, res = 1)
   r1Orig <- .writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  names(r1Orig) <- layer1Name
   if (mc$type == "Stack") {
     r1Orig2 <- .writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    names(r1Orig2) <- c(layer2Name)
     r1Orig <- stack(r1Orig, r1Orig2)
   } else if (mc$type == "Brick") {
     r1Orig2 <- r1Orig
-    r1Orig <- brick(r1Orig, r1Orig2)
+    r1Orig <- raster::brick(r1Orig, r1Orig2)
     r1Orig <- .writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    names(r1Orig) <- c(layer1Name, layer2Name)
+
   }
-  names(r1Orig) <- "layer1"
   r1End <- Cache(fn, r1Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   on.exit({
     clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
@@ -402,14 +414,17 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   driveLsBefore <- googledrive::drive_ls(cloudFolderID)
   r5Orig <- raster(extent(0,200, 0, 200), vals = 5, res = 1)
   r5Orig <- .writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-  names(r5Orig) <- "layer1"
+  names(r5Orig) <- layer1Name
   if (mc$type == "Stack") {
     r5Orig2 <- .writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    names(r5Orig2) <- c(layer2Name)
     r5Orig <- stack(r5Orig, r5Orig2)
   } else if (mc$type == "Brick") {
     r5Orig2 <- r5Orig
-    r5Orig <- brick(r5Orig, r5Orig2)
+    r5Orig <- raster::brick(r5Orig, r5Orig2)
     r5Orig <- .writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    names(r5Orig) <- c(layer1Name, layer2Name)
+
   }
   r5End <- Cache(fn, r5Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   on.exit({

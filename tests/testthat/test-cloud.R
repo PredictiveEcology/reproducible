@@ -11,10 +11,6 @@ test_that("test Cache(useCloud=TRUE, ...)", {
                   "reproducible.ask" = FALSE,
                   "reproducible.cloudFolderID" = "tmp_CacheForTesting")
     )
-    # googledrive::drive_auth("predictiveecology@gmail.com")
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
     clearCache(x = tmpCache, useCloud = TRUE)
     # if (packageVersion("googledrive") < "2.0.0") {
     #   df <- googledrive::drive_find(pattern = testsForPkgs, team_drive = NULL)
@@ -22,16 +18,14 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     #   df <- googledrive::drive_find(pattern = testsForPkgs, shared_drive = NULL)
     # }
     #if (NROW(df) == 0)
-    testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = .pkgEnv$testsForPkgs, overwrite = TRUE)))
+    testsForPkgsDir <- try(googledrive::drive_mkdir(name = .pkgEnv$testsForPkgs, overwrite = TRUE), silent = TRUE)
     on.exit({
       retry(quote(googledrive::drive_rm(.pkgEnv$testsForPkgs)))
+      testOnExit(testInitOut)
     }, add = TRUE)
 
     newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
     cloudFolderID = newDir
-    # on.exit({
-    #   retry(quote(googledrive::drive_rm(cloudFolderID)))
-    # }, add = TRUE)
 
     messLoadedCached <- "loaded cached"
     messUploaded <- "Uploading"
@@ -93,12 +87,8 @@ test_that("test Cache(useCloud=TRUE, ...)", {
       })
     })
 
-    # on.exit({
-    #   retry(quote(googledrive::drive_rm(googledrive::as_id(cloudFolderID))))
-    # }, add = TRUE)
     expect_true(any(grepl(messUploaded, mess5)))
     expect_false(any(grepl(messDownload, mess5)))
-    # expect_true(any(grepl("No cloudFolderID", warn5)))
 
     warn6 <- capture_warnings({
       mess6 <- capture_messages({
@@ -197,19 +187,25 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
 
     # googledrive::drive_auth("predictiveecology@gmail.com")
     on.exit({
-      testOnExit(testInitOut)
-      retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
+      try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
+      try(googledrive::drive_rm(testsForPkgsDir), silent = TRUE)
       options(opts)
+      testOnExit(testInitOut)
     }, add = TRUE)
     clearCache(x = tmpCache)
     clearCache(x = tmpdir)
     testsForPkgsDir <- try(googledrive::drive_mkdir(name = .pkgEnv$testsForPkgs, overwrite = FALSE), silent = TRUE)
     newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
     cloudFolderID = newDir
-
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
                       type = "Stack")
+    try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
 
+    clearCache(x = tmpdir)
+    newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
+    cloudFolderID = newDir
+    testRasterInCloud(".grd", cloudFolderID = cloudFolderID, numRasterFiles = 4, tmpdir = tmpdir,
+                      type = "Stack")
   }
 })
 
@@ -220,23 +216,28 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
                             opts = list("reproducible.ask" = FALSE))
 
     opts <- options("reproducible.cachePath" = tmpdir)
-    googledrive::drive_auth("predictiveecology@gmail.com")
     on.exit({
-      testOnExit(testInitOut)
-      retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
+      try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
+      try(googledrive::drive_rm(testsForPkgsDir), silent = TRUE)
       options(opts)
+      testOnExit(testInitOut)
     }, add = TRUE)
     clearCache(x = tmpCache)
     clearCache(x = tmpdir)
-    newDir <- #if (Sys.info()[["user"]] == "emcintir") {
-      #  list(id = "1vKImpt2FQLmdDzA7atwhz9B-6Er26rka")
-      #} else { # this is slow for emcintir because googledrive is large
-      retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
-    #}
-    cloudFolderID = newDir
+    testsForPkgsDir <- try(googledrive::drive_mkdir(name = .pkgEnv$testsForPkgs, overwrite = FALSE), silent = TRUE)
 
+    newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
+    cloudFolderID = newDir
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
                       type = "Brick")
+    try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
+
+    newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
+    cloudFolderID = newDir
+    testRasterInCloud(".grd", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
+                      type = "Brick")
+    try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
+
   }
 })
 
