@@ -50,7 +50,7 @@ test_that("test multiple cacheRepo with 1 of them a cloudCache", {
   #   then it runs the function, caching locally, and uploading to cloud -- copy exists in
   #   2 places
   newDir <- googledrive::drive_mkdir("testFolder")
-  on.exit(googledrive::drive_rm(googledrive::as_id(newDir$id), add = TRUE))
+  on.exit(googledrive::drive_trash(googledrive::as_id(newDir$id), add = TRUE))
 
   clearCache(ask = FALSE, cacheRepo = tmpCache)
   cloudSyncCache(cloudFolderID = newDir$id, cacheRepo = tmpCache)

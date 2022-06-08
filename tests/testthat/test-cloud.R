@@ -20,7 +20,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     #if (NROW(df) == 0)
     testsForPkgsDir <- try(googledrive::drive_mkdir(name = .pkgEnv$testsForPkgs, overwrite = TRUE), silent = TRUE)
     on.exit({
-      retry(quote(googledrive::drive_rm(.pkgEnv$testsForPkgs)))
+      retry(quote(googledrive::drive_trash(.pkgEnv$testsForPkgs)))
       testOnExit(testInitOut)
     }, add = TRUE)
 
@@ -103,7 +103,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     expect_true(isTRUE(all.equal(length(warn6), 0)))
 
     ########
-    retry(quote(googledrive::drive_rm(newDir))) # clear the original one
+    retry(quote(googledrive::drive_trash(newDir))) # clear the original one
     cloudFolderID <- getOption("reproducible.cloudFolderID")
     clearCache(x = tmpCache, useCloud = TRUE)#, cloudFolderID = cloudFolderID)
     # Add 3 things to cloud and local -- then clear them all
@@ -139,7 +139,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     gdriveLs <- googledrive::drive_ls(path = cloudFolderFromCacheRepo(tmpCache))
     expect_true(NROW(gdriveLs) == 1)
     expect_true(grepl(unique(showCache(tmpCache)[[.cacheTableHashColName()]]), gdriveLs$name))
-    retry(quote(googledrive::drive_rm(getOption("reproducible.cloudFolderID"))))
+    retry(quote(googledrive::drive_trash(getOption("reproducible.cloudFolderID"))))
   }
 })
 
@@ -156,9 +156,9 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
     clearCache(x = tmpdir)
     newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
     on.exit({
-      retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
+      retry(quote(googledrive::drive_trash(googledrive::as_id(newDir$id))))
       options(opts)
-      retry(quote(googledrive::drive_rm(.pkgEnv$testsForPkgs)))
+      retry(quote(googledrive::drive_trash(.pkgEnv$testsForPkgs)))
       testOnExit(testInitOut)
     }, add = TRUE)
 
@@ -169,7 +169,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
                       type = "Raster")
 
-    retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
+    retry(quote(googledrive::drive_trash(googledrive::as_id(newDir$id))))
     clearCache(x = tmpdir)
     newDir <- retry(quote(googledrive::drive_mkdir(rndstr(1,6), path = .pkgEnv$testsForPkgs)))
     cloudFolderID = newDir
@@ -186,8 +186,8 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
                             opts = list("reproducible.ask" = FALSE))
 
     on.exit({
-      try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
-      try(googledrive::drive_rm(testsForPkgsDir), silent = TRUE)
+      try(googledrive::drive_trash(googledrive::as_id(newDir$id)), silent = TRUE)
+      try(googledrive::drive_trash(testsForPkgsDir), silent = TRUE)
       options(opts)
       testOnExit(testInitOut)
     }, add = TRUE)
@@ -198,7 +198,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
     cloudFolderID = newDir
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
                       type = "Stack")
-    try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
+    try(googledrive::drive_trash(googledrive::as_id(newDir$id)), silent = TRUE)
 
     clearCache(x = tmpdir)
     newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
@@ -216,8 +216,8 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
 
     opts <- options("reproducible.cachePath" = tmpdir)
     on.exit({
-      try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
-      try(googledrive::drive_rm(testsForPkgsDir), silent = TRUE)
+      try(googledrive::drive_trash(googledrive::as_id(newDir$id)), silent = TRUE)
+      try(googledrive::drive_trash(testsForPkgsDir), silent = TRUE)
       options(opts)
       testOnExit(testInitOut)
     }, add = TRUE)
@@ -229,13 +229,13 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
     cloudFolderID = newDir
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
                       type = "Brick")
-    try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
+    try(googledrive::drive_trash(googledrive::as_id(newDir$id)), silent = TRUE)
 
     newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .pkgEnv$testsForPkgs)))
     cloudFolderID = newDir
     testRasterInCloud(".grd", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
                       type = "Brick")
-    try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
+    try(googledrive::drive_trash(googledrive::as_id(newDir$id)), silent = TRUE)
 
   }
 })
@@ -286,8 +286,8 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
 
     opts <- options("reproducible.cachePath" = tmpdir, "reproducible.cloudFolderID" = cloudFolderID)
     on.exit({
-      try(googledrive::drive_rm(googledrive::as_id(newDir$id)), silent = TRUE)
-      try(googledrive::drive_rm(testsForPkgsDir), silent = TRUE)
+      try(googledrive::drive_trash(googledrive::as_id(newDir$id)), silent = TRUE)
+      try(googledrive::drive_trash(testsForPkgsDir), silent = TRUE)
       options(opts)
       testOnExit(testInitOut)
     }, add = TRUE)
@@ -320,6 +320,8 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
     clearCache(useCloud = FALSE)
     rasOut <- Cache(fn, ras, useCloud = TRUE, cloudFolderID = cloudFolderID)
     expect_true(all(Filenames(rasOut) != Filenames(ras)))
+
+    try(googledrive::drive_trash())
   }
 
 
@@ -327,13 +329,14 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
 
 
 test_that("test individual useCloud family", {
-  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  if (!requireNamespace("googledrive"))
+    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   skip_if_no_token()
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
-    googledrive::drive_rm(googledrive::as_id(cloudFolderID))
-    googledrive::drive_rm(googledrive::as_id(tmpCloudFolderID))
+    googledrive::drive_trash(googledrive::as_id(cloudFolderID))
+    googledrive::drive_trash(googledrive::as_id(tmpCloudFolderID))
   }, add = TRUE)
 
   ras <- raster(extent(0,1,0,1), res  = 1, vals = 1)
