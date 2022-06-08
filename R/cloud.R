@@ -300,3 +300,14 @@ emptyDribble <- function() {
                                           id, drv = drv, conn = conn))
 
 }
+
+rmFromCloudFolder <- function(cloudFolderID, x, cacheIds, cacheDT) {
+  if (is.null(cloudFolderID)) {
+    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cacheRepo = x)
+  }
+  browser()
+  cloudIDs <- cacheDT[cacheId %in% cacheIds & tagKey %in% c("inCloudFile", "inCloudID")]
+  du <- googledrive::as_dribble(as_id(cloudIDs$tagValue[cloudIDs$tagKey == "inCloudID"]))
+  retry(quote(googledrive::drive_rm(du$id)))
+}
+

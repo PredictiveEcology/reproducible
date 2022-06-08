@@ -691,42 +691,6 @@ getArtifact <- function(cacheRepo, shownCache, cacheId) {
 }
 
 
-rmFromCloudFolder <- function(cloudFolderID, x, cacheIds, cacheDT) {
-  if (is.null(cloudFolderID)) {
-
-    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cacheRepo = x)
-    # stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
-    #      "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
-  }
-  # browser(expr = exists("._rmFromCloudFolder_1"))
-
-  if (FALSE) {
-    gdriveLs <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
-    cacheIds <- gsub("\\..*", "", gdriveLs$name)
-    filenamesToRm <- basename2(CacheStoredFile(x, cacheIds))
-    # filenamesToRm <- paste0(cacheIds, ".rda")
-    isInCloud <- gdriveLs$name %in% filenamesToRm
-    # Deal with Rasters
-    files <- CacheStoredFile(x, hash = cacheIds[isInCloud])
-    sc <- suppressMessages(showCache(x, userTags = cacheIds))
-    classes <- sc[tagKey == "class"]$tagValue
-    rases <- classes %in% c("RasterLayer", "RasterStack", "RasterBrick")
-    objs <- lapply(files[rases], readRDS)
-    frmDisk <- unlist(lapply(objs, fromDisk))
-    filenames <- unlist(lapply(objs[frmDisk], Filenames))
-    toDelete <- gdriveLs[isInCloud,]
-    messageCache("Cloud:")
-    if (!is.null(filenames)) {
-      rasFiles <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
-      toDelete <- rbind(rasFiles, toDelete)
-    }
-  }
-
-  cloudIDs <- cacheDT[cacheId %in% cacheIds & tagKey %in% c("inCloudFile", "inCloudID")]
-  du <- googledrive::as_dribble(as_id(cloudIDs$tagValue[cloudIDs$tagKey == "inCloudID"]))
-  retry(quote(googledrive::drive_rm(du)))
-}
-
 
 isTRUEorForce <- function(cond) {
   isTRUE(cond) || identical(cond, "force")
