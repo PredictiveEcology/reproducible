@@ -304,7 +304,7 @@ emptyDribble <- function() {
 }
 
 
-rmFromCloudFolder <- function(cloudFolderID, x, cacheIds, cacheDT) {
+cloudRemove <- function(cloudFolderID, x, cacheIds, cacheDT) {
   if (is.null(cloudFolderID)) {
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cacheRepo = x)
   }
