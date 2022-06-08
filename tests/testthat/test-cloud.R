@@ -320,7 +320,7 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
     clearCache(useCloud = FALSE)
     rasOut <- Cache(fn, ras, useCloud = TRUE, cloudFolderID = cloudFolderID)
     expect_true(all(Filenames(rasOut) != Filenames(ras)))
-
+  }
 
 
 })
