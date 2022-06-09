@@ -25,6 +25,12 @@ cloudFolderID <- function(cloudFolderID = getOption('reproducible.cloudFolderID'
   if (!requireNamespace("googledrive", quietly = TRUE))
     stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
+  if (is.null(cloudFolderID)) {
+    cloudFolderID <- getOption("reproducible.cloudFolderID", NULL)
+    if (is.null(cloudFolderID))
+      cloudFolderID <- Sys.getenv("reproducible.cloudFolderID")
+  }
+
   browser(expr = exists("._checkAndMakeCloudFolderID_1"))
   if (!is(cloudFolderID, "dribble")) {
     isNullCFI <- is.null(cloudFolderID)
