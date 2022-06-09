@@ -818,6 +818,8 @@ setMethod(
         # Here, download cloud copy to local folder, skip the running of FUN
         output <- cloudDownload(outputHash, gdriveLs, cacheRepo, cloudFolderID,
                                 drv = drv, conn = conn)
+        output <- do.call(.prepareOutput, args = append(list(output, cacheRepo), modifiedDots))
+
         if (!is.null(output))
           .CacheIsNew <- FALSE
       }
