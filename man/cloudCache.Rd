@@ -2,7 +2,7 @@
 % Please edit documentation in R/cloud.R
 \name{cloudDownload}
 \alias{cloudDownload}
-\alias{cloudCacheClearAll}
+\alias{cloudClearCache}
 \alias{cloudCacheBrowse}
 \title{Download from cloud, if necessary}
 \usage{
@@ -15,9 +15,7 @@ cloudDownload(
   conn = getOption("reproducible.conn", NULL)
 )
 
-cloudCacheClearAll(
-  cloudFolderID = getOption("reproducible.cloudFolderID", NULL)
-)
+cloudClearCache(cloudFolderID = getOption("reproducible.cloudFolderID", NULL))
 
 cloudCacheBrowse(cloudFolderID = getOption("reproducible.cloudFolderID", NULL))
 }

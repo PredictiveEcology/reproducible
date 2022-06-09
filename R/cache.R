@@ -635,12 +635,12 @@ setMethod(
         if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
         # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
         #  returns NROW 0 gdriveLs if not present
-        #cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)
+        #cloudFolderID <- cloudFolderID(cloudFolderID)
         # browser(expr = exists("._Cache_2"))
         if (is.null(cloudFolderID))
           cloudFolderID <- cloudFolderFromCacheRepo(cacheRepo)
         if (is.character(cloudFolderID)) {
-          cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, create = TRUE,
+          cloudFolderID <- cloudFolderID(cloudFolderID, create = TRUE,
                                                      overwrite = FALSE)
         }
         gdriveLs <- retry(quote(cloudDriveLs(cloudFolderID, pattern = outputHash,

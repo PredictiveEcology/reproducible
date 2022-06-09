@@ -16,7 +16,7 @@ if (getRversion() >= "3.1.0") {
 #' @param team_drive Logical indicating whether to check team drives.
 #'
 #' @export
-checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cloudFolderID', NULL),
+cloudFolderID <- function(cloudFolderID = getOption('reproducible.cloudFolderID', NULL),
                                       cacheRepo = NULL,
                                       create = FALSE,
                                       overwrite = FALSE,
@@ -84,7 +84,7 @@ cloudDriveLs <- function(cloudFolderID = NULL, pattern = NULL,
     stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
   if (!is(cloudFolderID, "tbl")) {
-    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = FALSE,
+    cloudFolderID <- cloudFolderID(cloudFolderID = cloudFolderID, create = FALSE,
                                                team_drive = team_drive) # only deals with NULL case
   }
 
@@ -175,7 +175,7 @@ cloudUpload <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
   if (!any(isInCloud)) {
     newFileName <- basename2(cacheIdFileName)
 
-    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
+    cloudFolderID <- cloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
     messageCache("Uploading object ", newFileName,", with cacheId: ",
             outputHash," to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id)
     du <- try(retry(quote(googledrive::drive_upload(media = cacheIdFileName,
@@ -291,7 +291,7 @@ cloudAddTagsRepo <- function(drib, outputHash, cacheRepo, drv, conn) {
 
 cloudRemove <- function(cloudFolderID, x, cacheIds, cacheDT) {
   if (is.null(cloudFolderID)) {
-    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cacheRepo = x)
+    cloudFolderID <- cloudFolderID(cloudFolderID, cacheRepo = x)
   }
   cloudIDs <- cacheDT[cacheId %in% cacheIds & tagKey %in% c("inCloudFile", "inCloudID")]
   du <- googledrive::as_dribble(googledrive::as_id(cloudIDs$tagValue[cloudIDs$tagKey == "inCloudID"]))
@@ -308,7 +308,7 @@ cloudRemove <- function(cloudFolderID, x, cacheIds, cacheDT) {
 #' @inheritParams Cache
 #' @export
 #' @rdname cloudCache
-cloudCacheClearAll <- function(cloudFolderID = getOption("reproducible.cloudFolderID", NULL)) {
+cloudClearCache <- function(cloudFolderID = getOption("reproducible.cloudFolderID", NULL)) {
   if (!is.null(cloudFolderID)) {
     gdriveLs <- googledrive::drive_ls(cloudFolderID)
     googledrive::drive_trash(gdriveLs)
@@ -339,3 +339,4 @@ cloudCacheBrowse <- function(cloudFolderID = getOption("reproducible.cloudFolder
     browseURL(file.path("https://drive.google.com/drive/folders/", cfid))
   }
 }
+

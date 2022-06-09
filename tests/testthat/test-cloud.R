@@ -373,12 +373,12 @@ test_that("test individual useCloud family", {
 
   gdriveLs1 <- data.frame(name = "GADM", id = "sdfsd", drive_resource = list(sdfsd = 1))
   expect_warning({
-    tmpCloudFolderID <- checkAndMakeCloudFolderID(create = TRUE)
+    tmpCloudFolderID <- cloudFolderID(create = TRUE)
   }, "No cloudFolderID supplied")
   gdriveLs <- cloudDriveLs(cloudFolderID = NULL, "sdfsdf")
   expect_true(NROW(gdriveLs) == 0)
-  expect_is(checkAndMakeCloudFolderID("testy"), "character")
-  cloudFolderID <- checkAndMakeCloudFolderID("testy", create = TRUE)
+  expect_is(cloudFolderID("testy"), "character")
+  cloudFolderID <- cloudFolderID("testy", create = TRUE)
   # testthat::with_mock(
   #   "reproducible::retry" = function(..., retries = 1) TRUE,
   #   {
