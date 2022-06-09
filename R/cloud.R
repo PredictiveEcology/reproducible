@@ -89,10 +89,10 @@ cloudDriveLs <- function(cloudFolderID = NULL, pattern = NULL,
   }
 
   messageCache("Retrieving file list in cloud folder", verbose = verbose)
-  gdriveLs <- retry(quote({
+  suppressMessages(gdriveLs <- retry(quote({
     googledrive::drive_ls(path = cloudFolderID, ## TODO: team drives needs a dribble
                           pattern = paste0(collapse = "|", c(cloudFolderID$id ,pattern)))
-  }))
+  })))
   if (is(gdriveLs, "try-error")) {
     fnf <- grepl("File not found", gdriveLs)
     if (!fnf) {
