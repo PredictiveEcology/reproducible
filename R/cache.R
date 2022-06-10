@@ -404,7 +404,7 @@ setGeneric(
            verbose = getOption("reproducible.verbose", 1), cacheId = NULL,
            useCache = getOption("reproducible.useCache", TRUE),
            useCloud = FALSE,
-           cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+           cloudFolderID = NULL,
            showSimilar = getOption("reproducible.showSimilar", FALSE),
            drv = getOption("reproducible.drv"),
            conn = getOption("reproducible.conn", NULL)) {
@@ -633,16 +633,8 @@ setMethod(
       tries <- 1
       if (useCloud) {
         if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
-        # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
-        #  returns NROW 0 gdriveLs if not present
-        #cloudFolderID <- cloudFolderID(cloudFolderID)
-        # browser(expr = exists("._Cache_2"))
-        if (is.null(cloudFolderID))
-          cloudFolderID <- cloudFolderFromCacheRepo(cacheRepo)
-        if (is.character(cloudFolderID)) {
-          cloudFolderID <- cloudFolderID(cloudFolderID, create = TRUE,
-                                                     overwrite = FALSE)
-        }
+        cloudFolderID <- cloudFolderID(cloudFolderID, create = TRUE,
+                                       overwrite = FALSE)
         gdriveLs <- retry(quote(cloudDriveLs(cloudFolderID, pattern = outputHash,
                                         verbose = verbose)))
       }
@@ -1795,9 +1787,6 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
   }
   return(list(isInRepo = isInRepo, outputHash = outputHash, needFindByTags = needFindByTags))
 }
-
-cloudFolderFromCacheRepo <- function(cacheRepo)
-  paste0(basename2(dirname(cacheRepo)), "_", basename2(cacheRepo))
 
 .defaultUserTags <- c("function", "class", "object.size", "accessed", "inCloud",
                       "otherFunctions", "preDigest", "file.size", "cacheId",

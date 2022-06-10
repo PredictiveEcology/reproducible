@@ -5,8 +5,8 @@
 \title{Check for presence of \code{checkFolderID} (for \code{Cache(useCloud)})}
 \usage{
 cloudFolderID(
-  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-  cacheRepo = NULL,
+  cloudFolderID = NULL,
+  cacheRepo = getOption("reproducible.cachePath", NULL),
   create = FALSE,
   overwrite = FALSE,
   verbose = getOption("reproducible.verbose", 1),
@@ -33,7 +33,18 @@ option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{team_drive}{Logical indicating whether to check team drives.}
 }
+\value{
+The \code{cloudFolderID} as a \code{dribble}, which will also be assigned to
+\code{options("reproducible.cloudFolderID")} so that it can be used again.
+}
 \description{
-Will check for presence of a \code{cloudFolderID} and make a new one
-if one not present on Google Drive, with a warning.
+Will check for presence of a \code{cloudFolderID} and optionally create a new one
+if one not present on Google Drive. The function will determine the cloudFolderID using the
+first non-NULL, non-empty result in the following sequence, in this order: 1. Supplied as
+argument, 2. \code{getOption("reproducible.cloudFolderID")}, 3.
+\code{Sys.getenv("reproducible.cloudFolderID")}, 4. determined from the \code{cacheRepo},
+using \code{cloudFolderFromCacheRepo(cacheRepo)}. Once a cloudFolder has been created,
+its googledrive ID must be saved or else it may be difficult to find it again. For
+this reason, whatever result is found with this function, it will be assigned
+to \code{options("reproducible.cloudFolderID")} so that it can be used again.
 }

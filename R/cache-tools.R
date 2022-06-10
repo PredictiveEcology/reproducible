@@ -86,7 +86,7 @@
 setGeneric("clearCache", function(x, userTags = character(), after = NULL, before = NULL,
                                   ask = getOption("reproducible.ask"),
                                   useCloud = FALSE,
-                                  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+                                  cloudFolderID = NULL,
                                   drv = getOption("reproducible.drv"),
                                   conn = getOption("reproducible.conn", NULL), ...) {
   standardGeneric("clearCache")
@@ -97,7 +97,7 @@ setGeneric("clearCache", function(x, userTags = character(), after = NULL, befor
 setMethod(
   "clearCache",
   definition = function(x, userTags, after = NULL, before = NULL, ask, useCloud = FALSE,
-                        cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+                        cloudFolderID = NULL,
                         drv = getOption("reproducible.drv"),
                         conn = getOption("reproducible.conn", NULL), ...) {
     # isn't clearing the raster bacekd file
@@ -129,6 +129,7 @@ setMethod(
       objsDT <- do.call(showCache, args = args, quote = TRUE)
       if (isTRUE(useCloud) && NROW(objsDT) > 0 || identical(useCloud, "force")) {
         if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+        cloudFolderID <- cloudFolderID(cloudFolderID)
         # browser(expr = exists("._clearCache_3"))
         cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
         if (identical(useCloud, "force")) {
@@ -136,6 +137,8 @@ setMethod(
           cacheIds <- c(cacheIds, gsub("\\..*$", "", gdriveLs$name))
         }
         cloudRemove(cloudFolderID, x, cacheIds, cacheDT = objsDT)
+
+        cloudRmFromDBFile(objsDT, cloudFolderID, cacheIds, gdriveLs = NULL, drv, conn)
 
       }
 
@@ -421,6 +424,8 @@ setMethod(
 #' @rdname viewCache
 setGeneric("keepCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  ask  = getOption("reproducible.ask"),
+                                 useCloud = FALSE,
+                                 cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
                                  drv = getOption("reproducible.drv"),
                                  conn = getOption("reproducible.conn", NULL), ...) {
   standardGeneric("keepCache")
@@ -430,23 +435,29 @@ setGeneric("keepCache", function(x, userTags = character(), after = NULL, before
 #' @rdname viewCache
 setMethod(
   "keepCache",
-  definition = function(x, userTags, after, before, ask, drv, conn, ...) {
+  definition = function(x, userTags, after, before, ask, useCloud, cloudFolderID, drv, conn, ...) {
+    dots <- list(...)
     if (missing(x)) {
-      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
-      x <- getOption("reproducible.cachePath")[1]
+      if (!is.null(dots$cacheRepo)) {
+        messageCache("x not specified but cacheRepo is; using cacheRepo")
+        x <- dots$cacheRepo
+      } else {
+        messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
+        x <- getOption("reproducible.cachePath")[1]
+      }
     }
 
-    args <- append(list(x = x, after = after, before = before, userTags = userTags), list(...))
+    args <- append(list(x = x, after = after, before = before, userTags = userTags), dots)
 
     objsDTAll <- suppressMessages(showCache(x, verboseMessaging = FALSE))
-    objsDT <- do.call(showCache, args = args)
+    objsDT <- suppressMessages(do.call(showCache, args = args))
     keep <- unique(objsDT[[.cacheTableHashColName()]])
     eliminate <- unique(objsDTAll[[.cacheTableHashColName()]][
       !(objsDTAll[[.cacheTableHashColName()]] %in% keep)])
 
     if (length(eliminate)) {
-      #eliminate <- paste(eliminate, collapse = "|") ## TODO: remove
-      clearCache(x, eliminate, verboseMessaging = FALSE, regexp = FALSE, ask = ask)
+      clearCache(x, eliminate, verboseMessaging = FALSE, regexp = FALSE, ask = ask,
+                 useCloud = useCloud, cloudFolderID = cloudFolderID)
     }
     setkeyv(objsDT, colnames(objsDT))
     return(objsDT)
@@ -697,9 +708,10 @@ isTRUEorForce <- function(cond) {
 }
 
 
-showCacheAll <- function(x, drv, conn) {
+showCacheAll <- function(x, drv, conn, dbTabNam = NULL) {
   if (useSQL(conn)) {
-    dbTabNam <- CacheDBTableName(x, drv = drv)
+    if (is.null(dbTabNam))
+      dbTabNam <- CacheDBTableName(x, drv = drv)
     res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
       DBI::dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
     tab <- DBI::dbFetch(res)
@@ -715,3 +727,4 @@ showCacheAll <- function(x, drv, conn) {
   }
   objsDT
 }
+

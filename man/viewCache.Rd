@@ -17,7 +17,7 @@ clearCache(
   before = NULL,
   ask = getOption("reproducible.ask"),
   useCloud = FALSE,
-  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+  cloudFolderID = NULL,
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -30,7 +30,7 @@ clearCache(
   before = NULL,
   ask = getOption("reproducible.ask"),
   useCloud = FALSE,
-  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+  cloudFolderID = NULL,
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -64,6 +64,8 @@ keepCache(
   after = NULL,
   before = NULL,
   ask = getOption("reproducible.ask"),
+  useCloud = FALSE,
+  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -75,6 +77,8 @@ keepCache(
   after = NULL,
   before = NULL,
   ask = getOption("reproducible.ask"),
+  useCloud = FALSE,
+  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
   ...

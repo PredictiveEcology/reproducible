@@ -194,7 +194,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                         cacheId, drv = getOption("reproducible.drv"),
                         conn = getOption("reproducible.conn", NULL),
-                        format = getOption("reproducible.cacheSaveFormat", "rds")) {
+                        format = getOption("reproducible.cacheSaveFormat", "rds"),
+                        dbTabName = NULL) {
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
     on.exit(dbDisconnectAll(conn, shutdown = TRUE))
@@ -215,7 +216,7 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   #
   # dbClearResult(res)
 
-  rmFromCacheAll(cachePath, drv, cacheId, conn)
+  rmFromCacheAll(cachePath, drv, cacheId, conn, dbTabName = dbTabName)
 
   unlink(CacheStoredFile(cachePath, hash = cacheId, format = format))
 }
@@ -255,7 +256,8 @@ connObject <- function(cachePath) {
 .addTagsRepo <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
                          tagKey = character(), tagValue = character(),
                          drv = getOption("reproducible.drv"),
-                         conn = getOption("reproducible.conn", NULL)) {
+                         conn = getOption("reproducible.conn", NULL),
+                         tbNam = NULL) {
   # browser(expr = exists("._addTagsRepo_1"))
   if (length(cacheId) > 0) {
     if (length(cacheId) > 1) stop(".addTagsRepo can only handle appending 1 tag at a time")
@@ -270,7 +272,7 @@ connObject <- function(cachePath) {
       tagValue <- curTime
 
     # This is what the next code pair of lines does
-    rs <- addTagsAll(conn, cachePath, drv, cacheId, tagKey, tagValue, curTime)
+    rs <- addTagsAll(conn, cachePath, drv, cacheId, tagKey, tagValue, curTime, tbNam)
 
 
   }
@@ -588,12 +590,15 @@ saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
 }
 
 
-addTagsAll <- function(conn, cachePath, drv, cacheId, tagKey, tagValue, curTime) {
+addTagsAll <- function(conn, cachePath, drv, cacheId, tagKey, tagValue, curTime, tbNam = NULL) {
+  if (is.null(tbNam)) {
+    tbNam <- CacheDBTableName(cachePath, drv)
+  }
   if (useSQL(conn)) {
     rs <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
       DBI::dbSendStatement(
         conn,
-        paste0("insert into \"", CacheDBTableName(cachePath, drv), "\"",
+        paste0("insert into \"", tbNam, "\"",
                " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
                "('", cacheId,
                "', '", tagKey, "', '", tagValue, "', '", curTime, "')"))
@@ -854,11 +859,13 @@ createEmptyTable <- function(conn, cachePath, drv) {
   return(invisible())
 }
 
-rmFromCacheAll <- function(cachePath, drv, cacheId, conn) {
+rmFromCacheAll <- function(cachePath, drv, cacheId, conn, dbTabName = NULL) {
   if (useSQL(conn)) {
+    if (is.null(dbTabName))
+      dbTabName <- CacheDBTableName(cachePath, drv)
     query <- glue::glue_sql(
       "DELETE FROM {DBI::SQL(glue::double_quote(dbTabName))} WHERE \"cacheId\" IN ({cacheId*})",
-      dbTabName = CacheDBTableName(cachePath, drv),
+      dbTabName = dbTabName,
       cacheId = cacheId,
       .con = conn)
     res <- DBI::dbSendQuery(conn, query)

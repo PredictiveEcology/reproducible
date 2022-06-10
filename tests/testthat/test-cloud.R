@@ -258,11 +258,14 @@ test_that("prepInputs works with team drives", {
 
     zipUrl <- "https://drive.google.com/file/d/1zRX2c55ebJbQtjijCErEfGxhsa7Ieph2"
     if (packageVersion("googledrive") < "2.0.0") {
-      wb <- prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
+      wb <- suppressWarningsSpecific(falseWarnings = "Discarded datum", prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
                        alsoExtract = "similar", fun = "shapefile", team_drive = TRUE)
+      )
     } else {
-      wb <- prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
+      wb <- wb <- suppressWarningsSpecific(falseWarnings = "Discarded datum",
+                                           prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
                        alsoExtract = "similar", fun = "shapefile", shared_drive = TRUE)
+      )
     }
     expect_true(is(wb, "Spatial"))
 
@@ -423,4 +426,43 @@ test_that("test individual useCloud family", {
   a <- new.env(parent = emptyenv())
   a$a = list(ras, ras)
   expect_true(all(unlist(isOrHasRaster(a))))
+})
+
+
+test_that("test keepCache(useCloud=TRUE, ...)", {
+  skip_if_no_token()
+  if (interactive()) {
+    testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
+                            opts = list("reproducible.ask" = FALSE,
+                                        "reproducible.cloudFolderID" = NULL))
+
+    opts <- options("reproducible.cachePath" = tmpdir)
+    on.exit({
+      try(googledrive::drive_trash(googledrive::as_id(newDir$id)), silent = TRUE)
+      try(googledrive::drive_trash(cloudFolderID()), silent = TRUE)
+      options(opts)
+      testOnExit(testInitOut)
+    }, add = TRUE)
+    clearCache(x = tmpCache)
+    clearCache(x = tmpdir)
+
+    cfid <- cloudFolderID(cacheRepo = tmpdir, create = TRUE) # sets option
+
+    out1 <- Cache(rnorm, 2, useCloud = TRUE, cloudFolderID = cfid, cacheRepo = tmpdir)
+    out2 <- Cache(rnorm, 3, useCloud = TRUE, cloudFolderID = cfid, cacheRepo = tmpdir)
+    out3 <- Cache(runif, 4, useCloud = TRUE, cloudFolderID = cfid, cacheRepo = tmpdir)
+    out4 <- Cache(runif, 5, useCloud = TRUE, cloudFolderID = cfid, cacheRepo = tmpCache)
+    out5 <- Cache(rnorm, 6, useCloud = TRUE, cloudFolderID = cfid, cacheRepo = tmpCache)
+
+    # This will only remove the objects that are *in* tmpdir
+    out6 <- keepCache(userTags = "runif", x = tmpdir, cloudFolderID = cfid, useCloud = TRUE)
+    expect_true(length(unique(out6$cacheId)) == 1)
+
+    out7 <- keepCache(userTags = "runif", x = tmpCache, cloudFolderID = cfid, useCloud = TRUE)
+    expect_true(length(unique(out7$cacheId)) == 1)
+
+    out8 <- clearCache(userTags = "runif", x = tmpCache, cloudFolderID = cfid, useCloud = TRUE)
+    expect_true(length(unique(out7$cacheId)) == 1)
+
+  }
 })

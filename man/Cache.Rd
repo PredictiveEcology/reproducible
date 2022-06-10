@@ -28,7 +28,7 @@ Cache(
   cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
   useCloud = FALSE,
-  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+  cloudFolderID = NULL,
   showSimilar = getOption("reproducible.showSimilar", FALSE),
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL)
@@ -57,7 +57,7 @@ Cache(
   cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
   useCloud = FALSE,
-  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+  cloudFolderID = NULL,
   showSimilar = getOption("reproducible.showSimilar", FALSE),
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL)

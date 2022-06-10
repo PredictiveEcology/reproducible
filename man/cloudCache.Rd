@@ -4,6 +4,7 @@
 \alias{cloudDownload}
 \alias{cloudClearCache}
 \alias{cloudCacheBrowse}
+\alias{cloudFolderFromCacheRepo}
 \title{Download from cloud, if necessary}
 \usage{
 cloudDownload(
@@ -15,9 +16,11 @@ cloudDownload(
   conn = getOption("reproducible.conn", NULL)
 )
 
-cloudClearCache(cloudFolderID = getOption("reproducible.cloudFolderID", NULL))
+cloudClearCache(cloudFolderID = NULL)
 
-cloudCacheBrowse(cloudFolderID = getOption("reproducible.cloudFolderID", NULL))
+cloudCacheBrowse(cloudFolderID = NULL)
+
+cloudFolderFromCacheRepo(cacheRepo)
 }
 \arguments{
 \item{cacheRepo}{A repository used for storing cached objects.
