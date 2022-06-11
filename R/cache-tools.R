@@ -99,16 +99,19 @@ setMethod(
   definition = function(x, userTags, after = NULL, before = NULL, ask, useCloud = FALSE,
                         cloudFolderID = NULL,
                         drv = getOption("reproducible.drv"),
-                        conn = getOption("reproducible.conn", NULL), ...) {
+                        conn = getOption("reproducible.conn", NULL),
+                        verbose = getOption("reproducible.verbose"), ...) {
     # isn't clearing the raster bacekd file
     # browser(expr = exists("._clearCache_1"))
 
     if (missing(x)) {
       x <- if (!is.null(list(...)$cacheRepo)) {
-        messageCache("x not specified, but cacheRepo is; using ", list(...)$cacheRepo)
+        messageCache("x not specified, but cacheRepo is; using ", list(...)$cacheRepo,
+                     verbose = verbose)
         list(...)$cacheRepo
       } else  {
-        messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
+        messageCache("x not specified; using ", getOption("reproducible.cachePath")[1],
+                     verbose = verbose)
         x <- getOption("reproducible.cachePath")[1]
       }
     }
@@ -159,7 +162,7 @@ setMethod(
                   " Are you sure you would like to delete it all? Y or N")
           rl <- readline()
           if (!identical(toupper(rl), "Y")) {
-            messageCache("Aborting clearCache")
+            messageCache("Aborting clearCache", verbose = verbose)
             return(invisible())
           }
         }
@@ -218,7 +221,7 @@ setMethod(
                   " Are you sure you would like to delete it all? Y or N")
           rl <- readline()
           if (!identical(toupper(rl), "Y")) {
-            messageCache("Aborting clearCache")
+            messageCache("Aborting clearCache", verbose = verbose)
             return(invisible())
           }
         }
@@ -258,6 +261,7 @@ setMethod(
 #'             the default, then it will delete the most recent entry in the Cache.
 #'
 #' @export
+#' @inheritParams Cache
 #' @rdname viewCache
 #'
 #' @examples
@@ -276,16 +280,18 @@ setMethod(
 #' showCache(x = tmpDir) # all those after thisTime gone, i.e., only 1 left
 #' cc(ask = FALSE, x = tmpDir) # Cache is
 #' cc(ask = FALSE, x = tmpDir) # Cache is already empty
-cc <- function(secs, ...) {
+cc <- function(secs,
+               verbose = getOption("reproducible.verbose"), ...) {
   # browser(expr = exists("jjjj"))
   if (missing(secs)) {
-    messageCache("No time provided; removing the most recent entry to the Cache")
+    messageCache("No time provided; removing the most recent entry to the Cache",
+                 verbose = verbose)
     suppressMessages({theCache <- reproducible::showCache(...)})
     if (NROW(theCache) > 0) {
       accessed <- data.table::setkey(theCache[tagKey == "accessed"], tagValue)
       clearCache(userTags = tail(accessed, 1)[[.cacheTableHashColName()]], ...)
     } else {
-      messageCache("Cache already empty")
+      messageCache("Cache already empty", verbose = verbose)
     }
   } else {
     if (is(secs, "POSIXct")) {
@@ -319,7 +325,8 @@ cc <- function(secs, ...) {
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  drv = getOption("reproducible.drv"),
-                                 conn = getOption("reproducible.conn", NULL), ...) {
+                                 conn = getOption("reproducible.conn", NULL),
+                                 verbose = getOption("reproducible.verbose"), ...) {
   standardGeneric("showCache")
 })
 
@@ -329,22 +336,29 @@ setMethod(
   "showCache",
   definition = function(x, userTags, after = NULL, before = NULL, drv, conn, ...) {
     # browser(expr = exists("rrrr"))
+    dots <- list(...)
     if (missing(x)) {
-      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
+      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1],
+                   verbose = verbose)
       x <- getOption("reproducible.cachePath")[1]
     }
     # browser(expr = exists("jjjj"))
-    afterNA <- FALSE
-    if (is.null(after)) {
-      afterNA <- TRUE
-      after <- NA
-    }
+    after <- toNA(after)
+    afterNA <- is.na(after)
+    before <- toNA(before)
+    beforeNA <- is.na(before)
+
+    # afterNA <- FALSE
+    # if (is.null(after)) {
+    #   afterNA <- TRUE
+    #   after <- NA
+    # }
     # "1970-01-01"
-    beforeNA <- FALSE
-    if (is.null(before)) {
-      beforeNA <- TRUE
-      before <- NA
-    } # Sys.time() + 1e5
+    # beforeNA <- FALSE
+    # if (is.null(before)) {
+    #   beforeNA <- TRUE
+    #   before <- NA
+    # } # Sys.time() + 1e5
     # if (is(x, "simList")) x <- x@paths$cachePath
 
     # not seeing userTags
@@ -368,26 +382,27 @@ setMethod(
         dbDisconnectAll(conn, shutdown = TRUE)
       }, add = TRUE)
     }
-    if (!CacheIsACache(x, drv = drv, conn = conn))
+    # This next "is.null(dots$dbTabName)" may be a work around for an internal
+    #   usage from cloud caching -- where dbTabNam is supplied
+    dbTabNam <- dots$dbTabNam
+    if (!CacheIsACache(x, drv = drv, conn = conn) && is.null(dbTabNam))
       return(.emptyCacheTable)
 
-    objsDT <- showCacheAll(x, drv, conn)
+    objsDT <- showCacheAll(x, drv, conn, dbTabNam)
 
     if (NROW(objsDT) > 0) {
-      if (!afterNA || !beforeNA) {
-        objsDT3 <- objsDT[tagKey == "accessed"]
-        if (!beforeNA)
-          objsDT3 <- objsDT3[(tagValue <= before)]
-        if ( !afterNA)
-          objsDT3 <- objsDT3[(tagValue >= after)]
-        # objsDT3 <- objsDT3[!duplicated(cacheId)]
-        # browser(expr = exists("zzzz"))
-        # objsDT <- objsDT[cacheId %in% objsDT3$cacheId]
-        objsDT <- objsDT[objsDT[[.cacheTableHashColName()]] %in%
-                           unique(objsDT3[[.cacheTableHashColName()]])] # faster than data.table join
-      }
+      # if (!afterNA || !beforeNA) {
+      #   objsDT3 <- objsDT[tagKey == "accessed"]
+      #   if (!beforeNA)
+      #     objsDT3 <- objsDT3[(tagValue <= before)]
+      #   if ( !afterNA)
+      #     objsDT3 <- objsDT3[(tagValue >= after)]
+      #   objsDT <- objsDT[objsDT[[.cacheTableHashColName()]] %in%
+      #                      unique(objsDT3[[.cacheTableHashColName()]])] # faster than data.table join
+      # }
+      objsDT <- afterBefore(objsDT, afterNA, after, beforeNA, before)
       if (length(userTags) > 0) {
-        if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
+        if (isTRUE(dots$regexp) | is.null(dots$regexp)) {
           objsDTs <- list()
           for (ut in userTags) {
               objsDT2 <- objsDT[
@@ -409,14 +424,14 @@ setMethod(
       }
     }
     verboseMessaging <- TRUE
-    if (!is.null(list(...)$verboseMessaging)) {
-      if (!isTRUE(list(...)$verboseMessaging)) {
+    if (!is.null(dots$verboseMessaging)) {
+      if (!isTRUE(dots$verboseMessaging)) {
         verboseMessaging <- FALSE
       }
     }
     if (verboseMessaging)
       .messageCacheSize(x, artifacts = unique(objsDT[[.cacheTableHashColName()]]),
-                        cacheTable = objsDT)
+                        cacheTable = objsDT, verbose = verbose)
     setkeyv(objsDT, colnames(objsDT))
     objsDT[]
 })
@@ -435,14 +450,18 @@ setGeneric("keepCache", function(x, userTags = character(), after = NULL, before
 #' @rdname viewCache
 setMethod(
   "keepCache",
-  definition = function(x, userTags, after, before, ask, useCloud, cloudFolderID, drv, conn, ...) {
+  definition = function(x, userTags, after, before, ask, useCloud, cloudFolderID,
+                        drv, conn,
+                        verbose = getOption("reproducible.verbose"), ...) {
     dots <- list(...)
     if (missing(x)) {
       if (!is.null(dots$cacheRepo)) {
-        messageCache("x not specified but cacheRepo is; using cacheRepo")
+        messageCache("x not specified but cacheRepo is; using cacheRepo",
+                     verbose = verbose)
         x <- dots$cacheRepo
       } else {
-        messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
+        messageCache("x not specified; using ", getOption("reproducible.cachePath")[1],
+                     verbose = verbose)
         x <- getOption("reproducible.cachePath")[1]
       }
     }
@@ -527,7 +546,7 @@ setMethod(
         outputToSave <- try(loadFromCache(cacheFrom, artifact))
 
         if (is(outputToSave, "try-error")) {
-          messageCache("Continuing to load others")
+          messageCache("Continuing to load others", verbose = verbose)
           outputToSave <- NULL
         }
 
@@ -535,19 +554,20 @@ setMethod(
         userTags <- cacheFromList[artifact, on = .cacheTableHashColName()][
           !tagKey %in% c("format", "name", "date", "cacheId"), list(tagKey, tagValue)]
         output <- saveToCache(cacheTo, userTags = userTags, obj = outputToSave, cacheId = artifact) # nolint
-        messageCache(artifact, " copied")
+        messageCache(artifact, " copied", verbose = verbose)
         outputToSave
       } else {
-        messageCache("Skipping ", artifact, "; already in ", cacheTo)
+        messageCache("Skipping ", artifact, "; already in ", cacheTo, verbose = verbose)
       }
     })
-    .messageCacheSize(cacheTo, cacheTable = showCache(cacheTo))
+    .messageCacheSize(cacheTo, cacheTable = showCache(cacheTo), verbose = verbose)
 
     return(invisible(cacheTo))
 })
 
 #' @keywords internal
-.messageCacheSize <- function(x, artifacts = NULL, cacheTable) {
+.messageCacheSize <- function(x, artifacts = NULL, cacheTable,
+                              verbose = getOption("reproducible.verbose")) {
   # browser(expr = exists("ffff"))
 
   tagCol <- "tagValue"
@@ -580,9 +600,9 @@ setMethod(
   class(fs) <- "object_size"
   preMessage <- "  Selected objects (not including Rasters): "
 
-  messageCache("Cache size: ")
-  messageCache(preMessage1, format(fsTotal, "auto"))
-  messageCache(preMessage, format(fs, "auto"))
+  messageCache("Cache size: ", verbose = verbose)
+  messageCache(preMessage1, format(fsTotal, "auto"), verbose = verbose)
+  messageCache(preMessage, format(fs, "auto"), verbose = verbose)
 }
 
 #' @keywords internal
@@ -710,6 +730,8 @@ isTRUEorForce <- function(cond) {
 
 showCacheAll <- function(x, drv, conn, dbTabNam = NULL) {
   if (useSQL(conn)) {
+    if (missing(x))
+      x <- dirname(conn@dbname)
     if (is.null(dbTabNam))
       dbTabNam <- CacheDBTableName(x, drv = drv)
     res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
@@ -728,3 +750,24 @@ showCacheAll <- function(x, drv, conn, dbTabNam = NULL) {
   objsDT
 }
 
+toNA <- function(x) {
+  # afterNA <- FALSE
+  if (is.null(x)) {
+    #afterNA <- TRUE
+    x <- NA
+  }
+  x
+}
+
+afterBefore <- function(objsDT, afterNA, after, beforeNA, before) {
+  if (!afterNA || !beforeNA) {
+    objsDT3 <- objsDT[tagKey == "accessed"]
+    if (!beforeNA)
+      objsDT3 <- objsDT3[(tagValue <= before)]
+    if ( !afterNA)
+      objsDT3 <- objsDT3[(tagValue >= after)]
+    objsDT <- objsDT[objsDT[[.cacheTableHashColName()]] %in%
+                       unique(objsDT3[[.cacheTableHashColName()]])] # faster than data.table join
+  }
+  objsDT
+}

@@ -5,6 +5,7 @@
 \alias{cloudClearCache}
 \alias{cloudCacheBrowse}
 \alias{cloudFolderFromCacheRepo}
+\alias{cloudShowCache}
 \title{Download from cloud, if necessary}
 \usage{
 cloudDownload(
@@ -21,6 +22,16 @@ cloudClearCache(cloudFolderID = NULL)
 cloudCacheBrowse(cloudFolderID = NULL)
 
 cloudFolderFromCacheRepo(cacheRepo)
+
+cloudShowCache(
+  cloudFolderID,
+  gdriveLs = NULL,
+  userTags = character(),
+  after = NULL,
+  before = NULL,
+  drv = getOption("reproducible.drv"),
+  conn = getOption("reproducible.conn", NULL)
+)
 }
 \arguments{
 \item{cacheRepo}{A repository used for storing cached objects.
@@ -42,6 +53,10 @@ and a DB backend such as \code{RSQLite} to be installed.}
 \item{conn}{Either the character string of the path to the `fst` file that is the
 cacheRepo file, or optionally (requires \code{DBI} and a DB backend such as \code{RSQLite})
 a DBIConnection object, as returned by \code{dbConnect()}}
+
+\item{userTags}{A character vector with descriptions of the Cache function call. These
+will be added to the Cache so that this entry in the Cache can be found using
+\code{userTags} e.g., via \code{\link{showCache}}.}
 }
 \description{
 Meant for internal use, as there are internal objects as arguments.

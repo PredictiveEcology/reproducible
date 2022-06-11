@@ -37,7 +37,8 @@ rmFromCache(
   cacheId,
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
-  format = getOption("reproducible.cacheSaveFormat", "rds")
+  format = getOption("reproducible.cacheSaveFormat", "rds"),
+  dbTabNam = NULL
 )
 }
 \arguments{

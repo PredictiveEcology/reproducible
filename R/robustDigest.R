@@ -197,9 +197,7 @@ setMethod(
         simpleDigest <- FALSE
       }}
     if (!simpleDigest) {
-      # browser(expr = exists("hhhh"))
       unlist(lapply(object, function(x) {
-        # browser(expr = exists("hhhh"))
         if (dir.exists(x)) {
           .doDigest(basename(x), algo)
         } else if (file.exists(x)) {
@@ -208,9 +206,6 @@ setMethod(
           .doDigest(x, algo)
         }
       }))
-      #} else {
-      #.doDigest(object, algo = algo)
-      #}
     } else {
       .doDigest(object, algo = algo)
     }
@@ -298,7 +293,7 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    dig <- lapply(object, .robustDigest, algo = algo, classOptions = classOptions)
+    dig <- lapply(object, .robustDigest, algo = algo, classOptions = classOptions, quick = quick)
     .robustDigest(unlist(dig), quick = TRUE, algo = algo, classOptions = classOptions)
 })
 

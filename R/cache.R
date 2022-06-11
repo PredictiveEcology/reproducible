@@ -112,7 +112,7 @@ utils::globalVariables(c(
 #' \code{Raster} currently. For class \code{character}, it is ambiguous whether
 #' this represents a character string or a vector of file paths. If it is known
 #' that character strings should not be treated as paths, then \code{quick =
-#' TRUE} will be much faster, with no loss of information. If it is file or
+#' TRUE} must be explicitly set. If it is file or
 #' directory, then it will digest the file content, or \code{basename(object)}.
 #' For class \code{Path} objects, the file's metadata (i.e., filename and file
 #' size) will be hashed instead of the file contents if \code{quick = TRUE}. If
@@ -1915,8 +1915,8 @@ dealWithClassOnRecovery2 <- function(output, cacheRepo, cacheId,
 
 checkInRepo <- function(conn, dbTabNam, outputHash) {
   if (useSQL(conn)) {
-    qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(glue::double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
-                          dbTabName = dbTabNam,
+    qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(glue::double_quote(dbTabNam))} where \"cacheId\" = ({outputHash})",
+                          dbTabNam = dbTabNam,
                           outputHash = outputHash,
                           .con = conn)
     res <- retry(retries = 15, exponentialDecayBase = 1.01,

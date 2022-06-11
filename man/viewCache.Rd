@@ -25,18 +25,19 @@ clearCache(
 
 \S4method{clearCache}{ANY}(
   x,
-  userTags = character(),
+  userTags,
   after = NULL,
   before = NULL,
-  ask = getOption("reproducible.ask"),
+  ask,
   useCloud = FALSE,
   cloudFolderID = NULL,
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 
-cc(secs, ...)
+cc(secs, verbose = getOption("reproducible.verbose"), ...)
 
 showCache(
   x,
@@ -45,6 +46,7 @@ showCache(
   before = NULL,
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 
@@ -55,6 +57,7 @@ showCache(
   before = NULL,
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 
@@ -73,14 +76,15 @@ keepCache(
 
 \S4method{keepCache}{ANY}(
   x,
-  userTags = character(),
-  after = NULL,
-  before = NULL,
-  ask = getOption("reproducible.ask"),
-  useCloud = FALSE,
-  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-  drv = getOption("reproducible.drv"),
-  conn = getOption("reproducible.conn", NULL),
+  userTags,
+  after,
+  before,
+  ask,
+  useCloud,
+  cloudFolderID,
+  drv,
+  conn,
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 }
@@ -137,6 +141,12 @@ Otherwise, \code{userTags} will need to be exact matches. Default is
 missing, which is the same as \code{TRUE}. If there are errors due
 to regular expression problem, try \code{FALSE}. For \code{cc}, it is
 passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{secs}{Currently 3 options: the number of seconds to pass to \code{clearCache(after = secs)},
 a \code{POSIXct} time e.g., from \code{Sys.time()}, or missing. If missing,

@@ -438,15 +438,16 @@ test_that("test keepCache(useCloud=TRUE, ...)", {
 
     opts <- options("reproducible.cachePath" = tmpdir)
     on.exit({
-      try(googledrive::drive_trash(googledrive::as_id(newDir$id)), silent = TRUE)
       try(googledrive::drive_trash(cloudFolderID()), silent = TRUE)
       options(opts)
       testOnExit(testInitOut)
     }, add = TRUE)
+    suppressWarnings(rm(aaa))
     clearCache(x = tmpCache)
     clearCache(x = tmpdir)
 
     cfid <- cloudFolderID(cacheRepo = tmpdir, create = TRUE) # sets option
+    cloudClearCache(cfid)
 
     out1 <- Cache(rnorm, 2, useCloud = TRUE, cloudFolderID = cfid, cacheRepo = tmpdir)
     out2 <- Cache(rnorm, 3, useCloud = TRUE, cloudFolderID = cfid, cacheRepo = tmpdir)
@@ -454,15 +455,48 @@ test_that("test keepCache(useCloud=TRUE, ...)", {
     out4 <- Cache(runif, 5, useCloud = TRUE, cloudFolderID = cfid, cacheRepo = tmpCache)
     out5 <- Cache(rnorm, 6, useCloud = TRUE, cloudFolderID = cfid, cacheRepo = tmpCache)
 
+    # The cloud used 2 different local caches; the cloud db file has all info
+    scAll <- cloudShowCache(cfid)
+    sctmpdir <- showCache(tmpdir)
+    sctmpCache <- showCache(tmpCache)
+    scLocal <- setkeyv(data.table::rbindlist(list(sctmpdir, sctmpCache)), colnames(scAll))
+    expect_true(all.equal(scAll[, -"createdDate"], scLocal[, -"createdDate"]))
+
+
     # This will only remove the objects that are *in* tmpdir
     out6 <- keepCache(userTags = "runif", x = tmpdir, cloudFolderID = cfid, useCloud = TRUE)
     expect_true(length(unique(out6$cacheId)) == 1)
+    sc <- cloudShowCache(cfid)
+    expect_true(NROW(unique(sc$cacheId)) == 3) # the 1 runif from tmpdir + 2 from tmpCache
 
     out7 <- keepCache(userTags = "runif", x = tmpCache, cloudFolderID = cfid, useCloud = TRUE)
     expect_true(length(unique(out7$cacheId)) == 1)
+    sc1 <- cloudShowCache(cfid)
+    expect_true(NROW(unique(sc1$cacheId)) == 2) # the 1 runif from tmpdir + 1 unif from tmpCache
 
     out8 <- clearCache(userTags = "runif", x = tmpCache, cloudFolderID = cfid, useCloud = TRUE)
-    expect_true(length(unique(out7$cacheId)) == 1)
+    expect_true(length(unique(out8$cacheId)) == 1)
+    sc2 <- cloudShowCache(cfid)
+    expect_true(NROW(unique(sc2$cacheId)) == 1) # the 1 runif from tmpdir
+
+
+    out9 <- Cache(rnorm, 7, useCloud = TRUE, cloudFolderID = cfid, cacheRepo = tmpdir)
+    sc3 <- cloudShowCache(cfid)
+    expect_true(NROW(unique(sc3$cacheId)) == 2) # the 1 runif from tmpdir + rnorm in tmpdir
+
+    # Delete only cloud --> this will cause local and cloud to be different
+    # aaa <<- 1
+    ss <- cloudClearCache(userTags = "rnorm")
+    expect_true(NROW(unique(ss$cacheId)) == 1) # the 1 runif from tmpdir + rnorm in tmpdir
+
+    # Put it back from local cache to cloud cache
+    out10 <- Cache(rnorm, 7, useCloud = TRUE, cloudFolderID = cfid, cacheRepo = tmpdir)
+    sc4 <- cloudShowCache(cfid)
+    scLoc <- showCache(tmpdir)
+    expect_true(identical(sc4[,-"createdDate"], scLoc[,-"createdDate"]))
+
+
+
 
   }
 })

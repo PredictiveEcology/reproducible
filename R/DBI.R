@@ -195,15 +195,15 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                         cacheId, drv = getOption("reproducible.drv"),
                         conn = getOption("reproducible.conn", NULL),
                         format = getOption("reproducible.cacheSaveFormat", "rds"),
-                        dbTabName = NULL) {
+                        dbTabNam = NULL) {
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
     on.exit(dbDisconnectAll(conn, shutdown = TRUE))
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
   # query <- glue::glue_sql(
-  #   "DELETE FROM {DBI::SQL(double_quote(dbTabName))} WHERE \"cacheId\" IN ({cacheId*})",
-  #   dbTabName = CacheDBTableName(cachePath, drv),
+  #   "DELETE FROM {DBI::SQL(double_quote(dbTabNam))} WHERE \"cacheId\" IN ({cacheId*})",
+  #   dbTabNam = CacheDBTableName(cachePath, drv),
   #   cacheId = cacheId,
   #   .con = conn)
   # res <- dbSendQuery(conn, query)
@@ -216,7 +216,7 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   #
   # dbClearResult(res)
 
-  rmFromCacheAll(cachePath, drv, cacheId, conn, dbTabName = dbTabName)
+  rmFromCacheAll(cachePath, drv, cacheId, conn, dbTabNam = dbTabNam)
 
   unlink(CacheStoredFile(cachePath, hash = cacheId, format = format))
 }
@@ -859,13 +859,13 @@ createEmptyTable <- function(conn, cachePath, drv) {
   return(invisible())
 }
 
-rmFromCacheAll <- function(cachePath, drv, cacheId, conn, dbTabName = NULL) {
+rmFromCacheAll <- function(cachePath, drv, cacheId, conn, dbTabNam = NULL) {
   if (useSQL(conn)) {
-    if (is.null(dbTabName))
-      dbTabName <- CacheDBTableName(cachePath, drv)
+    if (is.null(dbTabNam))
+      dbTabNam <- CacheDBTableName(cachePath, drv)
     query <- glue::glue_sql(
-      "DELETE FROM {DBI::SQL(glue::double_quote(dbTabName))} WHERE \"cacheId\" IN ({cacheId*})",
-      dbTabName = dbTabName,
+      "DELETE FROM {DBI::SQL(glue::double_quote(dbTabNam))} WHERE \"cacheId\" IN ({cacheId*})",
+      dbTabNam = dbTabNam,
       cacheId = cacheId,
       .con = conn)
     res <- DBI::dbSendQuery(conn, query)
