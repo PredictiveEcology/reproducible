@@ -439,9 +439,7 @@ setMethod(
       parsedFUN <- as.list(newSubstFun)#parse(text = newSubstFun)
       origFUN <- FUN
       FUN <- eval(parsedFUN[[1]], parent.frame())
-      dots <- parsedFUN[-1]
-    } else {
-      dots <- list(...)
+      originalDots <- parsedFUN[-1]
     }
     if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
 
@@ -449,11 +447,17 @@ setMethod(
 
     # returns "modifiedDots", "originalDots", "FUN", "funName", which will
     #  have modifications under many circumstances, e.g., do.call, specific methods etc.
-    fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", dots)
+    fnDetails <- if(isCapturedFUN)
+      .fnCleanup(FUN = FUN, callingFun = "Cache", originalDots)
+    else
+      .fnCleanup(FUN = FUN, callingFun = "Cache", ...)
+
+    if (exists("bbb")) browser()
 
     FUN <- fnDetails$FUN
     modifiedDots <- fnDetails$modifiedDots
-    originalDots <- fnDetails$originalDots
+    originalDots <- fnDetails$originalDots # should be same as originalDots
+
     skipCacheDueToNumeric <- is.numeric(useCache) && useCache <= (fnDetails$nestLevel)
 
     if (isFALSE(useCache) || isTRUE(0 == useCache) || skipCacheDueToNumeric) {
@@ -638,7 +642,7 @@ setMethod(
 
       if (length(debugCache)) {
         if (!is.na(pmatch(debugCache, "quick"))) {
-          return(list(hash = preDigest, content = dots))
+          return(list(hash = preDigest, content = originalDots))
         }
       }
 
@@ -719,7 +723,6 @@ setMethod(
       #   userTags and in devMode
       needFindByTags <- identical("devMode", useCache) && NROW(isInRepo) == 0
       if (needFindByTags) {
-        # browser(expr = exists("._Cache_5"))
         # It will not have the "localTags" object because of "direct db access" added Jan 20 2020
         if (!exists("localTags", inherits = FALSE)) #
           localTags <- showCache(repo, drv = drv, verboseMessaging = FALSE) # This is noisy
@@ -732,7 +735,6 @@ setMethod(
       # Deal with overwrite, needFindByTags (which is related to "devMode")
       isInCloud <- FALSE
       if (useCloud && identical("overwrite", useCache)) {
-        # browser(expr = exists("._Cache_16"))
         isInCloud <- isTRUE(any(gdriveLs$name %in% basename2(CacheStoredFile(cacheRepo, outputHash))))
       }
 
@@ -786,12 +788,9 @@ setMethod(
                                      preDigest = preDigest, startCacheTime = startCacheTime,
                                      drv = drv, conn = conn,
                                      ...), silent = TRUE)
-          #output <- dealWithClassOnRecovery(output, cacheRepo = cacheRepo, cacheId = isInRepo$cacheId,
-          #                                  drv = drv, conn = conn) # returns just the "original" filenames in metadata & copies file-backed
           postLoadTime <- Sys.time()
           elapsedTimeLoad <- postLoadTime - preLoadTime
 
-          # browser(expr = exists("._Cache_7"))
           if (is(output, "try-error")) {
             cID <- isInRepo[[.cacheTableHashColName()]]
             stop(output, "\nError in trying to recover cacheID: ", cID,
