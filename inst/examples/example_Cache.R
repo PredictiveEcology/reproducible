@@ -49,7 +49,7 @@ a <- rnorm(42) |> mean() |> Cache()
 b <- Cache(mean(rnorm(42)))
 all.equal(a, b, check.attributes = F) # these random calls are same
 
-# longer works, even with _ placeholder
+# longer works, even with _ placeholder and multiple randomness
 a <- rnorm(42, sd = 20) |> sd() |> rnorm(1, mean = _) |> Cache()
 b <- Cache(rnorm(1, sd(rnorm(42, sd = 20))))
 all.equal(a, b, check.attributes = F) # these random calls are same
