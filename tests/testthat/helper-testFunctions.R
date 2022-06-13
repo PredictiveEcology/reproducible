@@ -40,7 +40,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   else
     list()
 
-  assign(value = "testsForPkgs",  "testsForPkgs", envir = .pkgEnv)
+
+  assign(value = "cloudCache_testsForPkgs",  "testsForPkgs", envir = .pkgEnv)
 
   optsVerbose <- if (verbose)
     options(reproducible.verbose = verbose)
@@ -456,7 +457,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   expect_true(identical(driveLsAfter, driveLsBefore))
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
   driveLsEnd <- googledrive::drive_ls(cloudFolderID)
-  expect_true(NROW(driveLsEnd) == 0)
+  expect_true(NROW(driveLsEnd) == 1) # the cache database only
 }
 
 fnCacheHelper1 <- function() {

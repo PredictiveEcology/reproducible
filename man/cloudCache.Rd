@@ -17,14 +17,21 @@ cloudDownload(
   conn = getOption("reproducible.conn", NULL)
 )
 
-cloudClearCache(cloudFolderID = NULL)
+cloudClearCache(
+  cloudFolderID = NULL,
+  userTags = character(),
+  after = NULL,
+  before = NULL,
+  drv = getOption("reproducible.drv"),
+  conn = getOption("reproducible.conn", NULL)
+)
 
 cloudCacheBrowse(cloudFolderID = NULL)
 
 cloudFolderFromCacheRepo(cacheRepo)
 
 cloudShowCache(
-  cloudFolderID,
+  cloudFolderID = getOption("reproducible.cloudFolderID"),
   gdriveLs = NULL,
   userTags = character(),
   after = NULL,
@@ -67,4 +74,13 @@ To fully remove the entire \code{cloudFolderID} directory, use
 }
 \details{
 \code{cloudCacheBrowse} will open up a browser at the current cloudFolderID.
+
+\code{cloudShowCache} is the equivalent to \code{\link{showCache}}, but only
+for a \code{cloudFolderID}. This works by identifying the database file in the
+\code{cloudFolderID}, downloading that file to a local, temporary file location,
+then reading from it. It will remove the temporary file on completion. This
+\code{showCloudCache} will have no relationship to \code{showCache}; if the
+user would like to see what objects in the current local \code{cacheRepo} are
+in the cloud, use \code{showCache(cacheRepo)},
+which will have a \code{tagKey} of `inCloud` and a \code{tagValue} `TRUE`.
 }

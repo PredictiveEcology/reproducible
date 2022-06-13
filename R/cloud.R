@@ -53,8 +53,12 @@ cloudFolderID <- function(cloudFolderID = NULL,
       cloudFolderID <- cloudFolderFromCacheRepo(cacheRepo)
     }
     isID <- is(cloudFolderID, "drive_id")
-    # isID <- isTRUE(32 <= nchar(cloudFolderID) && nchar(cloudFolderID) <= 33)
-    if (!isID) cloudFolderID <- googledrive::as_id(cloudFolderID)
+
+    if (!isID) {
+      isStringForID <- isTRUE(32 <= nchar(cloudFolderID) && nchar(cloudFolderID) <= 33)
+      if (isStringForID) cloudFolderID <- googledrive::as_id(cloudFolderID)
+    }
+
     driveLs <-
       if (packageVersion("googledrive") < "2.0.0") {
         tryCatch(googledrive::drive_get(cloudFolderID, team_drive = team_drive),
@@ -145,6 +149,7 @@ cloudDownload <- function(outputHash, gdriveLs, cacheRepo, cloudFolderID,
                                   path = localNewFilename, # take first if there are duplicates
                                   overwrite = TRUE)))
 
+    if (exists("aaa")) browser()
     cloudAddTagsRepo(du, outputHash, cacheRepo, drv, conn)
     output <- loadFile(localNewFilename)
     output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID, outputHash = outputHash, drv = drv)
@@ -197,9 +202,8 @@ cloudUpload <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
       du <- rbind(du, cu)
     }
 
-    cloudAddTagsRepo(drib = du, outputHash, cacheRepo, drv = drv, conn = conn)
     if (exists("aaa")) browser()
-
+    cloudAddTagsRepo(drib = du, outputHash, cacheRepo, drv = drv, conn = conn)
 
     # Now update the db file in cloud
     suppressMessages(sc <- showCache(userTags = outputHash, x = cacheRepo, drv = drv, conn = conn))
@@ -271,7 +275,7 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, outputH
         du <- retry(quote(googledrive::drive_download(file = gdriveLs2[idRowNum,],
                                    path = localNewFilename, # take first if there are duplicates
                                    overwrite = TRUE)))
-        browser()
+        if (exists("aaa")) browser()
         cloudAddTagsRepo(drib = du, outputHash, cacheRepo, drv = drv, conn = conn)
         return(filenameMismatch)
 
@@ -314,10 +318,11 @@ isOrHasRaster <- function(obj) {
 
 
 cloudAddTagsRepo <- function(drib, outputHash, cacheRepo, drv, conn) {
+  if (exists("aaa")) browser()
   .updateTagsRepo(outputHash, cacheRepo, "inCloud", "TRUE", drv = drv, conn = conn)
-  lapply(drib$name, function(nam) .updateTagsRepo(outputHash, cacheRepo, "inCloudFile",
+  lapply(drib$name, function(nam) .addTagsRepo(outputHash, cacheRepo, "inCloudFile",
                                              nam, drv = drv, conn = conn))
-  lapply(drib$id, function(id) .updateTagsRepo(outputHash, cacheRepo, "inCloudID",
+  lapply(drib$id, function(id) .addTagsRepo(outputHash, cacheRepo, "inCloudID",
                                           id, drv = drv, conn = conn))
 
 }

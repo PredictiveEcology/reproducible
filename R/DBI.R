@@ -311,7 +311,7 @@ connObject <- function(cachePath) {
 }
 
 .ignoreTagKeys <- function() {
-  c("preDigest", "otherFunctions", "accessed", "elapsedTimeLoad", "fromDisk", "origRaster", "cacheRaster")
+  c("prerun", "preDigest", "otherFunctions", "accessed", "elapsedTimeLoad", "fromDisk", "origRaster", "cacheRaster")
 }
 
 .cacheTableHashColName <- function() {
