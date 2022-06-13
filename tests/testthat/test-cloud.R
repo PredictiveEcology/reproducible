@@ -34,7 +34,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     # local absent, cloud absent
     #######################################
     mess1 <- capture_messages({
-      a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+      a1 <- Cache(rnorm(1), cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
     })
     expect_true(any(grepl(messUploaded, mess1)))
 
@@ -67,7 +67,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
     a1 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID, cacheRepo = tmpCache)
     mess4 <- capture_messages({
-      a2 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+      a2 <- Cache(rnorm(2), cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
     })
 
     expect_true(any(grepl(messLoadedCached, mess4)))
@@ -92,7 +92,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
     warn6 <- capture_warnings({
       mess6 <- capture_messages({
-        a2 <- Cache(rnorm, 3, cacheRepo = tmpCache, useCloud = TRUE)
+        a2 <- Cache(rnorm(3), cacheRepo = tmpCache, useCloud = TRUE)
       })
     })
 
@@ -114,32 +114,32 @@ test_that("test Cache(useCloud=TRUE, ...)", {
         clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
       )
     })
-    expect_true(NROW(googledrive::drive_ls(path = cloudFolderFromCacheRepo(tmpCache))) == 0)
+    expect_true(NROW(googledrive::drive_ls(path = cloudFolderID)) == 1) # cache.db
 
     # Add 3 things to local, only 2 to cloud -- clear them all, without an error
     for (i in 1:2)
-      a1 <- Cache(rnorm, i, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+      a1 <- Cache(rnorm(i), cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
     a1 <- Cache(rnorm, 3, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = FALSE)
     expect_silent({
       mess2 <- capture_messages(
         clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
       )
     })
-    expect_true(NROW(googledrive::drive_ls(path = cloudFolderFromCacheRepo(tmpCache))) == 0)
+    expect_true(NROW(googledrive::drive_ls(path = cloudFolderID)) == 1) # cache.db
 
     # Add 2 things to local and cloud -- clear only 1 of them, without an error
     Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
-    Cache(rnorm, 2, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+    Cache(rnorm(2), cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
     expect_silent({
       mess2 <- capture_messages(
         clearCache(x = tmpCache, userTags = .robustDigest(1), useCloud = TRUE, cloudFolderID = cloudFolderID)
       )
     })
 
-    gdriveLs <- googledrive::drive_ls(path = cloudFolderFromCacheRepo(tmpCache))
-    expect_true(NROW(gdriveLs) == 1)
-    expect_true(grepl(unique(showCache(tmpCache)[[.cacheTableHashColName()]]), gdriveLs$name))
-    retry(quote(googledrive::drive_trash(getOption("reproducible.cloudFolderID"))))
+    gdriveLs <- googledrive::drive_ls(path = cloudFolderID)
+    expect_true(NROW(gdriveLs) == 2)
+    expect_true(sum(grepl(unique(showCache(tmpCache)[[.cacheTableHashColName()]]), gdriveLs$name)) == 1)
+    try(googledrive::drive_trash(getOption("reproducible.cloudFolderID")))
   }
 })
 
@@ -147,7 +147,8 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
   skip_if_no_token()
   if (interactive()) {
     testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
-                            opts = list("reproducible.ask" = FALSE))
+                            opts = list("reproducible.ask" = FALSE,
+                                        "reproducible.inputPaths" = NULL))
 
     opts <- options("reproducible.cachePath" = tmpdir)
     suppressWarnings(rm(list = "aaa", envir = .GlobalEnv))
@@ -304,16 +305,16 @@ test_that("test Cache(useCloud=TRUE, ...) with shared drive", {
     d <- Cache(runif, 16, useCloud = TRUE, cloudFolderID = cloudFolderID)
     gdriveLs3 <- googledrive::drive_ls(cloudFolderID)
 
-    expect_true(NROW(gdriveLs1) == 1)
-    expect_true(NROW(gdriveLs2) == 2)
-    expect_true(NROW(gdriveLs3) == 3)
+    expect_true(NROW(gdriveLs1) == 1 + 1)
+    expect_true(NROW(gdriveLs2) == 2 + 1)
+    expect_true(NROW(gdriveLs3) == 3 + 1)
     clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID, userTags = "rnorm")
     gdriveLs4 <- googledrive::drive_ls(cloudFolderID)
-    expect_true(NROW(gdriveLs4) == 1)
+    expect_true(NROW(gdriveLs4) == 1 + 1)
 
     clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
     gdriveLs5 <- googledrive::drive_ls(cloudFolderID)
-    expect_true(NROW(gdriveLs5) == 0)
+    expect_true(NROW(gdriveLs5) == 0 + 1)
 
     # Now try a raster
 
@@ -372,12 +373,11 @@ test_that("test individual useCloud family", {
   }, add = TRUE)
 
   ras <- raster(extent(0,1,0,1), res  = 1, vals = 1)
-  ras <- writeRaster(ras, file = tmpfile[1], overwrite = TRUE)
+  ras <- suppressWarningsSpecific(falseWarnings = "NOT UPDATED FOR PROJ",
+                                  writeRaster(ras, file = tmpfile[1], overwrite = TRUE))
 
   gdriveLs1 <- data.frame(name = "GADM", id = "sdfsd", drive_resource = list(sdfsd = 1))
-  expect_warning({
-    tmpCloudFolderID <- cloudFolderID(create = TRUE)
-  }, "No cloudFolderID supplied")
+  tmpCloudFolderID <- cloudFolderID(create = TRUE)
   gdriveLs <- cloudDriveLs(cloudFolderID = NULL, "sdfsdf")
   expect_true(NROW(gdriveLs) == 0)
   expect_is(cloudFolderID("testy"), "character")
@@ -393,10 +393,10 @@ test_that("test individual useCloud family", {
   # expect_true(grepl("cacheId\\: sdfsiodfja to cloud folder", mess1))
 
   a <- cloudUploadRasterBackends(ras, cloudFolderID = cloudFolderID)
-  mess1 <- capture_messages(expect_error(expect_warning({
-    a <- cloudDownload(outputHash = "sdfsd", newFileName = "test.tif",
+  mess1 <- #capture_messages(expect_error(expect_warning({
+    a <- cloudDownload(outputHash = "sdfsd", cacheRepo = tmpdir, # newFileName = "test.tif",
                        gdriveLs = gdriveLs1, cloudFolderID = "testy")
-  })))
+  #})))
   expect_true(grepl("Downloading cloud copy of test\\.tif", mess1))
   testthat::with_mock(
     "reproducible::retry" = function(..., retries = 1) TRUE,
