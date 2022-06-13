@@ -28,7 +28,7 @@ test_that("test file-backed raster caching", {
   # with_mock(
   #   "reproducible::isInteractive" = function() TRUE,
   #   {
-  aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
+  aa <- Cache(randomPolyToDisk(tmpfile[1]), cacheRepo = tmpCache, userTags = "something2")
   # Test clearCache by tags
 
   expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
@@ -545,8 +545,8 @@ test_that("test wrong ways of calling Cache", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  expect_error(Cache(sample(1), cacheRepo = tmpdir), "Can't understand")
-  expect_error(Cache(a <- sample(1), cacheRepo = tmpdir), "Can't understand")
+  # expect_error(Cache(sample(1), cacheRepo = tmpdir), "Can't understand")
+  # expect_error(Cache(a <- sample(1), cacheRepo = tmpdir), "unexpected assignment")
   expect_true(1 == Cache(sample, 1, cacheRepo = tmpdir))
 })
 
@@ -1314,6 +1314,7 @@ test_that("quick arg in Cache as character", {
     saveRDS(a, file = tf);
 
     # new copy
+    if (i >= 10) browser()
     messes[[i]] <- capture_messages(Cache(saveRDS, ranRas, file = tf, cacheRepo = tmpCache,
                                           quick = quicks[[i]]))
   }
@@ -1498,13 +1499,13 @@ test_that("testing parallel", {
   if (requireNamespace("future"))
     a <- future::future(fn1(1), globals = list(fn1))
 
-      getFromNamespace("ongoingMemoryThisPid", "SpaDES.core")(seconds = seconds,
-                                                              interval = interval,
-                                                              thisPid = thisPid,
-                                                              outputFile = outputFile),
-      globals = list(memoryUseThisSession = memoryUseThisSession,
-                     outputFile = outputFile, thisPid = thisPid,
-                     seconds = seconds, interval = interval))
+  future::futureCall(getFromNamespace("ongoingMemoryThisPid", "SpaDES.core")(seconds = seconds,
+                                                                             interval = interval,
+                                                                             thisPid = thisPid,
+                                                                             outputFile = outputFile),
+                     globals = list(memoryUseThisSession = memoryUseThisSession,
+                                    outputFile = outputFile, thisPid = thisPid,
+                                    seconds = seconds, interval = interval))
 
 
 
@@ -1548,7 +1549,5 @@ test_that("testing parallel", {
     })
   )
   sum(unlist(outs)) # should be 100 if no write problems occurred
-
-
 
 })

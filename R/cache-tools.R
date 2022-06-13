@@ -511,6 +511,7 @@ setMethod(
 setGeneric("mergeCache", function(cacheTo, cacheFrom,
                                   drvTo = getOption("reproducible.drv"),
                                   drvFrom = getOption("reproducible.drv"),
+                                  verbose = getOption("reproducible.verbose", 1),
                                   connTo = NULL, connFrom = NULL) {
   standardGeneric("mergeCache")
 })
@@ -519,7 +520,10 @@ setGeneric("mergeCache", function(cacheTo, cacheFrom,
 #' @rdname mergeCache
 setMethod(
   "mergeCache",
-  definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom) {
+  definition = function(cacheTo, cacheFrom, drvTo, drvFrom,
+                        verbose = getOption("reproducible.verbose", 1),
+                        connTo, connFrom
+                        ) {
     if (is.null(connTo)) {
       connTo <- dbConnectAll(drvTo, cachePath = cacheTo)
       on.exit(dbDisconnectAll(connTo, shutdown = TRUE), add = TRUE)

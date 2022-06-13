@@ -428,14 +428,20 @@ setMethod(
                         showSimilar, drv, conn) {
 
     isCapturedFUN <- FALSE
-    # Determine if it is in the form FUN(sss) or FUN, sss
+    # Determine if it is in the form Cache(FUN(sss)) or Cache(FUN, sss)
     if (!is.function(FUN)) {
-      newSubstFun <- substitute(FUN)
-      origFUN <- FUN
-      ss <- parse(text = newSubstFun)
-      FUN <- eval(ss[[1]], parent.frame())
-      dots <- as.list(ss[-1])
       isCapturedFUN <- TRUE
+      newSubstFun <- substitute(FUN)
+      if (is.call(FUN)) {# Means "quote"
+        parsedFUN <- parse(text = newSubstFun)
+        newSubstFun <- parsedFUN[[-1]]
+      }
+      parsedFUN <- as.list(newSubstFun)#parse(text = newSubstFun)
+      origFUN <- FUN
+      FUN <- eval(parsedFUN[[1]], parent.frame())
+      dots <- parsedFUN[-1]
+    } else {
+      dots <- list(...)
     }
     if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
 
@@ -443,10 +449,7 @@ setMethod(
 
     # returns "modifiedDots", "originalDots", "FUN", "funName", which will
     #  have modifications under many circumstances, e.g., do.call, specific methods etc.
-    if (!isCapturedFUN)
-      fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", ...)
-    else
-      fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", unlist(dots, recursive = FALSE))
+    fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", dots)
 
     FUN <- fnDetails$FUN
     modifiedDots <- fnDetails$modifiedDots
@@ -462,7 +465,7 @@ setMethod(
                    ")",
                    verbose = verbose)
       if (isCapturedFUN) {
-        eval(origFUN)
+        eval(origFUN, envir = parent.frame())
       } else {
         if (fnDetails$isDoCall) {
           do.call(modifiedDots$what, args = modifiedDots$args)
@@ -603,6 +606,7 @@ setMethod(
       if (!is.null(.cacheExtra)) {
         toDigest <- append(toDigest, list(.cacheExtra))
       }
+      if (exists("bbb")) browser()
       cacheDigest <- CacheDigest(toDigest, .objects = .objects,
                                  length = length, algo = algo, quick = quick,
                                  classOptions = classOptions)
@@ -634,14 +638,8 @@ setMethod(
 
       if (length(debugCache)) {
         if (!is.na(pmatch(debugCache, "quick"))) {
-          if (isCapturedFUN) {
-            return(list(hash = preDigest, content = dots))
-          } else {
-            return(list(hash = preDigest, content = list(...)))
-          }
-
+          return(list(hash = preDigest, content = dots))
         }
-
       }
 
       if (!is.null(cacheId)) {
@@ -875,7 +873,7 @@ setMethod(
                           drv = drv, conn = conn)
 
           output <- if (isCapturedFUN) {
-            eval(origFUN)
+            eval(origFUN, envir = parent.frame())
           } else {
             if (length(commonArgs) == 0) {
               FUN(...)
@@ -1436,6 +1434,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
 #'
 #' }
 CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", quick = FALSE, ...) {
+  if (exists("bbb")) browser()
   if (identical("Cache", calledFrom)) {
     namesOTD <- names(objsToDigest)
     lengthChars <- nchar(namesOTD)
@@ -1820,7 +1819,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
 }
 
 .defaultUserTags <- c("function", "class", "object.size", "accessed", "inCloud",
-                      "otherFunctions", "preDigest", "file.size", "cacheId",
+                      "otherFunctions", "preDigest", "file.size", "cacheId", "prerun",
                       "elapsedTimeDigest", "elapsedTimeFirstRun", "resultHash", "elapsedTimeLoad")
 
 .defaultOtherFunctionsOmit <- c("(test_","with_reporter", "force", "Restart", "with_mock",
