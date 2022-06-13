@@ -243,9 +243,11 @@ utils::globalVariables(c(
 #' @include cache-helpers.R
 #' @include robustDigest.R
 #'
-#' @param FUN Either a function or an unevaluated function call (e.g., using
-#'            \code{quote}.
-#' @param ... Arguments passed to \code{FUN}
+#' @param FUN Either a function, an unevaluated quoted function call (e.g., using
+#'            \code{quote}, or (as of reproducible 1.2.10 -- still experimental)
+#'            a function call, e.g., \code{rnorm(1)}.
+#'
+#' @param ... Arguments passed to \code{FUN} if FUN is provided as simply a function.
 #'
 #' @param .objects Character vector of objects to be digested. This is only applicable
 #'                if there is a list, environment (or similar) with named objects
@@ -425,13 +427,26 @@ setMethod(
                         cloudFolderID,
                         showSimilar, drv, conn) {
 
+    isCapturedFUN <- FALSE
+    # Determine if it is in the form FUN(sss) or FUN, sss
+    if (!is.function(FUN)) {
+      newSubstFun <- substitute(FUN)
+      origFUN <- FUN
+      ss <- parse(text = newSubstFun)
+      FUN <- eval(ss[[1]], parent.frame())
+      dots <- as.list(ss[-1])
+      isCapturedFUN <- TRUE
+    }
     if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
 
     if (missing(FUN)) stop("Cache requires the FUN argument")
 
     # returns "modifiedDots", "originalDots", "FUN", "funName", which will
     #  have modifications under many circumstances, e.g., do.call, specific methods etc.
-    fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", ...)
+    if (!isCapturedFUN)
+      fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", ...)
+    else
+      fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", unlist(dots, recursive = FALSE))
 
     FUN <- fnDetails$FUN
     modifiedDots <- fnDetails$modifiedDots
@@ -446,14 +461,19 @@ setMethod(
                    if (nestedLev > 0) paste0(" (currently running nested Cache level ", nestedLev + 1),
                    ")",
                    verbose = verbose)
-      if (fnDetails$isDoCall) {
-        do.call(modifiedDots$what, args = modifiedDots$args)
+      if (isCapturedFUN) {
+        eval(origFUN)
       } else {
-        commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
-        do.call(FUN, append(alist(...), modifiedDots[commonArgs]))
-        # FUN(...) # using do.call fails on quoted arguments because it evaluates them
-        # do.call(FUN, args = list(expr(modifiedDots)))
+        if (fnDetails$isDoCall) {
+          do.call(modifiedDots$what, args = modifiedDots$args)
+        } else {
+          commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
+          do.call(FUN, append(alist(...), modifiedDots[commonArgs]))
+          # FUN(...) # using do.call fails on quoted arguments because it evaluates them
+          # do.call(FUN, args = list(expr(modifiedDots)))
+        }
       }
+
     } else {
       startCacheTime <- verboseTime(verbose)
 
@@ -613,8 +633,15 @@ setMethod(
       }
 
       if (length(debugCache)) {
-        if (!is.na(pmatch(debugCache, "quick")))
-          return(list(hash = preDigest, content = list(...)))
+        if (!is.na(pmatch(debugCache, "quick"))) {
+          if (isCapturedFUN) {
+            return(list(hash = preDigest, content = dots))
+          } else {
+            return(list(hash = preDigest, content = list(...)))
+          }
+
+        }
+
       }
 
       if (!is.null(cacheId)) {
@@ -847,10 +874,14 @@ setMethod(
                           add = TRUE,
                           drv = drv, conn = conn)
 
-          output <- if (length(commonArgs) == 0) {
-            FUN(...)
-          } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
-            do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE)))
+          output <- if (isCapturedFUN) {
+            eval(origFUN)
+          } else {
+            if (length(commonArgs) == 0) {
+              FUN(...)
+            } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
+              do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE)))
+            }
           }
 
         }
