@@ -1,0 +1,29 @@
+---
+title: "Introduction to Cloud Cache"
+author:
+  - "Eliot J. B. McIntire"
+date: '`r strftime(Sys.Date(), "%B %d %Y")`'
+output:
+  rmarkdown::html_vignette:
+    fig_width: 7
+    number_sections: yes
+    self_contained: yes
+    toc: yes
+vignette: >
+  %\VignetteIndexEntry{Introduction to Cloud Cache}
+  %\VignetteDepends{DBI, raster}
+  %\VignetteKeyword{Cache}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+When objects are intended to be shared across machines, across users, or across projects, one option for efficiently moving data around is through cloud repositories. The `Cache` function has embedded functionality to mirror its process to a cloud repository, using `useCloud = TRUE`. 
+
+The way it is built in `reproducible` is based one three principles:
+
+1. The local Cache repository will always be *much* faster to work with than a cloud repository, so the local repository will always exist.
+2. The cloud repository will be a partial mirror of the local one, but since the cloud repository gets used via `Cache(..., useCloud = TRUE)`, i.e., each function will use the cloud independently of every other function. This allows the user to selectively place only the "really slow calculations" in the cloud repository. As a result, *the cloud repository may rarely be a full "sync" of the local repository*.
+3. A single cloud repository can be used with multiple local cache repositories. This allows sharing of a cloud object across projects.
+
