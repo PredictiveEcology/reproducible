@@ -283,7 +283,6 @@ connObject <- function(cachePath) {
                             add = TRUE,
                             drv = getOption("reproducible.drv"),
                             conn = getOption("reproducible.conn", NULL)) {
-  # browser(expr = exists("._updateTagsRepo_1"))
   if (length(cacheId) > 0) {
     if (length(cacheId) > 1) stop(".updateTagsRepo can only handle updating 1 tag at a time")
     if (is.null(conn)) {
@@ -423,7 +422,6 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
                           allowNoStorageFolder = FALSE, allowTBMismatch = FALSE,
                           drv = getOption("reproducible.drv"),
                           conn = getOption("reproducible.conn", NULL)) {
-  if (exists("ddd")) browser()
   checkPath(cachePath, create = TRUE)
   # browser(expr = exists("._CacheIsACache_1"))
   ret <- FALSE
@@ -657,10 +655,12 @@ updateTagsAll <- function(conn, cachePath, drv, tagValue, cacheId, tagKey) {
 
     objName <- objNameFromConn(conn)
     fsTab <- readFilebasedConn(objName, conn)
+    fsTab <- finalizeDTtoWrite(conn = conn, dt = fsTab, objName = objName)
     affectedAnyRows <- which(fsTab$cacheId == cacheId & fsTab$tagKey == tagKey)
     if (length(affectedAnyRows)) {
       # fsTab[affectedAnyRows, tagValue := tagValue]
-      writeFilebasedConnToMemory(conn = conn, objName = objName, dt = fsTab, update = fsTab[affectedAnyRows,])
+      writeFilebasedConnToMemory(conn = conn, objName = objName,
+                                 dt = fsTab, update = fsTab[affectedAnyRows,])
     }
     affectedAnyRows <- length(affectedAnyRows) > 0
   }
@@ -748,8 +748,7 @@ writeFilebasedConnToMemory <- function(cachePath, drv, conn, dt, objName, dig = 
   return(invisible())
 }
 
-finalizeDTtoWrite <- function(conn, dt, objName) {
-
+finalizeDTtoWrite <- function(conn, dt, objName, deleteObjs = FALSE) {
 
   objNameDig <- objNameWithDig(objName)
   digPre <- get0(objNameDig, envir = .pkgEnv)
@@ -787,6 +786,8 @@ finalizeDTtoWrite <- function(conn, dt, objName) {
     ToAdd <- get0(objNameToAdd, envir = .pkgEnv)
     if (!is.null(ToAdd)) {
       dt <- rbindlist(append(list(dt), ToAdd))
+      if (isTRUE(deleteObjs))
+        rm(list = objNameToAdd, envir = .pkgEnv)
     }
     objNameToUpdate <- objNameWithToUpdate(objName)
     ToUpdate <- get0(objNameToUpdate, envir = .pkgEnv)
@@ -808,6 +809,8 @@ finalizeDTtoWrite <- function(conn, dt, objName) {
         set(dt, wh, "tagValue", ToUpdate$tagValue[tu])
       })
 
+      if (isTRUE(deleteObjs))
+        rm(list = objNameToUpdate, envir = .pkgEnv)
 
     }
   }
@@ -822,7 +825,8 @@ dbDisconnectAll <- function(conn = getOption("reproducible.conn", NULL), ...) {
   else {
     objName <- objNameFromConn(conn)
     tab <- readFilebasedConn(objName, conn)
-    tab <- finalizeDTtoWrite(conn = conn, dt = tab, objName = objName)
+    tab <- finalizeDTtoWrite(conn = conn, dt = tab, objName = objName,
+                             deleteObjs = TRUE)
     lss <- ls(.pkgEnv);
     rm(list = lss[startsWith(lss, objName)], envir = .pkgEnv)
     writeFilebasedConn(conn = conn, dt = tab, objName = objName)

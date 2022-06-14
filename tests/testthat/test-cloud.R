@@ -1,5 +1,5 @@
 options(reproducible.drv = "fst")
-#options(reproducible.drv = RSQLite::SQLite())
+options(reproducible.drv = RSQLite::SQLite())
 
 test_that("test Cache(useCloud=TRUE, ...)", {
   if (!requireNamespace("googledrive", quietly = TRUE))
@@ -366,7 +366,8 @@ test_that("test keepCache(useCloud=TRUE, ...)", {
   sctmpdir <- showCache(tmpdir)
   sctmpCache <- showCache(tmpCache)
   scLocal <- setkeyv(data.table::rbindlist(list(sctmpdir, sctmpCache)), colnames(scAll))
-  expect_true(all.equal(scAll[, -"createdDate"], scLocal[, -"createdDate"]))
+  expect_true(all.equal(data.table::setkey(scAll[, -"createdDate"]),
+                        data.table::setkey(scLocal[, -"createdDate"])))
 
 
   # This will only remove the objects that are *in* tmpdir
@@ -399,10 +400,9 @@ test_that("test keepCache(useCloud=TRUE, ...)", {
   out10 <- Cache(rnorm, 7, useCloud = TRUE, cloudFolderID = cfid, cacheRepo = tmpdir)
   sc4 <- cloudShowCache(cfid)
   scLoc <- showCache(tmpdir)
-  expect_true(identical(sc4[,-"createdDate"], scLoc[,-"createdDate"]))
-
-
-
+  # expect_true(identical(sc4[,-"createdDate"], scLoc[,-"createdDate"]))
+  expect_true(all.equal(sc4[, -"createdDate"],
+                        scLoc[, -"createdDate"]))
 
 
 })

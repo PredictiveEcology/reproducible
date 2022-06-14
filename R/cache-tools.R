@@ -747,6 +747,7 @@ showCacheAll <- function(x, drv, conn, dbTabNam = NULL) {
   } else {
     objName <- objNameFromConn(conn)
     tab <- readFilebasedConn(objName, conn)
+    tab <- finalizeDTtoWrite(conn = conn, dt = tab, objName = objName)
   }
   if (is(tab, "try-error")) {
     objsDT <- setDF(.emptyCacheTable)

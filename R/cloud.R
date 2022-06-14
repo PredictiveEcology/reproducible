@@ -149,7 +149,6 @@ cloudDownload <- function(outputHash, gdriveLs, cacheRepo, cloudFolderID,
                                   path = localNewFilename, # take first if there are duplicates
                                   overwrite = TRUE)))
 
-    if (exists("aaa")) browser()
     cloudAddTagsRepo(du, outputHash, cacheRepo, drv, conn)
     output <- loadFile(localNewFilename)
     output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID, outputHash = outputHash, drv = drv)
@@ -213,7 +212,6 @@ cloudUpload <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
     if (FALSE) {
       gdriveLs <- googledrive::drive_ls(cloudFolderID)
       suppressMessages(csc <- cloudShowCache(cloudFolderID, drv = drv, gdriveLs = gdriveLs))
-      if (exists("aaa")) browser()
       toKeep <- sc[!cacheId %in% unique(toRm$cacheId)]
 
       dbFile <- cloudDBFile(cloudFolderID, gdriveLs = NULL, drv, conn)
@@ -224,7 +222,6 @@ cloudUpload <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
 
 
       cloud
-      if (exists("aaa")) browser()
       cloudAddToDBFile(sc, cloudFolderID, gdriveLs = NULL, drv, conn)
     }
   }
@@ -275,7 +272,6 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, outputH
         du <- retry(quote(googledrive::drive_download(file = gdriveLs2[idRowNum,],
                                    path = localNewFilename, # take first if there are duplicates
                                    overwrite = TRUE)))
-        if (exists("aaa")) browser()
         cloudAddTagsRepo(drib = du, outputHash, cacheRepo, drv = drv, conn = conn)
         return(filenameMismatch)
 
@@ -318,7 +314,6 @@ isOrHasRaster <- function(obj) {
 
 
 cloudAddTagsRepo <- function(drib, outputHash, cacheRepo, drv, conn) {
-  if (exists("aaa")) browser()
   .updateTagsRepo(outputHash, cacheRepo, "inCloud", "TRUE", drv = drv, conn = conn)
   lapply(drib$name, function(nam) .addTagsRepo(outputHash, cacheRepo, "inCloudFile",
                                              nam, drv = drv, conn = conn))
@@ -354,7 +349,6 @@ cloudClearCache <- function(cloudFolderID = NULL,
                             conn = getOption("reproducible.conn", NULL)) {
   cloudFolderID <- cloudFolderID(cloudFolderID)
   toKeep <- NULL
-  if (exists("aaa")) browser()
   if (!is.null(cloudFolderID)) {
     gdriveLs <- googledrive::drive_ls(cloudFolderID)
     sc <- cloudShowCache(cloudFolderID = cloudFolderID, drv = drv, gdriveLs = gdriveLs)
@@ -383,7 +377,6 @@ cloudClearCache <- function(cloudFolderID = NULL,
 
         localDB <- cacheDFToTmpDB(drv = drv, df = toKeep, cloudFolderID = cloudFolderID,
                                   gdriveLs = NULL)
-        if (exists("aaa")) browser()
         cloudUploadOrUpdateDBFile(cloudFolderID, dbFile, localDB)
 
       }
@@ -536,7 +529,6 @@ cloudShowCache <- function(cloudFolderID = getOption("reproducible.cloudFolderID
                            userTags = character(), after = NULL, before = NULL,
                            drv = getOption("reproducible.drv"),
                            conn = getOption("reproducible.conn", NULL)) {
-  if (exists("aaa")) browser()
   cloudFolderID <- cloudFolderID(cloudFolderID)
   if (is.null(gdriveLs)) {
     # Note :: adding pattern = basename(drv = drv) was actually slower
