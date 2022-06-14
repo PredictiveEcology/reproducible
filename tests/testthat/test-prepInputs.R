@@ -1998,7 +1998,7 @@ test_that("rasters aren't properly resampled", {
 
 
 
-test_that("rasters aren't properly resampled", {
+test_that("sideEffects", {
   testInitOut <- testInit("raster", tmpFileExt = ".tif",
                           opts = list("reproducible.overwrite" = TRUE,
                                       reproducible.showSimilar = TRUE,
@@ -2049,25 +2049,25 @@ test_that("rasters aren't properly resampled", {
   url <- "https://drive.google.com/file/d/11yCDc2_Wia2iw_kz0f0jOXrLpL8of2oM/view?usp=sharing"
   opts <- options("reproducible.inputPaths" = "~/data")
   rasTest1 <- Cache(cacheRepo = tmpdir,
-    prepInputs,
-    url = url,
-    #targetFile = lcc2005Filename,
-    #archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
-    destinationPath = tmpCache,
-    omitArgs = "destinationPath"
+                    prepInputs,
+                    url = url,
+                    #targetFile = lcc2005Filename,
+                    #archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
+                    destinationPath = tmpCache,
+                    omitArgs = "destinationPath"
   )
   tmpCache <- file.path(tmpCache, "innerForTest")
   checkPath(tmpCache, create = TRUE)
   unlink(Filenames(rasTest1))
   rm(rasTest1)
   rasTest2 <- Cache(cacheRepo = tmpdir,
-                     prepInputs,
-                     url = url,
-                     #targetFile = lcc2005Filename,
-                     #archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
-                     destinationPath = tmpCache,
+                    prepInputs,
+                    url = url,
+                    #targetFile = lcc2005Filename,
+                    #archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
+                    destinationPath = tmpCache,
                     omitArgs = "destinationPath"
   )
   expect_true(identical(dir(tmpCache), basename2(Filenames(rasTest2))))
 
-}
+})
