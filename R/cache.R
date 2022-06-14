@@ -565,6 +565,7 @@ setMethod(
         } else {
           dbConnectAll(drv, cachePath = cacheRepo)
         }
+        if (exists("ddd")) browser()
         CacheIsACache(cachePath = cacheRepo, drv = drv, create = TRUE,
                       conn = conns[[cacheRepo]])
       }))

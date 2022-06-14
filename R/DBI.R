@@ -423,6 +423,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
                           allowNoStorageFolder = FALSE, allowTBMismatch = FALSE,
                           drv = getOption("reproducible.drv"),
                           conn = getOption("reproducible.conn", NULL)) {
+  if (exists("ddd")) browser()
   checkPath(cachePath, create = TRUE)
   # browser(expr = exists("._CacheIsACache_1"))
   ret <- FALSE
