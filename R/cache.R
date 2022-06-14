@@ -1136,7 +1136,8 @@ Cache <-
 
       if (isNullOutput) return(NULL) else return(output)
     }
-  }#)
+  }
+#)
 
 #' @keywords internal
 .formalsCache <- formals(Cache)[-(1:2)]
