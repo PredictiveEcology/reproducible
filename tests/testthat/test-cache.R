@@ -1314,7 +1314,6 @@ test_that("quick arg in Cache as character", {
     saveRDS(a, file = tf);
 
     # new copy
-    if (i >= 10) browser()
     messes[[i]] <- capture_messages(Cache(saveRDS, ranRas, file = tf, cacheRepo = tmpCache,
                                           quick = quicks[[i]]))
   }

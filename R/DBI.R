@@ -819,7 +819,6 @@ dbDisconnectAll <- function(conn = getOption("reproducible.conn", NULL), ...) {
   if (useSQL(conn))
     DBI::dbDisconnect(conn, ...)
   else {
-    if (exists("ccc")) browser()
     objName <- objNameFromConn(conn)
     tab <- readFilebasedConn(objName, conn)
     tab <- finalizeDTtoWrite(conn = conn, dt = tab, objName = objName)
