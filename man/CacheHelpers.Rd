@@ -31,6 +31,7 @@ CacheIsACache(
   cachePath = getOption("reproducible.cachePath"),
   create = FALSE,
   allowNoStorageFolder = FALSE,
+  allowTBMismatch = FALSE,
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL)
 )
@@ -57,8 +58,14 @@ to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 \item{create}{Logical. Currently only affects non RQSLite default drivers. If this
 is \code{TRUE} and there is no Cache database, the function will create one.}
 
-\item{allowNoStorageFolder}{Logical. If \code{FALSE} then this function may still return
+\item{allowNoStorageFolder}{Logical. Not intended for user.
+If \code{FALSE} then this function may still return
 \code{TRUE} even if there is no outputs folder.}
+
+\item{allowTBMismatch}{Logical. Not intended for user.
+There are 2 known reasons why a db table will not be named
+from the cacheRepo: the repo was moved or it is from a cloudCache situation,
+which is temporary.}
 }
 \description{
 These are not intended for normal use.

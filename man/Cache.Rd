@@ -2,65 +2,35 @@
 % Please edit documentation in R/cache.R
 \name{Cache}
 \alias{Cache}
-\alias{Cache,ANY-method}
 \title{Cache method that accommodates environments, S4 methods, Rasters, & nested caching}
 \usage{
 Cache(
   FUN,
   ...,
-  notOlderThan = NULL,
+  notOlderThan,
   .objects = NULL,
   .cacheExtra = NULL,
-  outputObjects = NULL,
-  algo = "xxhash64",
-  cacheRepo = NULL,
-  length = getOption("reproducible.length", Inf),
+  outputObjects,
+  algo,
+  cacheRepo,
+  length,
   compareRasterFileLength,
-  userTags = c(),
+  userTags,
   digestPathContent,
-  omitArgs = NULL,
-  classOptions = list(),
-  debugCache = character(),
-  sideEffect = FALSE,
-  makeCopy = FALSE,
-  quick = getOption("reproducible.quick", FALSE),
-  verbose = getOption("reproducible.verbose", 1),
-  cacheId = NULL,
-  useCache = getOption("reproducible.useCache", TRUE),
-  useCloud = FALSE,
-  cloudFolderID = NULL,
-  showSimilar = getOption("reproducible.showSimilar", FALSE),
-  drv = getOption("reproducible.drv"),
-  conn = getOption("reproducible.conn", NULL)
-)
-
-\S4method{Cache}{ANY}(
-  FUN,
-  ...,
-  notOlderThan = NULL,
-  .objects = NULL,
-  .cacheExtra = NULL,
-  outputObjects = NULL,
-  algo = "xxhash64",
-  cacheRepo = NULL,
-  length = getOption("reproducible.length", Inf),
-  compareRasterFileLength,
-  userTags = c(),
-  digestPathContent,
-  omitArgs = NULL,
-  classOptions = list(),
-  debugCache = character(),
-  sideEffect = FALSE,
-  makeCopy = FALSE,
-  quick = getOption("reproducible.quick", FALSE),
-  verbose = getOption("reproducible.verbose", 1),
-  cacheId = NULL,
-  useCache = getOption("reproducible.useCache", TRUE),
-  useCloud = FALSE,
-  cloudFolderID = NULL,
-  showSimilar = getOption("reproducible.showSimilar", FALSE),
-  drv = getOption("reproducible.drv"),
-  conn = getOption("reproducible.conn", NULL)
+  omitArgs,
+  classOptions,
+  debugCache,
+  sideEffect,
+  makeCopy,
+  quick,
+  verbose,
+  cacheId,
+  useCache,
+  useCloud,
+  cloudFolderID,
+  showSimilar,
+  drv,
+  conn
 )
 }
 \arguments{
@@ -126,8 +96,10 @@ the object \code{attr(mySimOut, "debugCache1")} can be compared.
 If \code{"quick"}, then it will return the same two objects directly,
 without evalutating the \code{FUN(...)}.}
 
-\item{sideEffect}{Logical or path. Determines where the function will look for
-new files following function completion. See Details.
+\item{sideEffect}{Character string identifying a folder name where file-backed R objects,
+such as \code{Raster} or \code{Rast} will be written to. See Details.
+If \code{FUN} has an argument `destinationPath`, then `Cache` will attempt to
+use it, i.e., \code{sideEffect <- destinationPath}.
 \emph{NOTE: this argument is experimental and may change in future releases.}}
 
 \item{makeCopy}{Logical. If \code{sideEffect = TRUE}, and \code{makeCopy = TRUE},

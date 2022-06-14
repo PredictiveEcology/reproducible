@@ -393,8 +393,10 @@ utils::globalVariables(c(
 #'
 #' @example inst/examples/example_Cache.R
 #'
-setGeneric(
-  "Cache", # signature = "...",
+
+# setGeneric(
+#   "Cache", # signature = "...",
+Cache <-
   function(FUN, ..., notOlderThan = NULL,
            .objects = NULL, .cacheExtra = NULL,
            outputObjects = NULL, # nolint
@@ -412,22 +414,23 @@ setGeneric(
            showSimilar = getOption("reproducible.showSimilar", FALSE),
            drv = getOption("reproducible.drv"),
            conn = getOption("reproducible.conn", NULL)) {
-    standardGeneric("Cache")
-})
-
-#' @export
-#' @rdname Cache
-setMethod(
-  "Cache",
-  definition = function(FUN, ..., notOlderThan, .objects = NULL, .cacheExtra = NULL,
-                        outputObjects,  # nolint
-                        algo, cacheRepo, length, compareRasterFileLength, userTags,
-                        digestPathContent, omitArgs, classOptions,
-                        debugCache, sideEffect, makeCopy, quick, verbose,
-                        cacheId, useCache,
-                        useCloud,
-                        cloudFolderID,
-                        showSimilar, drv, conn) {
+#     standardGeneric("Cache")
+# })
+#
+# # @export
+# # @rdname Cache
+# setMethod(
+#   "Cache",
+#   definition =
+    # function(FUN, ..., notOlderThan, .objects = NULL, .cacheExtra = NULL,
+    #                     outputObjects,  # nolint
+    #                     algo, cacheRepo, length, compareRasterFileLength, userTags,
+    #                     digestPathContent, omitArgs, classOptions,
+    #                     debugCache, sideEffect, makeCopy, quick, verbose,
+    #                     cacheId, useCache,
+    #                     useCloud,
+    #                     cloudFolderID,
+    #                     showSimilar, drv, conn) {
 
     isCapturedFUN <- FALSE
     # Determine if it is in the form Cache(FUN(sss)) or Cache(FUN, sss)
@@ -1124,7 +1127,8 @@ setMethod(
 
       if (isNullOutput) return(NULL) else return(output)
     }
-  })
+  }
+#)
 
 #' @keywords internal
 .formalsCache <- formals(Cache)[-(1:2)]
