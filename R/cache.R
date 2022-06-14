@@ -452,8 +452,6 @@ setMethod(
     else
       .fnCleanup(FUN = FUN, callingFun = "Cache", ...)
 
-    if (exists("bbb")) browser()
-
     FUN <- fnDetails$FUN
     modifiedDots <- fnDetails$modifiedDots
     originalDots <- fnDetails$originalDots # should be same as originalDots
@@ -610,7 +608,6 @@ setMethod(
       if (!is.null(.cacheExtra)) {
         toDigest <- append(toDigest, list(.cacheExtra))
       }
-      if (exists("bbb")) browser()
       cacheDigest <- CacheDigest(toDigest, .objects = .objects,
                                  length = length, algo = algo, quick = quick,
                                  classOptions = classOptions)
@@ -1433,7 +1430,6 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
 #'
 #' }
 CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", quick = FALSE, ...) {
-  if (exists("bbb")) browser()
   if (identical("Cache", calledFrom)) {
     namesOTD <- names(objsToDigest)
     lengthChars <- nchar(namesOTD)

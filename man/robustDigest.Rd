@@ -86,7 +86,7 @@ memory content. See Details section about \code{quick} in \code{\link{Cache}}.}
 specific classes. Should be options that the \code{.robustDigest} knows what
 to do with.}
 
-\item{...}{Arguments passed to \code{FUN}}
+\item{...}{Arguments passed to \code{FUN} if FUN is provided as simply a function.}
 
 \item{objects}{Optional character vector indicating which objects are to
 be considered while making digestible. This argument is not used

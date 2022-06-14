@@ -385,7 +385,9 @@ setMethod(
     # This next "is.null(dots$dbTabName)" may be a work around for an internal
     #   usage from cloud caching -- where dbTabNam is supplied
     dbTabNam <- dots$dbTabNam
-    if (!CacheIsACache(x, drv = drv, conn = conn) && is.null(dbTabNam))
+    if (!CacheIsACache(x, drv = drv, conn = conn,
+                       allowNoStorageFolder = isTRUE(list(...)$allowNoStorageFolder),
+                       allowTBMismatch = isTRUE(list(...)$allowTBMismatch)))
       return(.emptyCacheTable)
 
     objsDT <- showCacheAll(x, drv, conn, dbTabNam)

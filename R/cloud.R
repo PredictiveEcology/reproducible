@@ -202,11 +202,11 @@ cloudUpload <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
       du <- rbind(du, cu)
     }
 
-    if (exists("aaa")) browser()
     cloudAddTagsRepo(drib = du, outputHash, cacheRepo, drv = drv, conn = conn)
 
     # Now update the db file in cloud
-    suppressMessages(sc <- showCache(userTags = outputHash, x = cacheRepo, drv = drv, conn = conn))
+    suppressMessages(sc <- showCache(userTags = outputHash, x = cacheRepo, drv = drv,
+                                     conn = conn))
     cloudAddToDBFile(sc, cloudFolderID, gdriveLs = NULL, drv, conn)
 
 
@@ -216,7 +216,7 @@ cloudUpload <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
       if (exists("aaa")) browser()
       toKeep <- sc[!cacheId %in% unique(toRm$cacheId)]
 
-      dbFile <- cloudDBFile(cloudFolderID, gdriveLs = NULL)
+      dbFile <- cloudDBFile(cloudFolderID, gdriveLs = NULL, drv, conn)
 
       localDB <- cacheDFToTmpDB(drv = drv, df = toKeep, cloudFolderID = cloudFolderID,
                                 gdriveLs = NULL)
@@ -322,7 +322,8 @@ cloudAddTagsRepo <- function(drib, outputHash, cacheRepo, drv, conn) {
   .updateTagsRepo(outputHash, cacheRepo, "inCloud", "TRUE", drv = drv, conn = conn)
   lapply(drib$name, function(nam) .addTagsRepo(outputHash, cacheRepo, "inCloudFile",
                                              nam, drv = drv, conn = conn))
-  lapply(drib$id, function(id) .addTagsRepo(outputHash, cacheRepo, "inCloudID",
+  ids <- if (is(drib$id, "drive_id")) as.character(drib$id) else drib$id
+  lapply(ids, function(id) .addTagsRepo(outputHash, cacheRepo, "inCloudID",
                                           id, drv = drv, conn = conn))
 
 }
@@ -378,7 +379,7 @@ cloudClearCache <- function(cloudFolderID = NULL,
         googledrive::drive_trash(gdriveLs2)
         toKeep <- sc[!cacheId %in% unique(toRm$cacheId)]
 
-        dbFile <- cloudDBFile(cloudFolderID, gdriveLs)
+        dbFile <- cloudDBFile(cloudFolderID, gdriveLs, drv, conn)
 
         localDB <- cacheDFToTmpDB(drv = drv, df = toKeep, cloudFolderID = cloudFolderID,
                                   gdriveLs = NULL)
@@ -439,19 +440,18 @@ cloudAddToDBFile <- function(sc, cloudFolderID, gdriveLs = NULL, drv, conn) {
     suppressWarnings(dbDisconnectAll(connTmp, shutdown = TRUE))
   }, add = TRUE)
   dbTabNam <- if (useSQL(connTmp)) DBI::dbListTables(connTmp) else NULL
-  dbFile <- cloudDBFile(cloudFolderID, gdriveLs)
+  dbFile <- cloudDBFile(cloudFolderID, gdriveLs, drv, connTmp)
 
   dfToDB(sc, drv, connTmp, dbTabNam)
-  cloudDisconnectDB(connTmp, #cp,
-                                     drv, dbFile, cloudFolderID)
+  cloudDisconnectDB(connTmp, drv, dbFile, cloudFolderID)
 
 }
 
 cloudRmFromDBFile <- function(objsDT, cloudFolderID, cacheIds, gdriveLs, drv, conn) {
-  dbFile <- cloudDBFile(cloudFolderID, gdriveLs)
+  dbFile <- cloudDBFile(cloudFolderID, gdriveLs, drv, conn)
   connTmp <- suppressMessages(cloudConnectDB(cloudFolderID, gdriveLs, drv))
   dbTabNam <- if (useSQL(connTmp)) DBI::dbListTables(connTmp) else NULL
-  cp <- dirname(connTmp@dbname)
+  cp <- cacheRepoFromConn(connTmp)
   rmFromCache(cachePath = cp, conn = connTmp, drv = drv, cacheId = cacheIds,
               dbTabNam = dbTabNam)
   cloudDisconnectDB(connTmp, #cp,
@@ -463,12 +463,13 @@ cloudRmFromDBFile <- function(objsDT, cloudFolderID, cacheIds, gdriveLs, drv, co
 cloudConnectDB <- function(cloudFolderID, gdriveLs, drv, dbFile = NULL) {
 
   if (is.null(dbFile))
-    dbFile <- cloudDBFile(cloudFolderID, gdriveLs)
+    dbFile <- cloudDBFile(cloudFolderID, gdriveLs, drv, conn)
 
   cp <- .reproducibleTempPath(sub = rndstr(1, 6))
   if (NROW(dbFile)) {
     name <- cloudFolderID$name
-    dld <- googledrive::drive_download(dbFile, file.path(cp, basename2(CacheDBFile(name))))
+    dld <- googledrive::drive_download(
+      dbFile, file.path(cp, basename2(CacheDBFile(name, drv = drv))))
   }
   connTmp <- dbConnectAll(drv, cachePath = cp)
   if (NROW(dbFile) == 0) {
@@ -485,9 +486,9 @@ cloudConnectDB <- function(cloudFolderID, gdriveLs, drv, dbFile = NULL) {
 }
 
 cloudDisconnectDB <- function(conn, drv, dbFile, cloudFolderID) {
-  cacheRepo <- dirname(conn@dbname)
+  localDB <- dbFileFromConn(conn)
+  # localDB <- CacheDBFile(cacheRepo, drv, conn)
   dbDisconnectAll(conn, shutdown = TRUE)
-  localDB <- CacheDBFile(cacheRepo, drv, conn)
   cloudUploadOrUpdateDBFile(cloudFolderID, dbFile, localDB)
   # if (NROW(dbFile) == 0) {
   #   googledrive::drive_upload(localDB, path = cloudFolderID)
@@ -495,11 +496,26 @@ cloudDisconnectDB <- function(conn, drv, dbFile, cloudFolderID) {
   #   googledrive::drive_update(dbFile, localDB)
   # }
 }
-cloudDBFile <- function(cloudFolderID, gdriveLs = NULL) {
+
+dbFileFromConn <- function(conn) {
+  cp <- if (useSQL(conn)) {
+    conn@dbname
+  } else {
+    conn
+  }
+  cp
+}
+
+cacheRepoFromConn <- function(conn) {
+  cp <- dbFileFromConn(conn)
+  cp <- dirname(cp)
+}
+
+cloudDBFile <- function(cloudFolderID, gdriveLs = NULL, drv, conn) {
   if (is.null(gdriveLs))
     suppressMessages(gdriveLs <- googledrive::drive_ls(cloudFolderID))
   name <- cloudFolderID$name
-  dbFile <- basename2(CacheDBFile(name))
+  dbFile <- basename2(CacheDBFile(name, drv = drv))
   gdriveLs[gdriveLs$name == dbFile, ]
 }
 
@@ -527,7 +543,7 @@ cloudShowCache <- function(cloudFolderID = getOption("reproducible.cloudFolderID
     suppressMessages(gdriveLs <- googledrive::drive_ls(cloudFolderID))
   }
   connTmp <- suppressMessages(cloudConnectDB(cloudFolderID, gdriveLs, drv))
-  dbFilename <- connTmp@dbname
+  dbFilename <- dbFileFromConn(connTmp)
   cp <- dirname(dbFilename)
   on.exit({
     dbDisconnectAll(connTmp, shutdown = TRUE)
@@ -536,7 +552,9 @@ cloudShowCache <- function(cloudFolderID = getOption("reproducible.cloudFolderID
   )
   dbTabNam <- if (useSQL(connTmp)) DBI::dbListTables(connTmp) else NULL
   sc <- showCache(x = cp, dbTabNam = dbTabNam, userTags = userTags,
-                  drv = drv, conn = connTmp, verbose = 0)
+                  drv = drv, conn = connTmp, allowNoStorageFolder = TRUE,
+                  allowTBMismatch = TRUE,
+                  verbose = 0)
   sc[]
 
 }
@@ -560,12 +578,19 @@ cacheDFToTmpDB <- function(drv, df, cloudFolderID, gdriveLs) {
   dbTabNam <- if (useSQL(connTmp)) DBI::dbListTables(connTmp) else NULL
   # dbFilename <- connTmp@dbname
   dfToDB(df, drv, connTmp, dbTabNam)
-  localDB <- normPath(connTmp@dbname)
+  localDB <- normPath(dbFileFromConn(connTmp))
   return(localDB)
 }
 
 dfToDB <- function(df, drv, conn, tbNam) {
-  cp <- dirname(conn@dbname)
+  # cp <- if (useSQL(conn)) {
+  #   conn@dbname
+  # } else {
+  #   conn
+  # }
+  # cp <- dirname(cp)
+
+  cp <- cacheRepoFromConn(conn)
   lapply(seq(NROW(df)), function(x) {
     scInner <- df[x, ]
     .addTagsRepo(cacheId = scInner$cacheId, tagKey = scInner$tagKey,

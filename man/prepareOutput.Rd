@@ -15,7 +15,7 @@
 \item{cacheRepo}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
-\item{...}{Arguments passed to \code{FUN}}
+\item{...}{Arguments passed to \code{FUN} if FUN is provided as simply a function.}
 }
 \value{
 The object, modified

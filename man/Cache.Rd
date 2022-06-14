@@ -64,10 +64,11 @@ Cache(
 )
 }
 \arguments{
-\item{FUN}{Either a function or an unevaluated function call (e.g., using
-\code{quote}.}
+\item{FUN}{Either a function, an unevaluated quoted function call (e.g., using
+\code{quote}, or (as of reproducible 1.2.10 -- still experimental)
+a function call, e.g., \code{rnorm(1)}.}
 
-\item{...}{Arguments passed to \code{FUN}}
+\item{...}{Arguments passed to \code{FUN} if FUN is provided as simply a function.}
 
 \item{notOlderThan}{A time. Load an object from the Cache if it was created after this.}
 
@@ -470,6 +471,27 @@ showCache(tmpDir) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d52
 
 # If it finds it by cacheID, doesn't matter what the userTags are
 ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = "thisIsUnique")
+
+# Can use base pipe (does not with magrittr pipe!), and mix and match ways of calling
+a <- rnorm(22) |> Cache()
+b <- Cache(rnorm(22))
+d <- Cache(rnorm, 22)
+all.equal(a, b, check.attributes = F) # these random calls are same
+all.equal(a, d, check.attributes = F) # these random calls are same
+attr(a, ".Cache") # new item
+attr(b, ".Cache") # not new --> recovered
+attr(d, ".Cache") # not new --> recovered
+
+# Can chain many using base pipe --> note Cache is as if it is "first", so
+#    randomness is captured, even if it is called first in the chain
+a <- rnorm(42) |> mean() |> Cache()
+b <- Cache(mean(rnorm(42)))
+all.equal(a, b, check.attributes = F) # these random calls are same
+
+# longer works, even with _ placeholder and multiple randomness
+a <- rnorm(42, sd = 20) |> sd() |> rnorm(1, mean = _) |> Cache()
+b <- Cache(rnorm(1, sd(rnorm(42, sd = 20))))
+all.equal(a, b, check.attributes = F) # these random calls are same
 
 options(opt)
 

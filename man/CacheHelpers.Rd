@@ -30,6 +30,7 @@ CacheDBTableName(
 CacheIsACache(
   cachePath = getOption("reproducible.cachePath"),
   create = FALSE,
+  allowNoStorageFolder = FALSE,
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL)
 )
@@ -55,6 +56,9 @@ to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 
 \item{create}{Logical. Currently only affects non RQSLite default drivers. If this
 is \code{TRUE} and there is no Cache database, the function will create one.}
+
+\item{allowNoStorageFolder}{Logical. If \code{FALSE} then this function may still return
+\code{TRUE} even if there is no outputs folder.}
 }
 \description{
 These are not intended for normal use.

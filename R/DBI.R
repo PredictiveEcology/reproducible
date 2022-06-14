@@ -408,11 +408,19 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
 #' @rdname CacheHelpers
 #' @param create Logical. Currently only affects non RQSLite default drivers. If this
 #'   is \code{TRUE} and there is no Cache database, the function will create one.
+#' @param allowNoStorageFolder Logical. Not intended for user.
+#'   If \code{FALSE} then this function may still return
+#'   \code{TRUE} even if there is no outputs folder.
+#' @param allowTBMismatch Logical. Not intended for user.
+#'   There are 2 known reasons why a db table will not be named
+#'   from the cacheRepo: the repo was moved or it is from a cloudCache situation,
+#'   which is temporary.
 #' @export
 #' @details
 #' \code{CacheIsACache} returns a logical of whether the specified cachePath
 #'   is actually a functioning cache.
 CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), create = FALSE,
+                          allowNoStorageFolder = FALSE, allowTBMismatch = FALSE,
                           drv = getOption("reproducible.drv"),
                           conn = getOption("reproducible.conn", NULL)) {
   checkPath(cachePath, create = TRUE)
@@ -430,9 +438,17 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 
   filesPresent <- list.files(cachePath)
   dbFile <- CacheDBFile(cachePath, drv, conn)
-  storageDir <- CacheStorageDir(cachePath)
-  filesNeededArePresent <- basename2(c(dbFile, storageDir)) %in% filesPresent
-  if (filesNeededArePresent[2] && !filesNeededArePresent[1]) {
+  filesNeeded <- dbFile
+  if (!allowNoStorageFolder) {
+    filesNeeded <- c(filesNeeded, CacheStorageDir(cachePath))
+  }
+  filesNeededArePresent <- basename2(filesNeeded) %in% filesPresent
+  switchedDBTable <- if (length(filesNeeded) >= 2) {
+    filesNeededArePresent[2] && !filesNeededArePresent[1]
+  } else {
+    FALSE
+  }
+  if (switchedDBTable) {
     # means a switched backend -- folder of storage files exist, but no db frontend
     if (identical(drv, "fst")) {
       if (!requireNamespace("RSQLite")) {
@@ -458,7 +474,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 
   ret <- all(filesNeededArePresent)
 
-  if (ret && useSQL(conn)) {
+  if (ret && useSQL(conn)  && !allowTBMismatch) {
     retOrig <- ret
     for (i in 1:2) {
       # This length-2 loop is for cases where the backend db changes;
@@ -591,10 +607,10 @@ saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
 
 
 addTagsAll <- function(conn, cachePath, drv, cacheId, tagKey, tagValue, curTime, tbNam = NULL) {
-  if (is.null(tbNam)) {
-    tbNam <- CacheDBTableName(cachePath, drv)
-  }
   if (useSQL(conn)) {
+    if (is.null(tbNam)) {
+      tbNam <- CacheDBTableName(cachePath, drv)
+    }
     rs <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
       DBI::dbSendStatement(
         conn,
@@ -606,7 +622,8 @@ addTagsAll <- function(conn, cachePath, drv, cacheId, tagKey, tagValue, curTime,
 
     DBI::dbClearResult(rs)
   } else {
-    dt <- setDT(list(cacheId = cacheId, tagKey = tagKey, tagValue = tagValue, createdDate = curTime))
+    dt <- setDT(list(cacheId = cacheId, tagKey = tagKey, tagValue = tagValue,
+                     createdDate = curTime))
     appendAll(conn, cachePath, drv, dt)
   }
 }
@@ -778,7 +795,18 @@ finalizeDTtoWrite <- function(conn, dt, objName) {
       } else {
         ToUpdate <- ToUpdate[[1]]
       }
-      dt$tagValue[ToUpdate$cacheId == dt$cacheId & ToUpdate$tagKey == dt$tagKey] <- ToUpdate$tagValue
+      data.table::setorderv(ToUpdate, colnames(ToUpdate), order = -1L)
+      data.table::setorderv(dt, colnames(ToUpdate), order = -1L)
+      colsForUniq <- head(colnames(ToUpdate),3)
+      dt <- unique(dt, by = colsForUniq)
+
+      ToUpdate <- unique(ToUpdate, by = colsForUniq)
+
+      lapply(seq(NROW(ToUpdate)), function(tu) {
+        wh <- which(ToUpdate$cacheId[tu] == dt$cacheId & ToUpdate$tagKey[tu] == dt$tagKey)
+        set(dt, wh, "tagValue", ToUpdate$tagValue[tu])
+      })
+
 
     }
   }
@@ -791,6 +819,7 @@ dbDisconnectAll <- function(conn = getOption("reproducible.conn", NULL), ...) {
   if (useSQL(conn))
     DBI::dbDisconnect(conn, ...)
   else {
+    if (exists("ccc")) browser()
     objName <- objNameFromConn(conn)
     tab <- readFilebasedConn(objName, conn)
     tab <- finalizeDTtoWrite(conn = conn, dt = tab, objName = objName)

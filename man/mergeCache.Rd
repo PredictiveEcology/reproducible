@@ -10,6 +10,7 @@ mergeCache(
   cacheFrom,
   drvTo = getOption("reproducible.drv"),
   drvFrom = getOption("reproducible.drv"),
+  verbose = getOption("reproducible.verbose", 1),
   connTo = NULL,
   connFrom = NULL
 )
@@ -19,6 +20,7 @@ mergeCache(
   cacheFrom,
   drvTo = getOption("reproducible.drv"),
   drvFrom = getOption("reproducible.drv"),
+  verbose = getOption("reproducible.verbose", 1),
   connTo = NULL,
   connFrom = NULL
 )
