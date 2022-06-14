@@ -434,18 +434,27 @@ Cache <-
 
     isCapturedFUN <- FALSE
     # Determine if it is in the form Cache(FUN(sss)) or Cache(FUN, sss)
-    if (!is.function(FUN)) {
+    newSubstFun <- substitute(FUN)
+    # if (!is.function(FUN)) {
+    # if (is.call(FUN)) {# Means "quote"
+    #  parsedFUN <- parse(text = newSubstFun)
+    #  newSubstFun <- parsedFUN[[-1]]
+    #}
+    parsedFUN <- as.list(newSubstFun)#parse(text = newSubstFun)
+    if (length(parsedFUN) > 1)
       isCapturedFUN <- TRUE
-      newSubstFun <- substitute(FUN)
-      if (is.call(FUN)) {# Means "quote"
-        parsedFUN <- parse(text = newSubstFun)
-        newSubstFun <- parsedFUN[[-1]]
-      }
+    origFUN <- quote(FUN)
+    FUN <- eval(parsedFUN[[1]], parent.frame())
+    if (is.call(FUN)) {
+      if (length(parsedFUN) == 1)
+        FUN <- eval(parsedFUN[[1]], parent.frame())
+      parsedFUN <- parse(text = newSubstFun)
+      newSubstFun <- parsedFUN[[-1]]
       parsedFUN <- as.list(newSubstFun)#parse(text = newSubstFun)
-      origFUN <- FUN
       FUN <- eval(parsedFUN[[1]], parent.frame())
-      originalDots <- parsedFUN[-1]
     }
+    originalDots <- parsedFUN[-1]
+    #}
     if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
 
     if (missing(FUN)) stop("Cache requires the FUN argument")
@@ -878,7 +887,7 @@ Cache <-
                           drv = drv, conn = conn)
 
           output <- if (isCapturedFUN) {
-            eval(origFUN, envir = parent.frame())
+            eval(newSubstFun, envir = parent.frame())
           } else {
             if (length(commonArgs) == 0) {
               FUN(...)
@@ -1127,7 +1136,7 @@ Cache <-
 
       if (isNullOutput) return(NULL) else return(output)
     }
-  })
+  }#)
 
 #' @keywords internal
 .formalsCache <- formals(Cache)[-(1:2)]
