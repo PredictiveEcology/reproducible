@@ -264,6 +264,7 @@
   } else {
     loadFromMgs <- "Loading from repo"
     output <- loadFromCache(cacheRepo, isInRepo[[.cacheTableHashColName()[lastOne]]],
+                            sideEffect = sideEffect,
                             drv = drv, conn = conn)
 
   }
@@ -293,9 +294,10 @@
                cachePath = cacheRepo, drv = drv, conn = conn)
 
   # browser(expr = exists("._getFromRepo_1"))
-  if (sideEffect != FALSE) {
-    .CacheSideEffectFn1(output, sideEffect, cacheRepo, quick, algo, FUN, verbose = verbose, ...)
-  }
+  # if (sideEffect != FALSE) {
+  #   browser()
+  #   .CacheSideEffectFn1(output, sideEffect, cacheRepo, quick, algo, FUN, verbose = verbose, ...)
+  # }
 
   # This allows for any class specific things
   output <- if (fnDetails$isDoCall) {

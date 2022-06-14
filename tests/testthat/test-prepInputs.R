@@ -1996,38 +1996,78 @@ test_that("rasters aren't properly resampled", {
   expect_true(identical(length(Filenames(out4)), 4L))
 })
 
-test_that("System call gdal works", {
-  skip_on_cran()
 
-  testInitOut <- testInit("raster")
+
+test_that("rasters aren't properly resampled", {
+  testInitOut <- testInit("raster", tmpFileExt = ".tif",
+                          opts = list("reproducible.overwrite" = TRUE,
+                                      reproducible.showSimilar = TRUE,
+                                      "reproducible.inputPaths" = NULL))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
+  ras <- raster::raster(extent(0,10,0,10), vals = 1:100)
+  ras2 <- writeRaster(filename = tmpfile, ras, overwrite = TRUE)
 
-  ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
-  crs(ras) <- crsToUse
-  rnStr <- rndstr(1,6)
-  ras <- suppressWarningsSpecific(writeRaster(ras, filename = file.path(tempdir2(rnStr), basename(tempfile())),
-                     format = "GTiff"), proj6Warn)
 
-  ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
-  crs(ras2) <- crsToUse
 
-  raster::rasterOptions(todisk = TRUE) # to trigger GDAL
+  # Simple case, local case
+  prepInputsWeird <- function(targetFile, fun, destinationPath) {
+    out <- prepInputs(targetFile = targetFile, fun = fun)
+    fns <- Filenames(out)
+    newFN <- file.path(destinationPath, basename2(fns))
+    file.copy(fns, newFN, overwrite = TRUE)
+    output <- updateFilenameSlots(out, Filenames(out, allowMultiple = FALSE),
+                                  newFilenames = newFN)
+  }
 
-  test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, filename2 = TRUE)
-  expect_true(file.exists(test1@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
-  expect_true(dataType(test1) == "INT1U") #properly resampled
+  # Original file is in tmpfile --> its Filename points to tmpfile
+  aa <- Cache(prepInputsWeird(targetFile = tmpfile, fun = raster::raster,
+                              destinationPath = tmpCache),
+              omitArgs = "destinationPath")
+  unlink(Filenames(aa))
+  rm(aa)
+  td2 <- .reproducibleTempPath(rndstr(1, 6))
+  bb <- Cache(prepInputsWeird, targetFile = tmpfile, fun = raster::raster,
+              destinationPath = td2,
+              omitArgs = "destinationPath")
+  expect_true(identical(dir(td2), basename2(Filenames(bb))))
 
-  ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
-  rnStr <- rndstr(1,6)
-  ras <- suppressWarningsSpecific(writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff"),
-                                  proj6Warn)
-  test2 <- prepInputs(targetFile = ras@file@name,
-                      destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, method = "bilinear")
-  expect_true(dataType(test2) == "FLT4S")
+  unlink(Filenames(bb))
+  rm(bb)
+  aa <- Cache(prepInputsWeird(targetFile = tmpfile, fun = raster::raster,
+                              destinationPath = tmpCache),
+              omitArgs = "destinationPath")
+  td2 <- .reproducibleTempPath(rndstr(1, 6))
+  bb <- Cache(prepInputsWeird, targetFile = tmpfile, fun = raster::raster,
+              destinationPath = td2,
+              omitArgs = "destinationPath")
+  expect_true(identical(dir(td2), basename2(Filenames(bb))))
 
-  on.exit(raster::rasterOptions(todisk = FALSE))
-})
+
+  # Simple case, online case
+  url <- "https://drive.google.com/file/d/11yCDc2_Wia2iw_kz0f0jOXrLpL8of2oM/view?usp=sharing"
+  opts <- options("reproducible.inputPaths" = "~/data")
+  rasTest1 <- Cache(cacheRepo = tmpdir,
+    prepInputs,
+    url = url,
+    #targetFile = lcc2005Filename,
+    #archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
+    destinationPath = tmpCache,
+    omitArgs = "destinationPath"
+  )
+  tmpCache <- file.path(tmpCache, "innerForTest")
+  checkPath(tmpCache, create = TRUE)
+  unlink(Filenames(rasTest1))
+  rm(rasTest1)
+  rasTest2 <- Cache(cacheRepo = tmpdir,
+                     prepInputs,
+                     url = url,
+                     #targetFile = lcc2005Filename,
+                     #archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
+                     destinationPath = tmpCache,
+                    omitArgs = "destinationPath"
+  )
+  expect_true(identical(dir(tmpCache), basename2(Filenames(rasTest2))))
+
+}

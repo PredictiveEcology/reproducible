@@ -292,8 +292,10 @@ utils::globalVariables(c(
 #'        If \code{"quick"}, then it will return the same two objects directly,
 #'        without evalutating the \code{FUN(...)}.
 #'
-#' @param sideEffect Logical or path. Determines where the function will look for
-#'        new files following function completion. See Details.
+#' @param sideEffect Character string identifying a folder name where file-backed R objects,
+#'        such as \code{Raster} or \code{Rast} will be written to. See Details.
+#'        If \code{FUN} has an argument `destinationPath`, then `Cache` will attempt to
+#'        use it, i.e., \code{sideEffect <- destinationPath}.
 #'        \emph{NOTE: this argument is experimental and may change in future releases.}
 #'
 #' @param makeCopy Logical. If \code{sideEffect = TRUE}, and \code{makeCopy = TRUE},
@@ -550,7 +552,7 @@ setMethod(
       # userTags added based on object class
       userTags <- c(userTags, unlist(lapply(modifiedDots, .tagsByClass)))
 
-      if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
+      # if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
       # browser(expr = exists("._Cache_17"))
       conns <- list()
@@ -577,9 +579,13 @@ setMethod(
       }
 
       # List file prior to cache
-      if (sideEffect != FALSE) {
-        priorRepo <- list.files(sideEffect, full.names = TRUE)
+      # browser()
+      if ("destinationPath" %in% fnDetails$formalArgs) {
+        sideEffect <- modifiedDots$destinationPath
       }
+      # if (sideEffect != FALSE) {
+      #   priorRepo <- list.files(sideEffect, full.names = TRUE)
+      # }
 
       # remove things in the Cache call that are not relevant to Caching
       if (!is.null(modifiedDots$progress))
@@ -923,10 +929,16 @@ setMethod(
         stop("attributes are not correct 5")
 
       # browser(expr = exists("._Cache_11"))
-      if (sideEffect != FALSE) {
-        output <- .CacheSideEffectFn2(sideEffect, cacheRepo, priorRepo, algo, output,
-                                      makeCopy, quick)
-      }
+      # if (sideEffect != FALSE) {
+      #   browser()
+      #   newFN <- file.path(sideEffect, basename2(Filenames(output)))
+      #   originalFN <- Filenames(output)
+      #   out <- hardLinkOrCopy(originalFN, newFN, , overwrite = TRUE)
+      #   output <- updateFilenameSlots(output, Filenames(output, allowMultiple = FALSE),
+      #                                 newFilenames = newFN)
+      #   # output <- .CacheSideEffectFn2(sideEffect, cacheRepo, priorRepo, algo, output,
+      #   #                               makeCopy, quick)
+      # }
 
       if (isS4(FUN)) {
         setattr(output, "function", FUN@generic)
@@ -1430,6 +1442,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
 #'
 #' }
 CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", quick = FALSE, ...) {
+
   if (identical("Cache", calledFrom)) {
     namesOTD <- names(objsToDigest)
     lengthChars <- nchar(namesOTD)
@@ -1823,7 +1836,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
                                 "FUN", "capture", "withVisible)")
 
 
-dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
+dealWithClassOnRecovery <- function(output, cacheRepo, cacheId, sideEffect = FALSE,
                                     drv = getOption("reproducible.drv"),
                                     conn = getOption("reproducible.conn", NULL)) {
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
@@ -1841,8 +1854,13 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
       } else {
         # This is trying to be a relative path
         orig <- output$origRaster
-        normalizePath(file.path(getwd(), output$origRasterRelativePath, basename(orig)),
+        if (!isFALSE(sideEffect)) {
+          normalizePath(file.path(sideEffect, basename(orig)),
                         winslash = "/", mustWork = FALSE)
+        } else {
+          normalizePath(file.path(getwd(), output$origRasterRelativePath, basename(orig)),
+                        winslash = "/", mustWork = FALSE)
+        }
       }
 
       filesExist <- file.exists(origFilenames)

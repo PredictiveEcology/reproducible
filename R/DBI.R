@@ -145,6 +145,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                           cacheId,
                           format = getOption("reproducible.cacheSaveFormat", "rds"),
+                          sideEffect = FALSE,
                           drv = getOption("reproducible.drv"),
                           conn = getOption("reproducible.conn", NULL) ) {
   isMemoised <- FALSE
@@ -177,7 +178,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     obj <- loadFile(f, format = format)
   }
   obj <- dealWithClassOnRecovery(obj, cacheRepo = cachePath,
-                                 cacheId = cacheId,
+                                 cacheId = cacheId, sideEffect = sideEffect,
                                  drv = drv, conn = conn)
 
   if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
