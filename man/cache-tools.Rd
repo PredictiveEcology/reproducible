@@ -28,6 +28,7 @@ loadFromCache(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
   format = getOption("reproducible.cacheSaveFormat", "rds"),
+  sideEffect = FALSE,
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL)
 )
@@ -69,6 +70,12 @@ This is used when identical outputs exist in the cache. This will save disk spac
 \item{format}{The text string representing the file extension used normally by
 different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
 to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
+
+\item{sideEffect}{Character string identifying a folder name where file-backed R objects,
+such as \code{Raster} or \code{Rast} will be written to. See Details.
+If \code{FUN} has an argument `destinationPath`, then `Cache` will attempt to
+use it, i.e., \code{sideEffect <- destinationPath}.
+\emph{NOTE: this argument is experimental and may change in future releases.}}
 }
 \description{
 Create a new cache
