@@ -431,37 +431,27 @@ Cache <-
     #                     cloudFolderID,
     #                     showSimilar, drv, conn) {
 
-    isCapturedFUN <- FALSE
-    # Determine if it is in the form Cache(FUN(sss)) or Cache(FUN, sss)
+    # Capture everything -- so not evaluated
     newSubstFun <- substitute(FUN)
-    # if (!is.function(FUN)) {
-    # if (is.call(FUN)) {# Means "quote"
-    #  parsedFUN <- parse(text = newSubstFun)
-    #  newSubstFun <- parsedFUN[[-1]]
-    #}
-    parsedFUN <- as.list(newSubstFun)#parse(text = newSubstFun)
-    if (length(parsedFUN) > 1)
-      isCapturedFUN <- TRUE
     origFUN <- quote(FUN)
-    FUN <- eval(parsedFUN[[1]], parent.frame())
-    if (is.call(FUN)) {
-      if (length(parsedFUN) == 1)
-        FUN <- eval(parsedFUN[[1]], parent.frame())
-      parsedFUN <- parse(text = newSubstFun)
-      newSubstFun <- parsedFUN[[-1]]
-      parsedFUN <- as.list(newSubstFun)#parse(text = newSubstFun)
-      FUN <- eval(parsedFUN[[1]], parent.frame())
+    isCapturedFUN <- length(newSubstFun) > 1
+    parsedExpanded <- evalArgsOnly(newSubstFun, env = parent.frame())
+    if (isCapturedFUN) {
+      FUN <- parsedExpanded[[1]]
+      originalDots <- parsedExpanded[-1]
+    } else {
+      FUN <- parsedExpanded
     }
-    originalDots <- parsedFUN[-1]
-    #}
+
     if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
 
     if (missing(FUN)) stop("Cache requires the FUN argument")
 
     # returns "modifiedDots", "originalDots", "FUN", "funName", which will
     #  have modifications under many circumstances, e.g., do.call, specific methods etc.
+    browser()
     fnDetails <- if(isCapturedFUN)
-      .fnCleanup(FUN = FUN, callingFun = "Cache", originalDots)
+      .fnCleanup(FUN = parsedExpanded[1], callingFun = "Cache", capturedFUN = originalDots)
     else
       .fnCleanup(FUN = FUN, callingFun = "Cache", ...)
 
@@ -480,6 +470,7 @@ Cache <-
                    ")",
                    verbose = verbose)
       if (isCapturedFUN) {
+        browser()
         eval(origFUN, envir = parent.frame())
       } else {
         if (fnDetails$isDoCall) {
@@ -556,6 +547,7 @@ Cache <-
 
       # if a simList is in ...
       # userTags added based on object class
+      browser()
       userTags <- c(userTags, unlist(lapply(modifiedDots, .tagsByClass)))
 
       # if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
@@ -857,24 +849,24 @@ Cache <-
         commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
         if (length(commonArgs) > 0) {
           messageCache("Cache and ", fnDetails$functionName, " have 1 or more common arguments: ", commonArgs,
-                         "\nSending the argument(s) to both ", verboseLevel = 2, verbose = verbose)
-          }
+                       "\nSending the argument(s) to both ", verboseLevel = 2, verbose = verbose)
+        }
 
-          # This will put a single line in the cache repo under this outputHash, indicating
-          #   that it has begun. This will be useful for systems that have a shared Cache across
-          #   multiple R sessions.
-          .updateTagsRepo(outputHash, cacheRepo, "prerun",
-                          "prerun",
-                          add = TRUE,
-                          drv = drv, conn = conn)
+        # This will put a single line in the cache repo under this outputHash, indicating
+        #   that it has begun. This will be useful for systems that have a shared Cache across
+        #   multiple R sessions.
+        .updateTagsRepo(outputHash, cacheRepo, "prerun",
+                        "prerun",
+                        add = TRUE,
+                        drv = drv, conn = conn)
 
-          output <- if (isCapturedFUN) {
-            eval(newSubstFun, envir = parent.frame())
-          } else {
-            if (length(commonArgs) == 0) {
-              FUN(...)
-            } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
-              do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE)))
+        output <- if (isCapturedFUN) {
+          eval(newSubstFun, envir = parent.frame())
+        } else {
+          if (length(commonArgs) == 0) {
+            FUN(...)
+          } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
+            do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE)))
           }
         }
 
@@ -1234,47 +1226,42 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
 }
 
 .fnCleanup <- function(FUN, ..., callingFun) {
+
   modifiedDots <- list(...)
   if (identical(names(modifiedDots), "capturedFUN"))
     modifiedDots <- modifiedDots[[1]]
   originalDots <- modifiedDots
 
+  browser()
   # browser(expr = exists("._fnCleanup_1"))
   # If passed with 'quote'
   if (!is.function(FUN)) {
-    parsedFun <- parse(text = FUN)
-    evaledParsedFun <- eval(parsedFun[[1]], envir = modifiedDots)
-    if (is.function(evaledParsedFun)) {
-      tmpFUN <- evaledParsedFun
-      mc <- match.call(tmpFUN, FUN)
-      FUN <- tmpFUN # nolint
-      originalDots <- append(originalDots, as.list(mc[-1]))
-      modifiedDots <- append(modifiedDots, as.list(mc[-1]))
-    }
+    originalDots <- append(originalDots, as.list(mc[-1]))
+    modifiedDots <- append(modifiedDots, as.list(mc[-1]))
     fnDetails <- list(functionName = as.character(parsedFun[[1]]))
   } else {
-      fnDetails <- getFunctionName(FUN, #...,
+    fnDetails <- getFunctionName(FUN, #...,
                                  originalDots = originalDots)
 
-      # i.e., if it did extract the name
-      if (!is.na(fnDetails$functionName)) {
-        if (is.primitive(FUN)) {
-          modifiedDots <- list(...)
-        } else {
-          nams <- names(modifiedDots)
-          if (!is.null(nams)) {
-            whHasNames <- nams != "" & !is.na(nams)
-            whHasNames[is.na(whHasNames)] <- FALSE
-            namedNames <- names(modifiedDots)[whHasNames]
-            modifiedDotsArgsToUse <- namedNames[!namedNames %in% names(.formalsCache)]#  c("", names(formals(FUN)))
-            modifiedDots <- append(modifiedDots[!whHasNames], modifiedDots[modifiedDotsArgsToUse])
-          }
-          theCall <- as.call(append(list(FUN), modifiedDots))
-          modifiedDots <- try(as.list(
-            match.call(FUN, theCall))[-1], silent = TRUE)
-          if (is(modifiedDots, "try-error")) {
-            modifiedDots <- if (any(formalArgs(FUN) %in% names(theCall))) {
-              md <- as.list(theCall)[formalArgs(FUN)]
+    # i.e., if it did extract the name
+    if (!is.na(fnDetails$functionName)) {
+      if (is.primitive(FUN)) {
+        modifiedDots <- list(...)
+      } else {
+        nams <- names(modifiedDots)
+        if (!is.null(nams)) {
+          whHasNames <- nams != "" & !is.na(nams)
+          whHasNames[is.na(whHasNames)] <- FALSE
+          namedNames <- names(modifiedDots)[whHasNames]
+          modifiedDotsArgsToUse <- namedNames[!namedNames %in% names(.formalsCache)]#  c("", names(formals(FUN)))
+          modifiedDots <- append(modifiedDots[!whHasNames], modifiedDots[modifiedDotsArgsToUse])
+        }
+        theCall <- as.call(append(list(FUN), modifiedDots))
+        modifiedDots <- try(as.list(
+          match.call(FUN, theCall))[-1], silent = TRUE)
+        if (is(modifiedDots, "try-error")) {
+          modifiedDots <- if (any(formalArgs(FUN) %in% names(theCall))) {
+            md <- as.list(theCall)[formalArgs(FUN)]
             md[!sapply(md, is.null)]
           } else {
             list()
@@ -1970,3 +1957,28 @@ checkInRepo <- function(conn, dbTabNam, outputHash) {
   }
   isInRepo
 }
+
+evalArgsOnly <- function(parsed, env) {
+  if (is.call(parsed)) {
+    if (identical(quote, eval(parsed[[1]], envir = env)))
+      parsed <- parsed[[2]]
+    p1 <- eval(parsed[[1]], env = env)
+    if (!is.primitive(p1))
+      parsed <- match.call(p1, parsed)
+    parsedAsList <- as.list(parsed)
+    if (!is.primitive(p1))
+      if (is.name(parsed[[1]]))
+        names(parsedAsList)[[1]] <- as.character(parsedAsList[[1]])
+
+    out <- lapply(parsedAsList, evalArgsOnly, env = env)
+  } else {
+    out <- eval(parsed, envir = env)
+  }
+  return(out)
+
+}
+# if (identical(quote, FUN)) {
+#   newSubstFun <- parsedFUN[[2]]
+# } else {
+#   break
+# }
