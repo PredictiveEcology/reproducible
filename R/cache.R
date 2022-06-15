@@ -366,8 +366,7 @@ utils::globalVariables(c(
 #' to this same cached function with identical arguments).
 #'
 #' @seealso \code{\link{showCache}}, \code{\link{clearCache}}, \code{\link{keepCache}},
-#'   \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}},
-#'   \code{\link{pipe}}
+#'   \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}}
 #'
 #' @author Eliot McIntire
 #' @export
@@ -544,16 +543,11 @@ Cache <-
         }, add = TRUE)
       }
 
-      if (fnDetails$isPipe) {
-        pipeRes <- .CachePipeFn1(modifiedDots, fnDetails, FUN)
-        modifiedDots <- pipeRes$modifiedDots
-        fnDetails <- pipeRes$fnDetails
-      }
-
       modifiedDots$.FUN <- fnDetails$.FUN # put in modifiedDots for digesting  # nolint
 
       # This is for Pipe operator -- needs special consideration
-      scalls <- if (!is(FUN, "function")) .CacheFn1(FUN, sys.calls()) else NULL
+      browser()
+      scalls <-  NULL
 
       # extract other function names that are not the ones the focus of the Cache call
       otherFns <- .getOtherFnNamesAndTags(scalls = scalls)
@@ -611,15 +605,14 @@ Cache <-
 
       # don't digest the dotPipe elements as they are already
       # extracted individually into modifiedDots list elements
-      dotPipe <- startsWith(names(modifiedDots), "._")
-      preDigestByClass <- lapply(seq_along(modifiedDots[!dotPipe]), function(x) {
-        .preDigestByClass(modifiedDots[!dotPipe][[x]])
+      preDigestByClass <- lapply(seq_along(modifiedDots), function(x) {
+        .preDigestByClass(modifiedDots[[x]])
       })
 
       startHashTime <- verboseTime(verbose)
 
       # remove some of the arguments passed to Cache, which are irrelevant for digest
-      argsToOmitForDigest <- dotPipe | (names(modifiedDots) %in% .defaultCacheOmitArgs)
+      argsToOmitForDigest <- (names(modifiedDots) %in% .defaultCacheOmitArgs)
 
       preCacheDigestTime <- Sys.time()
       toDigest <- modifiedDots[!argsToOmitForDigest]
@@ -642,7 +635,7 @@ Cache <-
 
       if (verbose > 3) {
         a <- .CacheVerboseFn1(preDigest, fnDetails,
-                              startHashTime, modifiedDots, dotPipe, quick = quick,
+                              startHashTime, modifiedDots, quick = quick,
                               verbose = verbose)
         on.exit({
           assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
@@ -861,20 +854,9 @@ Cache <-
       if (!exists("output", inherits = FALSE) || is.null(output)) {
         # Run the FUN
         preRunFUNTime <- Sys.time()
-        if (fnDetails$isPipe) {
-          output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
-        } else {
-          # rlang attempts that are inadequate -- can't quite get the flexibility required to
-          #   allow either Cache(rnorm(1)) or Cache(rnorm, 1) to work correctly. Can only get
-          #   one or the other
-          # FUNx1 <- rlang::enquo(FUN)
-          # FUNx2 <- rlang::enquos(...)
-          # rlang::eval_tidy(call2(FUNx1, !!!FUNx2))
-          # theCall <- expr(FUN(!!!dots))
-          # output <- eval_tidy(theCall)
-          commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
-          if (length(commonArgs) > 0) {
-            messageCache("Cache and ", fnDetails$functionName, " have 1 or more common arguments: ", commonArgs,
+        commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
+        if (length(commonArgs) > 0) {
+          messageCache("Cache and ", fnDetails$functionName, " have 1 or more common arguments: ", commonArgs,
                          "\nSending the argument(s) to both ", verboseLevel = 2, verbose = verbose)
           }
 
@@ -893,15 +875,15 @@ Cache <-
               FUN(...)
             } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
               do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE)))
-            }
           }
-
         }
+
+
         postRunFUNTime <- Sys.time()
         elapsedTimeFUN <- postRunFUNTime - preRunFUNTime
       }
 
-      output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots[!dotPipe],
+      output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots,
                                 .objects = outputObjects, length = length,
                                 algo = algo, quick = quick, classOptions = classOptions, ...)
       verboseDF1(verbose, fnDetails$functionName, startRunTime)
@@ -1270,10 +1252,8 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
     }
     fnDetails <- list(functionName = as.character(parsedFun[[1]]))
   } else {
-    if (!isPipe) {
       fnDetails <- getFunctionName(FUN, #...,
-                                   originalDots = originalDots,
-                                   isPipe = isPipe)
+                                 originalDots = originalDots)
 
       # i.e., if it did extract the name
       if (!is.na(fnDetails$functionName)) {
@@ -1294,16 +1274,14 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
           if (is(modifiedDots, "try-error")) {
             modifiedDots <- if (any(formalArgs(FUN) %in% names(theCall))) {
               md <- as.list(theCall)[formalArgs(FUN)]
-              md[!sapply(md, is.null)]
-            } else {
-              list()
-            }
+            md[!sapply(md, is.null)]
+          } else {
+            list()
           }
         }
       }
-    } else {
-      fnDetails <- list()
     }
+
   }
 
   isDoCall <- FALSE
@@ -1402,7 +1380,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
     }
   }
   # browser(expr = exists("._fnCleanup_2"))
-  return(append(fnDetails, list(originalDots = originalDots, FUN = FUN, isPipe = isPipe,
+  return(append(fnDetails, list(originalDots = originalDots, FUN = FUN,
                                 modifiedDots = modifiedDots, isDoCall = isDoCall,
                                 formalArgs = forms)))
 }

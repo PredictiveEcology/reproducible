@@ -270,8 +270,6 @@ setMethod(
 #'        arguments to the \code{FUN}
 #' @param overrideCall A character string indicating a different (not "Cache") function
 #'        name to search for. Mostly so that this works with deprecated "cache".
-#' @param isPipe Logical. If the call to \code{getFunctionName} is coming from a pipe, there is more
-#'               information available. Specifically, \code{._lhs} which is already a call.
 #' @note If the function cannot figure out a clean function name, it returns "internal"
 #'
 #' @author Eliot McIntire
@@ -279,9 +277,9 @@ setMethod(
 #' @importFrom utils head
 #' @keywords internal
 #' @rdname cache-helpers
-getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # nolint
+getFunctionName <- function(FUN, originalDots, ..., overrideCall) { # nolint
   callIndex <- numeric()
-  scalls <- sys.calls()
+  scalls <- sys.calls() # needed for nesting level
   if (isS4(FUN)) {
     # Have to extract the correct dispatched method
     firstElems <- strsplit(showMethods(FUN, inherited = TRUE, printTo = FALSE), split = ", ")
@@ -305,15 +303,9 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
     })
     signat <- unlist(sigArgs[unlist(lapply(sigArgs, function(y) any(y)))])
 
-    if (isPipe) {
-      matchedCall <- as.list(
-        match.call(FUN, list(...)$._lhs) # already a call
-      )
-    } else {
-      matchedCall <- as.list(
-        match.call(FUN, call(name = FUN@generic, list(...)))
-      )
-    }
+    matchedCall <- as.list(
+      match.call(FUN, call(name = FUN@generic, list(...)))
+    )
 
     matchedCall <- matchedCall[nzchar(names(matchedCall))]
     ff <- match(names(matchedCall), FUN@signature[signat])

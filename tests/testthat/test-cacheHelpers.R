@@ -53,23 +53,23 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   # getFunctionName
   fn <- function(FUN) {
-    getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
+    getFunctionName(fn, overrideCall = "fn")
   }
   expect_true(fn(1)$functionName == "FUN")
 
   fn <- function(FUN) {
-    getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
+    getFunctionName(fn, overrideCall = "fn")
   }
   expect_true(fn(2)$functionName == "FUN")
 
   fn <- function(FUN) {
-    getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
+    getFunctionName(1, overrideCall = "fn")
   }
   expect_true(fn(2)$functionName == "FUN")
   expect_true(is.null(fn(2)$.FUN))
 
   fn <- function(FUN) {
-    getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
+    getFunctionName(1, overrideCall = "fn")
   }
   expect_true(fn(log(1))$functionName== "FUN")
 

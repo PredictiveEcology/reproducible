@@ -106,7 +106,6 @@ Collate:
     'objectSize.R'
     'options.R'
     'packages.R'
-    'pipe.R'
     'postProcess.R'
     'postProcessTerra.R'
     'preProcess.R'

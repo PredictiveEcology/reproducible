@@ -489,8 +489,7 @@ options(opt)
 }
 \seealso{
 \code{\link{showCache}}, \code{\link{clearCache}}, \code{\link{keepCache}},
-  \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}},
-  \code{\link{pipe}}
+  \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}}
 }
 \author{
 Eliot McIntire

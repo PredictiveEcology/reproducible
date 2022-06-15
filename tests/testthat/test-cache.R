@@ -552,58 +552,6 @@ test_that("test wrong ways of calling Cache", {
   expect_true(1 == Cache(sample, 1, cacheRepo = tmpdir))
 })
 
-test_that("test pipe for Cache", {
-  skip("Temporary pipe for magrittr 2.0")
-  testInitOut <- testInit(c("raster", "magrittr"), tmpFileExt = ".pdf")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-  a <- rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
-  b <- Cache(cacheRepo = tmpdir) %>% rnorm(10, 16) %>% mean() %C% prod(., 6) # nolint
-  d <- Cache(cacheRepo = tmpdir) %>% rnorm(10, 16) %>% mean() %C% prod(., 6)  # nolint
-  expect_true(all.equalWONewCache(b, d))
-  expect_false(isTRUE(all.equalWONewCache(a, b)))
-  d1 <- Cache(cacheRepo = tmpdir) %>% rnorm(10, 6) %>% mean() %C% prod(., 6)  # nolint
-  expect_false(isTRUE(all.equalWONewCache(d1, d)))
-
-  d1 <- Cache(cacheRepo = tmpdir) %>% rnorm(10, 16) %>% mean() %C% prod(., 16)  # nolint
-  expect_false(isTRUE(all.equalWONewCache(d1, d)))
-
-  d2 <- Cache(cacheRepo = tmpdir, notOlderThan = Sys.time()) %>%
-    rnorm(10, 16) %>%
-    mean() %C%
-    prod(., 16)
-
-  expect_false(isTRUE(all.equalWONewCache(d1, d2)))
-
-  # New Pipe
-  clearCache(tmpdir, ask = FALSE)
-  a <- rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
-  b <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
-  d <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
-  expect_true(all.equalWONewCache(b, d))
-  expect_false(isTRUE(all.equalWONewCache(a, b)))
-  d1 <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 6) %>% mean() %>% prod(., 6) # nolint
-  expect_false(isTRUE(all.equalWONewCache(d1, d)))
-
-  d1 <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() %>% prod(., 16) # nolint
-  expect_false(isTRUE(all.equalWONewCache(d1, d)))
-
-  d2 <- Cache(cacheRepo = tmpdir, notOlderThan = Sys.time()) %C%
-    rnorm(10, 16) %>%
-    mean() %>%
-    prod(., 16)
-
-  expect_false(isTRUE(all.equalWONewCache(d1, d2)))
-
-
-  clearCache(tmpdir, ask = FALSE)
-  a <- rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
-  b <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() # nolint
-  d <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() # nolint
-  expect_true(all.equalWONewCache(b, d))
-
-})
 
 test_that("test quoted FUN in Cache", {
   testInitOut <- testInit("magrittr")
