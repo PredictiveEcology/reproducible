@@ -280,6 +280,11 @@ setMethod(
 getFunctionName <- function(FUN, originalDots, ..., overrideCall) { # nolint
   callIndex <- numeric()
   scalls <- sys.calls() # needed for nesting level
+  functionName <- NULL # initiate this here, so we can know if it is found
+  if (is(FUN, "list")) {
+    functionName <- names(FUN)
+    FUN <- FUN[[1]]
+  }
   if (isS4(FUN)) {
     # Have to extract the correct dispatched method
     firstElems <- strsplit(showMethods(FUN, inherited = TRUE, printTo = FALSE), split = ", ")
@@ -324,70 +329,72 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall) { # nolint
     functionName <- FUN@generic
     FUN <- methodUsed@.Data  # nolint
   } else {
-    if (!missing(overrideCall)) {
-      callIndices <- .grepSysCalls(scalls, pattern = paste0("^", overrideCall))
-      functionCall <- scalls[callIndices]
-    } else {
-      callIndices <- .grepSysCalls(scalls,
-                                   pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache|^cloudCache")
-      callIndicesDoCall <- .grepSysCalls(scalls, pattern = "^do.call")
-      doCall1st2Elements <- lapply(scalls[callIndicesDoCall], function(x) x[1:2])
-      callIndicesDoCall <- callIndicesDoCall[grep("Cache", doCall1st2Elements)]
-      # The next line takes too long to grep if scalls has enormous objects
-      # callIndices <- grep(scalls, pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache")
-      callIndices <- unique(sort(c(callIndices, callIndicesDoCall)))
-      functionCall <- scalls[callIndices]
-    }
-    if (length(functionCall)) {
-      # for() loop is a work around for R-devel that produces a different final call in the
-      # sys.calls() stack which is NOT .Method ... and produces a Cache(FUN = FUN...)
-      for (callIndex in head(rev(callIndices), 2)) {
-        if (!missing(overrideCall)) {
-          env <- sys.frames()[[callIndex]]
-          matchedCall <- match.call(get(overrideCall, envir = env), scalls[[callIndex]])#parse(text = callIndex))
-          forms <- tryCatch("FUN" %in% formalArgs(overrideCall), error = function(x) NULL)
-          if (!is.null(forms)) {
-            functionName <- matchedCall$FUN
-          } else {
-            functionName <- matchedCall[[2]]
-          }
-        } else {
-          foundCall <- FALSE
-          if (exists("callIndicesDoCall", inherits = FALSE))
-            if (length(callIndicesDoCall) > 0) {
-              if (callIndex %in% callIndicesDoCall) {
-                mcDoCall <- match.call(do.call, scalls[[callIndex]])
-                for (i in 1:2) {
-                  fnLookup <- try(eval(mcDoCall$args, envir = sys.frames()[[callIndex - i]]), silent = TRUE)
-                  if (!is(fnLookup, "try-error"))
-                    break
-                }
-                functionName <- if (isTRUE("FUN" %in% names(fnLookup)))
-                  fnLookup$FUN
-                else
-                  fnLookup[[1]]
-
-                foundCall <- TRUE
-              }
-            }
-          if (!foundCall) {
-            matchedCall <- try(match.call(Cache, scalls[[callIndex]]), silent = TRUE)#parse(text = callIndex))
-            functionName <- if (!is(matchedCall, "try-error"))
-              matchedCall$FUN
-            else
-              ""
-          }
-        }
-        functionName <- if (is(functionName, "name")) {
-          deparse(functionName, width.cutoff = 300)
-        } else {
-          "FUN"
-        }
-
-        if (all(functionName != c("FUN")) && all(functionName != c("NULL"))) break
+    if (is.null(functionName)) {
+      if (!missing(overrideCall)) {
+        callIndices <- .grepSysCalls(scalls, pattern = paste0("^", overrideCall))
+        functionCall <- scalls[callIndices]
+      } else {
+        callIndices <- .grepSysCalls(scalls,
+                                     pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache|^cloudCache")
+        callIndicesDoCall <- .grepSysCalls(scalls, pattern = "^do.call")
+        doCall1st2Elements <- lapply(scalls[callIndicesDoCall], function(x) x[1:2])
+        callIndicesDoCall <- callIndicesDoCall[grep("Cache", doCall1st2Elements)]
+        # The next line takes too long to grep if scalls has enormous objects
+        # callIndices <- grep(scalls, pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache")
+        callIndices <- unique(sort(c(callIndices, callIndicesDoCall)))
+        functionCall <- scalls[callIndices]
       }
-    } else {
-      functionName <- ""
+      if (length(functionCall)) {
+        # for() loop is a work around for R-devel that produces a different final call in the
+        # sys.calls() stack which is NOT .Method ... and produces a Cache(FUN = FUN...)
+        for (callIndex in head(rev(callIndices), 2)) {
+          if (!missing(overrideCall)) {
+            env <- sys.frames()[[callIndex]]
+            matchedCall <- match.call(get(overrideCall, envir = env), scalls[[callIndex]])#parse(text = callIndex))
+            forms <- tryCatch("FUN" %in% formalArgs(overrideCall), error = function(x) NULL)
+            if (!is.null(forms)) {
+              functionName <- matchedCall$FUN
+            } else {
+              functionName <- matchedCall[[2]]
+            }
+          } else {
+            foundCall <- FALSE
+            if (exists("callIndicesDoCall", inherits = FALSE))
+              if (length(callIndicesDoCall) > 0) {
+                if (callIndex %in% callIndicesDoCall) {
+                  mcDoCall <- match.call(do.call, scalls[[callIndex]])
+                  for (i in 1:2) {
+                    fnLookup <- try(eval(mcDoCall$args, envir = sys.frames()[[callIndex - i]]), silent = TRUE)
+                    if (!is(fnLookup, "try-error"))
+                      break
+                  }
+                  functionName <- if (isTRUE("FUN" %in% names(fnLookup)))
+                    fnLookup$FUN
+                  else
+                    fnLookup[[1]]
+
+                  foundCall <- TRUE
+                }
+              }
+            if (!foundCall) {
+              matchedCall <- try(match.call(Cache, scalls[[callIndex]]), silent = TRUE)#parse(text = callIndex))
+              functionName <- if (!is(matchedCall, "try-error"))
+                matchedCall$FUN
+              else
+                ""
+            }
+          }
+          functionName <- if (is(functionName, "name")) {
+            deparse(functionName, width.cutoff = 300)
+          } else {
+            "FUN"
+          }
+
+          if (all(functionName != c("FUN")) && all(functionName != c("NULL"))) break
+        }
+      } else {
+        functionName <- ""
+      }
     }
     .FUN <- FUN  # nolint
   }
@@ -1063,7 +1070,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 # loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
 
 #' @keywords internal
-.getOtherFnNamesAndTags <- function(scalls) {
+.getOtherFnNamesAndTags <- function(scalls = NULL) {
   if (is.null(scalls)) {
     scalls <- sys.calls()
   }
@@ -1072,15 +1079,17 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   otherFns <- .grepSysCalls(
     scalls,
     pattern = patt)
+  otherFnsOut <- character()
   if (length(otherFns)) {
-    otherFns <- unlist(lapply(scalls[-otherFns], function(x) {
-      tryCatch(as.character(x[[1]]), error = function(y) "")
-    }))
-    otherFns <- otherFns[nzchar(otherFns)]
-    otherFns <- otherFns[!startsWith(otherFns, prefix = ".")]
-    otherFns <- paste0("otherFunctions:", otherFns)
-  } else {
-    otherFns <- character()
+    scallsToKeep <- scalls[-otherFns]
+    if (length(scallsToKeep)) {
+      otherFnsOut <- unlist(lapply(scallsToKeep, function(x) {
+        tryCatch(as.character(x[[1]]), error = function(y) "")
+      }))
+      otherFnsOut <- otherFnsOut[nzchar(otherFnsOut)]
+      otherFnsOut <- otherFnsOut[!startsWith(otherFnsOut, prefix = ".")]
+      otherFnsOut <- if (length(otherFnsOut)) paste0("otherFunctions:", otherFnsOut) else character()
+    }
   }
 
   # Figure out if it is in a .parseModule call, if yes, then extract the module
@@ -1088,9 +1097,9 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   #doEventFrameNum <- which(startsWith(as.character(scalls), prefix = ".parseModule"))
   if (length(doEventFrameNum)) {
     module <- get("m", envir = sys.frame(doEventFrameNum[2])) # always 2
-    otherFns <- c(paste0("module:", module), otherFns)
+    otherFnsOut <- c(paste0("module:", module), otherFnsOut)
   }
-  unique(otherFns)
+  unique(otherFnsOut)
 }
 
 #' @keywords internal

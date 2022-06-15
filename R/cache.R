@@ -432,29 +432,30 @@ Cache <-
     #                     showSimilar, drv, conn) {
 
     # Capture everything -- so not evaluated
-    newSubstFun <- substitute(FUN)
+    FUNcaptured <- substitute(FUN)
     origFUN <- quote(FUN)
-    isCapturedFUN <- length(newSubstFun) > 1
-    parsedExpanded <- evalArgsOnly(newSubstFun, env = parent.frame())
-    if (isCapturedFUN) {
-      FUN <- parsedExpanded[[1]]
-      originalDots <- parsedExpanded[-1]
-    } else {
-      FUN <- parsedExpanded
-    }
 
+    # isCapturedFUN <- length(FUNcaptured) > 1
+    # parsedExpanded <- evalArgsOnly(FUNcaptured, env = parent.frame())
+    # if (isCapturedFUN) {
+    #   FUN <- parsedExpanded[[1]]
+    #   originalDots <- parsedExpanded[-1]
+    # } else {
+    #   FUN <- parsedExpanded
+    # }
     if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
 
     if (missing(FUN)) stop("Cache requires the FUN argument")
 
     # returns "modifiedDots", "originalDots", "FUN", "funName", which will
     #  have modifications under many circumstances, e.g., do.call, specific methods etc.
-    browser()
-    fnDetails <- if(isCapturedFUN)
-      .fnCleanup(FUN = parsedExpanded[1], callingFun = "Cache", capturedFUN = originalDots)
-    else
-      .fnCleanup(FUN = FUN, callingFun = "Cache", ...)
+    fnDetails <- #if(isCapturedFUN)
+      #.fnCleanup(FUN = parsedExpanded[1], callingFun = "Cache", capturedFUN = originalDots)
+    #else
+      .fnCleanup(FUN = FUN, callingFun = "Cache", ..., FUNcaptured = FUNcaptured)
 
+    if (!is.null(fnDetails$userTags))
+      userTags <- c(userTags, paste0("functionInner:", fnDetails$userTags))
     FUN <- fnDetails$FUN
     modifiedDots <- fnDetails$modifiedDots
     originalDots <- fnDetails$originalDots # should be same as originalDots
@@ -469,10 +470,11 @@ Cache <-
                    if (nestedLev > 0) paste0(" (currently running nested Cache level ", nestedLev + 1),
                    ")",
                    verbose = verbose)
-      if (isCapturedFUN) {
+      if (fnDetails$isCapturedFUN) {
         browser()
         eval(origFUN, envir = parent.frame())
       } else {
+        browser()
         if (fnDetails$isDoCall) {
           do.call(modifiedDots$what, args = modifiedDots$args)
         } else {
@@ -536,18 +538,14 @@ Cache <-
 
       modifiedDots$.FUN <- fnDetails$.FUN # put in modifiedDots for digesting  # nolint
 
-      # This is for Pipe operator -- needs special consideration
-      browser()
-      scalls <-  NULL
-
+      scalls <- sys.calls() # this will be done anyway in next function
       # extract other function names that are not the ones the focus of the Cache call
-      otherFns <- .getOtherFnNamesAndTags(scalls = scalls)
+      otherFns <- .getOtherFnNamesAndTags(scalls)
 
       if (missing(notOlderThan)) notOlderThan <- NULL
 
       # if a simList is in ...
       # userTags added based on object class
-      browser()
       userTags <- c(userTags, unlist(lapply(modifiedDots, .tagsByClass)))
 
       # if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
@@ -860,8 +858,8 @@ Cache <-
                         add = TRUE,
                         drv = drv, conn = conn)
 
-        output <- if (isCapturedFUN) {
-          eval(newSubstFun, envir = parent.frame())
+        output <- if (fnDetails$isCapturedFUN) {
+          eval(FUNcaptured, envir = parent.frame())
         } else {
           if (length(commonArgs) == 0) {
             FUN(...)
@@ -1225,24 +1223,47 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
   return(saved)
 }
 
-.fnCleanup <- function(FUN, ..., callingFun) {
+doCall <- function(what, args, quote = FALSE, envir = parent.frame()) {
+  subArgs <- substitute(args)
+  subWhat <- substitute(what)
+  subArgs[[1]] <- subWhat
+  # lala <- evalArgsOnly(subArgs, env = envir)
+  eval(subArgs, envir = envir)
+}
+
+.fnCleanup <- function(FUN, ..., callingFun, FUNcaptured = NULL) {
 
   modifiedDots <- list(...)
-  if (identical(names(modifiedDots), "capturedFUN"))
-    modifiedDots <- modifiedDots[[1]]
   originalDots <- modifiedDots
+  isCapturedFUN <- FALSE
+  userTagsOtherFunctions <- NULL
+  isDoCall <- FALSE
+  if (!is.null(FUNcaptured)) {
+    isCapturedFUN <- length(FUNcaptured) > 1
+    parsedExpanded <- evalArgsOnly(FUNcaptured, env = parent.frame())
+    isDoCall <- attr(parsedExpanded, "isDoCall")
+    if (isCapturedFUN) {
+      userTagsOtherFunctions <- attr(parsedExpanded, "functionNames")[-1]
+      FUN <- parsedExpanded[1]
+      originalDots <- parsedExpanded[-1]
+      modifiedDots <- parsedExpanded
+      forms <- names(originalDots)[-1]
+    } else {
+      FUN <- parsedExpanded
+    }
+  }
 
-  browser()
+
   # browser(expr = exists("._fnCleanup_1"))
   # If passed with 'quote'
-  if (!is.function(FUN)) {
-    originalDots <- append(originalDots, as.list(mc[-1]))
-    modifiedDots <- append(modifiedDots, as.list(mc[-1]))
-    fnDetails <- list(functionName = as.character(parsedFun[[1]]))
-  } else {
-    fnDetails <- getFunctionName(FUN, #...,
-                                 originalDots = originalDots)
+  # if (!is.function(FUN)) {
+  #   originalDots <- append(originalDots, as.list(mc[-1]))
+  #   modifiedDots <- append(modifiedDots, as.list(mc[-1]))
+  #   fnDetails <- list(functionName = as.character(parsedFun[[1]]))
+  # } else {
+  fnDetails <- getFunctionName(FUN, originalDots = originalDots)
 
+  if (!isCapturedFUN) {
     # i.e., if it did extract the name
     if (!is.na(fnDetails$functionName)) {
       if (is.primitive(FUN)) {
@@ -1259,6 +1280,8 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
         theCall <- as.call(append(list(FUN), modifiedDots))
         modifiedDots <- try(as.list(
           match.call(FUN, theCall))[-1], silent = TRUE)
+        browser()
+
         if (is(modifiedDots, "try-error")) {
           modifiedDots <- if (any(formalArgs(FUN) %in% names(theCall))) {
             md <- as.list(theCall)[formalArgs(FUN)]
@@ -1270,107 +1293,110 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
       }
     }
 
-  }
+    #  }
 
-  isDoCall <- FALSE
-  forms <- suppressWarnings(names(formals(FUN)))
-  if (!is.null(fnDetails$functionName)) {
-    if (!any(is.na(fnDetails$functionName))) {
-      if (any(fnDetails$functionName == "do.call")) {
-        isDoCall <- TRUE
-        possFunNames <- lapply(substitute(placeholderFunction(...))[-1],
-                               deparse, backtick = TRUE)
-        #doCallMatched <- as.list(match.call(modifiedDots$what, call = as.call(append(list(modifiedDots$what), modifiedDots$args))))
-        doCallMatched <- as.list(match.call(do.call, as.call(append(list(do.call), possFunNames))))
-        whatArg <- doCallMatched$what
+    isDoCall <- FALSE
+    forms <- suppressWarnings(names(formals(FUN)))
+    if (!is.null(fnDetails$functionName)) {
+      if (!any(is.na(fnDetails$functionName))) {
+        if (any(fnDetails$functionName == "do.call")) {
+          isDoCall <- TRUE
+          possFunNames <- lapply(substitute(placeholderFunction(...))[-1],
+                                 deparse, backtick = TRUE)
+          #doCallMatched <- as.list(match.call(modifiedDots$what, call = as.call(append(list(modifiedDots$what), modifiedDots$args))))
+          doCallMatched <- as.list(match.call(do.call, as.call(append(list(do.call), possFunNames))))
+          whatArg <- doCallMatched$what
 
-        whArgs <- which(names(modifiedDots) %in% "args")
-        doCallFUN <- modifiedDots$what
+          whArgs <- which(names(modifiedDots) %in% "args")
+          doCallFUN <- modifiedDots$what
 
-        forms <- names(formals(doCallFUN))
-        if (isS4(doCallFUN)) {
-          fnName <- doCallFUN@generic
+          forms <- names(formals(doCallFUN))
+          if (isS4(doCallFUN)) {
+            fnName <- doCallFUN@generic
 
-          # Not easy to selectMethod -- can't have trailing "ANY" -- see ?selectMethod last
-          #  paragraph of "Using findMethod()" which says:
-          # "Notice also that the length of the signature must be what the corresponding
-          #  package used. If thisPkg had only methods for one argument, only length-1
-          # signatures will match (no trailing "ANY"), even if another currently loaded
-          # package had signatures with more arguments.
-          numArgsInSig <- try({
-            suppressWarnings({
-              info <- attr(utils::methods(fnName), "info")# from hadley/sloop package s3_method_generic
-            })
-            max(unlist(lapply(strsplit(rownames(info), split = ","), length) ) - 1)
-          }, silent = TRUE)
-          matchOn <- doCallFUN@signature[seq(numArgsInSig)]
+            # Not easy to selectMethod -- can't have trailing "ANY" -- see ?selectMethod last
+            #  paragraph of "Using findMethod()" which says:
+            # "Notice also that the length of the signature must be what the corresponding
+            #  package used. If thisPkg had only methods for one argument, only length-1
+            # signatures will match (no trailing "ANY"), even if another currently loaded
+            # package had signatures with more arguments.
+            numArgsInSig <- try({
+              suppressWarnings({
+                info <- attr(utils::methods(fnName), "info")# from hadley/sloop package s3_method_generic
+              })
+              max(unlist(lapply(strsplit(rownames(info), split = ","), length) ) - 1)
+            }, silent = TRUE)
+            matchOn <- doCallFUN@signature[seq(numArgsInSig)]
 
-          mc <- as.list(match.call(doCallFUN, as.call(append(fnName, modifiedDots[[whArgs]])))[-1])
-          mc <- mc[!unlist(lapply(mc, is.null))]
-          argsClasses <- unlist(lapply(mc, function(x) class(x)[1]))
-          argsClasses <- argsClasses[names(argsClasses) %in% matchOn]
-          missingArgs <- matchOn[!(matchOn %in% names(argsClasses))]
+            mc <- as.list(match.call(doCallFUN, as.call(append(fnName, modifiedDots[[whArgs]])))[-1])
+            mc <- mc[!unlist(lapply(mc, is.null))]
+            argsClasses <- unlist(lapply(mc, function(x) class(x)[1]))
+            argsClasses <- argsClasses[names(argsClasses) %in% matchOn]
+            missingArgs <- matchOn[!(matchOn %in% names(argsClasses))]
 
-          missings <- rep("missing", length(missingArgs))
-          names(missings) <- missingArgs
-          argsClasses <- c(argsClasses, missings)
+            missings <- rep("missing", length(missingArgs))
+            names(missings) <- missingArgs
+            argsClasses <- c(argsClasses, missings)
 
-          forms <- names(formals(selectMethod(fnName, signature = argsClasses)))
-          fnDetails$functionName <- fnName
-        } else {
-          classes <- try({
-            suppressWarnings({
-              info <- attr(utils::methods(whatArg), "info") # from hadley/sloop pkg s3_method_generic
-            })
-            classes <- unlist(lapply(strsplit(rownames(info), split = "\\."), function(x) x[[2]]))
-            gsub("-method$", "", classes)
-          }, silent = TRUE)
-          if (is(classes, "try-error")) classes <- NA_character_
-          mc <- as.list(match.call(doCallFUN, as.call(append(whatArg, modifiedDots[[whArgs]])))[-1])
-          theClass <- classes[unlist(lapply(classes, function(x) inherits(mc[[1]], x)))]
-          forms <- if (length(theClass)) {
-            aa <- try(names(formals(paste0(whatArg, ".", theClass))))
-            aa
+            forms <- names(formals(selectMethod(fnName, signature = argsClasses)))
+            fnDetails$functionName <- fnName
           } else {
-            if (all(is.na(classes))) {
-              names(formals(doCallFUN))
+            classes <- try({
+              suppressWarnings({
+                info <- attr(utils::methods(whatArg), "info") # from hadley/sloop pkg s3_method_generic
+              })
+              classes <- unlist(lapply(strsplit(rownames(info), split = "\\."), function(x) x[[2]]))
+              gsub("-method$", "", classes)
+            }, silent = TRUE)
+            if (is(classes, "try-error")) classes <- NA_character_
+            mc <- as.list(match.call(doCallFUN, as.call(append(whatArg, modifiedDots[[whArgs]])))[-1])
+            theClass <- classes[unlist(lapply(classes, function(x) inherits(mc[[1]], x)))]
+            forms <- if (length(theClass)) {
+              aa <- try(names(formals(paste0(whatArg, ".", theClass))))
+              aa
             } else {
-              names(formals(whatArg))
+              if (all(is.na(classes))) {
+                names(formals(doCallFUN))
+              } else {
+                names(formals(whatArg))
+              }
             }
           }
         }
       }
     }
-  }
-  # Determine if some of the Cache arguments are also arguments to FUN
-  callingFunFormals <- if (callingFun == "Cache") .namesCacheFormals else names(formals(callingFun))
-  if (isDoCall) {
-    argNamesOfAllClasses <- forms
-    fnDetails$.FUN <- format(doCallFUN) # nolint
-    formalsInCallingAndFUN <- argNamesOfAllClasses[argNamesOfAllClasses %in% callingFunFormals]
-  } else {
-    fnDetails$.FUN <- format(FUN) # nolint
-    formalsInCallingAndFUN <- forms[forms %in% callingFunFormals]
-  }
+    # Determine if some of the Cache arguments are also arguments to FUN
+    callingFunFormals <- if (callingFun == "Cache") .namesCacheFormals else names(formals(callingFun))
+    if (isDoCall) {
+      argNamesOfAllClasses <- forms
+      fnDetails$.FUN <- format(doCallFUN) # nolint
+      formalsInCallingAndFUN <- argNamesOfAllClasses[argNamesOfAllClasses %in% callingFunFormals]
+    } else {
+      fnDetails$.FUN <- format(FUN) # nolint
+      formalsInCallingAndFUN <- forms[forms %in% callingFunFormals]
+    }
 
-  # If arguments to FUN and Cache are identical, pass them through to FUN
-  if (length(formalsInCallingAndFUN)) {
-    formalsInCallingAndFUN <- grep("\\.\\.\\.", formalsInCallingAndFUN, value = TRUE, invert = TRUE)
-    commonArguments <- try(mget(formalsInCallingAndFUN, inherits = FALSE,
-                                envir = parent.frame()),
-                           silent = TRUE)
-    if (!is(commonArguments, "try-error")) {
-      if (isDoCall) {
-        modifiedDots$args[formalsInCallingAndFUN] <- commonArguments
-      } else {
-        modifiedDots[formalsInCallingAndFUN] <- commonArguments
+    # If arguments to FUN and Cache are identical, pass them through to FUN
+    if (length(formalsInCallingAndFUN)) {
+      formalsInCallingAndFUN <- grep("\\.\\.\\.", formalsInCallingAndFUN, value = TRUE, invert = TRUE)
+      commonArguments <- try(mget(formalsInCallingAndFUN, inherits = FALSE,
+                                  envir = parent.frame()),
+                             silent = TRUE)
+      if (!is(commonArguments, "try-error")) {
+        if (isDoCall) {
+          modifiedDots$args[formalsInCallingAndFUN] <- commonArguments
+        } else {
+          modifiedDots[formalsInCallingAndFUN] <- commonArguments
+        }
       }
     }
   }
   # browser(expr = exists("._fnCleanup_2"))
   return(append(fnDetails, list(originalDots = originalDots, FUN = FUN,
                                 modifiedDots = modifiedDots, isDoCall = isDoCall,
-                                formalArgs = forms)))
+                                formalArgs = forms,
+                                userTags = userTagsOtherFunctions,
+                                isCapturedFUN = isCapturedFUN)))
 }
 
 #' Set subattributes within a list by reference
@@ -1959,26 +1985,57 @@ checkInRepo <- function(conn, dbTabNam, outputHash) {
 }
 
 evalArgsOnly <- function(parsed, env) {
+  topLevel <- FALSE
+  keepFnNamesObjName <- "._evalArgsOnlyFnNames"
+  isDoCall <- FALSE
+  if (!exists(keepFnNamesObjName, env, inherits = FALSE)) {
+    assign(keepFnNamesObjName, character(), env)
+    on.exit({
+      suppressWarnings(rm(list = keepFnNamesObjName, envir = env))})
+    topLevel <- TRUE
+  }
   if (is.call(parsed)) {
     if (identical(quote, eval(parsed[[1]], envir = env)))
       parsed <- parsed[[2]]
     p1 <- eval(parsed[[1]], env = env)
-    if (!is.primitive(p1))
+    if (!is.primitive(p1)) {
       parsed <- match.call(p1, parsed)
+      if (identical(format(parsed[[1]]), "do.call")) {
+        p2 <- match.call(eval(parsed$what, envir = env), parsed$args)
+        p2[[1]] <- parsed$what
+        parsed <- p2
+        isDoCall <- TRUE
+      }
+
+    }
     parsedAsList <- as.list(parsed)
-    if (!is.primitive(p1))
-      if (is.name(parsed[[1]]))
-        names(parsedAsList)[[1]] <- as.character(parsedAsList[[1]])
+    if (is.primitive(p1)) {
+      forms <- names(formals(args(p1)))
+      fnName <- gsub(".Primitive\\(\"(.*)\"\\)", "\\1", format(p1))
+      items <- seq(length(parsedAsList) - 1)
+      names(parsedAsList)[items + 1] <- forms[items]
+    } else {
+      if (is.name(parsed[[1]])) {
+        fnName <- as.character(parsedAsList[[1]])
+      } else {
+        browser()
+      }
+    }
+    eaofn <- get0(keepFnNamesObjName, envir = env, inherits = FALSE)
+    eaofn <- c(eaofn, fnName)
+    assign(keepFnNamesObjName, eaofn, envir = env)
+    names(parsedAsList)[[1]] <- fnName
 
     out <- lapply(parsedAsList, evalArgsOnly, env = env)
+
   } else {
     out <- eval(parsed, envir = env)
+  }
+  if (isTRUE(topLevel)) {
+    eaofn <- get0(keepFnNamesObjName, envir = env, inherits = FALSE)
+    attr(out, "functionNames") <- eaofn
+    attr(out, "isDoCall") <- isDoCall
   }
   return(out)
 
 }
-# if (identical(quote, FUN)) {
-#   newSubstFun <- parsedFUN[[2]]
-# } else {
-#   break
-# }
