@@ -1235,7 +1235,8 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
 
 .fnCleanup <- function(FUN, ..., callingFun) {
   modifiedDots <- list(...)
-  isPipe <- isTRUE(!is.null(modifiedDots$._pipe))
+  if (identical(names(modifiedDots), "capturedFUN"))
+    modifiedDots <- modifiedDots[[1]]
   originalDots <- modifiedDots
 
   # browser(expr = exists("._fnCleanup_1"))
