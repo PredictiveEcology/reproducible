@@ -295,10 +295,9 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, outputH
   output
 }
 
-#' @importFrom rlang inherits_only
 isOrHasRaster <- function(obj) {
   rasters <- if (is(obj, "environment")) {
-    if (inherits_only(obj, "environment")) {
+    if (identical(class(obj), "environment")) {
       lapply(mget(ls(obj), envir = obj), function(x) isOrHasRaster(x))
     } else {
       tryCatch(lapply(mget(ls(obj), envir = obj@.xData),
