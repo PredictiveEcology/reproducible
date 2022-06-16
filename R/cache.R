@@ -2005,7 +2005,7 @@ evalArgsOnly <- function(parsed, env, topLevelEnv = environment()) {
       if (isName) {
         fnName <- format(parsedAsList[[1]])
       } else {
-        browser()
+        stop("An unknown, undiagnosed error in evalArgsOnly")
       }
     }
     if (!is.primitive(p1)) {
