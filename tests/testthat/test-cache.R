@@ -973,8 +973,6 @@ test_that("test rm large non-file-backed rasters", {
 
   skip_on_ci()
 
-  if (!is.null(getOption("reproducible.conn", NULL)))
-
   testInitOut <- testInit(ask = FALSE)
 
   on.exit({
