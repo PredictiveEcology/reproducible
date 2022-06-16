@@ -292,7 +292,7 @@ connObject <- function(cachePath) {
 
 }
 .cacheNumDefaultTags <- function() {
-  8
+  7
 }
 
 .ignoreTagKeys <- function() {
