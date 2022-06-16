@@ -1,5 +1,6 @@
 options(reproducible.drv = "fst")
 # options(reproducible.drv = RSQLite::SQLite())
+message(format(getOption("reproducible.drv")))
 
 test_that("test Cache(useCloud=TRUE, ...)", {
   if (!requireNamespace("googledrive", quietly = TRUE))

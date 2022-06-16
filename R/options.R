@@ -181,7 +181,7 @@ reproducibleOptions <- function() {
     reproducible.cloudFolderID = NULL,
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
-    reproducible.drv = RSQLite::SQLite(), # "fst",
+    reproducible.drv = "fst",# RSQLite::SQLite(), # "fst",
     reproducible.futurePlan = FALSE, #future::plan("multicore"), #memoise
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
@@ -202,7 +202,7 @@ reproducibleOptions <- function() {
     reproducible.useGDAL = TRUE, #
     reproducible.useMemoise = FALSE, #memoise
     reproducible.useNewDigestAlgorithm = 2, # TODO: change in next release
-    reproducible.useTerra = FALSE, # Default for now
+    reproducible.useTerra = TRUE, # Default for now
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1
   )
