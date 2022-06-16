@@ -33,7 +33,7 @@ showCache(tmpDir) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d52
 # If it finds it by cacheID, doesn't matter what the userTags are
 ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = "thisIsUnique")
 
-# Can use base pipe (does not with magrittr pipe!), and mix and match ways of calling
+# Can use base pipe (does not work with magrittr pipe!), and mix and match ways of calling
 a <- rnorm(22) |> Cache()
 b <- Cache(rnorm(22))
 d <- Cache(rnorm, 22)

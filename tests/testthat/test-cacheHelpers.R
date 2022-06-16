@@ -218,8 +218,9 @@ test_that("test cache-helpers with stacks", {
   expect_true(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
 
   ## removing entry from Cache
-  grep(basename(tmpfile), list.files(tmpCache, recursive = TRUE, full.names = TRUE), value = TRUE) %>%
-    file.remove(.)
+  grep(basename(tmpfile), list.files(tmpCache, recursive = TRUE, full.names = TRUE),
+       value = TRUE) |>
+    file.remove()
   expect_false(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
   b <- .prepareFileBackedRaster(s, tmpCache)
   expect_true(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))

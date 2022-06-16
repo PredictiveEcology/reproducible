@@ -240,8 +240,6 @@ test_that("test memory backed raster robustDigest", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  # library(raster)
-  # tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
   set.seed(123)
   r1 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
   r2 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
@@ -564,12 +562,11 @@ test_that("test quoted FUN in Cache", {
   B <- Cache(rnorm, 10, 16, cacheRepo = tmpdir) # nolint
   C <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpdir) # nolint
 
-  D <- try(Cache(cacheRepo = tmpdir) %>% rnorm(10, 16) , silent = TRUE) # nolint
+  D <- rnorm(10, 16) |> Cache(cacheRepo = tmpdir) # nolint
 
-  expect_true(all.equalWONewCache(A,B))
+  expect_true(all.equalWONewCache(A, B))
   expect_true(all.equalWONewCache(A, C))
-  if (!is(D, "try-error"))
-    expect_true(all.equalWONewCache(A, D))
+  expect_true(all.equalWONewCache(A, D))
 })
 
 test_that("test Cache argument inheritance to inner functions", {

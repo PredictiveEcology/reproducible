@@ -54,7 +54,6 @@ Imports:
     digest,
     fst,
     lobstr,
-    magrittr,
     methods,
     raster (>= 3.5-15),
     Require,

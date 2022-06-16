@@ -385,7 +385,6 @@ utils::globalVariables(c(
 #' @importClassesFrom sp SpatialPolygonsDataFrame
 #' @importFrom digest digest
 #' @importFrom data.table setDT := setkeyv .N .SD setattr
-#' @importFrom magrittr %>%
 #' @importFrom utils object.size tail methods
 #' @importFrom methods formalArgs
 #' @rdname Cache
@@ -471,14 +470,11 @@ Cache <-
       if (fnDetails$isCapturedFUN) {
         eval(origFUN, envir = parent.frame())
       } else {
-        browser()
         if (fnDetails$isDoCall) {
           do.call(modifiedDots$what, args = modifiedDots$args)
         } else {
           commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
           do.call(FUN, append(alist(...), modifiedDots[commonArgs]))
-          # FUN(...) # using do.call fails on quoted arguments because it evaluates them
-          # do.call(FUN, args = list(expr(modifiedDots)))
         }
       }
 
@@ -572,13 +568,9 @@ Cache <-
       }
 
       # List file prior to cache
-      # browser()
       if ("destinationPath" %in% fnDetails$formalArgs) {
         sideEffect <- modifiedDots$destinationPath
       }
-      # if (sideEffect != FALSE) {
-      #   priorRepo <- list.files(sideEffect, full.names = TRUE)
-      # }
 
       # remove things in the Cache call that are not relevant to Caching
       if (!is.null(modifiedDots$progress))
@@ -911,18 +903,6 @@ Cache <-
         stop("attributes are not correct 4")
       if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash)))
         stop("attributes are not correct 5")
-
-      # browser(expr = exists("._Cache_11"))
-      # if (sideEffect != FALSE) {
-      #   browser()
-      #   newFN <- file.path(sideEffect, basename2(Filenames(output)))
-      #   originalFN <- Filenames(output)
-      #   out <- hardLinkOrCopy(originalFN, newFN, , overwrite = TRUE)
-      #   output <- updateFilenameSlots(output, Filenames(output, allowMultiple = FALSE),
-      #                                 newFilenames = newFN)
-      #   # output <- .CacheSideEffectFn2(sideEffect, cacheRepo, priorRepo, algo, output,
-      #   #                               makeCopy, quick)
-      # }
 
       if (isS4(FUN)) {
         setattr(output, "function", FUN@generic)
@@ -1704,17 +1684,6 @@ verboseDF3 <- function(verbose, functionName, startCacheTime) {
 #' @keywords internal
 determineNestedTags <- function(envir, mc, userTags) {
   argsNoNesting <- "useCloud"
-  # if (R.version[['minor']] <= "4.0") {
-  #   # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
-  #   lsCurEnv <- ls(all.names = TRUE, envir = envir)
-  #   objs <- lsCurEnv[lsCurEnv %in% .namesCacheFormals]
-  #   objs <- objs[match(.namesCacheFormals, objs)]# sort so same order as R > 3.4
-  #   args <- mget(objs, envir = envir)
-  #   forms <- lapply(.formalsCache, function(x) eval(x))
-  #   objOverride <- unlist(lapply(objs, function(obj) identical(args[[obj]], forms[[obj]])))
-  #   userCacheArgs <- objs[!objOverride]
-  #   namesUserCacheArgs <- userCacheArgs
-  # } else {
   mc <- as.list(mc[-1])
   namesMatchCall <- names(mc)
   namesMatchCall <- namesMatchCall[!namesMatchCall %in% argsNoNesting]

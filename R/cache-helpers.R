@@ -634,9 +634,9 @@ setAs(from = "character", to = "Path", function(from) {
 
       pathExists <- dir.exists(dirname(saveFilename2))
       if (any(!pathExists)) {
-        dirname(saveFilename2) %>%
-          unique() %>%
-          sapply(., dir.create, recursive = TRUE)
+        dirname(saveFilename2) |>
+          unique() |>
+          sapply(X = _, dir.create, recursive = TRUE)
       }
 
       saveFilename2 <- sapply(seq_along(curFilename2), function(x) {

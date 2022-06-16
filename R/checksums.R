@@ -106,8 +106,8 @@ setMethod(
     }
 
     if (is.null(files)) {
-      files <- list.files(path, full.names = TRUE) %>%
-        grep(basename(checksumFile), ., value = TRUE, invert = TRUE)
+      files <- list.files(path, full.names = TRUE) |>
+        grep(basename(checksumFile), x = _, value = TRUE, invert = TRUE)
     } else {
       isAbs <- isAbsolutePath(files)
       if (!all(isAbs))
@@ -325,10 +325,10 @@ setMethod(
   signature = c(file = "character"),
   definition = function(file, quickCheck, algo = "xxhash64", ...) {
     if (quickCheck) {
-      file.size(file) %>% as.character() # need as.character for empty case
+      file.size(file) |> as.character() # need as.character for empty case
     } else {
       lapply(file, function(f) {
         digest::digest(object = f, file = TRUE, algo = algo, ...)
-      }) %>% unlist() %>% unname() %>% as.character() # need as.character for empty case # nolint
+      }) |> unlist() |> unname() |> as.character() # need as.character for empty case # nolint
     }
   })
