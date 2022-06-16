@@ -256,12 +256,6 @@
   .addTagsRepo(cacheId = isInRepo[[.cacheTableHashColName()]][lastOne],
                cachePath = cacheRepo, drv = drv, conn = conn)
 
-  # browser(expr = exists("._getFromRepo_1"))
-  # if (sideEffect != FALSE) {
-  #   browser()
-  #   .CacheSideEffectFn1(output, sideEffect, cacheRepo, quick, algo, FUN, verbose = verbose, ...)
-  # }
-
   # This allows for any class specific things
   output <- if (fnDetails$isDoCall) {
     do.call(.prepareOutput, args = append(list(output, cacheRepo), modifiedDots$args))

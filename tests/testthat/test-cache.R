@@ -115,6 +115,7 @@ test_that("test file-backed raster caching", {
   fn2 <- function(stk) {
     stk
   }
+
   out <- Cache(fn2, bbS, cacheRepo = tmpCache, userTags = "something2")
   tmpdir2 <- file.path(tmpdir, "newCache")
 
@@ -524,10 +525,8 @@ test_that("test asPath", {
   expect_true(sum(grepl(paste(.loadedMemoisedResultMsg, "saveRDS call"), a3)) == 1)
 
   unlink(fn)
-  #aaa <<- 1
   tmpdir2 <- tmpdir
   try(clearCache(tmpdir2, ask = FALSE), silent = TRUE)
-  #rm(aaa, envir = .GlobalEnv)
   a1 <- capture_messages(Cache(saveRDS, obj, file = as(fn, "Path"),
                                quick = TRUE, cacheRepo = tmpdir))
   a2 <- capture_messages(Cache(saveRDS, obj, file = as(fn, "Path"),
@@ -978,8 +977,6 @@ test_that("test rm large non-file-backed rasters", {
   skip_on_ci()
 
   if (!is.null(getOption("reproducible.conn", NULL)))
-    if (!grepl("SQLite", class(getOption("reproducible.conn", NULL))))
-      skip("This is not for non-SQLite")
 
   testInitOut <- testInit(ask = FALSE)
 
@@ -1498,5 +1495,37 @@ test_that("testing parallel", {
     })
   )
   sum(unlist(outs)) # should be 100 if no write problems occurred
+
+})
+
+test_that("change to new capturing of FUN & base pipe", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  st1 <- system.time(
+    out1 <- Cache(do.call(rnorm, list(1, 2, sd = round(mean(runif(1e8, 4, 6))))),
+                cacheRepo = tmpCache)
+  )
+  st2 <- system.time(
+    out2 <- runif(1e8, 4, 6) |>
+    mean() |>
+    round() |>
+    rnorm(1, 2, sd = _) |>
+    Cache(cacheRepo = tmpCache)
+  )
+  st3 <- system.time(
+    out3 <- runif(1e8, 4, 6) |>
+      mean() |>
+      round() |>
+      rnorm(1, 2, sd = _) |>
+      Cache(cacheRepo = tmpCache)
+  )
+  expect_true(attr(out1, ".Cache")$newCache)
+  expect_false(attr(out2, ".Cache")$newCache)
+  expect_false(attr(out3, ".Cache")$newCache)
+
+  expect_true(all((st1[1] * 50) > st3[1]))
 
 })

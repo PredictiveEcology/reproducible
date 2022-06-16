@@ -449,14 +449,12 @@ Cache <-
 
     # returns "modifiedDots", "originalDots", "FUN", "funName", which will
     #  have modifications under many circumstances, e.g., do.call, specific methods etc.
-    fnDetails <- #if(isCapturedFUN)
-      #.fnCleanup(FUN = parsedExpanded[1], callingFun = "Cache", capturedFUN = originalDots)
-    #else
-      .fnCleanup(FUN = FUN, callingFun = "Cache", ..., FUNcaptured = FUNcaptured)
+    fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", ...,
+                            FUNcaptured = FUNcaptured)
 
     if (!is.null(fnDetails$userTags))
       userTags <- c(userTags, paste0("functionInner:", fnDetails$userTags))
-    FUN <- fnDetails$FUN
+    FUN <- if (is(fnDetails$FUN, "list")) fnDetails$FUN[[1]] else fnDetails$FUN
     modifiedDots <- fnDetails$modifiedDots
     originalDots <- fnDetails$originalDots # should be same as originalDots
 
@@ -471,7 +469,6 @@ Cache <-
                    ")",
                    verbose = verbose)
       if (fnDetails$isCapturedFUN) {
-        browser()
         eval(origFUN, envir = parent.frame())
       } else {
         browser()
@@ -609,6 +606,7 @@ Cache <-
       if (!is.null(.cacheExtra)) {
         toDigest <- append(toDigest, list(.cacheExtra))
       }
+
       cacheDigest <- CacheDigest(toDigest, .objects = .objects,
                                  length = length, algo = algo, quick = quick,
                                  classOptions = classOptions)
@@ -684,7 +682,8 @@ Cache <-
         if ("prerun" %in% isInRepo$tagKey && NROW(isInRepo) == 1)  {
           if (waiting[1] && waiting[2]) {           # Here, another process has started this Cache entry, but isn't finished
             if (isFirstTimeWaiting) {
-              message("Waiting ", waiting[2] * waiting[1], " seconds, trying every ",waiting[1]," seconds for Cache entry to exist; it has ",
+              message("Waiting ", waiting[2] * waiting[1], " seconds, trying every ",
+                      waiting[1]," seconds for Cache entry to exist; it has ",
                       "been started in another R session, but is not finished yet")
               isFirstTimeWaiting <- FALSE
             }
@@ -694,6 +693,7 @@ Cache <-
           }
           if (waiting[2] <= 0 || waiting[1] == 0) {
             isInRepo <- isInRepo[0]
+            suppressMessages(clearCache(cacheRepo, userTags = outputHash, verbose = 0))
           }
 
         }
@@ -1014,7 +1014,7 @@ Cache <-
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()),
                     paste0("inCloud:", isTRUE(useCloud)),
-                    paste0("resultHash:", resultHash),
+                    if (nchar(resultHash)) paste0("resultHash:", resultHash),
                     paste0("elapsedTimeDigest:", format(elapsedTimeCacheDigest, units = "secs")),
                     paste0("elapsedTimeFirstRun:", format(elapsedTimeFUN, units = "secs")),
                     paste0(otherFns),
@@ -1231,7 +1231,7 @@ doCall <- function(what, args, quote = FALSE, envir = parent.frame()) {
   eval(subArgs, envir = envir)
 }
 
-.fnCleanup <- function(FUN, ..., callingFun, FUNcaptured = NULL) {
+.fnCleanup <- function(FUN, ..., callingFun, FUNcaptured = NULL, callingEnv = parent.frame(2)) {
 
   modifiedDots <- list(...)
   originalDots <- modifiedDots
@@ -1240,19 +1240,20 @@ doCall <- function(what, args, quote = FALSE, envir = parent.frame()) {
   isDoCall <- FALSE
   if (!is.null(FUNcaptured)) {
     isCapturedFUN <- length(FUNcaptured) > 1
-    parsedExpanded <- evalArgsOnly(FUNcaptured, env = parent.frame())
+    parsedExpanded <- evalArgsOnly(FUNcaptured, env = callingEnv)
     isDoCall <- attr(parsedExpanded, "isDoCall")
     if (isCapturedFUN) {
       userTagsOtherFunctions <- attr(parsedExpanded, "functionNames")[-1]
+      if (length(userTagsOtherFunctions) == 0) userTagsOtherFunctions <- NULL
       FUN <- parsedExpanded[1]
       originalDots <- parsedExpanded[-1]
-      modifiedDots <- parsedExpanded
-      forms <- names(originalDots)[-1]
+      modifiedDots <- originalDots
+      forms <- names(originalDots)
     } else {
       FUN <- parsedExpanded
+      attr(FUN, "isDoCall") <- attr(FUN, "functionNames") <- NULL
     }
   }
-
 
   # browser(expr = exists("._fnCleanup_1"))
   # If passed with 'quote'
@@ -1280,7 +1281,6 @@ doCall <- function(what, args, quote = FALSE, envir = parent.frame()) {
         theCall <- as.call(append(list(FUN), modifiedDots))
         modifiedDots <- try(as.list(
           match.call(FUN, theCall))[-1], silent = TRUE)
-        browser()
 
         if (is(modifiedDots, "try-error")) {
           modifiedDots <- if (any(formalArgs(FUN) %in% names(theCall))) {
@@ -1984,17 +1984,19 @@ checkInRepo <- function(conn, dbTabNam, outputHash) {
   isInRepo
 }
 
-evalArgsOnly <- function(parsed, env) {
-  topLevel <- FALSE
+evalArgsOnly <- function(parsed, env, topLevelEnv = environment()) {
   keepFnNamesObjName <- "._evalArgsOnlyFnNames"
   isDoCall <- FALSE
-  if (!exists(keepFnNamesObjName, env, inherits = FALSE)) {
+  isTopLevel <-  identical(environment(), topLevelEnv)
+  if (isTopLevel) {
     assign(keepFnNamesObjName, character(), env)
     on.exit({
       suppressWarnings(rm(list = keepFnNamesObjName, envir = env))})
-    topLevel <- TRUE
   }
-  if (is.call(parsed)) {
+
+  isPkgColonFn <- FALSE
+  if (length(parsed) > 1) isPkgColonFn <- identical(parsed[[1]], quote(`::`))
+  if (is.call(parsed) && !isPkgColonFn) {
     if (identical(quote, eval(parsed[[1]], envir = env)))
       parsed <- parsed[[2]]
     p1 <- eval(parsed[[1]], env = env)
@@ -2006,32 +2008,51 @@ evalArgsOnly <- function(parsed, env) {
         parsed <- p2
         isDoCall <- TRUE
       }
-
     }
+
     parsedAsList <- as.list(parsed)
+
     if (is.primitive(p1)) {
-      forms <- names(formals(args(p1)))
+      argsP1 <- args(p1)
+      forms <- if (!is.null(argsP1)) {
+        names(formals(argsP1))
+      } else {
+        NULL
+      }
+
       fnName <- gsub(".Primitive\\(\"(.*)\"\\)", "\\1", format(p1))
       items <- seq(length(parsedAsList) - 1)
+      if (is.null(forms))
+        forms <- paste0("arg_", items)
+
       names(parsedAsList)[items + 1] <- forms[items]
     } else {
-      if (is.name(parsed[[1]])) {
-        fnName <- as.character(parsedAsList[[1]])
+      isName <- is.name(parsed[[1]])
+      if (!isName) {
+        possName <- as.list(parsed[[1]])
+        if (identical(format(possName[[1]]), "::"))
+          isName <- TRUE
+      }
+      if (isName) {
+        fnName <- format(parsedAsList[[1]])
       } else {
         browser()
       }
     }
-    eaofn <- get0(keepFnNamesObjName, envir = env, inherits = FALSE)
-    eaofn <- c(eaofn, fnName)
-    assign(keepFnNamesObjName, eaofn, envir = env)
+    if (!is.primitive(p1)) {
+      eaofn <- get0(keepFnNamesObjName, envir = env, inherits = FALSE)
+      eaofn <- c(eaofn, fnName)
+      assign(keepFnNamesObjName, eaofn, envir = env)
+    }
     names(parsedAsList)[[1]] <- fnName
 
-    out <- lapply(parsedAsList, evalArgsOnly, env = env)
+    out <- lapply(parsedAsList, evalArgsOnly, env = env,
+                  topLevelEnv = topLevelEnv)
 
   } else {
     out <- eval(parsed, envir = env)
   }
-  if (isTRUE(topLevel)) {
+  if (isTopLevel) {
     eaofn <- get0(keepFnNamesObjName, envir = env, inherits = FALSE)
     attr(out, "functionNames") <- eaofn
     attr(out, "isDoCall") <- isDoCall
