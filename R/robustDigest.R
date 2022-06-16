@@ -113,12 +113,11 @@ setMethod(
   signature = "ANY",
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
-    # browser(expr = exists("._robustDigest_1"))
     if (is(object, "quosure")) {# can't get this class from rlang via importClass rlang quosure
       object <- eval_tidy(object)
     }
 
-    if (is(object, "cluster")) {# can't get this class from rlang via importClass rlang quosure
+    if (is(object, "cluster")) {# can't get this class from parallel via importClass
       out <- .doDigest(NULL, algo)
       return(out)
     }
