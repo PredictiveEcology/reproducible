@@ -1447,10 +1447,6 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
                  exprBetween = quote(
                    x <- fixErrors(x, testValidity = NA, useCache = useCache)
                  ))
-      # x <- sf::st_set_precision(x, 1e5) %>% fixErrors(.)
-      # studyArea <- sf::st_set_precision(studyArea, 1e5) %>% fixErrors(.)
-      # y <- sf::st_intersection(x, studyArea)
-      # y <- fixErrors(y)
     }
     if (!identical(.crs(y), .crs(x))) {
       ## sometimes the proj4string is rearranged, so they are not identical; they should be

@@ -810,8 +810,6 @@ extractFromArchive <- function(archive,
   if (is.character(fun)) {
     messagePrepInputs(paste0("The archive appears to be not a .zip. Trying a system call to ", fun), verbose = verbose)
     extractSystemCallPath <- .testForArchiveExtract()
-    #tempDir <- file.path(args$exdir, "extractedFiles") %>%
-    #  checkPath(create = TRUE)
     if (grepl(x = extractSystemCallPath, pattern = "7z")) {
       prependPath <- if (isWindows()) {
         paste0("\"", extractSystemCallPath, "\"")
@@ -1013,12 +1011,6 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     } else {
       setDT(cs)
       nonCurrentFiles <- cs[!file %in% filesToChecksum]
-      # if (requireNamespace("dplyr")) {
-      #   nonCurrentFiles1 <- cs %>%
-      #     dplyr::filter(!file %in% filesToChecksum)
-      #   # browser(expr = !identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
-      #   stopifnot(identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
-      # }
       setDF(cs)
 
     }
