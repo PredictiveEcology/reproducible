@@ -134,7 +134,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
 }
 
 testOnExit <- function(testInitOut) {
-  try(rm(list = "testsForPkgs", envir = .pkgEnv), silent = TRUE)
+  suppressWarnings(try(rm(list = "testsForPkgs", envir = .pkgEnv), silent = TRUE))
   if (length(testInitOut$optsVerbose))
     options("reproducible.verbose" = testInitOut$optsVerbose[[1]])
   if (length(testInitOut$optsAsk))

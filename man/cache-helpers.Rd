@@ -8,7 +8,7 @@
 \alias{getArtifact}
 \title{A set of helpers for Cache}
 \usage{
-getFunctionName(FUN, originalDots, ..., overrideCall, isPipe)
+getFunctionName(FUN, originalDots, ..., overrideCall)
 
 .digestRasterLayer(object, length, algo, quick)
 
@@ -26,9 +26,6 @@ arguments to the \code{FUN}}
 
 \item{overrideCall}{A character string indicating a different (not "Cache") function
 name to search for. Mostly so that this works with deprecated "cache".}
-
-\item{isPipe}{Logical. If the call to \code{getFunctionName} is coming from a pipe, there is more
-information available. Specifically, \code{._lhs} which is already a call.}
 
 \item{length}{Numeric. If the element passed to Cache is a \code{Path} class
 object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with

@@ -7,30 +7,30 @@
 Cache(
   FUN,
   ...,
-  notOlderThan,
+  notOlderThan = NULL,
   .objects = NULL,
   .cacheExtra = NULL,
-  outputObjects,
-  algo,
-  cacheRepo,
-  length,
+  outputObjects = NULL,
+  algo = "xxhash64",
+  cacheRepo = NULL,
+  length = getOption("reproducible.length", Inf),
   compareRasterFileLength,
-  userTags,
+  userTags = c(),
   digestPathContent,
-  omitArgs,
-  classOptions,
-  debugCache,
-  sideEffect,
-  makeCopy,
-  quick,
-  verbose,
-  cacheId,
-  useCache,
-  useCloud,
-  cloudFolderID,
-  showSimilar,
-  drv,
-  conn
+  omitArgs = NULL,
+  classOptions = list(),
+  debugCache = character(),
+  sideEffect = FALSE,
+  makeCopy = FALSE,
+  quick = getOption("reproducible.quick", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
+  cacheId = NULL,
+  useCache = getOption("reproducible.useCache", TRUE),
+  useCloud = FALSE,
+  cloudFolderID = NULL,
+  showSimilar = getOption("reproducible.showSimilar", FALSE),
+  drv = getOption("reproducible.drv"),
+  conn = getOption("reproducible.conn", NULL)
 )
 }
 \arguments{
@@ -489,8 +489,7 @@ options(opt)
 }
 \seealso{
 \code{\link{showCache}}, \code{\link{clearCache}}, \code{\link{keepCache}},
-  \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}},
-  \code{\link{pipe}}
+  \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}}
 }
 \author{
 Eliot McIntire

@@ -2006,44 +2006,45 @@ test_that("sideEffects", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  ras <- raster::raster(extent(0,10,0,10), vals = 1:100)
-  ras2 <- writeRaster(filename = tmpfile, ras, overwrite = TRUE)
-
-
-
-  # Simple case, local case
-  prepInputsWeird <- function(targetFile, fun, destinationPath) {
-    out <- prepInputs(targetFile = targetFile, fun = fun)
-    fns <- Filenames(out)
-    newFN <- file.path(destinationPath, basename2(fns))
-    file.copy(fns, newFN, overwrite = TRUE)
-    output <- updateFilenameSlots(out, Filenames(out, allowMultiple = FALSE),
-                                  newFilenames = newFN)
-  }
-
-  # Original file is in tmpfile --> its Filename points to tmpfile
-  aa <- Cache(prepInputsWeird(targetFile = tmpfile, fun = raster::raster,
-                              destinationPath = tmpCache),
-              omitArgs = "destinationPath")
-  unlink(Filenames(aa))
-  rm(aa)
-  td2 <- .reproducibleTempPath(rndstr(1, 6))
-  bb <- Cache(prepInputsWeird, targetFile = tmpfile, fun = raster::raster,
-              destinationPath = td2,
-              omitArgs = "destinationPath")
-  expect_true(identical(dir(td2), basename2(Filenames(bb))))
-
-  unlink(Filenames(bb))
-  rm(bb)
-  aa <- Cache(prepInputsWeird(targetFile = tmpfile, fun = raster::raster,
-                              destinationPath = tmpCache),
-              omitArgs = "destinationPath")
-  td2 <- .reproducibleTempPath(rndstr(1, 6))
-  bb <- Cache(prepInputsWeird, targetFile = tmpfile, fun = raster::raster,
-              destinationPath = td2,
-              omitArgs = "destinationPath")
-  expect_true(identical(dir(td2), basename2(Filenames(bb))))
-
+  # ras <- raster::raster(extent(0,10,0,10), vals = 1:100)
+  # ras2 <- writeRaster(filename = tmpfile, ras, overwrite = TRUE)
+  #
+  #
+  #
+  # # Simple case, local case
+  # prepInputsWeird <- function(targetFile, fun, destinationPath) {
+  #   browser()
+  #   out <- prepInputs(targetFile = targetFile, fun = fun)
+  #   fns <- Filenames(out)
+  #   newFN <- file.path(destinationPath, basename2(fns))
+  #   file.copy(fns, newFN, overwrite = TRUE)
+  #   output <- updateFilenameSlots(out, Filenames(out, allowMultiple = FALSE),
+  #                                 newFilenames = newFN)
+  # }
+  #
+  # # Original file is in tmpfile --> its Filename points to tmpfile
+  # aa <- Cache(prepInputsWeird(targetFile = tmpfile, fun = raster::raster,
+  #                             destinationPath = tmpCache),
+  #             omitArgs = "destinationPath")
+  # unlink(Filenames(aa))
+  # rm(aa)
+  # td2 <- .reproducibleTempPath(rndstr(1, 6))
+  # bb <- Cache(prepInputsWeird, targetFile = tmpfile, fun = raster::raster,
+  #             destinationPath = td2,
+  #             omitArgs = "destinationPath")
+  # expect_true(identical(dir(td2), basename2(Filenames(bb))))
+  #
+  # unlink(Filenames(bb))
+  # rm(bb)
+  # aa <- Cache(prepInputsWeird(targetFile = tmpfile, fun = raster::raster,
+  #                             destinationPath = tmpCache),
+  #             omitArgs = "destinationPath")
+  # td2 <- .reproducibleTempPath(rndstr(1, 6))
+  # bb <- Cache(prepInputsWeird, targetFile = tmpfile, fun = raster::raster,
+  #             destinationPath = td2,
+  #             omitArgs = "destinationPath")
+  # expect_true(identical(dir(td2), basename2(Filenames(bb))))
+  #
 
   # Simple case, online case
   url <- "https://drive.google.com/file/d/11yCDc2_Wia2iw_kz0f0jOXrLpL8of2oM/view?usp=sharing"
@@ -2051,10 +2052,9 @@ test_that("sideEffects", {
   rasTest1 <- Cache(cacheRepo = tmpdir,
                     prepInputs,
                     url = url,
-                    #targetFile = lcc2005Filename,
-                    #archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
                     destinationPath = tmpCache,
-                    omitArgs = "destinationPath"
+                    omitArgs = "destinationPath",
+                    quick = "destinationPath"
   )
   tmpCache <- file.path(tmpCache, "innerForTest")
   checkPath(tmpCache, create = TRUE)
@@ -2063,11 +2063,18 @@ test_that("sideEffects", {
   rasTest2 <- Cache(cacheRepo = tmpdir,
                     prepInputs,
                     url = url,
-                    #targetFile = lcc2005Filename,
-                    #archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
                     destinationPath = tmpCache,
-                    omitArgs = "destinationPath"
+                    omitArgs = "destinationPath",
+                    quick = "destinationPath"
   )
   expect_true(identical(dir(tmpCache), basename2(Filenames(rasTest2))))
+
+  rasTest2 <- Cache(cacheRepo = tmpdir,
+                    prepInputs(
+                      url = url,
+                      destinationPath = tmpCache),
+                    omitArgs = "destinationPath",
+                    quick = "destinationPath"
+  )
 
 })

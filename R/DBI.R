@@ -201,21 +201,6 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
     on.exit(dbDisconnectAll(conn, shutdown = TRUE))
   }
-  # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
-  # query <- glue::glue_sql(
-  #   "DELETE FROM {DBI::SQL(double_quote(dbTabNam))} WHERE \"cacheId\" IN ({cacheId*})",
-  #   dbTabNam = CacheDBTableName(cachePath, drv),
-  #   cacheId = cacheId,
-  #   .con = conn)
-  # res <- dbSendQuery(conn, query)
-  #
-  # if (FALSE)   { # this is the "unsafe" version
-  #   query <- paste0("DELETE FROM \"", CacheDBTableName(cachePath, drv), "\" WHERE \"cacheId\" = $1")
-  #   res <- dbSendStatement(conn, query)
-  #   dbBind(res, list(cacheId))
-  # }
-  #
-  # dbClearResult(res)
 
   rmFromCacheAll(cachePath, drv, cacheId, conn, dbTabNam = dbTabNam)
 
@@ -913,11 +898,6 @@ rmFromCacheAll <- function(cachePath, drv, cacheId, conn, dbTabNam = NULL) {
     DBI::dbClearResult(res)
   } else {
     objDT <- readFilebasedConn(conn = conn)
-    # wh <- which(!objDT$cacheId %in% cacheId)
-    # if (length(wh) == 0)
-    #   objDT <- setDF(.emptyCacheTable)
-    # else
-    #   objDT <- objDT[wh, ]
     writeFilebasedConnToMemory(cachePath, drv, conn, dt = objDT, rm = cacheId)
   }
 }

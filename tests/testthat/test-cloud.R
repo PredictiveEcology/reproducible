@@ -15,12 +15,6 @@ test_that("test Cache(useCloud=TRUE, ...)", {
                 "reproducible.cloudFolderID" = "tmp_CacheForTesting")
   )
   clearCache(x = tmpCache, useCloud = TRUE)
-  # if (packageVersion("googledrive") < "2.0.0") {
-  #   df <- googledrive::drive_find(pattern = testsForPkgs, team_drive = NULL)
-  # } else {
-  #   df <- googledrive::drive_find(pattern = testsForPkgs, shared_drive = NULL)
-  # }
-  #if (NROW(df) == 0)
   testsForPkgsDir <- try(googledrive::drive_mkdir(name = .pkgEnv$testsForPkgs, overwrite = TRUE), silent = TRUE)
   on.exit({
     retry(quote(googledrive::drive_trash(.pkgEnv$testsForPkgs)))
