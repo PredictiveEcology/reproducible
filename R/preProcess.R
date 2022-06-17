@@ -1299,16 +1299,17 @@ hardLinkOrCopy <- function(from, to, overwrite = FALSE, verbose = TRUE) {
       fe <- file.exists(to)
       if (any(fe)) {
         unlinkOut <- unlink(to[fe])
-        overwriteMess <- paste0(to[fe], " exists; overwrite = TRUE; removing first; ")
+        overwriteMess <- paste0(to[fe], " exists; overwrite = TRUE; overwriting ... ")
       }
     }
     # Basically -- all warnings are irrelevant; if fails, it will return FALSE, then it will try the file.copy
     outFL <- suppressWarnings(file.link(from = from, to = to))
     if (any(outFL)) {
-      toCollapsed <- paste(to[outFL], collapse = ", ")
-      fromCollapsed <- paste(from[outFL], collapse = ", ")
-      messagePrepInputs(overwriteMess, hardlinkMessagePrefix, ": ", toCollapsed, ", ",whPointsToMess," "
-                        , fromCollapsed, "; no copy/copies made.", verbose = verbose, collapse = "\n")
+      numbered <- seq(from[outFL])
+      dd <- paste(numbered, "original:", from[outFL], "\n      link:", to[outFL], collapse = "\n")
+      messagePrepInputs(overwriteMess, verbose = verbose - 1)
+      messagePrepInputs(hardlinkMessagePrefix, ": ", verbose = verbose)
+      messagePrepInputs(dd, verbose = verbose)
     }
     if (any(!outFL)) {
       outFL <- copyFile(to = to[!outFL], from = from[!outFL], overwrite = overwrite, silent = TRUE)

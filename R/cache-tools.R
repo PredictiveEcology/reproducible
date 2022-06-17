@@ -88,7 +88,8 @@ setGeneric("clearCache", function(x, userTags = character(), after = NULL, befor
                                   useCloud = FALSE,
                                   cloudFolderID = NULL,
                                   drv = getOption("reproducible.drv"),
-                                  conn = getOption("reproducible.conn", NULL), ...) {
+                                  conn = getOption("reproducible.conn", NULL),
+                                  verbose = getOption("reproducible.verbose"), ...) {
   standardGeneric("clearCache")
 })
 
@@ -117,7 +118,7 @@ setMethod(
     }
 
     # Check if no args -- faster to delete all then make new empty repo for large repos
-    clearWholeCache <- all(missing(userTags), is.null(after), is.null(before))
+    clearWholeCache <- all(isTRUE(length(userTags) == 0), is.null(after), is.null(before))
 
     if (isTRUEorForce(useCloud) || !clearWholeCache) {
 
@@ -168,8 +169,7 @@ setMethod(
         }
 
       }
-      unlink(CacheStorageDir(x), recursive = TRUE)
-      unlink(file.path(x, "rasters"), recursive = TRUE)
+      unlink(CacheStorageDirs(x), recursive = TRUE)
       unlink(CacheDBFile(x, drv = drv, conn = conn), recursive = TRUE, force = TRUE)
 
       checkPath(x, create = TRUE)
@@ -184,69 +184,11 @@ setMethod(
     if (isTRUE(returnEmptyCache))
       return(.emptyCacheTable)
 
-    if (isInteractive()) {
-      objSizes <- as.numeric(objsDT[tagKey == "object.size"][[.cacheTableTagColName()]])
-      cacheSize <- sum(objSizes) / 4
-    }
-
     if (NROW(objsDT)) {
-      filesToRemove <- objsDT[grepl(pattern = "cacheRaster", tagKey)][[.cacheTableTagColName()]]
-      # filebackedInRepo <- objsDT[grepl(pattern = "fromDisk", tagKey) &
-      #                           grepl(pattern = "TRUE", get(.cacheTableTagColName()))]
-      #
-      # rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
-      #                           grepl(pattern = "Raster", get(.cacheTableTagColName()))]
-      # listsInRepo <-  objsDT[grepl(pattern = "class", tagKey) &
-      #                          grepl(pattern = "list", get(.cacheTableTagColName()))]
-      # hasARaster <- all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(rastersInRepo) > 0 # nolint
-      # hasAList <- all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(listsInRepo) > 0 # nolint
-
-      if (NROW(filesToRemove)) {
-        # fileBackedRastersInRepo <- filebackedInRepo[[.cacheTableHashColName()]]# [rasterObjSizes < 1e5]
-        #if (NROW(fileBackedRastersInRepo)) {
-          filesToRemove <- unlist(filesToRemove)
-          if (isInteractive()) {
-            dirLs <- dir(unique(dirname(filesToRemove)), full.names = TRUE)
-            dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )
-            cacheSize <- sum(cacheSize, file.size(dirLs))
-          }
-        #}
-      }
-
-      if (isInteractive()) {
-        class(cacheSize) <- "object_size"
-        formattedCacheSize <- format(cacheSize, "auto")
-        if (isTRUE(ask)) {
-          messageQuestion("Your size of your selected objects is ", formattedCacheSize, ".\n",
-                  " Are you sure you would like to delete it all? Y or N")
-          rl <- readline()
-          if (!identical(toupper(rl), "Y")) {
-            messageCache("Aborting clearCache", verbose = verbose)
-            return(invisible())
-          }
-        }
-      }
-
-      # remove file-backed files
-      if (NROW(filesToRemove) > 0) {
-        unlink(filesToRemove)
-      }
-
-      objToGet <- unique(objsDT[[.cacheTableHashColName()]])
-      if (is.null(conn)) {
-        conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
-        on.exit({
-          dbDisconnectAll(conn, shutdown = TRUE)})
-      }
-      rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
-      if (isTRUE(getOption("reproducible.useMemoise")))
-        if (exists(x, envir = .pkgEnv))
-          suppressWarnings(rm(list = objToGet, envir = .pkgEnv[[x]]))
-
-      # browser(expr = exists("rmFC"))
+      rmFromCache(x, objsDT, ask = ask, verbose = verbose,
+                  conn = conn, drv = drv)# many = TRUE)
 
     }
-    # memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
     setkeyv(objsDT, colnames(objsDT))
     return(objsDT)
@@ -348,28 +290,13 @@ setMethod(
     before <- toNA(before)
     beforeNA <- is.na(before)
 
-    # afterNA <- FALSE
-    # if (is.null(after)) {
-    #   afterNA <- TRUE
-    #   after <- NA
-    # }
-    # "1970-01-01"
-    # beforeNA <- FALSE
-    # if (is.null(before)) {
-    #   beforeNA <- TRUE
-    #   before <- NA
-    # } # Sys.time() + 1e5
-    # if (is(x, "simList")) x <- x@paths$cachePath
-
-    # not seeing userTags
     # Clear the futures that are resolved
-    .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
-      !isFALSE(getOption("reproducible.futurePlan"))
-    if (.onLinux) {
+    useFuture <- !isFALSE(getOption("reproducible.futurePlan"))
+    if (useFuture) {
       hasFuture <- exists("futureEnv", envir = .reproEnv)
       .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")
       if (hasFuture) {
-        checkFutures()
+        conn <- checkFutures(x, drv, conn)
       }
     }
 
@@ -575,73 +502,80 @@ setMethod(
 .messageCacheSize <- function(x, artifacts = NULL, cacheTable,
                               verbose = getOption("reproducible.verbose")) {
   # browser(expr = exists("ffff"))
+  CacheFiles <- dir(unique(CacheStorageDirs(x)), full.names = TRUE)
+  fsTotal <- sum(file.size(CacheFiles))
 
-  tagCol <- "tagValue"
-  if (missing(cacheTable)) {
-    a <- showCache(x, verboseMessaging = FALSE)
-
-  } else {
-    a <- cacheTable
-  }
-  cn <- if (any(colnames(a) %in% "tag")) "tag" else "tagKey"
-  b <- a[a[[cn]] == "object.size",]
-  if (any(colnames(a) %in% "tag")) {
-    fsTotal <- sum(as.numeric(unlist(lapply(strsplit(b[[cn]], split = ":"), function(x) x[[2]])))) / 4
-  } else {
-    fsTotal <- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
-  }
-  fsTotalRasters <- sum(file.size(dir(file.path(x, "rasters"), full.names = TRUE, recursive = TRUE)))
-  fsTotal <- fsTotal + fsTotalRasters
+  # tagCol <- "tagValue"
+  # if (missing(cacheTable)) {
+  #   a <- showCache(x, verboseMessaging = FALSE)
+  #
+  # } else {
+  #   a <- cacheTable
+  # }
+  # cn <- if (any(colnames(a) %in% "tag")) "tag" else "tagKey"
+  # b <- a[a[[cn]] == "object.size",]
+  # if (any(colnames(a) %in% "tag")) {
+  #   fsTotal <- sum(as.numeric(unlist(lapply(strsplit(b[[cn]], split = ":"), function(x) x[[2]])))) / 4
+  # } else {
+  #   fsTotal <- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
+  #
+  # }
+  # browser()
+  # fsTotalRasters <- sum(file.size(dir(file.path(x, "rasters"), full.names = TRUE, recursive = TRUE)))
+  # fsTotal <- fsTotal + fsTotalRasters
   class(fsTotal) <- "object_size"
-  preMessage1 <- "  Total (including Rasters): "
+  preMessage1 <- "  Total (including auxiliary files -- e.g., .tif, .grd): "
 
-  b <- a[a[[.cacheTableHashColName()]] %in% artifacts &
-           (a[[cn]] %in% "object.size"),]
-  if (cn == "tag") {
-    fs <- sum(as.numeric(unlist(lapply(strsplit(b[[cn]], split = ":"), function(x) x[[2]])))) / 4
-  } else {
-    fs <- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
-  }
-
-  class(fs) <- "object_size"
-  preMessage <- "  Selected objects (not including Rasters): "
+  # b <- a[a[[.cacheTableHashColName()]] %in% artifacts &
+  #          (a[[cn]] %in% "object.size"),]
+  # if (cn == "tag") {
+  #   fs <- sum(as.numeric(unlist(lapply(strsplit(b[[cn]], split = ":"), function(x) x[[2]])))) / 4
+  # } else {
+  #   fs <- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
+  # }
+  #
+  # class(fs) <- "object_size"
+  # preMessage <- "  Selected objects (not including Rasters): "
 
   messageCache("Cache size: ", verbose = verbose)
   messageCache(preMessage1, format(fsTotal, "auto"), verbose = verbose)
-  messageCache(preMessage, format(fs, "auto"), verbose = verbose)
+  # messageCache(preMessage, format(fs, "auto"), verbose = verbose)
 }
 
 #' @keywords internal
-checkFutures <- function() {
-  # This takes a long time -- can't use it if
-  resol1 <- FALSE
-  count <- 0
-  lsFutureEnv <- ls(.reproEnv$futureEnv)
-
-  anyFutureWrite <- length(lsFutureEnv)
-
-  if (anyFutureWrite > 0) {
-    #objsInReproEnv <- ls(.reproEnv)
-    #objsInReproEnv <- grep("^future|cloudCheckSums", objsInReproEnv, value = TRUE)
-    while (any(!resol1)) {
-      count <- count + 1
-      #numSleeps <<- numSleeps+1
-      if (count > 1 ) {
-        Sys.sleep(0.001)
-        if (count > 1e3) {
-          messageCache("Future is not resolved after 1 second of waiting. Allowing to proceed.")
-          break
-        }
-      }
-      resol <- future::resolved(.reproEnv$futureEnv)
-      resol1 <- resol[!startsWith(names(resol), "cloudCheckSums")]
-    }
-    # browser(expr = exists("aaaa"))
-    if (length(resol[resol]) > 0)
-      # for (v in names(resol)[resol])
-        rm(list = names(resol)[resol], envir = .reproEnv$futureEnv)
-
+checkFutures <- function(cacheRepo, drv, conn) {
+  if (!is.null(conn)) {
+    dbDisconnectAll(conn, shutdown = TRUE)
   }
+  if (exists("futureEnv", envir = .reproEnv)) {
+    resol1 <- FALSE
+    count <- 0
+    lsFutureEnv <- ls(.reproEnv$futureEnv)
+
+    anyFutureWrite <- length(lsFutureEnv)
+
+    if (anyFutureWrite > 0) {
+      while (any(!resol1)) {
+        count <- count + 1
+        if (count > 1 ) {
+          Sys.sleep(0.001)
+          if (count > 1e3) {
+            messageCache("Future is not resolved after 1 second of waiting. Allowing to proceed.")
+            break
+          }
+        }
+        resol <- future::resolved(.reproEnv$futureEnv)
+        resol1 <- resol[!startsWith(names(resol), "cloudCheckSums")]
+      }
+      # browser(expr = exists("aaaa"))
+      if (length(resol[resol]) > 0) {
+        rm(list = names(resol)[resol], envir = .reproEnv$futureEnv)
+      }
+
+    }
+  }
+  if (!is.null(conn)) conn <- dbConnectAll(drv, cachePath = cacheRepo)
+  return(conn)
 }
 
 #' Cache helpers
@@ -778,3 +712,15 @@ afterBefore <- function(objsDT, afterNA, after, beforeNA, before) {
   }
   objsDT
 }
+
+CacheDTFilesAll <- function(CacheDT, cacheRepo) {
+  mainFiles <- CacheStoredFile(cacheRepo, unique(CacheDT$cacheId))
+  wh <- CacheDT[["tagKey"]] %in% c(userTag_CacheRasterRelPath, userTag_SideEffectRelPath)
+  auxFiles <- CacheDT[[.cacheTableTagColName()]][wh]
+  if (NROW(auxFiles)) {
+    auxFilesAbsPath <- file.path(cacheRepo, auxFiles)
+    mainFiles <- c(mainFiles, auxFilesAbsPath)
+  }
+  mainFiles
+}
+

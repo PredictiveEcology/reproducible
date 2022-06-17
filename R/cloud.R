@@ -256,6 +256,7 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, outputH
   rasterFilename <- Filenames(output)
   if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0 && all(nchar(rasterFilename) > 0)) {
     gdriveLs2 <- NULL
+    browser()
     cacheRepoRasterDir <- file.path(cacheRepo, "rasters")
     checkPath(cacheRepoRasterDir, create = TRUE)
     simpleFilenames <- unique(filePathSansExt(basename2(unlist(rasterFilename))))
@@ -444,7 +445,8 @@ cloudRmFromDBFile <- function(objsDT, cloudFolderID, cacheIds, gdriveLs, drv, co
   connTmp <- suppressMessages(cloudConnectDB(cloudFolderID, gdriveLs, drv))
   dbTabNam <- if (useSQL(connTmp)) DBI::dbListTables(connTmp) else NULL
   cp <- cacheRepoFromConn(connTmp)
-  rmFromCache(cachePath = cp, conn = connTmp, drv = drv, cacheId = cacheIds,
+  browser() # cacheID can it be CacheDT
+  rmFromCache(cacheRepo = cp, conn = connTmp, drv = drv, cacheId = cacheIds,
               dbTabNam = dbTabNam)
   cloudDisconnectDB(connTmp, #cp,
                                      drv, dbFile, cloudFolderID)

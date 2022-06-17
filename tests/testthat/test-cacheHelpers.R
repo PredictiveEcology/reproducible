@@ -201,6 +201,7 @@ test_that("test cache-helpers with stacks", {
   ## in memory
   b <- .prepareFileBackedRaster(s, tmpCache)
   is(b, "RasterStack")
+  browser()
   expect_true(length(list.files(file.path(tmpCache, "rasters"))) == 0)
 
   ## with 1 backups

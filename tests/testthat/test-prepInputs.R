@@ -1142,7 +1142,7 @@ test_that("preProcess doesn't work", {
 
 test_that("prepInputs doesn't work (part 2)", {
   skip_on_cran()
-  skip_if_not(getRversion() > "3.3.0")
+  skip_if_not(compareVersion(format(getRversion()), "3.3.0") >= 0)
 
   testInitOut <- testInit(c("sf", "raster"), opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
@@ -1700,8 +1700,8 @@ test_that("options inputPaths", {
   }, add = TRUE)
 
   f <- formals(prepInputs);
-
-  if (getRversion() <= "3.3.0")  skip("Doesn't work on R 3.3.0") # Not sure why this fails on 3.3.0
+  if (compareVersion(format(getRversion()), "3.3.0") <  0)
+    skip("Doesn't work on R 3.3.0") # Not sure why this fails on 3.3.0
   options("reproducible.inputPaths" = NULL)
   options("reproducible.inputPathsRecursive" = FALSE)
 

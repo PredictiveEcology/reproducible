@@ -136,7 +136,8 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
   appendAll(conn, cachePath, drv, dt)
 
-  return(obj)
+  return(list(dt, conn, drv, cachePath))
+  #return(obj)
 }
 
 #' @export
@@ -170,7 +171,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                              format = fileExt(sameCacheID))
         fs <- saveToCache(obj = obj, cachePath = cachePath, drv = drv, conn = conn,
                           cacheId = cacheId)
-        rmFromCache(cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+        browser() # cacheId --> can it be CacheDT
+        rmFromCache(cacheRepo = cachePath, cacheId = cacheId, drv = drv, conn = conn,
                     format = fileExt(sameCacheID))
         return(fs)
       }
@@ -192,19 +194,43 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 #'
 #' @export
 #' @rdname cache-tools
-rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
-                        cacheId, drv = getOption("reproducible.drv"),
+rmFromCache <- function(cacheRepo = getOption("reproducible.cachePath"),
+                        CacheDT, ask = getOption("reproducible.ask"),
+                        verbose = getOption("reproducible.verbose"),
+                        drv = getOption("reproducible.drv"),
                         conn = getOption("reproducible.conn", NULL),
                         format = getOption("reproducible.cacheSaveFormat", "rds"),
-                        dbTabNam = NULL) {
+                        dbTabNam = NULL, ...) {
   if (is.null(conn)) {
-    conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
+    conn <- dbConnectAll(drv, cachePath = cacheRepo, create = FALSE)
     on.exit(dbDisconnectAll(conn, shutdown = TRUE))
   }
+  if (is(CacheDT, "character") || !is.null(list(...)$cacheId)) browser()
+  filesToRemove <- CacheDTFilesAll(cacheRepo = cacheRepo, CacheDT)
+  if (isInteractive() ) {
+    fileSizes <- file.size(filesToRemove)
+    nas <- is.na(fileSizes)
+    if (any(!nas)) {
+      cacheSize <- sum(fileSizes[!nas])
+      class(cacheSize) <- "object_size"
+      formattedCacheSize <- format(cacheSize, "auto")
+      if (isTRUE(ask)) {
+        messageQuestion("Your size of your selected objects is ", formattedCacheSize, ".\n",
+                        " Are you sure you would like to delete it all? Y or N")
+        rl <- readline()
+        if (!identical(toupper(rl), "Y")) {
+          messageCache("Aborting clearCache", verbose = verbose)
+          return(invisible())
+        }
+      }
+    }
+  }
 
-  rmFromCacheAll(cachePath, drv, cacheId, conn, dbTabNam = dbTabNam)
+  cacheId <- unique(CacheDT$cacheId)
+  rmFromCacheDBFileAll(cacheRepo, drv, cacheId, conn, dbTabNam = dbTabNam)
+  rmFromCacheStorage(filesToRemove)
+  rmFromCacheMemoise(cacheRepo, cacheId)
 
-  unlink(CacheStoredFile(cachePath, hash = cacheId, format = format))
 }
 
 dbConnectAll <- function(drv = getOption("reproducible.drv"),
@@ -292,11 +318,15 @@ connObject <- function(cachePath) {
 
 }
 .cacheNumDefaultTags <- function() {
-  7
+  9
 }
 
 .ignoreTagKeys <- function() {
-  c("prerun", "preDigest", "otherFunctions", "accessed", "elapsedTimeLoad", "fromDisk", "origRaster", "cacheRaster")
+  repNS <- asNamespace("reproducible");
+  knownTags <- unname(unlist(mget(ls(pattern = "userTag_", envir = repNS),
+                                  envir = repNS, inherits = FALSE)))
+  c("prerun", "preDigest", "otherFunctions", "accessed", "elapsedTimeLoad",
+    "fromDisk", knownTags)
 }
 
 .cacheTableHashColName <- function() {
@@ -343,8 +373,31 @@ errMessWrongDrv <- "Currently can only use 'fst', RSQLite::SQLite(), or RPostgre
 
 #' @rdname CacheHelpers
 #' @export
-CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
-  file.path(cachePath, "cacheOutputs")
+CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath"),
+                            sub = getOption("reproducible.cacheStorageFolder", "cacheOutputs")) {
+  file.path(cachePath, sub)
+}
+
+#' @rdname CacheHelpers
+#' @export
+CacheStorageRasterDir <- function(cachePath = getOption("reproducible.cachePath"),
+                                  sub = getOption("reproducible.cacheRasterFolder", "cacheOutputs")) {
+  file.path(cachePath, sub)
+}
+
+#' @rdname CacheHelpers
+#' @export
+CacheStorageSideEffectsDir <- function(cachePath = getOption("reproducible.cachePath"),
+                                       sub = getOption("reproducible.cacheSideEffectsFolder", "cacheOutputs")) {
+  file.path(cachePath, sub)
+}
+
+
+#' @rdname CacheHelpers
+#' @export
+CacheStorageDirs <- function(cachePath = getOption("reproducible.cachePath")) {
+  c(CacheStorageDir(cachePath), CacheStorageRasterDir(cachePath),
+    CacheStorageSideEffectsDir(cachePath))
 }
 
 #' @details
@@ -369,6 +422,40 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), has
   filename <- paste(hash, csExtension, sep = ".")
   file.path(CacheStorageDir(cachePath), filename)
 }
+
+#' @rdname CacheHelpers
+#' @export
+#' @param hash The cacheId or otherwise digested hash value, as character string.
+#' @param filename The text string representing the file filename (absolute or basename)
+CacheStoredRasterFile <- function(cachePath = getOption("reproducible.cachePath"), hash = NULL,
+                                  filename) {
+  hash <- if (is.null(hash)) "" else paste0(hash, "_")
+  file.path(CacheStorageRasterDir(cachePath), paste0(hash, basename(filename)))
+}
+
+#' @rdname CacheHelpers
+#' @export
+#' @param hash The cacheId or otherwise digested hash value, as character string.
+#' @param filename The text string representing the file filename (absolute or basename)
+CacheStoredSideEffectFile <- function(cachePath = getOption("reproducible.cachePath"), hash = NULL,
+                                  filename) {
+  hash <- if (is.null(hash)) "" else paste0(hash, "_")
+  file.path(CacheStorageSideEffectsDir(cachePath), paste0(hash, basename(filename)))
+}
+
+#' @rdname CacheHelpers
+#' @export
+#' @param hash The cacheId or otherwise digested hash value, as character string.
+#' @param filename The text string representing the file filename (absolute or basename)
+CacheStoredFilesList <- function(cachePath = getOption("reproducible.cachePath"), hash = NULL) {
+  stop("Not a function yet")
+  dd <- dir(unique(CacheStorageDirs(cachePath)))
+  browser()
+  c(CacheStoredFile(cachePath, hash),
+    CacheStoredFile(cachePath, hash),
+    CacheStoredFile(cachePath, hash))
+}
+
 
 #' @rdname CacheHelpers
 #' @export
@@ -663,7 +750,9 @@ readFilebasedConn <- function(objName, conn, columns = NULL, from = 1, to = NULL
     objName <- objNameFromConn(conn)
   }
   fsTab <- NULL
-  if (exists(objName, envir = .pkgEnv, inherits = FALSE)) {
+  exist <- try(exists(objName, envir = .pkgEnv, inherits = FALSE))
+  if (is(exist, "try-error")) browser()
+  if (exist) {
     fsTab <- get(objName, envir = .pkgEnv, inherits = FALSE)
   } else {
     # Read from disk, then assign right away to memory for all future reads
@@ -878,7 +967,7 @@ createEmptyTable <- function(conn, cachePath, drv) {
   return(invisible())
 }
 
-rmFromCacheAll <- function(cachePath, drv, cacheId, conn, dbTabNam = NULL) {
+rmFromCacheDBFileAll <- function(cachePath, drv, cacheId, conn, dbTabNam = NULL) {
   if (useSQL(conn)) {
     if (is.null(dbTabNam))
       dbTabNam <- CacheDBTableName(cachePath, drv)
@@ -952,3 +1041,16 @@ objNameWithToAdd <- function(objName) paste0(objName, "_dtRowsAdded")
 objNameWithRm <- function(objName) paste0(objName, "_rm")
 
 objNameWithToUpdate <- function(objName) paste0(objName, "_update")
+
+rmFromCacheStorage <- function(filesToRemove, cacheRepo, CacheDT) {
+  if (missing(filesToRemove))
+    filesToRemove <- CacheDTFilesAll(CacheDT = CacheDT, cacheRepo = cacheRepo)
+  unlink(filesToRemove)
+}
+
+rmFromCacheMemoise <- function(cacheRepo, cacheId) {
+  if (isTRUE(getOption("reproducible.useMemoise")))
+    if (exists(cacheRepo, envir = .pkgEnv, inherits = FALSE))
+      suppressWarnings(rm(list = cacheId, envir = .pkgEnv[[x]]))
+
+}

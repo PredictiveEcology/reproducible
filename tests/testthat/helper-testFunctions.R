@@ -141,7 +141,10 @@ testOnExit <- function(testInitOut) {
     options("reproducible.ask" = testInitOut$optsAsk[[1]])
   if (length(testInitOut$opts))
     options(testInitOut$opts)
-  setwd(testInitOut$origDir)
+  if  (exists(".rs.getProjectDirectory"))
+    setwd(.rs.getProjectDirectory())
+  else
+    setwd(testInitOut$origDir)
   unlink(testInitOut$tmpdir, recursive = TRUE)
   if (isTRUE(testInitOut$needGoogle)) {
     if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
@@ -165,9 +168,11 @@ testOnExit <- function(testInitOut) {
       try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab2))
   }
 
-  lapply(testInitOut$libs, function(lib) {
+  out <- lapply(testInitOut$libs, function(lib) {
     try(detach(paste0("package:", lib), character.only = TRUE), silent = TRUE)}
   )
+  messagePrepInputs("Setting directory: ", getwd())
+  return(invisible())
 }
 
 runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpdir, test) {

@@ -18,58 +18,58 @@ test_that("test cached downloads", {
 
   out <- createCache(outdir)
   storageDir <- CacheStorageDir(outdir)
+  destFile <- asPath(file.path(outdir, basename(urlTif1)))
   # Cache download first run. File is downloaded. checksum is logged in cache db
   out <- Cache(utils::download.file, url = urlTif1,
-               destfile = asPath(file.path(outdir, basename(urlTif1))),
+               destfile = destFile,
                method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE,
-               cacheRepo = outdir, sideEffect = TRUE, makeCopy = FALSE, quick = TRUE)
+               cacheRepo = outdir, sideEffect = "destfile",
+               quick = TRUE,
+               omitArgs = "destfile")
 
   # check if download occured
-  expect_true(file.exists(file.path(outdir, basename(urlTif1))))
+  outputHash <- gsub("cacheId:", "", attr(out, "tags"))
+  expect_true(file.exists(destFile)) # in actual destination
+  stashedFile <- sideEffectStashedFiles(outdir, outputHash, basename(destFile))
+  expect_true(file.exists(stashedFile)) # in Cache
 
   # compare checksum from file with checksum stored in cache db
   urlfileSize <- list(basename(urlTif1), file.size(file.path(outdir, basename(urlTif1))))
   urlfileChcksum <- digest::digest(urlfileSize, algo = "xxhash64")
 
-  cachedChcksum <- attributes(out)$chcksumFiles
-  expect_equal(paste0(file.path(basename(outdir), basename(urlTif1)), ":", urlfileChcksum),
-               cachedChcksum)
+  # cachedChcksum <- attributes(out)$chcksumFiles
+  # expect_equal(paste0(file.path(basename(outdir), basename(urlTif1)), ":", urlfileChcksum),
+  #              cachedChcksum)
 
   # rerun download. Shouldn't run. # TODO: this shouldn't be rerunning
   # sideE <<- aaaa <<- gggg <<- eeee <<- ffff <<- nnnn <<- 1
+  tf <- tempfile()
   out <- Cache(utils::download.file, url = urlTif1,
-               destfile = asPath(file.path(outdir, basename(urlTif1))),
+               destfile = tf,
                method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE,
-               cacheRepo = outdir, sideEffect = TRUE, makeCopy = FALSE, quick = TRUE)
+               cacheRepo = outdir, sideEffect = "destfile",
+               quick = TRUE,
+               omitArgs = "destfile")
+  expect_true(file.exists(tf)) # recovered, with
+  expect_true(file.exists(stashedFile)) # in Cache
 
   # Make sur the file do not exists before testing
-  file.remove(basename(urlTif1))
-  #toRemove <- list(basename(CacheDBFile(outdir)), )
-  #lapply(toRemove, function(x) {
-  #  if (file.exists(file.path(outdir, x))) file.remove(file.path(outdir, x))
-  #})
-  clearCache(outdir)
+  file.remove(destFile)
+  clearCache(outdir, userTags = outputHash)
   expect_false(file.exists(file.path(outdir, basename(urlTif1))))
+  expect_false(file.exists(file.path(CacheStorageDir(outdir), basename(urlTif1))))
 
-  # Test MakeCopy = TRUE
-  out <- Cache(utils::download.file, url = urlTif1,
-               destfile = asPath(file.path(outdir, basename(urlTif1))),
-               method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE,
-               cacheRepo = outdir, sideEffect = TRUE, makeCopy = TRUE, quick = TRUE)
-
-  # check if copy was created
-  copyFolder <- storageDir
-
-  expect_true(file.exists(file.path(copyFolder, basename(urlTif1))))
 
   # Remove downloaded file and check if it is brought back using the copy
   # see message 'loading cached result from previous FUN call'
-  file.remove(file.path(outdir, basename(urlTif1)))
-  expect_false(file.exists(file.path(outdir, basename(urlTif1))))
+  file.remove(stashedFile)
+  expect_false(file.exists(stashedFile))
+  tf1 <- file.path(.reproducibleTempPath("allo"), "myFile")
   out <- Cache(utils::download.file, url = urlTif1,
-               destfile = asPath(file.path(outdir, basename(urlTif1))),
+               destfile = tf1,
                method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE,
-               cacheRepo = outdir, sideEffect = TRUE, makeCopy = TRUE, quick = TRUE)
+               cacheRepo = outdir, sideEffect = "destfile", quick = TRUE,
+               omitArgs = "destfile")
 
-  expect_true(file.exists(file.path(outdir, basename(urlTif1))))
+  expect_true(file.exists(tf1))
 })

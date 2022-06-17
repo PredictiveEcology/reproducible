@@ -227,10 +227,7 @@ utils::globalVariables(c(
 #' If \code{sideEffect} is logical, then the function will check the \code{cacheRepo};
 #' if it is a path, then it will check the path.
 #' The function will assess whether the files to be downloaded are found locally prior to download.
-#' If it fails the local test, then it will try to recover from a local copy if (\code{makeCopy}
-#' had been set to \code{TRUE} the first time the function was run.
-#' Currently, local recovery will only work if\code{makeCOpy} was set to \code{TRUE} the first time
-#' \code{Cache} was run). Default is \code{FALSE}.
+#' Default is \code{FALSE}.
 #'
 #' @note As indicated above, several objects require pre-treatment before
 #' caching will work as expected. The function \code{.robustDigest} accommodates this.
@@ -292,18 +289,16 @@ utils::globalVariables(c(
 #'        If \code{"quick"}, then it will return the same two objects directly,
 #'        without evalutating the \code{FUN(...)}.
 #'
-#' @param sideEffect Character string identifying a folder name where file-backed R objects,
-#'        such as \code{Raster} or \code{Rast} will be written to. See Details.
+#' @param sideEffect Character string identifying either: 1) the argument
+#'        (e.g., \code{"destionationPath"}
+#'        that describes either a filename where the function will write some side effect to,
+#'        or a folder name where 1 or more files will be written to; or 2) a folder
+#'        name where file-backed R objects that have a method for \code{Filenames} will
+#'        be placed (and their file-backed info will be updated accordingly). See Details.
 #'        If \code{FUN} has an argument `destinationPath`, then `Cache` will attempt to
-#'        use it, i.e., \code{sideEffect <- destinationPath}.
-#'        \emph{NOTE: this argument is experimental and may change in future releases.}
-#'
-#' @param makeCopy Logical. If \code{sideEffect = TRUE}, and \code{makeCopy = TRUE},
-#'        a copy of the downloaded files will be made and stored in the \code{cacheRepo}
-#'        to speed up subsequent file recovery in the case where the original copy
-#'        of the downloaded files are corrupted or missing. Currently only works when
-#'        set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.
-#'        \emph{NOTE: this argument is experimental and may change in future releases.}
+#'        use it, i.e., \code{sideEffect = "destinationPath"} will be set.
+#'        \emph{NOTE: this argument has changed as of V 1.2.9.9011 and may change in
+#'        future releases.}
 #'
 #' @param userTags A character vector with descriptions of the Cache function call. These
 #'   will be added to the Cache so that this entry in the Cache can be found using
@@ -403,7 +398,7 @@ Cache <-
            compareRasterFileLength, userTags = c(),
            digestPathContent, omitArgs = NULL,
            classOptions = list(), debugCache = character(),
-           sideEffect = FALSE, makeCopy = FALSE,
+           sideEffect = FALSE,
            quick = getOption("reproducible.quick", FALSE),
            verbose = getOption("reproducible.verbose", 1), cacheId = NULL,
            useCache = getOption("reproducible.useCache", TRUE),
@@ -424,7 +419,7 @@ Cache <-
     #                     outputObjects,  # nolint
     #                     algo, cacheRepo, length, compareRasterFileLength, userTags,
     #                     digestPathContent, omitArgs, classOptions,
-    #                     debugCache, sideEffect, makeCopy, quick, verbose,
+    #                     debugCache, sideEffect, quick, verbose,
     #                     cacheId, useCache,
     #                     useCloud,
     #                     cloudFolderID,
@@ -473,7 +468,7 @@ Cache <-
         if (fnDetails$isDoCall) {
           do.call(modifiedDots$what, args = modifiedDots$args)
         } else {
-          commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
+          commonArgs <- .namesCacheFormals[.namesCacheFormals %in% fnDetails$formalArgs]
           do.call(FUN, append(alist(...), modifiedDots[commonArgs]))
         }
       }
@@ -568,9 +563,8 @@ Cache <-
       }
 
       # List file prior to cache
-      if ("destinationPath" %in% fnDetails$formalArgs) {
-        sideEffect <- modifiedDots$destinationPath
-      }
+      if (!isFALSE(sideEffect))
+        sideEffect <- sideEffectSetup(sideEffect, cacheRepo, fnDetails, modifiedDots)
 
       # remove things in the Cache call that are not relevant to Caching
       if (!is.null(modifiedDots$progress))
@@ -670,7 +664,17 @@ Cache <-
           dbDisconnectAll(conn, shutdown = TRUE)
           conn <- dbConnectAll(drv, cachePath = repo)
         }
-        isInRepo <- checkInRepo(conn, dbTabNam, outputHash)
+        if (useFuture()) {
+          conn <- checkFutures(repo, drv, conn)
+          isInRepo <- checkInRepo(conn, dbTabNam, outputHash)
+          if (identical("prerun", isInRepo$tagKey)) { # There is a weird holding on here
+            dbDisconnectAll(conn, shutdown = TRUE)
+            conn <- dbConnectAll(drv, cacheRepo)
+            isInRepo <- checkInRepo(conn, dbTabNam, outputHash)
+          }
+        } else {
+          isInRepo <- checkInRepo(conn, dbTabNam, outputHash)
+        }
         if ("prerun" %in% isInRepo$tagKey && NROW(isInRepo) == 1)  {
           if (waiting[1] && waiting[2]) {           # Here, another process has started this Cache entry, but isn't finished
             if (isFirstTimeWaiting) {
@@ -684,12 +688,18 @@ Cache <-
             tries <- tries - 1 # stop the count up if there is a vector of CacheRepositories; keep on this one
           }
           if (waiting[2] <= 0 || waiting[1] == 0) {
-            isInRepo <- isInRepo[0]
+            isInRepo <- isInRepo[0, ]
             suppressMessages(clearCache(cacheRepo, userTags = outputHash, verbose = 0))
           }
 
         }
 
+        if (!isFALSE(sideEffect)) {
+          sideEffect <- append(sideEffect, list(
+                             files = isInRepo$tagValue[isInRepo$tagKey == userTag_SideEffectRelPath],
+                             dir =  isInRepo$tagValue[isInRepo$tagKey == userTag_SideEffectRelPathDir],
+                             origRelPath = isInRepo$tagValue[isInRepo$tagKey == userTag_SideEffectRelPathOrig]))
+        }
         if (isFALSE(waiting[1]) || waiting[1] == 0 || tail(waiting, 1) <= 0 || NROW(isInRepo) > 1) {
           fullCacheTableForObj <- isInRepo
           if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
@@ -778,6 +788,7 @@ Cache <-
                                      preDigest = preDigest, startCacheTime = startCacheTime,
                                      drv = drv, conn = conn,
                                      ...), silent = TRUE)
+
           postLoadTime <- Sys.time()
           elapsedTimeLoad <- postLoadTime - preLoadTime
 
@@ -836,7 +847,7 @@ Cache <-
       if (!exists("output", inherits = FALSE) || is.null(output)) {
         # Run the FUN
         preRunFUNTime <- Sys.time()
-        commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
+        commonArgs <- .namesCacheFormals[.namesCacheFormals %in% fnDetails$formalArgs]
         if (length(commonArgs) > 0) {
           messageCache("Cache and ", fnDetails$functionName, " have 1 or more common arguments: ", commonArgs,
                        "\nSending the argument(s) to both ", verboseLevel = 2, verbose = verbose)
@@ -868,6 +879,10 @@ Cache <-
       output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots,
                                 .objects = outputObjects, length = length,
                                 algo = algo, quick = quick, classOptions = classOptions, ...)
+
+      if (!isFALSE(sideEffect))
+        userTags <- sideEffectCopyToCacheAddUT(sideEffect, cacheRepo, outputHash, userTags)
+
       verboseDF1(verbose, fnDetails$functionName, startRunTime)
 
       # Delete previous version if notOlderThan violated --
@@ -912,7 +927,8 @@ Cache <-
       }
       # Can make new methods by class to add tags to outputs
       if (.CacheIsNew) {
-        outputToSave <- dealWithClass(output, cacheRepo, drv = drv, conn = conn)
+        outputToSave <- dealWithClass(output, cacheRepo, sideEffect = sideEffect, hash = outputHash,
+                                      drv = drv, conn = conn)
         outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
       } else {
         outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
@@ -924,7 +940,6 @@ Cache <-
       if (isTRUE(any(alreadyIn)))
         otherFns <- otherFns[!alreadyIn]
 
-      # browser(expr = exists("._Cache_12"))
       outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
       if (outputToSaveIsList) {
         rasters <- unlist(lapply(outputToSave, is, "Raster"))
@@ -932,27 +947,22 @@ Cache <-
         rasters <- is(outputToSave, "Raster")
       }
       if (any(rasters)) {
-        if (outputToSaveIsList) {
-          outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
-            .prepareFileBackedRaster(x, repoDir = cacheRepo, overwrite = FALSE, drv = drv, conn = conn))
-        } else {
-          outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheRepo,
-                                                   overwrite = FALSE, drv = drv, conn = conn)
-        }
+        # if (outputToSaveIsList) {
+        #   outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
+        #     .prepareFileBackedRaster(x, repoDir = cacheRepo, overwrite = FALSE, drv = drv, conn = conn))
+        # } else {
+        #   outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheRepo,
+        #                                            overwrite = FALSE, drv = drv, conn = conn)
+        # }
 
-        # have to reset all these attributes on the rasters as they were undone in prev steps
-        setattr(outputToSave, "tags", attr(output, "tags"))
         .setSubAttrInList(outputToSave, ".Cache", "newCache", attr(output, ".Cache")$newCache)
         setattr(outputToSave, "call", attr(output, "call"))
 
-        # attr(outputToSave, "tags") <- attr(output, "tags")
-        # attr(outputToSave, "call") <- attr(output, "call")
-        # attr(outputToSave, ".Cache")$newCache <- attr(output, ".Cache")$newCache
         if (!identical(attr(outputToSave, ".Cache")$newCache, attr(output, ".Cache")$newCache))
           stop("attributes are not correct 6")
         if (!identical(attr(outputToSave, "call"), attr(output, "call")))
           stop("attributes are not correct 7")
-        if (!identical(attr(outputToSave, "tags"), attr(output, "tags")))
+        if (!all(attr(output, "tags") %in% attr(outputToSave, "tags")))
           stop("attributes are not correct 8")
 
         if (isS4(FUN)) {
@@ -960,9 +970,6 @@ Cache <-
           if (!identical(attr(outputToSave, "function"), attr(output, "function")))
             stop("There is an unknown error 04")
         }
-        # attr(outputToSave, "function") <- attr(output, "function")
-        # For Rasters, there will be a new name if file-backed ... it must be conveyed to output too
-        # output <- outputToSave
       }
       if (length(debugCache)) {
         if (!is.na(pmatch(debugCache, "complete"))) {
@@ -991,6 +998,7 @@ Cache <-
 
       userTags <- c(userTags,
                     paste0("class:", class(outputToSave)[1]),
+                    paste0("cacheRepo:", cacheRepo),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()),
                     paste0("inCloud:", isTRUE(useCloud)),
@@ -1004,19 +1012,11 @@ Cache <-
 
       written <- 0
 
-      useFuture <- FALSE
-      .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
-      if (.onLinux) {
-        if (!isFALSE(getOption("reproducible.futurePlan")) &&
-            .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")) {
-          useFuture <- TRUE
-        }
-      }
-      if (useFuture) {
+      if (useFuture()) {
         if (!exists("futureEnv", envir = .reproEnv))
           .reproEnv$futureEnv <- new.env(parent = emptyenv())
 
-        if (!identical(getOption("reproducible.futurePlan"), "multicore")) {
+        if (!identical(getOption("reproducible.futurePlan"), "future.callr::callr")) {
           message("Cache currently only tested with futurePlan = multicore; ",
                   "please set options(reproducible.futurePlan = 'multicore') or ",
                   "options(reproducible.futurePlan = FALSE) to turn it off. ",
@@ -1024,31 +1024,24 @@ Cache <-
           options(reproducible.futurePlan = FALSE)
         }
         if (isTRUE(getOption("reproducible.futurePlan"))) {
-          messageCache('options("reproducible.futurePlan") is TRUE. Setting it to "multicore".\n',
+          messageCache('options("reproducible.futurePlan") is TRUE. Setting it to "future.callr::callr".\n',
                        'Please specify a plan by name, e.g.,\n',
-                       '  options("reproducible.futurePlan" = "multicore")',
+                       '  options("reproducible.futurePlan" = "future.callr::callr")',
                        verbose = verbose)
-          future::plan("multicore", workers = 2)
+          future::plan("future.callr::callr", workers = 2)
         } else {
           if (!is(future::plan(), getOption("reproducible.futurePlan"))) {
             thePlan <- getOption("reproducible.futurePlan")
             future::plan(thePlan, workers = 2)
           }
         }
-        .reproEnv$futureEnv[[paste0("future_", rndstr(1,10))]] <-
-          #saved <-
-          future::futureCall(
-            FUN = writeFuture,
-            args = list(written, outputToSave, cacheRepo, userTags, drv, conn, outputHash, linkToCacheId),
-            globals = list(written = written,
-                           outputToSave = outputToSave,
-                           cacheRepo = cacheRepo,
-                           userTags = userTags,
-                           drv = drv,
-                           conn = conn,
-                           cacheId = outputHash,
-                           linkToCacheId = linkToCacheId)
-          )
+        dbDisconnectAll(conn, shutdown = TRUE)
+        futureID <- paste0("future_", rndstr(1,10))
+        .reproEnv$futureEnv[[futureID]] <-
+          future::future(seed = TRUE,
+                         getFromNamespace("saveToCache", "reproducible")(cachePath = cacheRepo, drv = drv, userTags = userTags,
+                                                                         obj = outputToSave, cacheId = outputHash,
+                                                                         linkToCacheId = linkToCacheId))
         if (is.null(.reproEnv$alreadyMsgFuture)) {
           messageCache("  Cache saved in a separate 'future' process. ",
                        "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour.",
@@ -1062,7 +1055,8 @@ Cache <-
         otsObjSize <- as.numeric(otsObjSize)
         class(otsObjSize) <- "object_size"
         isBig <- otsObjSize > 1e7
-        outputToSave <- progressBarCode(
+        # outputToSave <-
+          progressBarCode(
           saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
                       conn = conn, obj = outputToSave, cacheId = outputHash,
                       linkToCacheId = linkToCacheId),
@@ -1077,6 +1071,7 @@ Cache <-
       if (useCloud && .CacheIsNew) {
         # Here, upload local copy to cloud folder if it isn't already there
         # browser(expr = exists("._Cache_15"))
+        if (useFuture()) conn <- checkFutures(cacheRepo, drv, conn)
         cloudDribble <- try(cloudUpload(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
                                          outputToSave, gdriveLs = gdriveLs, drv = drv, conn = conn))
 
@@ -1196,6 +1191,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
     cacheId <- .robustDigest(outputToSave)
   }
 
+
   output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
                         conn = conn, obj = outputToSave, cacheId = cacheId,
                         linkToCacheId = linkToCacheId)
@@ -1219,7 +1215,7 @@ doCall <- function(what, args, quote = FALSE, envir = parent.frame()) {
   userTagsOtherFunctions <- NULL
   isDoCall <- FALSE
   if (!is.null(FUNcaptured)) {
-    isCapturedFUN <- length(FUNcaptured) > 1
+    isCapturedFUN <- length(FUNcaptured) > 1 && !(isPkgColonFn(FUNcaptured))
     parsedExpanded <- evalArgsOnly(FUNcaptured, env = callingEnv)
     isDoCall <- attr(parsedExpanded, "isDoCall")
     if (isCapturedFUN) {
@@ -1590,7 +1586,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", q
 .defaultCacheOmitArgs <- c("useCloud", "checksumsFileID", "cloudFolderID",
                            "notOlderThan", ".objects", "outputObjects", "algo", "cacheRepo",
                            "length", "compareRasterFileLength", "userTags", "digestPathContent",
-                           "omitArgs", "classOptions", "debugCache", "sideEffect", "makeCopy",
+                           "omitArgs", "classOptions", "debugCache", "sideEffect",
                            "quick", "verbose", "cacheId", "useCache", "showSimilar", "cl")
 
 #' @keywords internal
@@ -1800,7 +1796,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
   return(list(isInRepo = isInRepo, outputHash = outputHash, needFindByTags = needFindByTags))
 }
 
-.defaultUserTags <- c("function", "class", "object.size", "accessed", "inCloud",
+.defaultUserTags <- c("function", "cacheRepo", "class", "object.size", "accessed", "inCloud",
                       "otherFunctions", "preDigest", "file.size", "cacheId", "prerun",
                       "elapsedTimeDigest", "elapsedTimeFirstRun", "resultHash", "elapsedTimeLoad")
 
@@ -1817,22 +1813,22 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId, sideEffect = FAL
     return(dealWithClassOnRecovery2(output, cacheRepo, cacheId,
                                     drv, conn))
   }
-
   if (is(output, "list")) {
-    if (!"cacheRaster" %in% names(output)) { # recursive up until a list has cacheRaster name
+    if (!tag_cachedRaster %in% names(output)) { # recursive up until a list has cacheRaster name
       output <- lapply(output, function(out) dealWithClassOnRecovery(out, cacheRepo, cacheId,
+                                                                     sideEffect = sideEffect,
                                                                    drv, conn))
     } else {
       origFilenames <- if (is(output, "Raster")) {
         Filenames(output) # This is legacy piece which allows backwards compatible
       } else {
         # This is trying to be a relative path
-        orig <- output$origRaster
+        orig <- output[[tag_origRaster]]
         if (!isFALSE(sideEffect)) {
           normalizePath(file.path(sideEffect, basename(orig)),
                         winslash = "/", mustWork = FALSE)
         } else {
-          normalizePath(file.path(getwd(), output$origRasterRelativePath, basename(orig)),
+          normalizePath(file.path(getwd(), output[[tag_origRasterRelativePath]]),
                         winslash = "/", mustWork = FALSE)
         }
       }
@@ -1841,7 +1837,8 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId, sideEffect = FAL
       cacheFilenames <- Filenames(output)
       filesExistInCache <- file.exists(cacheFilenames)
       if (any(!filesExistInCache)) {
-        fileTails <- gsub("^.+(rasters.+)$", "\\1", cacheFilenames)
+        fileTails <- gsub(paste0("^.+(",basename(CacheStorageRasterDir(cacheRepo)),".+)$"),
+                          "\\1", cacheFilenames)
         correctFilenames <- file.path(cacheRepo, fileTails)
         filesExistInCache <- file.exists(correctFilenames)
         if (all(filesExistInCache)) {
@@ -1854,15 +1851,17 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId, sideEffect = FAL
       out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
                             origFilenames[filesExistInCache], overwrite = TRUE)
 
-      newOutput <- updateFilenameSlots(output$cacheRaster,
+      newOutput <- updateFilenameSlots(output[[tag_cachedRaster]],
                                        Filenames(output, allowMultiple = FALSE),
                                        newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
       output <- newOutput
       .setSubAttrInList(output, ".Cache", "newCache", FALSE)
 
     }
-
+  } else if (!isFALSE(sideEffect)) { # this is separate from sideEffects mechanism for rasters
+    out <- sideEffectCopyFromCache(cacheRepo, sideEffect)
   }
+
   if (any(inherits(output, "PackedSpatVector"))) {
     if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
       stop("Please install terra package")
@@ -1889,9 +1888,9 @@ dealWithClassOnRecovery2 <- function(output, cacheRepo, cacheId,
   #   If it is in both, take the one in the original location; if it has been deleted
   #   from the original location, then grab it from cache and put it in original place
   if (is(output, "list")) {
-    if (identical(names(output), c("origRaster", "cacheRaster"))) {
-      origFilenames <- Filenames(output$origRaster)
-      cacheFilenames <- Filenames(output$cacheRaster)
+    if (identical(names(output), c(tag_origRaster, tag_cachedRaster))) {
+      origFilenames <- Filenames(output[[tag_origRaster]])
+      cacheFilenames <- Filenames(output[[tag_cachedRaster]])
       origStillExist <- file.exists(origFilenames)
       origFilenamesNeed <- origFilenames[!origStillExist]
       cacheFilenamesNeed <- cacheFilenames[!origStillExist]
@@ -1914,7 +1913,7 @@ dealWithClassOnRecovery2 <- function(output, cacheRepo, cacheId,
           cacheFilenamesNeed2 <- gsub(dirnamesRasters, cacheRepo, cacheFilenamesNeed)
           wrongFilenames <- file.exists(cacheFilenamesNeed2)
           if (any(wrongFilenames)) {
-            output$cacheRaster <- updateFilenameSlots(output$cacheRaster, cacheFilenamesNeed[wrongFilenames],
+            output$cacheRaster <- updateFilenameSlots(output[[tag_cachedRaster]], cacheFilenamesNeed[wrongFilenames],
                                                       newFilenames = cacheFilenamesNeed2[wrongFilenames])
             fs <- saveFileInCacheFolder(output, cachePath = cacheRepo, cacheId = cacheId)
             cacheFilenamesNeed[wrongFilenames] <- cacheFilenamesNeed2[wrongFilenames]
@@ -1922,7 +1921,7 @@ dealWithClassOnRecovery2 <- function(output, cacheRepo, cacheId,
 
         }
       copyFile(from = cacheFilenamesNeed, to = origFilenamesNeed, overwrite = TRUE)
-      output <- output$origRaster
+      output <- output[[tag_origRaster]]
       .setSubAttrInList(output, ".Cache", "newCache", FALSE)
     }
   }
@@ -1964,7 +1963,10 @@ evalArgsOnly <- function(parsed, env, topLevelEnv = environment()) {
   }
 
   isPkgColonFn <- FALSE
-  if (length(parsed) > 1) isPkgColonFn <- identical(parsed[[1]], quote(`::`))
+
+  if (length(parsed) > 1) {
+    isPkgColonFn <- isPkgColonFn(parsed)
+  }
   if (is.call(parsed) && !isPkgColonFn) {
     if (identical(quote, eval(parsed[[1]], envir = env)))
       parsed <- parsed[[2]]
@@ -1999,13 +2001,13 @@ evalArgsOnly <- function(parsed, env, topLevelEnv = environment()) {
       isName <- is.name(parsed[[1]])
       if (!isName) {
         possName <- as.list(parsed[[1]])
-        if (identical(format(possName[[1]]), "::"))
+        if (isPkgColonFn(possName))
           isName <- TRUE
       }
       if (isName) {
         fnName <- format(parsedAsList[[1]])
       } else {
-        stop("An unknown, undiagnosed error in evalArgsOnly")
+        fnName <- "anonymous"
       }
     }
     if (!is.primitive(p1)) {
@@ -2019,7 +2021,8 @@ evalArgsOnly <- function(parsed, env, topLevelEnv = environment()) {
                   topLevelEnv = topLevelEnv)
 
   } else {
-    out <- eval(parsed, envir = env)
+    out <- try(eval(parsed, envir = env), silent = TRUE)
+    if (is(out, "try-error")) out <- format(parsed)
   }
   if (isTopLevel) {
     eaofn <- get0(keepFnNamesObjName, envir = env, inherits = FALSE)
@@ -2028,4 +2031,81 @@ evalArgsOnly <- function(parsed, env, topLevelEnv = environment()) {
   }
   return(out)
 
+}
+
+isPkgColonFn <- function(x) {
+  identical(x[[1]], quote(`::`))
+}
+
+sideEffectStashedFiles <- function(cacheRepo, outputHash, files)
+  file.path(CacheStorageSideEffectsDir(cacheRepo), paste0(outputHash, "_", basename2(files)))
+
+
+sideEffectSetup <- function(sideEffect, cacheRepo, fnDetails, modifiedDots) {
+  if (isTRUE(sideEffect)) sideEffect <- cacheRepo
+  if (sideEffect %in% fnDetails$formalArgs) {
+    sideEffect <- modifiedDots[[sideEffect]]
+  } else if ("destinationPath" %in% fnDetails$formalArgs) {
+    sideEffect <- modifiedDots$destinationPath
+  }
+
+  sideEffect <- list(sideEffect = normPath(sideEffect))
+
+  isADir <- dir.exists(sideEffect$sideEffect)
+  if (isADir) {
+    filesPre <- dir(sideEffect$sideEffect, recursive = TRUE, full.names = TRUE) |>
+      file.info()
+  } else {
+    filesPre <- dir(dirname(sideEffect$sideEffect), recursive = TRUE, full.names = TRUE,
+                    pattern = basename2(sideEffect$sideEffect)) |>
+      file.info()
+  }
+  sideEffect$filesPre <- list(filesPre)
+  sideEffect
+}
+
+
+sideEffectCopyToCacheAddUT <- function(sideEffect, cacheRepo, outputHash, userTags) {
+  se <- sideEffect$sideEffect
+  isAFile <- file.exists(se)
+  isADir <- dir.exists(se)
+  origRelativePath <- origFileRelativePath(sideEffect$sideEffect)
+  if (isAFile) {
+    sideEffectFiles <- sideEffectStashedFiles(cacheRepo, outputHash, se)
+    hardLinkOrCopy(se, to = sideEffectFiles)
+    userTags <- c(userTags,
+                  paste0(tag(userTag_SideEffectRelPath), basename2(sideEffectFiles)))
+  } else if (isADir) {
+    browser()
+    userTags <- c(userTags, paste0(tag(userTag_SideEffectRelPathDir), se))
+  }
+  userTags <- c(userTags, paste0(tag(userTag_SideEffectRelPathOrig), origRelativePath))
+}
+
+sideEffectCopyFromCache <- function(cacheRepo, sideEffect) {
+  filenamesInCache <- file.path(CacheStorageSideEffectsDir(cacheRepo), sideEffect$files)
+  isADir <- isTRUE(nchar(sideEffect$dir) > 0)
+  filenamesForDestination <- if (isADir) {
+    browser()
+  } else {
+    sideEffect$sideEffect
+  }
+  out <- hardLinkOrCopy(filenamesInCache, filenamesForDestination, overwrite = TRUE)
+}
+
+useFuture <- function() {
+  useFuture <- FALSE
+  if (!isFALSE(getOption("reproducible.futurePlan")) &&
+      .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")) {
+    if (grepl("callr", getOption("reproducible.futurePlan"))) {
+      .requireNamespace("future.callr", messageStart = "To use reproducible.futurePlan, ")
+      if (identical(getOption("reproducible.drv"), "fst")) {
+        useFuture <- TRUE
+      } else {
+        message("reproducible.futurePlan is set to future.callr::callr, but reproducible.drv must be 'fst', skipping")
+      }
+    }
+  }
+
+  useFuture
 }

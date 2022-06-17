@@ -602,6 +602,7 @@ setAs(from = "character", to = "Path", function(from) {
     }
   } else {
     saveFilename <- if (isRepo) {
+      browser()
       file.path(repoDir, "rasters", basename(curFilename))
     } else {
       file.path(repoDir, basename(curFilename))
@@ -634,6 +635,7 @@ setAs(from = "character", to = "Path", function(from) {
 
       pathExists <- dir.exists(dirname(saveFilename2))
       if (any(!pathExists)) {
+        browser()
         dirname(saveFilename2) |>
           unique() |>
           sapply(X = _, dir.create, recursive = TRUE)
@@ -654,17 +656,6 @@ setAs(from = "character", to = "Path", function(from) {
           saveFilenames <- nextNumericName(saveFilenames)
         }
         out <- hardLinkOrCopy(from = curFilename, to = saveFilenames, overwrite = TRUE)
-        # if (FALSE) {
-        #   outFL <- suppressWarningsSpecific(file.link(to = saveFilenames,
-        #                                               from = curFilename),
-        #                                     falseWarnings = "already exists|Invalid cross-device")
-        #   if (any(!outFL)) {
-        #     copyFile(to = saveFilenames[!outFL],
-        #              overwrite = TRUE,
-        #              from = curFilename[!outFL], silent = TRUE)
-        #
-        #   }
-        # }
         saveFilenames[match(fileExt(curFilename2[x]), fileExt(saveFilenames))]
       })
 
@@ -1148,12 +1139,12 @@ nextNumericName <- function(string) {
 }
 
 #' @importFrom raster fromDisk
-dealWithClass <- function(obj, cachePath, drv, conn) {
+dealWithClass <- function(obj, cachePath, sideEffect, hash, drv, conn) {
   # browser(expr = exists("._dealWithClass_1"))
   outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
 
   if (outputToSaveIsList) {
-    obj <- lapply(obj, dealWithClass, cachePath = cachePath, drv = drv, conn = conn)
+    obj <- lapply(obj, dealWithClass, cachePath = cachePath, hash = hash, drv = drv, conn = conn)
     innerTags <- lapply(obj, function(o) attr(o, "tags"))
     innerTags <- unique(unlist(innerTags))
     setattr(obj, "tags", innerTags)
@@ -1166,7 +1157,8 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
     objOrig <- obj
     atts <- attributes(obj)
     obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,
-                                    overwrite = FALSE, drv = drv, conn = conn)
+                                    overwrite = FALSE, hash = hash,
+                                    drv = drv, conn = conn)
     isFromDisk <- fromDisk(obj)
 
     # have to reset all these attributes on the rasters as they were undone in prev steps
@@ -1188,19 +1180,22 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
         stop("There is an unknown error 04")
     }
     if (isFromDisk) {
-      curDir <- normalizePath(getwd(), winslash = "/")
-      filesDirs <- normalizePath(dirname(Filenames(objOrig)), winslash = "/")
-      origRasterRelativePath <- gsub(curDir, "", filesDirs)
+      origRasterRelativePath <- origFileRelativePath(Filenames(objOrig))
       if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-        obj <- list(origRaster = objOrig, cacheRaster = obj)
+        obj2 <- list()
+        obj2[[tag_origRaster]] = objOrig
+        obj2[[tag_cachedRaster]] = obj
       } else {
-        obj <- list(origRaster = Filenames(objOrig), cacheRaster = obj,
-                    origRasterRelativePath = origRasterRelativePath)
+        obj2 <- list()
+        obj2[[tag_origRaster]] <- Filenames(objOrig)
+        obj2[[tag_cachedRaster]] <- obj
+        obj2[[tag_origRasterRelativePath]] = origRasterRelativePath
       }
+      obj <- obj2
       setattr(obj, "tags",
-              c(attributes(obj$cacheRaster)$tags,
-              paste0("origRaster:", obj$origRaster),
-              paste0("cacheRaster:", Filenames(obj))))
+              c(attributes(obj[[tag_cachedRaster]])$tags,
+              paste0(tag(userTag_OrigRasterRelPath), obj[[tag_origRasterRelativePath]]),
+              paste0(tag(userTag_CacheRasterRelPath), origFileRelativePath(Filenames(obj), cachePath))))
     }
 
   }
@@ -1422,12 +1417,13 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' r # now in "rasters" subfolder of tempdir()
 #'
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
+                                     hash = NULL,
                                      drv = getOption("reproducible.drv"),
                                      conn = getOption("reproducible.conn", NULL),
                                      ...) {
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
     return(.prepareFileBackedRaster2(obj, repoDir = repoDir, overwrite = overwrite,
-                                     drv = drv, conn = conn, ...))
+                                     hash = hash, drv = drv, conn = conn, ...))
   }
   fnsAll <- Filenames(obj)
   fnsShort <- Filenames(obj, FALSE)
@@ -1472,17 +1468,16 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
       }
     }
     #################
-
-
     saveFilename <- fns
     bn <- basename(fns)
     bnFB <- bn[FB]
 
 
     saveFilename[FB] <- if (isRepo) {
-      file.path(repoDir, "rasters"[isRepo], bnFB)
+      CacheStoredRasterFile(repoDir, hash = hash, bnFB)
+      # file.path(repoDir, "rasters"[isRepo], bnFB)
     } else {
-      file.path(repoDir, bnFB)
+      CacheStoredRasterFile(repoDir, hash = NULL, bnFB)
     }
     dirForNewFiles <- unique(dirname(saveFilename[FB]))
     checkPath(dirForNewFiles, create = TRUE)
@@ -1495,19 +1490,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
     FBAll <- nchar(fnsAll) > 0
 
     out <- hardLinkOrCopy(from = fnsAll[FBAll], to = saveFilename[FBAll])
-
-    # out <- Map(from = fnsAll[FBAll], to = saveFilename[FBAll],
-    #     function(from, to) {
-    #   linkTry <- suppressWarningsSpecific(file.link(from = from, to = to),
-    #                                   falseWarnings = "already exists|Invalid cross-device")
-    #   if (!linkTry)
-    #     linkTry <- copyFile(from = from, to = to, overwrite = TRUE, silent = TRUE)
-    #   linkTry
-    # })
-
-    # FBshort <- nchar(fnsShort) > 0
-    saveFilenamesToUpdateSlot <- saveFilename[basename(saveFilenamePreNumeric) %in%
-                                                basename(fnsShort)]
+    saveFilenamesToUpdateSlot <- saveFilename[grep(paste(basename(fnsShort), collapse = "|"), basename(saveFilenamePreNumeric))]
     obj <- updateFilenameSlots(obj, fnsShort, saveFilenamesToUpdateSlot)
 
   }
@@ -1533,3 +1516,23 @@ withoutFinalNumeric <- function(string) {
   woNumeric <- gsub("^(.+)\\_[[:digit:]]+$", "\\1", string1)
   paste0(woNumeric, ".", ext)
 }
+
+origFileRelativePath <- function(origFilenames, relativeTo = getwd()) {
+  curDir <- normPath(relativeTo)
+  filesDirs <- normPath(origFilenames)
+  relPath <- gsub(curDir, "", filesDirs)
+  gsub("^/", "", relPath)
+}
+
+userTag_CacheRasterRelPath <- "cacheRasterRelativePath"
+userTag_OrigRasterRelPath <- "origRasterRelativePath"
+userTag_SideEffectRelPath <- "sideEffectRelativePath"
+userTag_SideEffectRelPathDir <- "sideEffectRelativePathDir"
+userTag_SideEffectRelPathOrig <- "sideEffectRelativePathOrig"
+tag <- function(tag) {
+  paste0(tag, ":")
+}
+
+tag_origRaster <- "origRaster"
+tag_cachedRaster <- "cachedRaster"
+tag_origRasterRelativePath <- "origRasterRelativePath"
