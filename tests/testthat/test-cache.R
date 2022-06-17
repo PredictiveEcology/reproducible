@@ -742,11 +742,14 @@ test_that("test future", {
       (aa <- system.time({for (i in c(1:3)) a[[i]] <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i + 1)}))
       expect_true(sum(sapply(a, function(aa) attr(aa, ".Cache")$newCache)) == 1)
 
-      browser() # failing
       options("reproducible.futurePlan" = "future.callr::callr")
       a <- d <- list()
-      (aa <- system.time({for (i in c(1:3)) a[[i]] <- Cache(cacheRepo = tmpCache, rnorm(1e6 + i + 1))}))
-      expect_true(sum(sapply(a, function(aaa) attr(aaa, ".Cache")$newCache)) == 1)
+      (aa <- system.time({for (i in c(1:3)) a[[i]] <- Cache(cacheRepo = tmpCache, rnorm(1e5 + i + 1))}))
+      expect_true(sum(sapply(a, function(aaa) attr(aaa, ".Cache")$newCache)) == 3)
+
+      a <- d <- list()
+      (aa <- system.time({for (i in c(1:3)) a[[i]] <- Cache(cacheRepo = tmpCache, rnorm(1e5 + i + 1))}))
+      expect_true(sum(sapply(a, function(aaa) attr(aaa, ".Cache")$newCache)) == 0)
 
     }
   }

@@ -556,11 +556,13 @@ checkFutures <- function(cacheRepo, drv, conn) {
 
     if (anyFutureWrite > 0) {
       while (any(!resol1)) {
+        if (count == 0) messageCache("Waiting for a previous future `saveToCache` to complete ")
+        if (count %% 20 == 0) messageCache("\b.")
         count <- count + 1
         if (count > 1 ) {
           Sys.sleep(0.001)
-          if (count > 1e3) {
-            messageCache("Future is not resolved after 1 second of waiting. Allowing to proceed.")
+          if (count > 3e3) {
+            messageCache("Future is not resolved after many seconds of waiting. Allowing to proceed.")
             break
           }
         }
