@@ -1,4 +1,4 @@
-if (getRversion() >= "3.1.0") {
+if (compareVersion(format(getRversion()), "3.1.0") >= 0) {
   utils::globalVariables(c("expectedFile", "objName", "V1",
                            "method", "rasterToMatch", "studyArea", "targetCRS",
                            "to", "useSAcrs"))
@@ -1189,7 +1189,8 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @name archiveExtractBinary
 .archiveExtractBinary <- function(verbose = getOption("reproducible.verbose", 1)) {
     possPrograms <- c("7z", "unrar") |>
-      lapply(X = _, Sys.which) |>
+      # lapply(X = _, Sys.which) |> # _ Only works with R >= 4.2.0
+      (function(xx) lapply(X = xx, Sys.which))() |>
       unlist() |>
       unique() |>
       normPath()
@@ -1200,8 +1201,10 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     }
     if (!(isWindows())) {
       if (grepl("7z", extractSystemCallPath)) {
-        SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE) |>
-          grepl("installed", x = _)
+        SevenZrarExists <- system("apt -qq list p7zip-rar",
+                                  intern = TRUE, ignore.stderr = TRUE) |>
+          # grepl("installed", x = _) # _ Only works with R >= 4.2.0
+          (function(xx) grepl("installed", x = xx))()
         if (isFALSE(SevenZrarExists))
           messagePrepInputs("To extract .rar files, you will need p7zip-rar, not just p7zip-full. Try: \n",
                   "--------------------------\n",

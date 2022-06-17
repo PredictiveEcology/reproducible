@@ -1,4 +1,4 @@
-if (getRversion() >= "3.1.0") {
+if (compareVersion(format(getRversion()), "3.1.0") >= 0) {
   utils::globalVariables(c("actualFile", "algorithm", "checksum", "checksum.x", "checksum.y",
                            "filesize", "filesize.x", "filesize.y",
                            "i.algorithm", "i.checksum", "i.filesize", "result"))
