@@ -519,7 +519,6 @@ checkFutures <- function(cacheRepo, drv, conn) {
         resol <- future::resolved(.reproEnv$futureEnv)
         resol1 <- resol[!startsWith(names(resol), "cloudCheckSums")]
       }
-      # browser(expr = exists("aaaa"))
       if (length(resol[resol]) > 0) {
         rm(list = names(resol)[resol], envir = .reproEnv$futureEnv)
       }

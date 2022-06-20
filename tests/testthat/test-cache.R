@@ -21,18 +21,11 @@ test_that("test file-backed raster caching", {
   # confirm that the raster has the given tmp filename
   expect_identical(strsplit(tmpfile[1], split = "[\\/]"), strsplit(a@file@name, split = "[\\/]"))
 
-  # Using mock interactive function
-  # https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions
-  # https://github.com/r-lib/testthat/issues/734 to direct it to reproducible::isInteractive
-  #   solves the error about not being in the testthat package
   val1 <- .cacheNumDefaultTags()  # adding a userTag here
   ik <- .ignoreTagKeys()
-  # with_mock(
-  #   "reproducible::isInteractive" = function() TRUE,
-  #   {
   aa <- Cache(randomPolyToDisk(tmpfile[1]), cacheRepo = tmpCache, userTags = "something2")
-  # Test clearCache by tags
 
+  # Test clearCache by tags
   expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
   clearCache(tmpCache, userTags = "something$", ask = FALSE)
   expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
