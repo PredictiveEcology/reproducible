@@ -171,8 +171,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                              format = fileExt(sameCacheID))
         fs <- saveToCache(obj = obj, cachePath = cachePath, drv = drv, conn = conn,
                           cacheId = cacheId)
-        browser() # cacheId --> can it be CacheDT
-        rmFromCache(cacheRepo = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+        rmFromCache(cacheRepo = cachePath, CacheDT = cacheId, drv = drv, conn = conn,
                     format = fileExt(sameCacheID))
         return(fs)
       }
@@ -205,8 +204,15 @@ rmFromCache <- function(cacheRepo = getOption("reproducible.cachePath"),
     conn <- dbConnectAll(drv, cachePath = cacheRepo, create = FALSE)
     on.exit(dbDisconnectAll(conn, shutdown = TRUE))
   }
-  if (is(CacheDT, "character") || !is.null(list(...)$cacheId)) browser()
-  filesToRemove <- CacheDTFilesAll(cacheRepo = cacheRepo, CacheDT)
+
+  if (is(CacheDT, "character") || !is.null(list(...)$cacheId)) {
+    cacheId <- CacheDT
+    CacheDT <- showCache(cacheRepo, userTags = CacheDT, drv = drv, conn = conn, dbTabNam = dbTabNam)
+  } else {
+    cacheId <- unique(CacheDT$cacheId)
+  }
+
+  filesToRemove <- CacheDTFilesAll(cacheRepo = cacheRepo, CacheDT, format = format)
   if (isInteractive() ) {
     fileSizes <- file.size(filesToRemove)
     nas <- is.na(fileSizes)
@@ -226,9 +232,8 @@ rmFromCache <- function(cacheRepo = getOption("reproducible.cachePath"),
     }
   }
 
-  cacheId <- unique(CacheDT$cacheId)
   rmFromCacheDBFileAll(cacheRepo, drv, cacheId, conn, dbTabNam = dbTabNam)
-  rmFromCacheStorage(filesToRemove)
+  rmFromCacheStorage(filesToRemove, format = format)
   rmFromCacheMemoise(cacheRepo, cacheId)
 
 }
@@ -1042,9 +1047,9 @@ objNameWithRm <- function(objName) paste0(objName, "_rm")
 
 objNameWithToUpdate <- function(objName) paste0(objName, "_update")
 
-rmFromCacheStorage <- function(filesToRemove, cacheRepo, CacheDT) {
+rmFromCacheStorage <- function(filesToRemove, cacheRepo, CacheDT, format = getOption("reproducible.cacheSaveFormat", "rds")) {
   if (missing(filesToRemove))
-    filesToRemove <- CacheDTFilesAll(CacheDT = CacheDT, cacheRepo = cacheRepo)
+    filesToRemove <- CacheDTFilesAll(CacheDT = CacheDT, cacheRepo = cacheRepo, format = format)
   unlink(filesToRemove)
 }
 

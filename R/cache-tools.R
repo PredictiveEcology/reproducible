@@ -715,8 +715,8 @@ afterBefore <- function(objsDT, afterNA, after, beforeNA, before) {
   objsDT
 }
 
-CacheDTFilesAll <- function(CacheDT, cacheRepo) {
-  mainFiles <- CacheStoredFile(cacheRepo, unique(CacheDT$cacheId))
+CacheDTFilesAll <- function(CacheDT, cacheRepo, format = getOption("reproducible.cacheSaveFormat", "rds")) {
+  mainFiles <- CacheStoredFile(cacheRepo, unique(CacheDT$cacheId), format = format)
   wh <- CacheDT[["tagKey"]] %in% c(userTag_CacheRasterRelPath, userTag_SideEffectRelPath)
   auxFiles <- CacheDT[[.cacheTableTagColName()]][wh]
   if (NROW(auxFiles)) {

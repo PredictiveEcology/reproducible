@@ -446,7 +446,7 @@ cloudRmFromDBFile <- function(objsDT, cloudFolderID, cacheIds, gdriveLs, drv, co
   dbTabNam <- if (useSQL(connTmp)) DBI::dbListTables(connTmp) else NULL
   cp <- cacheRepoFromConn(connTmp)
   browser() # cacheID can it be CacheDT
-  rmFromCache(cacheRepo = cp, conn = connTmp, drv = drv, cacheId = cacheIds,
+  rmFromCache(cacheRepo = cp, conn = connTmp, drv = drv, CacheDT = cacheIds,
               dbTabNam = dbTabNam)
   cloudDisconnectDB(connTmp, #cp,
                                      drv, dbFile, cloudFolderID)

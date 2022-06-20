@@ -837,10 +837,8 @@ test_that("test cache-helpers", {
   b <- .prepareFileBackedRaster(r, tmpCache)
   expect_true(file.exists(filename(b)))
   # Check that it makes a new name if already in Cache
-  browser()
-  # checkPath(file.path(tmpCache, "rasters"), create = TRUE)
   checkPath(CacheStorageRasterDir(tmpCache), create = TRUE)
-  r1 <- .writeRaster(r1, filename = file.path(tmpCache, "rasters", basename(tmpfile2)), overwrite = TRUE)
+  r1 <- .writeRaster(r1, filename = file.path(CacheStorageRasterDir(tmpCache), basename(tmpfile2)), overwrite = TRUE)
   b <- .prepareFileBackedRaster(r1, tmpCache)
   expect_true(identical(normalizePath(filename(b), winslash = "/", mustWork = FALSE),
                         normalizePath(file.path(dirname(filename(r1)),
@@ -856,10 +854,10 @@ test_that("test cache-helpers", {
   b1 <- .prepareFileBackedRaster(s, repoDir = tmpCache)
   expect_true(is(b1, "RasterStack"))
   expect_true(identical(filename(b1), ""))
-  browser()
 
   expect_true(identical(normalizePath(filename(b1$layer.1), winslash = "/", mustWork = FALSE),
-                        normalizePath(file.path(tmpCache, "rasters", basename(filename(r))), winslash = "/", mustWork = FALSE)))
+                        normalizePath(file.path(CacheStorageRasterDir(tmpCache),
+                                                basename(filename(r))), winslash = "/", mustWork = FALSE)))
 
   # Give them single file -- 2 layer stack; like a brick, but a stack
   r[] <- r[]
@@ -990,7 +988,7 @@ test_that("test rm large non-file-backed rasters", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  opts11 <- options("reproducible.cacheSpeed" = "fast",
+  opts11 <- options("reproducible.cacheSpeed" = "slow",
                     "reproducible.cacheSaveFormat" = "qs")
   on.exit(options(opts11), add = TRUE)
 
@@ -1053,7 +1051,6 @@ test_that("test pre-creating conn", {
               conn = conn)
   expect_true(file.exists(filename(r1)))
   expect_true(file.exists(filename(r2)))
-  browser()
   expect_false(grepl(basename(dirname(filename(r1))), "rasters")) # changed behaviour as of reproducible 1.2.0.9020
   expect_false(grepl(basename(dirname(filename(r2))), "rasters")) # changed behaviour as of reproducible 1.2.0.9020
 
@@ -1540,3 +1537,4 @@ test_that("change to new capturing of FUN & base pipe", {
   }
 
 })
+

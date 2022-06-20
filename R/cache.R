@@ -1455,7 +1455,6 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", q
 
   }
 
-
   preDigest <- lapply(objsToDigest, function(x) {
     # remove the "newCache" attribute, which is irrelevant for digest
     if (!is.null(attr(x, ".Cache")$newCache)) {
