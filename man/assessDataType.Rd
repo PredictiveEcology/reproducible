@@ -213,7 +213,5 @@ Ceres Barros
 
 Ian Eddy
 
-Eliot McIntire
-
 Eliot McIntire, Ceres Barros, Ian Eddy, and Tati Micheletti
 }

@@ -31,8 +31,6 @@ just \code{search()} (which always starts at \code{.GlobalEnv}).
 
 \code{searchFullEx} shows an example function that is inside this package
 whose only function is to show the Scope of a package function.
-
-
 }
 \details{
 \code{searchFullEx} can be used to show an example of the use of \code{searchFull}.

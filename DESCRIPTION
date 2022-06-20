@@ -118,4 +118,4 @@ Collate:
     'search.R'
     'spatialObjects-class.R'
     'zzz.R'
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
