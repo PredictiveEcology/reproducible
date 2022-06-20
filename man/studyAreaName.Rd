@@ -3,12 +3,15 @@
 \name{studyAreaName}
 \alias{studyAreaName}
 \alias{studyAreaName,SpatialPolygonsDataFrame-method}
+\alias{studyAreaName,character-method}
 \alias{studyAreaName,ANY-method}
 \title{Get a unique name for a given study area}
 \usage{
 studyAreaName(studyArea, ...)
 
 \S4method{studyAreaName}{SpatialPolygonsDataFrame}(studyArea, ...)
+
+\S4method{studyAreaName}{character}(studyArea, ...)
 
 \S4method{studyAreaName}{ANY}(studyArea, ...)
 }
@@ -19,5 +22,6 @@ studyAreaName(studyArea, ...)
 }
 \description{
 Digest a spatial object to get a unique character string (hash) of the study area.
-Use \code{.suffix()} to append the hash to a filename, e.g., when using \code{filename2} in \code{prepInputs}.
+Use \code{.suffix()} to append the hash to a filename,
+e.g., when using \code{filename2} in \code{prepInputs}.
 }

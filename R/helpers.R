@@ -84,7 +84,8 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
 #' Get a unique name for a given study area
 #'
 #' Digest a spatial object to get a unique character string (hash) of the study area.
-#' Use \code{.suffix()} to append the hash to a filename, e.g., when using \code{filename2} in \code{prepInputs}.
+#' Use \code{.suffix()} to append the hash to a filename,
+#' e.g., when using \code{filename2} in \code{prepInputs}.
 #'
 #' @param studyArea Spatial object.
 #' @param ... Other arguments (not currently used)
@@ -104,7 +105,17 @@ setMethod(
     studyArea <- studyArea[, -c(1:ncol(studyArea))]
     studyArea <- as(studyArea, "SpatialPolygons")
     studyAreaName(studyArea, ...)
-  })
+})
+
+#' @export
+#' @rdname studyAreaName
+setMethod(
+  "studyAreaName",
+  signature = "character",
+  definition = function(studyArea, ...) {
+    sort(studyArea) ## ensure consistent hash for same subset of study area names
+    digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
+})
 
 #' @export
 #' @rdname studyAreaName
@@ -117,12 +128,11 @@ setMethod(
         studyArea <- sf::st_geometry(studyArea)
       }
     }
-    if (!(is(studyArea, "spatialClasses") || is(studyArea, "sfc"))) {
-      stop("studyAreaName expects a spatialClasses object")
+    if (!(is(studyArea, "spatialClasses") || is(studyArea, "sfc")) || is.character(studyArea)) {
+      stop("studyAreaName expects a spatialClasses object (or character vector)")
     }
     digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
-  })
-
+})
 
 #' Identify which formals to a function are not in the current \code{...}
 #'
