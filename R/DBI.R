@@ -503,7 +503,6 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
                           drv = getOption("reproducible.drv"),
                           conn = getOption("reproducible.conn", NULL)) {
   checkPath(cachePath, create = TRUE)
-  # browser(expr = exists("._CacheIsACache_1"))
   ret <- FALSE
   connIsNull <- is.null(conn)
   if (connIsNull) {

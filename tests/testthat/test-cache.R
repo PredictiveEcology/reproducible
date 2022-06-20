@@ -710,7 +710,6 @@ test_that("test Cache argument inheritance to inner functions", {
 test_that("test future", {
 
   skip_on_cran()
-  # skip_on_os("windows")
   skip_on_os("mac")
   skip_on_os("solaris")
   if (interactive()) {
@@ -721,7 +720,10 @@ test_that("test future", {
                                           "reproducible.futurePlan" = "future.callr::callr"))
       on.exit({
         testOnExit(testInitOut)
+        options(opts)
       }, add = TRUE)
+
+      opts <- options("reproducible.futureForce" = TRUE)
 
       # There is now a warning with future package
       a <- d <- list()
@@ -732,6 +734,7 @@ test_that("test future", {
 
       # Future ones show up in same Cache repo as non-future
       options("reproducible.futurePlan" = FALSE)
+      a <- d <- list()
       (aa <- system.time({for (i in c(1:3)) d[[i]] <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
       sc2 <- showCache(tmpCache)
       expect_true(length(unique(sc1$cacheId)) == 3)
@@ -742,13 +745,15 @@ test_that("test future", {
       (aa <- system.time({for (i in c(1:3)) a[[i]] <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i + 1)}))
       expect_true(sum(sapply(a, function(aa) attr(aa, ".Cache")$newCache)) == 1)
 
+      # These next 2 are large enough; don't need to force
+      options("reproducible.futureForce" = NULL)
       options("reproducible.futurePlan" = "future.callr::callr")
       a <- d <- list()
-      (aa <- system.time({for (i in c(1:3)) a[[i]] <- Cache(cacheRepo = tmpCache, rnorm(1e5 + i + 1))}))
+      (aa <- system.time({for (i in c(1:3)) a[[i]] <- Cache(cacheRepo = tmpCache, rnorm(2e5 + i + 1))}))
       expect_true(sum(sapply(a, function(aaa) attr(aaa, ".Cache")$newCache)) == 3)
 
       a <- d <- list()
-      (aa <- system.time({for (i in c(1:3)) a[[i]] <- Cache(cacheRepo = tmpCache, rnorm(1e5 + i + 1))}))
+      (aa <- system.time({for (i in c(1:3)) a[[i]] <- Cache(cacheRepo = tmpCache, rnorm(2e5 + i + 1))}))
       expect_true(sum(sapply(a, function(aaa) attr(aaa, ".Cache")$newCache)) == 0)
 
     }
@@ -1051,9 +1056,8 @@ test_that("test pre-creating conn", {
               conn = conn)
   expect_true(file.exists(filename(r1)))
   expect_true(file.exists(filename(r2)))
-  browser()
-  expect_false(grepl(basename(dirname(filename(r1))), "rasters")) # changed behaviour as of reproducible 1.2.0.9020
-  expect_false(grepl(basename(dirname(filename(r2))), "rasters")) # changed behaviour as of reproducible 1.2.0.9020
+  expect_false(grepl(basename(dirname(filename(r1))), "rasters")) # no longer here
+  expect_false(grepl(basename(dirname(filename(r2))), "rasters")) # no longer here
 
 })
 

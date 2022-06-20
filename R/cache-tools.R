@@ -280,7 +280,6 @@ setMethod(
                    verbose = verbose)
       x <- getOption("reproducible.cachePath")[1]
     }
-    # browser(expr = exists("jjjj"))
     after <- toNA(after)
     afterNA <- is.na(after)
     before <- toNA(before)
@@ -288,13 +287,7 @@ setMethod(
 
     # Clear the futures that are resolved
     useFuture <- !isFALSE(getOption("reproducible.futurePlan"))
-    if (useFuture) {
-      hasFuture <- exists("futureEnv", envir = .reproEnv)
-      .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")
-      if (hasFuture) {
-        conn <- checkFutures(x, drv, conn)
-      }
-    }
+    if (useFuture) conn <- checkFutures(x, drv, conn)
 
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
@@ -316,15 +309,6 @@ setMethod(
     objsDT <- showCacheAll(x, drv, conn, dbTabNam)
 
     if (NROW(objsDT) > 0) {
-      # if (!afterNA || !beforeNA) {
-      #   objsDT3 <- objsDT[tagKey == "accessed"]
-      #   if (!beforeNA)
-      #     objsDT3 <- objsDT3[(tagValue <= before)]
-      #   if ( !afterNA)
-      #     objsDT3 <- objsDT3[(tagValue >= after)]
-      #   objsDT <- objsDT[objsDT[[.cacheTableHashColName()]] %in%
-      #                      unique(objsDT3[[.cacheTableHashColName()]])] # faster than data.table join
-      # }
       objsDT <- afterBefore(objsDT, afterNA, after, beforeNA, before)
       if (length(userTags) > 0) {
         if (isTRUE(dots$regexp) | is.null(dots$regexp)) {
@@ -510,10 +494,10 @@ setMethod(
 
 #' @keywords internal
 checkFutures <- function(cacheRepo, drv, conn) {
-  if (!is.null(conn)) {
-    dbDisconnectAll(conn, shutdown = TRUE)
-  }
   if (exists("futureEnv", envir = .reproEnv)) {
+    if (!is.null(conn)) {
+      dbDisconnectAll(conn, shutdown = TRUE)
+    }
     resol1 <- FALSE
     count <- 0
     lsFutureEnv <- ls(.reproEnv$futureEnv)

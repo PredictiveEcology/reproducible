@@ -664,7 +664,7 @@ Cache <-
           dbDisconnectAll(conn, shutdown = TRUE)
           conn <- dbConnectAll(drv, cachePath = repo)
         }
-        if (useFuture()) {
+        if (useFuture(TRUE)) {
           conn <- checkFutures(repo, drv, conn)
           isInRepo <- checkInRepo(conn, dbTabNam, outputHash)
           if (identical("prerun", isInRepo$tagKey)) { # There is a weird holding on here
@@ -905,13 +905,9 @@ Cache <-
         output <- "NULL"
       }
 
-      # browser(expr = identical(outputHash, "aa8b14f8ef51eddb"))
       .setSubAttrInList(output, ".Cache", "newCache", .CacheIsNew)
       setattr(output, "tags", paste0("cacheId:", outputHash))
       setattr(output, "call", "")
-      # attr(output, "tags") <- paste0("cacheId:", outputHash)
-      # attr(output, ".Cache")$newCache <- TRUE
-      # attr(output, "call") <- ""
       if (!identical(attr(output, ".Cache")$newCache, .CacheIsNew))
         stop("attributes are not correct 3")
       if (!identical(attr(output, "call"), ""))
@@ -921,7 +917,6 @@ Cache <-
 
       if (isS4(FUN)) {
         setattr(output, "function", FUN@generic)
-        #attr(output, "function") <- FUN@generic
         if (!identical(attr(output, "function"), FUN@generic))
           stop("There is an unknown error 03")
       }
@@ -946,31 +941,23 @@ Cache <-
       } else {
         rasters <- is(outputToSave, "Raster")
       }
-      if (any(rasters)) {
-        # if (outputToSaveIsList) {
-        #   outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
-        #     .prepareFileBackedRaster(x, repoDir = cacheRepo, overwrite = FALSE, drv = drv, conn = conn))
-        # } else {
-        #   outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheRepo,
-        #                                            overwrite = FALSE, drv = drv, conn = conn)
-        # }
-
-        .setSubAttrInList(outputToSave, ".Cache", "newCache", attr(output, ".Cache")$newCache)
-        setattr(outputToSave, "call", attr(output, "call"))
-
-        if (!identical(attr(outputToSave, ".Cache")$newCache, attr(output, ".Cache")$newCache))
-          stop("attributes are not correct 6")
-        if (!identical(attr(outputToSave, "call"), attr(output, "call")))
-          stop("attributes are not correct 7")
-        if (!all(attr(output, "tags") %in% attr(outputToSave, "tags")))
-          stop("attributes are not correct 8")
-
-        if (isS4(FUN)) {
-          setattr(outputToSave, "function", attr(output, "function"))
-          if (!identical(attr(outputToSave, "function"), attr(output, "function")))
-            stop("There is an unknown error 04")
-        }
-      }
+      # if (any(rasters)) {
+      #   .setSubAttrInList(outputToSave, ".Cache", "newCache", attr(output, ".Cache")$newCache)
+      #   setattr(outputToSave, "call", attr(output, "call"))
+      #
+      #   if (!identical(attr(outputToSave, ".Cache")$newCache, attr(output, ".Cache")$newCache))
+      #     stop("attributes are not correct 6")
+      #   if (!identical(attr(outputToSave, "call"), attr(output, "call")))
+      #     stop("attributes are not correct 7")
+      #   if (!all(attr(output, "tags") %in% attr(outputToSave, "tags")))
+      #     stop("attributes are not correct 8")
+      #
+      #   if (isS4(FUN)) {
+      #     setattr(outputToSave, "function", attr(output, "function"))
+      #     if (!identical(attr(outputToSave, "function"), attr(output, "function")))
+      #       stop("There is an unknown error 04")
+      #   }
+      # }
       if (length(debugCache)) {
         if (!is.na(pmatch(debugCache, "complete"))) {
           output <- .debugCache(output, preDigest, ...)
@@ -979,9 +966,6 @@ Cache <-
       }
 
       startSaveTime <- verboseTime(verbose)
-      # This is for write conflicts to the SQLite database
-      #   (i.e., keep trying until it is written)
-
       objSize <- lobstr::obj_size(outputToSave)
       resultHash <- ""
       linkToCacheId <- NULL
@@ -1012,13 +996,13 @@ Cache <-
 
       written <- 0
 
-      if (useFuture()) {
+      if (useFuture(objSize > 1e6) || getOption("reproducible.futureForce", FALSE)) {
         if (!exists("futureEnv", envir = .reproEnv))
           .reproEnv$futureEnv <- new.env(parent = emptyenv())
 
         if (!identical(getOption("reproducible.futurePlan"), "future.callr::callr")) {
-          message("Cache currently only tested with futurePlan = multicore; ",
-                  "please set options(reproducible.futurePlan = 'multicore') or ",
+          message("Cache currently only tested with futurePlan = future.callr::callr; ",
+                  "please set options(reproducible.futurePlan = 'future.callr::callr') or ",
                   "options(reproducible.futurePlan = FALSE) to turn it off. ",
                   "setting options(reproducible.futurePlan = FALSE) now")
           options(reproducible.futurePlan = FALSE)
@@ -1070,8 +1054,9 @@ Cache <-
 
       if (useCloud && .CacheIsNew) {
         # Here, upload local copy to cloud folder if it isn't already there
-        # browser(expr = exists("._Cache_15"))
-        if (useFuture()) conn <- checkFutures(cacheRepo, drv, conn)
+        browser()
+
+        if (useFuture(TRUE)) conn <- checkFutures(cacheRepo, drv, conn)
         cloudDribble <- try(cloudUpload(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
                                          outputToSave, gdriveLs = gdriveLs, drv = drv, conn = conn))
 
@@ -1447,7 +1432,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", q
     preDigestQuick <- lapply(objsToDigestQuick, function(x) {
       # remove the "newCache" attribute, which is irrelevant for digest
       if (!is.null(attr(x, ".Cache")$newCache)) {
-        .setSubAttrInList(x, ".Cache", "newCache", NULL)
+        attr(x, ".Cache")[["newCache"]] <- NULL
         if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
       }
       .robustDigest(x, algo = algo, quick = TRUE, ...)
@@ -1458,7 +1443,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", q
   preDigest <- lapply(objsToDigest, function(x) {
     # remove the "newCache" attribute, which is irrelevant for digest
     if (!is.null(attr(x, ".Cache")$newCache)) {
-      .setSubAttrInList(x, ".Cache", "newCache", NULL)
+      attr(x, ".Cache")[["newCache"]] <- NULL
       if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
     }
     .robustDigest(x, algo = algo, quick = FALSE, ...)
@@ -2092,16 +2077,19 @@ sideEffectCopyFromCache <- function(cacheRepo, sideEffect) {
   out <- hardLinkOrCopy(filenamesInCache, filenamesForDestination, overwrite = TRUE)
 }
 
-useFuture <- function() {
+useFuture <- function(useFutureForce = FALSE) {
+
   useFuture <- FALSE
-  if (!isFALSE(getOption("reproducible.futurePlan")) &&
-      .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")) {
-    if (grepl("callr", getOption("reproducible.futurePlan"))) {
-      .requireNamespace("future.callr", messageStart = "To use reproducible.futurePlan, ")
-      if (identical(getOption("reproducible.drv"), "fst")) {
-        useFuture <- TRUE
-      } else {
-        message("reproducible.futurePlan is set to future.callr::callr, but reproducible.drv must be 'fst', skipping")
+  if (useFutureForce) {
+    if (!isFALSE(getOption("reproducible.futurePlan")) &&
+        .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")) {
+      if (grepl("callr", getOption("reproducible.futurePlan"))) {
+        .requireNamespace("future.callr", messageStart = "To use reproducible.futurePlan, ")
+        if (identical(getOption("reproducible.drv"), "fst")) {
+          useFuture <- TRUE
+        } else {
+          message("reproducible.futurePlan is set to future.callr::callr, but reproducible.drv must be 'fst', skipping")
+        }
       }
     }
   }
