@@ -1414,7 +1414,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' # copy it to the cache repository
 #' r <- .prepareFileBackedRaster(r, tempdir())
 #'
-#' r # now in "rasters" subfolder of tempdir()
+#' r # now in CacheStorageRasterDir(tempdir()) subfolder of tempdir()
 #'
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
                                      hash = NULL,
@@ -1475,7 +1475,6 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 
     saveFilename[FB] <- if (isRepo) {
       CacheStoredRasterFile(repoDir, hash = hash, bnFB)
-      # file.path(repoDir, "rasters"[isRepo], bnFB)
     } else {
       CacheStoredRasterFile(repoDir, hash = NULL, bnFB)
     }

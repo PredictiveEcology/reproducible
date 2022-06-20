@@ -122,10 +122,6 @@ setMethod(
 
     if (isTRUEorForce(useCloud) || !clearWholeCache) {
 
-      # browser(expr = exists("._clearCache_2"))
-      # if (missing(after)) after <- NA # "1970-01-01"
-      # if (missing(before)) before <- NA # Sys.time() + 1e5
-
       args <- append(list(x = x, after = after, before = before, userTags = userTags,
                           conn = conn, drv = drv),
                      list(...))
@@ -133,6 +129,7 @@ setMethod(
       objsDT <- do.call(showCache, args = args, quote = TRUE)
       if (isTRUE(useCloud) && NROW(objsDT) > 0 || identical(useCloud, "force")) {
         if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+        if (exists("aaa")) browser()
         cloudFolderID <- cloudFolderID(cloudFolderID)
         # browser(expr = exists("._clearCache_3"))
         cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
@@ -141,8 +138,8 @@ setMethod(
           cacheIds <- c(cacheIds, gsub("\\..*$", "", gdriveLs$name))
         }
         cloudRemove(cloudFolderID, x, cacheIds, cacheDT = objsDT)
-
-        cloudRmFromDBFile(objsDT, cloudFolderID, cacheIds, gdriveLs = NULL, drv, conn)
+        cloudRmFromDBFile(objsDT = objsDT, cloudFolderID = cloudFolderID, cacheIds = cacheIds,
+                          gdriveLs = NULL, drv = drv, conn = conn)
 
       }
 
@@ -185,8 +182,7 @@ setMethod(
       return(.emptyCacheTable)
 
     if (NROW(objsDT)) {
-      rmFromCache(x, objsDT, ask = ask, verbose = verbose,
-                  conn = conn, drv = drv)# many = TRUE)
+      rmFromCache(x, objsDT, ask = ask, verbose = verbose, conn = conn, drv = drv)# many = TRUE)
 
     }
     try(setindex(objsDT, NULL), silent = TRUE)
@@ -505,41 +501,11 @@ setMethod(
   CacheFiles <- dir(unique(CacheStorageDirs(x)), full.names = TRUE)
   fsTotal <- sum(file.size(CacheFiles))
 
-  # tagCol <- "tagValue"
-  # if (missing(cacheTable)) {
-  #   a <- showCache(x, verboseMessaging = FALSE)
-  #
-  # } else {
-  #   a <- cacheTable
-  # }
-  # cn <- if (any(colnames(a) %in% "tag")) "tag" else "tagKey"
-  # b <- a[a[[cn]] == "object.size",]
-  # if (any(colnames(a) %in% "tag")) {
-  #   fsTotal <- sum(as.numeric(unlist(lapply(strsplit(b[[cn]], split = ":"), function(x) x[[2]])))) / 4
-  # } else {
-  #   fsTotal <- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
-  #
-  # }
-  # browser()
-  # fsTotalRasters <- sum(file.size(dir(file.path(x, "rasters"), full.names = TRUE, recursive = TRUE)))
-  # fsTotal <- fsTotal + fsTotalRasters
   class(fsTotal) <- "object_size"
   preMessage1 <- "  Total (including auxiliary files -- e.g., .tif, .grd): "
 
-  # b <- a[a[[.cacheTableHashColName()]] %in% artifacts &
-  #          (a[[cn]] %in% "object.size"),]
-  # if (cn == "tag") {
-  #   fs <- sum(as.numeric(unlist(lapply(strsplit(b[[cn]], split = ":"), function(x) x[[2]])))) / 4
-  # } else {
-  #   fs <- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
-  # }
-  #
-  # class(fs) <- "object_size"
-  # preMessage <- "  Selected objects (not including Rasters): "
-
   messageCache("Cache size: ", verbose = verbose)
   messageCache(preMessage1, format(fsTotal, "auto"), verbose = verbose)
-  # messageCache(preMessage, format(fs, "auto"), verbose = verbose)
 }
 
 #' @keywords internal

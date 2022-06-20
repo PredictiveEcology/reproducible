@@ -363,7 +363,8 @@ CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
     type <- gsub("Connection", "", class(conn))
   }
 
-  if (grepl(type, "SQLite")) {
+  if (exists("aaa")) browser()
+  outFile <- if (grepl(type, "SQLite")) {
     file.path(cachePath, "cache.db")
   } else if (grepl(type, "character")) {
     if (identical(drv, "fst")) {
@@ -372,6 +373,7 @@ CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
       stop(errMessWrongDrv)
     }
   }
+  outFile
 }
 
 errMessWrongDrv <- "Currently can only use 'fst', RSQLite::SQLite(), or RPostgres::Postgres()"
