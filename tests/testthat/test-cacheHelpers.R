@@ -201,8 +201,7 @@ test_that("test cache-helpers with stacks", {
   ## in memory
   b <- .prepareFileBackedRaster(s, tmpCache)
   is(b, "RasterStack")
-  browser()
-  expect_true(length(list.files(file.path(tmpCache, "rasters"))) == 0)
+  expect_true(length(list.files(file.path(CacheStorageRasterDir(tmpCache)))) == 0)
 
   ## with 1 backups
   r <- .writeRaster(r, filename = tmpfile, overwrite = TRUE)
@@ -241,5 +240,5 @@ test_that("test miscellaneous unit tests cache-helpers", {
   mess <- capture_messages(clearCache(cacheRepo = tmpCache))
   expect_true(any(grepl("x not specified, but cacheRepo is", mess)))
   mess <- capture_messages(clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = NULL))
-  expect_equal(sum(grepl("0 bytes", mess)), 2)
+  expect_equal(sum(grepl("0 bytes", mess)), 1)
 })

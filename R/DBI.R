@@ -542,8 +542,9 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
       sc <- suppressMessages(showCache(x = cachePath, conn = tmpConn_db))
       fileOther_db <- CacheDBFile(cachePath, conn = tmpConn_db)
       on.exit({
-        if (file.exists(fileOther_db))
-          try(file.remove(fileOther_db), silent = TRUE)
+        if (file.exists(fileOther_db)) {
+          suppressWarnings(try(file.remove(fileOther_db), silent = TRUE))
+        }
       }
       , add = TRUE)
       writeFilebasedConn(cachePath = cachePath, conn = conn, dt = sc, drv = drv)
