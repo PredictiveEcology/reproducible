@@ -519,7 +519,8 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
     connFilePresentNotNeeded <- connFilePresentNotNeeded[relevantFiles]
   }
 
-  if (all(!filesNeededArePresent) && length(connFilePresentNotNeeded) == 0)
+  if ( (all(!filesNeededArePresent) && length(connFilePresentNotNeeded) == 0) ||
+       (!filesNeededArePresent[1] && length(connFilePresentNotNeeded) == 0) )
     return(ret)
 
   needWriteToConn <- FALSE #  If a db gets change, need to get it to disk, not just RAM
