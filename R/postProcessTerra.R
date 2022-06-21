@@ -400,10 +400,10 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE) {
       messagePrepInputs("    cropping...")
       st <- Sys.time()
 
-      ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
-      if (!sf::st_crs(from) == sf::st_crs(ext)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
-        ext <- sf::st_transform(ext, sf::st_crs(from))
+      if (!sf::st_crs(from) == sf::st_crs(cropTo)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
+        cropTo <- projectTo(cropTo, from)# sf::st_transform(cropTo, sf::st_crs(from))
       }
+      ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
       if (isVector(from)) {
         if (!isSpat(from)) {
           if (!is(from, "sf")) {
