@@ -404,8 +404,16 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE) {
       if (!sf::st_crs(from) == sf::st_crs(ext)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
         ext <- sf::st_transform(ext, sf::st_crs(from))
       }
-      if (isVector(from))
+      if (isVector(from)) {
+        if (!isSpat(from)) {
+          if (!is(from, "sf")) {
+            from <- sf::st_as_sf(from)
+          }
+          from <- terra::vect(from)
+        }
         ext <- terra::vect(ext)
+      }
+
 
       # This is only needed if crop happens before a projection... need to cells beyond edges so projection is accurate
       if (needBuffer)
