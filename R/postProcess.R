@@ -291,7 +291,10 @@ cropInputs <- function(x, studyArea, rasterToMatch, verbose = getOption("reprodu
 #' @export
 #' @rdname cropInputs
 cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
-  if (isSpatialAny(x) && (isSpatial(studyArea) || isSpatial(rasterToMatch))) {
+
+  if (missing(rasterToMatch)) rasterToMatch <- NULL
+
+  if (isSpatialAny(x) && (isSpatialAny(studyArea) || isSpatialAny(rasterToMatch))) {
     cropTo <- if (!is.null(rasterToMatch)) {
       rasterToMatch
     } else {
