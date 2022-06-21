@@ -1,4 +1,4 @@
-options(reproducible.drv = "fst")
+options(reproducible.drv = "csv")
 
 test_that("test file-backed raster caching", {
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
@@ -1395,14 +1395,16 @@ test_that("testing parallel", {
 
 
   # Set running on one R session in background
-  drvs <- list("fst", RSQLite::SQLite())
+  pkgload::load_all("~/GitHub/reproducible")
+  drvs <- list("csv", RSQLite::SQLite())
   i <- 1
-    options("reproducible.drv" = drvs[[i]])
-    repo <- "~/tmp/test"
-    unlink(repo, recursive = TRUE)
-    checkPath(repo, create = TRUE)
+  options("reproducible.drv" = drvs[[i]])
+  repo <- "~/tmp/test"
+  unlink(repo, recursive = TRUE)
+  checkPath(repo, create = TRUE)
 
-    options(reproducible.verbose = 0)
+  options(reproducible.verbose = 0)
+    # Background
     out = lapply(1:20000, function(x) Cache(rnorm, sample(1, 1), cacheRepo = repo))
 
     # Run this in foreground
@@ -1460,7 +1462,7 @@ test_that("testing parallel", {
 
 
 
-  drvs <- list("fst", RSQLite::SQLite())
+  drvs <- list("csv", RSQLite::SQLite())
   i <- 1
   options("reproducible.drv" = drvs[[i]])
   repo <- "~/tmp/test"

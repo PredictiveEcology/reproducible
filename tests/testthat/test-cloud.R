@@ -1,4 +1,4 @@
-options(reproducible.drv = "fst")
+options(reproducible.drv = "csv")
 # options(reproducible.drv = RSQLite::SQLite())
 message(format(getOption("reproducible.drv")))
 

@@ -77,26 +77,6 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   if (is.null(linkToCacheId)) {
     fs <- saveFileInCacheFolder(obj, fts)
-    # if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
-    #   .requireNamespace("qs", stopOnFALSE = TRUE)
-    #   for (attempt in 1:2) {
-    #     fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
-    #                     preset = getOption("reproducible.qsavePreset", "high"))
-    #     fs1 <- file.size(fts)
-    #     if (!identical(fs, fs1)) {
-    #       if (attempt == 1) {
-    #         warning("Attempted to save to Cache, but save seemed to fail; trying again")
-    #       } else {
-    #         stop("Saving to Cache did not work correctly; file appears corrupted. Please retry")
-    #       }
-    #     } else {
-    #       break
-    #     }
-    #   }
-    # } else {
-    #   saveRDS(obj, file = fts)
-    #   fs <- file.size(fts)
-    # }
   }
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     if (is.null(.pkgEnv[[cachePath]]))
@@ -243,7 +223,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv"),
                          conn = getOption("reproducible.conn", NULL), create = TRUE,
                          read_only = FALSE) {
 
-  if (identical(drv, "fst")) {
+  if (identical(drv, "fst") || identical(drv, "csv") ) {
     conn <- CacheDBFile(cachePath, drv = drv, conn = conn)
     return(conn)
   }
@@ -369,6 +349,8 @@ CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
   } else if (grepl(type, "character")) {
     if (identical(drv, "fst")) {
       file.path(cachePath, "cache.fst")
+    } else if (identical(drv, "csv")) {
+      file.path(cachePath, "cache.csv")
     } else {
       stop(errMessWrongDrv)
     }
@@ -528,7 +510,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   }
   if (switchedDBTable) {
     # means a switched backend -- folder of storage files exist, but no db frontend
-    if (identical(drv, "fst")) {
+    if (identical(drv, "fst") || identical(drv, "csv") ) {
       if (!requireNamespace("RSQLite")) {
         stop("It looks like this Cache database used to be an RSQLite database, but RSQLite is not installed; please install.packages('RSQLite')")
       }
@@ -575,9 +557,9 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
       }
       ret <- retOrig && any(grepl(tableShouldBe, tablesInDB))
       if (isFALSE(ret)) {
-        # the files all existed, but there is no db Table; likely from a conversion from fst to SQLite
+        # the files all existed, but there is no db Table; likely from a conversion from csv to SQLite
         createEmptyTable(conn, cachePath, drv)
-        drvOther <- "fst"
+        drvOther <- "csv"
         tmpConn <- dbConnectAll(drv = drvOther, cachePath = cachePath)
         on.exit({
           dbDisconnectAll(tmpConn, shutdown = TRUE)
@@ -753,6 +735,7 @@ objNameFromConn <- function(conn) {
 
 #' @importFrom fst read_fst
 readFilebasedConn <- function(objName, conn, columns = NULL, from = 1, to = NULL) {
+  messageCache(Sys.getpid(), " readFilebasedConn -- start of", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
   if (missing(objName)) {
     objName <- objNameFromConn(conn)
   }
@@ -766,16 +749,18 @@ readFilebasedConn <- function(objName, conn, columns = NULL, from = 1, to = NULL
     if (file.exists(conn)) {
       tf <- tempfile()
       on.exit({if (file.exists(tf)) file.remove(tf)})
-      fsTab <- try(retry(retries = 12, exponentialDecayBase = 1.01, silent = TRUE, quote({
-        file.copy(conn, tf, overwrite = TRUE)
-        fsTab <- read_fst(tf)
-      }
-      )), silent = TRUE)
+      messageCache(Sys.getpid(), " readFilebasedConn -- pre file.copy", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
+      file.copy(conn, tf, overwrite = FALSE)
+      messageCache(Sys.getpid(), " readFilebasedConn -- pre read_fst", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
+      fsTab <- setDF(data.table::fread(tf, colClasses = rep("character", 4)))
+      messageCache(Sys.getpid(), " readFilebasedConn -- post read_fst", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
+
       if (is(fsTab, "try-error"))
         stop("Something went wrong with accessing the Cache 2")
 
       if (!is(fsTab, "try-error")) {
         dig <- file.mtime(conn)
+        messageCache(Sys.getpid(), " readFilebasedConn -- pre writeFilebasedConnToMemory", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
         writeFilebasedConnToMemory(objName = objName, dt = fsTab, conn = conn, dig = dig)
       }
       if (file.exists(tf)) file.remove(tf)
@@ -788,7 +773,7 @@ readFilebasedConn <- function(objName, conn, columns = NULL, from = 1, to = NULL
     fsTab <- fsTab[, columns, drop = FALSE]
   if (!is.null(to))
     fsTab <- fsTab[from:to, , drop = FALSE]
-
+  messageCache(Sys.getpid(), " readFilebasedConn -- end of", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
   fsTab
 }
 
@@ -917,6 +902,8 @@ dbDisconnectAll <- function(conn = getOption("reproducible.conn", NULL), ...) {
 }
 
 writeFilebasedConn <- function(cachePath, drv, conn, dt, objName) {
+  messageCache(Sys.getpid(), " writeFilebasedConn -- start of", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
+
   if (!is.null(dt)) { # basically, if there was an error in the Cache function, there won't be anything here
     if (missing(conn))
       conn <- CacheDBFile(cachePath, drv = drv, conn = conn)
@@ -928,9 +915,13 @@ writeFilebasedConn <- function(cachePath, drv, conn, dt, objName) {
           quote({
 
             if (!rend || !file.exists(tf)) {
-              fsTab <- write_fst(dt, tf)
+              messageCache(Sys.getpid(), " writeFilebasedConn -- pre write_fst", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
+              fsTab <- data.table::fwrite(dt, file = tf)
+              # fsTab <- write_fst(dt, tf)
+              messageCache(Sys.getpid(), " writeFilebasedConn -- post write_fst", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
             }
             rend <- file.copy(tf, conn, overwrite = TRUE)
+            messageCache(Sys.getpid(), " writeFilebasedConn -- post file.copy", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
             if (!rend) {
               tf <- tempfile()
             }
@@ -953,6 +944,8 @@ writeFilebasedConn <- function(cachePath, drv, conn, dt, objName) {
 
     if (file.exists(tf)) file.remove(tf)
   }
+  messageCache(Sys.getpid(), " writeFilebasedConn -- end of", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
+
   return(invisible())
 }
 
@@ -1058,6 +1051,6 @@ rmFromCacheStorage <- function(filesToRemove, cacheRepo, CacheDT, format = getOp
 rmFromCacheMemoise <- function(cacheRepo, cacheId) {
   if (isTRUE(getOption("reproducible.useMemoise")))
     if (exists(cacheRepo, envir = .pkgEnv, inherits = FALSE))
-      suppressWarnings(rm(list = cacheId, envir = .pkgEnv[[x]]))
+      suppressWarnings(rm(list = cacheId, envir = .pkgEnv[[cacheRepo]]))
 
 }

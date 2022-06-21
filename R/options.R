@@ -46,10 +46,10 @@
 #'     Can be set globally here.
 #'   }
 #'   \item{\code{drv}}{
-#'     Default: \code{"fst"} for a single file-backed cache repository using the package
-#'     and format, \code{"fst"}. Alternatives are\code{RSQLite::SQLite()}.
+#'     Default: \code{"csv"} for a single file-backed cache repository using the package
+#'     and format, \code{"csv"}. Alternatives are\code{RSQLite::SQLite()}.
 #'     Sets the driver for the backend database system.
-#'     Only tested with \code{"fst"}, \code{RSQLite::SQLite()} and \code{RPostgres::Postgres()}.
+#'     Only tested with \code{"csv"}, \code{RSQLite::SQLite()} and \code{RPostgres::Postgres()}.
 #'   }
 #'   \item{\code{futurePlan}}{
 #'     Default: \code{FALSE}. On Linux OSes, \code{Cache} and \code{cloudCache} have some
@@ -181,7 +181,7 @@ reproducibleOptions <- function() {
     reproducible.cloudFolderID = NULL,
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
-    reproducible.drv = "fst",# RSQLite::SQLite(), # "fst",
+    reproducible.drv = "csv",# RSQLite::SQLite(), # "fst",
     reproducible.futurePlan = FALSE, #future::plan("multicore"), #memoise
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,

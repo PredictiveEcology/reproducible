@@ -343,8 +343,9 @@ utils::globalVariables(c(
 #'        If a number larger than \code{1}, then it will report the N most similar archived
 #'        objects.
 #'
-#' @param drv Either \code{"fst"} (the character string) the default as of reproducible V 1.2.9,
-#'   or an object that inherits from \code{DBIDriver}, or an existing \code{DBIConnection} object
+#' @param drv Either \code{"csv"} ( the default as of reproducible V 1.2.9) or
+#'   \code{"fst"} (as character strings), or an object that inherits from
+#'   \code{DBIDriver}, or an existing \code{DBIConnection} object
 #'   (in order to clone an existing connection). For these last two, user requires \code{DBI}
 #'   and a DB backend such as \code{RSQLite} to be installed.
 #'
@@ -592,7 +593,7 @@ Cache <-
       if (!is.null(.cacheExtra)) {
         toDigest <- append(toDigest, list(.cacheExtra))
       }
-
+      messageCache("pre CacheDigest", verbose = verbose, verboseLevel = 3)
       cacheDigest <- CacheDigest(toDigest, .objects = .objects,
                                  length = length, algo = algo, quick = quick,
                                  classOptions = classOptions)
@@ -656,6 +657,7 @@ Cache <-
       if (length(waiting) == 1) waiting <- c(waiting, Inf)
       isFirstTimeWaiting <- TRUE
 
+      messageCache("pre isInRrepo", verbose = verbose, verboseLevel = 3)
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
         # browser(expr = exists("._Cache_3"))
@@ -664,7 +666,7 @@ Cache <-
           dbDisconnectAll(conn, shutdown = TRUE)
           conn <- dbConnectAll(drv, cachePath = repo)
         }
-        if (useFuture(TRUE)) {
+        if (useFuture(TRUE, drv = drv)) {
           conn <- checkFutures(repo, drv, conn)
           isInRepo <- checkInRepo(conn, dbTabNam, outputHash)
           if (identical("prerun", isInRepo$tagKey)) { # There is a weird holding on here
@@ -779,6 +781,8 @@ Cache <-
                        verbose = verbose)
 
           preLoadTime <- Sys.time()
+          messageCache("pre getFromRepo", verbose = verbose, verboseLevel = 3)
+
           output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
                                      lastOne = lastOne, cacheRepo = cacheRepo,
                                      fnDetails = fnDetails,
@@ -861,6 +865,7 @@ Cache <-
                         add = TRUE,
                         drv = drv, conn = conn)
 
+        messageCache("pre evaluate FUN", verbose = verbose, verboseLevel = 3)
         output <- if (fnDetails$isCapturedFUN) {
           eval(FUNcaptured, envir = parent.frame())
         } else {
@@ -996,7 +1001,9 @@ Cache <-
 
       written <- 0
 
-      if (useFuture(objSize > 1e6) || getOption("reproducible.futureForce", FALSE)) {
+      messageCache("pre saveToCache", verbose = verbose, verboseLevel = 3)
+
+      if (useFuture(objSize > 1e6, drv = drv) ) {
         if (!exists("futureEnv", envir = .reproEnv))
           .reproEnv$futureEnv <- new.env(parent = emptyenv())
 
@@ -1019,7 +1026,7 @@ Cache <-
             future::plan(thePlan, workers = 2)
           }
         }
-        dbDisconnectAll(conn, shutdown = TRUE)
+        dbDisconnectAll(conn, shutdown = TRUE) # need to disconnect so future can write to it
         futureID <- paste0("future_", rndstr(1,10))
         .reproEnv$futureEnv[[futureID]] <-
           future::future(seed = TRUE,
@@ -1054,9 +1061,11 @@ Cache <-
 
       if (useCloud && .CacheIsNew) {
         # Here, upload local copy to cloud folder if it isn't already there
-        browser()
 
-        if (useFuture(TRUE)) conn <- checkFutures(cacheRepo, drv, conn)
+        if (useFuture(TRUE, drv = drv)) {
+          browser()
+          conn <- checkFutures(cacheRepo, drv, conn)
+        }
         cloudDribble <- try(cloudUpload(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
                                          outputToSave, gdriveLs = gdriveLs, drv = drv, conn = conn))
 
@@ -1928,7 +1937,6 @@ checkInRepo <- function(conn, dbTabNam, outputHash) {
     whInRepo <- which(out$cacheId == outputHash)
     isInRepo <- if (length(whInRepo)) {
       readFilebasedConn(conn = conn, from = min(whInRepo), to = max(whInRepo))
-      # read_fst(conn, from = min(whInRepo), to = max(whInRepo))
     } else {
       as.data.frame(.emptyCacheTable)
     }
@@ -2077,18 +2085,18 @@ sideEffectCopyFromCache <- function(cacheRepo, sideEffect) {
   out <- hardLinkOrCopy(filenamesInCache, filenamesForDestination, overwrite = TRUE)
 }
 
-useFuture <- function(useFutureForce = FALSE) {
+useFuture <- function(useFutureForce = FALSE, drv = getOption("reproducible.drv")) {
 
   useFuture <- FALSE
-  if (useFutureForce) {
+  if (useFutureForce || getOption("reproducible.futureForce", FALSE)) {
     if (!isFALSE(getOption("reproducible.futurePlan")) &&
         .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")) {
       if (grepl("callr", getOption("reproducible.futurePlan"))) {
         .requireNamespace("future.callr", messageStart = "To use reproducible.futurePlan, ")
-        if (identical(getOption("reproducible.drv"), "fst")) {
+        if (identical(drv, "fst") || identical(drv, "csv")) {
           useFuture <- TRUE
         } else {
-          message("reproducible.futurePlan is set to future.callr::callr, but reproducible.drv must be 'fst', skipping")
+          message("reproducible.futurePlan is set to future.callr::callr, but reproducible.drv must be 'csv' or 'fst', skipping")
         }
       }
     }

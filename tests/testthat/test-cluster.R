@@ -2,48 +2,67 @@ test_that("test parallel collisions", {
   skip_on_cran() # testing multi-threaded things on CRAN
   skip_on_os("mac")
 
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd", ".txt"))
+  setwd("~/GitHub/reproducible")
+  workingDir <- getwd()
+  testInitOut <- testInit("parallel", tmpFileExt = c(".log", ".log", ".log"))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
+  tmpfile <- file.path(paste0("~/tmp/out", 1:3, ".txt"))
+  cat(" ", file = tmpfile[3])
 
-  if (require(parallel, quietly = TRUE)) {
-    # make cluster -- note this works if cluster is FORK also, but for simplicity, using default
-    #   which works on Linux, Mac, Windows
-    N <- min(2, detectCores())
+  if (!require(parallel, quietly = TRUE)) skip("Need parallel")
+  # make cluster -- note this works if cluster is FORK also, but for simplicity, using default
+  #   which works on Linux, Mac, Windows
+  N <- min(2, detectCores())
 
-    if (!file.exists(CacheDBFile(tmpdir))) {
-      createCache(tmpdir)
-    }
+  if (!file.exists(CacheDBFile(tmpdir))) {
+    createCache(tmpdir)
+  }
 
-    # make function that will write to cache repository from with clusters
-    fun <- function(x, cacheRepo) {
-      #print(x)
-      Cache(rnorm, 10, sd = x, cacheRepo = cacheRepo)
-    }
-    # Run something that will write many times
-    # This will produce "database is locked" on Windows or Linux *most* of the time without the fix
-    if (interactive()) {
-      of <- tmpfile[3]
-      cl <- makeCluster(N, outfile = of)
-      message(paste("log file is", of))
+  # make function that will write to cache repository from with clusters
+  fun <- function(x, cacheRepo) {
+    options(reproducible.verbose = 3)
+    out <- try(Cache(rnorm, 10, sd = x, cacheRepo = cacheRepo, verbose = 3))
+    if (is(out, "try-error")) {
+      cat(capture.output(warnings()), sep = "\n", file = tmpfile[3])
+      cat(out, file = tmpfile[3], append = TRUE, sep = "\n")
     } else {
-      cl <- makeCluster(N)
+      cat(x, file = tmpfile[3], append = TRUE, sep = "\n")
     }
-    on.exit(stopCluster(cl), add = TRUE)
+    out
 
-    clusterSetRNGStream(cl)
-#    parallel::clusterEvalQ(cl, {library(reproducible)})
-    numToRun <- 40
+  }
+  # Run something that will write many times
+  # This will produce "database is locked" on Windows or Linux *most* of the time without the fix
+  if (interactive()) {
+    of <- tmpfile[3]
+    cl <- makeCluster(N, outfile = of)
+    message(paste("log file is", of))
+  } else {
+    cl <- makeCluster(N)
+  }
+  on.exit(try(stopCluster(cl), silent = TRUE), add = TRUE)
 
-    # There is a 'creating Cache at the same time' problem -- haven't resolved
-    #  Just make cache first and it seems fine
-    Cache(rnorm, 1, cacheRepo = tmpdir)
-    a <- try(clusterMap(cl = cl, fun, seq(numToRun), cacheRepo = tmpdir, .scheduling = "dynamic"),
-             silent = FALSE)
-    if (!is(a, "try-error")) {
-      expect_true(is.list(a))
-      expect_true(length(a) == numToRun)
-    }
+  clusterSetRNGStream(cl)
+  numToRun <- 4000
+
+  # There is a 'creating Cache at the same time' problem -- haven't resolved
+  #  Just make cache first and it seems fine
+  Cache(rnorm, 1, cacheRepo = tmpdir)
+  parallel::clusterExport(cl, varlist = c("workingDir", "tmpfile"), envir = environment())
+  outs <- parallel::clusterEvalQ(cl, {options("reproducible.drv" = 'fst');
+    pkgload::load_all(workingDir)})
+  # parallel::clusterEvalQ(cl, library(reproducible))
+
+
+  eval(parse(text = paste0("file.edit('",tmpfile[3], "')")))
+  a <- #try(
+    clusterMap(cl = cl, fun, seq(numToRun), cacheRepo = tmpdir, .scheduling = "dynamic")#,
+  #silent = FALSE)
+  if (!is(a, "try-error")) {
+    expect_true(is.list(a))
+    expect_true(length(a) == numToRun)
+    expect_true(all(sapply(a, function(aa) attr(aa, ".Cache")$newCache == TRUE)))
   }
 })

@@ -171,7 +171,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   comp <- .robustDigest("sdf")
   expect_true(identical(comp,
                         writeFuture(1, "sdf", cacheRepo = tmpCache, userTags = "",
-                                    drv = "fst"))) # RSQLite::SQLite()
+                                    drv = "csv"))) # RSQLite::SQLite()
   expect_error(writeFuture(1, "sdf", cacheRepo = "sdfd", userTags = ""))
 
   if (interactive()) {
