@@ -237,6 +237,7 @@ test_that("maskInputs errors when x is Lat-Long", {
   skip_on_cran()
   skip_on_ci()
   skip_if_not(requireNamespace("sf", quietly = TRUE))
+  skip_if_no_token()
 
   testInitOut <- testInit("raster", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
@@ -302,7 +303,7 @@ test_that("maskInputs errors when x is Lat-Long", {
 
 test_that("prepInputs doesn't work (part 3)", {
   if (interactive()) {
-    testInitOut <- testInit()
+    testInitOut <- testInit(opts = list(reproducible.useTerra = TRUE))
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
