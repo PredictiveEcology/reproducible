@@ -302,3 +302,8 @@ rebuildColors <- function(x, origColors) {
   return(cols)
 }
 
+
+similarExtents <- function(ext1, ext2, closeEnough) {
+  out <- sapply(slotNames(ext1), function(sn) abs(slot(ext1, sn) - slot(ext2, sn)) < closeEnough)
+  all(out)
+}
