@@ -85,7 +85,6 @@ all.equal(map1, map3) # TRUE
 
 ```{r}
 library(raster)
-library(magrittr)
 
 try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear
 

@@ -542,7 +542,7 @@ test_that("test wrong ways of calling Cache", {
 
 
 test_that("test quoted FUN in Cache", {
-  testInitOut <- testInit("magrittr")
+  testInitOut <- testInit()
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1400,7 +1400,6 @@ test_that("testing parallel", {
 
 
   # Set running on one R session in background
-  pkgload::load_all("~/GitHub/reproducible")
   drvs <- list("csv", RSQLite::SQLite())
   i <- 1
   options("reproducible.drv" = drvs[[i]])

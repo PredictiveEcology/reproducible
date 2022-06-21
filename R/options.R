@@ -158,7 +158,7 @@
 #' \describe{
 #'   \item{\code{cloudChecksumsFilename}}{
 #'     Default: \code{file.path(dirname(.reproducibleTempCacheDir()), "checksums.rds")}.
-#'     Used in \code{\link{cloudCache}}
+#'     Used in \code{cloudCache}
 #'   }
 #'   \item{\code{length}}{
 #'     Default: \code{Inf}. Used in \code{\link{Cache}}, specifically to the internal

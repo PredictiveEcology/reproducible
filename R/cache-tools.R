@@ -48,6 +48,7 @@
 #' large cache repository.
 #'
 #' @export
+#' @inheritParams Cache
 #' @importFrom data.table setindex
 #' @importFrom methods setGeneric setMethod
 #' @importFrom utils object.size
@@ -416,6 +417,7 @@ setMethod(
 #' @return The character string of the path of \code{cacheTo}, i.e., not the
 #' objects themselves.
 #'
+#' @inheritParams Cache
 #' @rdname mergeCache
 setGeneric("mergeCache", function(cacheTo, cacheFrom,
                                   drvTo = getOption("reproducible.drv"),

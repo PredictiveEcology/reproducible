@@ -126,34 +126,36 @@ cloudDriveLs <- function(cloudFolderID = NULL, pattern = NULL,
 #'
 #' @inheritParams cloudUpload
 #' @inheritParams Cache
+#' @param gdriveLs An optional `googledrive::drive_ls(cloudFolderID)`
+#' @inheritParams showCache
 #' @rdname cloudCache
 #' @export
-cloudDownload <- function(outputHash, gdriveLs, cacheRepo, cloudFolderID,
+cloudDownload <- function(cacheId, gdriveLs, cacheRepo, cloudFolderID,
                           drv = getOption("reproducible.drv"),
                           conn = getOption("reproducible.conn", NULL)) {
 
-  newFileName <- CacheStoredFile(cacheRepo, outputHash) # paste0(outputHash,".rda")
+  newFileName <- CacheStoredFile(cacheRepo, cacheId) # paste0(cacheId,".rda")
   isInCloud <- gsub(gdriveLs$name,
                     pattern = paste0("\\.", fileExt(newFileName)),
-                    replacement = "") %in% outputHash
+                    replacement = "") %in% cacheId
   output <- NULL
   if (any(isInCloud)) {
 
     if (!requireNamespace("googledrive", quietly = TRUE))
       stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
-    messageCache("Downloading cloud copy of ", newFileName,", with cacheId: ", outputHash)
+    messageCache("Downloading cloud copy of ", newFileName,", with cacheId: ", cacheId)
     localNewFilename <- file.path(tempdir2(), basename2(newFileName))
     du <- retry(quote(
       googledrive::drive_download(file = googledrive::as_id(gdriveLs$id[isInCloud][1]),
                                   path = localNewFilename, # take first if there are duplicates
                                   overwrite = TRUE)))
 
-    cloudAddTagsRepo(du, outputHash, cacheRepo, drv, conn)
+    cloudAddTagsRepo(du, cacheId, cacheRepo, drv, conn)
     output <- loadFile(localNewFilename)
-    output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID, outputHash = outputHash, drv = drv)
+    output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID, cacheId = cacheId, drv = drv)
     output <- dealWithClassOnRecovery(output, cacheRepo = cacheRepo,
-                                      cacheId = outputHash,
+                                      cacheId = cacheId,
                                       drv = drv, conn = conn)
 
   }
@@ -165,23 +167,23 @@ cloudDownload <- function(outputHash, gdriveLs, cacheRepo, cloudFolderID,
 #'
 #' Meant for internal use, as there are internal objects as arguments.
 #'
-#' @param isInCloud     A logical indicating whether an \code{outputHash} is in the cloud already.
+#' @param isInCloud     A logical indicating whether an \code{cacheId} is in the cloud already.
 #' @param outputToSave  Only required if \code{any(rasters) == TRUE}.
 #'                      This is the \code{Raster*} object.
 #' @inheritParams cloudUpload
 #'
 #' @keywords internal
 #'
-cloudUpload <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
+cloudUpload <- function(isInCloud, cacheId, cacheRepo, cloudFolderID,
                                  outputToSave, gdriveLs, drv = getOption("reproducible.drv"),
                                  conn = getOption("reproducible.conn", NULL)) {
   if (!requireNamespace("googledrive", quietly = TRUE))
     stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
-  cacheIdFileName <- CacheStoredFile(cacheRepo, outputHash)
+  cacheIdFileName <- CacheStoredFile(cacheRepo, cacheId)
   isInCloud <- gsub(gdriveLs$name,
                     pattern = paste0("\\.", fileExt(cacheIdFileName)),
-                    replacement = "") %in% outputHash
+                    replacement = "") %in% cacheId
   #browser(expr = exists("._cloudUploadFromCache_1"))
   du <- NULL
   if (!any(isInCloud)) {
@@ -189,7 +191,7 @@ cloudUpload <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
 
     cloudFolderID <- cloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
     messageCache("Uploading object ", newFileName,", with cacheId: ",
-            outputHash," to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id)
+            cacheId," to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id)
     du <- try(retry(quote(googledrive::drive_upload(media = cacheIdFileName,
                                        path = googledrive::as_id(cloudFolderID), name = newFileName,
                                        overwrite = FALSE))))
@@ -201,10 +203,10 @@ cloudUpload <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
       du <- rbind(du, cu)
     }
 
-    cloudAddTagsRepo(drib = du, outputHash, cacheRepo, drv = drv, conn = conn)
+    cloudAddTagsRepo(drib = du, cacheId, cacheRepo, drv = drv, conn = conn)
 
     # Now update the db file in cloud
-    suppressMessages(sc <- showCache(userTags = outputHash, x = cacheRepo, drv = drv,
+    suppressMessages(sc <- showCache(userTags = cacheId, x = cacheRepo, drv = drv,
                                      conn = conn))
     cloudAddToDBFile(sc, cloudFolderID, gdriveLs = NULL, drv, conn)
 
@@ -216,8 +218,8 @@ cloudUpload <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
 
       dbFile <- cloudDBFile(cloudFolderID, gdriveLs = NULL, drv, conn)
 
-      localDB <- cacheDFToTmpDB(drv = drv, df = toKeep, cloudFolderID = cloudFolderID,
-                                gdriveLs = NULL)
+      localDB <- cacheDFToTmpDB(df = toKeep, cloudFolderID = cloudFolderID,
+                                gdriveLs = NULL, drv = drv, conn = conn)
       cloudUploadOrUpdateDBFile(cloudFolderID, dbFile, localDB)
 
 
@@ -247,7 +249,7 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
   return(invisible(out))
 }
 
-cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, outputHash,
+cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, cacheId,
                                        drv = getOption("reproducible.drv"),
                                        conn = getOption("reproducible.conn", NULL)) {
   if (!requireNamespace("googledrive", quietly = TRUE))
@@ -272,7 +274,7 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, outputH
         du <- retry(quote(googledrive::drive_download(file = gdriveLs2[idRowNum,],
                                    path = localNewFilename, # take first if there are duplicates
                                    overwrite = TRUE)))
-        cloudAddTagsRepo(drib = du, outputHash, cacheRepo, drv = drv, conn = conn)
+        cloudAddTagsRepo(drib = du, cacheId, cacheRepo, drv = drv, conn = conn)
         return(filenameMismatch)
 
       }))
@@ -312,12 +314,12 @@ isOrHasRaster <- function(obj) {
 }
 
 
-cloudAddTagsRepo <- function(drib, outputHash, cacheRepo, drv, conn) {
-  .updateTagsRepo(outputHash, cacheRepo, "inCloud", "TRUE", drv = drv, conn = conn)
-  lapply(drib$name, function(nam) .addTagsRepo(outputHash, cacheRepo, "inCloudFile",
+cloudAddTagsRepo <- function(drib, cacheId, cacheRepo, drv, conn) {
+  .updateTagsRepo(cacheId = cacheId, cachePath = cacheRepo, "inCloud", "TRUE", drv = drv, conn = conn)
+  lapply(drib$name, function(nam) .addTagsRepo(cacheId, cacheRepo, "inCloudFile",
                                              nam, drv = drv, conn = conn))
   ids <- if (is(drib$id, "drive_id")) as.character(drib$id) else drib$id
-  lapply(ids, function(id) .addTagsRepo(outputHash, cacheRepo, "inCloudID",
+  lapply(ids, function(id) .addTagsRepo(cacheId, cacheRepo, "inCloudID",
                                           id, drv = drv, conn = conn))
 
 }
@@ -374,8 +376,8 @@ cloudClearCache <- function(cloudFolderID = NULL,
 
         dbFile <- cloudDBFile(cloudFolderID, gdriveLs, drv, conn)
 
-        localDB <- cacheDFToTmpDB(drv = drv, df = toKeep, cloudFolderID = cloudFolderID,
-                                  gdriveLs = NULL)
+        localDB <- cacheDFToTmpDB(df = toKeep, cloudFolderID = cloudFolderID,
+                                  gdriveLs = NULL, drv = drv, conn = conn)
         cloudUploadOrUpdateDBFile(cloudFolderID, dbFile, localDB)
 
       }
@@ -389,6 +391,7 @@ cloudClearCache <- function(cloudFolderID = NULL,
 }
 
 #' @rdname cloudCache
+#' @importFrom utils browseURL
 #' @inheritParams Cache
 #' @export
 #'
@@ -426,7 +429,7 @@ cloudFolderFromCacheRepo <- function(cacheRepo) {
 
 cloudAddToDBFile <- function(sc, cloudFolderID, gdriveLs = NULL, drv, conn) {
 
-  connTmp <- suppressMessages(cloudConnectDB(cloudFolderID, gdriveLs, drv))
+  connTmp <- suppressMessages(cloudConnectDB(cloudFolderID, gdriveLs, drv, conn = conn))
 
   on.exit({
     suppressWarnings(dbDisconnectAll(connTmp, shutdown = TRUE))
@@ -443,18 +446,17 @@ cloudRmFromDBFile <- function(objsDT, cloudFolderID, cacheIds, gdriveLs,
                               format = getOption("reproducible.cacheSaveFormat", "rds"),
                               drv, conn) {
   dbFile <- cloudDBFile(cloudFolderID, gdriveLs, drv, conn)
-  connTmp <- suppressMessages(cloudConnectDB(cloudFolderID, gdriveLs, drv))
+  connTmp <- suppressMessages(cloudConnectDB(cloudFolderID, gdriveLs, drv, conn = conn))
   dbTabNam <- if (useSQL(connTmp)) DBI::dbListTables(connTmp) else NULL
   cp <- cacheRepoFromConn(connTmp)
-  if (exists("aaa")) browser() # cacheID can it be CacheDT
-  rmFromCache(cacheRepo = cp, conn = connTmp, drv = drv, CacheDT = cacheIds,
+  rmFromCache(cacheRepo = cp, conn = connTmp, drv = drv, cacheIds = cacheIds,
               dbTabNam = dbTabNam, format = format)
   cloudDisconnectDB(connTmp, drv, dbFile, cloudFolderID)
 
 }
 
 
-cloudConnectDB <- function(cloudFolderID, gdriveLs, drv, dbFile = NULL) {
+cloudConnectDB <- function(cloudFolderID, gdriveLs, drv, conn, dbFile = NULL) {
 
   if (is.null(dbFile))
     dbFile <- cloudDBFile(cloudFolderID, gdriveLs, drv, conn)
@@ -536,7 +538,7 @@ cloudShowCache <- function(cloudFolderID = getOption("reproducible.cloudFolderID
     # Note :: adding pattern = basename(drv = drv) was actually slower
     suppressMessages(gdriveLs <- googledrive::drive_ls(cloudFolderID))
   }
-  connTmp <- suppressMessages(cloudConnectDB(cloudFolderID, gdriveLs, drv))
+  connTmp <- suppressMessages(cloudConnectDB(cloudFolderID, gdriveLs, drv, conn = conn))
   dbFilename <- dbFileFromConn(connTmp)
   cp <- dirname(dbFilename)
   on.exit({
@@ -563,8 +565,8 @@ cloudUploadOrUpdateDBFile <- function(cloudFolderID, dbFile, localDB) {
 }
 
 
-cacheDFToTmpDB <- function(drv, df, cloudFolderID, gdriveLs) {
-  connTmp <- cloudConnectDB(cloudFolderID, gdriveLs, drv, dbFile = numeric())
+cacheDFToTmpDB <- function(df, cloudFolderID, gdriveLs, drv, conn) {
+  connTmp <- cloudConnectDB(cloudFolderID, gdriveLs, drv, dbFile = numeric(), conn = conn)
   on.exit({
     dbDisconnectAll(connTmp, shutdown = TRUE)
   }

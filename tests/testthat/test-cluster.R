@@ -22,15 +22,17 @@ test_that("test parallel collisions", {
 
   # make function that will write to cache repository from with clusters
   fun <- function(x, cacheRepo) {
-    options(reproducible.verbose = 3)
-    out <- try(Cache(rnorm, 10, sd = x, cacheRepo = cacheRepo, verbose = 3))
-    if (is(out, "try-error")) {
-      cat(capture.output(warnings()), sep = "\n", file = tmpfile[3])
-      cat(out, file = tmpfile[3], append = TRUE, sep = "\n")
-    } else {
-      cat(x, file = tmpfile[3], append = TRUE, sep = "\n")
-    }
-    out
+    # options(reproducible.verbose = 3)
+    #out <- try(
+      Cache(rnorm, 10, sd = x, cacheRepo = cacheRepo)#, verbose = 3)
+#      )
+    # if (is(out, "try-error")) {
+    #   cat(capture.output(warnings()), sep = "\n", file = tmpfile[3])
+    #   cat(out, file = tmpfile[3], append = TRUE, sep = "\n")
+    # } else {
+    #   cat(x, file = tmpfile[3], append = TRUE, sep = "\n")
+    # }
+    # out
 
   }
   # Run something that will write many times
@@ -45,24 +47,18 @@ test_that("test parallel collisions", {
   on.exit(try(stopCluster(cl), silent = TRUE), add = TRUE)
 
   clusterSetRNGStream(cl)
-  numToRun <- 4000
+  numToRun <- if (interactive()) 4000 else 40
 
   # There is a 'creating Cache at the same time' problem -- haven't resolved
   #  Just make cache first and it seems fine
   Cache(rnorm, 1, cacheRepo = tmpdir)
   parallel::clusterExport(cl, varlist = c("workingDir", "tmpfile"), envir = environment())
-  outs <- parallel::clusterEvalQ(cl, {options("reproducible.drv" = 'fst');
-    pkgload::load_all(workingDir)})
-  # parallel::clusterEvalQ(cl, library(reproducible))
+  outs <- parallel::clusterEvalQ(cl, {#options("reproducible.drv" = 'csv');
+    library(reproducible)})
 
+  a <- clusterMap(cl = cl, fun, seq(numToRun), cacheRepo = tmpdir, .scheduling = "dynamic")
+  expect_true(is.list(a))
+  expect_true(length(a) == numToRun)
+  expect_true(all(sapply(a, function(aa) attr(aa, ".Cache")$newCache == TRUE)))
 
-  eval(parse(text = paste0("file.edit('",tmpfile[3], "')")))
-  a <- #try(
-    clusterMap(cl = cl, fun, seq(numToRun), cacheRepo = tmpdir, .scheduling = "dynamic")#,
-  #silent = FALSE)
-  if (!is(a, "try-error")) {
-    expect_true(is.list(a))
-    expect_true(length(a) == numToRun)
-    expect_true(all(sapply(a, function(aa) attr(aa, ".Cache")$newCache == TRUE)))
-  }
 })

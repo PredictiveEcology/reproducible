@@ -395,7 +395,6 @@ test_that("test keepCache(useCloud=TRUE, ...)", {
   out10 <- Cache(rnorm, 7, useCloud = TRUE, cloudFolderID = cfid, cacheRepo = tmpdir)
   sc4 <- cloudShowCache(cfid)
   scLoc <- showCache(tmpdir)
-  # expect_true(identical(sc4[,-"createdDate"], scLoc[,-"createdDate"]))
   expect_true(all.equal(sc4[, -"createdDate"],
                         scLoc[, -"createdDate"]))
 

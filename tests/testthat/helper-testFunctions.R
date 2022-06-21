@@ -459,7 +459,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   })
   expect_true(attr(r5End, ".Cache")$newCache == FALSE) # new to local cache
   driveLsAfter <- googledrive::drive_ls(cloudFolderID)
-  expect_true(identical(driveLsAfter, driveLsBefore))
+  expect_true(all.equal(driveLsAfter[,1:2], driveLsBefore[,1:2]))
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
   driveLsEnd <- googledrive::drive_ls(cloudFolderID)
   expect_true(NROW(driveLsEnd) == 1) # the cache database only

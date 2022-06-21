@@ -812,7 +812,7 @@ Cache <-
                           drv = drv, conn = conn)
           if (useCloud) {
             # Here, upload local copy to cloud folder
-            cloudDribble <- try(cloudUpload(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
+            cloudDribble <- try(cloudUpload(isInCloud, cacheId = outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
                                                      output, gdriveLs = gdriveLs, drv = drv, conn = conn))
 
           }
@@ -840,7 +840,7 @@ Cache <-
       if (useCloud) {
         # browser(expr = exists("._Cache_9"))
         # Here, download cloud copy to local folder, skip the running of FUN
-        output <- cloudDownload(outputHash, gdriveLs, cacheRepo, cloudFolderID,
+        output <- cloudDownload(cacheId = outputHash, gdriveLs, cacheRepo, cloudFolderID,
                                 drv = drv, conn = conn)
         output <- do.call(.prepareOutput, args = append(list(output, cacheRepo), modifiedDots))
 
@@ -930,7 +930,7 @@ Cache <-
       }
       # Can make new methods by class to add tags to outputs
       if (.CacheIsNew) {
-        outputToSave <- dealWithClass(output, cacheRepo, sideEffect = sideEffect, hash = outputHash,
+        outputToSave <- dealWithClass(output, cacheRepo, sideEffect = sideEffect, cacheId = outputHash,
                                       drv = drv, conn = conn)
         outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
       } else {
@@ -1069,7 +1069,7 @@ Cache <-
           browser()
           conn <- checkFutures(cacheRepo, drv, conn)
         }
-        cloudDribble <- try(cloudUpload(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
+        cloudDribble <- try(cloudUpload(isInCloud, cacheId = outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
                                          outputToSave, gdriveLs = gdriveLs, drv = drv, conn = conn))
 
       }
@@ -1965,7 +1965,7 @@ evalArgsOnly <- function(parsed, env, topLevelEnv = environment()) {
   if (is.call(parsed) && !isPkgColonFn) {
     if (identical(quote, eval(parsed[[1]], envir = env)))
       parsed <- parsed[[2]]
-    p1 <- eval(parsed[[1]], env = env)
+    p1 <- eval(parsed[[1]], envir = env)
     if (!is.primitive(p1)) {
       parsed <- match.call(p1, parsed)
       if (identical(format(parsed[[1]]), "do.call")) {

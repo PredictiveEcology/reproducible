@@ -1139,12 +1139,12 @@ nextNumericName <- function(string) {
 }
 
 #' @importFrom raster fromDisk
-dealWithClass <- function(obj, cachePath, sideEffect, hash, drv, conn) {
+dealWithClass <- function(obj, cachePath, sideEffect, cacheId, drv, conn) {
   # browser(expr = exists("._dealWithClass_1"))
   outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
 
   if (outputToSaveIsList) {
-    obj <- lapply(obj, dealWithClass, cachePath = cachePath, hash = hash, drv = drv, conn = conn)
+    obj <- lapply(obj, dealWithClass, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
     innerTags <- lapply(obj, function(o) attr(o, "tags"))
     innerTags <- unique(unlist(innerTags))
     setattr(obj, "tags", innerTags)
@@ -1157,7 +1157,7 @@ dealWithClass <- function(obj, cachePath, sideEffect, hash, drv, conn) {
     objOrig <- obj
     atts <- attributes(obj)
     obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,
-                                    overwrite = FALSE, hash = hash,
+                                    overwrite = FALSE, cacheId = cacheId,
                                     drv = drv, conn = conn)
     isFromDisk <- fromDisk(obj)
 
@@ -1400,6 +1400,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' @importFrom methods is selectMethod slot slot<-
 #' @importFrom raster dataType filename hasValues inMemory nlayers writeRaster
 #' @inheritParams Cache
+#' @inheritParams
 #' @rdname prepareFileBackedRaster
 #' @examples
 #' library(raster)
@@ -1417,13 +1418,13 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' r # now in CacheStorageRasterDir(tempdir()) subfolder of tempdir()
 #'
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
-                                     hash = NULL,
+                                     cacheId = NULL,
                                      drv = getOption("reproducible.drv"),
                                      conn = getOption("reproducible.conn", NULL),
                                      ...) {
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
     return(.prepareFileBackedRaster2(obj, repoDir = repoDir, overwrite = overwrite,
-                                     hash = hash, drv = drv, conn = conn, ...))
+                                     cacheId = cacheId, drv = drv, conn = conn, ...))
   }
   fnsAll <- Filenames(obj)
   fnsShort <- Filenames(obj, FALSE)
@@ -1474,9 +1475,9 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 
 
     saveFilename[FB] <- if (isRepo) {
-      CacheStoredRasterFile(repoDir, hash = hash, bnFB)
+      CacheStoredRasterFile(repoDir, cacheId = cacheId, bnFB)
     } else {
-      CacheStoredRasterFile(repoDir, hash = NULL, bnFB)
+      CacheStoredRasterFile(repoDir, cacheId = NULL, bnFB)
     }
     dirForNewFiles <- unique(dirname(saveFilename[FB]))
     checkPath(dirForNewFiles, create = TRUE)
