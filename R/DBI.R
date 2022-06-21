@@ -514,6 +514,11 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   pat <- paste0(basename2(CacheDBFile(drv = drv)),"|", basename2(unique(CacheStorageDirs(cachePath))))
   connFilePresentNotNeeded <- grep(dir(cachePath), pattern = pat, invert = TRUE, value = TRUE)
 
+  if (length(connFilePresentNotNeeded) > 0) {
+    relevantFiles <- connFilePresentNotNeeded %in% dbKnownFiles
+    connFilePresentNotNeeded <- connFilePresentNotNeeded[relevantFiles]
+  }
+
   if (all(!filesNeededArePresent) && length(connFilePresentNotNeeded) == 0)
     return(ret)
 
@@ -1103,3 +1108,4 @@ writeFilebasedConnFile <- function(file, dt) {
 dbFileSQLite <- "cache.db"
 dbFilecsv <- "cache.csv"
 dbFilefst <- "cache.fst"
+dbKnownFiles <- c(dbFilecsv, dbFilefst, dbFileSQLite)
