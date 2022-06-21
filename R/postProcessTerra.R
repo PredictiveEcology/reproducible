@@ -237,7 +237,7 @@ fixErrorsTerra <- function(x) {
 }
 
 maskTo <- function(from, maskTo, touches = FALSE) {
-  if (!is.null(maskTo)) {
+  if (!is.null(maskTo) && isSpatialAny(maskTo)) {
     if (!is.naSpatial(maskTo)) {
       origFromClass <- class(from)
 
@@ -311,7 +311,7 @@ maskTo <- function(from, maskTo, touches = FALSE) {
 }
 
 projectTo <- function(from, projectTo, method) {
-  if (!is.null(projectTo)) {
+  if (!is.null(projectTo) && isSpatialAny(projectTo)) {
     origFromClass <- is(from)
     if (!is.naSpatial(projectTo)) {
       if (is(projectTo, "Raster"))
@@ -389,7 +389,7 @@ projectTo <- function(from, projectTo, method) {
 #'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
 #' @export
 cropTo <- function(from, cropTo = NULL, needBuffer = TRUE) {
-  if (!is.null(cropTo)) {
+  if (!is.null(cropTo) && isSpatialAny(cropTo)) {
     omit <- FALSE
     origFromClass <- is(from)
 
@@ -442,7 +442,7 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
   if (isStack) from <- raster::stack(from)
   if (isBrick) from <- raster::brick(from)
 
-  if (!is.null(writeTo))
+  if (!is.null(writeTo) && isSpatialAny(from))
     if (!is.na(writeTo)) {
       messagePrepInputs("    writing...")
       st <- Sys.time()
