@@ -147,7 +147,7 @@ setMethod(
 
     returnEmptyCache <- FALSE
     # browser(expr = exists("rrrr"))
-    if (!CacheIsACache(x, drv = drv, conn = conn))
+    if (!CacheIsACache(x, drv = drv, conn = conn, allowNoStorageFolder = TRUE, allowTBMismatch = TRUE))
       returnEmptyCache <- TRUE
 
     if (clearWholeCache && !returnEmptyCache) {

@@ -1354,40 +1354,49 @@ test_that("change to 'fst'", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  drv1 <- RSQLite::SQLite()
-  drv2 <- 'fst'
-  clearCache(drv = drv1, x = tmpCache)
-  clearCache(drv = drv2, x = tmpCache)
+  suppressWarnings(try(rm(list = c("ccc", "ddd", "eee", "fff"), envir = .GlobalEnv)))
+  drvs <- list(RSQLite::SQLite(), "csv", "fst")
+  for(drv2 in drvs) {
+    drv1s <- setdiff(drvs, list(drv2))
+    for (drv1 in drv1s) {
+      #drv1 <- drvs[[1]]
+      #drv2 <- drvs[[3]]
+      unlink(tmpCache, recursive = T)
+      clearCache(drv = drv1, x = tmpCache)
+      # ccc <- 1
+      clearCache(drv = drv2, x = tmpCache)
+    #  fff <- 1
 
-  out <- Cache(rnorm, 1, drv = drv1, cacheRepo = tmpCache)
-  expect_true(identical(attr(out, ".Cache")$newCache, TRUE))
-  out <- Cache(rnorm, 1, drv = drv1, cacheRepo = tmpCache)
-  expect_false(identical(attr(out, ".Cache")$newCache, TRUE))
-  expect_true(file.exists(CacheDBFile(tmpCache, drv1)))
+      out <- Cache(rnorm, 1, drv = drv1, cacheRepo = tmpCache)
+      expect_true(identical(attr(out, ".Cache")$newCache, TRUE))
+      out <- Cache(rnorm, 1, drv = drv1, cacheRepo = tmpCache)
+      expect_false(identical(attr(out, ".Cache")$newCache, TRUE))
+      expect_true(file.exists(CacheDBFile(tmpCache, drv1)))
 
-  # Now convert
-  out <- Cache(rnorm, 1, drv = drv2, cacheRepo = tmpCache)
-  expect_true(identical(attr(out, ".Cache")$newCache, FALSE))
-  expect_true(!file.exists(CacheDBFile(tmpCache, drv1)))
+      # Now convert
+      out <- Cache(rnorm, 1, drv = drv2, cacheRepo = tmpCache)
+      expect_true(identical(attr(out, ".Cache")$newCache, FALSE))
+      expect_true(!file.exists(CacheDBFile(tmpCache, drv1)))
 
-  # Now convert back
-  out <- Cache(rnorm, 1, drv = drv1, cacheRepo = tmpCache)
-  expect_true(identical(attr(out, ".Cache")$newCache, FALSE))
-  expect_true(!file.exists(CacheDBFile(tmpCache, drv2)))
+      # Now convert back
+      out <- Cache(rnorm, 1, drv = drv1, cacheRepo = tmpCache)
+      expect_true(identical(attr(out, ".Cache")$newCache, FALSE))
+      expect_true(!file.exists(CacheDBFile(tmpCache, drv2)))
 
-  # Now convert to orig
-  out <- Cache(rnorm, 1, drv = drv2, cacheRepo = tmpCache)
-  expect_true(identical(attr(out, ".Cache")$newCache, FALSE))
-  expect_true(!file.exists(CacheDBFile(tmpCache, drv1)))
+      # Now convert to orig
+      out <- Cache(rnorm, 1, drv = drv2, cacheRepo = tmpCache)
+      expect_true(identical(attr(out, ".Cache")$newCache, FALSE))
+      expect_true(!file.exists(CacheDBFile(tmpCache, drv1)))
 
-  sc2 <- showCache(drv = drv2, tmpCache)
-  expect_true(file.exists(CacheDBFile(tmpCache, drv = drv2)))
-  expect_false(file.exists(CacheDBFile(tmpCache, drv = drv1)))
-  sc1 <- showCache(drv = drv1, tmpCache)
-  expect_true(identical(sc2, sc1)) # because it switches backend seamlessly
-  expect_true(file.exists(CacheDBFile(tmpCache, drv = drv1)))
-  expect_false(file.exists(CacheDBFile(tmpCache, drv = drv2)))
-
+      sc2 <- showCache(drv = drv2, tmpCache)
+      expect_true(file.exists(CacheDBFile(tmpCache, drv = drv2)))
+      expect_false(file.exists(CacheDBFile(tmpCache, drv = drv1)))
+      sc1 <- showCache(drv = drv1, tmpCache)
+      expect_true(identical(sc2, sc1)) # because it switches backend seamlessly
+      expect_true(file.exists(CacheDBFile(tmpCache, drv = drv1)))
+      expect_false(file.exists(CacheDBFile(tmpCache, drv = drv2)))
+    }
+  }
 })
 
 test_that("testing parallel", {

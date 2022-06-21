@@ -345,12 +345,12 @@ CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
 
   if (exists("aaa")) browser()
   outFile <- if (grepl(type, "SQLite")) {
-    file.path(cachePath, "cache.db")
+    file.path(cachePath, dbFileSQLite)
   } else if (grepl(type, "character")) {
     if (identical(drv, "fst")) {
-      file.path(cachePath, "cache.fst")
+      file.path(cachePath, dbFilefst)
     } else if (identical(drv, "csv")) {
-      file.path(cachePath, "cache.csv")
+      file.path(cachePath, dbFilecsv)
     } else {
       stop(errMessWrongDrv)
     }
@@ -484,12 +484,14 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
                           allowNoStorageFolder = FALSE, allowTBMismatch = FALSE,
                           drv = getOption("reproducible.drv"),
                           conn = getOption("reproducible.conn", NULL)) {
+  if (exists("ccc")) browser()
   checkPath(cachePath, create = TRUE)
   ret <- FALSE
   connIsNull <- is.null(conn)
   if (connIsNull) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
     on.exit({
+      if (exists("ddd")) browser()
       dbDisconnectAll(conn, shutdown = TRUE)
       }, add = TRUE)
   }
@@ -508,7 +510,15 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   } else {
     FALSE
   }
-  if (switchedDBTable) {
+
+  pat <- paste0(basename2(CacheDBFile(drv = drv)),"|", basename2(unique(CacheStorageDirs(cachePath))))
+  connFilePresentNotNeeded <- grep(dir(cachePath), pattern = pat, invert = TRUE, value = TRUE)
+
+  if (all(!filesNeededArePresent) && length(connFilePresentNotNeeded) == 0)
+    return(ret)
+
+  needWriteToConn <- FALSE #  If a db gets change, need to get it to disk, not just RAM
+  if (switchedDBTable && identical(connFilePresentNotNeeded, dbFileSQLite)) {
     # means a switched backend -- folder of storage files exist, but no db frontend
     if (identical(drv, "fst") || identical(drv, "csv") ) {
       if (!requireNamespace("RSQLite")) {
@@ -528,38 +538,44 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
         }
       }
       , add = TRUE)
-      writeFilebasedConn(cachePath = cachePath, conn = conn, dt = sc, drv = drv)
+      needWriteToConn <- TRUE
     }
     filesNeededArePresent[1] <- file.exists(dbFile)
   }
 
   ret <- all(filesNeededArePresent)
+  wrongDBFile <- !filesNeededArePresent[1]
 
-  if (ret && useSQL(conn)  && !allowTBMismatch) {
+  useSQLConn <- useSQL(conn)
+  if (ret && useSQLConn && !allowTBMismatch || (wrongDBFile && !useSQLConn)) {
     retOrig <- ret
     for (i in 1:2) {
       # This length-2 loop is for cases where the backend db changes;
       # if it is intact, will break and only do 1
-      tablesInDB <- retry(retries = 250, exponentialDecayBase = 1.01,
-                          quote(DBI::dbListTables(conn)))
-      tableShouldBe <- CacheDBTableName(cachePath)
-      if (length(tablesInDB) == 1) {
-        if (!any(tablesInDB %in% tableShouldBe) && grepl(type, "SQLite")) {
-          warning(paste0("The table in the Cache repo does not match the cacheRepo. ",
-                         "If this is because of a moved repository (i.e., files ",
-                         "copied), then it is being updated automatically. ",
-                         "If not, cache is in an error state. ",
-                         "You may need to delete the Cache"))
-          movedCache(cachePath, #old = tablesInDB,
-                     drv = drv, conn = conn)
-        }
+      if (useSQLConn) {
+        tablesInDB <- retry(retries = 250, exponentialDecayBase = 1.01,
+                            quote(DBI::dbListTables(conn)))
+        tableShouldBe <- CacheDBTableName(cachePath)
+        if (length(tablesInDB) == 1) {
+          if (!any(tablesInDB %in% tableShouldBe) && grepl(type, "SQLite")) {
+            warning(paste0("The table in the Cache repo does not match the cacheRepo. ",
+                           "If this is because of a moved repository (i.e., files ",
+                           "copied), then it is being updated automatically. ",
+                           "If not, cache is in an error state. ",
+                           "You may need to delete the Cache"))
+            movedCache(cachePath, #old = tablesInDB,
+                       drv = drv, conn = conn)
+          }
 
+        }
+        ret <- retOrig && any(grepl(tableShouldBe, tablesInDB))
       }
-      ret <- retOrig && any(grepl(tableShouldBe, tablesInDB))
       if (isFALSE(ret)) {
-        # the files all existed, but there is no db Table; likely from a conversion from csv to SQLite
+        # the files all existed, but there is no db Table; likely from a conversion from a file-based to SQLite
         createEmptyTable(conn, cachePath, drv)
-        drvOther <- "csv"
+        drvOther <- fileExt(connFilePresentNotNeeded)
+        if (exists("ddd")) browser()
+        if (identical(drvOther, "db")) drvOther <- RSQLite::SQLite()
         tmpConn <- dbConnectAll(drv = drvOther, cachePath = cachePath)
         on.exit({
           dbDisconnectAll(tmpConn, shutdown = TRUE)
@@ -567,12 +583,14 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
         , add = TRUE)
         sc <- suppressMessages(showCache(x = cachePath, drv = drvOther, conn = tmpConn))
         appendAll(conn, cachePath, drv, sc)
+        needWriteToConn <- !useSQLConn
         fileOther <- CacheDBFile(cachePath, drv = drvOther, conn = tmpConn)
         on.exit({
           if (file.exists(fileOther))
             file.remove(fileOther)
         }
         , add = TRUE)
+        ret <- TRUE
 
       } else {
         break
@@ -581,6 +599,8 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 
   }
 
+  if (isTRUE(needWriteToConn))
+    writeFilebasedConn(cachePath = cachePath, conn = conn, dt = sc, drv = drv)
   if (isFALSE(ret) && isTRUE(create)) {
     if (grepl(type, "Pq")) {
       file.create(CacheDBFile(cachePath, drv = drv, conn = conn))
@@ -752,7 +772,8 @@ readFilebasedConn <- function(objName, conn, columns = NULL, from = 1, to = NULL
       messageCache(Sys.getpid(), " readFilebasedConn -- pre file.copy", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
       file.copy(conn, tf, overwrite = FALSE)
       messageCache(Sys.getpid(), " readFilebasedConn -- pre read_fst", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
-      fsTab <- setDF(data.table::fread(tf, colClasses = rep("character", 4)))
+      fsTab <- readFilebasedConnFile(tf)
+      # fsTab <- setDF(data.table::fread(tf, colClasses = rep("character", 4)))
       messageCache(Sys.getpid(), " readFilebasedConn -- post read_fst", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
 
       if (is(fsTab, "try-error"))
@@ -911,6 +932,7 @@ writeFilebasedConn <- function(cachePath, drv, conn, dt, objName) {
     on.exit({if (file.exists(tf)) file.remove(tf)})
 
     rend <- FALSE
+    if (exists("fff")) browser()
     retry(retries = 30, exponentialDecayBase = 1.01, silent = TRUE,
           quote({
 
@@ -1054,3 +1076,30 @@ rmFromCacheMemoise <- function(cacheRepo, cacheId) {
       suppressWarnings(rm(list = cacheId, envir = .pkgEnv[[cacheRepo]]))
 
 }
+
+readFilebasedConnFile <- function(file) {
+  fe <- fileExt(file)
+  if (identical(fe, ""))
+    fe <- getOption("reproducible.drv")
+  ret <- if (identical(fe, "fst"))
+    fst::read_fst(file)
+  else if (identical(fe, "csv"))
+    data.table::fread(file, colClasses = rep("character", 4))
+  setDF(ret)
+}
+
+writeFilebasedConnFile <- function(file, dt) {
+  fe <- fileExt(file)
+  if (identical(fe, ""))
+    fe <- getOption("reproducible.drv")
+  ret <- if (identical(fe, "fst"))
+    fst::write_fst(file, x = dt)
+  else if (identical(fe, "csv"))
+    data.table::fwrite(dt, file = file)
+
+}
+
+
+dbFileSQLite <- "cache.db"
+dbFilecsv <- "cache.csv"
+dbFilefst <- "cache.fst"

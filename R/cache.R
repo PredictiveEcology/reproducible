@@ -541,10 +541,12 @@ Cache <-
 
       # browser(expr = exists("._Cache_17"))
       conns <- list()
+      if (exists("fff")) browser()
       on.exit({done <- lapply(conns, function(co) {
         if (!identical(co, conns[[1]])) {
           try(dbDisconnectAll(co, shutdown = TRUE), silent = TRUE)
         }})}, add = TRUE)
+      if (exists("fff")) browser()
       isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
         # browser(expr = exists("._Cache_18"))
         conns[[cacheRepo]] <<- if (cacheRepo == cacheRepos[[1]]) {
@@ -675,6 +677,7 @@ Cache <-
             isInRepo <- checkInRepo(conn, dbTabNam, outputHash)
           }
         } else {
+          if (exists("eee")) browser()
           isInRepo <- checkInRepo(conn, dbTabNam, outputHash)
         }
         if ("prerun" %in% isInRepo$tagKey && NROW(isInRepo) == 1)  {
