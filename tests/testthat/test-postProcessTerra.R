@@ -214,6 +214,7 @@ test_that("testing terra", {
       xVectSF <- sf::st_as_sf(xVect)
       # It is a real warning about geometry stuff, but not relevant here
       warn <- capture_warnings(t22 <- postProcessTerra(xVectSF, valbersSF))
+      expect_true(is(t22, class(xVectSF)[1]))
 
     }
 #  }

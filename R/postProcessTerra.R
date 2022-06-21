@@ -311,7 +311,7 @@ maskTo <- function(from, maskTo, touches = FALSE) {
 }
 
 projectTo <- function(from, projectTo, method) {
-  if (!is.null(projectTo) && isSpatialAny(projectTo)) {
+  if (!is.null(projectTo) && (isSpatialAny(projectTo) || is(projectTo, "crs"))) {
     origFromClass <- is(from)
     if (!is.naSpatial(projectTo)) {
       if (is(projectTo, "Raster"))
@@ -365,10 +365,14 @@ projectTo <- function(from, projectTo, method) {
         # Since we only use the crs when projectTo is a Vector, no need to "fixErrorsTerra"
         from <- if (isVector(from)) {
           isSpatial <- is(from, "Spatial")
-          if (isSpatial)
-            from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
+          if (isSpatial) {
+            from <- suppressWarningsSpecific(sf::st_as_sf(from), shldBeChar)
+          }
+          if (is(from, "sf"))
+            from <- terra::vect(from)
+
           from <- terra::project(from, projectTo)
-          if (isSpatial) from <- as(from, "Spatial")
+          # if (isSpatial) from <- as(from, "Spatial")
           from
         } else {
           terra::project(from, projectTo, method = method)
