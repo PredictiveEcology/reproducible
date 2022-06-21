@@ -1346,7 +1346,7 @@ test_that("Cache the dots; .cacheExtra", {
 
 })
 
-test_that("change to 'fst'", {
+test_that("switching between SQLite, 'fst', 'csv'", {
   if (!requireNamespace("RSQLite")) skip()
 
   testInitOut <- testInit()
@@ -1354,18 +1354,14 @@ test_that("change to 'fst'", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  suppressWarnings(try(rm(list = c("ccc", "ddd", "eee", "fff"), envir = .GlobalEnv)))
+  # suppressWarnings(try(rm(list = c("ccc", "ddd", "eee", "fff"), envir = .GlobalEnv)))
   drvs <- list(RSQLite::SQLite(), "csv", "fst")
   for(drv2 in drvs) {
     drv1s <- setdiff(drvs, list(drv2))
     for (drv1 in drv1s) {
-      #drv1 <- drvs[[1]]
-      #drv2 <- drvs[[3]]
       unlink(tmpCache, recursive = T)
       clearCache(drv = drv1, x = tmpCache)
-      # ccc <- 1
       clearCache(drv = drv2, x = tmpCache)
-    #  fff <- 1
 
       out <- Cache(rnorm, 1, drv = drv1, cacheRepo = tmpCache)
       expect_true(identical(attr(out, ".Cache")$newCache, TRUE))
