@@ -34,12 +34,15 @@ loadFromCache(
 )
 
 rmFromCache(
-  cachePath = getOption("reproducible.cachePath"),
-  cacheId,
+  cacheRepo = getOption("reproducible.cachePath"),
+  cacheIds,
+  ask = getOption("reproducible.ask"),
+  verbose = getOption("reproducible.verbose"),
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
   format = getOption("reproducible.cacheSaveFormat", "rds"),
-  dbTabNam = NULL
+  dbTabNam = NULL,
+  ...
 )
 }
 \arguments{
@@ -61,7 +64,7 @@ even if it already exists, overwriting.}
 will be added to the Cache so that this entry in the Cache can be found using
 \code{userTags} e.g., via \code{\link{showCache}}.}
 
-\item{cacheId}{The hash string representing the result of \code{.robustDigest}}
+\item{cacheId}{The hash string representing the result of \code{CacheDigest(...)[[1]]}}
 
 \item{linkToCacheId}{Optional. If a \code{cacheId} is provided here, then a \code{file.link}
 will be made to the file with that \code{cacheId} name in the cache repo.
@@ -71,11 +74,30 @@ This is used when identical outputs exist in the cache. This will save disk spac
 different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
 to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 
-\item{sideEffect}{Character string identifying a folder name where file-backed R objects,
-such as \code{Raster} or \code{Rast} will be written to. See Details.
+\item{sideEffect}{Character string identifying either: 1) the argument
+(e.g., \code{"destionationPath"}
+that describes either a filename where the function will write some side effect to,
+or a folder name where 1 or more files will be written to; or 2) a folder
+name where file-backed R objects that have a method for \code{Filenames} will
+be placed (and their file-backed info will be updated accordingly). See Details.
 If \code{FUN} has an argument `destinationPath`, then `Cache` will attempt to
-use it, i.e., \code{sideEffect <- destinationPath}.
-\emph{NOTE: this argument is experimental and may change in future releases.}}
+use it, i.e., \code{sideEffect = "destinationPath"} will be set.
+\emph{NOTE: this argument has changed as of V 1.2.9.9011 and may change in
+future releases.}}
+
+\item{cacheRepo}{A repository used for storing cached objects.
+This is optional if \code{Cache} is used inside a SpaDES module.}
+
+\item{cacheIds}{Either a character string with the cacheId of item to remove from
+Cache repository, or a data.table coming from `showCache` with the items to remove.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{...}{Arguments passed to \code{FUN} if FUN is provided as simply a function.}
 }
 \description{
 Create a new cache

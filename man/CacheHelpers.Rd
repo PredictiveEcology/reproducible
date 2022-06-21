@@ -3,7 +3,13 @@
 \name{CacheDBFile}
 \alias{CacheDBFile}
 \alias{CacheStorageDir}
+\alias{CacheStorageRasterDir}
+\alias{CacheStorageSideEffectsDir}
+\alias{CacheStorageDirs}
 \alias{CacheStoredFile}
+\alias{CacheStoredRasterFile}
+\alias{CacheStoredSideEffectFile}
+\alias{CacheStoredFilesList}
 \alias{CacheDBTableName}
 \alias{CacheIsACache}
 \title{A collection of low level tools for Cache}
@@ -14,12 +20,44 @@ CacheDBFile(
   conn = getOption("reproducible.conn", NULL)
 )
 
-CacheStorageDir(cachePath = getOption("reproducible.cachePath"))
+CacheStorageDir(
+  cachePath = getOption("reproducible.cachePath"),
+  sub = getOption("reproducible.cacheStorageFolder", "cacheOutputs")
+)
+
+CacheStorageRasterDir(
+  cachePath = getOption("reproducible.cachePath"),
+  sub = getOption("reproducible.cacheRasterFolder", "cacheOutputs")
+)
+
+CacheStorageSideEffectsDir(
+  cachePath = getOption("reproducible.cachePath"),
+  sub = getOption("reproducible.cacheSideEffectsFolder", "cacheOutputs")
+)
+
+CacheStorageDirs(cachePath = getOption("reproducible.cachePath"))
 
 CacheStoredFile(
   cachePath = getOption("reproducible.cachePath"),
-  hash,
+  cacheId,
   format = getOption("reproducible.cacheSaveFormat", "rds")
+)
+
+CacheStoredRasterFile(
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
+  filename
+)
+
+CacheStoredSideEffectFile(
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
+  filename
+)
+
+CacheStoredFilesList(
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL
 )
 
 CacheDBTableName(
@@ -40,8 +78,9 @@ CacheIsACache(
 \item{cachePath}{A path describing the directory in which to create
 the database file(s)}
 
-\item{drv}{Either \code{"fst"} (the character string) the default as of reproducible V 1.2.9,
-or an object that inherits from \code{DBIDriver}, or an existing \code{DBIConnection} object
+\item{drv}{Either \code{"csv"} ( the default as of reproducible V 1.2.9) or
+\code{"fst"} (as character strings), or an object that inherits from
+\code{DBIDriver}, or an existing \code{DBIConnection} object
 (in order to clone an existing connection). For these last two, user requires \code{DBI}
 and a DB backend such as \code{RSQLite} to be installed.}
 
@@ -49,11 +88,16 @@ and a DB backend such as \code{RSQLite} to be installed.}
 cacheRepo file, or optionally (requires \code{DBI} and a DB backend such as \code{RSQLite})
 a DBIConnection object, as returned by \code{dbConnect()}}
 
-\item{hash}{The cacheId or otherwise digested hash value, as character string.}
+\item{sub}{A character string indicating the sub-folder to use within the Cache Repository
+to store the binary files.}
+
+\item{cacheId}{The cacheId or otherwise digested hash value, as character string.}
 
 \item{format}{The text string representing the file extension used normally by
 different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
 to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
+
+\item{filename}{The text string representing the file filename (absolute or basename)}
 
 \item{create}{Logical. Currently only affects non RQSLite default drivers. If this
 is \code{TRUE} and there is no Cache database, the function will create one.}

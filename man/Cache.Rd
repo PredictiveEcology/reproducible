@@ -21,7 +21,6 @@ Cache(
   classOptions = list(),
   debugCache = character(),
   sideEffect = FALSE,
-  makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", 1),
   cacheId = NULL,
@@ -96,18 +95,16 @@ the object \code{attr(mySimOut, "debugCache1")} can be compared.
 If \code{"quick"}, then it will return the same two objects directly,
 without evalutating the \code{FUN(...)}.}
 
-\item{sideEffect}{Character string identifying a folder name where file-backed R objects,
-such as \code{Raster} or \code{Rast} will be written to. See Details.
+\item{sideEffect}{Character string identifying either: 1) the argument
+(e.g., \code{"destionationPath"}
+that describes either a filename where the function will write some side effect to,
+or a folder name where 1 or more files will be written to; or 2) a folder
+name where file-backed R objects that have a method for \code{Filenames} will
+be placed (and their file-backed info will be updated accordingly). See Details.
 If \code{FUN} has an argument `destinationPath`, then `Cache` will attempt to
-use it, i.e., \code{sideEffect <- destinationPath}.
-\emph{NOTE: this argument is experimental and may change in future releases.}}
-
-\item{makeCopy}{Logical. If \code{sideEffect = TRUE}, and \code{makeCopy = TRUE},
-a copy of the downloaded files will be made and stored in the \code{cacheRepo}
-to speed up subsequent file recovery in the case where the original copy
-of the downloaded files are corrupted or missing. Currently only works when
-set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.
-\emph{NOTE: this argument is experimental and may change in future releases.}}
+use it, i.e., \code{sideEffect = "destinationPath"} will be set.
+\emph{NOTE: this argument has changed as of V 1.2.9.9011 and may change in
+future releases.}}
 
 \item{quick}{Logical or character. If \code{TRUE},
 no disk-based information will be assessed, i.e., only
@@ -146,8 +143,9 @@ the next most similar archive, and indicate which argument(s) is/are different.
 If a number larger than \code{1}, then it will report the N most similar archived
 objects.}
 
-\item{drv}{Either \code{"fst"} (the character string) the default as of reproducible V 1.2.9,
-or an object that inherits from \code{DBIDriver}, or an existing \code{DBIConnection} object
+\item{drv}{Either \code{"csv"} ( the default as of reproducible V 1.2.9) or
+\code{"fst"} (as character strings), or an object that inherits from
+\code{DBIDriver}, or an existing \code{DBIConnection} object
 (in order to clone an existing connection). For these last two, user requires \code{DBI}
 and a DB backend such as \code{RSQLite} to be installed.}
 
@@ -402,10 +400,7 @@ effect files were modified.
 If \code{sideEffect} is logical, then the function will check the \code{cacheRepo};
 if it is a path, then it will check the path.
 The function will assess whether the files to be downloaded are found locally prior to download.
-If it fails the local test, then it will try to recover from a local copy if (\code{makeCopy}
-had been set to \code{TRUE} the first time the function was run.
-Currently, local recovery will only work if\code{makeCOpy} was set to \code{TRUE} the first time
-\code{Cache} was run). Default is \code{FALSE}.
+Default is \code{FALSE}.
 }
 
 \examples{
@@ -448,8 +443,8 @@ ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = "th
 a <- rnorm(22) |> Cache()
 b <- Cache(rnorm(22))
 d <- Cache(rnorm, 22)
-all.equal(a, b, check.attributes = F) # these random calls are same
-all.equal(a, d, check.attributes = F) # these random calls are same
+all.equal(a, b, check.attributes = FALSE) # these random calls are same
+all.equal(a, d, check.attributes = FALSE) # these random calls are same
 attr(a, ".Cache") # new item
 attr(b, ".Cache") # not new --> recovered
 attr(d, ".Cache") # not new --> recovered
@@ -458,13 +453,13 @@ attr(d, ".Cache") # not new --> recovered
 #    randomness is captured, even if it is called first in the chain
 a <- rnorm(42) |> mean() |> Cache()
 b <- Cache(mean(rnorm(42)))
-all.equal(a, b, check.attributes = F) # these random calls are same
+all.equal(a, b, check.attributes = FALSE) # these random calls are same
 
 # longer works, even with _ placeholder (only available from R v 4.2.0) and multiple randomness
-if (compareVersion(format(getRversion()), "4.2.0")) {
+if (compareVersion(format(getRversion()), "4.2.0") >= 0) {
   a <- rnorm(42, sd = 20) |> sd() |> rnorm(1, mean = _) |> Cache()
   b <- Cache(rnorm(1, sd(rnorm(42, sd = 20))))
-  all.equal(a, b, check.attributes = F) # these random calls are same
+  all.equal(a, b, check.attributes = FALSE) # these random calls are same
 }
 
 options(opt)

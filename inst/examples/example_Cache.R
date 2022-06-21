@@ -37,8 +37,8 @@ ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = "th
 a <- rnorm(22) |> Cache()
 b <- Cache(rnorm(22))
 d <- Cache(rnorm, 22)
-all.equal(a, b, check.attributes = F) # these random calls are same
-all.equal(a, d, check.attributes = F) # these random calls are same
+all.equal(a, b, check.attributes = FALSE) # these random calls are same
+all.equal(a, d, check.attributes = FALSE) # these random calls are same
 attr(a, ".Cache") # new item
 attr(b, ".Cache") # not new --> recovered
 attr(d, ".Cache") # not new --> recovered
@@ -47,13 +47,13 @@ attr(d, ".Cache") # not new --> recovered
 #    randomness is captured, even if it is called first in the chain
 a <- rnorm(42) |> mean() |> Cache()
 b <- Cache(mean(rnorm(42)))
-all.equal(a, b, check.attributes = F) # these random calls are same
+all.equal(a, b, check.attributes = FALSE) # these random calls are same
 
 # longer works, even with _ placeholder (only available from R v 4.2.0) and multiple randomness
 if (compareVersion(format(getRversion()), "4.2.0") >= 0) {
   a <- rnorm(42, sd = 20) |> sd() |> rnorm(1, mean = _) |> Cache()
   b <- Cache(rnorm(1, sd(rnorm(42, sd = 20))))
-  all.equal(a, b, check.attributes = F) # these random calls are same
+  all.equal(a, b, check.attributes = FALSE) # these random calls are same
 }
 
 options(opt)

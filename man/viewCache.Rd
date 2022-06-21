@@ -20,15 +20,16 @@ clearCache(
   cloudFolderID = NULL,
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 
 \S4method{clearCache}{ANY}(
   x,
-  userTags,
+  userTags = character(),
   after = NULL,
   before = NULL,
-  ask,
+  ask = getOption("reproducible.ask"),
   useCloud = FALSE,
   cloudFolderID = NULL,
   drv = getOption("reproducible.drv"),
@@ -126,8 +127,9 @@ This \code{cloudFolderID} will be added to \code{options("reproducible.cloudFold
 but this will not persist across sessions. If this is a character string, it will
 treat this as a folder name to create or use on GoogleDrive.}
 
-\item{drv}{Either \code{"fst"} (the character string) the default as of reproducible V 1.2.9,
-or an object that inherits from \code{DBIDriver}, or an existing \code{DBIConnection} object
+\item{drv}{Either \code{"csv"} ( the default as of reproducible V 1.2.9) or
+\code{"fst"} (as character strings), or an object that inherits from
+\code{DBIDriver}, or an existing \code{DBIConnection} object
 (in order to clone an existing connection). For these last two, user requires \code{DBI}
 and a DB backend such as \code{RSQLite} to be installed.}
 
@@ -135,18 +137,18 @@ and a DB backend such as \code{RSQLite} to be installed.}
 cacheRepo file, or optionally (requires \code{DBI} and a DB backend such as \code{RSQLite})
 a DBIConnection object, as returned by \code{dbConnect()}}
 
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+
 \item{...}{Other arguments. Currently, \code{regexp}, a logical, can be provided.
 This must be \code{TRUE} if the use is passing a regular expression.
 Otherwise, \code{userTags} will need to be exact matches. Default is
 missing, which is the same as \code{TRUE}. If there are errors due
 to regular expression problem, try \code{FALSE}. For \code{cc}, it is
 passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}}
-
-\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
-1 showing more messaging, 2 being more messaging, etc.
-Default is 1. Above 3 will output much more information about the internals of
-Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{secs}{Currently 3 options: the number of seconds to pass to \code{clearCache(after = secs)},
 a \code{POSIXct} time e.g., from \code{Sys.time()}, or missing. If missing,

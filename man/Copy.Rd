@@ -43,8 +43,9 @@ copied and could therefore cause a collision as the
 pre-copied object and post-copied object would have the same
 file backing them.}
 
-\item{drv}{Either \code{"fst"} (the character string) the default as of reproducible V 1.2.9,
-or an object that inherits from \code{DBIDriver}, or an existing \code{DBIConnection} object
+\item{drv}{Either \code{"csv"} ( the default as of reproducible V 1.2.9) or
+\code{"fst"} (as character strings), or an object that inherits from
+\code{DBIDriver}, or an existing \code{DBIConnection} object
 (in order to clone an existing connection). For these last two, user requires \code{DBI}
 and a DB backend such as \code{RSQLite} to be installed.}
 

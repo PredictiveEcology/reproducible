@@ -67,6 +67,7 @@ Suggests:
     fastdigest,
     fasterize,
     future,
+    future.callr,
     glue,
     googledrive,
     httr,

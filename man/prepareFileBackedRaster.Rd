@@ -8,6 +8,7 @@
   obj,
   repoDir = NULL,
   overwrite = FALSE,
+  cacheId = NULL,
   drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -20,8 +21,17 @@
 
 \item{overwrite}{Logical. Should the raster be saved to disk, overwriting existing file.}
 
-\item{drv}{Either \code{"fst"} (the character string) the default as of reproducible V 1.2.9,
-or an object that inherits from \code{DBIDriver}, or an existing \code{DBIConnection} object
+\item{cacheId}{Character string. If passed, this will override the calculated hash
+of the inputs, and return the result from this cacheId in the cacheRepo.
+Setting this is equivalent to manually saving the output of this function, i.e.,
+the object will be on disk, and will be recovered in subsequent
+This may help in some particularly finicky situations
+where Cache is not correctly detecting unchanged inputs. This will guarantee
+the object will be identical each time; this may be useful in operational code.}
+
+\item{drv}{Either \code{"csv"} ( the default as of reproducible V 1.2.9) or
+\code{"fst"} (as character strings), or an object that inherits from
+\code{DBIDriver}, or an existing \code{DBIConnection} object
 (in order to clone an existing connection). For these last two, user requires \code{DBI}
 and a DB backend such as \code{RSQLite} to be installed.}
 
@@ -57,7 +67,7 @@ r <- writeRaster(r, file = tempfile())
 # copy it to the cache repository
 r <- .prepareFileBackedRaster(r, tempdir())
 
-r # now in "rasters" subfolder of tempdir()
+r # now in CacheStorageRasterDir(tempdir()) subfolder of tempdir()
 
 }
 \author{
