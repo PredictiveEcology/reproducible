@@ -225,25 +225,30 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
                            useCache = getOption("reproducible.useCache", FALSE),
                            verbose = getOption("reproducible.verbose", 1),
                            ...) {
-  .requireNamespace("sf", stopOnFALSE = TRUE)
+  if (getOption("reproducible.useTerra")) {
+    x <- postProcessTerra(from = x, studyArea = studyArea,
+                           rasterToMatch = rasterToMatch, writeTo = filename2, ...)
+  } else {
+    .requireNamespace("sf", stopOnFALSE = TRUE)
+    messagePrepInputs("postProcess with sf class objects is still experimental")
+    if (!is.null(rasterToMatch)) {
+      if (is.null(studyArea))
+        stop("sf class objects are not yet working with rasterToMatch argument")
+      messagePrepInputs("sf class objects can not be postProcessed directly from rasterToMatch yet;",
+                        "using studyArea. ")
+      rasterToMatch <- NULL
+    }
+    if (is(studyArea, "Spatial")) {
+      studyArea <- sf::st_as_sf(studyArea)
+    }
+
+    x <- postProcessAllSpatial(x = x, studyArea = studyArea,
+                               rasterToMatch = rasterToMatch, useCache = useCache,
+                               filename1 = filename1, filename2 = filename2,
+                               useSAcrs = useSAcrs, overwrite = overwrite, verbose = verbose, ...)
+  }
 
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
-  messagePrepInputs("postProcess with sf class objects is still experimental")
-  if (!is.null(rasterToMatch)) {
-    if (is.null(studyArea))
-      stop("sf class objects are not yet working with rasterToMatch argument")
-    messagePrepInputs("sf class objects can not be postProcessed directly from rasterToMatch yet;",
-                      "using studyArea. ")
-    rasterToMatch <- NULL
-  }
-  if (is(studyArea, "Spatial")) {
-    studyArea <- sf::st_as_sf(studyArea)
-  }
-
-  x <- postProcessAllSpatial(x = x, studyArea = studyArea,
-                             rasterToMatch = rasterToMatch, useCache = useCache,
-                             filename1 = filename1, filename2 = filename2,
-                             useSAcrs = useSAcrs, overwrite = overwrite, verbose = verbose, ...)
 
   return(x)
 }
