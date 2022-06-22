@@ -127,7 +127,8 @@ setMethod(
         studyArea <- sf::st_geometry(studyArea)
       }
     }
-    if (!(is(studyArea, "spatialClasses") || is(studyArea, "sfc")) || is.character(studyArea)) {
+    if (!(is(studyArea, "spatialClasses") || is(studyArea, "sfc") || is(studyArea, "SpatVector")) ||
+        is.character(studyArea)) {
       stop("studyAreaName expects a spatialClasses object (or character vector)")
     }
     digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
