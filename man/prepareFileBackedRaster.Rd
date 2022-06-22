@@ -6,7 +6,7 @@
 \usage{
 .prepareFileBackedRaster(
   obj,
-  repoDir = NULL,
+  cacheRepo = NULL,
   overwrite = FALSE,
   cacheId = NULL,
   drv = getOption("reproducible.drv"),
@@ -17,17 +17,12 @@
 \arguments{
 \item{obj}{The raster object to save to the repository.}
 
-\item{repoDir}{Character denoting an existing directory in which an artifact will be saved.}
+\item{cacheRepo}{Character denoting an existing directory in which an artifact will be saved.}
 
 \item{overwrite}{Logical. Should the raster be saved to disk, overwriting existing file.}
 
-\item{cacheId}{Character string. If passed, this will override the calculated hash
-of the inputs, and return the result from this cacheId in the cacheRepo.
-Setting this is equivalent to manually saving the output of this function, i.e.,
-the object will be on disk, and will be recovered in subsequent
-This may help in some particularly finicky situations
-where Cache is not correctly detecting unchanged inputs. This will guarantee
-the object will be identical each time; this may be useful in operational code.}
+\item{cacheId}{Character string of the hash of the object being affected. This is used when
+stashing the file-backed raster if it is in the Cache repository.}
 
 \item{drv}{Either \code{"csv"} ( the default as of reproducible V 1.2.9) or
 \code{"fst"} (as character strings), or an object that inherits from
@@ -44,8 +39,8 @@ a DBIConnection object, as returned by \code{dbConnect()}}
 \value{
 A raster object and its newly located file backing.
         Note that if this is a legitimate Cache repository, the new location
-        will be a subdirectory called \file{rasters/} of \file{repoDir/}.
-        If this is not a repository, the new location will be within \code{repoDir}.
+        will be a subdirectory called \file{rasters/} of \file{cacheRepo/}.
+        If this is not a repository, the new location will be within \code{cacheRepo}.
 }
 \description{
 Rasters are sometimes file-based, so the normal save and copy and assign

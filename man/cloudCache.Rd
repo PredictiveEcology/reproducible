@@ -9,7 +9,7 @@
 \title{Download from cloud, if necessary}
 \usage{
 cloudDownload(
-  outputHash,
+  cacheId,
   gdriveLs,
   cacheRepo,
   cloudFolderID,
@@ -41,6 +41,16 @@ cloudShowCache(
 )
 }
 \arguments{
+\item{cacheId}{Character string. If passed, this will override the calculated hash
+of the inputs, and return the result from this cacheId in the cacheRepo.
+Setting this is equivalent to manually saving the output of this function, i.e.,
+the object will be on disk, and will be recovered in subsequent
+This may help in some particularly finicky situations
+where Cache is not correctly detecting unchanged inputs. This will guarantee
+the object will be identical each time; this may be useful in operational code.}
+
+\item{gdriveLs}{An optional `googledrive::drive_ls(cloudFolderID)`}
+
 \item{cacheRepo}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
@@ -65,6 +75,12 @@ a DBIConnection object, as returned by \code{dbConnect()}}
 \item{userTags}{A character vector with descriptions of the Cache function call. These
 will be added to the Cache so that this entry in the Cache can be found using
 \code{userTags} e.g., via \code{\link{showCache}}.}
+
+\item{after}{A time (POSIX, character understandable by data.table).
+Objects cached after this time will be shown or deleted.}
+
+\item{before}{A time (POSIX, character understandable by data.table).
+Objects cached before this time will be shown or deleted.}
 }
 \description{
 Meant for internal use, as there are internal objects as arguments.

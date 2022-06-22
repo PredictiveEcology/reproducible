@@ -849,7 +849,7 @@ test_that("test cache-helpers", {
   r <- .writeRaster(r, filename = tmpfile, overwrite = TRUE)
   r1 <- .writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
   s <- addLayer(r, r1)
-  b1 <- .prepareFileBackedRaster(s, repoDir = tmpCache)
+  b1 <- .prepareFileBackedRaster(s, cacheRepo = tmpCache)
   expect_true(is(b1, "RasterStack"))
   expect_true(identical(filename(b1), ""))
 
@@ -912,7 +912,7 @@ test_that("test cache-helpers", {
   for (rr in list(r1, r2, r3, r2tif, r3tif, s1, s2, s3, s2tif, s3tif)) {
     message(i); i <- i + 1
 
-    out2 <- .prepareFileBackedRaster(rr, repoDir = tmpCache)
+    out2 <- .prepareFileBackedRaster(rr, cacheRepo = tmpCache)
     test1 <- identical(out2, rr)
     test2 <- identical(Filenames(out2), Filenames(rr))
     test3 <- identical(Filenames(out2, allowMultiple = FALSE),
@@ -929,8 +929,8 @@ test_that("test cache-helpers", {
     unlink(Filenames(out2))
   }
 
-  out2 <- .prepareFileBackedRaster(s2, repoDir = tmpCache)
-  out3 <- .prepareFileBackedRaster(s2, repoDir = tmpCache)
+  out2 <- .prepareFileBackedRaster(s2, cacheRepo = tmpCache)
+  out3 <- .prepareFileBackedRaster(s2, cacheRepo = tmpCache)
   fn2 <- Filenames(out2)
   fn3 <- Filenames(out3)
   actualFiles <- nchar(fn2) > 0
@@ -942,7 +942,7 @@ test_that("test cache-helpers", {
   expect_true(sameFileBase)
 
   unlink(Filenames(s2))
-  expect_error(out2 <- .prepareFileBackedRaster(s2, repoDir = tmpCache), "most likely")
+  expect_error(out2 <- .prepareFileBackedRaster(s2, cacheRepo = tmpCache), "most likely")
 
 })
 

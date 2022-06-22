@@ -1096,8 +1096,8 @@ Cache <-
 .namesCacheFormalsSendToBoth <- intersect("verbose", names(.formalsCache)[])
 
 #' @keywords internal
-.loadFromLocalRepoMem <- function(md5hash, repoDir, ...) {
-  out <- loadFromCache(cachePath = repoDir, cacheId = md5hash)
+.loadFromLocalRepoMem <- function(md5hash, cacheRepo, ...) {
+  out <- loadFromCache(cachePath = cacheRepo, cacheId = md5hash)
   out <- makeMemoisable(out)
   return(out)
 }

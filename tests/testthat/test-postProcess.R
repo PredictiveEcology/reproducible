@@ -1,4 +1,4 @@
-test_that("prepInputs doesn't work (part 3)", {
+test_that("postProcess doesn't work (part 1)", {
   testInitOut <- testInit(c("raster", "sf"), tmpFileExt = c(".tif", ".tif"),
                           opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
@@ -115,52 +115,58 @@ test_that("prepInputs doesn't work (part 3)", {
     expect_true(identical(1, cropInputs(1)))
     nonLatLongProj2 <- paste("+proj=lcc +lat_1=51 +lat_2=77 +lat_0=0 +lon_0=-95",
                              "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
-    nc3 <- spTransform(as(nc1, "Spatial"), CRSobj = CRS(nonLatLongProj2))
+    nc3 <- suppressWarningsSpecific(falseWarnings = "Discarded datum Unknown based",
+                                    spTransform(as(nc1, "Spatial"), CRSobj = CRS(nonLatLongProj2)))
+
     nc4 <- cropInputs(nc3, studyArea = ncSmall)
+    # nc4 <- cropTo(nc3, ncSmall)
     ncSmall2 <- spTransform(as(ncSmall, "Spatial"), CRSobj = CRS(nonLatLongProj2))
     ee <- extent(nc4)
 
     expect_true(isTRUE(similarExtents(ee, extent(ncSmall2), closeEnough = res(r)[1])))
 
-    mess <- capture_error({
-      nc4 <- cropInputs(nc3, studyArea = 1)
-    })
-    expect_true(grepl("studyArea does not have a crs", mess))
+    # pass through
+    nc4 <- cropInputs(nc3, studyArea = 1)
+    expect_true(identical(nc4, nc3))
 
     ncSmallShifted <- ncSmall + 10000000
     ncSmallShifted <- st_as_sf(ncSmallShifted)
     st_crs(ncSmallShifted) <- st_crs(ncSmall)
-    mess <- capture_error(cropInputs(as(ncSmall, "Spatial"), studyArea = ncSmallShifted))
-    expect_true(any(grepl("polygons do not intersect", mess)))
+    mess <- cropTo(ncSmall, cropTo = ncSmallShifted)
+    expect_true(NROW(mess) == 0) # didn't overlap -- used to be error
     # expect_true(any(grepl("with no data", mess)))
 
     # cropInputs.sf
     nc3 <- st_transform(nc1, crs = CRS(nonLatLongProj2))
-    nc4 <- cropInputs(nc3, studyArea = ncSmall)
+    nc4 <- cropTo(nc3, cropTo = ncSmall)
+    # nc4 <- cropInputs(nc3, studyArea = ncSmall)
     ncSmall2 <- st_transform(ncSmall, crs = CRS(nonLatLongProj2))
     expect_true(isTRUE(similarExtents(extent(nc4), extent(ncSmall2), closeEnough = res(r)[1])))
     # expect_true(isTRUE(all.equal(extent(nc4), extent(ncSmall2))))
 
     # studyArea as spatial object
-    nc5 <- cropInputs(nc3, studyArea = as(ncSmall, "Spatial"))
+    nc5 <- cropTo(nc3, cropTo = as(ncSmall, "Spatial"))
+    # nc5 <- cropInputs(nc3, studyArea = as(ncSmall, "Spatial"))
     ncSmall2 <- st_transform(ncSmall, crs = CRS(nonLatLongProj2))
     expect_true(similarExtents(extent(nc5), extent(ncSmall2), res(r)[1]))
     expect_true(isTRUE(all.equal(extent(nc5), extent(nc4))))
 
     # studyArea pass through
-    nc5 <- cropInputs(nc3, studyArea = 1)
+    nc5 <- cropTo(nc3, cropTo = 1)
     expect_identical(nc5, nc3)
 
     # rasterToMatch
-    nc5 <- cropInputs(nc3, rasterToMatch = r)
+    nc5 <- cropTo(nc3, cropTo = r)
+    nc5_b <- projectTo(nc5, projectTo = r)
     nc5Extent_r <- st_transform(nc5, crs = crs(r))
     expect_true(similarExtents(extent(r), extent(nc5Extent_r), res(r)[1]))
 
     ncSmallShifted <- ncSmall + 10000000
     ncSmallShifted <- st_as_sf(ncSmallShifted)
     st_crs(ncSmallShifted) <- st_crs(ncSmall)
-    mess <- capture_messages(cropInputs(ncSmall, studyArea = ncSmallShifted))
-    expect_true(any(grepl("polygons do not intersect", mess)))
+    mess <- capture_messages(out <- cropTo(ncSmall, cropTo = ncSmallShifted))
+    # expect_true(any(grepl("polygons do not intersect", mess)))
+    expect_true(NROW(out) == 0) # polygons do not intersect
 
     # LINEARRING Example
     p6 = terra::vect("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
@@ -320,7 +326,7 @@ test_that("prepInputs doesn't work (part 3)", {
     sumNonNAs <- sum(!is.na(!LCC05[]))
 
     # These are suitably vague that they will capture the mask if it gets it right
-    expect_true(sumNonNAs < 38000000)
-    expect_true(sumNonNAs > 37000000)
+    expect_true(sumNonNAs < 37193550)
+    expect_true(sumNonNAs > 37192540)
   }}
 )

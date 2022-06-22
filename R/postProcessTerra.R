@@ -405,7 +405,12 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE) {
       st <- Sys.time()
 
       if (!sf::st_crs(from) == sf::st_crs(cropTo)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
-        cropTo <- projectTo(cropTo, from)# sf::st_transform(cropTo, sf::st_crs(from))
+        if (isGridded(cropTo)) {
+          if (is(cropTo, "Raster")) {
+            cropTo <- extentDense(cropTo)
+          }
+        }
+        suppressMessages(cropTo <- projectTo(cropTo, from))# sf::st_transform(cropTo, sf::st_crs(from))
       }
       ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
       if (isVector(from)) {
@@ -572,4 +577,20 @@ revertClass <- function(from, isStack = FALSE, isBrick = FALSE, isRasterLayer = 
     }
   }
   from
+}
+
+extentDense <- function(cropTo) {
+  crop3 <- cropTo
+  crop3[] <- crop3[] # to memory
+  crop3[] <- 1
+  crop3 <- terra::rast(crop3)
+  crop4 <- terra::as.polygons(crop3)
+  gm <- geom(crop4)
+  n <- (xmax(crop3) - xmin(crop3))/res(crop3)[1]
+  x <- approx(gm[,c("x")], method = "linear", n = n)
+  y <- approx(gm[,c("y")], method = "linear", n = n)
+  crop5 <- cbind(geom = 1, part = 1, x = x$y, y = y$y, hole = 0)
+  crop6 <- terra::vect(crop5, type = "polygon")
+  terra::crs(crop6) <- attr(terra::crs(cropTo), "comment")
+  crop6
 }

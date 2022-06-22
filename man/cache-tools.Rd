@@ -91,11 +91,16 @@ This is optional if \code{Cache} is used inside a SpaDES module.}
 \item{cacheIds}{Either a character string with the cacheId of item to remove from
 Cache repository, or a data.table coming from `showCache` with the items to remove.}
 
+\item{ask}{Logical. If \code{FALSE}, then it will not ask to confirm deletions using
+\code{clearCache} or \code{keepCache}. Default is \code{TRUE}}
+
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{dbTabNam}{For internal use only.}
 
 \item{...}{Arguments passed to \code{FUN} if FUN is provided as simply a function.}
 }

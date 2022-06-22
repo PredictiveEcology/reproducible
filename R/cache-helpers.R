@@ -488,15 +488,15 @@ setAs(from = "character", to = "Path", function(from) {
 })
 
 # Old one
-.prepareFileBackedRaster2 <- function(obj, repoDir = NULL, overwrite = FALSE,
+.prepareFileBackedRaster2 <- function(obj, cacheRepo = NULL, overwrite = FALSE,
                                       drv = getOption("reproducible.drv"),
                                       conn = getOption("reproducible.conn", NULL),
                                       ...) {
   isRasterLayer <- TRUE
   isBrick <- is(obj, "RasterBrick")
   isStack <- is(obj, "RasterStack")
-  repoDir <- checkPath(repoDir, create = TRUE)
-  isRepo <- CacheIsACache(cachePath = repoDir, drv = drv, conn = conn)
+  cacheRepo <- checkPath(cacheRepo, create = TRUE)
+  isRepo <- CacheIsACache(cachePath = cacheRepo, drv = drv, conn = conn)
 
   ## check which files are backed
   numFiles <- sum(nchar(unique(Filenames(obj)))>0)
@@ -569,17 +569,17 @@ setAs(from = "character", to = "Path", function(from) {
     badFileNames <- curFilename[!file.exists(curFilename) & isFilebacked]
 
     # File is in wrong folder, usually the result of a copy of cache between 2 machines
-    splittedFilenames <- strsplit(badFileNames, split = basename(repoDir))
+    splittedFilenames <- strsplit(badFileNames, split = basename(cacheRepo))
     trySaveFilename <- if (length(splittedFilenames) == 1) {
       normalizePath(
-        file.path(repoDir, splittedFilenames[[1]][[length(splittedFilenames[[1]])]]),
+        file.path(cacheRepo, splittedFilenames[[1]][[length(splittedFilenames[[1]])]]),
         winslash = "/", mustWork = FALSE)
     } else {
       splittedFilenames2 <- lapply(splittedFilenames, function(x) {
         ifelse(length(x), x[length(x)], "")
       })
 
-      normalizePath(file.path(repoDir, splittedFilenames2), winslash = "/", mustWork = FALSE)
+      normalizePath(file.path(cacheRepo, splittedFilenames2), winslash = "/", mustWork = FALSE)
     }
     if (any(!file.exists(trySaveFilename))) {
       stop("The following file-backed rasters are supposed to be on disk ",
@@ -603,9 +603,9 @@ setAs(from = "character", to = "Path", function(from) {
   } else {
     saveFilename <- if (isRepo) {
       browser()
-      file.path(repoDir, "rasters", basename(curFilename))
+      file.path(cacheRepo, "rasters", basename(curFilename))
     } else {
-      file.path(repoDir, basename(curFilename))
+      file.path(cacheRepo, basename(curFilename))
     }
     saveFilename <- normPath(saveFilename)
   }
@@ -1156,7 +1156,7 @@ dealWithClass <- function(obj, cachePath, sideEffect, cacheId, drv, conn) {
   if (any(rasters)) {
     objOrig <- obj
     atts <- attributes(obj)
-    obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,
+    obj <- .prepareFileBackedRaster(obj, cacheRepo = cachePath,
                                     overwrite = FALSE, cacheId = cacheId,
                                     drv = drv, conn = conn)
     isFromDisk <- fromDisk(obj)
@@ -1383,16 +1383,18 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #'
 #' @param obj The raster object to save to the repository.
 #'
-#' @param repoDir Character denoting an existing directory in which an artifact will be saved.
+#' @param cacheRepo Character denoting an existing directory in which an artifact will be saved.
 #'
 #' @param overwrite Logical. Should the raster be saved to disk, overwriting existing file.
+#' @param cacheId Character string of the hash of the object being affected. This is used when
+#'   stashing the file-backed raster if it is in the Cache repository.
 #'
 #' @param ... Not used
 #'
 #' @return A raster object and its newly located file backing.
 #'         Note that if this is a legitimate Cache repository, the new location
-#'         will be a subdirectory called \file{rasters/} of \file{repoDir/}.
-#'         If this is not a repository, the new location will be within \code{repoDir}.
+#'         will be a subdirectory called \file{rasters/} of \file{cacheRepo/}.
+#'         If this is not a repository, the new location will be within \code{cacheRepo}.
 #'
 #' @author Eliot McIntire
 #' @export
@@ -1417,20 +1419,20 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #'
 #' r # now in CacheStorageRasterDir(tempdir()) subfolder of tempdir()
 #'
-.prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
+.prepareFileBackedRaster <- function(obj, cacheRepo = NULL, overwrite = FALSE,
                                      cacheId = NULL,
                                      drv = getOption("reproducible.drv"),
                                      conn = getOption("reproducible.conn", NULL),
                                      ...) {
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-    return(.prepareFileBackedRaster2(obj, repoDir = repoDir, overwrite = overwrite,
+    return(.prepareFileBackedRaster2(obj, cacheRepo = cacheRepo, overwrite = overwrite,
                                      cacheId = cacheId, drv = drv, conn = conn, ...))
   }
   fnsAll <- Filenames(obj)
   fnsShort <- Filenames(obj, FALSE)
   if (!all(nchar(fnsAll) == 0)) {
-    repoDir <- checkPath(repoDir, create = TRUE)
-    isRepo <- CacheIsACache(cachePath = repoDir, drv = drv, conn = conn)
+    cacheRepo <- checkPath(cacheRepo, create = TRUE)
+    isRepo <- CacheIsACache(cachePath = cacheRepo, drv = drv, conn = conn)
     # thoseWithGRI <- endsWith(fnsAll, "gri")
     fns <- fnsAll
     FB <- nchar(fns) > 0
@@ -1441,18 +1443,18 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
       badFileNames <- fnsOnly[!file.exists(fnsOnly)]
 
       trySaveFilename <- badFileNames
-      if (any(grepl(basename(repoDir), badFileNames))) {
+      if (any(grepl(basename(cacheRepo), badFileNames))) {
         # File is in wrong folder, usually the result of a copy of cache between 2 machines
-        splittedFilenames <- strsplit(badFileNames, split = basename(repoDir))
+        splittedFilenames <- strsplit(badFileNames, split = basename(cacheRepo))
         trySaveFilename <- if (length(splittedFilenames) == 1) {
           normalizePath(
-            file.path(repoDir, splittedFilenames[[1]][[length(splittedFilenames[[1]])]]),
+            file.path(cacheRepo, splittedFilenames[[1]][[length(splittedFilenames[[1]])]]),
             winslash = "/", mustWork = FALSE)
         } else {
           splittedFilenames2 <- lapply(splittedFilenames, function(x) {
             ifelse(length(x), x[length(x)], "")
           })
-          normalizePath(file.path(repoDir, splittedFilenames2), winslash = "/", mustWork = FALSE)
+          normalizePath(file.path(cacheRepo, splittedFilenames2), winslash = "/", mustWork = FALSE)
         }
       }
       if (any(!file.exists(trySaveFilename))) {
@@ -1475,9 +1477,9 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 
 
     saveFilename[FB] <- if (isRepo) {
-      CacheStoredRasterFile(repoDir, cacheId = cacheId, bnFB)
+      CacheStoredRasterFile(cacheRepo, cacheId = cacheId, bnFB)
     } else {
-      CacheStoredRasterFile(repoDir, cacheId = NULL, bnFB)
+      CacheStoredRasterFile(cacheRepo, cacheId = NULL, bnFB)
     }
     dirForNewFiles <- unique(dirname(saveFilename[FB]))
     checkPath(dirForNewFiles, create = TRUE)

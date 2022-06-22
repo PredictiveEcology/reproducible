@@ -6,7 +6,7 @@
 \usage{
 cloudUpload(
   isInCloud,
-  outputHash,
+  cacheId,
   cacheRepo,
   cloudFolderID,
   outputToSave,
@@ -16,7 +16,7 @@ cloudUpload(
 )
 }
 \arguments{
-\item{isInCloud}{A logical indicating whether an \code{outputHash} is in the cloud already.}
+\item{isInCloud}{A logical indicating whether an \code{cacheId} is in the cloud already.}
 
 \item{outputToSave}{Only required if \code{any(rasters) == TRUE}.
 This is the \code{Raster*} object.}

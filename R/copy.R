@@ -192,7 +192,7 @@ setMethod("Copy",
                 filebackedDir <- tempdir2(rndstr(1, 11))
               }
               if (!is.null(filebackedDir))
-                object <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn)
+                object <- .prepareFileBackedRaster(object, cacheRepo = filebackedDir, drv = drv, conn = conn)
             }
             object
 })
