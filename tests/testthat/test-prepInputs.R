@@ -1,6 +1,7 @@
 test_that("prepInputs doesn't work (part 1)", {
   skip_on_cran()
   skip_on_ci()
+  skip_if_no_token()
 
   testInitOut <- testInit("raster", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
@@ -1143,6 +1144,7 @@ test_that("preProcess doesn't work", {
 test_that("prepInputs doesn't work (part 2)", {
   skip_on_cran()
   skip_if_not(compareVersion(format(getRversion()), "3.3.0") >= 0)
+  skip_if_no_token()
 
   testInitOut <- testInit(c("sf", "raster"), opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
@@ -2006,6 +2008,8 @@ test_that("sideEffects", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
+  skip_if_no_token()
+
   # ras <- raster::raster(extent(0,10,0,10), vals = 1:100)
   # ras2 <- writeRaster(filename = tmpfile, ras, overwrite = TRUE)
   #
