@@ -975,7 +975,7 @@ setMethod(
       # This is for write conflicts to the SQLite database
       #   (i.e., keep trying until it is written)
 
-      objSize <- sum(unlist(objSize(outputToSave)))
+      objSize <- lobstr::obj_size(outputToSave)
       resultHash <- ""
       linkToCacheId <- NULL
       if (objSize > 1e6) {
@@ -1269,8 +1269,8 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
   isDoCall <- FALSE
   forms <- suppressWarnings(names(formals(FUN)))
   if (!is.null(fnDetails$functionName)) {
-    if (!is.na(fnDetails$functionName)) {
-      if (fnDetails$functionName == "do.call") {
+    if (!any(is.na(fnDetails$functionName))) {
+      if (any(fnDetails$functionName == "do.call")) {
         isDoCall <- TRUE
         possFunNames <- lapply(substitute(placeholderFunction(...))[-1],
                                deparse, backtick = TRUE)

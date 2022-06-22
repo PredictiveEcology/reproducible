@@ -1172,7 +1172,7 @@ test_that("test file link with duplicate Cache", {
 
   # Change in RSQLite 2.2.2 -- there is now a random number used in dbAppend,
   #   so this test no longer works after the second time -- running it a 3rd time
-  #   is sufficient for the test. The point it, if it is an identical result,
+  #   is sufficient for the test. The point is, if it is an identical result,
   #   then there will be a file.link
   set.seed(123)
   mess2 <- capture_messages({

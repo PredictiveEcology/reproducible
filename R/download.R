@@ -32,16 +32,6 @@ downloadFile <- function(archive, targetFile, neededFiles,
   if (!is.null(url) || !is.null(dlFun)) {
     missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile)
 
-    # if (is.null(neededFiles)) {
-    #   result <- unique(checkSums$result)
-    # } else {
-    #   result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
-    # }
-    # if (length(result) == 0) result <- NA
-    #
-    # missingNeededFiles <- (!(all(compareNA(result, "OK")) && all(neededFiles %in% checkSums$expectedFile)) ||
-    #                          is.null(targetFile) || is.null(neededFiles))
-
     if (missingNeededFiles) { # needed may be missing, but maybe can skip download b/c archive exists
       if (!is.null(archive)) {
         localArchivesExist <- file.exists(archive)
@@ -119,7 +109,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
             messCommon <- paste0("Download of ", targetFile, " from ", url, " failed. Please check the url that it is correct.\n",
                                          "If the url is correct, it is possible that manually downloading it will work. ",
                                          "To try this, with your browser, go to\n",
-                                         url, ",\n ... then download it manually, give it this name: '", basename(fileToDownload),
+                                         url, ",\n ... then download it manually, give it this name: '", .basename(fileToDownload),
                                          "', and place file here: ", destinationPath)
             if (isInteractive() && getOption('reproducible.interactiveOnDownloadFail', TRUE)) {
               mess <- paste0(messCommon,
@@ -146,6 +136,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
             Sys.sleep(0.5)
           }
         } else {
+          # This is so that we essentially treat it as a file, not an object, which means
+          #   the second time we try this call, we can access the file locally, without needed to download
           if (is(downloadResults$out, "Spatial")) downloadResults$out <- NULL # TODO This appears to be a bug
           failed <- 0
         }
@@ -443,7 +435,11 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         if (!is.null(dlFun)) {
           dlFunName <- dlFun
           dlFun <- .extractFunction(dlFun)
-          fun <- .fnCleanup(dlFun, callingFun = "downloadRemote")
+          fun <- if (is(dlFun, "call")) {
+            .fnCleanup(dlFun, callingFun = "downloadRemote")
+          } else {
+            NULL
+          }
           forms <- .argsToRemove
           #dots <- list(...)
           overlappingForms <- fun$formalArgs[fun$formalArgs %in% forms]
@@ -460,7 +456,14 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             fileInfo <- file.info(dir(destinationPath))
           }
           # browser(expr = exists("._downloadRemote_1"))
-          out <- do.call(dlFun, args = args)
+          out <- if (is.call(dlFun)) {
+            env1 <- new.env()
+            list2env(args, env1)
+            eval(dlFun, envir = env1)
+          } else {
+            do.call(dlFun, args = args)
+          }
+
           needSave <- TRUE
           if (is.null(targetFile)) {
             fileInfoAfter <- file.info(dir(destinationPath))

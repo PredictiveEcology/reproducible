@@ -890,9 +890,12 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
       #"offset", "gain"
     ))]
     dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
+    names(dataSlotsToDigest) <- sn
+    theData <- .robustDigest(object@data@values)
+    dataSlotsToDigest$values <- NULL
     if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") > 0))
       dig <- .robustDigest(append(list(dim(object), res(object), crs(object),
-                                       extent(object)), dataSlotsToDigest), length = length, quick = quick,
+                                       extent(object), theData), dataSlotsToDigest), length = length, quick = quick,
                            algo = algo) # don't include object@data -- these are volatile
     else {
       if (!requireNamespace("fastdigest", quietly = TRUE))

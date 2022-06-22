@@ -15,8 +15,8 @@ test_that("test miscellaneous fns (part 1)", {
   a <- 1
   b <- tempfile()
   saveRDS(a, b)
-  expect_is(objSize(asPath(b)), "numeric")
-  expect_is(objSize(asPath(b), quick = TRUE), "object_size")
+  expect_true(is.numeric(objSize(asPath(b))))
+  expect_true(is(objSize(asPath(b)), "lobstr_bytes"))
 
   # objSizeSession
   mess <- capture.output({d <- objSizeSession()})
@@ -129,28 +129,6 @@ test_that("unrar is working as expected", {
   expect_true(identical(unrar$fun, "unrar"))
   suppressWarnings(
     expect_error(.callArchiveExtractFn(unrar$fun, files = "", args = list(exdir = tmpCache)))
-  )
-})
-
-test_that("check GDAL version", {
-  testInitOut <- testInit()
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  testthat::with_mock(
-    "reproducible::getGDALVersion" = function() NA,
-    {
-      expect_false(checkGDALVersion("3.0"))
-    }
-  )
-
-  ## test with devel version
-  testthat::with_mock(
-    "reproducible::getGDALVersion" = function() "GDAL 3.5.0dev-805b2bbca3, released 2022/02/17",
-    {
-      expect_true(checkGDALVersion("3.5"))
-    }
   )
 })
 

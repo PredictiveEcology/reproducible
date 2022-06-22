@@ -68,6 +68,35 @@ if (getRversion() >= "3.1.0") {
 #'   Please see \code{\link{postProcess.spatialClasses}}.
 #'  }
 #'
+#'
+#' @section \code{fun}:
+#'
+#'  \code{fun} offers the ability to pass any custom function with which to load
+#'  the object obtained by `preProcess` into the session. There are two cases that are
+#'  dealt with: when the `preProcess` downloads a file (including via `dlFun`),
+#'  `fun` must deal with a file; and, when `preProcess` creates an R object
+#'  (e.g., raster::getData returns an object), `fun` must deal with an object.
+#'
+#'  \code{fun} can be supplied in three ways: a function, a character string
+#'   (i.e., a function name as a string), of a quoted expression.
+#'   If a character string or function, is should have the package name e.g.,
+#'   \code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
+#'   In these cases, it will evaluate this function call while passing `targetFile`
+#'   as the first argument. These will only work in the simplest of cases.
+#'
+#'   When more precision is required, the full call can be written, surrounded by
+#'   \code{quote}, and where the object can be referred to as `targetFile` if the function
+#'   is loading a file or as `x` if it is loading the object that was returned by
+#'   `preProcess`. If `preProcess` returns an object, this must be used by `fun`; if
+#'   `preProcess` is only getting a file, then there will be no object, so `targetFile` is the
+#'   only option.
+#'
+#'   If there is a custom function call, is not in a package, `prepInputs` may not find it. In such
+#'   cases, simply pass the function as a named argument (with same name as function) to `prepInputs`.
+#'   See examples.
+#'   NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
+#'   replicate the functionality of simply calling \code{preProcess} directly.
+#'
 #' @section \code{purge}:
 #'
 #' In options for control of purging the \code{CHECKSUMS.txt} file are:
@@ -129,19 +158,8 @@ if (getRversion() >= "3.1.0") {
 #'   \code{NULL} meaning do not search locally.
 #'
 #' @param fun Function, character string, or quoted call with which to load the
-#'   \code{targetFile} into an \code{R} object. It must be either a function
-#'   as a character string, or the function itself.
-#'   If a character string or function, is should have the package name e.g.,
-#'   \code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
-#'   If it is to be a custom function call, then use `quote`, e.g.,
-#'   `quote(customFun(x = targetFilePath))`, using
-#'   `targetFilePath` as the file path of the object that has been `preProcess`ed.
-#'   If the custom function is not in a package, `prepInputs` may not find it. In such
-#'   cases, simply pass the function as a named argument (with same name as function)
-#'   e.g.,
-#'   `prepInputs(..., fun = quote(customFun(x = targetFilePath), customFun = customFun)`.
-#'   NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
-#'   replicate the functionality of simply calling \code{preProcess} directly.
+#'   \code{targetFile} or an object created by \code{dlFun}
+#'   into an \code{R} object. See details and examples below.
 #'
 #' @param quick Logical. This is passed internally to \code{\link{Checksums}}
 #'   (the quickCheck argument), and to
@@ -269,6 +287,22 @@ if (getRversion() >= "3.1.0") {
 #'                     path = dPath)
 #' }
 #'
+#' # Using quoted dlFun and fun
+#' \dontrun{
+#'   prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun)
+#'   # or more complex
+#'   test5 <- prepInputs(
+#'     targetFile = targetFileLuxRDS,
+#'     dlFun = quote({
+#'       getDataFn(name = "GADM", country = "LUX", level = 0) # preProcess keeps file from this!
+#'     }),
+#'     fun = quote({
+#'       out <- readRDS(targetFilePath)
+#'       out <- as(out, "SpatialPolygonsDataFrame")
+#'       sf::st_as_sf(out)})
+#'    )
+#' }
+#'
 prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = getOption("reproducible.destinationPath", "."),
                        fun = NULL,
@@ -307,7 +341,13 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   )
 
   # Load object to R
-  fun <- .fnCleanup(out$fun, callingFun = "prepInputs", ...)
+  # If it is simple call, then we can extract stuff from the function call; otherwise all bets off
+  fun <- if (is(out$fun, "call") || is(out$fun, "function") && is.null(out$object)) {
+    .fnCleanup(out$fun, callingFun = "prepInputs", ...)
+  } else {
+    NULL
+  }
+
   suppressWarnings({
     naFun <- all(is.na(out$fun))
   })
@@ -359,7 +399,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
               out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
                                    out[-which(names(out) == "targetFilePath")]),
                             args)
-              out[[fun[["functionName"]]]] <- fun$FUN
+              if (length(fun[["functionName"]]) == 1)
+                out[[fun[["functionName"]]]] <- fun$FUN
               obj <- Cache(eval, out$fun, envir = out, useCache = useCache2)
             } else {
               obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
@@ -376,7 +417,14 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         }
       }
     } else {
-      out$object
+      if (is.null(fun)) {
+        out$object
+      } else {
+        x <- out$object
+        env1 <- new.env()
+        list2env(list(...), envir = env1)
+        eval(out$fun, envir = env1)
+      }
     }
   } else {
     messagePrepInputs("No loading of object into R; fun = ", out$fun, verbose = verbose)

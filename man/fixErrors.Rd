@@ -66,11 +66,11 @@ to user will mention this.}
 
 \item{attemptErrorFixes}{Will attempt to fix known errors. Currently only some failures
 for \code{SpatialPolygons*} are attempted.
-Notably with \code{raster::buffer(..., width = 0)}.
+Notably with \code{terra::buffer(..., width = 0)}.
 Default \code{TRUE}, though this may not be the right action for all cases.}
 
 \item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
-Cache is used on the internal \code{raster::buffer} command.}
+Cache is used on the internal \code{terra::buffer} command.}
 
 \item{testValidity}{Logical. If \code{TRUE}, the a test for validity will happen
 before actually running buffering (which is the solution in most
@@ -85,10 +85,10 @@ If \code{NA}, then all testing and buffering will be skipped.}
 \description{
 These must be very common for this function to be useful. Currently, the only
 meaningful method is on \code{SpatialPolygons}, and it runs \code{sf::st_is_valid}.
-If \code{FALSE}, then it runs  \code{st_make_valid} or \code{raster::buffer},
+If \code{FALSE}, then it runs  \code{st_make_valid} or \code{terra::buffer},
 depending on whether x is \code{sf} or \code{SpatialPolygons*}, respectively.
 
-This uses \code{raster::buffer(..., width = 0)} internally, which fixes some
+This uses \code{terra::buffer(..., width = 0)} internally, which fixes some
 failures to \code{sf::st_is_valid}
 }
 \examples{
@@ -112,16 +112,47 @@ coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58,
 Sr1 <- Polygon(coords)
 Srs1 <- Polygons(list(Sr1), "s1")
 StudyArea <- SpatialPolygons(list(Srs1), 1L)
-crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+crs(StudyArea) <- crs(shpEcozone)
+projString <- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
+StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
 
 ##########
 shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
+
 
 # Try manually, individual pieces
 shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
 shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
 shpEcozoneClean <- fixErrors(shpEcozone)
 shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
+
+# With terra
+if (require("terra")) {
+  opts <- options("reproducible.useTerra" = TRUE)
+  vectEcozone <- terra::vect(sf::st_as_sf(shpEcozone)) # direct conversion throws warning
+
+  # If input is Spatial object --> return will also be Spatial
+  shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
+  # Try manually, individual pieces -- Note functions are different
+  shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
+  shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
+  shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
+
+  # If input is Spat object --> return will also be Spat
+  vectEcozonePostProcessed <- postProcess(vectEcozone, studyArea = StudyArea)
+  # Try manually, individual pieces -- Note functions are different
+  vectEcozoneMasked <- maskInputs(vectEcozone, StudyArea)
+  VectEcozoneReprojected <- projectInputs(vectEcozone, StudyArea)
+  vectEcozoneCropped <- cropInputs(vectEcozone, StudyArea)
+
+
+
+  # Note these two have different function names --> methods for cropInputs and fixErrors
+  #    are not implemented yet
+  shpEcozoneClean <- fixErrorsTerra(vectEcozone)
+
+  options(opts)
+}
 
 setwd(ow)
 }

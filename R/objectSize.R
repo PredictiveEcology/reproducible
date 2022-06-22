@@ -1,20 +1,17 @@
-#' Recursive \code{object.size}
+#' Wrapper around \code{lobstr::obj_size}
 #'
-#' This has methods for various types of things that may not correctly report
-#' their object size using \code{object.size}.
-#' Also, for lists and environments, it will return the object size separately for each element.
-#' These are estimates only, and could be inaccurate.
-#' Alternative, similar functions include \code{object.size} and \code{pryr::object_size}.
-#' See Details for the special case of functions and their enclosing environments.
+#' This will return the result from \code{lobstr::obj_size}, i.e., a \code{lobstr_bytes}
+#' which is a \code{numeric}. If \code{quick = FALSE}, it will also have an attribute,
+#' "objSize", which will
+#' be a list with each element being the \code{objSize} of the individual elements of \code{x}.
+#' This is particularly useful if \code{x} is a \code{list} or \code{environment}.
+#' However, because of the potential for shared memory, the sum of the individual
+#' elements will generally not equal the value returned from this function.
 #'
 #' @param x An object
-#' @param enclosingEnvs Logical indicating whether to include enclosing environments.
-#'                      Default \code{TRUE}.
-#' @param quick Logical. Only some methods use this. e.g.,
-#'              \code{Path} class objects. In which case, \code{file.size} will be
-#'              used instead of \code{object.size}.
-#' @param .prevEnvirs For internal account keeping to identify and prevent duplicate counting
-#' @param ...  Additional arguments (currently unused)
+#' @param quick Logical. If \code{FALSE}, then an attribute, "objSize" will be added to
+#'   the returned value, with each of the elements' object size returned also.
+#' @param ...  Additional arguments (currently unused), enables backwards compatible use.
 #'
 #' @export
 #' @rdname objSize
@@ -44,80 +41,7 @@
 #' sum(unlist(os2)) # around 13 MB, with all functions, objects
 #'                  # and imported functions
 #'
-objSize <- function(x, quick, enclosingEnvs, .prevEnvirs, ...) {
-  UseMethod("objSize", x)
-}
-
-#' @export
 #' @importFrom utils object.size
-#' @rdname objSize
-objSize.default <- function(x, quick = getOption("reproducible.quick", FALSE),
-                            enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
-  if (any(inherits(x, "SpatVector"), inherits(x, "SpatRaster"))) {
-    if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
-      stop("Please install terra package")
-      os <- object.size(terra::wrap(x))
-  } else {
-    os <- object.size(x)
-  }
-  os
-}
-
-#' @export
-#' @rdname objSize
-objSize.list <- function(x, quick = getOption("reproducible.quick", FALSE),
-                         enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
-  TandC <- grepl(".__[TC]__", names(x))
-  if (sum(TandC) > 0)
-    x <- x[!TandC]
-  osList <- lapply(x, function(y) {
-    if (!is.function(y)) {
-      os <- objSize(y, quick = quick, enclosingEnvs = enclosingEnvs, .prevEnvirs = .prevEnvirs)
-    } else {
-      doneAlready <- lapply(.prevEnvirs, function(pe) identical(pe, environment(y)))
-      .prevEnvirs <<- unique(append(.prevEnvirs, environment(y)))
-      if (!any(unlist(doneAlready))) {
-        os <- objSize(y, quick = quick, enclosingEnvs = enclosingEnvs, .prevEnvirs = .prevEnvirs)
-      } else {
-        os <- NULL
-      }
-    }
-    return(os)
-  })
-  if (length(osList) > 0)
-    osList <- osList[!unlist(lapply(osList, function(x) is.null(x) || length(x) == 0))]
-  osList
-}
-
-#' @export
-#' @importFrom utils object.size
-#' @rdname objSize
-objSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE),
-                                enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
-  xName <- deparse(substitute(x))
-  # print(format(x))
-  os <- objSize(as.list(x, all.names = TRUE), enclosingEnvs = enclosingEnvs,
-                .prevEnvirs = .prevEnvirs)
-  if (length(os) > 0)
-    names(os) <- paste0(xName, "$", names(os))
-  osCur <- list(object.size(x))
-  names(osCur) <- xName
-  os <- append(os, osCur)
-  return(os)
-}
-
-#' @export
-#' @importFrom utils object.size
-#' @rdname objSize
-objSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE),
-                         enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
-  if (quick) {
-    object.size(x)
-  } else {
-    file.size(x)
-  }
-}
-
 #' @details
 #' For functions, a user can include the enclosing environment as described
 #' \url{https://www.r-bloggers.com/2015/03/using-closures-as-objects-in-r/} and
@@ -127,27 +51,66 @@ objSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE),
 #' not be included even though \code{enclosingEnvs = TRUE}.
 #'
 #' @export
-#' @rdname objSize
-objSize.function <- function(x, quick = getOption("reproducible.quick", FALSE),
-                             enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
-  varName <- deparse(substitute(x))
-  if (isTRUE(enclosingEnvs) && (!isTopLevelEnv(environment(x)))) {
-    if (is.primitive(x)) {
-      os <- list(object.size(x))
-    } else {
-      x <- mget(ls(envir = environment(x)), envir = environment(x))
-      os <- lapply(x, function(xx) object.size(xx))
-    }
-  } else {
-    os <- object.size(x)
-  }
-  return(os)
+objSize <- function(x, quick = TRUE, ...) {
+  UseMethod("objSize", x)
 }
+
+#' @export
+#' @importFrom lobstr obj_size
+objSize.default <- function(x, quick = TRUE, ...) {
+  out <- obj_size(x)
+  if (!quick)
+    attr(out, "objSize") <- list(obj = out)
+  out
+}
+
+#' @export
+#' @importFrom lobstr obj_size
+objSize.list <- function(x, quick = TRUE, ...) {
+  os <- obj_size(x)
+  if (!quick) {
+    out <- lapply(x, lobstr::obj_size, quick = quick)
+    attr(os, "objSize") <- out
+  }
+  os
+}
+
+#' @export
+#' @importFrom lobstr obj_size
+objSize.Path <- function(x, quick = TRUE, ...) {
+  if (quick) {
+    os <- obj_size(x)
+  } else {
+    os <- file.size(x)
+  }
+
+  if (!quick) {
+    out <- lapply(x, lobstr::obj_size, quick = quick)
+    attr(os, "objSize") <- out
+  }
+  os
+}
+
+#' @export
+#' @importFrom lobstr obj_size
+objSize.environment <- function(x, quick = TRUE, ...) {
+  os <- obj_size(x)
+  if (!quick) {
+    out <- lapply(as.list(x, all.names = TRUE), lobstr::obj_size, quick = quick)
+    attr(os, "objSize") <- out
+  }
+  os
+}
+
 
 #' @param sumLevel Numeric, indicating at which depth in the list of objects should the
 #'   object sizes be summed (summarized). Default is \code{Inf}, meaning no sums. Currently,
 #'   the only option other than Inf is 1: \code{objSizeSession(1)},
 #'   which gives the size of each package.
+#' @param enclosingEnvs Logical indicating whether to include enclosing environments.
+#'                      Default \code{TRUE}.
+#' @param .prevEnvirs For internal account keeping to identify and prevent duplicate counting
+#'
 #'
 #' @details \code{objSizeSession} will give the size of the whole session, including loaded packages.
 #' Because of the difficulties in calculating the object size of \code{base}
@@ -195,22 +158,3 @@ objSizeSession <- function(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = l
   return(os)
 }
 
-#' Determine if an environment is a top level environment
-#'
-#' Here, we define that as .GlobalEnv, any namespace, emptyenv,
-#' or baseenv. This is useful to determine the effective size
-#' of an R function, due to R including the objects from enclosing
-#' environments
-#'
-#' @param x Any environment
-#'
-#' @return
-#' A logical. \code{FALSE} if it is not one of the "Top Level Environments",
-#' \code{TRUE} otherwise.
-#' @export
-isTopLevelEnv <- function(x) {
-  identical(.GlobalEnv, x) ||
-       isNamespace(x) ||
-       identical(emptyenv(), x) ||
-       identical(baseenv(), x)
-}

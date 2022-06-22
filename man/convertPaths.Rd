@@ -42,6 +42,4 @@ lapply(rasters, raster::filename)
 }
 \author{
 Eliot McIntire and Alex Chubaty
-
-Eliot McIntire and Alex Chubaty
 }
