@@ -34,5 +34,6 @@ setClassUnion(name = "spatialClasses",
                           "SpatialLines", "SpatialLinesDataFrame",
                           "SpatialPixels", "SpatialPixelsDataFrame",
                           "SpatialPoints", "SpatialPointsDataFrame",
-                          "SpatialPolygons", "SpatialPolygonsDataFrame")
+                          "SpatialPolygons", "SpatialPolygonsDataFrame",
+                          "SpatVector", "SpatRaster")
 )

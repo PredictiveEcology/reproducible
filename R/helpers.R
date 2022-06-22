@@ -128,8 +128,9 @@ setMethod(
         studyArea <- sf::st_geometry(studyArea)
       }
     }
-    if (!(is(studyArea, "spatialClasses") || is(studyArea, "sfc")) || is.character(studyArea)) {
-      stop("studyAreaName expects a spatialClasses object (or character vector)")
+    if (!(isSpatialClass(studyArea)) || is.character(studyArea)) {
+      stop("studyAreaName expects an object the inherits ",
+           "from getOption('reproducible.spatialClasses') or character vector")
     }
     digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
 })
@@ -514,4 +515,9 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   )
   colnames(df) <- c("extension", "fun", "type")
   df
+}
+
+
+isSpatialClass <- function(x, spatialClasses = getOption("reproducible.spatialClasses")) {
+  inherits(x, spatialClasses)
 }
