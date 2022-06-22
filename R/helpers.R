@@ -129,7 +129,7 @@ setMethod(
     }
     if (!(is(studyArea, "spatialClasses") || is(studyArea, "sfc") || is(studyArea, "SpatVector")) ||
         is.character(studyArea)) {
-      stop("studyAreaName expects a spatialClasses object (or character vector)")
+      stop("studyAreaName expects a spatialClasses object, sf::sfc object, SpatVector, or character vector)")
     }
     digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
 })
