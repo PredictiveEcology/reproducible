@@ -3,31 +3,11 @@
 \name{postProcess}
 \alias{postProcess}
 \alias{postProcess.default}
-\alias{postProcess.list}
-\alias{postProcess.spatialClasses}
-\alias{postProcess.sf}
 \title{Generic function to post process objects}
 \usage{
 postProcess(x, ...)
 
-\method{postProcess}{default}(x, ...)
-
-\method{postProcess}{list}(x, ...)
-
-\method{postProcess}{spatialClasses}(
-  x,
-  filename1 = NULL,
-  filename2 = NULL,
-  studyArea = NULL,
-  rasterToMatch = NULL,
-  overwrite = getOption("reproducible.overwrite", TRUE),
-  useSAcrs = FALSE,
-  useCache = getOption("reproducible.useCache", FALSE),
-  verbose = getOption("reproducible.verbose", 1),
-  ...
-)
-
-\method{postProcess}{sf}(
+\method{postProcess}{default}(
   x,
   filename1 = NULL,
   filename2 = NULL,
@@ -41,12 +21,12 @@ postProcess(x, ...)
 )
 }
 \arguments{
-\item{x}{An object of postProcessing, e.g., \code{spatialClasses}.
+\item{x}{An object of postProcessing, e.g., returns `TRUE` with `isSpatialAny(x)`.
 See individual methods. This can be provided as a
 \code{rlang::quosure} or a normal R object.}
 
-\item{...}{Additional arguments passed to methods. For \code{spatialClasses},
-           these are: \code{\link{cropInputs}}, \code{\link{fixErrors}},
+\item{...}{Additional arguments passed to internal methods, which are:
+           \code{\link{cropInputs}}, \code{\link{fixErrors}},
            \code{\link{projectInputs}}, \code{\link{maskInputs}},
            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
            Each of these may also pass \code{...} into other functions, like
@@ -119,8 +99,8 @@ option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 \description{
 \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
 
-The method for \code{spatialClasses} (\code{Raster*} and \code{Spatial*}) will
-crop, reproject, and mask, in that order.
+The method for spatial objects (i.e., returns \code{TRUE} with `isSpatialAny(x)`)
+will crop, reproject, and mask, in that order.
 This is a wrapper for \code{\link{cropInputs}}, \code{\link{fixErrors}},
 \code{\link{projectInputs}}, \code{\link{maskInputs}} and \code{\link{writeOutputs}},
 with a decent amount of data manipulation between these calls so that the crs match.
@@ -181,69 +161,6 @@ Depending on which of these were passed, different things will happen to the
 }
 
 \examples{
-# Add a study area to Crop and Mask to
-# Create a "study area"
-library(sp)
-library(raster)
-ow <- setwd(tempdir())
-
-# make a SpatialPolygon
-coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
-                     .Dim = c(5L, 2L))
-Sr1 <- Polygon(coords1)
-Srs1 <- Polygons(list(Sr1), "s1")
-shpEcozone <- SpatialPolygons(list(Srs1), 1L)
-crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-
-# make a "study area" that is subset of larger dataset
-coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                    .Dim = c(5L, 2L))
-Sr1 <- Polygon(coords)
-Srs1 <- Polygons(list(Sr1), "s1")
-StudyArea <- SpatialPolygons(list(Srs1), 1L)
-crs(StudyArea) <- crs(shpEcozone)
-projString <- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
-StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
-
-##########
-shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
-
-
-# Try manually, individual pieces
-shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
-shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
-shpEcozoneClean <- fixErrors(shpEcozone)
-shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
-
-# With terra
-if (require("terra")) {
-  opts <- options("reproducible.useTerra" = TRUE)
-  vectEcozone <- terra::vect(sf::st_as_sf(shpEcozone)) # direct conversion throws warning
-
-  # If input is Spatial object --> return will also be Spatial
-  shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
-  # Try manually, individual pieces -- Note functions are different
-  shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
-  shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
-  shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
-
-  # If input is Spat object --> return will also be Spat
-  vectEcozonePostProcessed <- postProcess(vectEcozone, studyArea = StudyArea)
-  # Try manually, individual pieces -- Note functions are different
-  vectEcozoneMasked <- maskInputs(vectEcozone, StudyArea)
-  VectEcozoneReprojected <- projectInputs(vectEcozone, StudyArea)
-  vectEcozoneCropped <- cropInputs(vectEcozone, StudyArea)
-
-
-
-  # Note these two have different function names --> methods for cropInputs and fixErrors
-  #    are not implemented yet
-  shpEcozoneClean <- fixErrorsTerra(vectEcozone)
-
-  options(opts)
-}
-
-setwd(ow)
 # Add a study area to Crop and Mask to
 # Create a "study area"
 library(sp)

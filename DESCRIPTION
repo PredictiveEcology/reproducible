@@ -50,22 +50,19 @@ Depends:
     R (>= 4.0)
 Imports:
     data.table (>= 1.10.4),
-    DBI,
     digest,
-    fst,
     lobstr,
     methods,
-    raster (>= 3.5-15),
     Require,
     rlang,
-    RSQLite,
-    sp (>= 1.4-2),
     utils
 Suggests:
     covr,
     crayon,
+    DBI,
     fastdigest,
     fasterize,
+    fst,
     future,
     future.callr,
     glue,
@@ -75,10 +72,13 @@ Suggests:
     qs,
     knitr,
     parallel,
+    raster (>= 3.5-15),
     RCurl (>= 1.95-4.8),
     rgdal,
     rmarkdown,
+    RSQLite,
     sf,
+    sp (>= 1.4-2),
     stats,
     terra (>= 1.5-17),
     testthat
@@ -114,6 +114,5 @@ Collate:
     'reproducible-deprecated.R'
     'reproducible-package.R'
     'search.R'
-    'spatialObjects-class.R'
     'zzz.R'
 RoxygenNote: 7.2.0

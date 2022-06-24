@@ -196,12 +196,6 @@ reproducibleOptions <- function() {
     reproducible.shapefileRead = NULL, # TODO: change in next release
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
-    reproducible.spatialClasses = c("RasterLayer", "RasterLayerSparse", "RasterStack", "RasterBrick",
-                                    "SpatialLines", "SpatialLinesDataFrame",
-                                    "SpatialPixels", "SpatialPixelsDataFrame",
-                                    "SpatialPoints", "SpatialPointsDataFrame",
-                                    "SpatialPolygons", "SpatialPolygonsDataFrame",
-                                    "SpatVector", "SpatRaster", "sfc"),
     reproducible.tempPath = .reproducibleTempPath(),
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #

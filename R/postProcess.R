@@ -3,7 +3,7 @@
 #' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
 #'
 #' @export
-#' @param x  An object of postProcessing, e.g., \code{spatialClasses}.
+#' @param x  An object of postProcessing, e.g., returns `TRUE` with `isSpatialAny(x)`.
 #'           See individual methods. This can be provided as a
 #'           \code{rlang::quosure} or a normal R object.
 #' @importFrom utils capture.output
@@ -18,10 +18,10 @@ postProcess <- function(x, ...) {
 
 
 
-#' Post processing for \code{spatialClasses}
+#' Post processing for spatial objects
 #'
-#' The method for \code{spatialClasses} (\code{Raster*} and \code{Spatial*}) will
-#' crop, reproject, and mask, in that order.
+#' The method for spatial objects (i.e., returns \code{TRUE} with `isSpatialAny(x)`)
+#' will crop, reproject, and mask, in that order.
 #' This is a wrapper for \code{\link{cropInputs}}, \code{\link{fixErrors}},
 #' \code{\link{projectInputs}}, \code{\link{maskInputs}} and \code{\link{writeOutputs}},
 #' with a decent amount of data manipulation between these calls so that the crs match.
@@ -70,8 +70,8 @@ postProcess <- function(x, ...) {
 #'                 If \code{TRUE}, it will be taken from \code{studyArea}. See table
 #'                 in details below.
 #'
-#' @param ... Additional arguments passed to methods. For \code{spatialClasses},
-#'            these are: \code{\link{cropInputs}}, \code{\link{fixErrors}},
+#' @param ... Additional arguments passed to internal methods, which are:
+#'            \code{\link{cropInputs}}, \code{\link{fixErrors}},
 #'            \code{\link{projectInputs}}, \code{\link{maskInputs}},
 #'            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
 #'            Each of these may also pass \code{...} into other functions, like
@@ -146,7 +146,7 @@ postProcess.default <- function(x, filename1 = NULL, filename2 = NULL,
   }
 
 
-  if (isSpatialClass(x)) {
+  if (isSpatialAny(x)) {
     on.exit(removeTmpFiles(h = 0), add = TRUE)
 
     # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
@@ -295,17 +295,6 @@ fixErrors.Raster <- function(x, objectName, attemptErrorFixes = TRUE,
     ymax(x) <- roundTo6Dec(ymax(x))
     res(x) <- roundTo6Dec(res(x))
   }
-  # if (!identical(origin(x), round(origin(x), .Machine$double.eps))) {
-  #   roundedOrigin <- round(origin(x),6)
-  #   if (identical(origin(x), roundedOrigin))
-  #     origin(x) <- roundedOrigin
-  # }
-  # roundedRes <- round(res(x),6)
-  # if (identical(res(x), roundedRes))
-  #   res(x) <- roundedRes
-  # roundedExtent <- round(extent(x),6)
-  # if (identical(extent(x), roundedExtent))
-  #   extent(x) <- roundedExtent
   x
 }
 
@@ -810,7 +799,8 @@ projectInputs.Spatial <- function(x, targetCRS, verbose = getOption("reproducibl
     } else {
       if (!is(targetCRS, "CRS")) {
         if (!is.character(targetCRS)) {
-          if (is(targetCRS, "spatialClasses")) {
+          if (isSpatialAny(targetCRS)) {
+          # if (is(targetCRS, "spatialClasses")) {
             targetCRS <- .crs(targetCRS)
           } else {
             stop("targetCRS in projectInputs must be a CRS object or a class from",
@@ -832,7 +822,7 @@ projectInputs.Spatial <- function(x, targetCRS, verbose = getOption("reproducibl
 #'
 #' This is the function that follows the table of order of
 #' preference for determining CRS. See \code{\link{postProcess}}
-#' @inheritParams postProcess.spatialClasses
+#' @inheritParams postProcess.default
 #' @keywords internal
 #' @rdname postProcessHelpers
 .getTargetCRS <- function(useSAcrs, studyArea, rasterToMatch, targetCRS = NULL) {
@@ -1047,7 +1037,7 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
 #'   absolute or relative path and used as is if absolute or
 #'   prepended with \code{destinationPath} if relative.
 #'
-#' @inheritParams postProcess.spatialClasses
+#' @inheritParams postProcess.default
 #'
 #' @param destinationPath Optional. If \code{filename2} is a relative file path, then this
 #'                        will be the directory of the resulting absolute file path.

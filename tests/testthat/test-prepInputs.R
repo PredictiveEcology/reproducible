@@ -1888,7 +1888,7 @@ test_that("options inputPaths", {
       })
     })
   })
-  expect_true(is(test1, "spatialClasses"))
+  expect_true(isSpatialAny(test1))
   test11 <- grep(hardlinkMessagePrefixForGrep, mess1, value = TRUE)
   test11 <- grep(tmpdir, test11, invert = TRUE)
   expect_true(length(test11) == 0) # no link made b/c identical dir

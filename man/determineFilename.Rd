@@ -40,8 +40,8 @@ option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{prefix}{The character string to prepend to \code{filename1}, if \code{filename2}
 not provided.}
 
-\item{...}{Additional arguments passed to methods. For \code{spatialClasses},
-           these are: \code{\link{cropInputs}}, \code{\link{fixErrors}},
+\item{...}{Additional arguments passed to internal methods, which are:
+           \code{\link{cropInputs}}, \code{\link{fixErrors}},
            \code{\link{projectInputs}}, \code{\link{maskInputs}},
            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
            Each of these may also pass \code{...} into other functions, like

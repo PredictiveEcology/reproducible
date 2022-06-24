@@ -216,7 +216,7 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
 isSpat <- function(x) is(x, "SpatRaster") || is(x, "SpatVector")
 isSpat2 <- function(origClass) any(origClass %in% c("SpatVector", "SpatRaster"))
 isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
-isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || is(x, "sf")
+isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || is(x, "sf") || is(x, "sfc")
 isSpatialAny <- function(x) isGridded(x) || isVector(x)
 
 

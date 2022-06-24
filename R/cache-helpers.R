@@ -1402,7 +1402,6 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' @importFrom methods is selectMethod slot slot<-
 #' @importFrom raster dataType filename hasValues inMemory nlayers writeRaster
 #' @inheritParams Cache
-#' @inheritParams
 #' @rdname prepareFileBackedRaster
 #' @examples
 #' library(raster)
