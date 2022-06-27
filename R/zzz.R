@@ -10,7 +10,8 @@
   opts.reproducible <- reproducibleOptions()
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
-  fst::threads_fst(1)
+  if (requireNamespace("fst", quietly = TRUE))
+    fst::threads_fst(1)
   td <- tempdir()
   if (!dir.exists(td)) dir.create(td)
   invisible()
@@ -22,8 +23,8 @@
     packageStartupMessage(
       "Using reproducible version ",
       utils::packageVersion("reproducible"), ".",
-      "\n  'reproducible' has changed the default database backend.",
-      "\n  See ?reproducibleOptions for details.",
+      # "\n  'reproducible' has changed the default database backend.",
+      "\n  See ?reproducibleOptions for many available options to customize reproducible.",
       "\n  During transition to GDAL>3 and PROJ>6, many warnings will be suppressed until",
       " simple solutions are available; if these GDAL and PROJ changes",
       " are important to your project you will have to manually update",
