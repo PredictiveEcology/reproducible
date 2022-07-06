@@ -76,6 +76,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          options(install.packages.check.source = "no", install.packages.compile.from.source = FALSE)
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
           install.packages(c("raster", "sf", "sp", "lwgeom", "terra", "rgdal", "rgeos"), repos = "https://cran.rstudio.com")

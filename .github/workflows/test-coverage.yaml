@@ -40,6 +40,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          options(install.packages.check.source = "no", install.packages.compile.from.source = FALSE)
           install.packages(c("remotes"))
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("covr")
