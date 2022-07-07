@@ -59,6 +59,13 @@ jobs:
 
       - name: Install additional dependencies
         run: |
+          options(install.packages.check.source = "no", install.packages.compile.from.source = FALSE)
+          install.packages(c("foreach", "R.utils")) ## TEMPORARY: July 2022
+          install.packages("https://cran.r-project.org/src/contrib/Archive/gdalUtils/gdalUtils_2.0.3.2.tar.gz", repos = NULL) ## TEMPORARY: July 2022
+          install.packages("https://cran.r-project.org/src/contrib/Archive/RandomFieldsUtils/RandomFieldsUtils_1.2.3.tar.gz", repos = NULL) ## TEMPORARY: July 2022
+          install.packages("https://cran.r-project.org/src/contrib/Archive/RandomFields/RandomFields_3.3.14.tar.gz", repos = NULL) ## TEMPORARY: July 2022
+          install.packages(c("raster", "sf", "sp", "lwgeom", "terra", "rgdal", "rgeos"), repos = "https://cran.rstudio.com") ## need source on Linux, not RSPM binary
+          install.packages("igraph", repos = 'https://cran.rstudio.com') ## need source on Linux, not RSPM binary
           remotes::install_github('PredictiveEcology/Require@development')
         shell: Rscript {0}
 
@@ -86,7 +93,6 @@ jobs:
           options(install.packages.check.source = "no", install.packages.compile.from.source = FALSE)
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
-          install.packages(c("raster", "sf", "sp", "lwgeom", "terra", "rgdal", "rgeos"), repos = "https://cran.rstudio.com")
         shell: Rscript {0}
 
       - name: Session info
