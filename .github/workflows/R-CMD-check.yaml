@@ -23,10 +23,11 @@ jobs:
           - {os: macOS-latest,   r: 'release'}
           - {os: windows-latest, r: 'devel'}
           - {os: windows-latest, r: 'release'}
-          - {os: windows-latest, r: '4.0'}
-          - {os: ubuntu-20.04,   r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest", http-user-agent: "R/4.2.0 (ubuntu-20.04) R (4.2.0 x86_64-pc-linux-gnu x86_64 linux-gnu) on GitHub Actions" }
+          - {os: windows-latest, r: '4.1'}
+          - {os: ubuntu-20.04,   r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest", http-user-agent: "R/4.3.0 (ubuntu-20.04) R (4.3.0 x86_64-pc-linux-gnu x86_64 linux-gnu) on GitHub Actions" }
           - {os: ubuntu-20.04,   r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
           - {os: ubuntu-20.04,   r: 'oldrel',  rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
+          - {os: ubuntu-20.04,   r: '4.0',  rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
@@ -50,6 +51,23 @@ jobs:
           writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
         shell: Rscript {0}
 
+      - name: Install system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install gdal udunits
+
+      - name: Install additional dependencies
+        run: |
+          options(install.packages.check.source = "no", install.packages.compile.from.source = FALSE)
+          install.packages(c("raster", "sf", "sp", "lwgeom", "terra", "rgdal", "rgeos"), repos = "https://cran.rstudio.com") ## need source on Linux, not RSPM binary
+          install.packages(c("foreach", "R.utils")) ## TEMPORARY: July 2022
+          install.packages("https://cran.r-project.org/src/contrib/Archive/gdalUtils/gdalUtils_2.0.3.2.tar.gz", repos = NULL) ## TEMPORARY: July 2022
+          install.packages("https://cran.r-project.org/src/contrib/Archive/RandomFieldsUtils/RandomFieldsUtils_1.2.3.tar.gz", repos = NULL) ## TEMPORARY: July 2022
+          install.packages("https://cran.r-project.org/src/contrib/Archive/RandomFields/RandomFields_3.3.14.tar.gz", repos = NULL) ## TEMPORARY: July 2022
+          install.packages("igraph", repos = 'https://cran.rstudio.com') ## need source on Linux, not RSPM binary
+          remotes::install_github('PredictiveEcology/Require@development')
+        shell: Rscript {0}
+
       - name: Cache R packages
         if: runner.os != 'Windows'
         uses: actions/cache@v1
@@ -71,9 +89,9 @@ jobs:
 
       - name: Install dependencies
         run: |
+          options(install.packages.check.source = "no", install.packages.compile.from.source = FALSE)
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
-          install.packages(c("raster", "sf", "sp", "lwgeom", "terra", "rgdal", "rgeos"), repos = "https://cran.rstudio.com")
         shell: Rscript {0}
 
       - name: Session info
