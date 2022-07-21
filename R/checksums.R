@@ -106,8 +106,8 @@ setMethod(
     }
 
     if (is.null(files)) {
-      files <- list.files(path, full.names = TRUE) |>
-        grep(basename(checksumFile), x = _, value = TRUE, invert = TRUE)
+      files <- list.files(path, full.names = TRUE) #|> # can't use pipe placeholder yet in packages on CRAN
+      files <- grep(basename(checksumFile), x = files, value = TRUE, invert = TRUE)
     } else {
       isAbs <- isAbsolutePath(files)
       if (!all(isAbs))
