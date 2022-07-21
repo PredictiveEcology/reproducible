@@ -152,6 +152,7 @@ setMethod(
     fun <- get(fun, mode = "function", envir = parent.frame())
   }
 
+  browser()
   if (missing(formalNames))
     if (isS4(fun)) {
       forms <- methodFormals(fun, signature = signature, envir = parent.frame())

@@ -64,7 +64,8 @@ test_that("prepInputs doesn't work (part 1)", {
     "ecozones.shp",
     "ecozones.shx"
   )
-  noisyOutput <- capture.output({
+  suppressWarningsSpecific(falseWarnings = "Discarded datum D_North_American_1983_CSRS98",
+                           noisyOutput <- capture.output({
     shpEcozone2 <- prepInputs(
       targetFile = ecozoneFilename,
       url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
@@ -72,7 +73,7 @@ test_that("prepInputs doesn't work (part 1)", {
       fun = "shapefile",
       destinationPath = dPath
     )
-  })
+  }))
 
   expect_true(is(shpEcozone2, "SpatialPolygons"))
   testObj <- if (!is(shpEcozone1, "Spatial")) as(shpEcozone1, "Spatial") else shpEcozone1
@@ -116,7 +117,8 @@ test_that("prepInputs doesn't work (part 1)", {
 
   unlink(dirname(ecozoneFilename), recursive = TRUE)
   # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
-  noisyOutput <- capture.output({
+  suppressWarningsSpecific(falseWarnings = "Discarded datum D_North_American_1983_CSRS98",
+                           noisyOutput <- capture.output({
     warn <- suppressWarningsSpecific(
     falseWarnings = "attribute variables are assumed to be spatially constant", {
     mess <- capture_messages({
@@ -133,7 +135,7 @@ test_that("prepInputs doesn't work (part 1)", {
       )
     })
     })
-  })
+  }))
   expect_false(all(grepl("loading", mess)))
 
   # Test useCache -- doesn't error and loads from cache
@@ -1202,6 +1204,7 @@ test_that("prepInputs doesn't work (part 2)", {
         test4 <- prepInputs(
           #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
           targetFile = targetFileLuxRDS,
+          useCache = FALSE,
           #destinationPath = ".",
           dlFun = quote(gdf()),
           fun = quote(fn11(targetFilePath)), fn11 = fn11,
@@ -1220,13 +1223,14 @@ test_that("prepInputs doesn't work (part 2)", {
           dlFun = quote({
             getDataFn(name = "GADM", country = "LUX", level = 0)
             }),
+          useCache = FALSE,
           fun = quote({
             out <- readRDS(targetFilePath)
             out <- as(out, "SpatialPolygonsDataFrame")
             sf::st_as_sf(out)}),
           path = tmpdir)      })
     })
-    expect_true(identical(test5, test4))
+    expect_true(all.equal(test5, test4))
 
     if (interactive()) {
       noisyOutput6 <- capture.output(type = "message", {
@@ -1512,9 +1516,8 @@ test_that("lightweight tests for code coverage", {
     )
     expect_true(file.exists(dir(tmpdir, pattern = "ecozone", full.names = TRUE)))
 
-
     # have local copy
-    unzip("ecozone_shp.zip", exdir = tmpdir)
+    unzip(file.path(tmpdir, "ecozone_shp.zip"), exdir = tmpdir)
     file.copy(dir(file.path(tmpdir, "Ecozones"), full.names = TRUE), tmpdir)
     checkSums <- Checksums(path = tmpdir, write = TRUE)
 

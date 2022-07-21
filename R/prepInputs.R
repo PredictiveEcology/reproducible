@@ -342,8 +342,10 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Load object to R
   # If it is simple call, then we can extract stuff from the function call; otherwise all bets off
-  fun <- if (is(out$fun, "call") || is(out$fun, "function") && is.null(out$object)) {
+  fun <- if (is(out$fun, "function") && is.null(out$object)) {
     .fnCleanup(out$fun, callingFun = "prepInputs", ...)
+  } else if (is(out$fun, "call")) {
+    .fnCleanup(out$fun, FUNcaptured = out$fun, callingFun = "prepInputs", ...)
   } else {
     NULL
   }
@@ -849,6 +851,7 @@ extractFromArchive <- function(archive,
     }
   } else {
     # Try the direct, then indirect
+    browser()
     isUnzip <- if (identical(unzip, fun)) TRUE else ("overwrite" %in% names(formals(fun)))
     argList <- if (isUnzip) {
       c(argList, overwrite = overwrite)
