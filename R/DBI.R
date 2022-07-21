@@ -767,7 +767,6 @@ objNameFromConn <- function(conn) {
   gsub(":", "", gsub("/|\\\\", "_", conn))
 }
 
-#' @importFrom fst read_fst
 readFilebasedConn <- function(objName, conn, columns = NULL, from = 1, to = NULL) {
   messageCache(Sys.getpid(), " readFilebasedConn -- start of", verboseLevel = 3, verbose = getOption("reproducible.verbose"))
   if (missing(objName)) {
@@ -812,7 +811,6 @@ readFilebasedConn <- function(objName, conn, columns = NULL, from = 1, to = NULL
   fsTab
 }
 
-#' @importFrom fst write_fst
 writeFilebasedConnToMemory <- function(cachePath, drv, conn, dt, objName, dig = NULL,
                                        dtRowsAdded = NULL, rm = NULL, update = NULL) {
   if (missing(conn))
@@ -1095,9 +1093,10 @@ readFilebasedConnFile <- function(file) {
   fe <- fileExt(file)
   if (identical(fe, ""))
     fe <- getOption("reproducible.drv")
-  ret <- if (identical(fe, "fst"))
+  ret <- if (identical(fe, "fst")) {
+    .requireNamespace("fst", stopOnFALSE = TRUE)
     fst::read_fst(file)
-  else if (identical(fe, "csv"))
+  } else if (identical(fe, "csv"))
     data.table::fread(file, colClasses = rep("character", 4))
   setDF(ret)
 }

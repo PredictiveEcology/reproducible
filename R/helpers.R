@@ -325,7 +325,7 @@ isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
                               messageStart = paste0(pkg, if (!is.null(minVersion))
                                 paste0("(>=", minVersion, ")"), " is required. Try: ")) {
   need <- FALSE
-  if (suppressWarnings(!requireNamespace(pkg, quietly = TRUE))) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
     need <- TRUE
   } else {
     if (!is.null(minVersion)) {

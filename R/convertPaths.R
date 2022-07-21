@@ -44,21 +44,21 @@ convertPaths <- function(x, patterns, replacements) {
 
 #' @author Eliot McIntire and Alex Chubaty
 #' @export
-#' @importFrom raster filename raster
 #' @rdname convertPaths
 convertRasterPaths <- function(x, patterns, replacements) {
   if (is.list(x)) {
     x <- lapply(x, convertRasterPaths, patterns, replacements)
   } else if (!is.null(x)) {
+    .requireNamespace("raster", stopOnFALSE = TRUE)
     if (is.character(x)) {
       if (length(x) > 1) {
         x <- lapply(x, convertRasterPaths, patterns, replacements)
       } else {
-        x <- raster(x)
+        x <- raster::raster(x)
       }
     }
 
-    x@file@name <- convertPaths(filename(x), patterns, replacements)
+    x@file@name <- convertPaths(raster::filename(x), patterns, replacements)
   }
   x # handles null case
 }

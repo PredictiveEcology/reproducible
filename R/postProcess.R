@@ -7,8 +7,6 @@
 #'           See individual methods. This can be provided as a
 #'           \code{rlang::quosure} or a normal R object.
 #' @importFrom utils capture.output
-#' @importFrom raster buffer
-#' @importFrom sp spTransform
 #' @seealso \code{prepInputs}
 #' @inheritParams prepInputs
 #' @rdname postProcess
@@ -125,7 +123,6 @@ postProcess <- function(x, ...) {
 #' }
 #'
 #' @export
-#' @importFrom raster removeTmpFiles
 #' @example inst/examples/example_postProcess.R
 #' @rdname postProcess
 postProcess.default <- function(x, filename1 = NULL, filename2 = NULL,
@@ -146,7 +143,9 @@ postProcess.default <- function(x, filename1 = NULL, filename2 = NULL,
 
 
   if (isSpatialAny(x)) {
-    on.exit(removeTmpFiles(h = 0), add = TRUE)
+    .requireNamespace("terra", stopOnFALSE = TRUE)
+    .requireNamespace("raster", stopOnFALSE = TRUE)
+    on.exit(raster::removeTmpFiles(h = 0), add = TRUE)
     x <- postProcessTerra(from = x, studyArea = studyArea,
                           rasterToMatch = rasterToMatch, useCache = useCache,
                           filename1 = filename1, filename2 = filename2,
@@ -187,8 +186,6 @@ postProcess.default <- function(x, filename1 = NULL, filename2 = NULL,
 #' @example inst/examples/example_postProcess.R
 #' @export
 #' @importFrom methods is
-#' @importFrom raster buffer crop crs extent projectRaster res crs<-
-#' @importFrom sp SpatialPolygonsDataFrame spTransform CRS proj4string
 #' @rdname cropInputs
 cropInputs <- function(x, studyArea, rasterToMatch, verbose = getOption("reproducible.verbose", 1), ...) {
   UseMethod("cropInputs")
@@ -204,7 +201,8 @@ cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
     cropTo <- if (!is.null(rasterToMatch)) {
       rasterToMatch
     } else {
-      if (is.na(crs(studyArea)))
+      browser()
+      if (is.na(.crs(studyArea)))
         stop("studyArea does not have a crs")
       studyArea
     }
@@ -266,7 +264,6 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
 
 #' @keywords internal
 #' @rdname fixErrors
-#' @importFrom raster isLonLat origin origin<- xmax<- xmin<- ymax<- ymin<-
 fixErrorsRaster <- function(x, objectName, attemptErrorFixes = TRUE,
                              useCache = getOption("reproducible.useCache", FALSE),
                              verbose = getOption("reproducible.verbose", 1),
@@ -274,13 +271,14 @@ fixErrorsRaster <- function(x, objectName, attemptErrorFixes = TRUE,
                              ...) {
 
   #rounding lon lat resolution will break the raster
-  if (!isLonLat(x)) {
+  .requireNamespace("raster", stopOnFALSE = TRUE)
+  if (!raster::isLonLat(x)) {
     origin(x) <- roundTo6Dec(origin(x))
-    xmin(x) <- roundTo6Dec(xmin(x))
-    ymin(x) <- roundTo6Dec(ymin(x))
-    xmax(x) <- roundTo6Dec(xmax(x))
-    ymax(x) <- roundTo6Dec(ymax(x))
-    res(x) <- roundTo6Dec(res(x))
+    raster::xmin(x) <- roundTo6Dec(raster::xmin(x))
+    raster::ymin(x) <- roundTo6Dec(raster::ymin(x))
+    raster::xmax(x) <- roundTo6Dec(raster::xmax(x))
+    raster::ymax(x) <- roundTo6Dec(raster::ymax(x))
+    raster::res(x) <- roundTo6Dec(raster::res(x))
   }
   x
 }
@@ -413,7 +411,6 @@ fixErrorssf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
 #'
 #' @export
 #' @inheritParams prepInputs
-#' @importFrom raster canProcessInMemory
 #' @rdname projectInputs
 #'
 #' @example inst/examples/example_postProcess.R
@@ -533,7 +530,6 @@ maskInputs.default <- function(x, studyArea = NULL, rasterToMatch = NULL, maskWi
 #'  absolute or relative path and used as is if absolute or prepended with
 #'  \code{destinationPath} if provided, and if \code{filename2} is relative.
 #'
-#' @importFrom raster tmpDir
 #' @rdname determineFilename
 #' @example inst/examples/example_postProcess.R
 determineFilename <- function(filename2 = NULL, filename1 = NULL,
@@ -624,7 +620,6 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #' @author Eliot McIntire and Jean Marchal
 #' @export
 #' @importFrom methods is
-#' @importFrom raster shapefile writeRaster
 #' @rdname writeOutputs
 #'
 #' @example inst/examples/example_postProcess.R
@@ -754,7 +749,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
         }
         if (length(argsForWrite$filename) == 1) {
           argsForWrite <- lapply(argsForWrite, function(x) x[1])
-          xTmp <- do.call(writeRaster, args = c(x = x, argsForWrite))
+          xTmp <- do.call(terra::writeRaster, args = c(x = x, argsForWrite))
           names(xTmp) <- names(x)
           # messagePrepInputs("Object was a RasterStack; only one filename provided so returning a RasterBrick;", verbose = verbose)
           # messagePrepInputs("  layer names will likely be wrong.", verbose = verbose)
@@ -772,8 +767,8 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
           }
           argsForWrite[!longerThanOne] <- lapply(argsForWrite[!longerThanOne], function(x) rep(x, nLayers))
           xTmp <- lapply(seq_len(nLayers), function(ind) {
-            inside <- progressBarCode(do.call(writeRaster, args = c(x = x[[ind]], lapply(argsForWrite, function(y) y[ind]))),
-                                      doProgress = ncell(x) > 2e6,
+            inside <- progressBarCode(do.call(terra::writeRaster, args = c(x = x[[ind]], lapply(argsForWrite, function(y) y[ind]))),
+                                      doProgress = raster::ncell(x) > 2e6,
                                       message = c("Writing ", argsForWrite$filename[ind], " to disk ..."),
                                       colour = getOption("reproducible.messageColourPrepInputs"),
                                       verbose = verbose)
@@ -794,8 +789,8 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
           }
         }
         origColors <- checkColors(x)
-        xTmp <- progressBarCode(do.call(writeRaster, args = c(x = x, argsForWrite)),
-                                doProgress = ncell(x) > 2e6,
+        xTmp <- progressBarCode(do.call(terra::writeRaster, args = c(x = x, argsForWrite)),
+                                doProgress = raster::ncell(x) > 2e6,
                                 message = c("Writing ", argsForWrite$filename, " to disk ..."),
                                 colour = getOption("reproducible.messageColourPrepInputs"),
                                 verbose = verbose)
@@ -808,7 +803,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
       # should have stayed at
       # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0
       if (!identical(.crs(xTmp), .crs(x)))
-        crs(xTmp) <- .crs(x)
+        raster::crs(xTmp) <- .crs(x)
 
       x <- xTmp
     }
@@ -902,7 +897,6 @@ writeOutputs.default <- function(x, filename2, ...) {
 #' @author Ian Eddy
 #' @author Eliot McIntire
 #' @export
-#' @importFrom raster getValues sampleRandom
 #' @rdname assessDataType
 #'
 #' @example inst/examples/example_assessDataType.R
@@ -911,7 +905,6 @@ assessDataType <- function(ras, type = 'writeRaster') {
 }
 
 #' @export
-#' @importFrom raster getValues maxValue ncell
 #' @rdname assessDataType
 assessDataType.Raster <- function(ras, type = "writeRaster") {
   ## using ras@data@... is faster, but won't work for @values in large rasters
@@ -919,8 +912,8 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
 
   # browser(expr = exists("._assessDataType_1"))
   datatype <- NULL
-  if (ncell(ras) > 1e8) { # for very large rasters, try a different way
-    maxValCurrent <- maxValue(ras)
+  if (raster::ncell(ras) > 1e8) { # for very large rasters, try a different way
+    maxValCurrent <- raster::maxValue(ras)
     ras <- setMinMaxIfNeeded(ras)
     # if (maxValCurrent != maxValue(ras))
     datatype <- dataType(ras)
@@ -930,7 +923,7 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
 
   if (is.null(datatype)) {
 
-    if (ncell(ras) > N) {
+    if (raster::ncell(ras) > N) {
       rasVals <- tryCatch(suppressWarnings(raster::sampleRandom(x = ras, size = N)),
                           error = function(x) rep(NA_integer_, N))
     } else {
@@ -1045,8 +1038,6 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots,
   list(dots = dots, filename1 = filename1)
 }
 
-#' @importFrom raster projectExtent
-#' @importFrom sp wkt
 #' @importFrom Require normPath
 postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                                   useCache = getOption("reproducible.useCache", FALSE),
@@ -1088,7 +1079,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
       # cropInputs
       ##################################
       if (!is.null(rasterToMatch)) {
-        extRTM <- extent(rasterToMatch)
+        extRTM <- raster::extent(rasterToMatch)
         crsRTM <- .crs(rasterToMatch)
       } else {
         extRTM <- NULL
@@ -1108,7 +1099,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                                                        function(xx) !isProjected(xx)))
 
         if (!any(unlist(projections))) {
-          if (is.null(rasterToMatch) || max(res(rasterToMatch)) < min(res(x))) {
+          if (is.null(rasterToMatch) || max(raster::res(rasterToMatch)) < min(raster::res(x))) {
             useBuffer <- TRUE
           }
         }
@@ -1119,17 +1110,17 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
         #if (!requireNamespace("rgeos", quietly = TRUE)) stop(messageRgeosMissing)
         if (!is.null(rasterToMatch)) {
           #reproject rasterToMatch, extend by res
-          newExtent <- suppressWarningsSpecific(projectExtent(rasterToMatch, crs = .crs(x)), projNotWKT2warn)
-          tempPoly <- terra::vect(as(extent(newExtent), "SpatialPolygons"))
-          crs(tempPoly) <- sp::wkt(x)
+          newExtent <- suppressWarningsSpecific(raster::projectExtent(rasterToMatch, crs = .crs(x)), projNotWKT2warn)
+          tempPoly <- terra::vect(as(raster::extent(newExtent), "SpatialPolygons"))
+          raster::crs(tempPoly) <- sp::wkt(x)
           #buffer the new polygon by 1.5 the resolution of X so edges aren't cropped out
-          tempPoly <- as(terra::buffer(tempPoly, width = max(res(x))*1.5), "Spatial")
+          tempPoly <- as(terra::buffer(tempPoly, width = max(raster::res(x))*1.5), "Spatial")
           extRTM <- tempPoly
           crsRTM <- suppressWarningsSpecific(falseWarnings = "CRS object has comment", .crs(tempPoly))
         } else {
           bufferSA <- TRUE
           origStudyArea <- studyArea
-          bufferWidth <- max(res(x)) * 1.5
+          bufferWidth <- max(raster::res(x)) * 1.5
           crsX <- .crs(x)
           if (!is(studyArea, "sf")) {
             studyArea <- sp::spTransform(studyArea, CRSobj = crsX)
@@ -1157,7 +1148,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                        testValidity = testValidity, ...)
       } else {
         # browser(expr = exists("._postProcess.spatialClasses_2"))
-        if (!isTRUE(all.equal(extent(x), extRTM))) {
+        if (!isTRUE(all.equal(raster::extent(x), extRTM))) {
           useCacheOrig <- useCache
           useCache <- FALSE
           x <- Cache(cropInputs, x = x, studyArea = studyArea,
@@ -1276,17 +1267,9 @@ bufferWarningSuppress <- function(# warn,
   x1
 }
 
-roundToRes <- function(extent, x) {
-  if (is(x, "Raster"))
-    extent <- raster::extent(
-      c(round(c(xmin(extent), xmax(extent))/res(x)[1],0)*res(x)[1],
-        round(c(ymin(extent), ymax(extent))/res(x)[2],0)*res(x)[2]))
-  extent
-}
-
 setMinMaxIfNeeded <- function(ras) {
   # special case where the colours already match the discrete values
-  suppressWarnings(maxValCurrent <- maxValue(ras))
+  suppressWarnings(maxValCurrent <- raster::maxValue(ras))
   needSetMinMax <- FALSE
   if (isTRUE(any(is.na(maxValCurrent)))) {
     needSetMinMax <- TRUE
@@ -1294,8 +1277,8 @@ setMinMaxIfNeeded <- function(ras) {
 
     # if the colors are set and are the same length of the integer sequence between min and max, don't override
     if (length(.getColors(ras)[[1]])) {
-      if (!is.na(suppressWarnings(maxValue(ras))) && !is.na(suppressWarnings(minValue(ras))))
-        if (length(.getColors(ras)[[1]]) == (maxValue(ras) - minValue(ras) + 1)) {
+      if (!is.na(suppressWarnings(raster::maxValue(ras))) && !is.na(suppressWarnings(raster::minValue(ras))))
+        if (length(.getColors(ras)[[1]]) == (raster::maxValue(ras) - raster::minValue(ras) + 1)) {
           return(ras)
         }
     }
@@ -1305,7 +1288,7 @@ setMinMaxIfNeeded <- function(ras) {
     }
   }
   if (isTRUE(needSetMinMax)) {
-    large <- if (nlayers(ras) > 25 || ncell(ras) > 1e7) TRUE else FALSE
+    large <- if (nlayers(ras) > 25 || raster::ncell(ras) > 1e7) TRUE else FALSE
     if (large) message("  Large ",class(ras), " detected; setting minimum and maximum may take time")
     suppressWarnings(ras <- setMinMax(ras))
     if (large) message("  ... Done")
@@ -1316,7 +1299,7 @@ setMinMaxIfNeeded <- function(ras) {
 differentRasters <- function(ras1, ras2, targetCRS) {
 
   (!isTRUE(all.equal(.crs(ras1), targetCRS)) |
-     !isTRUE(all.equal(res(ras1), res(ras2))) |
+     !isTRUE(all.equal(raster::res(ras1), raster::res(ras2))) |
      !isTRUE(all.equal(extent(ras1), extent(ras2))))
 }
 
@@ -1401,213 +1384,16 @@ MaxValsFlts <- MaxVals[grep("FLT", names(MinVals), value = TRUE)]
 
 projNotWKT2warn <- "Using PROJ not WKT2"
 
-# specialBuffer <- function(studyArea, x) {
-#   studyAreaExt2 <- extent(studyArea)
-#   newXMin <- xmin(studyAreaExt2)
-#   xMisAlignMin <- ((xmin(studyAreaExt2) - origin(x)[1]) %% res(x)[1])
-#   if (xMisAlignMin < res(x)[1]/2) {
-#     newXMin <- newXMin - xMisAlignMin
-#   }
-#
-#   newYMin <- ymin(studyAreaExt2)
-#   yMisAlignMin <- ((ymin(studyAreaExt2) - origin(x)[2]) %% res(x)[2])
-#   if (yMisAlignMin < res(x)[2]/2) {
-#     newYMin <- newYMin - yMisAlignMin
-#   }
-#
-#   newXMax <- xmax(studyAreaExt2)
-#   xMisAlignMax <- (res(x)[1] - ((xmax(studyAreaExt2) - origin(x)[1]) %% res(x)[1]))
-#   if (xMisAlignMax < res(x)[1]/2) {
-#     newXMax <- newXMax + xMisAlignMax
-#   }
-#
-#   newYMax <- ymax(studyAreaExt2)
-#   yMisAlignMax <- (res(x)[2] - ((ymax(studyAreaExt2) - origin(x)[2]) %% res(x)[2]))
-#   if (yMisAlignMax < res(x)[2]/2) {
-#     newYMax <- ymax(studyAreaExt2) + yMisAlignMax
-#   }
-#
-#   newExtent <- extent(newXMin, newXMax, newYMin, newYMax)
-#   studyArea2 <- as(newExtent, "SpatialPolygons")
-#   crs(studyArea2) <- crs(studyArea)
-#   studyArea2
-# }
 
 
-# @importFrom raster extension
-# @importFrom gdalUtilities gdalwarp
-# cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
-#                                 targetCRS, cores = 1, dots = list(), filename2, useSAcrs = FALSE,
-#                                 destinationPath = getOption("reproducible.destinationPath", "."),
-#                                 verbose = getOption("reproducible.verbose", 1),
-#                                 ...) {
-#   messagePrepInputs("crop, reproject, mask is using one-step gdalwarp")
-#
-#   if (!is.null(studyArea)) {
-#     studyArea <- fixErrors(x = studyArea)
-#   }
-#
-#   # browser(expr = exists("._cropReprojMaskWGDAL_1"))
-#
-#   # rasters need to go to same directory that can be unlinked at end without losing other temp files
-#   tempSrcRaster <- bigRastersTmpFile()
-#   returnToRAM <- FALSE
-#   if (missing(filename2)) filename2 <- NULL
-#   if (!isFALSE(filename2)) {
-#     filename2 <- determineFilename(filename2, destinationPath = destinationPath, verbose = verbose)
-#   }
-#
-#   if (is.null(filename2) | isFALSE(filename2)) {
-#     returnToRAM <- TRUE
-#     tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
-#     filename2 <- file.path(tmpRasPath, paste0(x@data@names, "_", rndstr(1, 8)))
-#     layerName <- names(x)
-#   }
-#   if (nchar(extension(filename2)) == 0)
-#     filename2 <- paste0(filename2, ".tif")
-#   filename2 <- normPath(filename2)
-#
-#   # GDAL can't deal with grd filename extensions (and possibly others) --> go with .tif and update at end
-#   filename2Orig <- filename2
-#   if (!grepl(".tif$", filename2)) filename2 <- paste0(filename2, ".tif")
-#   needRenameAtEnd <- !identical(filename2Orig, filename2)
-#
-#   isFactor <- raster::is.factor(x)
-#   if (isFactor) {
-#     factorDF <- raster::levels(x)
-#   }
-#   # GDAL will to a reprojection without an explicit crop
-#   # the raster could be in memory if it wasn't reprojected
-#   if (inMemory(x)) {
-#     dType <- assessDataType(x, type = "writeRaster")
-#     dTypeGDAL <- assessDataType(x, type = "GDAL")
-#
-#     x <- progressBarCode(writeRaster(x, filename = tempSrcRaster,
-#                                      datatype = dType, overwrite = TRUE),
-#                          doProgress = ncell(x) > 2e6,
-#                          message = "Writing temporary raster to disk for GDAL ...",
-#                          colour = getOption("reproducible.messageColourPrepInputs"),
-#                          verbose = verbose)
-#     gc()
-#   } else {
-#     tempSrcRaster <- x@file@name #Keep original raster.
-#     dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
-#   }
-#   tempSrcRaster <- normPath(tempSrcRaster)
-#
-#   srcCRS <- as.character(.crs(raster::raster(tempSrcRaster)))
-#
-#   needCutline <- NULL
-#   needReproject <- FALSE
-#   needNewRes <- FALSE
-#   tempSrcShape <- NULL
-#   cropExtent <- extent(raster::raster(tempSrcRaster)) #default
-#
-#   if (!is.null(studyArea)) {
-#     # studyAreaCRSx <- spTransform(studyArea, crs(x))
-#     needCutline <- TRUE
-#     tempSrcShape <- normPath(file.path(tempfile(tmpdir = raster::tmpDir()), ".shp", fsep = ""))
-#
-#     studyAreasf <- sf::st_as_sf(studyArea)
-#     if (isTRUE(useSAcrs)) {
-#       targCRS <- .crs(studyArea)
-#     } else {
-#       if (!is.null(rasterToMatch)) {
-#         targCRS <- crs(rasterToMatch)
-#       } else {
-#         targCRS <- srcCRS
-#       }
-#       studyAreasf <- sf::st_transform(studyAreasf, crs = targCRS)
-#     }
-#     # write the studyArea to disk -- go via sf because faster
-#     muffld <- capture.output(
-#       sf::st_write(studyAreasf, tempSrcShape)
-#     )
-#
-#   } else if (!is.null(rasterToMatch)) {
-#     targCRS <- .crs(rasterToMatch)
-#   }
-#
-#   if (isTRUE(useSAcrs) | is.null(rasterToMatch)) {
-#     cropExtent <- extent(studyAreasf)
-#     if (!(grepl("longlat", targCRS)))
-#       cropExtent <- roundToRes(cropExtent, x = x)
-#   } else if (!is.null(rasterToMatch)) {
-#     cropExtent <- extent(rasterToMatch)
-#   } # else keep extent the original extent (ie SA provided, but useSACRS = FALSE)
-#
-#   dontSpecifyResBCLongLat <- isLongLat(targCRS, srcCRS)
-#
-#   if (!is.null(rasterToMatch)) {
-#     needNewRes <- !identical(res(x), res(rasterToMatch))
-#   } else if (isTRUE(useSAcrs) ) {
-#     if (!isProjected(x))
-#       stop("Cannot set useSAcrs to TRUE if x is longitude and latitude; please provide a rasterToMatch")
-#   }
-#
-#   ## GDAL requires file path to cutline - write to disk
-#   tr <- if (needNewRes) res(rasterToMatch) else res(x)
-#
-#   if (!compareCRS(srcCRS, targCRS) ) {
-#     needReproject <- TRUE
-#   }
-#
-#   if (is.null(dots$method)) {
-#     dots$method <- assessDataType(x, type = "projectRaster")
-#   }
-#   if (dots$method == "ngb") {
-#     dots$method <- "near"
-#   }
-#
-#   if (!is.character(targCRS)) {
-#     targCRS <- as.character(targCRS)
-#   }
-#
-#   ## convert extent to string
-#   te <- paste(c(cropExtent[1], cropExtent[3], cropExtent[2], cropExtent[4]))
-#   cores <- dealWithCores(cores)
-#   prll <- paste0("-wo NUM_THREADS=", cores, " ")
-#
-#   ## this is a workaround to passing NULL arguments to gdal_warp, which does not work
-#   gdalArgs <- list(srcfile = tempSrcRaster, dstfile = filename2, s_srs = srcCRS, te = te,
-#                    t_srs = targCRS, cutline = tempSrcShape, crop_to_cutline = NULL, srcnodata = NA,
-#                    dstnodata = NA, tr = tr, ot = dTypeGDAL,
-#                    multi = TRUE, wo = prll,
-#                    overwrite = TRUE)
-#   gdalArgs[["r"]] <- dots$method ## keep 'r' separate in case it's NULL (so it won't be added)
-#   gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))]
-#   do.call(gdalUtilities::gdalwarp, gdalArgs)
-#
-#   x <- raster(filename2)
-#
-#   x <- setMinMaxIfNeeded(x)
-#   if (returnToRAM) {
-#     origColors <- checkColors(x)
-#     x[] <- x[]
-#     x <- rebuildColors(x, origColors)
-#     names(x) <- layerName
-#   }
-#   if (needRenameAtEnd) {
-#     x <- progressBarCode(writeRaster(x, filename = filename2Orig, overwrite = TRUE),
-#                          doProgress = ncell(x) > 2e6,
-#                          message = "Writing correct raster file to disk following GDAL ...",
-#                          colour = getOption("reproducible.messageColourPrepInputs"),
-#                          verbose = verbose)
-#   }
-#
-#   if (isFactor) {
-#     levels(x) <- factorDF[[1]]
-#   }
-#
-#   x
-# }
 
 isLongLat <- function(targCRS, srcCRS = targCRS) {
   if (grepl("longlat", targCRS)) !grepl("longlat", srcCRS) else FALSE
 }
 
 .crs <- function(x, ...) {
-  a <- suppressWarningsSpecific(falseWarnings = "CRS object has comment",
+  .requireNamespace("raster", stopOnFALSE = TRUE)
+  suppressWarningsSpecific(falseWarnings = "CRS object has comment",
                            raster::crs(x, ...))
 }
 
@@ -1625,11 +1411,11 @@ isProjected <- function(x) {
   if (is(x, "sf")) {
     txt <- sf::st_crs(x)
   } else {
-    txt <- suppressWarningsSpecific(falseWarnings = "no wkt comment", wkt(x))
+    txt <- suppressWarningsSpecific(falseWarnings = "no wkt comment", sp::wkt(x))
   }
 
   if (identical(nchar(txt), 0L) || is.null(txt)) {
-    txt <- crs(x)
+    txt <- .crs(x)
     out <- any(!grepl("(longlat)", txt))
   } else {
     out <- tryCatch(any(!grepl("(longitude).*(latitude)", txt)), error = function(yy) NULL)
