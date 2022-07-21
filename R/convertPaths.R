@@ -78,32 +78,27 @@ convertRasterPaths <- function(x, patterns, replacements) {
 #' @author Eliot McIntire
 #' @export
 #' @rdname Filenames
-setGeneric("Filenames", function(obj, allowMultiple = TRUE) {
-  standardGeneric("Filenames")
-})
+Filenames <- function(obj, allowMultiple = TRUE) {
+  UseMethod("Filenames")
+}
 
-#' @export
-#' @rdname Filenames
-setMethod(
-  "Filenames",
-  signature = "ANY",
-  definition = function(obj, allowMultiple) {
-    if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
-      if (!requireNamespace("terra") )
-        stop("Please install terra package")
-      fns <- terra::sources(obj)
-    } else {
-      fns <- NULL
-    }
-    fns
-})
 
-#' @export
-#' @rdname Filenames
-setMethod(
-  "Filenames",
-  signature = "Raster",
-  definition = function(obj, allowMultiple = TRUE) {
+Filenames.default <- function(obj, allowMultiple) {
+  if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
+    if (!requireNamespace("terra") )
+      stop("Please install terra package")
+    fns <- terra::sources(obj)
+  } else if (inherits(obj, "RasterStack")) {
+    FilenamesRasterStack(obj, allowMultiple = allowMultiple)
+  } else if (inherits(obj, "Raster")) {
+    FilenamesRaster(obj, allowMultiple = allowMultiple)
+  } else {
+    fns <- NULL
+  }
+  fns
+}
+
+FilenamesRaster <- function(obj, allowMultiple = TRUE) {
     fn <- filename(obj)
     if (length(fn) == 0)
       fn <- ""
@@ -111,14 +106,9 @@ setMethod(
       if (endsWith(fn, suffix = "grd"))
         fn <- c(fn, gsub("grd$", "gri", fn))
     normPath(fn)
-})
+}
 
-#' @export
-#' @rdname Filenames
-setMethod(
-  "Filenames",
-  signature = "RasterStack",
-  definition = function(obj, allowMultiple = TRUE) {
+FilenamesRasterStack <- function(obj, allowMultiple = TRUE) {
     fn <- unlist(lapply(seq_along(names(obj)), function(index)
       Filenames(obj[[index]], allowMultiple = allowMultiple)))
 
@@ -130,14 +120,10 @@ setMethod(
     }
 
     return(fn)
-})
+}
 
 #' @export
-#' @rdname Filenames
-setMethod(
-  "Filenames",
-  signature = "environment",
-  definition = function(obj, allowMultiple = TRUE) {
+Filenames.environment <- function(obj, allowMultiple = TRUE) {
     rasterFilename <- Filenames(as.list(obj), allowMultiple = allowMultiple)
     # rastersLogicalList <- isOrHasRaster(obj)
     # rastersLogical <- vapply(rastersLogicalList, function(x) any(unlist(x)), logical(1))
@@ -175,18 +161,13 @@ setMethod(
       rasterFilename <- rasterFilename[!unlist(rasterFilenameDups)]
     }
     return(rasterFilename)
-})
+}
 
 #' @export
-#' @rdname Filenames
-setMethod(
-  "Filenames",
-  signature = "list",
-  definition = function(obj, allowMultiple = TRUE) {
+Filenames.list <- function(obj, allowMultiple = TRUE) {
     ## convert a list to an environment -- this is to align it with a simList and environment
     if (is.null(names(obj))) {
       names(obj) <- as.character(seq(obj))
     }
     unlist(lapply(obj, function(o) Filenames(o, allowMultiple = allowMultiple)))
-    # Filenames(as.environment(obj), allowMultiple = allowMultiple)
-})
+}

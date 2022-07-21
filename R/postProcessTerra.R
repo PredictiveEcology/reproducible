@@ -218,7 +218,7 @@ isSpat2 <- function(origClass) any(origClass %in% c("SpatVector", "SpatRaster"))
 isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
 isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || is(x, "sf") || is(x, "sfc")
 isSpatialAny <- function(x) isGridded(x) || isVector(x)
-
+isSpatial <- function(x) any(inherits(x, "Spatial"))
 
 #' Fix common errors in GIS layers, using \code{terra}
 #'
@@ -228,11 +228,16 @@ isSpatialAny <- function(x) isGridded(x) || isVector(x)
 #' @param x The SpatStat or SpatVect object to try to fix.
 #'
 fixErrorsTerra <- function(x) {
-  if (isVector(x)) {
-    xValids <- terra::is.valid(x)
-    if (any(!xValids))
-      x <- terra::makeValid(x)
+  if (isSpatial(x)) {
+    x <- fixErrorsSpatialPolygons(x)
+  } else {
+    if (isVector(x) && isSpat(x)) {
+      xValids <- terra::is.valid(x)
+      if (any(!xValids))
+        x <- terra::makeValid(x)
+    }
   }
+
   x
 }
 

@@ -133,7 +133,7 @@ StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
 shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
 
 
-# Try manually, individual pieces
+# Try manually, individual pieces # These use terra internally
 shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
 shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
 shpEcozoneClean <- fixErrors(shpEcozone)
@@ -157,13 +157,6 @@ if (require("terra")) {
   VectEcozoneReprojected <- projectInputs(vectEcozone, StudyArea)
   vectEcozoneCropped <- cropInputs(vectEcozone, StudyArea)
 
-
-
-  # Note these two have different function names --> methods for cropInputs and fixErrors
-  #    are not implemented yet
-  shpEcozoneClean <- fixErrorsTerra(vectEcozone)
-
-  options(opts)
 }
 
 setwd(ow)

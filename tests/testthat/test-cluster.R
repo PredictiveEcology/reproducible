@@ -2,7 +2,6 @@ test_that("test parallel collisions", {
   skip_on_cran() # testing multi-threaded things on CRAN
   skip_on_os("mac")
 
-  setwd("~/GitHub/reproducible")
   workingDir <- getwd()
   testInitOut <- testInit("parallel", tmpFileExt = c(".log", ".log", ".log"))
   on.exit({
