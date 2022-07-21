@@ -89,7 +89,7 @@ setMethod(
   signature = "ANY",
   definition = function(obj, allowMultiple) {
     if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
-      if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+      if (!requireNamespace("terra") )
         stop("Please install terra package")
       fns <- terra::sources(obj)
     } else {

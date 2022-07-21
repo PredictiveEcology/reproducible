@@ -1,181 +1,188 @@
 test_that("postProcess doesn't work (part 1)", {
   testInitOut <- testInit(c("raster", "sf"), tmpFileExt = c(".tif", ".tif"),
                           opts = list(
-    "rasterTmpDir" = tempdir2(rndstr(1,6)),
-    "reproducible.inputPaths" = NULL,
-    "reproducible.overwrite" = TRUE)
+                            "rasterTmpDir" = tempdir2(rndstr(1,6)),
+                            "reproducible.inputPaths" = NULL,
+                            "reproducible.overwrite" = TRUE)
   )
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-
   options("reproducible.cachePath" = tmpdir)
 
-  # Add a study area to Crop and Mask to
-  # Create a "study area"
-  coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                      .Dim = c(5L, 2L))
-  coords2 <- structure(c(-115.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                       .Dim = c(5L, 2L))
-  Sr1 <- Polygon(coords)
-  Srs1 <- Polygons(list(Sr1), "s1")
-  StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- crsToUse
+  for (TorF in c(FALSE, TRUE)) {
+    opts <- options("reproducible.useTerra" = TorF)
 
-  Sr1 <- Polygon(coords2)
-  Srs1 <- Polygons(list(Sr1), "s1")
-  StudyArea2 <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea2) <- crsToUse
+    # Add a study area to Crop and Mask to
+    # Create a "study area"
+    coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+                        .Dim = c(5L, 2L))
+    coords2 <- structure(c(-115.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+                         .Dim = c(5L, 2L))
+    Sr1 <- Polygon(coords)
+    Srs1 <- Polygons(list(Sr1), "s1")
+    StudyArea <- SpatialPolygons(list(Srs1), 1L)
+    crs(StudyArea) <- crsToUse
 
-  nonLatLongProj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
-                          "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
-  #dPath <- file.path(tmpdir, "ecozones")
-  nc <- sf::st_as_sf(StudyArea)#system.file("shape/nc.shp", package="sf"))
-  nc1 <- sf::st_transform(nc, nonLatLongProj)
-  #ncSmall <- sf::st_buffer(nc1, dist = -10000)
-  ncSmall <- sf::st_as_sf(StudyArea2)
-  ncSmall <- sf::st_transform(ncSmall, nonLatLongProj)
-  ncSmall <- sf::st_buffer(ncSmall, dist = -10000)
-  b <- postProcess(nc1, studyArea = ncSmall, filename2 = NULL)
-  expect_true(is(b, "sf"))
-  expect_equal(extent(b), extent(ncSmall))
-  expect_true(sf::st_area(b) < sf::st_area(nc1))
+    Sr1 <- Polygon(coords2)
+    Srs1 <- Polygons(list(Sr1), "s1")
+    StudyArea2 <- SpatialPolygons(list(Srs1), 1L)
+    crs(StudyArea2) <- crsToUse
 
-  r <- suppressWarnings(raster(nc1, res = 1000)) # TODO: temporary until raster crs fixes
-  # rSmall <- suppressWarnings(raster(ncSmall, res = 1000)) # TODO: temporary until raster crs fixes
+    nonLatLongProj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
+                            "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
+    #dPath <- file.path(tmpdir, "ecozones")
+    nc <- sf::st_as_sf(StudyArea)#system.file("shape/nc.shp", package="sf"))
+    nc1 <- sf::st_transform(nc, nonLatLongProj)
+    #ncSmall <- sf::st_buffer(nc1, dist = -10000)
+    ncSmall <- sf::st_as_sf(StudyArea2)
+    ncSmall <- sf::st_transform(ncSmall, nonLatLongProj)
+    ncSmall <- sf::st_buffer(ncSmall, dist = -10000)
+    b <- postProcess(nc1, studyArea = ncSmall, filename2 = NULL)
+    expect_true(is(b, "sf"))
+    expect_equal(extent(b), extent(ncSmall))
+    expect_true(sf::st_area(b) < sf::st_area(nc1))
 
-  rB <- suppressWarnings(raster(nc1, res = 4000)) # TODO: temporary until raster crs fixes
-  rSmall <- suppressWarnings(raster(ncSmall, res = 4000)) # TODO: temporary until raster crs fixes
+    r <- suppressWarnings(raster(nc1, res = 1000)) # TODO: temporary until raster crs fixes
+    # rSmall <- suppressWarnings(raster(ncSmall, res = 1000)) # TODO: temporary until raster crs fixes
 
-  # Tests with RasterBrick
-  r2 <- r1 <- rB
-  r1[] <- runif(ncell(rB))
-  r2[] <- runif(ncell(rB))
+    rB <- suppressWarnings(raster(nc1, res = 4000)) # TODO: temporary until raster crs fixes
+    rSmall <- suppressWarnings(raster(ncSmall, res = 4000)) # TODO: temporary until raster crs fixes
 
-  b <- raster::brick(r1, r2)
-  b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE)
-  expect_true(inherits(b1, "RasterBrick"))
+    # Tests with RasterBrick
+    r2 <- r1 <- rB
+    r1[] <- runif(ncell(rB))
+    r2[] <- runif(ncell(rB))
 
-  s <- raster::stack(r1, r2)
-  s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE)
-  expect_true(inherits(s1, "RasterStack"))
-  expect_equal(s1[], b1[], ignore_attr = TRUE)
-  # expect_equivalent(s1, b1) # deprecated in testthat
+    b <- raster::brick(r1, r2)
+    b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE)
+    expect_true(inherits(b1, "RasterBrick"))
 
-  b <- writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
-  b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
-  expect_true(inherits(b1, "RasterBrick"))
+    s <- raster::stack(r1, r2)
+    s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE)
+    expect_true(inherits(s1, "RasterStack"))
+    expect_equal(s1[], b1[], ignore_attr = TRUE)
+    # expect_equivalent(s1, b1) # deprecated in testthat
 
-  s <- raster::stack(writeRaster(s, filename = tmpfile[1], overwrite = TRUE))
-  s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
-  expect_true(inherits(s1, "RasterStack"))
+    b <- writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
+    b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
+    expect_true(inherits(b1, "RasterBrick"))
 
-  # Test datatype setting
-  dt1 <- "INT2U"
-  s <- raster::stack(writeRaster(s, filename = tmpfile[2], overwrite = TRUE))
-  s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
-                    datatype = dt1)
-  expect_identical(dataType(s1), rep(dt1, nlayers(s)))
+    s <- raster::stack(writeRaster(s, filename = tmpfile[1], overwrite = TRUE))
+    s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
+    expect_true(inherits(s1, "RasterStack"))
+    expect_true(identical(Filenames(s1), tmpfile[2]))
+    # it was masked
+    expect_true(sum(values(s1), na.rm = TRUE) < (0.8 * sum(values(s), na.rm = TRUE)))
 
-  # Test datatype setting
-  dt1 <- c("INT2U", "INT4U")
-  s <- raster::stack(writeRaster(s, filename = tmpfile[1], overwrite = TRUE))
-  warns <- capture_error({
-    s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE,
+    # Test datatype setting
+    dt1 <- "INT2U"
+    s <- raster::stack(writeRaster(s, filename = tmpfile[2], overwrite = TRUE))
+    s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
                       datatype = dt1)
-  })
-  expect_true(any(grepl("the condition has length", warns)))
+    expect_identical(dataType(s1), rep(dt1, nlayers(s)))
+    expect_false(identical(dataType(s1), dataType(s)))
 
-  dt1 <- "INT4U"
-  b <- writeRaster(b, filename = tmpfile[2], overwrite = TRUE)
-  b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
-                    datatype = dt1)
-  expect_identical(dataType(b1), dt1)
+    # Test datatype setting
+    dt1 <- c("INT2U", "INT4U")
+    s <- raster::stack(writeRaster(s, filename = tmpfile[1], overwrite = TRUE))
+    warns <- capture_error({
+      s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE,
+                        datatype = dt1)
+    })
+    expect_true(any(grepl("the condition has length", warns)))
 
-  # now raster with sf ## TODO: temporarily skip these tests due to fasterize not being updated yet for crs changes
-  if (requireNamespace("fasterize")) {
-    r1 <- fasterize::fasterize(nc1, r)
-    r2 <- postProcess(r1, studyArea = ncSmall, filename2 = NULL)
-    expect_true(is(r2, "RasterLayer"))
-    expect_true(ncell(r2) < ncell(r1))
-    similarExtents(extent(ncSmall), extent(r2), res(r2)[1] * 2.5)
-    # expect_true((xmin(extent(ncSmall)) - xmin(r2)) < (res(r2)[1] * 2))
-    # expect_true((ymin(extent(ncSmall)) - ymin(r2)) < (res(r2)[2] * 2.5))
-    # expect_true((ymax(extent(ncSmall)) - ymax(r2)) > -(res(r2)[2] * 2.5))
-    # expect_true((xmax(extent(ncSmall)) - xmax(r2)) > -(res(r2)[2] * 2))
+    dt1 <- "INT4U"
+    b <- writeRaster(b, filename = tmpfile[2], overwrite = TRUE)
+    b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
+                      datatype = dt1)
+    expect_identical(dataType(b1), dt1)
 
-    # postProcess
-    expect_true(identical(1, postProcess(1)))
-    expect_true(identical(list(1, 1), postProcess(list(1, 1))))
-    expect_error(postProcess(nc1, rasterToMatch = r))
-    nc2 <- postProcess(nc1, studyArea = as(ncSmall, "Spatial"))
-    expect_equal(st_area(nc2), st_area(ncSmall))
+    # now raster with sf ## TODO: temporarily skip these tests due to fasterize not being updated yet for crs changes
+    if (requireNamespace("fasterize")) {
+      r1 <- fasterize::fasterize(nc1, r)
+      r2 <- postProcess(r1, studyArea = ncSmall, filename2 = NULL)
+      expect_true(is(r2, "RasterLayer"))
+      expect_true(ncell(r2) < ncell(r1))
+      expect_true(similarExtents(extent(ncSmall), extent(r2), res(r2)[1] * 2.5))
+      # expect_true((xmin(extent(ncSmall)) - xmin(r2)) < (res(r2)[1] * 2))
+      # expect_true((ymin(extent(ncSmall)) - ymin(r2)) < (res(r2)[2] * 2.5))
+      # expect_true((ymax(extent(ncSmall)) - ymax(r2)) > -(res(r2)[2] * 2.5))
+      # expect_true((xmax(extent(ncSmall)) - xmax(r2)) > -(res(r2)[2] * 2))
 
-    # cropInputs
-    expect_true(identical(1, cropInputs(1)))
-    nonLatLongProj2 <- paste("+proj=lcc +lat_1=51 +lat_2=77 +lat_0=0 +lon_0=-95",
-                             "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
-    nc3 <- suppressWarningsSpecific(falseWarnings = "Discarded datum Unknown based",
-                                    spTransform(as(nc1, "Spatial"), CRSobj = CRS(nonLatLongProj2)))
+      # postProcess
+      expect_true(identical(1, postProcess(1)))
+      expect_true(identical(list(1, 1), postProcess(list(1, 1))))
+      expect_error(postProcess(nc1, rasterToMatch = r))
+      nc2 <- postProcess(nc1, studyArea = as(ncSmall, "Spatial"))
+      expect_equal(st_area(nc2), st_area(ncSmall))
 
-    nc4 <- cropInputs(nc3, studyArea = ncSmall)
-    # nc4 <- cropTo(nc3, ncSmall)
-    ncSmall2 <- spTransform(as(ncSmall, "Spatial"), CRSobj = CRS(nonLatLongProj2))
-    ee <- extent(nc4)
+      # cropInputs
+      expect_true(identical(1, cropInputs(1)))
+      nonLatLongProj2 <- paste("+proj=lcc +lat_1=51 +lat_2=77 +lat_0=0 +lon_0=-95",
+                               "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
+      nc3 <- suppressWarningsSpecific(falseWarnings = "Discarded datum Unknown based",
+                                      spTransform(as(nc1, "Spatial"), CRSobj = CRS(nonLatLongProj2)))
 
-    expect_true(isTRUE(similarExtents(ee, extent(ncSmall2), closeEnough = res(r)[1])))
+      nc4 <- cropInputs(nc3, studyArea = ncSmall)
+      # nc4 <- cropTo(nc3, ncSmall)
+      ncSmall2 <- spTransform(as(ncSmall, "Spatial"), CRSobj = CRS(nonLatLongProj2))
+      ee <- extent(nc4)
 
-    # pass through
-    nc4 <- cropInputs(nc3, studyArea = 1)
-    expect_true(identical(nc4, nc3))
+      expect_true(isTRUE(similarExtents(ee, extent(ncSmall2), closeEnough = res(r)[1])))
 
-    ncSmallShifted <- ncSmall + 10000000
-    ncSmallShifted <- st_as_sf(ncSmallShifted)
-    st_crs(ncSmallShifted) <- st_crs(ncSmall)
-    mess <- cropTo(ncSmall, cropTo = ncSmallShifted)
-    expect_true(NROW(mess) == 0) # didn't overlap -- used to be error
-    # expect_true(any(grepl("with no data", mess)))
+      # pass through
+      nc4 <- cropInputs(nc3, studyArea = 1)
+      expect_true(identical(nc4, nc3))
 
-    # cropInputs.sf
-    nc3 <- st_transform(nc1, crs = CRS(nonLatLongProj2))
-    nc4 <- cropTo(nc3, cropTo = ncSmall)
-    # nc4 <- cropInputs(nc3, studyArea = ncSmall)
-    ncSmall2 <- st_transform(ncSmall, crs = CRS(nonLatLongProj2))
-    expect_true(isTRUE(similarExtents(extent(nc4), extent(ncSmall2), closeEnough = res(r)[1])))
-    # expect_true(isTRUE(all.equal(extent(nc4), extent(ncSmall2))))
+      ncSmallShifted <- ncSmall + 10000000
+      ncSmallShifted <- st_as_sf(ncSmallShifted)
+      st_crs(ncSmallShifted) <- st_crs(ncSmall)
+      mess <- cropTo(ncSmall, cropTo = ncSmallShifted)
+      expect_true(NROW(mess) == 0) # didn't overlap -- used to be error
+      # expect_true(any(grepl("with no data", mess)))
 
-    # studyArea as spatial object
-    nc5 <- cropTo(nc3, cropTo = as(ncSmall, "Spatial"))
-    # nc5 <- cropInputs(nc3, studyArea = as(ncSmall, "Spatial"))
-    ncSmall2 <- st_transform(ncSmall, crs = CRS(nonLatLongProj2))
-    expect_true(similarExtents(extent(nc5), extent(ncSmall2), res(r)[1]))
-    expect_true(isTRUE(all.equal(extent(nc5), extent(nc4))))
+      # cropInputs.sf
+      nc3 <- st_transform(nc1, crs = CRS(nonLatLongProj2))
+      nc4 <- cropTo(nc3, cropTo = ncSmall)
+      # nc4 <- cropInputs(nc3, studyArea = ncSmall)
+      ncSmall2 <- st_transform(ncSmall, crs = CRS(nonLatLongProj2))
+      expect_true(isTRUE(similarExtents(extent(nc4), extent(ncSmall2), closeEnough = res(r)[1])))
+      # expect_true(isTRUE(all.equal(extent(nc4), extent(ncSmall2))))
 
-    # studyArea pass through
-    nc5 <- cropTo(nc3, cropTo = 1)
-    expect_identical(nc5, nc3)
+      # studyArea as spatial object
+      nc5 <- cropTo(nc3, cropTo = as(ncSmall, "Spatial"))
+      # nc5 <- cropInputs(nc3, studyArea = as(ncSmall, "Spatial"))
+      ncSmall2 <- st_transform(ncSmall, crs = CRS(nonLatLongProj2))
+      expect_true(similarExtents(extent(nc5), extent(ncSmall2), res(r)[1]))
+      expect_true(isTRUE(all.equal(extent(nc5), extent(nc4))))
 
-    # rasterToMatch
-    nc5 <- cropTo(nc3, cropTo = r)
-    nc5_b <- projectTo(nc5, projectTo = r)
-    nc5Extent_r <- st_transform(nc5, crs = crs(r))
-    expect_true(similarExtents(extent(r), extent(nc5Extent_r), res(r)[1]))
+      # studyArea pass through
+      nc5 <- cropTo(nc3, cropTo = 1)
+      expect_identical(nc5, nc3)
 
-    ncSmallShifted <- ncSmall + 10000000
-    ncSmallShifted <- st_as_sf(ncSmallShifted)
-    st_crs(ncSmallShifted) <- st_crs(ncSmall)
-    mess <- capture_messages(out <- cropTo(ncSmall, cropTo = ncSmallShifted))
-    # expect_true(any(grepl("polygons do not intersect", mess)))
-    expect_true(NROW(out) == 0) # polygons do not intersect
+      # rasterToMatch
+      nc5 <- cropTo(nc3, cropTo = r)
+      nc5_b <- projectTo(nc5, projectTo = r)
+      nc5Extent_r <- st_transform(nc5, crs = crs(r))
+      expect_true(similarExtents(extent(r), extent(nc5Extent_r), res(r)[1]))
 
-    # LINEARRING Example
-    p6 = terra::vect("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
-    p6a <- fixErrorsTerra(p6)
-    expect_true(terra::is.valid(p6a))
-    expect_false(terra::is.valid(p6))
-  # projectInputs pass through
-    nc5 <- projectInputs(x = 1)
-    expect_identical(nc5, 1)
+      ncSmallShifted <- ncSmall + 10000000
+      ncSmallShifted <- st_as_sf(ncSmallShifted)
+      st_crs(ncSmallShifted) <- st_crs(ncSmall)
+      mess <- capture_messages(out <- cropTo(ncSmall, cropTo = ncSmallShifted))
+      # expect_true(any(grepl("polygons do not intersect", mess)))
+      expect_true(NROW(out) == 0) # polygons do not intersect
+
+      # LINEARRING Example
+      p6 = terra::vect("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
+      p6a <- fixErrorsTerra(p6)
+      expect_true(terra::is.valid(p6a))
+      expect_false(terra::is.valid(p6))
+      # projectInputs pass through
+      nc5 <- expect_error(projectInputs(x = 1))
+      # expect_identical(nc5, 1)
+    }
   }
 })
 
@@ -243,13 +250,14 @@ test_that("maskInputs errors when x is Lat-Long", {
   skip_on_cran()
   skip_on_ci()
   skip_if_not(requireNamespace("sf", quietly = TRUE))
-  skip_if_no_token()
 
   testInitOut <- testInit("raster", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
   ), needGoogle = TRUE)
+  skip_if(!Require::internetExists())
+  skip_if_no_token()
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -269,25 +277,25 @@ test_that("maskInputs errors when x is Lat-Long", {
     options(reproducible.polygonShortcut = ii)
     noisyOutput <- capture.output(
       suppressWarningsSpecific(falseWarnings = "attribute variables|st_buffer does not correctly buffer longitude",
-                             roads[[i]] <- prepInputs(targetFile = "miniRoad.shp",
-                             alsoExtract = "similar",
-                             url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
-                             studyArea = smallSA,
-                             useCache = FALSE,
-                             fun = "sf::st_read",
-                             destinationPath = tmpdir,
-                             filename2 = "miniRoads"))
+                               roads[[i]] <- prepInputs(targetFile = "miniRoad.shp",
+                                                        alsoExtract = "similar",
+                                                        url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
+                                                        studyArea = smallSA,
+                                                        useCache = FALSE,
+                                                        fun = "sf::st_read",
+                                                        destinationPath = tmpdir,
+                                                        filename2 = "miniRoads"))
     )
     # clearCache()
     noisyOutput <- capture.output(
       roads[[i + 2]] <- prepInputs(targetFile = "miniRoad.shp",
-                            alsoExtract = "similar",
-                            url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
-                            # studyArea = smallSA,
-                            useCache = FALSE,
-                            fun = "sf::st_read",
-                            destinationPath = tmpdir,
-                            filename2 = "miniRoads")
+                                   alsoExtract = "similar",
+                                   url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
+                                   # studyArea = smallSA,
+                                   useCache = FALSE,
+                                   fun = "sf::st_read",
+                                   destinationPath = tmpdir,
+                                   filename2 = "miniRoads")
     )
     # clearCache()
     attr(roads[[i]], "tags") <- NULL
@@ -308,6 +316,7 @@ test_that("maskInputs errors when x is Lat-Long", {
 
 
 test_that("prepInputs doesn't work (part 3)", {
+  skip_if(!Require::internetExists())
   if (interactive()) {
     testInitOut <- testInit(opts = list(reproducible.useTerra = TRUE))
     on.exit({
@@ -330,3 +339,4 @@ test_that("prepInputs doesn't work (part 3)", {
     expect_true(sumNonNAs > 37192540)
   }}
 )
+

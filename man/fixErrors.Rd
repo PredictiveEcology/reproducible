@@ -3,9 +3,9 @@
 \name{fixErrors}
 \alias{fixErrors}
 \alias{fixErrors.default}
-\alias{fixErrors.Raster}
-\alias{fixErrors.SpatialPolygons}
-\alias{fixErrors.sf}
+\alias{fixErrorsRaster}
+\alias{fixErrorsSpatialPolygons}
+\alias{fixErrorssf}
 \title{Do some minor error fixing}
 \usage{
 fixErrors(
@@ -28,7 +28,7 @@ fixErrors(
   ...
 )
 
-\method{fixErrors}{Raster}(
+fixErrorsRaster(
   x,
   objectName,
   attemptErrorFixes = TRUE,
@@ -38,7 +38,7 @@ fixErrors(
   ...
 )
 
-\method{fixErrors}{SpatialPolygons}(
+fixErrorsSpatialPolygons(
   x,
   objectName = NULL,
   attemptErrorFixes = TRUE,
@@ -48,7 +48,7 @@ fixErrors(
   ...
 )
 
-\method{fixErrors}{sf}(
+fixErrorssf(
   x,
   objectName = NULL,
   attemptErrorFixes = TRUE,

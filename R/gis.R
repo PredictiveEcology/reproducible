@@ -22,7 +22,6 @@
 #' @author Eliot McIntire
 #' @export
 #' @inheritParams Cache
-#' @inheritParams projectInputs.Raster
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
 #' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
@@ -67,7 +66,7 @@
 #'
 #' }
 #'
-fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE),
+fastMask <- function(x, y, cores = NULL, # useGDAL = getOption("reproducible.useGDAL", TRUE),
                      verbose = getOption("reproducible.verbose", 1), ..., skipDeprecastedMsg = FALSE) {
   if (!skipDeprecastedMsg)
     .Deprecated("mask", "terra", "fastMask is deprecasted; using maskTo and terra")

@@ -425,8 +425,9 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE) {
 
 
       # This is only needed if crop happens before a projection... need to cells beyond edges so projection is accurate
+      isGrid <- isGridded(from)
       if (needBuffer)
-        if (isGridded(from)) {
+        if (isGrid) {
           res <- res(from)
           if (!isSpat(ext))
             ext <- terra::vect(ext)
@@ -434,6 +435,11 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE) {
           ext <- terra::extend(extTmp, res[1] * 2)
         }
 
+      if (isGrid) {
+        if (!isSpat(from)) {
+          from <- terra::rast(from)
+        }
+      }
       fromInt <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
                        messageFn = messagePrepInputs,
                        expr = quote(

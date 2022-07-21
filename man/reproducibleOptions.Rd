@@ -122,7 +122,7 @@ The following options are likely of interest to most users:
     Default \code{FALSE}. Passed to \code{Cache}.
   }
   \item{\code{useGDAL}}{
-    Default \code{TRUE}. Passed to \code{useGDAL} in \code{projectInputs.Raster}.
+    Deprecated.
   }
   \item{\code{useMemoise}}{
     Default: \code{FALSE}. Used in \code{\link{Cache}}. If \code{TRUE}, recovery of cached

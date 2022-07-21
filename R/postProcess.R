@@ -136,7 +136,6 @@ postProcess.default <- function(x, filename1 = NULL, filename2 = NULL,
                                        verbose = getOption("reproducible.verbose", 1),
                                        ...) {
 
-  browser()
   if (inherits(x, "quosure")) {
     x <- eval_tidy(x)
   }
@@ -151,19 +150,19 @@ postProcess.default <- function(x, filename1 = NULL, filename2 = NULL,
 
     # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
     # browser(expr = exists("._postProcess.spatialClasses_1"))
-    if (isTRUE(getOption("reproducible.useTerra"))) {
+    #if (isTRUE(getOption("reproducible.useTerra"))) {
       x <- postProcessTerra(from = x, studyArea = studyArea,
                             rasterToMatch = rasterToMatch, useCache = useCache,
                             filename1 = filename1, filename2 = filename2,
                             useSAcrs = useSAcrs, overwrite = overwrite,
                             verbose = verbose, ...)
-    } else {
-      x <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
-                                 rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
-                                 filename1 = filename1, filename2 = filename2,
-                                 useSAcrs = useSAcrs, overwrite = overwrite,
-                                 verbose = verbose, ...)
-    }
+    # } else {
+    #   x <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
+    #                              rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
+    #                              filename1 = filename1, filename2 = filename2,
+    #                              useSAcrs = useSAcrs, overwrite = overwrite,
+    #                              verbose = verbose, ...)
+    # }
   }
   return(x)
 }
@@ -273,14 +272,15 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
                               verbose = getOption("reproducible.verbose", 1),
                               testValidity = getOption("reproducible.testValidity", TRUE),
                               ...) {
-  x
+  browser()
+  fixErrorsTerra(x)
 }
 
 #' @export
 #' @keywords internal
 #' @rdname fixErrors
 #' @importFrom raster isLonLat origin origin<- xmax<- xmin<- ymax<- ymin<-
-fixErrors.Raster <- function(x, objectName, attemptErrorFixes = TRUE,
+fixErrorsRaster <- function(x, objectName, attemptErrorFixes = TRUE,
                              useCache = getOption("reproducible.useCache", FALSE),
                              verbose = getOption("reproducible.verbose", 1),
                              testValidity = getOption("reproducible.testValidity", TRUE),
@@ -305,7 +305,7 @@ fixErrors.Raster <- function(x, objectName, attemptErrorFixes = TRUE,
 #'
 #' @export
 #' @rdname fixErrors
-fixErrors.SpatialPolygons <- function(x, objectName = NULL,
+fixErrorsSpatialPolygons <- function(x, objectName = NULL,
                                       attemptErrorFixes = TRUE,
                                       useCache = getOption("reproducible.useCache", FALSE),
                                       verbose = getOption("reproducible.verbose", 1),
@@ -355,7 +355,7 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
 
 #' @export
 #' @rdname fixErrors
-fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
+fixErrorssf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
                          useCache = getOption("reproducible.useCache", FALSE),
                          verbose = getOption("reproducible.verbose", 1),
                          testValidity = getOption("reproducible.testValidity", TRUE),
@@ -438,11 +438,12 @@ projectInputs <- function(x, targetCRS, verbose = getOption("reproducible.verbos
 
 #' @export
 #' @rdname projectInputs
-projectInputs.default <- function(x, targetCRS, ...) {
+projectInputs.default <- function(x, rasterToMatch = NULL, targetCRS = NULL, studyArea = NULL, ...) {
+
+  postProcessTerra(x, projectTo = rasterToMatch, targetCRS = targetCRS, studyArea = studyArea)
   x
 }
 
-#' @export
 #' @rdname projectInputs
 #' @param useGDAL Logical or \code{"force"}.
 #'     Defaults to \code{getOption("reproducible.useGDAL" = TRUE)}.
@@ -456,7 +457,7 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #'
 #' @importFrom stats na.omit
 #' @importFrom raster crs dataType res res<- dataType<-
-projectInputs.Raster <- function(x, targetCRS = NULL,
+projectInputsRaster <- function(x, targetCRS = NULL,
                                  verbose = getOption("reproducible.verbose", 1),
                                  rasterToMatch = NULL, cores = NULL,
                                  useGDAL = getOption("reproducible.useGDAL", TRUE),
@@ -736,14 +737,14 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
 
 #' @export
 #' @rdname projectInputs
-projectInputs.SpatVector <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
+projectInputsSpatVector <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
   projectTo(from = x, projectTo = targetCRS)
 
 }
 
 #' @export
 #' @rdname projectInputs
-projectInputs.SpatRaster <- function(x, targetCRS = NULL,
+projectInputsSpatRaster <- function(x, targetCRS = NULL,
                                      verbose = getOption("reproducible.verbose", 1),
                                      rasterToMatch = NULL, cores = NULL,
                                      useGDAL = getOption("reproducible.useGDAL", TRUE),
@@ -758,7 +759,7 @@ projectInputs.SpatRaster <- function(x, targetCRS = NULL,
 
 #' @export
 #' @rdname projectInputs
-projectInputs.sf <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
+projectInputssf <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
   messagePrepInputs("    reprojecting ...", verbose = verbose, verboseLevel = 0)
   .requireNamespace("sf", stopOnFALSE = TRUE)
   if (!is.null(targetCRS)) {
@@ -789,7 +790,7 @@ projectInputs.sf <- function(x, targetCRS, verbose = getOption("reproducible.ver
 #' @export
 #' @rdname projectInputs
 #' @importFrom raster crs
-projectInputs.Spatial <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
+projectInputsSpatial <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
   messagePrepInputs("    reprojecting ...", verbose = verbose, verboseLevel = 0)
   if (!is.null(targetCRS)) {
 
@@ -860,13 +861,19 @@ maskInputs <- function(x, studyArea, ...) {
   UseMethod("maskInputs")
 }
 
+maskInputs.default <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = NULL,
+                             verbose = getOption("reproducible.verbose", 1), ...) {
+ browser()
+  maskTo(x, studyArea = studyArea, rasterToMatch = rasterToMatch, maskWithRTM = maskToRTM, verbose = verbose, ...)
+}
 #' @param maskWithRTM Logical. If \code{TRUE}, then the default,
 #'
 #' @export
 #' @importFrom raster stack
 #' @rdname maskInputs
-maskInputs.Raster <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = NULL,
+maskInputsRaster <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = NULL,
                               verbose = getOption("reproducible.verbose", 1), ...) {
+  browser()
   messagePrepInputs("    masking ...", verbose = verbose, verboseLevel = 0)
   # browser(expr = exists("._maskInputs_1"))
   isStack <- is(x, "RasterStack")
@@ -894,11 +901,12 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = 
 
 #' @export
 #' @rdname maskInputs
-maskInputs.Spatial <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = FALSE,
+maskInputsSpatial <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = FALSE,
                                verbose = getOption("reproducible.verbose", 1),
                                useCache = getOption("reproducible.useCache", FALSE),
                                ...) {
 
+  browser()
   if (isTRUE(getOption("reproducible.useTerra"))) {
     to <- if (isTRUE(maskWithRTM)) rasterToMatch else studyArea
     maskTo(from = x, maskTo = to)
@@ -920,7 +928,19 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM =
 
 #' @export
 #' @rdname maskInputs
-maskInputs.SpatVector <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = FALSE,
+maskInputsSpatVector <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = FALSE,
+                                  verbose = getOption("reproducible.verbose", 1),
+                                  useCache = getOption("reproducible.useCache", FALSE),
+                                  ...) {
+
+  to <- if (isTRUE(maskWithRTM)) rasterToMatch else studyArea
+  maskTo(from = x, maskTo = to)
+
+}
+
+#' @export
+#' @rdname maskInputs
+maskInputsSpatRaster <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = FALSE,
                                   verbose = getOption("reproducible.verbose", 1),
                                   useCache = getOption("reproducible.useCache", FALSE),
                                   ...) {
@@ -929,21 +949,10 @@ maskInputs.SpatVector <- function(x, studyArea, rasterToMatch = NULL, maskWithRT
 
 }
 
-#' @export
-#' @rdname maskInputs
-maskInputs.SpatRaster <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = FALSE,
-                                  verbose = getOption("reproducible.verbose", 1),
-                                  useCache = getOption("reproducible.useCache", FALSE),
-                                  ...) {
-  to <- if (isTRUE(maskWithRTM)) rasterToMatch else studyArea
-  maskTo(from = x, maskTo = to)
-
-}
-
 
 #' @export
 #' @rdname maskInputs
-maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbose", 1),
+maskInputssf <- function(x, studyArea, verbose = getOption("reproducible.verbose", 1),
                           useCache = getOption("reproducible.useCache", FALSE),
                           ...) {
   .requireNamespace("sf", stopOnFALSE = TRUE)
@@ -1579,6 +1588,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                                   verbose = getOption("reproducible.verbose", 1),
                                   ...) {
   dots <- list(...)
+  browser()
   # browser(expr = exists("._postProcessAllSpatial_1"))
   testValidity <- TRUE
 

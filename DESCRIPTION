@@ -115,4 +115,4 @@ Collate:
     'reproducible-package.R'
     'search.R'
     'zzz.R'
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.1

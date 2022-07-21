@@ -117,7 +117,7 @@
 #'     Default \code{FALSE}. Passed to \code{Cache}.
 #'   }
 #'   \item{\code{useGDAL}}{
-#'     Default \code{TRUE}. Passed to \code{useGDAL} in \code{projectInputs.Raster}.
+#'     Deprecated.
 #'   }
 #'   \item{\code{useMemoise}}{
 #'     Default: \code{FALSE}. Used in \code{\link{Cache}}. If \code{TRUE}, recovery of cached
@@ -202,7 +202,7 @@ reproducibleOptions <- function() {
     reproducible.useGDAL = TRUE, #
     reproducible.useMemoise = FALSE, #memoise
     reproducible.useNewDigestAlgorithm = 2, # TODO: change in next release
-    reproducible.useTerra = TRUE, # Default for now
+    # reproducible.useTerra = TRUE, # Default for now
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1
   )

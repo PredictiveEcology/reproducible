@@ -3,11 +3,11 @@
 \name{projectInputs}
 \alias{projectInputs}
 \alias{projectInputs.default}
-\alias{projectInputs.Raster}
-\alias{projectInputs.SpatVector}
-\alias{projectInputs.SpatRaster}
-\alias{projectInputs.sf}
-\alias{projectInputs.Spatial}
+\alias{projectInputsRaster}
+\alias{projectInputsSpatVector}
+\alias{projectInputsSpatRaster}
+\alias{projectInputssf}
+\alias{projectInputsSpatial}
 \title{Project \code{Raster*} or \code{Spatial*} or \code{sf} objects}
 \usage{
 projectInputs(
@@ -17,9 +17,9 @@ projectInputs(
   ...
 )
 
-\method{projectInputs}{default}(x, targetCRS, ...)
+\method{projectInputs}{default}(x, rasterToMatch = NULL, targetCRS = NULL, studyArea = NULL, ...)
 
-\method{projectInputs}{Raster}(
+projectInputsRaster(
   x,
   targetCRS = NULL,
   verbose = getOption("reproducible.verbose", 1),
@@ -29,14 +29,14 @@ projectInputs(
   ...
 )
 
-\method{projectInputs}{SpatVector}(
+projectInputsSpatVector(
   x,
   targetCRS,
   verbose = getOption("reproducible.verbose", 1),
   ...
 )
 
-\method{projectInputs}{SpatRaster}(
+projectInputsSpatRaster(
   x,
   targetCRS = NULL,
   verbose = getOption("reproducible.verbose", 1),
@@ -46,14 +46,14 @@ projectInputs(
   ...
 )
 
-\method{projectInputs}{sf}(
+projectInputssf(
   x,
   targetCRS,
   verbose = getOption("reproducible.verbose", 1),
   ...
 )
 
-\method{projectInputs}{Spatial}(
+projectInputsSpatial(
   x,
   targetCRS,
   verbose = getOption("reproducible.verbose", 1),

@@ -1202,7 +1202,7 @@ dealWithClass <- function(obj, cachePath, sideEffect, cacheId, drv, conn) {
 
 
   if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
-    if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+    if (!requireNamespace("terra"))
       stop("Please install terra package")
 
     obj <- terra::wrap(obj)

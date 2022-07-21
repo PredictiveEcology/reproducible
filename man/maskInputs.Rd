@@ -2,16 +2,16 @@
 % Please edit documentation in R/postProcess.R
 \name{maskInputs}
 \alias{maskInputs}
-\alias{maskInputs.Raster}
-\alias{maskInputs.Spatial}
-\alias{maskInputs.SpatVector}
-\alias{maskInputs.SpatRaster}
-\alias{maskInputs.sf}
+\alias{maskInputsRaster}
+\alias{maskInputsSpatial}
+\alias{maskInputsSpatVector}
+\alias{maskInputsSpatRaster}
+\alias{maskInputssf}
 \title{Mask module inputs}
 \usage{
 maskInputs(x, studyArea, ...)
 
-\method{maskInputs}{Raster}(
+maskInputsRaster(
   x,
   studyArea,
   rasterToMatch = NULL,
@@ -20,7 +20,7 @@ maskInputs(x, studyArea, ...)
   ...
 )
 
-\method{maskInputs}{Spatial}(
+maskInputsSpatial(
   x,
   studyArea,
   rasterToMatch = NULL,
@@ -30,7 +30,7 @@ maskInputs(x, studyArea, ...)
   ...
 )
 
-\method{maskInputs}{SpatVector}(
+maskInputsSpatVector(
   x,
   studyArea,
   rasterToMatch = NULL,
@@ -40,7 +40,7 @@ maskInputs(x, studyArea, ...)
   ...
 )
 
-\method{maskInputs}{SpatRaster}(
+maskInputsSpatRaster(
   x,
   studyArea,
   rasterToMatch = NULL,
@@ -50,7 +50,7 @@ maskInputs(x, studyArea, ...)
   ...
 )
 
-\method{maskInputs}{sf}(
+maskInputssf(
   x,
   studyArea,
   verbose = getOption("reproducible.verbose", 1),

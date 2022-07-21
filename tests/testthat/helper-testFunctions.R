@@ -40,6 +40,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   else
     list()
 
+  opts <- append(opts, list("Require.internetExistsTimeout" = 1000))
 
   assign(value = "cloudCache_testsForPkgs",  "testsForPkgs", envir = .pkgEnv)
 
