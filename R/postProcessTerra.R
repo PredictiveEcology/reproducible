@@ -191,7 +191,7 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   #############################################################
   from <- cropTo(from, cropTo, needBuffer = TRUE) # crop first for speed
   from <- projectTo(from, projectTo, method = method) # need to project with edges intact
-  from <- maskTo(from, maskTo)
+  from <- maskTo(from, maskTo, ...)
   from <- cropTo(from, cropTo) # need to recrop to trim excess pixels in new projection
 
   # Put this message near the end so doesn't get lost
@@ -236,7 +236,7 @@ fixErrorsTerra <- function(x) {
   x
 }
 
-maskTo <- function(from, maskTo, touches = FALSE) {
+maskTo <- function(from, maskTo, touches = FALSE, ...) {
   if (!is.null(maskTo) && isSpatialAny(maskTo)) {
     if (!is.naSpatial(maskTo)) {
       origFromClass <- class(from)
@@ -262,7 +262,11 @@ maskTo <- function(from, maskTo, touches = FALSE) {
       messagePrepInputs("    masking...")
       st <- Sys.time()
 
-
+      if (isGridded(maskTo)) {
+        if (isTRUE(terra::ext(from) != terra::ext(maskTo))) {
+          from <- terra::crop(from, maskTo)
+        }
+      }
       # There are 2 retry statements; first is for `maskTo`, second is for `from`, rather than fix both in one step, which may be unnecessary
       maskAttempts <- 0
       env <- environment()

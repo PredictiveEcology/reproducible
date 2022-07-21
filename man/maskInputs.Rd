@@ -2,61 +2,9 @@
 % Please edit documentation in R/postProcess.R
 \name{maskInputs}
 \alias{maskInputs}
-\alias{maskInputsRaster}
-\alias{maskInputsSpatial}
-\alias{maskInputsSpatVector}
-\alias{maskInputsSpatRaster}
-\alias{maskInputssf}
 \title{Mask module inputs}
 \usage{
 maskInputs(x, studyArea, ...)
-
-maskInputsRaster(
-  x,
-  studyArea,
-  rasterToMatch = NULL,
-  maskWithRTM = NULL,
-  verbose = getOption("reproducible.verbose", 1),
-  ...
-)
-
-maskInputsSpatial(
-  x,
-  studyArea,
-  rasterToMatch = NULL,
-  maskWithRTM = FALSE,
-  verbose = getOption("reproducible.verbose", 1),
-  useCache = getOption("reproducible.useCache", FALSE),
-  ...
-)
-
-maskInputsSpatVector(
-  x,
-  studyArea,
-  rasterToMatch = NULL,
-  maskWithRTM = FALSE,
-  verbose = getOption("reproducible.verbose", 1),
-  useCache = getOption("reproducible.useCache", FALSE),
-  ...
-)
-
-maskInputsSpatRaster(
-  x,
-  studyArea,
-  rasterToMatch = NULL,
-  maskWithRTM = FALSE,
-  verbose = getOption("reproducible.verbose", 1),
-  useCache = getOption("reproducible.useCache", FALSE),
-  ...
-)
-
-maskInputssf(
-  x,
-  studyArea,
-  verbose = getOption("reproducible.verbose", 1),
-  useCache = getOption("reproducible.useCache", FALSE),
-  ...
-)
 }
 \arguments{
 \item{x}{An object to do a geographic raster::mask/raster::intersect.
@@ -69,22 +17,6 @@ CRS of \code{x} before masking. Currently, this function will not reproject the
 \code{x}. Optional in \code{postProcess}.}
 
 \item{...}{Passed to methods. None currently implemented.}
-
-\item{rasterToMatch}{Template \code{Raster*} object used for cropping (so extent should be
-the extent of desired outcome) and reprojecting (including changing the
-resolution and projection).
-See details in \code{\link{postProcess}}.}
-
-\item{maskWithRTM}{Logical. If \code{TRUE}, then the default,}
-
-\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
-1 showing more messaging, 2 being more messaging, etc.
-Default is 1. Above 3 will output much more information about the internals of
-Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
-
-\item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
-\code{Cache} is used internally.}
 }
 \description{
 This function can be used to mask inputs from data. Masking here is
@@ -128,7 +60,6 @@ shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
 
 # With terra
 if (require("terra")) {
-  opts <- options("reproducible.useTerra" = TRUE)
   vectEcozone <- terra::vect(sf::st_as_sf(shpEcozone)) # direct conversion throws warning
 
   # If input is Spatial object --> return will also be Spatial

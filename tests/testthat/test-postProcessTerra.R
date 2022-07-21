@@ -150,6 +150,21 @@ test_that("testing terra", {
     t12 <- postProcessTerra(x, cropTo = valbers, maskTo = valbers)
     expect_true(sf::st_crs(t12) != sf::st_crs(valbers))
 
+    if (requireNamespace("raster")) {
+      # This is testing maskInputs with maskWithRTM
+      xRas <- raster::raster(xOrig)
+      t12Ras <- raster::raster(t12)
+      # no masking because maskWithRTM is default FALSE
+      xRasPost <- maskInputs(xRas, rasterToMatch = t12Ras)
+      xRasPost1 <- maskInputs(xRas, rasterToMatch = t12Ras, maskWithRTM = TRUE, touches = TRUE)
+      # The t12Ras has 6 cells more at one edge than xRas ... that is not relevant here,
+      #   so this is confirming that all non NA values in xRasPost1 are indeed non NA values in
+      #   t12Ras
+      expect_true(all(!is.na(terra::values(t12Ras)[!is.na(terra::values(xRasPost1))])))
+      expect_true(sum(terra::values(xRasPost), na.rm = TRUE) > sum(terra::values(xRasPost1), na.rm = TRUE))
+    }
+
+
     # projection with errors
     valbersErrors <- terra::project(v2, albers)
     mess <- capture_messages(t13a <- postProcessTerra(xVect, valbersErrors))
