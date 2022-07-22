@@ -442,7 +442,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           } else {
             NULL
           }
-          forms <- .argsToRemove
+          forms <- .argsToRemove()
           #dots <- list(...)
           overlappingForms <- fun$formalArgs[fun$formalArgs %in% forms]
           overlappingForms <- grep("\\.\\.\\.", overlappingForms, invert = TRUE, value = TRUE)

@@ -1,5 +1,5 @@
 test_that("test miscellaneous fns (part 1)", {
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  testInitOut <- testInit("terra", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -66,12 +66,12 @@ test_that("test miscellaneous fns (part 1)", {
     sort(normPath(file.path(newPaths, basename(unlist(lapply(list(r1, r2), raster::filename))))))
   ))
 
-  r3 <- suppressWarnings(writeRaster(r1, tmpfile[1], overwrite = TRUE)) ## TODO: raster needs updating for crs stuff
-  r4 <- suppressWarnings(convertRasterPaths(tmpfile[1], dirname(tmpfile[1]), newPaths))  ## TODO: raster needs updating for crs stuff
+  r3 <- suppressWarnings(.writeRaster(r1, tmpfile[2], overwrite = TRUE)) ## TODO: raster needs updating for crs stuff
+  r4 <- suppressWarnings(convertRasterPaths(tmpfile[2], dirname(tmpfile[1]), newPaths))  ## TODO: raster needs updating for crs stuff
 
   expect_true(identical(
-    normPath(file.path(newPaths, basename(filename(r4)))),
-    normPath(filename(r4))
+    normPath(file.path(newPaths, basename(Filenames(r4)))),
+    normPath(Filenames(r4))
   ))
 
   expect_silent({b <- retry(quote(rnorm(1)), retries = 1, silent = TRUE)})
@@ -149,12 +149,12 @@ test_that("Filenames for environment", {
   s <- new.env(parent = emptyenv())
   s$r <- raster(extent(0, 10, 0, 10), vals = 1, res = 1)
   s$r2 <- raster(extent(0, 10, 0, 10), vals = 1, res = 1)
-  s$r <- suppressWarningsSpecific(writeRaster(s$r, filename = tmpfile[1], overwrite = TRUE),
+  s$r <- suppressWarningsSpecific(.writeRaster(s$r, filename = tmpfile[1], overwrite = TRUE),
                                   "NOT UPDATED FOR PROJ >= 6")
-  s$r2 <- suppressWarningsSpecific(writeRaster(s$r2, filename = tmpfile[3], overwrite = TRUE),
+  s$r2 <- suppressWarningsSpecific(.writeRaster(s$r2, filename = tmpfile[3], overwrite = TRUE),
                                    "NOT UPDATED FOR PROJ >= 6")
   s$s <- stack(s$r, s$r2)
-  s$b <- writeRaster(s$s, filename = tmpfile[5], overwrite = TRUE)
+  s$b <- .writeRaster(s$s, filename = tmpfile[5], overwrite = TRUE)
 
   Fns <- Filenames(s)
 

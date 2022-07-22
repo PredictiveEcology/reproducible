@@ -1,12 +1,12 @@
 test_that("test Copy", {
-  testInitOut <- testInit(c("raster", "data.table"), tmpFileExt = ".tif")
+  testInitOut <- testInit(c("terra", "data.table"), tmpFileExt = ".tif")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
 
   ras <- raster(extent(0, 10, 0, 10), vals = 1)
   ras <- suppressWarningsSpecific(falseWarnings = proj6Warn,
-                                  writeRaster(ras, filename = tmpfile, overwrite = TRUE))
+                                  .writeRaster(ras, filename = tmpfile, overwrite = TRUE))
   # This will make hardlink
   ras2 <- suppressWarningsSpecific(Copy(ras, tmpdir), "NOT UPDATED FOR PROJ >= 6")
 
@@ -94,7 +94,7 @@ test_that("test Copy", {
   # This is an aside on testing whether the hard link can be messed with by overwrite
   fn <- Filenames(ras)
   ras3 <- raster(extent(0, 10, 0, 10), vals = 2)
-  ras3 <- suppressWarningsSpecific(writeRaster(ras3, filename = tmpfile, overwrite = TRUE),
+  ras3 <- suppressWarningsSpecific(terra::writeRaster(ras3, filename = tmpfile, overwrite = TRUE),
                                    "NOT UPDATED FOR PROJ >= 6")# overwrite the original
   # The hardlink is not affected by "overwrite = TRUE" -- it is not by filename, but by file location
   expect_true(all(ras2[] == 1))

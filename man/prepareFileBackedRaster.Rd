@@ -50,19 +50,20 @@ and changes the pointer (i.e., \code{filename(object)}) so that it is pointing
 to the new file.
 }
 \examples{
-library(raster)
+library(terra)
 # make a cache repository
 a <- Cache(rnorm, 1)
 
-r <- raster(extent(0,10,0,10), vals = 1:100)
+r <- rast(ext(0,10,0,10), vals = 1:100)
 
 # write to disk manually -- will be in tempdir()
-r <- writeRaster(r, file = tempfile())
+r <- writeRaster(r, file = tempfile(fileext = ".tif"))
+Filenames(r) # in tempdir()
 
-# copy it to the cache repository
-r <- .prepareFileBackedRaster(r, tempdir())
+# copy it to a different directory
+r <- .prepareFileBackedRaster(r, file.path(tempdir(), "test"))
+Filenames(r) # now in a different place in tempdir()
 
-r # now in CacheStorageRasterDir(tempdir()) subfolder of tempdir()
 
 }
 \author{

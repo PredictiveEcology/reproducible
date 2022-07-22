@@ -56,8 +56,8 @@
 #' @examples
 #'
 #' a <- 2
-#' tmpfile1 <- tempfile()
-#' tmpfile2 <- tempfile()
+#' tmpfile1 <- tempfile(fileext = ".tif")
+#' tmpfile2 <- tempfile(fileext = ".tif")
 #' save(a, file = tmpfile1)
 #' save(a, file = tmpfile2)
 #'
@@ -79,17 +79,21 @@
 #'
 #' # Rasters are interesting because it is not know a priori if it
 #' #   it has a file name associated with it.
-#' library(raster)
-#' r <- raster(extent(0,10,0,10), vals = 1:100)
+#' library(terra)
+#' r <- rast(ext(0,10,0,10), vals = 1:100)
 #'
 #' # write to disk
-#' r1 <- writeRaster(r, file = tmpfile1)
-#' r2 <- writeRaster(r, file = tmpfile2)
+#' r1 <- writeRaster(r, file = tmpfile1, overwrite = TRUE)
+#' r2 <- writeRaster(r, file = tmpfile2, overwrite = TRUE)
 #'
 #' digest::digest(r1)
-#' digest::digest(r2) # different
-#' digest::digest(r1)
-#' digest::digest(r2) # different
+#' digest::digest(r2) # same but for wrong reason: an in memory object
+#' r3 <- deepcopy(r2)
+#' r3[1] <- 22
+#' writeRaster(r3, tempfile(fileext = ".tif"))
+#' digest::digest(r2) # different (not sure why) but for wrong reason: an in memory object
+#' digest::digest(r3)
+#'
 #' .robustDigest(r1)
 #' .robustDigest(r2) # same... data are the same in the file
 #'

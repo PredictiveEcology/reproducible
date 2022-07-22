@@ -58,7 +58,7 @@ convertRasterPaths <- function(x, patterns, replacements) {
       }
     }
 
-    x@file@name <- convertPaths(raster::filename(x), patterns, replacements)
+    x@file@name <- convertPaths(Filenames(x, allowMultiple = FALSE), patterns, replacements)
   }
   x # handles null case
 }
@@ -89,17 +89,17 @@ Filenames.default <- function(obj, allowMultiple = TRUE) {
       stop("Please install terra package")
     terra::sources(obj)
   } else if (inherits(obj, "RasterStack")) {
-    FilenamesRasterStack(obj, allowMultiple = allowMultiple)
+    FilenameRasterStack(obj, allowMultiple = allowMultiple)
   } else if (inherits(obj, "Raster")) {
-    FilenamesRaster(obj, allowMultiple = allowMultiple)
+    FilenameRaster(obj, allowMultiple = allowMultiple)
   } else {
     NULL
   }
   fns
 }
 
-FilenamesRaster <- function(obj, allowMultiple = TRUE) {
-    fn <- filename(obj)
+FilenameRaster <- function(obj, allowMultiple = TRUE) {
+    fn <- raster::filename(obj)
     if (length(fn) == 0)
       fn <- ""
     if (isTRUE(allowMultiple))
@@ -108,7 +108,7 @@ FilenamesRaster <- function(obj, allowMultiple = TRUE) {
     normPath(fn)
 }
 
-FilenamesRasterStack <- function(obj, allowMultiple = TRUE) {
+FilenameRasterStack <- function(obj, allowMultiple = TRUE) {
     fn <- unlist(lapply(seq_along(names(obj)), function(index)
       Filenames(obj[[index]], allowMultiple = allowMultiple)))
 

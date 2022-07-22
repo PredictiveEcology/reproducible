@@ -200,14 +200,6 @@ setMethod(
 #' b <- "NULL"
 #' .prepareOutput(b) # converts to NULL
 #'
-#' library(raster)
-#' r <- raster(extent(0,10,0,10), vals = 1:100)
-#'
-#' # write to disk manually -- will be in tempdir()
-#' r <- writeRaster(r, file = tempfile())
-#'
-#' # copy it to the cache repository
-#' r <- .prepareOutput(r, tempdir())
 setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
   standardGeneric(".prepareOutput")
 })
@@ -1198,19 +1190,20 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' @inheritParams Cache
 #' @rdname prepareFileBackedRaster
 #' @examples
-#' library(raster)
+#' library(terra)
 #' # make a cache repository
 #' a <- Cache(rnorm, 1)
 #'
-#' r <- raster(extent(0,10,0,10), vals = 1:100)
+#' r <- rast(ext(0,10,0,10), vals = 1:100)
 #'
 #' # write to disk manually -- will be in tempdir()
-#' r <- writeRaster(r, file = tempfile())
+#' r <- writeRaster(r, file = tempfile(fileext = ".tif"))
+#' Filenames(r) # in tempdir()
 #'
-#' # copy it to the cache repository
-#' r <- .prepareFileBackedRaster(r, tempdir())
+#' # copy it to a different directory
+#' r <- .prepareFileBackedRaster(r, file.path(tempdir(), "test"))
+#' Filenames(r) # now in a different place in tempdir()
 #'
-#' r # now in CacheStorageRasterDir(tempdir()) subfolder of tempdir()
 #'
 .prepareFileBackedRaster <- function(obj, cacheRepo = NULL, overwrite = FALSE,
                                      cacheId = NULL,

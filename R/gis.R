@@ -158,6 +158,10 @@ rebuildColors <- function(x, origColors) {
 
 
 similarExtents <- function(ext1, ext2, closeEnough) {
-  out <- sapply(slotNames(ext1), function(sn) abs(slot(ext1, sn) - slot(ext2, sn)) < closeEnough)
+  if (is(ext1, "SpatExtent")) {
+    out <- ((ext1@ptr$vector - ext2@ptr$vector) < closeEnough)
+  } else {
+    out <- sapply(slotNames(ext1), function(sn) abs(slot(ext1, sn) - slot(ext2, sn)) < closeEnough)
+  }
   all(out)
 }

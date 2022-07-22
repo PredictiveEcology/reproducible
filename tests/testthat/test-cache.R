@@ -892,12 +892,12 @@ test_that("test cache-helpers", {
   r1 <- raster(extent(0,3,0,3), vals = 1)
   r2 <- raster(extent(0,3,0,3), vals = 2)
   r3 <- raster(extent(0,3,0,3), vals = 3)
-  r2 <- writeRaster(r1, filename = tmpfile2)
-  r3 <- writeRaster(r1, filename = tmpfile3)
+  r2 <- .writeRaster(r1, filename = tmpfile2)
+  r3 <- .writeRaster(r1, filename = tmpfile3)
   r2tif <- suppressWarningsSpecific(falseWarning = proj6Warn,
-                                    writeRaster(r1, filename = tmpfile2tif))
+                                    .writeRaster(r1, filename = tmpfile2tif))
   r3tif <- suppressWarningsSpecific(falseWarning = proj6Warn,
-                           writeRaster(r1, filename = tmpfile3tif))
+                           .writeRaster(r1, filename = tmpfile3tif))
 
   s1 <- raster::stack(r1, r1)
   s2 <- raster::stack(r1, r2)
@@ -1258,7 +1258,7 @@ test_that("quick arg in Cache as character", {
     ranRas <- raster(extent(0, 10, 0, 10), vals = vals);
     ranRas <- suppressWarningsSpecific(
       falseWarnings = proj6Warn,
-      writeRaster(ranRas, filename = tf2, overwrite = TRUE)
+      .writeRaster(ranRas, filename = tf2, overwrite = TRUE)
     )
     a <- sample(1e7, 1);
     saveRDS(a, file = tf);
@@ -1288,7 +1288,7 @@ test_that("List of Rasters", {
     ranRas <- raster(extent(0,10,0,10), vals = vals);
     ranRas <- suppressWarningsSpecific(
       falseWarnings = proj6Warn,
-      writeRaster(ranRas, filename = tmpfile[[x]], overwrite = TRUE))
+      .writeRaster(ranRas, filename = tmpfile[[x]], overwrite = TRUE))
   })
 
   writeRasterList <- function(rasList) {
@@ -1297,7 +1297,7 @@ test_that("List of Rasters", {
       ras[] <- ras[]
       ranRas <- suppressWarningsSpecific(
         falseWarnings = proj6Warn,
-        writeRaster(ras, filename = filename, overwrite = FALSE))
+        .writeRaster(ras, filename = filename, overwrite = FALSE))
     }
     )
   }

@@ -73,7 +73,7 @@ postProcess <- function(x, ...) {
 #'            \code{\link{projectInputs}}, \code{\link{maskInputs}},
 #'            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
 #'            Each of these may also pass \code{...} into other functions, like
-#'            \code{\link[raster]{writeRaster}}, or \code{sf::st_write}.
+#'            \code{\link[terra]{writeRaster}}, or \code{sf::st_write}.
 #'            This might include potentially important arguments like \code{datatype},
 #'            \code{format}. Also passed to \code{projectRaster},
 #'            with likely important arguments such as \code{method = "bilinear"}.
@@ -81,11 +81,11 @@ postProcess <- function(x, ...) {
 #'
 #' \subsection{... passed to:}{
 #'   \describe{
-#'     \item{\code{cropInputs}:}{\code{\link[raster]{crop}}}
-#'     \item{\code{projectInputs}}{\code{\link[raster]{projectRaster}}}
-#'     \item{\code{maskInputs}}{\code{\link{fastMask}} or \code{\link[raster]{intersect}}}
-#'     \item{\code{fixErrors}}{\code{\link[raster]{buffer}}}
-#'     \item{\code{writeOutputs}}{\code{\link[raster]{writeRaster}} or \code{\link[raster]{shapefile}}}
+#'     \item{\code{cropInputs}:}{\code{\link[terra]{crop}}}
+#'     \item{\code{projectInputs}}{\code{\link[terra]{project}}}
+#'     \item{\code{maskInputs}}{\code{\link{fastMask}} or \code{\link[terra]{intersect}}}
+#'     \item{\code{fixErrors}}{\code{\link[terra]{buffer}}}
+#'     \item{\code{writeOutputs}}{\code{\link[terra]{writeRaster}} or \code{\link[terra]{vect}}}
 #'     \item{\code{determineFilename}}{}
 #'   }
 #'   * Can be overridden with \code{useSAcrs}
@@ -175,7 +175,7 @@ postProcess.default <- function(x, filename1 = NULL, filename2 = NULL,
 #'                      resolution and projection).
 #'                      See details in \code{\link{postProcess}}.
 #'
-#' @param ... Passed to \code{raster::crop}
+#' @param ... Passed to \code{terra::crop}
 #'
 #' @param useCache Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
 #'                 \code{Cache} is used internally.
@@ -201,7 +201,6 @@ cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
     cropTo <- if (!is.null(rasterToMatch)) {
       rasterToMatch
     } else {
-      browser()
       if (is.na(.crs(studyArea)))
         stop("studyArea does not have a crs")
       studyArea
@@ -271,14 +270,14 @@ fixErrorsRaster <- function(x, objectName, attemptErrorFixes = TRUE,
                              ...) {
 
   #rounding lon lat resolution will break the raster
-  .requireNamespace("raster", stopOnFALSE = TRUE)
-  if (!raster::isLonLat(x)) {
+  .requireNamespace("terra", stopOnFALSE = TRUE)
+  if (!terra::is.lonlat(x)) {
     origin(x) <- roundTo6Dec(origin(x))
-    raster::xmin(x) <- roundTo6Dec(raster::xmin(x))
-    raster::ymin(x) <- roundTo6Dec(raster::ymin(x))
-    raster::xmax(x) <- roundTo6Dec(raster::xmax(x))
-    raster::ymax(x) <- roundTo6Dec(raster::ymax(x))
-    raster::res(x) <- roundTo6Dec(raster::res(x))
+    terra::xmin(x) <- roundTo6Dec(terra::xmin(x))
+    terra::ymin(x) <- roundTo6Dec(terra::ymin(x))
+    terra::xmax(x) <- roundTo6Dec(terra::xmax(x))
+    terra::ymax(x) <- roundTo6Dec(terra::ymax(x))
+    terra::res(x) <- roundTo6Dec(terra::res(x))
   }
   x
 }
@@ -394,10 +393,10 @@ fixErrorssf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
 #'
 #' @param targetCRS The CRS of x at the end  of this function (i.e., the goal)
 #'
-#' @param ... Passed to \code{\link[raster]{projectRaster}}.
+#' @param ... Passed to \code{\link[terra]{project}}.
 #'
 #' @param rasterToMatch Template \code{Raster*} object passed to the \code{to} argument of
-#'                      \code{\link[raster]{projectRaster}}, thus will changing the
+#'                      \code{\link[terra]{project}}, thus will changing the
 #'                      resolution and projection of \code{x}.
 #'                      See details in \code{\link{postProcess}}.
 #'
@@ -450,10 +449,10 @@ projectInputs.default <- function(x, rasterToMatch = NULL, targetCRS = NULL, stu
 #' Mask module inputs
 #'
 #' This function can be used to mask inputs from data. Masking here is
-#' equivalent to \code{raster::mask} (though \code{\link{fastMask}} is used here)
-#' or \code{raster::intersect}.
+#' equivalent to \code{terra::mask} (though \code{\link{fastMask}} is used here)
+#' or \code{terra::intersect}.
 #'
-#' @param x An object to do a geographic raster::mask/raster::intersect.
+#' @param x An object to do a geographic terra::mask/terra::intersect.
 #'          See methods.
 #' @param ... Passed to methods. None currently implemented.
 #'
@@ -608,12 +607,12 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #'
 #' @param overwrite Logical. Should file being written overwrite an existing file if it exists.
 #'
-#' @param filename2 File name passed to \code{\link[raster]{writeRaster}}, or
-#'                  \code{\link[raster]{shapefile}} or \code{\link[sf]{st_write}}
+#' @param filename2 File name passed to \code{\link[terra]{writeRaster}}, or
+#'                  \code{\link[terra]{vect}} or \code{\link[sf]{st_write}}
 #'                  (\code{dsn} argument).
 #'
-#' @param ... Passed into \code{\link[raster]{shapefile}} or
-#'             \code{\link[raster]{writeRaster}} or \code{\link[sf]{st_write}}
+#' @param ... Passed into \code{\link[terra]{vect}} or
+#'             \code{\link[terra]{writeRaster}} or \code{\link[sf]{st_write}}
 #'
 #' @inheritParams prepInputs
 #'
@@ -654,7 +653,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
                           "\n consider changing to ", datatype2), messagePrepInputs, verbose = verbose)
     }
 
-    if (any(raster::is.factor(x))) {
+    if (any(terra::is.factor(x))) {
       filename3 <- gsub(filename2, pattern = "\\.tif", replacement = ".grd")
       if (!identical(filename2, filename3)) {
         warning(".tif format does not preserve factor levels using rgdal. Using ",
@@ -740,7 +739,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
       argsForWrite <- append(list(filename = filename2, overwrite = overwrite), dots)
       if (is(x, "RasterStack")) {
         longerThanOne <- unlist(lapply(argsForWrite, function(x) length(unique(x)) > 1))
-        nLayers <- raster::nlayers(x)
+        nLayers <- terra::nlyr(x)
         if (any(unlist(longerThanOne))) {
           if (!identical(nLayers, length(argsForWrite$filename))) {
             argsForWrite$filename <- file.path(dirname(argsForWrite$filename),
@@ -768,7 +767,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
           argsForWrite[!longerThanOne] <- lapply(argsForWrite[!longerThanOne], function(x) rep(x, nLayers))
           xTmp <- lapply(seq_len(nLayers), function(ind) {
             inside <- progressBarCode(do.call(terra::writeRaster, args = c(x = x[[ind]], lapply(argsForWrite, function(y) y[ind]))),
-                                      doProgress = raster::ncell(x) > 2e6,
+                                      doProgress = terra::ncell(x) > 2e6,
                                       message = c("Writing ", argsForWrite$filename[ind], " to disk ..."),
                                       colour = getOption("reproducible.messageColourPrepInputs"),
                                       verbose = verbose)
@@ -779,7 +778,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
         } else {
           stop("filename2 must be length 1 or length nlayers(...)")
         }
-        xTmp <- raster::stack(xTmp)
+        xTmp <- terra::rast(xTmp)
       } else {
         if (file.exists(argsForWrite$filename)) {
           if (interactive() && isFALSE(argsForWrite$overwrite)) {
@@ -790,7 +789,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
         }
         origColors <- checkColors(x)
         xTmp <- progressBarCode(do.call(terra::writeRaster, args = c(x = x, argsForWrite)),
-                                doProgress = raster::ncell(x) > 2e6,
+                                doProgress = terra::ncell(x) > 2e6,
                                 message = c("Writing ", argsForWrite$filename, " to disk ..."),
                                 colour = getOption("reproducible.messageColourPrepInputs"),
                                 verbose = verbose)
@@ -803,7 +802,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
       # should have stayed at
       # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0
       if (!identical(.crs(xTmp), .crs(x)))
-        raster::crs(xTmp) <- .crs(x)
+        terra::crs(xTmp) <- .crs(x)
 
       x <- xTmp
     }
@@ -851,7 +850,7 @@ writeOutputs.sf <- function(x, filename2 = NULL,
     # if (!nzchar(fileExt(filename2))) {
     #   filename2 <- paste0(filename2, ".shp")
     # }
-    if (!grepl(".shp$", raster::extension(filename2))) {
+    if (!grepl(".shp$", fileExt(filename2))) {
       filename2 <- paste0(filename2, ".shp")
     }
     if (identical(".", dirname(filename2))) {
@@ -887,7 +886,7 @@ writeOutputs.default <- function(x, filename2, ...) {
 #'
 #' @param ras  The \code{RasterLayer} or \code{RasterStack} for which data type will be assessed.
 #' @param type Character. \code{"writeRaster"} (default) or \code{"GDAL"} to return the recommended
-#'             data type for writing from the raster packages, respectively, or
+#'             data type for writing from the terra packages, respectively, or
 #'             \code{"projectRaster"} to return recommended resampling type.
 #' @return The appropriate data type for the range of values in \code{ras}.
 #'         See \code{\link[raster]{dataType}} for details.
@@ -912,8 +911,8 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
 
   # browser(expr = exists("._assessDataType_1"))
   datatype <- NULL
-  if (raster::ncell(ras) > 1e8) { # for very large rasters, try a different way
-    maxValCurrent <- raster::maxValue(ras)
+  if (terra::ncell(ras) > 1e8) { # for very large rasters, try a different way
+    maxValCurrent <- terra::minmax(ras)[2] # max is 2nd
     ras <- setMinMaxIfNeeded(ras)
     # if (maxValCurrent != maxValue(ras))
     datatype <- dataType(ras)
@@ -923,11 +922,11 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
 
   if (is.null(datatype)) {
 
-    if (raster::ncell(ras) > N) {
-      rasVals <- tryCatch(suppressWarnings(raster::sampleRandom(x = ras, size = N)),
+    if (terra::ncell(ras) > N) {
+      rasVals <- tryCatch(suppressWarnings(terra::spatSample(x = ras, size = N, method = "random")),
                           error = function(x) rep(NA_integer_, N))
     } else {
-      rasVals <- raster::getValues(ras)
+      rasVals <- terra::values(ras)
     }
     minVal <- min(ras@data@min)
     maxVal <- max(ras@data@max)
@@ -1001,7 +1000,7 @@ assessDataType.default <- function(ras, type = "writeRaster") {
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
 #' @return The appropriate data type for the range of values in \code{ras} for using GDAL.
-#'         See \code{\link[raster]{dataType}} for details.
+#'         See \code{\link[terra]{datatype}} for details.
 #' @author Eliot McIntire, Ceres Barros, Ian Eddy, and Tati Micheletti
 #' @example inst/examples/example_assessDataTypeGDAL.R
 #' @export
@@ -1079,7 +1078,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
       # cropInputs
       ##################################
       if (!is.null(rasterToMatch)) {
-        extRTM <- raster::extent(rasterToMatch)
+        extRTM <- terra::ext(rasterToMatch)
         crsRTM <- .crs(rasterToMatch)
       } else {
         extRTM <- NULL
@@ -1099,7 +1098,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                                                        function(xx) !isProjected(xx)))
 
         if (!any(unlist(projections))) {
-          if (is.null(rasterToMatch) || max(raster::res(rasterToMatch)) < min(raster::res(x))) {
+          if (is.null(rasterToMatch) || max(terra::res(rasterToMatch)) < min(terra::res(x))) {
             useBuffer <- TRUE
           }
         }
@@ -1111,16 +1110,16 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
         if (!is.null(rasterToMatch)) {
           #reproject rasterToMatch, extend by res
           newExtent <- suppressWarningsSpecific(raster::projectExtent(rasterToMatch, crs = .crs(x)), projNotWKT2warn)
-          tempPoly <- terra::vect(as(raster::extent(newExtent), "SpatialPolygons"))
-          raster::crs(tempPoly) <- sp::wkt(x)
+          tempPoly <- terra::vect(as(terra::ext(newExtent), "SpatialPolygons"))
+          terra::crs(tempPoly) <- sp::wkt(x)
           #buffer the new polygon by 1.5 the resolution of X so edges aren't cropped out
-          tempPoly <- as(terra::buffer(tempPoly, width = max(raster::res(x))*1.5), "Spatial")
+          tempPoly <- as(terra::buffer(tempPoly, width = max(terra::res(x))*1.5), "Spatial")
           extRTM <- tempPoly
           crsRTM <- suppressWarningsSpecific(falseWarnings = "CRS object has comment", .crs(tempPoly))
         } else {
           bufferSA <- TRUE
           origStudyArea <- studyArea
-          bufferWidth <- max(raster::res(x)) * 1.5
+          bufferWidth <- max(terra::res(x)) * 1.5
           crsX <- .crs(x)
           if (!is(studyArea, "sf")) {
             studyArea <- sp::spTransform(studyArea, CRSobj = crsX)
@@ -1148,7 +1147,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                        testValidity = testValidity, ...)
       } else {
         # browser(expr = exists("._postProcess.spatialClasses_2"))
-        if (!isTRUE(all.equal(raster::extent(x), extRTM))) {
+        if (!isTRUE(all.equal(terra::ext(x), extRTM))) {
           useCacheOrig <- useCache
           useCache <- FALSE
           x <- Cache(cropInputs, x = x, studyArea = studyArea,
@@ -1269,7 +1268,7 @@ bufferWarningSuppress <- function(# warn,
 
 setMinMaxIfNeeded <- function(ras) {
   # special case where the colours already match the discrete values
-  suppressWarnings(maxValCurrent <- raster::maxValue(ras))
+  suppressWarnings(maxValCurrent <- terra::minmax(ras)[2]) # 2nd is max
   needSetMinMax <- FALSE
   if (isTRUE(any(is.na(maxValCurrent)))) {
     needSetMinMax <- TRUE
@@ -1277,8 +1276,8 @@ setMinMaxIfNeeded <- function(ras) {
 
     # if the colors are set and are the same length of the integer sequence between min and max, don't override
     if (length(.getColors(ras)[[1]])) {
-      if (!is.na(suppressWarnings(raster::maxValue(ras))) && !is.na(suppressWarnings(raster::minValue(ras))))
-        if (length(.getColors(ras)[[1]]) == (raster::maxValue(ras) - raster::minValue(ras) + 1)) {
+      if (!is.na(suppressWarnings(terra::minmax(ras)[2])) && !is.na(suppressWarnings(terra::minmax(ras)[1])))
+        if (length(.getColors(ras)[[1]]) == (terra::minmax(ras)[2] - terra::minmax(ras)[1] + 1)) {
           return(ras)
         }
     }
@@ -1288,7 +1287,7 @@ setMinMaxIfNeeded <- function(ras) {
     }
   }
   if (isTRUE(needSetMinMax)) {
-    large <- if (nlayers(ras) > 25 || raster::ncell(ras) > 1e7) TRUE else FALSE
+    large <- if (nlayers(ras) > 25 || terra::ncell(ras) > 1e7) TRUE else FALSE
     if (large) message("  Large ",class(ras), " detected; setting minimum and maximum may take time")
     suppressWarnings(ras <- setMinMax(ras))
     if (large) message("  ... Done")
@@ -1299,7 +1298,7 @@ setMinMaxIfNeeded <- function(ras) {
 differentRasters <- function(ras1, ras2, targetCRS) {
 
   (!isTRUE(all.equal(.crs(ras1), targetCRS)) |
-     !isTRUE(all.equal(raster::res(ras1), raster::res(ras2))) |
+     !isTRUE(all.equal(terra::res(ras1), terra::res(ras2))) |
      !isTRUE(all.equal(extent(ras1), extent(ras2))))
 }
 
@@ -1392,9 +1391,9 @@ isLongLat <- function(targCRS, srcCRS = targCRS) {
 }
 
 .crs <- function(x, ...) {
-  .requireNamespace("raster", stopOnFALSE = TRUE)
+  .requireNamespace("terra", stopOnFALSE = TRUE)
   suppressWarningsSpecific(falseWarnings = "CRS object has comment",
-                           raster::crs(x, ...))
+                           terra::crs(x, ...))
 }
 
 progressBarCode <- function(..., doProgress = TRUE, message,

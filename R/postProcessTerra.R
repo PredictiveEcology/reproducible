@@ -478,12 +478,8 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
     if (!is.na(writeTo)) {
       messagePrepInputs("    writing...")
       st <- Sys.time()
-      if (isRaster)
-        from <- raster::writeRaster(from, filename = writeTo, overwrite = overwrite,
-                                    datatype = datatype)
-      if (isSpatRaster)
-        from <- terra::writeRaster(from, filename = writeTo, overwrite = overwrite,
-                                   datatype = datatype)
+      from <- terra::writeRaster(from, filename = writeTo, overwrite = overwrite,
+                                 datatype = datatype)
       if (is(from, "SpatVector")) {
         if (isTRUE(overwrite))
           unlink(writeTo, force = TRUE, recursive = TRUE)

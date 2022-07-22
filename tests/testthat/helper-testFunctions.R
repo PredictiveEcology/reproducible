@@ -480,8 +480,21 @@ messageNoCacheRepo <- "No cacheRepo supplied and getOption\\('reproducible.cache
 
 
 .writeRaster <- function(...) {
+  .requireNamespace("terra", stopOnFALSE = TRUE)
+  args <- list(...)
+  wasRaster <- FALSE
+  if (is(args[[1]], "Raster")) {
+    wasRaster <- TRUE
+    args[[1]] <- terra::rast(args[[1]])
+  }
   suppressWarningsSpecific(falseWarnings = "NOT UPDATED FOR PROJ",
-                           writeRaster(...))
+                           out <- do.call(terra::writeRaster, args))
+  if (wasRaster) {
+    out <- terra::rast(args[[1]])
+    out <- raster::raster(out)
+  }
+
+  out
 }
 
 theRasterTests <- "https://github.com/tati-micheletti/host/raw/master/data/"

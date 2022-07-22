@@ -30,14 +30,6 @@ a <- 1
 b <- "NULL"
 .prepareOutput(b) # converts to NULL
 
-library(raster)
-r <- raster(extent(0,10,0,10), vals = 1:100)
-
-# write to disk manually -- will be in tempdir()
-r <- writeRaster(r, file = tempfile())
-
-# copy it to the cache repository
-r <- .prepareOutput(r, tempdir())
 }
 \author{
 Eliot McIntire

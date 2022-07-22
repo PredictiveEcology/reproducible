@@ -1,5 +1,5 @@
 test_that("postProcess doesn't work (part 1)", {
-  testInitOut <- testInit(c("raster", "sf"), tmpFileExt = c(".tif", ".tif"),
+  testInitOut <- testInit(c("raster", "sf"), tmpFileExt = c(".grd", ".grd", ".tif", ".tif"),
                           opts = list(
                             "rasterTmpDir" = tempdir2(rndstr(1,6)),
                             "reproducible.inputPaths" = NULL,
@@ -51,52 +51,48 @@ test_that("postProcess doesn't work (part 1)", {
 
     # Tests with RasterBrick
     r2 <- r1 <- rB
-    r1[] <- runif(ncell(rB))
-    r2[] <- runif(ncell(rB))
+    r1[] <- runif(ncell(rB)) * 100000
+    r2[] <- runif(ncell(rB)) * 100000
 
     b <- raster::brick(r1, r2)
     b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE)
     expect_true(inherits(b1, "RasterBrick"))
 
-    s <- raster::stack(r1, r2)
-    s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE)
+    ss <- raster::stack(r1, r2)
+    s1 <- postProcess(ss, studyArea = ncSmall, useCache = FALSE)
     expect_true(inherits(s1, "RasterStack"))
     expect_equal(s1[], b1[], ignore_attr = TRUE)
     # expect_equivalent(s1, b1) # deprecated in testthat
 
-    b <- writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
-    b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
-    expect_true(inherits(b1, "RasterBrick"))
+    file.remove(tmpfile[3])
+    b <- .writeRaster(terra::rast(b), filename = tmpfile[3], overwrite = TRUE) # changes it to SpatRaster
+    b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE,
+                      filename2 = tmpfile[2], overwrite = TRUE)
+    expect_true(inherits(b1, "SpatRaster"))
 
-    s <- raster::stack(writeRaster(s, filename = tmpfile[1], overwrite = TRUE))
-    s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
-    expect_true(inherits(s1, "RasterStack"))
-    expect_true(identical(Filenames(s1), tmpfile[2]))
+    ss <- .writeRaster(terra::rast(ss), filename = tmpfile[4], overwrite = TRUE)
+    s1 <- postProcess(ss, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[3], overwrite = TRUE)
+    expect_true(inherits(raster::stack(terra::rast(s1)), "RasterStack"))
+    expect_true(identical(Filenames(s1, allowMultiple = FALSE), tmpfile[3]))
     # it was masked
-    expect_true(sum(values(s1), na.rm = TRUE) < (0.8 * sum(values(s), na.rm = TRUE)))
+    expect_true(sum(values(s1), na.rm = TRUE) < (0.8 * sum(values(ss), na.rm = TRUE)))
 
     # Test datatype setting
     dt1 <- "INT2U"
-    s <- raster::stack(writeRaster(s, filename = tmpfile[2], overwrite = TRUE))
-    s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
+    ss <- .writeRaster(ss, filename = tmpfile[3], overwrite = TRUE)
+    s1 <- postProcess(ss, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[4], overwrite = TRUE,
                       datatype = dt1)
-    expect_identical(dataType(s1), rep(dt1, nlayers(s)))
-    expect_false(identical(dataType(s1), dataType(s)))
+    ss1A_FileSize <- file.size(Filenames(s1))
+    expect_true(max(abs(range(terra::minmax(s1)) - c(0, 65534))) < 10) # because INT -- all values became 0 to 9
 
     # Test datatype setting
-    dt1 <- c("INT2U", "INT4U")
-    s <- raster::stack(writeRaster(s, filename = tmpfile[1], overwrite = TRUE))
-    warns <- capture_error({
-      s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE,
-                        datatype = dt1)
-    })
-    expect_true(any(grepl("the condition has length", warns)))
-
     dt1 <- "INT4U"
-    b <- writeRaster(b, filename = tmpfile[2], overwrite = TRUE)
-    b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
+    ss <- .writeRaster(ss, filename = tmpfile[4], overwrite = TRUE)
+    b1 <- postProcess(ss, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[3], overwrite = TRUE,
                       datatype = dt1)
-    expect_identical(dataType(b1), dt1)
+    bb1A_FileSize <- file.size(Filenames(b1))
+    expect_true(max(abs(range(terra::minmax(b1)) - c(0, 99999))) < 10)
+    expect_true(bb1A_FileSize > ss1A_FileSize)
 
     # now raster with sf ## TODO: temporarily skip these tests due to fasterize not being updated yet for crs changes
     if (requireNamespace("fasterize")) {
@@ -122,14 +118,14 @@ test_that("postProcess doesn't work (part 1)", {
       nonLatLongProj2 <- paste("+proj=lcc +lat_1=51 +lat_2=77 +lat_0=0 +lon_0=-95",
                                "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
       nc3 <- suppressWarningsSpecific(falseWarnings = "Discarded datum Unknown based",
-                                      spTransform(as(nc1, "Spatial"), CRSobj = CRS(nonLatLongProj2)))
+                                      terra::project(terra::vect(nc1), nonLatLongProj2))#CRSobj = CRS(nonLatLongProj2)))
 
       nc4 <- cropInputs(nc3, studyArea = ncSmall)
       # nc4 <- cropTo(nc3, ncSmall)
-      ncSmall2 <- spTransform(as(ncSmall, "Spatial"), CRSobj = CRS(nonLatLongProj2))
-      ee <- extent(nc4)
+      ncSmall2 <- terra::project(terra::vect(ncSmall), nonLatLongProj2)
+      ee <- terra::ext(nc4)
 
-      expect_true(isTRUE(similarExtents(ee, extent(ncSmall2), closeEnough = res(r)[1])))
+      expect_true(isTRUE(similarExtents(ee, terra::ext(ncSmall2), closeEnough = terra::res(r)[1])))
 
       # pass through
       nc4 <- cropInputs(nc3, studyArea = 1)
@@ -162,6 +158,8 @@ test_that("postProcess doesn't work (part 1)", {
       expect_identical(nc5, nc3)
 
       # rasterToMatch
+      browser()
+
       nc5 <- cropTo(nc3, cropTo = r)
       nc5_b <- projectTo(nc5, projectTo = r)
       nc5Extent_r <- st_transform(nc5, crs = crs(r))
@@ -323,7 +321,7 @@ test_that("prepInputs doesn't work (part 3)", {
       testOnExit(testInitOut)
     }, add = TRUE)
 
-    # Tati's reprex
+    # Tati'ss reprex
     wd <- checkPath(file.path(getwd(), "reprex"), create = TRUE)
     ranges <- prepInputs(url = "https://drive.google.com/file/d/1AfGfRjaDsdq3JqcsidGRo3N66OUjRJnn",
                          destinationPath = wd,

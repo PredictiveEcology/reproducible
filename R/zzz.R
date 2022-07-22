@@ -52,15 +52,65 @@
 .reproducibleTempCacheDir <- function() .reproducibleTempPath("cache")
 .reproducibleTempInputDir <- function() Require::tempdir2("inputs")
 
-.argsToRemove <- argsToRemove <- unique(c(names(formals(prepInputs)),
-                                          names(formals(cropInputs)),
-                                          names(formals(fixErrors)),
-                                          names(formals(raster::writeRaster)),
-                                          names(formals(raster::projectRaster)),
-                                          names(formals(determineFilename)),
-                                          names(formals(writeOutputs)),
-                                          unlist(lapply(methods("postProcess"),
-                                                        function(x) names(formals(x))))))
+
+formalsAllMethods <- function(fn, envir = parent.frame()) {
+  fnChar <- deparse(substitute(fn))
+  browser()
+  if (is(fn, "character")) {
+    fnChar <- fn
+    fn <- eval(parse(text = fn))
+  }
+  if (isS4(fn)) {
+    meths <- showMethods(fn, printTo = FALSE)[-1]
+    meths <- meths[nzchar(meths)]
+    meths2 <- strsplit(meths, split = ",")
+    names(meths2) <- meths
+    nams <-
+      lapply(meths2, function(x) {
+        sig <- gsub("\"(.+)\"", "\\1" , x)
+        sig <- gsub(" ", "", sig)
+        nams <- strsplit(sig, "=")
+        nams1 <- sapply(nams, function(yy) yy[[1]])
+        sigs <- sapply(nams, function(yy) yy[[2]])
+        names(sigs) <- nams1
+        methodFormals(fn, signature = sigs)
+      })
+  } else if (isS3stdGeneric(fnChar)) {
+    meths <- methods(fnChar)
+    names(meths) <- meths
+    nams <- lapply(meths, function(y) formals(y))
+    nams <- append(list("generic" = formals(fn)), nams)
+  } else {
+    nams <- list(formals(fn))
+    names(nams) <- "function"
+  }
+  nams
+
+}
+
+formalArgsAllMethods <- function(fn, unique = TRUE, envir = parent.frame()) {
+  fnChar <- if (is.character(fn))
+    fn
+  else
+    deparse(substitute(fn))
+  browser()
+  fam <- formalsAllMethods(fnChar)
+  if (isTRUE(unique)) {
+    fam1 <- unname(fam)
+    fam <- unique(unlist(lapply(fam1, names)))
+  }
+
+  fam
+}
+
+.argsToRemove <- function() unique(c(formalArgsAllMethods(prepInputs),
+                                     formalArgsAllMethods(cropInputs),
+                                     formalArgsAllMethods(fixErrors),
+                                     formalArgsAllMethods(terra::writeRaster),
+                                     formalArgsAllMethods(terra::project),
+                                     formalArgsAllMethods(determineFilename),
+                                     formalArgsAllMethods(writeOutputs),
+                                     formalArgsAllMethods(postProcess)))
 
 #' The \code{reproducible} package environment
 #'
