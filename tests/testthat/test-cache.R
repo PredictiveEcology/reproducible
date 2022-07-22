@@ -980,7 +980,7 @@ test_that("test rm large non-file-backed rasters", {
 
   skip_on_ci()
 
-  testInitOut <- testInit(ask = FALSE)
+  testInitOut <- testInit("raster", ask = FALSE)
 
   on.exit({
     testOnExit(testInitOut)
@@ -1035,7 +1035,7 @@ test_that("test cc", {
 })
 
 test_that("test pre-creating conn", {
-  testInitOut <- testInit(ask = FALSE, tmpFileExt = c(".tif", ".tif"))
+  testInitOut <- testInit("raster", ask = FALSE, tmpFileExt = c(".tif", ".tif"))
   on.exit({
     dbDisconnectAll(conn)
     testOnExit(testInitOut)

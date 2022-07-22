@@ -83,17 +83,17 @@ Filenames <- function(obj, allowMultiple = TRUE) {
 }
 
 #' @export
-Filenames.default <- function(obj, allowMultiple) {
-  if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
+Filenames.default <- function(obj, allowMultiple = TRUE) {
+  fns <- if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
     if (!requireNamespace("terra") )
       stop("Please install terra package")
-    fns <- terra::sources(obj)
+    terra::sources(obj)
   } else if (inherits(obj, "RasterStack")) {
     FilenamesRasterStack(obj, allowMultiple = allowMultiple)
   } else if (inherits(obj, "Raster")) {
     FilenamesRaster(obj, allowMultiple = allowMultiple)
   } else {
-    fns <- NULL
+    NULL
   }
   fns
 }
