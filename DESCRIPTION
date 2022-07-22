@@ -74,7 +74,6 @@ Suggests:
     parallel,
     raster (>= 3.5-15),
     RCurl (>= 1.95-4.8),
-    rgdal,
     rmarkdown,
     RSQLite,
     sf,
