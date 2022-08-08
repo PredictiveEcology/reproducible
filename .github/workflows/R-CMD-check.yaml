@@ -67,26 +67,14 @@ jobs:
             eval sudo $cmd
           done < <(Rscript -e 'cat(remotes::system_requirements("ubuntu", "20.04"), sep = "\n")')
 
-      - name: Install additional dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          options(install.packages.check.source = "no", install.packages.compile.from.source = FALSE)
-          install.packages(c("igraph", "Rcpp"))
-          install.packages("rgdal", configure.args = c("--with-proj-lib=/usr/local/lib/", "--with-proj-include=/usr/local/include/"))
-          install.packages(c("sf", "terra"), configure.args = "--with-proj-lib=/usr/local/lib/")
-          install.packages(c("lwgeom", "raster", "rgeos", "sp"))
-          install.packages(c("foreach", "R.utils")) ## TEMPORARY: July 2022
-          remotes::install_github('PredictiveEcology/Require@development')
-        shell: Rscript {0}
-
       - name: Install additional dependencies
-        if: runner.os != 'macOS'
         run: |
           options(install.packages.check.source = "no", install.packages.compile.from.source = FALSE)
-          install.packages(c("foreach", "R.utils")) ## TEMPORARY: July 2022
-          install.packages(c("igraph", "Rcpp"), repos = "https://cran.rstudio.com") ## need source on Linux, not RSPM binary
+          install.packages("Rcpp", repos = "https://cran.rstudio.com") ## need source on Linux, not RSPM binary
           install.packages("terra", repos = "https://rspatial.r-universe.dev") ## TEMPORARY: July 2022
-          install.packages(c("lwgeom", "raster", "rgdal", "rgeos", "sf", "sp"), repos = "https://cran.rstudio.com") ## need source on Linux, not RSPM binary
+          install.packages(c("raster", "sf", "sp", "lwgeom", "rgdal", "rgeos"), repos = "https://cran.rstudio.com") ## need source on Linux, not RSPM binary
+          install.packages(c("foreach", "R.utils")) ## TEMPORARY: July 2022
+          install.packages("igraph", repos = 'https://cran.rstudio.com') ## need source on Linux, not RSPM binary
           remotes::install_github('PredictiveEcology/Require@development')
         shell: Rscript {0}
 
