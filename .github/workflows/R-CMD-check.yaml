@@ -56,14 +56,24 @@ jobs:
         run: |
           brew install gdal udunits
 
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install software-properties-common
+          sudo add-apt-repository ppa:ubuntugis/ppa
+          sudo apt-get update
+          while read -r cmd
+          do
+            eval sudo $cmd
+          done < <(Rscript -e 'cat(remotes::system_requirements("ubuntu", "20.04"), sep = "\n")')
+
       - name: Install additional dependencies
         run: |
           options(install.packages.check.source = "no", install.packages.compile.from.source = FALSE)
-          install.packages(c("raster", "sf", "sp", "lwgeom", "terra", "rgdal", "rgeos"), repos = "https://cran.rstudio.com") ## need source on Linux, not RSPM binary
+          install.packages("Rcpp", repos = "https://cran.rstudio.com") ## need source on Linux, not RSPM binary
+          install.packages("terra", repos = "https://rspatial.r-universe.dev") ## TEMPORARY: July 2022
+          install.packages(c("raster", "sf", "sp", "lwgeom", "rgdal", "rgeos"), repos = "https://cran.rstudio.com") ## need source on Linux, not RSPM binary
           install.packages(c("foreach", "R.utils")) ## TEMPORARY: July 2022
-          install.packages("https://cran.r-project.org/src/contrib/Archive/gdalUtils/gdalUtils_2.0.3.2.tar.gz", repos = NULL) ## TEMPORARY: July 2022
-          install.packages("https://cran.r-project.org/src/contrib/Archive/RandomFieldsUtils/RandomFieldsUtils_1.2.3.tar.gz", repos = NULL) ## TEMPORARY: July 2022
-          install.packages("https://cran.r-project.org/src/contrib/Archive/RandomFields/RandomFields_3.3.14.tar.gz", repos = NULL) ## TEMPORARY: July 2022
           install.packages("igraph", repos = 'https://cran.rstudio.com') ## need source on Linux, not RSPM binary
           remotes::install_github('PredictiveEcology/Require@development')
         shell: Rscript {0}
@@ -75,17 +85,6 @@ jobs:
           path: ${{ env.R_LIBS_USER }}
           key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-${{ hashFiles('.github/depends.Rds') }}
           restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-
-
-      - name: Install system dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install software-properties-common
-          sudo add-apt-repository ppa:ubuntugis/ppa
-          sudo apt-get update
-          while read -r cmd
-          do
-            eval sudo $cmd
-          done < <(Rscript -e 'cat(remotes::system_requirements("ubuntu", "20.04"), sep = "\n")')
 
       - name: Install dependencies
         run: |
