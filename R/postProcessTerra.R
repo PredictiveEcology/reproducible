@@ -539,7 +539,7 @@ is.naSpatial <- function(x) {
   isna <- FALSE
   if (!is.null(x))
     if (!isSpatialAny(x)) {
-      if (is.na(x)) isna <- TRUE
+      if (all(is.na(x))) isna <- TRUE
     }
   isna
 }

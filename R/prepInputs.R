@@ -883,7 +883,11 @@ extractFromArchive <- function(archive,
         messagePrepInputs("File unzipping using R does not appear to have worked.",
                           " Trying a system call of unzip...", verbose = verbose)
       } else {
-        messagePrepInputs("R's unzip utility cannot handle a zip file this size.", verbose = verbose)
+        messagePrepInputs(
+          paste("R's unzip utility cannot handle a zip file this size.\n",
+                "Install 7zip and add it to your PATH (see https://www.7-zip.org/)."),
+          verbose = verbose
+        )
       }
 
       if (file.exists(args[[1]])) {
