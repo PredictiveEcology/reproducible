@@ -233,7 +233,7 @@ basename2 <- function(x) {
 #'   to update in the main expr, and the return value is the new value. (previous versions allowed
 #'   a non-list return, but where the final line had to be an assignment operator,
 #'   specifying what object (that is used in `expr`) will be updated prior to running
-#'   the `expr` again. For backwards compabitility, this still works).
+#'   the `expr` again. For backwards compatibility, this still works).
 #' @param messageFn A function for messaging to console. Defaults to \code{message}
 #'
 #' @export
