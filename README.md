@@ -4,8 +4,7 @@
 [![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/reproducible)](https://cran.r-project.org/package=reproducible)
 [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/reproducible)](https://cran.r-project.org/package=reproducible)
 [![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg)](https://github.com/PredictiveEcology/reproducible/actions)
-[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/master/graph/badge.svg)](https://codecov.io/gh/PredictiveEcology/reproducible?branch=master)
-[![Gitter](https://badges.gitter.im/PredictiveEcology/reproducible.svg)](https://gitter.im/PredictiveEcology/reproducible?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/master/graph/badge.svg)](https://app.codecov.io/gh/PredictiveEcology/reproducible?branch=master)
 <!-- badges: end -->
 
 A set of tools for R that enhance reproducibility for data analytics and forecasting.
@@ -65,7 +64,7 @@ See vignettes and help files for many more real-world examples.
 ### Current release (on CRAN)
 
 [![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg?branch=master)](https://github.com/PredictiveEcology/reproducible/actions)
-[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/master/graph/badge.svg)](https://codecov.io/gh/PredictiveEcology/reproducible?branch=master)
+[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/master/graph/badge.svg)](https://app.codecov.io/gh/PredictiveEcology/reproducible?branch=master)
 
 **Install from CRAN:**
 
@@ -84,7 +83,7 @@ install_github("PredictiveEcology/reproducible", dependencies = TRUE)
 ### Development version
 
 [![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg?branch=development)](https://github.com/PredictiveEcology/reproducible/actions)
-[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/development/graph/badge.svg)](https://codecov.io/gh/PredictiveEcology/reproducible?branch=development)
+[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/development/graph/badge.svg)](https://app.codecov.io/gh/PredictiveEcology/reproducible?branch=development)
 
 **Install from GitHub:**
 

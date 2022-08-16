@@ -1,5 +1,32 @@
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
+Version 1.2.10
+==============
+
+## Dependency changes
+* Drop support for R 3.6 (#230)
+* remove `gdalUtilities`, `gdalUtils`, and `rgeos` from `Suggests`
+* Added minimum versions of `raster` and `terra`, because previous versions were causing collisions.
+
+## Enhancements
+* all direct calls to GDAL are removed: only `terra` and `sf` are used throughout
+* `prepInputs` can now take `fun` as a quoted expression on `x`, the object loaded by `dlFun` in `preProcess`
+* `preProcess` arg `dlFun` can now be a quoted expression
+* changes to the internals and outputs of `objSize`; now is primarily a wrapper around `lobstr::obj_size`, but has an option to get more detail for lists and environments.
+* `.robustDigest` now deals explicitly with numerics, which digest differently on different OSs. Namely, they get rounded prior to digesting. Through trial and error, it was found that setting `options("reproducible.digestDigits" = 7)` was sufficient for all known cases. Rounding to deeper than 7 decimal places was insufficient. There are also new methods for `language`, `integer`, `data.frame` (which does each column one at a time to address the numeric issue)
+* New version of `postProcess` called `postProcessTerra`. This will eventually replace `postProcess` as it is much faster in all cases and simpler code base thanks to the fantastic work of Robert Hijmans (`terra`) and all the upstream work that `terra` relies on
+* Minor message updates, especially for "adding to memoised copy...". The three dots made it seem like it was taking a long time. When in reality, it is instantaneous and is the last thing that happens in the `Cache` call. If there is a delay after this message, then it is the code following the `Cache` call that is (silently) slow.
+* `retry` can now return a named list for the `exprBetween`, which allows for more than one object to be modified between retries.
+ 
+## Bug fixes
+* `.robustDigest` was removing Cache attributes from objects under many conditions, when it should have left them there. It is unclear what the issues were, as this would likely not have impacted `Cache`. Now these attributes are left on.
+* `data.table` objects appear to not be recovered correctly from disk (e.g., from Cache repository. We have added `data.table::copy` when recovering from Cache repository
+* `clearCache` and `cc` did not correctly remove file-backed raster files (when not clearing whole CacheRepo); this may have resulted in a proliferation of files, each a filename with an underscore and a new higher number. This fix should eliminate this problem.
+* deal with development versions of GDAL in `getGDALVersion()` (#239)
+* fix issue with `maskInputs()` when not passing `rasterToMatch`.
+* fix issue with `isna.SpatialFix` when using `postProcess.quosure`
+
+
 Version 1.2.8
 =============
 

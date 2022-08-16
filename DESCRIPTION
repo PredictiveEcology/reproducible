@@ -16,8 +16,8 @@ SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.ra
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2021-09-26
-Version: 1.2.8
+Date: 2022-08-14
+Version: 1.2.10
 Authors@R: 
     c(person(given = "Eliot J B",
              family = "McIntire",
@@ -42,23 +42,23 @@ Authors@R:
       person(given = "Ian",
              family = "Eddy",
              role = "ctb",
-             email = "ian.eddy@canada.com",
+             email = "ian.eddy@nrcan-rncan.gc.ca",
              comment = c(ORCID = "0000-0001-7397-2116")),
       person(given = "Her Majesty the Queen in Right of Canada, as represented by the Minister of Natural Resources Canada",
              role = "cph"))
 Depends:
-    R (>= 3.6)
+    R (>= 4.0)
 Imports:
     data.table (>= 1.10.4),
     DBI,
     digest,
     fpCompare,
-    gdalUtilities,
     glue,
+    lobstr,
     magrittr,
     methods,
     Require,
-    raster,
+    raster (>= 3.5-15),
     RSQLite,
     rlang,
     sp (>= 1.4-2),
@@ -69,7 +69,6 @@ Suggests:
     fastdigest,
     fasterize,
     future,
-    gdalUtils,
     googledrive,
     httr,
     lwgeom,
@@ -78,11 +77,10 @@ Suggests:
     parallel,
     RCurl (>= 1.95-4.8),
     rgdal,
-    rgeos,
     rmarkdown,
     sf,
     stats,
-    terra,
+    terra (>= 1.5-17),
     testthat
 Encoding: UTF-8
 Language: en-CA
@@ -90,7 +88,6 @@ License: GPL-3
 VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
-RoxygenNote: 7.1.1
 Collate: 
     'DBI.R'
     'cache-helpers.R'
@@ -112,6 +109,7 @@ Collate:
     'packages.R'
     'pipe.R'
     'postProcess.R'
+    'postProcessTerra.R'
     'preProcess.R'
     'prepInputs.R'
     'reexports.R'
@@ -120,3 +118,4 @@ Collate:
     'search.R'
     'spatialObjects-class.R'
     'zzz.R'
+RoxygenNote: 7.2.1

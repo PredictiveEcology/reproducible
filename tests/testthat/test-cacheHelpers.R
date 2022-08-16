@@ -10,7 +10,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(any(grepl(.loadedMemoisedResultMsg, mess)))
 
   mess <- capture_message(.cacheMessage(a, "test", FALSE))
-  expect_true(any(grepl(paste0(.loadedCacheResultMsg, ".*adding"), mess)))
+  expect_true(any(grepl(paste0(.loadedCacheResultMsg, ".*added"), mess)))
 
   mess <- capture_message(.cacheMessage(a, "test", NA))
   expect_true(any(grepl(.loadedCacheResultMsg, mess)))

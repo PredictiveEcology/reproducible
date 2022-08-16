@@ -70,7 +70,7 @@ Other contributors:
 \itemize{
   \item Tati Micheletti \email{tati.micheletti@gmail.com} (\href{https://orcid.org/0000-0003-4838-8342}{ORCID}) [contributor]
   \item Ceres Barros \email{cbarros@mail.ubc.ca} (\href{https://orcid.org/0000-0003-4036-977X}{ORCID}) [contributor]
-  \item Ian Eddy \email{ian.eddy@canada.com} (\href{https://orcid.org/0000-0001-7397-2116}{ORCID}) [contributor]
+  \item Ian Eddy \email{ian.eddy@nrcan-rncan.gc.ca} (\href{https://orcid.org/0000-0001-7397-2116}{ORCID}) [contributor]
   \item Her Majesty the Queen in Right of Canada, as represented by the Minister of Natural Resources Canada [copyright holder]
 }
 

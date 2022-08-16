@@ -135,6 +135,12 @@
 #'     (like changing the order of arguments) and will work successfully across operating systems
 #'     (especially relevant for the new \code{cloudCache} function.
 #'   }
+#'   \item{\code{useTerra}}{
+#'     Default: \code{FALSE}. The GIS operations in postProcess, by default use primarily
+#'     the Raster package. The newer terra package does similar operations, but usually
+#'     faster. A user can now set this option to \code{TRUE} and \code{prepInputs}
+#'     and several components of \code{postProcess} will use \code{terra} internally.
+#'   }
 #'   \item{\code{verbose}}{
 #'     Default: \code{FALSE}. If set to \code{TRUE} then every \code{Cache} call will show a
 #'     summary of the objects being cached, their \code{object.size} and the time it took to digest
@@ -183,7 +189,7 @@ reproducibleOptions <- function() {
     reproducible.overwrite = FALSE,
     reproducible.polygonShortcut = FALSE,
     reproducible.quick = FALSE,
-    reproducible.shapefileRead = "raster::shapefile", # TODO: change in next release
+    reproducible.shapefileRead = NULL, # TODO: change in next release
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = .reproducibleTempPath(),
@@ -193,6 +199,7 @@ reproducibleOptions <- function() {
     reproducible.useGDAL = TRUE, #
     reproducible.useMemoise = FALSE, #memoise
     reproducible.useNewDigestAlgorithm = 2, # TODO: change in next release
+    reproducible.useTerra = FALSE, # Default for now
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1
   )

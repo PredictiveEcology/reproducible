@@ -63,19 +63,8 @@ search for the file before attempting to download. Default for that option is
 \code{NULL} meaning do not search locally.}
 
 \item{fun}{Function, character string, or quoted call with which to load the
-\code{targetFile} into an \code{R} object. It must be either a function
-as a character string, or the function itself.
-If a character string or function, is should have the package name e.g.,
-\code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
-If it is to be a custom function call, then use `quote`, e.g.,
-`quote(customFun(x = targetFilePath))`, using
-`targetFilePath` as the file path of the object that has been `preProcess`ed.
-If the custom function is not in a package, `prepInputs` may not find it. In such
-cases, simply pass the function as a named argument (with same name as function)
-e.g.,
-`prepInputs(..., fun = quote(customFun(x = targetFilePath), customFun = customFun)`.
-NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
-replicate the functionality of simply calling \code{preProcess} directly.}
+\code{targetFile} or an object created by \code{dlFun}
+into an \code{R} object. See details and examples below.}
 
 \item{quick}{Logical. This is passed internally to \code{\link{Checksums}}
 (the quickCheck argument), and to
@@ -183,6 +172,36 @@ See \code{\link{preProcess}} for combinations of arguments.
  }
 }
 
+\section{\code{fun}}{
+
+
+ \code{fun} offers the ability to pass any custom function with which to load
+ the object obtained by `preProcess` into the session. There are two cases that are
+ dealt with: when the `preProcess` downloads a file (including via `dlFun`),
+ `fun` must deal with a file; and, when `preProcess` creates an R object
+ (e.g., raster::getData returns an object), `fun` must deal with an object.
+
+ \code{fun} can be supplied in three ways: a function, a character string
+  (i.e., a function name as a string), of a quoted expression.
+  If a character string or function, is should have the package name e.g.,
+  \code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
+  In these cases, it will evaluate this function call while passing `targetFile`
+  as the first argument. These will only work in the simplest of cases.
+
+  When more precision is required, the full call can be written, surrounded by
+  \code{quote}, and where the object can be referred to as `targetFile` if the function
+  is loading a file or as `x` if it is loading the object that was returned by
+  `preProcess`. If `preProcess` returns an object, this must be used by `fun`; if
+  `preProcess` is only getting a file, then there will be no object, so `targetFile` is the
+  only option.
+
+  If there is a custom function call, is not in a package, `prepInputs` may not find it. In such
+  cases, simply pass the function as a named argument (with same name as function) to `prepInputs`.
+  See examples.
+  NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
+  replicate the functionality of simply calling \code{preProcess} directly.
+}
+
 \section{\code{purge}}{
 
 
@@ -285,6 +304,22 @@ LCC2005 <- Cache(prepInputs, url = url,
 test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
                     dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
                     path = dPath)
+}
+
+# Using quoted dlFun and fun
+\dontrun{
+  prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun)
+  # or more complex
+  test5 <- prepInputs(
+    targetFile = targetFileLuxRDS,
+    dlFun = quote({
+      getDataFn(name = "GADM", country = "LUX", level = 0) # preProcess keeps file from this!
+    }),
+    fun = quote({
+      out <- readRDS(targetFilePath)
+      out <- as(out, "SpatialPolygonsDataFrame")
+      sf::st_as_sf(out)})
+   )
 }
 
 }

@@ -13,7 +13,7 @@ We welcome contributions to `reproducible`, both as bug reports or package enhan
 This Git repository uses the [Git Flow](https://nvie.com/posts/a-successful-git-branching-model/) branching model (the [`git flow`](https://github.com/petervanderdoes/gitflow-avh) extension is useful for this).
 The [`development`](https://github.com/PredictiveEcology/reproducible/tree/development) branch contains the latest contributions and other code that will appear in the next release, and the [`master`](https://github.com/PredictiveEcology/reproducible) branch contains the code of the latest release, which is exactly what is currently on [CRAN](https://cran.r-project.org/package=reproducible).
 
-To make a contribution to the package, just send a [pull request](https://help.github.com/articles/using-pull-requests/). 
+To make a contribution to the package, just send a [pull request](https://docs.github.com/articles/using-pull-requests/). 
 When you send your PR, make sure `development` is the destination branch on the [reproducible repository](https://github.com/PredictiveEcology/reproducible).
 Your PR should pass `R CMD check --as-cran`, which will also be checked by <a href="https://github.com/PredictiveEcology/reproducible/actions">GitHub Actions</a> when the PR is submitted.
 

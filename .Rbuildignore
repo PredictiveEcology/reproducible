@@ -18,3 +18,4 @@
 ^tests/testthat/\.httr-oauth$
 ^vignettes/.*_cache$
 ^vignettes/.*\.log$
+^\.secret$

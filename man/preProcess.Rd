@@ -70,19 +70,8 @@ search for the file before attempting to download. Default for that option is
 \code{NULL} meaning do not search locally.}
 
 \item{fun}{Function, character string, or quoted call with which to load the
-\code{targetFile} into an \code{R} object. It must be either a function
-as a character string, or the function itself.
-If a character string or function, is should have the package name e.g.,
-\code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
-If it is to be a custom function call, then use `quote`, e.g.,
-`quote(customFun(x = targetFilePath))`, using
-`targetFilePath` as the file path of the object that has been `preProcess`ed.
-If the custom function is not in a package, `prepInputs` may not find it. In such
-cases, simply pass the function as a named argument (with same name as function)
-e.g.,
-`prepInputs(..., fun = quote(customFun(x = targetFilePath), customFun = customFun)`.
-NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
-replicate the functionality of simply calling \code{preProcess} directly.}
+\code{targetFile} or an object created by \code{dlFun}
+into an \code{R} object. See details and examples below.}
 
 \item{dlFun}{Optional "download function" name, such as \code{"raster::getData"}, which does
 custom downloading, in addition to loading into R. Still experimental.}

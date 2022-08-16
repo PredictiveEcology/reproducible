@@ -1,54 +1,4 @@
-#' Check the GDAL version in use
-#'
-#' @return \code{numeric_version}
-#'
-#' @author Alex Chubaty and Eliot McIntire
-#' @export
-#' @importFrom magrittr %>%
-getGDALVersion <-  function() {
-  if (.requireNamespace("rgdal")) {
-    vers <- tryCatch(rgdal::getGDALVersionInfo(), error = function(e) NA_real_)
-    if (!is.na(vers)) {
-      vers <- strsplit(vers, split = ",")[[1]][1] %>%
-        strsplit(., split = " ") %>%
-        `[[`(1) %>%
-        `[`(2) %>%
-        as.numeric_version(.)
-    }
-  } else {
-    vers <- '0.0.0'
-  }
-  return(vers)
-}
-
-#' Check whether the system has a minimum version of GDAL available
-#'
-#' @param version  The minimum GDAL version to check for.
-#'
-#' @return Logical.
-#'
-#' @author Eliot McIntire and Alex Chubaty
-#' @export
-#' @examples
-#'
-#' \dontrun{
-#'   checkGDALVersion("2.0")
-#' }
-checkGDALVersion <- function(version) {
-  if (missing(version)) stop("Minimum version not specified.")
-
-  if (!is.na(getGDALVersion())) {
-    if (getGDALVersion() >= version) {
-      return(TRUE)
-    } else {
-      return(FALSE)
-    }
-  } else {
-    return(FALSE)
-  }
-}
-
-#' Faster operations on rasters
+#' Faster operations on rasters (DEPRECATED as \code{terra::mask} is fast)
 #'
 #' This alternative to \code{raster::mask} is included here.
 #'
@@ -61,6 +11,9 @@ checkGDALVersion <- function(version) {
 #'           triggered. \code{'AUTO'} will calculate 90% of the total
 #'           number of cores in the system, while an integer or rounded
 #'           float will be passed as the exact number of cores to be used.
+#' @param skipDeprecastedMsg Logical. If \code{TRUE}, then the message about this function
+#'   being deprecated will be suppressed.
+#'
 #' @param ... Currently unused.
 #'
 #' @return A \code{Raster*} object, masked (i.e., smaller extent and/or
@@ -73,9 +26,10 @@ checkGDALVersion <- function(version) {
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
 #' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
-#' @importFrom gdalUtilities gdalwarp
 #'
 #' @examples
+#'
+#' # This function is mostly superfluous as terra::mask is fast
 #' library(sp)
 #' library(raster)
 #'
@@ -94,134 +48,164 @@ checkGDALVersion <- function(version) {
 #' poly[[1]] <- raster(raster::extent(shp), vals = 0, res = c(1, 1))
 #' poly[[2]] <- raster(raster::extent(shp), vals = 1, res = c(1, 1))
 #' origStack <- stack(poly)
-#' # original mask function in raster
-#' newStack1 <- mask(x= origStack, mask = shp)
-#' newStack2 <- fastMask(x = origStack, y = shp)
+#'
+#' # during transition from raster to terra, the following requires terra to run
+#' if (requireNamespace("terra", silent = TRUE)) {
+#'   newStack1 <- mask(x= terra::rast(origStack), mask = terra::vect(sf::st_as_sf(shp)))
+#'   newStack2 <- fastMask(x = origStack, y = sf::st_as_sf(shp))
 #'
 #' # test all equal
-#' all.equal(newStack1, newStack2)
+#'   all.equal(newStack1, newStack2)
 #'
-#' newStack1 <- stack(newStack1)
-#' newStack2 <- stack(newStack2)
+#'   newStack1 <- stack(newStack1)
+#'   newStack2 <- stack(newStack2)
 #'
-#' if (interactive()) {
+#'  if (interactive()) {
 #'   plot(newStack2[[1]])
 #'   plot(shp, add = TRUE)
+#'  }
+#'
 #' }
 #'
 fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE),
-                     verbose = getOption("reproducible.verbose", 1), ...) {
-  if (!identical(.crs(y), .crs(x))) {
-    if (!is(y, "sf")) {
-      y <- spTransform(x = y, CRSobj = .crs(x))
-    } else {
-      .requireNamespace("sf", stopOnFALSE = TRUE)
-      y <- sf::st_transform(x = y, crs = .crs(x))
-    }
-  }
-
-  if (is(y, "SpatialPolygons")) {
-    if (!is(y, "SpatialPolygonsDataFrame")) {
-      y <- SpatialPolygonsDataFrame(Sr = y, data = data.frame(ID = seq(length(y))),
-                                    match.ID = FALSE)
-    }
-  }
-
-  # need to double check that gdal executable exists before going down this path
-  attemptGDAL <- attemptGDAL(x, useGDAL, verbose = verbose)
-
-  # browser(expr = exists("._fastMask_2"))
-
-  if (is(x, "RasterLayer") && requireNamespace("sf", quietly = TRUE) &&
-      requireNamespace("fasterize", quietly = TRUE)) {
-    messagePrepInputs("fastMask is using sf and fasterize")
-
-
-    if (attemptGDAL) {
-      # call gdal
-      messagePrepInputs("fastMask is using gdalwarp")
-
-      # rasters need to go to same directory that can be unlinked at end without losing other temp files
-      tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
-      tempSrcRaster <- bigRastersTmpFile()
-      tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_mask", ".tif"))
-
-      # GDAL will to a reprojection without an explicit crop
-      cropExtent <- extent(x)
-      te <- paste(c(cropExtent[1], cropExtent[3],
-                    cropExtent[2], cropExtent[4]))
-      # cropExtentRounded <- roundToRes(cropExtent, x)
-      # the raster could be in memory if it wasn't reprojected
-      if (inMemory(x)) {
-        dType <- assessDataType(x, type = "writeRaster")
-        dTypeGDAL <- assessDataType(x, type = "GDAL")
-        x <- writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
-        gc()
-      } else {
-        tempSrcRaster <- x@file@name #Keep original raster.
-        dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
-      }
-
-      ## GDAL requires file path to cutline - write to disk
-      tempSrcShape <- normPath(file.path(tempfile(tmpdir = raster::tmpDir()), ".shp", fsep = ""))
-      ysf <- sf::st_as_sf(y)
-      sf::st_write(ysf, tempSrcShape)
-      tr <- res(x)
-
-      cores <- dealWithCores(cores)
-      prll <- paste0("-wo NUM_THREADS=", cores, " ")
-      srcCRS <- as.character(.crs(raster::raster(tempSrcRaster)))
-      targCRS <- srcCRS
-
-      gdalUtilities::gdalwarp(srcfile = tempSrcRaster, dstfile = tempDstRaster,
-                              s_srs = srcCRS, t_srs = targCRS,
-                              cutline = tempSrcShape, crop_to_cutline = FALSE,
-                              srcnodata = NA, dstnodata = NA, tr = tr,
-                              te = te, ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
-
-      x <- raster(tempDstRaster)
-      x <- setMinMaxIfNeeded(x)
-    } else {
-      # Eliot removed this because fasterize::fasterize will handle cases where x[[1]] is too big
-      #extentY <- extent(y)
-      #resX <- res(x) * 2 # allow a fuzzy interpretation -- the cropInputs here won't make it perfect anyway
-      # if ( (xmin(x) + resX[1]) < xmin(extentY) && (xmax(x) - resX[1]) > xmax(extentY) &&
-      #      (ymin(x) + resX[2]) < ymin(extentY) && (ymax(x) - resX[2]) > ymax(extentY) )
-      #   x <- cropInputs(x, y)
-      if (!is(y, "sf")) {
-        y <- sf::st_as_sf(y)
-      }
-      yRas <- fasterize::fasterize(y, raster = x[[1]], field = NULL)
-      x <- maskWithRasterNAs(x = x, y = yRas)
-      # if (canProcessInMemory(x, 3) && fromDisk(x))
-      #   x[] <- x[]
-      # m <- which(is.na(y[]))
-      # x[m] <- NA
-
-      if (nlayers(x) > 1) {
-        raster::stack(x)
-      } else {
-        x
-      }
-    }
-  } else {
-    messagePrepInputs("This function is using raster::mask")
-    if (is(x, "RasterStack") || is(x, "RasterBrick")) {
-      messagePrepInputs(" because fastMask doesn't have a specific method ",
-              "for these RasterStack or RasterBrick yet")
-    } else {
-      messagePrepInputs("This may be slow in large cases. ",
-              "To use sf and GDAL instead, see ",
-              "https://github.com/r-spatial/sf to install GDAL ",
-              "on your system. Then, 'install.packages(\"sf\")",
-              "; install.packages(\"fasterize\")')")
-    }
-    if (is(x, "RasterStack")) {
-      raster::stack(raster::mask(x, y))
-    } else {
-      raster::mask(x, y)
-    }
-  }
+                     verbose = getOption("reproducible.verbose", 1), ..., skipDeprecastedMsg = FALSE) {
+  if (!skipDeprecastedMsg)
+    .Deprecated("mask", "terra", "fastMask is deprecasted; using maskTo and terra")
+  touches <- list(...)$touches
+  maskTo(from = x, maskTo = y, touches = isTRUE(touches))
+#   if (!identical(.crs(y), .crs(x))) {
+#     if (!is(y, "sf")) {
+#       y <- spTransform(x = y, CRSobj = .crs(x))
+#     } else {
+#       .requireNamespace("sf", stopOnFALSE = TRUE)
+#       y <- sf::st_transform(x = y, crs = .crs(x))
+#     }
+#   }
+#
+#   if (is(y, "SpatialPolygons")) {
+#     if (!is(y, "SpatialPolygonsDataFrame")) {
+#       y <- SpatialPolygonsDataFrame(Sr = y, data = data.frame(ID = seq(length(y))),
+#                                     match.ID = FALSE)
+#     }
+#   }
+#
+#   # need to double check that gdal executable exists before going down this path
+#   attemptGDAL <- attemptGDAL(x, useGDAL, verbose = verbose)
+#
+#   # browser(expr = exists("._fastMask_2"))
+#
+#   if (is(x, "RasterLayer") && requireNamespace("sf", quietly = TRUE) &&
+#       requireNamespace("fasterize", quietly = TRUE)) {
+#     messagePrepInputs("fastMask is using sf and fasterize")
+#
+#
+#      if (attemptGDAL) {
+#        message("GDAL is deprecated in fastMask")
+#      }
+# #       # call gdal
+# #       messagePrepInputs("fastMask is using gdalwarp")
+# #
+# #       # rasters need to go to same directory that can be unlinked at end without losing other temp files
+# #       tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
+# #       tempSrcRaster <- bigRastersTmpFile()
+# #       tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_mask", ".tif"))
+# #
+# #       # GDAL will to a reprojection without an explicit crop
+# #       cropExtent <- extent(x)
+# #       te <- paste(c(cropExtent[1], cropExtent[3],
+# #                     cropExtent[2], cropExtent[4]))
+# #       # cropExtentRounded <- roundToRes(cropExtent, x)
+# #       # the raster could be in memory if it wasn't reprojected
+# #       if (inMemory(x)) {
+# #         dType <- assessDataType(x, type = "writeRaster")
+# #         dTypeGDAL <- assessDataType(x, type = "GDAL")
+# #         x <- writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
+# #         gc()
+# #       } else {
+# #         tempSrcRaster <- x@file@name #Keep original raster.
+# #         dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
+# #       }
+# #
+# #       ## GDAL requires file path to cutline - write to disk
+# #       tempSrcShape <- normPath(file.path(tempfile(tmpdir = raster::tmpDir()), ".shp", fsep = ""))
+# #       ysf <- sf::st_as_sf(y)
+# #       sf::st_write(ysf, tempSrcShape)
+# #       tr <- res(x)
+# #
+# #       cores <- dealWithCores(cores)
+# #       prll <- paste0("-wo NUM_THREADS=", cores, " ")
+# #       srcCRS <- as.character(.crs(raster::raster(tempSrcRaster)))
+# #       targCRS <- srcCRS
+# #
+# #       gdalUtilities::gdalwarp(srcfile = tempSrcRaster, dstfile = tempDstRaster,
+# #                               s_srs = srcCRS, t_srs = targCRS,
+# #                               cutline = tempSrcShape, crop_to_cutline = FALSE,
+# #                               srcnodata = NA, dstnodata = NA, tr = tr,
+# #                               te = te, ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
+# #
+# #       x <- raster(tempDstRaster)
+# #       x <- setMinMaxIfNeeded(x)
+# #     } else {
+#       # Eliot removed this because fasterize::fasterize will handle cases where x[[1]] is too big
+#       #extentY <- extent(y)
+#       #resX <- res(x) * 2 # allow a fuzzy interpretation -- the cropInputs here won't make it perfect anyway
+#       # if ( (xmin(x) + resX[1]) < xmin(extentY) && (xmax(x) - resX[1]) > xmax(extentY) &&
+#       #      (ymin(x) + resX[2]) < ymin(extentY) && (ymax(x) - resX[2]) > ymax(extentY) )
+#       #   x <- cropInputs(x, y)
+#       if (!is(y, "sf")) {
+#         y <- sf::st_as_sf(y)
+#       }
+#       yRas <- fasterize::fasterize(y, raster = x[[1]], field = NULL)
+#       x <- maskWithRasterNAs(x = x, y = yRas)
+#       # if (canProcessInMemory(x, 3) && fromDisk(x))
+#       #   x[] <- x[]
+#       # m <- which(is.na(y[]))
+#       # x[m] <- NA
+#
+#       if (nlayers(x) > 1) {
+#         raster::stack(x)
+#       } else {
+#         x
+#       }
+#     # }
+#   } else {
+#     if (is(x, "RasterStack") || is(x, "RasterBrick")) {
+#       messagePrepInputs(" because fastMask doesn't have a specific method ",
+#               "for these RasterStack or RasterBrick yet")
+#     } else {
+#       messagePrepInputs("This may be slow in large cases. ",
+#               "To use sf and GDAL instead, see ",
+#               "https://github.com/r-spatial/sf to install GDAL ",
+#               "on your system. Then, 'install.packages(\"sf\")",
+#               "; install.packages(\"fasterize\")')")
+#     }
+#     isRasterStack <- is(x, "RasterStack")
+#     isRasterBrick <- is(x, "RasterBrick")
+#     if (requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
+#
+#       messagePrepInputs("      Using terra::mask for masking")
+#       if (!is(x, "SpatRaster"))
+#         x <- terra::rast(x)
+#       if (!is(y, "SpatVector")) {
+#         if (!is(y, "sf"))
+#           y <- sf::st_as_sf(y)
+#         y <- terra::vect(y)
+#       }
+#
+#       x <- terra::mask(x, y, touches = FALSE) # that was previous default in raster::mask
+#       x <- if (isRasterStack) {
+#         raster::stack(x)
+#       } else if (isRasterBrick) {
+#         raster::brick(x)
+#       } else { raster::raster(x)}
+#     } else {
+#       messagePrepInputs("This function is using raster::mask")
+#       x <- raster::mask(x, y)
+#       if (isRasterStack) x <- raster::stack(x)
+#       x
+#     }
+#
+#   }
 }
 
 #' @importFrom raster tmpDir

@@ -4,7 +4,7 @@
 \alias{messageDF}
 \title{Use message to print a clean square data structure}
 \usage{
-messageDF(df, round, colour = NULL, colnames = NULL)
+messageDF(df, round, colour = NULL, colnames = NULL, appendLF = TRUE)
 }
 \arguments{
 \item{df}{A data.frame, data.table, matrix}
@@ -18,6 +18,9 @@ so any colour that \code{crayon} can use}
 column names even if there aren't any in the \code{df} (i.e., they will)
 be \code{V1} etc., \code{NULL} will print them if they exist, and \code{FALSE}
 which will omit them.}
+
+\item{appendLF}{logical: should messages given as a character string
+    have a newline appended?}
 }
 \description{
 Sends to \code{message}, but in a structured way so that a data.frame-like can
