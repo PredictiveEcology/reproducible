@@ -1,0 +1,11 @@
+pandoc: 2.14.2
+pkgdown: 2.0.6
+pkgdown_sha: ~
+articles:
+  Cache-using-postgresql: Cache-using-postgresql.html
+  Intro-to-Cache: Intro-to-Cache.html
+last_built: 2022-08-16T16:03Z
+urls:
+  reference: https://reproducible.predictiveecology.org/reference
+  article: https://reproducible.predictiveecology.org/articles
+
