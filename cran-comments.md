@@ -34,7 +34,7 @@ There were no ERRORs nor WARNINGs or NOTEs.
 
 ## Downstream dependencies
 
-We checked 4 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
+We checked 3 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
 
- * We saw 1 new problem with SpaDES.core. We are the developers of this package and will update shortly.
+ * We saw 1 problem with `SpaDES.core`. We are the developers of this package and will update it shortly.
  * We failed to check 0 packages
