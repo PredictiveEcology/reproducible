@@ -913,21 +913,24 @@ Cache <-
         output <- "NULL"
       }
 
-      .setSubAttrInList(output, ".Cache", "newCache", .CacheIsNew)
-      setattr(output, "tags", paste0("cacheId:", outputHash))
-      setattr(output, "call", "")
-      if (!identical(attr(output, ".Cache")$newCache, .CacheIsNew))
-        stop("attributes are not correct 3")
-      if (!identical(attr(output, "call"), ""))
-        stop("attributes are not correct 4")
-      if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash)))
-        stop("attributes are not correct 5")
+      cacheTagList <- list(newCache = .CacheIsNew,
+                           cacheId = outputHash,
+                           tags = "",
+                           call = "")
+      # .setSubAttrInList(output, ".Cache", "newCache", .CacheIsNew)
+      # setattr(output, "tags", paste0("cacheId:", outputHash))
+      # setattr(output, "call", "")
+      # if (!identical(attr(output, ".Cache")$newCache, .CacheIsNew))
+      #   stop("attributes are not correct 3")
+      # if (!identical(attr(output, "call"), ""))
+      #   stop("attributes are not correct 4")
+      # if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash)))
+      #   stop("attributes are not correct 5")
 
       if (isS4(FUN)) {
-        setattr(output, "function", FUN@generic)
-        if (!identical(attr(output, "function"), FUN@generic))
-          stop("There is an unknown error 03")
+        cacheTagList <- append(cacheTagList, list("function" = FUN@generic))
       }
+      setattr(output, ".Cache", cacheTagList)
       # Can make new methods by class to add tags to outputs
       if (.CacheIsNew) {
         outputToSave <- dealWithClass(output, cacheRepo, sideEffect = sideEffect, cacheId = outputHash,
@@ -1809,6 +1812,7 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId, sideEffect = FAL
     return(dealWithClassOnRecovery2(output, cacheRepo, cacheId,
                                     drv, conn))
   }
+
   if (is(output, "list")) {
     if (!tag_cachedRaster %in% names(output)) { # recursive up until a list has cacheRaster name
       output <- lapply(output, function(out) dealWithClassOnRecovery(out, cacheRepo, cacheId,
@@ -1857,6 +1861,8 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId, sideEffect = FAL
   } else if (!isFALSE(sideEffect)) { # this is separate from sideEffects mechanism for rasters
     out <- sideEffectCopyFromCache(cacheRepo, sideEffect)
   }
+  attrs <- attr(output, ".Cache")
+
 
   if (any(inherits(output, "PackedSpatVector"))) {
     if (!requireNamespace("terra") )
