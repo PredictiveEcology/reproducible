@@ -38,45 +38,46 @@ This can be extremely useful for web apps built with, say `shiny`.
 
 ## Function-level caching
 
-Any function can be cached using: `Cache(FUN = functionName, ...)`. 
-
-This will be a slight change to a function call, such as:
-`projectRaster(raster, crs = crs(newRaster))`
-to
-`Cache(projectRaster, raster, crs = crs(newRaster))`.
+This can be done in several ways. First, pass the function name to the first
+argument of `Cache`, with subsequent arguments passed as if they were being
+passed to that function. Second, the function call can be `quote`d. Thirs, 
+(still experimental) wrapping the function call with `Cache`. See examples.
 
 This is particularly useful for expensive operations.
 
 ```{r function-level, echo=TRUE}
-library(raster)
 library(reproducible)
 
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 checkPath(tmpDir, create = TRUE)
 
-ras <- raster(extent(0, 1000, 0, 1000), vals = 1:1e6, res = 1)
-crs(ras) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +datum=WGS84"
-
-newCRS <- "+init=epsg:4326" # A longlat crs
-
-# No Cache
-system.time(suppressWarnings(map1 <- projectRaster(ras, crs = newCRS))) # Warnings due to new PROJ
-
-# With Cache -- a little slower the first time because saving to disk
-system.time(suppressWarnings(map1 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir,
-                         notOlderThan = Sys.time())))
-
-# vastly faster the second time
-opts <- options("reproducible.useMemoise" = FALSE) # make sure memoising is off (a RAM copy)
-system.time(map2 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir))
-
-# Try with memoise for this example -- for many simple cases, memoising will not be faster
-options("reproducible.useMemoise" = TRUE)
-system.time(map3 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir))
-options(opts)
-
-all.equal(map1, map2) # TRUE
-all.equal(map1, map3) # TRUE
+if (requireNamespace("terra")) {
+  ras <- terra::rast(terra::ext(0, 100, 0, 100), vals = rep(1:2, length.out = 1e4), res = 1)
+  terra::crs(ras) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +datum=WGS84"
+  
+  newCRS <- "+init=epsg:4326" # A longlat crs
+  
+  # No Cache
+  system.time(map1 <- terra::project(ras, y = newCRS)) 
+  
+  # With Cache -- a little slower the first time because saving to disk
+  system.time(map2 <- Cache(terra::project(ras, y = newCRS), cacheRepo = tmpDir,
+                                             notOlderThan = Sys.time()))
+  
+  # vastly faster the second time
+  opts <- options("reproducible.useMemoise" = FALSE) # make sure memoising is off (a RAM copy)
+  system.time(map3 <- Cache(terra::project(ras, y = newCRS), cacheRepo = tmpDir))
+  
+  # Try with memoise for this example -- for simple cases, memoising may not be faster
+  options("reproducible.useMemoise" = TRUE)
+  system.time(suppressWarnings(map4 <- Cache(terra::project(ras, y = newCRS), cacheRepo = tmpDir)))
+  options(opts)
+  
+  # All same, except for some Cache attributes and
+  all.equalCache(map1, map2) # TRUE
+  all.equalCache(map1, map3, tolerance = 1e6) # TRUE (imprecision with terra::wrap, used by Cache)
+  all.equalCache(map1, map4, tolerance = 1e6) # TRUE (imprecision with terra::wrap, used by Cache)
+}
 ```
 
 ## Caching examples
@@ -84,15 +85,14 @@ all.equal(map1, map3) # TRUE
 ### Basic use
 
 ```{r}
-library(raster)
-
-try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear
+clearCache(tmpDir, ask = FALSE) # just to make sure it is clear
 
 ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
 
-# All same
-ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
-ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
+# All recover same Cached copy -- alternative ways of writing
+ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) 
+ranNumsC <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) 
+ranNumsD <- Cache(rnorm(n = 10, 16), cacheRepo = tmpDir) 
 
 # Any minor change makes it different
 ranNumsE <- Cache(rnorm, 10, 6, cacheRepo = tmpDir) # different
@@ -170,30 +170,24 @@ clearCache(tmpDir, ask = FALSE)
 ## Example 5: using caching to speed up rerunning expensive computations
 
 ```{r expensive-computations}
-ras <- raster(extent(0, 5, 0, 5), res = 1,
-              vals = sample(1:5, replace = TRUE, size = 25),
-              crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
-
-# A slow operation, like GIS operation
-notCached <- suppressWarnings(
-  # project raster generates warnings when run non-interactively
-  projectRaster(ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
-)
-
-cached <- suppressWarnings(
-  # project raster generates warnings when run non-interactively
-  # using quote works also
-  Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
-)
-
-# second time is much faster
-reRun <- suppressWarnings(
-  # project raster generates warnings when run non-interactively
-  Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
-)
-
-# recovered cached version is same as non-cached version
-all.equal(notCached, reRun) ## TRUE
+if (requireNamespace("terra")) {
+  ras <- terra::rast(terra::ext(0, 5, 0, 5), res = 1,
+                     vals = sample(1:5, replace = TRUE, size = 25),
+                     crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
+  
+  # A slow operation, like GIS operation
+  notCached <- terra::project(ras, y = terra::crs(ras), res = 0.25)
+  
+  cached <- 
+    Cache(terra::project(ras, y = terra::crs(ras), res = 0.25), cacheRepo = tmpDir)
+  
+  # second time is much faster
+  reRun <-
+    Cache(terra::project(ras, y = terra::crs(ras), res = 0.25), cacheRepo = tmpDir)
+  
+  # recovered cached version is same as non-cached version
+  all.equal(notCached@ptr, reRun@ptr) ## TRUE # The attributes are slightly different due to Cache
+}
 ```
 
 ## Nested Caching
@@ -260,7 +254,7 @@ Cache(rnorm, 1, cacheRepo = tmpdir1)
 # manually look at output attribute which shows cacheId: 7072c305d8c69df0
 Cache(rnorm, 1, cacheRepo = tmpdir1, cacheId = "7072c305d8c69df0") # same value
 
-# override even with different inputs ... obviously, this can go very wrong!
+# override even with different inputs ... obviously, this can go very wrong; use wisely!
 Cache(rnorm, 2, cacheRepo = tmpdir1, cacheId = "7072c305d8c69df0")
 
 ```
@@ -272,10 +266,11 @@ In addition, there are several helpers in the `reproducible` package, including 
 Also, one can access cached items manually (rather than simply rerunning the same `Cache` function again).
 
 ```{r manual-cache}
-# As of reproducible version 1.0, there is a new backend directly using DBI
-mapHash <- unique(showCache(tmpDir, userTags = "projectRaster")$cacheId)
-map <- loadFromCache(mapHash[1], cachePath = tmpDir)
-plot(map)
+if (requireNamespace("terra")) {
+  mapHash <- unique(showCache(tmpDir, userTags = "project")$cacheId)
+  map <- loadFromCache(mapHash[1], cachePath = tmpDir)
+  terra::plot(map)
+}
 ```
 
 ```{r cleanup}
@@ -285,8 +280,7 @@ unlink(dirname(tmpDir), recursive = TRUE)
 
 # Reproducible Workflow
 
-In general, we feel that a liberal use of `Cache` will make a re-usable and reproducible work flow.
-`shiny` apps can be made, taking advantage of `Cache`. 
+In general, we feel that a liberal use of `Cache` will be part of a robust, re-usable and reproducible work flow.
 Indeed, much of the difficulty in managing data sets and saving them for future use, can be accommodated by caching.
 
 

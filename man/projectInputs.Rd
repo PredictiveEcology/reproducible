@@ -25,10 +25,10 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Passed to \code{\link[raster]{projectRaster}}.}
+\item{...}{Passed to \code{\link[terra]{project}}.}
 
 \item{rasterToMatch}{Template \code{Raster*} object passed to the \code{to} argument of
-\code{\link[raster]{projectRaster}}, thus will changing the
+\code{\link[terra]{project}}, thus will changing the
 resolution and projection of \code{x}.
 See details in \code{\link{postProcess}}.}
 

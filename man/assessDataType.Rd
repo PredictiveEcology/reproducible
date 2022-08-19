@@ -22,7 +22,7 @@ assessDataTypeGDAL(ras)
 \item{ras}{The RasterLayer or RasterStack for which data type will be assessed.}
 
 \item{type}{Character. \code{"writeRaster"} (default) or \code{"GDAL"} to return the recommended
-data type for writing from the raster packages, respectively, or
+data type for writing from the terra packages, respectively, or
 \code{"projectRaster"} to return recommended resampling type.}
 }
 \value{
@@ -30,7 +30,7 @@ The appropriate data type for the range of values in \code{ras}.
         See \code{\link[raster]{dataType}} for details.
 
 The appropriate data type for the range of values in \code{ras} for using GDAL.
-        See \code{\link[raster]{dataType}} for details.
+        See \code{\link[terra]{datatype}} for details.
 }
 \description{
 Can be used to write prepared inputs on disk.

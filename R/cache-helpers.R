@@ -992,7 +992,9 @@ dealWithClass <- function(obj, cachePath, sideEffect, cacheId, drv, conn) {
     if (!requireNamespace("terra"))
       stop("Please install terra package")
 
+    attrs <- attr(obj, ".Cache")
     obj <- terra::wrap(obj)
+    setattr(obj, ".Cache", attrs)
   }
   obj
 }

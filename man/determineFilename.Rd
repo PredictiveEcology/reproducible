@@ -45,7 +45,7 @@ not provided.}
            \code{\link{projectInputs}}, \code{\link{maskInputs}},
            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
            Each of these may also pass \code{...} into other functions, like
-           \code{\link[raster]{writeRaster}}, or \code{sf::st_write}.
+           \code{\link[terra]{writeRaster}}, or \code{sf::st_write}.
            This might include potentially important arguments like \code{datatype},
            \code{format}. Also passed to \code{projectRaster},
            with likely important arguments such as \code{method = "bilinear"}.
@@ -53,11 +53,11 @@ not provided.}
 
 \subsection{... passed to:}{
   \describe{
-    \item{\code{cropInputs}:}{\code{\link[raster]{crop}}}
-    \item{\code{projectInputs}}{\code{\link[raster]{projectRaster}}}
-    \item{\code{maskInputs}}{\code{\link{fastMask}} or \code{\link[raster]{intersect}}}
-    \item{\code{fixErrors}}{\code{\link[raster]{buffer}}}
-    \item{\code{writeOutputs}}{\code{\link[raster]{writeRaster}} or \code{\link[raster]{shapefile}}}
+    \item{\code{cropInputs}:}{\code{\link[terra]{crop}}}
+    \item{\code{projectInputs}}{\code{\link[terra]{project}}}
+    \item{\code{maskInputs}}{\code{\link{fastMask}} or \code{\link[terra]{intersect}}}
+    \item{\code{fixErrors}}{\code{\link[terra]{buffer}}}
+    \item{\code{writeOutputs}}{\code{\link[terra]{writeRaster}} or \code{\link[terra]{vect}}}
     \item{\code{determineFilename}}{}
   }
   * Can be overridden with \code{useSAcrs}

@@ -1866,11 +1866,22 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId, sideEffect = FAL
   if (any(inherits(output, "PackedSpatRaster"))) {
     if (!requireNamespace("terra") )
       stop("Please install terra package")
-    output <- terra::rast(output)
+
+    # output <- terra::rast(output) # THIS HAS A BUG WHERE @ptr$timestep is not preserved correctly
+    a <- parse(text = output@definition)
+    x <- eval(a, envir = asNamespace("terra"))
+    terra::values(x) <- output@values
+    output <- x
+
+    # work around
+    #if (identical("", output@ptr$timestep)) {
+    #  output@ptr$timestep <- "seconds"
+    #}
   }
   if (any(inherits(output, "data.table"))) {
     output <- data.table::copy(output)
   }
+  setattr(output, ".Cache", attrs)
 
   output
 }

@@ -3,6 +3,7 @@
 S3method(Filenames,default)
 S3method(Filenames,environment)
 S3method(Filenames,list)
+S3method(all,equalCache)
 S3method(asPath,character)
 S3method(asPath,null)
 S3method(assessDataType,Raster)

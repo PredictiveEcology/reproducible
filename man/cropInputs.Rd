@@ -35,7 +35,7 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Passed to \code{raster::crop}}
+\item{...}{Passed to \code{terra::crop}}
 
 \item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
 \code{Cache} is used internally.}

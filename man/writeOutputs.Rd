@@ -46,14 +46,14 @@ writeOutputs(
 \arguments{
 \item{x}{The object save to disk i.e., write outputs}
 
-\item{filename2}{File name passed to \code{\link[raster]{writeRaster}}, or
-\code{\link[raster]{shapefile}} or \code{\link[sf]{st_write}}
+\item{filename2}{File name passed to \code{\link[terra]{writeRaster}}, or
+\code{\link[terra]{vect}} or \code{\link[sf]{st_write}}
 (\code{dsn} argument).}
 
 \item{overwrite}{Logical. Should file being written overwrite an existing file if it exists.}
 
-\item{...}{Passed into \code{\link[raster]{shapefile}} or
-\code{\link[raster]{writeRaster}} or \code{\link[sf]{st_write}}}
+\item{...}{Passed into \code{\link[terra]{vect}} or
+\code{\link[terra]{writeRaster}} or \code{\link[sf]{st_write}}}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.

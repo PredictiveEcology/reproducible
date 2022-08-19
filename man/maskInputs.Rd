@@ -7,7 +7,7 @@
 maskInputs(x, studyArea, ...)
 }
 \arguments{
-\item{x}{An object to do a geographic raster::mask/raster::intersect.
+\item{x}{An object to do a geographic terra::mask/terra::intersect.
 See methods.}
 
 \item{studyArea}{\code{SpatialPolygons*} object used for masking and possibly cropping
@@ -20,8 +20,8 @@ CRS of \code{x} before masking. Currently, this function will not reproject the
 }
 \description{
 This function can be used to mask inputs from data. Masking here is
-equivalent to \code{raster::mask} (though \code{\link{fastMask}} is used here)
-or \code{raster::intersect}.
+equivalent to \code{terra::mask} (though \code{\link{fastMask}} is used here)
+or \code{terra::intersect}.
 }
 \examples{
 # Add a study area to Crop and Mask to
