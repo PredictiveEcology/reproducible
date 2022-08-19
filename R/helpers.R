@@ -517,4 +517,18 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   df
 }
 
+all.equalWONewCache <- function(a, b, ...) {
+  attr(a, ".Cache") <- NULL
+  attr(b, ".Cache") <- NULL
+  all.equal(a, b, ...)
+}
 
+
+#' `all.equal` that allows comparison of Cached and non-Cached objects
+#'
+#' Cache places attributes on objects. This function strips those attributes,
+#' allowing comparison of 2 objects one or both of which came from a Cache.
+#'
+#' @export
+#' @inheritParams base::all.equal
+all.equalCache <- all.equalWONewCache

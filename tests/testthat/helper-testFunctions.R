@@ -1,8 +1,5 @@
-all.equalWONewCache <- function(a, b) {
-  attr(a, ".Cache")$newCache <- NULL
-  attr(b, ".Cache")$newCache <- NULL
-  all.equal(a,b)
-}
+
+
 
 skip_if_no_token <- function() {
 
