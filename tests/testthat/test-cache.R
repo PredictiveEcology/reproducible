@@ -555,9 +555,9 @@ test_that("test quoted FUN in Cache", {
 
   D <- rnorm(10, 16) |> Cache(cacheRepo = tmpdir) # nolint
 
-  expect_true(all.equalWONewCache(A, B))
-  expect_true(all.equalWONewCache(A, C))
-  expect_true(all.equalWONewCache(A, D))
+  expect_true(all.equalCache(A, B))
+  expect_true(all.equalCache(A, C))
+  expect_true(all.equalCache(A, D))
 })
 
 test_that("test Cache argument inheritance to inner functions", {

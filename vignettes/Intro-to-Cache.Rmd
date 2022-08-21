@@ -73,10 +73,10 @@ if (requireNamespace("terra")) {
   system.time(suppressWarnings(map4 <- Cache(terra::project(ras, y = newCRS), cacheRepo = tmpDir)))
   options(opts)
   
-  # All same, except for some Cache attributes and
-  all.equalCache(map1, map2) # TRUE
-  all.equalCache(map1, map3, tolerance = 1e6) # TRUE (imprecision with terra::wrap, used by Cache)
-  all.equalCache(map1, map4, tolerance = 1e6) # TRUE (imprecision with terra::wrap, used by Cache)
+  # All same, except foBr some Cache attributes and can't use base::all.equal directly
+  allEqual(map1, map2) # TRUE
+  allEqual(map1, map3, tolerance = 1e6) # TRUE (imprecision with terra::wrap, used by Cache)
+  allEqual(map1, map4, tolerance = 1e6) # TRUE (imprecision with terra::wrap, used by Cache)
 }
 ```
 
