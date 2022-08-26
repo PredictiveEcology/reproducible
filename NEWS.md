@@ -4,6 +4,18 @@ Version 1.2.10
 ==============
 
 ## Dependency changes
+* none
+
+## Enhancements
+* none
+
+## Bug fixes
+* fixed issue with masking
+
+Version 1.2.10
+==============
+
+## Dependency changes
 * Drop support for R 3.6 (#230)
 * remove `gdalUtilities`, `gdalUtils`, and `rgeos` from `Suggests`
 * Added minimum versions of `raster` and `terra`, because previous versions were causing collisions.

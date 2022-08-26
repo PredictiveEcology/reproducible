@@ -1372,10 +1372,9 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM =
                exprBetween = quote(
                  x <- fixErrors(x, testValidity = NA, useCache = useCache)
                ))
-
-    as(x, "Spatial")
+    x <- fixErrors(x, testValidity = NA, useCache = useCache) ## needed to deal with sfc issues
+    sf::as_Spatial(x)
   }
-
 }
 
 #' @export
@@ -2205,7 +2204,6 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                                        testValidity = NA, useCache = useCache)
                       ))
           x <- yy
-
         }
       }
       ##################################
