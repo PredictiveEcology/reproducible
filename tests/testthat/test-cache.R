@@ -1,7 +1,7 @@
 options(reproducible.drv = "csv")
 
 test_that("test file-backed raster caching", {
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  testInitOut <- testInit("terra", tmpFileExt = c(".tif", ".grd"))
 
   on.exit({
     testOnExit(testInitOut)
@@ -11,15 +11,15 @@ test_that("test file-backed raster caching", {
   nOT <- Sys.time()
 
   randomPolyToDisk <- function(tmpfile) {
-    r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+    r <- rast(ext(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
     .writeRaster(r, tmpfile[1], overwrite = TRUE)
-    r <- raster(tmpfile[1])
+    r <- rast(tmpfile[1])
     r
   }
 
   a <- randomPolyToDisk(tmpfile[1])
   # confirm that the raster has the given tmp filename
-  expect_identical(strsplit(tmpfile[1], split = "[\\/]"), strsplit(a@file@name, split = "[\\/]"))
+  expect_identical(tmpfile[1], Filenames(a)) # both have had a checkPath already
 
   val1 <- .cacheNumDefaultTags()  # adding a userTag here
   ik <- .ignoreTagKeys()
@@ -44,11 +44,10 @@ test_that("test file-backed raster caching", {
 
   aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
 
-  # confirm that the raster has the new filename in the cachePath
+  # ~~confirm that the raster has the new filename in the cachePath ~~
+  #  CHANGED BEHAVIOUR -- Cached File-backed object no longer has that the Cached filename
   expect_false(identical(normPath(Filenames(aa)),
                          normPath(CacheStoredRasterFile(tmpCache, filename = tmpfile[1]))))
-  expect_true(any(grepl(pattern = basename(Filenames(aa)),
-                  dir(CacheStorageRasterDir(tmpCache)))))
 
   clearCache(x = tmpCache)
   bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2",
