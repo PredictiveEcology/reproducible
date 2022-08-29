@@ -523,8 +523,8 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 #'
 #' @export
 #' @inheritParams base::all.equal
-allEqual <- function(a, b, ...) {
-  attr(a, ".Cache") <- NULL
-  attr(b, ".Cache") <- NULL
-  all.equal(a, b, ...)
+allEqual <- function(target, current, ...) {
+  attr(target, ".Cache") <- NULL
+  attr(current, ".Cache") <- NULL
+  all.equal(target, current, ...)
 }

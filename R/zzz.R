@@ -48,6 +48,7 @@
 .reproducibleTempInputDir <- function() Require::tempdir2("inputs")
 
 
+#' @importFrom utils isS3stdGeneric
 formalsAllMethods <- function(fn, envir = parent.frame()) {
   fnChar <- deparse(substitute(fn))
   browser()

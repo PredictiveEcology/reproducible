@@ -590,6 +590,7 @@ revertClass <- function(from, isStack = FALSE, isBrick = FALSE, isRasterLayer = 
   from
 }
 
+#' @importFrom stats approx
 extentDense <- function(cropTo) {
   crop3 <- cropTo
   crop3[] <- crop3[] # to memory
