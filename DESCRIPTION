@@ -62,7 +62,6 @@ Suggests:
     DBI,
     fastdigest,
     fasterize,
-    fst,
     future,
     future.callr,
     glue,
