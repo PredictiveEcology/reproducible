@@ -7,7 +7,6 @@
 \alias{Copy,list-method}
 \alias{Copy,refClass-method}
 \alias{Copy,data.frame-method}
-\alias{Copy,Raster-method}
 \title{Recursive copying of nested environments, and other "hard to copy" objects}
 \usage{
 Copy(object, ...)
@@ -21,14 +20,6 @@ Copy(object, ...)
 \S4method{Copy}{refClass}(object, ...)
 
 \S4method{Copy}{data.frame}(object, ...)
-
-\S4method{Copy}{Raster}(
-  object,
-  filebackedDir,
-  drv = getOption("reproducible.drv"),
-  conn = getOption("reproducible.conn", NULL),
-  ...
-)
 }
 \arguments{
 \item{object}{An R object (likely containing environments) or an environment.}
@@ -42,16 +33,6 @@ Can be \code{NULL}, which means that the file will not be
 copied and could therefore cause a collision as the
 pre-copied object and post-copied object would have the same
 file backing them.}
-
-\item{drv}{Either \code{"csv"} ( the default as of reproducible V 1.2.9) or
-\code{"fst"} (as character strings), or an object that inherits from
-\code{DBIDriver}, or an existing \code{DBIConnection} object
-(in order to clone an existing connection). For these last two, user requires \code{DBI}
-and a DB backend such as \code{RSQLite} to be installed.}
-
-\item{conn}{Either the character string of the path to the `fst` file that is the
-cacheRepo file, or optionally (requires \code{DBI} and a DB backend such as \code{RSQLite})
-a DBIConnection object, as returned by \code{dbConnect()}}
 }
 \description{
 When copying environments and all the objects contained within them, there are

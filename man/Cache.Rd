@@ -144,12 +144,12 @@ If a number larger than \code{1}, then it will report the N most similar archive
 objects.}
 
 \item{drv}{Either \code{"csv"} ( the default as of reproducible V 1.2.9) or
-\code{"fst"} (as character strings), or an object that inherits from
+an object that inherits from
 \code{DBIDriver}, or an existing \code{DBIConnection} object
 (in order to clone an existing connection). For these last two, user requires \code{DBI}
 and a DB backend such as \code{RSQLite} to be installed.}
 
-\item{conn}{Either the character string of the path to the `fst` file that is the
+\item{conn}{Either the character string of the path to the `csv` file that is the
 cacheRepo file, or optionally (requires \code{DBI} and a DB backend such as \code{RSQLite})
 a DBIConnection object, as returned by \code{dbConnect()}}
 }

@@ -14,8 +14,6 @@
 \alias{.robustDigest,numeric-method}
 \alias{.robustDigest,matrix-method}
 \alias{.robustDigest,integer-method}
-\alias{.robustDigest,Raster-method}
-\alias{.robustDigest,Spatial-method}
 \title{Create reproducible digests of objects in R}
 \usage{
 .robustDigest(
@@ -51,10 +49,6 @@
 \S4method{.robustDigest}{matrix}(object, .objects, length, algo, quick, classOptions)
 
 \S4method{.robustDigest}{integer}(object, .objects, length, algo, quick, classOptions)
-
-\S4method{.robustDigest}{Raster}(object, .objects, length, algo, quick, classOptions)
-
-\S4method{.robustDigest}{Spatial}(object, .objects, length, algo, quick, classOptions)
 }
 \arguments{
 \item{object}{an object to digest.}

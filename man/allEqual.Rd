@@ -4,9 +4,13 @@
 \alias{allEqual}
 \title{`all.equal` that allows comparison of Cached and non-Cached objects}
 \usage{
-allEqual(a, b, ...)
+allEqual(target, current, ...)
 }
 \arguments{
+\item{target}{\R object.}
+
+\item{current}{other \R object, to be compared with \code{target}.}
+
 \item{...}{further arguments for different methods, notably the
     following two, for numerical comparison:}
 }

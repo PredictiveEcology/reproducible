@@ -51,7 +51,7 @@ the database file(s)}
 
 \item{drv}{A driver, passed to \code{dbConnect}}
 
-\item{conn}{Either the character string of the path to the `fst` file that is the
+\item{conn}{Either the character string of the path to the `csv` file that is the
 cacheRepo file, or optionally (requires \code{DBI} and a DB backend such as \code{RSQLite})
 a DBIConnection object, as returned by \code{dbConnect()}}
 

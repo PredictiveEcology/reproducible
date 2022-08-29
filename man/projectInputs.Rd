@@ -7,7 +7,9 @@
 \usage{
 projectInputs(
   x,
+  rasterToMatch = NULL,
   targetCRS,
+  studyArea = NULL,
   verbose = getOption("reproducible.verbose", 1),
   ...
 )
@@ -16,6 +18,11 @@ projectInputs(
 }
 \arguments{
 \item{x}{A \code{Raster*}, \code{Spatial*} or \code{sf} object}
+
+\item{rasterToMatch}{Template \code{Raster*} object passed to the \code{to} argument of
+\code{\link[terra]{project}}, thus will changing the
+resolution and projection of \code{x}.
+See details in \code{\link{postProcess}}.}
 
 \item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
 
@@ -26,16 +33,6 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{...}{Passed to \code{\link[terra]{project}}.}
-
-\item{rasterToMatch}{Template \code{Raster*} object passed to the \code{to} argument of
-\code{\link[terra]{project}}, thus will changing the
-resolution and projection of \code{x}.
-See details in \code{\link{postProcess}}.}
-
-\item{cores}{An \code{integer*} or \code{'AUTO'}. This will be used if \code{gdalwarp} is
-triggered. \code{'AUTO'*} will calculate 90% of the total
-number of cores in the system, while an integer or rounded
-float will be passed as the exact number of cores to be used.}
 }
 \value{
 A file of the same type as starting, but with projection (and possibly

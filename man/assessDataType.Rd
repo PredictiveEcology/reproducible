@@ -2,17 +2,17 @@
 % Please edit documentation in R/postProcess.R
 \name{assessDataType}
 \alias{assessDataType}
-\alias{assessDataType.Raster}
-\alias{assessDataType.RasterStack}
+\alias{assessDataTypeRaster}
+\alias{assessDataTypeRasterStack}
 \alias{assessDataType.default}
 \alias{assessDataTypeGDAL}
 \title{Assess the appropriate raster layer data type}
 \usage{
 assessDataType(ras, type = "writeRaster")
 
-\method{assessDataType}{Raster}(ras, type = "writeRaster")
+assessDataTypeRaster(ras, type = "writeRaster")
 
-\method{assessDataType}{RasterStack}(ras, type = "writeRaster")
+assessDataTypeRasterStack(ras, type = "writeRaster")
 
 \method{assessDataType}{default}(ras, type = "writeRaster")
 

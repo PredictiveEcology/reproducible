@@ -36,9 +36,6 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{...}{Passed to \code{terra::crop}}
-
-\item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
-\code{Cache} is used internally.}
 }
 \description{
 This function can be used to crop or reproject module inputs from raw data.
