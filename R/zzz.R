@@ -7,8 +7,6 @@
   opts.reproducible <- reproducibleOptions()
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
-  if (requireNamespace("fst", quietly = TRUE))
-    fst::threads_fst(1)
   td <- tempdir()
   if (!dir.exists(td)) dir.create(td)
   invisible()

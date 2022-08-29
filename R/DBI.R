@@ -228,7 +228,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv"),
                          conn = getOption("reproducible.conn", NULL), create = TRUE,
                          read_only = FALSE) {
 
-  if (identical(drv, "fst") || identical(drv, "csv") ) {
+  if (identical(drv, "csv") ) {
     conn <- CacheDBFile(cachePath, drv = drv, conn = conn)
     return(conn)
   }
@@ -352,9 +352,7 @@ CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
   outFile <- if (grepl(type, "SQLite")) {
     file.path(cachePath, dbFileSQLite)
   } else if (grepl(type, "character")) {
-    if (identical(drv, "fst")) {
-      file.path(cachePath, dbFilefst)
-    } else if (identical(drv, "csv")) {
+    if (identical(drv, "csv")) {
       file.path(cachePath, dbFilecsv)
     } else {
       stop(errMessWrongDrv)
@@ -363,7 +361,7 @@ CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
   outFile
 }
 
-errMessWrongDrv <- "Currently can only use 'fst', RSQLite::SQLite(), or RPostgres::Postgres()"
+errMessWrongDrv <- "Currently can only use 'csv', RSQLite::SQLite(), or RPostgres::Postgres()"
 
 #' @rdname CacheHelpers
 #' @param sub A character string indicating the sub-folder to use within the Cache Repository
@@ -534,7 +532,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   needWriteToConn <- FALSE #  If a db gets change, need to get it to disk, not just RAM
   if (switchedDBTable && identical(connFilePresentNotNeeded, dbFileSQLite)) {
     # means a switched backend -- folder of storage files exist, but no db frontend
-    if (identical(drv, "fst") || identical(drv, "csv") ) {
+    if (identical(drv, "csv") ) {
       if (!requireNamespace("RSQLite")) {
         stop("It looks like this Cache database used to be an RSQLite database, but RSQLite is not installed; please install.packages('RSQLite')")
       }
@@ -1056,7 +1054,7 @@ renameCacheAll <- function(new, old, drv, conn) {
     res <- retry(retries = 15, exponentialDecayBase = 1.01, quote(DBI::dbSendQuery(conn, qry)))
     # dbFetch(res)
     DBI::dbClearResult(res)
-  } # fst does not need to rename a table, as there are no tables
+  } # csv does not need to rename a table, as there are no tables
 }
 
 useSQL <- function(conn) {
@@ -1093,10 +1091,7 @@ readFilebasedConnFile <- function(file) {
   fe <- fileExt(file)
   if (identical(fe, ""))
     fe <- getOption("reproducible.drv")
-  ret <- if (identical(fe, "fst")) {
-    .requireNamespace("fst", stopOnFALSE = TRUE)
-    fst::read_fst(file)
-  } else if (identical(fe, "csv"))
+  ret <- if (identical(fe, "csv"))
     data.table::fread(file, colClasses = rep("character", 4))
   setDF(ret)
 }
@@ -1105,9 +1100,7 @@ writeFilebasedConnFile <- function(file, dt) {
   fe <- fileExt(file)
   if (identical(fe, ""))
     fe <- getOption("reproducible.drv")
-  ret <- if (identical(fe, "fst"))
-    fst::write_fst(file, x = dt)
-  else if (identical(fe, "csv"))
+  ret <- if (identical(fe, "csv"))
     data.table::fwrite(dt, file = file)
 
 }
@@ -1115,5 +1108,4 @@ writeFilebasedConnFile <- function(file, dt) {
 
 dbFileSQLite <- "cache.db"
 dbFilecsv <- "cache.csv"
-dbFilefst <- "cache.fst"
-dbKnownFiles <- c(dbFilecsv, dbFilefst, dbFileSQLite)
+dbKnownFiles <- c(dbFilecsv, dbFileSQLite)

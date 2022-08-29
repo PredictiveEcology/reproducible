@@ -344,12 +344,12 @@ utils::globalVariables(c(
 #'        objects.
 #'
 #' @param drv Either \code{"csv"} ( the default as of reproducible V 1.2.9) or
-#'   \code{"fst"} (as character strings), or an object that inherits from
+#'   an object that inherits from
 #'   \code{DBIDriver}, or an existing \code{DBIConnection} object
 #'   (in order to clone an existing connection). For these last two, user requires \code{DBI}
 #'   and a DB backend such as \code{RSQLite} to be installed.
 #'
-#' @param conn Either the character string of the path to the `fst` file that is the
+#' @param conn Either the character string of the path to the `csv` file that is the
 #'   cacheRepo file, or optionally (requires \code{DBI} and a DB backend such as \code{RSQLite})
 #'   a DBIConnection object, as returned by \code{dbConnect()}
 #'
@@ -366,19 +366,6 @@ utils::globalVariables(c(
 #'
 #' @author Eliot McIntire
 #' @export
-#' @importClassesFrom raster RasterBrick
-#' @importClassesFrom raster RasterLayer
-#' @importClassesFrom raster RasterLayerSparse
-#' @importClassesFrom raster RasterStack
-#' @importClassesFrom sp Spatial
-#' @importClassesFrom sp SpatialLines
-#' @importClassesFrom sp SpatialLinesDataFrame
-#' @importClassesFrom sp SpatialPixels
-#' @importClassesFrom sp SpatialPixelsDataFrame
-#' @importClassesFrom sp SpatialPoints
-#' @importClassesFrom sp SpatialPointsDataFrame
-#' @importClassesFrom sp SpatialPolygons
-#' @importClassesFrom sp SpatialPolygonsDataFrame
 #' @importFrom digest digest
 #' @importFrom data.table setDT := setkeyv .N .SD setattr
 #' @importFrom utils object.size tail methods
@@ -2113,10 +2100,10 @@ useFuture <- function(useFutureForce = FALSE, drv = getOption("reproducible.drv"
         .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")) {
       if (grepl("callr", getOption("reproducible.futurePlan"))) {
         .requireNamespace("future.callr", messageStart = "To use reproducible.futurePlan, ")
-        if (identical(drv, "fst") || identical(drv, "csv")) {
+        if (identical(drv, "csv")) {
           useFuture <- TRUE
         } else {
-          message("reproducible.futurePlan is set to future.callr::callr, but reproducible.drv must be 'csv' or 'fst', skipping")
+          message("reproducible.futurePlan is set to future.callr::callr, but reproducible.drv must be 'csv', skipping")
         }
       }
     }

@@ -23,7 +23,7 @@ Version 1.2.10
 ## Enhancements
 * `Cache` can now take function calls as input, e.g., `Cache(rnorm(1))` or its exact equivalent using the base R pipe: `rnorm(1) |> Cache()`
 * Cloud-based caching has been massively overhauled and can still be accessed using e.g., `Cache(..., useCloud = TRUE)`. This caching will be substantially slower than local caching, but for cases where the object will be shared among computers or users, it is a straightforward and robust way to do this.
-* `Cache` backend can now use `fst`. This is in anticipation that it will be used instead of `RSQLite` as it is faster for all test cases and also has fewer package dependencies. In the next release, there will be 10 fewer direct and indirect dependencbrowies by removing `RSQLite` as a package dependency. Total recursive dependencies will be 15, down from 25 currently. 
+* `Cache` backend can now use `csv`. This is in anticipation that it will be used instead of `RSQLite` as it is faster for all test cases and also has fewer package dependencies. In the next release, there will be 10 fewer direct and indirect dependencies by removing `RSQLite` as a package dependency. Total recursive dependencies will be 15, down from 25 currently. 
 * all direct calls to GDAL are removed: only `terra` and `sf` are used throughout
 * `prepInputs` can now take `fun` as a quoted expression on `x`, the object loaded by `dlFun` in `preProcess`
 * `preProcess` arg `dlFun` can now be a quoted expression
