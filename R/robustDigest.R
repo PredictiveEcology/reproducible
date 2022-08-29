@@ -153,6 +153,58 @@ setMethod(
       return(out)
     }
 
+    if (any(inherits(object, "Raster"))) {
+      object <- .removeCacheAtts(object)
+
+      if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
+        if (is(object, "RasterStack")) {
+          # have to do one file at a time with Stack
+          dig <- suppressWarnings(
+            lapply(object@layers, function(yy) {
+              .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
+            })
+          )
+        } else {
+          # Brick and Layers have only one file
+          dig <- suppressWarnings(
+            .digestRasterLayer(object, length = length, algo = algo, quick = quick))
+        }
+      } else {
+        dig <- suppressWarnings(
+          .digestRasterLayer(object, length = length, algo = algo, quick = quick))
+      }
+      dig <- .doDigest(unlist(dig))
+      return(dig)
+    }
+
+    if  (any(inherits(object, "Spatial"))) {
+      object <- .removeCacheAtts(object, passByReference = FALSE)
+
+      if (is(object, "SpatialPoints")) {
+        aaa <- as.data.frame(object)
+      } else {
+        aaa <- object
+      }
+
+      # The following Rounding is necessary to make digest equal on linux and windows
+      if (inherits(aaa, "SpatialPolygonsDataFrame")) {
+        bbb <- unlist(lapply(as.data.frame(aaa), is.numeric))
+        if (sum(bbb)) {
+          bbbWh <- which(bbb)
+          for (i in bbbWh) { # changed because may not have correct names, can be NAs, Eliot March 2019
+            #  Error was: Error in round(aaa[[i]], 4) :
+            # non-numeric argument to mathematical function
+            aaa[[i]] <- round(aaa[[i]], 4)
+          }
+        }
+      }
+
+      #
+      out <- .doDigest(aaa, algo = algo)
+      return(out)
+
+    }
+
     # passByReference -- while doing pass by reference attribute setting is faster, is
     #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
     object1 <- .removeCacheAtts(object)
@@ -338,66 +390,7 @@ setMethod(
     .doDigest(object, algo = algo)
   })
 
-#' @rdname robustDigest
-#' @export
-setMethod(
-  ".robustDigest",
-  signature = "Raster",
-  definition = function(object, .objects, length, algo, quick, classOptions) {
-    object <- .removeCacheAtts(object)
 
-    if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
-      if (is(object, "RasterStack")) {
-        # have to do one file at a time with Stack
-        dig <- suppressWarnings(
-          lapply(object@layers, function(yy) {
-            .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
-          })
-        )
-      } else {
-        # Brick and Layers have only one file
-        dig <- suppressWarnings(
-          .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-      }
-    } else {
-      dig <- suppressWarnings(
-        .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-    }
-    dig <- .doDigest(unlist(dig))
-    return(dig)
-})
-
-
-#' @rdname robustDigest
-#' @export
-setMethod(
-  ".robustDigest",
-  signature = "Spatial",
-  definition = function(object, .objects, length, algo, quick, classOptions) {
-    object <- .removeCacheAtts(object, passByReference = FALSE)
-
-  if (is(object, "SpatialPoints")) {
-      aaa <- as.data.frame(object)
-    } else {
-      aaa <- object
-    }
-
-    # The following Rounding is necessary to make digest equal on linux and windows
-    if (inherits(aaa, "SpatialPolygonsDataFrame")) {
-      bbb <- unlist(lapply(as.data.frame(aaa), is.numeric))
-      if (sum(bbb)) {
-        bbbWh <- which(bbb)
-        for (i in bbbWh) { # changed because may not have correct names, can be NAs, Eliot March 2019
-                           #  Error was: Error in round(aaa[[i]], 4) :
-                           # non-numeric argument to mathematical function
-          aaa[[i]] <- round(aaa[[i]], 4)
-        }
-      }
-    }
-
-    #
-    .doDigest(aaa, algo = algo)
-})
 
 .basenames <- function(object, nParentDirs) {
   if (missing(nParentDirs)) {

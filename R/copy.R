@@ -48,7 +48,6 @@ file.move <- function(from, to, overwrite = FALSE) {
 #' @author Eliot McIntire
 #' @export
 #' @importFrom data.table copy
-#' @inheritParams Cache
 #' @rdname Copy
 #' @seealso \code{\link{.robustDigest}}
 #'
@@ -91,8 +90,7 @@ setGeneric("Copy", function(object, ...) {
 setMethod(
   "Copy",
   signature(object = "ANY"),
-  definition = function(object, # filebackedDir,
-                        ...) {
+  definition = function(object, ...) {
     if (any(grepl("DBIConnection", is(object)))) {
       messageCache("Copy will not do a deep copy of a DBI connection object; no copy being made. ",
               "This may have unexpected consequences...")
@@ -100,6 +98,18 @@ setMethod(
 
     if (is(object, "proto")) { # don't want to import class for reproducible package; an edge case
       return(get(class(object)[1])(object))
+    }
+
+    if (is(object, "Raster")) {
+      if (any(nchar(Filenames(object)) > 0)) {
+        dots <- list(...)
+        if (is.null(dots$filebackedDir)) {
+          filebackedDir <- tempdir2(rndstr(1, 11))
+        }
+        if (!is.null(filebackedDir))
+          object <- .prepareFileBackedRaster(object, cacheRepo = filebackedDir, ...)
+      }
+      return(object)
     }
 
     # keep this environment method here, as it will intercept "proto"
@@ -177,22 +187,3 @@ setMethod("Copy",
             object
 })
 
-#' @rdname Copy
-#' @inheritParams DBI::dbConnect
-setMethod("Copy",
-          signature(object = "Raster"),
-          definition = function(object, filebackedDir,
-                                drv = getOption("reproducible.drv"),
-                                conn = getOption("reproducible.conn", NULL), ...) {
-            # raster::fromDisk fails when only some of the RasterLayers in a RasterStack are fromDisk
-            #  --> changing to Filenames
-            # if (fromDisk(object)) {
-            if (any(nchar(Filenames(object)) > 0)) {
-              if (missing(filebackedDir)) {
-                filebackedDir <- tempdir2(rndstr(1, 11))
-              }
-              if (!is.null(filebackedDir))
-                object <- .prepareFileBackedRaster(object, cacheRepo = filebackedDir, drv = drv, conn = conn)
-            }
-            object
-})

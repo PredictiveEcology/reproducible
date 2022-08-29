@@ -96,16 +96,6 @@ setGeneric("studyAreaName", function(studyArea, ...) {
   standardGeneric("studyAreaName")
 })
 
-#' @export
-#' @rdname studyAreaName
-setMethod(
-  "studyAreaName",
-  signature = "SpatialPolygonsDataFrame",
-  definition = function(studyArea, ...) {
-    studyArea <- studyArea[, -c(1:ncol(studyArea))]
-    studyArea <- as(studyArea, "SpatialPolygons")
-    studyAreaName(studyArea, ...)
-})
 
 #' @export
 #' @rdname studyAreaName
@@ -132,6 +122,13 @@ setMethod(
       stop("studyAreaName expects an object that returns TRUE with ",
            "from isSpatialAny(x) or character vector")
     }
+
+    if (is(studyArea, "SpatialPolygonsDataFrame")) {
+      studyArea <- studyArea[, -c(1:ncol(studyArea))]
+      studyArea <- as(studyArea, "SpatialPolygons")
+      studyArea <- studyAreaName(studyArea, ...)
+    }
+
     digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
 })
 

@@ -351,7 +351,7 @@ projectTo <- function(from, projectTo, method) {
             # }
             messagePrepInputs("         projectTo is a Vector dataset, which does not define all metadata required. ")
             if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
-              newRes <- res(from)
+              newRes <- terra::res(from)
               messagePrepInputs("         Using resolution of ",paste(newRes, collapse = "x"),"m; ")
               projectTo <- terra::rast(projectTo, resolution = newRes)
             } else {
@@ -596,8 +596,8 @@ extentDense <- function(cropTo) {
   crop3[] <- 1
   crop3 <- terra::rast(crop3)
   crop4 <- terra::as.polygons(crop3)
-  gm <- geom(crop4)
-  n <- (xmax(crop3) - xmin(crop3))/res(crop3)[1]
+  gm <- terra::geom(crop4)
+  n <- (terra::xmax(crop3) - terra::xmin(crop3))/terra::res(crop3)[1]
   x <- approx(gm[,c("x")], method = "linear", n = n)
   y <- approx(gm[,c("y")], method = "linear", n = n)
   crop5 <- cbind(geom = 1, part = 1, x = x$y, y = y$y, hole = 0)
