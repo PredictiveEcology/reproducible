@@ -1210,7 +1210,6 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                                        testValidity = NA, useCache = useCache)
                       ))
           x <- yy
-
         }
       }
       ##################################
