@@ -1345,7 +1345,7 @@ test_that("Cache the dots; .cacheExtra", {
 
 })
 
-test_that("switching between SQLite, 'fst', 'csv'", {
+test_that("switching between SQLite, 'csv'", {
   if (!requireNamespace("RSQLite")) skip()
 
   testInitOut <- testInit()
@@ -1354,7 +1354,7 @@ test_that("switching between SQLite, 'fst', 'csv'", {
   }, add = TRUE)
 
   # suppressWarnings(try(rm(list = c("ccc", "ddd", "eee", "fff"), envir = .GlobalEnv)))
-  drvs <- list(RSQLite::SQLite(), "csv", "fst")
+  drvs <- list(RSQLite::SQLite(), "csv")
   for(drv2 in drvs) {
     drv1s <- setdiff(drvs, list(drv2))
     for (drv1 in drv1s) {
