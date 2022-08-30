@@ -176,14 +176,14 @@ if (requireNamespace("terra")) {
                      crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
   
   # A slow operation, like GIS operation
-  notCached <- terra::project(ras, y = terra::crs(ras), res = 0.25)
+  notCached <- terra::project(ras, y = terra::crs(ras))
   
   cached <- 
-    Cache(terra::project(ras, y = terra::crs(ras), res = 0.25), cacheRepo = tmpDir)
+    Cache(terra::project(ras, y = terra::crs(ras)), cacheRepo = tmpDir)
   
   # second time is much faster
   reRun <-
-    Cache(terra::project(ras, y = terra::crs(ras), res = 0.25), cacheRepo = tmpDir)
+    Cache(terra::project(ras, y = terra::crs(ras)), cacheRepo = tmpDir)
   
   # recovered cached version is same as non-cached version
   all.equal(notCached@ptr, reRun@ptr) ## TRUE # The attributes are slightly different due to Cache
