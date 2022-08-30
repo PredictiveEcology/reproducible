@@ -10,7 +10,13 @@
 #' @seealso \code{prepInputs}
 #' @inheritParams prepInputs
 #' @rdname postProcess
-postProcess <- function(x, ...) {
+postProcess <- function(x, filename1 = NULL, filename2 = NULL,
+                        studyArea = NULL, rasterToMatch = NULL,
+                        overwrite = getOption("reproducible.overwrite", TRUE),
+                        useSAcrs = FALSE,
+                        useCache = getOption("reproducible.useCache", FALSE),
+                        verbose = getOption("reproducible.verbose", 1),
+                        ...) {
   UseMethod("postProcess")
 }
 
@@ -1072,12 +1078,6 @@ setMinMaxIfNeeded <- function(ras) {
   ras
 }
 
-differentRasters <- function(ras1, ras2, targetCRS) {
-
-  (!isTRUE(all.equal(.crs(ras1), targetCRS)) |
-     !isTRUE(all.equal(terra::res(ras1), terra::res(ras2))) |
-     !isTRUE(all.equal(extent(ras1), extent(ras2))))
-}
 
 roundTo6Dec <- function(x) {
   # check if integer

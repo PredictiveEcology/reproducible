@@ -357,7 +357,8 @@ projectTo <- function(from, projectTo, method) {
             } else {
               projectTo <- terra::rast(ncols = terra::ncol(from), nrows = terra::nrow(from),
                                        crs = sf::st_crs(projectTo)$wkt, extent = terra::ext(projectTo))
-              messagePrepInputs("         Projecting to ", paste(collapse = "x", round(res(projectTo), 2))," resolution (same # pixels as `from`)")
+              messagePrepInputs("         Projecting to ",
+                                paste(collapse = "x", round(terra::res(projectTo), 2))," resolution (same # pixels as `from`)")
             }
 
             messagePrepInputs("         in the projection of `projectTo`, using the origin and extent")
@@ -437,7 +438,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE) {
       isGrid <- isGridded(from)
       if (needBuffer)
         if (isGrid) {
-          res <- res(from)
+          res <- terra::res(from)
           if (!isSpat(ext))
             ext <- terra::vect(ext)
           extTmp <- terra::ext(ext)

@@ -5,7 +5,18 @@
 \alias{postProcess.default}
 \title{Generic function to post process objects}
 \usage{
-postProcess(x, ...)
+postProcess(
+  x,
+  filename1 = NULL,
+  filename2 = NULL,
+  studyArea = NULL,
+  rasterToMatch = NULL,
+  overwrite = getOption("reproducible.overwrite", TRUE),
+  useSAcrs = FALSE,
+  useCache = getOption("reproducible.useCache", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
+  ...
+)
 
 \method{postProcess}{default}(
   x,
@@ -24,30 +35,6 @@ postProcess(x, ...)
 \item{x}{An object of postProcessing, e.g., returns `TRUE` with `isSpatialAny(x)`.
 See individual methods. This can be provided as a
 \code{rlang::quosure} or a normal R object.}
-
-\item{...}{Additional arguments passed to internal methods, which are:
-           \code{\link{cropInputs}}, \code{\link{fixErrors}},
-           \code{\link{projectInputs}}, \code{\link{maskInputs}},
-           \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
-           Each of these may also pass \code{...} into other functions, like
-           \code{\link[terra]{writeRaster}}, or \code{sf::st_write}.
-           This might include potentially important arguments like \code{datatype},
-           \code{format}. Also passed to \code{projectRaster},
-           with likely important arguments such as \code{method = "bilinear"}.
-           See details.
-
-\subsection{... passed to:}{
-  \describe{
-    \item{\code{cropInputs}:}{\code{\link[terra]{crop}}}
-    \item{\code{projectInputs}}{\code{\link[terra]{project}}}
-    \item{\code{maskInputs}}{\code{\link{fastMask}} or \code{\link[terra]{intersect}}}
-    \item{\code{fixErrors}}{\code{\link[terra]{buffer}}}
-    \item{\code{writeOutputs}}{\code{\link[terra]{writeRaster}} or \code{\link[terra]{vect}}}
-    \item{\code{determineFilename}}{}
-  }
-  * Can be overridden with \code{useSAcrs}
-  ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
-}}
 
 \item{filename1}{Character strings giving the file paths of
 the \emph{input} object (\code{filename1}) \code{filename1}
@@ -95,6 +82,30 @@ the first level of \code{*Input} functions, e.g., \code{cropInputs}, \code{proje
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{...}{Additional arguments passed to internal methods, which are:
+           \code{\link{cropInputs}}, \code{\link{fixErrors}},
+           \code{\link{projectInputs}}, \code{\link{maskInputs}},
+           \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
+           Each of these may also pass \code{...} into other functions, like
+           \code{\link[terra]{writeRaster}}, or \code{sf::st_write}.
+           This might include potentially important arguments like \code{datatype},
+           \code{format}. Also passed to \code{projectRaster},
+           with likely important arguments such as \code{method = "bilinear"}.
+           See details.
+
+\subsection{... passed to:}{
+  \describe{
+    \item{\code{cropInputs}:}{\code{\link[terra]{crop}}}
+    \item{\code{projectInputs}}{\code{\link[terra]{project}}}
+    \item{\code{maskInputs}}{\code{\link{fastMask}} or \code{\link[terra]{intersect}}}
+    \item{\code{fixErrors}}{\code{\link[terra]{buffer}}}
+    \item{\code{writeOutputs}}{\code{\link[terra]{writeRaster}} or \code{\link[terra]{vect}}}
+    \item{\code{determineFilename}}{}
+  }
+  * Can be overridden with \code{useSAcrs}
+  ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
+}}
 }
 \description{
 \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}

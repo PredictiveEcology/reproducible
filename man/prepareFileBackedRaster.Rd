@@ -6,7 +6,7 @@
 \usage{
 .prepareFileBackedRaster(
   obj,
-  cacheRepo = NULL,
+  filebackedDir = NULL,
   overwrite = FALSE,
   cacheId = NULL,
   drv = getOption("reproducible.drv"),
@@ -17,7 +17,7 @@
 \arguments{
 \item{obj}{The raster object to save to the repository.}
 
-\item{cacheRepo}{Character denoting an existing directory in which an artifact will be saved.}
+\item{filebackedDir}{Character denoting an existing directory in which an artifact will be saved.}
 
 \item{overwrite}{Logical. Should the raster be saved to disk, overwriting existing file.}
 
@@ -39,8 +39,8 @@ a DBIConnection object, as returned by \code{dbConnect()}}
 \value{
 A raster object and its newly located file backing.
         Note that if this is a legitimate Cache repository, the new location
-        will be a subdirectory called \file{rasters/} of \file{cacheRepo/}.
-        If this is not a repository, the new location will be within \code{cacheRepo}.
+        will be a subdirectory called \file{rasters/} of \file{filebackedDir/}.
+        If this is not a repository, the new location will be within \code{filebackedDir}.
 }
 \description{
 Rasters are sometimes file-based, so the normal save and copy and assign

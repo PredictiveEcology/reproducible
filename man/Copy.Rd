@@ -24,9 +24,8 @@ Copy(object, ...)
 \arguments{
 \item{object}{An R object (likely containing environments) or an environment.}
 
-\item{...}{Only used for custom Methods}
-
-\item{filebackedDir}{A directory to copy any files that are backing R objects,
+\item{...}{Passed to .prepareFileBackedRaster, most useful being `filebackedDir`,
+a directory to copy any files that are backing R objects,
 currently only valid for \code{Raster} classes. Defaults
 to \code{.reproducibleTempPath()}, which is unlikely to be very useful.
 Can be \code{NULL}, which means that the file will not be

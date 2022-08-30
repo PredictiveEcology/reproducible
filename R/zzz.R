@@ -51,7 +51,6 @@
 #' @importFrom utils isS3stdGeneric
 formalsAllMethods <- function(fn, envir = parent.frame()) {
   fnChar <- deparse(substitute(fn))
-  browser()
   if (is(fn, "character")) {
     fnChar <- fn
     fn <- eval(parse(text = fn))
@@ -89,7 +88,6 @@ formalArgsAllMethods <- function(fn, unique = TRUE, envir = parent.frame()) {
     fn
   else
     deparse(substitute(fn))
-  browser()
   fam <- formalsAllMethods(fnChar)
   if (isTRUE(unique)) {
     fam1 <- unname(fam)

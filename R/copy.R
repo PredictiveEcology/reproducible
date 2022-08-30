@@ -35,15 +35,14 @@ file.move <- function(from, to, overwrite = FALSE) {
 #'
 #' @param object  An R object (likely containing environments) or an environment.
 #'
-#' @param filebackedDir A directory to copy any files that are backing R objects,
+#' @param ... Passed to .prepareFileBackedRaster, most useful being `filebackedDir`,
+#'                      a directory to copy any files that are backing R objects,
 #'                      currently only valid for \code{Raster} classes. Defaults
 #'                      to \code{.reproducibleTempPath()}, which is unlikely to be very useful.
 #'                      Can be \code{NULL}, which means that the file will not be
 #'                      copied and could therefore cause a collision as the
 #'                      pre-copied object and post-copied object would have the same
 #'                      file backing them.
-#'
-#' @param ... Only used for custom Methods
 #'
 #' @author Eliot McIntire
 #' @export
