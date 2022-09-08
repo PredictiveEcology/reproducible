@@ -964,7 +964,12 @@ Cache <-
       }
 
       startSaveTime <- verboseTime(verbose)
-      objSize <- lobstr::obj_size(outputToSave)
+      objSize <- if (inherits(outputToSave, "data.table")) {
+        object.size(outputToSave)
+      } else {
+        lobstr::obj_size(outputToSave)
+      }
+
       resultHash <- ""
       linkToCacheId <- NULL
       if (objSize > 1e6) {
