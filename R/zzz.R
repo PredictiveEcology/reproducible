@@ -55,6 +55,7 @@ formalsAllMethods <- function(fn, envir = parent.frame()) {
     fnChar <- fn
     fn <- eval(parse(text = fn))
   }
+  if ("determineFilename" %in% fnChar) browser()
   if (isS4(fn)) {
     meths <- showMethods(fn, printTo = FALSE)[-1]
     meths <- meths[nzchar(meths)]
@@ -70,8 +71,8 @@ formalsAllMethods <- function(fn, envir = parent.frame()) {
         names(sigs) <- nams1
         methodFormals(fn, signature = sigs)
       })
-  } else if (isS3stdGeneric(fnChar)) {
-    meths <- methods(fnChar)
+  } else if (isS3stdGeneric(fn)) {
+    meths <- methods(fn)
     names(meths) <- meths
     nams <- lapply(meths, function(y) formals(y))
     nams <- append(list("generic" = formals(fn)), nams)
