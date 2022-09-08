@@ -55,7 +55,6 @@ formalsAllMethods <- function(fn, envir = parent.frame()) {
     fnChar <- fn
     fn <- eval(parse(text = fn))
   }
-  if ("determineFilename" %in% fnChar) browser()
   if (isS4(fn)) {
     meths <- showMethods(fn, printTo = FALSE)[-1]
     meths <- meths[nzchar(meths)]
