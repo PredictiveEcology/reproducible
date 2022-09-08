@@ -248,7 +248,7 @@ setMethod(
 
     simpleDigest <- TRUE
     if (!quick) {
-      if (any(unlist(lapply(object[1:10], file.exists)))) { # only try first 10 elements
+      if (any(file.exists(object[1:6]))) { # only try first 6 elements; ok if < length 6 (returns NA; then FALSE)
         simpleDigest <- FALSE
       }}
     if (!simpleDigest) {
