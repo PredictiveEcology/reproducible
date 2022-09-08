@@ -1973,6 +1973,11 @@ evalArgsOnly <- function(parsed, env, topLevelEnv = environment()) {
     if (!is.primitive(p1)) {
       parsed <- match.call(p1, parsed)
       if (identical(format(parsed[[1]]), "do.call")) {
+        while (is(parsed$args, "name")) {
+          parsed$args <- eval(parsed$args, envir = env)
+        }
+        if (!is.call(parsed$args))
+          parsed$args <- as.call(append(list(list), parsed$args))
         p2 <- match.call(eval(parsed$what, envir = env), parsed$args)
         p2[[1]] <- parsed$what
         parsed <- p2
