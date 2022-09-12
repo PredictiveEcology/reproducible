@@ -1,7 +1,19 @@
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
-Version 1.2.9
-=============
+Version 1.2.10
+==============
+
+## Dependency changes
+* none
+
+## Enhancements
+* none
+
+## Bug fixes
+* fixed issue with masking
+
+Version 1.2.10
+==============
 
 ## Dependency changes
 * Drop support for R 3.6 (#230)
@@ -24,6 +36,8 @@ Version 1.2.9
 * `clearCache` and `cc` did not correctly remove file-backed raster files (when not clearing whole CacheRepo); this may have resulted in a proliferation of files, each a filename with an underscore and a new higher number. This fix should eliminate this problem.
 * deal with development versions of GDAL in `getGDALVersion()` (#239)
 * fix issue with `maskInputs()` when not passing `rasterToMatch`.
+* fix issue with `isna.SpatialFix` when using `postProcess.quosure`
+
 
 Version 1.2.8
 =============
