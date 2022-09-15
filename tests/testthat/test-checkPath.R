@@ -18,6 +18,7 @@ test_that("checkPath: normPath consistency", {
                 ".//aaa//zzz/",
                 ".\\aaa\\zzz",
                 ".\\aaa\\zzz\\",
+                ".aaa//zzz/",
                 paste0(tmpdir, "/aaa/zzz"), # nolint
                 paste0(tmpdir, "/aaa/zzz/"), # nolint
                 file.path(tmpdir, "aaa", "zzz"))
