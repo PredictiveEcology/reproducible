@@ -1082,7 +1082,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
 
         messagePrepInputs("      reprojecting using ", dots$method, "...", verbose = verbose)
 
-        falseWarns <- paste0(projNotWKT2warn, "|input and output crs|no non-missing arguments")
+        falseWarns <- paste0(projNotWKT2warn, "|input and ouput crs|no non-missing arguments")
 
         if (requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
           m1 <- methodFormals(terra::project, "SpatRaster")
