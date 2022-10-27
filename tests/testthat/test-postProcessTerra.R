@@ -7,8 +7,9 @@ test_that("testing terra", {
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
+
     if (requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
-      f <- system.file("ex/elev.tif", package="terra")
+      f <- system.file("ex/elev.tif", package = "terra")
       tf <- tempfile(fileext = ".tif")
       tf1 <- tempfile(fileext = ".tif")
       tf2 <- tempfile(fileext = ".tif")
@@ -57,13 +58,10 @@ test_that("testing terra", {
       expect_true(!terra::inMemory(b[[2]][[1]]))
       expect_true(!terra::inMemory(b[[1]]))
 
-
-
-
-      f <- system.file("ex/lux.shp", package="terra")
+      f <- system.file("ex/lux.shp", package = "terra")
       v <- terra::vect(f)
       v <- v[1:2,]
-      rf <- system.file("ex/elev.tif", package="terra")
+      rf <- system.file("ex/elev.tif", package = "terra")
       xOrig <- terra::rast(rf)
       x <- xOrig
       xCut <- terra::classify(xOrig, rcl = 5)
@@ -103,10 +101,9 @@ test_that("testing terra", {
       expect_true(identical(t5[],t2[]))
 
 
-      t6 <- extract(x, v, mean, na.rm=TRUE)
+      t6 <- extract(x, v, mean, na.rm = TRUE)
       expect_true(all(t6$elevation == 1))
       expect_true(NROW(t6) == 2)
-
 
       ################
 
@@ -114,10 +111,23 @@ test_that("testing terra", {
       expect_true(terra::ext(t10) < terra::ext(xVect))
 
       ################
+      ## following #253
+      # https://github.com/PredictiveEcology/reproducible/issues/253#issuecomment-1263562631
       tf1 <- tempfile(fileext = ".shp")
       t11 <- postProcessTerra(xVect, v, writeTo = tf1)
+      tw_t11 <- terra::wrap(t11)
       vv <- terra::vect(tf1)
-      expect_identical(terra::wrap(vv), terra::wrap(t11))
+      tw_vv <- terra::wrap(vv)
+      expect_true(sf::st_crs(tw_vv@crs) == sf::st_crs(tw_t11@crs))
+
+      ## following #253 with different driver
+      ## https://github.com/PredictiveEcology/reproducible/issues/253#issuecomment-1263562631
+      tf1 <- tempfile(fileext = ".gpkg")
+      t11 <- postProcessTerra(xVect, v, writeTo = tf1)
+      tw_t11 <- terra::wrap(t11)
+      vv <- terra::vect(tf1)
+      tw_vv <- terra::wrap(vv)
+      expect_identical(tw_vv, tw_t11)
 
       # Test fixErrorTerra
       v1 <- terra::simplifyGeom(v)
@@ -130,13 +140,14 @@ test_that("testing terra", {
 
       terra::crs(v2) <- terra::crs(v)
       t10 <- try(postProcessTerra(xVect, v2))
+      ## Error : TopologyException: Input geom 1 is invalid:
+      ##  Self-intersection at 6.0905735768254896 49.981782482072084
       expect_true(!is(t10, "try-error"))
 
       # Projection -->
       albers <- sf::st_crs("epsg:5070")$wkt
       valbers <- terra::project(v, albers)
       ralbers <- terra::rast(valbers, res = 100)
-
 
       # use vector dataset -- force the 250m resolution
       t11 <- postProcessTerra(x, valbers)
@@ -153,7 +164,11 @@ test_that("testing terra", {
 
       # projection with errors
       valbersErrors <- terra::project(v2, albers)
-      mess <- capture_messages(t13a <- postProcessTerra(xVect, valbersErrors))
+      mess <- capture_messages({
+        t13a <- postProcessTerra(xVect, valbersErrors)
+      })
+      ## Error : TopologyException: Input geom 1 is invalid:
+      ##  Self-intersection at 6095858.7074040668 6626138.068126983
       expect_true(sum(grepl("error", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
       expect_true(sum(grepl("fixed", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
       expect_true(is(t13a, "SpatVector"))
@@ -172,7 +187,6 @@ test_that("testing terra", {
       expect_true(sf::st_crs(t18) != sf::st_crs(xVect2))
       expect_true(sf::st_crs(t18) == sf::st_crs(valbers))
 
-
       # Rasters
       t16 <- postProcessTerra(x, ralbers, cropTo = NA)
       expect_true(sf::st_crs(t16) != sf::st_crs(x))
@@ -186,9 +200,7 @@ test_that("testing terra", {
       t19 <- postProcessTerra(x, ralbers, maskTo = NA)
       expect_true(sf::st_crs(t19) != sf::st_crs(x))
       expect_true(sf::st_crs(t19) == sf::st_crs(valbers))
-      sum(terra::values(t19), na.rm = TRUE) >
-        sum(terra::values(t13), na.rm = TRUE)
-
+      sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE)
 
       # Raster with Vector
       t16 <- postProcessTerra(x, valbers, cropTo = NA)
@@ -202,8 +214,7 @@ test_that("testing terra", {
       t19 <- postProcessTerra(x, valbers, maskTo = NA)
       expect_true(sf::st_crs(t19) != sf::st_crs(x))
       expect_true(sf::st_crs(t19) == sf::st_crs(valbers))
-      sum(terra::values(t19), na.rm = TRUE) >
-        sum(terra::values(t13), na.rm = TRUE)
+      sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE)
 
       t21 <- postProcessTerra(x, projectTo = valbers)
       t20 <- postProcessTerra(x, projectTo = sf::st_crs(valbers))
@@ -212,9 +223,10 @@ test_that("testing terra", {
 
       valbersSF <- sf::st_as_sf(valbers)
       xVectSF <- sf::st_as_sf(xVect)
-      # It is a real warning about geometry stuff, but not relevant here
-      warn <- capture_warnings(t22 <- postProcessTerra(xVectSF, valbersSF))
-
+      ## It is a real warning about geometry stuff, but not relevant here
+      warn <- capture_warnings({
+        t22 <- postProcessTerra(xVectSF, valbersSF)
+      })
     }
 #  }
 })

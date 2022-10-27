@@ -1,6 +1,6 @@
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
-Version 1.2.10
+Version 1.2.10.9001
 ==============
 
 ## Dependency changes
@@ -10,6 +10,7 @@ Version 1.2.10
 * none
 
 ## Bug fixes
+* fix tests for `postProcessTerra` to deal with changes in GDAL/PROJ/GEOS (#253; @rsbivand)
 * fixed issue with masking
 
 Version 1.2.10
