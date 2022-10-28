@@ -6,9 +6,9 @@ test_that("prepInputs in a simple one double nested zip file, passing only desti
   }, add = TRUE)
 
   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterNested.zip"
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     testZip <- reproducible::prepInputs(url = url, destinationPath = tmpdir)
-  )
+  })
   expect_true(exists("testZip"))
 })
 
@@ -20,11 +20,11 @@ test_that("prepInputs in a simple one double nested zip file, passing targetFile
   }, add = TRUE)
 
   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterNested.zip"
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     testZip2 <- reproducible::prepInputs(url = url,
                                          targetFile = "rasterTest.tif",
                                          destinationPath = tmpdir)
-  )
+  })
   expect_true(exists("testZip2"))
 })
 
@@ -36,9 +36,9 @@ test_that("prepInputs in a two files double nested zip file, passing only destin
   }, add = TRUE)
 
   url <- "https://github.com/tati-micheletti/host/raw/master/data/multiFilesOutter.zip"
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     testZip3 <- reproducible::prepInputs(url = url, destinationPath = tmpdir)
-  )
+  })
   expect_true(exists("testZip3"))
 })
 
@@ -50,11 +50,11 @@ test_that("prepInputs in a two files double nested zip file, passing targetFile"
   }, add = TRUE)
 
   url <- "https://github.com/tati-micheletti/host/raw/master/data/multiFilesOutter.zip"
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     testZip4 <- reproducible::prepInputs(url = url,
                                          targetFile = "rasterTest.tif",
                                          destinationPath = tmpdir)
-  )
+  })
   expect_true(exists("testZip4"))
 })
 
@@ -64,8 +64,7 @@ test_that(
     "the second layer, and a shapefile in the first, not specifying the targetFile"
   ), {
     skip_on_cran()
-    testInitOut <-
-      testInit("raster", needGoogle = FALSE)
+    testInitOut <- testInit("raster", needGoogle = FALSE)
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
@@ -74,11 +73,11 @@ test_that(
     url <- "https://github.com/tati-micheletti/host/raw/master/data/multiFilesMultiLevels.zip"
     # The warning is about the .prj file missing, which is not relevant here -
     #   Capture it and do nothing with it
-    noisyOutput <- capture.output(
+    noisyOutput <- capture.output({
       warn <- capture_warnings({
         testZip6 <- reproducible::prepInputs(url = url, destinationPath = tmpdir)
       })
-    )
+    })
     expect_true(exists("testZip6"))
     expect_is(testZip6, shapefileClassDefault())
   })
@@ -93,11 +92,11 @@ test_that(
            }, add = TRUE)
 
            url <- "https://github.com/tati-micheletti/host/raw/master/data/multiFilesMultiLevels.zip"
-           noisyOutput <- capture.output(
+           noisyOutput <- capture.output({
              testZip7 <- reproducible::prepInputs(url = url,
                                                   targetFile = "rasterTest.tif",
                                                   destinationPath = tmpdir)
-           )
+           })
            expect_true(exists("testZip7"))
            expect_is(testZip7, "RasterLayer")
          })
@@ -114,7 +113,7 @@ test_that(
 
           extractSystemCallPath <- .archiveExtractBinary()
           if (is.null(extractSystemCallPath)) {
-            noisyOutput <- capture.output(
+            noisyOutput <- capture.output({
               warn <- capture_warnings({
                 expect_error({
                   testRar <- reproducible::prepInputs(
@@ -123,14 +122,14 @@ test_that(
                   )
                 })
               })
-            )
+            })
           } else {
 
-            noisyOutput <- capture.output(
+            noisyOutput <- capture.output({
               testRar <- reproducible::prepInputs(
                 url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
                 destinationPath = tmpdir)
-            )
+            })
             expect_true(exists("testRar"))
             expect_is(testRar, "RasterLayer")
           }
@@ -157,11 +156,11 @@ test_that(
                                                  destinationPath = tmpdir)
           }))
       } else {
-        noisyOutput <- capture.output(
+        noisyOutput <- capture.output({
           testRar2 <- reproducible::prepInputs(url = url,
                                                targetFile = "rasterTOtestRAR.tif",
                                                destinationPath = tmpdir)
-        )
+        })
         expect_true(exists("testRar2"))
         expect_is(testRar2, "RasterLayer")
       }
@@ -187,16 +186,16 @@ test_that(paste0("prepInputs in a two files double nested rar file, with the wan
                                                               destinationPath = tmpdir)
                        }))
                    } else {
-                     noisyOutput <- capture.output(
+                     noisyOutput <- capture.output({
                        testRar3 <- reproducible::prepInputs(url = url,
                                                             archive = "nestedRarTxtFiles.rar",
                                                             targetFile = "rasterTOtestRAR.tif",
                                                             destinationPath = tmpdir)
-                     )
+                     })
                      expect_true(exists("testRar3"))
                      expect_is(testRar3, "RasterLayer")
                    }
-                 })
+})
 
 test_that("prepInputs works with nested rar file inside internal rar folder", {
   skip_on_cran()
@@ -221,12 +220,12 @@ test_that("prepInputs works with nested rar file inside internal rar folder", {
       })
     )
   } else {
-    noisyOutput <- capture.output(
+    noisyOutput <- capture.output({
       testRar4 <- reproducible::prepInputs(url = url,
                                            targetFile = "rasterTest.tif",
                                            destinationPath = tmpdir,
                                            useCache = FALSE)
-    )
+    })
     expect_true(exists("testRar4"))
     expect_is(testRar4, "RasterLayer")
   }
