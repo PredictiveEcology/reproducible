@@ -63,10 +63,9 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
       }
     }
   }
-  checkPath(tmpdir, create = TRUE)
-  origDir <- setwd(tmpdir)
-  tmpCache <- normPath(file.path(tmpdir, "testCache"))
-  checkPath(tmpCache, create = TRUE)
+
+  origDir <- setwd(checkPath(tmpdir, create = TRUE))
+  tmpCache <- checkPath(file.path(tmpdir, "testCache"), create = TRUE)
 
   defaultOpts <- list(
     reproducible.cachePath = .reproducibleTempCacheDir(), ## TODO: deal with cachePath issues in non-interactive tests
@@ -98,8 +97,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     tmpfile <- normPath(tmpfile)
   }
 
-  try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
   try(clearCache(tmpCache, ask = FALSE), silent = TRUE)
+  try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
 
   outList <- list(tmpdir = tmpdir, origDir = origDir, libs = libraries,
                   tmpCache = tmpCache, optsAsk = optsAsk,
