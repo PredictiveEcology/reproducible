@@ -1,6 +1,6 @@
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
-Version 1.2.10.9001
+Version 1.2.11
 ==============
 
 ## Dependency changes
