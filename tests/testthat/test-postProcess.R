@@ -236,6 +236,7 @@ test_that("maskInputs errors when x is Lat-Long", {
   skip_on_cran()
   skip_on_ci()
   skip_if_not(requireNamespace("sf", quietly = TRUE))
+  skip_if_no_token()
 
   testInitOut <- testInit("raster", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
@@ -295,9 +296,7 @@ test_that("maskInputs errors when x is Lat-Long", {
   expect_true(compareRaster(raster(extent(roads[[1]])), raster(extent(smallSA))))
   expect_error(compareRaster(raster(extent(roads[[3]])), raster(extent(smallSA))))
   expect_true(extent(roads[[3]]) > extent(roads[[1]]))
-
 })
-
 
 test_that("prepInputs doesn't work (part 3)", {
   if (interactive()) {

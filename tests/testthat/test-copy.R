@@ -98,6 +98,4 @@ test_that("test Copy", {
                                    "NOT UPDATED FOR PROJ >= 6")# overwrite the original
   # The hardlink is not affected by "overwrite = TRUE" -- it is not by filename, but by file location
   expect_true(all(ras2[] == 1))
-  ###################
-
 })

@@ -64,8 +64,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     }
   }
 
-  origDir <- setwd(checkPath(tmpdir, create = TRUE))
   tmpCache <- checkPath(file.path(tmpdir, "testCache"), create = TRUE)
+  origDir <- setwd(tmpdir)
 
   defaultOpts <- list(
     reproducible.cachePath = .reproducibleTempCacheDir(), ## TODO: deal with cachePath issues in non-interactive tests

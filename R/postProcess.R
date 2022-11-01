@@ -2129,7 +2129,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
       }
 
       if (is.null(rasterToMatch) && !is.null(studyArea) && (is(x, "Spatial") || is(x, "sf")) &&
-          getOption("reproducible.polygonShortcut", TRUE)) {
+          getOption("reproducible.polygonShortcut", FALSE)) {
         message("Using an experimental shortcut of maskInputs for special, simple case that x is polygon, ",
                 "rasterToMatch not provided, and studyArea provided.",
                 " If this is causing problems, set options(reproducible.polygonShortcut = FALSE)")
