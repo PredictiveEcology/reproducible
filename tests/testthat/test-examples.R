@@ -36,7 +36,6 @@ test_that("all exported functions have examples", {
     , add = TRUE)
   if (grepl("VIC-", Sys.info()["nodename"])) { # for debugging only
     cat(paste("All files exist: ", isTRUE(all(file.exists(exFiles))), "\n"), file = tmpExFile, append = TRUE)
-
   }
 
   for (file in exFiles) {
