@@ -235,6 +235,7 @@ targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
   }
 }
 
+## TODO: switch to `geodata` package (raster::getData() is deprecated) (#256)
 getDatatmp <- function(name = "GADM", download = TRUE, path = "", ...) {
   path <- raster:::.getDataPath(path)
   if (name == "GADM") {
