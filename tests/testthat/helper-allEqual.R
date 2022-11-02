@@ -64,7 +64,9 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     }
   }
 
-  tmpCache <- checkPath(file.path(tmpdir, "testCache"), create = TRUE)
+  .pkgEnv <- getFromNamespace(".pkgEnv", "reproducible")
+  tmpCache <- checkPath(file.path(tmpdir, sprintf("testCache_%03d", .pkgEnv$testCacheCounter)), create = TRUE)
+  .pkgEnv$testCacheCounter <- .pkgEnv$testCacheCounter + 1L
   origDir <- setwd(tmpdir)
 
   defaultOpts <- list(
