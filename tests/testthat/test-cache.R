@@ -1341,8 +1341,6 @@ test_that("List of Rasters", {
   expect_true(isTRUE(attr(a, ".Cache")$newCache))
 })
 
-
-
 test_that("Cache the dots; .cacheExtra", {
   testInitOut <- testInit()
   on.exit({
@@ -1358,9 +1356,12 @@ test_that("Cache the dots; .cacheExtra", {
     rnorm(d, e, f)
   }
 
-
-  suppressMessages(out1 <- Cache(fn1, a = 1, b = 2, d = 1, cacheRepo = tmpCache))
-  suppressMessages(out2 <- Cache(fn1, a = 1, b = 2, d = 2, cacheRepo = tmpCache))
+  suppressMessages({
+    out1 <- Cache(fn1, a = 1, b = 2, d = 1, cacheRepo = tmpCache)
+  })
+  suppressMessages({
+    out2 <- Cache(fn1, a = 1, b = 2, d = 2, cacheRepo = tmpCache)
+  })
   expect_true(!identical(out1, out2))
 
 
@@ -1368,14 +1369,21 @@ test_that("Cache the dots; .cacheExtra", {
     out <- fn2(d = 1)
   }
 
-  suppressMessages(out3 <- Cache(fn3, .cacheExtra = "12342", cacheRepo = tmpCache))
-  suppressMessages(out4 <- Cache(fn3, .cacheExtra = "123422", cacheRepo = tmpCache))
+  suppressMessages({
+    out3 <- Cache(fn3, .cacheExtra = "12342", cacheRepo = tmpCache)
+  })
+  suppressMessages({
+    out4 <- Cache(fn3, .cacheExtra = "123422", cacheRepo = tmpCache)
+  })
   expect_true(!identical(out3, out4))
 
   # These are now the same because the .cacheExtra is the same and the arg is ignored
-  suppressMessages(out5 <- Cache(mean, 6, omitArgs = "x", .cacheExtra = "234", cacheRepo = tmpCache))
-  suppressMessages(out6 <- Cache(mean, 7, omitArgs = "x", .cacheExtra = "234", cacheRepo = tmpCache))
+  suppressMessages({
+    out5 <- Cache(mean, 6, omitArgs = "x", .cacheExtra = "234", cacheRepo = tmpCache)
+  })
+  suppressMessages({
+    out6 <- Cache(mean, 7, omitArgs = "x", .cacheExtra = "234", cacheRepo = tmpCache)
+  })
   expect_true(out6 - 6 == 0) # takes first one
   expect_equivalent(out5, out6) # the attributes will be different because one is a recovery of the other
-
 })

@@ -1,6 +1,6 @@
 ##########################
 test_that("test miscellaneous unit tests cache-helpers", {
-  testInitOut <- testInit(opts = list(reproducible.useMemoise = TRUE))
+  testInitOut <- testInit(libraries = c("sf", "sp"), opts = list(reproducible.useMemoise = TRUE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -71,7 +71,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   fn <- function(FUN) {
     getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
   }
-  expect_true(fn(log(1))$functionName== "FUN")
+  expect_true(fn(log(1))$functionName == "FUN")
 
   ## nextNumericName
   b <- nextNumericName("test.pdf")
