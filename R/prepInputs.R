@@ -1134,7 +1134,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         }
       } else {
         if (grepl(x = extractSystemCallPath, pattern = "7z")) {
-          extractSystemCall <- paste0("\"", extractSystemCallPath, "\"", " l ", path.expand(archive[1]))
+          extractSystemCall <- paste0("\"", extractSystemCallPath, "\"", " l \"", path.expand(archive[1]), "\"")
           if (isWindows()) {
             filesOutput <- captureWarningsToAttr(
                              system(extractSystemCall, show.output.on.console = FALSE, intern = TRUE)
@@ -1148,7 +1148,6 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
             warn <- attr(filesOutput, "warning")
             attr(filesOutput, "warning") <- NULL
           }
-
         } else {
           archiveExtractBinary <- .archiveExtractBinary()
           if (is.null(archiveExtractBinary))
