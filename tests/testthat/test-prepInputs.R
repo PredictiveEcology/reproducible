@@ -1172,7 +1172,6 @@ test_that("prepInputs doesn't work (part 2)", {
     })
   })
   if (!is(test1, "try-error")) {
-
     # test quoted version of `dlFun`
     noisyOutput3 <- capture.output(type = "message", {
       mess3 <- capture_messages({
