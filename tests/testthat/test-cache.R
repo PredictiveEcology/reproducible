@@ -1198,7 +1198,7 @@ test_that("test file link with duplicate Cache", {
   expect_true(any(grepl("loaded cached", mess1)))
   # There are intermittent "status 5" warnings on next line on Windows -- not relevant here
   warns <- capture_warnings({
-    out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
+    out1 <- try(system2("du", paste0("\"", tmpCache, "\""), stdout = TRUE), silent = TRUE)
   })
   # out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
   if (!is(out1, "try-error"))

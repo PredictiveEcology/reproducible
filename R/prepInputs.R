@@ -818,9 +818,10 @@ extractFromArchive <- function(archive,
       } else {
         extractSystemCallPath
       }
+
       # This spits out a message on non-Windows about arguments that are ignored
       suppressMessages({
-        output <- system(paste0(prependPath, " e -aoa -o", .tempPath, " ", args[[1]]),
+        output <- system(paste0(prependPath, " e -aoa -o\"", .tempPath, "\" \"", args[[1]], "\""),
                          wait = TRUE,
                          ignore.stdout = FALSE,
                          ignore.stderr = FALSE,
