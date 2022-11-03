@@ -443,14 +443,14 @@ theRasterTestFilename <- function(pre = "", suff = "") {
 }
 theRasterTestZip <- theRasterTestFilename(theRasterTests, "zip") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
 theRasterTestRar <- theRasterTestFilename(theRasterTests, "rar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
-theRasterTestTar <- theRasterTestFilename(theRasterTests, "tar")
+theRasterTestTar <- theRasterTestFilename(theRasterTests, "tar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tar"
 
 
 shapefileClassDefault <- function() {
-  shpfl <- if(is.character(getOption("reproducible.shapefileRead")))
+  shpfl <- if (is.character(getOption("reproducible.shapefileRead"))) {
     eval(parse(text = getOption("reproducible.shapefileRead")))
-  else
+  } else {
     getOption("reproducible.shapefileRead")
-
+  }
   if (identical(shpfl, raster::shapefile)) "SpatialPolygons" else "sf"
 }
