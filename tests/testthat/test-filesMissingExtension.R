@@ -39,7 +39,7 @@ test_that("prepInputs WORKS if passing archive .zip", {
     testthat::expect_message({
       ras <- reproducible::prepInputs(url = "https://github.com/tati-micheletti/host/raw/master/data/unknownExtension",
                                       archive = "unknownExtension.zip",
-                                      alsoExtract = "similar", destinationPath = tempdir2(rndstr(1,6))))
+                                      alsoExtract = "similar", destinationPath = tempdir2(rndstr(1,6)))
     })
   )
   testthat::expect_is(object = ras, class = "RasterLayer")
