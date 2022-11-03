@@ -114,7 +114,9 @@ test_that("testing terra", {
       ## following #253
       # https://github.com/PredictiveEcology/reproducible/issues/253#issuecomment-1263562631
       tf1 <- tempfile(fileext = ".shp")
-      t11 <- postProcessTerra(xVect, v, writeTo = tf1)
+      t11 <- suppressWarnings({
+        postProcessTerra(xVect, v, writeTo = tf1)
+      }) ## WARNING: Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition
       tw_t11 <- terra::wrap(t11)
       vv <- terra::vect(tf1)
       tw_vv <- terra::wrap(vv)
@@ -123,7 +125,9 @@ test_that("testing terra", {
       ## following #253 with different driver
       ## https://github.com/PredictiveEcology/reproducible/issues/253#issuecomment-1263562631
       tf1 <- tempfile(fileext = ".gpkg")
-      t11 <- postProcessTerra(xVect, v, writeTo = tf1)
+      t11 <- suppressWarnings({
+        postProcessTerra(xVect, v, writeTo = tf1)
+      }) ## WARNING: GDAL Message 6: dataset does not support layer creation option ENCODING
       tw_t11 <- terra::wrap(t11)
       vv <- terra::vect(tf1)
       tw_vv <- terra::wrap(vv)
