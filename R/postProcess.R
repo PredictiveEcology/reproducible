@@ -1372,10 +1372,9 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM =
                exprBetween = quote(
                  x <- fixErrors(x, testValidity = NA, useCache = useCache)
                ))
-
-    as(x, "Spatial")
+    x <- fixErrors(x, testValidity = NA, useCache = useCache) ## needed to deal with sfc issues
+    sf::as_Spatial(x)
   }
-
 }
 
 #' @export
@@ -2086,11 +2085,12 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
         #if all CRS are projected, then check if buffer is necessary
         objsAreProjected <- list(x, studyArea, crsRTM)
         nonNulls <- !unlist(lapply(objsAreProjected, is.null))
-        suppressWarningsSpecific(falseWarnings = "wkt|CRS object has no comment",
-                                 projections <- sapply(objsAreProjected[nonNulls],
-                                                       # function(xx) grepl("(longitude).*(latitude)",
-                                                       #                    tryCatch(wkt(xx), error = function(yy) NULL))))
-                                                       function(xx) !isProjected(xx)))
+        suppressWarningsSpecific({
+          projections <- sapply(objsAreProjected[nonNulls],
+                                # function(xx) grepl("(longitude).*(latitude)",
+                                #                    tryCatch(wkt(xx), error = function(yy) NULL))))
+                                function(xx) !isProjected(xx))
+          }, falseWarnings = "wkt|CRS object has no comment")
 
         if (!any(unlist(projections))) {
           if (is.null(rasterToMatch) || max(res(rasterToMatch)) < min(res(x))) {
@@ -2130,7 +2130,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
       }
 
       if (is.null(rasterToMatch) && !is.null(studyArea) && (is(x, "Spatial") || is(x, "sf")) &&
-          getOption("reproducible.polygonShortcut", TRUE)) {
+          getOption("reproducible.polygonShortcut", FALSE)) {
         message("Using an experimental shortcut of maskInputs for special, simple case that x is polygon, ",
                 "rasterToMatch not provided, and studyArea provided.",
                 " If this is causing problems, set options(reproducible.polygonShortcut = FALSE)")
@@ -2205,7 +2205,6 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                                        testValidity = NA, useCache = useCache)
                       ))
           x <- yy
-
         }
       }
       ##################################
@@ -2324,8 +2323,7 @@ suppressWarningsSpecific <- function(code, falseWarnings, verbose = getOption("r
     yy <- eval(code)
   },
   warning = function(xx) {
-    trueWarnings <- grep(falseWarnings, xx$message,
-                         invert = TRUE, value = TRUE)
+    trueWarnings <- grep(falseWarnings, xx$message, invert = TRUE, value = TRUE)
     if (length(trueWarnings)) {
       warns <<- paste(trueWarnings, collapse = "\n  ")
     }

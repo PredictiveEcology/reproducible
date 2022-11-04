@@ -16,7 +16,7 @@ test_that("Checksums read and written correctly", {
   cnamesW <- c("file", "checksum", "filesize", "algorithm")
 
   # 1. read Checksums without CHECKSUMS.txt file
-  expect_true(NROW(Checksums(tmpdir))==0)
+  expect_true(NROW(Checksums(tmpdir)) == 0)
 
   Checksums(dirname(csf), write = TRUE)
   txt <- Checksums(dirname(csf))

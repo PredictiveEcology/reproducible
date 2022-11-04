@@ -1165,7 +1165,6 @@ test_that("prepInputs doesn't work (part 2)", {
         prepInputs(
           #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
           targetFile = targetFileLuxRDS,
-          #destinationPath = ".",
           dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
           #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
           path = tmpdir)
@@ -1173,7 +1172,6 @@ test_that("prepInputs doesn't work (part 2)", {
     })
   })
   if (!is(test1, "try-error")) {
-
     # test quoted version of `dlFun`
     noisyOutput3 <- capture.output(type = "message", {
       mess3 <- capture_messages({
