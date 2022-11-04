@@ -27,7 +27,12 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   if (missing(libraries)) libraries <- list()
   unlist(lapply(libraries, require, character.only = TRUE, quietly = TRUE))
   require("testthat", quietly = TRUE)
-  tmpdir <- tempdir2(rndstr(1, 6))
+
+  .pkgEnv <- getFromNamespace(".pkgEnv", "reproducible")
+  tmpdir <- tempdir2(sprintf("%s_%03d", rndstr(1, 6), .pkgEnv$testCacheCounter))
+  tmpCache <- checkPath(file.path(tmpdir, "testCache"), create = TRUE)
+  .pkgEnv$testCacheCounter <- .pkgEnv$testCacheCounter + 1L
+
 
   if (isTRUE(needGoogle)) {
     if (!requireNamespace("googledrive"))
@@ -64,9 +69,6 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     }
   }
 
-  .pkgEnv <- getFromNamespace(".pkgEnv", "reproducible")
-  tmpCache <- checkPath(file.path(tmpdir, sprintf("testCache_%03d", .pkgEnv$testCacheCounter)), create = TRUE)
-  .pkgEnv$testCacheCounter <- .pkgEnv$testCacheCounter + 1L
   origDir <- setwd(tmpdir)
 
   defaultOpts <- list(
