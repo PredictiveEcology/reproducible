@@ -973,8 +973,9 @@ test_that("test cache-helpers", {
   expect_true(sameFileBase)
 
   unlink(Filenames(s2))
-  expect_error(out2 <- .prepareFileBackedRaster(s2, repoDir = tmpCache), "most likely")
-
+  expect_error({
+    out2 <- .prepareFileBackedRaster(s2, repoDir = tmpCache)
+  }, "most likely")
 })
 
 test_that("test useCache = 'overwrite'", {

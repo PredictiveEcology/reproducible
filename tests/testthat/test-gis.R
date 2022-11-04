@@ -11,7 +11,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
       "reproducible::isInteractive" = function() {
         FALSE
       }, {
-        noisyOutput <- capture.output(
+        noisyOutput <- capture.output({
           warn <- capture_warnings({
             BCR6_VT <- prepInputs(
               url = "https://drive.google.com/open?id=1sEiXKnAOCi-f1BF7b4kTg-6zFlGr0YOH",
@@ -19,7 +19,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
               overwrite = TRUE
             )
           })
-        )
+        })
       })
     expect_true(is(BCR6_VT, shapefileClassDefault()))
 
@@ -35,13 +35,11 @@ test_that("testing prepInputs with deauthorized googledrive", {
     expect_true(all(c("zip", "sbx", "shp", "xml", "shx", "sbn") %in%
                       fileExt(dir(pattern = "NFDB_point"))))
 
-    noisyOutput <- capture.output(
-      warn <- capture_warnings(NFDB_PT_BCR6 <- Cache(
-        postProcess,
-        NFDB_PT,
-        studyArea = BCR6_VT
-      ))
-    )# warning is "attribute variables are assumed to be spatially constant"
+    noisyOutput <- capture.output({
+      warn <- capture_warnings({
+        NFDB_PT_BCR6 <- Cache(postProcess, NFDB_PT, studyArea = BCR6_VT)
+      })
+    })
     if (!all(grepl("attribute variables are assumed to be spatially constant", warn)))
       warnings(warn)
   }
@@ -57,5 +55,3 @@ test_that("testing rebuildColors", {
   origColors <- list(origColors = character(0), origMinValue = 0, origMaxValue = 197.100006103516)
   expect_is(rebuildColors(x, origColors), "Raster")
 })
-
-

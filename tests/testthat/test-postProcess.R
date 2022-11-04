@@ -196,7 +196,6 @@ test_that("writeOutputs with non-matching filename2", {
   expect_true(identical(normPath(filename(r2)), normPath(filename(r1))))
 })
 
-
 test_that("cropInputs crops too closely when input projections are different", {
   skip_on_cran()
 
