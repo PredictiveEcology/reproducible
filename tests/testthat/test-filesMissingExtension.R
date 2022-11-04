@@ -4,12 +4,13 @@ test_that("prepInputs works with NULL archive + file without extension, but orig
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  noisyOutput <- capture.output(
-    testthat::expect_message(
+  noisyOutput <- capture.output({
+    testthat::expect_message({
       ras <- reproducible::prepInputs(url = "https://github.com/tati-micheletti/host/raw/master/data/unknownExtension",
                                       alsoExtract = "similar",
-                                      destinationPath = tempdir2(rndstr(1,6))))
-  )
+                                      destinationPath = tempdir2(rndstr(1, 6)))
+    })
+  })
   testthat::expect_is(object = ras, class = "RasterLayer")
 })
 
