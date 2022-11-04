@@ -4,9 +4,9 @@ test_that("all exported functions have examples", {
 
   ## for debugging only:
   tmpDir <- if (grepl("VIC-", Sys.info()["nodename"]))  {
-    checkPath("~/tmp", create = TRUE)
+    checkPath("~/tmp/reproducible-examples", create = TRUE)
   } else {
-    checkPath(tempdir(), create = TRUE)
+    checkPath(file.path(tempdir(), "reproducible-examples"), create = TRUE)
   }
   tmpExFile <- file.path(tmpDir, "test-examples-out.txt")
 
@@ -28,7 +28,7 @@ test_that("all exported functions have examples", {
 
   # use for loop as it keeps control at top level
   owd <- getwd()
-  tmpdir <- tempdir2("test_Examples") %>% checkPath(create = TRUE)
+  tmpdir <- file.path(tmpDir, "test_Examples") %>% checkPath(create = TRUE)
   setwd(tmpdir)
   on.exit({
     unlink(tmpdir, recursive = TRUE)
