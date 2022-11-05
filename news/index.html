@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
       </span>
     </div>
 
@@ -66,6 +66,22 @@
       <small>Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="1.2.11" id="version-1211">Version 1.2.11<a class="anchor" aria-label="anchor" href="#version-1211"></a></h2>
+<div class="section level3">
+<h3 id="dependency-changes-1-2-11">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-1-2-11"></a></h3>
+<ul><li>none</li>
+</ul></div>
+<div class="section level3">
+<h3 id="enhancements-1-2-11">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-1-2-11"></a></h3>
+<ul><li>none</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-1-2-11">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-2-11"></a></h3>
+<ul><li>fix tests for <code>postProcessTerra</code> to deal with changes in GDAL/PROJ/GEOS (<a href="https://github.com/PredictiveEcology/reproducible/issues/253" class="external-link">#253</a>; <a href="https://github.com/rsbivand" class="external-link">@rsbivand</a>)</li>
+<li>fixed issue with masking</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="1.2.10" id="version-1210">Version 1.2.10<small>2022-08-17</small><a class="anchor" aria-label="anchor" href="#version-1210"></a></h2>
 <div class="section level3">
@@ -110,7 +126,8 @@
 <div class="section level3">
 <h3 id="dependency-changes-1-2-8">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-1-2-8"></a></h3>
 <ul><li>
-<code>lwgeom</code> now a suggested package</li></ul></div>
+<code>lwgeom</code> now a suggested package</li>
+</ul></div>
 <div class="section level3">
 <h3 id="enhancements-1-2-8">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-1-2-8"></a></h3>
 <ul><li>
@@ -126,7 +143,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-1-2-8">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-2-8"></a></h3>
-<ul><li>A small, but very impactful bug that created false positive <code>Cache</code> returns; i.e., a 2nd time through a Cache would return a cached copy, when some of the arguments were different. It occurred for when the differences were in unnamed arguments only.</li></ul></div>
+<ul><li>A small, but very impactful bug that created false positive <code>Cache</code> returns; i.e., a 2nd time through a Cache would return a cached copy, when some of the arguments were different. It occurred for when the differences were in unnamed arguments only.</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="1.2.7" id="version-127">Version 1.2.7<small>2021-05-28</small><a class="anchor" aria-label="anchor" href="#version-127"></a></h2>
@@ -202,13 +220,15 @@
 <h2 class="page-header" data-toc-text="1.2.4" id="version-124">version 1.2.4<small>2020-12-07</small><a class="anchor" aria-label="anchor" href="#version-124"></a></h2>
 <div class="section level3">
 <h3 id="bug-fix-1-2-4">Bug fix<a class="anchor" aria-label="anchor" href="#bug-fix-1-2-4"></a></h3>
-<ul><li>typo in date</li></ul></div>
+<ul><li>typo in date</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="1.2.3" id="version-123">version 1.2.3<a class="anchor" aria-label="anchor" href="#version-123"></a></h2>
 <div class="section level3">
 <h3 id="bug-fix-1-2-3">Bug fix<a class="anchor" aria-label="anchor" href="#bug-fix-1-2-3"></a></h3>
-<ul><li>minor url fix</li></ul></div>
+<ul><li>minor url fix</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="1.2.2" id="version-122">version 1.2.2<a class="anchor" aria-label="anchor" href="#version-122"></a></h2>
@@ -222,7 +242,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-1-2-2">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-2-2"></a></h3>
-<ul><li>several minor</li></ul></div>
+<ul><li>several minor</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="1.2.1" id="version-121">version 1.2.1<small>2020-08-18</small><a class="anchor" aria-label="anchor" href="#version-121"></a></h2>
@@ -267,7 +288,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="dependency-changes-1-2-0">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-1-2-0"></a></h3>
-<ul><li>net reduction in number of packages that are imported from by 14. Removed completely: <code>backports</code>, <code>memoise</code>, <code>quickPlot</code>, <code>R.utils</code>, <code>remotes</code>, <code>tools</code>, and <code>versions</code>; moved to Suggests: <code>fastdigest</code>, <code>gdalUtils</code>, <code>googledrive</code>, <code>httr</code>, <code>qs</code>, <code>rgdal</code>, <code>sf</code>, <code>testthat</code>; added: <code>Require</code>. Now there are 12 non-base packages listed in Imports. This is down from 31 prior to Ver 1.0.0.</li></ul></div>
+<ul><li>net reduction in number of packages that are imported from by 14. Removed completely: <code>backports</code>, <code>memoise</code>, <code>quickPlot</code>, <code>R.utils</code>, <code>remotes</code>, <code>tools</code>, and <code>versions</code>; moved to Suggests: <code>fastdigest</code>, <code>gdalUtils</code>, <code>googledrive</code>, <code>httr</code>, <code>qs</code>, <code>rgdal</code>, <code>sf</code>, <code>testthat</code>; added: <code>Require</code>. Now there are 12 non-base packages listed in Imports. This is down from 31 prior to Ver 1.0.0.</li>
+</ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-1-2-0">bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-2-0"></a></h3>
 <ul><li>fix over-wide tables in PDF manual (<a href="https://github.com/PredictiveEcology/reproducible/issues/144" class="external-link">#144</a>)</li>
@@ -284,13 +306,16 @@
 <h2 class="page-header" data-toc-text="1.1.1" id="version-111">version 1.1.1<small>2020-05-20</small><a class="anchor" aria-label="anchor" href="#version-111"></a></h2>
 <div class="section level3">
 <h3 id="new-features-1-1-1">New features<a class="anchor" aria-label="anchor" href="#new-features-1-1-1"></a></h3>
-<ul><li>none</li></ul></div>
+<ul><li>none</li>
+</ul></div>
 <div class="section level3">
 <h3 id="dependency-changes-1-1-1">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-1-1-1"></a></h3>
-<ul><li>none</li></ul></div>
+<ul><li>none</li>
+</ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-1-1-1">bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-1-1"></a></h3>
-<ul><li>fix CRAN test failure when <code>file.link</code> does not succeed.</li></ul></div>
+<ul><li>fix CRAN test failure when <code>file.link</code> does not succeed.</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="1.1.0" id="version-110">version 1.1.0<small>2020-05-15</small><a class="anchor" aria-label="anchor" href="#version-110"></a></h2>
@@ -314,7 +339,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="dependency-changes-1-1-0">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-1-1-0"></a></h3>
-<ul><li>none</li></ul></div>
+<ul><li>none</li>
+</ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-1-1-0">bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-1-0"></a></h3>
 <ul><li>
@@ -365,7 +391,8 @@
 <div class="section level3">
 <h3 id="dependency-changes-0-2-11">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-0-2-11"></a></h3>
 <ul><li>remove <code>dplyr</code> as a direct dependency. It is still an indirect dependency through <code>DiagrammeR</code>
-</li></ul></div>
+</li>
+</ul></div>
 <div class="section level3">
 <h3 id="new-features-0-2-11">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-11"></a></h3>
 <ul><li>new option: <code>reproducible.showSimilarDepth</code> allows for a deeper assessment of nested lists for differences between the nearest cached object and the present object. This greater depth may allow more fine tuned understanding of why an object is not correctly caching</li>
@@ -373,13 +400,15 @@
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-0-2-11">bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-2-11"></a></h3>
-<ul><li>Several minor, edge cases were detected and fixed.</li></ul></div>
+<ul><li>Several minor, edge cases were detected and fixed.</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.2.10" id="version-0210">version 0.2.10<small>2019-09-11</small><a class="anchor" aria-label="anchor" href="#version-0210"></a></h2>
 <div class="section level3">
 <h3 id="dependency-changes-0-2-10">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-0-2-10"></a></h3>
-<ul><li>made compatible with <code>googledrive</code> v 1.0.0 (<a href="https://github.com/PredictiveEcology/reproducible/issues/119" class="external-link">#119</a>)</li></ul></div>
+<ul><li>made compatible with <code>googledrive</code> v 1.0.0 (<a href="https://github.com/PredictiveEcology/reproducible/issues/119" class="external-link">#119</a>)</li>
+</ul></div>
 <div class="section level3">
 <h3 id="new-features-0-2-10">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-10"></a></h3>
 <ul><li>
@@ -454,7 +483,8 @@
 <h2 class="page-header" data-toc-text="0.2.6" id="version-026">version 0.2.6<small>2019-02-01</small><a class="anchor" aria-label="anchor" href="#version-026"></a></h2>
 <div class="section level3">
 <h3 id="dependency-changes-0-2-6">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-0-2-6"></a></h3>
-<ul><li>remove <code>tibble</code> from Imports as it’s no longer being used</li></ul></div>
+<ul><li>remove <code>tibble</code> from Imports as it’s no longer being used</li>
+</ul></div>
 <div class="section level3">
 <h3 id="new-features-0-2-6">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-6"></a></h3>
 <ul><li>remove <code>%&gt;%</code> pipe that was long ago deprecated. User should use <code>%C%</code> if they want a pipe that is Cache-aware. See examples.</li>
@@ -488,7 +518,8 @@
 <div class="section level3">
 <h3 id="dependency-changes-0-2-5">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-0-2-5"></a></h3>
 <ul><li>Added <code>remotes</code> to Imports and removed <code>devtools</code>
-</li></ul></div>
+</li>
+</ul></div>
 <div class="section level3">
 <h3 id="new-features-0-2-5">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-5"></a></h3>
 <ul><li><p>New value possible for <code>options(reproducible.useCache = 'overwrite')</code>, which allows use of <code>Cache</code> in cases where the function call has an entry in the <code>cacheRepo</code>, will purge it and add the output of the current call instead.</p></li>
@@ -526,12 +557,14 @@
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.2.3" id="version-023">version 0.2.3<small>2018-08-07</small><a class="anchor" aria-label="anchor" href="#version-023"></a></h2>
-<ul><li>fix and skip downloading test on CRAN</li></ul></div>
+<ul><li>fix and skip downloading test on CRAN</li>
+</ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.2.2" id="version-022">version 0.2.2<small>2018-08-01</small><a class="anchor" aria-label="anchor" href="#version-022"></a></h2>
 <div class="section level3">
 <h3 id="dependency-changes-0-2-2">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-0-2-2"></a></h3>
-<ul><li>Add <code>future</code> to Suggests.</li></ul></div>
+<ul><li>Add <code>future</code> to Suggests.</li>
+</ul></div>
 <div class="section level3">
 <h3 id="new-features-0-2-2">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-2"></a></h3>
 <ul><li>new option on non-Windows OSs to use <code>future</code> for <code>Cache</code> saving to SQLite database, via <code>options("reproducible.futurePlan")</code>, if the <code>future</code> package is installed. This is <code>FALSE</code> by default.</li>
@@ -574,7 +607,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="other-changes-0-2-2">Other changes<a class="anchor" aria-label="anchor" href="#other-changes-0-2-2"></a></h3>
-<ul><li>most tests now use a standardized approach to attaching libraries, creating objects, paths, enabling easier, error resistant test building</li></ul></div>
+<ul><li>most tests now use a standardized approach to attaching libraries, creating objects, paths, enabling easier, error resistant test building</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.2.1" id="version-021">version 0.2.1<small>2018-07-07</small><a class="anchor" aria-label="anchor" href="#version-021"></a></h2>
@@ -583,7 +617,8 @@
 <ul><li>
 <p>new functions:</p>
 <ul><li>
-<code>convertPaths</code> and <code>convertRasterPaths</code> to assist with renaming moved files.</li></ul></li>
+<code>convertPaths</code> and <code>convertRasterPaths</code> to assist with renaming moved files.</li>
+</ul></li>
 <li>
 <p><code>prepInputs</code> – new features</p>
 <ul><li>
@@ -668,7 +703,8 @@
 </ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.1.3" id="version-013">version 0.1.3<small>2017-08-10</small><a class="anchor" aria-label="anchor" href="#version-013"></a></h2>
-<ul><li>fix R CMD check errors on Solaris that were not previously resolved</li></ul></div>
+<ul><li>fix R CMD check errors on Solaris that were not previously resolved</li>
+</ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.1.2" id="version-012">version 0.1.2<small>2017-08-09</small><a class="anchor" aria-label="anchor" href="#version-012"></a></h2>
 <ul><li>fix R CMD check errors on Solaris</li>
@@ -682,7 +718,8 @@
 </ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.1.0" id="version-010">version 0.1.0<a class="anchor" aria-label="anchor" href="#version-010"></a></h2>
-<ul><li>A new package, which takes all caching utilities out of the <code>SpaDES</code> package.</li></ul></div>
+<ul><li>A new package, which takes all caching utilities out of the <code>SpaDES</code> package.</li>
+</ul></div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

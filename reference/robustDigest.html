@@ -31,7 +31,7 @@ work correctly."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
       </span>
     </div>
 
@@ -243,30 +243,30 @@ using <code>asPath(thePath)</code></p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># treats as character string, so 2 filenames are different</span></span></span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "e2622f7a4e3be3d9c8d1387ac3b9a530"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "3531d598fb2ed58102f20ec04b384cdd"</span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">tmpfile2</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "3aa63dfbd550d28fe2992215bb789a64"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "c27c436bc72ae77067008fe66ee4310d"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># tests to see whether character string is representing a file</span></span></span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0b58b70d5b246e40"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "217664b2d993e297"</span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="va">tmpfile2</span><span class="op">)</span> <span class="co"># same</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0b58b70d5b246e40"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "217664b2d993e297"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># if you tell it that it is a path, then you can decide if you want it to be</span></span></span>
 <span class="r-in"><span><span class="co">#  treated as a character string or as a file path</span></span></span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span>, quick <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "f285071bbd7e47a4"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "99acd36b8bb64b81"</span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">tmpfile2</span><span class="op">)</span>, quick <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># different because using file info</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "a6717eb56875c84a"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "de4694e4536e6cf9"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span>, quick <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0b58b70d5b246e40"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "217664b2d993e297"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">tmpfile2</span><span class="op">)</span>, quick <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="co"># same because using file content</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0b58b70d5b246e40"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "217664b2d993e297"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Rasters are interesting because it is not know a priori if it</span></span></span>
@@ -279,13 +279,13 @@ using <code>asPath(thePath)</code></p>
 <span class="r-in"><span><span class="va">r2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/terra/man/writeRaster.html" class="external-link">writeRaster</a></span><span class="op">(</span><span class="va">r</span>, file <span class="op">=</span> <span class="va">tmpfile2</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">r1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "bfe11b2dd37a74f2ae7dff637e82d2c8"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "58365aeffea306f04480d17f7f817d47"</span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">r2</span><span class="op">)</span> <span class="co"># different</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "ddd05c8465d231aba88f955f521eef8c"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "1e6a0c18047f3360c595aedd05719e41"</span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">r1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "bfe11b2dd37a74f2ae7dff637e82d2c8"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "58365aeffea306f04480d17f7f817d47"</span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">r2</span><span class="op">)</span> <span class="co"># different</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "ddd05c8465d231aba88f955f521eef8c"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "1e6a0c18047f3360c595aedd05719e41"</span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="va">r1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "490db087c08d4499"</span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="va">r2</span><span class="op">)</span> <span class="co"># same... data are the same in the file</span></span></span>

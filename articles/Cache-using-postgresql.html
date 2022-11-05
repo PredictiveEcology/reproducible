@@ -39,7 +39,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
       </span>
     </div>
 
@@ -88,10 +88,12 @@
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Using alternate database backends for Cache</h1>
-                        <h4 data-toc-skip class="author">Alex M. Chubaty</h4>
-                        <h4 data-toc-skip class="author">Eliot J. B. McIntire</h4>
+                        <h4 data-toc-skip class="author">Alex M.
+Chubaty</h4>
+                        <h4 data-toc-skip class="author">Eliot J. B.
+McIntire</h4>
             
-            <h4 data-toc-skip class="date">August 18 2022</h4>
+            <h4 data-toc-skip class="date">November 05 2022</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/vignettes/Cache-using-postgresql.Rmd" class="external-link"><code>vignettes/Cache-using-postgresql.Rmd</code></a></small>
       <div class="hidden name"><code>Cache-using-postgresql.Rmd</code></div>
@@ -103,13 +105,23 @@
 <div class="section level2">
 <h2 id="cache-database-backends">Cache database backends<a class="anchor" aria-label="anchor" href="#cache-database-backends"></a>
 </h2>
-<p>By default, caching relies on a sqlite database for it’s backend. While this works in many situations, there are some important limitations of using sqlite for caching, including 1) speed; 2) concurrent transactions; 3) sharing database across machines or projects. Fortunately, <code>Cache</code> makes use of <code>DBI</code> package and thus supports several database backends, including mysql and postgresql. This vignette demonstrates how to use alternate database backends for caching.</p>
+<p>By default, caching relies on a sqlite database for it’s backend.
+While this works in many situations, there are some important
+limitations of using sqlite for caching, including 1) speed; 2)
+concurrent transactions; 3) sharing database across machines or
+projects. Fortunately, <code>Cache</code> makes use of <code>DBI</code>
+package and thus supports several database backends, including mysql and
+postgresql. This vignette demonstrates how to use alternate database
+backends for caching.</p>
 </div>
 <div class="section level2">
 <h2 id="storing-database-credentials">Storing database credentials<a class="anchor" aria-label="anchor" href="#storing-database-credentials"></a>
 </h2>
-<p><strong>Be careful not to save database credentials in version control.</strong> We recommend per-project credentials saved either in config files or environment variables, described below.</p>
-<p>See <a href="https://db.rstudio.com/best-practices/managing-credentials/" class="external-link uri">https://db.rstudio.com/best-practices/managing-credentials/</a> for other important best practices.</p>
+<p><strong>Be careful not to save database credentials in version
+control.</strong> We recommend per-project credentials saved either in
+config files or environment variables, described below.</p>
+<p>See <a href="https://db.rstudio.com/best-practices/managing-credentials/" class="external-link uri">https://db.rstudio.com/best-practices/managing-credentials/</a>
+for other important best practices.</p>
 </div>
 <div class="section level2">
 <h2 id="postgresql">PostgreSQL<a class="anchor" aria-label="anchor" href="#postgresql"></a>
