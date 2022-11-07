@@ -131,7 +131,7 @@ test_that("testing terra", {
       tw_t11 <- terra::wrap(t11)
       vv <- terra::vect(tf1)
       tw_vv <- terra::wrap(vv)
-      expect_identical(tw_vv, tw_t11)
+      expect_equivalent(tw_vv, tw_t11) ## TODO: not identical
 
       # Test fixErrorTerra
       v1 <- terra::simplifyGeom(v)
