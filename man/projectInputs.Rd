@@ -19,12 +19,19 @@ projectInputs(
 \arguments{
 \item{x}{A \code{Raster*}, \code{Spatial*} or \code{sf} object}
 
-\item{rasterToMatch}{Template \code{Raster*} object passed to the \code{to} argument of
+\item{rasterToMatch}{Template \code{Raster*} or \code{SpatRast} object passed to
+the \code{to} argument of
 \code{\link[terra]{project}}, thus will changing the
 resolution and projection of \code{x}.
 See details in \code{\link{postProcess}}.}
 
 \item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
+
+\item{studyArea}{Template \code{SpatialPolygons*} or \code{SpatVect} object
+passed to the \code{to} argument of
+\code{\link[terra]{project}}, thus will changing the
+resolution and projection of \code{x}.
+See details in \code{\link{postProcess}}.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.

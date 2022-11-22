@@ -10,11 +10,11 @@ maskInputs(x, studyArea, ...)
 \item{x}{An object to do a geographic terra::mask/terra::intersect.
 See methods.}
 
-\item{studyArea}{\code{SpatialPolygons*} object used for masking and possibly cropping
-if no \code{rasterToMatch} is provided.
-If not in same CRS, then it will be \code{spTransform}ed to
-CRS of \code{x} before masking. Currently, this function will not reproject the
-\code{x}. Optional in \code{postProcess}.}
+\item{studyArea}{Template \code{SpatialPolygons*} or \code{SpatVect} object
+passed to the \code{to} argument of
+\code{\link[terra]{project}}, thus will changing the
+resolution and projection of \code{x}.
+See details in \code{\link{postProcess}}.}
 
 \item{...}{Passed to methods. None currently implemented.}
 }

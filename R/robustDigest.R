@@ -133,7 +133,7 @@ setMethod(
         out <- lapply(terra::sources(object), function(x)
           digest(file = x, length = length, algo = algo))
         dig <- .robustDigest(append(
-          list(terra::nrow(object), terra::ncol(object), terra::nlyr(object),
+          list(terra::nrow(object), terra::ncol(object), nlyr2(object),
                terra::res(object), terra::crs(object),
                terra::ext(object)), object@ptr$names, ),
           length = length, quick = quick,

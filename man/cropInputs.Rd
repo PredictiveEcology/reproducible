@@ -18,15 +18,16 @@ cropInputs(
 \arguments{
 \item{x}{A \code{Spatial*}, \code{sf}, or \code{Raster*} object.}
 
-\item{studyArea}{\code{SpatialPolygons*} object used for masking and possibly cropping
-if no \code{rasterToMatch} is provided.
-If not in same CRS, then it will be \code{spTransform}ed to
-CRS of \code{x} before masking. Currently, this function will not reproject the
-\code{x}. Optional in \code{postProcess}.}
+\item{studyArea}{Template \code{SpatialPolygons*} or \code{SpatVect} object
+passed to the \code{to} argument of
+\code{\link[terra]{project}}, thus will changing the
+resolution and projection of \code{x}.
+See details in \code{\link{postProcess}}.}
 
-\item{rasterToMatch}{Template \code{Raster*} object used for cropping (so extent should be
-the extent of desired outcome) and reprojecting (including changing the
-resolution and projection).
+\item{rasterToMatch}{Template \code{Raster*} or \code{SpatRast} object passed to
+the \code{to} argument of
+\code{\link[terra]{project}}, thus will changing the
+resolution and projection of \code{x}.
 See details in \code{\link{postProcess}}.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,

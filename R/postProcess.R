@@ -170,20 +170,12 @@ postProcess.default <- function(x, filename1 = NULL, filename2 = NULL,
 #'
 #' @param x A \code{Spatial*}, \code{sf}, or \code{Raster*} object.
 #'
-#' @param studyArea \code{SpatialPolygons*} object used for masking and possibly cropping
-#'                  if no \code{rasterToMatch} is provided.
-#'                  If not in same CRS, then it will be \code{spTransform}ed to
-#'                  CRS of \code{x} before masking. Currently, this function will not reproject the
-#'                  \code{x}. Optional in \code{postProcess}.
-#'
-#' @param rasterToMatch Template \code{Raster*} object used for cropping (so extent should be
-#'                      the extent of desired outcome) and reprojecting (including changing the
-#'                      resolution and projection).
-#'                      See details in \code{\link{postProcess}}.
+#' @inheritParams projectInputs
 #'
 #' @param ... Passed to \code{terra::crop}
 #'
 #' @inheritParams projectInputs
+#' @inheritParams Cache
 #'
 #' @author Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti
 #' @example inst/examples/example_postProcess.R
@@ -396,19 +388,26 @@ fixErrorssf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
 #'
 #' @param targetCRS The CRS of x at the end  of this function (i.e., the goal)
 #'
-#' @param ... Passed to \code{\link[terra]{project}}.
-#'
-#' @param rasterToMatch Template \code{Raster*} object passed to the \code{to} argument of
+#' @param rasterToMatch Template \code{Raster*} or \code{SpatRast} object passed to
+#'                      the \code{to} argument of
 #'                      \code{\link[terra]{project}}, thus will changing the
 #'                      resolution and projection of \code{x}.
 #'                      See details in \code{\link{postProcess}}.
+#'
+#' @param studyArea Template \code{SpatialPolygons*} or \code{SpatVect} object
+#'                  passed to the \code{to} argument of
+#'                  \code{\link[terra]{project}}, thus will changing the
+#'                  resolution and projection of \code{x}.
+#'                  See details in \code{\link{postProcess}}.
+#'
+#' @param ... Passed to \code{\link[terra]{project}}.
 #'
 #' @return A file of the same type as starting, but with projection (and possibly
 #' other characteristics, including resolution, origin, extent if changed).
 #'
 #' @export
-#' @inheritParams prepInputs
 #' @inheritParams postProcess
+#' @inheritParams Cache # for verbose
 #' @rdname projectInputs
 #'
 #' @example inst/examples/example_postProcess.R
@@ -717,7 +716,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
       argsForWrite <- append(list(filename = filename2, overwrite = overwrite), dots)
       if (is(x, "RasterStack")) {
         longerThanOne <- unlist(lapply(argsForWrite, function(x) length(unique(x)) > 1))
-        nLayers <- terra::nlyr(x)
+        nLayers <- nlyr2(x)
         if (any(unlist(longerThanOne))) {
           if (!identical(nLayers, length(argsForWrite$filename))) {
             argsForWrite$filename <- file.path(dirname(argsForWrite$filename),
@@ -892,7 +891,7 @@ assessDataTypeRaster <- function(ras, type = "writeRaster") {
   .requireNamespace("terra", stopOnFALSE = TRUE)
   .requireNamespace("raster", stopOnFALSE = TRUE)
   if (terra::ncell(ras) > 1e8) { # for very large rasters, try a different way
-    maxValCurrent <- terra::minmax(ras)[2] # max is 2nd
+    maxValCurrent <- maxValue2(ras)
     ras <- setMinMaxIfNeeded(ras)
     # if (maxValCurrent != maxValue(ras))
     datatype <- terra::datatype(ras)
@@ -1051,7 +1050,7 @@ bufferWarningSuppress <- function(# warn,
 
 setMinMaxIfNeeded <- function(ras) {
   # special case where the colours already match the discrete values
-  suppressWarnings(maxValCurrent <- terra::minmax(ras)[2]) # 2nd is max
+  suppressWarnings(maxValCurrent <- maxValue2(ras)) # 2nd is max
   needSetMinMax <- FALSE
   if (isTRUE(any(is.na(maxValCurrent)))) {
     needSetMinMax <- TRUE
@@ -1059,8 +1058,8 @@ setMinMaxIfNeeded <- function(ras) {
 
     # if the colors are set and are the same length of the integer sequence between min and max, don't override
     if (length(.getColors(ras)[[1]])) {
-      if (!is.na(suppressWarnings(terra::minmax(ras)[2])) && !is.na(suppressWarnings(terra::minmax(ras)[1])))
-        if (length(.getColors(ras)[[1]]) == (terra::minmax(ras)[2] - terra::minmax(ras)[1] + 1)) {
+      if (!is.na(suppressWarnings(maxValue2(ras))) && !is.na(suppressWarnings(minValue2(ras))))
+        if (length(.getColors(ras)[[1]]) == (maxValue2(ras) - minValue2(ras) + 1)) {
           return(ras)
         }
     }
@@ -1070,7 +1069,7 @@ setMinMaxIfNeeded <- function(ras) {
     }
   }
   if (isTRUE(needSetMinMax)) {
-    large <- if (terra::nlyr(ras) > 25 || terra::ncell(ras) > 1e7) TRUE else FALSE
+    large <- if (nlyr2(ras) > 25 || terra::ncell(ras) > 1e7) TRUE else FALSE
     if (large) message("  Large ",class(ras), " detected; setting minimum and maximum may take time")
     suppressWarnings(ras <- terra::setMinMax(ras))
     if (large) message("  ... Done")
@@ -1078,6 +1077,64 @@ setMinMaxIfNeeded <- function(ras) {
   ras
 }
 
+# Some functions where terra and raster are not compatible with a single terra function
+terraOrRaster <- function(ras, terraFn = "nlyr", rasterFn = "nlayers",
+                          terraIndex, rasterIndex) {
+  isRaster <- inherits(ras, "Raster")
+  if (isRaster) {
+    if (.requireNamespace("raster", stopOnFALSE = TRUE))
+      out <- getFromNamespace(rasterFn, "raster")(ras)
+    if (!missing(rasterIndex))
+      out[rasterIndex]
+  } else {
+    out <- getFromNamespace(terraFn, "terra")(ras)
+    if (!missing(terraIndex))
+      out[terraIndex]
+  }
+  out
+}
+
+# These are a set of terra or raster pkg fns
+nlyr2 <- function(ras) terraOrRaster(ras, "nlyr", "nlayers")
+
+ncell2 <- function(ras) terraOrRaster(ras, "ncell", "ncell")
+
+maxValue2 <- function(ras) terraOrRaster(ras, "minmax", "maxValue", terraIndex = 2)
+
+minValue2 <- function(ras) terraOrRaster(ras, "minmax", "minValue", terraIndex = 1)
+
+# nlyr2 <- function(ras) {
+#   isRaster <- is(ras, "Raster")
+#   if (isRaster) {
+#     if (.requireNamespace("raster", stopOnFALSE = TRUE))
+#       out <- raster::nlayers(ras)
+#   } else {
+#     out <- terra::nlyr(ras)
+#   }
+#   out
+# }
+#
+# maxValue2 <- function(ras) {
+#   isRaster <- is(ras, "Raster")
+#   if (isRaster) {
+#     if (.requireNamespace("raster", stopOnFALSE = TRUE))
+#       out <- raster::maxValue(ras)
+#   } else {
+#     out <- terra::minmax(ras)[2]
+#   }
+#   out
+# }
+#
+# minValue2 <- function(ras) {
+#   isRaster <- is(ras, "Raster")
+#   if (isRaster) {
+#     if (.requireNamespace("raster", stopOnFALSE = TRUE))
+#       out <- raster::minValue(ras)
+#   } else {
+#     out <- terra::minmax(ras)[1]
+#   }
+#   out
+# }
 
 roundTo6Dec <- function(x) {
   # check if integer

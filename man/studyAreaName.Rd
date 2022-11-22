@@ -13,7 +13,11 @@ studyAreaName(studyArea, ...)
 \S4method{studyAreaName}{ANY}(studyArea, ...)
 }
 \arguments{
-\item{studyArea}{Spatial object.}
+\item{studyArea}{Template \code{SpatialPolygons*} or \code{SpatVect} object
+passed to the \code{to} argument of
+\code{\link[terra]{project}}, thus will changing the
+resolution and projection of \code{x}.
+See details in \code{\link{postProcess}}.}
 
 \item{...}{Other arguments (not currently used)}
 }

@@ -87,7 +87,7 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
 #' Use \code{.suffix()} to append the hash to a filename,
 #' e.g., when using \code{filename2} in \code{prepInputs}.
 #'
-#' @param studyArea Spatial object.
+#' @inheritParams projectInputs
 #' @param ... Other arguments (not currently used)
 #'
 #' @export
