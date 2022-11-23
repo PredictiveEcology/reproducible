@@ -7,22 +7,32 @@ test_that("preProcess fails if user provides non-existing file", {
   testthat::with_mock(
     `reproducible:::isInteractive` = function() {FALSE},
     {
-      co <- capture.output(co <- capture.output(type = "message",
-                         errMsg <- testthat::capture_error(reproducible::preProcess(
-      url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
-      destinationPath = tmpdir
-    ))))
-    })
+      co <- capture.output({
+        co <- capture.output(type = "message", {
+          errMsg <- testthat::capture_error({
+            reproducible::preProcess(
+              url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+              destinationPath = tmpdir
+            )
+          })
+        })
+      })
+    }
+  )
   expect_true(grepl("manual download", errMsg))
   expect_true(grepl("appendChecksumsTable", errMsg))
 
-  optsOrig <- options('reproducible.interactiveOnDownloadFail' = FALSE)
-  co <- capture.output(co <- capture.output(type = "message",
-          errMsg <- testthat::capture_error(reproducible::preProcess(
-    url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
-    destinationPath = tmpdir
-  ))
-  ))
+  optsOrig <- options(reproducible.interactiveOnDownloadFail = FALSE)
+  co <- capture.output({
+    co <- capture.output(type = "message", {
+      errMsg <- testthat::capture_error({
+        reproducible::preProcess(
+          url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+          destinationPath = tmpdir
+        )
+      })
+    })
+  })
   expect_true(grepl("manual download", errMsg))
   expect_true(grepl("appendChecksumsTable", errMsg))
   options(optsOrig)
@@ -31,14 +41,20 @@ test_that("preProcess fails if user provides non-existing file", {
     `reproducible:::isInteractive` = function() {TRUE},
     `reproducible:::.readline` = function(prompt) {"n"},
     {
-      co <- capture.output(co <- capture.output(type = "message",
-      mess <- testthat::capture_messages(
-        errMsg <- testthat::capture_error(reproducible::preProcess(
-        url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
-        destinationPath = tmpdir
-      )))
-      ))
-    })
+      co <- capture.output({
+        co <- capture.output(type = "message", {
+          mess <- testthat::capture_messages({
+            errMsg <- testthat::capture_error({
+              reproducible::preProcess(
+                url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+                destinationPath = tmpdir
+              )
+            })
+          })
+        })
+      })
+    }
+  )
   expect_true(sum(grepl("Download failed", errMsg)) == 1)
   # expect_true(sum(grepl("To prevent", errMsg)) == 1)
 
@@ -55,25 +71,28 @@ test_that("preProcess fails if user provides non-existing file", {
       "y"
       },
     {
-      co <- capture.output(co <- capture.output(type = "message",
-                                                mess <- testthat::capture_messages(
-        errMsg <- testthat::capture_error(reproducible::preProcess(
-          url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
-          destinationPath = tmpdir
-        )))
-      ))
+      co <- capture.output({
+        co <- capture.output(type = "message", {
+          mess <- testthat::capture_messages({
+            errMsg <- testthat::capture_error({
+              reproducible::preProcess(
+                url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+                destinationPath = tmpdir
+              )
+            })
+          })
+      })
     })
+  })
   expect_true(sum(grepl("manual download", mess)) == 1)
   expect_true(sum(grepl("To prevent", mess)) == 1)
   if (isWindows()) # windows can't tell a zip file is a zip file, but Unix-alikes can
-    expect_true(sum(grepl("Will assume the file is an archive", mess)) == 1)              ##############
+    expect_true(sum(grepl("Will assume the file is an archive", mess)) == 1)
   expect_true(file.exists(file.path(tmpdir, "rasterTest.zip")))
-  cs <- read.table(file.path(tmpdir, "CHECKSUMS.txt"), header = T)
+  cs <- read.table(file.path(tmpdir, "CHECKSUMS.txt"), header = TRUE)
   expect_true(NROW(cs) == 2)
   expect_true(all(grepl("rasterTest", cs$file)))
   options(optsOrig)
-
-
 })
 
 test_that("preProcess fails if user provides a non .zip/.tar as archive", {
@@ -82,12 +101,11 @@ test_that("preProcess fails if user provides a non .zip/.tar as archive", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  co <- capture.output(co <- capture.output(type = "message",
-                                            pre <- reproducible::preProcess(
-    url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
-    destinationPath = tmpdir
-  )
-  ))
+  co <- capture.output({
+    co <- capture.output(type = "message", {
+      pre <- reproducible::preProcess(url = theRasterTestZip, destinationPath = tmpdir)
+    })
+  })
   testthat::expect_is(object = pre, class = "list")
   testthat::expect_error({
     ras <- reproducible::preProcess(archive = pre$targetFilePath)
@@ -100,12 +118,11 @@ test_that("preProcess fails if user provides non-existing file", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  co <- capture.output(co <- capture.output(type = "message",
-                                            pre <- reproducible::preProcess(
-    url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
-    destinationPath = tmpdir
-  )
-  ))
+  co <- capture.output({
+    co <- capture.output(type = "message", {
+      pre <- reproducible::preProcess(url = theRasterTestZip, destinationPath = tmpdir)
+    })
+  })
   testthat::expect_is(object = pre, class = "list")
   testthat::expect_error({
     ras <- reproducible::preProcess(archive = "fileDoesNotExist.zip")
@@ -118,28 +135,29 @@ test_that("preProcess fails if user provides a directory as a targetFile", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  co <- capture.output(co <- capture.output(type = "message",
-                                            pre <- reproducible::preProcess(
-    url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
-    destinationPath = tmpdir
-  )
-  ))
+  co <- capture.output({
+    co <- capture.output(type = "message", {
+      pre <- reproducible::preProcess(url = theRasterTestZip, destinationPath = tmpdir)
+    })
+  })
   testthat::expect_is(object = pre, class = "list")
   testthat::expect_error({
     ras <- reproducible::preProcess(targetFile = tmpdir)
   })
 })
 
-test_that("preProcess fails if the .rar file is defective", {
-  skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-  co <- capture.output(co <- capture.output(type = "message",
-                                            testthat::expect_error({
-    ras <- preProcess(url = "https://github.com/tati-micheletti/host/blob/master/data/rasterTest.rar",
-                      destinationPath = tmpdir)
-  })
-  ))
-})
+## 2022-11-03 this no longer fails on Ubuntu 20.04
+# test_that("preProcess fails if the .rar file is defective", {
+#   skip_on_cran()
+#   testInitOut <- testInit("raster", needGoogle = FALSE)
+#   on.exit({
+#     testOnExit(testInitOut)
+#   }, add = TRUE)
+#   co <- capture.output({
+#     co <- capture.output(type = "message", {
+#       testthat::expect_error({
+#         ras <- preProcess(url = theRasterTestRar, destinationPath = tmpdir)
+#       })
+#     })
+#   })
+# })

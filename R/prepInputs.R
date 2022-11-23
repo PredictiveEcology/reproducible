@@ -818,9 +818,10 @@ extractFromArchive <- function(archive,
       } else {
         extractSystemCallPath
       }
+
       # This spits out a message on non-Windows about arguments that are ignored
       suppressMessages({
-        output <- system(paste0(prependPath, " e -aoa -o", .tempPath, " ", args[[1]]),
+        output <- system(paste0(prependPath, " e -aoa -o\"", .tempPath, "\" \"", args[[1]], "\""),
                          wait = TRUE,
                          ignore.stdout = FALSE,
                          ignore.stderr = FALSE,
@@ -1134,7 +1135,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         }
       } else {
         if (grepl(x = extractSystemCallPath, pattern = "7z")) {
-          extractSystemCall <- paste0("\"", extractSystemCallPath, "\"", " l ", path.expand(archive[1]))
+          extractSystemCall <- paste0("\"", extractSystemCallPath, "\"", " l \"", path.expand(archive[1]), "\"")
           if (isWindows()) {
             filesOutput <- captureWarningsToAttr(
                              system(extractSystemCall, show.output.on.console = FALSE, intern = TRUE)
@@ -1148,7 +1149,6 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
             warn <- attr(filesOutput, "warning")
             attr(filesOutput, "warning") <- NULL
           }
-
         } else {
           archiveExtractBinary <- .archiveExtractBinary()
           if (is.null(archiveExtractBinary))

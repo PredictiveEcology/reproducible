@@ -4,12 +4,13 @@ test_that("prepInputs works with NULL archive + file without extension, but orig
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  noisyOutput <- capture.output(
-    testthat::expect_message(
+  noisyOutput <- capture.output({
+    testthat::expect_message({
       ras <- reproducible::prepInputs(url = "https://github.com/tati-micheletti/host/raw/master/data/unknownExtension",
                                       alsoExtract = "similar",
-                                      destinationPath = tempdir2(rndstr(1,6))))
-  )
+                                      destinationPath = tempdir2(rndstr(1, 6)))
+    })
+  })
   testthat::expect_is(object = ras, class = "RasterLayer")
 })
 
@@ -20,10 +21,11 @@ test_that("prepInputs WORKS if the file is not originally a .zip, but archive is
     testOnExit(testInitOut)
   }, add = TRUE)
   noisyOutput <- capture.output(
-    testthat::expect_message(
+    testthat::expect_message({
       ras <- reproducible::prepInputs(url = "https://github.com/tati-micheletti/host/raw/master/data/unknownTAR",
                                       alsoExtract = "similar", archive = "unknownTAR.tar",
-                                      destinationPath = tempdir2(rndstr(1,6))))
+                                      destinationPath = tempdir2(rndstr(1, 6)))
+    })
   )
   testthat::expect_is(object = ras, class = "RasterLayer")
 })
@@ -35,10 +37,11 @@ test_that("prepInputs WORKS if passing archive .zip", {
     testOnExit(testInitOut)
   }, add = TRUE)
   noisyOutput <- capture.output(
-    testthat::expect_message(
+    testthat::expect_message({
       ras <- reproducible::prepInputs(url = "https://github.com/tati-micheletti/host/raw/master/data/unknownExtension",
                                       archive = "unknownExtension.zip",
-                                      alsoExtract = "similar", destinationPath = tempdir2(rndstr(1,6))))
+                                      alsoExtract = "similar", destinationPath = tempdir2(rndstr(1,6)))
+    })
   )
   testthat::expect_is(object = ras, class = "RasterLayer")
 })
@@ -49,11 +52,13 @@ test_that("prepInputs WORKS passing just targetFile that is NOT an archive", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  noisyOutput <- capture.output(
-    testthat::expect_message(
+  noisyOutput <- capture.output({
+    testthat::expect_message({
       ras <- reproducible::prepInputs(url = "https://github.com/tati-micheletti/host/raw/master/data/unknownTIF",
-                                      alsoExtract = "similar", targetFile = "unknownTIF.tif", destinationPath = tempdir2(rndstr(1,6))))
-  )
+                                      alsoExtract = "similar", targetFile = "unknownTIF.tif",
+                                      destinationPath = tempdir2(rndstr(1, 6)))
+    })
+  })
   testthat::expect_is(object = ras, class = "RasterLayer")
 })
 
@@ -63,12 +68,13 @@ test_that("prepInputs WORKS passing archive + targetFile", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  noisyOutput <- capture.output(
-    testthat::expect_message(
+  noisyOutput <- capture.output({
+    testthat::expect_message({
       ras <- reproducible::prepInputs(url = "https://github.com/tati-micheletti/host/raw/master/data/unknownExtension",
                                       archive = "unknownExtension.zip", targetFile = "rasterTest.tif",
                                       alsoExtract = "similar",
-                                      destinationPath = tempdir2(rndstr(1,6))))
-  )
+                                      destinationPath = tempdir2(rndstr(1, 6)))
+    })
+  })
   testthat::expect_is(object = ras, class = "RasterLayer")
 })

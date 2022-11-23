@@ -27,7 +27,12 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   if (missing(libraries)) libraries <- list()
   unlist(lapply(libraries, require, character.only = TRUE, quietly = TRUE))
   require("testthat", quietly = TRUE)
-  tmpdir <- tempdir2(rndstr(1, 6))
+
+  .pkgEnv <- getFromNamespace(".pkgEnv", "reproducible")
+  tmpdir <- tempdir2(sprintf("%s_%03d", rndstr(1, 6), .pkgEnv$testCacheCounter))
+  tmpCache <- checkPath(file.path(tmpdir, "testCache"), create = TRUE)
+  .pkgEnv$testCacheCounter <- .pkgEnv$testCacheCounter + 1L
+
 
   if (isTRUE(needGoogle)) {
     if (!requireNamespace("googledrive"))
@@ -64,7 +69,6 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     }
   }
 
-  tmpCache <- checkPath(file.path(tmpdir, "testCache"), create = TRUE)
   origDir <- setwd(tmpdir)
 
   defaultOpts <- list(
@@ -233,42 +237,17 @@ targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
   }
 }
 
-getDatatmp <- function(name = "GADM", download = TRUE, path = "", ...) {
-  path <- raster:::.getDataPath(path)
-  if (name == "GADM") {
-    .GADMtmp(..., download = download, path = path, version = 3.6)
-  }
-  else if (name == "SRTM") {
-    raster:::.SRTM(..., download = download, path = path)
-  }
-  else if (name == "alt") {
-    raster:::.raster(..., name = name, download = download, path = path)
-  }
-  else if (name == "worldclim") {
-    raster:::.worldclim(..., download = download, path = path)
-  }
-  else if (name == "CMIP5") {
-    raster:::.cmip5(..., download = download, path = path)
-  }
-  else if (name == "ISO3") {
-    raster:::ccodes()[, c(2, 1)]
-  }
-  else if (name == "countries") {
-    raster:::.countries(download = download, path = path, ...)
-  }
-  else {
-    stop(name, " not recognized as a valid name.")
-  }
+## TODO: switch to `geodata` package (raster::getData() is deprecated) (#256)
+getDataFn <- function(...) {
+  suppressWarningsSpecific({
+    raster::getData(...)
+  }, falseWarnings = "getData will be removed in a future version of raster")
 }
 
-if (utils::packageVersion("raster") <= "2.6.7") {
-  getDataFn <- getDatatmp
-} else {
-  getDataFn <- raster::getData
-}
-
-testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, type = c("Raster", "Stack", "Brick")) {
-  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
+                              type = c("Raster", "Stack", "Brick")) {
+  if (!requireNamespace("googledrive"))
+    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
   # Second test .grd which has two files
   ####################################################
@@ -281,7 +260,6 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   mc <- match.call()
   r1Orig <- raster(extent(0,200, 0, 200), vals = 1, res = 1)
   r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-
 
   if (mc$type == "Stack") {
     r1Orig2 <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
@@ -440,14 +418,14 @@ theRasterTestFilename <- function(pre = "", suff = "") {
 }
 theRasterTestZip <- theRasterTestFilename(theRasterTests, "zip") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
 theRasterTestRar <- theRasterTestFilename(theRasterTests, "rar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
-theRasterTestTar <- theRasterTestFilename(theRasterTests, "tar")
+theRasterTestTar <- theRasterTestFilename(theRasterTests, "tar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tar"
 
 
 shapefileClassDefault <- function() {
-  shpfl <- if(is.character(getOption("reproducible.shapefileRead")))
+  shpfl <- if (is.character(getOption("reproducible.shapefileRead"))) {
     eval(parse(text = getOption("reproducible.shapefileRead")))
-  else
+  } else {
     getOption("reproducible.shapefileRead")
-
+  }
   if (identical(shpfl, raster::shapefile)) "SpatialPolygons" else "sf"
 }

@@ -54,3 +54,4 @@
 #' @keywords internal
 #' @rdname pkgEnv
 .pkgEnv <- new.env(parent = emptyenv())
+.pkgEnv$testCacheCounter <- 1L
