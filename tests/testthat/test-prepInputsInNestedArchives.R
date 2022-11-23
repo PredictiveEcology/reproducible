@@ -80,7 +80,7 @@ test_that(
     })
     expect_true(exists("testZip6"))
     expect_is(testZip6, shapefileClassDefault())
-  })
+})
 
 test_that(
   paste0("prepInputs in a two files double nested zip file, with the wanted file in",
@@ -106,12 +106,14 @@ test_that(
         "with the wanted file in the second layer, not specifying the targetFile"), {
           skip_on_cran()
           skip_on_os("mac")
+
           testInitOut <- testInit("raster", needGoogle = FALSE)
           on.exit({
             testOnExit(testInitOut)
           }, add = TRUE)
 
           extractSystemCallPath <- .archiveExtractBinary()
+
           if (is.null(extractSystemCallPath)) {
             noisyOutput <- capture.output({
               warn <- capture_warnings({
@@ -124,7 +126,6 @@ test_that(
               })
             })
           } else {
-
             noisyOutput <- capture.output({
               testRar <- reproducible::prepInputs(
                 url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
@@ -133,7 +134,7 @@ test_that(
             expect_true(exists("testRar"))
             expect_is(testRar, "RasterLayer")
           }
-        })
+})
 
 test_that(
   paste0(

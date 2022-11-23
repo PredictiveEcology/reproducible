@@ -2085,11 +2085,12 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
         #if all CRS are projected, then check if buffer is necessary
         objsAreProjected <- list(x, studyArea, crsRTM)
         nonNulls <- !unlist(lapply(objsAreProjected, is.null))
-        suppressWarningsSpecific(falseWarnings = "wkt|CRS object has no comment",
-                                 projections <- sapply(objsAreProjected[nonNulls],
-                                                       # function(xx) grepl("(longitude).*(latitude)",
-                                                       #                    tryCatch(wkt(xx), error = function(yy) NULL))))
-                                                       function(xx) !isProjected(xx)))
+        suppressWarningsSpecific({
+          projections <- sapply(objsAreProjected[nonNulls],
+                                # function(xx) grepl("(longitude).*(latitude)",
+                                #                    tryCatch(wkt(xx), error = function(yy) NULL))))
+                                function(xx) !isProjected(xx))
+          }, falseWarnings = "wkt|CRS object has no comment")
 
         if (!any(unlist(projections))) {
           if (is.null(rasterToMatch) || max(res(rasterToMatch)) < min(res(x))) {
@@ -2322,8 +2323,7 @@ suppressWarningsSpecific <- function(code, falseWarnings, verbose = getOption("r
     yy <- eval(code)
   },
   warning = function(xx) {
-    trueWarnings <- grep(falseWarnings, xx$message,
-                         invert = TRUE, value = TRUE)
+    trueWarnings <- grep(falseWarnings, xx$message, invert = TRUE, value = TRUE)
     if (length(trueWarnings)) {
       warns <<- paste(trueWarnings, collapse = "\n  ")
     }

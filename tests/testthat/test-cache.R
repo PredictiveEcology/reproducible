@@ -161,7 +161,7 @@ test_that("test file-backed raster caching", {
   expect_equal(a1, a2)
 
   # confirm that the second one was obtained through reading from Cache... much faster than writing
-  expect_true(b1[1] > b2[1])
+  if (!isWindows()) expect_true(b1[1] > b2[1]) ## TODO: windows can be randomly slow
 
   clearCache(tmpCache, ask = FALSE)
 
@@ -973,8 +973,9 @@ test_that("test cache-helpers", {
   expect_true(sameFileBase)
 
   unlink(Filenames(s2))
-  expect_error(out2 <- .prepareFileBackedRaster(s2, repoDir = tmpCache), "most likely")
-
+  expect_error({
+    out2 <- .prepareFileBackedRaster(s2, repoDir = tmpCache)
+  }, "most likely")
 })
 
 test_that("test useCache = 'overwrite'", {
@@ -1198,7 +1199,7 @@ test_that("test file link with duplicate Cache", {
   expect_true(any(grepl("loaded cached", mess1)))
   # There are intermittent "status 5" warnings on next line on Windows -- not relevant here
   warns <- capture_warnings({
-    out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
+    out1 <- try(system2("du", paste0("\"", tmpCache, "\""), stdout = TRUE), silent = TRUE)
   })
   # out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
   if (!is(out1, "try-error"))
@@ -1341,8 +1342,6 @@ test_that("List of Rasters", {
   expect_true(isTRUE(attr(a, ".Cache")$newCache))
 })
 
-
-
 test_that("Cache the dots; .cacheExtra", {
   testInitOut <- testInit()
   on.exit({
@@ -1358,9 +1357,12 @@ test_that("Cache the dots; .cacheExtra", {
     rnorm(d, e, f)
   }
 
-
-  suppressMessages(out1 <- Cache(fn1, a = 1, b = 2, d = 1, cacheRepo = tmpCache))
-  suppressMessages(out2 <- Cache(fn1, a = 1, b = 2, d = 2, cacheRepo = tmpCache))
+  suppressMessages({
+    out1 <- Cache(fn1, a = 1, b = 2, d = 1, cacheRepo = tmpCache)
+  })
+  suppressMessages({
+    out2 <- Cache(fn1, a = 1, b = 2, d = 2, cacheRepo = tmpCache)
+  })
   expect_true(!identical(out1, out2))
 
 
@@ -1368,14 +1370,21 @@ test_that("Cache the dots; .cacheExtra", {
     out <- fn2(d = 1)
   }
 
-  suppressMessages(out3 <- Cache(fn3, .cacheExtra = "12342", cacheRepo = tmpCache))
-  suppressMessages(out4 <- Cache(fn3, .cacheExtra = "123422", cacheRepo = tmpCache))
+  suppressMessages({
+    out3 <- Cache(fn3, .cacheExtra = "12342", cacheRepo = tmpCache)
+  })
+  suppressMessages({
+    out4 <- Cache(fn3, .cacheExtra = "123422", cacheRepo = tmpCache)
+  })
   expect_true(!identical(out3, out4))
 
   # These are now the same because the .cacheExtra is the same and the arg is ignored
-  suppressMessages(out5 <- Cache(mean, 6, omitArgs = "x", .cacheExtra = "234", cacheRepo = tmpCache))
-  suppressMessages(out6 <- Cache(mean, 7, omitArgs = "x", .cacheExtra = "234", cacheRepo = tmpCache))
+  suppressMessages({
+    out5 <- Cache(mean, 6, omitArgs = "x", .cacheExtra = "234", cacheRepo = tmpCache)
+  })
+  suppressMessages({
+    out6 <- Cache(mean, 7, omitArgs = "x", .cacheExtra = "234", cacheRepo = tmpCache)
+  })
   expect_true(out6 - 6 == 0) # takes first one
   expect_equivalent(out5, out6) # the attributes will be different because one is a recovery of the other
-
 })
