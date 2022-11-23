@@ -21,26 +21,29 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
     return(invisible(cachePath))
   }
 
+  browser()
   checkPath(cachePath, create = TRUE)
   checkPath(CacheStorageDir(cachePath), create = TRUE)
-  if (useDBI()) {
-    if (is.null(conn)) {
-      conn <- dbConnectAll(drv, cachePath = cachePath)
-      on.exit(dbDisconnect(conn))
+  if (!getOption("reproducible.useMultipleDBFiles", FALSE)) {
+    if (useDBI()) {
+      if (is.null(conn)) {
+        conn <- dbConnectAll(drv, cachePath = cachePath)
+        on.exit(dbDisconnect(conn))
+      }
     }
-  }
-  dt <- .emptyCacheTable
+    dt <- .emptyCacheTable
 
-  # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
-  a <- retry(retries = 250, exponentialDecayBase = 1.01,
-        quote(dbListTables(conn)))
+    # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
+    a <- retry(retries = 250, exponentialDecayBase = 1.01,
+               quote(dbListTables(conn)))
 
-  if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
-    #retry(retries = 5, exponentialDecayBase = 1.5, quote(
+    if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
+      #retry(retries = 5, exponentialDecayBase = 1.5, quote(
       try(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
-                   field.types = c(cacheId = "text", tagKey = "text",
-                                   tagValue = "text", createdDate = "text")), silent = TRUE)
+                       field.types = c(cacheId = "text", tagKey = "text",
+                                       tagValue = "text", createdDate = "text")), silent = TRUE)
     #)
+  }
 }
 
 #' @rdname cache-tools
@@ -150,7 +153,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
   if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
-    dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
+    dtFile <- CacheDBFilesMultiple(cachePath = cachePath, cacheId = cacheId)
     saveFileInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
 
   } else {
@@ -269,33 +272,48 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
   if (length(cacheId) > 0) {
     if (length(cacheId) > 1) stop(".addTagsRepo can only handle appending 1 tag at a time")
     if (useDBI()) {
-      if (is.null(conn)) {
-        conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
-        on.exit(dbDisconnect(conn))
-      }
+
       curTime <- as.character(Sys.time())
       if (length(tagKey) < length(cacheId))
         tagKey <- "accessed"
       if (length(tagValue) < length(cacheId))
         tagValue <- curTime
 
-      # This is what the next code pair of lines does
-      # dt <- data.table("cacheId" = cacheId, "tagKey" = "accessed",
-      #                 "tagValue" = as.character(Sys.time()),
-      #                 "createdDate" = as.character(Sys.time()))
-      #
-      # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
-      rs <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-        dbSendStatement(
-          conn,
-          paste0("insert into \"", CacheDBTableName(cachePath, drv), "\"",
-                 " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
-                 "('", cacheId,
-                 "', '", tagKey, "', '", tagValue, "', '", curTime, "')"))
-      ))
+      if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
+        dtNew <- data.table("cacheId" = cacheId, "tagKey" = "accessed",
+                            "tagValue" = as.character(Sys.time()),
+                            "createdDate" = as.character(Sys.time()))
+        # dtFile <- CacheDBFilesMultiple(cachePath = cachePath, cacheId = cacheId)
+        # dtOld <- loadFile(dtFile)
+        # dt <- rbindlist(list(dtOld, dtNew))
+        # saveFileInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
+        appendDBMultiple(cachePath, cacheId, dtNew)
 
-      dbClearResult(rs)
+      } else {
+
+        if (is.null(conn)) {
+          conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
+          on.exit(dbDisconnect(conn))
+        }
+        # This is what the next code pair of lines does
+        # dt <- data.table("cacheId" = cacheId, "tagKey" = "accessed",
+        #                 "tagValue" = as.character(Sys.time()),
+        #                 "createdDate" = as.character(Sys.time()))
+        #
+        # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
+        rs <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
+          dbSendStatement(
+            conn,
+            paste0("insert into \"", CacheDBTableName(cachePath, drv), "\"",
+                   " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
+                   "('", cacheId,
+                   "', '", tagKey, "', '", tagValue, "', '", curTime, "')"))
+        ))
+
+        dbClearResult(rs)
+      }
     }
+
   }
 }
 
@@ -317,27 +335,35 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
         warning("tagKey and/or tagValue must both be supplied for .updateTagsRepo.")
         return(invisible())
       }
+      if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
+        dtNew <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
+                            "tagValue" = tagValue,
+                            "createdDate" = as.character(Sys.time()))
+        appendDBMultiple(cachePath, cacheId, dtNew, updateCols = c("cacheId", "tagKey"))
 
-      # This is what the next code pair of lines does
-      # dt <- data.table("cacheId" = cacheId, "tagKey" = "accessed",
-      #                 "tagValue" = as.character(Sys.time()),
-      #                 "createdDate" = as.character(Sys.time()))
-      #
-      # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
-      rs <- #retry(retries = 250, exponentialDecayBase = 1.01, quote(
-        dbSendStatement(
-          conn,
-          paste0("update \"", CacheDBTableName(cachePath, drv), "\"",
-                 " set \"tagValue\" = '",tagValue,"' where ",
-                 " \"cacheId\" = '",cacheId, "'", " AND \"tagKey\" = '",tagKey, "'"))
-      #))
-      affectedAnyRows <- DBI::dbGetRowsAffected(rs) > 0
-      dbClearResult(rs)
-      if (!affectedAnyRows) {
-        if (isTRUE(add)) {
-          .addTagsRepo(cacheId, cachePath, tagKey, tagValue, drv = drv, conn = conn)
+      } else {
+        # This is what the next code pair of lines does
+        # dt <- data.table("cacheId" = cacheId, "tagKey" = "accessed",
+        #                 "tagValue" = as.character(Sys.time()),
+        #                 "createdDate" = as.character(Sys.time()))
+        #
+        # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
+        rs <- #retry(retries = 250, exponentialDecayBase = 1.01, quote(
+          dbSendStatement(
+            conn,
+            paste0("update \"", CacheDBTableName(cachePath, drv), "\"",
+                   " set \"tagValue\" = '",tagValue,"' where ",
+                   " \"cacheId\" = '",cacheId, "'", " AND \"tagKey\" = '",tagKey, "'"))
+        #))
+        affectedAnyRows <- DBI::dbGetRowsAffected(rs) > 0
+        dbClearResult(rs)
+        if (!affectedAnyRows) {
+          if (isTRUE(add)) {
+            .addTagsRepo(cacheId, cachePath, tagKey, tagValue, drv = drv, conn = conn)
+          }
         }
       }
+
     } else {
       warning("updateTagsRepo not implemented when useDBI = FALSE")
     }
@@ -478,7 +504,6 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
                           conn = getOption("reproducible.conn", NULL)) {
   checkPath(cachePath, create = TRUE)
-  # browser(expr = exists("._CacheIsACache_1"))
   if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
@@ -488,10 +513,13 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   }
 
   ret <- FALSE
-  # browser(expr = exists("jjjj"))
-  ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
-               list.files(cachePath))
-  if (useDBI()) {
+  if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
+    ret <- dir.exists(CacheStorageDir(cachePath))
+  } else {
+    ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
+                 list.files(cachePath))
+  }
+  if (useDBI() && !(getOption("reproducible.useMultipleDBFiles", FALSE))) {
     # browser(expr = exists("._CacheIsACache_2"))
     if (ret) {
       tablesInDB <- retry(retries = 250, exponentialDecayBase = 1.01,
@@ -631,7 +659,33 @@ saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
   fs
 }
 
-CacheDBFileSingle <- function(cachePath, cacheId) {
-  paste0(CacheStoredFile(cachePath = cachePath, hash = cacheId),
-         paste0(".dt.", getOption("reproducible.cacheSaveFormat")))
+CacheDBFilesMultiple <- function(cachePath, cacheId) {
+  ending <- paste0(".dt.", getOption("reproducible.cacheSaveFormat"))
+  if (missing(cacheId)) {
+    dir(CacheStorageDir(cachePath), pattern = ending, full.names = TRUE)
+  } else {
+    paste0(CacheStoredFile(cachePath = cachePath, hash = cacheId), ending)
+  }
 }
+
+appendDBMultiple <- function(cachePath, cacheId, dt, updateCols) {
+  dtFile <- CacheDBFilesMultiple(cachePath = cachePath, cacheId = cacheId)
+  dtOld <- loadFile(dtFile)
+  if (missing(updateCols)) {
+    dt <- rbindlist(list(dtOld, dt))
+  } else {
+    wh <- Map(uc = updateCols, function(uc) {
+      dtOld[[uc]] == dt[[uc]]
+    })
+    updateRow <- Reduce(`&`, wh)
+    if (any(updateRow)) {
+      vals <- setdiff(colnames(dtOld), updateCols)
+      set(dtOld, which(updateRow), vals, dt[, ..vals])
+      dt <- dtOld
+    } else {
+      dt <- rbindlist(list(dtOld, dt))
+    }
+  }
+  saveFileInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
+}
+

@@ -367,31 +367,38 @@ setMethod(
     }
 
     if (useDBI()) {
-      if (is.null(conn)) {
-        conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
-        if (is.null(conn)) {
-          return(invisible(.emptyCacheTable))
-        }
-        on.exit({
-          dbDisconnect(conn)
-        })
-      }
-      if (useDBI()) {
-        if (!CacheIsACache(x, drv = drv, conn = conn))
-          return(invisible(.emptyCacheTable))
-      }
+      if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
+        browser()
+        CacheIsACache(x, drv = drv, conn = conn)
 
-      dbTabNam <- CacheDBTableName(x, drv = drv)
-      # tab <- dbReadTable(conn, dbTabNam)
-      res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-        dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
-      tab <- dbFetch(res)
-      dbClearResult(res)
-      if (is(tab, "try-error"))
-        objsDT <- .emptyCacheTable
-      else
-        objsDT <- setDT(tab)
-      #setkeyv(objsDT, "cacheId")
+        filesInMultiple <- CacheDBFilesMultiple(x)
+        objsDT <- rbindlist(lapply(filesInMultiple, loadFile))
+      } else {
+        if (is.null(conn)) {
+          conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
+          if (is.null(conn)) {
+            return(invisible(.emptyCacheTable))
+          }
+          on.exit({
+            dbDisconnect(conn)
+          })
+        }
+        if (useDBI()) {
+          if (!CacheIsACache(x, drv = drv, conn = conn))
+            return(invisible(.emptyCacheTable))
+        }
+
+        dbTabNam <- CacheDBTableName(x, drv = drv)
+        # tab <- dbReadTable(conn, dbTabNam)
+        res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
+          dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
+        tab <- dbFetch(res)
+        dbClearResult(res)
+        if (is(tab, "try-error"))
+          objsDT <- .emptyCacheTable
+        else
+          objsDT <- setDT(tab)
+      }
     }
 
     if (NROW(objsDT) > 0) {

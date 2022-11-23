@@ -489,10 +489,14 @@ setMethod(
 
       if (useDBI()) {
         if (is.null(conn)) {
-          conn <- dbConnectAll(drv, cachePath = cacheRepo)
-          RSQLite::dbClearResult(RSQLite::dbSendQuery(conn, "PRAGMA busy_timeout=5000;"))
-          RSQLite::dbClearResult(RSQLite::dbSendQuery(conn, "PRAGMA journal_mode=WAL;"))
-          on.exit({dbDisconnect(conn)}, add = TRUE)
+          if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
+            conn <- cacheRepo
+          } else {
+            conn <- dbConnectAll(drv, cachePath = cacheRepo)
+            RSQLite::dbClearResult(RSQLite::dbSendQuery(conn, "PRAGMA busy_timeout=5000;"))
+            RSQLite::dbClearResult(RSQLite::dbSendQuery(conn, "PRAGMA journal_mode=WAL;"))
+            on.exit({dbDisconnect(conn)}, add = TRUE)
+          }
         }
       }
 
@@ -647,7 +651,7 @@ setMethod(
           if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
             csf <- CacheStoredFile(cachePath = cacheRepo, hash = outputHash)
             if (file.exists(csf)) {
-              dtFile <- CacheDBFileSingle(cachePath = cacheRepo, cacheId = outputHash)
+              dtFile <- CacheDBFilesMultiple(cachePath = cacheRepo, cacheId = outputHash)
               isInRepo <- loadFile(dtFile)
             } else {
               isInRepo <- data.table::copy(.emptyCacheTable)
