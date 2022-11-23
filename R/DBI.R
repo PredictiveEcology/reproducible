@@ -149,8 +149,14 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   }
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
-  a <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-    dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
+  if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
+    dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
+    saveFileInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
+
+  } else {
+    a <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
+      dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
+  }
 
   return(obj)
 }
@@ -623,4 +629,9 @@ saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
     fs <- file.size(fts)
   }
   fs
+}
+
+CacheDBFileSingle <- function(cachePath, cacheId) {
+  paste0(CacheStoredFile(cachePath = cachePath, hash = cacheId),
+         paste0(".dt.", getOption("reproducible.cacheSaveFormat")))
 }

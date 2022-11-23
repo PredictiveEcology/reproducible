@@ -644,20 +644,30 @@ setMethod(
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
         if (useDBI()) {
-          # browser(expr = exists("._Cache_3"))
-          dbTabNam <- CacheDBTableName(repo, drv = drv)
-          if (tries > 1) {
-            dbDisconnect(conn)
-            conn <- dbConnectAll(drv, cachePath = repo)
+          if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
+            csf <- CacheStoredFile(cachePath = cacheRepo, hash = outputHash)
+            if (file.exists(csf)) {
+              dtFile <- CacheDBFileSingle(cachePath = cacheRepo, cacheId = outputHash)
+              isInRepo <- loadFile(dtFile)
+            } else {
+              isInRepo <- data.table::copy(.emptyCacheTable)
+            }
+          } else {
+            # browser(expr = exists("._Cache_3"))
+            dbTabNam <- CacheDBTableName(repo, drv = drv)
+            if (tries > 1) {
+              dbDisconnect(conn)
+              conn <- dbConnectAll(drv, cachePath = repo)
+            }
+            qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
+                                  dbTabName = dbTabNam,
+                                  outputHash = outputHash,
+                                  .con = conn)
+            res <- retry(retries = 15, exponentialDecayBase = 1.01,
+                         quote(dbSendQuery(conn, qry)))
+            isInRepo <- setDT(dbFetch(res))
+            dbClearResult(res)
           }
-          qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
-                                dbTabName = dbTabNam,
-                                outputHash = outputHash,
-                                .con = conn)
-          res <- retry(retries = 15, exponentialDecayBase = 1.01,
-                       quote(dbSendQuery(conn, qry)))
-          isInRepo <- setDT(dbFetch(res))
-          dbClearResult(res)
         }
         fullCacheTableForObj <- isInRepo
         if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
