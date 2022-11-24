@@ -11,7 +11,8 @@ mergeCache(
   drvTo = getOption("reproducible.drv", RSQLite::SQLite()),
   drvFrom = getOption("reproducible.drv", RSQLite::SQLite()),
   connTo = NULL,
-  connFrom = NULL
+  connFrom = NULL,
+  verbose = getOption("reproducible.verbose")
 )
 
 \S4method{mergeCache}{ANY}(
@@ -20,7 +21,8 @@ mergeCache(
   drvTo = getOption("reproducible.drv", RSQLite::SQLite()),
   drvFrom = getOption("reproducible.drv", RSQLite::SQLite()),
   connTo = NULL,
-  connFrom = NULL
+  connFrom = NULL,
+  verbose = getOption("reproducible.verbose")
 )
 }
 \arguments{
