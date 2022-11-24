@@ -713,6 +713,7 @@ CacheDBFilesMultiple <- function(cachePath = getOption("reproducible.cachePath")
   if (length(outExists)) {
     if (allowConvertFormat)
       if (!identical(outOught, outExists)) {
+        browser() # These may need to be sorted so that outExists and outOught are same order
         # Means it has changed format
         convertBetweenFormat(filenameActual = outExists, filenameOught = outOught,
                              cachePath, cacheId, drv, conn)
