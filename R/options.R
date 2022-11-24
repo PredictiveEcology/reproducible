@@ -172,13 +172,14 @@
 reproducibleOptions <- function() {
   list( # nolint
     reproducible.ask = TRUE,
-    reproducible.cachePath = .reproducibleTempCacheDir(),
+    reproducible.cachePath = file.path(tempdir(), "reproducible", "cache"),
     reproducible.cacheSaveFormat = "rds",
     reproducible.cacheSpeed = "slow",
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
     reproducible.drv = RSQLite::SQLite(),
     reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
+    reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
     reproducible.length = Inf,
@@ -192,7 +193,7 @@ reproducibleOptions <- function() {
     reproducible.shapefileRead = NULL, # TODO: change in next release
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
-    reproducible.tempPath = .reproducibleTempPath(),
+    reproducible.tempPath = file.path(tempdir(), "reproducible"),
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
     reproducible.useDBI = TRUE,

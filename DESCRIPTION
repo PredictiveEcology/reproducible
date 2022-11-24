@@ -57,7 +57,6 @@ Imports:
     lobstr,
     magrittr,
     methods,
-    Require,
     raster (>= 3.5-15),
     RSQLite,
     rlang,
@@ -107,12 +106,12 @@ Collate:
     'objectSize.R'
     'options.R'
     'packages.R'
+    'paths.R'
     'pipe.R'
     'postProcess.R'
     'postProcessTerra.R'
     'preProcess.R'
     'prepInputs.R'
-    'reexports.R'
     'reproducible-deprecated.R'
     'reproducible-package.R'
     'search.R'

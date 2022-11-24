@@ -1,6 +1,4 @@
 .onLoad <- function(libname, pkgname) {
-  Require::checkPath(.reproducibleTempCacheDir(), create = TRUE)
-  Require::checkPath(.reproducibleTempInputDir(), create = TRUE)
 
   ## set options using the approach used by devtools
   opts <- options()
@@ -33,9 +31,9 @@
   options(o)
 }
 
-.reproducibleTempPath <- function() Require::tempdir2()
-.reproducibleTempCacheDir <- function() Require::tempdir2("cache")
-.reproducibleTempInputDir <- function() Require::tempdir2("inputs")
+.reproducibleTempPath <- function() getOption("reproducible.tempPath")#file.path(tempdir(), "reproducible")
+.reproducibleTempCacheDir <- function()  getOption("reproducible.cachePath")
+.reproducibleTempInputDir <- function() file.path(tempdir(), "reproducible", "inputs")
 
 .argsToRemove <- argsToRemove <- unique(c(names(formals(prepInputs)),
                                           names(formals(cropInputs)),

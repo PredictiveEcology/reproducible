@@ -2032,7 +2032,6 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots,
 
 #' @importFrom raster projectExtent
 #' @importFrom sp wkt
-#' @importFrom Require normPath
 postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                                   useCache = getOption("reproducible.useCache", FALSE),
                                   filename1,

@@ -209,7 +209,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
 }
 
 #' @importFrom raster tmpDir
-bigRastersTmpFolder <- function() checkPath(Require::tempdir2(sub = "bigRasters"), create = TRUE)
+bigRastersTmpFolder <- function() checkPath(tempdir2(sub = "bigRasters"), create = TRUE)
 
 bigRastersTmpFile <- function() file.path(bigRastersTmpFolder(), "bigRasInput.tif")
 
