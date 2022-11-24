@@ -264,7 +264,8 @@
   } else {
     loadFromMgs <- "Loading from repo"
     if (useDBI()) {
-      output <- loadFromCache(cacheRepo, isInRepo[[.cacheTableHashColName()[lastOne]]],
+      output <- loadFromCache(cachePath = cacheRepo,
+                              cacheId = isInRepo[[.cacheTableHashColName()[lastOne]]],
                               drv = drv, conn = conn)
     }
   }

@@ -32,12 +32,10 @@ This \code{cloudFolderID} will be added to \code{options("reproducible.cloudFold
 but this will not persist across sessions. If this is a character string, it will
 treat this as a folder name to create or use on GoogleDrive.}
 
-\item{drv}{an object that inherits from \linkS4class{DBIDriver},
-or an existing \linkS4class{DBIConnection}
+\item{drv}{an object that inherits from DBIDriver, or an existing DBIConnection
 object (in order to clone an existing connection).}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{A DBIConnection object, as returned by DBI:dbConnect.}
 }
 \description{
 Meant for internal use, as there are internal objects as arguments.

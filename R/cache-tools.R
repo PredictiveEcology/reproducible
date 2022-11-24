@@ -183,6 +183,7 @@ setMethod(
     }
 
     if (isInteractive()) {
+      if (exists("aaa")) browser()
       objSizes <- as.numeric(objsDT[tagKey == "object.size"][[.cacheTableTagColName()]])
       cacheSize <- sum(objSizes) / 4
     }
@@ -234,7 +235,7 @@ setMethod(
       if (useDBI()) {
         if (is.null(conn)) {
           conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
-          on.exit({dbDisconnect(conn)})
+          on.exit(dbDisconnectAll(conn, drv = drv, cachePath = x))
         }
         rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
         if (isTRUE(getOption("reproducible.useMemoise")))
@@ -312,7 +313,7 @@ cc <- function(secs, ...) {
 #' @inheritParams clearCache
 #'
 #' @export
-#' @importFrom DBI dbSendQuery dbFetch dbClearResult
+# #' @importFrom DBI dbSendQuery dbFetch dbClearResult
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
 #' @seealso \code{\link{mergeCache}}. Many more examples
@@ -368,10 +369,8 @@ setMethod(
 
     if (useDBI()) {
       if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
-        browser()
         CacheIsACache(x, drv = drv, conn = conn)
-
-        filesInMultiple <- CacheDBFilesMultiple(x)
+        filesInMultiple <- CacheDBFilesMultiple(cachePath = x, drv = drv, conn = conn)
         objsDT <- rbindlist(lapply(filesInMultiple, loadFile))
       } else {
         if (is.null(conn)) {
@@ -379,9 +378,7 @@ setMethod(
           if (is.null(conn)) {
             return(invisible(.emptyCacheTable))
           }
-          on.exit({
-            dbDisconnect(conn)
-          })
+              on.exit(dbDisconnectAll(conn, drv = drv, cachePath = x))
         }
         if (useDBI()) {
           if (!CacheIsACache(x, drv = drv, conn = conn))
@@ -391,9 +388,9 @@ setMethod(
         dbTabNam <- CacheDBTableName(x, drv = drv)
         # tab <- dbReadTable(conn, dbTabNam)
         res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-          dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
-        tab <- dbFetch(res)
-        dbClearResult(res)
+          DBI::dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
+        tab <- DBI::dbFetch(res)
+        DBI::dbClearResult(res)
         if (is(tab, "try-error"))
           objsDT <- .emptyCacheTable
         else
@@ -532,12 +529,14 @@ setMethod(
   definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom) {
     if (is.null(connTo)) {
       connTo <- dbConnectAll(drvTo, cachePath = cacheTo)
-      on.exit(dbDisconnect(connTo), add = TRUE)
+      on.exit(dbDisconnectAll(connTo, drv = drvTo, cachePath = cacheTo), add = TRUE)
+#       on.exit(DBI::dbDisconnect(connTo), add = TRUE)
     }
 
     if (is.null(connFrom)) {
       connFrom <- dbConnectAll(drvFrom, cachePath = cacheFrom)
-      on.exit(dbDisconnect(connFrom), add = TRUE)
+      on.exit(dbDisconnectAll(connFrom, drv = drvFrom, cachePath = cacheFrom), add = TRUE)
+      # on.exit(DBI::dbDisconnect(connFrom), add = TRUE)
     }
 
     suppressMessages({
@@ -738,6 +737,14 @@ useDBI <- function() {
   if (isFALSE(ud)) {
     stop("options('reproducible.useDBI') can only be TRUE in this and future versions of reproducible",
          call. = FALSE)
+  }
+  if (!getOption("reproducible.useMultipleDBFiles", FALSE)) {
+    if (!requireNamespace("DBI", quietly = TRUE))
+      .requireNamespace("DBI")
+    if (!requireNamespace("RSQLite"))
+      .requireNamespace("RSQLite")
+    if (!requireNamespace("glue"))
+      .requireNamespace("glue")
   }
   ud
 }

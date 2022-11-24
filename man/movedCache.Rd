@@ -19,12 +19,10 @@ the new DB Table Name}
 Either the path of the previous \code{cachePath} where the cache was moved or copied from, or
 the old DB Table Name}
 
-\item{drv}{an object that inherits from \linkS4class{DBIDriver},
-or an existing \linkS4class{DBIConnection}
+\item{drv}{an object that inherits from DBIDriver, or an existing DBIConnection
 object (in order to clone an existing connection).}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{A DBIConnection object, as returned by DBI:dbConnect.}
 }
 \description{
 If a user manually copies a complete Cache folder (including the db file and rasters folder),
