@@ -3,7 +3,6 @@
 \name{Copy}
 \alias{Copy}
 \alias{Copy,ANY-method}
-\alias{Copy,SQLiteConnection-method}
 \alias{Copy,data.table-method}
 \alias{Copy,list-method}
 \alias{Copy,refClass-method}
@@ -14,8 +13,6 @@
 Copy(object, ...)
 
 \S4method{Copy}{ANY}(object, ...)
-
-\S4method{Copy}{SQLiteConnection}(object, ...)
 
 \S4method{Copy}{data.table}(object, ...)
 
@@ -46,12 +43,10 @@ copied and could therefore cause a collision as the
 pre-copied object and post-copied object would have the same
 file backing them.}
 
-\item{drv}{an object that inherits from \linkS4class{DBIDriver},
-or an existing \linkS4class{DBIConnection}
+\item{drv}{an object that inherits from DBIDriver, or an existing DBIConnection
 object (in order to clone an existing connection).}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{A DBIConnection object, as returned by DBI:dbConnect.}
 }
 \description{
 When copying environments and all the objects contained within them, there are

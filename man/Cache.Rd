@@ -173,12 +173,10 @@ the next most similar archive, and indicate which argument(s) is/are different.
 If a number larger than \code{1}, then it will report the N most similar archived
 objects.}
 
-\item{drv}{an object that inherits from \linkS4class{DBIDriver},
-or an existing \linkS4class{DBIConnection}
+\item{drv}{an object that inherits from DBIDriver, or an existing DBIConnection
 object (in order to clone an existing connection).}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{A DBIConnection object, as returned by DBI:dbConnect.}
 }
 \value{
 As with \code{archivist::cache}, returns the value of the

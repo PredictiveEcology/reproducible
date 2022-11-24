@@ -26,12 +26,10 @@ Should be 0 to start.}
 \item{userTags}{Character string of tags to attach to this \code{outputToSave} in
 the \code{CacheRepo}}
 
-\item{drv}{an object that inherits from \linkS4class{DBIDriver},
-or an existing \linkS4class{DBIConnection}
+\item{drv}{an object that inherits from DBIDriver, or an existing DBIConnection
 object (in order to clone an existing connection).}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{A DBIConnection object, as returned by DBI:dbConnect.}
 
 \item{cacheId}{Character string. If passed, this will override the calculated hash
 of the inputs, and return the result from this cacheId in the cacheRepo.

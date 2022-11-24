@@ -38,12 +38,10 @@ CacheIsACache(
 \item{cachePath}{A path describing the directory in which to create
 the database file(s)}
 
-\item{drv}{an object that inherits from \linkS4class{DBIDriver},
-or an existing \linkS4class{DBIConnection}
+\item{drv}{an object that inherits from DBIDriver, or an existing DBIConnection
 object (in order to clone an existing connection).}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{A DBIConnection object, as returned by DBI:dbConnect.}
 
 \item{hash}{The cacheId or otherwise digested hash value, as character string.}
 
