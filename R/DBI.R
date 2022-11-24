@@ -644,38 +644,61 @@ loadFile <- function(file, format) {
   # browser(expr = exists("._loadFile_1"))
   if (missing(format))
     format <- fileExt(file)
-  if (format == "qs") {
-    .requireNamespace("qs", stopOnFALSE = TRUE)
-    obj <- qs::qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
-  } else {
-    obj <- readRDS(file = file)
-  }
+  fileLock <- paste0(file, ".lock")
+  theLock <- filelock::lock(fileLock)
+  on.exit({
+    filelock::unlock(theLock)
+  })
+  suppressWarningsSpecific(falseWarnings = "invalid or incomplete compressed data", obj <- retry(silent = TRUE, quote({
+    if (format == "qs") {
+      .requireNamespace("qs", stopOnFALSE = TRUE)
+      obj <- qs::qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
+    } else {
+      obj <- readRDS(file = file)
+    }
+    obj
+  }), retries = 30, exponentialDecayBase = 1.001))
+  if (is(obj, "try-error")) stop("Couldn't access the Cached object; is there another process reading or writing to the Cache")
+  obj
 }
 
 saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
   if (missing(fts))
     fts <- CacheStoredFile(cachePath, cacheId)
 
-  if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
-    .requireNamespace("qs", stopOnFALSE = TRUE)
-    for (attempt in 1:2) {
-      fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
-                      preset = getOption("reproducible.qsavePreset", "high"))
-      fs1 <- file.size(fts)
-      if (!identical(fs, fs1)) {
-        if (attempt == 1) {
-          warning("Attempted to save to Cache, but save seemed to fail; trying again")
-        } else {
-          stop("Saving to Cache did not work correctly; file appears corrupted. Please retry")
+
+  fileLock <- paste0(fts, ".lock")
+  theLock <- filelock::lock(fileLock)
+  on.exit({
+    filelock::unlock(theLock)
+  })
+  suppressWarningsSpecific(
+    falseWarnings = "invalid or incomplete compressed data",
+    fs <- retry(silent = TRUE, quote({
+
+
+      if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
+        .requireNamespace("qs", stopOnFALSE = TRUE)
+        for (attempt in 1:2) {
+          fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
+                          preset = getOption("reproducible.qsavePreset", "high"))
+          fs1 <- file.size(fts)
+          if (!identical(fs, fs1)) {
+            if (attempt == 1) {
+              warning("Attempted to save to Cache, but save seemed to fail; trying again")
+            } else {
+              stop("Saving to Cache did not work correctly; file appears corrupted. Please retry")
+            }
+          } else {
+            break
+          }
         }
       } else {
-        break
+        saveRDS(obj, file = fts)
+        fs <- file.size(fts)
       }
-    }
-  } else {
-    saveRDS(obj, file = fts)
-    fs <- file.size(fts)
-  }
+      fs
+    })))
   fs
 }
 
@@ -690,6 +713,7 @@ CacheDBFilesMultiple <- function(cachePath = getOption("reproducible.cachePath")
 
   # Get just the ones that have
   outExists <- normPath(dir(CacheStorageDir(cachePath), pattern = ending, full.names = TRUE))
+  outExists <- grep("\\.lock$", outExists, value = TRUE, invert = TRUE)
   if (missing(cacheId)) {
     outOught <- outExists
   } else {

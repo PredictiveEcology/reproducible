@@ -51,6 +51,7 @@ Depends:
 Imports:
     data.table (>= 1.10.4),
     digest,
+    filelock,
     fpCompare,
     lobstr,
     magrittr,
