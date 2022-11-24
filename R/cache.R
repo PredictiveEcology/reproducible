@@ -344,9 +344,14 @@ utils::globalVariables(c(
 #'        If a number larger than \code{1}, then it will report the N most similar archived
 #'        objects.
 #'
+#' @param drv an object that inherits from DBIDriver, or an existing DBIConnection
+#'            object (in order to clone an existing connection).
+#'
+#' @param conn A DBIConnection object, as returned by DBI:dbConnect.
+#'
 #' @inheritParams digest::digest
-#' @inheritParams DBI::dbConnect
-#' @inheritParams DBI::dbWriteTable
+# #' @inheritParams DBI::dbConnect
+# #' @inheritParams DBI::dbWriteTable
 #'
 #' @param digestPathContent Being deprecated. Use \code{quick}.
 #'
@@ -373,10 +378,10 @@ utils::globalVariables(c(
 #' @importClassesFrom sp SpatialPointsDataFrame
 #' @importClassesFrom sp SpatialPolygons
 #' @importClassesFrom sp SpatialPolygonsDataFrame
-#' @importFrom DBI SQL
+# #' @importFrom DBI SQL
 #' @importFrom digest digest
 #' @importFrom data.table setDT := setkeyv .N .SD setattr
-#' @importFrom glue glue_sql double_quote
+# #' @importFrom glue glue_sql double_quote
 #' @importFrom magrittr %>%
 #' @importFrom utils object.size tail methods
 #' @importFrom methods formalArgs
@@ -495,7 +500,8 @@ setMethod(
             conn <- dbConnectAll(drv, cachePath = cacheRepo)
             RSQLite::dbClearResult(RSQLite::dbSendQuery(conn, "PRAGMA busy_timeout=5000;"))
             RSQLite::dbClearResult(RSQLite::dbSendQuery(conn, "PRAGMA journal_mode=WAL;"))
-            on.exit({dbDisconnect(conn)}, add = TRUE)
+            on.exit(dbDisconnectAll(conn, drv = drv, cachePath = cacheRepo), add = TRUE)
+            # on.exit({DBI::dbDisconnect(conn)}, add = TRUE)
           }
         }
       }
@@ -526,7 +532,8 @@ setMethod(
       conns <- list()
       on.exit({done <- lapply(conns, function(co) {
         if (!identical(co, conns[[1]])) {
-          try(dbDisconnect(co), silent = TRUE)
+          try(dbDisconnectAll(co, drv = drv, cachePath = cacheRepo), silent = TRUE)
+          # try(DBI::dbDisconnect(co), silent = TRUE)
         }})}, add = TRUE)
       isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
         # browser(expr = exists("._Cache_18"))
@@ -660,17 +667,18 @@ setMethod(
             # browser(expr = exists("._Cache_3"))
             dbTabNam <- CacheDBTableName(repo, drv = drv)
             if (tries > 1) {
-              dbDisconnect(conn)
+              dbDisconnectAll(conn, drv = drv, cachePath = repo)
+              # DBI::dbDisconnect(conn)
               conn <- dbConnectAll(drv, cachePath = repo)
             }
-            qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
+            qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(glue::double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
                                   dbTabName = dbTabNam,
                                   outputHash = outputHash,
                                   .con = conn)
             res <- retry(retries = 15, exponentialDecayBase = 1.01,
-                         quote(dbSendQuery(conn, qry)))
-            isInRepo <- setDT(dbFetch(res))
-            dbClearResult(res)
+                         quote(DBI::dbSendQuery(conn, qry)))
+            isInRepo <- setDT(DBI::dbFetch(res))
+            DBI::dbClearResult(res)
           }
         }
         fullCacheTableForObj <- isInRepo
@@ -998,9 +1006,9 @@ setMethod(
                               dbTabName = dbTabNam,
                               .con = conn)
         res <- retry(retries = 15, exponentialDecayBase = 1.01,
-                     quote(dbSendQuery(conn, qry)))
-        allCache <- setDT(dbFetch(res))
-        dbClearResult(res)
+                       quote(DBI::dbSendQuery(conn, qry)))
+          allCache <- setDT(DBI::dbFetch(res))
+          DBI::dbClearResult(res)
         if (NROW(allCache)) {
           alreadyExists <- allCache[allCache$tagKey == "resultHash" & allCache$tagValue %in% resultHash]
           if (NROW(alreadyExists)) {

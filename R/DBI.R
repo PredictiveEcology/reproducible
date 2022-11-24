@@ -1,3 +1,8 @@
+utils::globalVariables(c(
+  "..vals"
+  ))
+
+
 #' Create a new cache
 #'
 #' @param cachePath A path describing the directory in which to create
@@ -6,9 +11,9 @@
 #' @param force Logical. Should it create a cache in the \code{cachePath},
 #'   even if it already exists, overwriting.
 #' @importFrom data.table data.table
-#' @importFrom DBI dbConnect dbDisconnect dbWriteTable
-#' @inheritParams DBI::dbConnect
-#' @inheritParams DBI::dbWriteTable
+# #' @importFrom DBI dbConnect dbDisconnect dbWriteTable
+# #' @inheritParams DBI::dbConnect
+# #' @inheritParams DBI::dbWriteTable
 #' @rdname cache-tools
 #' @export
 createCache <- function(cachePath = getOption("reproducible.cachePath"),
@@ -21,25 +26,24 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
     return(invisible(cachePath))
   }
 
-  browser()
   checkPath(cachePath, create = TRUE)
   checkPath(CacheStorageDir(cachePath), create = TRUE)
   if (!getOption("reproducible.useMultipleDBFiles", FALSE)) {
     if (useDBI()) {
       if (is.null(conn)) {
         conn <- dbConnectAll(drv, cachePath = cachePath)
-        on.exit(dbDisconnect(conn))
+        on.exit(dbDisconnectAll(conn, drv = drv, cachePath = cachePath))
       }
     }
     dt <- .emptyCacheTable
 
     # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
     a <- retry(retries = 250, exponentialDecayBase = 1.01,
-               quote(dbListTables(conn)))
+               quote(DBI::dbListTables(conn)))
 
     if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
       #retry(retries = 5, exponentialDecayBase = 1.5, quote(
-      try(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
+      try(DBI::dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
                        field.types = c(cacheId = "text", tagKey = "text",
                                        tagValue = "text", createdDate = "text")), silent = TRUE)
     #)
@@ -60,7 +64,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   # browser(expr = exists("._saveToCache_1"))
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
-    on.exit(dbDisconnect(conn))
+        on.exit(dbDisconnectAll(conn, drv = drv, cachePath = cachePath))
   }
 
   if (missing(userTags)) userTags = "otherFunctions"
@@ -95,26 +99,6 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   if (is.null(linkToCacheId)) {
     fs <- saveFileInCacheFolder(obj, fts)
-    # if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
-    #   .requireNamespace("qs", stopOnFALSE = TRUE)
-    #   for (attempt in 1:2) {
-    #     fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
-    #                     preset = getOption("reproducible.qsavePreset", "high"))
-    #     fs1 <- file.size(fts)
-    #     if (!identical(fs, fs1)) {
-    #       if (attempt == 1) {
-    #         warning("Attempted to save to Cache, but save seemed to fail; trying again")
-    #       } else {
-    #         stop("Saving to Cache did not work correctly; file appears corrupted. Please retry")
-    #       }
-    #     } else {
-    #       break
-    #     }
-    #   }
-    # } else {
-    #   saveRDS(obj, file = fts)
-    #   fs <- file.size(fts)
-    # }
   }
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     if (is.null(.pkgEnv[[cachePath]]))
@@ -158,7 +142,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   } else {
     a <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-      dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
+      DBI::dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
   }
 
   return(obj)
@@ -214,7 +198,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
 #' Low level tools to work with Cache
 #'
-#' @importFrom DBI dbClearResult dbSendStatement dbBind dbAppendTable
+# #' @importFrom DBI dbClearResult dbSendStatement dbBind dbAppendTable
 #' @export
 #' @rdname cache-tools
 rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
@@ -223,47 +207,57 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                         format = getOption("reproducible.cacheSaveFormat", "rds")) {
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
-    on.exit(dbDisconnect(conn))
+    on.exit(dbDisconnectAll(conn, drv = drv, cachePath = cachePath))
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
   query <- glue::glue_sql(
-    "DELETE FROM {DBI::SQL(double_quote(dbTabName))} WHERE \"cacheId\" IN ({cacheId*})",
+      "DELETE FROM {DBI::SQL(glue::double_quote(dbTabName))} WHERE \"cacheId\" IN ({cacheId*})",
     dbTabName = CacheDBTableName(cachePath, drv),
     cacheId = cacheId,
     .con = conn)
-  res <- dbSendQuery(conn, query)
+    res <- DBI::dbSendQuery(conn, query)
 
   if (FALSE)   { # this is the "unsafe" version
     query <- paste0("DELETE FROM \"", CacheDBTableName(cachePath, drv), "\" WHERE \"cacheId\" = $1")
-    res <- dbSendStatement(conn, query)
-    dbBind(res, list(cacheId))
+      res <- DBI::dbSendStatement(conn, query)
+      DBI::dbBind(res, list(cacheId))
   }
 
-  dbClearResult(res)
+    DBI::dbClearResult(res)
+    unlink(CacheStoredFile(cachePath, hash = cacheId, format = format))
+  }
 
-  unlink(CacheStoredFile(cachePath, hash = cacheId, format = format))
 }
 
 dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
                          cachePath = getOption("reproducible.cachePath"),
                          conn = getOption("reproducible.conn", NULL), create = TRUE) {
   args <- list(drv = drv)
-  # browser(expr = exists("yyyy"))
   if (is(drv, "SQLiteDriver")) {
-    # if (!CacheIsACache(cachePath = cachePath, drv = drv, conn = conn))
-    #   if (isFALSE(create)) {
-    #     return(invisible())
-    #   }
     args <- append(args, list(dbname = CacheDBFile(cachePath, drv = drv, conn = conn),
                               synchronous = NULL))
   } # other types of drv, e.g., Postgres can be done via env vars
-  do.call(dbConnect, args)
+  if (identical(drv, "dt")) {
+    out <- cachePath
+  } else {
+    out <- do.call(DBI::dbConnect, args)
+  }
+  out
+}
+
+dbDisconnectAll <- function(conn, cachePath, drv) {
+  if (is(conn, "character")) {
+    out <- NULL
+  } else {
+    out <- DBI::dbDisconnect(conn)
+  }
+  return(out)
 }
 
 .emptyCacheTable <- data.table::data.table(cacheId = character(), tagKey = character(),
                                tagValue = character(), createdDate = character())
 
-#' @importFrom DBI dbSendStatement dbClearResult
+# #' @importFrom DBI dbSendStatement dbClearResult
 .addTagsRepo <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
                          tagKey = character(), tagValue = character(),
                          drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -293,7 +287,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 
         if (is.null(conn)) {
           conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
-          on.exit(dbDisconnect(conn))
+              on.exit(dbDisconnectAll(conn, drv = drv, cachePath = cachePath))
         }
         # This is what the next code pair of lines does
         # dt <- data.table("cacheId" = cacheId, "tagKey" = "accessed",
@@ -302,7 +296,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
         #
         # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
         rs <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-          dbSendStatement(
+          DBI::dbSendStatement(
             conn,
             paste0("insert into \"", CacheDBTableName(cachePath, drv), "\"",
                    " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
@@ -310,7 +304,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
                    "', '", tagKey, "', '", tagValue, "', '", curTime, "')"))
         ))
 
-        dbClearResult(rs)
+        DBI::dbClearResult(rs)
       }
     }
 
@@ -328,7 +322,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
     if (useDBI()) {
       if (is.null(conn)) {
         conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
-        on.exit(dbDisconnect(conn))
+            on.exit(dbDisconnectAll(conn, drv = drv, cachePath = cachePath))
       }
       curTime <- as.character(Sys.time())
       if (length(tagKey) < length(cacheId)) {
@@ -349,14 +343,14 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
         #
         # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
         rs <- #retry(retries = 250, exponentialDecayBase = 1.01, quote(
-          dbSendStatement(
+          DBI::dbSendStatement(
             conn,
             paste0("update \"", CacheDBTableName(cachePath, drv), "\"",
                    " set \"tagValue\" = '",tagValue,"' where ",
                    " \"cacheId\" = '",cacheId, "'", " AND \"tagKey\" = '",tagKey, "'"))
         #))
         affectedAnyRows <- DBI::dbGetRowsAffected(rs) > 0
-        dbClearResult(rs)
+        DBI::dbClearResult(rs)
         if (!affectedAnyRows) {
           if (isTRUE(add)) {
             .addTagsRepo(cacheId, cachePath, tagKey, tagValue, drv = drv, conn = conn)
@@ -495,7 +489,7 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
 #' @rdname CacheHelpers
 #' @param create Logical. Currently only affects non RQSLite default drivers. If this
 #'   is \code{TRUE} and there is no Cache database, the function will create one.
-#' @importFrom DBI dbListTables
+# #' @importFrom DBI dbListTables
 #' @export
 #' @details
 #' \code{CacheIsACache} returns a logical of whether the specified cachePath
@@ -507,7 +501,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
-      on.exit(dbDisconnect(conn))
+      on.exit(dbDisconnectAll(conn, drv = drv, cachePath = cachePath))
     }
     type <- gsub("Connection", "", class(conn))
   }
@@ -523,7 +517,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
     # browser(expr = exists("._CacheIsACache_2"))
     if (ret) {
       tablesInDB <- retry(retries = 250, exponentialDecayBase = 1.01,
-                          quote(dbListTables(conn)))
+                          quote(DBI::dbListTables(conn)))
       tableShouldBe <- CacheDBTableName(cachePath)
       if (length(tablesInDB) == 1) {
         if (!any(tablesInDB %in% tableShouldBe) && grepl(type, "SQLite")) {
@@ -563,7 +557,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 #'   Either the path of the previous \code{cachePath} where the cache was moved or copied from, or
 #'   the old DB Table Name
 #' @inheritParams Cache
-#' @importFrom DBI dbListTables
+# #' @importFrom DBI dbListTables
 #' @export
 #' @examples
 #' tmpCache <- file.path(tempdir(), "tmpCache")
@@ -586,10 +580,11 @@ movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQ
   if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = new)
-      on.exit(dbDisconnect(conn))
+          on.exit(dbDisconnectAll(conn, drv = drv))
     }
   }
-  tables <- dbListTables(conn)
+  if (!is(conn, "character")) {
+    tables <- DBI::dbListTables(conn)
   # browser(expr = exists("._movedCache_2"))
   if (missing(old)) {
     if (length(tables) == 1) {
@@ -612,12 +607,13 @@ movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQ
   newTable <- CacheDBTableName(new, drv = drv)
 
   qry <- glue::glue_sql("ALTER TABLE {`old`} RENAME TO {`new`}",
-                        old = oldTable,
-                        new = newTable,
-                        .con = conn)
-  res <- retry(retries = 15, exponentialDecayBase = 1.01, quote(dbSendQuery(conn, qry)))
-  # dbFetch(res)
-  dbClearResult(res)
+                          old = oldTable,
+                          new = newTable,
+                          .con = conn)
+    res <- retry(retries = 15, exponentialDecayBase = 1.01, quote(DBI::dbSendQuery(conn, qry)))
+    # dbFetch(res)
+    DBI::dbClearResult(res)
+  }
 }
 
 loadFile <- function(file, format) {

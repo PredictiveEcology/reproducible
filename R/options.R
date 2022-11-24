@@ -177,7 +177,7 @@ reproducibleOptions <- function() {
     reproducible.cacheSpeed = "slow",
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
-    reproducible.drv = RSQLite::SQLite(),
+    reproducible.drv = "dt", #RSQLite::SQLite(),
     reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
@@ -185,6 +185,7 @@ reproducibleOptions <- function() {
     reproducible.messageColourPrepInputs = "cyan",
     reproducible.messageColourCache = "blue",
     reproducible.messageColourQuestion = "green",
+    reproducible.useMultipleDBFiles = TRUE,
     reproducible.nThreads = 1,
     reproducible.overwrite = FALSE,
     reproducible.polygonShortcut = FALSE,

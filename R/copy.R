@@ -102,6 +102,13 @@ setMethod(
       return(get(class(object)[1])(object))
     }
 
+    if (is(object, "SQLiteConnection")) {
+      con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+      messageCache("Making a copy of the entire SQLite database: ",object@dbname,
+                   "; this may not be desireable ...")
+      return(RSQLite::sqliteCopyDatabase(object, con))
+    }
+
     # keep this environment method here, as it will intercept "proto"
     #   and other environments that it shouldn't
     if (!identical(is(object)[1], "environment") && is.environment(object)) {
@@ -130,15 +137,15 @@ setMethod(
 })
 
 
-#' @rdname Copy
-setMethod("Copy",
-          signature(object = "SQLiteConnection"),
-          definition = function(object, ...) {
-            con <- dbConnect(RSQLite::SQLite(), ":memory:")
-            messageCache("Making a copy of the entire SQLite database: ",object@dbname,
-                    "; this may not be desireable ...")
-            RSQLite::sqliteCopyDatabase(object, con)
-})
+# #' @rdname Copy
+# setMethod("Copy",
+#           signature(object = "SQLiteConnection"),
+#           definition = function(object, ...) {
+#             con <- dbConnect(RSQLite::SQLite(), ":memory:")
+#             messageCache("Making a copy of the entire SQLite database: ",object@dbname,
+#                     "; this may not be desireable ...")
+#             RSQLite::sqliteCopyDatabase(object, con)
+# })
 
 #' @rdname Copy
 setMethod("Copy",
@@ -180,7 +187,7 @@ setMethod("Copy",
 })
 
 #' @rdname Copy
-#' @inheritParams DBI::dbConnect
+#' @inheritParams Cache # DBI::dbConnect
 setMethod("Copy",
           signature(object = "Raster"),
           definition = function(object, filebackedDir,
