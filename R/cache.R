@@ -1011,10 +1011,7 @@ setMethod(
       if (objSize > 1e6) {
         resultHash <- CacheDigest(list(outputToSave), .objects = .objects)$outputHash
         if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
-          fn <- dir(CacheStorageDir(cacheRepo), pattern = resultHash, full.names = TRUE)
-          if (length(fn)) {
-            browser()
-          }
+          allCache <- showCache(cacheRepo, verbose = -1)
         } else {
           qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(glue::double_quote(dbTabName))}",
                                 dbTabName = dbTabNam,
@@ -1023,13 +1020,14 @@ setMethod(
                        quote(DBI::dbSendQuery(conn, qry)))
           allCache <- setDT(DBI::dbFetch(res))
           DBI::dbClearResult(res)
-          if (NROW(allCache)) {
-            alreadyExists <- allCache[allCache$tagKey == "resultHash" & allCache$tagValue %in% resultHash]
-            if (NROW(alreadyExists)) {
-              linkToCacheId <- alreadyExists[["cacheId"]][[1]]
-            }
+        }
+        if (NROW(allCache)) {
+          alreadyExists <- allCache[allCache$tagKey == "resultHash" & allCache$tagValue %in% resultHash]
+          if (NROW(alreadyExists)) {
+            linkToCacheId <- alreadyExists[["cacheId"]][[1]]
           }
         }
+
 
       }
 

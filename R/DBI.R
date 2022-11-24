@@ -695,7 +695,7 @@ CacheDBFilesMultiple <- function(cachePath = getOption("reproducible.cachePath")
   } else {
     outOught <- normPath(paste0(CacheStoredFile(cachePath = cachePath, hash = cacheId, format = format),
                                 endingOught))
-    outExists <- grep(cacheId, outExists, value = TRUE)
+    outExists <- unlist(lapply(cacheId, grep, x = outExists, value = TRUE))
   }
 
   if (isTRUE(returnExisting)) {
@@ -707,7 +707,7 @@ CacheDBFilesMultiple <- function(cachePath = getOption("reproducible.cachePath")
     if (!missing(cacheId)) {
       # } else {
       # paste0(CacheStoredFile(cachePath = cachePath, hash = cacheId, format = NULL), ending)
-      outOught <- grep(cacheId, outOught, value = TRUE)
+      outOught <- unlist(lapply(cacheId, grep, x = outOught, value = TRUE))
     }
   }
   if (length(outExists)) {
