@@ -125,7 +125,7 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
 
   artifact <- isInRepo[[.cacheTableHashColName()]][1]
   # browser(expr = exists("._cloudUpload_1"))
-  artifactFileName <- CacheStoredFile(cacheRepo, hash = artifact)
+  artifactFileName <- CacheStoredFile(cacheRepo, cacheId = artifact)
   #artifactFileName <- paste0(artifact, ".rda")
   if (useDBI()) {
     newFileName <- basename2(artifactFileName)

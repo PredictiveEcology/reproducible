@@ -645,7 +645,7 @@ setMethod(
         repo <- cacheRepos[[tries]]
         if (useDBI()) {
           if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
-            csf <- CacheStoredFile(cachePath = cacheRepo, hash = outputHash)
+            csf <- CacheStoredFile(cachePath = cacheRepo, cacheId = outputHash)
             if (file.exists(csf)) {
               dtFile <- CacheDBFileSingle(cachePath = cacheRepo, cacheId = outputHash)
               isInRepo <- loadFile(dtFile)
