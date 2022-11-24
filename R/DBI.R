@@ -431,9 +431,9 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), has
   } else {
     format
   }
-  csExtension <- if (csf == "qs") {
+  csExtension <- if (isTRUE("qs" %in% csf)) {
     "qs"
-  } else if (csf == "rds") {
+  } else if (isTRUE("rds" %in% csf)) {
     "rds"
   } else {
     "rda"
