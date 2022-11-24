@@ -183,6 +183,7 @@ setMethod(
     }
 
     if (isInteractive()) {
+      if (exists("aaa")) browser()
       objSizes <- as.numeric(objsDT[tagKey == "object.size"][[.cacheTableTagColName()]])
       cacheSize <- sum(objSizes) / 4
     }
