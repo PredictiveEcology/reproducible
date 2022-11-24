@@ -466,7 +466,8 @@ setMethod(
 setGeneric("keepCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  ask  = getOption("reproducible.ask"),
                                  drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                                 conn = getOption("reproducible.conn", NULL), ...) {
+                                 conn = getOption("reproducible.conn", NULL),
+                                 verbose = getOption("reproducible.verbose"), ...) {
   standardGeneric("keepCache")
 })
 
@@ -474,7 +475,8 @@ setGeneric("keepCache", function(x, userTags = character(), after = NULL, before
 #' @rdname viewCache
 setMethod(
   "keepCache",
-  definition = function(x, userTags, after, before, ask, drv, conn, ...) {
+  definition = function(x, userTags, after, before, ask, drv, conn,
+                        verbose = getOption("reproducible.verbose"), ...) {
     if (missing(x)) {
       messageCache("x not specified; using ", getOption("reproducible.cachePath")[1],
                    verboseLevel = 1, verbose = verbose)

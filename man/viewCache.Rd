@@ -70,6 +70,7 @@ keepCache(
   ask = getOption("reproducible.ask"),
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 
@@ -81,6 +82,7 @@ keepCache(
   ask = getOption("reproducible.ask"),
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 }
