@@ -462,6 +462,7 @@ setMethod(
 })
 
 #' @rdname viewCache
+#' @inheritParams Cache
 setGeneric("keepCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  ask  = getOption("reproducible.ask"),
                                  drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -534,6 +535,7 @@ setGeneric("mergeCache", function(cacheTo, cacheFrom,
 
 #' @export
 #' @rdname mergeCache
+#' @inheritParams Cache
 setMethod(
   "mergeCache",
   definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom,
