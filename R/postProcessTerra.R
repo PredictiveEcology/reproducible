@@ -318,8 +318,8 @@ projectTo <- function(from, projectTo, method) {
         projectTo <- terra::rast(projectTo)
 
       projectToOrig <- projectTo # keep for below
-
-      if (sf::st_crs(projectTo) == sf::st_crs(from)) {
+      if (sf::st_crs(projectTo) == sf::st_crs(from) &&
+          all(res(projectTo) == res(from))) {
         messagePrepInputs("    projection of from is same as projectTo, not projecting")
       } else {
         messagePrepInputs("    projecting...")
