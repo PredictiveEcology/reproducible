@@ -86,7 +86,7 @@ setMethod(
         if (all(isExistingFile)) {
           messageCache(
             "That path is an existing file(s)",
-            verboseLevel = 0,
+            verboseLevel = 1,
             verbose = getOption("Require.verbose")
           )
         } else {
