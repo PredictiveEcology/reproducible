@@ -87,7 +87,7 @@ setMethod(
           messageCache(
             "That path is an existing file(s)",
             verboseLevel = 1,
-            verbose = getOption("Require.verbose")
+            verbose = getOption("reproducible.verbose")
           )
         } else {
           if (create == TRUE) {
