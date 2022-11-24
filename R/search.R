@@ -10,8 +10,6 @@
 #' \code{searchFullEx} shows an example function that is inside this package
 #' whose only function is to show the Scope of a package function.
 #'
-#' @description
-#'
 #' @param env The environment to start searching at. Default is
 #'                calling environment, i.e., \code{parent.frame()}
 #' @param simplify Logical. Should the output be simplified to character,

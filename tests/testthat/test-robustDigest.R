@@ -4,7 +4,6 @@ test_that("test file-backed raster caching", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-
   # make sure that .robustDigest does not include the cache-added attributes
   c1 <- Cache(rnorm, 11, cacheRepo = tmpCache)
   c1a <- .robustDigest(c1)
@@ -19,6 +18,4 @@ test_that("test file-backed raster caching", {
   aC <- CacheDigest(a)
   bC <- CacheDigest(b)
   expect_false(identical(aC, bC))
-
-
 })
