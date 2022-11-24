@@ -368,10 +368,8 @@ setMethod(
 
     if (useDBI()) {
       if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
-        browser()
         CacheIsACache(x, drv = drv, conn = conn)
-
-        filesInMultiple <- CacheDBFilesMultiple(x)
+        filesInMultiple <- CacheDBFilesMultiple(cachePath = x, drv = drv, conn = conn)
         objsDT <- rbindlist(lapply(filesInMultiple, loadFile))
       } else {
         if (is.null(conn)) {

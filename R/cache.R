@@ -656,15 +656,22 @@ setMethod(
         repo <- cacheRepos[[tries]]
         if (useDBI()) {
           if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
-            csf <- CacheStoredFile(cachePath = cacheRepo, hash = outputHash)
-            if (file.exists(csf)) {
-              dtFile <- CacheDBFilesMultiple(cachePath = cacheRepo, cacheId = outputHash)
+            # csf <- CacheStoredFile(cachePath = repo, hash = outputHash)
+
+            # next line could be wrong format; take anyway; convert later so it only has to be loaded 1x
+            dtFile <- CacheDBFilesMultiple(cachePath = repo, cacheId = outputHash,
+                                           drv = drv, conn = conn, returnExisting = TRUE)
+            # both <- file.exists(c(csf, dtFile))
+            fe <- file.exists(dtFile)
+            if (isTRUE(fe)) {
               isInRepo <- loadFile(dtFile)
             } else {
+              # if (any(both)) {
+              #   stop(messTryingToRecoverFail(cacheId = outputHash))
+              # }
               isInRepo <- data.table::copy(.emptyCacheTable)
             }
           } else {
-            # browser(expr = exists("._Cache_3"))
             dbTabNam <- CacheDBTableName(repo, drv = drv)
             if (tries > 1) {
               dbDisconnectAll(conn, drv = drv, cachePath = repo)
@@ -787,9 +794,10 @@ setMethod(
               isInRepo[[.cacheTableHashColName()]]
             else
               gsub("cacheId:", "", isInRepo[[.cacheTableTagColName()]])
-            stop(output, "\nError in trying to recover cacheID: ", cID,
-                 "\nYou will likely need to remove that item from Cache, e.g., ",
-                 "\nclearCache(userTags = '", cID, "')")
+            stop(messTryingToRecoverFail(output, cacheId = outputHash))
+            # stop(output, "\nError in trying to recover cacheID: ", cID,
+            #      "\nYou will likely need to remove that item from Cache, e.g., ",
+            #      "\nclearCache(userTags = '", cID, "')")
           }
 
           if (useDBI())
@@ -1002,19 +1010,27 @@ setMethod(
       linkToCacheId <- NULL
       if (objSize > 1e6) {
         resultHash <- CacheDigest(list(outputToSave), .objects = .objects)$outputHash
-        qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))}",
-                              dbTabName = dbTabNam,
-                              .con = conn)
-        res <- retry(retries = 15, exponentialDecayBase = 1.01,
+        if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
+          fn <- dir(CacheStorageDir(cacheRepo), pattern = resultHash, full.names = TRUE)
+          if (length(fn)) {
+            browser()
+          }
+        } else {
+          qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(glue::double_quote(dbTabName))}",
+                                dbTabName = dbTabNam,
+                                .con = conn)
+          res <- retry(retries = 15, exponentialDecayBase = 1.01,
                        quote(DBI::dbSendQuery(conn, qry)))
           allCache <- setDT(DBI::dbFetch(res))
           DBI::dbClearResult(res)
-        if (NROW(allCache)) {
-          alreadyExists <- allCache[allCache$tagKey == "resultHash" & allCache$tagValue %in% resultHash]
-          if (NROW(alreadyExists)) {
-            linkToCacheId <- alreadyExists[["cacheId"]][[1]]
+          if (NROW(allCache)) {
+            alreadyExists <- allCache[allCache$tagKey == "resultHash" & allCache$tagValue %in% resultHash]
+            if (NROW(alreadyExists)) {
+              linkToCacheId <- alreadyExists[["cacheId"]][[1]]
+            }
           }
         }
+
       }
 
       userTags <- c(userTags,
@@ -1950,4 +1966,13 @@ dealWithClassOnRecovery2 <- function(output, cacheRepo, cacheId,
     }
   }
   output
+}
+
+messTryingToRecoverFail <- function(tryError, cacheId) {
+  mess <- paste0("\nError in trying to recover cacheID: ", cacheId,
+                 "\nYou will likely need to remove that item from Cache, e.g., ",
+                 "\nclearCache(userTags = '", cacheId, "')")
+  if (!missing(tryError))
+    mess <- paste0(tryError, mess)
+  mess
 }
