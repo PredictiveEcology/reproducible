@@ -37,7 +37,7 @@ Normally, \code{checkPath} can be called directly, but does not have class-speci
 }
 \examples{
 a <- "test"
-.checkCacheRepo(a) # no cache repository supplied
+.checkCacheRepo(a, create = TRUE)
 
 }
 \author{
