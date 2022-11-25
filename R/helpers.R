@@ -183,17 +183,6 @@ rndstr <- function(n = 1, len = 8) {
 #' just for the test. In all other times, this returns the same things as
 #' \code{interactive()}.
 #' @keywords internal
-#' @examples
-#' \dontrun{
-#' testthat::with_mock(
-#' `isInteractive` = function() {browser(); TRUE},
-#' {
-#'   tmpdir <- tempdir()
-#'   aa <- Cache(rnorm, 1, cacheRepo = tmpdir, userTags = "something2")
-#'   # Test clearCache -- has an internal isInteractive() call
-#'   clearCache(tmpdir, ask = FALSE)
-#'   })
-#' }
 isInteractive <- function() interactive()
 
 #' A version of \code{base::basename} that is \code{NULL} resistant
