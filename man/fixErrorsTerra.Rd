@@ -4,7 +4,12 @@
 \alias{fixErrorsTerra}
 \title{Fix common errors in GIS layers, using \code{terra}}
 \usage{
-fixErrorsTerra(x)
+fixErrorsTerra(
+  x,
+  error,
+  verbose = getOption("reproducible.verbose"),
+  fromFnName = ""
+)
 }
 \arguments{
 \item{x}{The SpatStat or SpatVect object to try to fix.}

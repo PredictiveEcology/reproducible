@@ -18,7 +18,12 @@ postProcessTerra(
   ...
 )
 
-cropTo(from, cropTo = NULL, needBuffer = TRUE)
+cropTo(
+  from,
+  cropTo = NULL,
+  needBuffer = TRUE,
+  verbose = getOption("reproducible.verbose")
+)
 }
 \arguments{
 \item{from}{A Gridded or Vector dataset on which to do one or more of:

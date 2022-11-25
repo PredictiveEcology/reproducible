@@ -204,7 +204,7 @@ test_that("testing terra", {
       t19 <- postProcessTerra(x, ralbers, maskTo = NA)
       expect_true(sf::st_crs(t19) != sf::st_crs(x))
       expect_true(sf::st_crs(t19) == sf::st_crs(valbers))
-      sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE)
+      expect_true(sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
 
       # Raster with Vector
       t16 <- postProcessTerra(x, valbers, cropTo = NA)
@@ -218,7 +218,7 @@ test_that("testing terra", {
       t19 <- postProcessTerra(x, valbers, maskTo = NA)
       expect_true(sf::st_crs(t19) != sf::st_crs(x))
       expect_true(sf::st_crs(t19) == sf::st_crs(valbers))
-      sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE)
+      expect_true(sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
 
       t21 <- postProcessTerra(x, projectTo = valbers)
       t20 <- postProcessTerra(x, projectTo = sf::st_crs(valbers))

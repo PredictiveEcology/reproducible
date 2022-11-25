@@ -846,17 +846,18 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
       }
       if (isTRUE(runBuffer)) {
         messagePrepInputs("Found errors in ", objectName, ". Attempting to correct.",
-                          verbose = verbose)
+                          verbose = verbose, verboseLevel = 1)
 
         x1 <- suppressWarningsSpecific(falseWarnings = paste("Spatial object is not projected;",
                                                              "GEOS expects planar coordinates"),
-                                       try(Cache(sf::st_make_valid, x, useCache = useCache)))
+                                       try(Cache(sf::st_make_valid, x, useCache = useCache, verbose = verbose)))
         x <- bufferWarningSuppress(#warn = attr(x1, "warning"),
           objectName = objectName,
-          x1 = x1, bufferFn = "sf::st_make_valid")
+          x1 = x1, bufferFn = "sf::st_make_valid",
+          verbose = verbose)
 
       } else {
-        messagePrepInputs("  Found no errors.", verbose = verbose)
+        messagePrepInputs("  Found no errors.", verbose = verbose, verboseLevel = 1)
       }
     }
   }
@@ -2255,7 +2256,7 @@ bufferWarningSuppress <- function(# warn,
     messagePrepInputs("There are errors with ", objectName,
                       ". Couldn't fix them with ", bufferFn, "(..., width = 0)", verbose = verbose)
   } else {
-    messagePrepInputs("  Some or all of the errors fixed.", verbose = verbose)
+    messagePrepInputs("  Some or all of the errors fixed.", verbose = verbose, verboseLevel = 1)
   }
   x1
 }
