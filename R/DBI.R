@@ -654,7 +654,7 @@ loadFile <- function(file, format) {
     filelock::unlock(theLock)
   })
   suppressWarningsSpecific(falseWarnings = "invalid or incomplete compressed data", obj <- retry(silent = TRUE, quote({
-    if (format == "qs") {
+    if ("qs" %in% format) {
       .requireNamespace("qs", stopOnFALSE = TRUE)
       obj <- qs::qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
     } else {
