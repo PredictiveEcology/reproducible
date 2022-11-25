@@ -90,11 +90,11 @@ used instead of \code{x}, though \code{x} will take precedence.}
 Specifying one or more \code{userTag} here will clear all
 objects that match those tags.
 Matching is via regular expression, meaning partial matches
-will work unless strict beginning (^) and end ($) of string
+will work unless strict beginning (\code{^}) and end (\code{$}) of string
 characters are used.
 Matching will be against any of the 3 columns returned by \code{showCache()},
 i.e., \code{artifact}, \code{tagValue} or \code{tagName}.
-Also, length \code{userTags} > 1, then matching is by \code{and}.
+Also, if \code{length(userTags) > 1}, then matching is by \code{and}.
 For \code{or} matching, use \code{|} in a single character string.
 See examples.}
 

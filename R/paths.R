@@ -206,8 +206,8 @@ setMethod(
 #'
 #' @param sub Character string, length 1. Can be a result of
 #'   `file.path("smth", "smth2")` for nested temporary subdirectories.
-#' @param tempdir Optional character string where the
-#'   temporary dir should be placed. Defaults to `getOption("reproducible.tempPath")`.
+#' @param tempdir Optional character string where the temporary
+#'   directory should be placed. Defaults to `getOption("reproducible.tempPath")`.
 #' @param create Logical. Should the directory be created. Default `TRUE`.
 #'
 #' @seealso [tempfile2]
@@ -222,7 +222,7 @@ tempdir2 <- function(sub = "",
   np
 }
 
-#' Make a temporary subfile in a temporary (sub-)directory
+#' Make a temporary file in a temporary (sub-)directory
 #'
 #' @param ... passed to `tempfile`, e.g., `fileext`
 #'
