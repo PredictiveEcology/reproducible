@@ -1,15 +1,14 @@
 #' A wrapper around a set of downloading functions
 #'
-#' Currently, this only deals with \code{\link[googledrive]{drive_download}},
-#' and \code{\link[utils]{download.file}}.
+#' Currently, this only deals with [googledrive::drive_download()],
+#' and [utils::download.file()].
 #'
 #' @inheritParams prepInputs
 #' @inheritParams extractFromArchive
-#' @importFrom Require normPath
-#' @param dlFun Optional "download function" name, such as \code{"raster::getData"}, which does
+#' @param dlFun Optional "download function" name, such as `"raster::getData"`, which does
 #'              custom downloading, in addition to loading into R. Still experimental.
-#' @param ... Passed to \code{dlFun}. Still experimental.
-#' @param checksumFile A character string indicating the absolute path to the \code{CHECKSUMS.txt}
+#' @param ... Passed to `dlFun`. Still experimental.
+#' @param checksumFile A character string indicating the absolute path to the `CHECKSUMS.txt`
 #'                     file.
 #'
 #' @inheritParams Cache
@@ -375,9 +374,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' Download file from generic source url
 #'
 #' @param url  The url (link) to the file.
-#' @param needChecksums Logical indicating whether to generate checksums.
-#'
-#' ## TODO: add overwrite arg to the function?
+#' @param needChecksums Logical indicating whether to generate checksums. ## TODO: add overwrite arg to the function?
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal

@@ -11,5 +11,5 @@ fixErrorsTerra(x)
 }
 \description{
 Currently, this only tests for validity of a SpatVect file, then if there is a problem,
-it will run `terra::makeValid`
+it will run \code{terra::makeValid}
 }

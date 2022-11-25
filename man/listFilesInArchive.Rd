@@ -13,6 +13,6 @@
 A character string of all files in the archive.
 }
 \description{
-Makes the outputs from\code{.tar}\code{.zip} the same, which they aren't by default.
+Makes the outputs from\verb{.tar``.zip} the same, which they aren't by default.
 }
 \keyword{internal}

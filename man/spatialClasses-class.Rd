@@ -13,11 +13,11 @@ This class is the union of several spatial objects from \pkg{raster} and
 Members:
 
 \itemize{
-  \item \code{RasterLayer}, \code{RasterLayerSparse}, \code{RasterStack};
-  \item \code{SpatialLines}, \code{SpatialLinesDataFrame};
-  \item \code{SpatialPixels}, \code{SpatialPixelsDataFrame};
-  \item \code{SpatialPoints}, \code{SpatialPointsDataFrame};
-  \item \code{SpatialPolygons}, \code{SpatialPolygonsDataFrame}.
+\item \code{RasterLayer}, \code{RasterLayerSparse}, \code{RasterStack};
+\item \code{SpatialLines}, \code{SpatialLinesDataFrame};
+\item \code{SpatialPixels}, \code{SpatialPixelsDataFrame};
+\item \code{SpatialPoints}, \code{SpatialPointsDataFrame};
+\item \code{SpatialPolygons}, \code{SpatialPolygonsDataFrame}.
 }
 
 Notably missing is \code{RasterBrick}, for now.

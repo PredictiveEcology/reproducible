@@ -2,17 +2,17 @@ if (getRversion() >= "3.1.0") {
   utils::globalVariables(c("cacheId", "checksumsFilename", "checksumsID", "id"))
 }
 
-#' Check for presence of \code{checkFolderID} (for \code{Cache(useCloud)})
+#' Check for presence of `checkFolderID` (for `Cache(useCloud)`)
 #'
-#' Will check for presence of a \code{cloudFolderID} and make a new one
+#' Will check for presence of a `cloudFolderID` and make a new one
 #' if one not present on Google Drive, with a warning.
 #'
 #' @inheritParams Cache
 #' @param cloudFolderID The google folder ID where cloud caching will occur.
-#' @param create Logical. If \code{TRUE}, then the \code{cloudFolderID} will be created.
+#' @param create Logical. If `TRUE`, then the `cloudFolderID` will be created.
 #'     This should be used with caution as there are no checks for overwriting.
-#'     See \code{googledrive::drive_mkdir}. Default \code{FALSE}.
-#' @param overwrite Logical. Passed to \code{googledrive::drive_mkdir}.
+#'     See `googledrive::drive_mkdir`. Default `FALSE`.
+#' @param overwrite Logical. Passed to `googledrive::drive_mkdir`.
 #' @param team_drive Logical indicating whether to check team drives.
 #'
 #' @export
@@ -115,9 +115,9 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL,
 #' Meant for internal use, as there are internal objects as arguments.
 #'
 #' @param isInRepo A data.table with the information about an object that is in the local cacheRepo
-#' @param outputHash The \code{cacheId} of the object to upload
-#' @param gdriveLs The result of \code{googledrive::drive_ls(googledrive::as_id(cloudFolderID), pattern = "outputHash")}
-#' @param output The output object of FUN that was run in \code{Cache}
+#' @param outputHash The `cacheId` of the object to upload
+#' @param gdriveLs The result of `googledrive::drive_ls(googledrive::as_id(cloudFolderID), pattern = "outputHash")`
+#' @param output The output object of FUN that was run in `Cache`
 #' @inheritParams Cache
 cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output) {
   if (!requireNamespace("googledrive", quietly = TRUE))
@@ -125,7 +125,7 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
 
   artifact <- isInRepo[[.cacheTableHashColName()]][1]
   # browser(expr = exists("._cloudUpload_1"))
-  artifactFileName <- CacheStoredFile(cacheRepo, hash = artifact)
+  artifactFileName <- CacheStoredFile(cacheRepo, cacheId = artifact)
   #artifactFileName <- paste0(artifact, ".rda")
   if (useDBI()) {
     newFileName <- basename2(artifactFileName)
@@ -192,15 +192,15 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
   output
 }
 
-#' Upload a file to cloud directly from local \code{cacheRepo}
+#' Upload a file to cloud directly from local `cacheRepo`
 #'
 #' Meant for internal use, as there are internal objects as arguments.
 #'
-#' @param isInCloud     A logical indicating whether an \code{outputHash} is in the cloud already.
-#' @param outputToSave  Only required if \code{any(rasters) == TRUE}.
-#'                      This is the \code{Raster*} object.
+#' @param isInCloud     A logical indicating whether an `outputHash` is in the cloud already.
+#' @param outputToSave  Only required if `any(rasters) == TRUE`.
+#'                      This is the `Raster*` object.
 #' @param rasters       A logical vector of length >= 1 indicating which elements in
-#'                      \code{outputToSave} are \code{Raster*} objects.
+#'                      `outputToSave` are `Raster*` objects.
 #' @inheritParams cloudUpload
 #'
 #' @keywords internal

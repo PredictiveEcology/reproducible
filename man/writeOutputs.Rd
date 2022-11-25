@@ -46,20 +46,20 @@ writeOutputs(
 \arguments{
 \item{x}{The object save to disk i.e., write outputs}
 
-\item{filename2}{File name passed to \code{\link[raster]{writeRaster}}, or
-\code{\link[raster]{shapefile}} or \code{\link[sf]{st_write}}
+\item{filename2}{File name passed to \code{\link[raster:writeRaster]{raster::writeRaster()}}, or
+\code{\link[raster:shapefile]{raster::shapefile()}} or \code{\link[sf:st_write]{sf::st_write()}}
 (\code{dsn} argument).}
 
 \item{overwrite}{Logical. Should file being written overwrite an existing file if it exists.}
 
-\item{...}{Passed into \code{\link[raster]{shapefile}} or
-\code{\link[raster]{writeRaster}} or \code{\link[sf]{st_write}}}
+\item{...}{Passed into \code{\link[raster:shapefile]{raster::shapefile()}} or
+\code{\link[raster:writeRaster]{raster::writeRaster()}} or \code{\link[sf:st_write]{sf::st_write()}}}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \description{
 Can be used to write prepared inputs on disk.

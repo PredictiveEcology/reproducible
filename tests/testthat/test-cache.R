@@ -758,31 +758,30 @@ test_that("test Cache argument inheritance to inner functions", {
 ##########################
 test_that("test future", {
   skip_on_cran()
+  skip_if_not_installed("future")
 
   .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
   if (.onLinux) {
-    if (requireNamespace("future")) {
-      testInitOut <- testInit("raster", verbose = TRUE, tmpFileExt = ".rds")
-      optsFuture <- options("future.supportsMulticore.unstable" = "quiet")
-      on.exit({
-        testOnExit(testInitOut)
-        options(optsFuture)
-      }, add = TRUE)
+    testInitOut <- testInit("raster", verbose = TRUE, tmpFileExt = ".rds")
+    optsFuture <- options("future.supportsMulticore.unstable" = "quiet")
+    on.exit({
+      testOnExit(testInitOut)
+      options(optsFuture)
+    }, add = TRUE)
 
-      options("reproducible.futurePlan" = "multicore")
-      on.exit({
-        options("reproducible.futurePlan" = FALSE)
-      }, add = TRUE)
-      # There is now a warning with future package
-      (aa <- system.time({for (i in c(1:3)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
-      a <- showCache(tmpCache)
+    options("reproducible.futurePlan" = "multicore")
+    on.exit({
+      options("reproducible.futurePlan" = FALSE)
+    }, add = TRUE)
+    # There is now a warning with future package
+    (aa <- system.time({for (i in c(1:3)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
+    a <- showCache(tmpCache)
 
-      try(unlink(tmpCache, recursive = TRUE))
-      (bb <- system.time({for (i in 1:3) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
+    try(unlink(tmpCache, recursive = TRUE))
+    (bb <- system.time({for (i in 1:3) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
 
-      # Test the speed of rerunning same line
-      (aa <- system.time({for (i in c(1, 1)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
-    }
+    # Test the speed of rerunning same line
+    (aa <- system.time({for (i in c(1, 1)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
   }
 })
 

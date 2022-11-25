@@ -26,7 +26,7 @@ robust CacheDigest results.}
 
 \item{quick}{Logical or character. If \code{TRUE},
 no disk-based information will be assessed, i.e., only
-memory content. See Details section about \code{quick} in \code{\link{Cache}}.}
+memory content. See Details section about \code{quick} in \code{\link[=Cache]{Cache()}}.}
 
 \item{...}{passed to \code{.robustDigest}; this is generally empty except
 for advanced use.}
@@ -41,9 +41,7 @@ This can be used by a user to pre-test their arguments before running
 \code{Cache}, for example to determine whether there is a cached copy.
 }
 \examples{
-\dontrun{
-  a <- Cache(rnorm, 1)
-  CacheDigest(list(rnorm, 1))
+a <- Cache(rnorm, 1)
+CacheDigest(list(rnorm, 1))
 
-}
 }

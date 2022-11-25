@@ -1,5 +1,17 @@
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
+Version 1.2.12
+==============
+
+## Dependency changes
+* `Require` has been removed
+
+## Enhancements
+* examples were reworked, replaced, improved
+
+## Bug fixes
+* none
+
 Version 1.2.11
 ==============
 

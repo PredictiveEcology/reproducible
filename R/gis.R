@@ -1,22 +1,22 @@
-#' Faster operations on rasters (DEPRECATED as \code{terra::mask} is fast)
+#' Faster operations on rasters (DEPRECATED as `terra::mask` is fast)
 #'
-#' This alternative to \code{raster::mask} is included here.
+#' This alternative to `raster::mask` is included here.
 #'
-#' @param x  A \code{Raster*} object.
+#' @param x  A `Raster*` object.
 #'
-#' @param y  A \code{SpatialPolygons} object. If it is not in the same projection
-#'           as \code{x}, it will be reprojected on the fly to that of \code{x}
+#' @param y  A `SpatialPolygons` object. If it is not in the same projection
+#'           as `x`, it will be reprojected on the fly to that of `x`
 #'
-#' @param cores An \code{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
-#'           triggered. \code{'AUTO'} will calculate 90% of the total
+#' @param cores An `integer*` or `'AUTO'`. This will be used if gdalwarp is
+#'           triggered. `'AUTO'` will calculate 90% of the total
 #'           number of cores in the system, while an integer or rounded
 #'           float will be passed as the exact number of cores to be used.
-#' @param skipDeprecastedMsg Logical. If \code{TRUE}, then the message about this function
+#' @param skipDeprecastedMsg Logical. If `TRUE`, then the message about this function
 #'   being deprecated will be suppressed.
 #'
 #' @param ... Currently unused.
 #'
-#' @return A \code{Raster*} object, masked (i.e., smaller extent and/or
+#' @return A `Raster*` object, masked (i.e., smaller extent and/or
 #'         several pixels converted to NA)
 #'
 #' @author Eliot McIntire
@@ -27,50 +27,10 @@
 #' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
 #'
-#' @examples
-#'
-#' # This function is mostly superfluous as terra::mask is fast
-#' library(sp)
-#' library(raster)
-#'
-#' Sr1 <- Polygon(cbind(c(2, 4, 4, 0.9, 2), c(2, 3, 5, 4, 2)))
-#' Sr2 <- Polygon(cbind(c(5, 4, 2, 5), c(2, 3, 2, 2)))
-#' Sr3 <- Polygon(cbind(c(4, 4, 5, 10, 4), c(5, 3, 2, 5, 5)))
-#'
-#' Srs1 <- Polygons(list(Sr1), "s1")
-#' Srs2 <- Polygons(list(Sr2), "s2")
-#' Srs3 <- Polygons(list(Sr3), "s3")
-#' shp <- SpatialPolygons(list(Srs1, Srs2, Srs3), 1:3)
-#' d <- data.frame(vals = 1:3, other = letters[3:1], stringsAsFactors = FALSE)
-#' row.names(d) <- names(shp)
-#' shp <- SpatialPolygonsDataFrame(shp, data = d)
-#' poly <- list()
-#' poly[[1]] <- raster(raster::extent(shp), vals = 0, res = c(1, 1))
-#' poly[[2]] <- raster(raster::extent(shp), vals = 1, res = c(1, 1))
-#' origStack <- stack(poly)
-#'
-#' # during transition from raster to terra, the following requires terra to run
-#' if (requireNamespace("terra", silent = TRUE)) {
-#'   newStack1 <- mask(x= terra::rast(origStack), mask = terra::vect(sf::st_as_sf(shp)))
-#'   newStack2 <- fastMask(x = origStack, y = sf::st_as_sf(shp))
-#'
-#' # test all equal
-#'   all.equal(newStack1, newStack2)
-#'
-#'   newStack1 <- stack(newStack1)
-#'   newStack2 <- stack(newStack2)
-#'
-#'  if (interactive()) {
-#'   plot(newStack2[[1]])
-#'   plot(shp, add = TRUE)
-#'  }
-#'
-#' }
-#'
 fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE),
                      verbose = getOption("reproducible.verbose", 1), ..., skipDeprecastedMsg = FALSE) {
   if (!skipDeprecastedMsg)
-    .Deprecated("mask", "terra", "fastMask is deprecasted; using maskTo and terra")
+    .Deprecated("mask", "terra", "fastMask is deprecated; using maskTo and terra")
   touches <- list(...)$touches
   maskTo(from = x, maskTo = y, touches = isTRUE(touches))
 #   if (!identical(.crs(y), .crs(x))) {
@@ -181,7 +141,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
 #     }
 #     isRasterStack <- is(x, "RasterStack")
 #     isRasterBrick <- is(x, "RasterBrick")
-#     if (requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
+#     if (requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)) {
 #
 #       messagePrepInputs("      Using terra::mask for masking")
 #       if (!is(x, "SpatRaster"))
@@ -209,7 +169,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
 }
 
 #' @importFrom raster tmpDir
-bigRastersTmpFolder <- function() checkPath(Require::tempdir2(sub = "bigRasters"), create = TRUE)
+bigRastersTmpFolder <- function() checkPath(tempdir2(sub = "bigRasters"), create = TRUE)
 
 bigRastersTmpFile <- function() file.path(bigRastersTmpFolder(), "bigRasInput.tif")
 

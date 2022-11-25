@@ -18,7 +18,7 @@ CacheStorageDir(cachePath = getOption("reproducible.cachePath"))
 
 CacheStoredFile(
   cachePath = getOption("reproducible.cachePath"),
-  hash,
+  cacheId,
   format = getOption("reproducible.cacheSaveFormat", "rds")
 )
 
@@ -45,7 +45,7 @@ object (in order to clone an existing connection).}
 \item{conn}{A \linkS4class{DBIConnection} object, as returned by
 \code{\link[DBI:dbConnect]{dbConnect()}}.}
 
-\item{hash}{The cacheId or otherwise digested hash value, as character string.}
+\item{cacheId}{The cacheId or otherwise digested hash value, as character string.}
 
 \item{format}{The text string representing the file extension used normally by
 different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
@@ -63,5 +63,5 @@ These are not intended for normal use.
 \code{CacheStoredFile} returns the file path to the file with the specified hash value.
 
 \code{CacheIsACache} returns a logical of whether the specified cachePath
-  is actually a functioning cache.
+is actually a functioning cache.
 }

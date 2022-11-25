@@ -1,28 +1,28 @@
 #' Search up the full scope for functions
 #'
 #' @description
-#' This is like \code{base::search} but when used inside a function, it will
-#' show the full scope (see figure in the section \emph{Binding environments}
-#' on \url{http://adv-r.had.co.nz/Environments.html}).
+#' This is like `base::search` but when used inside a function, it will
+#' show the full scope (see figure in the section *Binding environments*
+#' on <http://adv-r.had.co.nz/Environments.html>).
 #' This full search path will be potentially much longer than
-#' just \code{search()} (which always starts at \code{.GlobalEnv}).
+#' just `search()` (which always starts at `.GlobalEnv`).
 #'
-#' \code{searchFullEx} shows an example function that is inside this package
+#' `searchFullEx` shows an example function that is inside this package
 #' whose only function is to show the Scope of a package function.
 #'
 #' @param env The environment to start searching at. Default is
-#'                calling environment, i.e., \code{parent.frame()}
+#'                calling environment, i.e., `parent.frame()`
 #' @param simplify Logical. Should the output be simplified to character,
 #'                 if possible (usually it is not possible because environments
 #'                 don't always coerce correctly)
 #' @return
-#' A list of environments that is the actual search path, unlike \code{search()}
-#' which only prints from \code{.GlobalEnv} up to \code{base} through user attached
+#' A list of environments that is the actual search path, unlike `search()`
+#' which only prints from `.GlobalEnv` up to `base` through user attached
 #' packages.
 #'
 #' @export
 #' @rdname search
-#' @seealso \code{\link[base]{search}}
+#' @seealso [base::search()]
 #'
 #' @examples
 #' seeScope <- function() {
@@ -46,7 +46,7 @@ searchFull <- function(env = parent.frame(), simplify = TRUE) {
 }
 
 #' @details
-#' \code{searchFullEx} can be used to show an example of the use of \code{searchFull}.
+#' `searchFullEx` can be used to show an example of the use of `searchFull`.
 #'
 #' @export
 #' @examples

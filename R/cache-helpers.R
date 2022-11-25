@@ -35,7 +35,7 @@ setMethod(
 #'
 #' @param object Any R object.
 #' @param functionName A character string indicating the function name
-#' @param fromMemoise Logical. If \code{TRUE}, the message will be about
+#' @param fromMemoise Logical. If `TRUE`, the message will be about
 #'        recovery from memoised copy
 #' @inheritParams Cache
 #'
@@ -80,7 +80,7 @@ setMethod(
 #'
 #' @param FUN A function
 #'
-#' @param preDigestByClass A list, usually from \code{.preDigestByClass}
+#' @param preDigestByClass A list, usually from `.preDigestByClass`
 #'
 #' @return New object with tags attached.
 #'
@@ -102,14 +102,14 @@ setMethod(
   })
 
 ################################################################################
-#' Any miscellaneous things to do before \code{.robustDigest} and after \code{FUN} call
+#' Any miscellaneous things to do before `.robustDigest` and after `FUN` call
 #'
-#' The default method for \code{preDigestByClass} and simply returns \code{NULL}.
+#' The default method for `preDigestByClass` and simply returns `NULL`.
 #' There may be methods in other packages.
 #'
 #' @param object Any R object.
 #'
-#' @return A list with elements that will likely be used in \code{.postProcessing}
+#' @return A list with elements that will likely be used in `.postProcessing`
 #'
 #' @author Eliot McIntire
 #' @export
@@ -135,7 +135,7 @@ setMethod(
 #' Check for cache repository info in ...
 #'
 #' This is a generic definition that can be extended according to class.
-#' Normally, \code{checkPath} can be called directly, but does not have class-specific methods.
+#' Normally, `checkPath` can be called directly, but does not have class-specific methods.
 #'
 #' @param object An R object
 #' @param create Logical. If TRUE, then it will create the path for cache.
@@ -147,8 +147,8 @@ setMethod(
 #' @export
 #' @rdname checkCacheRepo
 #' @examples
-#' a <- "test"
-#' .checkCacheRepo(a) # no cache repository supplied
+#' a <- normalizePath(file.path(tempdir(), "test"), mustWork = FALSE)
+#' .checkCacheRepo(a, create = TRUE)
 #'
 setGeneric(".checkCacheRepo", function(object, create = FALSE,
                                        verbose = getOption("reproducible.verbose", 1)) {
@@ -212,38 +212,6 @@ setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
   standardGeneric(".prepareOutput")
 })
 
-# @export
-# @rdname prepareOutput
-# @importFrom Require normPath
-# @importFrom RSQLite SQLite
-# setMethod(
-#   ".prepareOutput",
-#   signature = "Raster",
-#   definition = function(object, cacheRepo, drv = getOption("reproducible.drv", RSQLite::SQLite()),
-#                         conn = getOption("reproducible.conn", NULL), ...) {
-#     # with this call to .prepareFileBackedRaster, it is from the same function call as a previous time
-#     #  overwrite is ok
-#     # .prepareFileBackedRaster(object, repoDir = cacheRepo, drv = drv, conn = conn, ...)
-#     # browser(expr = exists("._prepareOutputs_1"))
-#     if (isTRUE(fromDisk(object))) {
-#       fns <- Filenames(object, allowMultiple = FALSE)
-#       fpShould <- normPath(file.path(cacheRepo, "rasters"))
-#       isCorrect <- unlist(lapply(normPath(file.path(fpShould, basename(fns))),
-#                                  function(x) any(grepl(x, fns))))
-#       if (!any(isCorrect)) {
-#         if (is(object, "RasterStack")) {
-#           # browser(expr = exists("._prepareOutputs_2"))
-#           for (i in seq(nlayers(object))) {
-#             object@layers[[i]]@file@name <- gsub(dirname(object@layers[[i]]@file@name),
-#                                                  fpShould, object@layers[[i]]@file@name)
-#           }
-#         } else {
-#           object@file@name <- gsub(unique(dirname(fns)), fpShould, fns)
-#         }
-#       }
-#     }
-#     object
-#   })
 
 #' @export
 #' @rdname prepareOutput
@@ -267,9 +235,9 @@ setMethod(
 #'
 #' @param object Any R object returned from a function
 #' @param preDigest The full, element by element hash of the input arguments to that same function,
-#' e.g., from \code{.robustDigest}
+#' e.g., from `.robustDigest`
 #' @param origArguments These are the actual arguments (i.e., the values, not the names) that
-#'        were the source for \code{preDigest}
+#'        were the source for `preDigest`
 #' @param ... Anything passed to methods.
 #'
 #' @return The object, modified
@@ -298,12 +266,12 @@ setMethod(
 #' These are internal only.
 #'
 #' @param FUN A function
-#' @param ... passing the \code{...} from outer function, which will include potential
-#'        arguments to the \code{FUN}
+#' @param ... passing the `...` from outer function, which will include potential
+#'        arguments to the `FUN`
 #' @param overrideCall A character string indicating a different (not "Cache") function
 #'        name to search for. Mostly so that this works with deprecated "cache".
-#' @param isPipe Logical. If the call to \code{getFunctionName} is coming from a pipe, there is more
-#'               information available. Specifically, \code{._lhs} which is already a call.
+#' @param isPipe Logical. If the call to `getFunctionName` is coming from a pipe, there is more
+#'               information available. Specifically, `._lhs` which is already a call.
 #' @note If the function cannot figure out a clean function name, it returns "internal"
 #'
 #' @author Eliot McIntire
@@ -459,8 +427,8 @@ setClass("Path", slots = c(.Data = "character"), contains = "character", prototy
 #'
 #' It is often difficult or impossible to know algorithmically whether a
 #' character string corresponds to a valid filepath.
-#' In the case where it is en existing file, \code{file.exists} can work.
-#' But if it does not yet exist, e.g., for a \code{save}, it is difficult to know
+#' In the case where it is en existing file, `file.exists` can work.
+#' But if it does not yet exist, e.g., for a `save`, it is difficult to know
 #' whether it is a valid path before attempting to save to the path.
 #'
 #' This function can be used to remove any ambiguity about whether a character
@@ -470,14 +438,14 @@ setClass("Path", slots = c(.Data = "character"), contains = "character", prototy
 #' to detect a candidate for recovery from the cache.
 #' Paths, are different. While they are character strings, there are many ways to
 #' write the same path. Examples of identical meaning, but different character strings are:
-#' path expanding of \code{~} vs. not, double back slash vs. single forward slash,
+#' path expanding of `~` vs. not, double back slash vs. single forward slash,
 #' relative path vs. absolute path.
 #' All of these should be assessed for their actual file or directory location,
 #' NOT their character string. By converting all character string that are actual
-#' file or directory paths with this function, then \code{Cache} will correctly assess
+#' file or directory paths with this function, then `Cache` will correctly assess
 #' the location, NOT the character string representation.
 #'
-#' @param obj A character string to convert to a \code{Path}.
+#' @param obj A character string to convert to a `Path`.
 #' @param nParentDirs A numeric indicating the number of parent directories starting
 #'                    from basename(obj) = 0 to keep for the digest
 #'
@@ -510,8 +478,8 @@ asPath.null <- function(obj, nParentDirs = 0) {  # nolint
   return(NULL)
 }
 
-#' If using \code{as("string", "Path")}, there is no option to pass \code{nParentDirs}.
-#' So, using \code{asPath} directly (e.g., \code{asPath("string", 0))}) is preferred.
+#' If using `as("string", "Path")`, there is no option to pass `nParentDirs`.
+#' So, using `asPath` directly (e.g., `asPath("string", 0))`) is preferred.
 #' @export
 #' @importFrom methods new
 #' @rdname Path-class
@@ -738,12 +706,12 @@ setAs(from = "character", to = "Path", function(from) {
   return(obj)
 }
 
-#' Copy a file using \code{robocopy} on Windows and \code{rsync} on Linux/macOS
+#' Copy a file using `robocopy` on Windows and `rsync` on Linux/macOS
 #'
-#' This is replacement for \code{file.copy}, but for one file at a time.
-#' The additional feature is that it will use \code{robocopy} (on Windows) or
-#' \code{rsync} on Linux or Mac, if they exist.
-#' It will default back to \code{file.copy} if none of these exists.
+#' This is replacement for `file.copy`, but for one file at a time.
+#' The additional feature is that it will use `robocopy` (on Windows) or
+#' `rsync` on Linux or Mac, if they exist.
+#' It will default back to `file.copy` if none of these exists.
 #' If there is a possibility that the file already exists, then this function
 #' should be very fast as it will do "update only", i.e., nothing.
 #'
@@ -751,17 +719,17 @@ setAs(from = "character", to = "Path", function(from) {
 #'
 #' @param to The new file.
 #'
-#' @param useRobocopy For Windows, this will use a system call to \code{robocopy}
-#'        which appears to be much faster than the internal \code{file.copy} function.
-#'        Uses \code{/MIR} flag. Default \code{TRUE}.
+#' @param useRobocopy For Windows, this will use a system call to `robocopy`
+#'        which appears to be much faster than the internal `file.copy` function.
+#'        Uses `/MIR` flag. Default `TRUE`.
 #'
-#' @param overwrite Passed to \code{file.copy}
+#' @param overwrite Passed to `file.copy`
 #'
 #' @param delDestination Logical, whether the destination should have any files deleted,
-#' if they don't exist in the source. This is \code{/purge} for robocopy and --delete for
+#' if they don't exist in the source. This is `/purge` for robocopy and --delete for
 #' rsync.
 #'
-#' @param create Passed to \code{checkPath}.
+#' @param create Passed to `checkPath`.
 #'
 #' @param silent Should a progress be printed.
 #'
@@ -773,7 +741,7 @@ setAs(from = "character", to = "Path", function(from) {
 #' tmpDirTo <- file.path(tempdir(), "example_fileCopy_to")
 #' tmpFile1 <- tempfile("file1", tmpDirFrom, ".csv")
 #' tmpFile2 <- tempfile("file2", tmpDirFrom, ".csv")
-#' checkPath(tmpDirFrom, create = TRUE)
+#' dir.create(tmpDirFrom, recursive = TRUE, showWarnings = FALSE)
 #' f1 <- normalizePath(tmpFile1, mustWork = FALSE)
 #' f2 <- normalizePath(tmpFile2, mustWork = FALSE)
 #' t1 <- normalizePath(file.path(tmpDirTo, basename(tmpFile1)), mustWork = FALSE)
@@ -1031,10 +999,10 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #' (with the sort key based on their second character, see examples.
 #' It also sorts lower case before upper case.
 #'
-#' @param obj  An arbitrary R object for which a \code{names} function
+#' @param obj  An arbitrary R object for which a `names` function
 #'              returns a character vector.
 #'
-#' @return The same object as \code{obj}, but sorted with .objects first.
+#' @return The same object as `obj`, but sorted with .objects first.
 #'
 #' @author Eliot McIntire
 #' @export
@@ -1089,7 +1057,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #' @param preDigest  A list of hashes.
 #' @param ...  Dots passed from Cache
 #'
-#' @return The same object as \code{obj}, but with 2 attributes set.
+#' @return The same object as `obj`, but with 2 attributes set.
 #'
 #' @author Eliot McIntire
 #' @importFrom data.table setattr
@@ -1162,13 +1130,13 @@ nextNumericName <- function(string) {
 #' Grep system calls
 #'
 #' A faster way of grepping the system call stack than just
-#' \code{grep(sys.calls(), pattern = "test")}
+#' `grep(sys.calls(), pattern = "test")`
 #'
-#' @param sysCalls The return from \code{sys.calls()}
+#' @param sysCalls The return from `sys.calls()`
 #' @param pattern Character, passed to grep
 #' @return
-#' Numeric vector, equivalent to return from \code{grep(sys.calls(), pattern = "test")},
-#' but faster if \code{sys.calls()} is very big.
+#' Numeric vector, equivalent to return from `grep(sys.calls(), pattern = "test")`,
+#' but faster if `sys.calls()` is very big.
 #'
 #' @export
 #' @keywords internal
@@ -1232,9 +1200,8 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
 
   }
 
-
   if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
-    if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
       stop("Please install terra package")
 
     obj <- terra::wrap(obj)
@@ -1258,26 +1225,26 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
 
 
 
-#' A helper function to change the filename slot of \code{Raster*} objects
+#' A helper function to change the filename slot of `Raster*` objects
 #'
 #' This is intended for internal use, though it is exported because other packages
 #' use this. This function exists because when copying file-backed rasters, the
-#' usual mechanism of \code{writeRaster} can be very slow. This function allows
+#' usual mechanism of `writeRaster` can be very slow. This function allows
 #' for a user to optionally create a hard link to the old file, give it a new
-#' name, then update the filename slot(s) in the \code{Raster*} class object. This
+#' name, then update the filename slot(s) in the `Raster*` class object. This
 #' can be 100s of times faster for large rasters.
 #'
 #' @export
 #' @keywords internal
-#' @param obj An object. This function only has useful methods for \code{Raster*},
+#' @param obj An object. This function only has useful methods for `Raster*`,
 #'   with all other classes being simply a pass-through
 #' @param curFilenames An optional character vector of filenames currently existing
-#'   and that are pointed to in the obj. If omitted, will take from the \code{obj}
-#'   using \code{Filenames(obj)}
+#'   and that are pointed to in the obj. If omitted, will take from the `obj`
+#'   using `Filenames(obj)`
 #' @param newFilenames An optional character vector of filenames to use instead of
 #'   the curFilenames. This can also be a single directory, in which case the
 #'   renaming will be given:
-#'   \code{file.path(newFilenames, basename(Filenames(obj, allowMultiple = FALSE)))}
+#'   `file.path(newFilenames, basename(Filenames(obj, allowMultiple = FALSE)))`
 #' @rdname updateFilenameSlots
 updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL) {
   UseMethod("updateFilenameSlots")
@@ -1410,7 +1377,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' Rasters are sometimes file-based, so the normal save and copy and assign
 #' mechanisms in R don't work for saving, copying and assigning.
 #' This function creates an explicit file copy of the file that is backing the raster,
-#' and changes the pointer (i.e., \code{filename(object)}) so that it is pointing
+#' and changes the pointer (i.e., `filename(object)`) so that it is pointing
 #' to the new file.
 #'
 #' @param obj The raster object to save to the repository.
@@ -1424,7 +1391,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' @return A raster object and its newly located file backing.
 #'         Note that if this is a legitimate Cache repository, the new location
 #'         will be a subdirectory called \file{rasters/} of \file{repoDir/}.
-#'         If this is not a repository, the new location will be within \code{repoDir}.
+#'         If this is not a repository, the new location will be within `repoDir`.
 #'
 #' @author Eliot McIntire
 #' @export

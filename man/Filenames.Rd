@@ -7,7 +7,7 @@
 \alias{Filenames,RasterStack-method}
 \alias{Filenames,environment-method}
 \alias{Filenames,list-method}
-\title{Return the filename(s) from a \code{Raster*} object}
+\title{Return the filename(s) from a \verb{Raster*} object}
 \usage{
 Filenames(obj, allowMultiple = TRUE)
 
@@ -22,7 +22,7 @@ Filenames(obj, allowMultiple = TRUE)
 \S4method{Filenames}{list}(obj, allowMultiple = TRUE)
 }
 \arguments{
-\item{obj}{A \code{Raster*} object (i.e., \code{RasterLayer}, \code{RasterStack}, \code{RasterBrick})}
+\item{obj}{A \verb{Raster*} object (i.e., \code{RasterLayer}, \code{RasterStack}, \code{RasterBrick})}
 
 \item{allowMultiple}{Logical. If \code{TRUE}, the default, then all relevant
 filenames will be returned, i.e., in cases such as \code{.grd} where multiple files

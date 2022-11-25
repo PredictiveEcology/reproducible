@@ -14,9 +14,7 @@ dlGeneric(
 \arguments{
 \item{url}{The url (link) to the file.}
 
-\item{needChecksums}{Logical indicating whether to generate checksums.
-
-## TODO: add overwrite arg to the function?}
+\item{needChecksums}{Logical indicating whether to generate checksums. ## TODO: add overwrite arg to the function?}
 
 \item{destinationPath}{Character string of a directory in which to download
 and save the file that comes from \code{url} and is also where the function
@@ -30,7 +28,7 @@ search for the file before attempting to download. Default for that option is
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \description{
 Download file from generic source url

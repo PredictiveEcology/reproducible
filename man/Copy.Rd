@@ -88,7 +88,8 @@ g$one
 f$one
 e$one
 
-\dontrun{
+# To create a new deep copy method, use the following template
+if (FALSE) {
 setMethod("Copy", signature = "the class", # where = specify here if not in a package,
   definition = function(object, filebackendDir, ...) {
   # write deep copy code here
@@ -96,7 +97,7 @@ setMethod("Copy", signature = "the class", # where = specify here if not in a pa
 }
 }
 \seealso{
-\code{\link{.robustDigest}}
+\code{\link[=.robustDigest]{.robustDigest()}}
 }
 \author{
 Eliot McIntire

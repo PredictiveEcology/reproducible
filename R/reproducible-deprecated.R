@@ -8,11 +8,11 @@
 #' threads. This function will clear entries in the SQLite database which
 #' have no actual file with data.
 #'
-#' @return Invoked for its side effect on the \code{repoDir}.
+#' @return Invoked for its side effect on the `repoDir`.
 #'
 #' @param repoDir A character denoting an existing directory of the repository for
-#' which metadata will be returned. If \code{NULL} (default), it will use the
-#' \code{repoDir} specified in \code{archivist::setLocalRepo}.
+#' which metadata will be returned. If `NULL` (default), it will use the
+#' `repoDir` specified in `archivist::setLocalRepo`.
 #'
 #' @author Eliot McIntire
 #' @export

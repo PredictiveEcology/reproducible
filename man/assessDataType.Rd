@@ -27,10 +27,10 @@ data type for writing from the raster packages, respectively, or
 }
 \value{
 The appropriate data type for the range of values in \code{ras}.
-        See \code{\link[raster]{dataType}} for details.
+See \code{\link[raster:dataType]{raster::dataType()}} for details.
 
 The appropriate data type for the range of values in \code{ras} for using GDAL.
-        See \code{\link[raster]{dataType}} for details.
+See \code{\link[raster:dataType]{raster::dataType()}} for details.
 }
 \description{
 Can be used to write prepared inputs on disk.
