@@ -206,6 +206,8 @@ if (getRversion() >= "3.1.0") {
 #'          \code{\link{postProcess}}.
 #' @examples
 #' if (reproducible:::.runLongExamples()) {
+#' origDir <- getwd()
+#' setwd(reproducible:::tempdir2()) # use a temporary directory
 #' # download a zip file from internet, unzip all files, load as shapefile, Cache the call
 #' # First time: don't know all files - prepInputs will guess, if download file is an archive,
 #' #   then extract all files, then if there is a .shp, it will load with raster::shapefile
@@ -283,6 +285,7 @@ if (getRversion() >= "3.1.0") {
 #' test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
 #'                     dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
 #'                     path = dPath)
+#' setwd(origDir)
 #' }
 #'
 #' # Using quoted dlFun and fun -- this is not intended to be run but used as a template
