@@ -36,7 +36,7 @@ ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = "th
 options(opt)
 
 # For more in depth uses, see vignette
-\dontrun{
+if (FALSE) {
   # To use Postgres, set environment variables with the required credentials
   if (requireNamespace("RPostgres")) {
     Sys.setenv(PGHOST = "server.url")
