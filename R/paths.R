@@ -212,5 +212,4 @@ tempdir2 <- function(sub = "",
   np
 }
 
-SysInfo <-
-  Sys.info() # do this on load; nothing can change, so repeated calls are a waste
+SysInfo <- Sys.info() # do this on load; nothing can change, so repeated calls are a waste
