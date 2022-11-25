@@ -5,7 +5,7 @@
   opts.reproducible <- reproducibleOptions()
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
-
+  SysInfo <<- Sys.info() # update with system at time of loading; all we need is username
   invisible()
 }
 
