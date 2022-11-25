@@ -773,7 +773,7 @@ setAs(from = "character", to = "Path", function(from) {
 #' tmpDirTo <- file.path(tempdir(), "example_fileCopy_to")
 #' tmpFile1 <- tempfile("file1", tmpDirFrom, ".csv")
 #' tmpFile2 <- tempfile("file2", tmpDirFrom, ".csv")
-#' checkPath(tmpDirFrom, create = TRUE)
+#' dir.create(tmpDirFrom, recursive = TRUE, showWarnings = FALSE)
 #' f1 <- normalizePath(tmpFile1, mustWork = FALSE)
 #' f2 <- normalizePath(tmpFile2, mustWork = FALSE)
 #' t1 <- normalizePath(file.path(tmpDirTo, basename(tmpFile1)), mustWork = FALSE)
