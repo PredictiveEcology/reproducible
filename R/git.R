@@ -15,7 +15,7 @@
 #'
 #' Defunct.
 #'
-#' @param repo Repository address in the format \code{username/repo[/subdir][@ref|#pull]}.
+#' @param repo Repository address in the format `username/repo[/subdir][@ref|#pull]`.
 #'   Alternatively, you can specify subdir and/or ref using the respective parameters (see below);
 #'   if both is specified, the values in repo take precedence.
 #'
@@ -25,7 +25,7 @@
 #' @param cred Character string. Either the name of the environment variable
 #'             that contains the GitHub PAT or filename of the GitHub private key file.
 #'
-#' @param ...  Additional arguments passed to \code{git2r} functions.
+#' @param ...  Additional arguments passed to `git2r` functions.
 #'
 #' @return Invisibly returns a git_repository class object, defined in \pkg{git2r}.
 #'

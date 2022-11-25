@@ -31,9 +31,9 @@ object (in order to clone an existing connection).}
 }
 \value{
 A raster object and its newly located file backing.
-        Note that if this is a legitimate Cache repository, the new location
-        will be a subdirectory called \file{rasters/} of \file{repoDir/}.
-        If this is not a repository, the new location will be within \code{repoDir}.
+Note that if this is a legitimate Cache repository, the new location
+will be a subdirectory called \file{rasters/} of \file{repoDir/}.
+If this is not a repository, the new location will be within \code{repoDir}.
 }
 \description{
 Rasters are sometimes file-based, so the normal save and copy and assign

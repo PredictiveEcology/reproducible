@@ -29,9 +29,11 @@ Character vector of cleaned up filepaths.
 }
 \description{
 Checks the specified filepath for formatting consistencies:
- 1) use slash instead of backslash;
- 2) do tilde etc. expansion;
- 3) remove trailing slash.
+\enumerate{
+\item use slash instead of backslash;
+\item do tilde etc. expansion;
+\item remove trailing slash.
+}
 }
 \examples{
 ## normalize file paths

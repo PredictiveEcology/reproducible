@@ -30,10 +30,10 @@ but this will not persist across sessions. If this is a character string, it wil
 treat this as a folder name to create or use on GoogleDrive.}
 
 \item{outputToSave}{Only required if \code{any(rasters) == TRUE}.
-This is the \code{Raster*} object.}
+This is the \verb{Raster*} object.}
 
 \item{rasters}{A logical vector of length >= 1 indicating which elements in
-\code{outputToSave} are \code{Raster*} objects.}
+\code{outputToSave} are \verb{Raster*} objects.}
 }
 \description{
 Meant for internal use, as there are internal objects as arguments.

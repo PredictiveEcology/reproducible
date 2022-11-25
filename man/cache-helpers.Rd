@@ -44,7 +44,7 @@ Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.}
 
 \item{quick}{Logical or character. If \code{TRUE},
 no disk-based information will be assessed, i.e., only
-memory content. See Details section about \code{quick} in \code{\link{Cache}}.}
+memory content. See Details section about \code{quick} in \code{\link[=Cache]{Cache()}}.}
 
 \item{cacheRepo}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}

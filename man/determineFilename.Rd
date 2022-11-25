@@ -20,7 +20,7 @@ for writing the object to disk. If
 \code{TRUE} (the default), it will give it a file name determined by
 \code{.prefix(basename(filename1), prefix)}. If
 a character string, it will use this as its file name. See
-\code{\link{determineFilename}}.}
+\code{\link[=determineFilename]{determineFilename()}}.}
 
 \item{filename1}{Character strings giving the file paths of
 the \emph{input} object (\code{filename1}) \code{filename1}
@@ -35,33 +35,35 @@ will be the directory of the resulting absolute file path.}
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{prefix}{The character string to prepend to \code{filename1}, if \code{filename2}
 not provided.}
 
 \item{...}{Additional arguments passed to methods. For \code{spatialClasses},
-           these are: \code{\link{cropInputs}}, \code{\link{fixErrors}},
-           \code{\link{projectInputs}}, \code{\link{maskInputs}},
-           \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
-           Each of these may also pass \code{...} into other functions, like
-           \code{\link[raster]{writeRaster}}, or \code{sf::st_write}.
-           This might include potentially important arguments like \code{datatype},
-           \code{format}. Also passed to \code{projectRaster},
-           with likely important arguments such as \code{method = "bilinear"}.
-           See details.
+these are: \code{\link[=cropInputs]{cropInputs()}}, \code{\link[=fixErrors]{fixErrors()}},
+\code{\link[=projectInputs]{projectInputs()}}, \code{\link[=maskInputs]{maskInputs()}},
+\code{\link[=determineFilename]{determineFilename()}}, and \code{\link[=writeOutputs]{writeOutputs()}}.
+Each of these may also pass \code{...} into other functions, like
+\code{\link[raster:writeRaster]{raster::writeRaster()}}, or \code{sf::st_write}.
+This might include potentially important arguments like \code{datatype},
+\code{format}. Also passed to \code{projectRaster},
+with likely important arguments such as \code{method = "bilinear"}.
+See details.
 
 \subsection{... passed to:}{
-  \describe{
-    \item{\code{cropInputs}:}{\code{\link[raster]{crop}}}
-    \item{\code{projectInputs}}{\code{\link[raster]{projectRaster}}}
-    \item{\code{maskInputs}}{\code{\link{fastMask}} or \code{\link[raster]{intersect}}}
-    \item{\code{fixErrors}}{\code{\link[raster]{buffer}}}
-    \item{\code{writeOutputs}}{\code{\link[raster]{writeRaster}} or \code{\link[raster]{shapefile}}}
-    \item{\code{determineFilename}}{}
-  }
-  * Can be overridden with \code{useSAcrs}
-  ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
+\describe{
+\item{\code{cropInputs}:}{\code{\link[raster:crop]{raster::crop()}}}
+\item{\code{projectInputs}}{\code{\link[raster:projectRaster]{raster::projectRaster()}}}
+\item{\code{maskInputs}}{\code{\link[=fastMask]{fastMask()}} or \code{\link[raster:intersect]{raster::intersect()}}}
+\item{\code{fixErrors}}{\code{\link[raster:buffer]{raster::buffer()}}}
+\item{\code{writeOutputs}}{\code{\link[raster:writeRaster]{raster::writeRaster()}} or \code{\link[raster:shapefile]{raster::shapefile()}}}
+\item{\code{determineFilename}}{}
+}
+\itemize{
+\item Can be overridden with \code{useSAcrs}
+** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
+}
 }}
 }
 \description{
@@ -71,38 +73,37 @@ Determine the filename, given various combinations of inputs.
 The post processing workflow, which includes this function,
 addresses several scenarios, and depending on which scenario, there are
 several file names at play. For example, \code{Raster} objects may have
-  file-backed data, and so \emph{possess a file name}, whereas \code{Spatial}
-  objects do not. Also, if post processing is part of a \code{\link{prepInputs}}
-  workflow, there will always be a file downloaded. From the perspective of
-  \code{postProcess}, these are the "inputs" or \code{filename1}.
-  Similarly, there may or may not be a desire to write an
-  object to disk after all post processing, \code{filename2}.
+file-backed data, and so \emph{possess a file name}, whereas \code{Spatial}
+objects do not. Also, if post processing is part of a \code{\link[=prepInputs]{prepInputs()}}
+workflow, there will always be a file downloaded. From the perspective of
+\code{postProcess}, these are the "inputs" or \code{filename1}.
+Similarly, there may or may not be a desire to write an
+object to disk after all post processing, \code{filename2}.
 
-  This subtlety means that there are two file names that may be at play:
-  the "input" file name (\code{filename1}), and the "output" filename (\code{filename2}).
-  When this is used within \code{postProcess}, it is straight forward.
+This subtlety means that there are two file names that may be at play:
+the "input" file name (\code{filename1}), and the "output" filename (\code{filename2}).
+When this is used within \code{postProcess}, it is straight forward.
 
+However, when \code{postProcess} is used within a \code{prepInputs} call,
+the \code{filename1} file is the file name of the downloaded file (usually
+automatically known following the downloading, and refered to as \code{targetFile})
+and the \code{filename2} is the file name of the of post-processed file.
 
-  However, when \code{postProcess} is used within a \code{prepInputs} call,
-  the \code{filename1} file is the file name of the downloaded file (usually
-  automatically known following the downloading, and refered to as \code{targetFile})
-  and the \code{filename2} is the file name of the of post-processed file.
+If \code{filename2} is \code{TRUE}, i.e., not an actual file name, then the cropped/masked
+raster will be written to disk with the original \code{filenam1/targetFile}
+name, with \code{prefix} prefixed to the basename(\code{targetFile}).
 
-  If \code{filename2} is \code{TRUE}, i.e., not an actual file name, then the cropped/masked
-  raster will be written to disk with the original \code{filenam1/targetFile}
-  name, with \code{prefix} prefixed to the basename(\code{targetFile}).
-
-  If \code{filename2} is a character string, it will be the path of the saved/written
-  object e.g., passed to \code{writeOutput}. It will be tested whether it is an
-  absolute or relative path and used as is if absolute or
-  prepended with \code{destinationPath} if relative.
+If \code{filename2} is a character string, it will be the path of the saved/written
+object e.g., passed to \code{writeOutput}. It will be tested whether it is an
+absolute or relative path and used as is if absolute or
+prepended with \code{destinationPath} if relative.
 
 If \code{filename2} is \code{logical}, then the output
- filename will be \code{prefix} prefixed to the basename(\code{filename1}).
- If a character string, it
- will be the path returned. It will be tested whether it is an
- absolute or relative path and used as is if absolute or prepended with
- \code{destinationPath} if provided, and if \code{filename2} is relative.
+filename will be \code{prefix} prefixed to the basename(\code{filename1}).
+If a character string, it
+will be the path returned. It will be tested whether it is an
+absolute or relative path and used as is if absolute or prepended with
+\code{destinationPath} if provided, and if \code{filename2} is relative.
 }
 \examples{
 # Add a study area to Crop and Mask to

@@ -45,7 +45,7 @@
                                           unlist(lapply(methods("postProcess"),
                                                         function(x) names(formals(x))))))
 
-#' The \code{reproducible} package environment
+#' The `reproducible` package environment
 #'
 #' Environment used internally to store internal package objects and methods.
 #'

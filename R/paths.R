@@ -210,7 +210,7 @@ setMethod(
 #'   temporary dir should be placed. Defaults to `getOption("reproducible.tempPath")`.
 #' @param create Logical. Should the directory be created. Default `TRUE`.
 #'
-#' @seealso [tempfile2()]
+#' @seealso [tempfile2]
 #' @export
 tempdir2 <- function(sub = "",
                      tempdir = getOption("reproducible.tempPath", .reproducibleTempPath()),
@@ -226,7 +226,7 @@ tempdir2 <- function(sub = "",
 #'
 #' @param ... passed to `tempfile`, e.g., `fileext`
 #'
-#' @seealso [tempdir2()]
+#' @seealso [tempdir2]
 #' @inheritParams tempdir2
 #' @param ... passed to `tempfile`, e.g., `fileext`
 #' @export

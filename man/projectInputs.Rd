@@ -8,7 +8,7 @@
 \alias{projectInputs.SpatRaster}
 \alias{projectInputs.sf}
 \alias{projectInputs.Spatial}
-\title{Project \code{Raster*} or \code{Spatial*} or \code{sf} objects}
+\title{Project \verb{Raster*} or \verb{Spatial*} or \code{sf} objects}
 \usage{
 projectInputs(
   x,
@@ -61,7 +61,7 @@ projectInputs(
 )
 }
 \arguments{
-\item{x}{A \code{Raster*}, \code{Spatial*} or \code{sf} object}
+\item{x}{A \verb{Raster*}, \verb{Spatial*} or \code{sf} object}
 
 \item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
 
@@ -69,17 +69,17 @@ projectInputs(
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Passed to \code{\link[raster]{projectRaster}}.}
+\item{...}{Passed to \code{\link[raster:projectRaster]{raster::projectRaster()}}.}
 
-\item{rasterToMatch}{Template \code{Raster*} object passed to the \code{to} argument of
-\code{\link[raster]{projectRaster}}, thus will changing the
+\item{rasterToMatch}{Template \verb{Raster*} object passed to the \code{to} argument of
+\code{\link[raster:projectRaster]{raster::projectRaster()}}, thus will changing the
 resolution and projection of \code{x}.
-See details in \code{\link{postProcess}}.}
+See details in \code{\link[=postProcess]{postProcess()}}.}
 
-\item{cores}{An \code{integer*} or \code{'AUTO'}. This will be used if \code{gdalwarp} is
-triggered. \code{'AUTO'*} will calculate 90% of the total
+\item{cores}{An \verb{integer*} or \code{'AUTO'}. This will be used if \code{gdalwarp} is
+triggered. \verb{'AUTO'*} will calculate 90\% of the total
 number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.}
 

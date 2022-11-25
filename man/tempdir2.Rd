@@ -12,16 +12,16 @@ tempdir2(
 }
 \arguments{
 \item{sub}{Character string, length 1. Can be a result of
-`file.path("smth", "smth2")` for nested temporary subdirectories.}
+\code{file.path("smth", "smth2")} for nested temporary subdirectories.}
 
 \item{tempdir}{Optional character string where the
-temporary dir should be placed. Defaults to `getOption("reproducible.tempPath")`.}
+temporary dir should be placed. Defaults to \code{getOption("reproducible.tempPath")}.}
 
-\item{create}{Logical. Should the directory be created. Default `TRUE`.}
+\item{create}{Logical. Should the directory be created. Default \code{TRUE}.}
 }
 \description{
-Create a temporary subdirectory in `getOption("reproducible.tempPath")`.
+Create a temporary subdirectory in \code{getOption("reproducible.tempPath")}.
 }
 \seealso{
-[tempfile2()]
+\link{tempfile2}
 }

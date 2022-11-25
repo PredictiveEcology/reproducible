@@ -34,7 +34,7 @@ or tar archive. This is the file \emph{before} it is passed to
 \code{postProcess}. Currently, the internal checksumming does not checksum
 the file after it is \code{postProcess}ed (e.g., cropped/reprojected/masked).
 Using \code{Cache} around \code{prepInputs} will do a sufficient job in these cases.
-See table in \code{\link{preProcess}}.}
+See table in \code{\link[=preProcess]{preProcess()}}.}
 
 \item{url}{Optional character string indicating the URL to download from.
 If not specified, then no download will be attempted. If not entry
@@ -42,13 +42,13 @@ exists in the \code{CHECKSUMS.txt} (in \code{destinationPath}), an entry
 will be created or appended to. This \code{CHECKSUMS.txt} entry will be used
 in subsequent calls to
 \code{prepInputs} or \code{preProcess}, comparing the file on hand with the ad hoc
-\code{CHECKSUMS.txt}. See table in \code{\link{preProcess}}.}
+\code{CHECKSUMS.txt}. See table in \code{\link[=preProcess]{preProcess()}}.}
 
 \item{archive}{Optional character string giving the path of an archive
 containing \code{targetFile}, or a vector giving a set of nested archives
 (e.g., \code{c("xxx.tar", "inner.zip", "inner.rar")}). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the \code{targetFile}. See table in \code{\link{preProcess}}. If it is \code{NA},
+the \code{targetFile}. See table in \code{\link[=preProcess]{preProcess()}}. If it is \code{NA},
 then it will \emph{not} attempt to see it as an archive, even if it has archive-like
 file extension (e.g., \code{.zip}). This may be useful when an R function
 is expecting an archive directly.}
@@ -59,7 +59,7 @@ is expecting an archive directly.}
 \code{"similar"} will extract all files with the same filename without
 file extension as \code{targetFile}. \code{NA} will extract nothing other
 than \code{targetFile}. A character string of specific file names will cause
-only those to be extracted. See table in \code{\link{preProcess}}.}
+only those to be extracted. See table in \code{\link[=preProcess]{preProcess()}}.}
 
 \item{destinationPath}{Character string of a directory in which to download
 and save the file that comes from \code{url} and is also where the function
@@ -76,9 +76,9 @@ into an \code{R} object. See details and examples below.}
 \item{dlFun}{Optional "download function" name, such as \code{"raster::getData"}, which does
 custom downloading, in addition to loading into R. Still experimental.}
 
-\item{quick}{Logical. This is passed internally to \code{\link{Checksums}}
+\item{quick}{Logical. This is passed internally to \code{\link[=Checksums]{Checksums()}}
 (the quickCheck argument), and to
-\code{\link{Cache}} (the quick argument). This results in faster, though
+\code{\link[=Cache]{Cache()}} (the quick argument). This results in faster, though
 less robust checking of inputs. See the respective functions.}
 
 \item{overwrite}{Logical. Should downloading and all the other actions occur
@@ -93,16 +93,16 @@ even if they pass the checksums or the files are all there.}
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{.tempPath}{Optional temporary path for internal file intermediate steps.
 Will be cleared on.exit from this function.}
 
 \item{...}{Additional arguments passed to \code{fun} (i.e,. user supplied),
- \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.
-Since \code{...} is passed to \code{\link{postProcess}}, these will
+\code{\link[=postProcess]{postProcess()}} and \code{\link[=Cache]{Cache()}}.
+Since \code{...} is passed to \code{\link[=postProcess]{postProcess()}}, these will
 \code{...} will also be passed into the inner
-functions, e.g., \code{\link{cropInputs}}. Possibly useful other arguments include
+functions, e.g., \code{\link[=cropInputs]{cropInputs()}}. Possibly useful other arguments include
 \code{dlFun} which is passed to \code{preProcess}. See details and examples.}
 }
 \value{
@@ -120,13 +120,13 @@ This is the first stage of three used in \code{prepInputs}.
 \section{Combinations of \code{targetFile}, \code{url}, \code{archive}, \code{alsoExtract}}{
 
 
-  Use \code{preProcessParams()} for a table describing various parameter combinations and their
-  outcomes.
+Use \code{preProcessParams()} for a table describing various parameter combinations and their
+outcomes.
 
- \code{*} If the \code{url} is a file on Google Drive, checksumming will work
- even without a \code{targetFile} specified because there is an initial attempt
- to get the remove file information (e.g., file name). With that, the connection
- between the \code{url} and the filename used in the \file{CHECKSUMS.txt} file can be made.
+\code{*} If the \code{url} is a file on Google Drive, checksumming will work
+even without a \code{targetFile} specified because there is an initial attempt
+to get the remove file information (e.g., file name). With that, the connection
+between the \code{url} and the filename used in the \file{CHECKSUMS.txt} file can be made.
 }
 
 \author{

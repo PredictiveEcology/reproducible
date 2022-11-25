@@ -4,17 +4,17 @@
 #' @description
 #' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
 #'
-#' With updates to \code{magrittr} to version 2.0, this Cache pipe is now broken.
+#' With updates to `magrittr` to version 2.0, this Cache pipe is now broken.
 #' We are working on an update.
 #'
 #' This pipe can only be used at any point in a pipe chain, but must
-#' be preceded by \code{Cache(...)} (which allows other \code{Cache()
-#' \%C\% ... remaining pipes}
+#' be preceded by `Cache(...)` (which allows other `Cache()
+#' \%C\% ... remaining pipes`
 #' arguments to be passed).
 #'
 #' This will take the input arguments of the first function immediately following
-#' the \code{Cache()} and the pipe chain until the special \code{\%C\%},
-#' evaluate them both against the \code{cacheRepo} argument in \code{Cache}.
+#' the `Cache()` and the pipe chain until the special `\%C\%`,
+#' evaluate them both against the `cacheRepo` argument in `Cache`.
 #' If they exist, then the entire pipe chain will be skipped, and only the
 #' previous final result will be given.
 #' If there is no previous cached copy of the initial function's arguments,
@@ -22,7 +22,7 @@
 #' The final result will be cached for future use.
 #' Therefore, the entire chain must be identical.
 #' The required usage should be straight forward to insert into existing code
-#' that uses pipes (\code{Cache() \%C\% ... remaining pipes}).
+#' that uses pipes (`Cache() \%C\% ... remaining pipes`).
 #'
 #' @aliases %C%
 #' @export
@@ -121,10 +121,10 @@
   }
 }
 
-#' The special assign operator \code{\%<C-\%} is equivalent to Cache. See examples at the end.
+#' The special assign operator `\%<C-\%` is equivalent to Cache. See examples at the end.
 #'
 #' Still experimental and may change. This form cannot pass any arguments to
-#' \code{Cache}, such as \code{cacheRepo}, thus it is of limited utility. However,
+#' `Cache`, such as `cacheRepo`, thus it is of limited utility. However,
 #' it is a clean alternative for simple cases.
 #'
 #' @export

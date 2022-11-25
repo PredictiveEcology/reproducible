@@ -29,7 +29,7 @@ See \code{googledrive::drive_mkdir}. Default \code{FALSE}.}
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{team_drive}{Logical indicating whether to check team drives.}
 }

@@ -1,53 +1,53 @@
 #' Transform a GIS dataset so it has the properties (extent, projection, mask) of another
 #'
 #' This function provides a single step to achieve the GIS operations "crop", "project",
-#' "mask" and possibly "write". It uses primarily the \code{terra} package internally
-#' (with some minor functions from \code{sf} and \code{raster})
+#' "mask" and possibly "write". It uses primarily the `terra` package internally
+#' (with some minor functions from `sf` and `raster`)
 #' in an attempt to be as efficient as possible.
-#' For this function, Gridded means a \code{Raster*} class object from \code{raster} or
-#' a \code{SpatRaster} class object from \code{terra}.
-#' Vector means a \code{Spatial*} class object from \code{sp}, a \code{sf} class object
-#' from \code{sf}, or a \code{SpatVector} class object from \code{terra}.
+#' For this function, Gridded means a `Raster*` class object from `raster` or
+#' a `SpatRaster` class object from `terra`.
+#' Vector means a `Spatial*` class object from `sp`, a `sf` class object
+#' from `sf`, or a `SpatVector` class object from `terra`.
 #'
 #' @section Use Cases:
 #'
-#' The table below shows what will result from passing different classes to \code{from}
-#' and \code{to}:
+#' The table below shows what will result from passing different classes to `from`
+#' and `to`:
 #'
 #' \tabular{lll}{
-#'   \code{from}\tab \code{to}\tab \code{from} will have:\cr
-#'   \code{Gridded}\tab \code{Gridded} \tab the extent, projection, origin, resolution and
-#'                         masking where there are \code{NA} from the {to}\cr
-#'   \code{Gridded}\tab \code{Vector} \tab the projection, origin, and mask from \code{to}, and extent will
+#'   `from`\tab `to`\tab `from` will have:\cr
+#'   `Gridded`\tab `Gridded` \tab the extent, projection, origin, resolution and
+#'                         masking where there are `NA` from the {to}\cr
+#'   `Gridded`\tab `Vector` \tab the projection, origin, and mask from `to`, and extent will
 #'                        be a round number of pixels that fit within the extent
-#'                        of \code{to}. Resolution will be the same as \code{from} \cr
-#'   \code{Vector}\tab \code{Vector} \tab the projection, origin, extent and mask from \code{to}\cr
+#'                        of `to`. Resolution will be the same as `from` \cr
+#'   `Vector`\tab `Vector` \tab the projection, origin, extent and mask from `to`\cr
 #' }
 #'
 #'
-#' If one or more of the \code{*To} arguments are supplied, these will
-#' override individual components of \code{to}. If \code{to} is omitted or \code{NULL},
-#' then only the \code{*To} arguments that are used will be performed. In all cases,
-#' setting a \code{*To} argument to \code{NA} will prevent that step from happening.
+#' If one or more of the `*To` arguments are supplied, these will
+#' override individual components of `to`. If `to` is omitted or `NULL`,
+#' then only the `*To` arguments that are used will be performed. In all cases,
+#' setting a `*To` argument to `NA` will prevent that step from happening.
 #'
-#' @section Backwards compatibility with \code{postProcess}:
+#' @section Backwards compatibility with `postProcess`:
 #'
-#' \subsection{\code{rasterToMatch} and \code{studyArea}:}{
+#' \subsection{`rasterToMatch` and `studyArea`:}{
 #'
-#'   If these are supplied, \code{postProcessTerra} will use them instead
-#'   of \code{to}. If only \code{rasterToMatch} is supplied, it will be assigned to
-#'   \code{to}. If only \code{studyArea} is supplied, it will be used for \code{cropTo}
-#'   and \code{maskTo}; it will only be used for \code{projectTo} if \code{useSAcrs = TRUE}.
-#'   If both \code{rasterToMatch} and \code{studyArea} are supplied,
-#'   \code{studyArea} will only be applied to \code{maskTo} (and optionally \code{projectTo} if
-#'   \code{useSAcrs = TRUE}); everything else will be from \code{rasterToMatch}.
+#'   If these are supplied, `postProcessTerra` will use them instead
+#'   of `to`. If only `rasterToMatch` is supplied, it will be assigned to
+#'   `to`. If only `studyArea` is supplied, it will be used for `cropTo`
+#'   and `maskTo`; it will only be used for `projectTo` if `useSAcrs = TRUE`.
+#'   If both `rasterToMatch` and `studyArea` are supplied,
+#'   `studyArea` will only be applied to `maskTo` (and optionally `projectTo` if
+#'   `useSAcrs = TRUE`); everything else will be from `rasterToMatch`.
 #' }
 #'
-#' \subsection{\code{targetCRS}, \code{filename2}, \code{useSAcrs}:}{
+#' \subsection{`targetCRS`, `filename2`, `useSAcrs`:}{
 #'
-#'   \code{targetCRS} if supplied will be assigned to \code{projectTo}. \code{filename2} will
-#'   be assigned to \code{writeTo}. If \code{useSAcrs} is set, then the \code{studyArea}
-#'   will be assigned to \code{projectTo}. All of these will override any existing values
+#'   `targetCRS` if supplied will be assigned to `projectTo`. `filename2` will
+#'   be assigned to `writeTo`. If `useSAcrs` is set, then the `studyArea`
+#'   will be assigned to `projectTo`. All of these will override any existing values
 #'   for these arguments.
 #' }
 #'
@@ -56,51 +56,51 @@
 #' If `cropTo` is not `NA`, postProcessTerra does cropping twice, both the first and last steps.
 #' It does it first for speed, as cropping is a very fast algorithm. This will quickly remove
 #' a bunch of pixels that are not necessary. But, to not create bias, this first crop is padded
-#' by  \code{2 * res(from)[1]}), so that edge cells still have a complete set of neighbours.
+#' by  `2 * res(from)[1]`), so that edge cells still have a complete set of neighbours.
 #' The second crop is at the end, after projecting and masking. After the projection step,
 #' the crop is no longer tight. Under some conditions, masking will effectively mask and crop in
 #' on step, but under some conditions, this is not true, and the mask leaves padded NAs out to
-#' the extent of the \code{from} (as it is after crop, project, mask). Thus the second
+#' the extent of the `from` (as it is after crop, project, mask). Thus the second
 #' crop removes all NA cells so they are tight to the mask.
 #'
 #'
 #' @return
-#' An object of the same class as \code{from}, but potentially cropped, projected, masked,
+#' An object of the same class as `from`, but potentially cropped, projected, masked,
 #' and written to disk.
 #'
 #' @param from A Gridded or Vector dataset on which to do one or more of:
 #'   crop, project, mask, and write
 #' @param to A Gridded or Vector dataset which is the object
-#'   whose metadata will be the target for cropping, projecting, and masking of \code{from}.
+#'   whose metadata will be the target for cropping, projecting, and masking of `from`.
 #' @param cropTo Optional Gridded or Vector dataset which,
-#'   if supplied, will supply the extent with which to crop \code{from}. To omit
-#'   cropping completely, set this to \code{NA}. If supplied, this will override \code{to}
-#'   for the cropping step. Defaults to \code{NULL}, which means use \code{to}
-#' @param projectTo Optional Gridded or Vector dataset, or \code{crs} object (e.g., sf::st_crs).
+#'   if supplied, will supply the extent with which to crop `from`. To omit
+#'   cropping completely, set this to `NA`. If supplied, this will override `to`
+#'   for the cropping step. Defaults to `NULL`, which means use `to`
+#' @param projectTo Optional Gridded or Vector dataset, or `crs` object (e.g., sf::st_crs).
 #'   If Gridded it will supply
-#'   the \code{crs}, \code{extent}, \code{res}, and \code{origin}
-#'   to project the \code{from} to. If Vector, it will provide the \code{crs} only.
-#'   The resolution and extent will be taken from \code{res(from)} (i.e. \code{ncol(from)*nrow(from)}).
-#'   If a Vector, the extent of the \code{projectTo} is not used (unless it is also passed to \code{cropTo}.
-#'   To omit projecting, set this to \code{NA}.
-#'   If supplied, this will override \code{to}
-#'   for the projecting step. Defaults to \code{NULL}, which means use \code{to}
+#'   the `crs`, `extent`, `res`, and `origin`
+#'   to project the `from` to. If Vector, it will provide the `crs` only.
+#'   The resolution and extent will be taken from `res(from)` (i.e. `ncol(from)*nrow(from)`).
+#'   If a Vector, the extent of the `projectTo` is not used (unless it is also passed to `cropTo`.
+#'   To omit projecting, set this to `NA`.
+#'   If supplied, this will override `to`
+#'   for the projecting step. Defaults to `NULL`, which means use `to`
 #' @param maskTo Optional Gridded or Vector dataset which,
-#'   if supplied, will supply the extent with which to mask \code{from}. If Gridded,
-#'   it will mask with the \code{NA} values on the \code{maskTo}; if Vector, it will
-#'   mask on the \code{terra::aggregate(maskTo)}. To omit
-#'   masking completely, set this to \code{NA}. If supplied,
-#'   this will override \code{to} for the masking step.
-#'   Defaults to \code{NULL}, which means use \code{to}
+#'   if supplied, will supply the extent with which to mask `from`. If Gridded,
+#'   it will mask with the `NA` values on the `maskTo`; if Vector, it will
+#'   mask on the `terra::aggregate(maskTo)`. To omit
+#'   masking completely, set this to `NA`. If supplied,
+#'   this will override `to` for the masking step.
+#'   Defaults to `NULL`, which means use `to`
 #' @param writeTo Optional character string of a filename to use `writeRaster` to save the final
-#'   object. Default is \code{NULL}, which means there is no `writeRaster`
-#' @param method Used if \code{projectTo} is not \code{NULL}, and is the method used for
-#'   interpolation. See \code{terra::project}. Defaults to \code{"bilinear"}
-#' @param datatype A character string, used if \code{writeTo} is not \code{NULL}. See \code{raster::writeRaster}
-#' @param overwrite Logical. Used if \code{writeTo} is not \code{NULL}
-#' @param ... Currently can be either \code{rasterToMatch}, \code{studyArea}, \code{filename2},
-#'   \code{useSAcrs}, or \code{targetCRS} to allow backwards
-#'   compatibility with \code{postProcess}. See section below for details.
+#'   object. Default is `NULL`, which means there is no `writeRaster`
+#' @param method Used if `projectTo` is not `NULL`, and is the method used for
+#'   interpolation. See `terra::project`. Defaults to `"bilinear"`
+#' @param datatype A character string, used if `writeTo` is not `NULL`. See `raster::writeRaster`
+#' @param overwrite Logical. Used if `writeTo` is not `NULL`
+#' @param ... Currently can be either `rasterToMatch`, `studyArea`, `filename2`,
+#'   `useSAcrs`, or `targetCRS` to allow backwards
+#'   compatibility with `postProcess`. See section below for details.
 #' @export
 postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NULL,
                              writeTo = NULL, method = NULL, datatype = "FLT4S",
@@ -220,7 +220,7 @@ isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || is(x, "sf")
 isSpatialAny <- function(x) isGridded(x) || isVector(x)
 
 
-#' Fix common errors in GIS layers, using \code{terra}
+#' Fix common errors in GIS layers, using `terra`
 #'
 #' Currently, this only tests for validity of a SpatVect file, then if there is a problem,
 #' it will run `terra::makeValid`
@@ -383,8 +383,8 @@ projectTo <- function(from, projectTo, method) {
 
 #' @rdname postProcessTerra
 #' @param cropTo A Vector dataset
-#' @param needBuffer Logical. Defaults to \code{TRUE}, meaning nothing is done out
-#'   of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
+#' @param needBuffer Logical. Defaults to `TRUE`, meaning nothing is done out
+#'   of the ordinary. If `TRUE`, then a buffer around the cropTo, so that if a reprojection
 #'   has to happen on the `cropTo` prior to using it as a crop layer, then a buffer
 #'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
 #' @export

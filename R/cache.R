@@ -16,7 +16,7 @@ utils::globalVariables(c(
 #' will decline when the computational time of the "first" function call is fast and/or
 #' the argument values and return objects are large. The default setting (and first
 #' call to Cache) will always save to disk. The 2nd call to the same function will return
-#' from disk, unless \code{options("reproducible.useMemoise" = TRUE)}, then the 2nd time
+#' from disk, unless `options("reproducible.useMemoise" = TRUE)`, then the 2nd time
 #' will recover the object from RAM and is normally much faster (at the expense of RAM use).
 #'
 #' @details
@@ -26,107 +26,96 @@ utils::globalVariables(c(
 #' tested it with many "non-standard" R objects (e.g., RasterLayer objects) and
 #' environments, which tend to be challenging for caching as they are always unique.
 #'
-#' This version of the \code{Cache} function accommodates those four special,
+#' This version of the `Cache` function accommodates those four special,
 #' though quite common, cases by:
 #' \enumerate{
 #'   \item converting any environments into list equivalents;
 #'   \item identifying the dispatched S4 method (including those made through
 #'         inheritance) before hashing so the correct method is being cached;
 #'   \item by hashing the linked file, rather than the Raster object.
-#'         Currently, only file-backed \code{Raster*} objects are digested
-#'         (e.g., not \code{ff} objects, or any other R object where the data
+#'         Currently, only file-backed `Raster*` objects are digested
+#'         (e.g., not `ff` objects, or any other R object where the data
 #'         are on disk instead of in RAM);
-#'   \item Uses \code{\link[digest]{digest}} (formerly fastdigest, which does
+#'   \item Uses [digest::digest()] (formerly fastdigest, which does
 #'         not translate between operating systems).
 #'         This is used for file-backed objects as well.
 #'   \item Cache will save arguments passed by user in a hidden environment. Any
 #'         nested Cache functions will use arguments in this order 1) actual arguments
 #'         passed at each Cache call, 2) any inherited arguments from an outer Cache
-#'         call, 3) the default values of the Cache function. See section on \emph{Nested
-#'         Caching}.
+#'         call, 3) the default values of the Cache function. See section on *Nested
+#'         Caching*.
 #' }
 #'
-#' Caching R objects using \code{archivist::cache} has five important limitations:
-#' \enumerate{
-#'   \item the \pkg{archivist} package detects different environments as different;
-#'   \item it also does not detect S4 methods correctly due to method inheritance;
-#'   \item it does not detect objects that have file-based storage of information
-#'         (specifically \code{\link[raster:Raster-classes]{RasterLayer-class}} objects);
-#'   \item the default hashing algorithm is relatively slow.
-#'   \item heavily nested function calls may want Cache arguments to propagate through
-#' }
 #'
-#' As part of the SpaDES ecosystem of R packages, \code{Cache} can be used
+#' As part of the SpaDES ecosystem of R packages, `Cache` can be used
 #' within SpaDES modules. If it is, then the cached entry will automatically
-#' get 3 extra \code{userTags}: \code{eventTime}, \code{eventType}, and \code{moduleName}.
-#' These can then be used in \code{clearCache} to selectively remove cached objects
-#' by \code{eventTime}, \code{eventType} or \code{moduleName}.
+#' get 3 extra `userTags`: `eventTime`, `eventType`, and `moduleName`.
+#' These can then be used in `clearCache` to selectively remove cached objects
+#' by `eventTime`, `eventType` or `moduleName`.
 #'
-#' \code{Cache} will add a tag to the artifact in the database called \code{accessed},
+#' `Cache` will add a tag to the artifact in the database called `accessed`,
 #' which will assign the time that it was accessed, either read or write.
-#' That way, artifacts can be shown (using \code{showCache}) or removed (using
-#' \code{clearCache}) selectively, based on their access dates, rather than only
-#' by their creation dates. See example in \code{\link{clearCache}}.
-#' \code{Cache} (uppercase C) is used here so that it is not confused with, and does
-#' not mask, the \code{archivist::cache} function.
+#' That way, artifacts can be shown (using `showCache`) or removed (using
+#' `clearCache`) selectively, based on their access dates, rather than only
+#' by their creation dates. See example in [clearCache()].
 #'
 #' @section Nested Caching:
-#' Commonly, Caching is nested, i.e., an outer function is wrapped in a \code{Cache}
-#' function call, and one or more inner functions are also wrapped in a \code{Cache}
-#' function call. A user \emph{can} always specify arguments in every Cache function
+#' Commonly, Caching is nested, i.e., an outer function is wrapped in a `Cache`
+#' function call, and one or more inner functions are also wrapped in a `Cache`
+#' function call. A user *can* always specify arguments in every Cache function
 #' call, but this can get tedious and can be prone to errors. The normal way that
-#' \emph{R} handles arguments is it takes the user passed arguments if any, and
+#' *R* handles arguments is it takes the user passed arguments if any, and
 #' default arguments for all those that have no user passed arguments. We have inserted
-#' a middle step. The order or precedence for any given \code{Cache} function call is
+#' a middle step. The order or precedence for any given `Cache` function call is
 #' 1. user arguments, 2. inherited arguments, 3. default arguments. At this time,
-#' the top level \code{Cache} arguments will propagate to all inner functions unless
-#' each individual \code{Cache} call has other arguments specified, i.e., "middle"
-#' nested \code{Cache} function calls don't propagate their arguments to further "inner"
-#' \code{Cache} function calls.  See example.
+#' the top level `Cache` arguments will propagate to all inner functions unless
+#' each individual `Cache` call has other arguments specified, i.e., "middle"
+#' nested `Cache` function calls don't propagate their arguments to further "inner"
+#' `Cache` function calls.  See example.
 #'
-#' \code{userTags} is unique of all arguments: its values will be appended to the
-#' inherited \code{userTags}.
+#' `userTags` is unique of all arguments: its values will be appended to the
+#' inherited `userTags`.
 #'
 #' @section quick:
-#' The \code{quick} argument is attempting to sort out an ambiguity with character strings:
-#' are they file paths or are they simply character strings. When \code{quick = TRUE},
-#' \code{Cache} will treat these as character strings; when \code{quick = FALSE},
+#' The `quick` argument is attempting to sort out an ambiguity with character strings:
+#' are they file paths or are they simply character strings. When `quick = TRUE`,
+#' `Cache` will treat these as character strings; when `quick = FALSE`,
 #' they will be attempted to be treated as file paths first; if there is no file, then
 #' it will revert to treating them as character strings. If user passes a
-#' character vector to this, then this will behave like \code{omitArgs}:
-#' \code{quick = "file"} will treat the argument \code{"file"} as character string.
+#' character vector to this, then this will behave like `omitArgs`:
+#' `quick = "file"` will treat the argument `"file"` as character string.
 #'
 #' The most often encountered situation where this ambiguity matters is in arguments about
 #' filenames: is the filename an input pointing to an object whose content we want to
 #' assess (e.g., a file-backed raster), or an output (as in saveRDS) and it should not
 #' be assessed. If only run once, the output file won't exist, so it will be treated
 #' as a character string. However, once the function has been run once, the output file
-#' will exist, and \code{Cache(...)} will assess it, which is incorrect. In these cases,
-#' the user is advised to use \code{quick = "TheOutputFilenameArgument"} to
+#' will exist, and `Cache(...)` will assess it, which is incorrect. In these cases,
+#' the user is advised to use `quick = "TheOutputFilenameArgument"` to
 #' specify the argument whose content on disk should not be assessed, but whose
-#' character string should be assessed (distinguishing it from \code{omitArgs =
-#' "TheOutputFilenameArgument"}, which will not assess the file content nor the
+#' character string should be assessed (distinguishing it from `omitArgs =
+#' "TheOutputFilenameArgument"`, which will not assess the file content nor the
 #' character string).
 #'
-#' This is relevant for objects of class \code{character}, \code{Path} and
-#' \code{Raster} currently. For class \code{character}, it is ambiguous whether
+#' This is relevant for objects of class `character`, `Path` and
+#' `Raster` currently. For class `character`, it is ambiguous whether
 #' this represents a character string or a vector of file paths. If it is known
-#' that character strings should not be treated as paths, then \code{quick =
-#' TRUE} will be much faster, with no loss of information. If it is file or
-#' directory, then it will digest the file content, or \code{basename(object)}.
-#' For class \code{Path} objects, the file's metadata (i.e., filename and file
-#' size) will be hashed instead of the file contents if \code{quick = TRUE}. If
-#' set to \code{FALSE} (default), the contents of the file(s) are hashed. If
-#' \code{quick = TRUE}, \code{length} is ignored. \code{Raster} objects are
+#' that character strings should not be treated as paths, then `quick =
+#' TRUE` will be much faster, with no loss of information. If it is file or
+#' directory, then it will digest the file content, or `basename(object)`.
+#' For class `Path` objects, the file's metadata (i.e., filename and file
+#' size) will be hashed instead of the file contents if `quick = TRUE`. If
+#' set to `FALSE` (default), the contents of the file(s) are hashed. If
+#' `quick = TRUE`, `length` is ignored. `Raster` objects are
 #' treated as paths, if they are file-backed.
 #'
 #' @section Caching Speed:
 #' Caching speed may become a critical aspect of a final product. For example,
 #' if the final product is a shiny app, rerunning the entire project may need
 #' to take less then a few seconds at most. There are 3 arguments that affect
-#' Cache speed: \code{quick}, \code{length}, and
-#' \code{algo}. \code{quick} is passed to \code{.robustDigest}, which currently
-#' only affects \code{Path} and \code{Raster*} class objects. In both cases, \code{quick}
+#' Cache speed: `quick`, `length`, and
+#' `algo`. `quick` is passed to `.robustDigest`, which currently
+#' only affects `Path` and `Raster*` class objects. In both cases, `quick`
 #' means that little or no disk-based information will be assessed.
 #'
 #'
@@ -135,43 +124,43 @@ utils::globalVariables(c(
 #' done. Possibilities include:
 #' \enumerate{
 #'   \item hash the string as is (this will be very system specific, meaning a
-#'         \code{Cache} call will not work if copied between systems or directories);
-#'   \item hash the \code{basename(path)};
+#'         `Cache` call will not work if copied between systems or directories);
+#'   \item hash the `basename(path)`;
 #'   \item hash the contents of the file.
 #' }
 #' If paths are passed in as is (i.e,. character string), the result will not be predictable.
-#' Instead, one should use the wrapper function \code{asPath(path)}, which sets the
-#' class of the string to a \code{Path}, and one should decide whether one wants
-#' to digest the content of the file (using \code{quick = FALSE}),
-#' or just the filename (\code{(quick = TRUE)}). See examples.
+#' Instead, one should use the wrapper function `asPath(path)`, which sets the
+#' class of the string to a `Path`, and one should decide whether one wants
+#' to digest the content of the file (using `quick = FALSE`),
+#' or just the filename (`(quick = TRUE)`). See examples.
 #'
 #' @section Stochasticity:
 #' In general, it is expected that caching will only be used when stochasticity
 #' is not relevant, or if a user has achieved sufficient stochasticity (e.g., via
-#' sufficient number of calls to \code{experiment}) such that no new explorations
+#' sufficient number of calls to `experiment`) such that no new explorations
 #' of stochastic outcomes are required. It will also be very useful in a
 #' reproducible workflow.
 #'
 #' @section useCache:
-#' Logical or numeric. If \code{FALSE} or \code{0}, then the entire Caching
+#' Logical or numeric. If `FALSE` or `0`, then the entire Caching
 #' mechanism is bypassed and the
 #' function is evaluated as if it was not being Cached. Default is
-#' \code{getOption("reproducible.useCache")}), which is \code{TRUE} by default,
+#' `getOption("reproducible.useCache")`), which is `TRUE` by default,
 #' meaning use the Cache mechanism. This may be useful to turn all Caching on or
 #' off in very complex scripts and nested functions. Increasing levels of numeric
 #' values will cause deeper levels of Caching to occur. Currently, only implemented
-#' in \code{postProcess}: to do both caching of inner \code{cropInputs}, \code{projectInputs}
-#' and \code{maskInputs}, and caching of outer \code{postProcess}, use
-#' \code{useCache = 2}; to skip the inner sequence of 3 functions, use \code{useCache = 1}.
+#' in `postProcess`: to do both caching of inner `cropInputs`, `projectInputs`
+#' and `maskInputs`, and caching of outer `postProcess`, use
+#' `useCache = 2`; to skip the inner sequence of 3 functions, use `useCache = 1`.
 #' For large objects, this may prevent many duplicated save to disk events.
 #'
-#' If \code{"overwrite"}
-#' (which can be set with \code{options("reproducible.useCache" =
-#' "overwrite")}), then the function invoke the caching mechanism but will purge
+#' If `"overwrite"`
+#' (which can be set with `options("reproducible.useCache" =
+#' "overwrite")`), then the function invoke the caching mechanism but will purge
 #' any entry that is matched, and it will be replaced with the results of the
 #' current call.
 #'
-#' If \code{"devMode"}: The point of this mode is to facilitate using the Cache when
+#' If `"devMode"`: The point of this mode is to facilitate using the Cache when
 #' functions and datasets are continually in flux, and old Cache entries are
 #' likely stale very often. In `devMode`, the cache mechanism will work as
 #' normal if the Cache call is the first time for a function OR if it
@@ -182,70 +171,70 @@ utils::globalVariables(c(
 #' (identified based on matching `userTags`), then continue with normal `Cache`.
 #' For this to work correctly, `userTags` must be unique for each function call.
 #' This should be used with caution as it is still experimental. Currently, if
-#' \code{userTags} are not unique to a single entry in the cacheRepo, it will
-#' default to the behaviour of \code{useCache = TRUE} with a message. This means
-#' that \code{"devMode"} is most useful if used from the start of a project.
+#' `userTags` are not unique to a single entry in the cacheRepo, it will
+#' default to the behaviour of `useCache = TRUE` with a message. This means
+#' that `"devMode"` is most useful if used from the start of a project.
 #'
-#' @section \code{useCloud}:
+#' @section `useCloud`:
 #' This is a way to store all or some of the local Cache in the cloud.
 #' Currently, the only cloud option is Google Drive, via \pkg{googledrive}.
 #' For this to work, the user must be or be able to be authenticated
-#' with \code{googledrive::drive_auth}. The principle behind this
-#' \code{useCloud} is that it will be a full or partial mirror of a local Cache.
+#' with `googledrive::drive_auth`. The principle behind this
+#' `useCloud` is that it will be a full or partial mirror of a local Cache.
 #' It is not intended to be used independently from a local Cache. To share
 #' objects that are in the Cloud with another person, it requires 2 steps. 1)
-#' share the \code{cloudFolderID$id}, which can be retrieved by
-#' \code{getOption("reproducible.cloudFolderID")$id} after at least one Cache
-#' call has been made. 2) The other user must then set their  \code{cacheFolderID} in a
-#' \code{Cache\(..., reproducible.cloudFolderID = \"the ID here\"\)} call or
+#' share the `cloudFolderID$id`, which can be retrieved by
+#' `getOption("reproducible.cloudFolderID")$id` after at least one Cache
+#' call has been made. 2) The other user must then set their  `cacheFolderID` in a
+#' `Cache\(..., reproducible.cloudFolderID = \"the ID here\"\)` call or
 #' set their option manually
-#' \code{options\(\"reproducible.cloudFolderID\" = \"the ID here\"\)}.
+#' `options\(\"reproducible.cloudFolderID\" = \"the ID here\"\)`.
 #'
-#' If \code{TRUE}, then this Cache call will download
+#' If `TRUE`, then this Cache call will download
 #'   (if local copy doesn't exist, but cloud copy does exist), upload
 #'   (local copy does or doesn't exist and
 #'   cloud copy doesn't exist), or
-#'   will not download nor upload if object exists in both. If \code{TRUE} will be at
-#'   least 1 second slower than setting this to \code{FALSE}, and likely even slower as the
+#'   will not download nor upload if object exists in both. If `TRUE` will be at
+#'   least 1 second slower than setting this to `FALSE`, and likely even slower as the
 #'   cloud folder gets large. If a user wishes to keep "high-level" control, set this to
-#'   \code{getOption("reproducible.useCloud", FALSE)} or
-#'   \code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
-#'   be \code{FALSE} or \code{TRUE}, respectively) so it can be turned on and off with
-#'   this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})
+#'   `getOption("reproducible.useCloud", FALSE)` or
+#'   `getOption("reproducible.useCloud", TRUE)` (if the default behaviour should
+#'   be `FALSE` or `TRUE`, respectively) so it can be turned on and off with
+#'   this option. NOTE: *This argument will not be passed into inner/nested Cache calls.*)
 #'
-#' @section \code{sideEffect}:
-#' If \code{sideEffect} is not \code{FALSE}, then metadata about any files that
-#' added to \code{sideEffect} will be added as an attribute to the cached copy.
+#' @section `sideEffect`:
+#' If `sideEffect` is not `FALSE`, then metadata about any files that
+#' added to `sideEffect` will be added as an attribute to the cached copy.
 #' Subsequent calls to this function will assess for the presence of the new files in the
-#' \code{sideEffect} location.
-#' If the files are identical (\code{quick = FALSE}) or their file size is identical
-#' (\code{quick = TRUE}), then the cached copy of the function will be returned
+#' `sideEffect` location.
+#' If the files are identical (`quick = FALSE`) or their file size is identical
+#' (`quick = TRUE`), then the cached copy of the function will be returned
 #' (and no files changed).
 #' If there are missing or incorrect files, then the function will re-run.
 #' This will accommodate the situation where the function call is identical, but somehow the side
 #' effect files were modified.
-#' If \code{sideEffect} is logical, then the function will check the \code{cacheRepo};
+#' If `sideEffect` is logical, then the function will check the `cacheRepo`;
 #' if it is a path, then it will check the path.
 #' The function will assess whether the files to be downloaded are found locally prior to download.
-#' If it fails the local test, then it will try to recover from a local copy if (\code{makeCopy}
-#' had been set to \code{TRUE} the first time the function was run.
-#' Currently, local recovery will only work if\code{makeCOpy} was set to \code{TRUE} the first time
-#' \code{Cache} was run). Default is \code{FALSE}.
+#' If it fails the local test, then it will try to recover from a local copy if (`makeCopy`
+#' had been set to `TRUE` the first time the function was run.
+#' Currently, local recovery will only work if`makeCOpy` was set to `TRUE` the first time
+#' `Cache` was run). Default is `FALSE`.
 #'
 #' @note As indicated above, several objects require pre-treatment before
-#' caching will work as expected. The function \code{.robustDigest} accommodates this.
+#' caching will work as expected. The function `.robustDigest` accommodates this.
 #' It is an S4 generic, meaning that developers can produce their own methods for
 #' different classes of objects. Currently, there are methods for several types
-#' of classes. See \code{\link{.robustDigest}}.
+#' of classes. See [.robustDigest()].
 #'
-#' See \code{\link{.robustDigest}} for other specifics for other classes.
+#' See [.robustDigest()] for other specifics for other classes.
 #'
 #' @include cache-helpers.R
 #' @include robustDigest.R
 #'
 #' @param FUN Either a function or an unevaluated function call (e.g., using
-#'            \code{quote}.
-#' @param ... Arguments passed to \code{FUN}
+#'            `quote`.
+#' @param ... Arguments passed to `FUN`
 #'
 #' @param .objects Character vector of objects to be digested. This is only applicable
 #'                if there is a list, environment (or similar) with named objects
@@ -255,67 +244,67 @@ utils::globalVariables(c(
 #'                objects, this will only be applied outermost first.
 #'
 #' @param .cacheExtra A an arbitrary R object that will be included in the `CacheDigest`,
-#'       but otherwise not passed into the \code{FUN}.
+#'       but otherwise not passed into the `FUN`.
 #'
 #' @param outputObjects Optional character vector indicating which objects to
 #'                      return. This is only relevant for list, environment (or similar) objects
 #'
 #' @param cacheRepo A repository used for storing cached objects.
-#'                  This is optional if \code{Cache} is used inside a SpaDES module.
+#'                  This is optional if `Cache` is used inside a SpaDES module.
 #'
-#' @param length Numeric. If the element passed to Cache is a \code{Path} class
-#'        object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with
+#' @param length Numeric. If the element passed to Cache is a `Path` class
+#'        object (from e.g., `asPath(filename)`) or it is a `Raster` with
 #'        file-backing, then this will be
-#'        passed to \code{digest::digest}, essentially limiting the number of bytes
-#'        to digest (for speed). This will only be used if \code{quick = FALSE}.
-#'        Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.
+#'        passed to `digest::digest`, essentially limiting the number of bytes
+#'        to digest (for speed). This will only be used if `quick = FALSE`.
+#'        Default is `getOption("reproducible.length")`, which is set to `Inf`.
 #'
-#' @param compareRasterFileLength Being deprecated; use \code{length}.
+#' @param compareRasterFileLength Being deprecated; use `length`.
 #'
 #' @param omitArgs Optional character string of arguments in the FUN to omit from the digest.
 #'
-#' @param classOptions Optional list. This will pass into \code{.robustDigest} for
-#'        specific classes. Should be options that the \code{.robustDigest} knows what
+#' @param classOptions Optional list. This will pass into `.robustDigest` for
+#'        specific classes. Should be options that the `.robustDigest` knows what
 #'        to do with.
 #'
-#' @param debugCache Character or Logical. Either \code{"complete"} or \code{"quick"} (uses
-#'        partial matching, so "c" or "q" work). \code{TRUE} is equivalent to \code{"complete"}.
-#'        If \code{"complete"}, then the returned object from the Cache
-#'        function will have two attributes, \code{debugCache1} and \code{debugCache2},
-#'        which are the entire \code{list(...)} and that same object, but after all
-#'        \code{.robustDigest} calls, at the moment that it is digested using
-#'        \code{digest}, respectively. This \code{attr(mySimOut, "debugCache2")}
+#' @param debugCache Character or Logical. Either `"complete"` or `"quick"` (uses
+#'        partial matching, so "c" or "q" work). `TRUE` is equivalent to `"complete"`.
+#'        If `"complete"`, then the returned object from the Cache
+#'        function will have two attributes, `debugCache1` and `debugCache2`,
+#'        which are the entire `list(...)` and that same object, but after all
+#'        `.robustDigest` calls, at the moment that it is digested using
+#'        `digest`, respectively. This `attr(mySimOut, "debugCache2")`
 #'        can then be compared to a subsequent call and individual items within
-#'        the object \code{attr(mySimOut, "debugCache1")} can be compared.
-#'        If \code{"quick"}, then it will return the same two objects directly,
-#'        without evalutating the \code{FUN(...)}.
+#'        the object `attr(mySimOut, "debugCache1")` can be compared.
+#'        If `"quick"`, then it will return the same two objects directly,
+#'        without evalutating the `FUN(...)`.
 #'
 #' @param sideEffect Logical or path. Determines where the function will look for
 #'        new files following function completion. See Details.
-#'        \emph{NOTE: this argument is experimental and may change in future releases.}
+#'        *NOTE: this argument is experimental and may change in future releases.*
 #'
-#' @param makeCopy Logical. If \code{sideEffect = TRUE}, and \code{makeCopy = TRUE},
-#'        a copy of the downloaded files will be made and stored in the \code{cacheRepo}
+#' @param makeCopy Logical. If `sideEffect = TRUE`, and `makeCopy = TRUE`,
+#'        a copy of the downloaded files will be made and stored in the `cacheRepo`
 #'        to speed up subsequent file recovery in the case where the original copy
 #'        of the downloaded files are corrupted or missing. Currently only works when
-#'        set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.
-#'        \emph{NOTE: this argument is experimental and may change in future releases.}
+#'        set to `TRUE` during the first run of `Cache`. Default is `FALSE`.
+#'        *NOTE: this argument is experimental and may change in future releases.*
 #'
 #' @param userTags A character vector with descriptions of the Cache function call. These
 #'   will be added to the Cache so that this entry in the Cache can be found using
-#'   \code{userTags} e.g., via \code{\link{showCache}}.
+#'   `userTags` e.g., via [showCache()].
 #'
 #' @param notOlderThan A time. Load an object from the Cache if it was created after this.
 #'
-#' @param quick Logical or character. If \code{TRUE},
+#' @param quick Logical or character. If `TRUE`,
 #'        no disk-based information will be assessed, i.e., only
-#'        memory content. See Details section about \code{quick} in \code{\link{Cache}}.
+#'        memory content. See Details section about `quick` in [Cache()].
 #'
 #' @param verbose Numeric, -1 silent (where possible), 0 being very quiet,
 #'        1 showing more messaging, 2 being more messaging, etc.
 #'        Default is 1. Above 3 will output much more information about the internals of
 #'        Caching, which may help diagnose Caching challenges. Can set globally with an
-#'        option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}
+#'        option, e.g., `options('reproducible.verbose' = 0) to reduce to minimal`
 #'
 #' @param cacheId Character string. If passed, this will override the calculated hash
 #'        of the inputs, and return the result from this cacheId in the cacheRepo.
@@ -325,38 +314,38 @@ utils::globalVariables(c(
 #'        where Cache is not correctly detecting unchanged inputs. This will guarantee
 #'        the object will be identical each time; this may be useful in operational code.
 #'
-#' @param useCache Logical, numeric or \code{"overwrite"} or \code{"devMode"}. See details.
+#' @param useCache Logical, numeric or `"overwrite"` or `"devMode"`. See details.
 #'
 #' @param useCloud Logical. See Details.
 #'
-#' @param cloudFolderID A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
-#'   If left as \code{NULL}, the function will create a cloud folder with name from last
-#'   two folder levels of the \code{cacheRepo} path, :
-#'   \code{paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))}.
-#'   This \code{cloudFolderID} will be added to \code{options("reproducible.cloudFolderID")},
+#' @param cloudFolderID A googledrive dribble of a folder, e.g., using `drive_mkdir()`.
+#'   If left as `NULL`, the function will create a cloud folder with name from last
+#'   two folder levels of the `cacheRepo` path, :
+#'   `paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))`.
+#'   This `cloudFolderID` will be added to `options("reproducible.cloudFolderID")`,
 #'   but this will not persist across sessions. If this is a character string, it will
 #'   treat this as a folder name to create or use on GoogleDrive.
 #'
 #' @param showSimilar A logical or numeric. Useful for debugging.
-#'        If \code{TRUE} or \code{1}, then if the Cache
+#'        If `TRUE` or `1`, then if the Cache
 #'        does not find an identical archive in the cacheRepo, it will report (via message)
 #'        the next most similar archive, and indicate which argument(s) is/are different.
-#'        If a number larger than \code{1}, then it will report the N most similar archived
+#'        If a number larger than `1`, then it will report the N most similar archived
 #'        objects.
 #'
 #' @inheritParams digest::digest
 #' @inheritParams DBI::dbConnect
 #' @inheritParams DBI::dbWriteTable
 #'
-#' @param digestPathContent Being deprecated. Use \code{quick}.
+#' @param digestPathContent Being deprecated. Use `quick`.
 #'
-#' @return As with \code{archivist::cache}, returns the value of the
+#' @return Returns the value of the
 #' function call or the cached version (i.e., the result from a previous call
 #' to this same cached function with identical arguments).
 #'
-#' @seealso \code{\link{showCache}}, \code{\link{clearCache}}, \code{\link{keepCache}},
-#'   \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}},
-#'   \code{\link{pipe}}
+#' @seealso [showCache()], [clearCache()], [keepCache()],
+#'   [CacheDigest()], [movedCache()], [.robustDigest()],
+#'   [pipe()]
 #'
 #' @author Eliot McIntire
 #' @export
@@ -1185,17 +1174,17 @@ unmakeMemoisable.default <- function(x) {
   x
 }
 
-#' Write to cache repository, using \code{future::future}
+#' Write to cache repository, using `future::future`
 #'
-#' This will be used internally if \code{options("reproducible.futurePlan" = TRUE)}.
+#' This will be used internally if `options("reproducible.futurePlan" = TRUE)`.
 #' This is still experimental.
 #'
 #' @param written Integer. If zero or positive then it needs to be written still.
 #'                Should be 0 to start.
 #' @param outputToSave The R object to save to repository
 #' @param cacheRepo The file path of the repository
-#' @param userTags Character string of tags to attach to this \code{outputToSave} in
-#'                 the \code{CacheRepo}
+#' @param userTags Character string of tags to attach to this `outputToSave` in
+#'                 the `CacheRepo`
 #'
 #' @export
 #' @inheritParams Cache
@@ -1380,7 +1369,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
 
 #' Set subattributes within a list by reference
 #'
-#' This uses \code{data.table::setattr}, but in the case where there is
+#' This uses `data.table::setattr`, but in the case where there is
 #' only a single element within a list attribute.
 #' @param object An arbitrary object
 #' @param attr The attribute name (that is a list object) to change
@@ -1397,13 +1386,13 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
   setattr(object, attr, .CacheAttr)
 }
 
-#' The exact digest function that \code{Cache} uses
+#' The exact digest function that `Cache` uses
 #'
 #' This can be used by a user to pre-test their arguments before running
-#' \code{Cache}, for example to determine whether there is a cached copy.
+#' `Cache`, for example to determine whether there is a cached copy.
 #'
 #'
-#' @param ... passed to \code{.robustDigest}; this is generally empty except
+#' @param ... passed to `.robustDigest`; this is generally empty except
 #'    for advanced use.
 #' @param objsToDigest A list of all the objects (e.g., arguments) to be digested
 #' @param calledFrom a Character string, length 1, with the function to
@@ -1413,9 +1402,9 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
 #' @inheritParams Cache
 #'
 #' @return
-#' A list of length 2 with the \code{outputHash}, which is the digest
-#' that Cache uses for \code{cacheId} and also \code{preDigest}, which is
-#' the digest of each sub-element in \code{objsToDigest}.
+#' A list of length 2 with the `outputHash`, which is the digest
+#' that Cache uses for `cacheId` and also `preDigest`, which is
+#' the digest of each sub-element in `objsToDigest`.
 #'
 #' @export
 #'

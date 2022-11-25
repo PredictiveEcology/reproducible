@@ -63,5 +63,5 @@ These are not intended for normal use.
 \code{CacheStoredFile} returns the file path to the file with the specified hash value.
 
 \code{CacheIsACache} returns a logical of whether the specified cachePath
-  is actually a functioning cache.
+is actually a functioning cache.
 }

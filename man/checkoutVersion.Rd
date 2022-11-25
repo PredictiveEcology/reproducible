@@ -7,7 +7,7 @@
 checkoutVersion(repo, localRepoPath = ".", cred = "", ...)
 }
 \arguments{
-\item{repo}{Repository address in the format \code{username/repo[/subdir][@ref|#pull]}.
+\item{repo}{Repository address in the format \verb{username/repo[/subdir][@ref|#pull]}.
 Alternatively, you can specify subdir and/or ref using the respective parameters (see below);
 if both is specified, the values in repo take precedence.}
 
