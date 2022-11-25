@@ -148,7 +148,7 @@ setMethod(
 #' @rdname checkCacheRepo
 #' @examples
 #' a <- "test"
-#' .checkCacheRepo(a) # no cache repository supplied
+#' .checkCacheRepo(a, create = TRUE) # no cache repository supplied
 #'
 setGeneric(".checkCacheRepo", function(object, create = FALSE,
                                        verbose = getOption("reproducible.verbose", 1)) {
