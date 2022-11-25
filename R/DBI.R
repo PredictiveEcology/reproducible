@@ -172,7 +172,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     }
   }
   if (!isTRUE(isMemoised)) {
-    f <- CacheStoredFile(cachePath = cachePath, hash = cacheId, format)
+    f <- CacheStoredFile(cachePath = cachePath, cacheId = cacheId, format)
 
     # First test if it is correct format
     needConvert <- FALSE
@@ -226,7 +226,7 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   }
   if (is(conn, "character")) {
     fns <- list()
-    fns[[1]] <- CacheStoredFile(cachePath, hash = cacheId, format = format)
+    fns[[1]] <- CacheStoredFile(cachePath, cacheId = cacheId, format = format)
     fns[[2]] <- CacheDBFilesMultiple(cachePath, cacheId = cacheId, format = format,
                                      drv = drv, conn = conn, allowConvertFormat = FALSE)
     unlink(unlist(fns))
@@ -247,7 +247,7 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     }
 
     DBI::dbClearResult(res)
-    unlink(CacheStoredFile(cachePath, hash = cacheId, format = format))
+    unlink(CacheStoredFile(cachePath, cacheId = cacheId, format = format))
   }
 
 }
@@ -717,7 +717,7 @@ CacheDBFilesMultiple <- function(cachePath = getOption("reproducible.cachePath")
   if (missing(cacheId)) {
     outOught <- outExists
   } else {
-    outOught <- normPath(paste0(CacheStoredFile(cachePath = cachePath, hash = cacheId, format = format),
+    outOught <- normPath(paste0(CacheStoredFile(cachePath = cachePath, cacheId = cacheId, format = format),
                                 endingOught))
     outExists <- unlist(lapply(cacheId, grep, x = outExists, value = TRUE))
   }
@@ -730,7 +730,7 @@ CacheDBFilesMultiple <- function(cachePath = getOption("reproducible.cachePath")
   if (length(outOught)) {
     if (!missing(cacheId)) {
       # } else {
-      # paste0(CacheStoredFile(cachePath = cachePath, hash = cacheId, format = NULL), ending)
+      # paste0(CacheStoredFile(cachePath = cachePath, cacheId = cacheId, format = NULL), ending)
       outOught <- unlist(lapply(cacheId, grep, x = outOught, value = TRUE))
     }
   }
