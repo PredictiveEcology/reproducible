@@ -58,19 +58,16 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @examples
 #' \dontrun{
-#' moduleName <- "my_module"
-#' modulePath <- file.path("path", "to", "modules")
+#' modulePath <- file.path(tempdir(), "myModulePath")
+#' dir.create(modulePath, recursive = TRUE, showWarnings = FALSE)
+#' moduleName <- "myModule"
+#' cat("hi", file = file.path(modulePath, moduleName)) # put something there for this example
 #'
 #' ## verify checksums of all data files
-#' Checksums(moduleName, modulePath)
+#' Checksums(modulePath, files = moduleName)
 #'
 #' ## write new CHECKSUMS.txt file
-#'
-#' # 1. verify that all data files are present (and no extra files are present)
-#' list.files(file.path(modulePath, moduleName, "data"))
-#'
-#' # 2. calculate file checksums and write to file (this will overwrite CHECKSUMS.txt)
-#' Checksums(moduleName, modulePath, write = TRUE)
+#' Checksums(files = moduleName, modulePath, write = TRUE)
 #' }
 #'
 setGeneric("Checksums", function(path, write, quickCheck = FALSE,
