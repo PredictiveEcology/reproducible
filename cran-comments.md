@@ -1,6 +1,6 @@
-## Updated release
+## Release information
 
-This release fixes CRAN check problems caused by changes to GDAL/GEOS/PROJ libraries.
+This is a resubmission to restore the package to CRAN following archival due to removal of dependency package `Require`, which has now been restored to CRAN.
 See `NEWS.md` for a full list of changes.
 
 ## Test environments
@@ -34,6 +34,4 @@ There were no ERRORs nor WARNINGs or NOTEs.
 
 ## Downstream dependencies
 
-We checked 3 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
-
- * We failed to check 0 packages
+Currently none, but we are working to resubmit our other packages that depend on this one, and they are passing.
