@@ -469,25 +469,23 @@ ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = "th
 
 options(opt)
 
+# To use Postgres, set environment variables with the required credentials
+# if (requireNamespace("RPostgres")) {
+#   Sys.setenv(PGHOST = "server.url")
+#   Sys.setenv(PGPORT = 5432)
+#   Sys.setenv(PGDATABASE = "mydatabase")
+#   Sys.setenv(PGUSER = "mydbuser")
+#   Sys.setenv(PGPASSWORD = "mysecurepassword")
+#
+#   conn <- DBI::dbConnect(RPostgres::Postgres())
+#   options("reproducible.conn" = conn)
+#
+#   # Will use postgres for cache data table, and tempdir() for saved R objects
+#   Cache(rnorm, 1, cacheRepo = tempdir())
+# }
+
 # For more in depth uses, see vignette
-\dontrun{
-  # To use Postgres, set environment variables with the required credentials
-  if (requireNamespace("RPostgres")) {
-    Sys.setenv(PGHOST = "server.url")
-    Sys.setenv(PGPORT = 5432)
-    Sys.setenv(PGDATABASE = "mydatabase")
-    Sys.setenv(PGUSER = "mydbuser")
-    Sys.setenv(PGPASSWORD = "mysecurepassword")
-
-    conn <- DBI::dbConnect(RPostgres::Postgres())
-    options("reproducible.conn" = conn)
-
-    # Will use postgres for cache data table, and tempdir() for saved R objects
-    Cache(rnorm, 1, cacheRepo = tempdir())
-  }
-
-  browseVignettes(package = "reproducible")
-}
+browseVignettes(package = "reproducible")
 }
 \seealso{
 \code{\link{showCache}}, \code{\link{clearCache}}, \code{\link{keepCache}},

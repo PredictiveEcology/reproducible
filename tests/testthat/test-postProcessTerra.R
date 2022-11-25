@@ -8,7 +8,7 @@ test_that("testing terra", {
       testOnExit(testInitOut)
     }, add = TRUE)
 
-    if (requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
+    if (requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)) {
       f <- system.file("ex/elev.tif", package = "terra")
       tf <- tempfile(fileext = ".tif")
       tf1 <- tempfile(fileext = ".tif")
