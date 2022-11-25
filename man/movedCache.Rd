@@ -28,24 +28,27 @@ object (in order to clone an existing connection).}
 }
 \description{
 If a user manually copies a complete Cache folder (including the db file and rasters folder),
-there are issues that must be addressed. Primarily, the db table must be renamed. Run
+there are issues that must be addressed, depending on the Cache backend used.
+If using DBI (e.g., RSQLite or Postgres), the db table must be renamed. Run
 this function after a manual copy of a cache folder. See examples for one way to do that.
 }
 \examples{
-tmpCache <- normalizePath(file.path(tempdir(), "tmpCache"), mustWork = FALSE)
-tmpdir <- normalizePath(file.path(tempdir(), "tmpdir"), mustWork = FALSE)
-bb <- Cache(rnorm, 1, cacheRepo = tmpCache)
+tmpdir <- "tmpdir"
+tmpCache <- "tmpCache"
+tmpCacheDir <- normalizePath(file.path(tempdir(), tmpCache), mustWork = FALSE)
+tmpdirPath <- normalizePath(file.path(tempdir(), tmpdir), mustWork = FALSE)
+bb <- Cache(rnorm, 1, cacheRepo = tmpCacheDir)
 
 # Copy all files from tmpCache to tmpdir
-froms <- normalizePath(dir(tmpCache, recursive = TRUE, full.names = TRUE),
+froms <- normalizePath(dir(tmpCacheDir, recursive = TRUE, full.names = TRUE),
                        mustWork = FALSE)
-dir.create(file.path(tmpdir, "rasters"), recursive = TRUE)
-dir.create(file.path(tmpdir, "cacheOutputs"), recursive = TRUE)
+dir.create(file.path(tmpdirPath, "rasters"), recursive = TRUE)
+dir.create(file.path(tmpdirPath, "cacheOutputs"), recursive = TRUE)
 file.copy(from = froms, overwrite = TRUE,
           to = gsub(tmpCache, tmpdir, froms))
 
 # Must use 'movedCache' to update the database table
-movedCache(new = tmpdir, old = tmpCache)
-bb <- Cache(rnorm, 1, cacheRepo = tmpdir) # should recover the previous call
+movedCache(new = tmpdirPath, old = tmpCacheDir)
+bb <- Cache(rnorm, 1, cacheRepo = tmpdirPath) # should recover the previous call
 
 }
