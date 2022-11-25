@@ -225,6 +225,15 @@ test_that("testing terra", {
       expect_true(all.equal(t20, t21))
       expect_true(identical(terra::size(x), terra::size(t20)))
 
+      ## same projection change resolution only (will likely affect extent)
+      y2 <- terra::rast(crs = crs(y), res = 0.008333333*2)
+      y2[] <- 1
+      t22 <- postProcessTerra(x, to = y2)
+      expect_true(identical(crs(t22), crs(x)))
+      expect_true(terra::ext(t22) == terra::ext(y2))   ## "identical" may say FALSE (decimal plates?)
+      expect_true(identical(res(t22), res(y2)))
+      expect_false(identical(res(t22), res(x)))
+
       valbersSF <- sf::st_as_sf(valbers)
       xVectSF <- sf::st_as_sf(xVect)
       ## It is a real warning about geometry stuff, but not relevant here

@@ -318,8 +318,14 @@ projectTo <- function(from, projectTo, method) {
         projectTo <- terra::rast(projectTo)
 
       projectToOrig <- projectTo # keep for below
-      if (sf::st_crs(projectTo) == sf::st_crs(from) &&
-          all(res(projectTo) == res(from))) {
+      sameProj <- sf::st_crs(projectTo) == sf::st_crs(from)
+      sameRes <- if (isVector(from) | isVector(projectTo)) {
+        TRUE
+      } else {
+        all(res(projectTo) == res(from))
+      }
+
+      if (sameProj && sameRes) {
         messagePrepInputs("    projection of from is same as projectTo, not projecting")
       } else {
         messagePrepInputs("    projecting...")
