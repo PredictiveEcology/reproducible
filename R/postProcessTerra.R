@@ -319,7 +319,8 @@ projectTo <- function(from, projectTo, method) {
 
       projectToOrig <- projectTo # keep for below
       sameProj <- sf::st_crs(projectTo) == sf::st_crs(from)
-      sameRes <- if (isVector(from) | isVector(projectTo)) {
+      isProjectToVecOrCRS <- is(projectTo, "crs") || isVector(projectTo)
+      sameRes <- if (isVector(from) || isProjectToVecOrCRS) {
         TRUE
       } else {
         all(res(projectTo) == res(from))
@@ -330,7 +331,7 @@ projectTo <- function(from, projectTo, method) {
       } else {
         messagePrepInputs("    projecting...")
         st <- Sys.time()
-        if (is(projectTo, "crs") || isVector(projectTo)) {
+        if (isProjectToVecOrCRS) {
           projectToTmp <- sf::st_as_sfc(sf::st_bbox(from))
           if (isVector(projectTo))
             projectTo <- sf::st_crs(projectTo)
