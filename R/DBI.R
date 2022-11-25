@@ -2,8 +2,8 @@
 #'
 #' @param cachePath A path describing the directory in which to create
 #'   the database file(s)
-#' @param drv A driver, passed to \code{dbConnect}
-#' @param force Logical. Should it create a cache in the \code{cachePath},
+#' @param drv A driver, passed to `dbConnect`
+#' @param force Logical. Should it create a cache in the `cachePath`,
 #'   even if it already exists, overwriting.
 #' @importFrom data.table data.table
 #' @importFrom DBI dbConnect dbDisconnect dbWriteTable
@@ -45,10 +45,10 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
 
 #' @rdname cache-tools
 #' @inheritParams Cache
-#' @param cacheId The hash string representing the result of \code{.robustDigest}
+#' @param cacheId The hash string representing the result of `.robustDigest`
 #' @param obj The R object to save to the cache
-#' @param linkToCacheId Optional. If a \code{cacheId} is provided here, then a \code{file.link}
-#'   will be made to the file with that \code{cacheId} name in the cache repo.
+#' @param linkToCacheId Optional. If a `cacheId` is provided here, then a `file.link`
+#'   will be made to the file with that `cacheId` name in the cache repo.
 #'   This is used when identical outputs exist in the cache. This will save disk space.
 saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -149,8 +149,14 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   }
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
-  a <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-    dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
+  if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
+    dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
+    saveFileInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
+
+  } else {
+    a <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
+      dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
+  }
 
   return(obj)
 }
@@ -232,7 +238,7 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   dbClearResult(res)
 
-  unlink(CacheStoredFile(cachePath, hash = cacheId, format = format))
+  unlink(CacheStoredFile(cachePath, cacheId = cacheId, format = format))
 }
 
 dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -375,7 +381,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 #' @rdname CacheHelpers
 #' @export
 #' @details
-#' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
+#' `CacheStoredFile` returns the file path to the file with the specified hash value.
 CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL)) {
@@ -410,29 +416,29 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 }
 
 #' @details
-#' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
+#' `CacheStoredFile` returns the file path to the file with the specified hash value.
 #'
 #' @rdname CacheHelpers
 #' @export
-#' @param hash The cacheId or otherwise digested hash value, as character string.
+#' @param cacheId The cacheId or otherwise digested hash value, as character string.
 #' @param format The text string representing the file extension used normally by
-#'   different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
-#'   to \code{getOption("reproducible.cacheSaveFormat", "rds")}
-CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), hash,
+#'   different save formats; currently only `"rds"` or `"qs"`. Defaults
+#'   to `getOption("reproducible.cacheSaveFormat", "rds")`
+CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cacheId,
                             format = getOption("reproducible.cacheSaveFormat", "rds")) {
   csf <- if (isTRUE(useDBI()) == FALSE) {
     "rda"
   } else {
     format
   }
-  csExtension <- if (csf == "qs") {
+  csExtension <- if (isTRUE("qs" %in% csf)) {
     "qs"
-  } else if (csf == "rds") {
+  } else if (isTRUE("rds" %in% csf)) {
     "rds"
   } else {
     "rda"
   }
-  filename <- paste(hash, csExtension, sep = ".")
+  filename <- paste(cacheId, csExtension, sep = ".")
   file.path(CacheStorageDir(cachePath), filename)
 }
 
@@ -462,11 +468,11 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
 
 #' @rdname CacheHelpers
 #' @param create Logical. Currently only affects non RQSLite default drivers. If this
-#'   is \code{TRUE} and there is no Cache database, the function will create one.
+#'   is `TRUE` and there is no Cache database, the function will create one.
 #' @importFrom DBI dbListTables
 #' @export
 #' @details
-#' \code{CacheIsACache} returns a logical of whether the specified cachePath
+#' `CacheIsACache` returns a logical of whether the specified cachePath
 #'   is actually a functioning cache.
 CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), create = FALSE,
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -520,32 +526,36 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 #' Deal with moved cache issues
 #'
 #' If a user manually copies a complete Cache folder (including the db file and rasters folder),
-#' there are issues that must be addressed. Primarily, the db table must be renamed. Run
+#' there are issues that must be addressed, depending on the Cache backend used.
+#' If using DBI (e.g., RSQLite or Postgres), the db table must be renamed. Run
 #' this function after a manual copy of a cache folder. See examples for one way to do that.
 #'
-#' @param  new Either the path of the new \code{cachePath} where the cache was moved or copied to, or
+#' @param  new Either the path of the new `cachePath` where the cache was moved or copied to, or
 #'   the new DB Table Name
-#' @param  old Optional, if there is only one table in the \code{new} cache path.
-#'   Either the path of the previous \code{cachePath} where the cache was moved or copied from, or
+#' @param  old Optional, if there is only one table in the `new` cache path.
+#'   Either the path of the previous `cachePath` where the cache was moved or copied from, or
 #'   the old DB Table Name
 #' @inheritParams Cache
 #' @importFrom DBI dbListTables
 #' @export
 #' @examples
-#' tmpCache <- file.path(tempdir(), "tmpCache")
-#' tmpdir <- file.path(tempdir(), "tmpdir")
-#' bb <- Cache(rnorm, 1, cacheRepo = tmpCache)
+#' tmpdir <- "tmpdir"
+#' tmpCache <- "tmpCache"
+#' tmpCacheDir <- normalizePath(file.path(tempdir(), tmpCache), mustWork = FALSE)
+#' tmpdirPath <- normalizePath(file.path(tempdir(), tmpdir), mustWork = FALSE)
+#' bb <- Cache(rnorm, 1, cacheRepo = tmpCacheDir)
 #'
 #' # Copy all files from tmpCache to tmpdir
-#' froms <- normPath(dir(tmpCache, recursive = TRUE, full.names = TRUE))
-#' checkPath(file.path(tmpdir, "rasters"), create = TRUE)
-#' checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
+#' froms <- normalizePath(dir(tmpCacheDir, recursive = TRUE, full.names = TRUE),
+#'                        mustWork = FALSE)
+#' dir.create(file.path(tmpdirPath, "rasters"), recursive = TRUE)
+#' dir.create(file.path(tmpdirPath, "cacheOutputs"), recursive = TRUE)
 #' file.copy(from = froms, overwrite = TRUE,
-#'           to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
+#'           to = gsub(tmpCache, tmpdir, froms))
 #'
 #' # Must use 'movedCache' to update the database table
-#' movedCache(new = tmpdir, old = tmpCache)
-#' bb <- Cache(rnorm, 1, cacheRepo = tmpdir) # should recover the previous call
+#' movedCache(new = tmpdirPath, old = tmpCacheDir)
+#' bb <- Cache(rnorm, 1, cacheRepo = tmpdirPath) # should recover the previous call
 #'
 movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                        conn = getOption("reproducible.conn", NULL)) {
@@ -623,4 +633,9 @@ saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
     fs <- file.size(fts)
   }
   fs
+}
+
+CacheDBFileSingle <- function(cachePath, cacheId) {
+  paste0(CacheStoredFile(cachePath = cachePath, cacheId = cacheId),
+         paste0(".dt.", getOption("reproducible.cacheSaveFormat")))
 }

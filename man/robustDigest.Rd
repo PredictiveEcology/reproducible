@@ -80,7 +80,7 @@ Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.}
 
 \item{quick}{Logical or character. If \code{TRUE},
 no disk-based information will be assessed, i.e., only
-memory content. See Details section about \code{quick} in \code{\link{Cache}}.}
+memory content. See Details section about \code{quick} in \code{\link[=Cache]{Cache()}}.}
 
 \item{classOptions}{Optional list. This will pass into \code{.robustDigest} for
 specific classes. Should be options that the \code{.robustDigest} knows what
@@ -111,8 +111,8 @@ work correctly.
 \section{Classes}{
 
 
-\code{Raster*} objects have the potential for disk-backed storage, thus, require more work.
-Also, because \code{Raster*} can have a built-in representation for having their data content
+\verb{Raster*} objects have the potential for disk-backed storage, thus, require more work.
+Also, because \verb{Raster*} can have a built-in representation for having their data content
 located on disk, this format will be maintained if the raster already is file-backed,
 i.e., to create \code{.tif} or \code{.grd} backed rasters, use \code{writeRaster} first,
 then \code{Cache}.
@@ -126,7 +126,7 @@ Functions (which are contained within environments) are
 converted to a text representation via a call to \code{format(FUN)}.
 
 Objects contained within a list or environment are recursively hashed
-using \code{\link[digest]{digest}}, while removing all references to
+using \code{\link[digest:digest]{digest::digest()}}, while removing all references to
 environments.
 
 Character strings are first assessed with \code{dir.exists} and \code{file.exists}

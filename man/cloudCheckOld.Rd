@@ -13,12 +13,12 @@ cloudCheckOld(toDigest, checksumsFileID = NULL, cloudFolderID = NULL)
 provided as a character string.}
 
 \item{cloudFolderID}{The google folder ID where a new checksums file should
- be written. This will only be used if \code{checksumsFileID} is not provided
+be written. This will only be used if \code{checksumsFileID} is not provided
 provided as a character string.}
 }
 \description{
 Very experimental
 }
 \seealso{
-\code{\link{cloudSyncCacheOld}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}}
+\code{\link[=cloudSyncCacheOld]{cloudSyncCacheOld()}}, \code{\link[=Cache]{Cache()}}, \code{\link[=cloudWriteOld]{cloudWriteOld()}}
 }

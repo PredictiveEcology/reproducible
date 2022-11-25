@@ -1,6 +1,6 @@
-#' @param n Number of non-null arguments passed to \code{preProcess}.
-#' E.g., passing \code{n = 1} returns combinations with only a single non-NULL parameter.
-#' If \code{NULL} (default), all parameter combinations are returned.
+#' @param n Number of non-null arguments passed to `preProcess`.
+#' E.g., passing `n = 1` returns combinations with only a single non-NULL parameter.
+#' If `NULL` (default), all parameter combinations are returned.
 #'
 #' @export
 #' @rdname preProcess
@@ -106,26 +106,26 @@ preProcessParams <- function(n = NULL) {
 
 #' Download, Checksum, Extract files
 #'
-#' This does downloading (via \code{downloadFile}), checksumming (\code{Checksums}),
-#' and extracting from archives (\code{extractFromArchive}), plus cleaning up of input
+#' This does downloading (via `downloadFile`), checksumming (`Checksums`),
+#' and extracting from archives (`extractFromArchive`), plus cleaning up of input
 #' arguments (e.g., paths, function names).
-#' This is the first stage of three used in \code{prepInputs}.
+#' This is the first stage of three used in `prepInputs`.
 #'
 #' @return
-#' A list with 5 elements: \code{checkSums} (the result of a \code{Checksums}
-#' after downloading), \code{dots} (cleaned up \code{...}, including deprecated argument checks),
-#' \code{fun} (the function to be used to load the \code{preProcess}ed object from disk),
-#' and \code{targetFilePath} (the fully qualified path to the \code{targetFile}).
+#' A list with 5 elements: `checkSums` (the result of a `Checksums`
+#' after downloading), `dots` (cleaned up `...`, including deprecated argument checks),
+#' `fun` (the function to be used to load the `preProcess`ed object from disk),
+#' and `targetFilePath` (the fully qualified path to the `targetFile`).
 #'
-#' @section Combinations of \code{targetFile}, \code{url}, \code{archive}, \code{alsoExtract}:
+#' @section Combinations of `targetFile`, `url`, `archive`, `alsoExtract`:
 #'
-#'   Use \code{preProcessParams()} for a table describing various parameter combinations and their
+#'   Use `preProcessParams()` for a table describing various parameter combinations and their
 #'   outcomes.
 #'
-#'  \code{*} If the \code{url} is a file on Google Drive, checksumming will work
-#'  even without a \code{targetFile} specified because there is an initial attempt
+#'  `*` If the `url` is a file on Google Drive, checksumming will work
+#'  even without a `targetFile` specified because there is an initial attempt
 #'  to get the remove file information (e.g., file name). With that, the connection
-#'  between the \code{url} and the filename used in the \file{CHECKSUMS.txt} file can be made.
+#'  between the `url` and the filename used in the \file{CHECKSUMS.txt} file can be made.
 #'
 #' @inheritParams prepInputs
 #' @inheritParams downloadFile
@@ -907,17 +907,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' Hardlink, symlink, or copy a file
 #'
 #' Attempt first to make a hardlink. If that fails, try to make
-#' a symlink (on non-windows systems and \code{symlink = TRUE}).
+#' a symlink (on non-windows systems and `symlink = TRUE`).
 #' If that fails, copy the file.
 #'
 #' @note Use caution with files-backed objects (e.g., rasters). See examples.
 #'
 #' @param from,to  Character vectors, containing file names or paths.
-#'                 \code{to} can alternatively be the path to a single existing directory.
+#'                 `to` can alternatively be the path to a single existing directory.
 #' @param symlink  Logical indicating whether to use symlink (instead of hardlink).
-#'                 Default \code{FALSE}.
+#'                 Default `FALSE`.
 #' @inheritParams prepInputs
-#' @seealso \code{\link{file.link}}, \code{\link{file.symlink}}, \code{\link{file.copy}}.
+#' @seealso [file.link()], [file.symlink()], [file.copy()].
 #'
 #' @author Alex Chubaty and Eliot McIntire
 #' @export

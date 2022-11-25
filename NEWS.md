@@ -4,10 +4,10 @@ Version 1.2.12
 ==============
 
 ## Dependency changes
-* none
+* `Require` has been removed
 
 ## Enhancements
-* none
+* examples were reworked, replaced, improved
 
 ## Bug fixes
 * `postProcess` now also checks resolution when assessing whether to project 

@@ -20,13 +20,13 @@ or tar archive. This is the file \emph{before} it is passed to
 \code{postProcess}. Currently, the internal checksumming does not checksum
 the file after it is \code{postProcess}ed (e.g., cropped/reprojected/masked).
 Using \code{Cache} around \code{prepInputs} will do a sufficient job in these cases.
-See table in \code{\link{preProcess}}.}
+See table in \code{\link[=preProcess]{preProcess()}}.}
 
 \item{archive}{Optional character string giving the path of an archive
 containing \code{targetFile}, or a vector giving a set of nested archives
 (e.g., \code{c("xxx.tar", "inner.zip", "inner.rar")}). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the \code{targetFile}. See table in \code{\link{preProcess}}. If it is \code{NA},
+the \code{targetFile}. See table in \code{\link[=preProcess]{preProcess()}}. If it is \code{NA},
 then it will \emph{not} attempt to see it as an archive, even if it has archive-like
 file extension (e.g., \code{.zip}). This may be useful when an R function
 is expecting an archive directly.}
@@ -37,7 +37,7 @@ exists in the \code{CHECKSUMS.txt} (in \code{destinationPath}), an entry
 will be created or appended to. This \code{CHECKSUMS.txt} entry will be used
 in subsequent calls to
 \code{prepInputs} or \code{preProcess}, comparing the file on hand with the ad hoc
-\code{CHECKSUMS.txt}. See table in \code{\link{preProcess}}.}
+\code{CHECKSUMS.txt}. See table in \code{\link[=preProcess]{preProcess()}}.}
 }
 \description{
 Purge individual line items from checksums file

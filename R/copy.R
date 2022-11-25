@@ -36,9 +36,9 @@ file.move <- function(from, to, overwrite = FALSE) {
 #' @param object  An R object (likely containing environments) or an environment.
 #'
 #' @param filebackedDir A directory to copy any files that are backing R objects,
-#'                      currently only valid for \code{Raster} classes. Defaults
-#'                      to \code{.reproducibleTempPath()}, which is unlikely to be very useful.
-#'                      Can be \code{NULL}, which means that the file will not be
+#'                      currently only valid for `Raster` classes. Defaults
+#'                      to `.reproducibleTempPath()`, which is unlikely to be very useful.
+#'                      Can be `NULL`, which means that the file will not be
 #'                      copied and could therefore cause a collision as the
 #'                      pre-copied object and post-copied object would have the same
 #'                      file backing them.
@@ -50,7 +50,7 @@ file.move <- function(from, to, overwrite = FALSE) {
 #' @importFrom data.table copy
 #' @inheritParams Cache
 #' @rdname Copy
-#' @seealso \code{\link{.robustDigest}}
+#' @seealso [.robustDigest()]
 #'
 #' @examples
 #' e <- new.env()
@@ -77,7 +77,8 @@ file.move <- function(from, to, overwrite = FALSE) {
 #' f$one
 #' e$one
 #'
-#' \dontrun{
+#' # To create a new deep copy method, use the following template
+#' if (FALSE) {
 #' setMethod("Copy", signature = "the class", # where = specify here if not in a package,
 #'   definition = function(object, filebackendDir, ...) {
 #'   # write deep copy code here

@@ -18,7 +18,7 @@
 A character vector of hashes.
 }
 \description{
-Internal function. Wrapper for \code{\link[digest]{digest}} using \code{xxhash64}.
+Internal function. Wrapper for \code{\link[digest:digest]{digest::digest()}} using \code{xxhash64}.
 }
 \author{
 Alex Chubaty

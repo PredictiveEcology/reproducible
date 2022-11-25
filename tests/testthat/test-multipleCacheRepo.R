@@ -28,17 +28,19 @@ test_that("test multiple cacheRepo", {
   expect_true(length(unique(dCache[[.cacheTableHashColName()]]))==1)
 
   f <- Cache(rnorm, 2)
-  suppressMessages(fCache <- showCache())
-  expect_true(length(unique(fCache[[.cacheTableHashColName()]]))==1)
+  suppressMessages({
+    fCache <- showCache()
+  })
+  expect_true(length(unique(fCache[[.cacheTableHashColName()]])) == 1)
 
   on.exit(options(opt), add = TRUE)
 })
 
-
 ##########################
 test_that("test multiple cacheRepo with 1 of them a cloudCache", {
   skip(message = "test cloudCache inside Cache -- Not fully written test")
-  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  if (!requireNamespace("googledrive", quietly = TRUE))
+    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   #if (!interactive())
   testInitOut <- testInit(libraries = "googledrive")
   on.exit({

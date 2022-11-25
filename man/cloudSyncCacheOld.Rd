@@ -17,7 +17,7 @@ cloudSyncCacheOld(
 )
 }
 \arguments{
-\item{cacheRepo}{See \code{x} in \code{\link{showCache}}}
+\item{cacheRepo}{See \code{x} in \code{\link[=showCache]{showCache()}}}
 
 \item{checksumsFileID}{A google file ID where the checksums data.table is located,
 provided as a character string.}
@@ -62,6 +62,6 @@ This is still experimental, see examples.
 \code{cloudSyncCacheOld} will remove any entries in a cloudCache that are not in a
 }
 \seealso{
-\code{\link{cloudCache}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}},
-  \code{\link{cloudCheckOld}}
+\code{\link[=cloudCache]{cloudCache()}}, \code{\link[=Cache]{Cache()}}, \code{\link[=cloudWriteOld]{cloudWriteOld()}},
+\code{\link[=cloudCheckOld]{cloudCheckOld()}}
 }

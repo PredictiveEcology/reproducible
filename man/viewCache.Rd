@@ -94,8 +94,8 @@ will work unless strict beginning (^) and end ($) of string
 characters are used.
 Matching will be against any of the 3 columns returned by \code{showCache()},
 i.e., \code{artifact}, \code{tagValue} or \code{tagName}.
-Also, length \code{userTags} > 1, then matching is by `and`.
-For `or` matching, use \code{|} in a single character string.
+Also, length \code{userTags} > 1, then matching is by \code{and}.
+For \code{or} matching, use \code{|} in a single character string.
 See examples.}
 
 \item{after}{A time (POSIX, character understandable by data.table).
@@ -134,7 +134,7 @@ passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}}
 
 \item{secs}{Currently 3 options: the number of seconds to pass to \code{clearCache(after = secs)},
 a \code{POSIXct} time e.g., from \code{Sys.time()}, or missing. If missing,
-        the default, then it will delete the most recent entry in the Cache.}
+the default, then it will delete the most recent entry in the Cache.}
 }
 \value{
 Will clear all objects (or those that match \code{userTags}, or those
@@ -158,11 +158,11 @@ If \code{userTags} is used, this will override \code{after} or \code{before}.
 i.e., to remove any cache entries touched in the last \code{secs} seconds.
 
 \describe{
-  \item{\code{clearCache}}{remove items from the cache based on their
-                           \code{userTag} or \code{times} values.}
-  \item{\code{keepCache}}{remove all cached items \emph{except} those based on
-                          certain \code{userTags} or \code{times} values.}
-  \item{\code{showCache}}{display the contents of the cache.}
+\item{\code{clearCache}}{remove items from the cache based on their
+\code{userTag} or \code{times} values.}
+\item{\code{keepCache}}{remove all cached items \emph{except} those based on
+certain \code{userTags} or \code{times} values.}
+\item{\code{showCache}}{display the contents of the cache.}
 }
 }
 \note{
@@ -217,6 +217,6 @@ cc(ask = FALSE, x = tmpDir) # Cache is
 cc(ask = FALSE, x = tmpDir) # Cache is already empty
 }
 \seealso{
-\code{\link{mergeCache}}. Many more examples
-in \code{\link{Cache}}.
+\code{\link[=mergeCache]{mergeCache()}}. Many more examples
+in \code{\link[=Cache]{Cache()}}.
 }

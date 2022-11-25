@@ -93,7 +93,7 @@ test_that("prepInputs doesn't work (part 3)", {
   expect_identical(dataType(b1), dt1)
 
   # now raster with sf ## TODO: temporarily skip these tests due to fasterize not being updated yet for crs changes
-  if (requireNamespace("fasterize")) {
+  if (requireNamespace("fasterize", quietly = TRUE)) {
     r1 <- fasterize::fasterize(nc1, r)
     r2 <- postProcess(r1, studyArea = ncSmall, filename2 = NULL)
     expect_true(is(r2, "RasterLayer"))
@@ -116,9 +116,11 @@ test_that("prepInputs doesn't work (part 3)", {
                              "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
     nc3 <- suppressWarningsSpecific({
       spTransform(as(nc1, "Spatial"), CRSobj = CRS(nonLatLongProj2))
-    }, falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition")
+    }, falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition|PROJ support is provided by the sf and terra packages among others")
     nc4 <- cropInputs(nc3, studyArea = ncSmall)
-    ncSmall2 <- spTransform(as(ncSmall, "Spatial"), CRSobj = CRS(nonLatLongProj2))
+    ncSmall2 <- suppressWarningsSpecific({
+      spTransform(as(ncSmall, "Spatial"), CRSobj = CRS(nonLatLongProj2))
+    }, falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition|PROJ support is provided by the sf and terra packages among others")
     expect_true(isTRUE(all.equal(extent(nc4), extent(ncSmall2))))
 
     mess <- capture_error({
