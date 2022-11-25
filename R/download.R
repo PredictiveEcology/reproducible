@@ -374,9 +374,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' Download file from generic source url
 #'
 #' @param url  The url (link) to the file.
-#' @param needChecksums Logical indicating whether to generate checksums.
-#'
-#' ## TODO: add overwrite arg to the function?
+#' @param needChecksums Logical indicating whether to generate checksums. ## TODO: add overwrite arg to the function?
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal

@@ -14,9 +14,7 @@ dlGeneric(
 \arguments{
 \item{url}{The url (link) to the file.}
 
-\item{needChecksums}{Logical indicating whether to generate checksums.
-\subsection{TODO: add overwrite arg to the function?}{
-}}
+\item{needChecksums}{Logical indicating whether to generate checksums. ## TODO: add overwrite arg to the function?}
 
 \item{destinationPath}{Character string of a directory in which to download
 and save the file that comes from \code{url} and is also where the function
