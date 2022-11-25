@@ -3,13 +3,13 @@
 #' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
 #'
 #' @export
-#' @param x  An object of postProcessing, e.g., \code{spatialClasses}.
+#' @param x  An object of postProcessing, e.g., `spatialClasses`.
 #'           See individual methods. This can be provided as a
-#'           \code{rlang::quosure} or a normal R object.
+#'           `rlang::quosure` or a normal R object.
 #' @importFrom utils capture.output
 #' @importFrom raster buffer
 #' @importFrom sp spTransform
-#' @seealso \code{prepInputs}
+#' @seealso `prepInputs`
 #' @inheritParams prepInputs
 #' @rdname postProcess
 postProcess <- function(x, ...) {
@@ -34,110 +34,110 @@ postProcess.list <- function(x, ...) {
   lapply(x, function(y) postProcess(y, ...))
 }
 
-#' Post processing for \code{spatialClasses}
+#' Post processing for `spatialClasses`
 #'
-#' The method for \code{spatialClasses} (\code{Raster*} and \code{Spatial*}) will
+#' The method for `spatialClasses` (`Raster*` and `Spatial*`) will
 #' crop, reproject, and mask, in that order.
-#' This is a wrapper for \code{\link{cropInputs}}, \code{\link{fixErrors}},
-#' \code{\link{projectInputs}}, \code{\link{maskInputs}} and \code{\link{writeOutputs}},
+#' This is a wrapper for [cropInputs()], [fixErrors()],
+#' [projectInputs()], [maskInputs()] and [writeOutputs()],
 #' with a decent amount of data manipulation between these calls so that the crs match.
 #'
 #' @section Post processing sequence:
 #'
-#'   If the \code{rasterToMatch} or \code{studyArea} are passed, then
+#'   If the `rasterToMatch` or `studyArea` are passed, then
 #'   the following sequence will occur:
 #'
 #'   \enumerate{
-#'     \item Fix errors \code{\link{fixErrors}}. Currently only errors fixed are for
-#'            \code{SpatialPolygons} using \code{buffer(..., width = 0)}.
-#'     \item Crop using \code{\link{cropInputs}}
-#'     \item Project using \code{\link{projectInputs}}
-#'     \item Mask using \code{\link{maskInputs}}
-#'     \item Determine file name \code{\link{determineFilename}}
-#'     \item Write that file name to disk, optionally \code{\link{writeOutputs}}
+#'     \item Fix errors [fixErrors()]. Currently only errors fixed are for
+#'            `SpatialPolygons` using `buffer(..., width = 0)`.
+#'     \item Crop using [cropInputs()]
+#'     \item Project using [projectInputs()]
+#'     \item Mask using [maskInputs()]
+#'     \item Determine file name [determineFilename()]
+#'     \item Write that file name to disk, optionally [writeOutputs()]
 #'   }
 #'
 #'   NOTE: checksumming does not occur during the post-processing stage, as
 #'   there are no file downloads. To achieve fast results, wrap
-#'   \code{prepInputs} with \code{Cache}
+#'   `prepInputs` with `Cache`
 #'
-#'   NOTE: \code{sf} objects are still very experimental.
+#'   NOTE: `sf` objects are still very experimental.
 #'
 #' @inheritParams prepInputs
 #'
 #' @inheritParams cropInputs
 #'
 #' @param filename1  Character strings giving the file paths of
-#'                   the \emph{input} object (\code{filename1}) \code{filename1}
+#'                   the *input* object (`filename1`) `filename1`
 #'                   is only used for messaging (i.e., the object itself is passed
-#'                   in as \code{x}) and possibly naming of output (see details
-#'                   and \code{filename2}).
+#'                   in as `x`) and possibly naming of output (see details
+#'                   and `filename2`).
 #'
-#' @param filename2   \code{filename2} is optional, and is either
+#' @param filename2   `filename2` is optional, and is either
 #'                   NULL (no writing of outputs to disk), or several options
 #'                   for writing the object to disk. If
-#'                   \code{TRUE} (the default), it will give it a file name determined by
-#'                   \code{.prefix(basename(filename1), prefix)}. If
+#'                   `TRUE` (the default), it will give it a file name determined by
+#'                   `.prefix(basename(filename1), prefix)`. If
 #'                   a character string, it will use this as its file name. See
-#'                   \code{\link{determineFilename}}.
+#'                   [determineFilename()].
 #'
-#' @param useSAcrs Logical. If \code{FALSE}, the default, then the desired projection
-#'                 will be taken from \code{rasterToMatch} or none at all.
-#'                 If \code{TRUE}, it will be taken from \code{studyArea}. See table
+#' @param useSAcrs Logical. If `FALSE`, the default, then the desired projection
+#'                 will be taken from `rasterToMatch` or none at all.
+#'                 If `TRUE`, it will be taken from `studyArea`. See table
 #'                 in details below.
 #'
-#' @param ... Additional arguments passed to methods. For \code{spatialClasses},
-#'            these are: \code{\link{cropInputs}}, \code{\link{fixErrors}},
-#'            \code{\link{projectInputs}}, \code{\link{maskInputs}},
-#'            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
-#'            Each of these may also pass \code{...} into other functions, like
-#'            \code{\link[raster]{writeRaster}}, or \code{sf::st_write}.
-#'            This might include potentially important arguments like \code{datatype},
-#'            \code{format}. Also passed to \code{projectRaster},
-#'            with likely important arguments such as \code{method = "bilinear"}.
+#' @param ... Additional arguments passed to methods. For `spatialClasses`,
+#'            these are: [cropInputs()], [fixErrors()],
+#'            [projectInputs()], [maskInputs()],
+#'            [determineFilename()], and [writeOutputs()].
+#'            Each of these may also pass `...` into other functions, like
+#'            [raster::writeRaster()], or `sf::st_write`.
+#'            This might include potentially important arguments like `datatype`,
+#'            `format`. Also passed to `projectRaster`,
+#'            with likely important arguments such as `method = "bilinear"`.
 #'            See details.
 #'
 #' \subsection{... passed to:}{
 #'   \describe{
-#'     \item{\code{cropInputs}:}{\code{\link[raster]{crop}}}
-#'     \item{\code{projectInputs}}{\code{\link[raster]{projectRaster}}}
-#'     \item{\code{maskInputs}}{\code{\link{fastMask}} or \code{\link[raster]{intersect}}}
-#'     \item{\code{fixErrors}}{\code{\link[raster]{buffer}}}
-#'     \item{\code{writeOutputs}}{\code{\link[raster]{writeRaster}} or \code{\link[raster]{shapefile}}}
-#'     \item{\code{determineFilename}}{}
+#'     \item{`cropInputs`:}{[raster::crop()]}
+#'     \item{`projectInputs`}{[raster::projectRaster()]}
+#'     \item{`maskInputs`}{[fastMask()] or [raster::intersect()]}
+#'     \item{`fixErrors`}{[raster::buffer()]}
+#'     \item{`writeOutputs`}{[raster::writeRaster()] or [raster::shapefile()]}
+#'     \item{`determineFilename`}{}
 #'   }
-#'   * Can be overridden with \code{useSAcrs}
-#'   ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
+#'   * Can be overridden with `useSAcrs`
+#'   ** Will mask with `NA`s from `rasterToMatch` if `maskWithRTM`
 #' }
 #'
-#' @section Passing \code{rasterToMatch} and/or \code{studyArea}:
+#' @section Passing `rasterToMatch` and/or `studyArea`:
 #'
 #' Depending on which of these were passed, different things will happen to the
-#' \code{targetFile} located at \code{filename1}.
+#' `targetFile` located at `filename1`.
 #'
-#' \subsection{If \code{targetFile} is a \code{Raster*} object:}{
+#' \subsection{If `targetFile` is a `Raster*` object:}{
 #'   \tabular{lccc}{
-#'                       \tab \code{rasterToMatch} \tab \code{studyArea} \tab             Both \cr
-#'     \code{extent}     \tab Yes                  \tab   Yes        \tab \code{rasterToMatch} \cr
-#'     \code{resolution} \tab Yes                  \tab   No         \tab \code{rasterToMatch} \cr
-#'     \code{projection} \tab Yes                  \tab   No*        \tab \code{rasterToMatch}*\cr
-#'     \code{alignment}  \tab Yes                  \tab   No         \tab \code{rasterToMatch} \cr
-#'     \code{mask}       \tab No**                 \tab   Yes        \tab \code{studyArea}**   \cr
+#'                       \tab `rasterToMatch` \tab `studyArea` \tab             Both \cr
+#'     `extent`     \tab Yes                  \tab   Yes        \tab `rasterToMatch` \cr
+#'     `resolution` \tab Yes                  \tab   No         \tab `rasterToMatch` \cr
+#'     `projection` \tab Yes                  \tab   No*        \tab `rasterToMatch`*\cr
+#'     `alignment`  \tab Yes                  \tab   No         \tab `rasterToMatch` \cr
+#'     `mask`       \tab No**                 \tab   Yes        \tab `studyArea`**   \cr
 #'   }
-#'   * Can be overridden with \code{useSAcrs}.
-#'   ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}.
+#'   * Can be overridden with `useSAcrs`.
+#'   ** Will mask with `NA`s from `rasterToMatch` if `maskWithRTM`.
 #' }
 #'
-#' \subsection{If \code{targetFile} is a \code{Spatial*} object:}{
+#' \subsection{If `targetFile` is a `Spatial*` object:}{
 #'   \tabular{lccc}{
-#'                       \tab \code{rasterToMatch} \tab \code{studyArea} \tab             Both \cr
-#'     \code{extent}     \tab Yes                  \tab   Yes        \tab \code{rasterToMatch} \cr
-#'     \code{resolution} \tab NA                   \tab   NA         \tab NA                   \cr
-#'     \code{projection} \tab Yes                  \tab   No*        \tab \code{rasterToMatch}*\cr
-#'     \code{alignment}  \tab NA                   \tab   NA         \tab NA                   \cr
-#'     \code{mask}       \tab No                   \tab   Yes        \tab \code{studyArea}     \cr
+#'                       \tab `rasterToMatch` \tab `studyArea` \tab             Both \cr
+#'     `extent`     \tab Yes                  \tab   Yes        \tab `rasterToMatch` \cr
+#'     `resolution` \tab NA                   \tab   NA         \tab NA                   \cr
+#'     `projection` \tab Yes                  \tab   No*        \tab `rasterToMatch`*\cr
+#'     `alignment`  \tab NA                   \tab   NA         \tab NA                   \cr
+#'     `mask`       \tab No                   \tab   Yes        \tab `studyArea`     \cr
 #'   }
-#'   * Can be overridden with \code{useSAcrs}
+#'   * Can be overridden with `useSAcrs`
 #' }
 #'
 #' @export
@@ -248,27 +248,27 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
   return(x)
 }
 
-#' Crop a \code{Spatial*} or \code{Raster*} object
+#' Crop a `Spatial*` or `Raster*` object
 #'
 #' This function can be used to crop or reproject module inputs from raw data.
 #'
-#' @param x A \code{Spatial*}, \code{sf}, or \code{Raster*} object.
+#' @param x A `Spatial*`, `sf`, or `Raster*` object.
 #'
-#' @param studyArea \code{SpatialPolygons*} object used for masking and possibly cropping
-#'                  if no \code{rasterToMatch} is provided.
-#'                  If not in same CRS, then it will be \code{spTransform}ed to
-#'                  CRS of \code{x} before masking. Currently, this function will not reproject the
-#'                  \code{x}. Optional in \code{postProcess}.
+#' @param studyArea `SpatialPolygons*` object used for masking and possibly cropping
+#'                  if no `rasterToMatch` is provided.
+#'                  If not in same CRS, then it will be `spTransform`ed to
+#'                  CRS of `x` before masking. Currently, this function will not reproject the
+#'                  `x`. Optional in `postProcess`.
 #'
-#' @param rasterToMatch Template \code{Raster*} object used for cropping (so extent should be
+#' @param rasterToMatch Template `Raster*` object used for cropping (so extent should be
 #'                      the extent of desired outcome) and reprojecting (including changing the
 #'                      resolution and projection).
-#'                      See details in \code{\link{postProcess}}.
+#'                      See details in [postProcess()].
 #'
-#' @param ... Passed to \code{raster::crop}
+#' @param ... Passed to `raster::crop`
 #'
-#' @param useCache Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
-#'                 \code{Cache} is used internally.
+#' @param useCache Logical, default `getOption("reproducible.useCache", FALSE)`, whether
+#'                 `Cache` is used internally.
 #'
 #' @inheritParams projectInputs
 #'
@@ -341,12 +341,12 @@ cropInputs.SpatRaster <- function(x, studyArea = NULL, rasterToMatch = NULL,
   x
 }
 
-#' @param extentToMatch Optional. Can pass an extent here and a \code{crs} to
-#'                      \code{extentCRS} instead of \code{rasterToMatch}. These
-#'                      will override \code{rasterToMatch}, with a warning if both
+#' @param extentToMatch Optional. Can pass an extent here and a `crs` to
+#'                      `extentCRS` instead of `rasterToMatch`. These
+#'                      will override `rasterToMatch`, with a warning if both
 #'                      passed.
-#' @param extentCRS     Optional. Can pass a \code{crs} here with an extent to
-#'                      \code{extentTomatch} instead of \code{rasterToMatch}
+#' @param extentCRS     Optional. Can pass a `crs` here with an extent to
+#'                      `extentTomatch` instead of `rasterToMatch`
 #'
 #' @export
 #' @importFrom raster compareCRS projectExtent tmpDir
@@ -678,28 +678,28 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #' Do some minor error fixing
 #'
 #' These must be very common for this function to be useful. Currently, the only
-#' meaningful method is on \code{SpatialPolygons}, and it runs \code{sf::st_is_valid}.
-#' If \code{FALSE}, then it runs  \code{st_make_valid} or \code{terra::buffer},
-#' depending on whether x is \code{sf} or \code{SpatialPolygons*}, respectively.
+#' meaningful method is on `SpatialPolygons`, and it runs `sf::st_is_valid`.
+#' If `FALSE`, then it runs  `st_make_valid` or `terra::buffer`,
+#' depending on whether x is `sf` or `SpatialPolygons*`, respectively.
 #'
-#' @param x A \code{SpatialPolygons*} or \code{sf} object.
+#' @param x A `SpatialPolygons*` or `sf` object.
 #'
 #' @param objectName Optional. This is only for messaging; if provided, then messages relayed
 #'                   to user will mention this.
 #'
 #' @param attemptErrorFixes Will attempt to fix known errors. Currently only some failures
-#'        for \code{SpatialPolygons*} are attempted.
-#'        Notably with \code{terra::buffer(..., width = 0)}.
-#'        Default \code{TRUE}, though this may not be the right action for all cases.
-#' @param useCache Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
-#'                 Cache is used on the internal \code{terra::buffer} command.
-#' @param testValidity Logical. If \code{TRUE}, the a test for validity will happen
+#'        for `SpatialPolygons*` are attempted.
+#'        Notably with `terra::buffer(..., width = 0)`.
+#'        Default `TRUE`, though this may not be the right action for all cases.
+#' @param useCache Logical, default `getOption("reproducible.useCache", FALSE)`, whether
+#'                 Cache is used on the internal `terra::buffer` command.
+#' @param testValidity Logical. If `TRUE`, the a test for validity will happen
 #'                 before actually running buffering (which is the solution in most
 #'                 cases). However, sometimes it takes longer to test for validity
 #'                 than just buffer without testing (there are no consequences of
-#'                 buffering if everything is valid). If \code{FALSE}, then the
+#'                 buffering if everything is valid). If `FALSE`, then the
 #'                 test will be skipped and the buffering will happen regardless.
-#'                 If \code{NA}, then all testing and buffering will be skipped.
+#'                 If `NA`, then all testing and buffering will be skipped.
 #' @param ... Passed to methods. None currently implemented.
 #'
 #' @export
@@ -758,10 +758,10 @@ fixErrors.Raster <- function(x, objectName, attemptErrorFixes = TRUE,
   x
 }
 
-#' Fix \code{sf::st_is_valid} failures in \code{SpatialPolygons}
+#' Fix `sf::st_is_valid` failures in `SpatialPolygons`
 #'
-#' This uses \code{terra::buffer(..., width = 0)} internally, which fixes some
-#' failures to \code{sf::st_is_valid}
+#' This uses `terra::buffer(..., width = 0)` internally, which fixes some
+#' failures to `sf::st_is_valid`
 #'
 #' @export
 #' @rdname fixErrors
@@ -863,23 +863,23 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
   return(x)
 }
 
-#' Project \code{Raster*} or \code{Spatial*} or \code{sf} objects
+#' Project `Raster*` or `Spatial*` or `sf` objects
 #'
 #' A simple wrapper around the various different tools for these GIS types.
 #'
-#' @param x A \code{Raster*}, \code{Spatial*} or \code{sf} object
+#' @param x A `Raster*`, `Spatial*` or `sf` object
 #'
 #' @param targetCRS The CRS of x at the end  of this function (i.e., the goal)
 #'
-#' @param ... Passed to \code{\link[raster]{projectRaster}}.
+#' @param ... Passed to [raster::projectRaster()].
 #'
-#' @param rasterToMatch Template \code{Raster*} object passed to the \code{to} argument of
-#'                      \code{\link[raster]{projectRaster}}, thus will changing the
-#'                      resolution and projection of \code{x}.
-#'                      See details in \code{\link{postProcess}}.
+#' @param rasterToMatch Template `Raster*` object passed to the `to` argument of
+#'                      [raster::projectRaster()], thus will changing the
+#'                      resolution and projection of `x`.
+#'                      See details in [postProcess()].
 #'
-#' @param cores An \code{integer*} or \code{'AUTO'}. This will be used if \code{gdalwarp} is
-#'              triggered. \code{'AUTO'*} will calculate 90% of the total
+#' @param cores An `integer*` or `'AUTO'`. This will be used if `gdalwarp` is
+#'              triggered. `'AUTO'*` will calculate 90% of the total
 #'              number of cores in the system, while an integer or rounded
 #'              float will be passed as the exact number of cores to be used.
 #'
@@ -904,14 +904,14 @@ projectInputs.default <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
-#' @param useGDAL Logical or \code{"force"}.
-#'     Defaults to \code{getOption("reproducible.useGDAL" = TRUE)}.
-#'     If \code{TRUE}, then this function will use \code{gdalwarp} only when not
-#'     small enough to fit in memory (i.e., \emph{if the operation fails} the
-#'     \code{raster::canProcessInMemory(x, 3)} test). Using \code{gdalwarp} will
-#'     usually be faster than \code{raster::projectRaster}, the function used
-#'     if this is \code{FALSE}. Since since the two options use different algorithms,
-#'     there may be different projection results. \code{"force"} will cause it to
+#' @param useGDAL Logical or `"force"`.
+#'     Defaults to `getOption("reproducible.useGDAL" = TRUE)`.
+#'     If `TRUE`, then this function will use `gdalwarp` only when not
+#'     small enough to fit in memory (i.e., *if the operation fails* the
+#'     `raster::canProcessInMemory(x, 3)` test). Using `gdalwarp` will
+#'     usually be faster than `raster::projectRaster`, the function used
+#'     if this is `FALSE`. Since since the two options use different algorithms,
+#'     there may be different projection results. `"force"` will cause it to
 #'     use GDAL regardless of the memory test described here.
 #'
 #' @importFrom fpCompare %==%
@@ -1279,10 +1279,10 @@ projectInputs.Spatial <- function(x, targetCRS, verbose = getOption("reproducibl
   x
 }
 
-#' Hierarchically get crs from \code{Raster*}, \code{Spatial*}
+#' Hierarchically get crs from `Raster*`, `Spatial*`
 #'
 #' This is the function that follows the table of order of
-#' preference for determining CRS. See \code{\link{postProcess}}
+#' preference for determining CRS. See [postProcess()]
 #' @inheritParams postProcess.spatialClasses
 #' @keywords internal
 #' @rdname postProcessHelpers
@@ -1302,8 +1302,8 @@ projectInputs.Spatial <- function(x, targetCRS, verbose = getOption("reproducibl
 #' Mask module inputs
 #'
 #' This function can be used to mask inputs from data. Masking here is
-#' equivalent to \code{raster::mask} (though \code{\link{fastMask}} is used here)
-#' or \code{raster::intersect}.
+#' equivalent to `raster::mask` (though [fastMask()] is used here)
+#' or `raster::intersect`.
 #'
 #' @param x An object to do a geographic raster::mask/raster::intersect.
 #'          See methods.
@@ -1321,7 +1321,7 @@ maskInputs <- function(x, studyArea, ...) {
   UseMethod("maskInputs")
 }
 
-#' @param maskWithRTM Logical. If \code{TRUE}, then the default,
+#' @param maskWithRTM Logical. If `TRUE`, then the default,
 #'
 #' @export
 #' @importFrom raster stack
@@ -1474,50 +1474,50 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
 #' @details
 #' The post processing workflow, which includes this function,
 #' addresses several scenarios, and depending on which scenario, there are
-#' several file names at play. For example, \code{Raster} objects may have
-#'   file-backed data, and so \emph{possess a file name}, whereas \code{Spatial}
-#'   objects do not. Also, if post processing is part of a \code{\link{prepInputs}}
+#' several file names at play. For example, `Raster` objects may have
+#'   file-backed data, and so *possess a file name*, whereas `Spatial`
+#'   objects do not. Also, if post processing is part of a [prepInputs()]
 #'   workflow, there will always be a file downloaded. From the perspective of
-#'   \code{postProcess}, these are the "inputs" or \code{filename1}.
+#'   `postProcess`, these are the "inputs" or `filename1`.
 #'   Similarly, there may or may not be a desire to write an
-#'   object to disk after all post processing, \code{filename2}.
+#'   object to disk after all post processing, `filename2`.
 #'
 #'   This subtlety means that there are two file names that may be at play:
-#'   the "input" file name (\code{filename1}), and the "output" filename (\code{filename2}).
-#'   When this is used within \code{postProcess}, it is straight forward.
+#'   the "input" file name (`filename1`), and the "output" filename (`filename2`).
+#'   When this is used within `postProcess`, it is straight forward.
 #'
 #'
-#'   However, when \code{postProcess} is used within a \code{prepInputs} call,
-#'   the \code{filename1} file is the file name of the downloaded file (usually
-#'   automatically known following the downloading, and refered to as \code{targetFile})
-#'   and the \code{filename2} is the file name of the of post-processed file.
+#'   However, when `postProcess` is used within a `prepInputs` call,
+#'   the `filename1` file is the file name of the downloaded file (usually
+#'   automatically known following the downloading, and refered to as `targetFile`)
+#'   and the `filename2` is the file name of the of post-processed file.
 #'
-#'   If \code{filename2} is \code{TRUE}, i.e., not an actual file name, then the cropped/masked
-#'   raster will be written to disk with the original \code{filenam1/targetFile}
-#'   name, with \code{prefix} prefixed to the basename(\code{targetFile}).
+#'   If `filename2` is `TRUE`, i.e., not an actual file name, then the cropped/masked
+#'   raster will be written to disk with the original `filenam1/targetFile`
+#'   name, with `prefix` prefixed to the basename(`targetFile`).
 #'
-#'   If \code{filename2} is a character string, it will be the path of the saved/written
-#'   object e.g., passed to \code{writeOutput}. It will be tested whether it is an
+#'   If `filename2` is a character string, it will be the path of the saved/written
+#'   object e.g., passed to `writeOutput`. It will be tested whether it is an
 #'   absolute or relative path and used as is if absolute or
-#'   prepended with \code{destinationPath} if relative.
+#'   prepended with `destinationPath` if relative.
 #'
 #' @inheritParams postProcess.spatialClasses
 #'
-#' @param destinationPath Optional. If \code{filename2} is a relative file path, then this
+#' @param destinationPath Optional. If `filename2` is a relative file path, then this
 #'                        will be the directory of the resulting absolute file path.
 #'
-#' @param prefix The character string to prepend to \code{filename1}, if \code{filename2}
+#' @param prefix The character string to prepend to `filename1`, if `filename2`
 #'               not provided.
 #'
 #' @include helpers.R
 #'
 #' @details
-#'  If \code{filename2} is \code{logical}, then the output
-#'  filename will be \code{prefix} prefixed to the basename(\code{filename1}).
+#'  If `filename2` is `logical`, then the output
+#'  filename will be `prefix` prefixed to the basename(`filename1`).
 #'  If a character string, it
 #'  will be the path returned. It will be tested whether it is an
 #'  absolute or relative path and used as is if absolute or prepended with
-#'  \code{destinationPath} if provided, and if \code{filename2} is relative.
+#'  `destinationPath` if provided, and if `filename2` is relative.
 #'
 #' @importFrom raster tmpDir
 #' @rdname determineFilename
@@ -1598,12 +1598,12 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #'
 #' @param overwrite Logical. Should file being written overwrite an existing file if it exists.
 #'
-#' @param filename2 File name passed to \code{\link[raster]{writeRaster}}, or
-#'                  \code{\link[raster]{shapefile}} or \code{\link[sf]{st_write}}
-#'                  (\code{dsn} argument).
+#' @param filename2 File name passed to [raster::writeRaster()], or
+#'                  [raster::shapefile()] or [sf::st_write()]
+#'                  (`dsn` argument).
 #'
-#' @param ... Passed into \code{\link[raster]{shapefile}} or
-#'             \code{\link[raster]{writeRaster}} or \code{\link[sf]{st_write}}
+#' @param ... Passed into [raster::shapefile()] or
+#'             [raster::writeRaster()] or [sf::st_write()]
 #'
 #' @inheritParams prepInputs
 #'
@@ -1876,12 +1876,12 @@ writeOutputs.default <- function(x, filename2, ...) {
 #'
 #' Can be used to write prepared inputs on disk.
 #'
-#' @param ras  The \code{RasterLayer} or \code{RasterStack} for which data type will be assessed.
-#' @param type Character. \code{"writeRaster"} (default) or \code{"GDAL"} to return the recommended
+#' @param ras  The `RasterLayer` or `RasterStack` for which data type will be assessed.
+#' @param type Character. `"writeRaster"` (default) or `"GDAL"` to return the recommended
 #'             data type for writing from the raster packages, respectively, or
-#'             \code{"projectRaster"} to return recommended resampling type.
-#' @return The appropriate data type for the range of values in \code{ras}.
-#'         See \code{\link[raster]{dataType}} for details.
+#'             `"projectRaster"` to return recommended resampling type.
+#' @return The appropriate data type for the range of values in `ras`.
+#'         See [raster::dataType()] for details.
 #'
 #' @author Eliot McIntire
 #' @author Ceres Barros
@@ -1990,11 +1990,11 @@ assessDataType.default <- function(ras, type = "writeRaster") {
 
 #' Assess the appropriate raster layer data type for GDAL
 #'
-#' This is a convenience function around \code{assessDataType(ras, type = "GDAL")}
+#' This is a convenience function around `assessDataType(ras, type = "GDAL")`
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
-#' @return The appropriate data type for the range of values in \code{ras} for using GDAL.
-#'         See \code{\link[raster]{dataType}} for details.
+#' @return The appropriate data type for the range of values in `ras` for using GDAL.
+#'         See [raster::dataType()] for details.
 #' @author Eliot McIntire, Ceres Barros, Ian Eddy, and Tati Micheletti
 #' @example inst/examples/example_assessDataTypeGDAL.R
 #' @export

@@ -29,11 +29,11 @@ where \code{i} is the retry number (i.e., follows \code{seq_len(retries)})}
 \item{silent}{Logical indicating whether to \code{try} silently.}
 
 \item{exprBetween}{Another expression that should be run after a failed attempt
-of the `expr`. This should return a named list, where the names indicate the object names
+of the \code{expr}. This should return a named list, where the names indicate the object names
 to update in the main expr, and the return value is the new value. (previous versions allowed
 a non-list return, but where the final line had to be an assignment operator,
-specifying what object (that is used in `expr`) will be updated prior to running
-the `expr` again. For backwards compatibility, this still works).}
+specifying what object (that is used in \code{expr}) will be updated prior to running
+the \code{expr} again. For backwards compatibility, this still works).}
 
 \item{messageFn}{A function for messaging to console. Defaults to \code{message}}
 }

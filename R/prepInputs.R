@@ -12,80 +12,80 @@ if (getRversion() >= "3.1.0") {
 #' The object of this function is to provide a reproducible version of
 #' a series of commonly used steps for getting, loading, and processing data.
 #' This function has two stages: Getting data (download, extracting from archives,
-#' loading into R) and post-processing (for \code{Spatial*} and \code{Raster*}
+#' loading into R) and post-processing (for `Spatial*` and `Raster*`
 #' objects, this is crop, reproject, mask/intersect).
-#' To trigger the first stage, provide \code{url} or \code{archive}.
-#' To trigger the second stage, provide \code{studyArea} or \code{rasterToMatch}.
+#' To trigger the first stage, provide `url` or `archive`.
+#' To trigger the second stage, provide `studyArea` or `rasterToMatch`.
 #' See examples.
 #'
 #' @note This function is still experimental: use with caution.
 #'
 #' @section Stage 1 - Getting data:
 #'
-#' See \code{\link{preProcess}} for combinations of arguments.
+#' See [preProcess()] for combinations of arguments.
 #'
 #'   \enumerate{
-#'     \item Download from the web via either \code{\link[googledrive]{drive_download}},
-#'     \code{\link[utils]{download.file}};
-#'     \item Extract from archive using \code{\link{unzip}} or \code{\link{untar}};
-#'     \item Load into R using \code{\link[raster]{raster}},
-#'     \code{\link[raster]{shapefile}}, or any other function passed in with \code{fun};
+#'     \item Download from the web via either [googledrive::drive_download()],
+#'     [utils::download.file()];
+#'     \item Extract from archive using [unzip()] or [untar()];
+#'     \item Load into R using [raster::raster()],
+#'     [raster::shapefile()], or any other function passed in with `fun`;
 #'     \item Checksumming of all files during this process. This is put into a
-#'     \file{CHECKSUMS.txt} file in the \code{destinationPath}, appending if it is
+#'     \file{CHECKSUMS.txt} file in the `destinationPath`, appending if it is
 #'     already there, overwriting the entries for same files if entries already exist.
 #'  }
 #'
 #' @section Stage 2 - Post processing:
 #'
-#'   This will be triggered if either \code{rasterToMatch} or \code{studyArea}
+#'   This will be triggered if either `rasterToMatch` or `studyArea`
 #'   is supplied.
 #'
 #'   \enumerate{
-#'     \item Fix errors. Currently only errors fixed are for \code{SpatialPolygons}
-#'     using \code{buffer(..., width = 0)};
-#'     \item Crop using \code{\link{cropInputs}};
-#'     \item Project using \code{\link{projectInputs}};
-#'     \item Mask using \code{\link{maskInputs}};
-#'     \item Determine file name \code{\link{determineFilename}} via \code{filename2};
-#'     \item Optionally, write that file name to disk via \code{\link{writeOutputs}}.
+#'     \item Fix errors. Currently only errors fixed are for `SpatialPolygons`
+#'     using `buffer(..., width = 0)`;
+#'     \item Crop using [cropInputs()];
+#'     \item Project using [projectInputs()];
+#'     \item Mask using [maskInputs()];
+#'     \item Determine file name [determineFilename()] via `filename2`;
+#'     \item Optionally, write that file name to disk via [writeOutputs()].
 #'    }
 #'
 #'   NOTE: checksumming does not occur during the post-processing stage, as
 #'   there are no file downloads. To achieve fast results, wrap
-#'   \code{prepInputs} with \code{Cache}.
+#'   `prepInputs` with `Cache`.
 #'
-#'   NOTE: \code{sf} objects are still very experimental.
+#'   NOTE: `sf` objects are still very experimental.
 #'
-#' \subsection{postProcessing of \code{Raster*} and \code{Spatial*} objects:}{
+#' \subsection{postProcessing of `Raster*` and `Spatial*` objects:}{
 #'
-#'   If \code{rasterToMatch} or \code{studyArea} are used, then this will
+#'   If `rasterToMatch` or `studyArea` are used, then this will
 #'   trigger several subsequent functions, specifically the sequence,
-#'   \emph{Crop, reproject, mask}, which appears to be a common sequence in
-#'   spatial simulation. See \code{\link{postProcess.spatialClasses}}.
+#'   *Crop, reproject, mask*, which appears to be a common sequence in
+#'   spatial simulation. See [postProcess.spatialClasses()].
 #'
-#'   \emph{Understanding various combinations of \code{rasterToMatch}
-#'   and/or \code{studyArea}:}
-#'   Please see \code{\link{postProcess.spatialClasses}}.
+#'   *Understanding various combinations of `rasterToMatch`
+#'   and/or `studyArea`:*
+#'   Please see [postProcess.spatialClasses()].
 #'  }
 #'
 #'
-#' @section \code{fun}:
+#' @section `fun`:
 #'
-#'  \code{fun} offers the ability to pass any custom function with which to load
+#'  `fun` offers the ability to pass any custom function with which to load
 #'  the object obtained by `preProcess` into the session. There are two cases that are
 #'  dealt with: when the `preProcess` downloads a file (including via `dlFun`),
 #'  `fun` must deal with a file; and, when `preProcess` creates an R object
 #'  (e.g., raster::getData returns an object), `fun` must deal with an object.
 #'
-#'  \code{fun} can be supplied in three ways: a function, a character string
+#'  `fun` can be supplied in three ways: a function, a character string
 #'   (i.e., a function name as a string), of a quoted expression.
 #'   If a character string or function, is should have the package name e.g.,
-#'   \code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
+#'   `"raster::raster"` or as an actual function, e.g., `base::readRDS`.
 #'   In these cases, it will evaluate this function call while passing `targetFile`
 #'   as the first argument. These will only work in the simplest of cases.
 #'
 #'   When more precision is required, the full call can be written, surrounded by
-#'   \code{quote}, and where the object can be referred to as `targetFile` if the function
+#'   `quote`, and where the object can be referred to as `targetFile` if the function
 #'   is loading a file or as `x` if it is loading the object that was returned by
 #'   `preProcess`. If `preProcess` returns an object, this must be used by `fun`; if
 #'   `preProcess` is only getting a file, then there will be no object, so `targetFile` is the
@@ -94,100 +94,100 @@ if (getRversion() >= "3.1.0") {
 #'   If there is a custom function call, is not in a package, `prepInputs` may not find it. In such
 #'   cases, simply pass the function as a named argument (with same name as function) to `prepInputs`.
 #'   See examples.
-#'   NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
-#'   replicate the functionality of simply calling \code{preProcess} directly.
+#'   NOTE: passing `NA` will skip loading object into R. Note this will essentially
+#'   replicate the functionality of simply calling `preProcess` directly.
 #'
-#' @section \code{purge}:
+#' @section `purge`:
 #'
-#' In options for control of purging the \code{CHECKSUMS.txt} file are:
+#' In options for control of purging the `CHECKSUMS.txt` file are:
 #'
 #'   \describe{
-#'     \item{\code{0}}{keep file}
-#'     \item{\code{1}}{delete file}
-#'     \item{\code{2}}{delete entry for \code{targetFile}}
-#'     \item{\code{4}}{delete entry for \code{alsoExtract}}
-#'     \item{\code{3}}{delete entry for \code{archive}}
-#'     \item{\code{5}}{delete entry for \code{targetFile} & \code{alsoExtract}}
-#'     \item{\code{6}}{delete entry for \code{targetFile}, \code{alsoExtract} & \code{archive}}
-#'     \item{\code{7}}{delete entry that is failing (i.e., for the file downloaded by the \code{url})}
+#'     \item{`0`}{keep file}
+#'     \item{`1`}{delete file}
+#'     \item{`2`}{delete entry for `targetFile`}
+#'     \item{`4`}{delete entry for `alsoExtract`}
+#'     \item{`3`}{delete entry for `archive`}
+#'     \item{`5`}{delete entry for `targetFile` & `alsoExtract`}
+#'     \item{`6`}{delete entry for `targetFile`, `alsoExtract` & `archive`}
+#'     \item{`7`}{delete entry that is failing (i.e., for the file downloaded by the `url`)}
 #'   }
-#' will only remove entries in the \code{CHECKSUMS.txt} that are associated with
-#'   \code{targetFile}, \code{alsoExtract} or \code{archive} When \code{prepInputs} is called,
-#'   it will write or append to a (if already exists) \code{CHECKSUMS.txt} file.
-#'   If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
+#' will only remove entries in the `CHECKSUMS.txt` that are associated with
+#'   `targetFile`, `alsoExtract` or `archive` When `prepInputs` is called,
+#'   it will write or append to a (if already exists) `CHECKSUMS.txt` file.
+#'   If the `CHECKSUMS.txt` is not correct, use this argument to remove it.
 #'
 #' @param targetFile Character string giving the path to the eventual file
 #'   (raster, shapefile, csv, etc.) after downloading and extracting from a zip
-#'   or tar archive. This is the file \emph{before} it is passed to
-#'   \code{postProcess}. Currently, the internal checksumming does not checksum
-#'   the file after it is \code{postProcess}ed (e.g., cropped/reprojected/masked).
-#'   Using \code{Cache} around \code{prepInputs} will do a sufficient job in these cases.
-#'   See table in \code{\link{preProcess}}.
+#'   or tar archive. This is the file *before* it is passed to
+#'   `postProcess`. Currently, the internal checksumming does not checksum
+#'   the file after it is `postProcess`ed (e.g., cropped/reprojected/masked).
+#'   Using `Cache` around `prepInputs` will do a sufficient job in these cases.
+#'   See table in [preProcess()].
 #'
 #' @param archive Optional character string giving the path of an archive
-#'   containing \code{targetFile}, or a vector giving a set of nested archives
-#'   (e.g., \code{c("xxx.tar", "inner.zip", "inner.rar")}). If there is/are (an) inner
+#'   containing `targetFile`, or a vector giving a set of nested archives
+#'   (e.g., `c("xxx.tar", "inner.zip", "inner.rar")`). If there is/are (an) inner
 #'   archive(s), but they are unknown, the function will try all until it finds
-#'   the \code{targetFile}. See table in \code{\link{preProcess}}. If it is \code{NA},
-#'   then it will \emph{not} attempt to see it as an archive, even if it has archive-like
-#'   file extension (e.g., \code{.zip}). This may be useful when an R function
+#'   the `targetFile`. See table in [preProcess()]. If it is `NA`,
+#'   then it will *not* attempt to see it as an archive, even if it has archive-like
+#'   file extension (e.g., `.zip`). This may be useful when an R function
 #'   is expecting an archive directly.
 #'
 #' @param url Optional character string indicating the URL to download from.
 #'   If not specified, then no download will be attempted. If not entry
-#'   exists in the \code{CHECKSUMS.txt} (in \code{destinationPath}), an entry
-#'   will be created or appended to. This \code{CHECKSUMS.txt} entry will be used
+#'   exists in the `CHECKSUMS.txt` (in `destinationPath`), an entry
+#'   will be created or appended to. This `CHECKSUMS.txt` entry will be used
 #'   in subsequent calls to
-#'   \code{prepInputs} or \code{preProcess}, comparing the file on hand with the ad hoc
-#'   \code{CHECKSUMS.txt}. See table in \code{\link{preProcess}}.
+#'   `prepInputs` or `preProcess`, comparing the file on hand with the ad hoc
+#'   `CHECKSUMS.txt`. See table in [preProcess()].
 #'
 #' @param alsoExtract Optional character string naming files other than
-#'   \code{targetFile} that must be extracted from the \code{archive}. If
-#'   \code{NULL}, the default, then it will extract all files. Other options:
-#'   \code{"similar"} will extract all files with the same filename without
-#'   file extension as \code{targetFile}. \code{NA} will extract nothing other
-#'   than \code{targetFile}. A character string of specific file names will cause
-#'   only those to be extracted. See table in \code{\link{preProcess}}.
+#'   `targetFile` that must be extracted from the `archive`. If
+#'   `NULL`, the default, then it will extract all files. Other options:
+#'   `"similar"` will extract all files with the same filename without
+#'   file extension as `targetFile`. `NA` will extract nothing other
+#'   than `targetFile`. A character string of specific file names will cause
+#'   only those to be extracted. See table in [preProcess()].
 #'
 #' @param destinationPath Character string of a directory in which to download
-#'   and save the file that comes from \code{url} and is also where the function
-#'   will look for \code{archive} or \code{targetFile}. NOTE (still experimental):
+#'   and save the file that comes from `url` and is also where the function
+#'   will look for `archive` or `targetFile`. NOTE (still experimental):
 #'   To prevent repeated downloads in different locations, the user can also set
-#'   \code{options("reproducible.inputPaths")} to one or more local file paths to
+#'   `options("reproducible.inputPaths")` to one or more local file paths to
 #'   search for the file before attempting to download. Default for that option is
-#'   \code{NULL} meaning do not search locally.
+#'   `NULL` meaning do not search locally.
 #'
 #' @param fun Function, character string, or quoted call with which to load the
-#'   \code{targetFile} or an object created by \code{dlFun}
-#'   into an \code{R} object. See details and examples below.
+#'   `targetFile` or an object created by `dlFun`
+#'   into an `R` object. See details and examples below.
 #'
-#' @param quick Logical. This is passed internally to \code{\link{Checksums}}
+#' @param quick Logical. This is passed internally to [Checksums()]
 #'   (the quickCheck argument), and to
-#'   \code{\link{Cache}} (the quick argument). This results in faster, though
+#'   [Cache()] (the quick argument). This results in faster, though
 #'   less robust checking of inputs. See the respective functions.
 #'
-#' @param purge Logical or Integer. \code{0/FALSE} (default) keeps existing
-#'    \code{CHECKSUMS.txt} file and
-#'    \code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
-#'    \code{CHECKSUMS.txt} file. Other options, see details.
+#' @param purge Logical or Integer. `0/FALSE` (default) keeps existing
+#'    `CHECKSUMS.txt` file and
+#'    `prepInputs` will write or append to it. `1/TRUE` will deleted the entire
+#'    `CHECKSUMS.txt` file. Other options, see details.
 #'
 #' @param overwrite Logical. Should downloading and all the other actions occur
 #'   even if they pass the checksums or the files are all there.
 #'
-#' @param ... Additional arguments passed to \code{fun} (i.e,. user supplied),
-#'   \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.
-#'  Since \code{...} is passed to \code{\link{postProcess}}, these will
-#'  \code{...} will also be passed into the inner
-#'  functions, e.g., \code{\link{cropInputs}}. Possibly useful other arguments include
-#'  \code{dlFun} which is passed to \code{preProcess}. See details and examples.
+#' @param ... Additional arguments passed to `fun` (i.e,. user supplied),
+#'   [postProcess()] and [reproducible::Cache()].
+#'  Since `...` is passed to [postProcess()], these will
+#'  `...` will also be passed into the inner
+#'  functions, e.g., [cropInputs()]. Possibly useful other arguments include
+#'  `dlFun` which is passed to `preProcess`. See details and examples.
 #'
-#' @param useCache Passed to \code{Cache} in various places.
-#'   Defaults to \code{getOption("reproducible.useCache", 2L)} in \code{prepInputs}, and
-#'   \code{getOption("reproducible.useCache", FALSE)} if calling any of the inner
-#'   functions manually. For \code{prepInputs}, this mean it will use \code{Cache}
-#'   only up to 2 nested levels, which will generally including \code{postProcess} and
-#'   the first level of \code{*Input} functions, e.g., \code{cropInputs}, \code{projectInputs},
-#'   \code{maskInputs}, but not \code{fixErrors}.
+#' @param useCache Passed to `Cache` in various places.
+#'   Defaults to `getOption("reproducible.useCache", 2L)` in `prepInputs`, and
+#'   `getOption("reproducible.useCache", FALSE)` if calling any of the inner
+#'   functions manually. For `prepInputs`, this mean it will use `Cache`
+#'   only up to 2 nested levels, which will generally including `postProcess` and
+#'   the first level of `*Input` functions, e.g., `cropInputs`, `projectInputs`,
+#'   `maskInputs`, but not `fixErrors`.
 #'
 #' @param .tempPath Optional temporary path for internal file intermediate steps.
 #'   Will be cleared on.exit from this function.
@@ -202,8 +202,8 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom utils methods modifyList
 #' @include checksums.R download.R postProcess.R
 #' @rdname prepInputs
-#' @seealso \code{\link{downloadFile}}, \code{\link{extractFromArchive}},
-#'          \code{\link{postProcess}}.
+#' @seealso [downloadFile()], [extractFromArchive()],
+#'          [postProcess()].
 #' @examples
 #' if (reproducible:::.runLongExamples()) {
 #' origDir <- getwd()
@@ -515,9 +515,9 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' Extract zip or tar archive files, possibly nested in other zip or tar archives.
 #'
 #' @param archive Character string giving the path of the archive
-#' containing the \code{file} to be extracted. This path must exist or be \code{NULL}
+#' containing the `file` to be extracted. This path must exist or be `NULL`
 #'
-#' @param destinationPath Character string giving the path where \code{neededFiles} will be
+#' @param destinationPath Character string giving the path where `neededFiles` will be
 #' extracted. Defaults to the archive directory.
 #'
 #' @param neededFiles Character string giving the name of the file(s) to be extracted.
@@ -525,12 +525,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @param extractedArchives Used internally to track archives that have been extracted from.
 #' @param filesExtracted Used internally to track files that have been extracted.
 #' @param checkSums A checksums file, e.g., created by Checksums(..., write = TRUE)
-#' @param needChecksums A numeric, with \code{0} indicating do not write a new checksums,
-#'                      \code{1} write a new one,
-#'                      \code{2} append new information to existing one.
+#' @param needChecksums A numeric, with `0` indicating do not write a new checksums,
+#'                      `1` write a new one,
+#'                      `2` append new information to existing one.
 #' @param checkSumFilePath The full path to the checksum.txt file
-#' @param quick Passed to \code{Checksums}
-#' @param ... Passed to \code{unzip} or \code{untar}, e.g., \code{overwrite}
+#' @param quick Passed to `Checksums`
+#' @param ... Passed to `unzip` or `untar`, e.g., `overwrite`
 #' @inheritParams prepInputs
 #'
 #' @return A character vector listing the paths of the extracted archives.
@@ -1083,7 +1083,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' Currently, this is only used for shapefiles.
 #'
 #' @param neededFiles A character string of file name(s) that will be checked. Specifically
-#'        if the file extension is \code{.shp} it will output the names of files with
+#'        if the file extension is `.shp` it will output the names of files with
 #'        these extensions also:
 #'        c("shx", "dbf", "prj", "sbx", "sbn") files also.
 #' @keywords internal
@@ -1105,9 +1105,9 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   neededFiles
 }
 
-#' List files in either a \code{.zip} or or \code{.tar} file
+#' List files in either a `.zip` or or `.tar` file
 #'
-#' Makes the outputs from\code{.tar}\code{.zip} the same, which they aren't by default.
+#' Makes the outputs from`.tar``.zip` the same, which they aren't by default.
 #'
 #' @param archive A character string of a single file name to list files in.
 #'

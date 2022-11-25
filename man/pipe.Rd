@@ -22,12 +22,11 @@ With updates to \code{magrittr} to version 2.0, this Cache pipe is now broken.
 We are working on an update.
 
 This pipe can only be used at any point in a pipe chain, but must
-be preceded by \code{Cache(...)} (which allows other \code{Cache()
-\%C\% ... remaining pipes}
+be preceded by \code{Cache(...)} (which allows other \verb{Cache() \\\%C\\\% ... remaining pipes}
 arguments to be passed).
 
 This will take the input arguments of the first function immediately following
-the \code{Cache()} and the pipe chain until the special \code{\%C\%},
+the \code{Cache()} and the pipe chain until the special \verb{\\\%C\\\%},
 evaluate them both against the \code{cacheRepo} argument in \code{Cache}.
 If they exist, then the entire pipe chain will be skipped, and only the
 previous final result will be given.
@@ -36,7 +35,7 @@ then all chain elements will be evaluated.
 The final result will be cached for future use.
 Therefore, the entire chain must be identical.
 The required usage should be straight forward to insert into existing code
-that uses pipes (\code{Cache() \%C\% ... remaining pipes}).
+that uses pipes (\verb{Cache() \\\%C\\\% ... remaining pipes}).
 
 Still experimental and may change. This form cannot pass any arguments to
 \code{Cache}, such as \code{cacheRepo}, thus it is of limited utility. However,

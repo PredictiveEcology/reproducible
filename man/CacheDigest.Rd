@@ -26,7 +26,7 @@ robust CacheDigest results.}
 
 \item{quick}{Logical or character. If \code{TRUE},
 no disk-based information will be assessed, i.e., only
-memory content. See Details section about \code{quick} in \code{\link{Cache}}.}
+memory content. See Details section about \code{quick} in \code{\link[=Cache]{Cache()}}.}
 
 \item{...}{passed to \code{.robustDigest}; this is generally empty except
 for advanced use.}

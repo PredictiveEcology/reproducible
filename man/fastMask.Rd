@@ -15,13 +15,13 @@ fastMask(
 )
 }
 \arguments{
-\item{x}{A \code{Raster*} object.}
+\item{x}{A \verb{Raster*} object.}
 
 \item{y}{A \code{SpatialPolygons} object. If it is not in the same projection
 as \code{x}, it will be reprojected on the fly to that of \code{x}}
 
-\item{cores}{An \code{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
-triggered. \code{'AUTO'} will calculate 90% of the total
+\item{cores}{An \verb{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
+triggered. \code{'AUTO'} will calculate 90\% of the total
 number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.}
 
@@ -39,7 +39,7 @@ use GDAL regardless of the memory test described here.}
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{...}{Currently unused.}
 
@@ -47,8 +47,8 @@ option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 being deprecated will be suppressed.}
 }
 \value{
-A \code{Raster*} object, masked (i.e., smaller extent and/or
-        several pixels converted to NA)
+A \verb{Raster*} object, masked (i.e., smaller extent and/or
+several pixels converted to NA)
 }
 \description{
 This alternative to \code{raster::mask} is included here.

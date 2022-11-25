@@ -1,15 +1,15 @@
-#' Wrapper around \code{lobstr::obj_size}
+#' Wrapper around `lobstr::obj_size`
 #'
-#' This will return the result from \code{lobstr::obj_size}, i.e., a \code{lobstr_bytes}
-#' which is a \code{numeric}. If \code{quick = FALSE}, it will also have an attribute,
+#' This will return the result from `lobstr::obj_size`, i.e., a `lobstr_bytes`
+#' which is a `numeric`. If `quick = FALSE`, it will also have an attribute,
 #' "objSize", which will
-#' be a list with each element being the \code{objSize} of the individual elements of \code{x}.
-#' This is particularly useful if \code{x} is a \code{list} or \code{environment}.
+#' be a list with each element being the `objSize` of the individual elements of `x`.
+#' This is particularly useful if `x` is a `list` or `environment`.
 #' However, because of the potential for shared memory, the sum of the individual
 #' elements will generally not equal the value returned from this function.
 #'
 #' @param x An object
-#' @param quick Logical. If \code{FALSE}, then an attribute, "objSize" will be added to
+#' @param quick Logical. If `FALSE`, then an attribute, "objSize" will be added to
 #'   the returned value, with each of the elements' object size returned also.
 #' @param ...  Additional arguments (currently unused), enables backwards compatible use.
 #'
@@ -44,11 +44,11 @@
 #' @importFrom utils object.size
 #' @details
 #' For functions, a user can include the enclosing environment as described
-#' \url{https://www.r-bloggers.com/2015/03/using-closures-as-objects-in-r/} and
-#' \url{http://adv-r.had.co.nz/memory.html}.
+#' <https://www.r-bloggers.com/2015/03/using-closures-as-objects-in-r/> and
+#' <http://adv-r.had.co.nz/memory.html>.
 #' It is not entirely clear which estimate is better.
-#' However, if the enclosing environment is the \code{.GlobalEnv}, it will
-#' not be included even though \code{enclosingEnvs = TRUE}.
+#' However, if the enclosing environment is the `.GlobalEnv`, it will
+#' not be included even though `enclosingEnvs = TRUE`.
 #'
 #' @export
 objSize <- function(x, quick = TRUE, ...) {
@@ -104,17 +104,17 @@ objSize.environment <- function(x, quick = TRUE, ...) {
 
 
 #' @param sumLevel Numeric, indicating at which depth in the list of objects should the
-#'   object sizes be summed (summarized). Default is \code{Inf}, meaning no sums. Currently,
-#'   the only option other than Inf is 1: \code{objSizeSession(1)},
+#'   object sizes be summed (summarized). Default is `Inf`, meaning no sums. Currently,
+#'   the only option other than Inf is 1: `objSizeSession(1)`,
 #'   which gives the size of each package.
 #' @param enclosingEnvs Logical indicating whether to include enclosing environments.
-#'                      Default \code{TRUE}.
+#'                      Default `TRUE`.
 #' @param .prevEnvirs For internal account keeping to identify and prevent duplicate counting
 #'
 #'
-#' @details \code{objSizeSession} will give the size of the whole session, including loaded packages.
-#' Because of the difficulties in calculating the object size of \code{base}
-#' and \code{methods} packages and \code{Autoloads}, these are omitted.
+#' @details `objSizeSession` will give the size of the whole session, including loaded packages.
+#' Because of the difficulties in calculating the object size of `base`
+#' and `methods` packages and `Autoloads`, these are omitted.
 #'
 #' @export
 #' @rdname objSize

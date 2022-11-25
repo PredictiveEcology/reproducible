@@ -59,13 +59,13 @@ fixErrors(
 )
 }
 \arguments{
-\item{x}{A \code{SpatialPolygons*} or \code{sf} object.}
+\item{x}{A \verb{SpatialPolygons*} or \code{sf} object.}
 
 \item{objectName}{Optional. This is only for messaging; if provided, then messages relayed
 to user will mention this.}
 
 \item{attemptErrorFixes}{Will attempt to fix known errors. Currently only some failures
-for \code{SpatialPolygons*} are attempted.
+for \verb{SpatialPolygons*} are attempted.
 Notably with \code{terra::buffer(..., width = 0)}.
 Default \code{TRUE}, though this may not be the right action for all cases.}
 
@@ -86,7 +86,7 @@ If \code{NA}, then all testing and buffering will be skipped.}
 These must be very common for this function to be useful. Currently, the only
 meaningful method is on \code{SpatialPolygons}, and it runs \code{sf::st_is_valid}.
 If \code{FALSE}, then it runs  \code{st_make_valid} or \code{terra::buffer},
-depending on whether x is \code{sf} or \code{SpatialPolygons*}, respectively.
+depending on whether x is \code{sf} or \verb{SpatialPolygons*}, respectively.
 
 This uses \code{terra::buffer(..., width = 0)} internally, which fixes some
 failures to \code{sf::st_is_valid}

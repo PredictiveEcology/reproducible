@@ -22,7 +22,7 @@ Default \code{FALSE}.}
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \description{
 Attempt first to make a hardlink. If that fails, try to make
@@ -78,7 +78,7 @@ isTRUE(all.equal(r3a, r4a)) # TRUE
 unlink(tmpDir, recursive = TRUE)
 }
 \seealso{
-\code{\link{file.link}}, \code{\link{file.symlink}}, \code{\link{file.copy}}.
+\code{\link[=file.link]{file.link()}}, \code{\link[=file.symlink]{file.symlink()}}, \code{\link[=file.copy]{file.copy()}}.
 }
 \author{
 Alex Chubaty and Eliot McIntire

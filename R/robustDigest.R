@@ -2,7 +2,7 @@
 #' Create reproducible digests of objects in R
 #'
 #' Not all aspects of R objects are captured by current hashing tools in R
-#' (e.g. \code{digest::digest}, \code{knitr} caching, \code{archivist::cache}).
+#' (e.g. `digest::digest`, `knitr` caching, `archivist::cache`).
 #' This is mostly because many objects have "transient"
 #' (e.g., functions have environments), or "disk-backed" features.
 #' Since the goal of using reproducibility is to have tools that are not session specific,
@@ -13,28 +13,28 @@
 #'
 #' @section Classes:
 #'
-#' \code{Raster*} objects have the potential for disk-backed storage, thus, require more work.
-#' Also, because \code{Raster*} can have a built-in representation for having their data content
+#' `Raster*` objects have the potential for disk-backed storage, thus, require more work.
+#' Also, because `Raster*` can have a built-in representation for having their data content
 #' located on disk, this format will be maintained if the raster already is file-backed,
-#' i.e., to create \code{.tif} or \code{.grd} backed rasters, use \code{writeRaster} first,
-#' then \code{Cache}.
+#' i.e., to create `.tif` or `.grd` backed rasters, use `writeRaster` first,
+#' then `Cache`.
 #' The \file{.tif} or \file{.grd} will be copied to the \file{raster/} subdirectory of the
-#' \code{cacheRepo}.
+#' `cacheRepo`.
 #' Their RAM representation (as an R object) will still be in the usual  \file{cacheOutputs/}
 #' (or formerly \file{gallery/}) directory.
-#' For \code{inMemory} raster objects, they will remain as binary \code{.RData} files.
+#' For `inMemory` raster objects, they will remain as binary `.RData` files.
 #'
 #' Functions (which are contained within environments) are
-#' converted to a text representation via a call to \code{format(FUN)}.
+#' converted to a text representation via a call to `format(FUN)`.
 #'
 #' Objects contained within a list or environment are recursively hashed
-#' using \code{\link[digest]{digest}}, while removing all references to
+#' using [digest::digest()], while removing all references to
 #' environments.
 #'
-#' Character strings are first assessed with \code{dir.exists} and \code{file.exists}
+#' Character strings are first assessed with `dir.exists` and `file.exists`
 #' to check for paths. If they are found to be paths, then the path is hashed with
-#' only its filename via \code{basename(filename)}. If it is actually a path, we suggest
-#' using \code{asPath(thePath)}
+#' only its filename via `basename(filename)`. If it is actually a path, we suggest
+#' using `asPath(thePath)`
 #'
 #' @param object an object to digest.
 #'
@@ -42,7 +42,7 @@
 #'                be considered while making digestible. This argument is not used
 #'                in the default cases; the only known method that uses this
 #'                in the default cases; the only known method that uses this
-#'                argument is the \code{simList} class from \code{SpaDES.core}.
+#'                argument is the `simList` class from `SpaDES.core`.
 #'
 #' @inheritParams Cache
 #'
@@ -423,9 +423,9 @@ setMethod(
 #'
 #' @importFrom data.table setattr
 #' @param x Any arbitrary R object that could have attributes
-#' @param passByReference Logical. If \code{TRUE}, the default, this uses \code{data.table::setattr}
-#'   to remove several attributes that are unnecessary for digesting, specifically \code{tags},
-#'   \code{.Cache} and \code{call}
+#' @param passByReference Logical. If `TRUE`, the default, this uses `data.table::setattr`
+#'   to remove several attributes that are unnecessary for digesting, specifically `tags`,
+#'   `.Cache` and `call`
 .removeCacheAtts <- function(x, passByReference = FALSE) {
   if (passByReference) {
     setattr(x, "tags", NULL)

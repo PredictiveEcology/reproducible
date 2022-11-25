@@ -7,8 +7,8 @@ utils::globalVariables(c(
 #'
 #' @param cachePath A path describing the directory in which to create
 #'   the database file(s)
-#' @param drv A driver, passed to \code{dbConnect}
-#' @param force Logical. Should it create a cache in the \code{cachePath},
+#' @param drv A driver, passed to `dbConnect`
+#' @param force Logical. Should it create a cache in the `cachePath`,
 #'   even if it already exists, overwriting.
 #' @importFrom data.table data.table
 # #' @importFrom DBI dbConnect dbDisconnect dbWriteTable
@@ -52,10 +52,10 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
 
 #' @rdname cache-tools
 #' @inheritParams Cache
-#' @param cacheId The hash string representing the result of \code{.robustDigest}
+#' @param cacheId The hash string representing the result of `.robustDigest`
 #' @param obj The R object to save to the cache
-#' @param linkToCacheId Optional. If a \code{cacheId} is provided here, then a \code{file.link}
-#'   will be made to the file with that \code{cacheId} name in the cache repo.
+#' @param linkToCacheId Optional. If a `cacheId` is provided here, then a `file.link`
+#'   will be made to the file with that `cacheId` name in the cache repo.
 #'   This is used when identical outputs exist in the cache. This will save disk space.
 saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -425,7 +425,7 @@ dbDisconnectAll <- function(conn, cachePath, drv) {
 #' @rdname CacheHelpers
 #' @export
 #' @details
-#' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
+#' `CacheStoredFile` returns the file path to the file with the specified hash value.
 CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL)) {
@@ -460,14 +460,14 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 }
 
 #' @details
-#' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
+#' `CacheStoredFile` returns the file path to the file with the specified hash value.
 #'
 #' @rdname CacheHelpers
 #' @export
 #' @param cacheId The cacheId or otherwise digested hash value, as character string.
 #' @param format The text string representing the file extension used normally by
-#'   different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
-#'   to \code{getOption("reproducible.cacheSaveFormat", "rds")}
+#'   different save formats; currently only `"rds"` or `"qs"`. Defaults
+#'   to `getOption("reproducible.cacheSaveFormat", "rds")`
 CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cacheId,
                             format = getOption("reproducible.cacheSaveFormat", "rds")) {
   csf <- if (isTRUE(useDBI()) == FALSE) {
@@ -512,11 +512,11 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
 
 #' @rdname CacheHelpers
 #' @param create Logical. Currently only affects non RQSLite default drivers. If this
-#'   is \code{TRUE} and there is no Cache database, the function will create one.
+#'   is `TRUE` and there is no Cache database, the function will create one.
 # #' @importFrom DBI dbListTables
 #' @export
 #' @details
-#' \code{CacheIsACache} returns a logical of whether the specified cachePath
+#' `CacheIsACache` returns a logical of whether the specified cachePath
 #'   is actually a functioning cache.
 CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), create = FALSE,
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -576,10 +576,10 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 #' If using DBI (e.g., RSQLite or Postgres), the db table must be renamed. Run
 #' this function after a manual copy of a cache folder. See examples for one way to do that.
 #'
-#' @param  new Either the path of the new \code{cachePath} where the cache was moved or copied to, or
+#' @param  new Either the path of the new `cachePath` where the cache was moved or copied to, or
 #'   the new DB Table Name
-#' @param  old Optional, if there is only one table in the \code{new} cache path.
-#'   Either the path of the previous \code{cachePath} where the cache was moved or copied from, or
+#' @param  old Optional, if there is only one table in the `new` cache path.
+#'   Either the path of the previous `cachePath` where the cache was moved or copied from, or
 #'   the old DB Table Name
 #' @inheritParams Cache
 # #' @importFrom DBI dbListTables

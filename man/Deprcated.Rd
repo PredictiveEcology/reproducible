@@ -7,7 +7,7 @@
 cloudCache(...)
 }
 \arguments{
-\item{...}{Passed to \code{\link{Cache}}}
+\item{...}{Passed to \code{\link[=Cache]{Cache()}}}
 }
 \description{
 \if{html}{\figure{lifecycle-defunct.svg}{options: alt="defunct"}}
@@ -16,6 +16,6 @@ cloudCache(...)
 Please use \code{Cache}, with args \code{useCloud} and \code{cloudFolderID}.
 }
 \seealso{
-\code{\link{cloudSyncCacheOld}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}},
-  \code{\link{cloudCheckOld}}
+\code{\link[=cloudSyncCacheOld]{cloudSyncCacheOld()}}, \code{\link[=Cache]{Cache()}}, \code{\link[=cloudWriteOld]{cloudWriteOld()}},
+\code{\link[=cloudCheckOld]{cloudCheckOld()}}
 }

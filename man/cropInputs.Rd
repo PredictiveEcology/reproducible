@@ -5,7 +5,7 @@
 \alias{cropInputs.default}
 \alias{cropInputs.spatialClasses}
 \alias{cropInputs.sf}
-\title{Crop a \code{Spatial*} or \code{Raster*} object}
+\title{Crop a \verb{Spatial*} or \verb{Raster*} object}
 \usage{
 cropInputs(
   x,
@@ -41,24 +41,24 @@ cropInputs(
 )
 }
 \arguments{
-\item{x}{A \code{Spatial*}, \code{sf}, or \code{Raster*} object.}
+\item{x}{A \verb{Spatial*}, \code{sf}, or \verb{Raster*} object.}
 
-\item{studyArea}{\code{SpatialPolygons*} object used for masking and possibly cropping
+\item{studyArea}{\verb{SpatialPolygons*} object used for masking and possibly cropping
 if no \code{rasterToMatch} is provided.
 If not in same CRS, then it will be \code{spTransform}ed to
 CRS of \code{x} before masking. Currently, this function will not reproject the
 \code{x}. Optional in \code{postProcess}.}
 
-\item{rasterToMatch}{Template \code{Raster*} object used for cropping (so extent should be
+\item{rasterToMatch}{Template \verb{Raster*} object used for cropping (so extent should be
 the extent of desired outcome) and reprojecting (including changing the
 resolution and projection).
-See details in \code{\link{postProcess}}.}
+See details in \code{\link[=postProcess]{postProcess()}}.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{...}{Passed to \code{raster::crop}}
 

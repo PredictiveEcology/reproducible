@@ -1,14 +1,14 @@
 #' A wrapper around a set of downloading functions
 #'
-#' Currently, this only deals with \code{\link[googledrive]{drive_download}},
-#' and \code{\link[utils]{download.file}}.
+#' Currently, this only deals with [googledrive::drive_download()],
+#' and [utils::download.file()].
 #'
 #' @inheritParams prepInputs
 #' @inheritParams extractFromArchive
-#' @param dlFun Optional "download function" name, such as \code{"raster::getData"}, which does
+#' @param dlFun Optional "download function" name, such as `"raster::getData"`, which does
 #'              custom downloading, in addition to loading into R. Still experimental.
-#' @param ... Passed to \code{dlFun}. Still experimental.
-#' @param checksumFile A character string indicating the absolute path to the \code{CHECKSUMS.txt}
+#' @param ... Passed to `dlFun`. Still experimental.
+#' @param checksumFile A character string indicating the absolute path to the `CHECKSUMS.txt`
 #'                     file.
 #'
 #' @inheritParams Cache

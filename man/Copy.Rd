@@ -92,7 +92,7 @@ setMethod("Copy", signature = "the class", # where = specify here if not in a pa
 }
 }
 \seealso{
-\code{\link{.robustDigest}}
+\code{\link[=.robustDigest]{.robustDigest()}}
 }
 \author{
 Eliot McIntire

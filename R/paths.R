@@ -210,6 +210,7 @@ setMethod(
 #'   temporary dir should be placed. Defaults to `getOption("reproducible.tempPath")`.
 #' @param create Logical. Should the directory be created. Default `TRUE`.
 #'
+#' @seealso [tempfile2]
 #' @export
 tempdir2 <- function(sub = "",
                      tempdir = getOption("reproducible.tempPath", .reproducibleTempPath()),
@@ -219,6 +220,20 @@ tempdir2 <- function(sub = "",
     checkPath(np, create = TRUE)
   }
   np
+}
+
+#' Make a temporary subfile in a temporary (sub-)directory
+#'
+#' @param ... passed to `tempfile`, e.g., `fileext`
+#'
+#' @seealso [tempdir2]
+#' @inheritParams tempdir2
+#' @param ... passed to `tempfile`, e.g., `fileext`
+#' @export
+tempfile2 <- function(sub = "",
+                      tempdir = getOption("reproducible.tempPath", .reproducibleTempPath()),
+                      ...) {
+  normPath(file.path(tempdir2(sub = sub, tempdir = tempdir), basename(tempfile(...))))
 }
 
 SysInfo <- Sys.info() # do this on load; nothing can change, so repeated calls are a waste

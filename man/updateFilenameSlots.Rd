@@ -6,7 +6,7 @@
 \alias{updateFilenameSlots.list}
 \alias{updateFilenameSlots.environment}
 \alias{updateFilenameSlots.Raster}
-\title{A helper function to change the filename slot of \code{Raster*} objects}
+\title{A helper function to change the filename slot of \verb{Raster*} objects}
 \usage{
 updateFilenameSlots(obj, curFilenames, newFilenames, isStack = NULL)
 
@@ -19,7 +19,7 @@ updateFilenameSlots(obj, curFilenames, newFilenames, isStack = NULL)
 \method{updateFilenameSlots}{Raster}(obj, curFilenames, newFilenames, isStack = NULL)
 }
 \arguments{
-\item{obj}{An object. This function only has useful methods for \code{Raster*},
+\item{obj}{An object. This function only has useful methods for \verb{Raster*},
 with all other classes being simply a pass-through}
 
 \item{curFilenames}{An optional character vector of filenames currently existing
@@ -36,7 +36,7 @@ This is intended for internal use, though it is exported because other packages
 use this. This function exists because when copying file-backed rasters, the
 usual mechanism of \code{writeRaster} can be very slow. This function allows
 for a user to optionally create a hard link to the old file, give it a new
-name, then update the filename slot(s) in the \code{Raster*} class object. This
+name, then update the filename slot(s) in the \verb{Raster*} class object. This
 can be 100s of times faster for large rasters.
 }
 \keyword{internal}

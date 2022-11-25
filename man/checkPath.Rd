@@ -22,7 +22,7 @@ checkPath(path, create)
 \item{path}{A character string corresponding to a directory path.}
 
 \item{create}{A logical indicating whether the path should
-be created if it does not exist. Default is `FALSE`.}
+be created if it does not exist. Default is \code{FALSE}.}
 }
 \value{
 Character string denoting the cleaned up filepath.
@@ -33,8 +33,8 @@ such as trailing slashes, etc.
 }
 \note{
 This will not work for paths to files.
-To check for existence of files, use `file.exists()`.
-To normalize a path to a file, use `normPath()` or `normalizePath()`.
+To check for existence of files, use \code{file.exists()}.
+To normalize a path to a file, use \code{normPath()} or \code{normalizePath()}.
 }
 \examples{
 ## normalize file paths
@@ -61,5 +61,5 @@ dir.exists(tmpdir) ## TRUE
 unlink(tmpdir, recursive = TRUE)
 }
 \seealso{
-[file.exists()], [dir.create()].
+\code{\link[=file.exists]{file.exists()}}, \code{\link[=dir.create]{dir.create()}}.
 }
