@@ -226,12 +226,18 @@ isSpatialAny <- function(x) isGridded(x) || isVector(x)
 #' it will run `terra::makeValid`
 #' @export
 #' @param x The SpatStat or SpatVect object to try to fix.
+#' @param error The error message, e.g., coming from `try(...)`
+#' @inheritParams Cache
+#' @param fromFnName The function name that produced the error, e.g., `maskTo`
 #'
-fixErrorsTerra <- function(x, error, verbose = getOption("reproducible.verbose"), fromFnName = "") {
-
-  messageDeclareError(error, fromFnName, verbose)
-
+#' @return
+#' An object of the same class as `x`.
+#'
+#'
+fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.verbose"), fromFnName = "") {
   if (isVector(x)) {
+    if (!is.null(error))
+      messageDeclareError(error, fromFnName, verbose)
     xValids <- terra::is.valid(x)
     if (any(!xValids))
       x <- terra::makeValid(x)
