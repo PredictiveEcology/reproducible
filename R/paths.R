@@ -1,7 +1,25 @@
+#' Normalize filepath
+#'
+#' Checks the specified filepath for formatting consistencies:
+#'  1) use slash instead of backslash;
+#'  2) do tilde etc. expansion;
+#'  3) remove trailing slash.
+#'
+#' @param path A character vector of filepaths.
+#'
+#' @return Character vector of cleaned up filepaths.
+#'
+#' @export
+#' @rdname normPath
+#'
+#' @example inst/examples/example_checkPath.R
+#'
 setGeneric("normPath", function(path) {
   standardGeneric("normPath")
 })
 
+#' @export
+#' @rdname normPath
 setMethod(
   "normPath",
   signature(path = "character"),
@@ -34,6 +52,8 @@ setMethod(
   }
 )
 
+#' @export
+#' @rdname normPath
 setMethod(
   "normPath",
   signature(path = "list"),
@@ -42,6 +62,8 @@ setMethod(
   }
 )
 
+#' @export
+#' @rdname normPath
 setMethod(
   "normPath",
   signature(path = "NULL"),
@@ -50,6 +72,8 @@ setMethod(
   }
 )
 
+#' @export
+#' @rdname normPath
 setMethod(
   "normPath",
   signature(path = "missing"),
@@ -58,6 +82,8 @@ setMethod(
   }
 )
 
+#' @export
+#' @rdname normPath
 setMethod(
   "normPath",
   signature(path = "logical"),
@@ -66,10 +92,35 @@ setMethod(
   }
 )
 
+#' Check directory path
+#'
+#' Checks the specified path to a directory for formatting consistencies,
+#' such as trailing slashes, etc.
+#'
+#' @note This will not work for paths to files.
+#' To check for existence of files, use `file.exists()`.
+#' To normalize a path to a file, use `normPath()` or `normalizePath()`.
+#'
+#' @param path A character string corresponding to a directory path.
+#'
+#' @param create A logical indicating whether the path should
+#' be created if it does not exist. Default is `FALSE`.
+#'
+#' @return Character string denoting the cleaned up filepath.
+#'
+#' @seealso [file.exists()], [dir.create()].
+#'
+#' @export
+#' @rdname checkPath
+#'
+#' @example inst/examples/example_checkPath.R
+#'
 setGeneric("checkPath", function(path, create) {
   standardGeneric("checkPath")
 })
 
+#' @export
+#' @rdname checkPath
 setMethod(
   "checkPath",
   signature(path = "character", create = "logical"),
@@ -86,7 +137,7 @@ setMethod(
         if (all(isExistingFile)) {
           messageCache(
             "That path is an existing file(s)",
-            verboseLevel = 1,
+            verboseLevel = 0,
             verbose = getOption("reproducible.verbose")
           )
         } else {
@@ -109,7 +160,7 @@ setMethod(
           }
         }
       }
-      if (Sys.info()[["sysname"]] == "Darwin") {
+      if (SysInfo[["sysname"]] == "Darwin") {
         path <-
           normPath(path)
       } # ensure path re-normalized after creation
@@ -119,6 +170,8 @@ setMethod(
   }
 )
 
+#' @export
+#' @rdname checkPath
 setMethod(
   "checkPath",
   signature(path = "character", create = "missing"),
@@ -127,6 +180,8 @@ setMethod(
   }
 )
 
+#' @export
+#' @rdname checkPath
 setMethod(
   "checkPath",
   signature(path = "NULL", create = "ANY"),
@@ -135,6 +190,8 @@ setMethod(
   }
 )
 
+#' @export
+#' @rdname checkPath
 setMethod(
   "checkPath",
   signature(path = "missing", create = "ANY"),
@@ -142,6 +199,8 @@ setMethod(
     stop("Invalid path: no path specified.")
   }
 )
+
+
 
 tempdir2 <- function(sub = "",
                      tempdir = getOption("reproducible.tempPath", .reproducibleTempPath()),
@@ -153,3 +212,5 @@ tempdir2 <- function(sub = "",
   np
 }
 
+SysInfo <-
+  Sys.info() # do this on load; nothing can change, so repeated calls are a waste
