@@ -101,6 +101,7 @@
 #' @param ... Currently can be either `rasterToMatch`, `studyArea`, `filename2`,
 #'   `useSAcrs`, or `targetCRS` to allow backwards
 #'   compatibility with `postProcess`. See section below for details.
+#' @inheritParams Cache
 #' @export
 postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NULL,
                              writeTo = NULL, method = NULL, datatype = "FLT4S",
