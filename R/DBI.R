@@ -538,16 +538,17 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 #' @importFrom DBI dbListTables
 #' @export
 #' @examples
-#' tmpCache <- file.path(tempdir(), "tmpCache")
-#' tmpdir <- file.path(tempdir(), "tmpdir")
+#' tmpCache <- normalizePath(file.path(tempdir(), "tmpCache"), mustWork = FALSE)
+#' tmpdir <- normalizePath(file.path(tempdir(), "tmpdir"), mustWork = FALSE)
 #' bb <- Cache(rnorm, 1, cacheRepo = tmpCache)
 #'
 #' # Copy all files from tmpCache to tmpdir
-#' froms <- normPath(dir(tmpCache, recursive = TRUE, full.names = TRUE))
-#' checkPath(file.path(tmpdir, "rasters"), create = TRUE)
-#' checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
+#' froms <- normalizePath(dir(tmpCache, recursive = TRUE, full.names = TRUE),
+#'                        mustWork = FALSE)
+#' dir.create(file.path(tmpdir, "rasters"), recursive = TRUE)
+#' dir.create(file.path(tmpdir, "cacheOutputs"), recursive = TRUE)
 #' file.copy(from = froms, overwrite = TRUE,
-#'           to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
+#'           to = gsub(tmpCache, tmpdir, froms))
 #'
 #' # Must use 'movedCache' to update the database table
 #' movedCache(new = tmpdir, old = tmpCache)

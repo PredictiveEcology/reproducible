@@ -147,7 +147,7 @@ setMethod(
 #' @export
 #' @rdname checkCacheRepo
 #' @examples
-#' a <- "test"
+#' a <- normalizePath(file.path(tempdir(), "test"), mustWork = FALSE)
 #' .checkCacheRepo(a, create = TRUE)
 #'
 setGeneric(".checkCacheRepo", function(object, create = FALSE,

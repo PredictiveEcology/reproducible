@@ -36,7 +36,7 @@ This is a generic definition that can be extended according to class.
 Normally, \code{checkPath} can be called directly, but does not have class-specific methods.
 }
 \examples{
-a <- "test"
+a <- normalizePath(file.path(tempdir(), "test"), mustWork = FALSE)
 .checkCacheRepo(a, create = TRUE)
 
 }
