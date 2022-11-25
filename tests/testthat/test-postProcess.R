@@ -93,7 +93,7 @@ test_that("prepInputs doesn't work (part 3)", {
   expect_identical(dataType(b1), dt1)
 
   # now raster with sf ## TODO: temporarily skip these tests due to fasterize not being updated yet for crs changes
-  if (requireNamespace("fasterize")) {
+  if (requireNamespace("fasterize", quietly = TRUE)) {
     r1 <- fasterize::fasterize(nc1, r)
     r2 <- postProcess(r1, studyArea = ncSmall, filename2 = NULL)
     expect_true(is(r2, "RasterLayer"))

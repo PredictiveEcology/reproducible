@@ -624,7 +624,8 @@ setMethod(
       # compare outputHash to existing Cache record
       tries <- 1
       if (useCloud) {
-        if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+        if (!requireNamespace("googledrive", quietly = TRUE))
+          stop(requireNamespaceMsg("googledrive", "to use google drive files"))
         # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
         #  returns NROW 0 gdriveLs if not present
         #cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)
@@ -1470,7 +1471,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", q
   res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") > 0)) {
     .robustDigest(unname(sort(unlist(preDigest))), algo = algo, quick = TRUE, ...)
   } else {
-    if (!requireNamespace("fastdigest"))
+    if (!requireNamespace("fastdigest", quietly = TRUE))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
     fastdigest::fastdigest(preDigest)
   }
@@ -1873,12 +1874,12 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
 
   }
   if (any(inherits(output, "PackedSpatVector"))) {
-    if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
       stop("Please install terra package")
     output <- terra::vect(output)
   }
   if (any(inherits(output, "PackedSpatRaster"))) {
-    if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
       stop("Please install terra package")
     output <- terra::rast(output)
   }

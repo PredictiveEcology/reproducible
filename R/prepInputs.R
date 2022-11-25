@@ -438,7 +438,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     messagePrepInputs("No loading of object into R; fun = ", out$fun, verbose = verbose)
     x <- out
   }
-  if (requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
+  if (requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)) {
     if (!(all(is.null(out$dots$studyArea),
               is.null(out$dots$rasterToMatch),
               is.null(out$dots$targetCRS))) || !(all(is.null(out$dots$to)))) {
@@ -1026,7 +1026,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     } else {
       setDT(cs)
       nonCurrentFiles <- cs[!file %in% filesToChecksum]
-      # if (requireNamespace("dplyr")) {
+      # if (requireNamespace("dplyr", quietly = TRUE)) {
       #   nonCurrentFiles1 <- cs %>%
       #     dplyr::filter(!file %in% filesToChecksum)
       #   # browser(expr = !identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
@@ -1043,13 +1043,12 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           "  you can specify targetFile (and optionally alsoExtract) so it knows\n",
           "  what to look for.", verbose = verbose)
   csf <- if (append) tempfile(fileext = ".TXT") else checkSumFilePath
-  capture.output(
-    type = "message",
+  capture.output(type = "message", {
     currentFiles <- Checksums(path = destinationPath, write = TRUE, #write = !append || NROW(nonCurrentFiles) == 0,
                               files = file.path(destinationPath, filesToChecksum),
                               checksumFile = csf,
                               verbose = verbose)
-  )
+  })
   if (append) { # a checksums file already existed, need to keep some of it
     currentFilesToRbind <- data.table::as.data.table(currentFiles)
     keepCols <- c("expectedFile", "checksum.x", "algorithm.x", "filesize.x")

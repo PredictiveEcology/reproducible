@@ -445,20 +445,20 @@ test_that("Test to fix issue #101 prepInputs on raster from disk", {
 })
 
 test_that("Test of using future and progress indicator for lrg files on Google Drive", {
+  skip_if_not_installed("future")
+
   if (interactive()) {
-    if (requireNamespace("future")) {
-      testInitOut <- testInit(c("raster", "future"), needGoogle = TRUE, opts = list("reproducible.futurePlan" = "multiprocess"))
-      on.exit({
-        testOnExit(testInitOut)
-      }, add = TRUE)
-      #future::plan("multiprocess")
-      noisyOutput <- capture.output(
-        ccc <- testthat::capture_output(
-          smallRT <- preProcess(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
-        )
-      )
-      expect_true(is(smallRT, "list"))
-    }
+    testInitOut <- testInit(c("raster", "future"), needGoogle = TRUE, opts = list("reproducible.futurePlan" = "multiprocess"))
+    on.exit({
+      testOnExit(testInitOut)
+    }, add = TRUE)
+    #future::plan("multiprocess")
+    noisyOutput <- capture.output({
+      ccc <- testthat::capture_output({
+        smallRT <- preProcess(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
+      })
+    })
+    expect_true(is(smallRT, "list"))
   }
 })
 

@@ -133,7 +133,8 @@ test_that("unrar is working as expected", {
 })
 
 test_that("test miscellaneous fns (part 2)", {
-  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  if (!requireNamespace("googledrive", quietly = TRUE))
+    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   skip_if_no_token()
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
