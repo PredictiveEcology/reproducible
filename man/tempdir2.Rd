@@ -15,11 +15,10 @@ tempdir2(
 `file.path("smth", "smth2")` for nested temporary subdirectories.}
 
 \item{tempdir}{Optional character string where the
-temporary dir should be placed. Defaults to `.reproducibleTempPath()`.}
+temporary dir should be placed. Defaults to `getOption("reproducible.tempPath")`.}
 
 \item{create}{Logical. Should the directory be created. Default `TRUE`.}
 }
 \description{
-Create a temporary subdirectory in `.reproducibleTempPath()`, or a
-temporary file in that temporary subdirectory.
+Create a temporary subdirectory in `getOption("reproducible.tempPath")`.
 }
