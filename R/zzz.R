@@ -15,7 +15,7 @@
     packageStartupMessage(
       "Using reproducible version ",
       utils::packageVersion("reproducible"), ".",
-      "\n  'reproducible' has changed the default database backend.",
+      # "\n  'reproducible' has changed the default database backend.", # Not true yet
       "\n  See ?reproducibleOptions for details.",
       "\n  During transition to GDAL>3 and PROJ>6, many warnings will be suppressed until",
       " simple solutions are available; if these GDAL and PROJ changes",
