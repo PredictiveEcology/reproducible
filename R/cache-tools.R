@@ -18,11 +18,11 @@
 #'                 Specifying one or more `userTag` here will clear all
 #'                 objects that match those tags.
 #'                 Matching is via regular expression, meaning partial matches
-#'                 will work unless strict beginning (^) and end ($) of string
+#'                 will work unless strict beginning (`^`) and end (`$`) of string
 #'                 characters are used.
 #'                 Matching will be against any of the 3 columns returned by `showCache()`,
 #'                 i.e., `artifact`, `tagValue` or `tagName`.
-#'                 Also, length `userTags` > 1, then matching is by `and`.
+#'                 Also, if `length(userTags) > 1`, then matching is by `and`.
 #'                 For `or` matching, use `|` in a single character string.
 #'                 See examples.
 #' @param useCloud Logical. If `TRUE`, then every object that is deleted locally will
