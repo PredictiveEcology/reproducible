@@ -464,25 +464,25 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 #'
 #' @rdname CacheHelpers
 #' @export
-#' @param hash The cacheId or otherwise digested hash value, as character string.
+#' @param cacheId The cacheId or otherwise digested hash value, as character string.
 #' @param format The text string representing the file extension used normally by
 #'   different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
 #'   to \code{getOption("reproducible.cacheSaveFormat", "rds")}
-CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), hash,
+CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cacheId,
                             format = getOption("reproducible.cacheSaveFormat", "rds")) {
   csf <- if (isTRUE(useDBI()) == FALSE) {
     "rda"
   } else {
     format
   }
-  csExtension <- if (csf == "qs") {
+  csExtension <- if (isTRUE("qs" %in% csf)) {
     "qs"
-  } else if (csf == "rds") {
+  } else if (isTRUE("rds" %in% csf)) {
     "rds"
   } else {
     "rda"
   }
-  filename <- paste(hash, csExtension, sep = ".")
+  filename <- paste(cacheId, csExtension, sep = ".")
   file.path(CacheStorageDir(cachePath), filename)
 }
 

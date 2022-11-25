@@ -466,8 +466,8 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
 
 postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
   if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
-    stop("Need terra and sf: Require::Require(c('terra', 'sf'), require = FALSE)")
-  if (!requireNamespace("sf")) stop("Need sf: Require::Require(c('sf'), require = FALSE)")
+    stop("Need terra and sf: install.packages(c('terra', 'sf'))")
+  if (!requireNamespace("sf")) stop("Need sf: install.packages('sf')")
 
   if (!(isSpatialAny(from))) stop("from must be a Raster* or SpatRaster")
 

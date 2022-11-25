@@ -784,7 +784,7 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
   # filenamesToRm <- paste0(cacheIds, ".rda")
   isInCloud <- gdriveLs$name %in% filenamesToRm
   # Deal with Rasters
-  files <- CacheStoredFile(x, hash = cacheIds[isInCloud])
+  files <- CacheStoredFile(x, cacheId = cacheIds[isInCloud])
   sc <- suppressMessages(showCache(x, userTags = cacheIds))
   classes <- sc[tagKey == "class"]$tagValue
   rases <- classes %in% c("RasterLayer", "RasterStack", "RasterBrick")

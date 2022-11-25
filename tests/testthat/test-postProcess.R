@@ -116,9 +116,11 @@ test_that("prepInputs doesn't work (part 3)", {
                              "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
     nc3 <- suppressWarningsSpecific({
       spTransform(as(nc1, "Spatial"), CRSobj = CRS(nonLatLongProj2))
-    }, falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition")
+    }, falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition|PROJ support is provided by the sf and terra packages among others")
     nc4 <- cropInputs(nc3, studyArea = ncSmall)
-    ncSmall2 <- spTransform(as(ncSmall, "Spatial"), CRSobj = CRS(nonLatLongProj2))
+    ncSmall2 <- suppressWarningsSpecific({
+      spTransform(as(ncSmall, "Spatial"), CRSobj = CRS(nonLatLongProj2))
+    }, falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition|PROJ support is provided by the sf and terra packages among others")
     expect_true(isTRUE(all.equal(extent(nc4), extent(ncSmall2))))
 
     mess <- capture_error({
