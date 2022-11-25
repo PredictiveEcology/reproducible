@@ -200,8 +200,18 @@ setMethod(
   }
 )
 
-
-
+#' Make a temporary (sub-)directory
+#'
+#' Create a temporary subdirectory in `.reproducibleTempPath()`, or a
+#' temporary file in that temporary subdirectory.
+#'
+#' @param sub Character string, length 1. Can be a result of
+#'   `file.path("smth", "smth2")` for nested temporary subdirectories.
+#' @param tempdir Optional character string where the
+#'   temporary dir should be placed. Defaults to `.reproducibleTempPath()`.
+#' @param create Logical. Should the directory be created. Default `TRUE`.
+#'
+#' @export
 tempdir2 <- function(sub = "",
                      tempdir = getOption("reproducible.tempPath", .reproducibleTempPath()),
                      create = TRUE) {
@@ -212,5 +222,4 @@ tempdir2 <- function(sub = "",
   np
 }
 
-SysInfo <-
-  Sys.info() # do this on load; nothing can change, so repeated calls are a waste
+SysInfo <- Sys.info() # do this on load; nothing can change, so repeated calls are a waste
