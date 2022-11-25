@@ -27,50 +27,10 @@
 #' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
 #'
-#' @examples
-#'
-#' # This function is mostly superfluous as terra::mask is fast
-#' library(sp)
-#' library(raster)
-#'
-#' Sr1 <- Polygon(cbind(c(2, 4, 4, 0.9, 2), c(2, 3, 5, 4, 2)))
-#' Sr2 <- Polygon(cbind(c(5, 4, 2, 5), c(2, 3, 2, 2)))
-#' Sr3 <- Polygon(cbind(c(4, 4, 5, 10, 4), c(5, 3, 2, 5, 5)))
-#'
-#' Srs1 <- Polygons(list(Sr1), "s1")
-#' Srs2 <- Polygons(list(Sr2), "s2")
-#' Srs3 <- Polygons(list(Sr3), "s3")
-#' shp <- SpatialPolygons(list(Srs1, Srs2, Srs3), 1:3)
-#' d <- data.frame(vals = 1:3, other = letters[3:1], stringsAsFactors = FALSE)
-#' row.names(d) <- names(shp)
-#' shp <- SpatialPolygonsDataFrame(shp, data = d)
-#' poly <- list()
-#' poly[[1]] <- raster(raster::extent(shp), vals = 0, res = c(1, 1))
-#' poly[[2]] <- raster(raster::extent(shp), vals = 1, res = c(1, 1))
-#' origStack <- stack(poly)
-#'
-#' # during transition from raster to terra, the following requires terra to run
-#' if (requireNamespace("terra", silent = TRUE)) {
-#'   newStack1 <- mask(x= terra::rast(origStack), mask = terra::vect(sf::st_as_sf(shp)))
-#'   newStack2 <- fastMask(x = origStack, y = sf::st_as_sf(shp))
-#'
-#' # test all equal
-#'   all.equal(newStack1, newStack2)
-#'
-#'   newStack1 <- stack(newStack1)
-#'   newStack2 <- stack(newStack2)
-#'
-#'  if (interactive()) {
-#'   plot(newStack2[[1]])
-#'   plot(shp, add = TRUE)
-#'  }
-#'
-#' }
-#'
 fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE),
                      verbose = getOption("reproducible.verbose", 1), ..., skipDeprecastedMsg = FALSE) {
   if (!skipDeprecastedMsg)
-    .Deprecated("mask", "terra", "fastMask is deprecasted; using maskTo and terra")
+    .Deprecated("mask", "terra", "fastMask is deprecated; using maskTo and terra")
   touches <- list(...)$touches
   maskTo(from = x, maskTo = y, touches = isTRUE(touches))
 #   if (!identical(.crs(y), .crs(x))) {
