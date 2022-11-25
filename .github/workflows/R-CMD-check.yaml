@@ -56,7 +56,6 @@ jobs:
           extra-packages: |
             any::rcmdcheck
             any::Rcpp
-            PredictiveEcology/Require@development
 
       - uses: r-lib/actions/check-r-package@v2
         with:
