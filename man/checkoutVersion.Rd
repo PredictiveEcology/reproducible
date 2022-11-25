@@ -25,33 +25,6 @@ Invisibly returns a git_repository class object, defined in \pkg{git2r}.
 \description{
 Defunct.
 }
-\examples{
-\dontrun{
-  tmpDir <- tempfile("")
-  dir.create(tmpDir)
-  repo <- "PredictiveEcology/reproducible"
-
-  ## get latest from master branch
-  localRepo <- checkoutVersion("PredictiveEcology/reproducible",
-                               localRepoPath = tmpDir)
-  git2r::summary(localRepo)
-  unlink(tmpDir, recursive = TRUE)
-
-  ## get latest from development branch
-  localRepo <- checkoutVersion(paste0(repo, "@", "development"), localRepoPath = tmpDir)
-  git2r::summary(localRepo)
-  unlink(tmpDir, recursive = TRUE)
-
-  ## get a particular commit by sha
-  sha <- "8179e1910e7c617fdeacad0f9d81323e6aad57c3"
-  localRepo <- checkoutVersion(paste0(repo, "@", sha), localRepoPath = tmpDir)
-  git2r::summary(localRepo)
-  unlink(tmpDir, recursive = TRUE)
-
-  rm(localRepo, repo)
-}
-
-}
 \author{
 Eliot McIntire and Alex Chubaty
 }

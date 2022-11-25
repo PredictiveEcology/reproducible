@@ -183,17 +183,6 @@ rndstr <- function(n = 1, len = 8) {
 #' just for the test. In all other times, this returns the same things as
 #' \code{interactive()}.
 #' @keywords internal
-#' @examples
-#' \dontrun{
-#' testthat::with_mock(
-#' `isInteractive` = function() {browser(); TRUE},
-#' {
-#'   tmpdir <- tempdir()
-#'   aa <- Cache(rnorm, 1, cacheRepo = tmpdir, userTags = "something2")
-#'   # Test clearCache -- has an internal isInteractive() call
-#'   clearCache(tmpdir, ask = FALSE)
-#'   })
-#' }
 isInteractive <- function() interactive()
 
 #' A version of \code{base::basename} that is \code{NULL} resistant
@@ -511,4 +500,19 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   )
   colnames(df) <- c("extension", "fun", "type")
   df
+}
+
+
+#' @importFrom utils packageDescription
+.isDevelVersion <- function() {
+  length(strsplit(packageDescription("reproducible")$Version, "\\.")[[1]]) > 3
+}
+
+.runLongTests <- function() {
+  .isDevelVersion() || Sys.getenv("R_REPRODUCIBLE_RUN_ALL_TESTS") == "true"
+}
+
+.runLongExamples <- function() {
+  .isDevelVersion() ||
+    Sys.getenv("R_REPRODUCIBLE_RUN_ALL_EXAMPLES") == "true"
 }

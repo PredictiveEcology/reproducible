@@ -41,9 +41,7 @@ This can be used by a user to pre-test their arguments before running
 \code{Cache}, for example to determine whether there is a cached copy.
 }
 \examples{
-\dontrun{
-  a <- Cache(rnorm, 1)
-  CacheDigest(list(rnorm, 1))
+a <- Cache(rnorm, 1)
+CacheDigest(list(rnorm, 1))
 
-}
 }

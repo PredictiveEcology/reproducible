@@ -224,9 +224,7 @@ will only remove entries in the \code{CHECKSUMS.txt} that are associated with
 }
 
 \examples{
-# This function works within a module; however, currently,
-#   \cde{sourceURL} is not yet working as desired. Use \code{url}.
-\dontrun{
+if (reproducible:::.runLongExamples()) {
 # download a zip file from internet, unzip all files, load as shapefile, Cache the call
 # First time: don't know all files - prepInputs will guess, if download file is an archive,
 #   then extract all files, then if there is a .shp, it will load with raster::shapefile
@@ -292,7 +290,7 @@ LCC2005 <- prepInputs(url = url,
                       destinationPath = asPath(dPath),
                       studyArea = StudyArea)
 
-plot(LCC2005)
+raster::plot(LCC2005)
 
 # if wrapped with Cache, will be very fast second time (via memoised copy)
 LCC2005 <- Cache(prepInputs, url = url,
@@ -306,8 +304,8 @@ test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify current
                     path = dPath)
 }
 
-# Using quoted dlFun and fun
-\dontrun{
+# Using quoted dlFun and fun -- this is not intended to be run but used as a template
+if (FALSE) {
   prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun)
   # or more complex
   test5 <- prepInputs(

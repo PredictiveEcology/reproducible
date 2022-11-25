@@ -1445,11 +1445,9 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#'   a <- Cache(rnorm, 1)
-#'   CacheDigest(list(rnorm, 1))
+#' a <- Cache(rnorm, 1)
+#' CacheDigest(list(rnorm, 1))
 #'
-#' }
 CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", quick = FALSE, ...) {
   if (identical("Cache", calledFrom)) {
     namesOTD <- names(objsToDigest)
