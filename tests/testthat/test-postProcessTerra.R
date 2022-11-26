@@ -227,7 +227,8 @@ test_that("testing terra", {
 
       ## same projection change resolution only (will likely affect extent)
       y2 <- terra::rast(crs = crs(y), res = 0.008333333*2)
-      y2[] <- 1
+      terra::values(y2) <- 1
+
       t22 <- postProcessTerra(x, to = y2)
       expect_true(identical(crs(t22), crs(x)))
       expect_true(terra::ext(t22) == terra::ext(y2))   ## "identical" may say FALSE (decimal plates?)
