@@ -154,10 +154,7 @@ if (require("terra")) {
   VectEcozoneReprojected <- projectInputs(vectEcozone, StudyArea)
   vectEcozoneCropped <- cropInputs(vectEcozone, StudyArea)
 
-
-
-  # Note these two have different function names --> methods for cropInputs and fixErrors
-  #    are not implemented yet
+  # fixErrorsTerra --> generally not called on its own
   shpEcozoneClean <- fixErrorsTerra(vectEcozone)
 
   options(opts)

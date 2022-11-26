@@ -10,7 +10,7 @@ Version 1.2.12
 * examples were reworked, replaced, improved
 
 ## Bug fixes
-* none
+* `postProcess` now also checks resolution when assessing whether to project 
 
 Version 1.2.11
 ==============

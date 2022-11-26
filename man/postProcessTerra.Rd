@@ -18,7 +18,12 @@ postProcessTerra(
   ...
 )
 
-cropTo(from, cropTo = NULL, needBuffer = TRUE)
+cropTo(
+  from,
+  cropTo = NULL,
+  needBuffer = TRUE,
+  verbose = getOption("reproducible.verbose")
+)
 }
 \arguments{
 \item{from}{A Gridded or Vector dataset on which to do one or more of:
@@ -65,6 +70,12 @@ compatibility with \code{postProcess}. See section below for details.}
 of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
 has to happen on the \code{cropTo} prior to using it as a crop layer, then a buffer
 of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \value{
 An object of the same class as \code{from}, but potentially cropped, projected, masked,

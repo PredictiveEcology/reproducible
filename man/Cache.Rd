@@ -2,7 +2,6 @@
 % Please edit documentation in R/cache.R
 \name{Cache}
 \alias{Cache}
-\alias{Cache,ANY-method}
 \title{Cache method that accommodates environments, S4 methods, Rasters, & nested caching}
 \usage{
 Cache(
@@ -28,38 +27,9 @@ Cache(
   cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
   useCloud = FALSE,
-  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+  cloudFolderID = NULL,
   showSimilar = getOption("reproducible.showSimilar", FALSE),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = getOption("reproducible.conn", NULL)
-)
-
-\S4method{Cache}{ANY}(
-  FUN,
-  ...,
-  notOlderThan = NULL,
-  .objects = NULL,
-  .cacheExtra = NULL,
-  outputObjects = NULL,
-  algo = "xxhash64",
-  cacheRepo = NULL,
-  length = getOption("reproducible.length", Inf),
-  compareRasterFileLength,
-  userTags = c(),
-  digestPathContent,
-  omitArgs = NULL,
-  classOptions = list(),
-  debugCache = character(),
-  sideEffect = FALSE,
-  makeCopy = FALSE,
-  quick = getOption("reproducible.quick", FALSE),
-  verbose = getOption("reproducible.verbose", 1),
-  cacheId = NULL,
-  useCache = getOption("reproducible.useCache", TRUE),
-  useCloud = FALSE,
-  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-  showSimilar = getOption("reproducible.showSimilar", FALSE),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL)
 )
 }
