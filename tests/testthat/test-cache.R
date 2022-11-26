@@ -1348,28 +1348,27 @@ test_that("change to new capturing of FUN & base pipe", {
       out1 <- Cache(do.call(rnorm, list(1, 2, sd = round(mean(runif(1e8, 4, 6))))),
                     cacheRepo = tmpCache)
     )
-    st2 <- system.time(
-      out2 <- runif(1e8, 4, 6) |>
+    f1 <- paste("runif(1e8, 4, 6) |>
         mean() |>
         round() |>
         rnorm(1, 2, sd = _) |> # _ Only works with R >= 4.2.0
         # (function(xx) rnorm(1, 2, sd = xx))() |>
         Cache(cacheRepo = tmpCache)
-    )
-    st3 <- system.time(
-      out3 <- runif(1e8, 4, 6) |>
+    ")
+    st2 <- system.time(out2 <- eval(parse(text = f1)))
+    f2 <-   paste("out3 <- runif(1e8, 4, 6) |>
         mean() |>
         round() |>
         rnorm(1, 2, sd = _) |> # _ Only works with R >= 4.2.0
         # (function(xx) rnorm(1, 2, sd = xx))() |>
         Cache(cacheRepo = tmpCache)
-    )
+    ")
+    st3 <- system.time(eval(parse(text = f2)))
     expect_true(attr(out1, ".Cache")$newCache)
     expect_false(attr(out2, ".Cache")$newCache)
     expect_false(attr(out3, ".Cache")$newCache)
 
     expect_true(all((st1[1] * 50) > st3[1]))
   }
-
 })
 
