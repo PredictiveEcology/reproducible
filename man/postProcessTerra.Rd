@@ -22,6 +22,7 @@ cropTo(
   from,
   cropTo = NULL,
   needBuffer = TRUE,
+  overwrite = FALSE,
   verbose = getOption("reproducible.verbose")
 )
 }
@@ -60,7 +61,9 @@ interpolation. See \code{terra::project}. Defaults to \code{"bilinear"}}
 
 \item{datatype}{A character string, used if \code{writeTo} is not \code{NULL}. See \code{raster::writeRaster}}
 
-\item{overwrite}{Logical. Used if \code{writeTo} is not \code{NULL}}
+\item{overwrite}{Logical. Used if \code{writeTo} is not \code{NULL}; also if \code{terra} determines
+that the object requires writing to disk during a \code{crop}, \code{mask} or \code{project} call
+e.g., because it is too large.}
 
 \item{...}{Currently can be either \code{rasterToMatch}, \code{studyArea}, \code{filename2},
 \code{useSAcrs}, or \code{targetCRS} to allow backwards
