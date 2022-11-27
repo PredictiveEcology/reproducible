@@ -8,6 +8,7 @@ Version 1.2.12
 
 ## Enhancements
 * examples were reworked, replaced, improved
+* `Cache` now works with base pipe |>. It is still experimental to some extent.
 
 ## Bug fixes
 * `postProcess` now also checks resolution when assessing whether to project 
