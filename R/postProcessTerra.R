@@ -97,7 +97,9 @@
 #' @param method Used if `projectTo` is not `NULL`, and is the method used for
 #'   interpolation. See `terra::project`. Defaults to `"bilinear"`
 #' @param datatype A character string, used if `writeTo` is not `NULL`. See `raster::writeRaster`
-#' @param overwrite Logical. Used if `writeTo` is not `NULL`
+#' @param overwrite Logical. Used if `writeTo` is not `NULL`; also if `terra` determines
+#'   that the object requires writing to disk during a `crop`, `mask` or `project` call
+#'   e.g., because it is too large.
 #' @param ... Currently can be either `rasterToMatch`, `studyArea`, `filename2`,
 #'   `useSAcrs`, or `targetCRS` to allow backwards
 #'   compatibility with `postProcess`. See section below for details.
@@ -190,10 +192,10 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   #############################################################
   # crop project mask sequence ################################
   #############################################################
-  from <- cropTo(from, cropTo, needBuffer = TRUE) # crop first for speed
-  from <- projectTo(from, projectTo, method = method) # need to project with edges intact
-  from <- maskTo(from, maskTo)
-  from <- cropTo(from, cropTo) # need to recrop to trim excess pixels in new projection
+  from <- cropTo(from, cropTo, needBuffer = TRUE, overwrite = overwrite) # crop first for speed
+  from <- projectTo(from, projectTo, method = method, overwrite = overwrite) # need to project with edges intact
+  from <- maskTo(from, maskTo, overwrite = overwrite)
+  from <- cropTo(from, cropTo, overwrite = overwrite) # need to recrop to trim excess pixels in new projection
 
   # Put this message near the end so doesn't get lost
   if (is.naSpatial(cropTo) && isVector(maskTo))  {
@@ -246,7 +248,8 @@ fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.ve
   x
 }
 
-maskTo <- function(from, maskTo, touches = FALSE, verbose = getOption("reproducible.verbose")) {
+maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
+                   verbose = getOption("reproducible.verbose")) {
   if (!is.null(maskTo)) {
     if (!is.naSpatial(maskTo)) {
       origFromClass <- class(from)
@@ -267,7 +270,7 @@ maskTo <- function(from, maskTo, touches = FALSE, verbose = getOption("reproduci
 
 
       if (!sf::st_crs(from) == sf::st_crs(maskTo)) {
-        maskTo <- terra::project(maskTo, from)
+        maskTo <- terra::project(maskTo, from, overwrite = overwrite)
       }
       messagePrepInputs("    masking...", appendLF = FALSE)
       st <- Sys.time()
@@ -288,9 +291,9 @@ maskTo <- function(from, maskTo, touches = FALSE, verbose = getOption("reproduci
             terra::intersect(from, maskTo)
           } else {
             if (isGridded(maskTo)) {
-              terra::mask(from, maskTo)
+              terra::mask(from, maskTo, overwrite = overwrite)
             } else {
-              terra::mask(from, maskTo, touches = touches)
+              terra::mask(from, maskTo, touches = touches, overwrite = overwrite)
             }
           }
         }, silent = TRUE)
@@ -323,7 +326,7 @@ maskTo <- function(from, maskTo, touches = FALSE, verbose = getOption("reproduci
   from
 }
 
-projectTo <- function(from, projectTo, method) {
+projectTo <- function(from, projectTo, method, overwrite = FALSE) {
   if (!is.null(projectTo)) {
     origFromClass <- is(from)
     if (!is.naSpatial(projectTo)) {
@@ -393,7 +396,7 @@ projectTo <- function(from, projectTo, method) {
           if (isSpatial) from <- as(from, "Spatial")
           from
         } else {
-          terra::project(from, projectTo, method = method)
+          terra::project(from, projectTo, method = method, overwrite = overwrite)
         }
         messagePrepInputs("done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
       }
@@ -410,7 +413,8 @@ projectTo <- function(from, projectTo, method) {
 #'   has to happen on the `cropTo` prior to using it as a crop layer, then a buffer
 #'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
 #' @export
-cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, verbose = getOption("reproducible.verbose")) {
+cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
+                   verbose = getOption("reproducible.verbose")) {
   if (!is.null(cropTo)) {
     omit <- FALSE
     origFromClass <- is(from)
@@ -441,7 +445,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, verbose = getOption("
 
       attempt <- 1
       while (attempt <= 2) {
-        fromInt <- try(terra::crop(from, ext), silent = TRUE)
+        fromInt <- try(terra::crop(from, ext, overwrite = overwrite), silent = TRUE)
         if (is(fromInt, "try-error")) {
           if (attempt == 1) {
             from <- fixErrorsTerra(from, error = fromInt, fromFnName = "cropTo", verbose = verbose)
