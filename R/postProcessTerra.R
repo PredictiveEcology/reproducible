@@ -270,7 +270,11 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
 
 
       if (!sf::st_crs(from) == sf::st_crs(maskTo)) {
-        maskTo <- terra::project(maskTo, from, overwrite = overwrite)
+        if (isGridded(maskTo)) {
+          maskTo <- terra::project(maskTo, from, overwrite = overwrite)
+        } else {
+          maskTo <- terra::project(maskTo, from)
+        }
       }
       messagePrepInputs("    masking...", appendLF = FALSE)
       st <- Sys.time()
@@ -445,7 +449,11 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
 
       attempt <- 1
       while (attempt <= 2) {
-        fromInt <- try(terra::crop(from, ext, overwrite = overwrite), silent = TRUE)
+        if (isGridded(from)) {
+          fromInt <- try(terra::crop(from, ext, overwrite = overwrite), silent = TRUE)
+        } else {
+          fromInt <- try(terra::crop(from, ext), silent = TRUE)
+        }
         if (is(fromInt, "try-error")) {
           if (attempt == 1) {
             from <- fixErrorsTerra(from, error = fromInt, fromFnName = "cropTo", verbose = verbose)
