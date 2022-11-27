@@ -1,6 +1,6 @@
 ## Release information
 
-This is a resubmission to restore the package to CRAN following archival due to removal of dependency package `Require`, which has now been restored to CRAN.
+This is a new submission to restore the package to CRAN following archival due to removal of dependency package `Require`. This version no longer depends on `Require`.
 See `NEWS.md` for a full list of changes.
 
 ## Test environments
