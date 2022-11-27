@@ -8,7 +8,8 @@ Version 1.2.12
 
 ## Enhancements
 * examples were reworked, replaced, improved
-* `Cache` now works with base pipe |>. It is still experimental to some extent.
+* `Cache` now works with base pipe |>. It is still experimental.
+* `Cache` now captures the first argument passed to it without evaluating it, so `Cache(rnorm(1))` now works as expected.
 
 ## Bug fixes
 * `postProcess` now also checks resolution when assessing whether to project 
