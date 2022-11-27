@@ -124,12 +124,14 @@ test_that("unrar is working as expected", {
   }, add = TRUE)
 
   rarPath <- file.path(tmpdir, "tmp.rar")
-  utils::zip(zipfile = rarPath, files = tmpfile)
-  unrar <- .whichExtractFn(archive = rarPath, args = "")
-  expect_true(identical(unrar$fun, "unrar"))
-  suppressWarnings(
-    expect_error(.callArchiveExtractFn(unrar$fun, files = "", args = list(exdir = tmpCache)))
-  )
+  out <- try(utils::zip(zipfile = rarPath, files = tmpfile)) # this should only be relevant if system can unrar
+  if (!is(out, "try-error")) {
+    unrar <- .whichExtractFn(archive = rarPath, args = "")
+    expect_true(identical(unrar$fun, "unrar"))
+    suppressWarnings(
+      expect_error(.callArchiveExtractFn(unrar$fun, files = "", args = list(exdir = tmpCache)))
+    )
+  }
 })
 
 test_that("test miscellaneous fns (part 2)", {

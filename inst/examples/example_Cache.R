@@ -51,4 +51,5 @@ options(opt)
 # }
 
 # For more in depth uses, see vignette
-browseVignettes(package = "reproducible")
+if (interactive())
+  browseVignettes(package = "reproducible")

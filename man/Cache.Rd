@@ -444,7 +444,8 @@ options(opt)
 # }
 
 # For more in depth uses, see vignette
-browseVignettes(package = "reproducible")
+if (interactive())
+  browseVignettes(package = "reproducible")
 }
 \seealso{
 \code{\link[=showCache]{showCache()}}, \code{\link[=clearCache]{clearCache()}}, \code{\link[=keepCache]{keepCache()}},
