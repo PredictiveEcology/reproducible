@@ -13,7 +13,6 @@ if (getRversion() >= "3.1.0") {
 #' @param cloudFolderID The google folder ID where a new checksums file should
 #'    be written. This will only be used if `checksumsFileID` is not provided
 #'   provided as a character string.
-#' @export
 #' @seealso [cloudSyncCacheOld()], [Cache()], [cloudWriteOld()]
 cloudCheckOld <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
   .Deprecated("Cache", msg = "Please use the 'useCloud' and 'cloudFolderID' args in 'Cache' instead")
@@ -33,7 +32,6 @@ cloudCheckOld <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL
 #' @param futurePlan Which `future::plan` to use. Default:
 #'    `getOption("reproducible.futurePlan")`
 #'
-#' @export
 #' @importFrom data.table data.table rbindlist
 #' @seealso [cloudSyncCacheOld()], [cloudCheckOld()]
 cloudWriteOld <- function(object, digest, cloudFolderID = NULL, checksums, checksumsFileID,
@@ -50,7 +48,6 @@ cloudWriteOld <- function(object, digest, cloudFolderID = NULL, checksums, check
 #'
 #' @param ... Passed to [Cache()]
 #'
-#' @export
 #' @importFrom data.table setattr
 #' @rdname Deprcated
 #' @seealso [cloudSyncCacheOld()], [Cache()], [cloudWriteOld()],
@@ -69,7 +66,7 @@ cloudCache <- function(...) {
 #'
 #' @inheritParams Cache
 #' @inheritParams cloudCache
-#' @inheritParams clearCache
+#' @inheritParams showCache
 #' @param cacheRepo See `x` in [showCache()]
 #' @param checksumsFileID A google file ID where the checksums data.table is located,
 #'   provided as a character string.
@@ -91,7 +88,6 @@ cloudCache <- function(...) {
 #'   to local machine if it exists remotely.
 #' @param ... Passed to `showCache` to get the artifacts to delete.
 #'
-#' @export
 #' @importFrom data.table data.table rbindlist
 #' @seealso [cloudCache()], [Cache()], [cloudWriteOld()],
 #'   [cloudCheckOld()]

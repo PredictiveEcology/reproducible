@@ -1,5 +1,13 @@
 #' Wrapper around `lobstr::obj_size`
 #'
+#' This function attempts to estimate the real object size of an object. If the object
+#' has pass-by-reference semantics, it may not estimate the object size well without
+#' a specific method developed. For the case of `terra` class objects, this will
+#' be accurate (both RAM and file size), but only if it is not passed inside
+#' a list or environment. To get an accuate size of these, they should be passed
+#' individually.
+#'
+#' @return
 #' This will return the result from `lobstr::obj_size`, i.e., a `lobstr_bytes`
 #' which is a `numeric`. If `quick = FALSE`, it will also have an attribute,
 #' "objSize", which will
@@ -24,9 +32,9 @@
 #' foo$d <- 1:10
 #'
 #' objSize(foo) # all the elements in the environment
-#' object.size(foo) # different - only measuring the environment as an object
+#' utils::object.size(foo) # different - only measuring the environment as an object
 #'
-#' object.size(prepInputs) # only the function, without its enclosing environment
+#' utils::object.size(prepInputs) # only the function, without its enclosing environment
 #' objSize(prepInputs)     # the function, plus its enclosing environment
 #'
 #' # Size of all packages; includes their imported functions
@@ -35,13 +43,12 @@
 #'   print(bar, units = "auto")
 #' }
 #'
-#' os1 <- object.size(as.environment("package:reproducible"))
+#' os1 <- utils::object.size(as.environment("package:reproducible"))
 #' os2 <- objSize(as.environment("package:reproducible"))
 #' (os1) # very small -- just the environment container
 #' sum(unlist(os2)) # around 13 MB, with all functions, objects
 #'                  # and imported functions
 #'
-#' @importFrom utils object.size
 #' @details
 #' For functions, a user can include the enclosing environment as described
 #' <https://www.r-bloggers.com/2015/03/using-closures-as-objects-in-r/> and
@@ -51,14 +58,28 @@
 #' not be included even though `enclosingEnvs = TRUE`.
 #'
 #' @export
-objSize <- function(x, quick = TRUE, ...) {
+objSize <- function(x, quick = FALSE, ...) {
   UseMethod("objSize", x)
 }
 
 #' @export
 #' @importFrom lobstr obj_size
-objSize.default <- function(x, quick = TRUE, ...) {
+objSize.default <- function(x, quick = FALSE, ...) {
+  FNs <- Filenames(x)
+  if (!is.null(FNs)) {
+    browser()
+    FNs <- asPath(FNs)
+    out2 <- objSize(FNs, quick = FALSE)
+  }
+  if (is(x, "SpatRaster") || is(x, "SpatVector")) {
+    if (.requireNamespace("terra"))
+      x <- terra::wrap(x)
+  }
   out <- obj_size(x)
+  if (exists("out2", inherits = FALSE)) {
+    out <- sum(out, out2)
+  }
+
   if (!quick)
     attr(out, "objSize") <- list(obj = out)
   out
@@ -66,10 +87,11 @@ objSize.default <- function(x, quick = TRUE, ...) {
 
 #' @export
 #' @importFrom lobstr obj_size
-objSize.list <- function(x, quick = TRUE, ...) {
-  os <- obj_size(x)
+objSize.list <- function(x, quick = FALSE, ...) {
+  os <- obj_size(x) # need to get overall object size; not just elements;
+                    # but this doesn't work for e.g., terra
   if (!quick) {
-    out <- lapply(x, lobstr::obj_size, quick = quick)
+    out <- lapply(x, objSize, quick = quick)
     attr(os, "objSize") <- out
   }
   os
@@ -77,7 +99,7 @@ objSize.list <- function(x, quick = TRUE, ...) {
 
 #' @export
 #' @importFrom lobstr obj_size
-objSize.Path <- function(x, quick = TRUE, ...) {
+objSize.Path <- function(x, quick = FALSE, ...) {
   if (quick) {
     os <- obj_size(x)
   } else {
@@ -85,18 +107,17 @@ objSize.Path <- function(x, quick = TRUE, ...) {
   }
 
   if (!quick) {
-    out <- lapply(x, lobstr::obj_size, quick = quick)
-    attr(os, "objSize") <- out
+    attr(os, "objSize") <- os
   }
   os
 }
 
 #' @export
 #' @importFrom lobstr obj_size
-objSize.environment <- function(x, quick = TRUE, ...) {
+objSize.environment <- function(x, quick = FALSE, ...) {
   os <- obj_size(x)
   if (!quick) {
-    out <- lapply(as.list(x, all.names = TRUE), lobstr::obj_size, quick = quick)
+    out <- lapply(as.list(x, all.names = TRUE), objSize, quick = quick)
     attr(os, "objSize") <- out
   }
   os

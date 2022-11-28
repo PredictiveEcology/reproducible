@@ -103,6 +103,12 @@ Since \code{...} is passed to \code{\link[=postProcess]{postProcess()}}, these w
 functions, e.g., \code{\link[=cropInputs]{cropInputs()}}. Possibly useful other arguments include
 \code{dlFun} which is passed to \code{preProcess}. See details and examples.}
 }
+\value{
+This is an omnibus function that will return an R object that will have resulted from
+the running of \code{\link[=preProcess]{preProcess()}} and \code{\link[=postProcess]{postProcess()}} or \code{\link[=postProcessTerra]{postProcessTerra()}}. Thus,
+if it is a GIS object, it may have been cropped, reprojected, "fixed", masked, and
+written to disk.
+}
 \description{
 \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
 }
@@ -332,7 +338,7 @@ if (FALSE) {
 
 }
 \seealso{
-\code{\link[=downloadFile]{downloadFile()}}, \code{\link[=extractFromArchive]{extractFromArchive()}},
+\code{\link[=postProcessTerra]{postProcessTerra()}}, \code{\link[=downloadFile]{downloadFile()}}, \code{\link[=extractFromArchive]{extractFromArchive()}},
 \code{\link[=postProcess]{postProcess()}}.
 }
 \author{

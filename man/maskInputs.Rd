@@ -86,6 +86,10 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
 \code{Cache} is used internally.}
 }
+\value{
+A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+appropriately masked.
+}
 \description{
 This function can be used to mask inputs from data. Masking here is
 equivalent to \code{raster::mask} (though \code{\link[=fastMask]{fastMask()}} is used here)
@@ -152,6 +156,9 @@ if (require("terra")) {
 }
 
 setwd(ow)
+}
+\seealso{
+\code{\link[=maskTo]{maskTo()}}
 }
 \author{
 Eliot McIntire and Jean Marchal

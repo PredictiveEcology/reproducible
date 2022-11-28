@@ -17,6 +17,10 @@
 
 \item{suffix}{A character string to postpend to the filename.}
 }
+\value{
+A character string or vector with the prefix pre-pended or suffix post-pended
+on the \code{basename} of the \code{f}, before the file extension.
+}
 \description{
 Prepend (or postpend) a filename with a prefix (or suffix).
 If the directory name of the file cannot be ascertained from its path,

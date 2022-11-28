@@ -33,6 +33,9 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{team_drive}{Logical indicating whether to check team drives.}
 }
+\value{
+Returns the character string of the cloud folder ID created or reported
+}
 \description{
 Will check for presence of a \code{cloudFolderID} and make a new one
 if one not present on Google Drive, with a warning.

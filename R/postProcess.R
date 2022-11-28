@@ -144,6 +144,9 @@ postProcess.list <- function(x, ...) {
 #' @importFrom raster removeTmpFiles
 #' @example inst/examples/example_postProcess.R
 #' @rdname postProcess
+#' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+#' appropriately cropped, reprojected, masked, depending on the inputs.
+#'
 postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = NULL,
                                        studyArea = NULL, rasterToMatch = NULL,
                                        overwrite = getOption("reproducible.overwrite", TRUE),
@@ -278,6 +281,8 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
 #' @importFrom methods is
 #' @importFrom raster buffer crop crs extent projectRaster res crs<-
 #' @importFrom sp SpatialPolygonsDataFrame spTransform CRS proj4string
+#' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+#' appropriately cropped.
 #' @rdname cropInputs
 cropInputs <- function(x, studyArea, rasterToMatch, verbose = getOption("reproducible.verbose", 1), ...) {
   UseMethod("cropInputs")
@@ -703,7 +708,10 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #' @param ... Passed to methods. None currently implemented.
 #'
 #' @export
+#' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+#' attempted to be fixed, if it finds errors.
 #' @keywords internal
+#' @seealso [fixErrorsTerra()]
 #'
 #' @example inst/examples/example_postProcess.R
 fixErrors <- function(x, objectName, attemptErrorFixes = TRUE,
@@ -891,6 +899,9 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
 #' @inheritParams prepInputs
 #' @importFrom raster canProcessInMemory
 #' @rdname projectInputs
+#' @seealso [projectTo()]
+#' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+#' appropriately reprojected.
 #'
 #' @example inst/examples/example_postProcess.R
 projectInputs <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
@@ -1316,6 +1327,9 @@ projectInputs.Spatial <- function(x, targetCRS, verbose = getOption("reproducibl
 #' @export
 #' @importFrom utils capture.output
 #' @rdname maskInputs
+#' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+#' appropriately masked.
+#' @seealso [maskTo()]
 #' @example inst/examples/example_postProcess.R
 #'
 maskInputs <- function(x, studyArea, ...) {
@@ -1610,6 +1624,10 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #'
 #' @author Eliot McIntire and Jean Marchal
 #' @export
+#' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+#' appropriately written to disk. In the case of vector datasets, this will
+#' be a side effect. In the case of gridded objects (Raster*, SpatRaster), the
+#' object will have a file-backing.
 #' @importFrom methods is
 #' @importFrom raster shapefile writeRaster
 #' @rdname writeOutputs
@@ -1881,14 +1899,10 @@ writeOutputs.default <- function(x, filename2, ...) {
 #' @param type Character. `"writeRaster"` (default) or `"GDAL"` to return the recommended
 #'             data type for writing from the raster packages, respectively, or
 #'             `"projectRaster"` to return recommended resampling type.
-#' @return The appropriate data type for the range of values in `ras`.
-#'         See [raster::dataType()] for details.
 #'
-#' @author Eliot McIntire
-#' @author Ceres Barros
-#' @author Ian Eddy
-#' @author Eliot McIntire
 #' @export
+#' @return A character string indicating the data type of the spatial layer
+#' (e.g., "INT2U"). See [terra::datatype()] or [raster::dataType()]
 #' @importFrom raster getValues sampleRandom
 #' @rdname assessDataType
 #'
@@ -1994,8 +2008,6 @@ assessDataType.default <- function(ras, type = "writeRaster") {
 #' This is a convenience function around `assessDataType(ras, type = "GDAL")`
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
-#' @return The appropriate data type for the range of values in `ras` for using GDAL.
-#'         See [raster::dataType()] for details.
 #' @author Eliot McIntire, Ceres Barros, Ian Eddy, and Tati Micheletti
 #' @example inst/examples/example_assessDataTypeGDAL.R
 #' @export

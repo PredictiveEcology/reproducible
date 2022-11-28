@@ -9,7 +9,7 @@
 #' @importFrom DBI dbConnect dbDisconnect dbWriteTable
 #' @inheritParams DBI::dbConnect
 #' @inheritParams DBI::dbWriteTable
-#' @rdname cache-tools
+#' @rdname CacheHelpers
 #' @details
 #' This function will create a Cache folder structure and necessary files, based on
 #' the particular `drv` or `conn` provided.
@@ -124,6 +124,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     if (is.null(.pkgEnv[[cachePath]]))
       .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
+    obj <- makeMemoisable(obj)
     assign(cacheId, obj, envir = .pkgEnv[[cachePath]])
   }
 
@@ -170,7 +171,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 }
 
 #' @export
-#' @rdname cache-tools
+#' @rdname CacheHelpers
 #' @inheritParams CacheStoredFile
 #' @return
 #' `loadFromCache` returns the object from the cache that has the particular `cacheId`.
@@ -187,6 +188,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     isMemoised <- exists(cacheId, envir = .pkgEnv[[cachePath]])
     if (isTRUE(isMemoised)) {
       obj <- get(cacheId, envir = .pkgEnv[[cachePath]])
+      obj <- unmakeMemoisable(obj)
     }
   }
   if (!isTRUE(isMemoised)) {
@@ -224,7 +226,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 #'
 #' @importFrom DBI dbClearResult dbSendStatement dbBind dbAppendTable
 #' @export
-#' @rdname cache-tools
+#' @rdname CacheHelpers
 #' @details
 #' `rmFromCache` removes one or more items from the cache, and updates the cache
 #' database files.

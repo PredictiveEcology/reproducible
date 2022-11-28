@@ -96,6 +96,9 @@ use GDAL regardless of the memory test described here.}
 \value{
 A file of the same type as starting, but with projection (and possibly
 other characteristics, including resolution, origin, extent if changed).
+
+A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+appropriately reprojected.
 }
 \description{
 A simple wrapper around the various different tools for these GIS types.
@@ -161,4 +164,7 @@ if (require("terra")) {
 }
 
 setwd(ow)
+}
+\seealso{
+\code{\link[=projectTo]{projectTo()}}
 }

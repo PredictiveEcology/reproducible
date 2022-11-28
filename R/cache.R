@@ -392,36 +392,11 @@ Cache <-
            showSimilar = getOption("reproducible.showSimilar", FALSE),
            drv = getOption("reproducible.drv"),
            conn = getOption("reproducible.conn", NULL)) {
-    #     standardGeneric("Cache")
-    # })
-    #
-    # # @export
-    # # @rdname Cache
-    # setMethod(
-    #   "Cache",
-    #   definition =
-    # function(FUN, ..., notOlderThan, .objects = NULL, .cacheExtra = NULL,
-    #                     outputObjects,  # nolint
-    #                     algo, cacheRepo, length, compareRasterFileLength, userTags,
-    #                     digestPathContent, omitArgs, classOptions,
-    #                     debugCache, sideEffect, quick, verbose,
-    #                     cacheId, useCache,
-    #                     useCloud,
-    #                     cloudFolderID,
-    #                     showSimilar, drv, conn) {
 
     # Capture everything -- so not evaluated
     FUNcaptured <- substitute(FUN)
     origFUN <- quote(FUN)
 
-    # isCapturedFUN <- length(FUNcaptured) > 1
-    # parsedExpanded <- evalArgsOnly(FUNcaptured, env = parent.frame())
-    # if (isCapturedFUN) {
-    #   FUN <- parsedExpanded[[1]]
-    #   originalDots <- parsedExpanded[-1]
-    # } else {
-    #   FUN <- parsedExpanded
-    # }
     if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
 
     if (missing(FUN)) stop("Cache requires the FUN argument")
@@ -911,9 +886,6 @@ Cache <-
       .setSubAttrInList(output, ".Cache", "newCache", .CacheIsNew)
       setattr(output, "tags", paste0("cacheId:", outputHash))
       setattr(output, "call", "")
-      # attr(output, "tags") <- paste0("cacheId:", outputHash)
-      # attr(output, ".Cache")$newCache <- TRUE
-      # attr(output, "call") <- ""
       if (!identical(attr(output, ".Cache")$newCache, .CacheIsNew))
         stop("attributes are not correct 3")
       if (!identical(attr(output, "call"), ""))
@@ -929,7 +901,6 @@ Cache <-
 
       if (isS4(FUN)) {
         setattr(output, "function", FUN@generic)
-        #attr(output, "function") <- FUN@generic
         if (!identical(attr(output, "function"), FUN@generic))
           stop("There is an unknown error 03")
       }
@@ -1140,12 +1111,9 @@ Cache <-
   if (useDBI()) {
     out <- loadFromCache(cachePath = repoDir, cacheId = md5hash)
   }
-  out <- makeMemoisable(out)
   return(out)
 }
 
-#' @keywords internal
-#.loadFromLocalRepoMem <- memoise::memoise(.loadFromLocalRepoMem2)
 
 #' @keywords internal
 .unlistToCharacter <- function(l, max.level = 1) {
@@ -1166,40 +1134,7 @@ Cache <-
   }
 }
 
-#' Generic method to make or unmake objects memoisable
-#'
-#' This is just a pass through for all classes in \pkg{reproducible}.
-#' This generic is here so that downstream methods can be created.
-#'
-#' @param x  An object to make memoisable.
-#'           See individual methods in other packages.
-#' @return The same object, but with any modifications, especially
-#' dealing with saving of environments, which memoising doesn't handle
-#' correctly in some cases.
-#'
-#' @export
-#' @rdname makeMemoisable
-makeMemoisable <- function(x) {
-  UseMethod("makeMemoisable")
-}
 
-#' @export
-#' @rdname makeMemoisable
-makeMemoisable.default <- function(x) {
-  x
-}
-
-#' @export
-#' @rdname makeMemoisable
-unmakeMemoisable <- function(x) {
-  UseMethod("unmakeMemoisable")
-}
-
-#' @export
-#' @rdname makeMemoisable
-unmakeMemoisable.default <- function(x) {
-  x
-}
 
 #' Write to cache repository, using `future::future`
 #'

@@ -2,7 +2,10 @@
 % Please edit documentation in R/postProcessTerra.R
 \name{postProcessTerra}
 \alias{postProcessTerra}
+\alias{maskTo}
+\alias{projectTo}
 \alias{cropTo}
+\alias{writeTo}
 \title{Transform a GIS dataset so it has the properties (extent, projection, mask) of another}
 \usage{
 postProcessTerra(
@@ -18,12 +21,33 @@ postProcessTerra(
   ...
 )
 
+maskTo(
+  from,
+  maskTo,
+  touches = FALSE,
+  overwrite = FALSE,
+  verbose = getOption("reproducible.verbose")
+)
+
+projectTo(from, projectTo, method, overwrite = FALSE)
+
 cropTo(
   from,
   cropTo = NULL,
   needBuffer = TRUE,
   overwrite = FALSE,
   verbose = getOption("reproducible.verbose")
+)
+
+writeTo(
+  from,
+  writeTo,
+  overwrite,
+  isStack = FALSE,
+  isBrick = FALSE,
+  isRaster = FALSE,
+  isSpatRaster = FALSE,
+  datatype = "FLT4S"
 )
 }
 \arguments{
@@ -33,7 +57,10 @@ crop, project, mask, and write}
 \item{to}{A Gridded or Vector dataset which is the object
 whose metadata will be the target for cropping, projecting, and masking of \code{from}.}
 
-\item{cropTo}{A Vector dataset}
+\item{cropTo}{Optional Gridded or Vector dataset which,
+if supplied, will supply the extent with which to crop \code{from}. To omit
+cropping completely, set this to \code{NA}. If supplied, this will override \code{to}
+for the cropping step. Defaults to \code{NULL}, which means use \code{to}}
 
 \item{projectTo}{Optional Gridded or Vector dataset, or \code{crs} object (e.g., sf::st_crs).
 If Gridded it will supply
@@ -69,20 +96,21 @@ e.g., because it is too large.}
 \code{useSAcrs}, or \code{targetCRS} to allow backwards
 compatibility with \code{postProcess}. See section below for details.}
 
-\item{needBuffer}{Logical. Defaults to \code{TRUE}, meaning nothing is done out
-of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
-has to happen on the \code{cropTo} prior to using it as a crop layer, then a buffer
-of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.}
-
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{needBuffer}{Logical. Defaults to \code{TRUE}, meaning nothing is done out
+of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
+has to happen on the \code{cropTo} prior to using it as a crop layer, then a buffer
+of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.}
 }
 \value{
-An object of the same class as \code{from}, but potentially cropped, projected, masked,
-and written to disk.
+An object of the same class as \code{from}, but potentially cropped (via \code{\link[=cropTo]{cropTo()}}),
+projected (via \code{\link[=projectTo]{projectTo()}}), masked (via \code{\link[=maskTo]{maskTo()}}), and written to disk
+(via \code{\link[=writeTo]{writeTo()}}).
 }
 \description{
 This function provides a single step to achieve the GIS operations "crop", "project",
@@ -152,3 +180,7 @@ the extent of the \code{from} (as it is after crop, project, mask). Thus the sec
 crop removes all NA cells so they are tight to the mask.
 }
 
+\seealso{
+This function is meant to replace \code{\link[=postProcess]{postProcess()}} with the more efficient
+and faster \code{terra} functions.
+}

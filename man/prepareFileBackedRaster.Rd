@@ -53,7 +53,7 @@ r <- raster(extent(0,10,0,10), vals = 1:100)
 r <- writeRaster(r, file = tempfile())
 
 # copy it to the cache repository
-r <- .prepareFileBackedRaster(r, tempdir())
+r <- reproducible:::.prepareFileBackedRaster(r, tempdir())
 
 r # now in "rasters" subfolder of tempdir()
 

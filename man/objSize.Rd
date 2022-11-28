@@ -5,7 +5,7 @@
 \alias{objSizeSession}
 \title{Wrapper around \code{lobstr::obj_size}}
 \usage{
-objSize(x, quick = TRUE, ...)
+objSize(x, quick = FALSE, ...)
 
 objSizeSession(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = list())
 }
@@ -27,7 +27,7 @@ Default \code{TRUE}.}
 
 \item{.prevEnvirs}{For internal account keeping to identify and prevent duplicate counting}
 }
-\description{
+\value{
 This will return the result from \code{lobstr::obj_size}, i.e., a \code{lobstr_bytes}
 which is a \code{numeric}. If \code{quick = FALSE}, it will also have an attribute,
 "objSize", which will
@@ -35,6 +35,14 @@ be a list with each element being the \code{objSize} of the individual elements 
 This is particularly useful if \code{x} is a \code{list} or \code{environment}.
 However, because of the potential for shared memory, the sum of the individual
 elements will generally not equal the value returned from this function.
+}
+\description{
+This function attempts to estimate the real object size of an object. If the object
+has pass-by-reference semantics, it may not estimate the object size well without
+a specific method developed. For the case of \code{terra} class objects, this will
+be accurate (both RAM and file size), but only if it is not passed inside
+a list or environment. To get an accuate size of these, they should be passed
+individually.
 }
 \details{
 For functions, a user can include the enclosing environment as described
@@ -56,9 +64,9 @@ foo$b <- 1:10
 foo$d <- 1:10
 
 objSize(foo) # all the elements in the environment
-object.size(foo) # different - only measuring the environment as an object
+utils::object.size(foo) # different - only measuring the environment as an object
 
-object.size(prepInputs) # only the function, without its enclosing environment
+utils::object.size(prepInputs) # only the function, without its enclosing environment
 objSize(prepInputs)     # the function, plus its enclosing environment
 
 # Size of all packages; includes their imported functions
@@ -67,7 +75,7 @@ objSize(prepInputs)     # the function, plus its enclosing environment
   print(bar, units = "auto")
 }
 
-os1 <- object.size(as.environment("package:reproducible"))
+os1 <- utils::object.size(as.environment("package:reproducible"))
 os2 <- objSize(as.environment("package:reproducible"))
 (os1) # very small -- just the environment container
 sum(unlist(os2)) # around 13 MB, with all functions, objects

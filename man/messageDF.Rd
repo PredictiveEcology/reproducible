@@ -22,6 +22,9 @@ which will omit them.}
 \item{appendLF}{logical: should messages given as a character string
     have a newline appended?}
 }
+\value{
+Used for side effects. This will produce a message of a structured \code{data.frame}.
+}
 \description{
 Sends to \code{message}, but in a structured way so that a data.frame-like can
 be cleanly sent to messaging.

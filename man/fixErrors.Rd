@@ -82,6 +82,10 @@ If \code{NA}, then all testing and buffering will be skipped.}
 
 \item{...}{Passed to methods. None currently implemented.}
 }
+\value{
+A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+attempted to be fixed, if it finds errors.
+}
 \description{
 These must be very common for this function to be useful. Currently, the only
 meaningful method is on \code{SpatialPolygons}, and it runs \code{sf::st_is_valid}.
@@ -152,5 +156,8 @@ if (require("terra")) {
 }
 
 setwd(ow)
+}
+\seealso{
+\code{\link[=fixErrorsTerra]{fixErrorsTerra()}}
 }
 \keyword{internal}

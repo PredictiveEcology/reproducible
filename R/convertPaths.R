@@ -15,6 +15,9 @@
 #' @author Eliot McIntire and Alex Chubaty
 #' @export
 #' @rdname convertPaths
+#' @return
+#' A normalized path with the `patterns` replaced by `replacements`. Or a list of such
+#' objects if `x` was a list.
 #'
 #' @examples
 #' filenames <- c("/home/user1/Documents/file.txt", "/Users/user1/Documents/file.txt")
@@ -76,6 +79,13 @@ convertRasterPaths <- function(x, patterns, replacements) {
 #'   e.g., `filename.grd`, in the case of default Raster format in R.
 #'
 #' @author Eliot McIntire
+#' @details
+#' New methods can be made for this generic.
+#'
+#' @return
+#' A character vector of filenames that are part of the objects passed to `obj`.
+#' This returns `NULL` is the object is not file-backed or does not have a method
+#' to recover the file-backed filename.
 #' @export
 #' @rdname Filenames
 setGeneric("Filenames", function(obj, allowMultiple = TRUE) {
@@ -141,37 +151,6 @@ setMethod(
   signature = "environment",
   definition = function(obj, allowMultiple = TRUE) {
     rasterFilename <- Filenames(as.list(obj), allowMultiple = allowMultiple)
-    # rastersLogicalList <- isOrHasRaster(obj)
-    # rastersLogical <- vapply(rastersLogicalList, function(x) any(unlist(x)), logical(1))
-    # rastersLogicalLong <- unlist(rastersLogicalList)
-    # rasterFilename <- NULL
-    # if (any(rastersLogical)) {
-    #   rasterNames <- names(rastersLogical)[rastersLogical]
-    #   if (!is.null(rasterNames)) {
-    #     no <- names(obj)
-    #     names(no) <- no
-    #     ## TODO: sapply is not type-safe; use vapply
-    #     nestedOnes <- lapply(no, function(rn) grep(paste0("^", rn, "\\."), rasterNames, value = TRUE))
-    #     nestedOnes1 <- nestedOnes[sapply(nestedOnes, function(x) length(x) > 0)]
-    #     nonNested <- nestedOnes[sapply(nestedOnes, function(x) length(x) == 0)]
-    #     nonNestedRasterNames <- rasterNames[rasterNames %in% names(nonNested)]
-    #     diskBacked <- sapply(mget(nonNestedRasterNames, envir = obj), fromDisk)
-    #
-    #     names(rasterNames) <- rasterNames
-    #     rasterFilename <- if (sum(diskBacked) > 0) {
-    #       browser()
-    #       lapply(mget(rasterNames[diskBacked], envir = obj), Filenames,
-    #              allowMultiple = allowMultiple)
-    #     } else {
-    #       NULL
-    #     }
-    #     if (length(nestedOnes1) > 0) {
-    #       rasterFilename2 <- sapply(mget(names(nestedOnes1), envir = obj), Filenames,
-    #                                 allowMultiple = allowMultiple)
-    #       rasterFilename <- c(rasterFilename, rasterFilename2)
-    #     }
-    #   }
-    # }
     rasterFilenameDups <- lapply(rasterFilename, duplicated)
 
     if (any(unlist(rasterFilenameDups))) {

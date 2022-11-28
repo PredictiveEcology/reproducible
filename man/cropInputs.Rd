@@ -83,6 +83,10 @@ use GDAL regardless of the memory test described here.}
 \item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
 \code{Cache} is used internally.}
 }
+\value{
+A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+appropriately cropped.
+}
 \description{
 This function can be used to crop or reproject module inputs from raw data.
 }

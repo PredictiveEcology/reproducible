@@ -51,6 +51,7 @@
 #' @importFrom data.table setindex
 #' @importFrom methods setGeneric setMethod
 #' @importFrom utils object.size
+#' @name showCache
 #' @rdname viewCache
 #'
 #' @examples
@@ -251,8 +252,10 @@ setMethod(
 })
 
 #' @details
-#' `cc(secs)` is just a shortcut for `clearCache(repo = Paths$cachePath, after = secs)`,
-#' i.e., to remove any cache entries touched in the last `secs` seconds.
+#' `cc(secs)` is just a shortcut for `clearCache(repo = currentRepo, after = secs)`,
+#' i.e., to remove any cache entries touched in the last `secs` seconds. Since, `secs`
+#' can be missing, this is also be a shorthand for "remove most recent entry from
+#' the cache".
 #'
 #' @param secs Currently 3 options: the number of seconds to pass to `clearCache(after = secs)`,
 #'     a `POSIXct` time e.g., from `Sys.time()`, or missing. If missing,
@@ -316,6 +319,7 @@ cc <- function(secs, ...) {
 #' @importFrom DBI dbSendQuery dbFetch dbClearResult
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
+#' @name showCache
 #' @seealso [mergeCache()]. Many more examples
 #' in [Cache()].
 #'
@@ -644,88 +648,7 @@ checkFutures <- function() {
   }
 }
 
-#' Cache helpers
-#'
-#' A few helpers to get specific things from the cache repository
-#' @rdname cache-helpers
-#' @inheritParams Cache
-#' @export
-#' @param shownCache Primary way of supplying `cacheRepo`; the data.table obj
-#'   resulting from `showCache`, i.e., it will override `cacheRepo`.
-#'   If this and `cacheRepo` are missing, then it will default to
-#'   `getOption('reproducible.cachePath')`
-#' @param cacheId A character vector of cacheId values to use in the cache
-#' @param concatenated Logical. If `TRUE`, the returned `userTags` will
-#'   be concatenated `tagKey:tagValue`.
-getUserTags <- function(cacheRepo, shownCache, cacheId, concatenated = TRUE) {
-  stop("This function is deprecated")
-  if (missing(shownCache)) {
-    if (missing(cacheRepo)) {
-      cacheRepos <- .checkCacheRepo(create = TRUE)
-      cacheRepo <- cacheRepos[[1]]
-    }
-    suppressMessages({
-      shownCache <- showCache(cacheRepo)
-    })
-  }
-  arts <- getArtifact(shownCache = shownCache, cacheId = cacheId)
-  if (!missing(cacheId)) {
-    shownCache <- shownCache[artifact %in% arts]
-  }
 
-  userTags <- shownCache[!tagKey %in% c("format", "name", "class", "date", "cacheId"),
-                         list(tagKey, tagValue)]
-  if (concatenated)
-    userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
-  userTags
-}
-
-#' @param artifact Character vector of artifact values in the
-#'   `artifact` column of `showCache`
-#'
-#' @return `getCacheId` returns the `cacheId` values for 1 or more artifacts in the cache.
-#'
-#' @export
-#' @rdname cache-helpers
-getCacheId <- function(cacheRepo, shownCache, artifact) {
-  if (missing(shownCache)) {
-    if (missing(cacheRepo)) {
-      cacheRepos <- .checkCacheRepo(create = TRUE)
-      cacheRepo <- cacheRepos[[1]]
-    }
-    suppressMessages({
-      shownCache <- showCache(cacheRepo)
-    })
-  }
-  if (!missing(artifact)) {
-    artifacts <- artifact
-    shownCache <- shownCache[artifact %in% artifacts]
-  }
-  shownCache[tagKey == "cacheId"]$tagValue
-}
-
-#' @return
-#' `getArtifact` returns the `artifact` value for 1 or more
-#' entries in the cache, by `cacheId`.
-#'
-#' @export
-#' @rdname cache-helpers
-getArtifact <- function(cacheRepo, shownCache, cacheId) {
-  stop("This function is deprecated")
-  if (missing(shownCache)) {
-    if (missing(cacheRepo)) {
-      cacheRepos <- .checkCacheRepo(create = TRUE)
-      cacheRepo <- cacheRepos[[1]]
-    }
-    suppressMessages({
-      shownCache <- showCache(cacheRepo)
-    })
-  }
-  if (!missing(cacheId)) {
-    shownCache <- shownCache[tagValue %in% cacheId]
-  }
-  shownCache[tagKey == "cacheId", artifact]
-}
 
 useDBI <- function() {
   ud <- getOption("reproducible.useDBI", TRUE)
@@ -743,7 +666,6 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
     # stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
     #      "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
   }
-  # browser(expr = exists("._rmFromCloudFolder_1"))
 
   gdriveLs <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
   cacheIds <- gsub("\\..*", "", gdriveLs$name)

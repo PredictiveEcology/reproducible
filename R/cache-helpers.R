@@ -1,267 +1,3 @@
-################################################################################
-#' Add extra tags to an archive based on class
-#'
-#' This is a generic definition that can be extended according to class.
-#'
-#' @return A character vector of new tags.
-#'
-#' @param object Any R object.
-#'
-#' @author Eliot McIntire
-#' @export
-#' @return
-#' The default method returns `NULL`. Other packages may
-#' @rdname tagsByClass
-#' @examples
-#' .tagsByClass(character()) # Nothing interesting. Other packages will make methods
-#'
-setGeneric(".tagsByClass", function(object) {
-  standardGeneric(".tagsByClass")
-})
-
-#' @export
-#' @rdname tagsByClass
-setMethod(
-  ".tagsByClass",
-  signature = "ANY",
-  definition = function(object) {
-    NULL
-  })
-
-################################################################################
-#' Create a custom cache message by class
-#'
-#' This is a generic definition that can be extended according to class.
-#'
-#' @return Nothing; called for its messaging side effect.
-#'
-#' @param object Any R object.
-#' @param functionName A character string indicating the function name
-#' @param fromMemoise Logical. If `TRUE`, the message will be about
-#'        recovery from memoised copy
-#' @inheritParams Cache
-#'
-#' @author Eliot McIntire
-#' @export
-#' @rdname cacheMessage
-#' @examples
-#' a <- 1
-#' .cacheMessage(a, "mean")
-#'
-setGeneric(".cacheMessage", function(object, functionName,
-                                     fromMemoise = getOption("reproducible.useMemoise", TRUE),
-                                     verbose = getOption("reproducible.verbose", 1)) {
-  standardGeneric(".cacheMessage")
-})
-
-#' @export
-#' @rdname cacheMessage
-setMethod(
-  ".cacheMessage",
-  signature = "ANY",
-  definition = function(object, functionName, fromMemoise, verbose = getOption("reproducible.verbose", 1)) {
-    if (isTRUE(fromMemoise)) {
-      messageCache(.loadedCacheMsg(.loadedMemoisedResultMsg, functionName), verbose = verbose)
-    } else if (!is.na(fromMemoise)) {
-      messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName), " ",
-                   .addingToMemoisedMsg, sep = "", verbose = verbose)
-    } else {
-      messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName), verbose = verbose)
-    }
-  })
-
-################################################################################
-#' Add tags to object
-#'
-#' This is a generic definition that can be extended according to class.
-#' This function and methods should do "deep" copy for archiving purposes.
-#'
-#' @inheritParams Cache
-#'
-#' @param object Any R object.
-#'
-#' @param FUN A function
-#'
-#' @param preDigestByClass A list, usually from `.preDigestByClass`
-#'
-#' @return New object with tags attached.
-#'
-#' @author Eliot McIntire
-#' @export
-#' @rdname addTagsToOutput
-#'
-setGeneric(".addTagsToOutput", function(object, outputObjects, FUN, preDigestByClass) { # nolint
-  standardGeneric(".addTagsToOutput")
-})
-
-#' @export
-#' @rdname addTagsToOutput
-setMethod(
-  ".addTagsToOutput",
-  signature = "ANY",
-  definition = function(object, outputObjects, FUN, preDigestByClass) { # nolint
-    object
-  })
-
-################################################################################
-#' Any miscellaneous things to do before `.robustDigest` and after `FUN` call
-#'
-#' The default method for `preDigestByClass` and simply returns `NULL`.
-#' There may be methods in other packages.
-#'
-#' @param object Any R object.
-#'
-#' @return A list with elements that will likely be used in `.postProcessing`
-#'
-#' @author Eliot McIntire
-#' @export
-#' @rdname preDigestByClass
-#' @examples
-#' a <- 1
-#' .preDigestByClass(a) # returns NULL in the simple case here.
-#'
-setGeneric(".preDigestByClass", function(object) { # nolint
-  standardGeneric(".preDigestByClass")
-})
-
-#' @export
-#' @rdname preDigestByClass
-setMethod(
-  ".preDigestByClass",
-  signature = "ANY",
-  definition = function(object) { # nolint
-    NULL
-  })
-
-################################################################################
-#' Check for cache repository info in ...
-#'
-#' This is a generic definition that can be extended according to class.
-#' Normally, `checkPath` can be called directly, but does not have class-specific methods.
-#'
-#' @param object An R object
-#' @param create Logical. If TRUE, then it will create the path for cache.
-#' @inheritParams Cache
-#'
-#' @return A character string with a path to a cache repository.
-#'
-#' @author Eliot McIntire
-#' @export
-#' @rdname checkCacheRepo
-#' @examples
-#' a <- normalizePath(file.path(tempdir(), "test"), mustWork = FALSE)
-#' .checkCacheRepo(a, create = TRUE)
-#'
-setGeneric(".checkCacheRepo", function(object, create = FALSE,
-                                       verbose = getOption("reproducible.verbose", 1)) {
-  standardGeneric(".checkCacheRepo")
-})
-
-#' @export
-#' @rdname checkCacheRepo
-setMethod(
-  ".checkCacheRepo",
-  signature = "ANY",
-  definition = function(object, create, verbose = getOption("reproducible.verbose", 1)) {
-    cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
-      cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")[1]))) {
-        tmpDir <- .reproducibleTempCacheDir()
-        # Test whether the user has accepted the default. If yes, then give message.
-        #  If no, then user is aware and doesn't need a message
-        if (any(identical(normPath(tmpDir), normPath(getOption("reproducible.cachePath"))))) {
-          messageCache("No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;\n",
-                       "  this will not persist across R sessions.", verbose = verbose)
-        }
-        getOption("reproducible.cachePath", tmpDir)
-      } else {
-        messageCache("No cacheRepo supplied. Using ",.reproducibleTempCacheDir(), verbose = verbose)
-        .reproducibleTempCacheDir()
-      }
-      checkPath(path = cacheRepo, create = create)
-    })
-  })
-
-################################################################################
-#' Make any modifications to object recovered from cacheRepo
-#'
-#' This is a generic definition that can be extended according to class.
-#'
-#' @inheritParams Cache
-#'
-#' @param object Any R object
-#'
-#' @return The object, modified
-#'
-#' @author Eliot McIntire
-#' @export
-#' @rdname prepareOutput
-#' @examples
-#' a <- 1
-#' .prepareOutput(a) # does nothing
-#'
-#' b <- "NULL"
-#' .prepareOutput(b) # converts to NULL
-#'
-#' library(raster)
-#' r <- raster(extent(0,10,0,10), vals = 1:100)
-#'
-#' # write to disk manually -- will be in tempdir()
-#' r <- writeRaster(r, file = tempfile())
-#'
-#' # copy it to the cache repository
-#' r <- .prepareOutput(r, tempdir())
-setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
-  standardGeneric(".prepareOutput")
-})
-
-
-#' @export
-#' @rdname prepareOutput
-setMethod(
-  ".prepareOutput",
-  signature = "ANY",
-  definition = function(object, cacheRepo, ...) {
-    if (is.character(object)) {
-      if (length(object) == 1) {
-        # need something to attach tags to if it is actually NULL
-        if (identical(object, "NULL")) object <- NULL
-      }
-    }
-    object
-  })
-
-################################################################################
-#' Add an attribute to an object indicating which named elements change
-#'
-#' This is a generic definition that can be extended according to class.
-#'
-#' @param object Any R object returned from a function
-#' @param preDigest The full, element by element hash of the input arguments to that same function,
-#' e.g., from `.robustDigest`
-#' @param origArguments These are the actual arguments (i.e., the values, not the names) that
-#'        were the source for `preDigest`
-#' @param ... Anything passed to methods.
-#'
-#' @return The object, modified
-#'
-#' @author Eliot McIntire
-#' @export
-#' @rdname addChangedAttr
-#' @examples
-#' a <- 1
-#' .addChangedAttr(a) # does nothing because default method is just a pass through
-setGeneric(".addChangedAttr", function(object, preDigest, origArguments, ...) {
-  standardGeneric(".addChangedAttr")
-})
-
-#' @export
-#' @rdname addChangedAttr
-setMethod(
-  ".addChangedAttr",
-  signature = "ANY",
-  definition = function(object, preDigest, origArguments, ...) {
-    object
-  })
 
 #' A set of helpers for Cache
 #'
@@ -993,9 +729,8 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 
 
 ################################################################################
-#' Sort or order any named object with dotted names and underscores first
-#'
-#' Internal use only. This exists so Windows, Linux, and Mac machines can have
+#' @details
+#' `.sortDotsUnderscoreFirst`: This exists so Windows, Linux, and Mac machines can have
 #' the same order after a sort. It will put dots and underscores first
 #' (with the sort key based on their second character, see examples.
 #' It also sorts lower case before upper case.
@@ -1003,11 +738,13 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #' @param obj  An arbitrary R object for which a `names` function
 #'              returns a character vector.
 #'
-#' @return The same object as `obj`, but sorted with .objects first.
+#' @return `.sortDotsUnderscoreFirst`: the same object as `obj`,
+#'   but sorted with dots and underscores first,
+#'   lower case before upper case.
 #'
 #' @author Eliot McIntire
 #' @export
-#' @rdname sortDotsUnderscoreFirst
+#' @rdname exportedMethods
 #'
 #' @examples
 #' items <- c(A = "a", Z = "z", `.D` = ".d", `_C` = "_C")
@@ -1025,7 +762,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 }
 
 #' @export
-#' @rdname sortDotsUnderscoreFirst
+#' @rdname exportedMethods
 .orderDotsUnderscoreFirst <- function(obj) {
   if (!is.null(names(obj))) {
     namesObj <- names(obj)
@@ -1222,131 +959,6 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
 
 
 
-
-
-
-#' A helper function to change the filename slot of `Raster*` objects
-#'
-#' This is intended for internal use, though it is exported because other packages
-#' use this. This function exists because when copying file-backed rasters, the
-#' usual mechanism of `writeRaster` can be very slow. This function allows
-#' for a user to optionally create a hard link to the old file, give it a new
-#' name, then update the filename slot(s) in the `Raster*` class object. This
-#' can be 100s of times faster for large rasters.
-#'
-#' @export
-#' @keywords internal
-#' @param obj An object. This function only has useful methods for `Raster*`,
-#'   with all other classes being simply a pass-through
-#' @param curFilenames An optional character vector of filenames currently existing
-#'   and that are pointed to in the obj. If omitted, will take from the `obj`
-#'   using `Filenames(obj)`
-#' @param newFilenames An optional character vector of filenames to use instead of
-#'   the curFilenames. This can also be a single directory, in which case the
-#'   renaming will be given:
-#'   `file.path(newFilenames, basename(Filenames(obj, allowMultiple = FALSE)))`
-#' @rdname updateFilenameSlots
-updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL) {
-  UseMethod("updateFilenameSlots")
-}
-
-#' @rdname updateFilenameSlots
-#' @export
-#' @keywords internal
-updateFilenameSlots.default <- function(obj, ...)  {
-  obj
-}
-
-#' @rdname updateFilenameSlots
-#' @export
-#' @keywords internal
-updateFilenameSlots.list <- function(obj, ...)  {
-
-  areRasters <- vapply(obj, is, "RasterLayer", FUN.VALUE = logical(1))
-  if (all(areRasters)) {
-    # a separate option for list of RasterLayers because curFilename will be
-    #   as long as all the filenames because there is a method for lists;
-    #   passing this to updateFilaneSlots will fail if it is one RasterLayer
-    #   at a time
-    out <- updateFilenameSlots(raster::stack(obj), ...)
-    out <- raster::unstack(out)
-  } else {
-    out <- lapply(obj, function(o) {
-      updateFilenameSlots(o, ...)
-    })
-  }
-  out
-
-}
-
-#' @rdname updateFilenameSlots
-#' @export
-#' @keywords internal
-updateFilenameSlots.environment <- function(obj, ...)  {
-  if (is.null(names(obj))) {
-    names(obj) <- as.character(seq(obj))
-  }
-  lapply(obj, function(o) {
-    updateFilenameSlots(as.list(o), ...)
-  })
-}
-
-
-#' @rdname updateFilenameSlots
-#' @export
-#' @keywords internal
-updateFilenameSlots.Raster <- function(obj, curFilenames, newFilenames, isStack = NULL) {
-  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-    return(updateFilenameSlots2(obj, curFilenames, newFilenames, isStack))
-  }
-  if (missing(curFilenames)) {
-    curFilenames <- Filenames(obj, allowMultiple = FALSE)
-  }
-
-  if (missing(newFilenames)) stop("newFilenames can't be missing: either new filenames or a single directory")
-  # if newFilenames is a directory
-  areDirs <- dir.exists(newFilenames)
-  if (any(areDirs) && length(newFilenames) == 1) {
-    newFilenames <- file.path(newFilenames, basename(curFilenames))
-  }
-
-  if (length(curFilenames) > 1) {
-    for (i in seq_along(curFilenames)) {
-      if (is.list(obj)) {
-        slot(slot(obj[[i]], "file"), "name") <- newFilenames[i]
-      } else {
-        slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
-      }
-    }
-  } else {
-    if (is.null(isStack)) isStack <- is(obj, "RasterStack")
-    if (!isStack) {
-      slot(slot(obj, "file"), "name") <- newFilenames
-    } else {
-      # aiof <- allInOneFile(obj)
-
-      # if (isTRUE(aiof)) {
-      #   slot(obj, "filename") <- newFilenames
-      # } else {
-      if (length(newFilenames) == 1) {
-        newFilenames <- rep(newFilenames, nlayers(obj))
-      }
-      for (i in seq_len(nlayers(obj))) {
-        whFilename <- unique(match(withoutFinalNumeric(basename(newFilenames)),
-                                   withoutFinalNumeric(basename(curFilenames))))
-        isNAwhFn <- is.na(whFilename)
-        if (any(isNAwhFn))
-          whFilename <- i
-        slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
-      }
-      # }
-
-
-    }
-  }
-  obj
-}
-
 updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL) {
   whichNotGri <- grep("\\.gri$", curFilenames, invert = TRUE)
   curFilenamesNotGri <- curFilenames[whichNotGri]
@@ -1394,7 +1006,6 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #'         If this is not a repository, the new location will be within `repoDir`.
 #'
 #' @author Eliot McIntire
-#' @export
 #' @importFrom digest digest
 #' @importFrom methods is selectMethod slot slot<-
 #' @importFrom raster dataType filename hasValues inMemory nlayers writeRaster
@@ -1411,7 +1022,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' r <- writeRaster(r, file = tempfile())
 #'
 #' # copy it to the cache repository
-#' r <- .prepareFileBackedRaster(r, tempdir())
+#' r <- reproducible:::.prepareFileBackedRaster(r, tempdir())
 #'
 #' r # now in "rasters" subfolder of tempdir()
 #'
@@ -1527,3 +1138,5 @@ withoutFinalNumeric <- function(string) {
   woNumeric <- gsub("^(.+)\\_[[:digit:]]+$", "\\1", string1)
   paste0(woNumeric, ".", ext)
 }
+
+

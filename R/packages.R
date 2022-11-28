@@ -16,6 +16,8 @@ utils::globalVariables(c(
 #' @export
 #' @param v1 A vector
 #' @param v2 A vector
+#' @return
+#' A logical vector, indicating positions where two vectors are same or differ.
 #'
 #' @examples
 #' a <- c(NA, 1, 2, NA)

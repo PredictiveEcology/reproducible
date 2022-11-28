@@ -195,6 +195,12 @@ if (getRversion() >= "3.1.0") {
 #' @inheritParams Cache
 #' @author Eliot McIntire, Jean Marchal, and Tati Micheletti
 #' @export
+#' @return
+#' This is an omnibus function that will return an R object that will have resulted from
+#' the running of [preProcess()] and [postProcess()] or [postProcessTerra()]. Thus,
+#' if it is a GIS object, it may have been cropped, reprojected, "fixed", masked, and
+#' written to disk.
+#'
 #' @importFrom data.table data.table
 #' @importFrom digest digest
 #' @importFrom methods is
@@ -202,7 +208,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom utils methods modifyList
 #' @include checksums.R download.R postProcess.R
 #' @rdname prepInputs
-#' @seealso [downloadFile()], [extractFromArchive()],
+#' @seealso [postProcessTerra()], [downloadFile()], [extractFromArchive()],
 #'          [postProcess()].
 #' @examples
 #' if (reproducible:::.runLongExamples()) {

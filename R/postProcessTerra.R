@@ -65,8 +65,9 @@
 #'
 #'
 #' @return
-#' An object of the same class as `from`, but potentially cropped, projected, masked,
-#' and written to disk.
+#' An object of the same class as `from`, but potentially cropped (via [cropTo()]),
+#' projected (via [projectTo()]), masked (via [maskTo()]), and written to disk
+#' (via [writeTo()]).
 #'
 #' @param from A Gridded or Vector dataset on which to do one or more of:
 #'   crop, project, mask, and write
@@ -105,6 +106,10 @@
 #'   compatibility with `postProcess`. See section below for details.
 #' @inheritParams Cache
 #' @export
+#'
+#' @seealso This function is meant to replace [postProcess()] with the more efficient
+#' and faster `terra` functions.
+#'
 postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NULL,
                              writeTo = NULL, method = NULL, datatype = "FLT4S",
                              overwrite = TRUE, ...) {
@@ -234,7 +239,7 @@ isSpatialAny <- function(x) isGridded(x) || isVector(x)
 #' @param fromFnName The function name that produced the error, e.g., `maskTo`
 #'
 #' @return
-#' An object of the same class as `x`.
+#' An object of the same class as `x`, but with some errors fixed via `terra::makeValid()`
 #'
 #'
 fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.verbose"), fromFnName = "") {
@@ -248,6 +253,8 @@ fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.ve
   x
 }
 
+#' @export
+#' @rdname postProcessTerra
 maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
                    verbose = getOption("reproducible.verbose")) {
   if (!is.null(maskTo)) {
@@ -330,6 +337,8 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
   from
 }
 
+#' @export
+#' @rdname postProcessTerra
 projectTo <- function(from, projectTo, method, overwrite = FALSE) {
   if (!is.null(projectTo)) {
     origFromClass <- is(from)
@@ -410,13 +419,12 @@ projectTo <- function(from, projectTo, method, overwrite = FALSE) {
   from
 }
 
-#' @rdname postProcessTerra
-#' @param cropTo A Vector dataset
 #' @param needBuffer Logical. Defaults to `TRUE`, meaning nothing is done out
 #'   of the ordinary. If `TRUE`, then a buffer around the cropTo, so that if a reprojection
 #'   has to happen on the `cropTo` prior to using it as a crop layer, then a buffer
 #'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
 #' @export
+#' @rdname postProcessTerra
 cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
                    verbose = getOption("reproducible.verbose")) {
   if (!is.null(cropTo)) {
@@ -476,6 +484,8 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
   from
 }
 
+#' @export
+#' @rdname postProcessTerra
 writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, isRaster = FALSE,
                     isSpatRaster = FALSE, datatype = "FLT4S") {
   if (isStack) from <- raster::stack(from)
@@ -582,16 +592,6 @@ cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")
 
 
     }
-    # from2 <- try(retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
-    #                messageFn = messagePrepInputs,
-    #                expr = quote(
-    #                  {
-    #                    sf::st_crop(from, sf::st_transform(sf::st_as_sfc(sf::st_bbox(cropToVect)), sf::st_crs(from)))
-    #                  }
-    #                ),
-    #                exprBetween = quote({
-    #                  from <- fixErrors(from, useCache = FALSE)
-    #                })))
     if (!is(from2, "try-error"))
       from <- from2
     messagePrepInputs("  done in ", format(difftime(Sys.time(), st),

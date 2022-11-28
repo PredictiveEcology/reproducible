@@ -118,6 +118,10 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
+\value{
+A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+appropriately cropped, reprojected, masked, depending on the inputs.
+}
 \description{
 \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
 

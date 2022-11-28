@@ -25,7 +25,7 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{fromFnName}{The function name that produced the error, e.g., \code{maskTo}}
 }
 \value{
-An object of the same class as \code{x}.
+An object of the same class as \code{x}, but with some errors fixed via \code{terra::makeValid()}
 }
 \description{
 Currently, this only tests for validity of a SpatVect file, then if there is a problem,

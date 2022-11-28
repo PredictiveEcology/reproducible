@@ -61,6 +61,12 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
+\value{
+A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+appropriately written to disk. In the case of vector datasets, this will
+be a side effect. In the case of gridded objects (Raster*, SpatRaster), the
+object will have a file-backing.
+}
 \description{
 Can be used to write prepared inputs on disk.
 }

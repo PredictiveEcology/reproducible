@@ -20,6 +20,10 @@ studyAreaName(studyArea, ...)
 
 \item{...}{Other arguments (not currently used)}
 }
+\value{
+A character string using the \code{digest} of the \code{studyArea}. This is only intended
+for use with spatial objects.
+}
 \description{
 Digest a spatial object to get a unique character string (hash) of the study area.
 Use \code{.suffix()} to append the hash to a filename,

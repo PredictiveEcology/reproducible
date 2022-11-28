@@ -15,6 +15,8 @@ if (getRversion() >= "3.1.0") {
 #' @param overwrite Logical. Passed to `googledrive::drive_mkdir`.
 #' @param team_drive Logical indicating whether to check team drives.
 #'
+#' @return
+#' Returns the character string of the cloud folder ID created or reported
 #' @export
 checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cloudFolderID', NULL),
                                       cacheRepo = NULL,

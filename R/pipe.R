@@ -25,7 +25,6 @@
 #' that uses pipes (`Cache() \%C\% ... remaining pipes`).
 #'
 #' @aliases %C%
-#' @export
 #' @importFrom magrittr freduce
 #' @importFrom utils getFromNamespace
 #' @name pipe
@@ -42,7 +41,6 @@
 #' `Cache`, such as `cacheRepo`, thus it is of limited utility. However,
 #' it is a clean alternative for simple cases.
 #'
-#' @export
 #' @rdname pipe
 #' @param lhs A name to assign to.
 #' @param rhs A function call

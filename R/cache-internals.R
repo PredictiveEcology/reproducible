@@ -259,8 +259,6 @@
         fromMemoise <- TRUE
     loadFromMgs <- "Loading from memoised version of repo"
     output <- .loadFromLocalRepoMem(md5hash = cacheObj, repoDir = cacheRepo, value = TRUE)
-    output <- unmakeMemoisable(output)
-    #if (is(output, "simList_")) output <- as(output, "simList")
   } else {
     loadFromMgs <- "Loading from repo"
     if (useDBI()) {
