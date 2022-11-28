@@ -54,6 +54,21 @@ to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 \item{create}{Logical. Currently only affects non RQSLite default drivers. If this
 is \code{TRUE} and there is no Cache database, the function will create one.}
 }
+\value{
+\code{CacheDBFile} returns the name of the database file for a given Cache.
+
+\code{CacheStorageDir} returns the name of the directory where cached objects are
+stored.
+
+\code{CacheStoredFile} returns the name of the file in which the cacheId object is stored.
+This can be loaded to memory with e.g., \code{loadFile}.
+
+\code{CacheDBTableName} returns the name of the table inside the SQL database, if that
+is being used.
+
+\code{CacheIsACache} returns a logical indicating whether the \code{cachePath} is currently
+a \code{reproducible} cache database.
+}
 \description{
 These are not intended for normal use.
 }
@@ -64,4 +79,23 @@ These are not intended for normal use.
 
 \code{CacheIsACache} returns a logical of whether the specified cachePath
 is actually a functioning cache.
+}
+\examples{
+newCache <- tempdir2("cacheHelperExamples")
+createCache(newCache)
+
+CacheDBFile(newCache)
+CacheStorageDir(newCache)
+
+out <- Cache(rnorm(1), cacheRepo = newCache)
+cacheId <- gsub("cacheId:", "", attr(out, "tags"))
+CacheStoredFile(newCache, cacheId = cacheId)
+
+# The name of the table inside the SQL database
+CacheDBTableName(newCache)
+
+CacheIsACache(newCache) # returns TRUE
+
+# clean up
+unlink(dirname(newCache), recursive = TRUE)
 }

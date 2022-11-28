@@ -9,7 +9,7 @@ Description: Collection of high-level, machine- and OS-independent tools
     in continuous workflow environments. In all cases,
     efforts are made to make the first and subsequent calls of functions have 
     the same result, but vastly faster at subsequent times by way of checksums
-    and digesting. Several features are still under active development, including
+    and digesting. Several features are still under development, including
     cloud storage of cached objects, allowing for sharing between users. Several
     advanced options are available, see '?reproducibleOptions()'.
 SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.rar' files.

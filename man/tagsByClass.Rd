@@ -14,6 +14,8 @@
 }
 \value{
 A character vector of new tags.
+
+The default method returns \code{NULL}. Other packages may
 }
 \description{
 This is a generic definition that can be extended according to class.

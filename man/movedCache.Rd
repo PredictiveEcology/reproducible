@@ -26,11 +26,21 @@ object (in order to clone an existing connection).}
 \item{conn}{A \linkS4class{DBIConnection} object, as returned by
 \code{\link[DBI:dbConnect]{dbConnect()}}.}
 }
+\value{
+\code{movedCache} does not return anything; it is called for its side effects.
+}
 \description{
 If a user manually copies a complete Cache folder (including the db file and rasters folder),
 there are issues that must be addressed, depending on the Cache backend used.
 If using DBI (e.g., RSQLite or Postgres), the db table must be renamed. Run
 this function after a manual copy of a cache folder. See examples for one way to do that.
+}
+\details{
+When the backend database for a \code{reproducinle} cache is an SQL database, the files
+on disk cannot be copied manually to a new location because they contain internal
+tables. Because \code{reproducible} gives the main table a name based on the \code{cacheRepo}
+path, calls to \code{Cache} will attempt to call this internally if it detects a
+name mismatch.
 }
 \examples{
 tmpdir <- "tmpdir"
@@ -47,7 +57,8 @@ dir.create(file.path(tmpdirPath, "cacheOutputs"), recursive = TRUE)
 file.copy(from = froms, overwrite = TRUE,
           to = gsub(tmpCache, tmpdir, froms))
 
-# Must use 'movedCache' to update the database table
+# Can use 'movedCache' to update the database table, though will generally
+#   happen automatically, with message indicating so
 movedCache(new = tmpdirPath, old = tmpCacheDir)
 bb <- Cache(rnorm, 1, cacheRepo = tmpdirPath) # should recover the previous call
 

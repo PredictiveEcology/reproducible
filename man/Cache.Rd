@@ -450,7 +450,8 @@ if (interactive())
 \seealso{
 \code{\link[=showCache]{showCache()}}, \code{\link[=clearCache]{clearCache()}}, \code{\link[=keepCache]{keepCache()}},
 \code{\link[=CacheDigest]{CacheDigest()}}, \code{\link[=movedCache]{movedCache()}}, \code{\link[=.robustDigest]{.robustDigest()}},
-\code{\link[=pipe]{pipe()}}
+\code{\link[=pipe]{pipe()}}, and for more advaned uses there are several helper functions,
+e.g., \link{rmFromCache}, \code{\link[=CacheStorageDir]{CacheStorageDir()}}
 }
 \author{
 Eliot McIntire

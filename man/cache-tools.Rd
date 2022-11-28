@@ -2,26 +2,15 @@
 % Please edit documentation in R/DBI.R
 \name{createCache}
 \alias{createCache}
-\alias{saveToCache}
 \alias{loadFromCache}
 \alias{rmFromCache}
-\title{Create a new cache}
+\title{Functions to create and work giwth a cache}
 \usage{
 createCache(
   cachePath = getOption("reproducible.cachePath"),
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),
   force = FALSE
-)
-
-saveToCache(
-  cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = getOption("reproducible.conn", NULL),
-  obj,
-  userTags,
-  cacheId,
-  linkToCacheId = NULL
 )
 
 loadFromCache(
@@ -52,24 +41,42 @@ the database file(s)}
 \item{force}{Logical. Should it create a cache in the \code{cachePath},
 even if it already exists, overwriting.}
 
-\item{obj}{The R object to save to the cache}
-
-\item{userTags}{A character vector with descriptions of the Cache function call. These
-will be added to the Cache so that this entry in the Cache can be found using
-\code{userTags} e.g., via \code{\link[=showCache]{showCache()}}.}
-
-\item{cacheId}{The hash string representing the result of \code{.robustDigest}}
-
-\item{linkToCacheId}{Optional. If a \code{cacheId} is provided here, then a \code{file.link}
-will be made to the file with that \code{cacheId} name in the cache repo.
-This is used when identical outputs exist in the cache. This will save disk space.}
+\item{cacheId}{The cacheId or otherwise digested hash value, as character string.}
 
 \item{format}{The text string representing the file extension used normally by
 different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
 to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 }
+\value{
+\code{createCache} does not return a value; it is called for side effects.
+
+\code{loadFromCache} returns the object from the cache that has the particular \code{cacheId}.
+
+\code{rmFromCache} has no return value; it is called for its side effects.
+}
 \description{
-Create a new cache
+Functions to create and work giwth a cache
 
 Low level tools to work with Cache
+}
+\details{
+This function will create a Cache folder structure and necessary files, based on
+the particular \code{drv} or \code{conn} provided.
+
+\code{rmFromCache} removes one or more items from the cache, and updates the cache
+database files.
+}
+\examples{
+newCache <- tempdir2("cacheHelperExamples")
+createCache(newCache)
+
+out <- Cache(rnorm(1), cacheRepo = newCache)
+cacheId <- gsub("cacheId:", "", attr(out, "tags"))
+loadFromCache(newCache, cacheId = cacheId)
+
+rmFromCache(newCache, cacheId = cacheId)
+
+# clean up
+unlink(dirname(newCache), recursive = TRUE)
+
 }

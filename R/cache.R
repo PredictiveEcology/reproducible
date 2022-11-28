@@ -345,7 +345,8 @@ utils::globalVariables(c(
 #'
 #' @seealso [showCache()], [clearCache()], [keepCache()],
 #'   [CacheDigest()], [movedCache()], [.robustDigest()],
-#'   [pipe()]
+#'   [pipe()], and for more advaned uses there are several helper functions,
+#'   e.g., [rmFromCache], [CacheStorageDir()]
 #'
 #' @author Eliot McIntire
 #' @export

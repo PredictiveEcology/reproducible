@@ -9,6 +9,8 @@
 #'
 #' @author Eliot McIntire
 #' @export
+#' @return
+#' The default method returns `NULL`. Other packages may
 #' @rdname tagsByClass
 #' @examples
 #' .tagsByClass(character()) # Nothing interesting. Other packages will make methods
@@ -278,7 +280,6 @@ setMethod(
 #' @importFrom methods selectMethod showMethods
 #' @importFrom utils head
 #' @keywords internal
-#' @rdname cache-helpers
 getFunctionName <- function(FUN, originalDots, ..., overrideCall) { # nolint
   callIndex <- numeric()
   scalls <- sys.calls() # needed for nesting level
@@ -838,7 +839,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #' @importFrom methods slotNames
 #' @importFrom digest digest
 #' @importFrom raster res crs extent
-#' @rdname cache-helpers
 .digestRasterLayer <- function(object, length, algo, quick) {
   # metadata -- only a few items of the long list because one thing (I don't recall)
   #  doesn't cache consistently
@@ -1139,7 +1139,6 @@ nextNumericName <- function(string) {
 #' Numeric vector, equivalent to return from `grep(sys.calls(), pattern = "test")`,
 #' but faster if `sys.calls()` is very big.
 #'
-#' @export
 #' @keywords internal
 #' @rdname grepSysCalls
 .grepSysCalls <- function(sysCalls, pattern) {
