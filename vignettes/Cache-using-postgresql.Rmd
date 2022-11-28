@@ -12,7 +12,7 @@ output:
     toc: yes
 vignette: >
   %\VignetteIndexEntry{Using alternate database backends for Cache}
-  %\VignetteDepends{DBI}
+  %\VignetteDepends{DBI, RPostgres}
   %\VignetteKeyword{Cache, postgresql}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
@@ -38,39 +38,9 @@ This vignette demonstrates how to use alternate database backends for caching.
 **Be careful not to save database credentials in version control.**
 We recommend per-project credentials saved either in config files or environment variables, described below.
 
-See <https://db.rstudio.com/best-practices/managing-credentials/> for other important best practices.
+See <https://solutions.rstudio.com/db/best-practices/managing-credentials/> for other important best practices.
 
 # PostgreSQL
-
-## Using config files
-
-Add the following to your project's `config.yml` file:
-
-```{bash}
-default:
-  cachedb:
-    driver: 'postgres' 
-    server: 'localhost'
-    user: 'mydbuser'
-    password: 'mysecurepassword'  
-    port: 5432
-    database: 'mydatabase'
-```
-
-Then, in your main project script, add the following:
-
-```{r}
-cachedb <- config::get("cachedb")
-
-conn <- DBI::dbConnect(drv = RPostgres::Postgres(),
-                      host = cachedb$server,
-                      port = cachedb$port,
-                      dbname = cachedb$database,
-                      user = cachedb$user,
-                      password = cachedb$password)
-
-options("reproducible.conn" = conn) # sets the default connection globally
-```
 
 ## Using environment variables
 
@@ -98,3 +68,6 @@ conn <-   DBI::dbConnect(drv = RPostgres::Postgres(),
 
 options("reproducible.conn" = conn) # sets the default connection globally
 ```
+
+**NOTE:** database connections are not serializable, which means that they cannot be passed to e.g., spawned child processes if running in parallel.
+A new database connection will need to be established in each of the child processes using the `DBI::dbConnect()` call and setting the `reproducible.conn` option per above.
