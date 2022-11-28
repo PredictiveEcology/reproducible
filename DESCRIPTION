@@ -77,6 +77,7 @@ Suggests:
     RCurl (>= 1.95-4.8),
     rgdal,
     rmarkdown,
+    RPostgres,
     sf,
     stats,
     terra (>= 1.5-17),
