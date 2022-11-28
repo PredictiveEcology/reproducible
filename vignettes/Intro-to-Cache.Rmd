@@ -65,14 +65,21 @@ system.time(suppressWarnings(map1 <- projectRaster(ras, crs = newCRS))) # Warnin
 # Try with memoise for this example -- for many simple cases, memoising will not be faster
 opts <- options("reproducible.useMemoise" = TRUE)
 # With Cache -- a little slower the first time because saving to disk
-system.time(suppressWarnings(map1 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir,
-                         notOlderThan = Sys.time())))
+system.time({
+  suppressWarnings({
+    map1 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir, notOlderThan = Sys.time())
+  })
+})
 
 # vastly faster the second time
-system.time(map2 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir))
+system.time({
+  map2 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir)
+})
 
 # may be faster the third time because of memoise; but this example is too simple to show
-system.time(map3 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir))
+system.time({
+  map3 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir)
+})
 options(opts)
 
 all.equal(map1, map2) # TRUE
@@ -99,7 +106,7 @@ ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cache
 ranNumsE <- Cache(rnorm, 10, 6, cacheRepo = tmpDir) # different
 ```
 
-## Example 1: Basic cache use with tags
+#### Example 1: Basic cache use with tags
 
 ```{r tags}
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
@@ -115,7 +122,7 @@ showCache(tmpDir) # only those made during rnorm call
 clearCache(tmpDir, ask = FALSE)
 ```
 
-## Example 2: using the "accessed" tag
+#### Example 2: using the "accessed" tag
 
 ```{r accessed-tag}
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
@@ -138,7 +145,7 @@ showCache(tmpDir) # still has more recently accessed
 
 ```
 
-## Example 3: using keepCache
+#### Example 3: using keepCache
 
 ```{r keepCache}
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
@@ -168,7 +175,7 @@ clearCache(tmpDir, ask = FALSE)
 
 ```
 
-## Example 4: searching for multiple objects in the cache
+#### Example 4: searching for multiple objects in the cache
 
 ```{r searching-within-cache}
 # default userTags is "and" matching; for "or" matching use |
@@ -191,7 +198,7 @@ keepCache(tmpDir, userTags = "runif|rnorm", ask = FALSE)
 clearCache(tmpDir, ask = FALSE)
 ```
 
-## Example 5: using caching to speed up rerunning expensive computations
+#### Example 5: using caching to speed up rerunning expensive computations
 
 ```{r expensive-computations}
 ras <- raster(extent(0, 5, 0, 5), res = 1,
@@ -220,7 +227,7 @@ reRun <- suppressWarnings(
 all.equal(notCached, reRun) ## TRUE
 ```
 
-## Nested Caching
+### Nested Caching
 
 Nested caching, which is when Caching of a function occurs inside an outer function, which is itself cached.
 This is a critical element to working within a reproducible work flow.
@@ -270,7 +277,7 @@ showCache(tmpdir1) # rnorm function has outerTag and innerTag, inner and outer o
 
 ```
 
-## cacheId
+### cacheId
 
 Sometimes, it is not absolutely desirable to maintain the work flow intact because changes that are irrelevant to the analysis, such as changing messages sent to a user, may be changed, without a desire to rerun functions.
 The `cacheId` argument is for this.
@@ -305,10 +312,16 @@ plot(map)
 unlink(dirname(tmpDir), recursive = TRUE)
 ```
 
-# Reproducible Workflow
+# Alternative database backends
+
+By default, caching relies on a sqlite database for it's backend.
+While this works in many situations, there are some important limitations of using sqlite for caching, including 1) speed; 2) concurrent transactions; 3) sharing database across machines or projects.
+Fortunately, `Cache` makes use of `DBI` package and thus supports several database backends, including mysql and postgresql.
+
+See <https://github.com/PredictiveEcology/SpaDES/wiki/Using-alternate-database-backends-for-Cache> for further information on configuring these additional backends.
+
+# Reproducible workflow
 
 In general, we feel that a liberal use of `Cache` will make a re-usable and reproducible work flow.
 `shiny` apps can be made, taking advantage of `Cache`. 
 Indeed, much of the difficulty in managing data sets and saving them for future use, can be accommodated by caching.
-
-
