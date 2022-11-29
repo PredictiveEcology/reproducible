@@ -29,10 +29,8 @@ test_that("prepInputs doesn't work (part 3)", {
 
   nonLatLongProj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
                           "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
-  #dPath <- file.path(tmpdir, "ecozones")
   nc <- sf::st_as_sf(StudyArea)#system.file("shape/nc.shp", package="sf"))
   nc1 <- sf::st_transform(nc, nonLatLongProj)
-  #ncSmall <- sf::st_buffer(nc1, dist = -10000)
   ncSmall <- sf::st_as_sf(StudyArea2)
   ncSmall <- sf::st_transform(ncSmall, nonLatLongProj)
   ncSmall <- sf::st_buffer(ncSmall, dist = -10000)
@@ -42,7 +40,6 @@ test_that("prepInputs doesn't work (part 3)", {
   expect_true(sf::st_area(b) < sf::st_area(nc1))
 
   r <- suppressWarnings(raster(nc1, res = 1000)) # TODO: temporary until raster crs fixes
-  # rSmall <- suppressWarnings(raster(ncSmall, res = 1000)) # TODO: temporary until raster crs fixes
 
   rB <- suppressWarnings(raster(nc1, res = 4000)) # TODO: temporary until raster crs fixes
   rSmall <- suppressWarnings(raster(ncSmall, res = 4000)) # TODO: temporary until raster crs fixes
@@ -60,7 +57,6 @@ test_that("prepInputs doesn't work (part 3)", {
   s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE)
   expect_true(inherits(s1, "RasterStack"))
   expect_equal(s1[], b1[], ignore_attr = TRUE)
-  # expect_equivalent(s1, b1) # deprecated in testthat
 
   b <- writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
@@ -133,7 +129,6 @@ test_that("prepInputs doesn't work (part 3)", {
     st_crs(ncSmallShifted) <- st_crs(ncSmall)
     mess <- capture_error(cropInputs(as(ncSmall, "Spatial"), studyArea = ncSmallShifted))
     expect_true(any(grepl("polygons do not intersect", mess)))
-    # expect_true(any(grepl("with no data", mess)))
 
     # cropInputs.sf
     nc3 <- st_transform(nc1, crs = CRS(nonLatLongProj2))
@@ -170,7 +165,7 @@ test_that("prepInputs doesn't work (part 3)", {
     p6a <- fixErrorsTerra(p6)
     expect_true(terra::is.valid(p6a))
     expect_false(terra::is.valid(p6))
-  # projectInputs pass through
+    # projectInputs pass through
     nc5 <- projectInputs(x = 1)
     expect_identical(nc5, 1)
   }

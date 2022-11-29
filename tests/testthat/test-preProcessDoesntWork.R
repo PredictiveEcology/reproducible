@@ -56,7 +56,6 @@ test_that("preProcess fails if user provides non-existing file", {
     }
   )
   expect_true(sum(grepl("Download failed", errMsg)) == 1)
-  # expect_true(sum(grepl("To prevent", errMsg)) == 1)
 
   optsOrig <- options('reproducible.interactiveOnDownloadFail' = TRUE)
   testthat::with_mock(
