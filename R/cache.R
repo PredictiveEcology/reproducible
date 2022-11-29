@@ -633,7 +633,7 @@ Cache <-
         # browser(expr = exists("._Cache_5"))
         # It will not have the "localTags" object because of "direct db access" added Jan 20 2020
         if (!exists("localTags", inherits = FALSE)) #
-          localTags <- showCache(repo, drv = drv, verbose = FALSE) # This is noisy
+          localTags <- showCache(cachePath, drv = drv, verbose = FALSE) # This is noisy
         devModeOut <- devModeFn1(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose, isInRepo, outputHash)
         outputHash <- devModeOut$outputHash
         isInRepo <- devModeOut$isInRepo
@@ -689,7 +689,7 @@ Cache <-
         if (!is.null(showSimilar)) { # TODO: Needs testing
           if (!isFALSE(showSimilar)) {
             if (!exists("localTags", inherits = FALSE)) #
-              localTags <- showCache(repo, drv = drv, verbose = FALSE) # This is noisy
+              localTags <- showCache(cachePath, drv = drv, verbose = FALSE) # This is noisy
             .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
                          userTags, functionName = fnDetails$functionName,
                          useCache = useCache, verbose = verbose)
@@ -1495,7 +1495,7 @@ verboseDF2 <- function(verbose, functionName, startSaveTime) {
     verboseDF <-
       data.frame(
         functionName = functionName,
-        component = "Saving to repo",
+        component = "Saving to cachePath",
         elapsedTime = as.numeric(difftime(endSaveTime, startSaveTime, units = "secs")),
         units = "secs",
         stringsAsFactors = FALSE
