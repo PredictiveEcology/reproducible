@@ -673,7 +673,7 @@ Cache <-
         # browser(expr = exists("._Cache_5"))
         # It will not have the "localTags" object because of "direct db access" added Jan 20 2020
         if (!exists("localTags", inherits = FALSE)) #
-          localTags <- showCache(repo, drv = drv, verboseMessaging = FALSE) # This is noisy
+          localTags <- showCache(repo, drv = drv, verbose = FALSE) # This is noisy
         devModeOut <- devModeFn1(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose, isInRepo, outputHash)
         outputHash <- devModeOut$outputHash
         isInRepo <- devModeOut$isInRepo
@@ -781,7 +781,7 @@ Cache <-
         if (!is.null(showSimilar)) { # TODO: Needs testing
           if (!isFALSE(showSimilar)) {
             if (!exists("localTags", inherits = FALSE)) #
-              localTags <- showCache(repo, drv = drv, verboseMessaging = FALSE) # This is noisy
+              localTags <- showCache(repo, drv = drv, verbose = FALSE) # This is noisy
             .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
                          userTags, functionName = fnDetails$functionName,
                          useCache = useCache, verbose = verbose)
@@ -1970,7 +1970,8 @@ evalTheFun <- function(fnDetails, FUNcaptured, envir = parent.frame(), FUN, verb
     if (length(commonArgs) == 0) {
       FUN(...)
     } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
-      do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE)))
+      browser()
+      do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE, envir = parent.frame())))
     }
   }
 }
