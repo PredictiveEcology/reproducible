@@ -8,8 +8,9 @@ Version 1.2.13
 
 ## Enhancements
 * examples were reworked, replaced, improved
-* `Cache` now works with base pipe |>. It is still experimental.
+* All user-facing exported functions and methods now have complete documentation
 * `Cache` now captures the first argument passed to it without evaluating it, so `Cache(rnorm(1))` now works as expected.
+* `Cache` now works with base pipe |>. It is still experimental.
 * added more unit tests
 
 ## removals

@@ -427,23 +427,15 @@ Cache <-
     modifiedDots <- fnDetails$modifiedDots
     originalDots <- fnDetails$originalDots
     skipCacheDueToNumeric <- is.numeric(useCache) && useCache <= (fnDetails$nestLevel)
-
     if (isFALSE(useCache) || isTRUE(0 == useCache) || skipCacheDueToNumeric) {
       nestedLev <- max(0, as.numeric(fnDetails$nestLevel)) ## nestedLev >= 0
       spacing <- paste(collapse = "", rep("  ", nestedLev))
       messageCache(spacing, "useCache is ", useCache,
                    "; skipping Cache on function ", fnDetails$functionName,
-                   if (nestedLev > 0) paste0(" (currently running nested Cache level ", nestedLev + 1),
-                   ")",
+                   if (nestedLev > 0) paste0(" (currently running nested Cache level ", nestedLev + 1, ")"),
                    verbose = verbose)
-      if (fnDetails$isDoCall) {
-        do.call(modifiedDots$what, args = modifiedDots$args)
-      } else {
-        commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
-        do.call(FUN, append(alist(...), modifiedDots[commonArgs]))
-        # FUN(...) # using do.call fails on quoted arguments because it evaluates them
-        # do.call(FUN, args = list(expr(modifiedDots)))
-      }
+      output <- evalTheFun(fnDetails, FUNcaptured, envir = parent.frame(), FUN, verbose, ...)
+      # }
     } else {
       startCacheTime <- verboseTime(verbose)
 
@@ -452,11 +444,11 @@ Cache <-
                      verbose = verbose)
         length <- compareRasterFileLength
       }
-      if (!missing(digestPathContent)) {
-        messageCache("digestPathContent argument being deprecated. Use 'quick'.",
-                     verbose = verbose)
-        quick <- !digestPathContent
-      }
+      # if (!missing(digestPathContent)) {
+      #   messageCache("digestPathContent argument being deprecated. Use 'quick'.",
+      #                verbose = verbose)
+      #   quick <- !digestPathContent
+      # }
 
       mced <- match.call(expand.dots = TRUE)
       nestedTags <- determineNestedTags(envir = environment(),
@@ -831,40 +823,10 @@ Cache <-
       # browser(expr = exists("._Cache_10"))
       elapsedTimeFUN <- NA
       if (!exists("output", inherits = FALSE) || is.null(output)) {
+
         # Run the FUN
         preRunFUNTime <- Sys.time()
-        # if (fnDetails$isPipe) {
-        #   output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
-        # } else {
-          # rlang attempts that are inadequate -- can't quite get the flexibility required to
-          #   allow either Cache(rnorm(1)) or Cache(rnorm, 1) to work correctly. Can only get
-          #   one or the other
-          # FUNx1 <- rlang::enquo(FUN)
-          # FUNx2 <- rlang::enquos(...)
-          # rlang::eval_tidy(call2(FUNx1, !!!FUNx2))
-          # theCall <- expr(FUN(!!!dots))
-          # output <- eval_tidy(theCall)
-          commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
-          if (length(commonArgs) > 0) {
-            messageCache("Cache and ", fnDetails$functionName, " have 1 or more common arguments: ", commonArgs,
-                         "\nSending the argument(s) to both ", verboseLevel = 2, verbose = verbose)
-          }
-          # output <- if (length(commonArgs) == 0) {
-          #   FUN(...)
-          # } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
-          #   do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE)))
-          # }
-          output <- if (fnDetails$isCapturedFUN) {
-            eval(FUNcaptured, envir = parent.frame())
-          } else {
-            if (length(commonArgs) == 0) {
-              FUN(...)
-            } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
-              do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE)))
-            }
-          }
-
-        # }
+        output <- evalTheFun(fnDetails, FUNcaptured, envir = parent.frame(), FUN, verbose, ...)
         postRunFUNTime <- Sys.time()
         elapsedTimeFUN <- postRunFUNTime - preRunFUNTime
       }
@@ -1099,8 +1061,9 @@ Cache <-
 
       verboseDF3(verbose, fnDetails$functionName, startCacheTime)
 
-      if (isNullOutput) return(NULL) else return(output)
+      if (isNullOutput) return(NULL)
     }
+    return(output)
   }
 
 #' @keywords internal
@@ -2000,4 +1963,22 @@ evalArgsOnly <- function(parsed, env, topLevelEnv = environment()) {
 
 isPkgColonFn <- function(x) {
   identical(x[[1]], quote(`::`))
+}
+
+evalTheFun <- function(fnDetails, FUNcaptured, envir = parent.frame(), FUN, verbose, ...) {
+  commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
+  if (length(commonArgs) > 0) {
+    messageCache("Cache and ", fnDetails$functionName, " have 1 or more common arguments: ", commonArgs,
+                 "\nSending the argument(s) to both ", verboseLevel = 2, verbose = verbose)
+  }
+
+  if (fnDetails$isCapturedFUN) {
+    eval(FUNcaptured, envir = envir)
+  } else {
+    if (length(commonArgs) == 0) {
+      FUN(...)
+    } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
+      do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE)))
+    }
+  }
 }
