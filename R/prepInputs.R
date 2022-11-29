@@ -420,7 +420,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
               obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
                            useCache = useCache2)
             }, message = function(m) {
-              m$message <- grep("No cacheRepo supplied|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
+              m$message <- grep("No cachePath supplied|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
               if (length(m$message)) {
                 mm <- gsub("(.*)\n$", "\\1", m$message)
                 messagePrepInputs(mm)

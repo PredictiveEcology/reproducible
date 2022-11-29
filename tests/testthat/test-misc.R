@@ -163,11 +163,11 @@ test_that("test miscellaneous fns (part 2)", {
 
         mess1 <- capture_messages(expect_error(
           cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
-                      gdriveLs = gdriveLs1, cacheRepo = tmpCache)))
+                      gdriveLs = gdriveLs1, cachePath = tmpCache)))
       } else {
         mess1 <- capture_messages(expect_error(
           cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
-                      gdriveLs = gdriveLs1, cacheRepo = tmpCache)))
+                      gdriveLs = gdriveLs1, cachePath = tmpCache)))
       }
     })
   expect_true(grepl("Uploading local copy of", mess1))
@@ -185,7 +185,7 @@ test_that("test miscellaneous fns (part 2)", {
       # cloudFolderID can't be meaningless "character", but retry is TRUE
       warns <- capture_warnings({
         err <- capture_error({
-          cloudDownloadRasterBackend(output = ras, cacheRepo = tmpCache, cloudFolderID = "character")
+          cloudDownloadRasterBackend(output = ras, cachePath = tmpCache, cloudFolderID = "character")
         })
       })
       expect_true(is.null(err))
@@ -197,7 +197,7 @@ test_that("test miscellaneous fns (part 2)", {
       mess1 <- capture_messages({
         err <- capture_error({
           cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs", saved = "life",
-                               cacheRepo = tmpCache)
+                               cachePath = tmpCache)
         })
       })
       expect_true(all(grepl("cloudFolderID.*is missing, with no default", err)))

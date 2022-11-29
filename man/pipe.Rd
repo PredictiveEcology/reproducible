@@ -27,7 +27,7 @@ arguments to be passed).
 
 This will take the input arguments of the first function immediately following
 the \code{Cache()} and the pipe chain until the special \verb{\\\%C\\\%},
-evaluate them both against the \code{cacheRepo} argument in \code{Cache}.
+evaluate them both against the \code{cachePath} argument in \code{Cache}.
 If they exist, then the entire pipe chain will be skipped, and only the
 previous final result will be given.
 If there is no previous cached copy of the initial function's arguments,
@@ -38,6 +38,6 @@ The required usage should be straight forward to insert into existing code
 that uses pipes (\verb{Cache() \\\%C\\\% ... remaining pipes}).
 
 Still experimental and may change. This form cannot pass any arguments to
-\code{Cache}, such as \code{cacheRepo}, thus it is of limited utility. However,
+\code{Cache}, such as \code{cachePath}, thus it is of limited utility. However,
 it is a clean alternative for simple cases.
 }

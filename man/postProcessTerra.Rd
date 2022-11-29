@@ -96,6 +96,8 @@ e.g., because it is too large.}
 \code{useSAcrs}, or \code{targetCRS} to allow backwards
 compatibility with \code{postProcess}. See section below for details.}
 
+\item{touches}{See \code{terra::mask}}
+
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
@@ -106,6 +108,9 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
 has to happen on the \code{cropTo} prior to using it as a crop layer, then a buffer
 of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.}
+
+\item{isStack, isBrick, isRaster, isSpatRaster}{Logical. Default \code{FALSE}. Used to convert \code{from}
+back to these classes prior to writing.}
 }
 \value{
 An object of the same class as \code{from}, but potentially cropped (via \code{\link[=cropTo]{cropTo()}}),

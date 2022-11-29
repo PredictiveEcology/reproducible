@@ -1,5 +1,5 @@
 #' @param x A simList or a directory containing a valid Cache repository. Note:
-#'   For compatibility with `Cache` argument, `cacheRepo` can also be
+#'   For compatibility with `Cache` argument, `cachePath` can also be
 #'   used instead of `x`, though `x` will take precedence.
 #' @param after A time (POSIX, character understandable by data.table).
 #'                  Objects cached after this time will be shown or deleted.
@@ -40,7 +40,7 @@
 #' @return Will clear all objects (or those that match `userTags`, or those
 #' between `after` or `before`) from the repository located at
 #' `cachePath` of the sim object, if `sim` is provided, or located in
-#' `cacheRepo`.
+#' `cachePath`.
 #' Invisibly returns a `data.table` of the removed items.
 #'
 #' @note If the cache is larger than 10MB, and clearCache is used, there will be
@@ -52,6 +52,7 @@
 #' @importFrom methods setGeneric setMethod
 #' @importFrom utils object.size
 #' @name showCache
+#' @aliases clearCache
 #' @rdname viewCache
 #'
 #' @examples
@@ -61,19 +62,19 @@
 #' try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear
 #'
 #' # Basic use
-#' ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
+#' ranNumsA <- Cache(rnorm, 10, 16, cachePath = tmpDir)
 #'
 #' # All same
-#' ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
-#' ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
+#' ranNumsB <- Cache(rnorm, 10, 16, cachePath = tmpDir) # recovers cached copy
+#' ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cachePath = tmpDir) # recovers cached copy
 #'
 #' # Any minor change makes it different
-#' ranNumsE <- Cache(rnorm, 10, 6, cacheRepo = tmpDir) # different
+#' ranNumsE <- Cache(rnorm, 10, 6, cachePath = tmpDir) # different
 #'
 #' ## Example 1: basic cache use with tags
-#' ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-#' ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
-#' ranNumsC <- Cache(runif, 40, cacheRepo = tmpDir, userTags = "objectName:b")
+#' ranNumsA <- Cache(rnorm, 4, cachePath = tmpDir, userTags = "objectName:a")
+#' ranNumsB <- Cache(runif, 4, cachePath = tmpDir, userTags = "objectName:b")
+#' ranNumsC <- Cache(runif, 40, cachePath = tmpDir, userTags = "objectName:b")
 #'
 #' showCache(tmpDir, userTags = c("objectName"))
 #' showCache(tmpDir, userTags = c("^a$")) # regular expression ... "a" exactly
@@ -105,9 +106,9 @@ setMethod(
     # browser(expr = exists("._clearCache_1"))
 
     if (missing(x)) {
-      x <- if (!is.null(list(...)$cacheRepo)) {
-        messageCache("x not specified, but cacheRepo is; using ", list(...)$cacheRepo)
-        list(...)$cacheRepo
+      x <- if (!is.null(list(...)$cachePath)) {
+        messageCache("x not specified, but cachePath is; using ", list(...)$cachePath)
+        list(...)$cachePath
       } else  {
         messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
         x <- getOption("reproducible.cachePath")[1]
@@ -268,11 +269,11 @@ setMethod(
 #' tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 #' try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear
 #'
-#' Cache(rnorm, 1, cacheRepo = tmpDir)
+#' Cache(rnorm, 1, cachePath = tmpDir)
 #' thisTime <- Sys.time()
-#' Cache(rnorm, 2, cacheRepo = tmpDir)
-#' Cache(rnorm, 3, cacheRepo = tmpDir)
-#' Cache(rnorm, 4, cacheRepo = tmpDir)
+#' Cache(rnorm, 2, cachePath = tmpDir)
+#' Cache(rnorm, 3, cachePath = tmpDir)
+#' Cache(rnorm, 4, cachePath = tmpDir)
 #' showCache(x = tmpDir) # shows all 4 entries
 #' cc(ask = FALSE, x = tmpDir)
 #' showCache(x = tmpDir) # most recent is gone
@@ -356,7 +357,6 @@ setMethod(
       if (is.null(after)) after <- "1970-01-01"
       if (is.null(before)) before <- Sys.time() + 1e5
     }
-    # if (is(x, "simList")) x <- x@paths$cachePath
 
     # not seeing userTags
     # Clear the futures that are resolved
@@ -662,7 +662,7 @@ useDBI <- function() {
 rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
   if (is.null(cloudFolderID)) {
 
-    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cacheRepo = x)
+    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cachePath = x)
     # stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
     #      "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
   }

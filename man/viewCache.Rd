@@ -2,6 +2,7 @@
 % Please edit documentation in R/showCacheEtc.R
 \name{showCache}
 \alias{showCache}
+\alias{clearCache}
 \alias{clearCache,ANY-method}
 \alias{cc}
 \alias{showCache,ANY-method}
@@ -81,7 +82,7 @@ keepCache(
 }
 \arguments{
 \item{x}{A simList or a directory containing a valid Cache repository. Note:
-For compatibility with \code{Cache} argument, \code{cacheRepo} can also be
+For compatibility with \code{Cache} argument, \code{cachePath} can also be
 used instead of \code{x}, though \code{x} will take precedence.}
 
 \item{userTags}{Character vector. If used, this will be used in place of the
@@ -111,8 +112,8 @@ also be deleted in the \code{cloudFolderID}, if it is non-\code{NULL}}
 
 \item{cloudFolderID}{A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
 If left as \code{NULL}, the function will create a cloud folder with name from last
-two folder levels of the \code{cacheRepo} path, :
-\code{paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))}.
+two folder levels of the \code{cachePath} path, :
+\code{paste0(basename(dirname(cachePath)), "_", basename(cachePath))}.
 This \code{cloudFolderID} will be added to \code{options("reproducible.cloudFolderID")},
 but this will not persist across sessions. If this is a character string, it will
 treat this as a folder name to create or use on GoogleDrive.}
@@ -139,7 +140,7 @@ the default, then it will delete the most recent entry in the Cache.}
 Will clear all objects (or those that match \code{userTags}, or those
 between \code{after} or \code{before}) from the repository located at
 \code{cachePath} of the sim object, if \code{sim} is provided, or located in
-\code{cacheRepo}.
+\code{cachePath}.
 Invisibly returns a \code{data.table} of the removed items.
 }
 \description{
@@ -178,19 +179,19 @@ tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear
 
 # Basic use
-ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
+ranNumsA <- Cache(rnorm, 10, 16, cachePath = tmpDir)
 
 # All same
-ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
-ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
+ranNumsB <- Cache(rnorm, 10, 16, cachePath = tmpDir) # recovers cached copy
+ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cachePath = tmpDir) # recovers cached copy
 
 # Any minor change makes it different
-ranNumsE <- Cache(rnorm, 10, 6, cacheRepo = tmpDir) # different
+ranNumsE <- Cache(rnorm, 10, 6, cachePath = tmpDir) # different
 
 ## Example 1: basic cache use with tags
-ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
-ranNumsC <- Cache(runif, 40, cacheRepo = tmpDir, userTags = "objectName:b")
+ranNumsA <- Cache(rnorm, 4, cachePath = tmpDir, userTags = "objectName:a")
+ranNumsB <- Cache(runif, 4, cachePath = tmpDir, userTags = "objectName:b")
+ranNumsC <- Cache(runif, 40, cachePath = tmpDir, userTags = "objectName:b")
 
 showCache(tmpDir, userTags = c("objectName"))
 showCache(tmpDir, userTags = c("^a$")) # regular expression ... "a" exactly
@@ -204,11 +205,11 @@ cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is l
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear
 
-Cache(rnorm, 1, cacheRepo = tmpDir)
+Cache(rnorm, 1, cachePath = tmpDir)
 thisTime <- Sys.time()
-Cache(rnorm, 2, cacheRepo = tmpDir)
-Cache(rnorm, 3, cacheRepo = tmpDir)
-Cache(rnorm, 4, cacheRepo = tmpDir)
+Cache(rnorm, 2, cachePath = tmpDir)
+Cache(rnorm, 3, cachePath = tmpDir)
+Cache(rnorm, 4, cachePath = tmpDir)
 showCache(x = tmpDir) # shows all 4 entries
 cc(ask = FALSE, x = tmpDir)
 showCache(x = tmpDir) # most recent is gone

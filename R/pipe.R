@@ -14,7 +14,7 @@
 #'
 #' This will take the input arguments of the first function immediately following
 #' the `Cache()` and the pipe chain until the special `\%C\%`,
-#' evaluate them both against the `cacheRepo` argument in `Cache`.
+#' evaluate them both against the `cachePath` argument in `Cache`.
 #' If they exist, then the entire pipe chain will be skipped, and only the
 #' previous final result will be given.
 #' If there is no previous cached copy of the initial function's arguments,
@@ -38,7 +38,7 @@
 #' The special assign operator `\%<C-\%` is equivalent to Cache. See examples at the end.
 #'
 #' Still experimental and may change. This form cannot pass any arguments to
-#' `Cache`, such as `cacheRepo`, thus it is of limited utility. However,
+#' `Cache`, such as `cachePath`, thus it is of limited utility. However,
 #' it is a clean alternative for simple cases.
 #'
 #' @rdname pipe

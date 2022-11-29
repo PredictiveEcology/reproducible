@@ -33,7 +33,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     # local absent, cloud absent
     #######################################
     mess1 <- capture_messages({
-      a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+      a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
     })
     expect_true(any(grepl("uploaded", mess1)))
 
@@ -41,7 +41,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     # local present, cloud present
     #######################################
     mess2 <- capture_messages({
-      a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+      a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
     })
     expect_true(any(grepl("loading cached", mess2)))
     expect_false(all(grepl("uploaded", mess2)))
@@ -54,7 +54,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
     clearCache(userTags = .robustDigest(1), x = tmpCache, useCloud = FALSE)
     mess3 <- capture_messages({
-      a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+      a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
     })
     expect_false(any(grepl("loading cached", mess3)))
     expect_false(any(grepl("uploaded", mess3)))
@@ -64,9 +64,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     # local present, cloud absent
     #######################################
     clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
-    a1 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID, cacheRepo = tmpCache)
+    a1 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID, cachePath = tmpCache)
     mess4 <- capture_messages({
-      a2 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+      a2 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
     })
 
     expect_true(any(grepl("loading cached", mess4)))
@@ -82,7 +82,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
     warn5 <- capture_warnings({
       mess5 <- capture_messages({
-        a2 <- Cache(rnorm, 3, cacheRepo = tmpCache, useCloud = TRUE)
+        a2 <- Cache(rnorm, 3, cachePath = tmpCache, useCloud = TRUE)
       })
     })
 
@@ -96,7 +96,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
     warn6 <- capture_warnings({
       mess6 <- capture_messages({
-        a2 <- Cache(rnorm, 3, cacheRepo = tmpCache, useCloud = TRUE)
+        a2 <- Cache(rnorm, 3, cachePath = tmpCache, useCloud = TRUE)
       })
     })
 
@@ -112,7 +112,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     clearCache(x = tmpCache, useCloud = TRUE)#, cloudFolderID = cloudFolderID)
     # Add 3 things to cloud and local -- then clear them all
     for (i in 1:3)
-      a1 <- Cache(rnorm, i, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+      a1 <- Cache(rnorm, i, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
     expect_silent({
       mess1 <- capture_messages(
         clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
@@ -122,8 +122,8 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
     # Add 3 things to local, only 2 to cloud -- clear them all, without an error
     for (i in 1:2)
-      a1 <- Cache(rnorm, i, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
-    a1 <- Cache(rnorm, 3, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = FALSE)
+      a1 <- Cache(rnorm, i, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
+    a1 <- Cache(rnorm, 3, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = FALSE)
     expect_silent({
       mess2 <- capture_messages(
         clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
@@ -132,8 +132,8 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     expect_true(NROW(googledrive::drive_ls(path = cloudFolderFromCacheRepo(tmpCache))) == 0)
 
     # Add 2 things to local and cloud -- clear only 1 of them, without an error
-    Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
-    Cache(rnorm, 2, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+    Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
+    Cache(rnorm, 2, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
     expect_silent({
       mess2 <- capture_messages(
         clearCache(x = tmpCache, userTags = .robustDigest(1), useCloud = TRUE, cloudFolderID = cloudFolderID)

@@ -5,10 +5,10 @@ test_that("test file-backed raster caching", {
   }, add = TRUE)
 
   # make sure that .robustDigest does not include the cache-added attributes
-  c1 <- Cache(rnorm, 11, cacheRepo = tmpCache)
+  c1 <- Cache(rnorm, 11, cachePath = tmpCache)
   c1a <- .robustDigest(c1)
 
-  c1 <- Cache(rnorm, 11, cacheRepo = tmpCache)
+  c1 <- Cache(rnorm, 11, cachePath = tmpCache)
   c1b <- .robustDigest(c1)
   expect_true(identical(c1a, c1b)) # failed pre reproducible 0.2.4.9000
 

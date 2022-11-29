@@ -38,7 +38,7 @@ this function after a manual copy of a cache folder. See examples for one way to
 \details{
 When the backend database for a \code{reproducinle} cache is an SQL database, the files
 on disk cannot be copied manually to a new location because they contain internal
-tables. Because \code{reproducible} gives the main table a name based on the \code{cacheRepo}
+tables. Because \code{reproducible} gives the main table a name based on the \code{cachePath}
 path, calls to \code{Cache} will attempt to call this internally if it detects a
 name mismatch.
 }
@@ -47,7 +47,7 @@ tmpdir <- "tmpdir"
 tmpCache <- "tmpCache"
 tmpCacheDir <- normalizePath(file.path(tempdir(), tmpCache), mustWork = FALSE)
 tmpdirPath <- normalizePath(file.path(tempdir(), tmpdir), mustWork = FALSE)
-bb <- Cache(rnorm, 1, cacheRepo = tmpCacheDir)
+bb <- Cache(rnorm, 1, cachePath = tmpCacheDir)
 
 # Copy all files from tmpCache to tmpdir
 froms <- normalizePath(dir(tmpCacheDir, recursive = TRUE, full.names = TRUE),
@@ -60,6 +60,6 @@ file.copy(from = froms, overwrite = TRUE,
 # Can use 'movedCache' to update the database table, though will generally
 #   happen automatically, with message indicating so
 movedCache(new = tmpdirPath, old = tmpCacheDir)
-bb <- Cache(rnorm, 1, cacheRepo = tmpdirPath) # should recover the previous call
+bb <- Cache(rnorm, 1, cachePath = tmpdirPath) # should recover the previous call
 
 }

@@ -130,7 +130,7 @@
 }
 
 
-.CacheSideEffectFn1 <- function(output, sideEffect, cacheRepo, quick, algo, FUN,
+.CacheSideEffectFn1 <- function(output, sideEffect, cachePath, quick, algo, FUN,
                                 verbose = getOption("reproducible.verbose", 1), ...) {
   messageCache("sideEffect argument is poorly tested. It may not function as desired")
   # browser(expr = exists("sideE"))
@@ -146,7 +146,7 @@
       if (file.exists(chcksumPath)) {
         checkDigest <- TRUE
       } else {
-        checkCopy <- file.path(CacheStorageDir(cacheRepo), basename(chcksumName))
+        checkCopy <- file.path(CacheStorageDir(cachePath), basename(chcksumName))
         if (file.exists(checkCopy)) {
           chcksumPath <- checkCopy
           checkDigest <- TRUE
@@ -191,19 +191,19 @@
   }
 
   if (NROW(fromCopy)) {
-    repoTo <- CacheStorageDir(cacheRepo)
+    repoTo <- CacheStorageDir(cachePath)
     lapply(fromCopy, function(x) {
       file.copy(from = file.path(repoTo, basename(x)),
-                to = file.path(cacheRepo), recursive = TRUE)
+                to = file.path(cachePath), recursive = TRUE)
     })
   }
 }
 
-.CacheSideEffectFn2 <- function(sideEffect, cacheRepo, priorRepo, algo, output,
+.CacheSideEffectFn2 <- function(sideEffect, cachePath, priorRepo, algo, output,
                                 makeCopy, quick) {
   # browser(expr = exists("sideE"))
   if (isTRUE(sideEffect)) {
-    postRepo <- list.files(cacheRepo, full.names = TRUE)
+    postRepo <- list.files(cachePath, full.names = TRUE)
   } else {
     postRepo <- list.files(sideEffect, full.names = TRUE)
   }
@@ -230,7 +230,7 @@
 
     # browser(expr = exists("sideE"))
     if (makeCopy) {
-      repoTo <- CacheStorageDir(cacheRepo)
+      repoTo <- CacheStorageDir(cachePath)
       checkPath(repoTo, create = TRUE)
       lapply(dwdFlst, function(x) {
         file.copy(from = x, to = file.path(repoTo), recursive = TRUE)
@@ -240,7 +240,7 @@
   return(output)
 }
 
-.getFromRepo <- function(FUN, isInRepo, notOlderThan, lastOne, cacheRepo, fnDetails,
+.getFromRepo <- function(FUN, isInRepo, notOlderThan, lastOne, cachePath, fnDetails,
                          modifiedDots, debugCache, verbose, sideEffect, quick,
                          algo, preDigest, startCacheTime,
                          drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -254,15 +254,15 @@
   fromMemoise <- NA
   if (getOption("reproducible.useMemoise")) {
     fromMemoise <- FALSE
-    if (!is.null(.pkgEnv[[cacheRepo]]))
-      if (exists(cacheObj, envir = .pkgEnv[[cacheRepo]]))
+    if (!is.null(.pkgEnv[[cachePath]]))
+      if (exists(cacheObj, envir = .pkgEnv[[cachePath]]))
         fromMemoise <- TRUE
     loadFromMgs <- "Loading from memoised version of repo"
-    output <- .loadFromLocalRepoMem(md5hash = cacheObj, repoDir = cacheRepo, value = TRUE)
+    output <- .loadFromLocalRepoMem(md5hash = cacheObj, repoDir = cachePath, value = TRUE)
   } else {
     loadFromMgs <- "Loading from repo"
     if (useDBI()) {
-      output <- loadFromCache(cacheRepo, isInRepo[[.cacheTableHashColName()[lastOne]]],
+      output <- loadFromCache(cachePath, isInRepo[[.cacheTableHashColName()[lastOne]]],
                               drv = drv, conn = conn)
     }
   }
@@ -287,20 +287,19 @@
   .cacheMessage(output, fnDetails$functionName, fromMemoise = fromMemoise, verbose = verbose)
 
   # This is protected from multiple-write to SQL collisions
-  # .addTagsRepo(isInRepo, cacheRepo, lastOne, drv, conn = conn)
   .addTagsRepo(cacheId = isInRepo[[.cacheTableHashColName()]][lastOne],
-               cachePath = cacheRepo, drv = drv, conn = conn)
+               cachePath = cachePath, drv = drv, conn = conn)
 
   # browser(expr = exists("._getFromRepo_1"))
   if (sideEffect != FALSE) {
-    .CacheSideEffectFn1(output, sideEffect, cacheRepo, quick, algo, FUN, verbose = verbose, ...)
+    .CacheSideEffectFn1(output, sideEffect, cachePath, quick, algo, FUN, verbose = verbose, ...)
   }
 
   # This allows for any class specific things
   output <- if (fnDetails$isDoCall) {
-    do.call(.prepareOutput, args = append(list(output, cacheRepo), modifiedDots$args))
+    do.call(.prepareOutput, args = append(list(output, cachePath), modifiedDots$args))
   } else {
-    do.call(.prepareOutput, args = append(list(output, cacheRepo), modifiedDots))
+    do.call(.prepareOutput, args = append(list(output, cachePath), modifiedDots))
   }
 
   if (length(debugCache)) {
@@ -327,7 +326,7 @@
     }
   }
 
-  # If it was a NULL, the cacheRepo stored it as "NULL" ... return it as NULL
+  # If it was a NULL, the cachePath stored it as "NULL" ... return it as NULL
   if (is.character(output)) {
     if (identical(as.character(output), "NULL"))
       output <- NULL

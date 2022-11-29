@@ -22,7 +22,7 @@
 #' tmpDir <- file.path(tempdir(), "reproducible_examples", "clearStubArtifacts")
 #'
 #' lapply(c(runif, rnorm), function(f) {
-#'   reproducible::Cache(f, 10, cacheRepo = tmpDir)
+#'   reproducible::Cache(f, 10, cachePath = tmpDir)
 #' })
 #'
 #' # clear out any stub artifacts

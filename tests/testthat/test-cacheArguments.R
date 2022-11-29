@@ -22,7 +22,7 @@ test_that("test cached downloads", {
   out <- Cache(utils::download.file, url = urlTif1,
                destfile = asPath(file.path(outdir, basename(urlTif1))),
                method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE,
-               cacheRepo = outdir, sideEffect = TRUE, makeCopy = FALSE, quick = TRUE)
+               cachePath = outdir, sideEffect = TRUE, makeCopy = FALSE, quick = TRUE)
 
   # check if download occured
   expect_true(file.exists(file.path(outdir, basename(urlTif1))))
@@ -40,7 +40,7 @@ test_that("test cached downloads", {
   out <- Cache(utils::download.file, url = urlTif1,
                destfile = asPath(file.path(outdir, basename(urlTif1))),
                method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE,
-               cacheRepo = outdir, sideEffect = TRUE, makeCopy = FALSE, quick = TRUE)
+               cachePath = outdir, sideEffect = TRUE, makeCopy = FALSE, quick = TRUE)
 
   # Make sur the file do not exists before testing
   file.remove(basename(urlTif1))
@@ -55,7 +55,7 @@ test_that("test cached downloads", {
   out <- Cache(utils::download.file, url = urlTif1,
                destfile = asPath(file.path(outdir, basename(urlTif1))),
                method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE,
-               cacheRepo = outdir, sideEffect = TRUE, makeCopy = TRUE, quick = TRUE)
+               cachePath = outdir, sideEffect = TRUE, makeCopy = TRUE, quick = TRUE)
 
   # check if copy was created
   copyFolder <- storageDir
@@ -69,7 +69,7 @@ test_that("test cached downloads", {
   out <- Cache(utils::download.file, url = urlTif1,
                destfile = asPath(file.path(outdir, basename(urlTif1))),
                method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE,
-               cacheRepo = outdir, sideEffect = TRUE, makeCopy = TRUE, quick = TRUE)
+               cachePath = outdir, sideEffect = TRUE, makeCopy = TRUE, quick = TRUE)
 
   expect_true(file.exists(file.path(outdir, basename(urlTif1))))
 })

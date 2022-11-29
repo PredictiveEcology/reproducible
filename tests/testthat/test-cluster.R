@@ -18,9 +18,9 @@ test_that("test parallel collisions", {
     }
 
     # make function that will write to cache repository from with clusters
-    fun <- function(x, cacheRepo) {
+    fun <- function(x, cachePath) {
       #print(x)
-      Cache(rnorm, 10, sd = x, cacheRepo = cacheRepo)
+      Cache(rnorm, 10, sd = x, cachePath = cachePath)
     }
     # Run something that will write many times
     # This will produce "database is locked" on Windows or Linux *most* of the time without the fix
@@ -39,8 +39,8 @@ test_that("test parallel collisions", {
 
     # There is a 'creating Cache at the same time' problem -- haven't resolved
     #  Just make cache first and it seems fine
-    Cache(rnorm, 1, cacheRepo = tmpdir)
-    a <- try(clusterMap(cl = cl, fun, seq(numToRun), cacheRepo = tmpdir, .scheduling = "dynamic"),
+    Cache(rnorm, 1, cachePath = tmpdir)
+    a <- try(clusterMap(cl = cl, fun, seq(numToRun), cachePath = tmpdir, .scheduling = "dynamic"),
              silent = FALSE)
     if (!is(a, "try-error")) {
       expect_true(is.list(a))

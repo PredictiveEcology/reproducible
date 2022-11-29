@@ -123,7 +123,7 @@ is actually a functioning cache.
 newCache <- tempdir2("cacheHelperExamples")
 createCache(newCache)
 
-out <- Cache(rnorm(1), cacheRepo = newCache)
+out <- Cache(rnorm(1), cachePath = newCache)
 cacheId <- gsub("cacheId:", "", attr(out, "tags"))
 loadFromCache(newCache, cacheId = cacheId)
 
@@ -138,7 +138,7 @@ createCache(newCache)
 CacheDBFile(newCache)
 CacheStorageDir(newCache)
 
-out <- Cache(rnorm(1), cacheRepo = newCache)
+out <- Cache(rnorm(1), cachePath = newCache)
 cacheId <- gsub("cacheId:", "", attr(out, "tags"))
 CacheStoredFile(newCache, cacheId = cacheId)
 

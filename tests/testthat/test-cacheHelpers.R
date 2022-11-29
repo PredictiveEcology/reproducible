@@ -49,7 +49,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
     options(opt11)
   }, add = TRUE)
   mess <- capture_message(.checkCacheRepo(a))
-  expect_true(any(grepl("No cacheRepo supplied. Using", mess)))
+  expect_true(any(grepl("No cachePath supplied. Using", mess)))
 
   # getFunctionName
   fn <- function(FUN) {
@@ -79,10 +79,10 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   ## expect_true(grepl("_2.pdf", b1)) ## TODO: this number is not consistently 2 or 3
   aMess <- capture_messages({
-    a <- Cache(rnorm, 1, useCache = FALSE, cacheRepo = tmpCache)
+    a <- Cache(rnorm, 1, useCache = FALSE, cachePath = tmpCache)
   })
   bMess <- capture_messages({
-    b <- Cache(rnorm, 1, useCache = FALSE, cacheRepo = tmpCache)
+    b <- Cache(rnorm, 1, useCache = FALSE, cachePath = tmpCache)
   })
   expect_false(identical(a,b))
   expect_true(grepl("skipping Cache", aMess))
@@ -91,17 +91,17 @@ test_that("test miscellaneous unit tests cache-helpers", {
   ## getOption("reproducible.useMemoise" = FALSE)
   opt22 <- options("reproducible.useMemoise" = FALSE)
   aMess <- capture_messages({
-    a <- Cache(rnorm, 1, cacheRepo = tmpCache)
+    a <- Cache(rnorm, 1, cachePath = tmpCache)
   })
   bMess <- capture_messages({
-    a <- Cache(rnorm, 1, cacheRepo = tmpCache)
+    a <- Cache(rnorm, 1, cachePath = tmpCache)
   })
   options(opt22)
   cMess <- capture_messages({
-    a <- Cache(rnorm, 1, cacheRepo = tmpCache)
+    a <- Cache(rnorm, 1, cachePath = tmpCache)
   })
   dMess <- capture_messages({
-    a <- Cache(rnorm, 1, cacheRepo = tmpCache)
+    a <- Cache(rnorm, 1, cachePath = tmpCache)
   })
   #expect_true(identical(aMess, bMess[1]))
   expect_false(any(grepl("memoise", bMess)))
@@ -110,18 +110,18 @@ test_that("test miscellaneous unit tests cache-helpers", {
   ## showSimilar
   try(clearCache(ask = FALSE, x = tmpCache), silent = TRUE)
   aMess <- capture_messages({
-    a <- Cache(rnorm, n = 1, mean = 1, cacheRepo = tmpCache)
+    a <- Cache(rnorm, n = 1, mean = 1, cachePath = tmpCache)
   })
   #lapply(letters[11], function(l) assign(paste(rep(l, 4), collapse = ""), 1, envir = .GlobalEnv))
   bMess <- capture_messages({
-    b <- Cache(rnorm, n = 2, mean = 1, sd = 3, showSimilar = TRUE, cacheRepo = tmpCache)
+    b <- Cache(rnorm, n = 2, mean = 1, sd = 3, showSimilar = TRUE, cachePath = tmpCache)
   })
   expect_true(any(grepl("different n", bMess)))
   expect_true(any(grepl("new argument.*sd", bMess)))
   expect_true(any(grepl("next closest cacheId", bMess)))
   # aaaa <<- bbbb <<- cccc <<- 1
   cMess <- capture_messages({
-    b <- Cache(rnorm, n = 3, mean = 1, sd = 3, showSimilar = TRUE, cacheRepo = tmpCache)
+    b <- Cache(rnorm, n = 3, mean = 1, sd = 3, showSimilar = TRUE, cachePath = tmpCache)
   })
   expect_true(any(grepl("different n", cMess)))
   expect_false(any(grepl("new argument.*sd", cMess)))
@@ -130,7 +130,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_false(identical(cMessCacheId, bMessCacheId))
 
   dMess <- capture_messages({
-    b <- Cache(rnorm, n = 4, mean = 1, sd = 4, showSimilar = TRUE, cacheRepo = tmpCache)
+    b <- Cache(rnorm, n = 4, mean = 1, sd = 4, showSimilar = TRUE, cachePath = tmpCache)
   })
 
   # There are 2 ways this may come out -- similarity to 1 of 2 alternatives above
@@ -146,7 +146,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
     }
 
   eMess <- capture_messages({
-    b <- Cache(rlnorm, 4, sd = 5, showSimilar = TRUE, cacheRepo = tmpCache)
+    b <- Cache(rlnorm, 4, sd = 5, showSimilar = TRUE, cachePath = tmpCache)
   })
   expect_true(any(grepl("different .FUN", eMess)))
   expect_false(grepl(" n[ ,{\x1b}]", grep("different", eMess, value = TRUE)))
@@ -154,13 +154,13 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   ## debugCache -- "complete"
   thing <- 1
-  aa <- Cache(rnorm, thing, debugCache = "complete", cacheRepo = tmpCache)
+  aa <- Cache(rnorm, thing, debugCache = "complete", cachePath = tmpCache)
   expect_true(identical(thing, attr(aa, "debugCache1")[[1]]))
   expect_true(identical(.robustDigest(thing), attr(aa, "debugCache2")$n))
   expect_true(is.numeric(aa))
 
   ## debugCache -- "quick"
-  aa <- Cache(rnorm, thing, debugCache = "quick", cacheRepo = tmpCache)
+  aa <- Cache(rnorm, thing, debugCache = "quick", cachePath = tmpCache)
   expect_true(identical(.robustDigest(thing), aa$hash$n))
   expect_true(identical(thing, aa$content[[1]]))
 
@@ -172,15 +172,15 @@ test_that("test miscellaneous unit tests cache-helpers", {
   comp <- if (useDBI()) .robustDigest("sdf") else
     "dda1fbb70d256e6b3b696ef0176c63de"
   expect_true(identical(comp,
-                        writeFuture(1, "sdf", cacheRepo = tmpCache, userTags = "",
+                        writeFuture(1, "sdf", cachePath = tmpCache, userTags = "",
                                     drv = RSQLite::SQLite())))
-  expect_error(writeFuture(1, "sdf", cacheRepo = "sdfd", userTags = ""))
+  expect_error(writeFuture(1, "sdf", cachePath = "sdfd", userTags = ""))
 
   if (interactive()) {
     try(silent = TRUE, clearCache(tmpCache, ask = FALSE))
     bMess <- capture_output({
       aMess <- capture_messages({
-        aa <- Cache(fnCacheHelper, 1, verbose = 4, cacheRepo = tmpCache, cacheRepo2 = tmpCache)
+        aa <- Cache(fnCacheHelper, 1, verbose = 4, cachePath = tmpCache, cacheRepo2 = tmpCache)
       })
     })
     expect_true(any(grepl("fnCacheHelper", aMess))) # TODO: fix this;
@@ -237,9 +237,9 @@ test_that("test miscellaneous unit tests cache-helpers", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  a <- Cache(rnorm, 1, cacheRepo = tmpCache)
-  mess <- capture_messages(clearCache(cacheRepo = tmpCache))
-  expect_true(any(grepl("x not specified, but cacheRepo is", mess)))
+  a <- Cache(rnorm, 1, cachePath = tmpCache)
+  mess <- capture_messages(clearCache(cachePath = tmpCache))
+  expect_true(any(grepl("x not specified, but cachePath is", mess)))
   mess <- capture_messages(clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = NULL))
   expect_equal(sum(grepl("0 bytes", mess)), 2)
 })

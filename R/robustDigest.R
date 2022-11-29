@@ -19,7 +19,7 @@
 #' i.e., to create `.tif` or `.grd` backed rasters, use `writeRaster` first,
 #' then `Cache`.
 #' The \file{.tif} or \file{.grd} will be copied to the \file{raster/} subdirectory of the
-#' `cacheRepo`.
+#' `cachePath`.
 #' Their RAM representation (as an R object) will still be in the usual  \file{cacheOutputs/}
 #' (or formerly \file{gallery/}) directory.
 #' For `inMemory` raster objects, they will remain as binary `.RData` files.

@@ -2079,7 +2079,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
     # } else {
       # fix errors if methods available
       skipCacheMess <- "useCache is FALSE, skipping Cache"
-      skipCacheMess2 <- "No cacheRepo supplied"
+      skipCacheMess2 <- "No cachePath supplied"
 
       ##################################
       # cropInputs

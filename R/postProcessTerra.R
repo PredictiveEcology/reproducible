@@ -255,6 +255,7 @@ fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.ve
 
 #' @export
 #' @rdname postProcessTerra
+#' @param touches See `terra::mask`
 maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
                    verbose = getOption("reproducible.verbose")) {
   if (!is.null(maskTo)) {
@@ -486,6 +487,9 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
 
 #' @export
 #' @rdname postProcessTerra
+#' @param isStack,isBrick,isRaster,isSpatRaster Logical. Default `FALSE`. Used to convert `from`
+#'   back to these classes prior to writing.
+#'
 writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, isRaster = FALSE,
                     isSpatRaster = FALSE, datatype = "FLT4S") {
   if (isStack) from <- raster::stack(from)

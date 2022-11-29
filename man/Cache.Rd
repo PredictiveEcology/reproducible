@@ -13,6 +13,7 @@ Cache(
   outputObjects = NULL,
   algo = "xxhash64",
   cacheRepo = NULL,
+  cachePath = NULL,
   length = getOption("reproducible.length", Inf),
   compareRasterFileLength,
   userTags = c(),
@@ -59,7 +60,9 @@ return. This is only relevant for list, environment (or similar) objects}
     \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64},
     \code{murmur32}, \code{spookyhash} and \code{blake3}.}
 
-\item{cacheRepo}{A repository used for storing cached objects.
+\item{cacheRepo}{Same as \code{cachePath}, but kept for backwards compatibility.}
+
+\item{cachePath}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{length}{Numeric. If the element passed to Cache is a \code{Path} class
@@ -100,7 +103,7 @@ new files following function completion. See Details.
 \emph{NOTE: this argument is experimental and may change in future releases.}}
 
 \item{makeCopy}{Logical. If \code{sideEffect = TRUE}, and \code{makeCopy = TRUE},
-a copy of the downloaded files will be made and stored in the \code{cacheRepo}
+a copy of the downloaded files will be made and stored in the \code{cachePath}
 to speed up subsequent file recovery in the case where the original copy
 of the downloaded files are corrupted or missing. Currently only works when
 set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.
@@ -117,7 +120,7 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{cacheId}{Character string. If passed, this will override the calculated hash
-of the inputs, and return the result from this cacheId in the cacheRepo.
+of the inputs, and return the result from this cacheId in the \code{cachePath}.
 Setting this is equivalent to manually saving the output of this function, i.e.,
 the object will be on disk, and will be recovered in subsequent
 This may help in some particularly finicky situations
@@ -130,15 +133,15 @@ the object will be identical each time; this may be useful in operational code.}
 
 \item{cloudFolderID}{A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
 If left as \code{NULL}, the function will create a cloud folder with name from last
-two folder levels of the \code{cacheRepo} path, :
-\code{paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))}.
+two folder levels of the \code{cachePath} path, :
+\code{paste0(basename(dirname(cachePath)), "_", basename(cachePath))}.
 This \code{cloudFolderID} will be added to \code{options("reproducible.cloudFolderID")},
 but this will not persist across sessions. If this is a character string, it will
 treat this as a folder name to create or use on GoogleDrive.}
 
 \item{showSimilar}{A logical or numeric. Useful for debugging.
 If \code{TRUE} or \code{1}, then if the Cache
-does not find an identical archive in the cacheRepo, it will report (via message)
+does not find an identical archive in the \code{cachePath}, it will report (via message)
 the next most similar archive, and indicate which argument(s) is/are different.
 If a number larger than \code{1}, then it will report the N most similar archived
 objects.}
@@ -330,12 +333,12 @@ likely stale very often. In \code{devMode}, the cache mechanism will work as
 normal if the Cache call is the first time for a function OR if it
 successfully finds a copy in the cache based on the normal Cache mechanism.
 It \emph{differs} from the normal Cache if the Cache call does \emph{not} find a copy
-in the \code{cacheRepo}, but it does find an entry that matches based on
-\code{userTags}. In this case, it will delete the old entry in the \code{cacheRepo}
+in the \code{cachePath}, but it does find an entry that matches based on
+\code{userTags}. In this case, it will delete the old entry in the \code{cachePath}
 (identified based on matching \code{userTags}), then continue with normal \code{Cache}.
 For this to work correctly, \code{userTags} must be unique for each function call.
 This should be used with caution as it is still experimental. Currently, if
-\code{userTags} are not unique to a single entry in the cacheRepo, it will
+\code{userTags} are not unique to a single entry in the cachePath, it will
 default to the behaviour of \code{useCache = TRUE} with a message. This means
 that \code{"devMode"} is most useful if used from the start of a project.
 }
@@ -381,7 +384,7 @@ If the files are identical (\code{quick = FALSE}) or their file size is identica
 If there are missing or incorrect files, then the function will re-run.
 This will accommodate the situation where the function call is identical, but somehow the side
 effect files were modified.
-If \code{sideEffect} is logical, then the function will check the \code{cacheRepo};
+If \code{sideEffect} is logical, then the function will check the \code{cachePath};
 if it is a path, then it will check the path.
 The function will assess whether the files to be downloaded are found locally prior to download.
 If it fails the local test, then it will try to recover from a local copy if (\code{makeCopy}
@@ -394,11 +397,11 @@ Currently, local recovery will only work if\code{makeCOpy} was set to \code{TRUE
 tmpDir <- file.path(tempdir())
 
 # Basic use
-ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
+ranNumsA <- Cache(rnorm, 10, 16, cachePath = tmpDir)
 
 # All same
-ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
-ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
+ranNumsB <- Cache(rnorm, 10, 16, cachePath = tmpDir) # recovers cached copy
+ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cachePath = tmpDir) # recovers cached copy
 
 ###############################################
 # experimental devMode
@@ -409,7 +412,7 @@ centralTendency <- function(x)
   mean(x)
 funnyData <- c(1, 1, 1, 1, 10)
 uniqueUserTags <- c("thisIsUnique", "reallyUnique")
-ranNumsB <- Cache(centralTendency, funnyData, cacheRepo = tmpDir,
+ranNumsB <- Cache(centralTendency, funnyData, cachePath = tmpDir,
                   userTags = uniqueUserTags) # sets new value to Cache
 showCache(tmpDir) # 1 unique artifact -- cacheId is 8be9cf2a072bdbb0515c5f0b3578f474
 
@@ -420,11 +423,11 @@ centralTendency <- function(x)
 #   never again be defined that way. Here, because of userTags being the same,
 #   it will replace the entry in the Cache, effetively overwriting it, even though
 #   it has a different cacheId
-ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = uniqueUserTags)
+ranNumsD <- Cache(centralTendency, funnyData, cachePath = tmpDir, userTags = uniqueUserTags)
 showCache(tmpDir) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b
 
 # If it finds it by cacheID, doesn't matter what the userTags are
-ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = "thisIsUnique")
+ranNumsD <- Cache(centralTendency, funnyData, cachePath = tmpDir, userTags = "thisIsUnique")
 
 options(opt)
 
@@ -440,7 +443,7 @@ options(opt)
 #   options("reproducible.conn" = conn)
 #
 #   # Will use postgres for cache data table, and tempdir() for saved R objects
-#   Cache(rnorm, 1, cacheRepo = tempdir())
+#   Cache(rnorm, 1, cachePath = tempdir())
 # }
 
 # For more in depth uses, see vignette

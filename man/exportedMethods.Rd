@@ -72,9 +72,9 @@
   verbose = getOption("reproducible.verbose", 1)
 )
 
-.prepareOutput(object, cacheRepo, ...)
+.prepareOutput(object, cachePath, ...)
 
-\S4method{.prepareOutput}{ANY}(object, cacheRepo, ...)
+\S4method{.prepareOutput}{ANY}(object, cachePath, ...)
 
 .addChangedAttr(object, preDigest, origArguments, ...)
 
@@ -126,7 +126,7 @@ return. This is only relevant for list, environment (or similar) objects}
 
 \item{create}{Logical. If TRUE, then it will create the path for cache.}
 
-\item{cacheRepo}{A repository used for storing cached objects.
+\item{cachePath}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{...}{Anything passed to methods.}

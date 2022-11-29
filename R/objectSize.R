@@ -67,7 +67,6 @@ objSize <- function(x, quick = FALSE, ...) {
 objSize.default <- function(x, quick = FALSE, ...) {
   FNs <- Filenames(x)
   if (!is.null(FNs)) {
-    browser()
     FNs <- asPath(FNs)
     out2 <- objSize(FNs, quick = FALSE)
   }
@@ -78,6 +77,7 @@ objSize.default <- function(x, quick = FALSE, ...) {
   out <- obj_size(x)
   if (exists("out2", inherits = FALSE)) {
     out <- sum(out, out2)
+    class(out) <- "lobstr_bytes"
   }
 
   if (!quick)
@@ -109,6 +109,8 @@ objSize.Path <- function(x, quick = FALSE, ...) {
   if (!quick) {
     attr(os, "objSize") <- os
   }
+  class(os) <- "lobstr_bytes"
+
   os
 }
 

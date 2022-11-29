@@ -166,12 +166,12 @@ utils::globalVariables(c(
 #' normal if the Cache call is the first time for a function OR if it
 #' successfully finds a copy in the cache based on the normal Cache mechanism.
 #' It *differs* from the normal Cache if the Cache call does *not* find a copy
-#' in the `cacheRepo`, but it does find an entry that matches based on
-#' `userTags`. In this case, it will delete the old entry in the `cacheRepo`
+#' in the `cachePath`, but it does find an entry that matches based on
+#' `userTags`. In this case, it will delete the old entry in the `cachePath`
 #' (identified based on matching `userTags`), then continue with normal `Cache`.
 #' For this to work correctly, `userTags` must be unique for each function call.
 #' This should be used with caution as it is still experimental. Currently, if
-#' `userTags` are not unique to a single entry in the cacheRepo, it will
+#' `userTags` are not unique to a single entry in the cachePath, it will
 #' default to the behaviour of `useCache = TRUE` with a message. This means
 #' that `"devMode"` is most useful if used from the start of a project.
 #'
@@ -213,7 +213,7 @@ utils::globalVariables(c(
 #' If there are missing or incorrect files, then the function will re-run.
 #' This will accommodate the situation where the function call is identical, but somehow the side
 #' effect files were modified.
-#' If `sideEffect` is logical, then the function will check the `cacheRepo`;
+#' If `sideEffect` is logical, then the function will check the `cachePath`;
 #' if it is a path, then it will check the path.
 #' The function will assess whether the files to be downloaded are found locally prior to download.
 #' If it fails the local test, then it will try to recover from a local copy if (`makeCopy`
@@ -249,9 +249,10 @@ utils::globalVariables(c(
 #' @param outputObjects Optional character vector indicating which objects to
 #'                      return. This is only relevant for list, environment (or similar) objects
 #'
-#' @param cacheRepo A repository used for storing cached objects.
-#'                  This is optional if `Cache` is used inside a SpaDES module.
+#' @param cacheRepo Same as `cachePath`, but kept for backwards compatibility.
 #'
+#' @param cachePath A repository used for storing cached objects.
+#'                  This is optional if `Cache` is used inside a SpaDES module.
 #' @param length Numeric. If the element passed to Cache is a `Path` class
 #'        object (from e.g., `asPath(filename)`) or it is a `Raster` with
 #'        file-backing, then this will be
@@ -284,7 +285,7 @@ utils::globalVariables(c(
 #'        *NOTE: this argument is experimental and may change in future releases.*
 #'
 #' @param makeCopy Logical. If `sideEffect = TRUE`, and `makeCopy = TRUE`,
-#'        a copy of the downloaded files will be made and stored in the `cacheRepo`
+#'        a copy of the downloaded files will be made and stored in the `cachePath`
 #'        to speed up subsequent file recovery in the case where the original copy
 #'        of the downloaded files are corrupted or missing. Currently only works when
 #'        set to `TRUE` during the first run of `Cache`. Default is `FALSE`.
@@ -307,7 +308,7 @@ utils::globalVariables(c(
 #'        option, e.g., `options('reproducible.verbose' = 0) to reduce to minimal`
 #'
 #' @param cacheId Character string. If passed, this will override the calculated hash
-#'        of the inputs, and return the result from this cacheId in the cacheRepo.
+#'        of the inputs, and return the result from this cacheId in the `cachePath`.
 #'        Setting this is equivalent to manually saving the output of this function, i.e.,
 #'        the object will be on disk, and will be recovered in subsequent
 #'        This may help in some particularly finicky situations
@@ -320,15 +321,15 @@ utils::globalVariables(c(
 #'
 #' @param cloudFolderID A googledrive dribble of a folder, e.g., using `drive_mkdir()`.
 #'   If left as `NULL`, the function will create a cloud folder with name from last
-#'   two folder levels of the `cacheRepo` path, :
-#'   `paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))`.
+#'   two folder levels of the `cachePath` path, :
+#'   `paste0(basename(dirname(cachePath)), "_", basename(cachePath))`.
 #'   This `cloudFolderID` will be added to `options("reproducible.cloudFolderID")`,
 #'   but this will not persist across sessions. If this is a character string, it will
 #'   treat this as a folder name to create or use on GoogleDrive.
 #'
 #' @param showSimilar A logical or numeric. Useful for debugging.
 #'        If `TRUE` or `1`, then if the Cache
-#'        does not find an identical archive in the cacheRepo, it will report (via message)
+#'        does not find an identical archive in the `cachePath`, it will report (via message)
 #'        the next most similar archive, and indicate which argument(s) is/are different.
 #'        If a number larger than `1`, then it will report the N most similar archived
 #'        objects.
@@ -379,6 +380,7 @@ Cache <-
            .objects = NULL, .cacheExtra = NULL,
            outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL,
+           cachePath = NULL,
            length = getOption("reproducible.length", Inf),
            compareRasterFileLength, userTags = c(),
            digestPathContent, omitArgs = NULL,
@@ -393,6 +395,10 @@ Cache <-
            drv = getOption("reproducible.drv"),
            conn = getOption("reproducible.conn", NULL)) {
 
+    if (is.null(cachePath)) {
+      if (!is.null(cacheRepo))
+        cachePath <- cacheRepo
+    }
     # Capture everything -- so not evaluated
     FUNcaptured <- substitute(FUN)
     origFUN <- quote(FUN)
@@ -465,13 +471,13 @@ Cache <-
         }, add = TRUE)
       }
 
-      # get cacheRepo if not supplied
-      cacheRepos <- getCacheRepos(cacheRepo, modifiedDots, verbose = verbose)
-      cacheRepo <- cacheRepos[[1]]
+      # get cachePath if not supplied
+      cachePaths <- getCacheRepos(cachePath, modifiedDots, verbose = verbose)
+      cachePath <- cachePaths[[1]]
 
       if (useDBI()) {
         if (is.null(conn)) {
-          conn <- dbConnectAll(drv, cachePath = cacheRepo)
+          conn <- dbConnectAll(drv, cachePath = cachePath)
           RSQLite::dbClearResult(RSQLite::dbSendQuery(conn, "PRAGMA busy_timeout=5000;"))
           RSQLite::dbClearResult(RSQLite::dbSendQuery(conn, "PRAGMA journal_mode=WAL;"))
           on.exit({dbDisconnect(conn)}, add = TRUE)
@@ -498,7 +504,7 @@ Cache <-
       # userTags added based on object class
       userTags <- c(userTags, unlist(lapply(modifiedDots, .tagsByClass)))
 
-      if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
+      if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cachePath
 
       # browser(expr = exists("._Cache_17"))
       conns <- list()
@@ -506,21 +512,21 @@ Cache <-
         if (!identical(co, conns[[1]])) {
           try(dbDisconnect(co), silent = TRUE)
         }})}, add = TRUE)
-      isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
+      isIntactRepo <- unlist(lapply(cachePaths, function(cachePath) {
         # browser(expr = exists("._Cache_18"))
-        conns[[cacheRepo]] <<- if (cacheRepo == cacheRepos[[1]]) {
+        conns[[cachePath]] <<- if (cachePath == cachePaths[[1]]) {
           conn
         } else {
-          dbConnectAll(drv, cachePath = cacheRepo)
+          dbConnectAll(drv, cachePath = cachePath)
         }
-        CacheIsACache(cachePath = cacheRepo, drv = drv, create = TRUE,
-                      conn = conns[[cacheRepo]])
+        CacheIsACache(cachePath = cachePath, drv = drv, create = TRUE,
+                      conn = conns[[cachePath]])
       }))
 
       if (any(!isIntactRepo)) {
         if (useDBI())
-          ret <- lapply(seq(cacheRepos)[!isIntactRepo], function(cacheRepoInd) {
-            createCache(cacheRepos[[cacheRepoInd]], drv = drv, conn = conn,
+          ret <- lapply(seq(cachePaths)[!isIntactRepo], function(cacheRepoInd) {
+            createCache(cachePaths[[cacheRepoInd]], drv = drv, conn = conn,
                         force = isIntactRepo[cacheRepoInd])
           })
       }
@@ -613,7 +619,7 @@ Cache <-
         #cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)
         # browser(expr = exists("._Cache_2"))
         if (is.null(cloudFolderID))
-          cloudFolderID <- cloudFolderFromCacheRepo(cacheRepo)
+          cloudFolderID <- cloudFolderFromCacheRepo(cachePath)
         if (is.character(cloudFolderID)) {
           cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, create = TRUE,
                                                      overwrite = FALSE)
@@ -624,13 +630,13 @@ Cache <-
 
       # Check if it is in repository
       needDisconnect <- FALSE
-      while (tries <= length(cacheRepos)) {
-        repo <- cacheRepos[[tries]]
+      while (tries <= length(cachePaths)) {
+        repo <- cachePaths[[tries]]
         if (useDBI()) {
           if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
-            csf <- CacheStoredFile(cachePath = cacheRepo, cacheId = outputHash)
+            csf <- CacheStoredFile(cachePath = cachePath, cacheId = outputHash)
             if (file.exists(csf)) {
-              dtFile <- CacheDBFileSingle(cachePath = cacheRepo, cacheId = outputHash)
+              dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = outputHash)
               isInRepo <- loadFile(dtFile)
             } else {
               isInRepo <- data.table::copy(.emptyCacheTable)
@@ -656,7 +662,7 @@ Cache <-
         if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
         if (NROW(isInRepo) > 0) {
           # browser(expr = exists("._Cache_4"))
-          cacheRepo <- repo
+          cachePath <- repo
           break
         }
         tries <- tries + 1
@@ -686,11 +692,11 @@ Cache <-
       isInCloud <- FALSE
       if (useCloud && identical("overwrite", useCache)) {
         # browser(expr = exists("._Cache_16"))
-        isInCloud <- isTRUE(any(gdriveLs$name %in% basename2(CacheStoredFile(cacheRepo, outputHash))))
+        isInCloud <- isTRUE(any(gdriveLs$name %in% basename2(CacheStoredFile(cachePath, outputHash))))
       }
 
       if (identical("overwrite", useCache)  && (NROW(isInRepo) > 0 || isInCloud) || needFindByTags) {
-        suppressMessages(clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE,
+        suppressMessages(clearCache(x = cachePath, userTags = outputHash, ask = FALSE,
                                     useCloud = ifelse(isTRUEorForce(useCloud), "force", FALSE),
                                     drv = drv, conn = conn,
                                     cloudFolderID = cloudFolderID))
@@ -704,7 +710,7 @@ Cache <-
           # remove entries from the 2 data.frames of isInRep & gdriveLs
           if (useDBI()) {
             if (useCloud)
-              gdriveLs <- gdriveLs[!gdriveLs$name %in% basename2(CacheStoredFile(cacheRepo, outputHash)),]
+              gdriveLs <- gdriveLs[!gdriveLs$name %in% basename2(CacheStoredFile(cachePath, outputHash)),]
             isInRepo <- isInRepo[isInRepo[[.cacheTableHashColName()]] != outputHash, , drop = FALSE]
           } else {
             isInRepo <- isInRepo[isInRepo[[.cacheTableTagColName()]] != paste0("cacheId:", outputHash), , drop = FALSE]
@@ -725,12 +731,12 @@ Cache <-
             as.numeric(tail(fullCacheTableForObj[["tagValue"]][
               fullCacheTableForObj$tagKey == "file.size"], 1))
           } else {
-            file.size(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
+            file.size(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]]))
           }
           class(objSize) <- "object_size"
           bigFile <- isTRUE(objSize > 1e6)
           messageCache("  ...(Object to retrieve (",
-                       basename2(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]])),
+                       basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]])),
                        ")",
                        if (bigFile) " is large: ",
                        if (bigFile) format(objSize, units = "auto"),
@@ -739,7 +745,7 @@ Cache <-
 
           preLoadTime <- Sys.time()
           output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
-                                     lastOne = lastOne, cacheRepo = cacheRepo,
+                                     lastOne = lastOne, cachePath = cachePath,
                                      fnDetails = fnDetails,
                                      modifiedDots = modifiedDots, debugCache = debugCache,
                                      verbose = verbose, sideEffect = sideEffect,
@@ -747,8 +753,6 @@ Cache <-
                                      preDigest = preDigest, startCacheTime = startCacheTime,
                                      drv = drv, conn = conn,
                                      ...), silent = TRUE)
-          #output <- dealWithClassOnRecovery(output, cacheRepo = cacheRepo, cacheId = isInRepo$cacheId,
-          #                                  drv = drv, conn = conn) # returns just the "original" filenames in metadata & copies file-backed
           postLoadTime <- Sys.time()
           elapsedTimeLoad <- postLoadTime - preLoadTime
 
@@ -764,16 +768,16 @@ Cache <-
           }
 
           if (useDBI())
-            .updateTagsRepo(outputHash, cacheRepo, "elapsedTimeLoad",
+            .updateTagsRepo(outputHash, cachePath, "elapsedTimeLoad",
                             format(elapsedTimeLoad, units = "secs"),
                             add = TRUE,
                             drv = drv, conn = conn)
           if (useCloud) {
             # browser(expr = exists("._Cache_7b"))
             # Here, upload local copy to cloud folder
-            cu <- try(retry(quote(isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo,
+            cu <- try(retry(quote(isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cachePath,
                                                            cloudFolderID, output))))
-            .updateTagsRepo(outputHash, cacheRepo, "inCloud", "TRUE", drv = drv, conn = conn)
+            .updateTagsRepo(outputHash, cachePath, "inCloud", "TRUE", drv = drv, conn = conn)
           }
 
           return(output)
@@ -799,12 +803,12 @@ Cache <-
       if (useCloud) {
         # browser(expr = exists("._Cache_9"))
         # Here, download cloud copy to local folder, skip the running of FUN
-        newFileName <- CacheStoredFile(cacheRepo, outputHash) # paste0(outputHash,".rda")
+        newFileName <- CacheStoredFile(cachePath, outputHash) # paste0(outputHash,".rda")
         isInCloud <- gsub(gdriveLs$name,
-                          pattern = paste0("\\.", fileExt(CacheStoredFile(cacheRepo, outputHash))),
+                          pattern = paste0("\\.", fileExt(CacheStoredFile(cachePath, outputHash))),
                           replacement = "") %in% outputHash
         if (any(isInCloud)) {
-          output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
+          output <- cloudDownload(outputHash, newFileName, gdriveLs, cachePath, cloudFolderID,
                                   drv = drv)
           if (is.null(output)) {
             retry(quote(googledrive::drive_rm(gdriveLs[isInCloud,])))
@@ -870,7 +874,7 @@ Cache <-
         # flush it if notOlderThan is violated
         if (notOlderThan >= lastEntry) {
           suppressMessages(clearCache(userTags = isInRepo[[.cacheTableHashColName()]][lastOne],
-                                      x = cacheRepo,
+                                      x = cachePath,
                                       ask = FALSE, useCloud = useCloud, drv = drv, conn = conn,
                                       cloudFolderID = cloudFolderID))
         }
@@ -895,7 +899,7 @@ Cache <-
 
       # browser(expr = exists("._Cache_11"))
       if (sideEffect != FALSE) {
-        output <- .CacheSideEffectFn2(sideEffect, cacheRepo, priorRepo, algo, output,
+        output <- .CacheSideEffectFn2(sideEffect, cachePath, priorRepo, algo, output,
                                       makeCopy, quick)
       }
 
@@ -907,7 +911,7 @@ Cache <-
       # Can make new methods by class to add tags to outputs
       if (useDBI()) {
         if (.CacheIsNew) {
-          outputToSave <- dealWithClass(output, cacheRepo, drv = drv, conn = conn)
+          outputToSave <- dealWithClass(output, cachePath, drv = drv, conn = conn)
           outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
         } else {
           outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
@@ -931,9 +935,9 @@ Cache <-
         if (any(rasters)) {
           if (outputToSaveIsList) {
             outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
-              .prepareFileBackedRaster(x, repoDir = cacheRepo, overwrite = FALSE, drv = drv, conn = conn))
+              .prepareFileBackedRaster(x, repoDir = cachePath, overwrite = FALSE, drv = drv, conn = conn))
           } else {
-            outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheRepo,
+            outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cachePath,
                                                      overwrite = FALSE, drv = drv, conn = conn)
           }
 
@@ -1036,10 +1040,10 @@ Cache <-
           #saved <-
           future::futureCall(
             FUN = writeFuture,
-            args = list(written, outputToSave, cacheRepo, userTags, drv, conn, cacheId, linkToCacheId),
+            args = list(written, outputToSave, cachePath, userTags, drv, conn, cacheId, linkToCacheId),
             globals = list(written = written,
                            outputToSave = outputToSave,
-                           cacheRepo = cacheRepo,
+                           cachePath = cachePath,
                            userTags = userTags,
                            drv = drv,
                            conn = conn,
@@ -1062,7 +1066,7 @@ Cache <-
         if (useDBI()) {
           # browser(expr = exists("._Cache_13"))
           outputToSave <- progressBarCode(
-            saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
+            saveToCache(cachePath = cachePath, drv = drv, userTags = userTags,
                         conn = conn, obj = outputToSave, cacheId = outputHash,
                         linkToCacheId = linkToCacheId),
             doProgress = isBig,
@@ -1071,19 +1075,16 @@ Cache <-
             verboseLevel = 2 - isBig, verbose = verbose,
             colour = getOption("reproducible.messageColourCache"))
 
-          #  outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
-          #                              conn = conn, obj = outputToSave, cacheId = outputHash,
-          #                              linkToCacheId = linkToCacheId)
         }
       }
 
       if (useCloud && .CacheIsNew) {
         # Here, upload local copy to cloud folder if it isn't already there
         # browser(expr = exists("._Cache_15"))
-        cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
+        cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cachePath, cloudFolderID, ## TODO: saved not found
                                          outputToSave, rasters))
         if (is(cufc, "try-error"))
-          .updateTagsRepo(outputHash, cacheRepo, "inCloud", "FALSE", drv = drv, conn = conn)
+          .updateTagsRepo(outputHash, cachePath, "inCloud", "FALSE", drv = drv, conn = conn)
       }
 
       verboseDF2(verbose, fnDetails$functionName, startSaveTime)
@@ -1144,28 +1145,28 @@ Cache <-
 #' @param written Integer. If zero or positive then it needs to be written still.
 #'                Should be 0 to start.
 #' @param outputToSave The R object to save to repository
-#' @param cacheRepo The file path of the repository
+#' @param cachePath The file path of the repository
 #' @param userTags Character string of tags to attach to this `outputToSave` in
 #'                 the `CacheRepo`
 #'
 #' @export
 #' @inheritParams Cache
 #' @inheritParams saveToCache
-writeFuture <- function(written, outputToSave, cacheRepo, userTags,
+writeFuture <- function(written, outputToSave, cachePath, userTags,
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL),
                         cacheId, linkToCacheId = NULL) {
   counter <- 0
   # browser(expr = exists("._writeFuture_1"))
-  if (!CacheIsACache(cachePath = cacheRepo, drv = drv, conn = conn)) {
-    stop("That cacheRepo does not exist")
+  if (!CacheIsACache(cachePath = cachePath, drv = drv, conn = conn)) {
+    stop("That cachePath does not exist")
   }
 
   if (useDBI()) {
     if (missing(cacheId)) {
       cacheId <- .robustDigest(outputToSave)
     }
-    output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
+    output <- saveToCache(cachePath = cachePath, drv = drv, userTags = userTags,
                           conn = conn, obj = outputToSave, cacheId = cacheId,
                           linkToCacheId = linkToCacheId)
     saved <- cacheId
@@ -1541,14 +1542,14 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", q
 
   } else {
     if (!identical("devMode", useCache))
-      messageCache("There is no similar item in the cacheRepo", verbose = verbose)
+      messageCache("There is no similar item in the cachePath", verbose = verbose)
   }
 }
 
 
 #' @keywords internal
 .defaultCacheOmitArgs <- c("useCloud", "checksumsFileID", "cloudFolderID",
-                           "notOlderThan", ".objects", "outputObjects", "algo", "cacheRepo",
+                           "notOlderThan", ".objects", "outputObjects", "algo", "cachePath",
                            "length", "compareRasterFileLength", "userTags", "digestPathContent",
                            "omitArgs", "classOptions", "debugCache", "sideEffect", "makeCopy",
                            "quick", "verbose", "cacheId", "useCache", "showSimilar", "cl")
@@ -1709,15 +1710,15 @@ determineNestedTags <- function(envir, mc, userTags) {
               objOverride = objOverride))
 }
 
-getCacheRepos <- function(cacheRepo, modifiedDots, verbose = getOption("reproducible.verbose", 1)) {
-  if (is.null(cacheRepo)) {
-    cacheRepos <- .checkCacheRepo(modifiedDots, create = TRUE, verbose = verbose)
+getCacheRepos <- function(cachePath, modifiedDots, verbose = getOption("reproducible.verbose", 1)) {
+  if (is.null(cachePath)) {
+    cachePaths <- .checkCacheRepo(modifiedDots, create = TRUE, verbose = verbose)
   } else {
-    cacheRepos <- lapply(cacheRepo, function(repo) {
+    cachePaths <- lapply(cachePath, function(repo) {
       repo <- checkPath(repo, create = TRUE)
     })
   }
-  return(cacheRepos)
+  return(cachePaths)
 }
 
 devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose,
@@ -1779,8 +1780,8 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
   return(list(isInRepo = isInRepo, outputHash = outputHash, needFindByTags = needFindByTags))
 }
 
-cloudFolderFromCacheRepo <- function(cacheRepo)
-  paste0(basename2(dirname(cacheRepo)), "_", basename2(cacheRepo))
+cloudFolderFromCacheRepo <- function(cachePath)
+  paste0(basename2(dirname(cachePath)), "_", basename2(cachePath))
 
 .defaultUserTags <- c("function", "class", "object.size", "accessed", "inCloud",
                       "otherFunctions", "preDigest", "file.size", "cacheId",
@@ -1792,17 +1793,17 @@ cloudFolderFromCacheRepo <- function(cacheRepo)
                                 "FUN", "capture", "withVisible)")
 
 
-dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
+dealWithClassOnRecovery <- function(output, cachePath, cacheId,
                                     drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                     conn = getOption("reproducible.conn", NULL)) {
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-    return(dealWithClassOnRecovery2(output, cacheRepo, cacheId,
+    return(dealWithClassOnRecovery2(output, cachePath, cacheId,
                                     drv, conn))
   }
 
   if (is(output, "list")) {
     if (!"cacheRaster" %in% names(output)) { # recursive up until a list has cacheRaster name
-      output <- lapply(output, function(out) dealWithClassOnRecovery(out, cacheRepo, cacheId,
+      output <- lapply(output, function(out) dealWithClassOnRecovery(out, cachePath, cacheId,
                                                                    drv, conn))
     } else {
       origFilenames <- if (is(output, "Raster")) {
@@ -1816,7 +1817,7 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
       filesExistInCache <- file.exists(cacheFilenames)
       if (any(!filesExistInCache)) {
         fileTails <- gsub("^.+(rasters.+)$", "\\1", cacheFilenames)
-        correctFilenames <- file.path(cacheRepo, fileTails)
+        correctFilenames <- file.path(cachePath, fileTails)
         filesExistInCache <- file.exists(correctFilenames)
         if (all(filesExistInCache)) {
           cacheFilenames <- correctFilenames
@@ -1855,11 +1856,11 @@ dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
 }
 
 # This one is old, overly complicated; defunct
-dealWithClassOnRecovery2 <- function(output, cacheRepo, cacheId,
+dealWithClassOnRecovery2 <- function(output, cachePath, cacheId,
                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                      conn = getOption("reproducible.conn", NULL)) {
   # This function is because the user doesn't want the path of the file-backed raster to
-  #   be in the cacheRepo --> they want it in its original file location
+  #   be in the cachePath --> they want it in its original file location
   #   If it is in both, take the one in the original location; if it has been deleted
   #   from the original location, then grab it from cache and put it in original place
   if (is(output, "list")) {
@@ -1884,13 +1885,13 @@ dealWithClassOnRecovery2 <- function(output, cacheRepo, cacheId,
       }
       dirnamesRasters <- unique(dirname(dirname(cacheFilenamesNeed)))
       if (length(dirnamesRasters))
-        if (!isTRUE(all.equal(dirnamesRasters, cacheRepo))) { # if this is a moved cache, the filenames in the cache will be wrong
-          cacheFilenamesNeed2 <- gsub(dirnamesRasters, cacheRepo, cacheFilenamesNeed)
+        if (!isTRUE(all.equal(dirnamesRasters, cachePath))) { # if this is a moved cache, the filenames in the cache will be wrong
+          cacheFilenamesNeed2 <- gsub(dirnamesRasters, cachePath, cacheFilenamesNeed)
           wrongFilenames <- file.exists(cacheFilenamesNeed2)
           if (any(wrongFilenames)) {
             output$cacheRaster <- updateFilenameSlots(output$cacheRaster, cacheFilenamesNeed[wrongFilenames],
                                                       newFilenames = cacheFilenamesNeed2[wrongFilenames])
-            fs <- saveFileInCacheFolder(output, cachePath = cacheRepo, cacheId = cacheId)
+            fs <- saveFileInCacheFolder(output, cachePath = cachePath, cacheId = cacheId)
             cacheFilenamesNeed[wrongFilenames] <- cacheFilenamesNeed2[wrongFilenames]
           }
 

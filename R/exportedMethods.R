@@ -174,21 +174,21 @@ setMethod(
   ".checkCacheRepo",
   signature = "ANY",
   definition = function(object, create, verbose = getOption("reproducible.verbose", 1)) {
-    cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
-      cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")[1]))) {
+    cachePath <- tryCatch(checkPath(object, create), error = function(x) {
+      cachePath <- if (isTRUE(nzchar(getOption("reproducible.cachePath")[1]))) {
         tmpDir <- .reproducibleTempCacheDir()
         # Test whether the user has accepted the default. If yes, then give message.
         #  If no, then user is aware and doesn't need a message
         if (any(identical(normPath(tmpDir), normPath(getOption("reproducible.cachePath"))))) {
-          messageCache("No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;\n",
+          messageCache("No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;\n",
                        "  this will not persist across R sessions.", verbose = verbose)
         }
         getOption("reproducible.cachePath", tmpDir)
       } else {
-        messageCache("No cacheRepo supplied. Using ",.reproducibleTempCacheDir(), verbose = verbose)
+        messageCache("No cachePath supplied. Using ",.reproducibleTempCacheDir(), verbose = verbose)
         .reproducibleTempCacheDir()
       }
-      checkPath(path = cacheRepo, create = create)
+      checkPath(path = cachePath, create = create)
     })
   })
 
@@ -225,7 +225,7 @@ setMethod(
 #'
 #' # copy it to the cache repository
 #' r <- .prepareOutput(r, tempdir())
-setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
+setGeneric(".prepareOutput", function(object, cachePath, ...) {
   standardGeneric(".prepareOutput")
 })
 
@@ -235,7 +235,7 @@ setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
 setMethod(
   ".prepareOutput",
   signature = "ANY",
-  definition = function(object, cacheRepo, ...) {
+  definition = function(object, cachePath, ...) {
     if (is.character(object)) {
       if (length(object) == 1) {
         # need something to attach tags to if it is actually NULL

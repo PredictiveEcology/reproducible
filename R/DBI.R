@@ -22,7 +22,7 @@
 #' newCache <- tempdir2("cacheHelperExamples")
 #' createCache(newCache)
 #'
-#' out <- Cache(rnorm(1), cacheRepo = newCache)
+#' out <- Cache(rnorm(1), cachePath = newCache)
 #' cacheId <- gsub("cacheId:", "", attr(out, "tags"))
 #' loadFromCache(newCache, cacheId = cacheId)
 #'
@@ -211,7 +211,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     }
     obj <- loadFile(f, format = format)
   }
-  obj <- dealWithClassOnRecovery(obj, cacheRepo = cachePath,
+  obj <- dealWithClassOnRecovery(obj, cachePath = cachePath,
                                  cacheId = cacheId,
                                  drv = drv, conn = conn)
 
@@ -418,7 +418,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 #' CacheDBFile(newCache)
 #' CacheStorageDir(newCache)
 #'
-#' out <- Cache(rnorm(1), cacheRepo = newCache)
+#' out <- Cache(rnorm(1), cachePath = newCache)
 #' cacheId <- gsub("cacheId:", "", attr(out, "tags"))
 #' CacheStoredFile(newCache, cacheId = cacheId)
 #'
@@ -557,7 +557,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
       tableShouldBe <- CacheDBTableName(cachePath)
       if (length(tablesInDB) == 1) {
         if (!any(tablesInDB %in% tableShouldBe) && grepl(type, "SQLite")) {
-          warning(paste0("The table in the Cache repo does not match the cacheRepo. ",
+          warning(paste0("The table in the Cache repo does not match the cachePath. ",
                      "If this is because of a moved repository (i.e., files ",
                      "copied), then it is being updated automatically. ",
                      "If not, cache is in an error state. ",
@@ -599,7 +599,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 #' @details
 #' When the backend database for a `reproducinle` cache is an SQL database, the files
 #' on disk cannot be copied manually to a new location because they contain internal
-#' tables. Because `reproducible` gives the main table a name based on the `cacheRepo`
+#' tables. Because `reproducible` gives the main table a name based on the `cachePath`
 #' path, calls to `Cache` will attempt to call this internally if it detects a
 #' name mismatch.
 #' @return
@@ -609,7 +609,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 #' tmpCache <- "tmpCache"
 #' tmpCacheDir <- normalizePath(file.path(tempdir(), tmpCache), mustWork = FALSE)
 #' tmpdirPath <- normalizePath(file.path(tempdir(), tmpdir), mustWork = FALSE)
-#' bb <- Cache(rnorm, 1, cacheRepo = tmpCacheDir)
+#' bb <- Cache(rnorm, 1, cachePath = tmpCacheDir)
 #'
 #' # Copy all files from tmpCache to tmpdir
 #' froms <- normalizePath(dir(tmpCacheDir, recursive = TRUE, full.names = TRUE),
@@ -622,7 +622,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 #' # Can use 'movedCache' to update the database table, though will generally
 #' #   happen automatically, with message indicating so
 #' movedCache(new = tmpdirPath, old = tmpCacheDir)
-#' bb <- Cache(rnorm, 1, cacheRepo = tmpdirPath) # should recover the previous call
+#' bb <- Cache(rnorm, 1, cachePath = tmpdirPath) # should recover the previous call
 #'
 movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                        conn = getOption("reproducible.conn", NULL)) {
