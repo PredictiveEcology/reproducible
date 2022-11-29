@@ -12,13 +12,13 @@ This package aims at making
 high-level, robust, machine and OS independent tools for making deeply
 reproducible and reusable content in R. The core user functions are \code{Cache}
 and \code{prepInputs}. Each of these is built around many core and edge cases
-required to have deeply reproducible code.
+required to have reproducible code of arbitrary complexity.
 }
 \section{Main Tools}{
 
 
 There are many elements within the reproducible package.
-However, there are currently three main ones that are critical for reproducible research.
+However, there are currently two main ones that are critical for reproducible research.
 The key element for reproducible research is that the code must always return the same content
 every time it is run, but it must be vastly faster the 2nd, 3rd, 4th etc, time it is run.
 That way, the entire code sequence for a project of arbitrary size can be run

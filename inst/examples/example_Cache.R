@@ -5,9 +5,13 @@ Cache(rnorm, 10, 16, cachePath = tmpDir) # recovers cached copy
 Cache(quote(rnorm(n = 10, 16)), cachePath = tmpDir) # recovers cached copy
 # as function call
 Cache(rnorm(10, 16), cachePath = tmpDir)
-# with base pipe
-rnorm(10, 16) |>
-  Cache(cachePath = tmpDir)
+# with base pipe -- this is put in "" because R version 4.0 can't understand this
+#  if you are using R >= 4.1, then you can just use pipe normally
+pipeWay <- "rnorm(10, 16) |>
+  Cache(cachePath = tmpDir)"
+if (getRversion() >= 4.1) {
+  eval(parse(text = pipeWay))
+}
 
 ###############################################
 # devMode -- enables cache database to stay
