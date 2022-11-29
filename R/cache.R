@@ -484,12 +484,6 @@ Cache <-
         }
       }
 
-      # if (fnDetails$isPipe) {
-      #   pipeRes <- .CachePipeFn1(modifiedDots, fnDetails, FUN)
-      #   modifiedDots <- pipeRes$modifiedDots
-      #   fnDetails <- pipeRes$fnDetails
-      # }
-
       modifiedDots$.FUN <- fnDetails$.FUN # put in modifiedDots for digesting  # nolint
 
       # This is for Pipe operator -- needs special consideration
@@ -546,17 +540,15 @@ Cache <-
         modifiedDots[omitArgs] <- NULL
       }
 
-      # don't digest the dotPipe elements as they are already
-      # extracted individually into modifiedDots list elements
-      dotPipe <- startsWith(names(modifiedDots), "._")
-      preDigestByClass <- lapply(seq_along(modifiedDots[!dotPipe]), function(x) {
-        .preDigestByClass(modifiedDots[!dotPipe][[x]])
+      preDigestByClass <- lapply(seq_along(modifiedDots),
+                                 function(x) {
+        .preDigestByClass(modifiedDots[[x]])
       })
 
       startHashTime <- verboseTime(verbose)
 
       # remove some of the arguments passed to Cache, which are irrelevant for digest
-      argsToOmitForDigest <- dotPipe | (names(modifiedDots) %in% .defaultCacheOmitArgs)
+      argsToOmitForDigest <- names(modifiedDots) %in% .defaultCacheOmitArgs
 
       preCacheDigestTime <- Sys.time()
       toDigest <- modifiedDots[!argsToOmitForDigest]
@@ -579,7 +571,7 @@ Cache <-
 
       if (verbose > 3) {
         a <- .CacheVerboseFn1(preDigest, fnDetails,
-                              startHashTime, modifiedDots, dotPipe, quick = quick,
+                              startHashTime, modifiedDots, quick = quick,
                               verbose = verbose)
         on.exit({
           assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
@@ -831,7 +823,7 @@ Cache <-
         elapsedTimeFUN <- postRunFUNTime - preRunFUNTime
       }
 
-      output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots[!dotPipe],
+      output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots,
                                 .objects = outputObjects, length = length,
                                 algo = algo, quick = quick, classOptions = classOptions, ...)
       verboseDF1(verbose, fnDetails$functionName, startRunTime)

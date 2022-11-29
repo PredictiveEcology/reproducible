@@ -1,5 +1,5 @@
 .CacheVerboseFn1 <- function(preDigest, fnDetails,
-                             startHashTime, modifiedDots, dotPipe, quick,
+                             startHashTime, modifiedDots, quick,
                              verbose = getOption("reproducible.verbose", 1)) {
   preDigestUnlist <- .unlistToCharacter(preDigest, 4)
   endHashTime <- Sys.time()
@@ -11,7 +11,7 @@
     stringsAsFactors = FALSE
   )
 
-  hashObjectSize <- unlist(lapply(modifiedDots[!dotPipe], function(x) {
+  hashObjectSize <- unlist(lapply(modifiedDots, function(x) {
     objSize <- objSize(x, quick = quick)
   }))
 
