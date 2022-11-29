@@ -17,7 +17,6 @@ Cache(
   length = getOption("reproducible.length", Inf),
   compareRasterFileLength,
   userTags = c(),
-  digestPathContent,
   omitArgs = NULL,
   classOptions = list(),
   debugCache = character(),
@@ -78,8 +77,6 @@ Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.}
 \item{userTags}{A character vector with descriptions of the Cache function call. These
 will be added to the Cache so that this entry in the Cache can be found using
 \code{userTags} e.g., via \code{\link[=showCache]{showCache()}}.}
-
-\item{digestPathContent}{Being deprecated. Use \code{quick}.}
 
 \item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
 
@@ -406,17 +403,41 @@ Currently, local recovery will only work if\code{makeCOpy} was set to \code{TRUE
 tmpDir <- file.path(tempdir())
 
 # Basic use -- All same
-Cache(rnorm, 10, 16, cachePath = tmpDir) # recovers cached copy
+Cache(rnorm, 10, 16, cachePath = tmpDir) # creates cached copy
 Cache(quote(rnorm(n = 10, 16)), cachePath = tmpDir) # recovers cached copy
 # as function call
-Cache(rnorm(10, 16), cachePath = tmpDir)
+Cache(rnorm(10, 16), cachePath = tmpDir) # recovers cached copy
 # with base pipe -- this is put in "" because R version 4.0 can't understand this
 #  if you are using R >= 4.1, then you can just use pipe normally
-pipeWay <- "rnorm(10, 16) |>
-  Cache(cachePath = tmpDir)"
+usingPipe <- "
+  rnorm(10, 16) |>
+    Cache(cachePath = tmpDir)
+"
 if (getRversion() >= 4.1) {
-  eval(parse(text = pipeWay))
+  eval(parse(text = usingPipe)) # recovers cached copy
 }
+
+#########################
+# Advanced examples
+#########################
+
+# .cacheExtra -- add something to digest
+Cache(rnorm(1), .cacheExtra = "sfessee11") # adds something other than fn args
+Cache(rnorm(1), .cacheExtra = "nothing") # even though fn is same, the extra is different
+
+# omitArgs -- remove something from digest (kind of the opposite of .cacheExtra)
+Cache(rnorm(2, sd = 1), omitArgs = "sd") # removes one or more args from cache digest
+Cache(rnorm(2, sd = 2), omitArgs = "sd") # b/c sd is not used, this is same as previous
+
+# cacheId -- force the use of a digest -- can give undesired consequences
+Cache(rnorm(3), cacheId = "k323431232") # sets the cacheId for this call
+Cache(runif(14), cacheId = "k323431232") # recovers same as above, i.e, rnorm(3)
+
+# Turn off Caching session-side
+opts <- options(reproducible.useCache = FALSE)
+Cache(rnorm(3)) # sets the cacheId for this call
+Cache(rnorm(3)) # recovers same as above, i.e, rnorm(3)
+options(opts)
 
 ###############################################
 # devMode -- enables cache database to stay

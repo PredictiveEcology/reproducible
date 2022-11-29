@@ -237,7 +237,7 @@ basename2 <- function(x) {
 #' @param messageFn A function for messaging to console. Defaults to `message`
 #'
 #' @return
-#' As with `try`, so the successfully returned return from the `expr` or a `try-error`.
+#' As with `try`, so the successfully returned `return()` from the `expr` or a `try-error`.
 #'
 #' @export
 retry <- function(expr, envir = parent.frame(), retries = 5,

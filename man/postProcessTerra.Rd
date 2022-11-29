@@ -119,13 +119,16 @@ projected (via \code{\link[=projectTo]{projectTo()}}), masked (via \code{\link[=
 }
 \description{
 This function provides a single step to achieve the GIS operations "crop", "project",
-"mask" and possibly "write". It uses primarily the \code{terra} package internally
+"mask" and possibly "write". This is intended to completely replace \code{\link[=postProcess]{postProcess()}}
+(which primarily used GDAL, \code{Raster} and \code{sp}).
+It uses primarily the \code{terra} package internally
 (with some minor functions from \code{sf} and \code{raster})
 in an attempt to be as efficient as possible.
 For this function, Gridded means a \verb{Raster*} class object from \code{raster} or
 a \code{SpatRaster} class object from \code{terra}.
 Vector means a \verb{Spatial*} class object from \code{sp}, a \code{sf} class object
-from \code{sf}, or a \code{SpatVector} class object from \code{terra}.
+from \code{sf}, or a \code{SpatVector} class object from \code{terra}. This function is currently
+part of the internals for some cases encountered by \code{\link[=postProcess]{postProcess()}}.
 }
 \section{Use Cases}{
 
@@ -136,7 +139,7 @@ and \code{to}:
 \tabular{lll}{
 \code{from}\tab \code{to}\tab \code{from} will have:\cr
 \code{Gridded}\tab \code{Gridded} \tab the extent, projection, origin, resolution and
-masking where there are \code{NA} from the {to}\cr
+masking where there are \code{NA} from the \code{to}\cr
 \code{Gridded}\tab \code{Vector} \tab the projection, origin, and mask from \code{to}, and extent will
 be a round number of pixels that fit within the extent
 of \code{to}. Resolution will be the same as \code{from} \cr
@@ -180,7 +183,7 @@ a bunch of pixels that are not necessary. But, to not create bias, this first cr
 by  \code{2 * res(from)[1]}), so that edge cells still have a complete set of neighbours.
 The second crop is at the end, after projecting and masking. After the projection step,
 the crop is no longer tight. Under some conditions, masking will effectively mask and crop in
-on step, but under some conditions, this is not true, and the mask leaves padded NAs out to
+one step, but under some conditions, this is not true, and the mask leaves padded NAs out to
 the extent of the \code{from} (as it is after crop, project, mask). Thus the second
 crop removes all NA cells so they are tight to the mask.
 }

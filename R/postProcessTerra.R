@@ -1,13 +1,16 @@
 #' Transform a GIS dataset so it has the properties (extent, projection, mask) of another
 #'
 #' This function provides a single step to achieve the GIS operations "crop", "project",
-#' "mask" and possibly "write". It uses primarily the `terra` package internally
+#' "mask" and possibly "write". This is intended to completely replace [postProcess()]
+#' (which primarily used GDAL, `Raster` and `sp`).
+#' It uses primarily the `terra` package internally
 #' (with some minor functions from `sf` and `raster`)
 #' in an attempt to be as efficient as possible.
 #' For this function, Gridded means a `Raster*` class object from `raster` or
 #' a `SpatRaster` class object from `terra`.
 #' Vector means a `Spatial*` class object from `sp`, a `sf` class object
-#' from `sf`, or a `SpatVector` class object from `terra`.
+#' from `sf`, or a `SpatVector` class object from `terra`. This function is currently
+#' part of the internals for some cases encountered by [postProcess()].
 #'
 #' @section Use Cases:
 #'
@@ -17,7 +20,7 @@
 #' \tabular{lll}{
 #'   `from`\tab `to`\tab `from` will have:\cr
 #'   `Gridded`\tab `Gridded` \tab the extent, projection, origin, resolution and
-#'                         masking where there are `NA` from the {to}\cr
+#'                         masking where there are `NA` from the `to`\cr
 #'   `Gridded`\tab `Vector` \tab the projection, origin, and mask from `to`, and extent will
 #'                        be a round number of pixels that fit within the extent
 #'                        of `to`. Resolution will be the same as `from` \cr
@@ -59,7 +62,7 @@
 #' by  `2 * res(from)[1]`), so that edge cells still have a complete set of neighbours.
 #' The second crop is at the end, after projecting and masking. After the projection step,
 #' the crop is no longer tight. Under some conditions, masking will effectively mask and crop in
-#' on step, but under some conditions, this is not true, and the mask leaves padded NAs out to
+#' one step, but under some conditions, this is not true, and the mask leaves padded NAs out to
 #' the extent of the `from` (as it is after crop, project, mask). Thus the second
 #' crop removes all NA cells so they are tight to the mask.
 #'
@@ -288,7 +291,7 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
       st <- Sys.time()
 
 
-      # There are 2 retry statements; first is for `maskTo`, second is for `from`, rather than fix both in one step, which may be unnecessary
+      # There are 2 tries; first is for `maskTo`, second is for `from`, rather than fix both in one step, which may be unnecessary
       maskAttempts <- 0
       env <- environment()
 

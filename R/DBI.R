@@ -11,7 +11,7 @@
 #' @inheritParams DBI::dbWriteTable
 #' @rdname CacheHelpers
 #' @details
-#' This function will create a Cache folder structure and necessary files, based on
+#' `createCache` function will create a Cache folder structure and necessary files, based on
 #' the particular `drv` or `conn` provided.
 #'
 #' @return
@@ -173,6 +173,9 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 #' @export
 #' @rdname CacheHelpers
 #' @inheritParams CacheStoredFile
+#' @details
+#' `loadFromCache` is a function to get a single object from the cache, given its `cacheId`.
+
 #' @return
 #' `loadFromCache` returns the object from the cache that has the particular `cacheId`.
 #'
@@ -407,10 +410,12 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 #'
 #' @examples
 #' newCache <- tempdir2("cacheHelperExamples")
+#'
+#' # Given the drv and conn, creates the minimum infrastructure for a cache
 #' createCache(newCache)
 #'
-#' CacheDBFile(newCache)
-#' CacheStorageDir(newCache)
+#' CacheDBFile(newCache) # identifies the database file
+#' CacheStorageDir(newCache) # identifies the directory where cached objects are stored
 #'
 #' out <- Cache(rnorm(1), cachePath = newCache)
 #' cacheId <- gsub("cacheId:", "", attr(out, "tags"))

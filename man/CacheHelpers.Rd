@@ -106,8 +106,10 @@ a \code{reproducible} cache database.
 These are not intended for normal use.
 }
 \details{
-This function will create a Cache folder structure and necessary files, based on
+\code{createCache} function will create a Cache folder structure and necessary files, based on
 the particular \code{drv} or \code{conn} provided.
+
+\code{loadFromCache} is a function to get a single object from the cache, given its \code{cacheId}.
 
 \code{rmFromCache} removes one or more items from the cache, and updates the cache
 database files.
@@ -133,10 +135,12 @@ rmFromCache(newCache, cacheId = cacheId)
 unlink(dirname(newCache), recursive = TRUE)
 
 newCache <- tempdir2("cacheHelperExamples")
+
+# Given the drv and conn, creates the minimum infrastructure for a cache
 createCache(newCache)
 
-CacheDBFile(newCache)
-CacheStorageDir(newCache)
+CacheDBFile(newCache) # identifies the database file
+CacheStorageDir(newCache) # identifies the directory where cached objects are stored
 
 out <- Cache(rnorm(1), cachePath = newCache)
 cacheId <- gsub("cacheId:", "", attr(out, "tags"))
