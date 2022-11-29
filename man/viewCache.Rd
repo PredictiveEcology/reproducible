@@ -20,6 +20,7 @@ clearCache(
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 
@@ -33,6 +34,7 @@ clearCache(
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 
@@ -45,6 +47,7 @@ showCache(
   before = NULL,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 
@@ -55,6 +58,7 @@ showCache(
   before = NULL,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 
@@ -66,6 +70,7 @@ keepCache(
   ask = getOption("reproducible.ask"),
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 
@@ -77,6 +82,7 @@ keepCache(
   ask = getOption("reproducible.ask"),
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 }
@@ -124,6 +130,12 @@ object (in order to clone an existing connection).}
 
 \item{conn}{A \linkS4class{DBIConnection} object, as returned by
 \code{\link[DBI:dbConnect]{dbConnect()}}.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{...}{Other arguments. Currently, \code{regexp}, a logical, can be provided.
 This must be \code{TRUE} if the use is passing a regular expression.
@@ -219,6 +231,5 @@ cc(ask = FALSE, x = tmpDir) # Cache is
 cc(ask = FALSE, x = tmpDir) # Cache is already empty
 }
 \seealso{
-\code{\link[=mergeCache]{mergeCache()}}. Many more examples
-in \code{\link[=Cache]{Cache()}}.
+\code{\link[=mergeCache]{mergeCache()}}. Many more examples in \code{\link[=Cache]{Cache()}}.
 }

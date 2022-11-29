@@ -11,7 +11,8 @@ mergeCache(
   drvTo = getOption("reproducible.drv", RSQLite::SQLite()),
   drvFrom = getOption("reproducible.drv", RSQLite::SQLite()),
   connTo = NULL,
-  connFrom = NULL
+  connFrom = NULL,
+  verbose = getOption("reproducible.verbose")
 )
 
 \S4method{mergeCache}{ANY}(
@@ -20,7 +21,8 @@ mergeCache(
   drvTo = getOption("reproducible.drv", RSQLite::SQLite()),
   drvFrom = getOption("reproducible.drv", RSQLite::SQLite()),
   connTo = NULL,
-  connFrom = NULL
+  connFrom = NULL,
+  verbose = getOption("reproducible.verbose")
 )
 }
 \arguments{
@@ -39,6 +41,12 @@ a new one will be made from \code{drvTo} and \code{cacheTo}}
 
 \item{connFrom}{The database for the \code{cacheFrom}. If not provided, then
 a new one will be made from \code{drvFrom} and \code{cacheFrom}}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \value{
 The character string of the path of \code{cacheTo}, i.e., not the

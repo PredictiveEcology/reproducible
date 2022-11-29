@@ -90,7 +90,9 @@ setGeneric("clearCache", function(x, userTags = character(), after = NULL, befor
                                   useCloud = FALSE,
                                   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
                                   drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                                  conn = getOption("reproducible.conn", NULL), ...) {
+                                  conn = getOption("reproducible.conn", NULL),
+                                  verbose = getOption("reproducible.verbose"),
+                                  ...) {
   standardGeneric("clearCache")
 })
 
@@ -101,7 +103,9 @@ setMethod(
   definition = function(x, userTags, after = NULL, before = NULL, ask, useCloud = FALSE,
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                        conn = getOption("reproducible.conn", NULL), ...) {
+                        conn = getOption("reproducible.conn", NULL),
+                        verbose = getOption("reproducible.verbose"),
+                        ...) {
     # isn't clearing the raster bacekd file
     # browser(expr = exists("._clearCache_1"))
 
@@ -315,18 +319,19 @@ cc <- function(secs, ...) {
 #' }
 #'
 #' @inheritParams clearCache
+#' @inheritParams Cache
 #'
 #' @export
 #' @importFrom DBI dbSendQuery dbFetch dbClearResult
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
 #' @name showCache
-#' @seealso [mergeCache()]. Many more examples
-#' in [Cache()].
+#' @seealso [mergeCache()]. Many more examples in [Cache()].
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                                 conn = getOption("reproducible.conn", NULL), ...) {
+                                 conn = getOption("reproducible.conn", NULL),
+                                 verbose = getOption("reproducible.verbose"), ...) {
   standardGeneric("showCache")
 })
 
@@ -442,15 +447,8 @@ setMethod(
         }
       }
     }
-    verboseMessaging <- TRUE
-    if (!is.null(list(...)$verboseMessaging)) {
-      if (!isTRUE(list(...)$verboseMessaging)) {
-        verboseMessaging <- FALSE
-      }
-    }
-    if (verboseMessaging)
-      .messageCacheSize(x, artifacts = unique(objsDT[[.cacheTableHashColName()]]),
-                        cacheTable = objsDT)
+    .messageCacheSize(x, artifacts = unique(objsDT[[.cacheTableHashColName()]]),
+                        cacheTable = objsDT, verbose = verbose)
     objsDT
 })
 
@@ -458,7 +456,9 @@ setMethod(
 setGeneric("keepCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  ask  = getOption("reproducible.ask"),
                                  drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                                 conn = getOption("reproducible.conn", NULL), ...) {
+                                 conn = getOption("reproducible.conn", NULL),
+                                 verbose = getOption("reproducible.verbose"),
+                                 ...) {
   standardGeneric("keepCache")
 })
 
@@ -466,26 +466,23 @@ setGeneric("keepCache", function(x, userTags = character(), after = NULL, before
 #' @rdname viewCache
 setMethod(
   "keepCache",
-  definition = function(x, userTags, after, before, ask, drv, conn, ...) {
+  definition = function(x, userTags, after, before, ask, drv, conn,
+                        verbose = getOption("reproducible.verbose"),
+                        ...) {
     if (missing(x)) {
       messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
       x <- getOption("reproducible.cachePath")[1]
     }
-    # if (missing(after)) after <- NA # "1970-01-01"
-    # if (missing(before)) before <- NA # Sys.time() + 1e5
-    # if (is(x, "simList")) x <- x@paths$cachePath
-
     args <- append(list(x = x, after = after, before = before, userTags = userTags), list(...))
 
-    objsDTAll <- suppressMessages(showCache(x, verboseMessaging = FALSE))
+    objsDTAll <- suppressMessages(showCache(x, verbose = FALSE))
     objsDT <- do.call(showCache, args = args)
     keep <- unique(objsDT[[.cacheTableHashColName()]])
     eliminate <- unique(objsDTAll[[.cacheTableHashColName()]][
       !(objsDTAll[[.cacheTableHashColName()]] %in% keep)])
 
     if (length(eliminate)) {
-      #eliminate <- paste(eliminate, collapse = "|") ## TODO: remove
-      clearCache(x, eliminate, verboseMessaging = FALSE, regexp = FALSE, ask = ask)
+      clearCache(x, eliminate, verbose = FALSE, regexp = FALSE, ask = ask)
     }
     return(objsDT)
 })
@@ -514,12 +511,12 @@ setMethod(
 #'
 #' @return The character string of the path of `cacheTo`, i.e., not the
 #' objects themselves.
-#'
-#' @rdname mergeCache
+#' @inheritParams Cache
 setGeneric("mergeCache", function(cacheTo, cacheFrom,
                                   drvTo = getOption("reproducible.drv", RSQLite::SQLite()),
                                   drvFrom = getOption("reproducible.drv", RSQLite::SQLite()),
-                                  connTo = NULL, connFrom = NULL) {
+                                  connTo = NULL, connFrom = NULL,
+                                  verbose = getOption("reproducible.verbose")) {
   standardGeneric("mergeCache")
 })
 
@@ -527,7 +524,8 @@ setGeneric("mergeCache", function(cacheTo, cacheFrom,
 #' @rdname mergeCache
 setMethod(
   "mergeCache",
-  definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom) {
+  definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom,
+                        verbose = getOption("reproducible.verbose")) {
     if (is.null(connTo)) {
       connTo <- dbConnectAll(drvTo, cachePath = cacheTo)
       on.exit(dbDisconnect(connTo), add = TRUE)
@@ -544,7 +542,6 @@ setMethod(
     suppressMessages({
       cacheToList <- showCache(cacheTo, drv = drvTo, connTo = connTo)
     })
-    # browser(expr = exists("kkkk"))
 
     artifacts <- unique(cacheFromList[[.cacheTableHashColName()]])
     objectList <- lapply(artifacts, function(artifact) {
@@ -571,19 +568,20 @@ setMethod(
         messageCache("Skipping ", artifact, "; already in ", cacheTo)
       }
     })
-    .messageCacheSize(cacheTo, cacheTable = showCache(cacheTo))
+    .messageCacheSize(cacheTo, cacheTable = showCache(cacheTo), verbose = verbose)
 
     return(invisible(cacheTo))
 })
 
 #' @keywords internal
-.messageCacheSize <- function(x, artifacts = NULL, cacheTable) {
+.messageCacheSize <- function(x, artifacts = NULL, cacheTable,
+                              verbose = getOption("reproducible.verbose")) {
   # browser(expr = exists("ffff"))
 
   tagCol <- "tagValue"
   if (missing(cacheTable)) {
     if (useDBI()) {
-      a <- showCache(x, verboseMessaging = FALSE)
+      a <- showCache(x, verbose = verbose - 1)
     }
 
   } else {
@@ -612,9 +610,9 @@ setMethod(
   class(fs) <- "object_size"
   preMessage <- "  Selected objects (not including Rasters): "
 
-  messageCache("Cache size: ")
-  messageCache(preMessage1, format(fsTotal, "auto"))
-  messageCache(preMessage, format(fs, "auto"))
+  messageCache("Cache size: ", verbose = verbose)
+  messageCache(preMessage1, format(fsTotal, "auto"), verbose = verbose)
+  messageCache(preMessage, format(fs, "auto"), verbose = verbose)
 }
 
 #' @keywords internal

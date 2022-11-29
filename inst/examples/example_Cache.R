@@ -31,11 +31,14 @@ Cache(rnorm(2, sd = 2), omitArgs = "sd") # b/c sd is not used, this is same as p
 Cache(rnorm(3), cacheId = "k323431232") # sets the cacheId for this call
 Cache(runif(14), cacheId = "k323431232") # recovers same as above, i.e, rnorm(3)
 
-# Turn off Caching session-side
+# Turn off Caching session-wide
 opts <- options(reproducible.useCache = FALSE)
 Cache(rnorm(3)) # sets the cacheId for this call
 Cache(rnorm(3)) # recovers same as above, i.e, rnorm(3)
 options(opts)
+
+# showSimilar can help with debugging why a Cache call isn't picking up a cached copy
+Cache(rnorm(4), showSimilar = TRUE) # shows that the argument `n` is different
 
 ###############################################
 # devMode -- enables cache database to stay
