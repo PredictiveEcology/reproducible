@@ -618,6 +618,7 @@ Cache <-
       dbTabNam <- inRepos$dbTabName
       isInRepo <- inRepos$isInRepo
       fullCacheTableForObj <- inRepos$fullCacheTableForObj
+      cachePath <- inRepos$cachePath # i.e., if there was > 1, then we now know which one
 
       userTags <- c(userTags, if (!is.na(fnDetails$functionName))
         paste0("function:", fnDetails$functionName)
@@ -1934,7 +1935,8 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
     }
     tries <- tries + 1
   }
-  list(isInRepo = isInRepo, dbTabName = dbTabNam, fullCacheTableForObj = fullCacheTableForObj)
+  list(isInRepo = isInRepo, dbTabName = dbTabNam, fullCacheTableForObj = fullCacheTableForObj,
+       cachePath = cachePath)
 }
 
 
