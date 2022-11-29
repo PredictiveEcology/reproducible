@@ -477,7 +477,8 @@ if (interactive())
 }
 \seealso{
 \code{\link[=showCache]{showCache()}}, \code{\link[=clearCache]{clearCache()}}, \code{\link[=keepCache]{keepCache()}},
-\code{\link[=CacheDigest]{CacheDigest()}}, \code{\link[=movedCache]{movedCache()}}, \code{\link[=.robustDigest]{.robustDigest()}}, and
+\code{\link[=CacheDigest]{CacheDigest()}} to determine the digest of a given function or expression,
+as used internallyl within \code{Cache}, \code{\link[=movedCache]{movedCache()}}, \code{\link[=.robustDigest]{.robustDigest()}}, and
 for more advanced uses there are several helper functions,
 e.g., \code{\link[=rmFromCache]{rmFromCache()}}, \code{\link[=CacheStorageDir]{CacheStorageDir()}}
 }

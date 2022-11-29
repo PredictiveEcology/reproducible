@@ -1,6 +1,7 @@
 .CacheVerboseFn1 <- function(preDigest, fnDetails,
                              startHashTime, modifiedDots, quick,
-                             verbose = getOption("reproducible.verbose", 1)) {
+                             verbose = getOption("reproducible.verbose", 1),
+                             verboseLevel = 1) {
   preDigestUnlist <- .unlistToCharacter(preDigest, 4)
   endHashTime <- Sys.time()
   verboseDF <- data.frame(
@@ -42,8 +43,9 @@
     .reproEnv$hashDetails <- hashDetails
     on.exit({
       assign("hashDetailsAll", .reproEnv$hashDetails, envir = .reproEnv)
-      messageDF(.reproEnv$hashDetails, colour = "blue")
-      messageCache("The hashing details are available from .reproEnv$hashDetails", verbose = verbose)
+      messageDF(.reproEnv$hashDetails, colour = "blue", verbose = verbose, verboseLevel = verboseLevel)
+      messageCache("The hashing details are available from .reproEnv$hashDetails",
+                   verbose = verbose, verboseLevel = verboseLevel)
       rm("hashDetails", envir = .reproEnv)
     }, add = TRUE)
   }

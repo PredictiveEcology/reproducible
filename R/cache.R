@@ -391,7 +391,6 @@ Cache <-
            cachePath = NULL,
            length = getOption("reproducible.length", Inf),
            compareRasterFileLength, userTags = c(),
-           # digestPathContent,
            omitArgs = NULL,
            classOptions = list(), debugCache = character(),
            sideEffect = FALSE, makeCopy = FALSE,
@@ -438,7 +437,7 @@ Cache <-
       output <- evalTheFun(fnDetails, FUNcaptured, envir = parent.frame(), FUN, verbose, ...)
       # }
     } else {
-      startCacheTime <- verboseTime(verbose)
+      startCacheTime <- verboseTime(verbose, verboseLevel = 3)
 
       if (!missing(compareRasterFileLength)) {
         messageCache("compareRasterFileLength argument being deprecated. Use 'length'",
@@ -541,7 +540,7 @@ Cache <-
         .preDigestByClass(modifiedDots[[x]])
       })
 
-      startHashTime <- verboseTime(verbose)
+      startHashTime <- verboseTime(verbose, verboseLevel = 3)
 
       # remove some of the arguments passed to Cache, which are irrelevant for digest
       argsToOmitForDigest <- names(modifiedDots) %in% .defaultCacheOmitArgs
@@ -568,12 +567,12 @@ Cache <-
       if (verbose > 3) {
         a <- .CacheVerboseFn1(preDigest, fnDetails,
                               startHashTime, modifiedDots, quick = quick,
-                              verbose = verbose)
+                              verbose = verbose, verboseLevel = 3)
         on.exit({
           assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
-          messageDF(.reproEnv$verboseTiming, colour = "blue")
+          messageDF(.reproEnv$verboseTiming, colour = "blue", verbose = verbose, verboseLevel = 3)
           messageCache("This object is also available from .reproEnv$cacheTimings",
-                       verbose = verbose)
+                       verbose = verbose, verboseLevel = 3)
           if (exists("verboseTiming", envir = .reproEnv))
             rm("verboseTiming", envir = .reproEnv)
         },
@@ -598,14 +597,11 @@ Cache <-
       }
 
       # compare outputHash to existing Cache record
-      tries <- 1
       if (useCloud) {
         if (!requireNamespace("googledrive", quietly = TRUE))
           stop(requireNamespaceMsg("googledrive", "to use google drive files"))
         # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
         #  returns NROW 0 gdriveLs if not present
-        #cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)
-        # browser(expr = exists("._Cache_2"))
         if (is.null(cloudFolderID))
           cloudFolderID <- cloudFolderFromCacheRepo(cachePath)
         if (is.character(cloudFolderID)) {
@@ -617,44 +613,11 @@ Cache <-
       }
 
       # Check if it is in repository
-      needDisconnect <- FALSE
-      while (tries <= length(cachePaths)) {
-        repo <- cachePaths[[tries]]
-        if (useDBI()) {
-          if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
-            csf <- CacheStoredFile(cachePath = cachePath, cacheId = outputHash)
-            if (file.exists(csf)) {
-              dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = outputHash)
-              isInRepo <- loadFile(dtFile)
-            } else {
-              isInRepo <- data.table::copy(.emptyCacheTable)
-            }
-          } else {
-            # browser(expr = exists("._Cache_3"))
-            dbTabNam <- CacheDBTableName(repo, drv = drv)
-            if (tries > 1) {
-              dbDisconnect(conn)
-              conn <- dbConnectAll(drv, cachePath = repo)
-            }
-            qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
-                                  dbTabName = dbTabNam,
-                                  outputHash = outputHash,
-                                  .con = conn)
-            res <- retry(retries = 15, exponentialDecayBase = 1.01,
-                         quote(dbSendQuery(conn, qry)))
-            isInRepo <- setDT(dbFetch(res))
-            dbClearResult(res)
-          }
-        }
-        fullCacheTableForObj <- isInRepo
-        if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
-        if (NROW(isInRepo) > 0) {
-          # browser(expr = exists("._Cache_4"))
-          cachePath <- repo
-          break
-        }
-        tries <- tries + 1
-      }
+      inRepos <- searchInRepos(cachePaths, outputHash = outputHash,
+                              drv = drv, conn = conn)
+      dbTabNam <- inRepos$dbTabName
+      isInRepo <- inRepos$isInRepo
+      fullCacheTableForObj <- inRepos$fullCacheTableForObj
 
       userTags <- c(userTags, if (!is.na(fnDetails$functionName))
         paste0("function:", fnDetails$functionName)
@@ -714,66 +677,14 @@ Cache <-
         lastEntry <- max(isInRepo$createdDate)
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-          # browser(expr = exists("._Cache_6"))
-          objSize <- if (useDBI()) {
-            as.numeric(tail(fullCacheTableForObj[["tagValue"]][
-              fullCacheTableForObj$tagKey == "file.size"], 1))
-          } else {
-            file.size(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]]))
-          }
-          class(objSize) <- "object_size"
-          bigFile <- isTRUE(objSize > 1e6)
-          messageCache("  ...(Object to retrieve (",
-                       basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]])),
-                       ")",
-                       if (bigFile) " is large: ",
-                       if (bigFile) format(objSize, units = "auto"),
-                       ")",
-                       verbose = verbose)
-
-          preLoadTime <- Sys.time()
-          output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
-                                     lastOne = lastOne, cachePath = cachePath,
-                                     fnDetails = fnDetails,
-                                     modifiedDots = modifiedDots, debugCache = debugCache,
-                                     verbose = verbose, sideEffect = sideEffect,
-                                     quick = quick, algo = algo,
-                                     preDigest = preDigest, startCacheTime = startCacheTime,
-                                     drv = drv, conn = conn,
-                                     ...), silent = TRUE)
-          postLoadTime <- Sys.time()
-          elapsedTimeLoad <- postLoadTime - preLoadTime
-
-          # browser(expr = exists("._Cache_7"))
-          if (is(output, "try-error")) {
-            cID <- if (useDBI())
-              isInRepo[[.cacheTableHashColName()]]
-            else
-              gsub("cacheId:", "", isInRepo[[.cacheTableTagColName()]])
-            stop(output, "\nError in trying to recover cacheID: ", cID,
-                 "\nYou will likely need to remove that item from Cache, e.g., ",
-                 "\nclearCache(userTags = '", cID, "')")
-          }
-
-          if (useDBI())
-            .updateTagsRepo(outputHash, cachePath, "elapsedTimeLoad",
-                            format(elapsedTimeLoad, units = "secs"),
-                            add = TRUE,
-                            drv = drv, conn = conn)
-          if (useCloud) {
-            # browser(expr = exists("._Cache_7b"))
-            # Here, upload local copy to cloud folder
-            cu <- try(retry(quote(isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cachePath,
-                                                           cloudFolderID, output))))
-            .updateTagsRepo(outputHash, cachePath, "inCloud", "TRUE", drv = drv, conn = conn)
-          }
-
-          return(output)
+          out <- returnObjFromRepo(isInRepo, notOlderThan, fullCacheTableForObj, cachePath,
+                                   verbose, FUN, fnDetails, modifiedDots,
+                                   debugCache, sideEffect, quick, algo, preDigest, startCacheTime, drv, conn,
+                                   outputHash, useCloud, gdriveLs, cloudFolderID, lastEntry, lastOne, ...)
+          return(out)
         }
       } else {
-        # find similar -- in progress
-        # browser(expr = exists("._Cache_8"))
-
+        # find similar
         if (!is.null(showSimilar)) { # TODO: Needs testing
           if (!isFALSE(showSimilar)) {
             if (!exists("localTags", inherits = FALSE)) #
@@ -785,7 +696,7 @@ Cache <-
         }
       }
 
-      startRunTime <- verboseTime(verbose)
+      startRunTime <- verboseTime(verbose, verboseLevel = 3)
 
       .CacheIsNew <- TRUE
       if (useCloud) {
@@ -904,9 +815,6 @@ Cache <-
           .setSubAttrInList(outputToSave, ".Cache", "newCache", attr(output, ".Cache")$newCache)
           setattr(outputToSave, "call", attr(output, "call"))
 
-          # attr(outputToSave, "tags") <- attr(output, "tags")
-          # attr(outputToSave, "call") <- attr(output, "call")
-          # attr(outputToSave, ".Cache")$newCache <- attr(output, ".Cache")$newCache
           if (!identical(attr(outputToSave, ".Cache")$newCache, attr(output, ".Cache")$newCache))
             stop("attributes are not correct 6")
           if (!identical(attr(outputToSave, "call"), attr(output, "call")))
@@ -919,7 +827,6 @@ Cache <-
             if (!identical(attr(outputToSave, "function"), attr(output, "function")))
               stop("There is an unknown error 04")
           }
-          # attr(outputToSave, "function") <- attr(output, "function")
           # For Rasters, there will be a new name if file-backed ... it must be conveyed to output too
           output <- outputToSave
         }
@@ -931,7 +838,7 @@ Cache <-
         }
       }
 
-      startSaveTime <- verboseTime(verbose)
+      startSaveTime <- verboseTime(verbose, verboseLevel = 3)
       # This is for write conflicts to the SQLite database
       #   (i.e., keep trying until it is written)
 
@@ -1529,8 +1436,8 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
                            "quick", "verbose", "cacheId", "useCache", "showSimilar", "cl")
 
 #' @keywords internal
-verboseTime <- function(verbose) {
-  if (verbose > 3) {
+verboseTime <- function(verbose, verboseLevel = 3) {
+  if (verbose >= verboseLevel) {
     return(Sys.time())
   }
 }
@@ -1984,4 +1891,112 @@ evalTheFun <- function(fnDetails, FUNcaptured, envir = parent.frame(), FUN, verb
       do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE, envir = parent.frame())))
     }
   }
+}
+
+searchInRepos <- function(cachePaths, drv, outputHash, conn) {
+
+  dbTabName <- NULL
+  tries <- 1
+  while (tries <= length(cachePaths)) {
+    repo <- cachePaths[[tries]]
+    if (useDBI()) {
+      if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
+        csf <- CacheStoredFile(cachePath = repo, cacheId = outputHash)
+        if (file.exists(csf)) {
+          dtFile <- CacheDBFileSingle(cachePath = repo, cacheId = outputHash)
+          isInRepo <- loadFile(dtFile)
+        } else {
+          isInRepo <- data.table::copy(.emptyCacheTable)
+        }
+      } else {
+        dbTabNam <- CacheDBTableName(repo, drv = drv)
+
+        if (tries > 1) {
+          dbDisconnect(conn)
+          conn <- dbConnectAll(drv, cachePath = repo)
+        }
+        qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
+                              dbTabName = dbTabNam,
+                              outputHash = outputHash,
+                              .con = conn)
+        res <- retry(retries = 15, exponentialDecayBase = 1.01,
+                     quote(dbSendQuery(conn, qry)))
+        isInRepo <- setDT(dbFetch(res))
+        dbClearResult(res)
+      }
+    }
+    fullCacheTableForObj <- isInRepo
+    if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
+    if (NROW(isInRepo) > 0) {
+      # browser(expr = exists("._Cache_4"))
+      cachePath <- repo
+      break
+    }
+    tries <- tries + 1
+  }
+  list(isInRepo = isInRepo, dbTabName = dbTabName, fullCacheTableForObj = fullCacheTableForObj)
+}
+
+
+
+returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cachePath,
+                              verbose, FUN, fnDetails, modifiedDots,
+                              debugCache, sideEffect, quick, algo, preDigest, startCacheTime, drv, conn,
+                              outputHash, useCloud, gdriveLs, cloudFolderID, lastEntry, lastOne, ...) {
+  # browser(expr = exists("._Cache_6"))
+  objSize <- if (useDBI()) {
+    as.numeric(tail(fullCacheTableForObj[["tagValue"]][
+      fullCacheTableForObj$tagKey == "file.size"], 1))
+  } else {
+    file.size(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]]))
+  }
+  class(objSize) <- "object_size"
+  bigFile <- isTRUE(objSize > 1e6)
+  messageCache("  ...(Object to retrieve (",
+               basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]])),
+               ")",
+               if (bigFile) " is large: ",
+               if (bigFile) format(objSize, units = "auto"),
+               ")",
+               verbose = verbose)
+
+  preLoadTime <- Sys.time()
+  output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
+                             lastOne = lastOne, cachePath = cachePath,
+                             fnDetails = fnDetails,
+                             modifiedDots = modifiedDots, debugCache = debugCache,
+                             verbose = verbose, sideEffect = sideEffect,
+                             quick = quick, algo = algo,
+                             preDigest = preDigest, startCacheTime = startCacheTime,
+                             drv = drv, conn = conn,
+                             ...), silent = TRUE)
+  postLoadTime <- Sys.time()
+  elapsedTimeLoad <- postLoadTime - preLoadTime
+
+  # browser(expr = exists("._Cache_7"))
+  if (is(output, "try-error")) {
+    cID <- if (useDBI())
+      isInRepo[[.cacheTableHashColName()]]
+    else
+      gsub("cacheId:", "", isInRepo[[.cacheTableTagColName()]])
+    stop(output, "\nError in trying to recover cacheID: ", cID,
+         "\nYou will likely need to remove that item from Cache, e.g., ",
+         "\nclearCache(userTags = '", cID, "')")
+  }
+
+  if (useDBI())
+    .updateTagsRepo(outputHash, cachePath, "elapsedTimeLoad",
+                    format(elapsedTimeLoad, units = "secs"),
+                    add = TRUE,
+                    drv = drv, conn = conn)
+  if (useCloud) {
+    # browser(expr = exists("._Cache_7b"))
+    # Here, upload local copy to cloud folder
+    cu <- try(retry(quote(isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cachePath,
+                                                   cloudFolderID, output))))
+    .updateTagsRepo(outputHash, cachePath, "inCloud", "TRUE", drv = drv, conn = conn)
+  }
+
+  return(output)
+
 }

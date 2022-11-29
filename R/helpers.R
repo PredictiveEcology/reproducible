@@ -361,7 +361,8 @@ isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
 #'
 #' @importFrom data.table is.data.table as.data.table
 #' @importFrom utils capture.output
-messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE) {
+messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE,
+                      verbose = getOption("reproducible.verbose"), verboseLevel = 1) {
   origColNames <- if (is.null(colnames) | isTRUE(colnames)) colnames(df) else NULL
 
   if (is.matrix(df))
@@ -380,12 +381,10 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE
   }
   outMess <- capture.output(df)
   if (skipColNames) outMess <- outMess[-1]
+  if (is.null(colour)) colour <- "red"
   out <- lapply(outMess, function(x) {
-    if (!is.null(colour)) {
-      messageColoured(x, colour = colour, appendLF = appendLF)
-    } else {
-      message(x, appendLF = appendLF)
-    }
+    messageColoured(x, colour = colour, appendLF = appendLF, verbose = verbose,
+                    verboseLevel = verboseLevel)
   })
 }
 

@@ -4,7 +4,15 @@
 \alias{messageDF}
 \title{Use message to print a clean square data structure}
 \usage{
-messageDF(df, round, colour = NULL, colnames = NULL, appendLF = TRUE)
+messageDF(
+  df,
+  round,
+  colour = NULL,
+  colnames = NULL,
+  appendLF = TRUE,
+  verbose = getOption("reproducible.verbose"),
+  verboseLevel = 1
+)
 }
 \arguments{
 \item{df}{A data.frame, data.table, matrix}
