@@ -232,9 +232,11 @@ utils::globalVariables(c(
 #' @include cache-helpers.R
 #' @include robustDigest.R
 #'
-#' @param FUN Either a function or an unevaluated function call (e.g., using
-#'            `quote`.
-#' @param ... Arguments passed to `FUN`
+#' @param FUN Either a function (e.g., `rnorm`), a function call (e.g., `rnorm(1)`),
+#'             or an unevaluated function call (e.g., using
+#'            `quote`).
+#'
+#' @param ... Arguments passed to `FUN`, if `FUN` is not an expression.
 #'
 #' @param .objects Character vector of objects to be digested. This is only applicable
 #'                if there is a list, environment (or similar) with named objects
@@ -345,9 +347,9 @@ utils::globalVariables(c(
 #' to this same cached function with identical arguments).
 #'
 #' @seealso [showCache()], [clearCache()], [keepCache()],
-#'   [CacheDigest()], [movedCache()], [.robustDigest()],
-#'   [pipe()], and for more advaned uses there are several helper functions,
-#'   e.g., [rmFromCache], [CacheStorageDir()]
+#'   [CacheDigest()], [movedCache()], [.robustDigest()], and
+#'   for more advaned uses there are several helper functions,
+#'   e.g., [rmFromCache()], [CacheStorageDir()]
 #'
 #' @author Eliot McIntire
 #' @export

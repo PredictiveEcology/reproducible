@@ -189,6 +189,12 @@ setClass("Path", slots = c(.Data = "character"), contains = "character", prototy
 #'
 #' @export
 #' @rdname Path-class
+#' @return
+#' A vector of class `Path`, which is similar to a character, but
+#' has an attribute indicating how deep the Path should be
+#' considered "digestible". In other words, most of the time, only some
+#' component of an absolute path is relevant for evaluating its purpose in
+#' a Cache situation. In general, this is usually equivalent to just the "relative" path
 #'
 #' @examples
 #' tmpf <- tempfile(fileext = ".csv")

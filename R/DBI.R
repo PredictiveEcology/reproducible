@@ -265,16 +265,10 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
                          conn = getOption("reproducible.conn", NULL), create = TRUE,
                          verbose = getOption("reproducible.verbose")) {
   args <- list(drv = drv)
-  # browser(expr = exists("yyyy"))
   if (is(drv, "SQLiteDriver")) {
-    # if (!CacheIsACache(cachePath = cachePath, drv = drv, conn = conn))
-    #   if (isFALSE(create)) {
-    #     messageCache("There is no Cache at this location", verbose = verbose, verboseLevel = 1)
-    #     return(invisible())
-    #   }
     args <- append(args, list(dbname = CacheDBFile(cachePath, drv = drv, conn = conn),
                               synchronous = NULL))
-  } # other types of drv, e.g., Postgres can be done via env vars
+  }
   conn <- try(do.call(dbConnect, args), silent = TRUE)
   if (is(conn, "try-error")) {
     messageCache("There is no Cache at this location", verbose = verbose, verboseLevel = 1)

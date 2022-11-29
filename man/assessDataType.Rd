@@ -30,9 +30,8 @@ A character string indicating the data type of the spatial layer
 (e.g., "INT2U"). See \code{\link[terra:geomtype]{terra::datatype()}} or \code{\link[raster:dataType]{raster::dataType()}}
 }
 \description{
-Can be used to write prepared inputs on disk.
-
-This is a convenience function around \code{assessDataType(ras, type = "GDAL")}
+When writing raster-type objects to disk, a \code{datatype} can be specified. These
+functions help identify what smallest \code{datatype} can be used.
 }
 \examples{
 ## LOG1S

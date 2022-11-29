@@ -1893,7 +1893,8 @@ writeOutputs.default <- function(x, filename2, ...) {
 
 #' Assess the appropriate raster layer data type
 #'
-#' Can be used to write prepared inputs on disk.
+#' When writing raster-type objects to disk, a `datatype` can be specified. These
+#' functions help identify what smallest `datatype` can be used.
 #'
 #' @param ras  The `RasterLayer` or `RasterStack` for which data type will be assessed.
 #' @param type Character. `"writeRaster"` (default) or `"GDAL"` to return the recommended
@@ -2003,9 +2004,8 @@ assessDataType.default <- function(ras, type = "writeRaster") {
   stop("No method for assessDataType for class ", class(ras))
 }
 
-#' Assess the appropriate raster layer data type for GDAL
-#'
-#' This is a convenience function around `assessDataType(ras, type = "GDAL")`
+#' `assessDataTypeGDAL` assesses the appropriate raster layer data type for GDAL.
+#' It is a convenience function around `assessDataType(ras, type = "GDAL")`
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
 #' @author Eliot McIntire, Ceres Barros, Ian Eddy, and Tati Micheletti

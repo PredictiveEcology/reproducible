@@ -44,7 +44,7 @@ Authors@R:
              role = "ctb",
              email = "ian.eddy@nrcan-rncan.gc.ca",
              comment = c(ORCID = "0000-0001-7397-2116")),
-      person(given = "Her Majesty the Queen in Right of Canada, as represented by the Minister of Natural Resources Canada",
+      person(given = "His Majesty the King in Right of Canada, as represented by the Minister of Natural Resources Canada",
              role = "cph"))
 Depends:
     R (>= 4.0)
