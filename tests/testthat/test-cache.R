@@ -646,8 +646,6 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(inner, 0.1, useCache = useCache, ...)
   }
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-  #expect_true(all(grepl("There is no similar item in the cachePath", out)))
-  #expect_true(all(grepl(paste(.loadedCacheResultMsg, "outer call"), out)))
 
   outer <- function(n) {
     Cache(inner, 0.1, notOlderThan = Sys.time() - 1e4)
@@ -747,8 +745,6 @@ test_that("test mergeCache", {
 
   aCache <- showCache(tmpdir)
   bCache <- showCache(tmpCache)
-
-  #nnnn <<- ffff <<- aaaa <<- bbbb <<-
 
   d <- mergeCache(tmpCache, tmpdir)
 
@@ -1172,8 +1168,6 @@ test_that("test file link with duplicate Cache", {
   unlink(dir(CacheStorageDir(tmpCache), pattern = cacheIds[2], full.names = TRUE))
   set.seed(1234)
 
-#  ._saveToCache_1 <<- 1
-#  on.exit(rm(list = c("._saveToCache_1"), envir = .GlobalEnv), add = TRUE)
   warn <- capture_warnings({d1 <- Cache(sam1, N, cachePath = tmpCache)})
   expect_true(length(warn) == 0)
 })

@@ -456,3 +456,22 @@ unmakeMemoisable.default <- function(x) {
   x
 }
 
+
+#' Grep system calls
+#'
+#' A faster way of grepping the system call stack than just
+#' `grep(sys.calls(), pattern = "test")`
+#'
+#' @param sysCalls The return from `sys.calls()`
+#' @param pattern Character, passed to grep
+#' @return
+#' Numeric vector, equivalent to return from `grep(sys.calls(), pattern = "test")`,
+#' but faster if `sys.calls()` is very big.
+#'
+#' @keywords internal
+#' @export
+#' @rdname grepSysCalls
+.grepSysCalls <- function(sysCalls, pattern) {
+  scallsFirstElement <- lapply(sysCalls, function(x) x[1])
+  grep(scallsFirstElement, pattern = pattern)
+}
