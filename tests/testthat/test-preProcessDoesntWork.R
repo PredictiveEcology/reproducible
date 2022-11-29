@@ -67,7 +67,7 @@ test_that("preProcess fails if user provides non-existing file", {
       zipFilename <- file.path(tmpdir, "rasterTest")
       zip(zipfile = zipFilename, files = theFile, flags = "-q")
       zipFilenameWithDotZip <- dir(tmpdir, pattern = "\\.zip", full.names = TRUE)
-      file.move(from = zipFilenameWithDotZip, to = zipFilename)
+      .file.move(from = zipFilenameWithDotZip, to = zipFilename)
       "y"
       },
     {

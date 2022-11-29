@@ -1,11 +1,13 @@
 #' Move a file to a new location
 #'
+#' This will first try to `file.rename`, and if that fails, then it will
+#' `file.copy` then `file.remove`.
 #' @param from,to character vectors, containing file names or paths.
 #' @param overwrite logical indicating whether to overwrite destination file if it exists.
-#'
+#' @export
 #' @return Logical indicating whether operation succeeded.
 #'
-file.move <- function(from, to, overwrite = FALSE) {
+.file.move <- function(from, to, overwrite = FALSE) {
   stopifnot(file.exists(from))
   res <- suppressWarnings(file.rename(from = from, to = to))
 
