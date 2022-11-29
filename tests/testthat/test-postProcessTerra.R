@@ -226,7 +226,7 @@ test_that("testing terra", {
       expect_true(identical(terra::size(x), terra::size(t20)))
 
       ## same projection change resolution only (will likely affect extent)
-      y2 <- terra::rast(crs = crs(y), res = 0.008333333*2)
+      y2 <- terra::rast(crs = crs(y), res = 0.008333333*2, extent = terra::ext(y))
       y2 <- terra::setValues(y2, rep(1, ncell(y2)))
 
       t22 <- postProcessTerra(x, to = y2, overwrite = TRUE) # not sure why need this; R devel on Winbuilder Nov 26, 2022
