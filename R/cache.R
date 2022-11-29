@@ -1936,7 +1936,7 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
     tries <- tries + 1
   }
   list(isInRepo = isInRepo, dbTabName = dbTabNam, fullCacheTableForObj = fullCacheTableForObj,
-       cachePath = cachePath)
+       cachePath = repo)
 }
 
 
