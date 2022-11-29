@@ -44,5 +44,5 @@ cache database.
 \description{
 This is not expected to be used by a user as it requires that the \code{cacheId}
 be calculated in exactly the same as it calculated inside \code{Cache} (which requires
-\code{match.call} to match arguments with their names, amongst other things).
+\code{match.call} to match arguments with their names, among other things).
 }

@@ -661,10 +661,7 @@ useDBI <- function() {
 
 rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
   if (is.null(cloudFolderID)) {
-
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cachePath = x)
-    # stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
-    #      "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
   }
 
   gdriveLs <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))

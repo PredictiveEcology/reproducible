@@ -6,7 +6,7 @@
 #' they are made available for package developers to build specific methods.
 #'
 #' @details
-#' The methods should do as decribed below.
+#' The methods should do as described below.
 #'
 #' `.tagsByClass` should return a character vector, with a single colon (":") dividing
 #' two parts: the tag type and tag value, for the specific class.

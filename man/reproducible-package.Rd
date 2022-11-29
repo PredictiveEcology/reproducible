@@ -25,13 +25,13 @@ That way, the entire code sequence for a project of arbitrary size can be run
 \emph{from the start} every time.
 
 \describe{
-\item{\code{Cache}:}{A robust wrapper for any function, including those with environments,
+\item{\code{\link[=Cache]{Cache()}}:}{A robust wrapper for any function, including those with environments,
 disk-backed storage (currently on \code{Raster}) class), operating-system independent,
 whose first time called will execute the function, second time will compare the inputs to a
 database of entries, and recover the first result if inputs are identical.
-If \code{options("reproducible.useMemoise" = TRUE)}, the third time will be very fast as it
+If \code{options("reproducible.useMemoise" = TRUE)}, the second time will be very fast as it
 will recover the answer from RAM.}
-\item{\code{prepInputs}:}{ Download, or load objects, and possibly post-process them.
+\item{\code{\link[=prepInputs]{prepInputs()}}for other specifics for other classes.:}{ Download, or load objects, and possibly post-process them.
 The main advantage to using this over more direct routes is that it will automatically build
 checksums tables, use \code{Cache} internally where helpful, and possibly run a variety of
 post-processing actions.

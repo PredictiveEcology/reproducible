@@ -192,7 +192,7 @@ the same order after a sort. It will put dots and underscores first
 (with the sort key based on their second character, see examples.
 It also sorts lower case before upper case.
 
-The methods should do as decribed below.
+The methods should do as described below.
 
 \code{.tagsByClass} should return a character vector, with a single colon (":") dividing
 two parts: the tag type and tag value, for the specific class.

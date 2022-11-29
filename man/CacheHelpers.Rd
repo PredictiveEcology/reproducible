@@ -9,7 +9,7 @@
 \alias{CacheStoredFile}
 \alias{CacheDBTableName}
 \alias{CacheIsACache}
-\title{Functions to create and work giwth a cache}
+\title{Functions to create and work with a cache}
 \usage{
 createCache(
   cachePath = getOption("reproducible.cachePath"),

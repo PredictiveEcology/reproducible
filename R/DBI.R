@@ -1,4 +1,4 @@
-#' Functions to create and work giwth a cache
+#' Functions to create and work with a cache
 #'
 #' @param cachePath A path describing the directory in which to create
 #'   the database file(s)
@@ -67,7 +67,7 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
 #'
 #' This is not expected to be used by a user as it requires that the `cacheId`
 #' be calculated in exactly the same as it calculated inside `Cache` (which requires
-#' `match.call` to match arguments with their names, amongst other things).
+#' `match.call` to match arguments with their names, among other things).
 #'
 #' @inheritParams Cache
 #' @param cacheId The hash string representing the result of `.robustDigest`

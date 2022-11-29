@@ -22,11 +22,11 @@ Gridded
 HTTP2
 Hardlink
 Hijmans
+INT2U
 Marchal
 ORCID
 OSs
 PROJ
-PostgreSQL
 Postgres
 PredictiveEcology
 R6
@@ -40,11 +40,11 @@ Rstudio
 S4
 SQLite
 SpaDES
+SpatRaster
 SpatStat
 SpatVect
 Stochasticity
 Ver
-Workflow
 algorithmically
 analytics
 aren
@@ -84,6 +84,7 @@ getData
 github
 google
 googledrive
+gridded
 hardlink
 hardlinks
 http
@@ -128,7 +129,6 @@ reprojection
 reprojects
 resave
 robocopy
-rstudio
 rsync
 saveRDS
 sbn

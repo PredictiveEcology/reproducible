@@ -215,8 +215,6 @@ caching will work as expected. The function \code{.robustDigest} accommodates th
 It is an S4 generic, meaning that developers can produce their own methods for
 different classes of objects. Currently, there are methods for several types
 of classes. See \code{\link[=.robustDigest]{.robustDigest()}}.
-
-See \code{\link[=.robustDigest]{.robustDigest()}} for other specifics for other classes.
 }
 \section{Nested Caching}{
 
@@ -309,6 +307,15 @@ of stochastic outcomes are required. It will also be very useful in a
 reproducible workflow.
 }
 
+\section{\code{drv} and \code{conn}}{
+
+By default, \code{drv} uses an SQLite database. This can be sufficient for most cases.
+However, if a user has dozens or more cores making requests to the Cache database,
+it may be insufficient. A user can set up a different database backend, e.g.,
+PostGres that can handle multiple simultaneous read-write situations. See
+\url{https://github.com/PredictiveEcology/SpaDES/wiki/Using-alternate-database-backends-for-Cache}.
+}
+
 \section{useCache}{
 
 Logical or numeric. If \code{FALSE} or \code{0}, then the entire Caching
@@ -375,6 +382,7 @@ this option. NOTE: \emph{This argument will not be passed into inner/nested Cach
 
 \section{\code{sideEffect}}{
 
+This feature is not well tested and will likely not perform as expected.
 If \code{sideEffect} is not \code{FALSE}, then metadata about any files that
 added to \code{sideEffect} will be added as an attribute to the cached copy.
 Subsequent calls to this function will assess for the presence of the new files in the
@@ -442,7 +450,7 @@ if (interactive())
 \seealso{
 \code{\link[=showCache]{showCache()}}, \code{\link[=clearCache]{clearCache()}}, \code{\link[=keepCache]{keepCache()}},
 \code{\link[=CacheDigest]{CacheDigest()}}, \code{\link[=movedCache]{movedCache()}}, \code{\link[=.robustDigest]{.robustDigest()}}, and
-for more advaned uses there are several helper functions,
+for more advanced uses there are several helper functions,
 e.g., \code{\link[=rmFromCache]{rmFromCache()}}, \code{\link[=CacheStorageDir]{CacheStorageDir()}}
 }
 \author{

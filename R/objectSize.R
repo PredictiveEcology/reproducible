@@ -4,7 +4,7 @@
 #' has pass-by-reference semantics, it may not estimate the object size well without
 #' a specific method developed. For the case of `terra` class objects, this will
 #' be accurate (both RAM and file size), but only if it is not passed inside
-#' a list or environment. To get an accuate size of these, they should be passed
+#' a list or environment. To get an accurate size of these, they should be passed
 #' individually.
 #'
 #' @return
