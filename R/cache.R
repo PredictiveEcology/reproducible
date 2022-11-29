@@ -347,8 +347,6 @@ utils::globalVariables(c(
 #' @inheritParams DBI::dbConnect
 #' @inheritParams DBI::dbWriteTable
 #'
-#' @param digestPathContent Being deprecated. Use `quick`.
-#'
 #' @return Returns the value of the
 #' function call or the cached version (i.e., the result from a previous call
 #' to this same cached function with identical arguments).
@@ -392,7 +390,8 @@ Cache <-
            cachePath = NULL,
            length = getOption("reproducible.length", Inf),
            compareRasterFileLength, userTags = c(),
-           digestPathContent, omitArgs = NULL,
+           # digestPathContent,
+           omitArgs = NULL,
            classOptions = list(), debugCache = character(),
            sideEffect = FALSE, makeCopy = FALSE,
            quick = getOption("reproducible.quick", FALSE),

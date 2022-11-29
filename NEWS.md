@@ -12,6 +12,9 @@ Version 1.2.13
 * `Cache` now captures the first argument passed to it without evaluating it, so `Cache(rnorm(1))` now works as expected.
 * added more unit tests
 
+## removals
+* remove defunct argument `digestPathContent` from `Cache`
+
 ## Bug fixes
 * `postProcess` now also checks resolution when assessing whether to project 
 
