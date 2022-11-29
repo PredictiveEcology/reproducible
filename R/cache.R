@@ -1895,7 +1895,7 @@ evalTheFun <- function(fnDetails, FUNcaptured, envir = parent.frame(), FUN, verb
 
 searchInRepos <- function(cachePaths, drv, outputHash, conn) {
 
-  dbTabName <- NULL
+  dbTabNam <- NULL
   tries <- 1
   while (tries <= length(cachePaths)) {
     repo <- cachePaths[[tries]]
@@ -1934,7 +1934,7 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
     }
     tries <- tries + 1
   }
-  list(isInRepo = isInRepo, dbTabName = dbTabName, fullCacheTableForObj = fullCacheTableForObj)
+  list(isInRepo = isInRepo, dbTabName = dbTabNam, fullCacheTableForObj = fullCacheTableForObj)
 }
 
 
