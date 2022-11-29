@@ -352,7 +352,8 @@ utils::globalVariables(c(
 #' to this same cached function with identical arguments).
 #'
 #' @seealso [showCache()], [clearCache()], [keepCache()],
-#'   [CacheDigest()], [movedCache()], [.robustDigest()], and
+#'   [CacheDigest()] to determine the digest of a given function or expression,
+#'   as used internallyl within `Cache`, [movedCache()], [.robustDigest()], and
 #'   for more advanced uses there are several helper functions,
 #'   e.g., [rmFromCache()], [CacheStorageDir()]
 #'
@@ -409,7 +410,7 @@ Cache <-
     }
     # Capture everything -- so not evaluated
     FUNcaptured <- substitute(FUN)
-    origFUN <- quote(FUN)
+    # origFUN <- quote(FUN)
 
     if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
 
@@ -444,11 +445,6 @@ Cache <-
                      verbose = verbose)
         length <- compareRasterFileLength
       }
-      # if (!missing(digestPathContent)) {
-      #   messageCache("digestPathContent argument being deprecated. Use 'quick'.",
-      #                verbose = verbose)
-      #   quick <- !digestPathContent
-      # }
 
       mced <- match.call(expand.dots = TRUE)
       nestedTags <- determineNestedTags(envir = environment(),
@@ -1349,9 +1345,24 @@ writeFuture <- function(written, outputToSave, cachePath, userTags,
 #'
 #' @examples
 #' a <- Cache(rnorm, 1)
-#' CacheDigest(list(rnorm, 1))
 #'
-CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", quick = FALSE, ...) {
+#' # like with Cache, user can pass function and args in a few ways
+#' CacheDigest(rnorm(1)) # shows same cacheId as previous line
+#' CacheDigest(rnorm, 1) # shows same cacheId as previous line
+#'
+CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cache", quick = FALSE) {
+
+  FUNcaptured <- substitute(objsToDigest)
+  # origFUN <- quote(objsToDigest)
+  fromCache <- identical(FUNcaptured, as.name("toDigest"))
+  if (is(FUNcaptured, "call") || !fromCache) {
+    fnDetails <- .fnCleanup(FUN = objsToDigest, callingFun = "CacheDigest", ...,
+                            FUNcaptured = FUNcaptured)
+    modifiedDots <- fnDetails$modifiedDots
+    modifiedDots$.FUN <- fnDetails$.FUN
+    objsToDigest <- modifiedDots
+
+  }
   if (identical("Cache", calledFrom)) {
     namesOTD <- names(objsToDigest)
     lengthChars <- nchar(namesOTD)
