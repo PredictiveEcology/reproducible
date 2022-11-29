@@ -411,8 +411,6 @@ Cache <-
     FUNcaptured <- substitute(FUN)
     # origFUN <- quote(FUN)
 
-    if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
-
     if (missing(FUN)) stop("Cache requires the FUN argument")
 
     # returns "modifiedDots", "originalDots", "FUN", "funName", which will
@@ -678,10 +676,15 @@ Cache <-
         lastEntry <- max(isInRepo$createdDate)
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-          out <- returnObjFromRepo(isInRepo, notOlderThan, fullCacheTableForObj, cachePath,
-                                   verbose, FUN, fnDetails, modifiedDots,
-                                   debugCache, sideEffect, quick, algo, preDigest, startCacheTime, drv, conn,
-                                   outputHash, useCloud, gdriveLs, cloudFolderID, lastEntry, lastOne, ...)
+          out <- returnObjFromRepo(isInRepo = isInRepo, notOlderThan = notOlderThan,
+                                   fullCacheTableForObj = fullCacheTableForObj, cachePath = cachePath,
+                                   verbose = verbose, FUN = FUN, fnDetails = fnDetails, modifiedDots = modifiedDots,
+                                   debugCache = debugCache, sideEffect = sideEffect,
+                                   quick = quick, algo = algo, preDigest = preDigest,
+                                   startCacheTime = startCacheTime, drv = drv, conn = conn,
+                                   outputHash = outputHash, useCloud = useCloud, gdriveLs = gdriveLs,
+                                   cloudFolderID = cloudFolderID,
+                                   lastEntry = lastEntry, lastOne = lastOne, ...)
           return(out)
         }
       } else {

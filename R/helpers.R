@@ -353,6 +353,9 @@ isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
 #'   column names even if there aren't any in the `df` (i.e., they will)
 #'   be `V1` etc., `NULL` will print them if they exist, and `FALSE`
 #'   which will omit them.
+#' @param verboseLevel The numeric value for this `message*` call, equal or above
+#'   which `verbose` must be. The higher this is set, the more unlikely the call
+#'   will show a message.
 #' @inheritParams base::message
 #'
 #' @export
@@ -361,6 +364,7 @@ isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
 #'
 #' @importFrom data.table is.data.table as.data.table
 #' @importFrom utils capture.output
+#' @inheritParams Cache
 messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE,
                       verbose = getOption("reproducible.verbose"), verboseLevel = 1) {
   origColNames <- if (is.null(colnames) | isTRUE(colnames)) colnames(df) else NULL
@@ -461,7 +465,7 @@ messageCache <- function(..., colour = getOption("reproducible.messageColourCach
 messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
   # force this message to print
   messageColoured(..., colour = getOption("reproducible.messageColourQuestion"),
-                  verboseLevel = verboseLevel, verbose = 0, appendLF = appendLF)
+                  verboseLevel = verboseLevel, verbose = 10, appendLF = appendLF)
 }
 
 messageColoured <- function(..., colour = NULL, verboseLevel = 1,
