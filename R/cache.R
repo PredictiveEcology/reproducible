@@ -1970,7 +1970,6 @@ evalTheFun <- function(fnDetails, FUNcaptured, envir = parent.frame(), FUN, verb
     if (length(commonArgs) == 0) {
       FUN(...)
     } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
-      browser()
       do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE, envir = parent.frame())))
     }
   }
