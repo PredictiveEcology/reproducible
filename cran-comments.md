@@ -1,6 +1,6 @@
 ## Release information
 
-This is a new submission to restore the package to CRAN following archival due to removal of dependency package `Require`.
+This is a new submission the includes previous new version 1.2.12 to restore the package to CRAN following archival due to removal of dependency package `Require`. This version now includes changes to documentation as requested on Nov 28, 2022 upon submission to CRAN. Specifically, there were 4 items: add () in DESCRIPTION for functions; add \value in .Rd files for exported methods (structure, the class, the output meaning); remove commented code in examples. 
 This version no longer depends on `Require`.
 See `NEWS.md` for a full list of changes.
 
