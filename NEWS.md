@@ -10,8 +10,9 @@ Version 1.2.13
 * examples were reworked, replaced, improved
 * All user-facing exported functions and methods now have complete documentation
 * `Cache` now captures the first argument passed to it without evaluating it, so `Cache(rnorm(1))` now works as expected.
-* `Cache` now works with base pipe |>. It is still experimental.
+* As a result of previous, `Cache` now works with base pipe |> (with R >= 4.1). 
 * added more unit tests
+* internals of `Cache` streamlined in numerous places
 
 ## removals
 * remove defunct argument `digestPathContent` from `Cache`
