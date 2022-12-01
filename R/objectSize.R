@@ -142,42 +142,6 @@ objSize.environment <- function(x, quick = FALSE, ...) {
 #' @export
 #' @rdname objSize
 objSizeSession <- function(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = list()) {
-  srch <- search()
-  srch <- setdiff(srch, c("package:base", "package:methods", "Autoloads"))
-  names(srch) <- srch
-  os <- lapply(srch, function(x) {
-    doneAlready <- lapply(.prevEnvirs, function(pe)
-      tryCatch(identical(pe, as.environment(x)), error = function(e) FALSE))
-    # Update the object in the function so next lapply has access to the updated version
-    .prevEnvirs <<- unique(append(.prevEnvirs, as.environment(x)))
-    out <- if (!any(unlist(doneAlready))) {
-      xAsEnv <- as.environment(x)
-      if (!identical(xAsEnv, globalenv())) {
-        xAsEnv <- tryCatch(asNamespace(gsub("package:", "", x)), error = function(x) xAsEnv)
-      }
-      tryCatch(
-        objSize(xAsEnv, enclosingEnvs = enclosingEnvs,
-                  .prevEnvirs = .prevEnvirs)
-        , error = function(x) NULL,
-              warning = function(y) NULL
-        )
-    } else {
-      NULL
-    }
-    return(out)
-  })
-  if (sumLevel == 1) {
-    os <- lapply(os, function(x) {
-      osIn <- sum(unlist(x))
-      class(osIn) <- "object_size"
-      osIn
-    })
-  } else if (sumLevel == 0) {
-    os <- sum(unlist(os))
-    class(os) <- "object_size"
-    os
-  }
-
-  return(os)
+  .Defunct("Please use lobstr::obj_size instead")
 }
 
