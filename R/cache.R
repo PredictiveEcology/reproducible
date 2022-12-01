@@ -211,24 +211,8 @@ utils::globalVariables(c(
 #'   this option. NOTE: *This argument will not be passed into inner/nested Cache calls.*)
 #'
 #' @section `sideEffect`:
-#' This feature is not well tested and will likely not perform as expected.
-#' If `sideEffect` is not `FALSE`, then metadata about any files that
-#' added to `sideEffect` will be added as an attribute to the cached copy.
-#' Subsequent calls to this function will assess for the presence of the new files in the
-#' `sideEffect` location.
-#' If the files are identical (`quick = FALSE`) or their file size is identical
-#' (`quick = TRUE`), then the cached copy of the function will be returned
-#' (and no files changed).
-#' If there are missing or incorrect files, then the function will re-run.
-#' This will accommodate the situation where the function call is identical, but somehow the side
-#' effect files were modified.
-#' If `sideEffect` is logical, then the function will check the `cachePath`;
-#' if it is a path, then it will check the path.
-#' The function will assess whether the files to be downloaded are found locally prior to download.
-#' If it fails the local test, then it will try to recover from a local copy if (`makeCopy`
-#' had been set to `TRUE` the first time the function was run.
-#' Currently, local recovery will only work if`makeCOpy` was set to `TRUE` the first time
-#' `Cache` was run). Default is `FALSE`.
+#' This feature is now deprecated. Do not use as it is ignored.
+#'
 #'
 #' @note As indicated above, several objects require pre-treatment before
 #' caching will work as expected. The function `.robustDigest` accommodates this.
@@ -289,16 +273,11 @@ utils::globalVariables(c(
 #'        If `"quick"`, then it will return the same two objects directly,
 #'        without evalutating the `FUN(...)`.
 #'
-#' @param sideEffect Logical or path. Determines where the function will look for
+#' @param sideEffect Now deprecated. Logical or path. Determines where the function will look for
 #'        new files following function completion. See Details.
 #'        *NOTE: this argument is experimental and may change in future releases.*
 #'
-#' @param makeCopy Logical. If `sideEffect = TRUE`, and `makeCopy = TRUE`,
-#'        a copy of the downloaded files will be made and stored in the `cachePath`
-#'        to speed up subsequent file recovery in the case where the original copy
-#'        of the downloaded files are corrupted or missing. Currently only works when
-#'        set to `TRUE` during the first run of `Cache`. Default is `FALSE`.
-#'        *NOTE: this argument is experimental and may change in future releases.*
+#' @param makeCopy Now deprecated. Ignored if uesd.
 #'
 #' @param userTags A character vector with descriptions of the Cache function call. These
 #'   will be added to the Cache so that this entry in the Cache can be found using
@@ -393,7 +372,8 @@ Cache <-
            compareRasterFileLength, userTags = c(),
            omitArgs = NULL,
            classOptions = list(), debugCache = character(),
-           sideEffect = FALSE, makeCopy = FALSE,
+           sideEffect = FALSE,
+           makeCopy = FALSE,
            quick = getOption("reproducible.quick", FALSE),
            verbose = getOption("reproducible.verbose", 1), cacheId = NULL,
            useCache = getOption("reproducible.useCache", TRUE),
@@ -679,7 +659,7 @@ Cache <-
           out <- returnObjFromRepo(isInRepo = isInRepo, notOlderThan = notOlderThan,
                                    fullCacheTableForObj = fullCacheTableForObj, cachePath = cachePath,
                                    verbose = verbose, FUN = FUN, fnDetails = fnDetails, modifiedDots = modifiedDots,
-                                   debugCache = debugCache, sideEffect = sideEffect,
+                                   debugCache = debugCache, # sideEffect = sideEffect,
                                    quick = quick, algo = algo, preDigest = preDigest,
                                    startCacheTime = startCacheTime, drv = drv, conn = conn,
                                    outputHash = outputHash, useCloud = useCloud, gdriveLs = gdriveLs,
@@ -1946,7 +1926,8 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
 
 returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cachePath,
                               verbose, FUN, fnDetails, modifiedDots,
-                              debugCache, sideEffect, quick, algo, preDigest, startCacheTime, drv, conn,
+                              debugCache, # sideEffect,
+                              quick, algo, preDigest, startCacheTime, drv, conn,
                               outputHash, useCloud, gdriveLs, cloudFolderID, lastEntry, lastOne, ...) {
   # browser(expr = exists("._Cache_6"))
   objSize <- if (useDBI()) {
@@ -1970,7 +1951,7 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
                              lastOne = lastOne, cachePath = cachePath,
                              fnDetails = fnDetails,
                              modifiedDots = modifiedDots, debugCache = debugCache,
-                             verbose = verbose, sideEffect = sideEffect,
+                             verbose = verbose, # sideEffect = sideEffect,
                              quick = quick, algo = algo,
                              preDigest = preDigest, startCacheTime = startCacheTime,
                              drv = drv, conn = conn,

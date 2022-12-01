@@ -96,16 +96,11 @@ the object \code{attr(mySimOut, "debugCache1")} can be compared.
 If \code{"quick"}, then it will return the same two objects directly,
 without evalutating the \code{FUN(...)}.}
 
-\item{sideEffect}{Logical or path. Determines where the function will look for
+\item{sideEffect}{Now deprecated. Logical or path. Determines where the function will look for
 new files following function completion. See Details.
 \emph{NOTE: this argument is experimental and may change in future releases.}}
 
-\item{makeCopy}{Logical. If \code{sideEffect = TRUE}, and \code{makeCopy = TRUE},
-a copy of the downloaded files will be made and stored in the \code{cachePath}
-to speed up subsequent file recovery in the case where the original copy
-of the downloaded files are corrupted or missing. Currently only works when
-set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.
-\emph{NOTE: this argument is experimental and may change in future releases.}}
+\item{makeCopy}{Now deprecated. Ignored if uesd.}
 
 \item{quick}{Logical or character. If \code{TRUE},
 no disk-based information will be assessed, i.e., only
@@ -379,24 +374,7 @@ this option. NOTE: \emph{This argument will not be passed into inner/nested Cach
 
 \section{\code{sideEffect}}{
 
-This feature is not well tested and will likely not perform as expected.
-If \code{sideEffect} is not \code{FALSE}, then metadata about any files that
-added to \code{sideEffect} will be added as an attribute to the cached copy.
-Subsequent calls to this function will assess for the presence of the new files in the
-\code{sideEffect} location.
-If the files are identical (\code{quick = FALSE}) or their file size is identical
-(\code{quick = TRUE}), then the cached copy of the function will be returned
-(and no files changed).
-If there are missing or incorrect files, then the function will re-run.
-This will accommodate the situation where the function call is identical, but somehow the side
-effect files were modified.
-If \code{sideEffect} is logical, then the function will check the \code{cachePath};
-if it is a path, then it will check the path.
-The function will assess whether the files to be downloaded are found locally prior to download.
-If it fails the local test, then it will try to recover from a local copy if (\code{makeCopy}
-had been set to \code{TRUE} the first time the function was run.
-Currently, local recovery will only work if\code{makeCOpy} was set to \code{TRUE} the first time
-\code{Cache} was run). Default is \code{FALSE}.
+This feature is now deprecated. Do not use as it is ignored.
 }
 
 \examples{
