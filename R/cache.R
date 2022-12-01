@@ -211,24 +211,8 @@ utils::globalVariables(c(
 #'   this option. NOTE: *This argument will not be passed into inner/nested Cache calls.*)
 #'
 #' @section `sideEffect`:
-#' This feature is not well tested and will likely not perform as expected.
-#' If `sideEffect` is not `FALSE`, then metadata about any files that
-#' added to `sideEffect` will be added as an attribute to the cached copy.
-#' Subsequent calls to this function will assess for the presence of the new files in the
-#' `sideEffect` location.
-#' If the files are identical (`quick = FALSE`) or their file size is identical
-#' (`quick = TRUE`), then the cached copy of the function will be returned
-#' (and no files changed).
-#' If there are missing or incorrect files, then the function will re-run.
-#' This will accommodate the situation where the function call is identical, but somehow the side
-#' effect files were modified.
-#' If `sideEffect` is logical, then the function will check the `cachePath`;
-#' if it is a path, then it will check the path.
-#' The function will assess whether the files to be downloaded are found locally prior to download.
-#' If it fails the local test, then it will try to recover from a local copy if (`makeCopy`
-#' had been set to `TRUE` the first time the function was run.
-#' Currently, local recovery will only work if`makeCOpy` was set to `TRUE` the first time
-#' `Cache` was run). Default is `FALSE`.
+#' This feature is now deprecated. Do not use as it is ignored.
+#'
 #'
 #' @note As indicated above, several objects require pre-treatment before
 #' caching will work as expected. The function `.robustDigest` accommodates this.
@@ -289,16 +273,11 @@ utils::globalVariables(c(
 #'        If `"quick"`, then it will return the same two objects directly,
 #'        without evalutating the `FUN(...)`.
 #'
-#' @param sideEffect Logical or path. Determines where the function will look for
+#' @param sideEffect Now deprecated. Logical or path. Determines where the function will look for
 #'        new files following function completion. See Details.
 #'        *NOTE: this argument is experimental and may change in future releases.*
 #'
-#' @param makeCopy Logical. If `sideEffect = TRUE`, and `makeCopy = TRUE`,
-#'        a copy of the downloaded files will be made and stored in the `cachePath`
-#'        to speed up subsequent file recovery in the case where the original copy
-#'        of the downloaded files are corrupted or missing. Currently only works when
-#'        set to `TRUE` during the first run of `Cache`. Default is `FALSE`.
-#'        *NOTE: this argument is experimental and may change in future releases.*
+#' @param makeCopy Now deprecated. Ignored if uesd.
 #'
 #' @param userTags A character vector with descriptions of the Cache function call. These
 #'   will be added to the Cache so that this entry in the Cache can be found using
@@ -393,7 +372,8 @@ Cache <-
            compareRasterFileLength, userTags = c(),
            omitArgs = NULL,
            classOptions = list(), debugCache = character(),
-           sideEffect = FALSE, makeCopy = FALSE,
+           sideEffect = FALSE,
+           makeCopy = FALSE,
            quick = getOption("reproducible.quick", FALSE),
            verbose = getOption("reproducible.verbose", 1), cacheId = NULL,
            useCache = getOption("reproducible.useCache", TRUE),
@@ -466,62 +446,23 @@ Cache <-
 
       # get cachePath if not supplied
       cachePaths <- getCacheRepos(cachePath, modifiedDots, verbose = verbose)
-      cachePath <- cachePaths[[1]]
-
-      if (useDBI()) {
-        if (is.null(conn)) {
-          conn <- dbConnectAll(drv, cachePath = cachePath)
-          RSQLite::dbClearResult(RSQLite::dbSendQuery(conn, "PRAGMA busy_timeout=5000;"))
-          RSQLite::dbClearResult(RSQLite::dbSendQuery(conn, "PRAGMA journal_mode=WAL;"))
-          on.exit({dbDisconnect(conn)}, add = TRUE)
-        }
-      }
-
       modifiedDots$.FUN <- fnDetails$.FUN # put in modifiedDots for digesting  # nolint
-
-      # This is for Pipe operator -- needs special consideration
       scalls <- if (!is(FUN, "function")) .CacheFn1(FUN, sys.calls()) else NULL
 
       # extract other function names that are not the ones the focus of the Cache call
       otherFns <- .getOtherFnNamesAndTags(scalls = scalls)
 
       if (missing(notOlderThan)) notOlderThan <- NULL
-
       # if a simList is in ...
       # userTags added based on object class
       userTags <- c(userTags, unlist(lapply(modifiedDots, .tagsByClass)))
 
-      if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cachePath
-
-      # browser(expr = exists("._Cache_17"))
-      conns <- list()
-      on.exit({done <- lapply(conns, function(co) {
-        if (!identical(co, conns[[1]])) {
-          try(dbDisconnect(co), silent = TRUE)
-        }})}, add = TRUE)
-      isIntactRepo <- unlist(lapply(cachePaths, function(cachePath) {
-        # browser(expr = exists("._Cache_18"))
-        conns[[cachePath]] <<- if (cachePath == cachePaths[[1]]) {
-          conn
-        } else {
-          dbConnectAll(drv, cachePath = cachePath)
-        }
-        CacheIsACache(cachePath = cachePath, drv = drv, create = TRUE,
-                      conn = conns[[cachePath]])
-      }))
-
-      if (any(!isIntactRepo)) {
-        if (useDBI())
-          ret <- lapply(seq(cachePaths)[!isIntactRepo], function(cacheRepoInd) {
-            createCache(cachePaths[[cacheRepoInd]], drv = drv, conn = conn,
-                        force = isIntactRepo[cacheRepoInd])
-          })
-      }
+      if (sideEffect != FALSE) messageCache("sideEffect is deprecated; being ignored", verbose = verbose, verboseLevel = 0)
 
       # List file prior to cache
-      if (sideEffect != FALSE) {
-        priorRepo <- list.files(sideEffect, full.names = TRUE)
-      }
+      # if (sideEffect != FALSE) {
+      #   priorRepo <- list.files(sideEffect, full.names = TRUE)
+      # }
 
       # remove things in the Cache call that are not relevant to Caching
       if (!is.null(modifiedDots$progress))
@@ -535,8 +476,8 @@ Cache <-
 
       preDigestByClass <- lapply(seq_along(modifiedDots),
                                  function(x) {
-        .preDigestByClass(modifiedDots[[x]])
-      })
+                                   .preDigestByClass(modifiedDots[[x]])
+                                 })
 
       startHashTime <- verboseTime(verbose, verboseLevel = 3)
 
@@ -550,7 +491,7 @@ Cache <-
       }
       cacheDigest <- CacheDigest(toDigest, .objects = .objects,
                                  length = length, algo = algo, quick = quick,
-                                 classOptions = classOptions)
+                                 classOptions = classOptions, calledFrom = "Cache")
       postCacheDigestTime <- Sys.time()
       elapsedTimeCacheDigest <- postCacheDigestTime - preCacheDigestTime
 
@@ -561,7 +502,6 @@ Cache <-
       preDigestUnlistTrunc <- unlist(
         .unlistToCharacter(preDigest, getOption("reproducible.showSimilarDepth", 3))
       )
-
       if (verbose > 3) {
         a <- .CacheVerboseFn1(preDigest, fnDetails,
                               startHashTime, modifiedDots, quick = quick,
@@ -581,6 +521,63 @@ Cache <-
         if (!is.na(pmatch(debugCache, "quick")))
           return(list(hash = preDigest, content = list(...)))
       }
+      conns <- list()
+      userConn <- !is.null(conn)
+      if (!is.null(conn)) { # if the conn was passed by user
+        if (!is.list(conn)) {
+          conn <- list(conn)
+        }
+        if (!identical(length(cachePaths), length(conn)))
+          stop("conn and cachePath are both provided, but are different lengths which is not allowed")
+        names(conn) <- cachePath
+        conns <- conn
+      }
+      for (cachePath in cachePaths) {
+        if (useDBI()) {
+          if (is.null(conns[[cachePath]])) {
+            conns[[cachePath]] <- dbConnectAll(drv, cachePath = cachePath)
+            RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA busy_timeout=5000;"))
+            RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA journal_mode=WAL;"))
+            # on.exit({dbDisconnect(conns[[cachePath]])}, add = TRUE)
+          }
+        }
+
+        isIntactRepo <- CacheIsACache(cachePath = cachePath, drv = drv, create = TRUE,
+                                      conn = conns[[cachePath]])
+        if (any(!isIntactRepo)) {
+          if (useDBI())
+            ret <- createCache(cachePath, drv = drv, conn = conns[[cachePath]],
+                        force = isIntactRepo)#[cacheRepoInd])
+        }
+
+        # Check if it is in repository
+        inReposPoss <- searchInRepos(cachePath, outputHash = outputHash,
+                                 drv = drv, conn = conns[[cachePath]])
+        if (cachePath == cachePaths[[1]] || NROW(inReposPoss$isInRepo)) {
+          # keep important parts if it is first one, or if it has the object in the cacheRepo
+          inRepos <- inReposPoss
+          conn <- conns[[cachePath]]
+          if (NROW(inReposPoss$isInRepo)) {
+            break
+          }
+        }
+
+      }
+      on.exit({
+        if (!isTRUE(userConn)) {
+          done <- lapply(conns, function(co) {
+            try(dbDisconnect(co), silent = TRUE)
+          })
+        }
+      }, add = TRUE)
+
+      isInRepo <- inRepos$isInRepo
+      dbTabNam <- inRepos$dbTabName
+      fullCacheTableForObj <- inRepos$fullCacheTableForObj
+      cachePath <- inRepos$cachePath # i.e., if there was > 1, then we now know which one
+
+
+
 
       if (!is.null(cacheId)) {
         outputHashManual <- cacheId
@@ -592,6 +589,8 @@ Cache <-
                        verbose = verbose)
         }
         outputHash <- outputHashManual
+
+
       }
 
       # compare outputHash to existing Cache record
@@ -610,13 +609,6 @@ Cache <-
                                         verbose = verbose)))
       }
 
-      # Check if it is in repository
-      inRepos <- searchInRepos(cachePaths, outputHash = outputHash,
-                              drv = drv, conn = conn)
-      dbTabNam <- inRepos$dbTabName
-      isInRepo <- inRepos$isInRepo
-      fullCacheTableForObj <- inRepos$fullCacheTableForObj
-      cachePath <- inRepos$cachePath # i.e., if there was > 1, then we now know which one
 
       userTags <- c(userTags, if (!is.na(fnDetails$functionName))
         paste0("function:", fnDetails$functionName)
@@ -679,7 +671,7 @@ Cache <-
           out <- returnObjFromRepo(isInRepo = isInRepo, notOlderThan = notOlderThan,
                                    fullCacheTableForObj = fullCacheTableForObj, cachePath = cachePath,
                                    verbose = verbose, FUN = FUN, fnDetails = fnDetails, modifiedDots = modifiedDots,
-                                   debugCache = debugCache, sideEffect = sideEffect,
+                                   debugCache = debugCache, # sideEffect = sideEffect,
                                    quick = quick, algo = algo, preDigest = preDigest,
                                    startCacheTime = startCacheTime, drv = drv, conn = conn,
                                    outputHash = outputHash, useCloud = useCloud, gdriveLs = gdriveLs,
@@ -771,10 +763,10 @@ Cache <-
         stop("attributes are not correct 5")
 
       # browser(expr = exists("._Cache_11"))
-      if (sideEffect != FALSE) {
-        output <- .CacheSideEffectFn2(sideEffect, cachePath, priorRepo, algo, output,
-                                      makeCopy, quick)
-      }
+      # if (sideEffect != FALSE) {
+      #   output <- .CacheSideEffectFn2(sideEffect, cachePath, priorRepo, algo, output,
+      #                                 makeCopy, quick)
+      # }
 
       if (isS4(FUN)) {
         setattr(output, "function", FUN@generic)
@@ -850,7 +842,7 @@ Cache <-
       resultHash <- ""
       linkToCacheId <- NULL
       if (objSize > 1e6) {
-        resultHash <- CacheDigest(list(outputToSave), .objects = .objects)$outputHash
+        resultHash <- CacheDigest(list(outputToSave), .objects = .objects, calledFrom = "Cache")$outputHash
         qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))}",
                               dbTabName = dbTabNam,
                               .con = conn)
@@ -1261,23 +1253,29 @@ writeFuture <- function(written, outputToSave, cachePath, userTags,
 #' CacheDigest(rnorm(1)) # shows same cacheId as previous line
 #' CacheDigest(rnorm, 1) # shows same cacheId as previous line
 #'
-CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cache", quick = FALSE) {
+CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "CacheDigest", quick = FALSE) {
 
   FUNcaptured <- substitute(objsToDigest)
   # origFUN <- quote(objsToDigest)
   fromCache <- identical(FUNcaptured, as.name("toDigest"))
-  if (is(FUNcaptured, "call") || !fromCache) {
+  dots <- list(...)
+  forms <- .formalsNotInCurrentDots(.robustDigest, dots = dots)
+  if (is(FUNcaptured, "call") || # as in rnorm(1)
+      (NROW(dots) > 0 && # if not an function with call, then it has to have something there
+                         # ... so not "just" an object in objsToDigest
+       (NROW(forms) > 1 || is.null(forms)))) { # can be CacheDigest(rnorm, 1)
+    # if (is(FUNcaptured, "call")) {
     fnDetails <- .fnCleanup(FUN = objsToDigest, callingFun = "CacheDigest", ...,
                             FUNcaptured = FUNcaptured)
     modifiedDots <- fnDetails$modifiedDots
     modifiedDots$.FUN <- fnDetails$.FUN
     objsToDigest <- modifiedDots
-
   }
+
   if (identical("Cache", calledFrom)) {
     namesOTD <- names(objsToDigest)
     lengthChars <- nchar(namesOTD)
-    if (!any(namesOTD == "FUN")) {
+    if (!any(namesOTD %in% "FUN")) {
       zeroLength <- which(lengthChars == 0)
       if (sum(zeroLength ) > 0) {
         names(objsToDigest)[zeroLength[1]] <- ".FUN"
@@ -1286,7 +1284,9 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   }
 
   # need to omit arguments that are in Cache function call
-  objsToDigest[names(objsToDigest) %in% .defaultCacheOmitArgs] <- NULL
+  defaults <- names(objsToDigest) %in% .defaultCacheOmitArgs
+  if (length(defaults))
+    objsToDigest[defaults] <- NULL
 
   if (is.character(quick) || isTRUE(quick)) {
     quickObjs <- if (isTRUE(quick)) rep(TRUE, length(objsToDigest)) else
@@ -1946,7 +1946,8 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
 
 returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cachePath,
                               verbose, FUN, fnDetails, modifiedDots,
-                              debugCache, sideEffect, quick, algo, preDigest, startCacheTime, drv, conn,
+                              debugCache, # sideEffect,
+                              quick, algo, preDigest, startCacheTime, drv, conn,
                               outputHash, useCloud, gdriveLs, cloudFolderID, lastEntry, lastOne, ...) {
   # browser(expr = exists("._Cache_6"))
   objSize <- if (useDBI()) {
@@ -1970,7 +1971,7 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
                              lastOne = lastOne, cachePath = cachePath,
                              fnDetails = fnDetails,
                              modifiedDots = modifiedDots, debugCache = debugCache,
-                             verbose = verbose, sideEffect = sideEffect,
+                             verbose = verbose, # sideEffect = sideEffect,
                              quick = quick, algo = algo,
                              preDigest = preDigest, startCacheTime = startCacheTime,
                              drv = drv, conn = conn,

@@ -2,6 +2,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   if (!requireNamespace("googledrive", quietly = TRUE))
     stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
+  skip_on_cran()
   skip_if_no_token()
   if (interactive()) {
     testInitOut <- testInit(

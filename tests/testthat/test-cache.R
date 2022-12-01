@@ -155,13 +155,12 @@ test_that("test file-backed raster caching", {
     nOT <- Sys.time() - 100
   }
 
-  attr(a1, ".Cache")$newCache <- NULL
-  attr(a2, ".Cache")$newCache <- NULL
+#   attr(a1, ".Cache")$newCache <- NULL
+#  attr(a2, ".Cache")$newCache <- NULL
   # test that they are identical
-  expect_equal(a1, a2)
-
-  # confirm that the second one was obtained through reading from Cache... much faster than writing
-  if (!isWindows()) expect_true(b1[1] > b2[1]) ## TODO: windows can be randomly slow
+  expect_true(all.equalWONewCache(a1, a2))
+  expect_true(identical(attr(a1, ".Cache")$newCache, TRUE))
+  expect_true(identical(attr(a2, ".Cache")$newCache, FALSE))
 
   clearCache(tmpCache, ask = FALSE)
 

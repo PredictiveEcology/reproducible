@@ -11,39 +11,8 @@ test_that("test miscellaneous fns (part 1)", {
   expect_true(all(unlist(lapply(searchFull(simplify = FALSE), is.environment))))
   expect_true(all(is.character(unlist(lapply(searchFull(simplify = FALSE), attributes)))))
 
-  # objectSize
-  a <- 1
-  b <- tempfile()
-  saveRDS(a, b)
-  expect_true(is.numeric(objSize(asPath(b))))
-  expect_true(is(objSize(asPath(b)), "lobstr_bytes"))
-
-  # objSizeSession
-  mess <- capture.output({d <- objSizeSession()})
-  expect_true(is.list(d))
-  g <- unlist(d)
-  expect_true(is.numeric(g))
-  expect_true(any(grepl("package", names(g))))
-
-  mess <- capture.output({d <- objSizeSession(1)})
-  expect_true(is.list(d))
-  g <- unlist(d)
-  expect_true(is.numeric(g))
-  expect_true(any(grepl("package", names(g))))
-  expect_true(all(names(g) %in% search() ))
-
-  mess <- capture.output({d1 <- objSizeSession(enclosingEnvs = FALSE)})
-  expect_true(is.list(d1))
-  g2 <- unlist(d1)
-  expect_true(is.numeric(g2))
-  expect_true(any(grepl("package", names(g2))))
-
   # NO LONGER RELIABLE TEST BECAUSE OF NEW REMOVAL OF PACKAGES fEB 24 2021
   # expect_true(sum(unlist(d1)) < sum(unlist(d)))
-
-  mess <- capture.output({d <- objSizeSession(0)})
-  expect_true(!is.list(d))
-  expect_true(is.numeric(d))
 
   # convertRasterPaths
   filenames <- normalizePath(c("/home/user1/Documents/file.txt", "/Users/user1/Documents/file.txt"),
@@ -81,6 +50,20 @@ test_that("test miscellaneous fns (part 1)", {
   a <- .formalsNotInCurrentDots(rnorm, n = 1, b = 2)
   b <- .formalsNotInCurrentDots(rnorm, dots = list(n = 1, b = 2))
   expect_identical(a,b)
+
+
+})
+
+test_that("objSize and objSizeSession", {
+  skip_on_cran()
+  # objectSize
+  a <- 1
+  b <- tempfile()
+  saveRDS(a, b)
+  expect_true(is.numeric(objSize(asPath(b))))
+  expect_true(is(objSize(asPath(b)), "lobstr_bytes"))
+
+
 })
 
 test_that("setting options works correctly", {
@@ -141,8 +124,8 @@ test_that("test miscellaneous fns (part 2)", {
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
-    googledrive::drive_rm(googledrive::as_id(cloudFolderID))
-    googledrive::drive_rm(googledrive::as_id(tmpCloudFolderID))
+    try(googledrive::drive_rm(googledrive::as_id(cloudFolderID)))
+    try(googledrive::drive_rm(googledrive::as_id(tmpCloudFolderID)))
   }, add = TRUE)
 
   ras <- raster(extent(0,1,0,1), res  = 1, vals = 1)

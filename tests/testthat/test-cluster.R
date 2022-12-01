@@ -4,7 +4,7 @@ test_that("test parallel collisions", {
 
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd", ".txt"))
   on.exit({
-    testOnExit(testInitOut)
+    try(testOnExit(testInitOut), silent = TRUE)
   }, add = TRUE)
 
   if (require(parallel, quietly = TRUE)) {
@@ -34,7 +34,7 @@ test_that("test parallel collisions", {
     on.exit(stopCluster(cl), add = TRUE)
 
     clusterSetRNGStream(cl)
-#    parallel::clusterEvalQ(cl, {library(reproducible)})
+    parallel::clusterEvalQ(cl, {library(reproducible)})
     numToRun <- 40
 
     # There is a 'creating Cache at the same time' problem -- haven't resolved

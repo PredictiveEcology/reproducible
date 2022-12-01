@@ -69,12 +69,6 @@ utils::object.size(foo) # different - only measuring the environment as an objec
 utils::object.size(prepInputs) # only the function, without its enclosing environment
 objSize(prepInputs)     # the function, plus its enclosing environment
 
-# Size of all packages; includes their imported functions
-\dontrun{
-  bar <- objSizeSession(1)
-  print(bar, units = "auto")
-}
-
 os1 <- utils::object.size(as.environment("package:reproducible"))
 os2 <- objSize(as.environment("package:reproducible"))
 (os1) # very small -- just the environment container
