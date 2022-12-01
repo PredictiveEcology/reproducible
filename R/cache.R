@@ -1277,7 +1277,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   if (identical("Cache", calledFrom)) {
     namesOTD <- names(objsToDigest)
     lengthChars <- nchar(namesOTD)
-    if (!any(namesOTD == "FUN")) {
+    if (!any(namesOTD %in% "FUN")) {
       zeroLength <- which(lengthChars == 0)
       if (sum(zeroLength ) > 0) {
         names(objsToDigest)[zeroLength[1]] <- ".FUN"
