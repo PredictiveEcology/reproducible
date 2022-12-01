@@ -144,9 +144,9 @@ testOnExit <- function(testInitOut) {
       try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab2))
   }
 
-  lapply(testInitOut$libs, function(lib) {
-    try(detach(paste0("package:", lib), character.only = TRUE), silent = TRUE)}
-  )
+  # lapply(testInitOut$libs, function(lib) {
+  #   try(detach(paste0("package:", lib), character.only = TRUE), silent = TRUE)}
+  # )
 }
 
 runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpdir, test) {

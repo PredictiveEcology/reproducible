@@ -124,8 +124,8 @@ test_that("test miscellaneous fns (part 2)", {
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
-    googledrive::drive_rm(googledrive::as_id(cloudFolderID))
-    googledrive::drive_rm(googledrive::as_id(tmpCloudFolderID))
+    try(googledrive::drive_rm(googledrive::as_id(cloudFolderID)))
+    try(googledrive::drive_rm(googledrive::as_id(tmpCloudFolderID)))
   }, add = TRUE)
 
   ras <- raster(extent(0,1,0,1), res  = 1, vals = 1)

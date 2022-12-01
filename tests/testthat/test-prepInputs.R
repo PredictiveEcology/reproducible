@@ -119,18 +119,22 @@ test_that("prepInputs doesn't work (part 1)", {
 
   # Test useCache -- doesn't error and loads from cache
   mess <- capture_messages({
-    shpEcozoneSm <- Cache(
-      prepInputs,
-      url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-      targetFile = reproducible::asPath(ecozoneFilename),
-      alsoExtract = reproducible::asPath(ecozoneFiles),
-      studyArea = StudyArea,
-      fun = "shapefile",
-      destinationPath = dPath,
-      filename2 = "EcozoneFile.shp",
-      useCache = TRUE
-    )
+    warn <- suppressWarningsSpecific(
+      falseWarnings = "attribute variables are assumed to be spatially constant", {
+        shpEcozoneSm <- Cache(
+          prepInputs,
+          url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+          targetFile = reproducible::asPath(ecozoneFilename),
+          alsoExtract = reproducible::asPath(ecozoneFiles),
+          studyArea = StudyArea,
+          fun = "shapefile",
+          destinationPath = dPath,
+          filename2 = "EcozoneFile.shp",
+          useCache = TRUE
+        )
+      })
   })
+
   expect_true(any(grepl("loaded", mess)))
 
   # # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
