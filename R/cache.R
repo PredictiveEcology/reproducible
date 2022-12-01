@@ -1253,19 +1253,25 @@ writeFuture <- function(written, outputToSave, cachePath, userTags,
 #' CacheDigest(rnorm(1)) # shows same cacheId as previous line
 #' CacheDigest(rnorm, 1) # shows same cacheId as previous line
 #'
-CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cache", quick = FALSE) {
+CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "CacheDigest", quick = FALSE) {
 
   FUNcaptured <- substitute(objsToDigest)
   # origFUN <- quote(objsToDigest)
   fromCache <- identical(FUNcaptured, as.name("toDigest"))
-  if (is(FUNcaptured, "call") || !fromCache) {
+  dots <- list(...)
+  forms <- .formalsNotInCurrentDots(.robustDigest, dots = dots)
+  if (is(FUNcaptured, "call") || # as in rnorm(1)
+      (NROW(dots) > 0 && # if not an function with call, then it has to have something there
+                         # ... so not "just" an object in objsToDigest
+       (NROW(forms) > 1 || is.null(forms)))) { # can be CacheDigest(rnorm, 1)
+    # if (is(FUNcaptured, "call")) {
     fnDetails <- .fnCleanup(FUN = objsToDigest, callingFun = "CacheDigest", ...,
                             FUNcaptured = FUNcaptured)
     modifiedDots <- fnDetails$modifiedDots
     modifiedDots$.FUN <- fnDetails$.FUN
     objsToDigest <- modifiedDots
-
   }
+
   if (identical("Cache", calledFrom)) {
     namesOTD <- names(objsToDigest)
     lengthChars <- nchar(namesOTD)
@@ -1278,7 +1284,9 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   }
 
   # need to omit arguments that are in Cache function call
-  objsToDigest[names(objsToDigest) %in% .defaultCacheOmitArgs] <- NULL
+  defaults <- names(objsToDigest) %in% .defaultCacheOmitArgs
+  if (length(defaults))
+    objsToDigest[defaults] <- NULL
 
   if (is.character(quick) || isTRUE(quick)) {
     quickObjs <- if (isTRUE(quick)) rep(TRUE, length(objsToDigest)) else

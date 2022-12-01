@@ -8,7 +8,7 @@ CacheDigest(
   objsToDigest,
   ...,
   algo = "xxhash64",
-  calledFrom = "Cache",
+  calledFrom = "CacheDigest",
   quick = FALSE
 )
 }
