@@ -49,7 +49,7 @@
 #'     functionality that uses the `future` package.
 #'     Default is to not use these, as they are experimental.
 #'     They may, however, be very effective in speeding up some things, specifically,
-#'     uploading cached elements via googledrive in `cloudCache`.
+#'     uploading cached elements via `googledrive` in `cloudCache`.
 #'   }
 #'   \item{`inputPaths`}{
 #'     Default: `NULL`. Used in [prepInputs()] and [preProcess()].

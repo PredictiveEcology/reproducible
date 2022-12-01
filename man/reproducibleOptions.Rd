@@ -54,7 +54,7 @@ Default: \code{FALSE}. On Linux OSes, \code{Cache} and \code{cloudCache} have so
 functionality that uses the \code{future} package.
 Default is to not use these, as they are experimental.
 They may, however, be very effective in speeding up some things, specifically,
-uploading cached elements via googledrive in \code{cloudCache}.
+uploading cached elements via \code{googledrive} in \code{cloudCache}.
 }
 \item{\code{inputPaths}}{
 Default: \code{NULL}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
