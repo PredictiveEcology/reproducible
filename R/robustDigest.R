@@ -298,7 +298,7 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    dig <- lapply(object, .robustDigest, algo = algo, classOptions = classOptions)
+    dig <- lapply(object, .robustDigest, algo = algo, quick = quick, classOptions = classOptions)
     .robustDigest(unlist(dig), quick = TRUE, algo = algo, classOptions = classOptions)
 })
 
