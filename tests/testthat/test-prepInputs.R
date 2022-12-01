@@ -239,6 +239,8 @@ test_that("prepInputs doesn't work (part 1)", {
 })
 
 test_that("interactive prepInputs", {
+  skip_on_cran()
+  skip_on_ci()
   testInitOut <- testInit("raster",
                           opts = list(
                             "rasterTmpDir" = tempdir2(rndstr(1,6)),
@@ -250,8 +252,6 @@ test_that("interactive prepInputs", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  skip_on_cran()
-  skip_on_ci()
 
   # skip_if_not(isInteractive())
   #######################################
@@ -377,6 +377,8 @@ test_that("interactive prepInputs", {
 })
 
 test_that("preProcess doesn't work", {
+  skip_on_cran()
+  skip_on_ci()
   testInitOut <- testInit("raster", opts = list(
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
@@ -385,10 +387,6 @@ test_that("preProcess doesn't work", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-
-  skip_on_cran()
-
-  skip_on_ci()
 
   skip_if_not(isInteractive())
 
