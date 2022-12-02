@@ -824,8 +824,6 @@ extractFromArchive <- function(archive,
   if (is.character(fun)) {
     messagePrepInputs(paste0("The archive appears to be not a .zip. Trying a system call to ", fun), verbose = verbose)
     extractSystemCallPath <- .testForArchiveExtract()
-    #tempDir <- file.path(args$exdir, "extractedFiles") %>%
-    #  checkPath(create = TRUE)
     if (grepl(x = extractSystemCallPath, pattern = "7z")) {
       prependPath <- if (isWindows()) {
         paste0("\"", extractSystemCallPath, "\"")
@@ -897,11 +895,18 @@ extractFromArchive <- function(archive,
         messagePrepInputs("File unzipping using R does not appear to have worked.",
                           " Trying a system call of unzip...", verbose = verbose)
       } else {
-        messagePrepInputs(
-          paste("R's unzip utility cannot handle a zip file this size.\n",
-                "Install 7zip and add it to your PATH (see https://www.7-zip.org/)."),
-          verbose = verbose
-        )
+        unz <- Sys.which("unzip")
+        sZip <- Sys.which("7z")
+        messPart1 <- "R's unzip utility cannot handle a zip file this size.\n"
+        if (nchar(sZip) > 0) {
+          messagePrepInputs(messPart1, verbose = verbose)
+        } else {
+          messagePrepInputs(
+            paste(messPart1,
+                  "Install 7zip and add it to your PATH (see https://www.7-zip.org/)."),
+            verbose = verbose
+          )
+        }
       }
 
       if (file.exists(args[[1]])) {
@@ -915,16 +920,28 @@ extractFromArchive <- function(archive,
                " The file might have been moved during unzipping or is corrupted.")
         }
       }
-      unz <- Sys.which("unzip")
-      sZip <- Sys.which("7z")
       if (nchar(sZip) > 0) {
         messagePrepInputs("Using '7zip'")
         op <- setwd(.tempPath)
         on.exit({
           setwd(op)
         }, add = TRUE)
+        lstFiles <- system(paste0(sZip, " l ", pathToFile), intern = TRUE, wait = TRUE)
+        startAndEnd <- grep("-----------", lstFiles)
+        if (diff(startAndEnd) > 1) {
+          lstFiles <- lstFiles[(startAndEnd[1]+1) : (startAndEnd[2]-1)]
+        }
+        if (length(files)) {
+          filesAreInArch <- unlist(lapply(files, function(x) any(grepl(x, lstFiles))))
+          if (all(filesAreInArch))
+            arg22 <- paste("e", pathToFile, paste(files, collapse = " "))
+          else
+            stop(paste(files, collapse = ", "), " not in ", basename2(pathToFile))
+        } else {
+          arg22 <- paste0(" e ", pathToFile)
+        }
         system2(sZip,
-                args = paste0(" e ", pathToFile),
+                args = arg22,
                 wait = TRUE,
                 stdout = NULL)
 
