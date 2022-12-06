@@ -368,12 +368,13 @@ setMethod(
     .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
       !isFALSE(getOption("reproducible.futurePlan"))
     if (.onLinux) {
-      if (exists("futureEnv", envir = .reproEnv))
+      if (exists("futureEnv", envir = .reproEnv)) {
         hasFuture <- .requireNamespace("future",
                                        messageStart = "To use reproducible.futurePlan, ")
         if (hasFuture) {
           checkFutures()
         }
+      }
     }
 
     if (useDBI()) {
