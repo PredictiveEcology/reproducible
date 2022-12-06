@@ -435,6 +435,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
     omit <- FALSE
     origFromClass <- is(from)
 
+    browser()
     if (!isSpatialAny(cropTo))
       if (is.na(cropTo)) omit <- TRUE
 
@@ -444,7 +445,17 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
 
       ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
       if (!sf::st_crs(from) == sf::st_crs(ext)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
-        ext <- sf::st_transform(ext, sf::st_crs(from))
+        if (isVector(cropTo)) {
+          if (isSpat(cropTo)) {
+            cropToInFromCRS <- terra::project(cropTo, terra::crs(from))
+          } else {
+            cropToInFromCRS <- sf::st_transform(cropTo, sf::st_crs(from))
+          }
+        } else {
+          cropToInFromCRS <- terra::project(cropTo, terra::crs(from))
+          # THIS IS WHAN cropTo is a Gridded object
+        }
+        ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
       }
       if (isVector(from))
         ext <- terra::vect(ext)
