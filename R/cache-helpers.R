@@ -8,8 +8,6 @@
 #'        arguments to the `FUN`
 #' @param overrideCall A character string indicating a different (not "Cache") function
 #'        name to search for. Mostly so that this works with deprecated "cache".
-#' @param isPipe Logical. If the call to `getFunctionName` is coming from a pipe, there is more
-#'               information available. Specifically, `._lhs` which is already a call.
 #' @note If the function cannot figure out a clean function name, it returns "internal"
 #'
 #' @author Eliot McIntire
