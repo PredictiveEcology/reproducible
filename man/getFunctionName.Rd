@@ -14,9 +14,6 @@ arguments to the \code{FUN}}
 
 \item{overrideCall}{A character string indicating a different (not "Cache") function
 name to search for. Mostly so that this works with deprecated "cache".}
-
-\item{isPipe}{Logical. If the call to \code{getFunctionName} is coming from a pipe, there is more
-information available. Specifically, \code{._lhs} which is already a call.}
 }
 \description{
 These are internal only.

@@ -72,7 +72,7 @@ objSize(prepInputs)     # the function, plus its enclosing environment
 os1 <- utils::object.size(as.environment("package:reproducible"))
 os2 <- objSize(as.environment("package:reproducible"))
 (os1) # very small -- just the environment container
-sum(unlist(os2)) # around 13 MB, with all functions, objects
+sum(unlist(os2)) # around 157 MB, with all functions, objects
                  # and imported functions
 
 }
