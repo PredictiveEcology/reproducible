@@ -51,27 +51,27 @@ test_that("test miscellaneous unit tests cache-helpers", {
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl("No cachePath supplied. Using", mess)))
 
-  # getFunctionName
-  fn <- function(FUN) {
-    getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
-  }
-  expect_true(fn(1)$functionName == "FUN")
-
-  fn <- function(FUN) {
-    getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
-  }
-  expect_true(fn(2)$functionName == "FUN")
-
-  fn <- function(FUN) {
-    getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
-  }
-  expect_true(fn(2)$functionName == "FUN")
-  expect_true(is.null(fn(2)$.FUN))
-
-  fn <- function(FUN) {
-    getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
-  }
-  expect_true(fn(log(1))$functionName == "FUN")
+  # # getFunctionName
+  # fn <- function(FUN) {
+  #   getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
+  # }
+  # expect_true(fn(1)$functionName == "FUN")
+  #
+  # fn <- function(FUN) {
+  #   getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
+  # }
+  # expect_true(fn(2)$functionName == "FUN")
+  #
+  # fn <- function(FUN) {
+  #   getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
+  # }
+  # expect_true(fn(2)$functionName == "FUN")
+  # expect_true(is.null(fn(2)$.FUN))
+  #
+  # fn <- function(FUN) {
+  #   getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
+  # }
+  # expect_true(fn(log(1))$functionName == "FUN")
 
   ## nextNumericName
   b <- nextNumericName("test.pdf")
@@ -117,7 +117,8 @@ test_that("test miscellaneous unit tests cache-helpers", {
     b <- Cache(rnorm, n = 2, mean = 1, sd = 3, showSimilar = TRUE, cachePath = tmpCache)
   })
   expect_true(any(grepl("different n", bMess)))
-  expect_true(any(grepl("new argument.*sd", bMess)))
+  expect_true(any(grepl("different .+sd", bMess)))
+  # expect_true(any(grepl("new argument.*sd", bMess)))
   expect_true(any(grepl("next closest cacheId", bMess)))
   # aaaa <<- bbbb <<- cccc <<- 1
   cMess <- capture_messages({

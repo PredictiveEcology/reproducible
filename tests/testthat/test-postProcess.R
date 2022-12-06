@@ -298,6 +298,7 @@ test_that("maskInputs errors when x is Lat-Long", {
 })
 
 test_that("prepInputs doesn't work (part 3)", {
+  skip_if_no_token()
   if (interactive()) {
     testInitOut <- testInit()
     on.exit({
@@ -305,13 +306,15 @@ test_that("prepInputs doesn't work (part 3)", {
     }, add = TRUE)
 
     # Tati's reprex
-    wd <- checkPath(file.path(getwd(), "reprex"), create = TRUE)
+    tmpdir <- "/mnt/d/temp/Cache"
+    wd <- checkPath(file.path(tmpdir, "reprex"), create = TRUE)
     ranges <- prepInputs(url = "https://drive.google.com/file/d/1AfGfRjaDsdq3JqcsidGRo3N66OUjRJnn",
                          destinationPath = wd,
-                         fun = "sf::st_read")
+                         fun = "terra::vect")
     LCC05 <- prepInputs(url = "https://drive.google.com/file/d/1g9jr0VrQxqxGjZ4ckF6ZkSMP-zuYzHQC",
                         targetFile = "LCC2005_V1_4a.tif",
                         studyArea = ranges,
+                        fun = "terra::rast",
                         destinationPath = wd)
     sumNonNAs <- sum(!is.na(!LCC05[]))
 

@@ -1171,7 +1171,7 @@ test_that("prepInputs doesn't work (part 2)", {
             }),
             path = tmpdir)          })
       })
-      expect_true(all(sf::st_bbox(test5) == sf::st_bbox(test6)))
+      # expect_true(all(sf::st_bbox(test5) == sf::st_bbox(test6)))
     }
 
 #

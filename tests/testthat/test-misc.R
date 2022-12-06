@@ -132,9 +132,7 @@ test_that("test miscellaneous fns (part 2)", {
   ras <- writeRaster(ras, file = tmpfile[1], overwrite = TRUE)
 
   gdriveLs1 <- data.frame(name = "GADM", id = "sdfsd", drive_resource = list(sdfsd = 1))
-  expect_warning({
-    tmpCloudFolderID <- checkAndMakeCloudFolderID(create = TRUE)
-  }, "No cloudFolderID supplied")
+  tmpCloudFolderID <- checkAndMakeCloudFolderID(create = TRUE)
   gdriveLs <- driveLs(cloudFolderID = NULL, "sdfsdf")
   expect_true(NROW(gdriveLs) == 0)
   expect_is(checkAndMakeCloudFolderID("testy"), "character")
@@ -179,13 +177,12 @@ test_that("test miscellaneous fns (part 2)", {
     {
       mess1 <- capture_messages({
         err <- capture_error({
-          cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs", saved = "life",
+          cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs", # saved = "life",
                                cachePath = tmpCache)
         })
       })
       expect_true(all(grepl("cloudFolderID.*is missing, with no default", err)))
     })
-  expect_true(grepl("Uploading new cached object|with cacheId", mess1))
 
   a <- new.env(parent = emptyenv())
   a$a = list(ras, ras)
@@ -290,3 +287,4 @@ test_that("test miscellaneous fns", {
     expect_true(is.numeric(as.numeric(gsub(".*: ", "", out)[2])))
   }
 })
+
