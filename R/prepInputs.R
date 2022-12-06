@@ -417,7 +417,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                 out[[fun[["functionName"]]]] <- fun$FUN
               obj <- Cache(eval, out$fun, envir = out, useCache = useCache2)
             } else {
-              obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
+              theFun <- out$fun
+              obj <- Cache(do.call, theFun, append(list(asPath(out$targetFilePath)), args),
                            useCache = useCache2)
             }, message = function(m) {
               m$message <- grep("No cachePath supplied|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
