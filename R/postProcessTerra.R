@@ -435,7 +435,6 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
     omit <- FALSE
     origFromClass <- is(from)
 
-    browser()
     if (!isSpatialAny(cropTo))
       if (is.na(cropTo)) omit <- TRUE
 
