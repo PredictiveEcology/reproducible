@@ -1205,6 +1205,8 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame()) {
 
     } else {
       isS3 <- isS3stdGeneric(FUN)
+      if (!is.null(names(isS3)))
+        fnNameInit <- names(isS3)
       if (isS3) {
         updatedFUN <- TRUE
         classes <- is(mc[[2]])
@@ -1213,9 +1215,10 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame()) {
           if (!is.null(FUN))
             break
         }
+
         if (is.null(FUN)) {
-          FUN <- get(fnNameInit, envir = callingEnv)
-          if (is.null(FUN)) {
+          FUN <- get0(fnNameInit, envir = callingEnv)
+          if (is.null(FUN) || isS4(FUN)) { # there are cases e.g., print that are both S4 & S3; this forces S3
             FUN <- get0(paste0(fnNameInit, ".default"), envir = callingEnv)
           }
         }
