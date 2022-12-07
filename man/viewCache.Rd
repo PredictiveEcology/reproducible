@@ -38,7 +38,7 @@ clearCache(
   ...
 )
 
-cc(secs, ...)
+cc(secs, ..., verbose = verbose)
 
 showCache(
   x,
@@ -142,7 +142,8 @@ This must be \code{TRUE} if the use is passing a regular expression.
 Otherwise, \code{userTags} will need to be exact matches. Default is
 missing, which is the same as \code{TRUE}. If there are errors due
 to regular expression problem, try \code{FALSE}. For \code{cc}, it is
-passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}}
+passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}. For \code{showCache},
+it can also be \code{sorted = FALSE} to return the object unsorted.}
 
 \item{secs}{Currently 3 options: the number of seconds to pass to \code{clearCache(after = secs)},
 a \code{POSIXct} time e.g., from \code{Sys.time()}, or missing. If missing,
@@ -178,6 +179,11 @@ the cache".
 certain \code{userTags} or \code{times} values.}
 \item{\code{showCache}}{display the contents of the cache.}
 }
+
+By default the return of \code{showCache} is sorted by \code{cacheId}. For convenience,
+a user can optionally have it unsorted (passing \code{sorted = FALSE}),
+which may be noticeably faster when
+the cache is large (>1e4 entries).
 }
 \note{
 If the cache is larger than 10MB, and clearCache is used, there will be

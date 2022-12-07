@@ -12,7 +12,8 @@
 #'            Otherwise, `userTags` will need to be exact matches. Default is
 #'            missing, which is the same as `TRUE`. If there are errors due
 #'            to regular expression problem, try `FALSE`. For `cc`, it is
-#'            passed to `clearCache`, e.g., `ask`, `userTags`
+#'            passed to `clearCache`, e.g., `ask`, `userTags`. For `showCache`,
+#'            it can also be `sorted = FALSE` to return the object unsorted.
 #' @param userTags Character vector. If used, this will be used in place of the
 #'                 `after` and `before`.
 #'                 Specifying one or more `userTag` here will clear all
@@ -111,10 +112,10 @@ setMethod(
 
     if (missing(x)) {
       x <- if (!is.null(list(...)$cachePath)) {
-        messageCache("x not specified, but cachePath is; using ", list(...)$cachePath)
+        messageCache("x not specified, but cachePath is; using ", list(...)$cachePath, verbose = verbose)
         list(...)$cachePath
       } else  {
-        messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
+        messageCache("x not specified; using ", getOption("reproducible.cachePath")[1], verbose = verbose)
         x <- getOption("reproducible.cachePath")[1]
       }
     }
@@ -130,7 +131,7 @@ setMethod(
       # if (missing(after)) after <- NA # "1970-01-01"
       # if (missing(before)) before <- NA # Sys.time() + 1e5
 
-      args <- append(list(x = x, after = after, before = before, userTags = userTags),
+      args <- append(list(x = x, after = after, before = before, userTags = userTags, sorted = FALSE),
                      list(...))
 
       objsDT <- do.call(showCache, args = args, quote = TRUE)
@@ -167,7 +168,7 @@ setMethod(
                   " Are you sure you would like to delete it all? Y or N")
           rl <- readline()
           if (!identical(toupper(rl), "Y")) {
-            messageCache("Aborting clearCache")
+            messageCache("Aborting clearCache", verbose = verbose)
             return(invisible())
           }
         }
@@ -226,7 +227,7 @@ setMethod(
                   " Are you sure you would like to delete it all? Y or N")
           rl <- readline()
           if (!identical(toupper(rl), "Y")) {
-            messageCache("Aborting clearCache")
+            messageCache("Aborting clearCache", verbose = verbose)
             return(invisible())
           }
         }
@@ -285,16 +286,16 @@ setMethod(
 #' showCache(x = tmpDir) # all those after thisTime gone, i.e., only 1 left
 #' cc(ask = FALSE, x = tmpDir) # Cache is
 #' cc(ask = FALSE, x = tmpDir) # Cache is already empty
-cc <- function(secs, ...) {
+cc <- function(secs, ..., verbose = verbose) {
   # browser(expr = exists("jjjj"))
   if (missing(secs)) {
-    messageCache("No time provided; removing the most recent entry to the Cache")
+    messageCache("No time provided; removing the most recent entry to the Cache", verbose = verbose)
     suppressMessages({theCache <- reproducible::showCache(...)})
     if (NROW(theCache) > 0) {
       accessed <- data.table::setkey(theCache[tagKey == "accessed"], tagValue)
       clearCache(userTags = tail(accessed, 1)[[.cacheTableHashColName()]], ...)
     } else {
-      messageCache("Cache already empty")
+      messageCache("Cache already empty", verbose = verbose)
     }
   } else {
     if (is(secs, "POSIXct")) {
@@ -317,6 +318,12 @@ cc <- function(secs, ...) {
 #'                           certain `userTags` or `times` values.}
 #'   \item{`showCache`}{display the contents of the cache.}
 #' }
+#'
+#' @details
+#' By default the return of `showCache` is sorted by `cacheId`. For convenience,
+#' a user can optionally have it unsorted (passing `sorted = FALSE`),
+#' which may be noticeably faster when
+#' the cache is large (>1e4 entries).
 #'
 #' @inheritParams clearCache
 #' @inheritParams Cache
@@ -342,7 +349,7 @@ setMethod(
   definition = function(x, userTags, after = NULL, before = NULL, drv, conn, ...) {
     # browser(expr = exists("rrrr"))
     if (missing(x)) {
-      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
+      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1], verbose = verbose)
       x <- getOption("reproducible.cachePath")[1]
     }
     # browser(expr = exists("jjjj"))
@@ -402,7 +409,9 @@ setMethod(
         objsDT <- .emptyCacheTable
       else
         objsDT <- setDT(tab)
-      #setkeyv(objsDT, "cacheId")
+      sorted <- !isFALSE(list(...)$sorted) # NULL and TRUE are sorted
+      if (isTRUE(sorted))
+        data.table::setorderv(objsDT, "cacheId")
     }
 
     if (NROW(objsDT) > 0) {
@@ -450,7 +459,7 @@ setMethod(
     }
     .messageCacheSize(x, artifacts = unique(objsDT[[.cacheTableHashColName()]]),
                         cacheTable = objsDT, verbose = verbose)
-    objsDT
+    return(objsDT)
 })
 
 #' @rdname viewCache
@@ -471,12 +480,12 @@ setMethod(
                         verbose = getOption("reproducible.verbose"),
                         ...) {
     if (missing(x)) {
-      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
+      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1], verbose = verbose)
       x <- getOption("reproducible.cachePath")[1]
     }
     args <- append(list(x = x, after = after, before = before, userTags = userTags), list(...))
 
-    objsDTAll <- suppressMessages(showCache(x, verbose = FALSE))
+    objsDTAll <- suppressMessages(showCache(x, verbose = FALSE, sorted = FALSE))
     objsDT <- do.call(showCache, args = args)
     keep <- unique(objsDT[[.cacheTableHashColName()]])
     eliminate <- unique(objsDTAll[[.cacheTableHashColName()]][
@@ -538,10 +547,10 @@ setMethod(
     }
 
     suppressMessages({
-      cacheFromList <- showCache(cacheFrom, drv = drvFrom, connFrom = connFrom)
+      cacheFromList <- showCache(cacheFrom, drv = drvFrom, connFrom = connFrom, sorted = FALSE)
     })
     suppressMessages({
-      cacheToList <- showCache(cacheTo, drv = drvTo, connTo = connTo)
+      cacheToList <- showCache(cacheTo, drv = drvTo, connTo = connTo, sorted = FALSE)
     })
 
     artifacts <- unique(cacheFromList[[.cacheTableHashColName()]])
@@ -553,7 +562,7 @@ setMethod(
           try(loadFromCache(cacheFrom, artifact))
         }
         if (is(outputToSave, "try-error")) {
-          messageCache("Continuing to load others")
+          messageCache("Continuing to load others", verbose = verbose)
           outputToSave <- NULL
         }
 
@@ -563,13 +572,13 @@ setMethod(
         if (useDBI()) {
           output <- saveToCache(cacheTo, userTags = userTags, obj = outputToSave, cacheId = artifact) # nolint
         }
-        messageCache(artifact, " copied")
+        messageCache(artifact, " copied", verbose = verbose)
         outputToSave
       } else {
-        messageCache("Skipping ", artifact, "; already in ", cacheTo)
+        messageCache("Skipping ", artifact, "; already in ", cacheTo, verbose = verbose)
       }
     })
-    .messageCacheSize(cacheTo, cacheTable = showCache(cacheTo), verbose = verbose)
+    .messageCacheSize(cacheTo, cacheTable = showCache(cacheTo, sorted = FALSE), verbose = verbose)
 
     return(invisible(cacheTo))
 })
@@ -582,7 +591,7 @@ setMethod(
   tagCol <- "tagValue"
   if (missing(cacheTable)) {
     if (useDBI()) {
-      a <- showCache(x, verbose = verbose - 1)
+      a <- showCache(x, verbose = verbose - 1, sorted = FALSE)
     }
 
   } else {
@@ -634,7 +643,8 @@ checkFutures <- function() {
       if (count > 1 ) {
         Sys.sleep(0.001)
         if (count > 1e3) {
-          messageCache("Future is not resolved after 1 second of waiting. Allowing to proceed.")
+          messageCache("Future is not resolved after 1 second of waiting. Allowing to proceed.",
+                       verbose = verbose)
           break
         }
       }
@@ -670,14 +680,14 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
   isInCloud <- gdriveLs$name %in% filenamesToRm
   # Deal with Rasters
   files <- CacheStoredFile(x, cacheId = cacheIds[isInCloud])
-  sc <- suppressMessages(showCache(x, userTags = cacheIds))
+  sc <- suppressMessages(showCache(x, userTags = cacheIds, sorted = FALSE))
   classes <- sc[tagKey == "class"]$tagValue
   rases <- classes %in% c("RasterLayer", "RasterStack", "RasterBrick")
   objs <- lapply(files[rases], readRDS)
   frmDisk <- unlist(lapply(objs, fromDisk))
   filenames <- unlist(lapply(objs[frmDisk], Filenames))
   toDelete <- gdriveLs[isInCloud,]
-  messageCache("Cloud:")
+  messageCache("Cloud:", verbose = verbose)
   if (!is.null(filenames)) {
     rasFiles <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
     toDelete <- rbind(rasFiles, toDelete)
