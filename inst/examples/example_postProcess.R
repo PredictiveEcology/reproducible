@@ -35,7 +35,7 @@ shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
 # With terra
 if (require("terra")) {
   opts <- options("reproducible.useTerra" = TRUE)
-  vectEcozone <- terra::vect(sf::st_as_sf(shpEcozone)) # direct conversion throws warning
+  vectEcozone <- terra::vect(shpEcozone)
 
   # If input is Spatial object --> return will also be Spatial
   shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)

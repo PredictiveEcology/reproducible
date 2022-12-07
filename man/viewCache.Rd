@@ -38,7 +38,7 @@ clearCache(
   ...
 )
 
-cc(secs, ..., verbose = verbose)
+cc(secs, ..., verbose = getOption("reproducible.verbose"))
 
 showCache(
   x,

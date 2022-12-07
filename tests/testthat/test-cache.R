@@ -1398,7 +1398,8 @@ test_that("change to new capturing of FUN & base pipe", {
 
 test_that("test cache with new approach to match.call", {
   testInitOut <- testInit()
-  opts <- options(reproducible.cachePath = tmpdir)
+  opts <- options(reproducible.cachePath = tmpdir,
+                  "reproducible.verbose" = -2)
   on.exit({
     options(opts)
     testOnExit(testInitOut)
@@ -1423,33 +1424,28 @@ test_that("test cache with new approach to match.call", {
   for (i in 2:10)
     expect_true(identical(attr(a[[i]], ".Cache")$newCache, FALSE))
 
-   suppressMessages(
-     lala <- capture.output({
-      for (fun in list(.robustDigest, print)) {
-        # bbb <<- 1
-        clearCache(ask = FALSE)
-        b <- list(fun = fun)
-        a <- list()
-        a[[1]] <- Cache(fun(1))
-        a[[2]] <- Cache(fun, 1)
-        a[[3]] <- Cache(do.call, fun, list(1))
-        a[[4]] <- Cache(do.call(fun, list(1)))
-        a[[5]] <- Cache(do.call(b$fun, list(1)))
-        a[[6]] <- Cache(do.call, b$fun, list(1))
-        a[[7]] <- Cache(b$fun, 1)
-        a[[8]] <- Cache(b$fun(1))
-        a[[9]] <- b$fun(1) |> Cache()
-        a[[10]] <- Cache(quote(fun(1)))
-        expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
-        for (i in 2:10) {
-          test <- identical(attr(a[[i]], ".Cache")$newCache, FALSE)
-          if (isFALSE(test)) browser()
-          expect_true(test)
-        }
-      }
+  for (fun in list(.robustDigest, print)) {
+    clearCache(ask = FALSE)
+    b <- list(fun = fun)
+    a <- list()
+    lala <- capture.output(a[[1]] <- Cache(fun(1)))
+    a[[2]] <- Cache(fun, 1)
+    a[[3]] <- Cache(do.call, fun, list(1))
+    a[[4]] <- Cache(do.call(fun, list(1)))
+    a[[5]] <- Cache(do.call(b$fun, list(1)))
+    a[[6]] <- Cache(do.call, b$fun, list(1))
+    a[[7]] <- Cache(b$fun, 1)
+    a[[8]] <- Cache(b$fun(1))
+    a[[9]] <- b$fun(1) |> Cache()
+    a[[10]] <- Cache(quote(fun(1)))
+    expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
+    for (i in 2:10) {
+      test <- identical(attr(a[[i]], ".Cache")$newCache, FALSE)
+      if (isFALSE(test)) browser()
+      expect_true(test)
+    }
+  }
 
-     })
-   )
 
 })
 

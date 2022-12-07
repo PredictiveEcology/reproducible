@@ -146,7 +146,7 @@ setMethod(
           gdriveLs <- driveLs(cloudFolderID, pattern = userTags)
           cacheIds <- c(cacheIds, gsub("\\..*$", "", gdriveLs$name))
         }
-        rmFromCloudFolder(cloudFolderID, x, cacheIds)
+        rmFromCloudFolder(cloudFolderID, x, cacheIds, verbose = verbose)
 
       }
 
@@ -286,10 +286,10 @@ setMethod(
 #' showCache(x = tmpDir) # all those after thisTime gone, i.e., only 1 left
 #' cc(ask = FALSE, x = tmpDir) # Cache is
 #' cc(ask = FALSE, x = tmpDir) # Cache is already empty
-cc <- function(secs, ..., verbose = verbose) {
-  # browser(expr = exists("jjjj"))
+cc <- function(secs, ..., verbose = getOption("reproducible.verbose")) {
   if (missing(secs)) {
-    messageCache("No time provided; removing the most recent entry to the Cache", verbose = verbose)
+    messageCache("No time provided; removing the most recent entry to the Cache",
+                 verbose = verbose)
     suppressMessages({theCache <- reproducible::showCache(...)})
     if (NROW(theCache) > 0) {
       accessed <- data.table::setkey(theCache[tagKey == "accessed"], tagValue)
@@ -379,7 +379,7 @@ setMethod(
         hasFuture <- .requireNamespace("future",
                                        messageStart = "To use reproducible.futurePlan, ")
         if (hasFuture) {
-          checkFutures()
+          checkFutures(verbose)
         }
       }
     }
@@ -626,7 +626,8 @@ setMethod(
 }
 
 #' @keywords internal
-checkFutures <- function() {
+#' @inheritParams Cache
+checkFutures <- function(verbose = getOption("reproducible.verbose")) {
   # This takes a long time -- can't use it if
   resol1 <- FALSE
   count <- 0
@@ -668,7 +669,9 @@ useDBI <- function() {
   ud
 }
 
-rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
+#' @inheritParams Cache
+rmFromCloudFolder <- function(cloudFolderID, x, cacheIds,
+                              verbose = getOption("reproducible.verbose")) {
   if (is.null(cloudFolderID)) {
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cachePath = x)
   }
