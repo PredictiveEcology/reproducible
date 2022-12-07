@@ -356,35 +356,45 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Load object to R
   # If it is simple call, then we can extract stuff from the function call; otherwise all bets off
-  fun <- if (is(out$fun, "call") || is(out$fun, "function") && is.null(out$object)) {
-    .fnCleanup(out$fun, callingFun = "prepInputs", ...)
-  } else {
-    NULL
-  }
-
+  theFun <- out$fun
+  # fun <- if (is(theFun, "call") || is(theFun, "function") && is.null(out$object)) {
+  #   fnNameInit <- deparse(substitute(out$fun))
+  #   browser()
+  #   argsPassingToTheFun <- out[!names(out) %in% c(formalArgs(prepInputs), "checkSums", "dots", "object")]
+  #   argsPassingToTheFun
+  #   match.call(theFun, as.call(append(list(theFun), argsPassingToTheFun)))
+  #               #)
+  # } else {
+  #   NULL
+  # }
+  #
   suppressWarnings({
-    naFun <- all(is.na(out$fun))
+    naFun <- all(is.na(theFun))
   })
+  argsPassingToTheFun <- out[!names(out) %in% c(formalArgs(prepInputs), "checkSums", "dots", "object")]
+  args <- argsPassingToTheFun[!names(argsPassingToTheFun) %in% "targetFilePath"]
 
-  ## dots will contain too many things for some functions
-  ## -- need to remove those that are known going into prepInputs
-  args <- out$dots[!(names(out$dots) %in% .argsToRemove)]
+  #
+  # ## dots will contain too many things for some functions
+  # ## -- need to remove those that are known going into prepInputs
+  # args <- out$dots[!(names(out$dots) %in% .argsToRemove)]
+  #
+  # # Only accept the ones that are the formals of the function -- above removals may be redunant
+  # args <- args[(names(args) %in% fun$formalArgs)]
+  # if (length(args) == 0) args <- NULL
 
-  # Only accept the ones that are the formals of the function -- above removals may be redunant
-  args <- args[(names(args) %in% fun$formalArgs)]
-  if (length(args) == 0) args <- NULL
-
-  if (!(naFun || is.null(out$fun))) {
+  if (!(naFun || is.null(theFun))) {
     x <- if (is.null(out$object)) {
+
       messagePrepInputs("Loading object into R", verbose = verbose)
-      if (identical(out$fun, raster::raster) |
-          identical(out$fun, raster::stack) |
-          identical(out$fun, raster::brick)) {
+      if (identical(theFun, raster::raster) |
+          identical(theFun, raster::stack) |
+          identical(theFun, raster::brick)) {
         ## Don't cache the reading of a raster
         ## -- normal reading of raster on disk is fast b/c only reads metadata
-        do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
+        do.call(theFun, append(list(asPath(out$targetFilePath)), args))
       } else {
-        if (identical(out$fun, base::load)) {
+        if (identical(theFun, base::load)) {
           if (is.null(args$envir)) {
             messagePrepInputs("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
                     "if you would like it loaded to a specific environment", verbose = verbose)
@@ -395,7 +405,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             args$envir <- NULL
             returnAsList <- FALSE
           }
-          objs <- do.call(out$fun, append(list(file = out$targetFilePath, envir = tmpEnv), args))
+          args2 <- append(list(file = out$targetFilePath, envir = tmpEnv), args)
+          objs <- do.call(theFun, args2)
           if (returnAsList)
             as.list(tmpEnv, all.names = TRUE)
         } else {
@@ -408,18 +419,17 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             messagePrepInputs("targetFile is already a binary; skipping Cache while loading")
           }
           withCallingHandlers(
-            if (is.call(out$fun)) {
+            if (is.call(theFun)) {
               # put `targetFilePath` in the first position -- allows quoted call to use first arg
               out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
                                    out[-which(names(out) == "targetFilePath")]),
                             args)
               if (length(fun[["functionName"]]) == 1)
                 out[[fun[["functionName"]]]] <- fun$FUN
-              obj <- Cache(eval, out$fun, envir = out, useCache = useCache2)
+              obj <- Cache(eval, theFun, envir = out, useCache = useCache2)
             } else {
-              theFun <- out$fun
-              obj <- Cache(do.call, theFun, append(list(asPath(out$targetFilePath)), args),
-                           useCache = useCache2)
+              args2 <- append(list(asPath(out$targetFilePath)), args)
+              obj <- Cache(do.call, theFun, args2, useCache = useCache2)
             }, message = function(m) {
               m$message <- grep("No cachePath supplied|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
               if (length(m$message)) {
@@ -438,11 +448,11 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         x <- out$object
         env1 <- new.env()
         list2env(list(...), envir = env1)
-        eval(out$fun, envir = env1)
+        eval(theFun, envir = env1)
       }
     }
   } else {
-    messagePrepInputs("No loading of object into R; fun = ", out$fun, verbose = verbose)
+    messagePrepInputs("No loading of object into R; fun = ", theFun, verbose = verbose)
     x <- out
   }
   if (requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)) {
