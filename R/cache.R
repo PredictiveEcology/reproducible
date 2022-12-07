@@ -1291,7 +1291,7 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame()) {
               yyy <- "default"
               if (length(xxx) > 0) {
                 if (length(xxx) == 1) {
-                  if (nchar(xxx) == 0) {
+                  if (isTRUE(nchar(xxx) == 0)) {
                     yyy <- NULL
                   }
                 }
