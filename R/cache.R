@@ -1086,7 +1086,14 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame()) {
   if (is.null(FUNcaptured))
     FUNcaptured <- substitute(FUN)
 
+  # two known cases to deal with separately ... the fn(...) and pkg::fn(...)
   isCapturedFUN <- is.call(FUNcaptured)
+  if (length(FUNcaptured) > 2) {
+    if (exists("bbb", inherits = FALSE, envir = .GlobalEnv)) browser()
+    if (identical(as.name("::"), FUNcaptured[[1]])) {
+      isCapturedFUN <- is.call(FUNcaptured[[3]])
+    }
+  }
   dotsCaptured <- substitute(list(...))
   dotsCaptured <- as.list(dotsCaptured[-1]) # need to remove the `list` on the inside of the substitute
   originalDots <- list(...)
@@ -1120,28 +1127,46 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame()) {
       args <- as.list(recursiveEvalNamesOnly(args$args[-1], envir = callingEnv))
     }
   } else if (isCapturedFUN) {
-    if (length(FUNcaptured) >= 2) { # e.g., Cache(rnorm(1)); Cache(out$fun, 1); Cache(out$fun(1))
-      if (length(dotsCaptured) > 0) { # this is e.g., Cache(out$fun, 1)
+    if (any(grepl("::", FUNcaptured))) {
+      #if (length(FUNcaptured) == 2) { # sf::st_make_valid(x)
+        FUN <- eval(FUNcaptured[[1]], envir = callingEnv)
+        fnNameInit <- deparse(FUNcaptured[[1]])
+        args <- as.list(FUNcaptured[-1])
+      # } else { # sf::st_make_valid
+      #   FUN <- eval(FUNcaptured, envir = callingEnv)
+      #   fnNameInit <- deparse(FUNcaptured)
+      #   args <- dotsCaptured
+      # }
+      args <- as.list(recursiveEvalNamesOnly(args, envir = callingEnv))
+      if (exists("bbb", inherits = FALSE, envir = .GlobalEnv)) browser()
+
+
+    } else {
+      if (length(FUNcaptured) >= 2) { # e.g., Cache(rnorm(1)); Cache(out$fun, 1); Cache(out$fun(1))
+        if (length(dotsCaptured) > 0) { # this is e.g., Cache(out$fun, 1)
+          FUN <- eval(FUNcaptured, envir = callingEnv)
+          fnNameInit <- deparse(FUNcaptured)#[[1]]) # the [[1]] is the "list"
+          if (exists("bbb", inherits = FALSE, envir = .GlobalEnv)) browser()
+          args <- dotsCaptured
+        } else {  # Cache(quote(rnorm(n = 10, 16)));
+          FUN <- eval(FUNcaptured[[1]], envir = callingEnv)
+          fnNameInit <- deparse(FUNcaptured[[1]]) # the [[1]] is the "list"
+          args <- as.list(recursiveEvalNamesOnly(FUNcaptured[-1], envir = callingEnv)) # -1 is remove the function
+        }
+      } else if  (length(FUNcaptured) == 1) {
+        fnNameInit <- deparse(FUNcaptured) # the [[1]] is the "list"
         FUN <- eval(FUNcaptured, envir = callingEnv)
-        fnNameInit <- deparse(FUNcaptured)#[[1]]) # the [[1]] is the "list"
         if (exists("bbb", inherits = FALSE, envir = .GlobalEnv)) browser()
         args <- dotsCaptured
-      } else {  # Cache(quote(rnorm(n = 10, 16)));
-        FUN <- eval(FUNcaptured[[1]], envir = callingEnv)
-        fnNameInit <- deparse(FUNcaptured[[1]]) # the [[1]] is the "list"
-        args <- as.list(recursiveEvalNamesOnly(FUNcaptured[-1], envir = callingEnv)) # -1 is remove the function
       }
-    } else if  (length(FUNcaptured) == 1) {
-      fnNameInit <- deparse(FUNcaptured) # the [[1]] is the "list"
-      FUN <- eval(FUNcaptured, envir = callingEnv)
-      if (exists("bbb", inherits = FALSE, envir = .GlobalEnv)) browser()
-      args <- dotsCaptured
     }
-  } else {
+
+  } else { # FUNcaptured = sf::st_make_valid
     if (exists("bbb", inherits = FALSE, envir = .GlobalEnv)) browser()
     fnNameInit <- deparse(FUNcaptured) # the [[1]] is the "list"
-    FUN <- FUNcaptured
+    FUN <- eval(FUNcaptured, envir = callingEnv)
     args <- dotsCaptured
+    args <- as.list(recursiveEvalNamesOnly(args, envir = callingEnv))
     # args <- lapply(originalDots, eval, envir = callingEnv)
   }
 
@@ -1206,22 +1231,37 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame()) {
     } else {
       isS3 <- isS3stdGeneric(FUN)
       if (!is.null(names(isS3)))
-        fnNameInit <- names(isS3)
+        fnNameInitAlt <- names(isS3)
       if (isS3) {
         updatedFUN <- TRUE
         classes <- is(mc[[2]])
         for (cla in classes) {
-          FUN <- utils::getS3method(fnNameInit, cla, optional = TRUE)  # S3 matches on 1st arg: mc[[2]]
-          if (!is.null(FUN))
+          FUNposs <- utils::getS3method(fnNameInitAlt, cla, optional = TRUE)  # S3 matches on 1st arg: mc[[2]]
+          if (!is.null(FUNposs))
             break
         }
 
-        if (is.null(FUN)) {
-          FUN <- get0(fnNameInit, envir = callingEnv)
-          if (is.null(FUN) || isS4(FUN)) { # there are cases e.g., print that are both S4 & S3; this forces S3
-            FUN <- get0(paste0(fnNameInit, ".default"), envir = callingEnv)
+        # if generic fn was not exported, then getS3method won't find it above; try directly in NS
+        if (is.null(FUNposs)) {
+          envNam <- environmentName(environment(FUN))
+          for (cla in classes) {
+            possMeth <- paste0(fnNameInitAlt, ".", cla)
+            FUNposs <- try(getFromNamespace(possMeth, ns = envNam), silent = TRUE)
+            if (!is(FUNposs, "try-error")) {
+              break
+            } else {
+              FUNposs <- NULL
+            }
           }
         }
+
+        if (is.null(FUNposs)) {
+          FUNposs <- get0(fnNameInitAlt, envir = callingEnv)
+          if (is.null(FUNposs) || isS4(FUNposs)) { # there are cases e.g., print that are both S4 & S3; this forces S3
+            FUNposs <- get0(paste0(fnNameInitAlt, ".default"), envir = callingEnv)
+          }
+        }
+        FUN <- FUNposs
       }
     }
 
