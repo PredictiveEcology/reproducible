@@ -121,6 +121,8 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   dots <- list(...)
   if (!is.null(dots$studyArea)) {
     messagePrepInputs("studyArea is supplied (deprecated); assigning it to `cropTo` & `maskTo`")
+    if (isSpatial(dots$studyArea))
+      dots$studyArea <- terra::vect(dots$studyArea)
     maskTo <- dots$studyArea
     cropTo <- dots$studyArea
   }
@@ -224,6 +226,7 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   from
 }
 
+isSpatial <- function(x) inherits(x, "Spatial")
 isSpat <- function(x) is(x, "SpatRaster") || is(x, "SpatVector")
 isSpat2 <- function(origClass) any(origClass %in% c("SpatVector", "SpatRaster"))
 isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
@@ -437,6 +440,9 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
 
     if (!isSpatialAny(cropTo))
       if (is.na(cropTo)) omit <- TRUE
+
+    if (isSpatial(cropTo))
+      cropTo <- terra::vect(cropTo)
 
     if (!omit) {
       messagePrepInputs("    cropping..." , appendLF = FALSE)
