@@ -2,6 +2,7 @@
 #'
 #' @param cachePath A path describing the directory in which to create
 #'   the database file(s)
+#' @inheritParams Cache
 #' @param drv A driver, passed to `dbConnect`
 #' @param force Logical. Should it create a cache in the `cachePath`,
 #'   even if it already exists, overwriting.
@@ -33,7 +34,8 @@
 #'
 createCache <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                        conn = getOption("reproducible.conn", NULL), force = FALSE) {
+                        conn = getOption("reproducible.conn", NULL), force = FALSE,
+                        verbose = getOption("reproducible.verbose")) {
   # browser(expr = exists("aaaa"))
   alreadyExists <- CacheIsACache(cachePath, drv = drv, conn = conn, create = TRUE)
   if (alreadyExists && force == FALSE) {
@@ -81,7 +83,8 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
 saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId,
-                        linkToCacheId = NULL) {
+                        linkToCacheId = NULL,
+                        verbose = getOption("reproducible.verbose")) {
   # browser(expr = exists("._saveToCache_1"))
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
@@ -113,7 +116,8 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
       linkToCacheId <- NULL
     else {
       messageCache("  (A file with identical properties already exists in the Cache: ",basename(ftL),"; ",
-              "The newly added (",basename(fts),") is a file.link to that file)")
+              "The newly added (",basename(fts),") is a file.link to that file)",
+              verbose = verbose)
     }
     fs <- file.size(fts)
   }
@@ -153,7 +157,8 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
               "Usually, a solution involves using quote and eval around the formulas ",
               "and defining functions in a package or otherwise clean space, ",
               "i.e., not inside another function.\n",
-              "See http://adv-r.had.co.nz/memory.html#gc and 'capturing environments'.")
+              "See http://adv-r.had.co.nz/memory.html#gc and 'capturing environments'.",
+              verbose = verbose)
     }
   }
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
