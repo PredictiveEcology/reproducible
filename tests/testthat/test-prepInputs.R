@@ -1872,9 +1872,9 @@ test_that("rasters aren't properly resampled", {
   a <- raster(extent(0, 20, 0, 20), res = 2, vals = as.integer(1:100*4))
   b <- raster(extent(0, 30, 0, 30), res = c(3,3), vals = 1L:100L)
   #suppressWarnings({
-    crs(a) <- crsToUse
-    crs(b) <- crsToUse
-    #}) ## TODO: temporary until raster fixes all crs issues
+  crs(a) <- crsToUse
+  crs(b) <- crsToUse
+  #}) ## TODO: temporary until raster fixes all crs issues
 
   tiftemp1 <- normPath(tempfile(tmpdir = tmpdir, fileext = ".tif"))
   tiftemp2 <- normPath(tempfile(tmpdir = tmpdir, fileext = ".tif"))
