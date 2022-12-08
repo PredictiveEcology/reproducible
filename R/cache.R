@@ -967,6 +967,9 @@ Cache <-
 .namesCacheFormals <- names(.formalsCache)[]
 
 #' @keywords internal
+.namesPostProcessFormals <- function() setdiff(unique(unlist(lapply(methods(postProcess), formalArgs))), "...")
+
+#' @keywords internal
 .namesCacheFormalsSendToBoth <- intersect("verbose", names(.formalsCache)[])
 
 #' @keywords internal
@@ -1122,14 +1125,18 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame()) {
 
   } else if (isDoCall || identical(as.name("do.call"), FUNcaptured[[1]] )) {
     if (length(dotsCaptured) > 0) { # Cache(do.call(rnorm, list(1)))
-      if (exists("bbb", inherits = FALSE, envir = .GlobalEnv)) browser()
       doCallMatched <- as.list(match.call(do.call, as.call(append(list(do.call), dotsCaptured))))
       fnNameInit <- deparse(doCallMatched$what) # the [[1]] is the "list"
       FUN <- eval(doCallMatched$what, envir = callingEnv)
+      if (exists("bbb", inherits = FALSE, envir = .GlobalEnv)) browser()
       if (is(doCallMatched$args, "name")) {
-        args <- as.list(recursiveEvalNamesOnly(doCallMatched$args, envir = callingEnv)[[1]]) # this -1 is extra; it is do.call
+        args <- as.list(recursiveEvalNamesOnly(doCallMatched$args, envir = callingEnv)[[1]])
       } else {
-        args <- as.list(recursiveEvalNamesOnly(doCallMatched$args[-1], envir = callingEnv)) # this -1 is extra; it is do.call
+        if (length(doCallMatched$args) == 3) { # a call that needs to be evaluated
+          args <- as.list(recursiveEvalNamesOnly(doCallMatched$args, envir = callingEnv)) # this -1 is extra; it is do.call
+        } else {
+          args <- as.list(recursiveEvalNamesOnly(doCallMatched$args[-1], envir = callingEnv)) # this -1 is extra; it is do.call
+        }
       }
     } else {
       doCallMatched <- as.list(match.call(do.call, FUNcaptured))
