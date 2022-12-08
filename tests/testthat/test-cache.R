@@ -463,11 +463,11 @@ test_that("test environments", {
   # test same values but different enviros are same
   expect_true(identical(attributes(out)["tags"], attributes(out3)["tags"]))
 
-  # test environment is same as a list
-  expect_true(identical(attributes(out)["tags"], attributes(out4)["tags"]))
+  # test environment is same as a list -- they shouldn't be
+  expect_false(identical(attributes(out)["tags"], attributes(out4)["tags"]))
 
-  # test environment is same as recursive list
-  expect_true(identical(attributes(out)["tags"], attributes(out5)["tags"]))
+  # test environment is same as recursive list - they shouldn't be
+  expect_false(identical(attributes(out)["tags"], attributes(out5)["tags"]))
 
   df <- data.frame(a = a$a, b = LETTERS[1:10])
   out6 <- Cache(shortFn, a = df, cachePath = tmpdir)
@@ -1420,6 +1420,8 @@ test_that("test cache with new approach to match.call", {
   a[[8]] <- Cache(b$fun(1))
   a[[9]] <- b$fun(1) |> Cache()
   a[[10]] <- Cache(quote(rnorm(1)))
+  a[[11]] <- Cache(stats::rnorm(1))
+  a[[12]] <- Cache(stats::rnorm, 1)
   expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
   for (i in 2:10)
     expect_true(identical(attr(a[[i]], ".Cache")$newCache, FALSE))
@@ -1446,6 +1448,30 @@ test_that("test cache with new approach to match.call", {
     }
   }
 
+  if (requireNamespace("sf")) {
+    clearCache(ask = FALSE)
+    b <- list(fun = fun)
+    a <- list()
+
+    p1 <- sf::st_as_sfc("POLYGON((0 0, 0 10, 10 0, 10 10, 0 0))")
+    a[[1]] <- Cache(sf::st_make_valid(p1)) # not
+    a[[2]] <- Cache(sf::st_make_valid, p1) # not
+    a[[3]] <- Cache(quote(sf::st_make_valid(p1))) # not
+    library(sf)
+    on.exit({
+      try(detach("package:sf", unload = TRUE), silent = TRUE)
+    }, add = TRUE)
+    a[[4]] <- Cache(st_make_valid(p1)) # not
+    ff <- sf::st_make_valid
+    a[[5]] <- Cache(ff(p1))
+
+    expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
+    for (i in 2:length(a)) {
+      test <- identical(attr(a[[i]], ".Cache")$newCache, FALSE)
+      if (isFALSE(test)) browser()
+      expect_true(test)
+    }
+  }
 
 })
 
@@ -1492,15 +1518,27 @@ test_that("test cache; new approach to match.call, postProcess", {
   expect_true(identical(attr(b1, ".Cache")$newCache, TRUE))
   b2 <- Cache(postProcess(nc1, studyArea = ncSmall, filename2 = NULL))
   expect_true(identical(attr(b2, ".Cache")$newCache, FALSE))
+  b3 <- Cache(postProcess, nc1, studyArea = ncSmall, filename2 = NULL)
+  expect_true(identical(attr(b3, ".Cache")$newCache, FALSE))
 
   # S4 classes
   c1 <- Cache(.robustDigest(data.frame(a = 1)))
   c2 <- Cache(.robustDigest(data.frame(a = 1)))
-  c3 <- Cache(.robustDigest(data.frame(a = 1), verbose = -2))
+  c3 <- Cache(.robustDigest(data.frame(a = 1), verbose = -2)) # add a non-relevant arg
+  c4 <- Cache(.robustDigest, data.frame(a = 1))
+  c5 <- Cache(.robustDigest, data.frame(a = 1), verbose = -2)
+
+  expect_true(identical(attr(c1, ".Cache")$newCache, TRUE))
+  expect_true(identical(attr(c2, ".Cache")$newCache, FALSE))
+  expect_true(identical(attr(c3, ".Cache")$newCache, FALSE))
+  expect_true(identical(attr(c4, ".Cache")$newCache, FALSE))
+  expect_true(identical(attr(c5, ".Cache")$newCache, FALSE))
 
   # S4 classes
   d1 <- Cache(Checksums(tmpdir, write = FALSE))
   d2 <- Cache(Checksums(tmpdir, write = FALSE))
+  expect_true(identical(attr(c1, ".Cache")$newCache, TRUE))
+  expect_true(identical(attr(c2, ".Cache")$newCache, FALSE))
 
 
 })

@@ -286,24 +286,15 @@
   }
 
   # Class-specific message
-  # browser(expr = exists("dddd"))
   .cacheMessage(output, fnDetails$functionName, fromMemoise = fromMemoise, verbose = verbose)
 
   # This is protected from multiple-write to SQL collisions
   .addTagsRepo(cacheId = isInRepo[[.cacheTableHashColName()]][lastOne],
                cachePath = cachePath, drv = drv, conn = conn)
 
-  # browser(expr = exists("._getFromRepo_1"))
-  # if (sideEffect != FALSE) {
-  #   .CacheSideEffectFn1(output, sideEffect, cachePath, quick, algo, FUN, verbose = verbose, ...)
-  # }
-
   # This allows for any class specific things
-  output <- if (fnDetails$isDoCall) {
-    do.call(.prepareOutput, args = append(list(output, cachePath), modifiedDots$args))
-  } else {
+  output <-
     do.call(.prepareOutput, args = append(list(output, cachePath), modifiedDots))
-  }
 
   if (length(debugCache)) {
     if (!is.na(pmatch(debugCache, "complete")) | isTRUE(debugCache))
