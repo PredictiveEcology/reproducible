@@ -1048,37 +1048,39 @@ findFun <- function(FUNcaptured, envir) {
 recursiveEvalNamesOnly <- function(args, envir = parent.frame()) {
   if (length(args)) {
     if (!any(grepl("^\\$|\\[|\\:\\:", args))) {
-      # doLapply <- TRUE
-      # if (length(args) > 2) {
-      #   if (exists("bbb", inherits = FALSE, envir = .GlobalEnv)) browser()
-      #   if (identical(as.name("::"), args[[1]])) {
-      #     doLapply <- is.call(args[[3]])
-      #   }
-      # }
-      # if (doLapply) {
-        out <- lapply(args, function(x) {
-          if (is.name(x)) {
-            # exists(x, envir = envir, inherits = FALSE)
-            if (exists(x, envir)) { # looks like variables that are in ... in the `envir` are not found; would need whereInStack
-              evd <- try(eval(x, envir))
-              if (is(evd, "try-error")) browser()
-              isPrim <- is.primitive(evd)
-              if (isPrim) { x } else {evd}
+      out <- lapply(args, function(xxxx) {
+        if (is.name(xxxx)) {
+          # exists(xxxx, envir = envir, inherits = FALSE)
+          if (exists(xxxx, envir)) { # looks like variables that are in ... in the `envir` are not found; would need whereInStack
+            evd <- try(eval(xxxx, envir))
+            if (is(evd, "try-error")) browser()
+            isPrim <- is.primitive(evd)
+            if (isPrim) {
+              xxxx
             } else {
-              envir2 <- whereInStack(x, envir)
-              ret <- try(eval(x, envir2))
-              if (is(ret, "try-error"))
-                browser()
-              ret
+              isQuo <- is(evd, "quosure")
+              if (isQuo)
+                evd <- rlang::eval_tidy(evd)
+              if (is(evd, "list")) {
+                evd <- recursiveEvalNamesOnly(evd, envir)
+              }
+              evd
             }
           } else {
-            if (is.call(x)) {
-              recursiveEvalNamesOnly(x, envir)
-            } else {
-              x
-            }
+            envir2 <- whereInStack(xxxx, envir)
+            ret <- try(eval(xxxx, envir2))
+            if (is(ret, "try-error"))
+              browser()
+            ret
           }
-        })
+        } else {
+          if (is.call(xxxx)) {
+            recursiveEvalNamesOnly(xxxx, envir)
+          } else {
+            xxxx
+          }
+        }
+      })
 
       args <- try(as.call(out))
       if (is(args, "try-error")) browser()
