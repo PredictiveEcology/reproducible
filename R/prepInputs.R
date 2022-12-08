@@ -371,10 +371,13 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   suppressWarnings({
     naFun <- all(is.na(theFun))
   })
-  argsPassingToTheFun <- out[!names(out) %in% c(formalArgs(prepInputs), "checkSums", "dots", "object")]
+
+  out <- modifyList(out, list(...))
+
+  argsPassingToTheFun <- out[!names(out) %in% c(.namesPostProcessFormals(), formalArgs(prepInputs),
+                                                "checkSums", "dots", "object")]
   args <- argsPassingToTheFun[!names(argsPassingToTheFun) %in% "targetFilePath"]
 
-  #
   # ## dots will contain too many things for some functions
   # ## -- need to remove those that are known going into prepInputs
   # args <- out$dots[!(names(out$dots) %in% .argsToRemove)]
@@ -455,6 +458,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     messagePrepInputs("No loading of object into R; fun = ", theFun, verbose = verbose)
     x <- out
   }
+
   if (requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)) {
     if (!(all(is.null(out$dots$studyArea),
               is.null(out$dots$rasterToMatch),
@@ -510,13 +514,14 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       out$dots[spatials] <- lapply(out$dots[spatials], function(x) rlang::quo(x))
       xquo <- rlang::quo(x)
 
+      fullList <- modifyList(list(x = xquo, filename1 = out$targetFilePath,
+                                  overwrite = overwrite,
+                                  destinationPath = out$destinationPath,
+                                  useCache = useCache,
+                                  verbose = verbose), # passed into postProcess
+                             out$dots)
       x <- Cache(
-        do.call, postProcess, modifyList(list(x = xquo, filename1 = out$targetFilePath,
-                                              overwrite = overwrite,
-                                              destinationPath = out$destinationPath,
-                                              useCache = useCache,
-                                              verbose = verbose), # passed into postProcess
-                                         out$dots),
+        do.call, postProcess, fullList,
         useCache = useCache, verbose = verbose # used here
       )
     }
