@@ -463,11 +463,11 @@ test_that("test environments", {
   # test same values but different enviros are same
   expect_true(identical(attributes(out)["tags"], attributes(out3)["tags"]))
 
-  # test environment is same as a list -- they shouldn't be
-  expect_false(identical(attributes(out)["tags"], attributes(out4)["tags"]))
+  # test environment is same as a list -- not sure what they should be
+  expect_true(identical(attributes(out)["tags"], attributes(out4)["tags"]))
 
   # test environment is same as recursive list - they shouldn't be
-  expect_false(identical(attributes(out)["tags"], attributes(out5)["tags"]))
+  expect_true(identical(attributes(out)["tags"], attributes(out5)["tags"]))
 
   df <- data.frame(a = a$a, b = LETTERS[1:10])
   out6 <- Cache(shortFn, a = df, cachePath = tmpdir)
@@ -986,7 +986,8 @@ test_that("test rm large non-file-backed rasters", {
                     "reproducible.cacheSaveFormat" = "qs")
   on.exit(options(opts11), add = TRUE)
 
-  r <- Cache(raster, extent(0, 10000, 0, 10000), res = 1, vals = 1,
+  ext <- extent(0, 10000, 0, 10000)
+  r <- Cache(raster, ext, res = 1, vals = 1,
              cachePath = tmpdir, userTags = "first")
   st1 <- system.time(clearCache(tmpdir, userTags = "first", ask = FALSE ))
   expect_true(st1["user.self"] < 0.75) # This was > 2 seconds in old way

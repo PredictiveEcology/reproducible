@@ -395,6 +395,7 @@ Cache <-
     # Capture everything -- so not evaluated
     FUNcaptured <- substitute(FUN)
     dotsCaptured <- as.list(substitute(list(...))[-1])
+    FUNbackup <- as.call(append(list(FUNcaptured), dotsCaptured))
 
     if (missing(FUN)) stop("Cache requires the FUN argument")
 
@@ -404,7 +405,10 @@ Cache <-
                             FUNcaptured = FUNcaptured)
 
     # next line is (1 && 1) && 1 -- if it has :: or $ or [] e.g., fun$b, it MUST be length 3 for it to not be "captured function"
-    isCapturedFUN <- isFALSE(isDollarSqBrPkgColon(FUNcaptured) && length(FUNcaptured) == 3) && length(dotsCaptured) == 0
+    isCapturedFUN <- isFALSE(isDollarSqBrPkgColon(FUNcaptured) &&
+                               length(FUNcaptured) == 3) &&
+      length(dotsCaptured) == 0 && # no dots; likely not a captured function, unless it has no args
+      (length(FUNcaptured) > 1) # Must have some args
     # isCapturedFUN <- length(dotsCaptured) == 0 && !is.function(fnDetails$FUN) # a function call with no args should not be "capturedFun"
     if (!is.null(fnDetails$userTags))
       userTags <- c(userTags, paste0("functionInner:", fnDetails$userTags))
@@ -421,7 +425,8 @@ Cache <-
                    "; skipping Cache on function ", fnDetails$functionName,
                    if (nestedLev > 0) paste0(" (currently running nested Cache level ", nestedLev + 1, ")"),
                    verbose = verbose)
-      output <- evalTheFun(fnDetails, FUNcaptured, isCapturedFUN, envir = parent.frame(), FUN, verbose, ...)
+      output <- evalTheFun(fnDetails, FUNcaptured, isCapturedFUN, envir = parent.frame(), FUN,
+                           FUNbackup, verbose, ...)
       # }
     } else {
       startCacheTime <- verboseTime(verbose, verboseLevel = 3)
@@ -731,7 +736,8 @@ Cache <-
 
         # Run the FUN
         preRunFUNTime <- Sys.time()
-        output <- evalTheFun(fnDetails, FUNcaptured, isCapturedFUN, envir = parent.frame(), FUN, verbose, ...)
+        output <- evalTheFun(fnDetails, FUNcaptured, isCapturedFUN, envir = parent.frame(), FUN,
+                             FUNbackup, verbose, ...)
         postRunFUNTime <- Sys.time()
         elapsedTimeFUN <- postRunFUNTime - preRunFUNTime
       }
@@ -1177,7 +1183,7 @@ getMethodAll <- function(FUNcaptured, callingEnv) {
     }, silent = TRUE)
     matchOn <- FUN@signature[seq(numArgsInSig)]
 
-    argsClasses <- unlist(lapply(FUNcaptured, function(x) class(x)[1]))
+    argsClasses <- unlist(lapply(FUNcaptured, function(x) class(x)))#[1]))
     argsClasses <- argsClasses[names(argsClasses) %in% matchOn]
     missingArgs <- matchOn[!(matchOn %in% names(argsClasses))]
 
@@ -1338,7 +1344,7 @@ getFunctionName2 <- function(mc) {
 
   fnNameInit <- getFunctionName2(mc1)
 
-  FUN <- FUNcapturedNamesEvaled[[1]] # This may be wrong because fn with no args
+  FUN <- FUNcapturedNamesEvaled[[1]] # This will be wrong if a fn has no args
   if (is.call(FUN)) { # This will only happen if there are no args to FUN e.g., fun()... anything else is a name fun(1)
     FUN <- FUN[[1]]
     FUNcapturedNamesEvaled[[1]] <- FUN
@@ -2054,7 +2060,8 @@ isPkgColonFn <- function(x) {
   identical(x[[1]], quote(`::`))
 }
 
-evalTheFun <- function(fnDetails, FUNcaptured, isCapturedFUN, envir = parent.frame(), FUN, verbose, ...) {
+evalTheFun <- function(fnDetails, FUNcaptured, isCapturedFUN, envir = parent.frame(), FUN,
+                       FUNbackup, verbose, ...) {
   commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
   if (length(commonArgs) > 0) {
     messageCache("Cache and ", fnDetails$functionName, " have 1 or more common arguments: ", commonArgs,
@@ -2067,14 +2074,17 @@ evalTheFun <- function(fnDetails, FUNcaptured, isCapturedFUN, envir = parent.fra
   # theCall <- as.call(append(list(fnDetails$FUN), fnDetails$modifiedDots))
   # eval(theCall)
   if (isCapturedFUN) {
-    eval(FUNcaptured, envir = envir)
+    out <- eval(FUNcaptured, envir = envir)
   } else {
     if (length(commonArgs) == 0) {
-      FUN(...)
+      out <- try(FUN(...), silent = TRUE) #  There are rare cases, e.g., Cache(raster, extent(0,1,0,1), vals = 1, res = 1) where FUN is wrong method
+      if (is(out, "try-error"))
+        out <- eval(FUNbackup, envir = envir)
     } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
-      do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE, envir = parent.frame())))
+      out <- do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE, envir = parent.frame())))
     }
   }
+  out
 }
 
 searchInRepos <- function(cachePaths, drv, outputHash, conn) {
