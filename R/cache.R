@@ -984,7 +984,12 @@ Cache <-
 .namesCacheFormals <- names(.formalsCache)[]
 
 #' @keywords internal
-.namesPostProcessFormals <- function() setdiff(unique(unlist(lapply(methods(postProcess), formalArgs))), "...")
+.namesPostProcessFormals <- function() {
+  # setdiff(unique(unlist(lapply(methods(postProcess), formalArgs))), "...")
+  c("x", "filename1", "filename2", "studyArea", "rasterToMatch",
+    "overwrite", "useSAcrs", "useCache", "verbose")
+}
+
 
 #' @keywords internal
 .namesCacheFormalsSendToBoth <- intersect("verbose", names(.formalsCache)[])
@@ -1070,12 +1075,13 @@ isDollarSqBrPkgColon <- function(args) {
 }
 
 recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE) {
-  if (exists("aaa")) browser()
+  if (browserCond("aaa")) browser()
   needsEvaling <- (length(args) > 1) || (length(args) == 1 && is.call(args)) # second case is fun() i.e., no args
   if (isTRUE(needsEvaling)) {
     if (is.call(args[[1]])) { # e.g., a$fun, stats::runif
       args[[1]] <- eval(args[[1]], envir)
     }
+    if (browserCond("aaa1")) browser()
 
     isStandAlone <- FALSE
     if (length(args) == 3) { # e.g., status::runif or fun(1, 2); second case requires subsequent efforts
@@ -1088,7 +1094,7 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE) {
 
     if (!any(isStandAlone)) {
       out <- lapply(args, function(xxxx) {
-        if (exists("ccc")) browser()
+        if (browserCond("aaa2")) browser()
         if (is.name(xxxx)) {
           # exists(xxxx, envir = envir, inherits = FALSE)
           if (exists(xxxx, envir)) { # looks like variables that are in ... in the `envir` are not found; would need whereInStack
@@ -1109,8 +1115,7 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE) {
           } else {
             envir2 <- whereInStack(xxxx, envir)
             ret <- try(eval(xxxx, envir2))
-            if (is(ret, "try-error"))
-              browser()
+            if (is(ret, "try-error")) browser()
             ret
           }
         } else {
@@ -1129,13 +1134,17 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE) {
       args <- eval(args, envir)
 
     }
+  } else {
+    if (length(args) == 1 && is.name(args)) {
+      args <- eval(args, envir)
+    }
   }
   args
 }
 
 
 matchCall <- function(FUNcaptured, envir = parent.frame()) {
-  if (exists("hhh")) browser()
+  if (browserCond("hhh")) browser()
   if (length(FUNcaptured) > 1) {
     FUN <- FUNcaptured[[1]]
     args <- as.list(FUNcaptured[-1])
@@ -1150,7 +1159,7 @@ matchCall <- function(FUNcaptured, envir = parent.frame()) {
           args2[seq(args)] <- args
           mc <- append(list(FUN), args2)
         } else {
-          if (exists("bbb", inherits = FALSE, envir = .GlobalEnv)) browser()
+          if (browserCond("hhh1")) browser()
           # args <- as.list(args[-1]) # remove the list that is inside the substitute; move to outside
           mc <- match.call(FUN, FUNcaptured)
         }
@@ -1284,7 +1293,7 @@ formals2 <- function(FUNcaptured) {
 }
 
 getFunctionName2 <- function(mc) {
-  if (exists("fff")) browser()
+  if (browserCond("fff")) browser()
   if (length(mc) > 0) {
     if (any(grepl("^\\$|\\[|\\:\\:", mc)) ) { # stats::runif
       if (any(grepl("^\\$|\\[|\\:\\:", mc[[1]])) ) { # stats::runif
@@ -1311,6 +1320,7 @@ getFunctionName2 <- function(mc) {
     FUNcaptured <- substitute(FUN)
 
   FUNcapturedOrig <- FUNcaptured
+  if (browserCond("eee")) browser()
 
   # Remove `quote`
   isQuoted <- any(grepl("^quote", FUNcaptured)) # won't work for complicated quote
@@ -1325,7 +1335,7 @@ getFunctionName2 <- function(mc) {
 
 
   # Make all cases look alike e.g., Cache(rnorm, 1) --> Cache(rnorm(1))
-  if (exists("eee", inherits = FALSE, envir = .GlobalEnv)) browser()
+  if (browserCond("eee1")) browser()
   FUNcapturedNamesEvaled <- recursiveEvalNamesOnly(FUNcaptured, callingEnv) # deals with e.g., stats::rnorm, b$fun, b[[fun]]
 
   if (!is.call(FUNcapturedNamesEvaled)) {
@@ -1334,7 +1344,10 @@ getFunctionName2 <- function(mc) {
 
   if (any(grepl("^do.call", FUNcapturedNamesEvaled)) || identical(do.call, FUNcapturedNamesEvaled[[1]])) {
     mc <- match.call(do.call, FUNcapturedNamesEvaled)
-    FUNcapturedNamesEvaled <- as.call(append(list(mc$what), as.list(mc$args[-1])))
+    if (browserCond("eee2")) browser()
+    FUNcapturedNamesEvaled <- try(as.call(append(list(mc$what), mc$args[-1]))) # the -1 is to remove the "list"
+    # FUNcapturedNamesEvaled <- try(as.call(append(list(mc$what), as.list(recursiveEvalNamesOnly(mc$args, callingEnv)))))
+    if (is(FUNcapturedNamesEvaled, "try-error")) browser()
   }
   FUNcapturedNamesEvaled <- recursiveEvalNamesOnly(FUNcapturedNamesEvaled, callingEnv)
 
@@ -2078,8 +2091,10 @@ evalTheFun <- function(fnDetails, FUNcaptured, isCapturedFUN, envir = parent.fra
   } else {
     if (length(commonArgs) == 0) {
       out <- try(FUN(...), silent = TRUE) #  There are rare cases, e.g., Cache(raster, extent(0,1,0,1), vals = 1, res = 1) where FUN is wrong method
-      if (is(out, "try-error"))
+      if (is(out, "try-error")) {
+        browser()
         out <- eval(FUNbackup, envir = envir)
+      }
     } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
       out <- do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE, envir = parent.frame())))
     }
@@ -2217,3 +2232,6 @@ whereInStack <- function(obj, startingEnv = parent.frame()) {
   return(testEnv)
 }
 
+browserCond <- function(expr) {
+  any(startsWith(ls(.GlobalEnv), expr))
+}
