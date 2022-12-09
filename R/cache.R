@@ -1185,9 +1185,10 @@ getMethodAll <- function(FUNcaptured, callingEnv) {
     }, silent = TRUE)
     matchOn <- FUN@signature[seq(numArgsInSig)]
 
-    argsClasses <- unlist(lapply(FUNcaptured, function(x) class(x)))#[1]))
-    argsClasses <- argsClasses[names(argsClasses) %in% matchOn]
-    missingArgs <- matchOn[!(matchOn %in% names(argsClasses))]
+    argsClassesList <- lapply(FUNcaptured, function(x) class(x))
+    # argsClasses <- unlist(argsClassesList)#[1]))
+    argsClasses <- unlist(unname(argsClassesList[names(argsClassesList) %in% matchOn]))
+    missingArgs <- matchOn[!(matchOn %in% names(argsClassesList))]
 
     missings <- rep("missing", length(missingArgs))
     names(missings) <- missingArgs
