@@ -13,7 +13,7 @@
   )
 
   hashObjectSize <- unlist(lapply(modifiedDots, function(x) {
-    objSize <- objSize(x, quick = quick)
+    objSize <- unname(attr(objSize(x), "objSize"))
   }))
 
   lengths <- unlist(lapply(preDigestUnlist, function(x) length(unlist(x))))

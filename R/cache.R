@@ -46,16 +46,9 @@ utils::globalVariables(c(
 #'         Caching*.
 #' }
 #'
-#'
-#' As part of the SpaDES ecosystem of R packages, `Cache` can be used
-#' within SpaDES modules. If it is, then the cached entry will automatically
-#' get 3 extra `userTags`: `eventTime`, `eventType`, and `moduleName`.
-#' These can then be used in `clearCache` to selectively remove cached objects
-#' by `eventTime`, `eventType` or `moduleName`.
-#'
-#' `Cache` will add a tag to the artifact in the database called `accessed`,
+#' `Cache` will add a tag to the entry in the cache database called `accessed`,
 #' which will assign the time that it was accessed, either read or write.
-#' That way, artifacts can be shown (using `showCache`) or removed (using
+#' That way, cached items can be shown (using `showCache`) or removed (using
 #' `clearCache`) selectively, based on their access dates, rather than only
 #' by their creation dates. See example in [clearCache()].
 #'
@@ -876,7 +869,7 @@ Cache <-
 
       userTags <- c(userTags,
                     paste0("class:", class(outputToSave)[1]),
-                    paste0("object.size:", objSize),
+                    paste0("object.size:", format(as.numeric(objSize))),
                     paste0("accessed:", Sys.time()),
                     paste0("inCloud:", isTRUE(useCloud)),
                     paste0("resultHash:", resultHash),

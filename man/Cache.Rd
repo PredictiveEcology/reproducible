@@ -188,6 +188,12 @@ passed at each Cache call, 2) any inherited arguments from an outer Cache
 call, 3) the default values of the Cache function. See section on \emph{Nested
 Caching}.
 }
+
+\code{Cache} will add a tag to the entry in the cache database called \code{accessed},
+which will assign the time that it was accessed, either read or write.
+That way, cached items can be shown (using \code{showCache}) or removed (using
+\code{clearCache}) selectively, based on their access dates, rather than only
+by their creation dates. See example in \code{\link[=clearCache]{clearCache()}}.
 }
 \note{
 As indicated above, several objects require pre-treatment before

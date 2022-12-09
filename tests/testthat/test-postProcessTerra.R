@@ -69,7 +69,7 @@ test_that("testing terra", {
   xVect <- terra::as.polygons(xCut)
   xVect2 <- terra::deepcopy(xVect)
 
-  y <- copy(x)
+  y <- terra::deepcopy(x)
   y[y > 200 & y < 300] <- NA
   x[] <- 1
   vRast <- terra::rast(v, res = 0.008333333)

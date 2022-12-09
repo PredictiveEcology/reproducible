@@ -1386,16 +1386,24 @@ test_that("change to new capturing of FUN & base pipe", {
     expect_true(all((st1[1] * 50) > st3[1]))
   }
 
-  for (i in 1:3) Cache(rnorm, i)
+  clearCache(tmpCache)
+  for (i in 1:3) Cache(rnorm, i, cachePath = tmpCache)
+  expect_true(length(unique(showCache(tmpCache)$cacheId)) == 3)
   # This would make sense it if only generates one Cache entry... i.e., do not evaluate the sample
+
+  clearCache(tmpCache)
   for (i in 1:3)
     sample(1000, i) |>  # creates 1 random number
     rnorm(1, 2, sd = _) |>  # passed to sd of rnorm
     Cache(cachePath = tmpCache)
+  sc <- data.table::copy(showCache(tmpCache))
+  expect_true(length(unique(sc$cacheId)) == 3)
 
-  # This, using logic from above would evaluate `sample(10, 1)` before Caching ... so this will generate new Caches each time
-  for (i in 1:3)
-    Cache(rnorm(1, 2, sample(1000, 1)))
+  # This, different way; not evaluating `sample`; so this is same as prev
+  for (i in 1:3) Cache(rnorm(1, 2, sample(1000, i)), cachePath = tmpCache)
+  sc1 <- showCache(tmpCache)
+  expect_true(length(unique(sc1$cacheId)) == 3)
+  expect_true(NROW(sc1) > NROW(sc))
 
 })
 
