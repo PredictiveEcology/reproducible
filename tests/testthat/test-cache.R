@@ -1191,7 +1191,9 @@ test_that("test file link with duplicate Cache", {
 
 test_that("test .object arg for list in Cache", {
   testInitOut <- testInit()
+  opts <- options(reproducible.cachePath = tmpdir)
   on.exit({
+    options(opts)
     testOnExit(testInitOut)
   }, add = TRUE)
   l <- list(a = 1, b = 2, f = 3)
@@ -1330,10 +1332,10 @@ test_that("Cache the dots; .cacheExtra", {
   }
 
   suppressMessages({
-    out3 <- Cache(fn3, .cacheExtra = "12342", cachePath = tmpCache)
+    out3 <- Cache(fn3, a = 1, b = 2, .cacheExtra = "12342", cachePath = tmpCache)
   })
   suppressMessages({
-    out4 <- Cache(fn3, .cacheExtra = "123422", cachePath = tmpCache)
+    out4 <- Cache(fn3, a = 1, b = 2, .cacheExtra = "123422", cachePath = tmpCache)
   })
   expect_true(!identical(out3, out4))
 
@@ -1448,6 +1450,7 @@ test_that("test cache with new approach to match.call", {
     }
   }
 
+  # This tries to do a method that is not actually exported from a package; the generic (sf::st_make_valid) is
   if (requireNamespace("sf")) {
     clearCache(ask = FALSE)
     b <- list(fun = fun)

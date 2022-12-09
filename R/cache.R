@@ -134,12 +134,17 @@ utils::globalVariables(c(
 #' to digest the content of the file (using `quick = FALSE`),
 #' or just the filename (`(quick = TRUE)`). See examples.
 #'
-#' @section Stochasticity:
-#' In general, it is expected that caching will only be used when stochasticity
-#' is not relevant, or if a user has achieved sufficient stochasticity (e.g., via
-#' sufficient number of calls to `experiment`) such that no new explorations
-#' of stochastic outcomes are required. It will also be very useful in a
-#' reproducible workflow.
+#' @section Stochasticity or randomness:
+#' In general, it is expected that caching will only be used when randomness is not
+#' desired, e.g., `Cache(rnorm(1))` is unlikely to be useful in many cases. However,
+#' `Cache` captures the call that is passed to it, leaving all functions unevaluated.
+#' As a result `Cache(glm, x ~ y, rnorm(1))` will not work as a means of forcing
+#' a new evaluation each time, as the `rnorm(1)` is not evaluated before the call
+#' is assessed against the cache database. To force a new call each time, evaluate
+#' the randomness prior to the Cache call, e.g., `ran = rnorm(1); Cache(glm, x ~ y, ran)`.
+#' Note this does not work for `glm` because `glm` accepts `...`.
+#' Rather, this randomness should be passed to `.cacheExtra`, e.g.,
+#' `Cache(glm, x ~ y, .cacheExtra = ran)`
 #'
 #' @section `drv` and `conn`:
 #' By default, `drv` uses an SQLite database. This can be sufficient for most cases.
@@ -395,10 +400,12 @@ Cache <-
 
     # returns "modifiedDots", "originalDots", "FUN", "funName", which will
     #  have modifications under many circumstances, e.g., do.call, specific methods etc.
-    isCapturedFUN <- length(dotsCaptured) == 0
     fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", ...,
                             FUNcaptured = FUNcaptured)
-    browser()
+
+    # next line is (1 && 1) && 1 -- if it has :: or $ or [] e.g., fun$b, it MUST be length 3 for it to not be "captured function"
+    isCapturedFUN <- isFALSE(isDollarSqBrPkgColon(FUNcaptured) && length(FUNcaptured) == 3) && length(dotsCaptured) == 0
+    # isCapturedFUN <- length(dotsCaptured) == 0 && !is.function(fnDetails$FUN) # a function call with no args should not be "capturedFun"
     if (!is.null(fnDetails$userTags))
       userTags <- c(userTags, paste0("functionInner:", fnDetails$userTags))
     FUN <- fnDetails$FUN
@@ -406,6 +413,7 @@ Cache <-
     modifiedDots <- fnDetails$modifiedDots
     originalDots <- fnDetails$originalDots
     skipCacheDueToNumeric <- is.numeric(useCache) && useCache <= (fnDetails$nestLevel)
+    if (exists("ggg")) browser()
     if (isFALSE(useCache) || isTRUE(0 == useCache) || skipCacheDueToNumeric) {
       nestedLev <- max(0, as.numeric(fnDetails$nestLevel)) ## nestedLev >= 0
       spacing <- paste(collapse = "", rep("  ", nestedLev))
@@ -489,7 +497,7 @@ Cache <-
       preCacheDigestTime <- Sys.time()
       toDigest <- modifiedDots[!argsToOmitForDigest]
       if (!is.null(.cacheExtra)) {
-        toDigest <- append(toDigest, list(.cacheExtra))
+        toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
       }
       cacheDigest <- CacheDigest(toDigest, .objects = .objects,
                                  length = length, algo = algo, quick = quick,
@@ -1051,18 +1059,27 @@ findFun <- function(FUNcaptured, envir) {
   out
 }
 
-recursiveEvalNamesOnly <- function(args, envir = parent.frame()) {
+isDollarSqBrPkgColon <- function(args) {
+  isTRUE(any(try(grepl("^\\$|\\[|\\:\\:", args), silent = TRUE)))
+}
+
+recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE) {
   if (exists("aaa")) browser()
-  if (length(args) > 1) {
+  needsEvaling <- (length(args) > 1) || (length(args) == 1 && is.call(args)) # second case is fun() i.e., no args
+  if (isTRUE(needsEvaling)) {
     if (is.call(args[[1]])) { # e.g., a$fun, stats::runif
       args[[1]] <- eval(args[[1]], envir)
     }
 
-    isStandAlone <- if (length(args[[1]]) == 3) {
-      isTRUE(try(grepl("^\\$|\\[|\\:\\:", args[[1]]), silent = TRUE))
-    } else {
-      FALSE
+    isStandAlone <- FALSE
+    if (length(args) == 3) { # e.g., status::runif or fun(1, 2); second case requires subsequent efforts
+      if (!is.function(args[[1]]))         # this removes fun(1, 2) case
+        isStandAlone <- isDollarSqBrPkgColon(args[[1]])
+
+    } else if (length(args[[1]]) == 3) {
+      isStandAlone <- isDollarSqBrPkgColon(args[[1]])
     }
+
     if (!any(isStandAlone)) {
       out <- lapply(args, function(xxxx) {
         if (exists("ccc")) browser()
@@ -1073,13 +1090,13 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame()) {
             if (is(evd, "try-error")) browser()
             isPrim <- is.primitive(evd)
             if (isPrim) {
-              xxxx
+              eval(xxxx)
             } else {
               isQuo <- is(evd, "quosure")
               if (isQuo)
                 evd <- rlang::eval_tidy(evd)
               if (is(evd, "list")) {
-                evd <- recursiveEvalNamesOnly(evd, envir)
+                evd <- recursiveEvalNamesOnly(evd, envir, outer = FALSE)
               }
               evd
             }
@@ -1092,14 +1109,15 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame()) {
           }
         } else {
           if (is.call(xxxx)) {
-            recursiveEvalNamesOnly(xxxx, envir)
+            recursiveEvalNamesOnly(xxxx, envir, outer = FALSE)
           } else {
             xxxx
           }
         }
       })
 
-      args <- try(as.call(out))
+      args <- if (isTRUE(outer)) try(as.call(out)) else out
+
       if (is(args, "try-error")) browser()
     } else {
       args <- eval(args, envir)
@@ -1111,17 +1129,18 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame()) {
 
 
 matchCall <- function(FUNcaptured, envir = parent.frame()) {
+  if (exists("hhh")) browser()
   if (length(FUNcaptured) > 1) {
     FUN <- FUNcaptured[[1]]
     args <- as.list(FUNcaptured[-1])
     if (is.call(FUN)) FUN <- eval(FUN, envir)
     if (is.function(FUN)) {
-      forms <- formals(FUN)
+      forms <- if (is.primitive(FUN)) formals(args(FUN)) else formals(FUN)
       if (length(forms) == 0) {
         mc <- list(FUN)
       } else {
         if (is.primitive(FUN)) {
-          args2 <- formals(args(FUN))
+          args2 <- forms
           args2[seq(args)] <- args
           mc <- append(list(FUN), args2)
         } else {
@@ -1259,11 +1278,16 @@ formals2 <- function(FUNcaptured) {
 }
 
 getFunctionName2 <- function(mc) {
-  if (length(mc) > 1) {
-    if (any(grepl("^\\$|\\[|\\:\\:", mc))) {
-      fnNameInit <- deparse(mc)
+  if (exists("fff")) browser()
+  if (length(mc) > 0) {
+    if (any(grepl("^\\$|\\[|\\:\\:", mc)) ) { # stats::runif
+      if (any(grepl("^\\$|\\[|\\:\\:", mc[[1]])) ) { # stats::runif
+        fnNameInit <- deparse(mc[[1]])
+      } else {
+        fnNameInit <- deparse(mc)
+      }
     } else {
-      fnNameInit <- deparse(mc[[1]])
+      fnNameInit <- deparse(as.list(mc[[1]])[[1]]) # fun() and fun could both be here in first slot
     }
   } else {
     fnNameInit <- deparse(mc)
@@ -1290,6 +1314,9 @@ getFunctionName2 <- function(mc) {
   dotsCaptured <- substitute(list(...))
   dotsCaptured <- as.list(dotsCaptured[-1]) # need to remove the `list` on the inside of the substitute
 
+  # Backward compatibility; has no effect now
+  userTagsOtherFunctions <- NULL
+
 
   # Make all cases look alike e.g., Cache(rnorm, 1) --> Cache(rnorm(1))
   if (exists("eee", inherits = FALSE, envir = .GlobalEnv)) browser()
@@ -1308,27 +1335,34 @@ getFunctionName2 <- function(mc) {
   # Now FUNcaptured will always have at least 1 element, because it is a call
   mc1 <- matchCall(FUNcaptured, callingEnv)
   FUNcapturedNamesEvaled <- matchCall(FUNcapturedNamesEvaled, callingEnv)
+
   fnNameInit <- getFunctionName2(mc1)
 
-  FUN <- FUNcapturedNamesEvaled[[1]]
+  FUN <- FUNcapturedNamesEvaled[[1]] # This may be wrong because fn with no args
+  if (is.call(FUN)) { # This will only happen if there are no args to FUN e.g., fun()... anything else is a name fun(1)
+    FUN <- FUN[[1]]
+    FUNcapturedNamesEvaled[[1]] <- FUN
+  }
 
   fnDetails <- list(functionName = fnNameInit,
                     .FUN = FUN,
                     nestLevel = 1)
-  userTagsOtherFunctions <- NULL
+
+  # both match.call and matchCall leave a trailing () if there is a fn with no args
+  # mc1[[1]] <- as.list(mc1[[1]])[[1]]
+  # FUNcapturedNamesEvaled[[1]] <- as.list(FUNcapturedNamesEvaled[[1]])[[1]]
 
   if (is.function(FUN)) {
     FUN <- getMethodAll(FUNcapturedNamesEvaled, callingEnv)
-    forms <- formals(FUN)
-    FUNcapturedNamesEvaled[[1]] <- FUN
+    forms <- if (is.primitive(FUN)) formals(args(FUN)) else formals(FUN)
+    FUNcapturedNamesEvaled[[1]] <- FUN # may be same if it was a primitive or just a function
     fnDetails$.FUN <- FUN
 
-    if (is.primitive(FUN)) {
-      FUNcapturedNamesEvaled <- append(list(FUN), formals(args(FUN)))
-    } else if (length(forms) > 0) {
-      forms <- formals2(FUNcapturedNamesEvaled)
+    if (!is.primitive(FUN) && (length(forms) > 0)) {
+      forms <- formals2(FUNcapturedNamesEvaled) # this gets formals for methods;
     }
   } else {
+    browser() # This hasn't been tested yet -- args is wrong in next line
     FUNcapturedNamesEvaled <- append(list(NULL), append(FUN, args)) # the first arg is supposed to be a function below; put NULL as placeholder
     forms <- names(FUNcapturedNamesEvaled[-1])
   }
@@ -1425,7 +1459,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
 
   # need to omit arguments that are in Cache function call
   defaults <- names(objsToDigest) %in% .defaultCacheOmitArgs
-  if (length(defaults))
+  if (sum(defaults))
     objsToDigest[defaults] <- NULL
 
   if (is.character(quick) || isTRUE(quick)) {

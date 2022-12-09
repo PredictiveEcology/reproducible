@@ -188,18 +188,6 @@ passed at each Cache call, 2) any inherited arguments from an outer Cache
 call, 3) the default values of the Cache function. See section on \emph{Nested
 Caching}.
 }
-
-As part of the SpaDES ecosystem of R packages, \code{Cache} can be used
-within SpaDES modules. If it is, then the cached entry will automatically
-get 3 extra \code{userTags}: \code{eventTime}, \code{eventType}, and \code{moduleName}.
-These can then be used in \code{clearCache} to selectively remove cached objects
-by \code{eventTime}, \code{eventType} or \code{moduleName}.
-
-\code{Cache} will add a tag to the artifact in the database called \code{accessed},
-which will assign the time that it was accessed, either read or write.
-That way, artifacts can be shown (using \code{showCache}) or removed (using
-\code{clearCache}) selectively, based on their access dates, rather than only
-by their creation dates. See example in \code{\link[=clearCache]{clearCache()}}.
 }
 \note{
 As indicated above, several objects require pre-treatment before
@@ -290,13 +278,18 @@ to digest the content of the file (using \code{quick = FALSE}),
 or just the filename (\code{(quick = TRUE)}). See examples.
 }
 
-\section{Stochasticity}{
+\section{Stochasticity or randomness}{
 
-In general, it is expected that caching will only be used when stochasticity
-is not relevant, or if a user has achieved sufficient stochasticity (e.g., via
-sufficient number of calls to \code{experiment}) such that no new explorations
-of stochastic outcomes are required. It will also be very useful in a
-reproducible workflow.
+In general, it is expected that caching will only be used when randomness is not
+desired, e.g., \code{Cache(rnorm(1))} is unlikely to be useful in many cases. However,
+\code{Cache} captures the call that is passed to it, leaving all functions unevaluated.
+As a result \code{Cache(glm, x ~ y, rnorm(1))} will not work as a means of forcing
+a new evaluation each time, as the \code{rnorm(1)} is not evaluated before the call
+is assessed against the cache database. To force a new call each time, evaluate
+the randomness prior to the Cache call, e.g., \verb{ran = rnorm(1); Cache(glm, x ~ y, ran)}.
+Note this does not work for \code{glm} because \code{glm} accepts \code{...}.
+Rather, this randomness should be passed to \code{.cacheExtra}, e.g.,
+\code{Cache(glm, x ~ y, .cacheExtra = ran)}
 }
 
 \section{\code{drv} and \code{conn}}{
