@@ -1338,9 +1338,11 @@ getFunctionName2 <- function(mc) {
 
   if (any(grepl("^do.call", FUNcapturedNamesEvaled)) || identical(do.call, FUNcapturedNamesEvaled[[1]])) {
     mc <- match.call(do.call, FUNcapturedNamesEvaled)
+    argsForWhat <- if (length(mc$args) > 1) mc$args[-1] else mc$args
     if (browserCond("eee2")) browser()
-    FUNcapturedNamesEvaled <- try(as.call(append(list(mc$what), mc$args[-1]))) # the -1 is to remove the "list"
-    # FUNcapturedNamesEvaled <- try(as.call(append(list(mc$what), as.list(recursiveEvalNamesOnly(mc$args, callingEnv)))))
+    # FUNcapturedNamesEvaled <- try(as.call(append(list(mc$what), mc$args[-1]))) # the -1 is to remove the "list"
+    # FUNcapturedNamesEvaled <- try(as.call(append(list(mc$what), recursiveEvalNamesOnly(mc$args[-1], callingEnv))))
+    FUNcapturedNamesEvaled <- try(as.call(append(list(mc$what), as.list(recursiveEvalNamesOnly(argsForWhat, callingEnv)))))
     if (is(FUNcapturedNamesEvaled, "try-error")) browser()
   }
   FUNcapturedNamesEvaled <- recursiveEvalNamesOnly(FUNcapturedNamesEvaled, callingEnv)
