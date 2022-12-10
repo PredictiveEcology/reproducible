@@ -418,8 +418,8 @@ Cache <-
                    "; skipping Cache on function ", fnDetails$functionName,
                    if (nestedLev > 0) paste0(" (currently running nested Cache level ", nestedLev + 1, ")"),
                    verbose = verbose)
-      output <- evalTheFun(fnDetails, FUNcaptured, isCapturedFUN, envir = parent.frame(), FUN,
-                           FUNbackup, verbose, ...)
+      output <- evalTheFun(FUNcaptured, isCapturedFUN, envir = parent.frame(),
+                           verbose, ...)
       # }
     } else {
       startCacheTime <- verboseTime(verbose, verboseLevel = 3)
@@ -729,8 +729,8 @@ Cache <-
 
         # Run the FUN
         preRunFUNTime <- Sys.time()
-        output <- evalTheFun(fnDetails, FUNcaptured, isCapturedFUN, envir = parent.frame(), FUN,
-                             FUNbackup, verbose, ...)
+        output <- evalTheFun(FUNcaptured, isCapturedFUN, envir = parent.frame(),
+                             verbose, ...)
         postRunFUNTime <- Sys.time()
         elapsedTimeFUN <- postRunFUNTime - preRunFUNTime
       }
@@ -2069,32 +2069,11 @@ isPkgColonFn <- function(x) {
   identical(x[[1]], quote(`::`))
 }
 
-evalTheFun <- function(fnDetails, FUNcaptured, isCapturedFUN, envir = parent.frame(), FUN,
-                       FUNbackup, verbose, ...) {
-  commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
-  if (length(commonArgs) > 0) {
-    messageCache("Cache and ", fnDetails$functionName, " have 1 or more common arguments: ", commonArgs,
-                 "\nSending the argument(s) to both ", verboseLevel = 2, verbose = verbose)
-  }
-
-  # This has been changed ...  now the arguments have all been evaluated already in .fnCleanup;
-  #   don't do it again here, in case there are long ones to calculate
-  # This approach is trying to avoid `do.call`, but I am not sure if it is any better
-  # theCall <- as.call(append(list(fnDetails$FUN), fnDetails$modifiedDots))
-  # eval(theCall)
+evalTheFun <- function(FUNcaptured, isCapturedFUN, envir = parent.frame(),
+                       verbose = getOption("reproducible.verbose"), ...) {
   out <- eval(FUNcaptured, envir = envir)
   if (!isCapturedFUN) { # if is wasn't "captured", then it is just a function, so now use it on the ...
     out <- out(...)
-  # } else {
-  #   # browser()
-  #   # if (length(commonArgs) == 0) {
-  #     #out <- try(FUN(...), silent = TRUE) #  There are rare cases, e.g., Cache(raster, extent(0,1,0,1), vals = 1, res = 1) where FUN is wrong method
-  #     #if (is(out, "try-error")) {
-  #       out <- eval(FUNbackup, envir = envir)
-  #     #}
-  #   # } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
-  #   #   out <- do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE, envir = parent.frame())))
-  #   # }
   }
   out
 }
