@@ -452,10 +452,11 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
       ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
       if (!sf::st_crs(from) == sf::st_crs(ext)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
         if (isVector(cropTo)) {
+          if (browserCond("qqq")) browser()
           if (isSpat(cropTo)) {
             cropToInFromCRS <- terra::project(cropTo, terra::crs(from))
           } else {
-            cropToInFromCRS <- sf::st_transform(cropTo, sf::st_crs(from))
+            cropToInFromCRS <- sf::st_transform(sf::st_as_sf(cropTo), sf::st_crs(from))
           }
         } else {
           cropToInFromCRS <- terra::project(cropTo, terra::crs(from))

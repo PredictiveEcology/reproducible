@@ -1,7 +1,7 @@
 test_that("testing terra", {
   #if (interactive()) {
   testInitOut <- testInit(needGoogle = FALSE,
-                          opts = list(reproducible.useMemoise = TRUE,
+                          opts = list(reproducible.useMemoise = FALSE,
                                       reproducible.useTerra = TRUE))
 
   on.exit({
@@ -149,14 +149,30 @@ test_that("testing terra", {
   ##  Self-intersection at 6.0905735768254896 49.981782482072084
   expect_true(!is(t10, "try-error"))
 
-  # Projection -->
-  utm <- terra::crs("epsg:23028")#sf::st_crs("epsg:23028")$wkt
-  # albers <- sf::st_crs("epsg:5070")$wkt
-  vutm <- terra::project(v, utm)
+  # Projection --> BAD BUG HERE ... CAN"T REPRODUCE ALWAYS --> use sf for testing Dec 9, 2022
+  if (FALSE) {
+    utm <- terra::crs("epsg:23028")#sf::st_crs("epsg:23028")$wkt
+    # albers <- sf::st_crs("epsg:5070")$wkt
+    vutm <- terra::project(v, utm)
+  }
+
+  utm <- sf::st_crs("epsg:23028")#$wkt
+  vsf <- sf::st_as_sf(v)
+  vsfutm <- sf::st_transform(vsf, utm)
+  vutm <- terra::vect(vsfutm)
   rutm <- terra::rast(vutm, res = 100)
 
-  # use vector dataset -- force the 250m resolution
-  save(x, vutm, rutm, utm, y, file = "~/tmp.rda")
+  if (Sys.info()["user"] %in% "emcintir") {
+    env <- environment()
+    suppressWarnings(
+      b <- lapply(ls(), function(x) if (isSpat(get(x))) try(assign(x, envir = env, terra::wrap(get(x)))))
+    )
+    save(list = ls(), file = "~/tmp2.rda")
+    # load(file = "~/tmp2.rda")
+    # env <- environment()
+    b <- lapply(ls(), function(x) if (is(get(x, env), "PackedSpatRaster") || is(get(x, env), "PackedSpatVector")) try(assign(x, envir = env, terra::unwrap(get(x)))))
+  }
+
   t11 <- postProcessTerra(x, vutm)
   expect_true(sf::st_crs(t11) == sf::st_crs(vutm))
 
@@ -170,6 +186,7 @@ test_that("testing terra", {
   expect_true(sf::st_crs(t12) != sf::st_crs(vutm))
 
   # projection with errors
+  utm <- terra::crs("epsg:23028") # This is same as above, but terra way
   vutmErrors <- terra::project(v2, utm)
   mess <- capture_messages({
     t13a <- postProcessTerra(xVect, vutmErrors)
@@ -233,7 +250,7 @@ test_that("testing terra", {
   y2 <- terra::setValues(y2, rep(1, ncell(y2)))
 
   t22 <- postProcessTerra(x, to = y2, overwrite = TRUE) # not sure why need this; R devel on Winbuilder Nov 26, 2022
-  expect_true(identical(crs(t22), crs(x)))
+  expect_true(sf::st_crs(t22) == sf::st_crs(x))
   expect_true(terra::ext(t22) == terra::ext(y2))   ## "identical" may say FALSE (decimal plates?)
   expect_true(identical(res(t22), res(y2)))
   expect_false(identical(res(t22), res(x)))
@@ -246,4 +263,3 @@ test_that("testing terra", {
   })
   #  }
 })
-
