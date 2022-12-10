@@ -71,7 +71,7 @@ system.time({
   })
 })
 
-# vastly faster the second time
+# faster the second time
 system.time({
   map2 <- Cache(projectRaster, ras, crs = newCRS, cachePath = tmpDir)
 })
