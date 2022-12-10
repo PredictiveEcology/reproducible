@@ -150,27 +150,28 @@ test_that("testing terra", {
   expect_true(!is(t10, "try-error"))
 
   # Projection -->
-  albers <- sf::st_crs("epsg:5070")$wkt
-  valbers <- terra::project(v, albers)
-  ralbers <- terra::rast(valbers, res = 100)
+  utm <- terra::crs("epsg:23028")#sf::st_crs("epsg:23028")$wkt
+  # albers <- sf::st_crs("epsg:5070")$wkt
+  vutm <- terra::project(v, utm)
+  rutm <- terra::rast(vutm, res = 100)
 
   # use vector dataset -- force the 250m resolution
-  t11 <- postProcessTerra(x, valbers)
-  expect_true(sf::st_crs(t11) == sf::st_crs(valbers))
+  t11 <- postProcessTerra(x, vutm)
+  expect_true(sf::st_crs(t11) == sf::st_crs(vutm))
 
   # use raster dataset -- take the projectTo resolution, i.e., 100
-  t13 <- postProcessTerra(x, ralbers)
+  t13 <- postProcessTerra(x, rutm)
   expect_true(identical(res(t13)[1], 100))
-  expect_true(sf::st_crs(t13) == sf::st_crs(valbers))
+  expect_true(sf::st_crs(t13) == sf::st_crs(vutm))
 
   # no projection
-  t12 <- postProcessTerra(x, cropTo = valbers, maskTo = valbers)
-  expect_true(sf::st_crs(t12) != sf::st_crs(valbers))
+  t12 <- postProcessTerra(x, cropTo = vutm, maskTo = vutm)
+  expect_true(sf::st_crs(t12) != sf::st_crs(vutm))
 
   # projection with errors
-  valbersErrors <- terra::project(v2, albers)
+  vutmErrors <- terra::project(v2, utm)
   mess <- capture_messages({
-    t13a <- postProcessTerra(xVect, valbersErrors)
+    t13a <- postProcessTerra(xVect, vutmErrors)
   })
   ## Error : TopologyException: Input geom 1 is invalid:
   ##  Self-intersection at 6095858.7074040668 6626138.068126983
@@ -180,49 +181,49 @@ test_that("testing terra", {
 
   # try NA to *To
   # Vectors
-  t14 <- postProcessTerra(xVect2, valbers, projectTo = NA)
+  t14 <- postProcessTerra(xVect2, vutm, projectTo = NA)
   expect_true(sf::st_crs(t14) == sf::st_crs(xVect2))
-  expect_true(sf::st_crs(t14) != sf::st_crs(valbers))
+  expect_true(sf::st_crs(t14) != sf::st_crs(vutm))
 
-  t15 <- postProcessTerra(xVect2, valbers, maskTo = NA)
+  t15 <- postProcessTerra(xVect2, vutm, maskTo = NA)
   expect_true(sf::st_crs(t15) != sf::st_crs(xVect2))
-  expect_true(sf::st_crs(t15) == sf::st_crs(valbers))
+  expect_true(sf::st_crs(t15) == sf::st_crs(vutm))
 
-  t18 <- postProcessTerra(xVect2, valbers, cropTo = NA)
+  t18 <- postProcessTerra(xVect2, vutm, cropTo = NA)
   expect_true(sf::st_crs(t18) != sf::st_crs(xVect2))
-  expect_true(sf::st_crs(t18) == sf::st_crs(valbers))
+  expect_true(sf::st_crs(t18) == sf::st_crs(vutm))
 
   # Rasters
-  t16 <- postProcessTerra(x, ralbers, cropTo = NA)
+  t16 <- postProcessTerra(x, rutm, cropTo = NA)
   expect_true(sf::st_crs(t16) != sf::st_crs(x))
-  expect_true(sf::st_crs(t16) == sf::st_crs(ralbers))
-  expect_true(terra::ext(t16) >= terra::ext(ralbers))
+  expect_true(sf::st_crs(t16) == sf::st_crs(rutm))
+  expect_true(terra::ext(t16) >= terra::ext(rutm))
 
-  t17 <- postProcessTerra(x, ralbers, projectTo = NA)
+  t17 <- postProcessTerra(x, rutm, projectTo = NA)
   expect_true(sf::st_crs(t17) == sf::st_crs(x))
-  expect_true(sf::st_crs(t17) != sf::st_crs(ralbers))
+  expect_true(sf::st_crs(t17) != sf::st_crs(rutm))
 
-  t19 <- postProcessTerra(x, ralbers, maskTo = NA)
+  t19 <- postProcessTerra(x, rutm, maskTo = NA)
   expect_true(sf::st_crs(t19) != sf::st_crs(x))
-  expect_true(sf::st_crs(t19) == sf::st_crs(valbers))
+  expect_true(sf::st_crs(t19) == sf::st_crs(vutm))
   expect_true(sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
 
   # Raster with Vector
-  t16 <- postProcessTerra(x, valbers, cropTo = NA)
+  t16 <- postProcessTerra(x, vutm, cropTo = NA)
   expect_true(sf::st_crs(t16) != sf::st_crs(x))
-  expect_true(sf::st_crs(t16) == sf::st_crs(valbers))
+  expect_true(sf::st_crs(t16) == sf::st_crs(vutm))
 
-  t17 <- postProcessTerra(x, valbers, projectTo = NA)
+  t17 <- postProcessTerra(x, vutm, projectTo = NA)
   expect_true(sf::st_crs(t17) == sf::st_crs(x))
-  expect_true(sf::st_crs(t17) != sf::st_crs(valbers))
+  expect_true(sf::st_crs(t17) != sf::st_crs(vutm))
 
-  t19 <- postProcessTerra(x, valbers, maskTo = NA)
+  t19 <- postProcessTerra(x, vutm, maskTo = NA)
   expect_true(sf::st_crs(t19) != sf::st_crs(x))
-  expect_true(sf::st_crs(t19) == sf::st_crs(valbers))
+  expect_true(sf::st_crs(t19) == sf::st_crs(vutm))
   expect_true(sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
 
-  t21 <- postProcessTerra(x, projectTo = valbers)
-  t20 <- postProcessTerra(x, projectTo = sf::st_crs(valbers))
+  t21 <- postProcessTerra(x, projectTo = vutm)
+  t20 <- postProcessTerra(x, projectTo = sf::st_crs(vutm))
   expect_true(all.equal(t20, t21))
   expect_true(identical(terra::size(x), terra::size(t20)))
 
@@ -236,11 +237,11 @@ test_that("testing terra", {
   expect_true(identical(res(t22), res(y2)))
   expect_false(identical(res(t22), res(x)))
 
-  valbersSF <- sf::st_as_sf(valbers)
+  vutmSF <- sf::st_as_sf(vutm)
   xVectSF <- sf::st_as_sf(xVect)
   ## It is a real warning about geometry stuff, but not relevant here
   warn <- capture_warnings({
-    t22 <- postProcessTerra(xVectSF, valbersSF)
+    t22 <- postProcessTerra(xVectSF, vutmSF)
   })
   #  }
 })

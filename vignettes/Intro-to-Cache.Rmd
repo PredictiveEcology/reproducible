@@ -38,7 +38,7 @@ This can be extremely useful for web apps built with, say `shiny`.
 
 ## Function-level caching
 
-Any function can be cached using: `Cache(FUN = functionName, ...)`. 
+Any function can be cached by wrapping `Cache` around the function call, or by using base pipe `|>` or using: `Cache(FUN = functionName, ...)`
 
 This will be a slight change to a function call, such as:
 `projectRaster(raster, crs = crs(newRaster))`
@@ -76,14 +76,9 @@ system.time({
   map2 <- Cache(projectRaster, ras, crs = newCRS, cachePath = tmpDir)
 })
 
-# may be faster the third time because of memoise; but this example is too simple to show
-system.time({
-  map3 <- Cache(projectRaster, ras, crs = newCRS, cachePath = tmpDir)
-})
 options(opts)
 
 all.equal(map1, map2) # TRUE
-all.equal(map1, map3) # TRUE
 ```
 
 ## Caching examples

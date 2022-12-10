@@ -16,9 +16,13 @@ test_that("test reproducible.verbose", {
   saveRDS(a, file = tmpfile)
   out1 <- Cache(readRDS, tmpfile, cachePath = tmpdir)
   out1Details <- .reproEnv$hashDetailsAll
-  out2 <- Cache(readRDS, asPath(tmpfile), cachePath = tmpdir)
+  ap <- asPath(tmpfile)
+  out2 <- Cache(readRDS, ap, cachePath = tmpdir)
   out2Details <- .reproEnv$hashDetailsAll
 
   # should be vastly larger when actual file, rather than just filename
+  out <- capture_messages(messageDF(rbind(out1Details, out2Details)))
+  out[1] <- paste0("0:", out[1])
+  cat(out, file = "~/tmp.txt", sep = "\n")
   expect_true( (20*out1Details$objSize[1]) < out2Details$objSize[1]) ##
 })

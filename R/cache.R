@@ -851,6 +851,7 @@ Cache <-
       resultHash <- ""
       linkToCacheId <- NULL
       if (objSize > 1e6) {
+        browser()
         resultHash <- CacheDigest(outputToSave, .objects = .objects, calledFrom = "Cache")$outputHash
         qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))}",
                               dbTabName = dbTabNam,
@@ -2085,15 +2086,15 @@ evalTheFun <- function(fnDetails, FUNcaptured, isCapturedFUN, envir = parent.fra
   if (isCapturedFUN) {
     out <- eval(FUNcaptured, envir = envir)
   } else {
-    if (length(commonArgs) == 0) {
-      out <- try(FUN(...), silent = TRUE) #  There are rare cases, e.g., Cache(raster, extent(0,1,0,1), vals = 1, res = 1) where FUN is wrong method
-      if (is(out, "try-error")) {
-        browser()
-        out <- eval(FUNbackup, envir = envir)
-      }
-    } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
-      out <- do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE, envir = parent.frame())))
-    }
+    # browser()
+    # if (length(commonArgs) == 0) {
+      # out <- try(FUN(...), silent = TRUE) #  There are rare cases, e.g., Cache(raster, extent(0,1,0,1), vals = 1, res = 1) where FUN is wrong method
+      # if (is(out, "try-error")) {
+        out <- try(eval(FUNbackup, envir = envir))
+      #}
+    # } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
+    #   out <- do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE, envir = parent.frame())))
+    # }
   }
   out
 }

@@ -12,6 +12,7 @@ Version 1.2.14
 * `Cache` now captures the first argument passed to it without evaluating it, so `Cache(rnorm(1))` now works as expected.
 * As a result of previous, `Cache` now works with base pipe |> (with R >= 4.1). 
 * added more unit tests
+* reworked internals so that digesting is more accurate, as the correct methods for functions are more accurately found, objects within functions are more precisely evaluated.
 * internals of `Cache` streamlined in numerous places
 
 ## removals

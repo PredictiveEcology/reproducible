@@ -1536,7 +1536,7 @@ test_that("test cache; new approach to match.call, postProcess", {
   # S4 classes
   c1 <- Cache(.robustDigest(data.frame(a = 1)))
   c2 <- Cache(.robustDigest(data.frame(a = 1)))
-  c3 <- Cache(.robustDigest(data.frame(a = 1), verbose = -2)) # add a non-relevant arg
+  c3 <- Cache(.robustDigest(data.frame(a = 1)), verbose = -2) # add a non-relevant arg
   c4 <- Cache(.robustDigest, data.frame(a = 1))
   c5 <- Cache(.robustDigest, data.frame(a = 1), verbose = -2)
 

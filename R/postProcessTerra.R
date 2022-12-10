@@ -191,7 +191,7 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
       st <- Sys.time()
       messagePrepInputs("  `from` is large, converting to terra object will take some time ...")
     }
-    from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
+    from <- suppressWarningsSpecific(terra::vect(sf::st_as_sf(from)), shldBeChar)
     if (lg) {
       messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
                                              units = "secs", digits = 3))
@@ -202,6 +202,7 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   #############################################################
   # crop project mask sequence ################################
   #############################################################
+  if (browserCond("fff")) browser()
   from <- cropTo(from, cropTo, needBuffer = TRUE, overwrite = overwrite) # crop first for speed
   from <- projectTo(from, projectTo, method = method, overwrite = overwrite) # need to project with edges intact
   from <- maskTo(from, maskTo, overwrite = overwrite)
