@@ -156,6 +156,7 @@ test_that("testing terra", {
   rutm <- terra::rast(vutm, res = 100)
 
   # use vector dataset -- force the 250m resolution
+  save(x, vutm, rutm, utm, y, file = "~/tmp.rda")
   t11 <- postProcessTerra(x, vutm)
   expect_true(sf::st_crs(t11) == sf::st_crs(vutm))
 

@@ -21,8 +21,5 @@ test_that("test reproducible.verbose", {
   out2Details <- .reproEnv$hashDetailsAll
 
   # should be vastly larger when actual file, rather than just filename
-  out <- capture_messages(messageDF(rbind(out1Details, out2Details)))
-  out[1] <- paste0("0:", out[1])
-  cat(out, file = "~/tmp.txt", sep = "\n")
   expect_true( (20*out1Details$objSize[1]) < out2Details$objSize[1]) ##
 })
