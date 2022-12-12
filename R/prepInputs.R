@@ -850,7 +850,7 @@ extractFromArchive <- function(archive,
       invisible(lapply(
         X = extractedFiles,
         FUN = function(fileToMove) {
-          invisible(file.move(from = file.path(.tempPath, fileToMove),
+          invisible(.file.move(from = file.path(.tempPath, fileToMove),
                               to = file.path(args$exdir, basename(fileToMove)),
                               overwrite = overwrite))
         }
@@ -953,7 +953,7 @@ extractFromArchive <- function(archive,
       })
 
       if (!isTRUE(all(out))) {
-        out <- try(file.move(from, to, overwrite))
+        out <- try(.file.move(from, to, overwrite))
       }
 
       if (!isTRUE(all(out))) {

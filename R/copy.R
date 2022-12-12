@@ -6,7 +6,7 @@
 #' @return Logical indicating whether operation succeeded.
 #'
 #' @export
-file.move <- function(from, to, overwrite = FALSE) {
+.file.move <- function(from, to, overwrite = FALSE) {
   stopifnot(file.exists(from))
   res <- suppressWarnings(file.rename(from = from, to = to))
 

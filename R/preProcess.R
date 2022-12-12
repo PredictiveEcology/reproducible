@@ -1168,7 +1168,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
         )
         newFileWithExtension <- file.path(normPath(dirname(downloadFileResult$downloaded)),
                                           downloadFileResult$neededFiles)
-        invisible(file.move(
+        invisible(.file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = newFileWithExtension))
         downloadFileResult$downloaded <- newFileWithExtension
@@ -1179,7 +1179,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
         )
         newFileWithExtension <- normPath(file.path(dirname(downloadFileResult$downloaded),
                                                    .basename(downloadFileResult$archive)))
-        invisible(file.move(
+        invisible(.file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = newFileWithExtension))
         downloadFileResult$downloaded <- newFileWithExtension
@@ -1192,7 +1192,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
         downloadFileResult$neededFiles <- .basename(archive)
         newFileWithExtension <- file.path(normPath(dirname(downloadFileResult$downloaded)),
                                            downloadFileResult$neededFiles)
-        invisible(file.move(
+        invisible(.file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = newFileWithExtension))
         downloadFileResult$downloaded <- newFileWithExtension
@@ -1209,7 +1209,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
         }
         downloadFileResult$archive <- file.path(normPath(destinationPath),
                                                 paste0(downloadFileResult$neededFiles, fileExt))
-        invisible(file.move(
+        invisible(.file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = normPath(downloadFileResult$archive)))
         downloadFileResult$neededFiles <- .listFilesInArchive(downloadFileResult$archive)
