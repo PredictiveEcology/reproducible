@@ -1456,6 +1456,8 @@ test_that("test cache with new approach to match.call", {
   clearCache(ask = FALSE)
 
   bbb <- 1
+  ee <- new.env(parent = emptyenv())
+  ee$qq <- bbb
   a[[1]] <- Cache(rnorm(1)) # no evaluation prior to Cache
   a[[2]] <- Cache(rnorm, 1) # no evaluation prior to Cache
   a[[3]] <- Cache(do.call, rnorm, list(1))
@@ -1469,6 +1471,16 @@ test_that("test cache with new approach to match.call", {
   a[[11]] <- Cache(stats::rnorm(1))
   a[[12]] <- Cache(stats::rnorm, 1)
   a[[13]] <- Cache(rnorm(1, 0, get("bbb", inherits = FALSE)))
+  a[[14]] <- Cache(rnorm(1, 0, get("qq", inherits = FALSE, envir = ee)))
+  a[[15]] <- Cache(rnorm(1, bbb - bbb, get("bbb", inherits = FALSE)))
+  a[[16]] <- Cache(rnorm(sd = 1, 0, n = get("bbb", inherits = FALSE))) # change order
+  a[[17]] <- Cache(rnorm(1, sd = get("ee", inherits = FALSE)$qq), mean = 0)
+  ss <- '{"bbb" |>
+      parse(text = _) |>
+      eval() |>
+      rnorm()} |>
+    Cache()'
+  a[[18]] <- eval(parse(text = ss))
   expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
   for (i in 2:NROW(a)) {
     expect_true(identical(attr(a[[i]], ".Cache")$newCache, FALSE))

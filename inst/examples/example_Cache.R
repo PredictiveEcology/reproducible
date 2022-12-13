@@ -1,19 +1,37 @@
 tmpDir <- file.path(tempdir())
+opts <- options(reproducible.cachePath = tmpDir)
 
-# Basic use -- All same
-Cache(rnorm, 10, 16, cachePath = tmpDir) # creates cached copy
-Cache(quote(rnorm(n = 10, 16)), cachePath = tmpDir) # recovers cached copy
-# as function call
-Cache(rnorm(10, 16), cachePath = tmpDir) # recovers cached copy
+# Usage -- All below are equivalent
+a <- list()
+a[[1]] <- Cache(rnorm(1)) # no evaluation prior to Cache
+a[[2]] <- Cache(rnorm, 1) # no evaluation prior to Cache
+a[[3]] <- Cache(do.call, rnorm, list(1))
+a[[4]] <- Cache(do.call(rnorm, list(1)))
+a[[5]] <- Cache(do.call(b$fun, list(1)))
+a[[6]] <- Cache(do.call, b$fun, list(1))
+a[[7]] <- Cache(b$fun, 1)
+a[[8]] <- Cache(b$fun(1))
+a[[9]] <- b$fun(1) |> Cache()  # base pipe
+a[[10]] <- Cache(quote(rnorm(1)))
+a[[11]] <- Cache(stats::rnorm(1))
+a[[12]] <- Cache(stats::rnorm, 1)
+a[[13]] <- Cache(rnorm(1, 0, get("bbb", inherits = FALSE)))
+a[[14]] <- Cache(rnorm(1, 0, get("qq", inherits = FALSE, envir = ee)))
+a[[15]] <- Cache(rnorm(1, bbb - bbb, get("bbb", inherits = FALSE)))
+a[[16]] <- Cache(rnorm(sd = 1, 0, n = get("bbb", inherits = FALSE))) # change order
+a[[17]] <- Cache(rnorm(1, sd = get("ee", inherits = FALSE)$qq), mean = 0)
 # with base pipe -- this is put in "" because R version 4.0 can't understand this
 #  if you are using R >= 4.1, then you can just use pipe normally
-usingPipe <- "
-  rnorm(10, 16) |>
-    Cache(cachePath = tmpDir)
-"
+usingPipe <- '{"bbb" |>
+      parse(text = _) |>
+      eval() |>
+      rnorm()} |>
+    Cache()'
 if (getRversion() >= 4.1) {
-  eval(parse(text = usingPipe)) # recovers cached copy
+  a[[18]] <-eval(parse(text = usingPipe)) # recovers cached copy
 }
+
+length(unique(a)) #  all same
 
 #########################
 # Advanced examples

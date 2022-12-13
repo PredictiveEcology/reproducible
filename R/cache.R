@@ -1095,9 +1095,11 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
       args <- as.list(args[-(1:2)])[[1]]
     }
 
+    if (identical(quote(parse), args[[1]]))
+      args <- eval(args)
+
     if (!isTRUE(recursive))
       isStandAlone <- TRUE
-
 
     if (!any(isStandAlone)) {
       out <- lapply(args, function(xxxx) {
@@ -1128,10 +1130,14 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
           }
         } else {
           if (is.call(xxxx)) {
-            recursiveEvalNamesOnly(xxxx, envir, outer = FALSE)
+            if (identical(quote(eval), xxxx[[1]])) # basically "eval" should be evaluated
+              ret <- eval(xxxx, envir = envir)
+            else
+              ret <- recursiveEvalNamesOnly(xxxx, envir, outer = FALSE)
           } else {
-            xxxx
+            ret <- xxxx
           }
+          ret
         }
       })
 
@@ -1370,23 +1376,30 @@ getFunctionName2 <- function(mc) {
     FUNcaptured[[1]] <- eval(FUNcaptured[[1]], envir = callingEnv)
   }
 
-  if (browserCond("ee2")) browser()
-
   isSquiggly <- FALSE
   if (length(FUNcaptured) > 1) isSquiggly <- identical(`{`, FUNcaptured[[1]])
 
+  if (browserCond("ee2")) browser()
   if (isSquiggly) {
     # Get rid of squiggly
     FUNcaptured <- as.list(FUNcaptured[-1]) # [[1]] ... if it has many calls... pipe will be just one; but others will be more
     if (length(FUNcaptured) > 1)
       stop("Cache can only handle curly braces if all internal code uses base pipe |> ")
-    FUNcapturedNamesEvaled <- lapply(FUNcaptured, recursiveEvalNamesOnly, envir = callingEnv) # deals with e.g., stats::rnorm, b$fun, b[[fun]]
-    mc1 <- lapply(FUNcaptured, matchCall, envir = callingEnv)
-    FUNcapturedNamesEvaled <- lapply(FUNcapturedNamesEvaled, matchCall, envir = callingEnv)
+    FUNcapturedNamesEvaled <- recursiveEvalNamesOnly(FUNcaptured[[1]], envir = callingEnv) # deals with e.g., stats::rnorm, b$fun, b[[fun]]
+    mc1 <- matchCall(FUNcaptured, envir = callingEnv)
+    FUNcapturedNamesEvaled <- matchCall(FUNcapturedNamesEvaled, envir = callingEnv)
     fnNameInit <- getFunctionName2(mc1[[1]])
   } else {
     if (length(FUNcaptured) > 1) {
-      FUNcapturedArgs <- lapply(as.list(FUNcaptured[-1]), eval, envir = callingEnv) # may be slow as it is evaluating the args
+      # The next line works for any object that is NOT in a ..., because the object never shows up in the environment; it is passed through
+      FUNcapturedArgs <- lapply(as.list(FUNcaptured[-1]), function(ee) {
+        out <- try(eval(ee, envir = callingEnv), silent = TRUE)
+        if (is(out, "try-error")) {
+          env2 <- whereInStack(ee)
+          out <- try(eval(ee, envir = env2), silent = TRUE)
+        }
+        out
+        })# may be slow as it is evaluating the args
       FUNcapturedNamesEvaled <- as.call(append(list(FUNcaptured[[1]]), FUNcapturedArgs))
       FUNcapturedNamesEvaled <- matchCall(FUNcapturedNamesEvaled, callingEnv)
     } else { # this is a function called with no arguments
