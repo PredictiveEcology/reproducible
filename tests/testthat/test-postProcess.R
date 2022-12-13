@@ -157,8 +157,8 @@ test_that("prepInputs doesn't work (part 3)", {
     ncSmallShifted <- ncSmall + 10000000
     ncSmallShifted <- st_as_sf(ncSmallShifted)
     st_crs(ncSmallShifted) <- st_crs(ncSmall)
-    mess <- capture_messages(cropInputs(ncSmall, studyArea = ncSmallShifted))
-    expect_true(any(grepl("polygons do not intersect", mess)))
+    out11 <- cropInputs(ncSmall, studyArea = ncSmallShifted)
+    expect_true(NROW(out11) == 0)
 
     # LINEARRING Example
     p6 = terra::vect("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
