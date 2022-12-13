@@ -14,7 +14,7 @@
 #' @importFrom methods selectMethod showMethods
 #' @importFrom utils head
 #' @keywords internal
-getFunctionName <- function(FUN, originalDots, ..., overrideCall) { # nolint
+getFunctionName <- function(FUN, ..., overrideCall) { # nolint
   callIndex <- numeric()
   scalls <- sys.calls() # needed for nesting level
   functionName <- NULL # initiate this here, so we can know if it is found

@@ -4,7 +4,7 @@
 \alias{getFunctionName}
 \title{A set of helpers for Cache}
 \usage{
-getFunctionName(FUN, originalDots, ..., overrideCall)
+getFunctionName(FUN, ..., overrideCall)
 }
 \arguments{
 \item{FUN}{A function}

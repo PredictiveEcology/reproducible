@@ -1360,30 +1360,37 @@ test_that("change to new capturing of FUN & base pipe", {
   if (isTRUE(getRversion() >= "4.2.0")) {
     Nrand <- 1e8
     st1 <- system.time(
-      out1 <- Cache(do.call(rnorm, list(1, 2, sd = round(mean(runif(Nrand, 4, 6))))),
+      out0 <- Cache(rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1)))), cachePath = tmpCache)
+    )
+
+    st2 <- system.time(
+      out1 <- Cache(do.call(rnorm, list(1, 2, sd = round(mean(runif(Nrand, 1, 1.1))))),
                     cachePath = tmpCache)
     )
-    f1 <- paste("runif(1e8, 4, 6) |>
+
+    f1 <- paste("
+      runif(1e8, 1, 1.1) |>
+        mean() |>
+        round() |>
+        rnorm(1, 2, sd = _) |> # _ Only works with R >= 4.2.0
+        Cache(cachePath = tmpCache)
+    ")
+    st3 <- system.time(out2 <- eval(parse(text = f1)))
+    f2 <-   paste("out3 <- runif(1e8, 1, 1.1) |>
         mean() |>
         round() |>
         rnorm(1, 2, sd = _) |> # _ Only works with R >= 4.2.0
         # (function(xx) rnorm(1, 2, sd = xx))() |>
         Cache(cachePath = tmpCache)
     ")
-    st2 <- system.time(out2 <- eval(parse(text = f1)))
-    f2 <-   paste("out3 <- runif(1e8, 4, 6) |>
-        mean() |>
-        round() |>
-        rnorm(1, 2, sd = _) |> # _ Only works with R >= 4.2.0
-        # (function(xx) rnorm(1, 2, sd = xx))() |>
-        Cache(cachePath = tmpCache)
-    ")
-    st3 <- system.time(eval(parse(text = f2)))
-    expect_true(attr(out1, ".Cache")$newCache)
+    st4 <- system.time(eval(parse(text = f2)))
+    expect_true(attr(out0, ".Cache")$newCache)
+    expect_false(attr(out1, ".Cache")$newCache)
     expect_false(attr(out2, ".Cache")$newCache)
     expect_false(attr(out3, ".Cache")$newCache)
 
-    expect_true(all((st1[1] * 50) > st3[1]))
+    for (i  in 1:4)
+      expect_true(get(paste0("st", i))[1] > 0.5) # all should be longer than 0.5 second because have to evaluate args
   }
 
   clearCache(tmpCache)
@@ -1393,17 +1400,44 @@ test_that("change to new capturing of FUN & base pipe", {
 
   clearCache(tmpCache)
   for (i in 1:3)
-    sample(1000, i) |>  # creates 1 random number
+    sample(100000000, i) |>  # creates 1 random number
     rnorm(1, 2, sd = _) |>  # passed to sd of rnorm
     Cache(cachePath = tmpCache)
   sc <- data.table::copy(showCache(tmpCache))
   expect_true(length(unique(sc$cacheId)) == 3)
 
   # This, different way; not evaluating `sample`; so this is same as prev
-  for (i in 1:3) Cache(rnorm(1, 2, sample(1000, i)), cachePath = tmpCache)
+  for (i in 1:3) Cache(rnorm(1, 2, sample(10000000, i)), cachePath = tmpCache)
   sc1 <- showCache(tmpCache)
-  expect_true(length(unique(sc1$cacheId)) == 3)
+  expect_true(length(unique(sc1$cacheId)) == 6)
   expect_true(NROW(sc1) > NROW(sc))
+
+
+  # Try with squiggly braces
+  out0 <- Cache(rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1)))), cachePath = tmpCache)
+  f1 <- paste("
+      {runif(Nrand, 1, 1.1) |>
+        mean() |>
+        round() |>
+        rnorm(1, 2, sd = _)} |> # _ Only works with R >= 4.2.0
+        Cache(cachePath = tmpCache)
+    ")
+  mn <- 1
+  st3 <- system.time(out2 <- eval(parse(text = f1)))
+  st4 <- system.time(out3 <- Cache({rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1))))},
+                                cachePath = tmpCache))
+  # can pass a variable, but not a function
+  st5 <- system.time(out3 <- Cache({rnorm(1, 2, round(mean(runif(Nrand, mn, 1.1))))},
+                                   cachePath = tmpCache))
+  f1 <- paste("
+      { a <- runif(Nrand, 1, 1.1)
+        b <- mean(a)
+        d <- round(b)
+        rnorm(1, 2, sd = d)} |> # _ Only works with R >= 4.2.0
+        Cache(cachePath = tmpCache)
+    ")
+  err <- capture_error(out2 <- eval(parse(text = f1)))
+  expect_true(is(err, "simpleError"))
 
 })
 
@@ -1421,8 +1455,9 @@ test_that("test cache with new approach to match.call", {
   a <- list()
   clearCache(ask = FALSE)
 
-  a[[1]] <- Cache(rnorm(1))
-  a[[2]] <- Cache(rnorm, 1)
+  bbb <- 1
+  a[[1]] <- Cache(rnorm(1)) # no evaluation prior to Cache
+  a[[2]] <- Cache(rnorm, 1) # no evaluation prior to Cache
   a[[3]] <- Cache(do.call, rnorm, list(1))
   a[[4]] <- Cache(do.call(rnorm, list(1)))
   a[[5]] <- Cache(do.call(b$fun, list(1)))
@@ -1433,9 +1468,11 @@ test_that("test cache with new approach to match.call", {
   a[[10]] <- Cache(quote(rnorm(1)))
   a[[11]] <- Cache(stats::rnorm(1))
   a[[12]] <- Cache(stats::rnorm, 1)
+  a[[13]] <- Cache(rnorm(1, 0, get("bbb", inherits = FALSE)))
   expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
-  for (i in 2:10)
+  for (i in 2:NROW(a)) {
     expect_true(identical(attr(a[[i]], ".Cache")$newCache, FALSE))
+  }
 
   for (fun in list(.robustDigest, print)) {
     clearCache(ask = FALSE)
