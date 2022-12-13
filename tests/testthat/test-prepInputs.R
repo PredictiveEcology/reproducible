@@ -245,6 +245,7 @@ test_that("prepInputs doesn't work (part 1)", {
 test_that("interactive prepInputs", {
   skip_on_cran()
   skip_on_ci()
+  skip_if_no_token()
   testInitOut <- testInit("raster",
                           opts = list(
                             "rasterTmpDir" = tempdir2(rndstr(1,6)),
@@ -1425,137 +1426,137 @@ test_that("lightweight tests for code coverage", {
 
   # if (interactive()) {
 
-    testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
-                                                  "reproducible.inputPaths" = NULL),
-                            needGoogle = TRUE)
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
-    url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
+  url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
 
-    checkPath(tmpdir, create = TRUE)
-    checkSums <- .emptyChecksumsResult
-    checkSumFilePath <- file.path(tmpdir, "CHECKSUMS.txt")
+  checkPath(tmpdir, create = TRUE)
+  checkSums <- .emptyChecksumsResult
+  checkSumFilePath <- file.path(tmpdir, "CHECKSUMS.txt")
 
-    noisyOutput <- capture.output(
-      downloadFile(url = url, neededFiles = "ecozones.shp", checkSums = checkSums,
+  noisyOutput <- capture.output(
+    downloadFile(url = url, neededFiles = "ecozones.shp", checkSums = checkSums,
+                 archive = "ecozone_shp.zip", needChecksums = TRUE, quick = FALSE,
+                 destinationPath = tmpdir, checksumFile = checkSumFilePath)
+  )
+  expect_true(file.exists(dir(tmpdir, pattern = "ecozone", full.names = TRUE)))
+
+
+  # have local copy
+  unzip("ecozone_shp.zip", exdir = tmpdir)
+  file.copy(dir(file.path(tmpdir, "Ecozones"), full.names = TRUE), tmpdir)
+  checkSums <- Checksums(path = tmpdir, write = TRUE)
+
+  aMess <- capture_messages(downloadFile(url = url, neededFiles = "ecozones.shp", checkSums = checkSums,
+                                         targetFile = "ecozones.shp",
+                                         archive = NULL, needChecksums = TRUE, quick = FALSE,
+                                         destinationPath = file.path(tmpdir, "Ecozones"),
+                                         checksumFile = file.path(tmpdir, "CHECKSUMS.txt")))
+
+  expect_true(any(grepl("Skipping download", aMess)))
+
+  filesForShp <- dir(file.path(tmpdir), pattern = "ecozones", full.names = TRUE)
+  file.copy(filesForShp, tmpCache)
+  # Need these in a test further down -- mostly just need the CRS
+  filesForShp2 <- dir(file.path(tmpCache), pattern = "ecozones", full.names = TRUE)
+  shpFile <- shapefile(grep(filesForShp2, pattern = "\\.shp", value = TRUE))
+  # Test when wrong archive exists, wrong checkSums
+  file.remove(file.path(tmpdir, "ecozone_shp.zip"))
+  file.remove(filesForShp)
+  file.create(file.path(tmpdir, "ecozone_shp.zip"))
+  checkSums <- Checksums(path = tmpdir, write = TRUE)
+  file.remove(file.path(tmpdir, "ecozone_shp.zip"))
+  checkSums <- Checksums(path = tmpdir)
+
+  noisyOutput <- capture.output(
+    expect_error(
+      downloadFile(url = url,
+                   neededFiles = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn", "ecozones.sbx",
+                                   "ecozones.shp", "ecozones.shx"),
+                   checkSums = checkSums,
+                   targetFile = "ecozones.shp",
                    archive = "ecozone_shp.zip", needChecksums = TRUE, quick = FALSE,
                    destinationPath = tmpdir, checksumFile = checkSumFilePath)
     )
-    expect_true(file.exists(dir(tmpdir, pattern = "ecozone", full.names = TRUE)))
+  )
 
+  ## postProcess.default
+  b <- 1
+  a <- postProcess(b)
+  expect_true(identical(a, b))
 
-    # have local copy
-    unzip("ecozone_shp.zip", exdir = tmpdir)
-    file.copy(dir(file.path(tmpdir, "Ecozones"), full.names = TRUE), tmpdir)
-    checkSums <- Checksums(path = tmpdir, write = TRUE)
+  ## postProcess.list
+  b <- list(1,1)
+  a <- postProcess(b)
+  expect_true(identical(a, b))
 
-    aMess <- capture_messages(downloadFile(url = url, neededFiles = "ecozones.shp", checkSums = checkSums,
-                                           targetFile = "ecozones.shp",
-                                           archive = NULL, needChecksums = TRUE, quick = FALSE,
-                                           destinationPath = file.path(tmpdir, "Ecozones"),
-                                           checksumFile = file.path(tmpdir, "CHECKSUMS.txt")))
+  ras <- raster(extent(0,10,0,10), res = 1, vals = 1:100)
+  crs(ras) <- crsToUse
 
-    expect_true(any(grepl("Skipping download", aMess)))
+  expect_error(postProcess(ras, studyArea = 1), "The 'studyArea")
+  expect_error(postProcess(ras, rasterToMatch = 1), "The 'rasterToMatch")
+  mess <- capture_messages(postProcess(ras, inputFilePath = "test"))
+  expect_true(all(grepl("inputFilePath is being deprecated", mess)))
 
-    filesForShp <- dir(file.path(tmpdir), pattern = "ecozones", full.names = TRUE)
-    file.copy(filesForShp, tmpCache)
-    # Need these in a test further down -- mostly just need the CRS
-    filesForShp2 <- dir(file.path(tmpCache), pattern = "ecozones", full.names = TRUE)
-    shpFile <- shapefile(grep(filesForShp2, pattern = "\\.shp", value = TRUE))
-    # Test when wrong archive exists, wrong checkSums
-    file.remove(file.path(tmpdir, "ecozone_shp.zip"))
-    file.remove(filesForShp)
-    file.create(file.path(tmpdir, "ecozone_shp.zip"))
-    checkSums <- Checksums(path = tmpdir, write = TRUE)
-    file.remove(file.path(tmpdir, "ecozone_shp.zip"))
-    checkSums <- Checksums(path = tmpdir)
+  mess <- capture_messages(postProcess(ras, targetFilePath = "test"))
+  expect_true(all(grepl("targetFilePath is being deprecated", mess)))
 
-    noisyOutput <- capture.output(
-      expect_error(
-        downloadFile(url = url,
-                     neededFiles = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn", "ecozones.sbx",
-                                     "ecozones.shp", "ecozones.shx"),
-                     checkSums = checkSums,
-                     targetFile = "ecozones.shp",
-                     archive = "ecozone_shp.zip", needChecksums = TRUE, quick = FALSE,
-                     destinationPath = tmpdir, checksumFile = checkSumFilePath)
-      )
-    )
+  ## cropInputs.default
+  b <- 1
+  a <- cropInputs(b)
+  expect_true(identical(a, b))
 
-    ## postProcess.default
-    b <- 1
-    a <- postProcess(b)
-    expect_true(identical(a, b))
+  ras2 <- raster(extent(0,5,0,5), res = 1, vals = 1:25)
+  crs(ras2) <- crsToUse
+  a <- cropInputs(ras, extentToMatch = extent(ras2), extentCRS = crs(ras2))
+  expect_true(inherits(a, "RasterLayer"))
 
-    ## postProcess.list
-    b <- list(1,1)
-    a <- postProcess(b)
-    expect_true(identical(a, b))
+  ras4 <- raster(extent(6,10,6,10), res = 1, vals = 1:16)
+  sp4 <- as(raster::extent(ras4), "SpatialPolygons")
+  crs(sp4) <- crsToUse
 
-    ras <- raster(extent(0,10,0,10), res = 1, vals = 1:100)
-    crs(ras) <- crsToUse
+  expect_error(cropInputs(ras2, studyArea = sp4), "extents do not overlap")
 
-    expect_error(postProcess(ras, studyArea = 1), "The 'studyArea")
-    expect_error(postProcess(ras, rasterToMatch = 1), "The 'rasterToMatch")
-    mess <- capture_messages(postProcess(ras, inputFilePath = "test"))
-    expect_true(all(grepl("inputFilePath is being deprecated", mess)))
+  ras3 <- raster(extent(0,5,0,5), res = 1, vals = 1:25)
+  crs(ras3) <- crsToUse
 
-    mess <- capture_messages(postProcess(ras, targetFilePath = "test"))
-    expect_true(all(grepl("targetFilePath is being deprecated", mess)))
+  ################################################
+  # Different crs
+  # Because studyArea is a Raster, then it doesn't work correctly
+  a <- cropInputs(ras2, studyArea = ras3)
+  expect_true(inherits(a, "RasterLayer"))
+  expect_true(identical(crs(a), crs(ras2)))
 
-    ## cropInputs.default
-    b <- 1
-    a <- cropInputs(b)
-    expect_true(identical(a, b))
+  # Now rasterToMatch used -- internally reprojects it to x
+  a <- cropInputs(ras2, rasterToMatch = ras3)
+  expect_true(inherits(a, "RasterLayer"))
+  expect_true(identical(crs(a), crs(ras2)))
 
-    ras2 <- raster(extent(0,5,0,5), res = 1, vals = 1:25)
-    crs(ras2) <- crsToUse
-    a <- cropInputs(ras, extentToMatch = extent(ras2), extentCRS = crs(ras2))
-    expect_true(inherits(a, "RasterLayer"))
+  ## fixErrors.default
+  b <- 1
+  a <- fixErrors(b)
+  expect_true(identical(a, b))
 
-    ras4 <- raster(extent(6,10,6,10), res = 1, vals = 1:16)
-    sp4 <- as(raster::extent(ras4), "SpatialPolygons")
-    crs(sp4) <- crsToUse
+  ## projectInputs.Raster
+  a <- projectInputs(ras2, rasterToMatch = ras3, method = "ngb")
+  expect_true(inherits(a, "RasterLayer"))
+  expect_true(identical(crs(a), crs(ras3)))
 
-    expect_error(cropInputs(ras2, studyArea = sp4), "extents do not overlap")
+  a <- projectInputs(ras2, targetCRS = crs(ras3), rasterToMatch = ras3, method = "ngb")
+  expect_true(inherits(a, "RasterLayer"))
+  expect_true(identical(crs(a), crs(ras3)))
 
-    ras3 <- raster(extent(0,5,0,5), res = 1, vals = 1:25)
-    crs(ras3) <- crsToUse
+  #warns if bilinear is passed for reprojecting integer
+  expect_warning(projectInputs(ras2, targetCRS = crs(shpFile), method = "bilinear"))
 
-    ################################################
-    # Different crs
-    # Because studyArea is a Raster, then it doesn't work correctly
-    a <- cropInputs(ras2, studyArea = ras3)
-    expect_true(inherits(a, "RasterLayer"))
-    expect_true(identical(crs(a), crs(ras2)))
-
-    # Now rasterToMatch used -- internally reprojects it to x
-    a <- cropInputs(ras2, rasterToMatch = ras3)
-    expect_true(inherits(a, "RasterLayer"))
-    expect_true(identical(crs(a), crs(ras2)))
-
-    ## fixErrors.default
-    b <- 1
-    a <- fixErrors(b)
-    expect_true(identical(a, b))
-
-    ## projectInputs.Raster
-    a <- projectInputs(ras2, rasterToMatch = ras3, method = "ngb")
-    expect_true(inherits(a, "RasterLayer"))
-    expect_true(identical(crs(a), crs(ras3)))
-
-    a <- projectInputs(ras2, targetCRS = crs(ras3), rasterToMatch = ras3, method = "ngb")
-    expect_true(inherits(a, "RasterLayer"))
-    expect_true(identical(crs(a), crs(ras3)))
-
-    #warns if bilinear is passed for reprojecting integer
-    expect_warning(projectInputs(ras2, targetCRS = crs(shpFile), method = "bilinear"))
-
-    #Works with no rasterToMatch
-    a <- projectInputs(ras2, targetCRS = crs(ras3), method = "ngb")
-    expect_true(identical(crs(a), crs(ras3)))
+  #Works with no rasterToMatch
+  a <- projectInputs(ras2, targetCRS = crs(ras3), method = "ngb")
+  expect_true(identical(crs(a), crs(ras3)))
 
   # }
   # sp::CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"))
