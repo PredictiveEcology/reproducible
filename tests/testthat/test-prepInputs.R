@@ -1635,7 +1635,7 @@ test_that("options inputPaths", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  f <- formals(prepInputs);
+  f <- formals3(prepInputs)
 
   if (getRversion() <= "3.3.0")  skip("Doesn't work on R 3.3.0") # Not sure why this fails on 3.3.0
   options("reproducible.inputPaths" = NULL)

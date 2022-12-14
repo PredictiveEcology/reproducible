@@ -404,8 +404,10 @@ a[[14]] <- Cache(rnorm(1, 0, get("qq", inherits = FALSE, envir = ee)))
 a[[15]] <- Cache(rnorm(1, bbb - bbb, get("bbb", inherits = FALSE)))
 a[[16]] <- Cache(rnorm(sd = 1, 0, n = get("bbb", inherits = FALSE))) # change order
 a[[17]] <- Cache(rnorm(1, sd = get("ee", inherits = FALSE)$qq), mean = 0)
-# with base pipe -- this is put in "" because R version 4.0 can't understand this
-#  if you are using R >= 4.1, then you can just use pipe normally
+
+# with base pipe -- this is put in quotes ('') because R version 4.0 can't understand this
+#  if you are using R >= 4.1 or R >= 4.2 if using the _ placeholder,
+#  then you can just use pipe normally
 usingPipe1 <- 'b$fun(1) |> Cache()'  # base pipe
 
 # For long pipe, need to wrap sequence in { }, or else only last step is cached
@@ -417,6 +419,8 @@ usingPipe2 <-
     Cache()'
 if (getRversion() >= 4.1) {
   a[[9]] <- eval(parse(text = usingPipe1)) # recovers cached copy
+}
+if (getRversion() >= 4.2) { # uses the _ placeholder; only available in R >= 4.2
   a[[18]] <- eval(parse(text = usingPipe2)) # recovers cached copy
 }
 

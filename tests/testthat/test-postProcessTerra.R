@@ -64,45 +64,45 @@ test_that("testing terra", {
   v <- v[1:2,]
   rf <- system.file("ex/elev.tif", package = "terra")
   xOrig <- terra::rast(rf)
-  x <- xOrig
+  elevRas <- xOrig
   xCut <- terra::classify(xOrig, rcl = 5)
   xVect <- terra::as.polygons(xCut)
   xVect2 <- terra::deepcopy(xVect)
 
-  y <- terra::deepcopy(x)
+  y <- terra::deepcopy(elevRas)
   y[y > 200 & y < 300] <- NA
-  terra::values(x) <- rep(1L, ncell(y))
+  terra::values(elevRas) <- rep(1L, ncell(y))
   vRast <- terra::rast(v, res = 0.008333333)
 
   # SR, SR
-  t1 <- postProcessTerra(x, y)
+  t1 <- postProcessTerra(elevRas, y)
   expect_true(sum(is.na(t1[]) != is.na(y[])) == 0)
 
-  t7 <- postProcessTerra(x, projectTo = y)
-  expect_true(identical(t7, x))
+  t7 <- postProcessTerra(elevRas, projectTo = y)
+  expect_true(identical(t7, elevRas))
 
-  t8 <- postProcessTerra(x, maskTo = y)
+  t8 <- postProcessTerra(elevRas, maskTo = y)
   expect_true(all.equal(t8, t1))
 
-  t9 <- postProcessTerra(x, cropTo = vRast)
+  t9 <- postProcessTerra(elevRas, cropTo = vRast)
   expect_true(terra::ext(v) <= terra::ext(t9))
 
 
   # SR, SV
-  t2 <- postProcessTerra(x, v)
+  t2 <- postProcessTerra(elevRas, v)
 
   # No crop
-  t3 <- postProcessTerra(x, maskTo = v)
-  expect_true(terra::ext(t3) == terra::ext(x))
+  t3 <- postProcessTerra(elevRas, maskTo = v)
+  expect_true(terra::ext(t3) == terra::ext(elevRas))
 
-  t4 <- postProcessTerra(x, cropTo = v, maskTo = v)
+  t4 <- postProcessTerra(elevRas, cropTo = v, maskTo = v)
   expect_true(terra::ext(t4) == terra::ext(t2))
 
-  t5 <- postProcessTerra(x, cropTo = v, maskTo = v, projectTo = v)
+  t5 <- postProcessTerra(elevRas, cropTo = v, maskTo = v, projectTo = v)
   expect_true(identical(t5[],t2[]))
 
 
-  t6 <- extract(x, v, mean, na.rm = TRUE)
+  t6 <- extract(elevRas, v, mean, na.rm = TRUE)
   expect_true(all(t6$elevation == 1))
   expect_true(NROW(t6) == 2)
 
@@ -160,7 +160,8 @@ test_that("testing terra", {
   vsf <- sf::st_as_sf(v)
   vsfutm <- sf::st_transform(vsf, utm)
   vutm <- terra::vect(vsfutm)
-  rutm <- terra::rast(vutm, res = 100)
+  res100 <- 100
+  rutm <- terra::rast(vutm, res = res100)
 
   if (Sys.info()["user"] %in% "emcintir") {
     env <- new.env(parent = emptyenv())
@@ -173,16 +174,16 @@ test_that("testing terra", {
     # b <- lapply(ls(), function(xx) if (is(get(xx, env), "PackedSpatRaster") || is(get(xx, env), "PackedSpatVector")) try(assign(xx, envir = env, terra::unwrap(get(xx)))))
   }
 
-  # t11 <- postProcessTerra(x, vutm)
+  # t11 <- postProcessTerra(elevRas, vutm)
   # expect_true(sf::st_crs(t11) == sf::st_crs(vutm))
 
-  # use raster dataset -- take the projectTo resolution, i.e., 100
-  t13 <- postProcessTerra(x, rutm)
-  expect_true(identical(res(t13)[1], 100))
+  # use raster dataset -- take the projectTo resolution, i.e., res100
+  t13 <- postProcessTerra(elevRas, rutm)
+  expect_true(identical(res(t13)[1], res100))
   expect_true(sf::st_crs(t13) == sf::st_crs(vutm))
 
   # no projection
-  t12 <- postProcessTerra(x, cropTo = vutm, maskTo = vutm)
+  t12 <- postProcessTerra(elevRas, cropTo = vutm, maskTo = vutm)
   expect_true(sf::st_crs(t12) != sf::st_crs(vutm))
 
   # projection with errors
@@ -212,48 +213,48 @@ test_that("testing terra", {
   expect_true(sf::st_crs(t18) == sf::st_crs(vutm))
 
   # Rasters
-  t16 <- postProcessTerra(x, rutm, cropTo = NA)
-  expect_true(sf::st_crs(t16) != sf::st_crs(x))
+  t16 <- postProcessTerra(elevRas, rutm, cropTo = NA)
+  expect_true(sf::st_crs(t16) != sf::st_crs(elevRas))
   expect_true(sf::st_crs(t16) == sf::st_crs(rutm))
   expect_true(terra::ext(t16) >= terra::ext(rutm))
 
-  t17 <- postProcessTerra(x, rutm, projectTo = NA)
-  expect_true(sf::st_crs(t17) == sf::st_crs(x))
+  t17 <- postProcessTerra(elevRas, rutm, projectTo = NA)
+  expect_true(sf::st_crs(t17) == sf::st_crs(elevRas))
   expect_true(sf::st_crs(t17) != sf::st_crs(rutm))
 
-  t19 <- postProcessTerra(x, rutm, maskTo = NA)
-  expect_true(sf::st_crs(t19) != sf::st_crs(x))
+  t19 <- postProcessTerra(elevRas, rutm, maskTo = NA)
+  expect_true(sf::st_crs(t19) != sf::st_crs(elevRas))
   expect_true(sf::st_crs(t19) == sf::st_crs(vutm))
   expect_true(sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
 
   # Raster with Vector
-  t16 <- postProcessTerra(x, vutm, cropTo = NA)
-  expect_true(sf::st_crs(t16) != sf::st_crs(x))
+  t16 <- postProcessTerra(elevRas, vutm, cropTo = NA)
+  expect_true(sf::st_crs(t16) != sf::st_crs(elevRas))
   expect_true(sf::st_crs(t16) == sf::st_crs(vutm))
 
-  t17 <- postProcessTerra(x, vutm, projectTo = NA)
-  expect_true(sf::st_crs(t17) == sf::st_crs(x))
+  t17 <- postProcessTerra(elevRas, vutm, projectTo = NA)
+  expect_true(sf::st_crs(t17) == sf::st_crs(elevRas))
   expect_true(sf::st_crs(t17) != sf::st_crs(vutm))
 
-  t19 <- postProcessTerra(x, vutm, maskTo = NA)
-  expect_true(sf::st_crs(t19) != sf::st_crs(x))
+  t19 <- postProcessTerra(elevRas, vutm, maskTo = NA)
+  expect_true(sf::st_crs(t19) != sf::st_crs(elevRas))
   expect_true(sf::st_crs(t19) == sf::st_crs(vutm))
   expect_true(sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
 
-  t21 <- postProcessTerra(x, projectTo = vutm)
-  t20 <- postProcessTerra(x, projectTo = sf::st_crs(vutm))
+  t21 <- postProcessTerra(elevRas, projectTo = vutm)
+  t20 <- postProcessTerra(elevRas, projectTo = sf::st_crs(vutm))
   expect_true(all.equal(t20, t21))
-  expect_true(identical(terra::size(x), terra::size(t20)))
+  expect_true(identical(terra::size(elevRas), terra::size(t20)))
 
   ## same projection change resolution only (will likely affect extent)
   y2 <- terra::rast(crs = crs(y), res = 0.008333333*2, extent = terra::ext(y))
   y2 <- terra::setValues(y2, rep(1, ncell(y2)))
 
-  t22 <- postProcessTerra(x, to = y2, overwrite = TRUE) # not sure why need this; R devel on Winbuilder Nov 26, 2022
-  expect_true(sf::st_crs(t22) == sf::st_crs(x))
+  t22 <- postProcessTerra(elevRas, to = y2, overwrite = TRUE) # not sure why need this; R devel on Winbuilder Nov 26, 2022
+  expect_true(sf::st_crs(t22) == sf::st_crs(elevRas))
   expect_true(terra::ext(t22) == terra::ext(y2))   ## "identical" may say FALSE (decimal plates?)
   expect_true(identical(res(t22), res(y2)))
-  expect_false(identical(res(t22), res(x)))
+  expect_false(identical(res(t22), res(elevRas)))
 
   vutmSF <- sf::st_as_sf(vutm)
   xVectSF <- sf::st_as_sf(xVect)

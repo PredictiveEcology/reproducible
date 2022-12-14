@@ -711,6 +711,7 @@ test_that("test Cache argument inheritance to inner functions", {
 ##########################
 test_that("test future", {
   skip_on_cran()
+  skip_on_ci()
   skip_if_not_installed("future")
 
   .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"

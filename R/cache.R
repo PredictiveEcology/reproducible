@@ -1264,16 +1264,23 @@ getMethodAll <- function(FUNcaptured, callingEnv) {
 
 formals2 <- function(FUNcaptured) {
   modifiedDots <- as.list(FUNcaptured[-1])
-
   FUN <- FUNcaptured[[1]]
+  modifiedDots <- formals3(FUN, modifiedDots, removeNulls = TRUE)
+  modifiedDots
+}
+
+
+formals3 <- function(FUN, modifiedDots = list(), removeNulls = FALSE) {
   forms1 <- formals(FUN) # primitives don't have formals
   if (!is.null(forms1)) {
     forms1 <- forms1[setdiff(names(forms1), "...")]
     if (NROW(forms1)) {
       defaults <- setdiff(names(forms1), names(modifiedDots))
-      theNulls <- unlist(lapply(forms1[defaults], is.null))
-      if (any(theNulls))
-        defaults <- defaults[!theNulls]
+      if (removeNulls) {
+        theNulls <- unlist(lapply(forms1[defaults], is.null))
+        if (any(theNulls))
+          defaults <- defaults[!theNulls]
+      }
 
       if (NROW(defaults)) { # there may be some arguments that are not specified
 
@@ -1299,7 +1306,8 @@ formals2 <- function(FUNcaptured) {
       }
 
       # Have to get rid of NULL because CacheDigest
-      forms1 <- forms1[!unlist(lapply(forms1, is.null))]
+      if (removeNulls)
+        forms1 <- forms1[!unlist(lapply(forms1, is.null))]
       modifiedDots <- modifyList(forms1, modifiedDots)
       forms <- names(forms1)
     }
@@ -1307,6 +1315,7 @@ formals2 <- function(FUNcaptured) {
   }
   modifiedDots
 }
+
 
 getFunctionName2 <- function(mc) {
   if (browserCond("fff")) browser()

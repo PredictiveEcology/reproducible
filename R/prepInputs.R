@@ -374,9 +374,14 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   out <- modifyList(out, list(...))
 
-  argsPassingToTheFun <- out[!names(out) %in% c(.namesPostProcessFormals(), formalArgs(prepInputs),
-                                                "checkSums", "dots", "object")]
-  args <- argsPassingToTheFun[!names(argsPassingToTheFun) %in% "targetFilePath"]
+  argsFromPrepInputsFamily <- unique(c(.namesPostProcessFormals(), formalArgs(prepInputs), formalArgs(preProcess),
+                                "checkSums", "dots", "object"))
+  # keep the ones for theFun
+  formsForTheFun <- names(formals3(theFun))
+  argsFromPrepInputsFamily <- setdiff(argsFromPrepInputsFamily, names(formals3(theFun)))
+  argsPassingToTheFun <- out[!names(out) %in% argsFromPrepInputsFamily]
+  # args <- argsPassingToTheFun[!names(argsPassingToTheFun) %in% "targetFilePath"] # will replace it without a named arg
+  args <- argsPassingToTheFun[names(argsPassingToTheFun) %in% formsForTheFun]
 
   # ## dots will contain too many things for some functions
   # ## -- need to remove those that are known going into prepInputs
