@@ -64,7 +64,7 @@ test_that("testing terra", {
   v <- v[1:2,]
   rf <- system.file("ex/elev.tif", package = "terra")
   xOrig <- terra::rast(rf)
-  elevRas <- xOrig
+  elevRas <- terra::deepcopy(xOrig)
   xCut <- terra::classify(xOrig, rcl = 5)
   xVect <- terra::as.polygons(xCut)
   xVect2 <- terra::deepcopy(xVect)
