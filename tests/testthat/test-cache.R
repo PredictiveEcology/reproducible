@@ -708,7 +708,6 @@ test_that("test Cache argument inheritance to inner functions", {
   expect_true(length(unique(cc[[.cacheTableHashColName()]])) == 3)
 })
 
-##########################
 test_that("test future", {
   skip_on_cran()
   skip_on_ci()
@@ -749,7 +748,6 @@ test_that("test future", {
   }
 })
 
-##########################
 test_that("test mergeCache", {
   testInitOut <- testInit("data.table")
   on.exit({
@@ -787,7 +785,6 @@ test_that("test mergeCache", {
   expect_true(identical(showCache(d), showCache(d1)))
 })
 
-##########################
 test_that("test cache-helpers", {
   testInitOut <- testInit("raster")
   out <- createCache(tmpCache)
@@ -1523,9 +1520,9 @@ test_that("test cache with new approach to match.call", {
     a[[2]] <- Cache(sf::st_make_valid, p1) # not
     a[[3]] <- Cache(quote(sf::st_make_valid(p1))) # not
     library(sf)
-    on.exit({
-      try(detach("package:sf", unload = TRUE), silent = TRUE)
-    }, add = TRUE)
+    # on.exit({
+    #   try(detach("package:sf", unload = TRUE), silent = TRUE)
+    # }, add = TRUE)
     a[[4]] <- Cache(st_make_valid(p1)) # not
     ff <- sf::st_make_valid
     a[[5]] <- Cache(ff(p1))
@@ -1607,5 +1604,6 @@ test_that("test cache; new approach to match.call, postProcess", {
 
 
 })
+
 
 

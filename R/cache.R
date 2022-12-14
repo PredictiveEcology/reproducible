@@ -1416,9 +1416,10 @@ getFunctionName2 <- function(mc) {
       FUNcapturedArgs <- lapply(as.list(FUNcaptured[-1]), function(ee) {
         out <- try(eval(ee, envir = callingEnv), silent = TRUE)
         if (is(out, "try-error")) {
-          browser()
           env2 <- whereInStack(ee)
           out <- try(eval(ee, envir = env2), silent = TRUE)
+          if (is(out, "try-error"))
+            out <- as.character(parse(text = ee))
         }
         out
         })# may be slow as it is evaluating the args
