@@ -165,7 +165,7 @@ test_that("testing terra", {
   if (Sys.info()["user"] %in% "emcintir") {
     env <- environment()
     suppressWarnings(
-      b <- lapply(ls(), function(x) if (isSpat(get(x))) try(assign(x, envir = env, terra::wrap(get(x)))))
+      b <- lapply(ls(), function(xx) if (isSpat(get(xx))) try(assign(xx, envir = env, terra::wrap(get(xx)))))
     )
     save(list = ls(), file = "~/tmp2.rda")
     # load(file = "~/tmp2.rda")
