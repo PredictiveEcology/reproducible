@@ -385,7 +385,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # # Only accept the ones that are the formals of the function -- above removals may be redunant
   # args <- args[(names(args) %in% fun$formalArgs)]
   # if (length(args) == 0) args <- NULL
-
   if (!(naFun || is.null(theFun))) {
     x <- if (is.null(out$object)) {
 

@@ -1358,7 +1358,7 @@ test_that("change to new capturing of FUN & base pipe", {
     testOnExit(testInitOut)
   }, add = TRUE)
   if (isTRUE(getRversion() >= "4.2.0")) {
-    Nrand <- 1e8
+    Nrand <- 3e7
     st1 <- system.time(
       out0 <- Cache(rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1)))), cachePath = tmpCache)
     )
@@ -1368,29 +1368,32 @@ test_that("change to new capturing of FUN & base pipe", {
                     cachePath = tmpCache)
     )
 
+    # NO LONGER THE SAME CALL AS ABOVE
     f1 <- paste("
-      runif(1e8, 1, 1.1) |>
+      {runif(3e7, 1, 1.1) |>
         mean() |>
         round() |>
-        rnorm(1, 2, sd = _) |> # _ Only works with R >= 4.2.0
+        rnorm(1, 2, sd = _)} |> # _ Only works with R >= 4.2.0
         Cache(cachePath = tmpCache)
     ")
     st3 <- system.time(out2 <- eval(parse(text = f1)))
-    f2 <-   paste("out3 <- runif(1e8, 1, 1.1) |>
+    f2 <-   paste("out3 <- {runif(3e7, 1, 1.1) |>
         mean() |>
         round() |>
-        rnorm(1, 2, sd = _) |> # _ Only works with R >= 4.2.0
+        rnorm(1, 2, sd = _)} |> # _ Only works with R >= 4.2.0
         # (function(xx) rnorm(1, 2, sd = xx))() |>
         Cache(cachePath = tmpCache)
     ")
     st4 <- system.time(eval(parse(text = f2)))
     expect_true(attr(out0, ".Cache")$newCache)
     expect_false(attr(out1, ".Cache")$newCache)
-    expect_false(attr(out2, ".Cache")$newCache)
+    expect_true(attr(out2, ".Cache")$newCache)
     expect_false(attr(out3, ".Cache")$newCache)
 
-    for (i  in 1:4)
+    for (i  in 1:3)
       expect_true(get(paste0("st", i))[1] > 0.5) # all should be longer than 0.5 second because have to evaluate args
+    for (i  in 4)
+      expect_true(get(paste0("st", i))[1] < 0.5) # Only this on is fast b/c it is based on args
   }
 
   clearCache(tmpCache)

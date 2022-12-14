@@ -1361,22 +1361,31 @@ getFunctionName2 <- function(mc) {
 
   }
 
-  if (!is.call(FUNcaptured)) { #|| isDollarSqBrPkgColon(FUNcaptured)) { # turn the rnorm, 1, 2 into rnorm(1, 2)
+  if (!is.call(FUNcaptured)) { # isDollarSqBrPkgColon(FUNcaptured)) { # turn the rnorm, 1, 2 into rnorm(1, 2)
     FUNcaptured <- as.call(append(list(FUNcaptured), dotsCaptured))
   }
 
-  if (any(grepl("^do.call", FUNcaptured)) || identical(do.call, FUNcaptured[[1]])) {
+  isDoCall <- any(grepl("^do.call", FUNcaptured)) || identical(do.call, FUNcaptured[[1]])
+  needRmList <- FALSE
+  fnNameInit <- NULL
+  if (isDoCall) {
     mc <- match.call(do.call, FUNcaptured)
-    argsForWhat <- if (length(mc$args) > 1) mc$args[-1] else mc$args
+    fnNameInit <- deparse(mc$what)
+    if (length(mc$args) > 1) {
+      argsForWhat <- mc$args[-1]
+    } else {
+      needRmList <- TRUE
+      argsForWhat <- mc$args # mc$args will be a list; needs to be evaluated to be unlisted; do below
+    }
     FUNcaptured <- try(as.call(append(list(mc$what), as.list(argsForWhat))))
     if (is(FUNcaptured, "try-error")) browser()
   }
 
+  isSquiggly <- FALSE
   if (!is.function(FUNcaptured[[1]])) { # e.g., just the name, such as rnorm --> convert to the actual function code
     FUNcaptured[[1]] <- eval(FUNcaptured[[1]], envir = callingEnv)
   }
 
-  isSquiggly <- FALSE
   if (length(FUNcaptured) > 1) isSquiggly <- identical(`{`, FUNcaptured[[1]])
 
   if (browserCond("ee2")) browser()
@@ -1384,31 +1393,39 @@ getFunctionName2 <- function(mc) {
     # Get rid of squiggly
     FUNcaptured <- as.list(FUNcaptured[-1]) # [[1]] ... if it has many calls... pipe will be just one; but others will be more
     if (length(FUNcaptured) > 1)
-      stop("Cache can only handle curly braces if all internal code uses base pipe |> ")
-    FUNcapturedNamesEvaled <- recursiveEvalNamesOnly(FUNcaptured[[1]], envir = callingEnv) # deals with e.g., stats::rnorm, b$fun, b[[fun]]
+      stop("Cache can only handle curly braces if all internal code uses base pipe |>; see examples")
+    FUNcaptured <- FUNcaptured[[1]]
+    FUNcapturedNamesEvaled <- recursiveEvalNamesOnly(FUNcaptured, envir = callingEnv) # deals with e.g., stats::rnorm, b$fun, b[[fun]]
     mc1 <- matchCall(FUNcaptured, envir = callingEnv)
     FUNcapturedNamesEvaled <- matchCall(FUNcapturedNamesEvaled, envir = callingEnv)
-    fnNameInit <- getFunctionName2(mc1[[1]])
+    if (is.null(fnNameInit))
+      fnNameInit <- getFunctionName2(mc1[[1]])
   } else {
     if (length(FUNcaptured) > 1) {
-      # The next line works for any object that is NOT in a ..., because the object never shows up in the environment; it is passed through
+      # The next line works for any object that is NOT in a ..., because the
+      #   object never shows up in the environment; it is passed through
       FUNcapturedArgs <- lapply(as.list(FUNcaptured[-1]), function(ee) {
         out <- try(eval(ee, envir = callingEnv), silent = TRUE)
         if (is(out, "try-error")) {
+          browser()
           env2 <- whereInStack(ee)
           out <- try(eval(ee, envir = env2), silent = TRUE)
         }
         out
         })# may be slow as it is evaluating the args
+      if (needRmList ) # it has one too many list elements # not sure about the length(out) == 1
+        FUNcapturedArgs <- FUNcapturedArgs[[1]]
+
       FUNcapturedNamesEvaled <- as.call(append(list(FUNcaptured[[1]]), FUNcapturedArgs))
       FUNcapturedNamesEvaled <- matchCall(FUNcapturedNamesEvaled, callingEnv)
     } else { # this is a function called with no arguments
       if (browserCond("ee1")) browser()
       FUNcapturedNamesEvaled <- FUNcaptured
     }
+    if (is.null(fnNameInit))
+      fnNameInit <- getFunctionName2(FUNcapturedOrig)
   }
 
-  fnNameInit <- getFunctionName2(FUNcapturedOrig)
 
 
   # Now FUNcaptured will always have at least 1 element, because it is a call
@@ -1474,8 +1491,7 @@ getFunctionName2 <- function(mc) {
 #' `Cache`, for example to determine whether there is a cached copy.
 #'
 #'
-#' @param ... passed to `.robustDigest`; this is generally empty except
-#'    for advanced use.
+#' @param ... passed to `.robustDigest`.
 #' @param objsToDigest A list of all the objects (e.g., arguments) to be digested
 #' @param calledFrom a Character string, length 1, with the function to
 #'    compare with. Default is "Cache". All other values may not produce
@@ -1508,10 +1524,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
       (NROW(dots) > 0 && # if not an function with call, then it has to have something there
                          # ... so not "just" an object in objsToDigest
        (NROW(forms) > 1 || is.null(forms)))) { # can be CacheDigest(rnorm, 1)
-    # if (is(FUNcaptured, "call")) {
-    browser()
-    fnDetails <- .fnCleanup(FUN = objsToDigest, # callingFun = "CacheDigest", ...,
-                            FUNcaptured = FUNcaptured)
+    fnDetails <- .fnCleanup(FUN = objsToDigest, callingFun = "Cache",  ..., FUNcaptured = FUNcaptured)
     modifiedDots <- fnDetails$modifiedDots
     modifiedDots$.FUN <- fnDetails$.FUN
     objsToDigest <- modifiedDots

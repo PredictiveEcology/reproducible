@@ -380,8 +380,14 @@ This feature is now deprecated. Do not use as it is ignored.
 tmpDir <- file.path(tempdir())
 opts <- options(reproducible.cachePath = tmpDir)
 
-# Usage -- All below are equivalent
+# Usage -- All below are equivalent; even where args are missing or provided,
+#   Cache evaluates using default values, if these are specified in formals(FUN)
 a <- list()
+b <- list(fun = rnorm)
+bbb <- 1
+ee <- new.env(parent = emptyenv())
+ee$qq <- bbb
+
 a[[1]] <- Cache(rnorm(1)) # no evaluation prior to Cache
 a[[2]] <- Cache(rnorm, 1) # no evaluation prior to Cache
 a[[3]] <- Cache(do.call, rnorm, list(1))
@@ -390,7 +396,6 @@ a[[5]] <- Cache(do.call(b$fun, list(1)))
 a[[6]] <- Cache(do.call, b$fun, list(1))
 a[[7]] <- Cache(b$fun, 1)
 a[[8]] <- Cache(b$fun(1))
-a[[9]] <- b$fun(1) |> Cache()  # base pipe
 a[[10]] <- Cache(quote(rnorm(1)))
 a[[11]] <- Cache(stats::rnorm(1))
 a[[12]] <- Cache(stats::rnorm, 1)
@@ -401,16 +406,33 @@ a[[16]] <- Cache(rnorm(sd = 1, 0, n = get("bbb", inherits = FALSE))) # change or
 a[[17]] <- Cache(rnorm(1, sd = get("ee", inherits = FALSE)$qq), mean = 0)
 # with base pipe -- this is put in "" because R version 4.0 can't understand this
 #  if you are using R >= 4.1, then you can just use pipe normally
-usingPipe <- '{"bbb" |>
+usingPipe1 <- 'b$fun(1) |> Cache()'  # base pipe
+
+# For long pipe, need to wrap sequence in { }, or else only last step is cached
+usingPipe2 <-
+  '{"bbb" |>
       parse(text = _) |>
       eval() |>
       rnorm()} |>
     Cache()'
 if (getRversion() >= 4.1) {
-  a[[18]] <-eval(parse(text = usingPipe)) # recovers cached copy
+  a[[9]] <- eval(parse(text = usingPipe1)) # recovers cached copy
+  a[[18]] <- eval(parse(text = usingPipe2)) # recovers cached copy
 }
 
-length(unique(a)) #  all same
+length(unique(a)) == 1 #  all same
+
+### Pipe -- have to use { } or else only final function is Cached
+b1a <- 'sample(1e5, 1) |> rnorm() |> Cache()'
+b1b <- 'sample(1e5, 1) |> rnorm() |> Cache()'
+b2a <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
+b2b <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
+b1a <- eval(parse(text = b1a))
+b1b <- eval(parse(text = b1b))
+b2a <- eval(parse(text = b2a))
+b2b <- eval(parse(text = b2b))
+all.equal(b1a, b1b) # Not TRUE because the sample is run first
+all.equal(b2a, b2b) # TRUE because of {  }
 
 #########################
 # Advanced examples

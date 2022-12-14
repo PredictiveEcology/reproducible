@@ -15,8 +15,7 @@ CacheDigest(
 \arguments{
 \item{objsToDigest}{A list of all the objects (e.g., arguments) to be digested}
 
-\item{...}{passed to \code{.robustDigest}; this is generally empty except
-for advanced use.}
+\item{...}{passed to \code{.robustDigest}.}
 
 \item{algo}{The algorithms to be used; currently available choices are
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
