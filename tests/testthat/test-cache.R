@@ -1388,10 +1388,9 @@ test_that("change to new capturing of FUN & base pipe", {
     expect_true(attr(out2, ".Cache")$newCache)
     expect_false(attr(out3, ".Cache")$newCache)
 
+    # 1 to 3 are have to calculate the runif; 4 is a unevaluated cache, so quick
     for (i  in 1:3)
-      expect_true(get(paste0("st", i))[1] > 0.5) # all should be longer than 0.5 second because have to evaluate args
-    for (i  in 4)
-      expect_true(get(paste0("st", i))[1] < 0.5) # Only this on is fast b/c it is based on args
+      expect_true(get(paste0("st", i))[1] > get(paste0("st", 4))[1]) # all should be longer than 0.5 second because have to evaluate args
   }
 
   clearCache(tmpCache)
