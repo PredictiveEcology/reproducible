@@ -2283,8 +2283,11 @@ whereInStack <- function(obj, startingEnv = parent.frame()) {
         next
       }
     }
-
-    fn <- get0(obj, testEnv, inherits = FALSE)
+    fn <- if (R.version$minor < "1.0" && R.version$major <= "4") { # faster than any other approach
+      get0(as.character(parse(text = obj)), testEnv, inherits = FALSE)
+    } else {
+      get0(obj, testEnv, inherits = FALSE) # much faster; only works R >= 4.1
+    }
     if (!is.null(fn)) {
       break
     }
