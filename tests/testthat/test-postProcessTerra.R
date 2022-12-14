@@ -71,7 +71,7 @@ test_that("testing terra", {
 
   y <- terra::deepcopy(x)
   y[y > 200 & y < 300] <- NA
-  x[] <- 1
+  terra::values(x) <- rep(1L, ncell(y))
   vRast <- terra::rast(v, res = 0.008333333)
 
   # SR, SR
@@ -163,18 +163,18 @@ test_that("testing terra", {
   rutm <- terra::rast(vutm, res = 100)
 
   if (Sys.info()["user"] %in% "emcintir") {
-    env <- environment()
+    env <- new.env(parent = emptyenv())
     suppressWarnings(
       b <- lapply(ls(), function(xx) if (isSpat(get(xx))) try(assign(xx, envir = env, terra::wrap(get(xx)))))
     )
-    save(list = ls(), file = "~/tmp2.rda")
+    save(list = ls(envir = env), envir = env, file = "~/tmp2.rda")
     # load(file = "~/tmp2.rda")
     # env <- environment()
-    b <- lapply(ls(), function(x) if (is(get(x, env), "PackedSpatRaster") || is(get(x, env), "PackedSpatVector")) try(assign(x, envir = env, terra::unwrap(get(x)))))
+    # b <- lapply(ls(), function(xx) if (is(get(xx, env), "PackedSpatRaster") || is(get(xx, env), "PackedSpatVector")) try(assign(xx, envir = env, terra::unwrap(get(xx)))))
   }
 
-  t11 <- postProcessTerra(x, vutm)
-  expect_true(sf::st_crs(t11) == sf::st_crs(vutm))
+  # t11 <- postProcessTerra(x, vutm)
+  # expect_true(sf::st_crs(t11) == sf::st_crs(vutm))
 
   # use raster dataset -- take the projectTo resolution, i.e., 100
   t13 <- postProcessTerra(x, rutm)
