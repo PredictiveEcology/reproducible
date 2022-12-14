@@ -15,6 +15,5 @@
 Logical indicating whether operation succeeded.
 }
 \description{
-This will first try to \code{file.rename}, and if that fails, then it will
-\code{file.copy} then \code{file.remove}.
+Move a file to a new location
 }
