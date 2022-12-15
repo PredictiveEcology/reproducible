@@ -201,6 +201,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   }
   if (!isTRUE(isMemoised)) {
     f <- CacheStoredFile(cachePath, cacheId, format)
+    f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
 
     # First test if it is correct format
     if (!file.exists(f)) {
