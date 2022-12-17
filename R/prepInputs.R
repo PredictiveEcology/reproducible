@@ -390,6 +390,11 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # # Only accept the ones that are the formals of the function -- above removals may be redunant
   # args <- args[(names(args) %in% fun$formalArgs)]
   # if (length(args) == 0) args <- NULL
+  otherFiles <- out$checkSums[result == "OK"]
+  .cacheExtra <- NULL
+  if (NROW(otherFiles)) {
+    .cacheExtra <- .robustDigest(otherFiles$checksum.x)
+  }
   if (!(naFun || is.null(theFun))) {
     x <- if (is.null(out$object)) {
 
@@ -433,10 +438,10 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                             args)
               if (length(fun[["functionName"]]) == 1)
                 out[[fun[["functionName"]]]] <- fun$FUN
-              obj <- Cache(eval, theFun, envir = out, useCache = useCache2)
+              obj <- Cache(eval, theFun, envir = out, useCache = useCache2, .cacheExtra = .cacheExtra)
             } else {
               args2 <- append(list(asPath(out$targetFilePath)), args)
-              obj <- Cache(do.call, theFun, args2, useCache = useCache2)
+              obj <- Cache(do.call, theFun, args2, useCache = useCache2, .cacheExtra = .cacheExtra)
             }, message = function(m) {
               m$message <- grep("No cachePath supplied|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
               if (length(m$message)) {
