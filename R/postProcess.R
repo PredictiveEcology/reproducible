@@ -285,7 +285,6 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
 #' @examples
 #' library(sp)
 #' library(raster)
-#' ow <- setwd(tempdir())
 #'
 #' # make a SpatialPolygon
 #' coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
@@ -737,7 +736,6 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #' @examples
 #' library(sp)
 #' library(raster)
-#' ow <- setwd(tempdir())
 #'
 #' # make a SpatialPolygon
 #' coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
@@ -939,7 +937,6 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
 #' @examples
 #' library(sp)
 #' library(raster)
-#' ow <- setwd(tempdir())
 #'
 #' # make a SpatialPolygon
 #' coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
@@ -1388,7 +1385,6 @@ projectInputs.Spatial <- function(x, targetCRS, verbose = getOption("reproducibl
 #' @examples
 #' library(sp)
 #' library(raster)
-#' ow <- setwd(tempdir())
 #'
 #' # make a SpatialPolygon
 #' coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),

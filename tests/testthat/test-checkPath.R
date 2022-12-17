@@ -1,10 +1,10 @@
 test_that("checkPath: normPath consistency", {
-  cwd <- getwd()
 
   # don't use checkPath here because we are testing normPath!
   tmpdir <- tempdir2("test_normPath")
   tmpdir <- normalizePath(tmpdir, winslash = "/", mustWork = FALSE)
 
+  cwd <- getwd()
   setwd(tmpdir)
 
   on.exit({
@@ -32,9 +32,9 @@ test_that("checkPath: normPath consistency", {
 })
 
 test_that("checkPath: checkPath consistency", {
-  currdir <- getwd()
 
   # don't use checkPath here because we are testing checkPath
+  currdir <- getwd()
   tmpdir <- tempdir2("test_checkPath")
 
   on.exit({
