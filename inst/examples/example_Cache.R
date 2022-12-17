@@ -79,8 +79,7 @@ Cache(runif(14), cacheId = "k323431232") # recovers same as above, i.e, rnorm(3)
 
 # Turn off Caching session-wide
 opts <- options(reproducible.useCache = FALSE)
-Cache(rnorm(3)) # sets the cacheId for this call
-Cache(rnorm(3)) # recovers same as above, i.e, rnorm(3)
+Cache(rnorm(3)) # doesn't cache
 options(opts)
 
 # showSimilar can help with debugging why a Cache call isn't picking up a cached copy
