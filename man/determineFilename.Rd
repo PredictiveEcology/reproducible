@@ -105,6 +105,3 @@ will be the path returned. It will be tested whether it is an
 absolute or relative path and used as is if absolute or prepended with
 \code{destinationPath} if provided, and if \code{filename2} is relative.
 }
-\examples{
-determineFilename(TRUE, "testing") # adds a prefix
-}

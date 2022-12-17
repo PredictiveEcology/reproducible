@@ -1613,8 +1613,6 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
 #'
 #' @importFrom raster tmpDir
 #' @rdname determineFilename
-#' @examples
-#' determineFilename(TRUE, "testing") # adds a prefix
 determineFilename <- function(filename2 = NULL, filename1 = NULL,
                               destinationPath = getOption("reproducible.destinationPath", "."),
                               verbose = getOption("reproducible.verbose", 1),
