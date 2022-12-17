@@ -385,6 +385,7 @@ Cache <-
       if (!is.null(cacheRepo))
         cachePath <- cacheRepo
     }
+    CacheMatchedCall <- match.call(Cache)
     # Capture everything -- so not evaluated
     FUNcaptured <- substitute(FUN)
     dotsCaptured <- as.list(substitute(list(...))[-1])
@@ -394,8 +395,9 @@ Cache <-
 
     # returns "modifiedDots", "originalDots", "FUN", "funName", which will
     #  have modifications under many circumstances, e.g., do.call, specific methods etc.
+    # Need the CacheMatchedCall so that args that are in both Cache and the FUN can be sent to both
     fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", ...,
-                            FUNcaptured = FUNcaptured)
+                            FUNcaptured = FUNcaptured, CacheMatchedCall = CacheMatchedCall)
 
     # next line is (1 && 1) && 1 -- if it has :: or $ or [] e.g., fun$b, it MUST be length 3 for it to not be "captured function"
     isCapturedFUN <- isFALSE(isDollarSqBrPkgColon(FUNcaptured) &&
@@ -1322,7 +1324,7 @@ getFunctionName2 <- function(mc) {
   if (length(mc) > 1) {
     if (identical(as.name("<-"), mc[[1]]))
       mc <- mc[-(1:2)]
-    if (any(grepl("^\\$|\\[|\\:\\:", mc)) ) { # stats::runif
+    if (any(grepl("^\\$|\\[|\\:\\:", mc)[1]) ) { # stats::runif -- has to be first one, not some argument in middle
       if (any(grepl("^\\$|\\[|\\:\\:", mc[[1]])) && length(mc) != 3) { # stats::runif
         fnNameInit <- deparse(mc[[1]])
       } else {
@@ -1340,7 +1342,7 @@ getFunctionName2 <- function(mc) {
 
 
 #' @importFrom utils modifyList isS3stdGeneric methods
-.fnCleanup <- function(FUN, ..., callingFun, FUNcaptured = NULL, callingEnv = parent.frame(2)) {
+.fnCleanup <- function(FUN, ..., callingFun, FUNcaptured = NULL, CacheMatchedCall, callingEnv = parent.frame(2)) {
   if (browserCond("eee")) browser()
 
   if (is.null(FUNcaptured))
@@ -1472,6 +1474,18 @@ getFunctionName2 <- function(mc) {
     forms <- names(FUNcapturedNamesEvaled[-1])
   }
 
+  # Check for args that are passed to both Cache and the FUN -- if any overlap; pass to both
+  possibleOverlap <- names(formals(args(Cache)))
+  possibleOverlap <- intersect(names(CacheMatchedCall), possibleOverlap)
+  actualOverlap <- intersect(names(forms), possibleOverlap)
+  if (length(actualOverlap)) { # e.g., useCache
+    message("The following arguments are arguments for both Cache and ", fnDetails$functionName, ":\n",
+            paste0(actualOverlap, collapse = ", "),
+            "\n...passing to both. If more control is needed, pass as a call, e.g., ",
+            "Cache(", fnDetails$functionName, "(...))")
+    overlappingArgsAsList <- as.list(CacheMatchedCall)[actualOverlap]
+    FUNcapturedNamesEvaled <- as.call(append(as.list(FUNcapturedNamesEvaled), overlappingArgsAsList))
+  }
 
   if (exists("ccc", inherits = FALSE, envir = .GlobalEnv)) browser()
   return(append(fnDetails, list(FUN = FUN, matchedCall = FUNcapturedNamesEvaled,
@@ -1539,7 +1553,8 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
       (NROW(dots) > 0 && # if not an function with call, then it has to have something there
                          # ... so not "just" an object in objsToDigest
        (NROW(forms) > 1 || is.null(forms)))) { # can be CacheDigest(rnorm, 1)
-    fnDetails <- .fnCleanup(FUN = objsToDigest, callingFun = "Cache",  ..., FUNcaptured = FUNcaptured)
+    fnDetails <- .fnCleanup(FUN = objsToDigest, callingFun = "Cache",  ..., FUNcaptured = FUNcaptured,
+                            CacheMatchedCall = match.call(CacheDigest))
     modifiedDots <- fnDetails$modifiedDots
     modifiedDots$.FUN <- fnDetails$.FUN
     objsToDigest <- modifiedDots
