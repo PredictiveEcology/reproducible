@@ -5,7 +5,7 @@ utils::globalVariables(c(
 
 .reproEnv <- new.env(parent = asNamespace("reproducible"))
 
-#' Cache method that accommodates environments, S4 methods, Rasters, & nested caching
+#' Saves a wide variety function call outputs to disk and optionally RAM, for recovery later
 #'
 #' @description
 #' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
@@ -23,8 +23,8 @@ utils::globalVariables(c(
 #'
 #' There are other similar functions in the R universe. This version of Cache has
 #' been used as part of a robust continuous workflow approach. As a result, we have
-#' tested it with many "non-standard" R objects (e.g., RasterLayer objects) and
-#' environments, which tend to be challenging for caching as they are always unique.
+#' tested it with many "non-standard" R objects (e.g., RasterLayer, terra objects) and
+#' environments (which are always unique, so do not cache readily).
 #'
 #' This version of the `Cache` function accommodates those four special,
 #' though quite common, cases by:
@@ -33,7 +33,7 @@ utils::globalVariables(c(
 #'   \item identifying the dispatched S4 method (including those made through
 #'         inheritance) before hashing so the correct method is being cached;
 #'   \item by hashing the linked file, rather than the Raster object.
-#'         Currently, only file-backed `Raster*` objects are digested
+#'         Currently, only file-backed `Raster*` or `terra*` objects are digested
 #'         (e.g., not `ff` objects, or any other R object where the data
 #'         are on disk instead of in RAM);
 #'   \item Uses [digest::digest()] (formerly fastdigest, which does
@@ -94,7 +94,7 @@ utils::globalVariables(c(
 #' `Raster` currently. For class `character`, it is ambiguous whether
 #' this represents a character string or a vector of file paths. If it is known
 #' that character strings should not be treated as paths, then `quick =
-#' TRUE` will be much faster, with no loss of information. If it is file or
+#' TRUE` is appropriate, with no loss of information. If it is file or
 #' directory, then it will digest the file content, or `basename(object)`.
 #' For class `Path` objects, the file's metadata (i.e., filename and file
 #' size) will be hashed instead of the file contents if `quick = TRUE`. If
@@ -154,19 +154,21 @@ utils::globalVariables(c(
 #' `getOption("reproducible.useCache")`), which is `TRUE` by default,
 #' meaning use the Cache mechanism. This may be useful to turn all Caching on or
 #' off in very complex scripts and nested functions. Increasing levels of numeric
-#' values will cause deeper levels of Caching to occur. Currently, only implemented
+#' values will cause deeper levels of Caching to occur (though this may not
+#' work as expected in all cases). The following is no longer supported:
+#' Currently, only implemented
 #' in `postProcess`: to do both caching of inner `cropInputs`, `projectInputs`
 #' and `maskInputs`, and caching of outer `postProcess`, use
 #' `useCache = 2`; to skip the inner sequence of 3 functions, use `useCache = 1`.
 #' For large objects, this may prevent many duplicated save to disk events.
 #'
-#' If `"overwrite"`
+#' If `useCache = "overwrite"`
 #' (which can be set with `options("reproducible.useCache" =
 #' "overwrite")`), then the function invoke the caching mechanism but will purge
 #' any entry that is matched, and it will be replaced with the results of the
 #' current call.
 #'
-#' If `"devMode"`: The point of this mode is to facilitate using the Cache when
+#' If `useCache = "devMode"`: The point of this mode is to facilitate using the Cache when
 #' functions and datasets are continually in flux, and old Cache entries are
 #' likely stale very often. In `devMode`, the cache mechanism will work as
 #' normal if the Cache call is the first time for a function OR if it
@@ -182,7 +184,8 @@ utils::globalVariables(c(
 #' that `"devMode"` is most useful if used from the start of a project.
 #'
 #' @section `useCloud`:
-#' This is a way to store all or some of the local Cache in the cloud.
+#' This is experimental and there are many conditions under which this is known
+#' to not work correctly. This is a way to store all or some of the local Cache in the cloud.
 #' Currently, the only cloud option is Google Drive, via \pkg{googledrive}.
 #' For this to work, the user must be or be able to be authenticated
 #' with `googledrive::drive_auth`. The principle behind this
