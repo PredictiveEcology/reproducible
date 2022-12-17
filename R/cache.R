@@ -1466,7 +1466,7 @@ getFunctionName2 <- function(mc) {
     fnDetails$.FUN <- FUN
 
     if (!is.primitive(FUN) && (length(forms) > 0)) {
-      modifiedDots <- formals2(FUNcapturedNamesEvaled) # this gets formals for methods;
+      modifiedDots <- formals2(FUNcapturedNamesEvaled) # this gets default values for methods;
     }
   } else {
     browser() # This hasn't been tested yet -- args is wrong in next line
