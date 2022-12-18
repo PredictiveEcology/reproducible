@@ -1350,7 +1350,7 @@ test_that("change to new capturing of FUN & base pipe", {
     testOnExit(testInitOut)
   }, add = TRUE)
   if (isTRUE(getRversion() >= "4.2.0")) {
-    Nrand <- 3e6
+    Nrand <- 9e5
     st1 <- system.time(
       out0 <- Cache(rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1)))), cachePath = tmpCache)
     )
