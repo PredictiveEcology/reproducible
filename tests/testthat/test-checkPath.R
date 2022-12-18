@@ -1,16 +1,10 @@
 test_that("checkPath: normPath consistency", {
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
   # don't use checkPath here because we are testing normPath!
-  tmpdir <- tempdir2("test_normPath")
-  tmpdir <- normalizePath(tmpdir, winslash = "/", mustWork = FALSE)
-
-  cwd <- getwd()
-  setwd(tmpdir)
-
-  on.exit({
-    setwd(cwd)
-    unlink(tmpdir, recursive = TRUE)
-  }, add = TRUE) # nolint
 
   paths <- list("./aaa/zzz",
                 "./aaa/zzz/",
@@ -32,16 +26,20 @@ test_that("checkPath: normPath consistency", {
 })
 
 test_that("checkPath: checkPath consistency", {
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
   # don't use checkPath here because we are testing checkPath
-  currdir <- getwd()
-  tmpdir <- tempdir2("test_checkPath")
-
-  on.exit({
-    setwd(currdir)
-    unlink(tmpdir, recursive = TRUE)
-  }, add = TRUE) # nolint
-  setwd(tmpdir)
+  # currdir <- getwd()
+  # tmpdir <- tempdir2("test_checkPath")
+  #
+  # on.exit({
+  #   setwd(currdir)
+  #   unlink(tmpdir, recursive = TRUE)
+  # }, add = TRUE) # nolint
+  # setwd(tmpdir)
 
   dir.create("aaa/zzz", recursive = TRUE, showWarnings = FALSE)
   paths <- list("./aaa/zzz",

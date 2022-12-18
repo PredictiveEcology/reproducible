@@ -1,4 +1,8 @@
 test_that("all exported functions have examples", {
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
   fns <- ls("package:reproducible")
   omit <- which(fns == "cache") ## cache is deprecated, so omit it
 
@@ -27,13 +31,13 @@ test_that("all exported functions have examples", {
     normalizePath(.)
 
   # use for loop as it keeps control at top level
-  owd <- getwd()
-  tmpdir <- file.path(tmpDir, "test_Examples") %>% checkPath(create = TRUE)
-  setwd(tmpdir)
-  on.exit({
-    unlink(tmpdir, recursive = TRUE)
-    setwd(owd)}
-    , add = TRUE)
+  # owd <- getwd()
+  # tmpdir <- file.path(tmpDir, "test_Examples") %>% checkPath(create = TRUE)
+  # setwd(tmpdir)
+  # on.exit({
+  #   unlink(tmpdir, recursive = TRUE)
+  #   setwd(owd)}
+  #   , add = TRUE)
   if (grepl("VIC-", Sys.info()["nodename"])) { # for debugging only
     cat(paste("All files exist: ", isTRUE(all(file.exists(exFiles))), "\n"), file = tmpExFile, append = TRUE)
   }

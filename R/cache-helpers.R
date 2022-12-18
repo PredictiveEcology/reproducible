@@ -506,7 +506,6 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                            #copyRasterFile = TRUE, clearRepo = TRUE,
                            create = TRUE, silent = FALSE) {
   if (any(length(from) != 1, length(to) != 1)) stop("from and to must each be length 1")
-  origDir <- getwd()
   useFileCopy <- identical(dirname(from), dirname(to))
 
   lapply(unique(dirname(to)), checkPath, create = create)
@@ -568,7 +567,6 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
     file.copy(from = from, to = to, overwrite = overwrite, recursive = FALSE)
   }
 
-  setwd(origDir)
   return(invisible(to))
 }
 

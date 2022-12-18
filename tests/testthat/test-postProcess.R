@@ -1,4 +1,5 @@
 test_that("prepInputs doesn't work (part 3)", {
+  skip_on_cran() # too long
   testInitOut <- testInit(c("raster", "sf"), tmpFileExt = c(".tif", ".tif"),
                           opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),

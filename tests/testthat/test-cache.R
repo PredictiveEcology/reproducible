@@ -1,4 +1,5 @@
 test_that("test file-backed raster caching", {
+  skip_on_cran()
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
@@ -248,11 +249,11 @@ test_that("test memory backed raster robustDigest", {
 
   # Brick
   r <- raster(matrix(1:10, 2, 5))
-  b <- brick(r, r)
+  b <- raster::brick(r, r)
   dig <- .robustDigest(b)
 
   r1 <- raster(matrix(1:10, 2, 5))
-  b1 <- brick(r1, r1)
+  b1 <- raster::brick(r1, r1)
   dig1 <- .robustDigest(b1)
 
   expect_identical(dig, dig1)
@@ -261,7 +262,7 @@ test_that("test memory backed raster robustDigest", {
   dig <- .robustDigest(b)
 
   r <- raster(matrix(1:10, 2, 5))
-  b <- brick(r, r)
+  b <- raster::brick(r, r)
   bb1 <- .writeRaster(b, file = tmpfile[1], overwrite = TRUE)
   dig1 <- .robustDigest(bb1)
 
@@ -485,10 +486,6 @@ test_that("test asPath", {
   }, add = TRUE)
 
   obj <- sample(1e5,10)
-  #origDir <- getwd()
-  #on.exit(setwd(origDir), add = TRUE)
-  #setwd(tmpdir)
-  # xxxx <<- ssss <<- jjjj <<- aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
   # First -- has no filename.RData
   a1 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
   # Second -- has a filename.RData, and passing a character string,
@@ -528,10 +525,6 @@ test_that("test asPath", {
                               .loadedMemoisedResultMsg), a2)) == 1)
   expect_true(sum(grepl(paste(.loadedMemoisedResultMsg, "saveRDS call"), a3)) == 1)
 
-  # setwd(origDir)
-  # unlink(tmpdir, recursive = TRUE)
-
-  # make several unique environments
 })
 
 test_that("test wrong ways of calling Cache", {
@@ -846,7 +839,7 @@ test_that("test cache-helpers", {
   expect_true(identical(normalizePath(filename(b1$layer.1), winslash = "/", mustWork = FALSE),
                         normalizePath(file.path(tmpCache, "rasters", basename(filename(r))), winslash = "/", mustWork = FALSE)))
 
-  # Give them single file -- 2 layer stack; like a brick, but a stack
+  # Give them single file -- 2 layer stack; like a raster::brick, but a stack
   r[] <- r[]
   r1[] <- r1[]
   b <- raster::stack(r, r1)
@@ -1222,6 +1215,7 @@ test_that("test .object arg for list in Cache", {
 })
 
 test_that("quick arg in Cache as character", {
+  skip_on_cran()
   testInitOut <- testInit("raster", tmpFileExt = c("rds", "tif"))
   on.exit({
     testOnExit(testInitOut)
