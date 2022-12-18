@@ -383,13 +383,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # args <- argsPassingToTheFun[!names(argsPassingToTheFun) %in% "targetFilePath"] # will replace it without a named arg
   args <- argsPassingToTheFun[names(argsPassingToTheFun) %in% formsForTheFun]
 
-  # ## dots will contain too many things for some functions
-  # ## -- need to remove those that are known going into prepInputs
-  # args <- out$dots[!(names(out$dots) %in% .argsToRemove)]
-  #
-  # # Only accept the ones that are the formals of the function -- above removals may be redunant
-  # args <- args[(names(args) %in% fun$formalArgs)]
-  # if (length(args) == 0) args <- NULL
   otherFiles <- out$checkSums[result == "OK"]
   .cacheExtra <- NULL
   if (NROW(otherFiles)) {
