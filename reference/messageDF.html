@@ -24,7 +24,7 @@ be cleanly sent to messaging."><!-- mathjax --><script src="https://cdnjs.cloudf
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
       </span>
     </div>
 
@@ -39,9 +39,6 @@ be cleanly sent to messaging."><!-- mathjax --><script src="https://cdnjs.cloudf
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
-    </li>
-    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul></li>
@@ -74,7 +71,15 @@ be cleanly sent to messaging.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">messageDF</span><span class="op">(</span><span class="va">df</span>, <span class="va">round</span>, colour <span class="op">=</span> <span class="cn">NULL</span>, colnames <span class="op">=</span> <span class="cn">NULL</span>, appendLF <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">messageDF</span><span class="op">(</span></span>
+<span>  <span class="va">df</span>,</span>
+<span>  <span class="va">round</span>,</span>
+<span>  colour <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  colnames <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  appendLF <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span><span class="op">)</span>,</span>
+<span>  verboseLevel <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -103,7 +108,27 @@ which will omit them.</p></dd>
 <dd><p>logical: should messages given as a character string
     have a newline appended?</p></dd>
 
+
+<dt>verbose</dt>
+<dd><p>Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></dd>
+
+
+<dt>verboseLevel</dt>
+<dd><p>The numeric value for this <code>message*</code> call, equal or above
+which <code>verbose</code> must be. The higher this is set, the more unlikely the call
+will show a message.</p></dd>
+
 </dl></div>
+    <div id="value">
+    <h2>Value</h2>
+    
+
+<p>Used for side effects. This will produce a message of a structured <code>data.frame</code>.</p>
+    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -117,7 +142,7 @@ which will omit them.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

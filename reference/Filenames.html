@@ -25,7 +25,7 @@ length &amp;gt;1 for RasterStack."><!-- mathjax --><script src="https://cdnjs.cl
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
       </span>
     </div>
 
@@ -40,9 +40,6 @@ length &amp;gt;1 for RasterStack."><!-- mathjax --><script src="https://cdnjs.cl
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
-    </li>
-    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul></li>
@@ -107,6 +104,18 @@ are required. If <code>FALSE</code>, then only the first file will be returned,
 e.g., <code>filename.grd</code>, in the case of default Raster format in R.</p></dd>
 
 </dl></div>
+    <div id="value">
+    <h2>Value</h2>
+    
+
+<p>A character vector of filenames that are part of the objects passed to <code>obj</code>.
+This returns <code>NULL</code> is the object is not file-backed or does not have a method
+to recover the file-backed filename.</p>
+    </div>
+    <div id="details">
+    <h2>Details</h2>
+    <p>New methods can be made for this generic.</p>
+    </div>
     <div id="author">
     <h2>Author</h2>
     <p>Eliot McIntire</p>
@@ -124,7 +133,7 @@ e.g., <code>filename.grd</code>, in the case of default Raster format in R.</p><
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

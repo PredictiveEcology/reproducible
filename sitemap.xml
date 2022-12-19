@@ -7,9 +7,6 @@
     <loc>https://reproducible.predictiveecology.org/CONTRIBUTING.html</loc>
   </url>
   <url>
-    <loc>https://reproducible.predictiveecology.org/articles/Cache-using-postgresql.html</loc>
-  </url>
-  <url>
     <loc>https://reproducible.predictiveecology.org/articles/Intro-to-Cache.html</loc>
   </url>
   <url>
@@ -49,12 +46,6 @@
     <loc>https://reproducible.predictiveecology.org/reference/Path-class.html</loc>
   </url>
   <url>
-    <loc>https://reproducible.predictiveecology.org/reference/addChangedAttr.html</loc>
-  </url>
-  <url>
-    <loc>https://reproducible.predictiveecology.org/reference/addTagsToOutput.html</loc>
-  </url>
-  <url>
     <loc>https://reproducible.predictiveecology.org/reference/archiveExtractBinary.html</loc>
   </url>
   <url>
@@ -64,25 +55,16 @@
     <loc>https://reproducible.predictiveecology.org/reference/basename2.html</loc>
   </url>
   <url>
-    <loc>https://reproducible.predictiveecology.org/reference/cache-helpers.html</loc>
-  </url>
-  <url>
-    <loc>https://reproducible.predictiveecology.org/reference/cache-tools.html</loc>
-  </url>
-  <url>
-    <loc>https://reproducible.predictiveecology.org/reference/cacheMessage.html</loc>
-  </url>
-  <url>
     <loc>https://reproducible.predictiveecology.org/reference/checkAndMakeCloudFolderID.html</loc>
-  </url>
-  <url>
-    <loc>https://reproducible.predictiveecology.org/reference/checkCacheRepo.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/checkForAuxiliaryFiles.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/checkGitConfig.html</loc>
+  </url>
+  <url>
+    <loc>https://reproducible.predictiveecology.org/reference/checkPath.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/checkoutVersion.html</loc>
@@ -136,6 +118,9 @@
     <loc>https://reproducible.predictiveecology.org/reference/dlGoogle.html</loc>
   </url>
   <url>
+    <loc>https://reproducible.predictiveecology.org/reference/dot-file.move.html</loc>
+  </url>
+  <url>
     <loc>https://reproducible.predictiveecology.org/reference/dot-formalsNotInCurrentDots.html</loc>
   </url>
   <url>
@@ -148,19 +133,22 @@
     <loc>https://reproducible.predictiveecology.org/reference/downloadFile.html</loc>
   </url>
   <url>
+    <loc>https://reproducible.predictiveecology.org/reference/exportedMethods.html</loc>
+  </url>
+  <url>
     <loc>https://reproducible.predictiveecology.org/reference/extractFromArchive.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/fastMask.html</loc>
   </url>
   <url>
-    <loc>https://reproducible.predictiveecology.org/reference/file.move.html</loc>
-  </url>
-  <url>
     <loc>https://reproducible.predictiveecology.org/reference/fixErrors.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/fixErrorsTerra.html</loc>
+  </url>
+  <url>
+    <loc>https://reproducible.predictiveecology.org/reference/getFunctionName.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/grepSysCalls.html</loc>
@@ -184,9 +172,6 @@
     <loc>https://reproducible.predictiveecology.org/reference/listFilesInArchive.html</loc>
   </url>
   <url>
-    <loc>https://reproducible.predictiveecology.org/reference/makeMemoisable.html</loc>
-  </url>
-  <url>
     <loc>https://reproducible.predictiveecology.org/reference/maskInputs.html</loc>
   </url>
   <url>
@@ -197,6 +182,9 @@
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/movedCache.html</loc>
+  </url>
+  <url>
+    <loc>https://reproducible.predictiveecology.org/reference/normPath.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/objSize.html</loc>
@@ -220,9 +208,6 @@
     <loc>https://reproducible.predictiveecology.org/reference/postProcessTerra.html</loc>
   </url>
   <url>
-    <loc>https://reproducible.predictiveecology.org/reference/preDigestByClass.html</loc>
-  </url>
-  <url>
     <loc>https://reproducible.predictiveecology.org/reference/preProcess.html</loc>
   </url>
   <url>
@@ -235,16 +220,10 @@
     <loc>https://reproducible.predictiveecology.org/reference/prepareFileBackedRaster.html</loc>
   </url>
   <url>
-    <loc>https://reproducible.predictiveecology.org/reference/prepareOutput.html</loc>
-  </url>
-  <url>
     <loc>https://reproducible.predictiveecology.org/reference/projectInputs.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/purge.html</loc>
-  </url>
-  <url>
-    <loc>https://reproducible.predictiveecology.org/reference/reexports.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/reproducible-package.html</loc>
@@ -259,13 +238,13 @@
     <loc>https://reproducible.predictiveecology.org/reference/robustDigest.html</loc>
   </url>
   <url>
+    <loc>https://reproducible.predictiveecology.org/reference/saveToCache.html</loc>
+  </url>
+  <url>
     <loc>https://reproducible.predictiveecology.org/reference/search.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/setSubAttrInList.html</loc>
-  </url>
-  <url>
-    <loc>https://reproducible.predictiveecology.org/reference/sortDotsUnderscoreFirst.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/spatialClasses-class.html</loc>
@@ -274,16 +253,16 @@
     <loc>https://reproducible.predictiveecology.org/reference/studyAreaName.html</loc>
   </url>
   <url>
-    <loc>https://reproducible.predictiveecology.org/reference/tagsByClass.html</loc>
+    <loc>https://reproducible.predictiveecology.org/reference/tempdir2.html</loc>
+  </url>
+  <url>
+    <loc>https://reproducible.predictiveecology.org/reference/tempfile2.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/testForArchiveExtract.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/unrarPath.html</loc>
-  </url>
-  <url>
-    <loc>https://reproducible.predictiveecology.org/reference/updateFilenameSlots.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/viewCache.html</loc>

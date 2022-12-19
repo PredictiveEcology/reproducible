@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
       </span>
     </div>
 
@@ -38,9 +38,6 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
-    </li>
-    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul></li>
@@ -76,7 +73,7 @@
 <span>  <span class="va">outputHash</span>,</span>
 <span>  <span class="va">newFileName</span>,</span>
 <span>  <span class="va">gdriveLs</span>,</span>
-<span>  <span class="va">cacheRepo</span>,</span>
+<span>  <span class="va">cachePath</span>,</span>
 <span>  <span class="va">cloudFolderID</span>,</span>
 <span>  drv <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  conn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.conn"</span>, <span class="cn">NULL</span><span class="op">)</span></span>
@@ -97,7 +94,7 @@
 <dd><p>The result of <code>googledrive::drive_ls(googledrive::as_id(cloudFolderID), pattern = "outputHash")</code></p></dd>
 
 
-<dt>cacheRepo</dt>
+<dt>cachePath</dt>
 <dd><p>A repository used for storing cached objects.
 This is optional if <code>Cache</code> is used inside a SpaDES module.</p></dd>
 
@@ -105,8 +102,8 @@ This is optional if <code>Cache</code> is used inside a SpaDES module.</p></dd>
 <dt>cloudFolderID</dt>
 <dd><p>A googledrive dribble of a folder, e.g., using <code>drive_mkdir()</code>.
 If left as <code>NULL</code>, the function will create a cloud folder with name from last
-two folder levels of the <code>cacheRepo</code> path, :
-<code>paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))</code>.
+two folder levels of the <code>cachePath</code> path, :
+<code>paste0(basename(dirname(cachePath)), "_", basename(cachePath))</code>.
 This <code>cloudFolderID</code> will be added to <code>options("reproducible.cloudFolderID")</code>,
 but this will not persist across sessions. If this is a character string, it will
 treat this as a folder name to create or use on GoogleDrive.</p></dd>
@@ -136,7 +133,7 @@ object (in order to clone an existing connection).</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

@@ -26,7 +26,7 @@ environments)."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/l
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
       </span>
     </div>
 
@@ -41,9 +41,6 @@ environments)."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/l
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
-    </li>
-    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul></li>
@@ -139,6 +136,13 @@ object (in order to clone an existing connection).</p></dd>
 <code><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect()</a></code>.</p></dd>
 
 </dl></div>
+    <div id="value">
+    <h2>Value</h2>
+    
+
+<p>The same object as <code>object</code>, but with pass-by-reference class elements "deep" copied.
+<code>reproducible</code> has methods for several classes.</p>
+    </div>
     <div id="details">
     <h2>Details</h2>
     <p>To create a new Copy method for a class that needs its own method, try something like
@@ -146,7 +150,7 @@ shown in example and put it in your package (or other R structure).</p>
     </div>
     <div id="see-also">
     <h2>See also</h2>
-    <div class="dont-index"><p><code><a href="robustDigest.html">.robustDigest</a></code></p></div>
+    <div class="dont-index"><p><code><a href="robustDigest.html">.robustDigest()</a></code>, <code><a href="Filenames.html">Filenames()</a></code></p></div>
     </div>
     <div id="author">
     <h2>Author</h2>
@@ -189,6 +193,7 @@ shown in example and put it in your package (or other R structure).</p>
 <span class="r-in"><span><span class="va">e</span><span class="op">$</span><span class="va">one</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># To create a new deep copy method, use the following template</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="kw">setMethod</span><span class="op">(</span><span class="st">"Copy"</span>, signature <span class="op">=</span> <span class="st">"the class"</span>, <span class="co"># where = specify here if not in a package,</span></span></span>
 <span class="r-in"><span>  definition <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">object</span>, <span class="va">filebackendDir</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -209,7 +214,7 @@ shown in example and put it in your package (or other R structure).</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

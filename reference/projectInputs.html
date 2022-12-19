@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
       </span>
     </div>
 
@@ -38,9 +38,6 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
-    </li>
-    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul></li>
@@ -148,19 +145,19 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
 
 
 <dt>...</dt>
-<dd><p>Passed to <code><a href="https://rdrr.io/pkg/raster/man/projectRaster.html" class="external-link">projectRaster</a></code>.</p></dd>
+<dd><p>Passed to <code><a href="https://rdrr.io/pkg/raster/man/projectRaster.html" class="external-link">raster::projectRaster()</a></code>.</p></dd>
 
 
 <dt>rasterToMatch</dt>
 <dd><p>Template <code>Raster*</code> object passed to the <code>to</code> argument of
-<code><a href="https://rdrr.io/pkg/raster/man/projectRaster.html" class="external-link">projectRaster</a></code>, thus will changing the
+<code><a href="https://rdrr.io/pkg/raster/man/projectRaster.html" class="external-link">raster::projectRaster()</a></code>, thus will changing the
 resolution and projection of <code>x</code>.
-See details in <code><a href="postProcess.html">postProcess</a></code>.</p></dd>
+See details in <code><a href="postProcess.html">postProcess()</a></code>.</p></dd>
 
 
 <dt>cores</dt>
 <dd><p>An <code>integer*</code> or <code>'AUTO'</code>. This will be used if <code>gdalwarp</code> is
-triggered. <code>'AUTO'*</code> will calculate 90<!-- % of the total -->
+triggered. <code>'AUTO'*</code> will calculate 90% of the total
 number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.</p></dd>
 
@@ -183,19 +180,24 @@ use GDAL regardless of the memory test described here.</p></dd>
 
 <p>A file of the same type as starting, but with projection (and possibly
 other characteristics, including resolution, origin, extent if changed).</p>
+
+
+<p>A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+appropriately reprojected.</p>
+    </div>
+    <div id="see-also">
+    <h2>See also</h2>
+    <div class="dont-index"><p><code><a href="postProcessTerra.html">projectTo()</a></code></p></div>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Add a study area to Crop and Mask to</span></span></span>
-<span class="r-in"><span><span class="co"># Create a "study area"</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/edzer/sp/" class="external-link">sp</a></span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/edzer/sp/" class="external-link">sp</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/raster" class="external-link">raster</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">ow</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># make a SpatialPolygon</span></span></span>
 <span class="r-in"><span><span class="va">coords1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/structure.html" class="external-link">structure</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">123.98</span>, <span class="op">-</span><span class="fl">117.1</span>, <span class="op">-</span><span class="fl">80.2</span>, <span class="op">-</span><span class="fl">100</span>, <span class="op">-</span><span class="fl">123.98</span>, <span class="fl">60.9</span>, <span class="fl">67.73</span>, <span class="fl">65.58</span>, <span class="fl">51.79</span>, <span class="fl">60.9</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                     .Dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5L</span>, <span class="fl">2L</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                       .Dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5L</span>, <span class="fl">2L</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">Sr1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialPolygons.html" class="external-link">Polygon</a></span><span class="op">(</span><span class="va">coords1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">Srs1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialPolygons.html" class="external-link">Polygons</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">Sr1</span><span class="op">)</span>, <span class="st">"s1"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">shpEcozone</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialPolygons.html" class="external-link">SpatialPolygons</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">Srs1</span><span class="op">)</span>, <span class="fl">1L</span><span class="op">)</span></span></span>
@@ -203,105 +205,19 @@ other characteristics, including resolution, origin, extent if changed).</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># make a "study area" that is subset of larger dataset</span></span></span>
 <span class="r-in"><span><span class="va">coords</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/structure.html" class="external-link">structure</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">118.98</span>, <span class="op">-</span><span class="fl">116.1</span>, <span class="op">-</span><span class="fl">99.2</span>, <span class="op">-</span><span class="fl">106</span>, <span class="op">-</span><span class="fl">118.98</span>, <span class="fl">59.9</span>, <span class="fl">65.73</span>, <span class="fl">63.58</span>, <span class="fl">54.79</span>, <span class="fl">59.9</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                    .Dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5L</span>, <span class="fl">2L</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                      .Dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5L</span>, <span class="fl">2L</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">Sr1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialPolygons.html" class="external-link">Polygon</a></span><span class="op">(</span><span class="va">coords</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">Srs1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialPolygons.html" class="external-link">Polygons</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">Sr1</span><span class="op">)</span>, <span class="st">"s1"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">StudyArea</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialPolygons.html" class="external-link">SpatialPolygons</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">Srs1</span><span class="op">)</span>, <span class="fl">1L</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/crs.html" class="external-link">crs</a></span><span class="op">(</span><span class="va">StudyArea</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/terra/man/crs.html" class="external-link">crs</a></span><span class="op">(</span><span class="va">shpEcozone</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">projString</span> <span class="op">&lt;-</span> <span class="st">"+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"</span></span></span>
 <span class="r-in"><span><span class="va">StudyArea</span> <span class="op">&lt;-</span> <span class="fu">sp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sp/man/spTransform.html" class="external-link">spTransform</a></span><span class="op">(</span><span class="va">StudyArea</span>, CRSobj <span class="op">=</span> <span class="va">projString</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">##########</span></span></span>
-<span class="r-in"><span><span class="va">shpEcozonePostProcessed</span> <span class="op">&lt;-</span> <span class="fu"><a href="postProcess.html">postProcess</a></span><span class="op">(</span><span class="va">shpEcozone</span>, studyArea <span class="op">=</span> <span class="va">StudyArea</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">useCache is FALSE; skipping Cache on function cropInputs)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (ea45e5989f6b0406.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous projectInputs call</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">maskInputs with sf class objects is still experimental</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    intersecting ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking for errors in SimpleFeature</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Found no errors.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking for errors in SimpleFeature</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Found no errors.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Skipping writeOutputs; filename2 is NULL</span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Try manually, individual pieces</span></span></span>
-<span class="r-in"><span><span class="va">shpEcozoneReprojected</span> <span class="op">&lt;-</span> <span class="fu">projectInputs</span><span class="op">(</span><span class="va">shpEcozone</span>, <span class="va">StudyArea</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">projectInputs</span><span class="op">(</span><span class="va">shpEcozone</span>, <span class="va">StudyArea</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    reprojecting ...</span></span>
-<span class="r-in"><span><span class="va">shpEcozoneCropped</span> <span class="op">&lt;-</span> <span class="fu"><a href="cropInputs.html">cropInputs</a></span><span class="op">(</span><span class="va">shpEcozone</span>, <span class="va">StudyArea</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping ...</span></span>
-<span class="r-in"><span><span class="va">shpEcozoneClean</span> <span class="op">&lt;-</span> <span class="fu"><a href="fixErrors.html">fixErrors</a></span><span class="op">(</span><span class="va">shpEcozone</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking for errors in SpatialPolygon</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Found no errors.</span></span>
-<span class="r-in"><span><span class="va">shpEcozoneMasked</span> <span class="op">&lt;-</span> <span class="fu"><a href="maskInputs.html">maskInputs</a></span><span class="op">(</span><span class="va">shpEcozone</span>, <span class="va">StudyArea</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">maskInputs with sf class objects is still experimental</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    intersecting ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking for errors in SimpleFeature</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Found no errors.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking for errors in SimpleFeature</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Found no errors.</span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># With terra</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://rspatial.org/terra/" class="external-link">"terra"</a></span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">opts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="st">"reproducible.useTerra"</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">vectEcozone</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/vect.html" class="external-link">vect</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="va">shpEcozone</span><span class="op">)</span><span class="op">)</span> <span class="co"># direct conversion throws warning</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># If input is Spatial object --&gt; return will also be Spatial</span></span></span>
-<span class="r-in"><span>  <span class="va">shpEcozonePostProcessed</span> <span class="op">&lt;-</span> <span class="fu"><a href="postProcess.html">postProcess</a></span><span class="op">(</span><span class="va">shpEcozone</span>, studyArea <span class="op">=</span> <span class="va">StudyArea</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="co"># Try manually, individual pieces -- Note functions are different</span></span></span>
-<span class="r-in"><span>  <span class="va">shpEcozoneReprojected</span> <span class="op">&lt;-</span> <span class="fu">projectInputs</span><span class="op">(</span><span class="va">shpEcozone</span>, <span class="va">StudyArea</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">shpEcozoneMasked</span> <span class="op">&lt;-</span> <span class="fu"><a href="maskInputs.html">maskInputs</a></span><span class="op">(</span><span class="va">shpEcozone</span>, <span class="va">StudyArea</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">shpEcozoneCropped</span> <span class="op">&lt;-</span> <span class="fu"><a href="cropInputs.html">cropInputs</a></span><span class="op">(</span><span class="va">shpEcozone</span>, <span class="va">StudyArea</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># If input is Spat object --&gt; return will also be Spat</span></span></span>
-<span class="r-in"><span>  <span class="va">vectEcozonePostProcessed</span> <span class="op">&lt;-</span> <span class="fu"><a href="postProcess.html">postProcess</a></span><span class="op">(</span><span class="va">vectEcozone</span>, studyArea <span class="op">=</span> <span class="va">StudyArea</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="co"># Try manually, individual pieces -- Note functions are different</span></span></span>
-<span class="r-in"><span>  <span class="va">vectEcozoneMasked</span> <span class="op">&lt;-</span> <span class="fu"><a href="maskInputs.html">maskInputs</a></span><span class="op">(</span><span class="va">vectEcozone</span>, <span class="va">StudyArea</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">VectEcozoneReprojected</span> <span class="op">&lt;-</span> <span class="fu">projectInputs</span><span class="op">(</span><span class="va">vectEcozone</span>, <span class="va">StudyArea</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">vectEcozoneCropped</span> <span class="op">&lt;-</span> <span class="fu"><a href="cropInputs.html">cropInputs</a></span><span class="op">(</span><span class="va">vectEcozone</span>, <span class="va">StudyArea</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># Note these two have different function names --&gt; methods for cropInputs and fixErrors</span></span></span>
-<span class="r-in"><span>  <span class="co">#    are not implemented yet</span></span></span>
-<span class="r-in"><span>  <span class="va">shpEcozoneClean</span> <span class="op">&lt;-</span> <span class="fu"><a href="fixErrorsTerra.html">fixErrorsTerra</a></span><span class="op">(</span><span class="va">vectEcozone</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">opts</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">studyArea is supplied (deprecated); assigning it to `cropTo` &amp; `maskTo`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">       done in 0.0364 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">       done in 0.00256 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">       done in 0.0398 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  postProcessTerra done in 0.134 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    reprojecting ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">       done in 0.0795 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">       done in 0.00216 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">       done in 0.0406 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">studyArea is supplied (deprecated); assigning it to `cropTo` &amp; `maskTo`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">       done in 0.0403 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">       done in 0.00227 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">       done in 0.0365 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  postProcessTerra done in 0.154 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">       done in 0.00224 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">       done in 0.0569 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">       done in 0.0391 secs</span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="va">ow</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> class       : SpatialPolygons </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> features    : 1 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> extent      : -1134887, 1087234, 5760893, 7710639  (xmin, xmax, ymin, ymax)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> crs         : +proj=utm +zone=15 +datum=NAD83 +units=m +no_defs </span>
 </code></pre></div>
     </div>
   </div>
@@ -316,7 +232,7 @@ other characteristics, including resolution, origin, extent if changed).</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

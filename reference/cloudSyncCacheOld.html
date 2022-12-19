@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
       </span>
     </div>
 
@@ -38,9 +38,6 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
-    </li>
-    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul></li>
@@ -88,7 +85,7 @@
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>cacheRepo</dt>
-<dd><p>See <code>x</code> in <code><a href="viewCache.html">showCache</a></code></p></dd>
+<dd><p>See <code>x</code> in <code><a href="viewCache.html">showCache()</a></code></p></dd>
 
 
 <dt>checksumsFileID</dt>
@@ -99,8 +96,8 @@ provided as a character string.</p></dd>
 <dt>cloudFolderID</dt>
 <dd><p>A googledrive dribble of a folder, e.g., using <code>drive_mkdir()</code>.
 If left as <code>NULL</code>, the function will create a cloud folder with name from last
-two folder levels of the <code>cacheRepo</code> path, :
-<code>paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))</code>.
+two folder levels of the <code>cachePath</code> path, :
+<code>paste0(basename(dirname(cachePath)), "_", basename(cachePath))</code>.
 This <code>cloudFolderID</code> will be added to <code>options("reproducible.cloudFolderID")</code>,
 but this will not persist across sessions. If this is a character string, it will
 treat this as a folder name to create or use on GoogleDrive.</p></dd>
@@ -149,8 +146,8 @@ full sync (i.e., match cloudFolder with local cacheRepo, constrained by
     </div>
     <div id="see-also">
     <h2>See also</h2>
-    <div class="dont-index"><p><code><a href="Deprcated.html">cloudCache</a></code>, <code><a href="Cache.html">Cache</a></code>, <code><a href="cloudWriteOld.html">cloudWriteOld</a></code>,
-  <code><a href="cloudCheckOld.html">cloudCheckOld</a></code></p></div>
+    <div class="dont-index"><p><code><a href="Deprcated.html">cloudCache()</a></code>, <code><a href="Cache.html">Cache()</a></code>, <code><a href="cloudWriteOld.html">cloudWriteOld()</a></code>,
+<code><a href="cloudCheckOld.html">cloudCheckOld()</a></code></p></div>
     </div>
 
   </div>
@@ -165,7 +162,7 @@ full sync (i.e., match cloudFolder with local cacheRepo, constrained by
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

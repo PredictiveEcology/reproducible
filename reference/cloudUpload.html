@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
       </span>
     </div>
 
@@ -38,9 +38,6 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
-    </li>
-    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul></li>
@@ -72,13 +69,13 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">cloudUpload</span><span class="op">(</span><span class="va">isInRepo</span>, <span class="va">outputHash</span>, <span class="va">gdriveLs</span>, <span class="va">cacheRepo</span>, <span class="va">cloudFolderID</span>, <span class="va">output</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">cloudUpload</span><span class="op">(</span><span class="va">isInRepo</span>, <span class="va">outputHash</span>, <span class="va">gdriveLs</span>, <span class="va">cachePath</span>, <span class="va">cloudFolderID</span>, <span class="va">output</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>isInRepo</dt>
-<dd><p>A data.table with the information about an object that is in the local cacheRepo</p></dd>
+<dd><p>A data.table with the information about an object that is in the local cachePath</p></dd>
 
 
 <dt>outputHash</dt>
@@ -89,7 +86,7 @@
 <dd><p>The result of <code>googledrive::drive_ls(googledrive::as_id(cloudFolderID), pattern = "outputHash")</code></p></dd>
 
 
-<dt>cacheRepo</dt>
+<dt>cachePath</dt>
 <dd><p>A repository used for storing cached objects.
 This is optional if <code>Cache</code> is used inside a SpaDES module.</p></dd>
 
@@ -97,8 +94,8 @@ This is optional if <code>Cache</code> is used inside a SpaDES module.</p></dd>
 <dt>cloudFolderID</dt>
 <dd><p>A googledrive dribble of a folder, e.g., using <code>drive_mkdir()</code>.
 If left as <code>NULL</code>, the function will create a cloud folder with name from last
-two folder levels of the <code>cacheRepo</code> path, :
-<code>paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))</code>.
+two folder levels of the <code>cachePath</code> path, :
+<code>paste0(basename(dirname(cachePath)), "_", basename(cachePath))</code>.
 This <code>cloudFolderID</code> will be added to <code>options("reproducible.cloudFolderID")</code>,
 but this will not persist across sessions. If this is a character string, it will
 treat this as a folder name to create or use on GoogleDrive.</p></dd>
@@ -121,7 +118,7 @@ treat this as a folder name to create or use on GoogleDrive.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

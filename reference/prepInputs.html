@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
       </span>
     </div>
 
@@ -38,9 +38,6 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
-    </li>
-    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul></li>
@@ -98,7 +95,7 @@ or tar archive. This is the file <em>before</em> it is passed to
 <code>postProcess</code>. Currently, the internal checksumming does not checksum
 the file after it is <code>postProcess</code>ed (e.g., cropped/reprojected/masked).
 Using <code>Cache</code> around <code>prepInputs</code> will do a sufficient job in these cases.
-See table in <code><a href="preProcess.html">preProcess</a></code>.</p></dd>
+See table in <code><a href="preProcess.html">preProcess()</a></code>.</p></dd>
 
 
 <dt>url</dt>
@@ -108,7 +105,7 @@ exists in the <code>CHECKSUMS.txt</code> (in <code>destinationPath</code>), an e
 will be created or appended to. This <code>CHECKSUMS.txt</code> entry will be used
 in subsequent calls to
 <code>prepInputs</code> or <code>preProcess</code>, comparing the file on hand with the ad hoc
-<code>CHECKSUMS.txt</code>. See table in <code><a href="preProcess.html">preProcess</a></code>.</p></dd>
+<code>CHECKSUMS.txt</code>. See table in <code><a href="preProcess.html">preProcess()</a></code>.</p></dd>
 
 
 <dt>archive</dt>
@@ -116,7 +113,7 @@ in subsequent calls to
 containing <code>targetFile</code>, or a vector giving a set of nested archives
 (e.g., <code>c("xxx.tar", "inner.zip", "inner.rar")</code>). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the <code>targetFile</code>. See table in <code><a href="preProcess.html">preProcess</a></code>. If it is <code>NA</code>,
+the <code>targetFile</code>. See table in <code><a href="preProcess.html">preProcess()</a></code>. If it is <code>NA</code>,
 then it will <em>not</em> attempt to see it as an archive, even if it has archive-like
 file extension (e.g., <code>.zip</code>). This may be useful when an R function
 is expecting an archive directly.</p></dd>
@@ -129,7 +126,7 @@ is expecting an archive directly.</p></dd>
 <code>"similar"</code> will extract all files with the same filename without
 file extension as <code>targetFile</code>. <code>NA</code> will extract nothing other
 than <code>targetFile</code>. A character string of specific file names will cause
-only those to be extracted. See table in <code><a href="preProcess.html">preProcess</a></code>.</p></dd>
+only those to be extracted. See table in <code><a href="preProcess.html">preProcess()</a></code>.</p></dd>
 
 
 <dt>destinationPath</dt>
@@ -149,9 +146,9 @@ into an <code>R</code> object. See details and examples below.</p></dd>
 
 
 <dt>quick</dt>
-<dd><p>Logical. This is passed internally to <code><a href="Checksums.html">Checksums</a></code>
+<dd><p>Logical. This is passed internally to <code><a href="Checksums.html">Checksums()</a></code>
 (the quickCheck argument), and to
-<code><a href="Cache.html">Cache</a></code> (the quick argument). This results in faster, though
+<code><a href="Cache.html">Cache()</a></code> (the quick argument). This results in faster, though
 less robust checking of inputs. See the respective functions.</p></dd>
 
 
@@ -192,13 +189,22 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
 
 <dt>...</dt>
 <dd><p>Additional arguments passed to <code>fun</code> (i.e,. user supplied),
- <code><a href="postProcess.html">postProcess</a></code> and <code><a href="Cache.html">Cache</a></code>.
-Since <code>...</code> is passed to <code><a href="postProcess.html">postProcess</a></code>, these will
+<code><a href="postProcess.html">postProcess()</a></code> and <code><a href="Cache.html">Cache()</a></code>.
+Since <code>...</code> is passed to <code><a href="postProcess.html">postProcess()</a></code>, these will
 <code>...</code> will also be passed into the inner
-functions, e.g., <code><a href="cropInputs.html">cropInputs</a></code>. Possibly useful other arguments include
+functions, e.g., <code><a href="cropInputs.html">cropInputs()</a></code>. Possibly useful other arguments include
 <code>dlFun</code> which is passed to <code>preProcess</code>. See details and examples.</p></dd>
 
 </dl></div>
+    <div id="value">
+    <h2>Value</h2>
+    
+
+<p>This is an omnibus function that will return an R object that will have resulted from
+the running of <code><a href="preProcess.html">preProcess()</a></code> and <code><a href="postProcess.html">postProcess()</a></code> or <code><a href="postProcessTerra.html">postProcessTerra()</a></code>. Thus,
+if it is a GIS object, it may have been cropped, reprojected, "fixed", masked, and
+written to disk.</p>
+    </div>
     <div id="details">
     <h2>Details</h2>
     <p>This function can be used to prepare R objects from remote or local data sources.
@@ -220,15 +226,15 @@ See examples.</p>
     
 
 
-<p>See <code><a href="preProcess.html">preProcess</a></code> for combinations of arguments.</p>
-<p></p><ol><li><p>Download from the web via either <code><a href="https://googledrive.tidyverse.org/reference/drive_download.html" class="external-link">drive_download</a></code>,
-    <code><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></code>;</p></li>
-<li><p>Extract from archive using <code><a href="https://rdrr.io/r/utils/unzip.html" class="external-link">unzip</a></code> or <code><a href="https://rdrr.io/r/utils/untar.html" class="external-link">untar</a></code>;</p></li>
-<li><p>Load into R using <code><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster</a></code>,
-    <code><a href="https://rdrr.io/pkg/raster/man/shapefile.html" class="external-link">shapefile</a></code>, or any other function passed in with <code>fun</code>;</p></li>
+<p>See <code><a href="preProcess.html">preProcess()</a></code> for combinations of arguments.</p>
+<ol><li><p>Download from the web via either <code><a href="https://googledrive.tidyverse.org/reference/drive_download.html" class="external-link">googledrive::drive_download()</a></code>,
+<code><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">utils::download.file()</a></code>;</p></li>
+<li><p>Extract from archive using <code><a href="https://rdrr.io/r/utils/unzip.html" class="external-link">unzip()</a></code> or <code><a href="https://rdrr.io/r/utils/untar.html" class="external-link">untar()</a></code>;</p></li>
+<li><p>Load into R using <code><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster::raster()</a></code>,
+<code><a href="https://rdrr.io/pkg/raster/man/shapefile.html" class="external-link">raster::shapefile()</a></code>, or any other function passed in with <code>fun</code>;</p></li>
 <li><p>Checksumming of all files during this process. This is put into a
-    <code class="file">CHECKSUMS.txt</code> file in the <code>destinationPath</code>, appending if it is
-    already there, overwriting the entries for same files if entries already exist.</p></li>
+<code class="file">CHECKSUMS.txt</code> file in the <code>destinationPath</code>, appending if it is
+already there, overwriting the entries for same files if entries already exist.</p></li>
 </ol></div>
     <div id="stage-post-processing">
     <h2>Stage 2 - Post processing</h2>
@@ -236,29 +242,29 @@ See examples.</p>
 
 
 <p>This will be triggered if either <code>rasterToMatch</code> or <code>studyArea</code>
-  is supplied.</p>
-<p></p><ol><li><p>Fix errors. Currently only errors fixed are for <code>SpatialPolygons</code>
-    using <code>buffer(..., width = 0)</code>;</p></li>
-<li><p>Crop using <code><a href="cropInputs.html">cropInputs</a></code>;</p></li>
-<li><p>Project using <code><a href="projectInputs.html">projectInputs</a></code>;</p></li>
-<li><p>Mask using <code><a href="maskInputs.html">maskInputs</a></code>;</p></li>
-<li><p>Determine file name <code><a href="determineFilename.html">determineFilename</a></code> via <code>filename2</code>;</p></li>
-<li><p>Optionally, write that file name to disk via <code><a href="writeOutputs.html">writeOutputs</a></code>.</p></li>
+is supplied.</p>
+<ol><li><p>Fix errors. Currently only errors fixed are for <code>SpatialPolygons</code>
+using <code>buffer(..., width = 0)</code>;</p></li>
+<li><p>Crop using <code><a href="cropInputs.html">cropInputs()</a></code>;</p></li>
+<li><p>Project using <code><a href="projectInputs.html">projectInputs()</a></code>;</p></li>
+<li><p>Mask using <code><a href="maskInputs.html">maskInputs()</a></code>;</p></li>
+<li><p>Determine file name <code><a href="determineFilename.html">determineFilename()</a></code> via <code>filename2</code>;</p></li>
+<li><p>Optionally, write that file name to disk via <code><a href="writeOutputs.html">writeOutputs()</a></code>.</p></li>
 </ol><p>NOTE: checksumming does not occur during the post-processing stage, as
-  there are no file downloads. To achieve fast results, wrap
-  <code>prepInputs</code> with <code>Cache</code>.</p>
+there are no file downloads. To achieve fast results, wrap
+<code>prepInputs</code> with <code>Cache</code>.</p>
 <p>NOTE: <code>sf</code> objects are still very experimental.</p>
 <div class="section">
 <h3 id="postprocessing-of-raster-and-spatial-objects-">postProcessing of <code>Raster*</code> and <code>Spatial*</code> objects:<a class="anchor" aria-label="anchor" href="#postprocessing-of-raster-and-spatial-objects-"></a></h3>
 
 
 <p>If <code>rasterToMatch</code> or <code>studyArea</code> are used, then this will
-  trigger several subsequent functions, specifically the sequence,
-  <em>Crop, reproject, mask</em>, which appears to be a common sequence in
-  spatial simulation. See <code><a href="postProcess.html">postProcess.spatialClasses</a></code>.</p>
+trigger several subsequent functions, specifically the sequence,
+<em>Crop, reproject, mask</em>, which appears to be a common sequence in
+spatial simulation. See <code><a href="postProcess.html">postProcess.spatialClasses()</a></code>.</p>
 <p><em>Understanding various combinations of <code>rasterToMatch</code>
-  and/or <code>studyArea</code>:</em>
-  Please see <code><a href="postProcess.html">postProcess.spatialClasses</a></code>.</p>
+and/or <code>studyArea</code>:</em>
+Please see <code><a href="postProcess.html">postProcess.spatialClasses()</a></code>.</p>
 </div>
 
     </div>
@@ -268,27 +274,27 @@ See examples.</p>
 
 
 <p><code>fun</code> offers the ability to pass any custom function with which to load
- the object obtained by `preProcess` into the session. There are two cases that are
- dealt with: when the `preProcess` downloads a file (including via `dlFun`),
- `fun` must deal with a file; and, when `preProcess` creates an R object
- (e.g., raster::getData returns an object), `fun` must deal with an object.</p>
+the object obtained by <code>preProcess</code> into the session. There are two cases that are
+dealt with: when the <code>preProcess</code> downloads a file (including via <code>dlFun</code>),
+<code>fun</code> must deal with a file; and, when <code>preProcess</code> creates an R object
+(e.g., raster::getData returns an object), <code>fun</code> must deal with an object.</p>
 <p><code>fun</code> can be supplied in three ways: a function, a character string
-  (i.e., a function name as a string), of a quoted expression.
-  If a character string or function, is should have the package name e.g.,
-  <code>"raster::raster"</code> or as an actual function, e.g., <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">base::readRDS</a></code>.
-  In these cases, it will evaluate this function call while passing `targetFile`
-  as the first argument. These will only work in the simplest of cases.</p>
+(i.e., a function name as a string), of a quoted expression.
+If a character string or function, is should have the package name e.g.,
+<code>"raster::raster"</code> or as an actual function, e.g., <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">base::readRDS</a></code>.
+In these cases, it will evaluate this function call while passing <code>targetFile</code>
+as the first argument. These will only work in the simplest of cases.</p>
 <p>When more precision is required, the full call can be written, surrounded by
-  <code>quote</code>, and where the object can be referred to as `targetFile` if the function
-  is loading a file or as `x` if it is loading the object that was returned by
-  `preProcess`. If `preProcess` returns an object, this must be used by `fun`; if
-  `preProcess` is only getting a file, then there will be no object, so `targetFile` is the
-  only option.</p>
-<p>If there is a custom function call, is not in a package, `prepInputs` may not find it. In such
-  cases, simply pass the function as a named argument (with same name as function) to `prepInputs`.
-  See examples.
-  NOTE: passing <code>NA</code> will skip loading object into R. Note this will essentially
-  replicate the functionality of simply calling <code>preProcess</code> directly.</p>
+<code>quote</code>, and where the object can be referred to as <code>targetFile</code> if the function
+is loading a file or as <code>x</code> if it is loading the object that was returned by
+<code>preProcess</code>. If <code>preProcess</code> returns an object, this must be used by <code>fun</code>; if
+<code>preProcess</code> is only getting a file, then there will be no object, so <code>targetFile</code> is the
+only option.</p>
+<p>If there is a custom function call, is not in a package, <code>prepInputs</code> may not find it. In such
+cases, simply pass the function as a named argument (with same name as function) to <code>prepInputs</code>.
+See examples.
+NOTE: passing <code>NA</code> will skip loading object into R. Note this will essentially
+replicate the functionality of simply calling <code>preProcess</code> directly.</p>
     </div>
     <div id="purge">
     <h2><code>purge</code></h2>
@@ -296,40 +302,40 @@ See examples.</p>
 
 
 <p>In options for control of purging the <code>CHECKSUMS.txt</code> file are:</p>
-<p></p><dl><dt><code>0</code></dt>
+<dl><dt><code>0</code></dt>
 <dd><p>keep file</p></dd>
 
-    <dt><code>1</code></dt>
+<dt><code>1</code></dt>
 <dd><p>delete file</p></dd>
 
-    <dt><code>2</code></dt>
+<dt><code>2</code></dt>
 <dd><p>delete entry for <code>targetFile</code></p></dd>
 
-    <dt><code>4</code></dt>
+<dt><code>4</code></dt>
 <dd><p>delete entry for <code>alsoExtract</code></p></dd>
 
-    <dt><code>3</code></dt>
+<dt><code>3</code></dt>
 <dd><p>delete entry for <code>archive</code></p></dd>
 
-    <dt><code>5</code></dt>
+<dt><code>5</code></dt>
 <dd><p>delete entry for <code>targetFile</code> &amp; <code>alsoExtract</code></p></dd>
 
-    <dt><code>6</code></dt>
+<dt><code>6</code></dt>
 <dd><p>delete entry for <code>targetFile</code>, <code>alsoExtract</code> &amp; <code>archive</code></p></dd>
 
-    <dt><code>7</code></dt>
+<dt><code>7</code></dt>
 <dd><p>delete entry that is failing (i.e., for the file downloaded by the <code>url</code>)</p></dd>
 
-  
+
 </dl><p>will only remove entries in the <code>CHECKSUMS.txt</code> that are associated with
-  <code>targetFile</code>, <code>alsoExtract</code> or <code>archive</code> When <code>prepInputs</code> is called,
-  it will write or append to a (if already exists) <code>CHECKSUMS.txt</code> file.
-  If the <code>CHECKSUMS.txt</code> is not correct, use this argument to remove it.</p>
+<code>targetFile</code>, <code>alsoExtract</code> or <code>archive</code> When <code>prepInputs</code> is called,
+it will write or append to a (if already exists) <code>CHECKSUMS.txt</code> file.
+If the <code>CHECKSUMS.txt</code> is not correct, use this argument to remove it.</p>
     </div>
     <div id="see-also">
     <h2>See also</h2>
-    <div class="dont-index"><p><code><a href="downloadFile.html">downloadFile</a></code>, <code><a href="extractFromArchive.html">extractFromArchive</a></code>,
-         <code><a href="postProcess.html">postProcess</a></code>.</p></div>
+    <div class="dont-index"><p><code><a href="postProcessTerra.html">postProcessTerra()</a></code>, <code><a href="downloadFile.html">downloadFile()</a></code>, <code><a href="extractFromArchive.html">extractFromArchive()</a></code>,
+<code><a href="postProcess.html">postProcess()</a></code>.</p></div>
     </div>
     <div id="author">
     <h2>Author</h2>
@@ -338,89 +344,97 @@ See examples.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># This function works within a module; however, currently,</span></span></span>
-<span class="r-in"><span><span class="co">#   \cde{sourceURL} is not yet working as desired. Use \code{url}.</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu">reproducible</span><span class="fu">:::</span><span class="fu">.runLongExamples</span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="va">origDir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="fu">reproducible</span><span class="fu">:::</span><span class="fu"><a href="tempdir2.html">tempdir2</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="co"># use a temporary directory</span></span></span>
 <span class="r-in"><span><span class="co"># download a zip file from internet, unzip all files, load as shapefile, Cache the call</span></span></span>
 <span class="r-in"><span><span class="co"># First time: don't know all files - prepInputs will guess, if download file is an archive,</span></span></span>
 <span class="r-in"><span><span class="co">#   then extract all files, then if there is a .shp, it will load with raster::shapefile</span></span></span>
 <span class="r-in"><span><span class="va">dPath</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"ecozones"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">shpEcozone</span> <span class="op">&lt;-</span> <span class="fu">prepInputs</span><span class="op">(</span>destinationPath <span class="op">=</span> <span class="va">dPath</span>,</span></span>
-<span class="r-in"><span>                         url <span class="op">=</span> <span class="st">"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">shpUrl</span> <span class="op">&lt;-</span> <span class="st">"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Robust to partial file deletions:</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">dir</a></span><span class="op">(</span><span class="va">dPath</span>, full.names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">shpEcozone</span> <span class="op">&lt;-</span> <span class="fu">prepInputs</span><span class="op">(</span>destinationPath <span class="op">=</span> <span class="va">dPath</span>,</span></span>
-<span class="r-in"><span>                         url <span class="op">=</span> <span class="st">"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">dPath</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Wrapped in a try because this particular url can be flaky</span></span></span>
+<span class="r-in"><span><span class="va">shpEcozone</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu">prepInputs</span><span class="op">(</span>destinationPath <span class="op">=</span> <span class="va">dPath</span>,</span></span>
+<span class="r-in"><span>                         url <span class="op">=</span> <span class="va">shpUrl</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/methods/is.html" class="external-link">is</a></span><span class="op">(</span><span class="va">shpEcozone</span>, <span class="st">"try-error"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="co"># Robust to partial file deletions:</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">dir</a></span><span class="op">(</span><span class="va">dPath</span>, full.names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">shpEcozone</span> <span class="op">&lt;-</span> <span class="fu">prepInputs</span><span class="op">(</span>destinationPath <span class="op">=</span> <span class="va">dPath</span>,</span></span>
+<span class="r-in"><span>                           url <span class="op">=</span> <span class="va">shpUrl</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">dPath</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Once this is done, can be more precise in operational code:</span></span></span>
-<span class="r-in"><span><span class="co">#  specify targetFile, alsoExtract, and fun, wrap with Cache</span></span></span>
-<span class="r-in"><span><span class="va">ecozoneFilename</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"ecozones.shp"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">ecozoneFiles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ecozones.dbf"</span>, <span class="st">"ecozones.prj"</span>,</span></span>
-<span class="r-in"><span>                  <span class="st">"ecozones.sbn"</span>, <span class="st">"ecozones.sbx"</span>, <span class="st">"ecozones.shp"</span>, <span class="st">"ecozones.shx"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">shpEcozone</span> <span class="op">&lt;-</span> <span class="fu">prepInputs</span><span class="op">(</span>targetFile <span class="op">=</span> <span class="va">ecozoneFilename</span>,</span></span>
-<span class="r-in"><span>                         url <span class="op">=</span> <span class="st">"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>,</span></span>
-<span class="r-in"><span>                         alsoExtract <span class="op">=</span> <span class="va">ecozoneFiles</span>,</span></span>
-<span class="r-in"><span>                         fun <span class="op">=</span> <span class="st">"shapefile"</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">dPath</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="co"># Once this is done, can be more precise in operational code:</span></span></span>
+<span class="r-in"><span>  <span class="co">#  specify targetFile, alsoExtract, and fun, wrap with Cache</span></span></span>
+<span class="r-in"><span>  <span class="va">ecozoneFilename</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"ecozones.shp"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">ecozoneFiles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ecozones.dbf"</span>, <span class="st">"ecozones.prj"</span>,</span></span>
+<span class="r-in"><span>                    <span class="st">"ecozones.sbn"</span>, <span class="st">"ecozones.sbx"</span>, <span class="st">"ecozones.shp"</span>, <span class="st">"ecozones.shx"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">shpEcozone</span> <span class="op">&lt;-</span> <span class="fu">prepInputs</span><span class="op">(</span>targetFile <span class="op">=</span> <span class="va">ecozoneFilename</span>,</span></span>
+<span class="r-in"><span>                           url <span class="op">=</span> <span class="va">shpUrl</span>,</span></span>
+<span class="r-in"><span>                           alsoExtract <span class="op">=</span> <span class="va">ecozoneFiles</span>,</span></span>
+<span class="r-in"><span>                           fun <span class="op">=</span> <span class="st">"shapefile"</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">dPath</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">#' # Add a study area to Crop and Mask to</span></span></span>
-<span class="r-in"><span><span class="co"># Create a "study area"</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/edzer/sp/" class="external-link">sp</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/raster" class="external-link">raster</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">coords</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/structure.html" class="external-link">structure</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">122.98</span>, <span class="op">-</span><span class="fl">116.1</span>, <span class="op">-</span><span class="fl">99.2</span>, <span class="op">-</span><span class="fl">106</span>, <span class="op">-</span><span class="fl">122.98</span>, <span class="fl">59.9</span>, <span class="fl">65.73</span>, <span class="fl">63.58</span>, <span class="fl">54.79</span>, <span class="fl">59.9</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                    .Dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5L</span>, <span class="fl">2L</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">Sr1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialPolygons.html" class="external-link">Polygon</a></span><span class="op">(</span><span class="va">coords</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">Srs1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialPolygons.html" class="external-link">Polygons</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">Sr1</span><span class="op">)</span>, <span class="st">"s1"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">StudyArea</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialPolygons.html" class="external-link">SpatialPolygons</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">Srs1</span><span class="op">)</span>, <span class="fl">1L</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/crs.html" class="external-link">crs</a></span><span class="op">(</span><span class="va">StudyArea</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span></span></span>
+<span class="r-in"><span>  <span class="co"># Add a study area to Crop and Mask to</span></span></span>
+<span class="r-in"><span>  <span class="co"># Create a "study area"</span></span></span>
+<span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/edzer/sp/" class="external-link">sp</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/raster" class="external-link">raster</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">coords</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/structure.html" class="external-link">structure</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">122.98</span>, <span class="op">-</span><span class="fl">116.1</span>, <span class="op">-</span><span class="fl">99.2</span>, <span class="op">-</span><span class="fl">106</span>, <span class="op">-</span><span class="fl">122.98</span>, <span class="fl">59.9</span>, <span class="fl">65.73</span>, <span class="fl">63.58</span>, <span class="fl">54.79</span>, <span class="fl">59.9</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                      .Dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5L</span>, <span class="fl">2L</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">Sr1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialPolygons.html" class="external-link">Polygon</a></span><span class="op">(</span><span class="va">coords</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">Srs1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialPolygons.html" class="external-link">Polygons</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">Sr1</span><span class="op">)</span>, <span class="st">"s1"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">StudyArea</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialPolygons.html" class="external-link">SpatialPolygons</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">Srs1</span><span class="op">)</span>, <span class="fl">1L</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/pkg/terra/man/crs.html" class="external-link">crs</a></span><span class="op">(</span><span class="va">StudyArea</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">#  specify targetFile, alsoExtract, and fun, wrap with Cache</span></span></span>
-<span class="r-in"><span><span class="va">ecozoneFilename</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"ecozones.shp"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the</span></span></span>
-<span class="r-in"><span><span class="co">#   targetFile is there, it will not redownload the archive.</span></span></span>
-<span class="r-in"><span><span class="va">ecozoneFiles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ecozones.dbf"</span>, <span class="st">"ecozones.prj"</span>,</span></span>
-<span class="r-in"><span>                  <span class="st">"ecozones.sbn"</span>, <span class="st">"ecozones.sbx"</span>, <span class="st">"ecozones.shp"</span>, <span class="st">"ecozones.shx"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">shpEcozoneSm</span> <span class="op">&lt;-</span> <span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="va">prepInputs</span>,</span></span>
-<span class="r-in"><span>                      url <span class="op">=</span> <span class="st">"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>,</span></span>
-<span class="r-in"><span>                      targetFile <span class="op">=</span> <span class="fu">reproducible</span><span class="fu">::</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">ecozoneFilename</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                      alsoExtract <span class="op">=</span> <span class="fu">reproducible</span><span class="fu">::</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">ecozoneFiles</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                      studyArea <span class="op">=</span> <span class="va">StudyArea</span>,</span></span>
-<span class="r-in"><span>                      fun <span class="op">=</span> <span class="st">"shapefile"</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span>,</span></span>
-<span class="r-in"><span>                      filename2 <span class="op">=</span> <span class="st">"EcozoneFile.shp"</span><span class="op">)</span> <span class="co"># passed to determineFilename</span></span></span>
+<span class="r-in"><span>  <span class="co">#  specify targetFile, alsoExtract, and fun, wrap with Cache</span></span></span>
+<span class="r-in"><span>  <span class="va">ecozoneFilename</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"ecozones.shp"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="co"># Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the</span></span></span>
+<span class="r-in"><span>  <span class="co">#   targetFile is there, it will not redownload the archive.</span></span></span>
+<span class="r-in"><span>  <span class="va">ecozoneFiles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ecozones.dbf"</span>, <span class="st">"ecozones.prj"</span>,</span></span>
+<span class="r-in"><span>                    <span class="st">"ecozones.sbn"</span>, <span class="st">"ecozones.sbx"</span>, <span class="st">"ecozones.shp"</span>, <span class="st">"ecozones.shx"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">shpEcozoneSm</span> <span class="op">&lt;-</span> <span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="va">prepInputs</span>,</span></span>
+<span class="r-in"><span>                        url <span class="op">=</span> <span class="va">shpUrl</span>,</span></span>
+<span class="r-in"><span>                        targetFile <span class="op">=</span> <span class="fu">reproducible</span><span class="fu">::</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">ecozoneFilename</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                        alsoExtract <span class="op">=</span> <span class="fu">reproducible</span><span class="fu">::</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">ecozoneFiles</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                        studyArea <span class="op">=</span> <span class="va">StudyArea</span>,</span></span>
+<span class="r-in"><span>                        fun <span class="op">=</span> <span class="st">"shapefile"</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span>,</span></span>
+<span class="r-in"><span>                        filename2 <span class="op">=</span> <span class="st">"EcozoneFile.shp"</span><span class="op">)</span> <span class="co"># passed to determineFilename</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">shpEcozone</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">shpEcozoneSm</span>, add <span class="op">=</span> <span class="cn">TRUE</span>, col <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">dPath</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">shpEcozone</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">shpEcozoneSm</span>, add <span class="op">=</span> <span class="cn">TRUE</span>, col <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">dPath</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,</span></span></span>
-<span class="r-in"><span><span class="co">#   but the StudyArea does get reprojected, need to use rasterToMatch</span></span></span>
-<span class="r-in"><span><span class="va">dPath</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"LCC"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">lcc2005Filename</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"LCC2005_V1_4a.tif"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">url</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover"</span>,</span></span>
-<span class="r-in"><span>                 <span class="st">"LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="co"># Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,</span></span></span>
+<span class="r-in"><span>  <span class="co">#   but the StudyArea does get reprojected, need to use rasterToMatch</span></span></span>
+<span class="r-in"><span>  <span class="va">dPath</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"LCC"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">lcc2005Filename</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"LCC2005_V1_4a.tif"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">url</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover"</span>,</span></span>
+<span class="r-in"><span>                   <span class="st">"LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># messages received below may help for filling in more arguments in the subsequent call</span></span></span>
-<span class="r-in"><span><span class="va">LCC2005</span> <span class="op">&lt;-</span> <span class="fu">prepInputs</span><span class="op">(</span>url <span class="op">=</span> <span class="va">url</span>,</span></span>
-<span class="r-in"><span>                      destinationPath <span class="op">=</span> <span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">dPath</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                      studyArea <span class="op">=</span> <span class="va">StudyArea</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="co"># messages received below may help for filling in more arguments in the subsequent call</span></span></span>
+<span class="r-in"><span>  <span class="co"># This is in a `try` because the url can be flaky</span></span></span>
+<span class="r-in"><span>  <span class="va">LCC2005</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu">prepInputs</span><span class="op">(</span>url <span class="op">=</span> <span class="va">url</span>,</span></span>
+<span class="r-in"><span>                        destinationPath <span class="op">=</span> <span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">dPath</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                        studyArea <span class="op">=</span> <span class="va">StudyArea</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/methods/is.html" class="external-link">is</a></span><span class="op">(</span><span class="va">LCC2005</span>, <span class="st">"try-error"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">LCC2005</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">LCC2005</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># if wrapped with Cache, will be very fast second time (via memoised copy)</span></span></span>
-<span class="r-in"><span><span class="va">LCC2005</span> <span class="op">&lt;-</span> <span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="va">prepInputs</span>, url <span class="op">=</span> <span class="va">url</span>,</span></span>
-<span class="r-in"><span>                 targetFile <span class="op">=</span> <span class="va">lcc2005Filename</span>,</span></span>
-<span class="r-in"><span>                 archive <span class="op">=</span> <span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="st">"LandCoverOfCanada2005_V1_4.zip"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                 destinationPath <span class="op">=</span> <span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">dPath</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                 studyArea <span class="op">=</span> <span class="va">StudyArea</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># Using dlFun -- a custom download function -- passed to preProcess</span></span></span>
-<span class="r-in"><span><span class="va">test1</span> <span class="op">&lt;-</span> <span class="fu">prepInputs</span><span class="op">(</span>targetFile <span class="op">=</span> <span class="st">"GADM_2.8_LUX_adm0.rds"</span>, <span class="co"># must specify currently</span></span></span>
-<span class="r-in"><span>                    dlFun <span class="op">=</span> <span class="st">"raster::getData"</span>, name <span class="op">=</span> <span class="st">"GADM"</span>, country <span class="op">=</span> <span class="st">"LUX"</span>, level <span class="op">=</span> <span class="fl">0</span>,</span></span>
-<span class="r-in"><span>                    path <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="co"># if wrapped with Cache, will be very fast second time (via memoised copy)</span></span></span>
+<span class="r-in"><span>    <span class="va">LCC2005</span> <span class="op">&lt;-</span> <span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="va">prepInputs</span>, url <span class="op">=</span> <span class="va">url</span>,</span></span>
+<span class="r-in"><span>                     targetFile <span class="op">=</span> <span class="va">lcc2005Filename</span>,</span></span>
+<span class="r-in"><span>                     archive <span class="op">=</span> <span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="st">"LandCoverOfCanada2005_V1_4.zip"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                     destinationPath <span class="op">=</span> <span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">dPath</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                     studyArea <span class="op">=</span> <span class="va">StudyArea</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="co"># Using dlFun -- a custom download function -- passed to preProcess</span></span></span>
+<span class="r-in"><span>    <span class="va">test1</span> <span class="op">&lt;-</span> <span class="fu">prepInputs</span><span class="op">(</span>targetFile <span class="op">=</span> <span class="st">"GADM_2.8_LUX_adm0.rds"</span>, <span class="co"># must specify currently</span></span></span>
+<span class="r-in"><span>                        dlFun <span class="op">=</span> <span class="st">"raster::getData"</span>, name <span class="op">=</span> <span class="st">"GADM"</span>, country <span class="op">=</span> <span class="st">"LUX"</span>, level <span class="op">=</span> <span class="fl">0</span>,</span></span>
+<span class="r-in"><span>                        path <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">}</span></span></span>
+<span class="r-in"><span>  <span class="op">}</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="va">origDir</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Using quoted dlFun and fun</span></span></span>
+<span class="r-in"><span><span class="co"># Using quoted dlFun and fun -- this is not intended to be run but used as a template</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu">prepInputs</span><span class="op">(</span><span class="va">...</span>, fun <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/substitute.html" class="external-link">quote</a></span><span class="op">(</span><span class="fu">customFun</span><span class="op">(</span>x <span class="op">=</span> <span class="va">targetFilePath</span><span class="op">)</span><span class="op">)</span>, customFun <span class="op">=</span> <span class="va">customFun</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="co"># or more complex</span></span></span>
@@ -430,7 +444,7 @@ See examples.</p>
 <span class="r-in"><span>      <span class="fu">getDataFn</span><span class="op">(</span>name <span class="op">=</span> <span class="st">"GADM"</span>, country <span class="op">=</span> <span class="st">"LUX"</span>, level <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="co"># preProcess keeps file from this!</span></span></span>
 <span class="r-in"><span>    <span class="op">}</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    fun <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/substitute.html" class="external-link">quote</a></span><span class="op">(</span><span class="op">{</span></span></span>
-<span class="r-in"><span>      <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">targetFilePath</span><span class="op">)</span></span></span>
+<span class="r-in"><span>      <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/terra/man/serialize.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">targetFilePath</span><span class="op">)</span></span></span>
 <span class="r-in"><span>      <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/methods/as.html" class="external-link">as</a></span><span class="op">(</span><span class="va">out</span>, <span class="st">"SpatialPolygonsDataFrame"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>      <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span><span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-in"><span>   <span class="op">)</span></span></span>
@@ -450,7 +464,7 @@ See examples.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

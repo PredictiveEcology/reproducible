@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
       </span>
     </div>
 
@@ -38,9 +38,6 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
-    </li>
-    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul></li>
@@ -72,15 +69,15 @@
       </tr></tbody><tbody><tr><td>
           <p><code><a href="Cache.html">Cache()</a></code> </p>
         </td>
-        <td><p>Cache method that accommodates environments, S4 methods, Rasters, &amp; nested caching</p></td>
+        <td><p>Saves a wide variety function call outputs to disk and optionally RAM, for recovery later</p></td>
       </tr><tr><td>
           <p><code><a href="CacheDigest.html">CacheDigest()</a></code> </p>
         </td>
         <td><p>The exact digest function that <code>Cache</code> uses</p></td>
       </tr><tr><td>
-          <p><code><a href="CacheHelpers.html">CacheDBFile()</a></code> <code><a href="CacheHelpers.html">CacheStorageDir()</a></code> <code><a href="CacheHelpers.html">CacheStoredFile()</a></code> <code><a href="CacheHelpers.html">CacheDBTableName()</a></code> <code><a href="CacheHelpers.html">CacheIsACache()</a></code> </p>
+          <p><code><a href="CacheHelpers.html">createCache()</a></code> <code><a href="CacheHelpers.html">loadFromCache()</a></code> <code><a href="CacheHelpers.html">rmFromCache()</a></code> <code><a href="CacheHelpers.html">CacheDBFile()</a></code> <code><a href="CacheHelpers.html">CacheStorageDir()</a></code> <code><a href="CacheHelpers.html">CacheStoredFile()</a></code> <code><a href="CacheHelpers.html">CacheDBTableName()</a></code> <code><a href="CacheHelpers.html">CacheIsACache()</a></code> </p>
         </td>
-        <td><p>A collection of low level tools for Cache</p></td>
+        <td><p>Functions to create and work with a cache</p></td>
       </tr><tr><td>
           <p><code><a href="Checksums.html">Checksums()</a></code> </p>
         </td>
@@ -102,14 +99,6 @@
         </td>
         <td><p>Coerce a character string to a class "Path"</p></td>
       </tr><tr><td>
-          <p><code><a href="addChangedAttr.html">.addChangedAttr()</a></code> </p>
-        </td>
-        <td><p>Add an attribute to an object indicating which named elements change</p></td>
-      </tr><tr><td>
-          <p><code><a href="addTagsToOutput.html">.addTagsToOutput()</a></code> </p>
-        </td>
-        <td><p>Add tags to object</p></td>
-      </tr><tr><td>
           <p><code><a href="assessDataType.html">assessDataType()</a></code> <code><a href="assessDataType.html">assessDataTypeGDAL()</a></code> </p>
         </td>
         <td><p>Assess the appropriate raster layer data type</p></td>
@@ -118,21 +107,13 @@
         </td>
         <td><p>A version of <code><a href="https://rdrr.io/r/base/basename.html" class="external-link">base::basename</a></code> that is <code>NULL</code> resistant</p></td>
       </tr><tr><td>
-          <p><code><a href="cache-tools.html">createCache()</a></code> <code><a href="cache-tools.html">saveToCache()</a></code> <code><a href="cache-tools.html">loadFromCache()</a></code> <code><a href="cache-tools.html">rmFromCache()</a></code> </p>
-        </td>
-        <td><p>Create a new cache</p></td>
-      </tr><tr><td>
-          <p><code><a href="cacheMessage.html">.cacheMessage()</a></code> </p>
-        </td>
-        <td><p>Create a custom cache message by class</p></td>
-      </tr><tr><td>
           <p><code><a href="checkAndMakeCloudFolderID.html">checkAndMakeCloudFolderID()</a></code> </p>
         </td>
         <td><p>Check for presence of <code>checkFolderID</code> (for <code>Cache(useCloud)</code>)</p></td>
       </tr><tr><td>
-          <p><code><a href="checkCacheRepo.html">.checkCacheRepo()</a></code> </p>
+          <p><code><a href="checkPath.html">checkPath</a></code> <code><a href="checkPath.html">checkPath,character,logical-method</a></code> <code><a href="checkPath.html">checkPath,character,missing-method</a></code> <code><a href="checkPath.html">checkPath,NULL,ANY-method</a></code> <code><a href="checkPath.html">checkPath,missing,ANY-method</a></code> </p>
         </td>
-        <td><p>Check for cache repository info in ...</p></td>
+        <td><p>Check directory path</p></td>
       </tr><tr><td>
           <p><code><a href="checkoutVersion.html">checkoutVersion()</a></code> </p>
         </td>
@@ -186,6 +167,10 @@
         </td>
         <td><p>Determine filename, either automatically or manually</p></td>
       </tr><tr><td>
+          <p><code><a href="dot-file.move.html">.file.move()</a></code> </p>
+        </td>
+        <td><p>Move a file to a new location</p></td>
+      </tr><tr><td>
           <p><code><a href="dot-removeCacheAtts.html">.removeCacheAtts()</a></code> </p>
         </td>
         <td><p>Remove attributes that are highly varying</p></td>
@@ -206,10 +191,6 @@
         </td>
         <td><p>Faster operations on rasters (DEPRECATED as <code><a href="https://rdrr.io/pkg/terra/man/mask.html" class="external-link">terra::mask</a></code> is fast)</p></td>
       </tr><tr><td>
-          <p><code><a href="file.move.html">file.move()</a></code> </p>
-        </td>
-        <td><p>Move a file to a new location</p></td>
-      </tr><tr><td>
           <p><code><a href="fixErrorsTerra.html">fixErrorsTerra()</a></code> </p>
         </td>
         <td><p>Fix common errors in GIS layers, using <code>terra</code></p></td>
@@ -217,10 +198,6 @@
           <p><code><a href="linkOrCopy.html">linkOrCopy()</a></code> </p>
         </td>
         <td><p>Hardlink, symlink, or copy a file</p></td>
-      </tr><tr><td>
-          <p><code><a href="makeMemoisable.html">makeMemoisable()</a></code> <code><a href="makeMemoisable.html">unmakeMemoisable()</a></code> </p>
-        </td>
-        <td><p>Generic method to make or unmake objects memoisable</p></td>
       </tr><tr><td>
           <p><code><a href="maskInputs.html">maskInputs()</a></code> </p>
         </td>
@@ -238,6 +215,10 @@
         </td>
         <td><p>Deal with moved cache issues</p></td>
       </tr><tr><td>
+          <p><code><a href="normPath.html">normPath</a></code> <code><a href="normPath.html">normPath,character-method</a></code> <code><a href="normPath.html">normPath,list-method</a></code> <code><a href="normPath.html">normPath,NULL-method</a></code> <code><a href="normPath.html">normPath,missing-method</a></code> <code><a href="normPath.html">normPath,logical-method</a></code> </p>
+        </td>
+        <td><p>Normalize filepath</p></td>
+      </tr><tr><td>
           <p><code><a href="objSize.html">objSize()</a></code> <code><a href="objSize.html">objSizeSession()</a></code> </p>
         </td>
         <td><p>Wrapper around <code><a href="https://lobstr.r-lib.org/reference/obj_size.html" class="external-link">lobstr::obj_size</a></code></p></td>
@@ -254,13 +235,9 @@
         </td>
         <td><p>Generic function to post process objects</p></td>
       </tr><tr><td>
-          <p><code><a href="postProcessTerra.html">postProcessTerra()</a></code> <code><a href="postProcessTerra.html">cropTo()</a></code> </p>
+          <p><code><a href="postProcessTerra.html">postProcessTerra()</a></code> <code><a href="postProcessTerra.html">maskTo()</a></code> <code><a href="postProcessTerra.html">projectTo()</a></code> <code><a href="postProcessTerra.html">cropTo()</a></code> <code><a href="postProcessTerra.html">writeTo()</a></code> </p>
         </td>
         <td><p>Transform a GIS dataset so it has the properties (extent, projection, mask) of another</p></td>
-      </tr><tr><td>
-          <p><code><a href="preDigestByClass.html">.preDigestByClass()</a></code> </p>
-        </td>
-        <td><p>Any miscellaneous things to do before <code>.robustDigest</code> and after <code>FUN</code> call</p></td>
       </tr><tr><td>
           <p><code><a href="preProcess.html">preProcessParams()</a></code> <code><a href="preProcess.html">preProcess()</a></code> </p>
         </td>
@@ -278,10 +255,6 @@
         </td>
         <td><p>Copy the file-backing of a file-backed Raster* object</p></td>
       </tr><tr><td>
-          <p><code><a href="prepareOutput.html">.prepareOutput()</a></code> </p>
-        </td>
-        <td><p>Make any modifications to object recovered from cacheRepo</p></td>
-      </tr><tr><td>
           <p><code><a href="projectInputs.html">projectInputs()</a></code> </p>
         </td>
         <td><p>Project <code>Raster*</code> or <code>Spatial*</code> or <code>sf</code> objects</p></td>
@@ -298,6 +271,10 @@
         </td>
         <td><p>A wrapper around <code>try</code> that retries on failure</p></td>
       </tr><tr><td>
+          <p><code><a href="saveToCache.html">saveToCache()</a></code> </p>
+        </td>
+        <td><p>Save an object to Cache</p></td>
+      </tr><tr><td>
           <p><code><a href="search.html">searchFull()</a></code> <code><a href="search.html">searchFullEx()</a></code> </p>
         </td>
         <td><p>Search up the full scope for functions</p></td>
@@ -305,10 +282,6 @@
           <p><code><a href="setSubAttrInList.html">.setSubAttrInList()</a></code> </p>
         </td>
         <td><p>Set subattributes within a list by reference</p></td>
-      </tr><tr><td>
-          <p><code><a href="sortDotsUnderscoreFirst.html">.sortDotsUnderscoreFirst()</a></code> <code><a href="sortDotsUnderscoreFirst.html">.orderDotsUnderscoreFirst()</a></code> </p>
-        </td>
-        <td><p>Sort or order any named object with dotted names and underscores first</p></td>
       </tr><tr><td>
           <p><code><a href="spatialClasses-class.html">spatialClasses-class</a></code> <code><a href="spatialClasses-class.html">spatialClasses</a></code> </p>
         </td>
@@ -318,9 +291,13 @@
         </td>
         <td><p>Get a unique name for a given study area</p></td>
       </tr><tr><td>
-          <p><code><a href="tagsByClass.html">.tagsByClass()</a></code> </p>
+          <p><code><a href="tempdir2.html">tempdir2()</a></code> </p>
         </td>
-        <td><p>Add extra tags to an archive based on class</p></td>
+        <td><p>Make a temporary (sub-)directory</p></td>
+      </tr><tr><td>
+          <p><code><a href="tempfile2.html">tempfile2()</a></code> </p>
+        </td>
+        <td><p>Make a temporary file in a temporary (sub-)directory</p></td>
       </tr><tr><td>
           <p><code><a href="unrarPath.html">.unrarPath</a></code> </p>
         </td>
@@ -350,7 +327,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

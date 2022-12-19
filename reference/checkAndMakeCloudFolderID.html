@@ -24,7 +24,7 @@ if one not present on Google Drive, with a warning."><!-- mathjax --><script src
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
       </span>
     </div>
 
@@ -39,9 +39,6 @@ if one not present on Google Drive, with a warning."><!-- mathjax --><script src
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
-    </li>
-    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul></li>
@@ -76,7 +73,7 @@ if one not present on Google Drive, with a warning.</p>
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">checkAndMakeCloudFolderID</span><span class="op">(</span></span>
 <span>  cloudFolderID <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.cloudFolderID"</span>, <span class="cn">NULL</span><span class="op">)</span>,</span>
-<span>  cacheRepo <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cachePath <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  create <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span>, <span class="fl">1</span><span class="op">)</span>,</span>
@@ -90,7 +87,7 @@ if one not present on Google Drive, with a warning.</p>
 <dd><p>The google folder ID where cloud caching will occur.</p></dd>
 
 
-<dt>cacheRepo</dt>
+<dt>cachePath</dt>
 <dd><p>A repository used for storing cached objects.
 This is optional if <code>Cache</code> is used inside a SpaDES module.</p></dd>
 
@@ -117,6 +114,12 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
 <dd><p>Logical indicating whether to check team drives.</p></dd>
 
 </dl></div>
+    <div id="value">
+    <h2>Value</h2>
+    
+
+<p>Returns the character string of the cloud folder ID created or reported</p>
+    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -130,7 +133,7 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

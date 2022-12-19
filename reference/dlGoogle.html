@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
       </span>
     </div>
 
@@ -38,9 +38,6 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
-    </li>
-    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul></li>
@@ -97,7 +94,7 @@
 containing <code>targetFile</code>, or a vector giving a set of nested archives
 (e.g., <code>c("xxx.tar", "inner.zip", "inner.rar")</code>). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the <code>targetFile</code>. See table in <code><a href="preProcess.html">preProcess</a></code>. If it is <code>NA</code>,
+the <code>targetFile</code>. See table in <code><a href="preProcess.html">preProcess()</a></code>. If it is <code>NA</code>,
 then it will <em>not</em> attempt to see it as an archive, even if it has archive-like
 file extension (e.g., <code>.zip</code>). This may be useful when an R function
 is expecting an archive directly.</p></dd>
@@ -110,7 +107,7 @@ or tar archive. This is the file <em>before</em> it is passed to
 <code>postProcess</code>. Currently, the internal checksumming does not checksum
 the file after it is <code>postProcess</code>ed (e.g., cropped/reprojected/masked).
 Using <code>Cache</code> around <code>prepInputs</code> will do a sufficient job in these cases.
-See table in <code><a href="preProcess.html">preProcess</a></code>.</p></dd>
+See table in <code><a href="preProcess.html">preProcess()</a></code>.</p></dd>
 
 
 <dt>destinationPath</dt>
@@ -153,7 +150,7 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

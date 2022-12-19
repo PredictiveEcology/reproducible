@@ -31,7 +31,7 @@ work correctly."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
       </span>
     </div>
 
@@ -46,9 +46,6 @@ work correctly."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
-    </li>
-    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul></li>
@@ -175,7 +172,7 @@ Default is <code>getOption("reproducible.length")</code>, which is set to <code>
 <dt>quick</dt>
 <dd><p>Logical or character. If <code>TRUE</code>,
 no disk-based information will be assessed, i.e., only
-memory content. See Details section about <code>quick</code> in <code><a href="Cache.html">Cache</a></code>.</p></dd>
+memory content. See Details section about <code>quick</code> in <code><a href="Cache.html">Cache()</a></code>.</p></dd>
 
 
 <dt>classOptions</dt>
@@ -185,7 +182,7 @@ to do with.</p></dd>
 
 
 <dt>...</dt>
-<dd><p>Arguments passed to <code>FUN</code></p></dd>
+<dd><p>Arguments passed to <code>FUN</code>, if <code>FUN</code> is not an expression.</p></dd>
 
 
 <dt>objects</dt>
@@ -213,14 +210,14 @@ located on disk, this format will be maintained if the raster already is file-ba
 i.e., to create <code>.tif</code> or <code>.grd</code> backed rasters, use <code>writeRaster</code> first,
 then <code>Cache</code>.
 The <code class="file">.tif</code> or <code class="file">.grd</code> will be copied to the <code class="file">raster/</code> subdirectory of the
-<code>cacheRepo</code>.
+<code>cachePath</code>.
 Their RAM representation (as an R object) will still be in the usual  <code class="file">cacheOutputs/</code>
 (or formerly <code class="file">gallery/</code>) directory.
 For <code>inMemory</code> raster objects, they will remain as binary <code>.RData</code> files.</p>
 <p>Functions (which are contained within environments) are
 converted to a text representation via a call to <code>format(FUN)</code>.</p>
 <p>Objects contained within a list or environment are recursively hashed
-using <code><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></code>, while removing all references to
+using <code><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest::digest()</a></code>, while removing all references to
 environments.</p>
 <p>Character strings are first assessed with <code>dir.exists</code> and <code>file.exists</code>
 to check for paths. If they are found to be paths, then the path is hashed with
@@ -243,9 +240,9 @@ using <code>asPath(thePath)</code></p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># treats as character string, so 2 filenames are different</span></span></span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cc279d96650cf1a23ffccf2ce572ac5e"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "ed6a8888c0fffce09f602ae248b7a93c"</span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">tmpfile2</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "3aa5e6f4aab9e1adde17b0b9870109dd"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "714eb191df47dff0a926947a9dc71966"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># tests to see whether character string is representing a file</span></span></span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span></span></span>
@@ -256,9 +253,9 @@ using <code>asPath(thePath)</code></p>
 <span class="r-in"><span><span class="co"># if you tell it that it is a path, then you can decide if you want it to be</span></span></span>
 <span class="r-in"><span><span class="co">#  treated as a character string or as a file path</span></span></span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span>, quick <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "1da8f027bf6f5dd4"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "b9feb316a6aed594"</span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">tmpfile2</span><span class="op">)</span>, quick <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># different because using file info</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "bf4cfe038ee249a4"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "178828911c8b592f"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span>, quick <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
@@ -279,13 +276,13 @@ using <code>asPath(thePath)</code></p>
 <span class="r-in"><span><span class="va">r2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/terra/man/writeRaster.html" class="external-link">writeRaster</a></span><span class="op">(</span><span class="va">r</span>, file <span class="op">=</span> <span class="va">tmpfile2</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">r1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "8c572a2df12ffaca85cca9c3148cdfff"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "671351b60d77eb554ac5414cff402043"</span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">r2</span><span class="op">)</span> <span class="co"># different</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "d30096758793122ef53781137a180010"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0b7ab78b08f322d6a7ef6470ac041dfd"</span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">r1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "8c572a2df12ffaca85cca9c3148cdfff"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "671351b60d77eb554ac5414cff402043"</span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">r2</span><span class="op">)</span> <span class="co"># different</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "d30096758793122ef53781137a180010"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0b7ab78b08f322d6a7ef6470ac041dfd"</span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="va">r1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "490db087c08d4499"</span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="va">r2</span><span class="op">)</span> <span class="co"># same... data are the same in the file</span></span></span>
@@ -311,7 +308,7 @@ using <code>asPath(thePath)</code></p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

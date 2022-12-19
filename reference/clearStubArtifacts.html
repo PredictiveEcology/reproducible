@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
       </span>
     </div>
 
@@ -38,9 +38,6 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
-    </li>
-    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul></li>
@@ -110,29 +107,29 @@ have no actual file with data.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">tmpDir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"reproducible_examples"</span>, <span class="st">"clearStubArtifacts"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">runif</span>, <span class="va">rnorm</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">f</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="fu">reproducible</span><span class="fu">::</span><span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="va">f</span>, <span class="fl">10</span>, cacheRepo <span class="op">=</span> <span class="va">tmpDir</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu">reproducible</span><span class="fu">::</span><span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="va">f</span>, <span class="fl">10</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 0.8914281 0.6984645 0.6337932 0.4657269 0.5245054 0.2724449 0.9340075</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] 0.4729716 0.3513314 0.7685970</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 0.002129125 0.609255821 0.242753130 0.804970985 0.317731302 0.778651210</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] 0.173214052 0.030845308 0.106631450 0.208862012</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"tags")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cacheId:88dabbb6fbb67941"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cacheId:98b52ff8fc0f4d2c"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"call")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] ""</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1]  0.2490685 -0.8749054  0.6608227 -0.3048359  0.7304013  1.1996764</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [7]  0.2457137  1.4568435  1.5404603 -0.8689065</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1]  0.31675112  0.90689404 -0.08370617 -2.28441063 -0.75012574 -0.40278727</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7]  0.44029906 -0.29917809 -1.15492763  0.04006556</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"tags")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cacheId:87eee6212ba1ae0a"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cacheId:76428544f5e765a5"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"call")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] ""</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -143,92 +140,100 @@ have no actual file with data.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Total (including Rasters): 552 bytes</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Selected objects (not including Rasters): 552 bytes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              cacheId              tagKey              tagValue</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 88dabbb6fbb67941            function                     f</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 88dabbb6fbb67941               class               numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 88dabbb6fbb67941         object.size                  1104</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 88dabbb6fbb67941            accessed   2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 88dabbb6fbb67941             inCloud                 FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 88dabbb6fbb67941          resultHash                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 88dabbb6fbb67941   elapsedTimeDigest     0.0005443096 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 88dabbb6fbb67941 elapsedTimeFirstRun     4.601479e-05 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 88dabbb6fbb67941      otherFunctions            build_site</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 88dabbb6fbb67941      otherFunctions      build_site_local</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 88dabbb6fbb67941      otherFunctions       build_reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 88dabbb6fbb67941      otherFunctions  data_reference_topic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 88dabbb6fbb67941      otherFunctions          run_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 88dabbb6fbb67941      otherFunctions    highlight_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 88dabbb6fbb67941      otherFunctions             timing_fn</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 88dabbb6fbb67941      otherFunctions                handle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 88dabbb6fbb67941      otherFunctions                   try</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 88dabbb6fbb67941      otherFunctions                lapply</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 88dabbb6fbb67941           preDigest    n:c5775c3b366fb719</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 88dabbb6fbb67941           preDigest .FUN:881ec847b7161f3c</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 88dabbb6fbb67941           file.size                   206</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 87eee6212ba1ae0a            function                     f</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 87eee6212ba1ae0a               class               numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 87eee6212ba1ae0a         object.size                  1104</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 87eee6212ba1ae0a            accessed   2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 87eee6212ba1ae0a             inCloud                 FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27: 87eee6212ba1ae0a          resultHash                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28: 87eee6212ba1ae0a   elapsedTimeDigest     0.0004913807 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29: 87eee6212ba1ae0a elapsedTimeFirstRun     4.911423e-05 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30: 87eee6212ba1ae0a      otherFunctions            build_site</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31: 87eee6212ba1ae0a      otherFunctions      build_site_local</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32: 87eee6212ba1ae0a      otherFunctions       build_reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33: 87eee6212ba1ae0a      otherFunctions  data_reference_topic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34: 87eee6212ba1ae0a      otherFunctions          run_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35: 87eee6212ba1ae0a      otherFunctions    highlight_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36: 87eee6212ba1ae0a      otherFunctions             timing_fn</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37: 87eee6212ba1ae0a      otherFunctions                handle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38: 87eee6212ba1ae0a      otherFunctions                   try</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39: 87eee6212ba1ae0a      otherFunctions                lapply</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40: 87eee6212ba1ae0a           preDigest    n:c5775c3b366fb719</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41: 87eee6212ba1ae0a           preDigest .FUN:4f604aa46882b368</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42: 87eee6212ba1ae0a           file.size                   225</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 76428544f5e765a5            function                     f</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 76428544f5e765a5               class               numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 76428544f5e765a5         object.size                  1104</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 76428544f5e765a5            accessed   2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 76428544f5e765a5             inCloud                 FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 76428544f5e765a5          resultHash                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 76428544f5e765a5   elapsedTimeDigest      0.002358437 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 76428544f5e765a5 elapsedTimeFirstRun      2.69413e-05 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 76428544f5e765a5      otherFunctions            build_site</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 76428544f5e765a5      otherFunctions      build_site_local</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 76428544f5e765a5      otherFunctions       build_reference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 76428544f5e765a5      otherFunctions  data_reference_topic</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 76428544f5e765a5      otherFunctions          run_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 76428544f5e765a5      otherFunctions    highlight_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 76428544f5e765a5      otherFunctions             timing_fn</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 76428544f5e765a5      otherFunctions                handle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 76428544f5e765a5      otherFunctions                   try</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 76428544f5e765a5      otherFunctions                lapply</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 76428544f5e765a5           preDigest    n:c5775c3b366fb719</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 76428544f5e765a5           preDigest mean:c40c00762a0dac94</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 76428544f5e765a5           preDigest   sd:853b1797f54b229c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 76428544f5e765a5           preDigest .FUN:4f604aa46882b368</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 76428544f5e765a5           file.size                   225</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 98b52ff8fc0f4d2c            function                     f</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 98b52ff8fc0f4d2c               class               numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 98b52ff8fc0f4d2c         object.size                  1104</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27: 98b52ff8fc0f4d2c            accessed   2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28: 98b52ff8fc0f4d2c             inCloud                 FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29: 98b52ff8fc0f4d2c          resultHash                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30: 98b52ff8fc0f4d2c   elapsedTimeDigest      0.002473116 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31: 98b52ff8fc0f4d2c elapsedTimeFirstRun     2.861023e-05 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32: 98b52ff8fc0f4d2c      otherFunctions            build_site</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33: 98b52ff8fc0f4d2c      otherFunctions      build_site_local</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34: 98b52ff8fc0f4d2c      otherFunctions       build_reference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35: 98b52ff8fc0f4d2c      otherFunctions  data_reference_topic</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36: 98b52ff8fc0f4d2c      otherFunctions          run_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37: 98b52ff8fc0f4d2c      otherFunctions    highlight_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38: 98b52ff8fc0f4d2c      otherFunctions             timing_fn</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39: 98b52ff8fc0f4d2c      otherFunctions                handle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40: 98b52ff8fc0f4d2c      otherFunctions                   try</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41: 98b52ff8fc0f4d2c      otherFunctions                lapply</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42: 98b52ff8fc0f4d2c           preDigest    n:c5775c3b366fb719</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43: 98b52ff8fc0f4d2c           preDigest  min:c40c00762a0dac94</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44: 98b52ff8fc0f4d2c           preDigest  max:853b1797f54b229c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45: 98b52ff8fc0f4d2c           preDigest .FUN:881ec847b7161f3c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46: 98b52ff8fc0f4d2c           file.size                   205</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              cacheId              tagKey              tagValue</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             createdDate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42: 2022-11-09 15:46:24</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46: 2022-12-19 22:34:07</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             createdDate</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">file2Remove</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">dir</a></span><span class="op">(</span><span class="fu"><a href="CacheHelpers.html">CacheStorageDir</a></span><span class="op">(</span><span class="va">tmpDir</span><span class="op">)</span>, full.name <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></span>
@@ -239,92 +244,100 @@ have no actual file with data.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Total (including Rasters): 552 bytes</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Selected objects (not including Rasters): 552 bytes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              cacheId              tagKey              tagValue</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 88dabbb6fbb67941            function                     f</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 88dabbb6fbb67941               class               numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 88dabbb6fbb67941         object.size                  1104</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 88dabbb6fbb67941            accessed   2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 88dabbb6fbb67941             inCloud                 FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 88dabbb6fbb67941          resultHash                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 88dabbb6fbb67941   elapsedTimeDigest     0.0005443096 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 88dabbb6fbb67941 elapsedTimeFirstRun     4.601479e-05 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 88dabbb6fbb67941      otherFunctions            build_site</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 88dabbb6fbb67941      otherFunctions      build_site_local</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 88dabbb6fbb67941      otherFunctions       build_reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 88dabbb6fbb67941      otherFunctions  data_reference_topic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 88dabbb6fbb67941      otherFunctions          run_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 88dabbb6fbb67941      otherFunctions    highlight_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 88dabbb6fbb67941      otherFunctions             timing_fn</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 88dabbb6fbb67941      otherFunctions                handle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 88dabbb6fbb67941      otherFunctions                   try</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 88dabbb6fbb67941      otherFunctions                lapply</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 88dabbb6fbb67941           preDigest    n:c5775c3b366fb719</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 88dabbb6fbb67941           preDigest .FUN:881ec847b7161f3c</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 88dabbb6fbb67941           file.size                   206</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 87eee6212ba1ae0a            function                     f</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 87eee6212ba1ae0a               class               numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 87eee6212ba1ae0a         object.size                  1104</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 87eee6212ba1ae0a            accessed   2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 87eee6212ba1ae0a             inCloud                 FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27: 87eee6212ba1ae0a          resultHash                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28: 87eee6212ba1ae0a   elapsedTimeDigest     0.0004913807 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29: 87eee6212ba1ae0a elapsedTimeFirstRun     4.911423e-05 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30: 87eee6212ba1ae0a      otherFunctions            build_site</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31: 87eee6212ba1ae0a      otherFunctions      build_site_local</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32: 87eee6212ba1ae0a      otherFunctions       build_reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33: 87eee6212ba1ae0a      otherFunctions  data_reference_topic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34: 87eee6212ba1ae0a      otherFunctions          run_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35: 87eee6212ba1ae0a      otherFunctions    highlight_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36: 87eee6212ba1ae0a      otherFunctions             timing_fn</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37: 87eee6212ba1ae0a      otherFunctions                handle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38: 87eee6212ba1ae0a      otherFunctions                   try</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39: 87eee6212ba1ae0a      otherFunctions                lapply</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40: 87eee6212ba1ae0a           preDigest    n:c5775c3b366fb719</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41: 87eee6212ba1ae0a           preDigest .FUN:4f604aa46882b368</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42: 87eee6212ba1ae0a           file.size                   225</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 76428544f5e765a5            function                     f</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 76428544f5e765a5               class               numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 76428544f5e765a5         object.size                  1104</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 76428544f5e765a5            accessed   2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 76428544f5e765a5             inCloud                 FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 76428544f5e765a5          resultHash                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 76428544f5e765a5   elapsedTimeDigest      0.002358437 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 76428544f5e765a5 elapsedTimeFirstRun      2.69413e-05 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 76428544f5e765a5      otherFunctions            build_site</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 76428544f5e765a5      otherFunctions      build_site_local</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 76428544f5e765a5      otherFunctions       build_reference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 76428544f5e765a5      otherFunctions  data_reference_topic</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 76428544f5e765a5      otherFunctions          run_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 76428544f5e765a5      otherFunctions    highlight_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 76428544f5e765a5      otherFunctions             timing_fn</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 76428544f5e765a5      otherFunctions                handle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 76428544f5e765a5      otherFunctions                   try</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 76428544f5e765a5      otherFunctions                lapply</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 76428544f5e765a5           preDigest    n:c5775c3b366fb719</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 76428544f5e765a5           preDigest mean:c40c00762a0dac94</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 76428544f5e765a5           preDigest   sd:853b1797f54b229c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 76428544f5e765a5           preDigest .FUN:4f604aa46882b368</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 76428544f5e765a5           file.size                   225</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 98b52ff8fc0f4d2c            function                     f</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 98b52ff8fc0f4d2c               class               numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 98b52ff8fc0f4d2c         object.size                  1104</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27: 98b52ff8fc0f4d2c            accessed   2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28: 98b52ff8fc0f4d2c             inCloud                 FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29: 98b52ff8fc0f4d2c          resultHash                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30: 98b52ff8fc0f4d2c   elapsedTimeDigest      0.002473116 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31: 98b52ff8fc0f4d2c elapsedTimeFirstRun     2.861023e-05 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32: 98b52ff8fc0f4d2c      otherFunctions            build_site</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33: 98b52ff8fc0f4d2c      otherFunctions      build_site_local</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34: 98b52ff8fc0f4d2c      otherFunctions       build_reference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35: 98b52ff8fc0f4d2c      otherFunctions  data_reference_topic</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36: 98b52ff8fc0f4d2c      otherFunctions          run_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37: 98b52ff8fc0f4d2c      otherFunctions    highlight_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38: 98b52ff8fc0f4d2c      otherFunctions             timing_fn</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39: 98b52ff8fc0f4d2c      otherFunctions                handle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40: 98b52ff8fc0f4d2c      otherFunctions                   try</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41: 98b52ff8fc0f4d2c      otherFunctions                lapply</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42: 98b52ff8fc0f4d2c           preDigest    n:c5775c3b366fb719</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43: 98b52ff8fc0f4d2c           preDigest  min:c40c00762a0dac94</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44: 98b52ff8fc0f4d2c           preDigest  max:853b1797f54b229c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45: 98b52ff8fc0f4d2c           preDigest .FUN:881ec847b7161f3c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46: 98b52ff8fc0f4d2c           file.size                   205</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              cacheId              tagKey              tagValue</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             createdDate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42: 2022-11-09 15:46:24</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46: 2022-12-19 22:34:07</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             createdDate</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># run clearStubArtifacts</span></span></span>
@@ -334,92 +347,100 @@ have no actual file with data.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Total (including Rasters): 552 bytes</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Selected objects (not including Rasters): 552 bytes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              cacheId              tagKey              tagValue</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 88dabbb6fbb67941            function                     f</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 88dabbb6fbb67941               class               numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 88dabbb6fbb67941         object.size                  1104</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 88dabbb6fbb67941            accessed   2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 88dabbb6fbb67941             inCloud                 FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 88dabbb6fbb67941          resultHash                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 88dabbb6fbb67941   elapsedTimeDigest     0.0005443096 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 88dabbb6fbb67941 elapsedTimeFirstRun     4.601479e-05 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 88dabbb6fbb67941      otherFunctions            build_site</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 88dabbb6fbb67941      otherFunctions      build_site_local</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 88dabbb6fbb67941      otherFunctions       build_reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 88dabbb6fbb67941      otherFunctions  data_reference_topic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 88dabbb6fbb67941      otherFunctions          run_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 88dabbb6fbb67941      otherFunctions    highlight_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 88dabbb6fbb67941      otherFunctions             timing_fn</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 88dabbb6fbb67941      otherFunctions                handle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 88dabbb6fbb67941      otherFunctions                   try</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 88dabbb6fbb67941      otherFunctions                lapply</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 88dabbb6fbb67941           preDigest    n:c5775c3b366fb719</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 88dabbb6fbb67941           preDigest .FUN:881ec847b7161f3c</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 88dabbb6fbb67941           file.size                   206</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 87eee6212ba1ae0a            function                     f</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 87eee6212ba1ae0a               class               numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 87eee6212ba1ae0a         object.size                  1104</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 87eee6212ba1ae0a            accessed   2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 87eee6212ba1ae0a             inCloud                 FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27: 87eee6212ba1ae0a          resultHash                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28: 87eee6212ba1ae0a   elapsedTimeDigest     0.0004913807 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29: 87eee6212ba1ae0a elapsedTimeFirstRun     4.911423e-05 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30: 87eee6212ba1ae0a      otherFunctions            build_site</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31: 87eee6212ba1ae0a      otherFunctions      build_site_local</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32: 87eee6212ba1ae0a      otherFunctions       build_reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33: 87eee6212ba1ae0a      otherFunctions  data_reference_topic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34: 87eee6212ba1ae0a      otherFunctions          run_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35: 87eee6212ba1ae0a      otherFunctions    highlight_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36: 87eee6212ba1ae0a      otherFunctions             timing_fn</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37: 87eee6212ba1ae0a      otherFunctions                handle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38: 87eee6212ba1ae0a      otherFunctions                   try</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39: 87eee6212ba1ae0a      otherFunctions                lapply</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40: 87eee6212ba1ae0a           preDigest    n:c5775c3b366fb719</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41: 87eee6212ba1ae0a           preDigest .FUN:4f604aa46882b368</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42: 87eee6212ba1ae0a           file.size                   225</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 76428544f5e765a5            function                     f</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 76428544f5e765a5               class               numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 76428544f5e765a5         object.size                  1104</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 76428544f5e765a5            accessed   2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 76428544f5e765a5             inCloud                 FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 76428544f5e765a5          resultHash                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 76428544f5e765a5   elapsedTimeDigest      0.002358437 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 76428544f5e765a5 elapsedTimeFirstRun      2.69413e-05 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 76428544f5e765a5      otherFunctions            build_site</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 76428544f5e765a5      otherFunctions      build_site_local</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 76428544f5e765a5      otherFunctions       build_reference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 76428544f5e765a5      otherFunctions  data_reference_topic</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 76428544f5e765a5      otherFunctions          run_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 76428544f5e765a5      otherFunctions    highlight_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 76428544f5e765a5      otherFunctions             timing_fn</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 76428544f5e765a5      otherFunctions                handle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 76428544f5e765a5      otherFunctions                   try</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 76428544f5e765a5      otherFunctions                lapply</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 76428544f5e765a5           preDigest    n:c5775c3b366fb719</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 76428544f5e765a5           preDigest mean:c40c00762a0dac94</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 76428544f5e765a5           preDigest   sd:853b1797f54b229c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 76428544f5e765a5           preDigest .FUN:4f604aa46882b368</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 76428544f5e765a5           file.size                   225</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 98b52ff8fc0f4d2c            function                     f</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 98b52ff8fc0f4d2c               class               numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 98b52ff8fc0f4d2c         object.size                  1104</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27: 98b52ff8fc0f4d2c            accessed   2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28: 98b52ff8fc0f4d2c             inCloud                 FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29: 98b52ff8fc0f4d2c          resultHash                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30: 98b52ff8fc0f4d2c   elapsedTimeDigest      0.002473116 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31: 98b52ff8fc0f4d2c elapsedTimeFirstRun     2.861023e-05 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32: 98b52ff8fc0f4d2c      otherFunctions            build_site</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33: 98b52ff8fc0f4d2c      otherFunctions      build_site_local</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34: 98b52ff8fc0f4d2c      otherFunctions       build_reference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35: 98b52ff8fc0f4d2c      otherFunctions  data_reference_topic</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36: 98b52ff8fc0f4d2c      otherFunctions          run_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37: 98b52ff8fc0f4d2c      otherFunctions    highlight_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38: 98b52ff8fc0f4d2c      otherFunctions             timing_fn</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39: 98b52ff8fc0f4d2c      otherFunctions                handle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40: 98b52ff8fc0f4d2c      otherFunctions                   try</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41: 98b52ff8fc0f4d2c      otherFunctions                lapply</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42: 98b52ff8fc0f4d2c           preDigest    n:c5775c3b366fb719</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43: 98b52ff8fc0f4d2c           preDigest  min:c40c00762a0dac94</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44: 98b52ff8fc0f4d2c           preDigest  max:853b1797f54b229c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45: 98b52ff8fc0f4d2c           preDigest .FUN:881ec847b7161f3c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46: 98b52ff8fc0f4d2c           file.size                   205</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              cacheId              tagKey              tagValue</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             createdDate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41: 2022-11-09 15:46:24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42: 2022-11-09 15:46:24</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45: 2022-12-19 22:34:07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46: 2022-12-19 22:34:07</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             createdDate</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># cleanup</span></span></span>
@@ -440,7 +461,7 @@ have no actual file with data.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>
