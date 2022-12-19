@@ -183,7 +183,7 @@ certain \code{userTags} or \code{times} values.}
 By default the return of \code{showCache} is sorted by \code{cacheId}. For convenience,
 a user can optionally have it unsorted (passing \code{sorted = FALSE}),
 which may be noticeably faster when
-the cache is large (>1e4 entries).
+the cache is large (\verb{> 1e4} entries).
 }
 \note{
 If the cache is larger than 10MB, and clearCache is used, there will be

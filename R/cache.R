@@ -143,7 +143,7 @@ utils::globalVariables(c(
 #' By default, `drv` uses an SQLite database. This can be sufficient for most cases.
 #' However, if a user has dozens or more cores making requests to the Cache database,
 #' it may be insufficient. A user can set up a different database backend, e.g.,
-#' PostGres that can handle multiple simultaneous read-write situations. See
+#' PostgreSQL that can handle multiple simultaneous read-write situations. See
 #' \url{https://github.com/PredictiveEcology/SpaDES/wiki/Using-alternate-database-backends-for-Cache}.
 #'
 #'
@@ -278,7 +278,7 @@ utils::globalVariables(c(
 #'        new files following function completion. See Details.
 #'        *NOTE: this argument is experimental and may change in future releases.*
 #'
-#' @param makeCopy Now deprecated. Ignored if uesd.
+#' @param makeCopy Now deprecated. Ignored if used.
 #'
 #' @param userTags A character vector with descriptions of the Cache function call. These
 #'   will be added to the Cache so that this entry in the Cache can be found using
@@ -333,7 +333,7 @@ utils::globalVariables(c(
 #'
 #' @seealso [showCache()], [clearCache()], [keepCache()],
 #'   [CacheDigest()] to determine the digest of a given function or expression,
-#'   as used internallyl within `Cache`, [movedCache()], [.robustDigest()], and
+#'   as used internally within `Cache`, [movedCache()], [.robustDigest()], and
 #'   for more advanced uses there are several helper functions,
 #'   e.g., [rmFromCache()], [CacheStorageDir()]
 #'
