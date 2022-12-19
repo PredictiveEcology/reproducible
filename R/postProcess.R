@@ -2231,11 +2231,9 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
         x <- fixErrors(x = x, useCache = useCache, verbose = verbose,
                        testValidity = testValidity, ...)
       } else {
-        # browser(expr = exists("._postProcess.spatialClasses_2"))
         if (!isTRUE(all.equal(extent(x), extRTM))) {
           useCacheOrig <- useCache
           useCache <- FALSE
-          if (browserCond("aaa")) browser()
           x <- Cache(cropInputs(x = x, studyArea = studyArea,
                      extentToMatch = extRTM,
                      extentCRS = crsRTM,

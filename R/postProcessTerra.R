@@ -202,7 +202,6 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   #############################################################
   # crop project mask sequence ################################
   #############################################################
-  if (browserCond("fff")) browser()
   from <- cropTo(from, cropTo, needBuffer = TRUE, overwrite = overwrite) # crop first for speed
   from <- projectTo(from, projectTo, method = method, overwrite = overwrite) # need to project with edges intact
   from <- maskTo(from, maskTo, overwrite = overwrite)
@@ -452,7 +451,6 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
       ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
       if (!sf::st_crs(from) == sf::st_crs(ext)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
         if (isVector(cropTo)) {
-          if (browserCond("qqq")) browser()
           if (isSpat(cropTo)) {
             cropToInFromCRS <- terra::project(cropTo, terra::crs(from))
           } else {
