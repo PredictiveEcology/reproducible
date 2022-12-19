@@ -400,6 +400,7 @@ Cache <-
     #  have modifications under many circumstances, e.g., do.call, specific methods etc.
     # Need the CacheMatchedCall so that args that are in both Cache and the FUN can be sent to both
     preCacheDigestTime <- Sys.time()
+    if (browserCond("fff")) browser()
     fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", ...,
                             FUNcaptured = FUNcaptured, CacheMatchedCall = CacheMatchedCall)
 
@@ -426,7 +427,7 @@ Cache <-
                    "; skipping Cache on function ", fnDetails$functionName,
                    if (nestedLev > 0) paste0(" (currently running nested Cache level ", nestedLev + 1, ")"),
                    verbose = verbose)
-      output <- evalTheFun(FUNcaptured, isCapturedFUN, isSquiggly, fnDetails$matchedCall, envir = parent.frame(),
+      output <- evalTheFun(FUNcaptured, isCapturedFUN, isSquiggly, FUNbackup, envir = parent.frame(),
                            verbose, ...)
       # }
     } else {
@@ -736,7 +737,7 @@ Cache <-
 
         # Run the FUN
         preRunFUNTime <- Sys.time()
-        output <- evalTheFun(FUNcaptured, isCapturedFUN, isSquiggly, fnDetails$matchedCall, envir = parent.frame(),
+        output <- evalTheFun(FUNcaptured, isCapturedFUN, isSquiggly, FUNbackup, envir = parent.frame(),
                              verbose, ...)
         postRunFUNTime <- Sys.time()
         elapsedTimeFUN <- postRunFUNTime - preRunFUNTime
@@ -1409,6 +1410,7 @@ getFunctionName2 <- function(mc) {
     if (length(FUNcaptured) > 1) {
       # The next line works for any object that is NOT in a ..., because the
       #   object never shows up in the environment; it is passed through
+      if (browserCond("aaa")) browser()
       FUNcapturedArgs <- lapply(as.list(FUNcaptured[-1]), function(ee) {
         out <- try(eval(ee, envir = callingEnv), silent = TRUE)
         if (is(out, "try-error")) {
@@ -1452,6 +1454,7 @@ getFunctionName2 <- function(mc) {
                     nestLevel = 1)
 
   modifiedDots <- as.list(FUNcapturedNamesEvaled[-1]) # this is prior to filling in with defaults
+  if (browserCond("aaa")) browser()
   if (is.function(FUN)) {
     FUN <- getMethodAll(FUNcapturedNamesEvaled, callingEnv)
     forms <- if (is.primitive(FUN)) formals(args(FUN)) else formals(FUN)
@@ -2164,8 +2167,9 @@ isPkgColonFn <- function(x) {
 
 evalTheFun <- function(FUNcaptured, isCapturedFUN, isSquiggly, matchedCall, envir = parent.frame(),
                        verbose = getOption("reproducible.verbose"), ...) {
-  if (isSquiggly) {
-  # if (isCapturedFUN) { # if is wasn't "captured", then it is just a function, so now use it on the ...
+  if (browserCond("eee")) browser()
+  #  if (isSquiggly) {
+  if (isCapturedFUN || isSquiggly) { # if is wasn't "captured", then it is just a function, so now use it on the ...
      out <- eval(FUNcaptured, envir = envir)
   } else {
     out <- eval(matchedCall, envir = envir)
