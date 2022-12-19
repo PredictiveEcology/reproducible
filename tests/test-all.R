@@ -5,7 +5,7 @@ library(testthat)
 # on.exit(options(opts))
 if (FALSE) {
   ff <- list()
-  runTestsWithTimings(ff)
+  runTestsWithTimings("ff", authorizeGoogle = TRUE)
 }
 test_check("reproducible")
 # options(opts)

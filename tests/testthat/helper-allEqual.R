@@ -465,7 +465,8 @@ runTestsWithTimings <- function(nameOfOuterList = "ff", envir = parent.frame(), 
     testFiles <- testFiles[-1]
   }
 
-  gg <- data.table::rbindlist(ff, idcol = "TestFile")
+  gg <- data.table::rbindlist(get(nameOfOuterList, envir = envir),
+                              idcol = "TestFile")
   gg[, TestFile := basename(TestFile)]
-  print(gg)
+  gg
 }
