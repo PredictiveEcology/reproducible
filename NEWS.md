@@ -1,5 +1,31 @@
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
+Version 1.2.15
+==============
+
+## Dependency changes
+* none
+
+## Enhancements
+* `Cache` now captures the first argument passed to it without evaluating it, so `Cache(rnorm(1))` now works as expected.
+* As a result of previous, `Cache` now works with base pipe |> (with R >= 4.1). 
+* Due to some internal changes in the way arguments are evaluated and digested, there may be some cache entries that will be rerun. However, in simple cases of `FUN` passed to `Cache`, there should be no problems with previous cache databases being successfully recovered. 
+* Added more unit tests
+* Reworked `Cache` internals so that digesting is more accurate, as the correct methods for functions are more accurately found, objects within functions are more precisely evaluated.
+* Improved documentation:
+  - Examples were reworked, replaced, improved;
+  - All user-facing exported functions and methods now have complete documentation;
+  - Added `()` in DESCRIPTION for functions;
+  - Added `\value` in `.Rd` files for exported methods (structure, the class, the output meaning);
+  - Remove commented code in examples.
+
+## Bug fixes
+* `postProcess` now also checks resolution when assessing whether to project 
+* `prepInputs` has an internal `Cache` call for loading the object into memory; this was incorrectly evaluating all files if there were more than one file downloaded and extracted. This resulted in cases, e.g. shapefiles, being considered identical if they had the identical geometries, even if their data were different. This is fixed now as it uses the digest of all files extracted.
+
+## Deprecated and defunct
+* remove defunct argument `digestPathContent` from `Cache`
+
 Version 1.2.11
 ==============
 

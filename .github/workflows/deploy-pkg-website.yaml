@@ -33,7 +33,6 @@ jobs:
           extra-packages: |
             any::pkgdown
             local::.
-            PredictiveEcology/Require@development
           needs: website
 
       - name: Build site

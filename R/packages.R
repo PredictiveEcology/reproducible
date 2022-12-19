@@ -6,16 +6,18 @@ utils::globalVariables(c(
 ))
 
 
-#' \code{NA}-aware comparison of two vectors
+#' `NA`-aware comparison of two vectors
 #'
 #' Copied from
-#' \url{http://www.cookbook-r.com/Manipulating_data/Comparing_vectors_or_factors_with_NA/}.
-#' This function returns \code{TRUE} wherever elements are the same, including \code{NA}'s,
-#' and \code{FALSE} everywhere else.
+#' <http://www.cookbook-r.com/Manipulating_data/Comparing_vectors_or_factors_with_NA/>.
+#' This function returns `TRUE` wherever elements are the same, including `NA`'s,
+#' and `FALSE` everywhere else.
 #'
 #' @export
 #' @param v1 A vector
 #' @param v2 A vector
+#' @return
+#' A logical vector, indicating positions where two vectors are same or differ.
 #'
 #' @examples
 #' a <- c(NA, 1, 2, NA)

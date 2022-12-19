@@ -1,13 +1,11 @@
 .onLoad <- function(libname, pkgname) {
-  Require::checkPath(.reproducibleTempCacheDir(), create = TRUE)
-  Require::checkPath(.reproducibleTempInputDir(), create = TRUE)
 
   ## set options using the approach used by devtools
   opts <- options()
   opts.reproducible <- reproducibleOptions()
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
-
+  SysInfo <<- Sys.info() # update with system at time of loading; all we need is username
   invisible()
 }
 
@@ -17,7 +15,7 @@
     packageStartupMessage(
       "Using reproducible version ",
       utils::packageVersion("reproducible"), ".",
-      "\n  'reproducible' has changed the default database backend.",
+      # "\n  'reproducible' has changed the default database backend.", # Not true yet
       "\n  See ?reproducibleOptions for details.",
       "\n  During transition to GDAL>3 and PROJ>6, many warnings will be suppressed until",
       " simple solutions are available; if these GDAL and PROJ changes",
@@ -33,9 +31,9 @@
   options(o)
 }
 
-.reproducibleTempPath <- function() Require::tempdir2()
-.reproducibleTempCacheDir <- function() Require::tempdir2("cache")
-.reproducibleTempInputDir <- function() Require::tempdir2("inputs")
+.reproducibleTempPath <- function() getOption("reproducible.tempPath")#file.path(tempdir(), "reproducible")
+.reproducibleTempCacheDir <- function()  getOption("reproducible.cachePath")
+.reproducibleTempInputDir <- function() file.path(tempdir(), "reproducible", "inputs")
 
 .argsToRemove <- argsToRemove <- unique(c(names(formals(prepInputs)),
                                           names(formals(cropInputs)),
@@ -47,7 +45,7 @@
                                           unlist(lapply(methods("postProcess"),
                                                         function(x) names(formals(x))))))
 
-#' The \code{reproducible} package environment
+#' The `reproducible` package environment
 #'
 #' Environment used internally to store internal package objects and methods.
 #'

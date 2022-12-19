@@ -1,4 +1,5 @@
 test_that("testing prepInputs with deauthorized googledrive", {
+  skip_on_cran()
   if (interactive()) {
     if (!requireNamespace("googledrive", quietly = TRUE))
       stop(requireNamespaceMsg("googledrive", "to use google drive files"))

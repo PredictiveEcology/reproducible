@@ -56,7 +56,6 @@ test_that("preProcess fails if user provides non-existing file", {
     }
   )
   expect_true(sum(grepl("Download failed", errMsg)) == 1)
-  # expect_true(sum(grepl("To prevent", errMsg)) == 1)
 
   optsOrig <- options('reproducible.interactiveOnDownloadFail' = TRUE)
   testthat::with_mock(
@@ -67,7 +66,7 @@ test_that("preProcess fails if user provides non-existing file", {
       zipFilename <- file.path(tmpdir, "rasterTest")
       zip(zipfile = zipFilename, files = theFile, flags = "-q")
       zipFilenameWithDotZip <- dir(tmpdir, pattern = "\\.zip", full.names = TRUE)
-      file.move(from = zipFilenameWithDotZip, to = zipFilename)
+      .file.move(from = zipFilenameWithDotZip, to = zipFilename)
       "y"
       },
     {

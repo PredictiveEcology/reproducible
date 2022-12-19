@@ -17,6 +17,9 @@ then this will cause the \code{...} to be ignored.}
 
 \item{formalNames}{Optional character vector. If provided then it will override the \code{fun}}
 }
+\value{
+A list of the formals of the \code{fun} that are missing from the \code{...} or \code{dots}.
+}
 \description{
 Advanced use.
 }

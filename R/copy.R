@@ -1,12 +1,13 @@
 #' Move a file to a new location
 #'
+#' This will first try to `file.rename`, and if that fails, then it will
+#' `file.copy` then `file.remove`.
 #' @param from,to character vectors, containing file names or paths.
 #' @param overwrite logical indicating whether to overwrite destination file if it exists.
-#'
+#' @export
 #' @return Logical indicating whether operation succeeded.
 #'
-#' @export
-file.move <- function(from, to, overwrite = FALSE) {
+.file.move <- function(from, to, overwrite = FALSE) {
   stopifnot(file.exists(from))
   res <- suppressWarnings(file.rename(from = from, to = to))
 
@@ -36,9 +37,9 @@ file.move <- function(from, to, overwrite = FALSE) {
 #' @param object  An R object (likely containing environments) or an environment.
 #'
 #' @param filebackedDir A directory to copy any files that are backing R objects,
-#'                      currently only valid for \code{Raster} classes. Defaults
-#'                      to \code{.reproducibleTempPath()}, which is unlikely to be very useful.
-#'                      Can be \code{NULL}, which means that the file will not be
+#'                      currently only valid for `Raster` classes. Defaults
+#'                      to `.reproducibleTempPath()`, which is unlikely to be very useful.
+#'                      Can be `NULL`, which means that the file will not be
 #'                      copied and could therefore cause a collision as the
 #'                      pre-copied object and post-copied object would have the same
 #'                      file backing them.
@@ -50,7 +51,11 @@ file.move <- function(from, to, overwrite = FALSE) {
 #' @importFrom data.table copy
 #' @inheritParams Cache
 #' @rdname Copy
-#' @seealso \code{\link{.robustDigest}}
+#' @return
+#' The same object as `object`, but with pass-by-reference class elements "deep" copied.
+#' `reproducible` has methods for several classes.
+#'
+#' @seealso [.robustDigest()], [Filenames()]
 #'
 #' @examples
 #' e <- new.env()
@@ -77,7 +82,8 @@ file.move <- function(from, to, overwrite = FALSE) {
 #' f$one
 #' e$one
 #'
-#' \dontrun{
+#' # To create a new deep copy method, use the following template
+#' if (FALSE) {
 #' setMethod("Copy", signature = "the class", # where = specify here if not in a package,
 #'   definition = function(object, filebackendDir, ...) {
 #'   # write deep copy code here
@@ -151,10 +157,6 @@ setMethod("Copy",
 setMethod("Copy",
           signature(object = "list"),
           definition = function(object,  ...) {
-            #if (missing(filebackedDir)) {
-            #  stop()
-            #  filebackedDir <- tempdir2(rndstr(1, 10))
-            #}
             lapply(object, function(x) {
               Copy(x, ...)
             })

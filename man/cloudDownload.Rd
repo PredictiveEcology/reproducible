@@ -8,7 +8,7 @@ cloudDownload(
   outputHash,
   newFileName,
   gdriveLs,
-  cacheRepo,
+  cachePath,
   cloudFolderID,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL)
@@ -21,13 +21,13 @@ cloudDownload(
 
 \item{gdriveLs}{The result of \code{googledrive::drive_ls(googledrive::as_id(cloudFolderID), pattern = "outputHash")}}
 
-\item{cacheRepo}{A repository used for storing cached objects.
+\item{cachePath}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{cloudFolderID}{A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
 If left as \code{NULL}, the function will create a cloud folder with name from last
-two folder levels of the \code{cacheRepo} path, :
-\code{paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))}.
+two folder levels of the \code{cachePath} path, :
+\code{paste0(basename(dirname(cachePath)), "_", basename(cachePath))}.
 This \code{cloudFolderID} will be added to \code{options("reproducible.cloudFolderID")},
 but this will not persist across sessions. If this is a character string, it will
 treat this as a folder name to create or use on GoogleDrive.}

@@ -7,7 +7,7 @@
 writeFuture(
   written,
   outputToSave,
-  cacheRepo,
+  cachePath,
   userTags,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),
@@ -21,7 +21,7 @@ Should be 0 to start.}
 
 \item{outputToSave}{The R object to save to repository}
 
-\item{cacheRepo}{The file path of the repository}
+\item{cachePath}{The file path of the repository}
 
 \item{userTags}{Character string of tags to attach to this \code{outputToSave} in
 the \code{CacheRepo}}
@@ -34,7 +34,7 @@ object (in order to clone an existing connection).}
 \code{\link[DBI:dbConnect]{dbConnect()}}.}
 
 \item{cacheId}{Character string. If passed, this will override the calculated hash
-of the inputs, and return the result from this cacheId in the cacheRepo.
+of the inputs, and return the result from this cacheId in the \code{cachePath}.
 Setting this is equivalent to manually saving the output of this function, i.e.,
 the object will be on disk, and will be recovered in subsequent
 This may help in some particularly finicky situations

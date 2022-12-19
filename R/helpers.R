@@ -12,17 +12,17 @@
 #' This will pad floating point numbers, right or left. For integers, either class
 #' integer or functionally integer (e.g., 1.0), it will not pad right of the decimal.
 #' For more specific control or to get exact padding right and left of decimal,
-#' try the \code{stringi} package. It will also not do any rounding. See examples.
+#' try the `stringi` package. It will also not do any rounding. See examples.
 #'
 #' @param x numeric. Number to be converted to character with padding
 #'
 #' @param padL numeric. Desired number of digits on left side of decimal.
-#'              If not enough, \code{pad} will be used to pad.
+#'              If not enough, `pad` will be used to pad.
 #'
 #' @param padR numeric. Desired number of digits on right side of decimal.
-#'              If not enough, \code{pad} will be used to pad.
+#'              If not enough, `pad` will be used to pad.
 #'
-#' @param pad character to use as padding (\code{nchar(pad) == 1} must be \code{TRUE}).
+#' @param pad character to use as padding (`nchar(pad) == 1` must be `TRUE`).
 #'
 #' @return Character string representing the filename.
 #'
@@ -56,6 +56,9 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
 #'
 #' @author Jean Marchal and Alex Chubaty
 #' @export
+#' @return
+#' A character string or vector with the prefix pre-pended or suffix post-pended
+#' on the `basename` of the `f`, before the file extension.
 #' @rdname prefix
 #'
 #' @examples
@@ -83,13 +86,17 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
 #' Get a unique name for a given study area
 #'
 #' Digest a spatial object to get a unique character string (hash) of the study area.
-#' Use \code{.suffix()} to append the hash to a filename,
-#' e.g., when using \code{filename2} in \code{prepInputs}.
+#' Use `.suffix()` to append the hash to a filename,
+#' e.g., when using `filename2` in `prepInputs`.
 #'
 #' @param studyArea Spatial object.
 #' @param ... Other arguments (not currently used)
 #'
 #' @export
+#' @return
+#' A character string using the `digest` of the `studyArea`. This is only intended
+#' for use with spatial objects.
+#'
 #' @importFrom digest digest
 setGeneric("studyAreaName", function(studyArea, ...) {
   standardGeneric("studyAreaName")
@@ -133,18 +140,21 @@ setMethod(
     digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
 })
 
-#' Identify which formals to a function are not in the current \code{...}
+#' Identify which formals to a function are not in the current `...`
 #'
 #' Advanced use.
 #'
 #' @keywords internal
 #' @export
+#' @return
+#' A list of the formals of the `fun` that are missing from the `...` or `dots`.
+#'
 #' @param fun A function
-#' @param ... The ... from inside a function. Will be ignored if \code{dots} is
+#' @param ... The ... from inside a function. Will be ignored if `dots` is
 #'        provided explicitly.
-#' @param dots Optional. If this is provided via say \code{dots = list(...)},
-#'             then this will cause the \code{...} to be ignored.
-#' @param formalNames Optional character vector. If provided then it will override the \code{fun}
+#' @param dots Optional. If this is provided via say `dots = list(...)`,
+#'             then this will cause the `...` to be ignored.
+#' @param formalNames Optional character vector. If provided then it will override the `fun`
 .formalsNotInCurrentDots <- function(fun, ..., dots, formalNames, signature = character()) {
   if (is.character(fun)) {
     fun <- get(fun, mode = "function", envir = parent.frame())
@@ -174,35 +184,25 @@ rndstr <- function(n = 1, len = 8) {
   }))
 }
 
-#' Alternative to \code{interactive()} for unit testing
+#' Alternative to `interactive()` for unit testing
 #'
 #' This is a suggestion from
-#' \url{https://github.com/MangoTheCat/blog-with-mock/blob/master/Blogpost1.Rmd}
+#' <https://github.com/MangoTheCat/blog-with-mock/blob/master/Blogpost1.Rmd>
 #' as a way to test interactive code in unit tests. Basically, in the unit tests,
-#' we use \code{testthat::with_mock}, and inside that we redefine \code{isInteractive}
+#' we use `testthat::with_mock`, and inside that we redefine `isInteractive`
 #' just for the test. In all other times, this returns the same things as
-#' \code{interactive()}.
+#' `interactive()`.
 #' @keywords internal
-#' @examples
-#' \dontrun{
-#' testthat::with_mock(
-#' `isInteractive` = function() {browser(); TRUE},
-#' {
-#'   tmpdir <- tempdir()
-#'   aa <- Cache(rnorm, 1, cacheRepo = tmpdir, userTags = "something2")
-#'   # Test clearCache -- has an internal isInteractive() call
-#'   clearCache(tmpdir, ask = FALSE)
-#'   })
-#' }
 isInteractive <- function() interactive()
 
-#' A version of \code{base::basename} that is \code{NULL} resistant
+#' A version of `base::basename` that is `NULL` resistant
 #'
-#' Returns \code{NULL} if x is \code{NULL}, otherwise, as \code{basename}.
+#' @return
+#' `NULL` if x is `NULL`, otherwise, as `basename`.
 #'
 #' @param x A character vector of paths
 #' @export
-#' @return Same as \code{\link[base]{basename}}
+#' @return Same as [base::basename()]
 #'
 basename2 <- function(x) {
   if (is.null(x)) {
@@ -212,29 +212,32 @@ basename2 <- function(x) {
   }
 }
 
-#' A wrapper around \code{try} that retries on failure
+#' A wrapper around `try` that retries on failure
 #'
-#' This is useful for functions that are "flaky", such as \code{curl}, which may fail for unknown
+#' This is useful for functions that are "flaky", such as `curl`, which may fail for unknown
 #' reasons that do not persist.
 #'
 #' @details
-#' Based on \url{https://github.com/jennybc/googlesheets/issues/219#issuecomment-195218525}.
+#' Based on <https://github.com/jennybc/googlesheets/issues/219#issuecomment-195218525>.
 #'
-#' @param expr     Quoted expression to run, i.e., \code{quote(...)}
+#' @param expr     Quoted expression to run, i.e., `quote(...)`
 #' @param retries  Numeric. The maximum number of retries.
 #' @param envir    The environment in which to evaluate the quoted expression, default
-#'   to \code{parent.frame(1)}
+#'   to `parent.frame(1)`
 #' @param exponentialDecayBase Numeric > 1.0. The delay between
-#'   successive retries will be \code{runif(1, min = 0, max = exponentialDecayBase ^ i - 1)}
-#'   where \code{i} is the retry number (i.e., follows \code{seq_len(retries)})
-#' @param silent   Logical indicating whether to \code{try} silently.
+#'   successive retries will be `runif(1, min = 0, max = exponentialDecayBase ^ i - 1)`
+#'   where `i` is the retry number (i.e., follows `seq_len(retries)`)
+#' @param silent   Logical indicating whether to `try` silently.
 #' @param exprBetween Another expression that should be run after a failed attempt
 #'   of the `expr`. This should return a named list, where the names indicate the object names
 #'   to update in the main expr, and the return value is the new value. (previous versions allowed
 #'   a non-list return, but where the final line had to be an assignment operator,
 #'   specifying what object (that is used in `expr`) will be updated prior to running
 #'   the `expr` again. For backwards compatibility, this still works).
-#' @param messageFn A function for messaging to console. Defaults to \code{message}
+#' @param messageFn A function for messaging to console. Defaults to `message`
+#'
+#' @return
+#' As with `try`, so the successfully returned `return()` from the `expr` or a `try-error`.
 #'
 #' @export
 retry <- function(expr, envir = parent.frame(), retries = 5,
@@ -297,7 +300,7 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
 
 #' Test whether system is Windows
 #'
-#' This is used so that unit tests can override this using \code{testthat::with_mock}.
+#' This is used so that unit tests can override this using `testthat::with_mock`.
 #' @keywords internal
 isWindows <- function() identical(.Platform$OS.type, "windows")
 
@@ -307,16 +310,20 @@ isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
 #' Provide standard messaging for missing package dependencies
 #'
 #' This provides a standard message format for missing packages, e.g.,
-#' detected via \code{requireNamespace}.
+#' detected via `requireNamespace`.
 #'
 #' @export
+#'
+#' @return
+#' A logical or stop if the namespace is not available to be loaded.
+#'
 #' @param pkg Character string indicating name of package required
 #' @param minVersion Character string indicating minimum version of package
 #'   that is needed
 #' @param messageStart A character string with a prefix of message to provide
-#' @param stopOnFALSE Logical. If \code{TRUE}, this function will create an
-#'   error (i.e., \code{stop}) if the function returns \code{FALSE}; otherwise
-#'   it simply returns \code{FALSE}
+#' @param stopOnFALSE Logical. If `TRUE`, this function will create an
+#'   error (i.e., `stop`) if the function returns `FALSE`; otherwise
+#'   it simply returns `FALSE`
 .requireNamespace <- function(pkg = "methods", minVersion = NULL,
                               stopOnFALSE = FALSE,
                               messageStart = paste0(pkg, if (!is.null(minVersion))
@@ -335,23 +342,31 @@ isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
 
 #' Use message to print a clean square data structure
 #'
-#' Sends to \code{message}, but in a structured way so that a data.frame-like can
+#' Sends to `message`, but in a structured way so that a data.frame-like can
 #' be cleanly sent to messaging.
 #'
 #' @param df A data.frame, data.table, matrix
-#' @param round An optional numeric to pass to \code{round}
-#' @param colour Passed to \code{getFromNamespace(colour, ns = "crayon")},
-#'   so any colour that \code{crayon} can use
-#' @param colnames Logical or \code{NULL}. If \code{TRUE}, then it will print
-#'   column names even if there aren't any in the \code{df} (i.e., they will)
-#'   be \code{V1} etc., \code{NULL} will print them if they exist, and \code{FALSE}
+#' @param round An optional numeric to pass to `round`
+#' @param colour Passed to `getFromNamespace(colour, ns = "crayon")`,
+#'   so any colour that `crayon` can use
+#' @param colnames Logical or `NULL`. If `TRUE`, then it will print
+#'   column names even if there aren't any in the `df` (i.e., they will)
+#'   be `V1` etc., `NULL` will print them if they exist, and `FALSE`
 #'   which will omit them.
+#' @param verboseLevel The numeric value for this `message*` call, equal or above
+#'   which `verbose` must be. The higher this is set, the more unlikely the call
+#'   will show a message.
 #' @inheritParams base::message
 #'
 #' @export
+#' @return
+#' Used for side effects. This will produce a message of a structured `data.frame`.
+#'
 #' @importFrom data.table is.data.table as.data.table
 #' @importFrom utils capture.output
-messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE) {
+#' @inheritParams Cache
+messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE,
+                      verbose = getOption("reproducible.verbose"), verboseLevel = 1) {
   origColNames <- if (is.null(colnames) | isTRUE(colnames)) colnames(df) else NULL
 
   if (is.matrix(df))
@@ -370,12 +385,10 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE
   }
   outMess <- capture.output(df)
   if (skipColNames) outMess <- outMess[-1]
+  if (is.null(colour)) colour <- "red"
   out <- lapply(outMess, function(x) {
-    if (!is.null(colour)) {
-      messageColoured(x, colour = colour, appendLF = appendLF)
-    } else {
-      message(x, appendLF = appendLF)
-    }
+    messageColoured(x, colour = colour, appendLF = appendLF, verbose = verbose,
+                    verboseLevel = verboseLevel)
   })
 }
 
@@ -452,7 +465,7 @@ messageCache <- function(..., colour = getOption("reproducible.messageColourCach
 messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
   # force this message to print
   messageColoured(..., colour = getOption("reproducible.messageColourQuestion"),
-                  verboseLevel = verboseLevel, verbose = 0, appendLF = appendLF)
+                  verboseLevel = verboseLevel, verbose = 10, appendLF = appendLF)
 }
 
 messageColoured <- function(..., colour = NULL, verboseLevel = 1,
@@ -511,4 +524,19 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   )
   colnames(df) <- c("extension", "fun", "type")
   df
+}
+
+
+#' @importFrom utils packageDescription
+.isDevelVersion <- function() {
+  length(strsplit(packageDescription("reproducible")$Version, "\\.")[[1]]) > 3
+}
+
+.runLongTests <- function() {
+  .isDevelVersion() || Sys.getenv("R_REPRODUCIBLE_RUN_ALL_TESTS") == "true"
+}
+
+.runLongExamples <- function() {
+  .isDevelVersion() ||
+    Sys.getenv("R_REPRODUCIBLE_RUN_ALL_EXAMPLES") == "true"
 }

@@ -53,6 +53,10 @@ object (in order to clone an existing connection).}
 \item{conn}{A \linkS4class{DBIConnection} object, as returned by
 \code{\link[DBI:dbConnect]{dbConnect()}}.}
 }
+\value{
+The same object as \code{object}, but with pass-by-reference class elements "deep" copied.
+\code{reproducible} has methods for several classes.
+}
 \description{
 When copying environments and all the objects contained within them, there are
 no copies made: it is a pass-by-reference operation. Sometimes, a deep copy is
@@ -88,7 +92,8 @@ g$one
 f$one
 e$one
 
-\dontrun{
+# To create a new deep copy method, use the following template
+if (FALSE) {
 setMethod("Copy", signature = "the class", # where = specify here if not in a package,
   definition = function(object, filebackendDir, ...) {
   # write deep copy code here
@@ -96,7 +101,7 @@ setMethod("Copy", signature = "the class", # where = specify here if not in a pa
 }
 }
 \seealso{
-\code{\link{.robustDigest}}
+\code{\link[=.robustDigest]{.robustDigest()}}, \code{\link[=Filenames]{Filenames()}}
 }
 \author{
 Eliot McIntire

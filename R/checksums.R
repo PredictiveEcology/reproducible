@@ -8,49 +8,49 @@ if (getRversion() >= "3.1.0") {
 #' Calculate checksum
 #'
 #' Verify (and optionally write) checksums.
-#' Checksums are computed using \code{\link{.digest}}, which is simply a
-#' wrapper around \code{digest::digest}.
+#' Checksums are computed using [.digest()], which is simply a
+#' wrapper around `digest::digest`.
 #'
 #' @note In version 1.2.0 and earlier, two checksums per file were required
 #' because of differences in the checksum hash values on Windows and Unix-like
 #' platforms. Recent versions use a different (faster) algorithm and only require
 #' one checksum value per file.
 #' To update your \file{CHECKSUMS.txt} files using the new algorithm, see
-#' \url{https://github.com/PredictiveEcology/SpaDES/issues/295#issuecomment-246513405}.
+#' <https://github.com/PredictiveEcology/SpaDES/issues/295#issuecomment-246513405>.
 #'
-#' @param path    Character string giving the directory path containing \code{CHECKSUMS.txt}
-#'                file, or where it will be written if \code{checksumFile = TRUE}.
+#' @param path    Character string giving the directory path containing `CHECKSUMS.txt`
+#'                file, or where it will be written if `checksumFile = TRUE`.
 #'
-#' @param write   Logical indicating whether to overwrite \code{CHECKSUMS.txt}.
-#'                Default is \code{FALSE}, as users should not change this file.
+#' @param write   Logical indicating whether to overwrite `CHECKSUMS.txt`.
+#'                Default is `FALSE`, as users should not change this file.
 #'                Module developers should write this file prior to distributing
 #'                their module code, and update accordingly when the data change.
 #'
-#' @param quickCheck Logical. If \code{TRUE}, then this will only use file sizes,
+#' @param quickCheck Logical. If `TRUE`, then this will only use file sizes,
 #'                   rather than a digest::digest hash. This is generally faster,
-#'                   but will be \emph{much} less robust.
+#'                   but will be *much* less robust.
 #'
 #' @param checksumFile The filename of the checksums file to read or write to.
 #'                     The default is \file{CHECKSUMS.txt} located at
-#'                     \code{file.path(path, module, "data", checksumFile)}.
+#'                     `file.path(path, module, "data", checksumFile)`.
 #'                     It is likely not a good idea to change this, and should
-#'                     only be used in cases such as \code{Cache}, which can
-#'                     evaluate if the \code{checksumFile} has changed.
+#'                     only be used in cases such as `Cache`, which can
+#'                     evaluate if the `checksumFile` has changed.
 #'
 #' @param files An optional character string or vector of specific files to checksum.
 #'              This may be very important if there are many files listed in a
-#'              \code{CHECKSUMS.txt} file, but only a few are to be checksummed.
+#'              `CHECKSUMS.txt` file, but only a few are to be checksummed.
 #'
-#' @param ...     Passed to \code{\link[digest]{digest}} and \code{\link[utils]{write.table}}.
-#'                For \code{digest}, the notable argument is \code{algo}. For \code{write.table},
-#'                the notable argument is \code{append}.
+#' @param ...     Passed to [digest::digest()] and [utils::write.table()].
+#'                For `digest`, the notable argument is `algo`. For `write.table`,
+#'                the notable argument is `append`.
 #'
 #' @inheritParams Cache
-#' @return A \code{data.table} with columns: \code{result}, \code{expectedFile},
-#'         \code{actualFile}, \code{checksum.x}, \code{checksum.y},
-#'         \code{algorithm.x}, \code{algorithm.y}, \code{filesize.x}, \code{filesize.y}
-#'         indicating the result of comparison between local file (\code{x}) and
-#'         expectation based on the \code{CHECKSUMS.txt} file.
+#' @return A `data.table` with columns: `result`, `expectedFile`,
+#'         `actualFile`, `checksum.x`, `checksum.y`,
+#'         `algorithm.x`, `algorithm.y`, `filesize.x`, `filesize.y`
+#'         indicating the result of comparison between local file (`x`) and
+#'         expectation based on the `CHECKSUMS.txt` file.
 #'
 #' @author Alex Chubaty
 #' @export
@@ -58,19 +58,16 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @examples
 #' \dontrun{
-#' moduleName <- "my_module"
-#' modulePath <- file.path("path", "to", "modules")
+#' modulePath <- file.path(tempdir(), "myModulePath")
+#' dir.create(modulePath, recursive = TRUE, showWarnings = FALSE)
+#' moduleName <- "myModule"
+#' cat("hi", file = file.path(modulePath, moduleName)) # put something there for this example
 #'
 #' ## verify checksums of all data files
-#' Checksums(moduleName, modulePath)
+#' Checksums(modulePath, files = moduleName)
 #'
 #' ## write new CHECKSUMS.txt file
-#'
-#' # 1. verify that all data files are present (and no extra files are present)
-#' list.files(file.path(modulePath, moduleName, "data"))
-#'
-#' # 2. calculate file checksums and write to file (this will overwrite CHECKSUMS.txt)
-#' Checksums(moduleName, modulePath, write = TRUE)
+#' Checksums(files = moduleName, modulePath, write = TRUE)
 #' }
 #'
 setGeneric("Checksums", function(path, write, quickCheck = FALSE,
@@ -304,10 +301,10 @@ writeChecksumsTable <- function(out, checksumFile, dots) {
 
 #' Calculate the hashes of multiple files
 #'
-#' Internal function. Wrapper for \code{\link[digest]{digest}} using \code{xxhash64}.
+#' Internal function. Wrapper for [digest::digest()] using `xxhash64`.
 #'
 #' @param file  Character vector of file paths.
-#' @param ...   Additional arguments to \code{digest::digest}.
+#' @param ...   Additional arguments to `digest::digest`.
 #'
 #' @return A character vector of hashes.
 #'

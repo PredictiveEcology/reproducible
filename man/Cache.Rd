@@ -2,8 +2,7 @@
 % Please edit documentation in R/cache.R
 \name{Cache}
 \alias{Cache}
-\alias{Cache,ANY-method}
-\title{Cache method that accommodates environments, S4 methods, Rasters, & nested caching}
+\title{Saves a wide variety function call outputs to disk and optionally RAM, for recovery later}
 \usage{
 Cache(
   FUN,
@@ -14,10 +13,10 @@ Cache(
   outputObjects = NULL,
   algo = "xxhash64",
   cacheRepo = NULL,
+  cachePath = NULL,
   length = getOption("reproducible.length", Inf),
   compareRasterFileLength,
   userTags = c(),
-  digestPathContent,
   omitArgs = NULL,
   classOptions = list(),
   debugCache = character(),
@@ -28,46 +27,18 @@ Cache(
   cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
   useCloud = FALSE,
-  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+  cloudFolderID = NULL,
   showSimilar = getOption("reproducible.showSimilar", FALSE),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = getOption("reproducible.conn", NULL)
-)
-
-\S4method{Cache}{ANY}(
-  FUN,
-  ...,
-  notOlderThan = NULL,
-  .objects = NULL,
-  .cacheExtra = NULL,
-  outputObjects = NULL,
-  algo = "xxhash64",
-  cacheRepo = NULL,
-  length = getOption("reproducible.length", Inf),
-  compareRasterFileLength,
-  userTags = c(),
-  digestPathContent,
-  omitArgs = NULL,
-  classOptions = list(),
-  debugCache = character(),
-  sideEffect = FALSE,
-  makeCopy = FALSE,
-  quick = getOption("reproducible.quick", FALSE),
-  verbose = getOption("reproducible.verbose", 1),
-  cacheId = NULL,
-  useCache = getOption("reproducible.useCache", TRUE),
-  useCloud = FALSE,
-  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-  showSimilar = getOption("reproducible.showSimilar", FALSE),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getOption("reproducible.drv"),
   conn = getOption("reproducible.conn", NULL)
 )
 }
 \arguments{
-\item{FUN}{Either a function or an unevaluated function call (e.g., using
-\code{quote}.}
+\item{FUN}{Either a function (e.g., \code{rnorm}), a function call (e.g., \code{rnorm(1)}),
+or an unevaluated function call (e.g., using
+\code{quote}).}
 
-\item{...}{Arguments passed to \code{FUN}}
+\item{...}{Arguments passed to \code{FUN}, if \code{FUN} is not an expression.}
 
 \item{notOlderThan}{A time. Load an object from the Cache if it was created after this.}
 
@@ -78,7 +49,7 @@ i.e., only use a subset of
 the list, environment or similar objects. In the case of nested list-type
 objects, this will only be applied outermost first.}
 
-\item{.cacheExtra}{A an arbitrary R object that will be included in the `CacheDigest`,
+\item{.cacheExtra}{A an arbitrary R object that will be included in the \code{CacheDigest},
 but otherwise not passed into the \code{FUN}.}
 
 \item{outputObjects}{Optional character vector indicating which objects to
@@ -89,7 +60,9 @@ return. This is only relevant for list, environment (or similar) objects}
     \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64},
     \code{murmur32}, \code{spookyhash} and \code{blake3}.}
 
-\item{cacheRepo}{A repository used for storing cached objects.
+\item{cacheRepo}{Same as \code{cachePath}, but kept for backwards compatibility.}
+
+\item{cachePath}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{length}{Numeric. If the element passed to Cache is a \code{Path} class
@@ -103,9 +76,7 @@ Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.}
 
 \item{userTags}{A character vector with descriptions of the Cache function call. These
 will be added to the Cache so that this entry in the Cache can be found using
-\code{userTags} e.g., via \code{\link{showCache}}.}
-
-\item{digestPathContent}{Being deprecated. Use \code{quick}.}
+\code{userTags} e.g., via \code{\link[=showCache]{showCache()}}.}
 
 \item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
 
@@ -125,29 +96,24 @@ the object \code{attr(mySimOut, "debugCache1")} can be compared.
 If \code{"quick"}, then it will return the same two objects directly,
 without evalutating the \code{FUN(...)}.}
 
-\item{sideEffect}{Logical or path. Determines where the function will look for
+\item{sideEffect}{Now deprecated. Logical or path. Determines where the function will look for
 new files following function completion. See Details.
 \emph{NOTE: this argument is experimental and may change in future releases.}}
 
-\item{makeCopy}{Logical. If \code{sideEffect = TRUE}, and \code{makeCopy = TRUE},
-a copy of the downloaded files will be made and stored in the \code{cacheRepo}
-to speed up subsequent file recovery in the case where the original copy
-of the downloaded files are corrupted or missing. Currently only works when
-set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.
-\emph{NOTE: this argument is experimental and may change in future releases.}}
+\item{makeCopy}{Now deprecated. Ignored if used.}
 
 \item{quick}{Logical or character. If \code{TRUE},
 no disk-based information will be assessed, i.e., only
-memory content. See Details section about \code{quick} in \code{\link{Cache}}.}
+memory content. See Details section about \code{quick} in \code{\link[=Cache]{Cache()}}.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{cacheId}{Character string. If passed, this will override the calculated hash
-of the inputs, and return the result from this cacheId in the cacheRepo.
+of the inputs, and return the result from this cacheId in the \code{cachePath}.
 Setting this is equivalent to manually saving the output of this function, i.e.,
 the object will be on disk, and will be recovered in subsequent
 This may help in some particularly finicky situations
@@ -160,15 +126,15 @@ the object will be identical each time; this may be useful in operational code.}
 
 \item{cloudFolderID}{A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
 If left as \code{NULL}, the function will create a cloud folder with name from last
-two folder levels of the \code{cacheRepo} path, :
-\code{paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))}.
+two folder levels of the \code{cachePath} path, :
+\code{paste0(basename(dirname(cachePath)), "_", basename(cachePath))}.
 This \code{cloudFolderID} will be added to \code{options("reproducible.cloudFolderID")},
 but this will not persist across sessions. If this is a character string, it will
 treat this as a folder name to create or use on GoogleDrive.}
 
 \item{showSimilar}{A logical or numeric. Useful for debugging.
 If \code{TRUE} or \code{1}, then if the Cache
-does not find an identical archive in the cacheRepo, it will report (via message)
+does not find an identical archive in the \code{cachePath}, it will report (via message)
 the next most similar archive, and indicate which argument(s) is/are different.
 If a number larger than \code{1}, then it will report the N most similar archived
 objects.}
@@ -181,7 +147,7 @@ object (in order to clone an existing connection).}
 \code{\link[DBI:dbConnect]{dbConnect()}}.}
 }
 \value{
-As with \code{archivist::cache}, returns the value of the
+Returns the value of the
 function call or the cached version (i.e., the result from a previous call
 to this same cached function with identical arguments).
 }
@@ -200,61 +166,41 @@ will recover the object from RAM and is normally much faster (at the expense of 
 \details{
 There are other similar functions in the R universe. This version of Cache has
 been used as part of a robust continuous workflow approach. As a result, we have
-tested it with many "non-standard" R objects (e.g., RasterLayer objects) and
-environments, which tend to be challenging for caching as they are always unique.
+tested it with many "non-standard" R objects (e.g., RasterLayer, terra objects) and
+environments (which are always unique, so do not cache readily).
 
 This version of the \code{Cache} function accommodates those four special,
 though quite common, cases by:
 \enumerate{
-  \item converting any environments into list equivalents;
-  \item identifying the dispatched S4 method (including those made through
-        inheritance) before hashing so the correct method is being cached;
-  \item by hashing the linked file, rather than the Raster object.
-        Currently, only file-backed \code{Raster*} objects are digested
-        (e.g., not \code{ff} objects, or any other R object where the data
-        are on disk instead of in RAM);
-  \item Uses \code{\link[digest]{digest}} (formerly fastdigest, which does
-        not translate between operating systems).
-        This is used for file-backed objects as well.
-  \item Cache will save arguments passed by user in a hidden environment. Any
-        nested Cache functions will use arguments in this order 1) actual arguments
-        passed at each Cache call, 2) any inherited arguments from an outer Cache
-        call, 3) the default values of the Cache function. See section on \emph{Nested
-        Caching}.
+\item converting any environments into list equivalents;
+\item identifying the dispatched S4 method (including those made through
+inheritance) before hashing so the correct method is being cached;
+\item by hashing the linked file, rather than the Raster object.
+Currently, only file-backed \verb{Raster*} or \verb{terra*} objects are digested
+(e.g., not \code{ff} objects, or any other R object where the data
+are on disk instead of in RAM);
+\item Uses \code{\link[digest:digest]{digest::digest()}} (formerly fastdigest, which does
+not translate between operating systems).
+This is used for file-backed objects as well.
+\item Cache will save arguments passed by user in a hidden environment. Any
+nested Cache functions will use arguments in this order 1) actual arguments
+passed at each Cache call, 2) any inherited arguments from an outer Cache
+call, 3) the default values of the Cache function. See section on \emph{Nested
+Caching}.
 }
 
-Caching R objects using \code{archivist::cache} has five important limitations:
-\enumerate{
-  \item the \pkg{archivist} package detects different environments as different;
-  \item it also does not detect S4 methods correctly due to method inheritance;
-  \item it does not detect objects that have file-based storage of information
-        (specifically \code{\link[raster:Raster-classes]{RasterLayer-class}} objects);
-  \item the default hashing algorithm is relatively slow.
-  \item heavily nested function calls may want Cache arguments to propagate through
-}
-
-As part of the SpaDES ecosystem of R packages, \code{Cache} can be used
-within SpaDES modules. If it is, then the cached entry will automatically
-get 3 extra \code{userTags}: \code{eventTime}, \code{eventType}, and \code{moduleName}.
-These can then be used in \code{clearCache} to selectively remove cached objects
-by \code{eventTime}, \code{eventType} or \code{moduleName}.
-
-\code{Cache} will add a tag to the artifact in the database called \code{accessed},
+\code{Cache} will add a tag to the entry in the cache database called \code{accessed},
 which will assign the time that it was accessed, either read or write.
-That way, artifacts can be shown (using \code{showCache}) or removed (using
+That way, cached items can be shown (using \code{showCache}) or removed (using
 \code{clearCache}) selectively, based on their access dates, rather than only
-by their creation dates. See example in \code{\link{clearCache}}.
-\code{Cache} (uppercase C) is used here so that it is not confused with, and does
-not mask, the \code{archivist::cache} function.
+by their creation dates. See example in \code{\link[=clearCache]{clearCache()}}.
 }
 \note{
 As indicated above, several objects require pre-treatment before
 caching will work as expected. The function \code{.robustDigest} accommodates this.
 It is an S4 generic, meaning that developers can produce their own methods for
 different classes of objects. Currently, there are methods for several types
-of classes. See \code{\link{.robustDigest}}.
-
-See \code{\link{.robustDigest}} for other specifics for other classes.
+of classes. See \code{\link[=.robustDigest]{.robustDigest()}}.
 }
 \section{Nested Caching}{
 
@@ -265,11 +211,13 @@ call, but this can get tedious and can be prone to errors. The normal way that
 \emph{R} handles arguments is it takes the user passed arguments if any, and
 default arguments for all those that have no user passed arguments. We have inserted
 a middle step. The order or precedence for any given \code{Cache} function call is
-1. user arguments, 2. inherited arguments, 3. default arguments. At this time,
+\enumerate{
+\item user arguments, 2. inherited arguments, 3. default arguments. At this time,
 the top level \code{Cache} arguments will propagate to all inner functions unless
 each individual \code{Cache} call has other arguments specified, i.e., "middle"
 nested \code{Cache} function calls don't propagate their arguments to further "inner"
 \code{Cache} function calls.  See example.
+}
 
 \code{userTags} is unique of all arguments: its values will be appended to the
 inherited \code{userTags}.
@@ -293,15 +241,13 @@ as a character string. However, once the function has been run once, the output 
 will exist, and \code{Cache(...)} will assess it, which is incorrect. In these cases,
 the user is advised to use \code{quick = "TheOutputFilenameArgument"} to
 specify the argument whose content on disk should not be assessed, but whose
-character string should be assessed (distinguishing it from \code{omitArgs =
-"TheOutputFilenameArgument"}, which will not assess the file content nor the
+character string should be assessed (distinguishing it from \code{omitArgs = "TheOutputFilenameArgument"}, which will not assess the file content nor the
 character string).
 
 This is relevant for objects of class \code{character}, \code{Path} and
 \code{Raster} currently. For class \code{character}, it is ambiguous whether
 this represents a character string or a vector of file paths. If it is known
-that character strings should not be treated as paths, then \code{quick =
-TRUE} will be much faster, with no loss of information. If it is file or
+that character strings should not be treated as paths, then \code{quick = TRUE} is appropriate, with no loss of information. If it is file or
 directory, then it will digest the file content, or \code{basename(object)}.
 For class \code{Path} objects, the file's metadata (i.e., filename and file
 size) will be hashed instead of the file contents if \code{quick = TRUE}. If
@@ -317,7 +263,7 @@ if the final product is a shiny app, rerunning the entire project may need
 to take less then a few seconds at most. There are 3 arguments that affect
 Cache speed: \code{quick}, \code{length}, and
 \code{algo}. \code{quick} is passed to \code{.robustDigest}, which currently
-only affects \code{Path} and \code{Raster*} class objects. In both cases, \code{quick}
+only affects \code{Path} and \verb{Raster*} class objects. In both cases, \code{quick}
 means that little or no disk-based information will be assessed.
 }
 
@@ -326,10 +272,10 @@ means that little or no disk-based information will be assessed.
 If a function has a path argument, there is some ambiguity about what should be
 done. Possibilities include:
 \enumerate{
-  \item hash the string as is (this will be very system specific, meaning a
-        \code{Cache} call will not work if copied between systems or directories);
-  \item hash the \code{basename(path)};
-  \item hash the contents of the file.
+\item hash the string as is (this will be very system specific, meaning a
+\code{Cache} call will not work if copied between systems or directories);
+\item hash the \code{basename(path)};
+\item hash the contents of the file.
 }
 If paths are passed in as is (i.e,. character string), the result will not be predictable.
 Instead, one should use the wrapper function \code{asPath(path)}, which sets the
@@ -338,13 +284,27 @@ to digest the content of the file (using \code{quick = FALSE}),
 or just the filename (\code{(quick = TRUE)}). See examples.
 }
 
-\section{Stochasticity}{
+\section{Stochasticity or randomness}{
 
-In general, it is expected that caching will only be used when stochasticity
-is not relevant, or if a user has achieved sufficient stochasticity (e.g., via
-sufficient number of calls to \code{experiment}) such that no new explorations
-of stochastic outcomes are required. It will also be very useful in a
-reproducible workflow.
+In general, it is expected that caching will only be used when randomness is not
+desired, e.g., \code{Cache(rnorm(1))} is unlikely to be useful in many cases. However,
+\code{Cache} captures the call that is passed to it, leaving all functions unevaluated.
+As a result \code{Cache(glm, x ~ y, rnorm(1))} will not work as a means of forcing
+a new evaluation each time, as the \code{rnorm(1)} is not evaluated before the call
+is assessed against the cache database. To force a new call each time, evaluate
+the randomness prior to the Cache call, e.g., \verb{ran = rnorm(1); Cache(glm, x ~ y, ran)}.
+Note this does not work for \code{glm} because \code{glm} accepts \code{...}.
+Rather, this randomness should be passed to \code{.cacheExtra}, e.g.,
+\code{Cache(glm, x ~ y, .cacheExtra = ran)}
+}
+
+\section{\code{drv} and \code{conn}}{
+
+By default, \code{drv} uses an SQLite database. This can be sufficient for most cases.
+However, if a user has dozens or more cores making requests to the Cache database,
+it may be insufficient. A user can set up a different database backend, e.g.,
+PostgreSQL that can handle multiple simultaneous read-write situations. See
+\url{https://github.com/PredictiveEcology/SpaDES/wiki/Using-alternate-database-backends-for-Cache}.
 }
 
 \section{useCache}{
@@ -355,37 +315,39 @@ function is evaluated as if it was not being Cached. Default is
 \code{getOption("reproducible.useCache")}), which is \code{TRUE} by default,
 meaning use the Cache mechanism. This may be useful to turn all Caching on or
 off in very complex scripts and nested functions. Increasing levels of numeric
-values will cause deeper levels of Caching to occur. Currently, only implemented
+values will cause deeper levels of Caching to occur (though this may not
+work as expected in all cases). The following is no longer supported:
+Currently, only implemented
 in \code{postProcess}: to do both caching of inner \code{cropInputs}, \code{projectInputs}
 and \code{maskInputs}, and caching of outer \code{postProcess}, use
 \code{useCache = 2}; to skip the inner sequence of 3 functions, use \code{useCache = 1}.
 For large objects, this may prevent many duplicated save to disk events.
 
-If \code{"overwrite"}
-(which can be set with \code{options("reproducible.useCache" =
-"overwrite")}), then the function invoke the caching mechanism but will purge
+If \code{useCache = "overwrite"}
+(which can be set with \code{options("reproducible.useCache" = "overwrite")}), then the function invoke the caching mechanism but will purge
 any entry that is matched, and it will be replaced with the results of the
 current call.
 
-If \code{"devMode"}: The point of this mode is to facilitate using the Cache when
+If \code{useCache = "devMode"}: The point of this mode is to facilitate using the Cache when
 functions and datasets are continually in flux, and old Cache entries are
-likely stale very often. In `devMode`, the cache mechanism will work as
+likely stale very often. In \code{devMode}, the cache mechanism will work as
 normal if the Cache call is the first time for a function OR if it
 successfully finds a copy in the cache based on the normal Cache mechanism.
-It *differs* from the normal Cache if the Cache call does *not* find a copy
-in the `cacheRepo`, but it does find an entry that matches based on
-`userTags`. In this case, it will delete the old entry in the `cacheRepo`
-(identified based on matching `userTags`), then continue with normal `Cache`.
-For this to work correctly, `userTags` must be unique for each function call.
+It \emph{differs} from the normal Cache if the Cache call does \emph{not} find a copy
+in the \code{cachePath}, but it does find an entry that matches based on
+\code{userTags}. In this case, it will delete the old entry in the \code{cachePath}
+(identified based on matching \code{userTags}), then continue with normal \code{Cache}.
+For this to work correctly, \code{userTags} must be unique for each function call.
 This should be used with caution as it is still experimental. Currently, if
-\code{userTags} are not unique to a single entry in the cacheRepo, it will
+\code{userTags} are not unique to a single entry in the cachePath, it will
 default to the behaviour of \code{useCache = TRUE} with a message. This means
 that \code{"devMode"} is most useful if used from the start of a project.
 }
 
 \section{\code{useCloud}}{
 
-This is a way to store all or some of the local Cache in the cloud.
+This is experimental and there are many conditions under which this is known
+to not work correctly. This is a way to store all or some of the local Cache in the cloud.
 Currently, the only cloud option is Google Drive, via \pkg{googledrive}.
 For this to work, the user must be or be able to be authenticated
 with \code{googledrive::drive_auth}. The principle behind this
@@ -395,56 +357,119 @@ objects that are in the Cloud with another person, it requires 2 steps. 1)
 share the \code{cloudFolderID$id}, which can be retrieved by
 \code{getOption("reproducible.cloudFolderID")$id} after at least one Cache
 call has been made. 2) The other user must then set their  \code{cacheFolderID} in a
-\code{Cache\(..., reproducible.cloudFolderID = \"the ID here\"\)} call or
+\verb{Cache\\(..., reproducible.cloudFolderID = \\"the ID here\\"\\)} call or
 set their option manually
-\code{options\(\"reproducible.cloudFolderID\" = \"the ID here\"\)}.
+\verb{options\\(\\"reproducible.cloudFolderID\\" = \\"the ID here\\"\\)}.
 
 If \code{TRUE}, then this Cache call will download
-  (if local copy doesn't exist, but cloud copy does exist), upload
-  (local copy does or doesn't exist and
-  cloud copy doesn't exist), or
-  will not download nor upload if object exists in both. If \code{TRUE} will be at
-  least 1 second slower than setting this to \code{FALSE}, and likely even slower as the
-  cloud folder gets large. If a user wishes to keep "high-level" control, set this to
-  \code{getOption("reproducible.useCloud", FALSE)} or
-  \code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
-  be \code{FALSE} or \code{TRUE}, respectively) so it can be turned on and off with
-  this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})
+(if local copy doesn't exist, but cloud copy does exist), upload
+(local copy does or doesn't exist and
+cloud copy doesn't exist), or
+will not download nor upload if object exists in both. If \code{TRUE} will be at
+least 1 second slower than setting this to \code{FALSE}, and likely even slower as the
+cloud folder gets large. If a user wishes to keep "high-level" control, set this to
+\code{getOption("reproducible.useCloud", FALSE)} or
+\code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
+be \code{FALSE} or \code{TRUE}, respectively) so it can be turned on and off with
+this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})
 }
 
 \section{\code{sideEffect}}{
 
-If \code{sideEffect} is not \code{FALSE}, then metadata about any files that
-added to \code{sideEffect} will be added as an attribute to the cached copy.
-Subsequent calls to this function will assess for the presence of the new files in the
-\code{sideEffect} location.
-If the files are identical (\code{quick = FALSE}) or their file size is identical
-(\code{quick = TRUE}), then the cached copy of the function will be returned
-(and no files changed).
-If there are missing or incorrect files, then the function will re-run.
-This will accommodate the situation where the function call is identical, but somehow the side
-effect files were modified.
-If \code{sideEffect} is logical, then the function will check the \code{cacheRepo};
-if it is a path, then it will check the path.
-The function will assess whether the files to be downloaded are found locally prior to download.
-If it fails the local test, then it will try to recover from a local copy if (\code{makeCopy}
-had been set to \code{TRUE} the first time the function was run.
-Currently, local recovery will only work if\code{makeCOpy} was set to \code{TRUE} the first time
-\code{Cache} was run). Default is \code{FALSE}.
+This feature is now deprecated. Do not use as it is ignored.
 }
 
 \examples{
 tmpDir <- file.path(tempdir())
+opts <- options(reproducible.cachePath = tmpDir)
 
-# Basic use
-ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
+# Usage -- All below are equivalent; even where args are missing or provided,
+#   Cache evaluates using default values, if these are specified in formals(FUN)
+a <- list()
+b <- list(fun = rnorm)
+bbb <- 1
+ee <- new.env(parent = emptyenv())
+ee$qq <- bbb
 
-# All same
-ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
-ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
+a[[1]] <- Cache(rnorm(1)) # no evaluation prior to Cache
+a[[2]] <- Cache(rnorm, 1) # no evaluation prior to Cache
+a[[3]] <- Cache(do.call, rnorm, list(1))
+a[[4]] <- Cache(do.call(rnorm, list(1)))
+a[[5]] <- Cache(do.call(b$fun, list(1)))
+a[[6]] <- Cache(do.call, b$fun, list(1))
+a[[7]] <- Cache(b$fun, 1)
+a[[8]] <- Cache(b$fun(1))
+a[[10]] <- Cache(quote(rnorm(1)))
+a[[11]] <- Cache(stats::rnorm(1))
+a[[12]] <- Cache(stats::rnorm, 1)
+a[[13]] <- Cache(rnorm(1, 0, get("bbb", inherits = FALSE)))
+a[[14]] <- Cache(rnorm(1, 0, get("qq", inherits = FALSE, envir = ee)))
+a[[15]] <- Cache(rnorm(1, bbb - bbb, get("bbb", inherits = FALSE)))
+a[[16]] <- Cache(rnorm(sd = 1, 0, n = get("bbb", inherits = FALSE))) # change order
+a[[17]] <- Cache(rnorm(1, sd = get("ee", inherits = FALSE)$qq), mean = 0)
+
+# with base pipe -- this is put in quotes ('') because R version 4.0 can't understand this
+#  if you are using R >= 4.1 or R >= 4.2 if using the _ placeholder,
+#  then you can just use pipe normally
+usingPipe1 <- 'b$fun(1) |> Cache()'  # base pipe
+
+# For long pipe, need to wrap sequence in { }, or else only last step is cached
+usingPipe2 <-
+  '{"bbb" |>
+      parse(text = _) |>
+      eval() |>
+      rnorm()} |>
+    Cache()'
+if (getRversion() >= 4.1) {
+  a[[9]] <- eval(parse(text = usingPipe1)) # recovers cached copy
+}
+if (getRversion() >= 4.2) { # uses the _ placeholder; only available in R >= 4.2
+  a[[18]] <- eval(parse(text = usingPipe2)) # recovers cached copy
+}
+
+length(unique(a)) == 1 #  all same
+
+### Pipe -- have to use { } or else only final function is Cached
+if (getRversion() >= 4.1) {
+  b1a <- 'sample(1e5, 1) |> rnorm() |> Cache()'
+  b1b <- 'sample(1e5, 1) |> rnorm() |> Cache()'
+  b2a <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
+  b2b <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
+  b1a <- eval(parse(text = b1a))
+  b1b <- eval(parse(text = b1b))
+  b2a <- eval(parse(text = b2a))
+  b2b <- eval(parse(text = b2b))
+  all.equal(b1a, b1b) # Not TRUE because the sample is run first
+  all.equal(b2a, b2b) # TRUE because of {  }
+}
+
+#########################
+# Advanced examples
+#########################
+
+# .cacheExtra -- add something to digest
+Cache(rnorm(1), .cacheExtra = "sfessee11") # adds something other than fn args
+Cache(rnorm(1), .cacheExtra = "nothing") # even though fn is same, the extra is different
+
+# omitArgs -- remove something from digest (kind of the opposite of .cacheExtra)
+Cache(rnorm(2, sd = 1), omitArgs = "sd") # removes one or more args from cache digest
+Cache(rnorm(2, sd = 2), omitArgs = "sd") # b/c sd is not used, this is same as previous
+
+# cacheId -- force the use of a digest -- can give undesired consequences
+Cache(rnorm(3), cacheId = "k323431232") # sets the cacheId for this call
+Cache(runif(14), cacheId = "k323431232") # recovers same as above, i.e, rnorm(3)
+
+# Turn off Caching session-wide
+opts <- options(reproducible.useCache = FALSE)
+Cache(rnorm(3)) # doesn't cache
+options(opts)
+
+# showSimilar can help with debugging why a Cache call isn't picking up a cached copy
+Cache(rnorm(4), showSimilar = TRUE) # shows that the argument `n` is different
 
 ###############################################
-# experimental devMode
+# devMode -- enables cache database to stay
+#            small even when developing code
 ###############################################
 opt <- options("reproducible.useCache" = "devMode")
 clearCache(tmpDir, ask = FALSE)
@@ -452,9 +477,9 @@ centralTendency <- function(x)
   mean(x)
 funnyData <- c(1, 1, 1, 1, 10)
 uniqueUserTags <- c("thisIsUnique", "reallyUnique")
-ranNumsB <- Cache(centralTendency, funnyData, cacheRepo = tmpDir,
+ranNumsB <- Cache(centralTendency, funnyData, cachePath = tmpDir,
                   userTags = uniqueUserTags) # sets new value to Cache
-showCache(tmpDir) # 1 unique artifact -- cacheId is 8be9cf2a072bdbb0515c5f0b3578f474
+showCache(tmpDir) # 1 unique cacheId -- cacheId is 71cd24ec3b0d0cac
 
 # During development, we often redefine function internals
 centralTendency <- function(x)
@@ -463,38 +488,24 @@ centralTendency <- function(x)
 #   never again be defined that way. Here, because of userTags being the same,
 #   it will replace the entry in the Cache, effetively overwriting it, even though
 #   it has a different cacheId
-ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = uniqueUserTags)
-showCache(tmpDir) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b
+ranNumsD <- Cache(centralTendency, funnyData, cachePath = tmpDir, userTags = uniqueUserTags)
+showCache(tmpDir) # 1 unique artifact -- cacheId is 632cd06f30e111be
 
 # If it finds it by cacheID, doesn't matter what the userTags are
-ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = "thisIsUnique")
-
+ranNumsD <- Cache(centralTendency, funnyData, cachePath = tmpDir, userTags = "thisIsUnique")
 options(opt)
 
+#########################################
 # For more in depth uses, see vignette
-\dontrun{
-  # To use Postgres, set environment variables with the required credentials
-  if (requireNamespace("RPostgres")) {
-    Sys.setenv(PGHOST = "server.url")
-    Sys.setenv(PGPORT = 5432)
-    Sys.setenv(PGDATABASE = "mydatabase")
-    Sys.setenv(PGUSER = "mydbuser")
-    Sys.setenv(PGPASSWORD = "mysecurepassword")
-
-    conn <- DBI::dbConnect(RPostgres::Postgres())
-    options("reproducible.conn" = conn)
-
-    # Will use postgres for cache data table, and tempdir() for saved R objects
-    Cache(rnorm, 1, cacheRepo = tempdir())
-  }
-
+if (interactive())
   browseVignettes(package = "reproducible")
 }
-}
 \seealso{
-\code{\link{showCache}}, \code{\link{clearCache}}, \code{\link{keepCache}},
-  \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}},
-  \code{\link{pipe}}
+\code{\link[=showCache]{showCache()}}, \code{\link[=clearCache]{clearCache()}}, \code{\link[=keepCache]{keepCache()}},
+\code{\link[=CacheDigest]{CacheDigest()}} to determine the digest of a given function or expression,
+as used internally within \code{Cache}, \code{\link[=movedCache]{movedCache()}}, \code{\link[=.robustDigest]{.robustDigest()}}, and
+for more advanced uses there are several helper functions,
+e.g., \code{\link[=rmFromCache]{rmFromCache()}}, \code{\link[=CacheStorageDir]{CacheStorageDir()}}
 }
 \author{
 Eliot McIntire
