@@ -42,7 +42,7 @@ test_that("Checksums read and written correctly", {
 
    #expect_identical(sort(txt$expectedFile), sort(basename(sampleFiles)))
   #expect_true(all(sort(txt$expectedFile) == sort(basename(sampleFiles))))
-  a <- sort(grep(".R$", txt[result == "OK",]$expectedFile, value = TRUE)) # the [result == "OK",] is because some unknown reason on GA
+  a <- sort(grep("\\.R$", txt[result == "OK",]$expectedFile, value = TRUE)) # the [result == "OK",] is because some unknown reason on GA
   b <- sort(basename(sampleFiles))
   expect_identical(a, b)
   # expect_identical(a[1], b[1])
@@ -75,7 +75,8 @@ test_that("Checksums read and written correctly", {
   txt <- txt[grepl("R", expectedFile)][result == "OK",]
   expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
   # expect_true(all(sort(txt$expectedFile) == sort(basename(sampleFiles))))
-  a <- sort(grep(".R$", txt$expectedFile, value = TRUE))
+  a <- sort(grep("\\.R$", txt$expectedFile, value = TRUE))
+  browser()
   print(txt$expectedFile)
   expect_identical(a, b)
   # expect_identical(a[1], b[1])
