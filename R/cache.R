@@ -792,7 +792,7 @@ Cache <-
       # Can make new methods by class to add tags to outputs
       if (useDBI()) {
         if (.CacheIsNew) {
-          outputToSave <- dealWithClass(output, cachePath, drv = drv, conn = conn)
+          outputToSave <- dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
           outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
         } else {
           outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
@@ -1236,6 +1236,7 @@ getMethodAll <- function(FUNcaptured, callingEnv) {
       # if generic fn was not exported, then getS3method won't find it above; try directly in NS
       if (is.null(FUNposs)) {
         envNam <- environmentName(environment(FUN))
+        FUNpossGen <- get0(fnNameInitAlt, envir = asNamespace(envNam))
         for (cla in classes) {
           possMeth <- paste0(fnNameInitAlt, ".", cla)
           FUNposs <- try(getFromNamespace(possMeth, ns = envNam), silent = TRUE)
@@ -1245,6 +1246,8 @@ getMethodAll <- function(FUNcaptured, callingEnv) {
             FUNposs <- NULL
           }
         }
+        if (is.null(FUNposs))
+          FUNposs <- FUNpossGen
       }
 
       if (is.null(FUNposs)) {
@@ -1468,7 +1471,7 @@ getFunctionName2 <- function(mc) {
   possibleOverlap <- names(formals(args(Cache)))
   possibleOverlap <- intersect(names(CacheMatchedCall), possibleOverlap)
   actualOverlap <- intersect(names(forms), possibleOverlap)
-  if (length(actualOverlap)) { # e.g., useCache
+  if (length(actualOverlap) && !identical(list(), dotsCaptured)) { # e.g., useCache, verbose; but if not in dots, then OK because were separate already
     message("The following arguments are arguments for both Cache and ", fnDetails$functionName, ":\n",
             paste0(actualOverlap, collapse = ", "),
             "\n...passing to both. If more control is needed, pass as a call, e.g., ",

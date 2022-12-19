@@ -870,7 +870,7 @@ nextNumericName <- function(string) {
 
 
 #' @importFrom raster fromDisk
-dealWithClass <- function(obj, cachePath, drv, conn) {
+dealWithClass <- function(obj, cachePath, drv, conn, verbose = getOption("reproducible.verbose")) {
   # browser(expr = exists("._dealWithClass_1"))
   outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
 
@@ -926,8 +926,9 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
   if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
     if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
       stop("Please install terra package")
-
+    messageCache("...wrapping terra object for saving...", verboseLevel = 1, verbose = verbose)
     obj <- terra::wrap(obj)
+    messageCache("\b Done!", verboseLevel = 1, verbose = verbose)
   }
   obj
 }
