@@ -119,4 +119,4 @@ Collate:
     'spatialObjects-class.R'
     'zzz.R'
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.2
+RoxygenNote: 7.2.3
