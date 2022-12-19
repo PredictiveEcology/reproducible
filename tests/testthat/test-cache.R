@@ -1345,97 +1345,100 @@ test_that("Cache the dots; .cacheExtra", {
 
 
 test_that("change to new capturing of FUN & base pipe", {
-  testInitOut <- testInit(opts = list(reproducible.verbose = -2))
+  testInitOut <- testInit(opts = list(reproducible.verbose = 5))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  if (isTRUE(getRversion() >= "4.2.0")) {
-    Nrand <- 9e5
-    st1 <- system.time(
-      out0 <- Cache(rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1)))), cachePath = tmpCache)
-    )
+  skip_if(getRversion() < "4.2.0")
 
-    st2 <- system.time(
-      out1 <- Cache(do.call(rnorm, list(1, 2, sd = round(mean(runif(Nrand, 1, 1.1))))),
-                    cachePath = tmpCache)
-    )
+  Nrand2 <- Nrand <- 1e6
+  mess0 <- capture_messages(
+    out0 <- Cache(rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1)))), cachePath = tmpCache)
+  )
 
-    # NO LONGER THE SAME CALL AS ABOVE
-    f1 <- paste("
-      {runif(3e6, 1, 1.1) |>
+  mess1 <- capture_messages(
+    out1 <- Cache(do.call(rnorm, list(1, 2, sd = round(mean(runif(Nrand2, 1, 1.1))))),
+                  cachePath = tmpCache)
+  )
+
+  # NO LONGER THE SAME CALL AS ABOVE
+  f1 <- paste("
+      {runif(1e6, 1, 1.1) |>
         mean() |>
         round() |>
         rnorm(1, 2, sd = _)} |> # _ Only works with R >= 4.2.0
         Cache(cachePath = tmpCache)
     ")
-    st3 <- system.time(out2 <- eval(parse(text = f1)))
-    f2 <-   paste("out3 <- {runif(3e6, 1, 1.1) |>
+  mess2 <- capture_messages(
+    out2 <- eval(parse(text = f1)))
+  f2 <-   paste("out3 <- {runif(Nrand, 1, 1.1) |>
         mean() |>
         round() |>
         rnorm(1, 2, sd = _)} |> # _ Only works with R >= 4.2.0
         # (function(xx) rnorm(1, 2, sd = xx))() |>
         Cache(cachePath = tmpCache)
     ")
-    st4 <- system.time(eval(parse(text = f2)))
-    expect_true(attr(out0, ".Cache")$newCache)
-    expect_false(attr(out1, ".Cache")$newCache)
-    expect_true(attr(out2, ".Cache")$newCache)
-    expect_false(attr(out3, ".Cache")$newCache)
+  mess3 <- capture_messages(
+    eval(parse(text = f2)))
+  expect_true(attr(out0, ".Cache")$newCache)
+  expect_false(attr(out1, ".Cache")$newCache)
+  expect_true(attr(out2, ".Cache")$newCache)
+  expect_false(attr(out3, ".Cache")$newCache)
 
-    # 1 to 3 are have to calculate the runif; 4 is a unevaluated cache, so quick
-    for (i  in 1:3)
-      expect_true(get(paste0("st", i))[1] > get(paste0("st", 4))[1]) # all should be longer than 0.5 second because have to evaluate args
+  expect_true(length(grep("\\<sd\\>", mess0)) == 1) # digests just the 1
+  expect_true(length(grep("\\<sd\\>", mess1)) == 1) # digests just the 1
+  expect_true(length(grep("\\<sd\\>", mess2)) == 6) # digests each element
+  expect_true(length(grep("\\<sd\\>", mess3)) == 6) # digests each element
 
-    clearCache(tmpCache)
-    for (i in 1:3) Cache(rnorm, i, cachePath = tmpCache)
-    expect_true(length(unique(showCache(tmpCache)$cacheId)) == 3)
-    # This would make sense it if only generates one Cache entry... i.e., do not evaluate the sample
+  clearCache(tmpCache)
+  for (i in 1:3) Cache(rnorm, i, cachePath = tmpCache)
+  expect_true(length(unique(showCache(tmpCache)$cacheId)) == 3)
+  # This would make sense it if only generates one Cache entry... i.e., do not evaluate the sample
 
-    clearCache(tmpCache)
+  clearCache(tmpCache)
 
 
-    for (i in 1:3) {
-      sss <- paste('sample(100000000, ',i,') |>  # creates 1 random number
+  for (i in 1:3) {
+    sss <- paste('sample(100000000, ',i,') |>  # creates 1 random number
       rnorm(1, 2, sd = _) |>  # passed to sd of rnorm
       Cache(cachePath = tmpCache)')
-      eval(parse(text = sss))
-    }
-    sc <- data.table::copy(showCache(tmpCache))
-    expect_true(length(unique(sc$cacheId)) == 3)
+    eval(parse(text = sss))
+  }
+  sc <- data.table::copy(showCache(tmpCache))
+  expect_true(length(unique(sc$cacheId)) == 3)
 
-    # This, different way; not evaluating `sample`; so this is same as prev
-    for (i in 1:3) Cache(rnorm(1, 2, sample(10000000, i)), cachePath = tmpCache)
-    sc1 <- showCache(tmpCache)
-    expect_true(length(unique(sc1$cacheId)) == 6)
-    expect_true(NROW(sc1) > NROW(sc))
+  # This, different way; not evaluating `sample`; so this is same as prev
+  for (i in 1:3) Cache(rnorm(1, 2, sample(10000000, i)), cachePath = tmpCache)
+  sc1 <- showCache(tmpCache)
+  expect_true(length(unique(sc1$cacheId)) == 6)
+  expect_true(NROW(sc1) > NROW(sc))
 
 
-    # Try with squiggly braces
-    out0 <- Cache(rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1)))), cachePath = tmpCache)
-    f1 <- paste("
+  # Try with squiggly braces
+  out0 <- Cache(rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1)))), cachePath = tmpCache)
+  f1 <- paste("
       {runif(Nrand, 1, 1.1) |>
         mean() |>
         round() |>
         rnorm(1, 2, sd = _)} |> # _ Only works with R >= 4.2.0
         Cache(cachePath = tmpCache)
     ")
-    mn <- 1
-    st3 <- system.time(out2 <- eval(parse(text = f1)))
-    st4 <- system.time(out3 <- Cache({rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1))))},
-                                     cachePath = tmpCache))
-    # can pass a variable, but not a function
-    st5 <- system.time(out3 <- Cache({rnorm(1, 2, round(mean(runif(Nrand, mn, 1.1))))},
-                                     cachePath = tmpCache))
-    f1 <- paste("
+  mn <- 1
+  st3 <- system.time(out2 <- eval(parse(text = f1)))
+  st4 <- system.time(out3 <- Cache({rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1))))},
+                                   cachePath = tmpCache))
+  # can pass a variable, but not a function
+  st5 <- system.time(out3 <- Cache({rnorm(1, 2, round(mean(runif(Nrand, mn, 1.1))))},
+                                   cachePath = tmpCache))
+  f1 <- paste("
       { a <- runif(Nrand, 1, 1.1)
         b <- mean(a)
         d <- round(b)
         rnorm(1, 2, sd = d)} |> # _ Only works with R >= 4.2.0
         Cache(cachePath = tmpCache)
     ")
-    err <- capture_error(out2 <- eval(parse(text = f1)))
-    expect_true(is(err, "simpleError"))
-  }
+  err <- capture_error(out2 <- eval(parse(text = f1)))
+  expect_true(is(err, "simpleError"))
 
 })
 

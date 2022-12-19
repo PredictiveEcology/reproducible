@@ -399,6 +399,7 @@ Cache <-
     # returns "modifiedDots", "originalDots", "FUN", "funName", which will
     #  have modifications under many circumstances, e.g., do.call, specific methods etc.
     # Need the CacheMatchedCall so that args that are in both Cache and the FUN can be sent to both
+    preCacheDigestTime <- Sys.time()
     fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", ...,
                             FUNcaptured = FUNcaptured, CacheMatchedCall = CacheMatchedCall)
 
@@ -418,7 +419,6 @@ Cache <-
     modifiedDots <- fnDetails$modifiedDots
     # originalDots <- fnDetails$originalDots
     skipCacheDueToNumeric <- is.numeric(useCache) && useCache <= (fnDetails$nestLevel)
-    if (exists("ggg")) browser()
     if (isFALSE(useCache) || isTRUE(0 == useCache) || skipCacheDueToNumeric) {
       nestedLev <- max(0, as.numeric(fnDetails$nestLevel)) ## nestedLev >= 0
       spacing <- paste(collapse = "", rep("  ", nestedLev))
@@ -500,7 +500,6 @@ Cache <-
       # remove some of the arguments passed to Cache, which are irrelevant for digest
       argsToOmitForDigest <- names(modifiedDots) %in% .defaultCacheOmitArgs
 
-      preCacheDigestTime <- Sys.time()
       toDigest <- modifiedDots[!argsToOmitForDigest]
       if (!is.null(.cacheExtra)) {
         toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
@@ -1079,13 +1078,11 @@ isDollarSqBrPkgColon <- function(args) {
 }
 
 recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, recursive = TRUE) {
-  if (browserCond("aaa")) browser()
   needsEvaling <- (length(args) > 1) || (length(args) == 1 && is.call(args)) # second case is fun() i.e., no args
   if (isTRUE(needsEvaling)) {
     if (is.call(args[[1]])) { # e.g., a$fun, stats::runif
       args[[1]] <- eval(args[[1]], envir)
     }
-    if (browserCond("aaa1")) browser()
 
     isStandAlone <- FALSE
     if (length(args) == 3) { # e.g., status::runif or fun(1, 2); second case requires subsequent efforts
@@ -1108,12 +1105,10 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
 
     if (!any(isStandAlone)) {
       out <- lapply(args, function(xxxx) {
-        if (browserCond("aaa2")) browser()
         if (is.name(xxxx)) {
           # exists(xxxx, envir = envir, inherits = FALSE)
           if (exists(xxxx, envir)) { # looks like variables that are in ... in the `envir` are not found; would need whereInStack
             evd <- try(eval(xxxx, envir))
-            if (is(evd, "try-error")) browser()
             isPrim <- is.primitive(evd)
             if (isPrim) {
               eval(xxxx)
@@ -1148,7 +1143,6 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
 
       args <- if (isTRUE(outer)) try(as.call(out)) else out
 
-      if (is(args, "try-error")) browser()
     } else {
       args <- eval(args, envir)
 
@@ -1163,7 +1157,6 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
 
 
 matchCall <- function(FUNcaptured, envir = parent.frame()) {
-  if (browserCond("hhh")) browser()
   if (length(FUNcaptured) > 1) {
     FUN <- FUNcaptured[[1]]
     args <- as.list(FUNcaptured[-1])
@@ -1178,7 +1171,6 @@ matchCall <- function(FUNcaptured, envir = parent.frame()) {
           args2[seq(args)] <- args
           mc <- append(list(FUN), args2)
         } else {
-          if (browserCond("hhh1")) browser()
           # args <- as.list(args[-1]) # remove the list that is inside the substitute; move to outside
           mc <- match.call(FUN, FUNcaptured)
         }
@@ -1323,7 +1315,6 @@ formals3 <- function(FUN, modifiedDots = list(), removeNulls = FALSE) {
 
 
 getFunctionName2 <- function(mc) {
-  if (browserCond("fff")) browser()
   if (length(mc) > 1) {
     if (identical(as.name("<-"), mc[[1]]))
       mc <- mc[-(1:2)]
@@ -1346,7 +1337,6 @@ getFunctionName2 <- function(mc) {
 
 #' @importFrom utils modifyList isS3stdGeneric methods
 .fnCleanup <- function(FUN, ..., callingFun, FUNcaptured = NULL, CacheMatchedCall, callingEnv = parent.frame(2)) {
-  if (browserCond("eee")) browser()
 
   if (is.null(FUNcaptured))
     FUNcaptured <- substitute(FUN)
@@ -1392,7 +1382,6 @@ getFunctionName2 <- function(mc) {
       argsForWhat <- mc$args # mc$args will be a list; needs to be evaluated to be unlisted; do below
     }
     FUNcaptured <- try(as.call(append(list(mc$what), as.list(argsForWhat))))
-    if (is(FUNcaptured, "try-error")) browser()
   }
 
   isSquiggly <- FALSE
@@ -1402,7 +1391,6 @@ getFunctionName2 <- function(mc) {
 
   if (length(FUNcaptured) > 1) isSquiggly <- identical(`{`, FUNcaptured[[1]])
 
-  if (browserCond("ee2")) browser()
   if (isSquiggly) {
     # Get rid of squiggly
     FUNcaptured <- as.list(FUNcaptured[-1]) # [[1]] ... if it has many calls... pipe will be just one; but others will be more
@@ -1439,7 +1427,6 @@ getFunctionName2 <- function(mc) {
       FUNcapturedNamesEvaled <- as.call(append(list(FUNcaptured[[1]]), FUNcapturedArgs))
       FUNcapturedNamesEvaled <- matchCall(FUNcapturedNamesEvaled, callingEnv)
     } else { # this is a function called with no arguments
-      if (browserCond("ee1")) browser()
       FUNcapturedNamesEvaled <- FUNcaptured
     }
     if (is.null(fnNameInit))
@@ -1490,7 +1477,6 @@ getFunctionName2 <- function(mc) {
     FUNcapturedNamesEvaled <- as.call(append(as.list(FUNcapturedNamesEvaled), overlappingArgsAsList))
   }
 
-  if (exists("ccc", inherits = FALSE, envir = .GlobalEnv)) browser()
   return(append(fnDetails, list(FUN = FUN, matchedCall = FUNcapturedNamesEvaled,
                                 modifiedDots = modifiedDots, # isDoCall = isDoCall,
                                 formalArgs = forms,
