@@ -836,7 +836,7 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
         x1 <-
           suppressWarningsSpecific(falseWarnings = paste("Spatial object is not projected;",
                                                          "GEOS expects planar coordinates"),
-                                   try(as(Cache(terra::buffer, terra::vect(x), width = 0,
+                                   try(as(Cache(terra::buffer(terra::vect(x), width = 0),
                                              # dissolve = FALSE,
                                              useCache = useCache), "Spatial"))#,
           )
@@ -889,7 +889,7 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
 
         x1 <- suppressWarningsSpecific(falseWarnings = paste("Spatial object is not projected;",
                                                              "GEOS expects planar coordinates"),
-                                       try(Cache(sf::st_make_valid, x, useCache = useCache, verbose = verbose)))
+                                       try(Cache(sf::st_make_valid(x), useCache = useCache, verbose = verbose)))
         x <- bufferWarningSuppress(#warn = attr(x1, "warning"),
           objectName = objectName,
           x1 = x1, bufferFn = "sf::st_make_valid",
@@ -2226,8 +2226,8 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                 " If this is causing problems, set options(reproducible.polygonShortcut = FALSE)")
         x <- fixErrors(x = x, useCache = useCache, verbose = verbose,
                        testValidity = testValidity, ...)
-        x <- Cache(maskInputs, x = x, studyArea = studyArea,
-                   useCache = useCache, verbose = verbose, ...)
+        x <- Cache(maskInputs(x = x, studyArea = studyArea, ...),
+                   useCache = useCache, verbose = verbose)
         x <- fixErrors(x = x, useCache = useCache, verbose = verbose,
                        testValidity = testValidity, ...)
       } else {
@@ -2235,10 +2235,11 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
         if (!isTRUE(all.equal(extent(x), extRTM))) {
           useCacheOrig <- useCache
           useCache <- FALSE
-          x <- Cache(cropInputs, x = x, studyArea = studyArea,
+          if (browserCond("aaa")) browser()
+          x <- Cache(cropInputs(x = x, studyArea = studyArea,
                      extentToMatch = extRTM,
                      extentCRS = crsRTM,
-                     useCache = useCache, verbose = verbose, useGDAL = useGDAL, ...)
+                     useGDAL = useGDAL, ...), useCache = useCache, verbose = verbose)
           useCache <- useCacheOrig
           testValidity <- NA # Crop will have done it
         } else {
@@ -2269,9 +2270,10 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
           if (runIt) {
             x <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
                        expr = quote(
-                         Cache(projectInputs, x = x, targetCRS = targetCRS,
-                               rasterToMatch = rasterToMatch, useCache = useCache,
-                               cores = cores, verbose = verbose, useGDAL = useGDAL, ...)
+                         Cache(projectInputs(x = x, targetCRS = targetCRS,
+                               rasterToMatch = rasterToMatch,
+                               cores = cores, useGDAL = useGDAL, ...),
+                               useCache = useCache, verbose = verbose)
                        ),
                        exprBetween = quote(
                          x <- fixErrors(x, objectName = objectName,
