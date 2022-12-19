@@ -1,8 +1,20 @@
 test_that("checkPath: normPath consistency", {
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  # testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  # on.exit({
+  #   testOnExit(testInitOut)
+  # }, add = TRUE)
+
+  # Use the following here instead of above because it fails on Mac without this.
+  tmpdir <- tempdir2("test_normPath")
+  tmpdir <- normalizePath(tmpdir, winslash = "/", mustWork = FALSE)
+
+  cwd <- getwd()
+  setwd(tmpdir)
+
   on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+    setwd(cwd)
+    unlink(tmpdir, recursive = TRUE)
+  }, add = TRUE) # nolint
 
   # don't use checkPath here because we are testing normPath!
 
