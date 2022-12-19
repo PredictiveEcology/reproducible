@@ -24,6 +24,9 @@ it simply returns \code{FALSE}}
 
 \item{messageStart}{A character string with a prefix of message to provide}
 }
+\value{
+A logical or stop if the namespace is not available to be loaded.
+}
 \description{
 This provides a standard message format for missing packages, e.g.,
 detected via \code{requireNamespace}.

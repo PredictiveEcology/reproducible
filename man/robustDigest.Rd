@@ -86,7 +86,7 @@ memory content. See Details section about \code{quick} in \code{\link[=Cache]{Ca
 specific classes. Should be options that the \code{.robustDigest} knows what
 to do with.}
 
-\item{...}{Arguments passed to \code{FUN}}
+\item{...}{Arguments passed to \code{FUN}, if \code{FUN} is not an expression.}
 
 \item{objects}{Optional character vector indicating which objects are to
 be considered while making digestible. This argument is not used
@@ -117,7 +117,7 @@ located on disk, this format will be maintained if the raster already is file-ba
 i.e., to create \code{.tif} or \code{.grd} backed rasters, use \code{writeRaster} first,
 then \code{Cache}.
 The \file{.tif} or \file{.grd} will be copied to the \file{raster/} subdirectory of the
-\code{cacheRepo}.
+\code{cachePath}.
 Their RAM representation (as an R object) will still be in the usual  \file{cacheOutputs/}
 (or formerly \file{gallery/}) directory.
 For \code{inMemory} raster objects, they will remain as binary \code{.RData} files.

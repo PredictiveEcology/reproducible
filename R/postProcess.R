@@ -144,6 +144,9 @@ postProcess.list <- function(x, ...) {
 #' @importFrom raster removeTmpFiles
 #' @example inst/examples/example_postProcess.R
 #' @rdname postProcess
+#' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+#' appropriately cropped, reprojected, masked, depending on the inputs.
+#'
 postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = NULL,
                                        studyArea = NULL, rasterToMatch = NULL,
                                        overwrite = getOption("reproducible.overwrite", TRUE),
@@ -216,7 +219,6 @@ postProcess.SpatVector <- function(x, filename1 = NULL, filename2 = NULL,
 }
 
 #' @export
-#' @example inst/examples/example_postProcess.R
 #' @rdname postProcess
 postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
                            studyArea = NULL, rasterToMatch = NULL,
@@ -273,12 +275,35 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
 #' @inheritParams projectInputs
 #'
 #' @author Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti
-#' @example inst/examples/example_postProcess.R
 #' @export
 #' @importFrom methods is
 #' @importFrom raster buffer crop crs extent projectRaster res crs<-
 #' @importFrom sp SpatialPolygonsDataFrame spTransform CRS proj4string
+#' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+#' appropriately cropped.
 #' @rdname cropInputs
+#' @examples
+#' library(sp)
+#' library(raster)
+#'
+#' # make a SpatialPolygon
+#' coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
+#'                        .Dim = c(5L, 2L))
+#' Sr1 <- Polygon(coords1)
+#' Srs1 <- Polygons(list(Sr1), "s1")
+#' shpEcozone <- SpatialPolygons(list(Srs1), 1L)
+#' crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#'
+#' # make a "study area" that is subset of larger dataset
+#' coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+#'                       .Dim = c(5L, 2L))
+#' Sr1 <- Polygon(coords)
+#' Srs1 <- Polygons(list(Sr1), "s1")
+#' StudyArea <- SpatialPolygons(list(Srs1), 1L)
+#' crs(StudyArea) <- crs(shpEcozone)
+#' projString <- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
+#' StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
+#' cropInputs(shpEcozone, StudyArea)
 cropInputs <- function(x, studyArea, rasterToMatch, verbose = getOption("reproducible.verbose", 1), ...) {
   UseMethod("cropInputs")
 }
@@ -703,9 +728,23 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #' @param ... Passed to methods. None currently implemented.
 #'
 #' @export
+#' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+#' attempted to be fixed, if it finds errors.
 #' @keywords internal
+#' @seealso [fixErrorsTerra()], [postProcessTerra()], [postProcess()]
 #'
-#' @example inst/examples/example_postProcess.R
+#' @examples
+#' library(sp)
+#' library(raster)
+#'
+#' # make a SpatialPolygon
+#' coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
+#'                        .Dim = c(5L, 2L))
+#' Sr1 <- Polygon(coords1)
+#' Srs1 <- Polygons(list(Sr1), "s1")
+#' shpEcozone <- SpatialPolygons(list(Srs1), 1L)
+#' crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#' fixErrors(shpEcozone)
 fixErrors <- function(x, objectName, attemptErrorFixes = TRUE,
                       useCache = getOption("reproducible.useCache", FALSE),
                       verbose = getOption("reproducible.verbose", 1),
@@ -846,17 +885,18 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
       }
       if (isTRUE(runBuffer)) {
         messagePrepInputs("Found errors in ", objectName, ". Attempting to correct.",
-                          verbose = verbose)
+                          verbose = verbose, verboseLevel = 1)
 
         x1 <- suppressWarningsSpecific(falseWarnings = paste("Spatial object is not projected;",
                                                              "GEOS expects planar coordinates"),
-                                       try(Cache(sf::st_make_valid, x, useCache = useCache)))
+                                       try(Cache(sf::st_make_valid, x, useCache = useCache, verbose = verbose)))
         x <- bufferWarningSuppress(#warn = attr(x1, "warning"),
           objectName = objectName,
-          x1 = x1, bufferFn = "sf::st_make_valid")
+          x1 = x1, bufferFn = "sf::st_make_valid",
+          verbose = verbose)
 
       } else {
-        messagePrepInputs("  Found no errors.", verbose = verbose)
+        messagePrepInputs("  Found no errors.", verbose = verbose, verboseLevel = 1)
       }
     }
   }
@@ -890,8 +930,32 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
 #' @inheritParams prepInputs
 #' @importFrom raster canProcessInMemory
 #' @rdname projectInputs
+#' @seealso [projectTo()]
+#' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+#' appropriately reprojected.
 #'
-#' @example inst/examples/example_postProcess.R
+#' @examples
+#' library(sp)
+#' library(raster)
+#'
+#' # make a SpatialPolygon
+#' coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
+#'                        .Dim = c(5L, 2L))
+#' Sr1 <- Polygon(coords1)
+#' Srs1 <- Polygons(list(Sr1), "s1")
+#' shpEcozone <- SpatialPolygons(list(Srs1), 1L)
+#' crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#'
+#' # make a "study area" that is subset of larger dataset
+#' coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+#'                       .Dim = c(5L, 2L))
+#' Sr1 <- Polygon(coords)
+#' Srs1 <- Polygons(list(Sr1), "s1")
+#' StudyArea <- SpatialPolygons(list(Srs1), 1L)
+#' crs(StudyArea) <- crs(shpEcozone)
+#' projString <- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
+#' StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
+#' projectInputs(shpEcozone, StudyArea)
 projectInputs <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
   UseMethod("projectInputs")
 }
@@ -1315,7 +1379,31 @@ projectInputs.Spatial <- function(x, targetCRS, verbose = getOption("reproducibl
 #' @export
 #' @importFrom utils capture.output
 #' @rdname maskInputs
-#' @example inst/examples/example_postProcess.R
+#' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+#' appropriately masked.
+#' @seealso [maskTo()], [postProcess()] for related examples
+#' @examples
+#' library(sp)
+#' library(raster)
+#'
+#' # make a SpatialPolygon
+#' coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
+#'                        .Dim = c(5L, 2L))
+#' Sr1 <- Polygon(coords1)
+#' Srs1 <- Polygons(list(Sr1), "s1")
+#' shpEcozone <- SpatialPolygons(list(Srs1), 1L)
+#' crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#'
+#' # make a "study area" that is subset of larger dataset
+#' coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+#'                       .Dim = c(5L, 2L))
+#' Sr1 <- Polygon(coords)
+#' Srs1 <- Polygons(list(Sr1), "s1")
+#' StudyArea <- SpatialPolygons(list(Srs1), 1L)
+#' crs(StudyArea) <- crs(shpEcozone)
+#' projString <- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
+#' StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
+#' maskInputs(shpEcozone, StudyArea)
 #'
 maskInputs <- function(x, studyArea, ...) {
   UseMethod("maskInputs")
@@ -1521,7 +1609,6 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
 #'
 #' @importFrom raster tmpDir
 #' @rdname determineFilename
-#' @example inst/examples/example_postProcess.R
 determineFilename <- function(filename2 = NULL, filename1 = NULL,
                               destinationPath = getOption("reproducible.destinationPath", "."),
                               verbose = getOption("reproducible.verbose", 1),
@@ -1609,11 +1696,21 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #'
 #' @author Eliot McIntire and Jean Marchal
 #' @export
+#' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+#' appropriately written to disk. In the case of vector datasets, this will
+#' be a side effect. In the case of gridded objects (Raster*, SpatRaster), the
+#' object will have a file-backing.
 #' @importFrom methods is
 #' @importFrom raster shapefile writeRaster
 #' @rdname writeOutputs
 #'
-#' @example inst/examples/example_postProcess.R
+#' @examples
+#' library(sp)
+#' library(raster)
+#' r <- raster::raster(extent(0,100,0,100), vals = 1:1e2)
+#'
+#' tf <- tempfile(fileext = ".tif")
+#' writeOutputs(r, tf)
 writeOutputs <- function(x, filename2,
                          overwrite = getOption("reproducible.overwrite", NULL),
                          ...) {
@@ -1874,20 +1971,17 @@ writeOutputs.default <- function(x, filename2, ...) {
 
 #' Assess the appropriate raster layer data type
 #'
-#' Can be used to write prepared inputs on disk.
+#' When writing raster-type objects to disk, a `datatype` can be specified. These
+#' functions help identify what smallest `datatype` can be used.
 #'
 #' @param ras  The `RasterLayer` or `RasterStack` for which data type will be assessed.
 #' @param type Character. `"writeRaster"` (default) or `"GDAL"` to return the recommended
 #'             data type for writing from the raster packages, respectively, or
 #'             `"projectRaster"` to return recommended resampling type.
-#' @return The appropriate data type for the range of values in `ras`.
-#'         See [raster::dataType()] for details.
 #'
-#' @author Eliot McIntire
-#' @author Ceres Barros
-#' @author Ian Eddy
-#' @author Eliot McIntire
 #' @export
+#' @return A character string indicating the data type of the spatial layer
+#' (e.g., "INT2U"). See [terra::datatype()] or [raster::dataType()]
 #' @importFrom raster getValues sampleRandom
 #' @rdname assessDataType
 #'
@@ -1988,15 +2082,11 @@ assessDataType.default <- function(ras, type = "writeRaster") {
   stop("No method for assessDataType for class ", class(ras))
 }
 
-#' Assess the appropriate raster layer data type for GDAL
-#'
-#' This is a convenience function around `assessDataType(ras, type = "GDAL")`
+#' `assessDataTypeGDAL` assesses the appropriate raster layer data type for GDAL.
+#' It is a convenience function around `assessDataType(ras, type = "GDAL")`
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
-#' @return The appropriate data type for the range of values in `ras` for using GDAL.
-#'         See [raster::dataType()] for details.
 #' @author Eliot McIntire, Ceres Barros, Ian Eddy, and Tati Micheletti
-#' @example inst/examples/example_assessDataTypeGDAL.R
 #' @export
 #' @rdname assessDataType
 assessDataTypeGDAL <- function(ras) {
@@ -2066,7 +2156,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
     # } else {
       # fix errors if methods available
       skipCacheMess <- "useCache is FALSE, skipping Cache"
-      skipCacheMess2 <- "No cacheRepo supplied"
+      skipCacheMess2 <- "No cachePath supplied"
 
       ##################################
       # cropInputs
@@ -2255,7 +2345,7 @@ bufferWarningSuppress <- function(# warn,
     messagePrepInputs("There are errors with ", objectName,
                       ". Couldn't fix them with ", bufferFn, "(..., width = 0)", verbose = verbose)
   } else {
-    messagePrepInputs("  Some or all of the errors fixed.", verbose = verbose)
+    messagePrepInputs("  Some or all of the errors fixed.", verbose = verbose, verboseLevel = 1)
   }
   x1
 }

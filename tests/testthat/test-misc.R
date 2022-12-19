@@ -11,39 +11,8 @@ test_that("test miscellaneous fns (part 1)", {
   expect_true(all(unlist(lapply(searchFull(simplify = FALSE), is.environment))))
   expect_true(all(is.character(unlist(lapply(searchFull(simplify = FALSE), attributes)))))
 
-  # objectSize
-  a <- 1
-  b <- tempfile()
-  saveRDS(a, b)
-  expect_true(is.numeric(objSize(asPath(b))))
-  expect_true(is(objSize(asPath(b)), "lobstr_bytes"))
-
-  # objSizeSession
-  mess <- capture.output({d <- objSizeSession()})
-  expect_true(is.list(d))
-  g <- unlist(d)
-  expect_true(is.numeric(g))
-  expect_true(any(grepl("package", names(g))))
-
-  mess <- capture.output({d <- objSizeSession(1)})
-  expect_true(is.list(d))
-  g <- unlist(d)
-  expect_true(is.numeric(g))
-  expect_true(any(grepl("package", names(g))))
-  expect_true(all(names(g) %in% search() ))
-
-  mess <- capture.output({d1 <- objSizeSession(enclosingEnvs = FALSE)})
-  expect_true(is.list(d1))
-  g2 <- unlist(d1)
-  expect_true(is.numeric(g2))
-  expect_true(any(grepl("package", names(g2))))
-
   # NO LONGER RELIABLE TEST BECAUSE OF NEW REMOVAL OF PACKAGES fEB 24 2021
   # expect_true(sum(unlist(d1)) < sum(unlist(d)))
-
-  mess <- capture.output({d <- objSizeSession(0)})
-  expect_true(!is.list(d))
-  expect_true(is.numeric(d))
 
   # convertRasterPaths
   filenames <- normalizePath(c("/home/user1/Documents/file.txt", "/Users/user1/Documents/file.txt"),
@@ -81,6 +50,20 @@ test_that("test miscellaneous fns (part 1)", {
   a <- .formalsNotInCurrentDots(rnorm, n = 1, b = 2)
   b <- .formalsNotInCurrentDots(rnorm, dots = list(n = 1, b = 2))
   expect_identical(a,b)
+
+
+})
+
+test_that("objSize and objSizeSession", {
+  skip_on_cran()
+  # objectSize
+  a <- 1
+  b <- tempfile()
+  saveRDS(a, b)
+  expect_true(is.numeric(objSize(asPath(b))))
+  expect_true(is(objSize(asPath(b)), "lobstr_bytes"))
+
+
 })
 
 test_that("setting options works correctly", {
@@ -124,12 +107,14 @@ test_that("unrar is working as expected", {
   }, add = TRUE)
 
   rarPath <- file.path(tmpdir, "tmp.rar")
-  utils::zip(zipfile = rarPath, files = tmpfile)
-  unrar <- .whichExtractFn(archive = rarPath, args = "")
-  expect_true(identical(unrar$fun, "unrar"))
-  suppressWarnings(
-    expect_error(.callArchiveExtractFn(unrar$fun, files = "", args = list(exdir = tmpCache)))
-  )
+  out <- try(utils::zip(zipfile = rarPath, files = tmpfile)) # this should only be relevant if system can unrar
+  if (!is(out, "try-error")) {
+    unrar <- .whichExtractFn(archive = rarPath, args = "")
+    expect_true(identical(unrar$fun, "unrar"))
+    suppressWarnings(
+      expect_error(.callArchiveExtractFn(unrar$fun, files = "", args = list(exdir = tmpCache)))
+    )
+  }
 })
 
 test_that("test miscellaneous fns (part 2)", {
@@ -139,17 +124,15 @@ test_that("test miscellaneous fns (part 2)", {
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
-    googledrive::drive_rm(googledrive::as_id(cloudFolderID))
-    googledrive::drive_rm(googledrive::as_id(tmpCloudFolderID))
+    try(googledrive::drive_rm(googledrive::as_id(cloudFolderID)))
+    try(googledrive::drive_rm(googledrive::as_id(tmpCloudFolderID)))
   }, add = TRUE)
 
   ras <- raster(extent(0,1,0,1), res  = 1, vals = 1)
   ras <- writeRaster(ras, file = tmpfile[1], overwrite = TRUE)
 
   gdriveLs1 <- data.frame(name = "GADM", id = "sdfsd", drive_resource = list(sdfsd = 1))
-  expect_warning({
-    tmpCloudFolderID <- checkAndMakeCloudFolderID(create = TRUE)
-  }, "No cloudFolderID supplied")
+  tmpCloudFolderID <- checkAndMakeCloudFolderID(create = TRUE)
   gdriveLs <- driveLs(cloudFolderID = NULL, "sdfsdf")
   expect_true(NROW(gdriveLs) == 0)
   expect_is(checkAndMakeCloudFolderID("testy"), "character")
@@ -161,11 +144,11 @@ test_that("test miscellaneous fns (part 2)", {
 
         mess1 <- capture_messages(expect_error(
           cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
-                      gdriveLs = gdriveLs1, cacheRepo = tmpCache)))
+                      gdriveLs = gdriveLs1, cachePath = tmpCache)))
       } else {
         mess1 <- capture_messages(expect_error(
           cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
-                      gdriveLs = gdriveLs1, cacheRepo = tmpCache)))
+                      gdriveLs = gdriveLs1, cachePath = tmpCache)))
       }
     })
   expect_true(grepl("Uploading local copy of", mess1))
@@ -183,7 +166,7 @@ test_that("test miscellaneous fns (part 2)", {
       # cloudFolderID can't be meaningless "character", but retry is TRUE
       warns <- capture_warnings({
         err <- capture_error({
-          cloudDownloadRasterBackend(output = ras, cacheRepo = tmpCache, cloudFolderID = "character")
+          cloudDownloadRasterBackend(output = ras, cachePath = tmpCache, cloudFolderID = "character")
         })
       })
       expect_true(is.null(err))
@@ -194,13 +177,12 @@ test_that("test miscellaneous fns (part 2)", {
     {
       mess1 <- capture_messages({
         err <- capture_error({
-          cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs", saved = "life",
-                               cacheRepo = tmpCache)
+          cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs", # saved = "life",
+                               cachePath = tmpCache)
         })
       })
       expect_true(all(grepl("cloudFolderID.*is missing, with no default", err)))
     })
-  expect_true(grepl("Uploading new cached object|with cacheId", mess1))
 
   a <- new.env(parent = emptyenv())
   a$a = list(ras, ras)
@@ -305,3 +287,4 @@ test_that("test miscellaneous fns", {
     expect_true(is.numeric(as.numeric(gsub(".*: ", "", out)[2])))
   }
 })
+

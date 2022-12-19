@@ -1,11 +1,12 @@
 #' Move a file to a new location
 #'
+#' This will first try to `file.rename`, and if that fails, then it will
+#' `file.copy` then `file.remove`.
 #' @param from,to character vectors, containing file names or paths.
 #' @param overwrite logical indicating whether to overwrite destination file if it exists.
-#'
+#' @export
 #' @return Logical indicating whether operation succeeded.
 #'
-#' @export
 .file.move <- function(from, to, overwrite = FALSE) {
   stopifnot(file.exists(from))
   res <- suppressWarnings(file.rename(from = from, to = to))
@@ -50,7 +51,11 @@
 #' @importFrom data.table copy
 #' @inheritParams Cache
 #' @rdname Copy
-#' @seealso [.robustDigest()]
+#' @return
+#' The same object as `object`, but with pass-by-reference class elements "deep" copied.
+#' `reproducible` has methods for several classes.
+#'
+#' @seealso [.robustDigest()], [Filenames()]
 #'
 #' @examples
 #' e <- new.env()
@@ -152,10 +157,6 @@ setMethod("Copy",
 setMethod("Copy",
           signature(object = "list"),
           definition = function(object,  ...) {
-            #if (missing(filebackedDir)) {
-            #  stop()
-            #  filebackedDir <- tempdir2(rndstr(1, 10))
-            #}
             lapply(object, function(x) {
               Copy(x, ...)
             })

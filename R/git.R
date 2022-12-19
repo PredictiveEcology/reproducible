@@ -30,7 +30,6 @@
 #' @return Invisibly returns a git_repository class object, defined in \pkg{git2r}.
 #'
 #' @author Eliot McIntire and Alex Chubaty
-#' @export
 #' @rdname checkoutVersion
 #'
 checkoutVersion <- function(repo, localRepoPath = ".", cred = "", ...) {

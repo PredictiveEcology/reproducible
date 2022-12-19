@@ -1,4 +1,5 @@
 test_that("prepInputs doesn't work (part 3)", {
+  skip_on_cran() # too long
   testInitOut <- testInit(c("raster", "sf"), tmpFileExt = c(".tif", ".tif"),
                           opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
@@ -29,10 +30,8 @@ test_that("prepInputs doesn't work (part 3)", {
 
   nonLatLongProj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
                           "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
-  #dPath <- file.path(tmpdir, "ecozones")
   nc <- sf::st_as_sf(StudyArea)#system.file("shape/nc.shp", package="sf"))
   nc1 <- sf::st_transform(nc, nonLatLongProj)
-  #ncSmall <- sf::st_buffer(nc1, dist = -10000)
   ncSmall <- sf::st_as_sf(StudyArea2)
   ncSmall <- sf::st_transform(ncSmall, nonLatLongProj)
   ncSmall <- sf::st_buffer(ncSmall, dist = -10000)
@@ -42,7 +41,6 @@ test_that("prepInputs doesn't work (part 3)", {
   expect_true(sf::st_area(b) < sf::st_area(nc1))
 
   r <- suppressWarnings(raster(nc1, res = 1000)) # TODO: temporary until raster crs fixes
-  # rSmall <- suppressWarnings(raster(ncSmall, res = 1000)) # TODO: temporary until raster crs fixes
 
   rB <- suppressWarnings(raster(nc1, res = 4000)) # TODO: temporary until raster crs fixes
   rSmall <- suppressWarnings(raster(ncSmall, res = 4000)) # TODO: temporary until raster crs fixes
@@ -60,7 +58,6 @@ test_that("prepInputs doesn't work (part 3)", {
   s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE)
   expect_true(inherits(s1, "RasterStack"))
   expect_equal(s1[], b1[], ignore_attr = TRUE)
-  # expect_equivalent(s1, b1) # deprecated in testthat
 
   b <- writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
@@ -133,7 +130,6 @@ test_that("prepInputs doesn't work (part 3)", {
     st_crs(ncSmallShifted) <- st_crs(ncSmall)
     mess <- capture_error(cropInputs(as(ncSmall, "Spatial"), studyArea = ncSmallShifted))
     expect_true(any(grepl("polygons do not intersect", mess)))
-    # expect_true(any(grepl("with no data", mess)))
 
     # cropInputs.sf
     nc3 <- st_transform(nc1, crs = CRS(nonLatLongProj2))
@@ -162,15 +158,15 @@ test_that("prepInputs doesn't work (part 3)", {
     ncSmallShifted <- ncSmall + 10000000
     ncSmallShifted <- st_as_sf(ncSmallShifted)
     st_crs(ncSmallShifted) <- st_crs(ncSmall)
-    mess <- capture_messages(cropInputs(ncSmall, studyArea = ncSmallShifted))
-    expect_true(any(grepl("polygons do not intersect", mess)))
+    out11 <- cropInputs(ncSmall, studyArea = ncSmallShifted)
+    expect_true(NROW(out11) == 0)
 
     # LINEARRING Example
     p6 = terra::vect("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
     p6a <- fixErrorsTerra(p6)
     expect_true(terra::is.valid(p6a))
     expect_false(terra::is.valid(p6))
-  # projectInputs pass through
+    # projectInputs pass through
     nc5 <- projectInputs(x = 1)
     expect_identical(nc5, 1)
   }
@@ -303,6 +299,7 @@ test_that("maskInputs errors when x is Lat-Long", {
 })
 
 test_that("prepInputs doesn't work (part 3)", {
+  skip_if_no_token()
   if (interactive()) {
     testInitOut <- testInit()
     on.exit({
@@ -310,13 +307,15 @@ test_that("prepInputs doesn't work (part 3)", {
     }, add = TRUE)
 
     # Tati's reprex
-    wd <- checkPath(file.path(getwd(), "reprex"), create = TRUE)
+    tmpdir <- "/mnt/d/temp/Cache"
+    wd <- checkPath(file.path(tmpdir, "reprex"), create = TRUE)
     ranges <- prepInputs(url = "https://drive.google.com/file/d/1AfGfRjaDsdq3JqcsidGRo3N66OUjRJnn",
                          destinationPath = wd,
-                         fun = "sf::st_read")
+                         fun = "terra::vect")
     LCC05 <- prepInputs(url = "https://drive.google.com/file/d/1g9jr0VrQxqxGjZ4ckF6ZkSMP-zuYzHQC",
                         targetFile = "LCC2005_V1_4a.tif",
                         studyArea = ranges,
+                        fun = "terra::rast",
                         destinationPath = wd)
     sumNonNAs <- sum(!is.na(!LCC05[]))
 

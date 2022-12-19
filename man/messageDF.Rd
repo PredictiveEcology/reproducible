@@ -4,7 +4,15 @@
 \alias{messageDF}
 \title{Use message to print a clean square data structure}
 \usage{
-messageDF(df, round, colour = NULL, colnames = NULL, appendLF = TRUE)
+messageDF(
+  df,
+  round,
+  colour = NULL,
+  colnames = NULL,
+  appendLF = TRUE,
+  verbose = getOption("reproducible.verbose"),
+  verboseLevel = 1
+)
 }
 \arguments{
 \item{df}{A data.frame, data.table, matrix}
@@ -21,6 +29,19 @@ which will omit them.}
 
 \item{appendLF}{logical: should messages given as a character string
     have a newline appended?}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{verboseLevel}{The numeric value for this \verb{message*} call, equal or above
+which \code{verbose} must be. The higher this is set, the more unlikely the call
+will show a message.}
+}
+\value{
+Used for side effects. This will produce a message of a structured \code{data.frame}.
 }
 \description{
 Sends to \code{message}, but in a structured way so that a data.frame-like can

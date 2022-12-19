@@ -19,6 +19,10 @@ directory should be placed. Defaults to \code{getOption("reproducible.tempPath")
 
 \item{create}{Logical. Should the directory be created. Default \code{TRUE}.}
 }
+\value{
+A character string of a path (that will be created if \code{create = TRUE}) in a
+sub-directory of the \code{tempdir()}.
+}
 \description{
 Create a temporary subdirectory in \code{getOption("reproducible.tempPath")}.
 }

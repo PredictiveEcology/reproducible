@@ -18,3 +18,4 @@
 ^vignettes/.*_cache$
 ^vignettes/.*\.log$
 ^\.secret$
+^CRAN-SUBMISSION$

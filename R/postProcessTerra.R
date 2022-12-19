@@ -1,13 +1,16 @@
 #' Transform a GIS dataset so it has the properties (extent, projection, mask) of another
 #'
 #' This function provides a single step to achieve the GIS operations "crop", "project",
-#' "mask" and possibly "write". It uses primarily the `terra` package internally
+#' "mask" and possibly "write". This is intended to completely replace [postProcess()]
+#' (which primarily used GDAL, `Raster` and `sp`).
+#' It uses primarily the `terra` package internally
 #' (with some minor functions from `sf` and `raster`)
 #' in an attempt to be as efficient as possible.
 #' For this function, Gridded means a `Raster*` class object from `raster` or
 #' a `SpatRaster` class object from `terra`.
 #' Vector means a `Spatial*` class object from `sp`, a `sf` class object
-#' from `sf`, or a `SpatVector` class object from `terra`.
+#' from `sf`, or a `SpatVector` class object from `terra`. This function is currently
+#' part of the internals for some cases encountered by [postProcess()].
 #'
 #' @section Use Cases:
 #'
@@ -17,7 +20,7 @@
 #' \tabular{lll}{
 #'   `from`\tab `to`\tab `from` will have:\cr
 #'   `Gridded`\tab `Gridded` \tab the extent, projection, origin, resolution and
-#'                         masking where there are `NA` from the {to}\cr
+#'                         masking where there are `NA` from the `to`\cr
 #'   `Gridded`\tab `Vector` \tab the projection, origin, and mask from `to`, and extent will
 #'                        be a round number of pixels that fit within the extent
 #'                        of `to`. Resolution will be the same as `from` \cr
@@ -59,14 +62,15 @@
 #' by  `2 * res(from)[1]`), so that edge cells still have a complete set of neighbours.
 #' The second crop is at the end, after projecting and masking. After the projection step,
 #' the crop is no longer tight. Under some conditions, masking will effectively mask and crop in
-#' on step, but under some conditions, this is not true, and the mask leaves padded NAs out to
+#' one step, but under some conditions, this is not true, and the mask leaves padded NAs out to
 #' the extent of the `from` (as it is after crop, project, mask). Thus the second
 #' crop removes all NA cells so they are tight to the mask.
 #'
 #'
 #' @return
-#' An object of the same class as `from`, but potentially cropped, projected, masked,
-#' and written to disk.
+#' An object of the same class as `from`, but potentially cropped (via [cropTo()]),
+#' projected (via [projectTo()]), masked (via [maskTo()]), and written to disk
+#' (via [writeTo()]).
 #'
 #' @param from A Gridded or Vector dataset on which to do one or more of:
 #'   crop, project, mask, and write
@@ -97,11 +101,18 @@
 #' @param method Used if `projectTo` is not `NULL`, and is the method used for
 #'   interpolation. See `terra::project`. Defaults to `"bilinear"`
 #' @param datatype A character string, used if `writeTo` is not `NULL`. See `raster::writeRaster`
-#' @param overwrite Logical. Used if `writeTo` is not `NULL`
+#' @param overwrite Logical. Used if `writeTo` is not `NULL`; also if `terra` determines
+#'   that the object requires writing to disk during a `crop`, `mask` or `project` call
+#'   e.g., because it is too large.
 #' @param ... Currently can be either `rasterToMatch`, `studyArea`, `filename2`,
 #'   `useSAcrs`, or `targetCRS` to allow backwards
 #'   compatibility with `postProcess`. See section below for details.
+#' @inheritParams Cache
 #' @export
+#'
+#' @seealso This function is meant to replace [postProcess()] with the more efficient
+#' and faster `terra` functions.
+#'
 postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NULL,
                              writeTo = NULL, method = NULL, datatype = "FLT4S",
                              overwrite = TRUE, ...) {
@@ -110,6 +121,8 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   dots <- list(...)
   if (!is.null(dots$studyArea)) {
     messagePrepInputs("studyArea is supplied (deprecated); assigning it to `cropTo` & `maskTo`")
+    if (isSpatial(dots$studyArea))
+      dots$studyArea <- terra::vect(dots$studyArea)
     maskTo <- dots$studyArea
     cropTo <- dots$studyArea
   }
@@ -178,7 +191,7 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
       st <- Sys.time()
       messagePrepInputs("  `from` is large, converting to terra object will take some time ...")
     }
-    from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
+    from <- suppressWarningsSpecific(terra::vect(sf::st_as_sf(from)), shldBeChar)
     if (lg) {
       messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
                                              units = "secs", digits = 3))
@@ -189,10 +202,11 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   #############################################################
   # crop project mask sequence ################################
   #############################################################
-  from <- cropTo(from, cropTo, needBuffer = TRUE) # crop first for speed
-  from <- projectTo(from, projectTo, method = method) # need to project with edges intact
-  from <- maskTo(from, maskTo)
-  from <- cropTo(from, cropTo) # need to recrop to trim excess pixels in new projection
+  if (browserCond("fff")) browser()
+  from <- cropTo(from, cropTo, needBuffer = TRUE, overwrite = overwrite) # crop first for speed
+  from <- projectTo(from, projectTo, method = method, overwrite = overwrite) # need to project with edges intact
+  from <- maskTo(from, maskTo, overwrite = overwrite)
+  from <- cropTo(from, cropTo, overwrite = overwrite) # need to recrop to trim excess pixels in new projection
 
   # Put this message near the end so doesn't get lost
   if (is.naSpatial(cropTo) && isVector(maskTo))  {
@@ -213,6 +227,7 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   from
 }
 
+isSpatial <- function(x) inherits(x, "Spatial")
 isSpat <- function(x) is(x, "SpatRaster") || is(x, "SpatVector")
 isSpat2 <- function(origClass) any(origClass %in% c("SpatVector", "SpatRaster"))
 isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
@@ -226,9 +241,18 @@ isSpatialAny <- function(x) isGridded(x) || isVector(x)
 #' it will run `terra::makeValid`
 #' @export
 #' @param x The SpatStat or SpatVect object to try to fix.
+#' @param error The error message, e.g., coming from `try(...)`
+#' @inheritParams Cache
+#' @param fromFnName The function name that produced the error, e.g., `maskTo`
 #'
-fixErrorsTerra <- function(x) {
+#' @return
+#' An object of the same class as `x`, but with some errors fixed via `terra::makeValid()`
+#'
+#'
+fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.verbose"), fromFnName = "") {
   if (isVector(x)) {
+    if (!is.null(error))
+      messageDeclareError(error, fromFnName, verbose)
     xValids <- terra::is.valid(x)
     if (any(!xValids))
       x <- terra::makeValid(x)
@@ -236,7 +260,11 @@ fixErrorsTerra <- function(x) {
   x
 }
 
-maskTo <- function(from, maskTo, touches = FALSE) {
+#' @export
+#' @rdname postProcessTerra
+#' @param touches See `terra::mask`
+maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
+                   verbose = getOption("reproducible.verbose")) {
   if (!is.null(maskTo)) {
     if (!is.naSpatial(maskTo)) {
       origFromClass <- class(from)
@@ -257,60 +285,69 @@ maskTo <- function(from, maskTo, touches = FALSE) {
 
 
       if (!sf::st_crs(from) == sf::st_crs(maskTo)) {
-        maskTo <- terra::project(maskTo, from)
+        if (isGridded(maskTo)) {
+          maskTo <- terra::project(maskTo, from, overwrite = overwrite)
+        } else {
+          maskTo <- terra::project(maskTo, from)
+        }
       }
-      messagePrepInputs("    masking...")
+      messagePrepInputs("    masking...", appendLF = FALSE)
       st <- Sys.time()
 
 
-      # There are 2 retry statements; first is for `maskTo`, second is for `from`, rather than fix both in one step, which may be unnecessary
+      # There are 2 tries; first is for `maskTo`, second is for `from`, rather than fix both in one step, which may be unnecessary
       maskAttempts <- 0
       env <- environment()
-      fromInt <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1, messageFn = messagePrepInputs,
-                       expr = quote({
 
-                       retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
-                             messageFn = messagePrepInputs,
-                             expr = quote(
-                               {
-                                 assign("maskAttempts", get("maskAttempts", envir = env, inherits = FALSE) + 1,
-                                        envir = env)
-                                 if (isVector(maskTo))
-                                   if (length(maskTo) > 1)
-                                     maskTo <- terra::aggregate(maskTo)
-                                 if (isVector(from)) {
-                                   terra::intersect(from, maskTo)
-                                 } else {
-                                   if (isGridded(maskTo)) {
-                                     terra::mask(from, maskTo)
-                                   } else {
-                                     terra::mask(from, maskTo, touches = touches)
-                                   }
-                                 }
-                               }
-                             ),
-                             exprBetween = quote({
-                               if (get("maskAttempts", envir = env, inherits = FALSE) == 1) {
-                                 messagePrepInputs("    Mask results in an error; attempting to fix `maskTo`",
-                                                   appendLF = FALSE)
-                                 maskTo <- fixErrorsTerra(maskTo)
-                               }
-                               maskTo <- maskTo
-                             }))
-                       }),     exprBetween = quote({
-                         messagePrepInputs("    Mask is still failing after fixing `maskTo`; attempting to fix `from`",
-                                           appendLF = FALSE)
-                         from <- fixErrorsTerra(from)
-                       }))
+      attempt <- 1
+      triedFrom <- NA
+      while (attempt <= 2) {
+        fromInt <- try({
+          if (isVector(maskTo))
+            if (length(maskTo) > 1)
+              maskTo <- terra::aggregate(maskTo)
+          if (isVector(from)) {
+            terra::intersect(from, maskTo)
+          } else {
+            if (isGridded(maskTo)) {
+              terra::mask(from, maskTo, overwrite = overwrite)
+            } else {
+              terra::mask(from, maskTo, touches = touches, overwrite = overwrite)
+            }
+          }
+        }, silent = TRUE)
+        if (is(fromInt, "try-error")) {
+          if (attempt >= 1) {
+            whichFailed <- grepl("geom 0", fromInt)
+            if (isTRUE(whichFailed) && !(triedFrom %in% TRUE)) { # don't try same one again
+              from <- fixErrorsTerra(from, error = fromInt, fromFnName = "maskTo", verbose = verbose)
+              triedFrom <- TRUE
+            } else {
+              maskTo <- fixErrorsTerra(maskTo, error = fromInt, fromFnName = "maskTo", verbose = verbose)
+              triedFrom <- FALSE
+            }
+          } else {
+            stop(fromInt)
+          }
+        } else {
+          if (attempt > 1)
+            messagePrepInputs("...fixed!", verbose = verbose, verboseLevel = 1 , appendLF = FALSE)
+          break
+        }
+        attempt <- attempt + 1
+      }
+
       from <- fromInt
-      messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+      messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
       from <- revertClass(from, origFromClass = origFromClass)
     }
   }
   from
 }
 
-projectTo <- function(from, projectTo, method) {
+#' @export
+#' @rdname postProcessTerra
+projectTo <- function(from, projectTo, method, overwrite = FALSE) {
   if (!is.null(projectTo)) {
     origFromClass <- is(from)
     if (!is.naSpatial(projectTo)) {
@@ -318,13 +355,20 @@ projectTo <- function(from, projectTo, method) {
         projectTo <- terra::rast(projectTo)
 
       projectToOrig <- projectTo # keep for below
+      sameProj <- sf::st_crs(projectTo) == sf::st_crs(from)
+      isProjectToVecOrCRS <- is(projectTo, "crs") || isVector(projectTo)
+      sameRes <- if (isVector(from) || isProjectToVecOrCRS) {
+        TRUE
+      } else {
+        all(res(projectTo) == res(from))
+      }
 
-      if (sf::st_crs(projectTo) == sf::st_crs(from)) {
+      if (sameProj && sameRes) {
         messagePrepInputs("    projection of from is same as projectTo, not projecting")
       } else {
-        messagePrepInputs("    projecting...")
+        messagePrepInputs("    projecting...", appendLF = FALSE)
         st <- Sys.time()
-        if (is(projectTo, "crs") || isVector(projectTo)) {
+        if (isProjectToVecOrCRS) {
           projectToTmp <- sf::st_as_sfc(sf::st_bbox(from))
           if (isVector(projectTo))
             projectTo <- sf::st_crs(projectTo)
@@ -340,6 +384,7 @@ projectTo <- function(from, projectTo, method) {
             # if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
             #   projectTo <- terra::rast(projectTo, resolution = res(from))
             # }
+            messagePrepInputs("")
             messagePrepInputs("         projectTo is a Vector dataset, which does not define all metadata required. ")
             if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
               newRes <- res(from)
@@ -353,7 +398,8 @@ projectTo <- function(from, projectTo, method) {
 
             messagePrepInputs("         in the projection of `projectTo`, using the origin and extent")
             messagePrepInputs("         from `ext(from)` (in the projection from `projectTo`).")
-            messagePrepInputs("         If this is not correct, create a template gridded object and pass that to projectTo")
+            messagePrepInputs("         If this is not correct, create a template gridded object and pass that to projectTo...")
+            messagePrepInputs("         ", appendLF = FALSE)
 
           } else {
             projectTo <- sf::st_crs(projectTo)$wkt
@@ -371,9 +417,9 @@ projectTo <- function(from, projectTo, method) {
           if (isSpatial) from <- as(from, "Spatial")
           from
         } else {
-          terra::project(from, projectTo, method = method)
+          terra::project(from, projectTo, method = method, overwrite = overwrite)
         }
-        messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+        messagePrepInputs("done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
       }
     }
     from <- revertClass(from, origFromClass = origFromClass)
@@ -381,14 +427,14 @@ projectTo <- function(from, projectTo, method) {
   from
 }
 
-#' @rdname postProcessTerra
-#' @param cropTo A Vector dataset
 #' @param needBuffer Logical. Defaults to `TRUE`, meaning nothing is done out
 #'   of the ordinary. If `TRUE`, then a buffer around the cropTo, so that if a reprojection
 #'   has to happen on the `cropTo` prior to using it as a crop layer, then a buffer
 #'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
 #' @export
-cropTo <- function(from, cropTo = NULL, needBuffer = TRUE) {
+#' @rdname postProcessTerra
+cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
+                   verbose = getOption("reproducible.verbose")) {
   if (!is.null(cropTo)) {
     omit <- FALSE
     origFromClass <- is(from)
@@ -396,13 +442,27 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE) {
     if (!isSpatialAny(cropTo))
       if (is.na(cropTo)) omit <- TRUE
 
+    if (isSpatial(cropTo))
+      cropTo <- terra::vect(cropTo)
+
     if (!omit) {
-      messagePrepInputs("    cropping...")
+      messagePrepInputs("    cropping..." , appendLF = FALSE)
       st <- Sys.time()
 
       ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
       if (!sf::st_crs(from) == sf::st_crs(ext)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
-        ext <- sf::st_transform(ext, sf::st_crs(from))
+        if (isVector(cropTo)) {
+          if (browserCond("qqq")) browser()
+          if (isSpat(cropTo)) {
+            cropToInFromCRS <- terra::project(cropTo, terra::crs(from))
+          } else {
+            cropToInFromCRS <- sf::st_transform(sf::st_as_sf(cropTo), sf::st_crs(from))
+          }
+        } else {
+          cropToInFromCRS <- terra::project(cropTo, terra::crs(from))
+          # THIS IS WHAN cropTo is a Gridded object
+        }
+        ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
       }
       if (isVector(from))
         ext <- terra::vect(ext)
@@ -417,26 +477,40 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE) {
           ext <- terra::extend(extTmp, res[1] * 2)
         }
 
-      fromInt <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
-                       messageFn = messagePrepInputs,
-                       expr = quote(
-                         terra::crop(from, ext)
-                       ),
-                       exprBetween = quote({
-                         # check validities
-                         messagePrepInputs("    Crop results in an error; attempting to fix",
-                                           appendLF = FALSE)
-                         from <- fixErrorsTerra(from)
-                         return(list(from = from))
-                       }))
+      attempt <- 1
+      while (attempt <= 2) {
+        if (isGridded(from)) {
+          fromInt <- try(terra::crop(from, ext, overwrite = overwrite), silent = TRUE)
+        } else {
+          fromInt <- try(terra::crop(from, ext), silent = TRUE)
+        }
+        if (is(fromInt, "try-error")) {
+          if (attempt == 1) {
+            from <- fixErrorsTerra(from, error = fromInt, fromFnName = "cropTo", verbose = verbose)
+          } else {
+            stop(fromInt)
+          }
+        } else {
+          if (attempt > 1)
+            messagePrepInputs("...fixed!", verbose = verbose, verboseLevel = 1,
+                              appendLF = FALSE)
+          break
+        }
+        attempt <- attempt + 1
+      }
       from <- fromInt
-      messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+      messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
     }
     from <- revertClass(from, origFromClass = origFromClass)
   }
   from
 }
 
+#' @export
+#' @rdname postProcessTerra
+#' @param isStack,isBrick,isRaster,isSpatRaster Logical. Default `FALSE`. Used to convert `from`
+#'   back to these classes prior to writing.
+#'
 writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, isRaster = FALSE,
                     isSpatRaster = FALSE, datatype = "FLT4S") {
   if (isStack) from <- raster::stack(from)
@@ -444,7 +518,7 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
 
   if (!is.null(writeTo))
     if (!is.na(writeTo)) {
-      messagePrepInputs("    writing...")
+      messagePrepInputs("    writing...", appendLF = FALSE)
       st <- Sys.time()
       if (isRaster)
         from <- raster::writeRaster(from, filename = writeTo, overwrite = overwrite,
@@ -457,7 +531,7 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
           unlink(writeTo, force = TRUE, recursive = TRUE)
         written <- terra::writeVector(from, filename = writeTo, overwrite = overwrite)
       }
-      messagePrepInputs("       done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+      messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
 
     }
 
@@ -516,21 +590,38 @@ is.naSpatial <- function(x) {
   isna
 }
 
-cropSF <- function(from, cropToVect) {
+cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")) {
+  st <- Sys.time()
   if (is(from, "sf") && (is(cropToVect, "sf") || is(cropToVect, "Spatial"))) {
     messagePrepInputs("    pre-cropping because `from` is sf and cropTo is sf/Spatial*")
-    from2 <- try(retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
-                   messageFn = messagePrepInputs,
-                   expr = quote(
-                     {
-                       sf::st_crop(from, sf::st_transform(sf::st_as_sfc(sf::st_bbox(cropToVect)), sf::st_crs(from)))
-                     }
-                   ),
-                   exprBetween = quote({
-                     from <- fixErrors(from, useCache = FALSE)
-                   })))
+    attempt <- 1
+    while (attempt <= 2) {
+
+      from2 <- try(sf::st_crop(from, sf::st_transform(sf::st_as_sfc(sf::st_bbox(cropToVect)),
+                                                        sf::st_crs(from))),
+                     silent = TRUE)
+      if (is(from2, "try-error")) {
+        if (attempt == 1) {
+          messageDeclareError(error = from2, fromFnName = "cropSF", verbose)
+          from <- fixErrors(from, useCache = FALSE, verbose = verbose - 1)
+        } else {
+          stop(from2)
+        }
+      } else {
+        if (attempt > 1)
+          messagePrepInputs("...fixed!", verbose = verbose, verboseLevel = 1,
+                            appendLF = FALSE)
+        break
+      }
+      attempt <- attempt + 1
+
+
+    }
     if (!is(from2, "try-error"))
       from <- from2
+    messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
+                                           units = "secs", digits = 3))
+
   }
   from
 }
@@ -560,4 +651,10 @@ revertClass <- function(from, isStack = FALSE, isBrick = FALSE, isRasterLayer = 
     }
   }
   from
+}
+
+messageDeclareError <- function(error, fromFnName, verbose) {
+  errWOWordError <- gsub("Error {0,1}: ", "", error)
+  messagePrepInputs("    ", fromFnName, " resulted in following error: \n    - ", errWOWordError, "    --> attempting to fix",
+                    appendLF = FALSE, verbose = verbose, verboseLevel = 1)
 }

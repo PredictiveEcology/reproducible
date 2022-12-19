@@ -49,7 +49,7 @@
 #'     functionality that uses the `future` package.
 #'     Default is to not use these, as they are experimental.
 #'     They may, however, be very effective in speeding up some things, specifically,
-#'     uploading cached elements via googledrive in `cloudCache`.
+#'     uploading cached elements via `googledrive` in `cloudCache`.
 #'   }
 #'   \item{`inputPaths`}{
 #'     Default: `NULL`. Used in [prepInputs()] and [preProcess()].
@@ -102,7 +102,7 @@
 #'     functions, i.e., they will likely never be relevant again.
 #'     This will therefore keep the cache repository clean of stale objects.
 #'     If there is ambiguity in the `userTags`, i.e., they do not uniquely identify a single
-#'     entry in the `cacheRepo`, then this option will default back to the non-dev-mode
+#'     entry in the `cachePath`, then this option will default back to the non-dev-mode
 #'     behaviour to avoid deleting objects.
 #'     This, therefore, is most useful if the user is using unique values for `userTags`.
 #'   }
@@ -118,7 +118,7 @@
 #'   }
 #'   \item{`useMemoise`}{
 #'     Default: `FALSE`. Used in [Cache()]. If `TRUE`, recovery of cached
-#'     elements from the `cacheRepo` will use `memoise::memoise`.
+#'     elements from the `cachePath` will use `memoise::memoise`.
 #'     This means that the 2nd time running a function will be much faster than the first
 #'     in a session (which either will create a new cache entry to disk or read a cached
 #'     entry from disk).

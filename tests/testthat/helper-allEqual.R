@@ -144,9 +144,9 @@ testOnExit <- function(testInitOut) {
       try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab2))
   }
 
-  lapply(testInitOut$libs, function(lib) {
-    try(detach(paste0("package:", lib), character.only = TRUE), silent = TRUE)}
-  )
+  # lapply(testInitOut$libs, function(lib) {
+  #   try(detach(paste0("package:", lib), character.only = TRUE), silent = TRUE)}
+  # )
 }
 
 runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpdir, test) {
@@ -400,12 +400,12 @@ fnCacheHelper1 <- function() {
 }
 
 fnCacheHelper <- function(a, cacheRepo2) {
-  Cache(fnCacheHelper1, cacheRepo = cacheRepo2, verbose = 2)
+  Cache(fnCacheHelper1, cachePath = cacheRepo2, verbose = 2)
 }
 
 crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84"
 
-messageNoCacheRepo <- "No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is inside"
+messageNoCacheRepo <- "No cachePath supplied and getOption\\('reproducible.cachePath'\\) is inside"
 
 
 .writeRaster <- function(...) {
@@ -429,4 +429,43 @@ shapefileClassDefault <- function() {
     getOption("reproducible.shapefileRead")
   }
   if (identical(shpfl, raster::shapefile)) "SpatialPolygons" else "sf"
+}
+
+
+
+runTestsWithTimings <- function(nameOfOuterList = "ff", envir = parent.frame(), authorizeGoogle = FALSE) {
+  if (isTRUE(authorizeGoogle))
+    if (Sys.info()[["user"]] == "emcintir")
+      googledrive::drive_auth(cache = "~/.secret", email = "predictiveecology@gmail.com")
+  prepend <- "/home/emcintir/GitHub/reproducible/tests/testthat"
+  testFiles <- dir(prepend, pattern = "^test-", full.names = TRUE)
+  testFiles <- grep("large", testFiles, value = TRUE, invert = TRUE)
+  rrrr <- get(nameOfOuterList, envir = envir)
+  testFiles <- setdiff(testFiles, file.path(prepend, names(rrrr)))
+  for (tf in testFiles) {
+    messageDF(colour = "blue", basename(tf))
+    a <- parse(tf, keep.source = TRUE)
+    labels <- unlist(lapply(a, function(x) x[[2]]))
+    # Sys.setenv("NOT_CRAN" = "false") # doesn't work
+    dd <- Map(testLabel = labels, parsed = a, function(parsed, testLabel) {
+      message(testLabel)
+      skipOnCran <- any(grepl("skip_on_cran", parsed[[3]]))
+      start <- Sys.time()
+      try(eval(parsed))
+      end <- Sys.time()
+      b <- difftime(end, start)
+      print(format(b))
+      data.table(elapsed = as.numeric(b), skipOnCRAN = skipOnCran)
+    })
+    ee <- data.table::rbindlist(dd, idcol = "Label")
+    ee <- setNames(list(ee), basename(tf))
+    rrrr <- append(rrrr, ee)
+    assign(nameOfOuterList, rrrr, envir = envir)
+
+    testFiles <- testFiles[-1]
+  }
+
+  gg <- data.table::rbindlist(ff, idcol = "TestFile")
+  gg[, TestFile := basename(TestFile)]
+  print(gg)
 }

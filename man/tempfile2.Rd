@@ -19,6 +19,10 @@ directory should be placed. Defaults to \code{getOption("reproducible.tempPath")
 
 \item{...}{passed to \code{tempfile}, e.g., \code{fileext}}
 }
+\value{
+A character string of a path to a file in a
+sub-directory of the \code{tempdir()}. This file will likely not exist yet.
+}
 \description{
 Make a temporary file in a temporary (sub-)directory
 }
