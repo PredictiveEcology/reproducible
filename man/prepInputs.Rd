@@ -230,7 +230,7 @@ If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
 }
 
 \examples{
-if (reproducible:::.runLongExamples()) {
+\donttest{
 origDir <- getwd()
 setwd(reproducible:::tempdir2()) # use a temporary directory
 # download a zip file from internet, unzip all files, load as shapefile, Cache the call

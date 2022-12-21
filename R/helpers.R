@@ -532,11 +532,3 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   length(strsplit(packageDescription("reproducible")$Version, "\\.")[[1]]) > 3
 }
 
-.runLongTests <- function() {
-  .isDevelVersion() || Sys.getenv("R_REPRODUCIBLE_RUN_ALL_TESTS") == "true"
-}
-
-.runLongExamples <- function() {
-  .isDevelVersion() ||
-    Sys.getenv("R_REPRODUCIBLE_RUN_ALL_EXAMPLES") == "true"
-}

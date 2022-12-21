@@ -5,6 +5,10 @@
 #' See Details below.
 #'
 #' @export
+#' @return
+#' This function returns a list of all the options that the `reproducible` package
+#' sets and uses. See below for details of each.
+#'
 #' @details
 #'
 #' Below are options that can be set with `options("reproducible.xxx" = newValue)`,

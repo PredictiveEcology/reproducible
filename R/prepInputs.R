@@ -211,7 +211,7 @@ if (getRversion() >= "3.1.0") {
 #' @seealso [postProcessTerra()], [downloadFile()], [extractFromArchive()],
 #'          [postProcess()].
 #' @examples
-#' if (reproducible:::.runLongExamples()) {
+#' \donttest{
 #' origDir <- getwd()
 #' setwd(reproducible:::tempdir2()) # use a temporary directory
 #' # download a zip file from internet, unzip all files, load as shapefile, Cache the call

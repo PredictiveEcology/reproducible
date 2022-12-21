@@ -1,14 +1,14 @@
 Package: reproducible
 Type: Package
-Title: A Set of Tools that Enhance Reproducibility Beyond Package Management
-Description: Collection of high-level, machine- and OS-independent tools
+Title: A Set of Tools that Enhance Reproducibility of R Code
+Description: A collection of high-level, machine- and OS-independent tools
     for making deeply reproducible and reusable content in R.
     The two workhorse functions are 'Cache()' and 'prepInputs()'; 
     these allow for: nested caching, robust to environments, and objects with
     environments (like functions); and data retrieval and processing 
     in continuous workflow environments. In all cases,
     efforts are made to make the first and subsequent calls of functions have 
-    the same result, but vastly faster at subsequent times by way of checksums
+    the same result, but faster at subsequent times by way of checksums
     and digesting. Several features are still under development, including
     cloud storage of cached objects, allowing for sharing between users. Several
     advanced options are available, see '?reproducibleOptions()'.
@@ -119,4 +119,4 @@ Collate:
     'spatialObjects-class.R'
     'zzz.R'
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.2
+RoxygenNote: 7.2.3

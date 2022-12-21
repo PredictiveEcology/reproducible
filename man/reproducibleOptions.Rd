@@ -6,6 +6,10 @@
 \usage{
 reproducibleOptions()
 }
+\value{
+This function returns a list of all the options that the \code{reproducible} package
+sets and uses. See below for details of each.
+}
 \description{
 These provide top-level, powerful settings for a comprehensive
 reproducible workflow. To see defaults, run \code{reproducibleOptions()}.
