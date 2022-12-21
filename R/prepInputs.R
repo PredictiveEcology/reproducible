@@ -213,7 +213,7 @@ if (getRversion() >= "3.1.0") {
 #' @examples
 #' \donttest{
 #' origDir <- getwd()
-#' setwd(reproducible:::tempdir2()) # use a temporary directory
+#' setwd(reproducible::tempdir2()) # use a temporary directory
 #' # download a zip file from internet, unzip all files, load as shapefile, Cache the call
 #' # First time: don't know all files - prepInputs will guess, if download file is an archive,
 #' #   then extract all files, then if there is a .shp, it will load with raster::shapefile
@@ -301,21 +301,20 @@ if (getRversion() >= "3.1.0") {
 #'   setwd(origDir)
 #' }
 #'
-#' # Using quoted dlFun and fun -- this is not intended to be run but used as a template
-#' if (FALSE) {
-#'   prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun)
-#'   # or more complex
-#'   test5 <- prepInputs(
-#'     targetFile = targetFileLuxRDS,
-#'     dlFun = quote({
-#'       getDataFn(name = "GADM", country = "LUX", level = 0) # preProcess keeps file from this!
-#'     }),
-#'     fun = quote({
-#'       out <- readRDS(targetFilePath)
-#'       out <- as(out, "SpatialPolygonsDataFrame")
-#'       sf::st_as_sf(out)})
-#'    )
-#' }
+#' ## Using quoted dlFun and fun -- this is not intended to be run but used as a template
+#' ## prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun)
+#' ##   # or more complex
+#' ##  test5 <- prepInputs(
+#' ##   targetFile = targetFileLuxRDS,
+#' ##   dlFun = quote({
+#' ##     getDataFn(name = "GADM", country = "LUX", level = 0) # preProcess keeps file from this!
+#' ##   }),
+#' ##   fun = quote({
+#' ##     out <- readRDS(targetFilePath)
+#' ##     out <- as(out, "SpatialPolygonsDataFrame")
+#' ##     sf::st_as_sf(out)})
+#' ##  )
+#'
 #'
 prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = getOption("reproducible.destinationPath", "."),

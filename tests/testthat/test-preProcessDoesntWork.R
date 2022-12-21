@@ -5,7 +5,7 @@ test_that("preProcess fails if user provides non-existing file", {
     testOnExit(testInitOut)
   }, add = TRUE)
   testthat::with_mock(
-    `reproducible:::isInteractive` = function() {FALSE},
+    `isInteractive` = function() {FALSE},
     {
       co <- capture.output({
         co <- capture.output(type = "message", {
@@ -38,8 +38,8 @@ test_that("preProcess fails if user provides non-existing file", {
   options(optsOrig)
 
   testthat::with_mock(
-    `reproducible:::isInteractive` = function() {TRUE},
-    `reproducible:::.readline` = function(prompt) {"n"},
+    `isInteractive` = function() {TRUE},
+    `.readline` = function(prompt) {"n"},
     {
       co <- capture.output({
         co <- capture.output(type = "message", {
@@ -59,8 +59,8 @@ test_that("preProcess fails if user provides non-existing file", {
 
   optsOrig <- options('reproducible.interactiveOnDownloadFail' = TRUE)
   testthat::with_mock(
-    `reproducible:::isInteractive` = function() {TRUE},
-    `reproducible:::.readline` = function(prompt) {
+    `isInteractive` = function() {TRUE},
+    `.readline` = function(prompt) {
       theFile <- file.path(tmpdir, "rasterTestAA")
       write.table(theFile, file = theFile)
       zipFilename <- file.path(tmpdir, "rasterTest")

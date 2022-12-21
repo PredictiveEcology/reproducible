@@ -1718,7 +1718,7 @@ test_that("options inputPaths", {
   # THIS NEXT ONE DOESN"T PASS ON GA on WINDOWS, skip it
   #  should copy from 2nd directory (tmpCache) because it is removed in the lower
   #  tmpdir directory & has a CHECKSUMS.txt
-  if (!testthat:::on_ci()) {
+  if (isTRUE(as.logical(Sys.getenv("CI")))) { #(!testthat:::on_ci()) { # can't use the :::
     options("reproducible.inputPaths" = tmpdir)
     options("reproducible.inputPathsRecursive" = TRUE)
     file.remove(file.path(tmpCache, theFile))
