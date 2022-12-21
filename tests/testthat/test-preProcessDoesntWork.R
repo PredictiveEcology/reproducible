@@ -17,7 +17,7 @@ test_that("preProcess fails if user provides non-existing file", {
           })
         })
       })
-    }
+    }, .env = "reproducible"
   )
   expect_true(grepl("manual download", errMsg))
   expect_true(grepl("appendChecksumsTable", errMsg))
@@ -53,7 +53,7 @@ test_that("preProcess fails if user provides non-existing file", {
           })
         })
       })
-    }
+    }, .env = "reproducible"
   )
   expect_true(sum(grepl("Download failed", errMsg)) == 1)
 
@@ -82,7 +82,7 @@ test_that("preProcess fails if user provides non-existing file", {
           })
       })
     })
-  })
+  }, .env = "reproducible")
   expect_true(sum(grepl("manual download", mess)) == 1)
   expect_true(sum(grepl("To prevent", mess)) == 1)
   if (isWindows()) # windows can't tell a zip file is a zip file, but Unix-alikes can
