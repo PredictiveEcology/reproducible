@@ -10,13 +10,11 @@ CMD
 CRS
 CacheDigest
 CacheRepo
-Checksum
 Checksumming
 Checksums
 Codecov
 GDAL
 GEOS
-GitHub
 GoogleDrive
 Gridded
 HTTP2
@@ -38,7 +36,6 @@ Rasters
 Reproducibility
 Rstudio
 S4
-SQLite
 SpaDES
 SpatRaster
 SpatStat
@@ -56,7 +53,6 @@ bugfixes
 cacheId
 cachePath
 cacheRepo
-checksum
 checksummed
 checksumming
 checksums
@@ -82,7 +78,6 @@ gdalwarp
 geospatial
 getData
 github
-google
 googledrive
 gridded
 hardlink
@@ -117,7 +112,6 @@ rasters
 rcnst
 refered
 reimplemented
-repeatability
 repo
 reprex
 reproducibility
@@ -135,11 +129,9 @@ sbn
 sbx
 setReplacement
 shx
-sim
 simList
 sqlite
 stackoverflow
-stochasticity
 subattributes
 subdir
 symlink
@@ -149,5 +141,3 @@ unevaluated
 unrar
 unrarPath
 useCache
-workflow
-workflows

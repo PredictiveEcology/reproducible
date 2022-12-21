@@ -1,6 +1,8 @@
 ## Release information
 
-This is a new submission the includes previous new version 1.2.12 to restore the package to CRAN following archival due to removal of dependency package `Require`. This version now includes changes to documentation as requested on Nov 28, 2022 upon submission to CRAN. Specifically, there were 4 items: add () in DESCRIPTION for functions; add \value in .Rd files for exported methods (structure, the class, the output meaning); remove commented code in examples. We have also simplified and removed tests and examples that were causing some systems on CRAN to take >10 minutes to complete package checking.
+This is a new submission to restore the package to CRAN following archival due to removal of dependency package `Require`.
+This version now includes changes to documentation as requested on Nov 28, 2022 upon a previous submission to CRAN.
+We have also simplified and removed tests and examples that were causing some systems on CRAN to take >10 minutes to complete package checking.
 
 See `NEWS.md` for a full list of changes.
 
@@ -18,16 +20,16 @@ See `NEWS.md` for a full list of changes.
 * macOS 11.7 Big Sur            (local), R 4.2.2
 * macOs (m1) Big Sur             (rhub), R 4.2.2
 * Ubuntu 20.04                 (GitHub), R 4.2.2
-* Ubuntu 20.04                  (local), R 4.2.2
+* Ubuntu 20.04                  (local), R 4.2.2 Patched (2022-11-10 r83330)
 * Windows                      (GitHub), R 4.2.2
 * Windows                       (local), R 4.2.2
 * Windows                 (win-builder), R 4.2.2
 
 ### Development R version
-* Ubuntu 20.04                 (GitHub), R-devel (2022-11-24 r83383)
-* Ubuntu 20.04                  (local), R-devel (2022-11-24 r83383)
-* Windows                      (GitHub), R-devel (2022-10-11 r83083 ucrt)
-* Windows                 (win-builder), R-devel (2022-10-11 r83083 ucrt)
+* Ubuntu 20.04                 (GitHub), R-devel (2022-12-18 r83472)
+* Ubuntu 20.04                  (local), R-devel (2022-12-19 r83478)
+* Windows                      (GitHub), R-devel (2022-12-19 r83478 ucrt)
+* Windows                 (win-builder), R-devel (2022-12-19 r83478 ucrt)
 
 ## R CMD check results
 

@@ -2,17 +2,13 @@
 
 We checked 3 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
 
- * We saw 2 new problems
- * We failed to check 0 packages
+ * We saw 0 new problems
+ * We failed to check 3 packages
 
 Issues with CRAN packages are summarised below.
 
-### New problems
-(This reports the first line of each new failure)
+### Failed to check
 
-* SpaDES
-  checking whether package ‘SpaDES’ can be installed ... WARNING
-
-* SpaDES.core
-  checking whether package ‘SpaDES.core’ can be installed ... WARNING
-
+* SpaDES        (NA)
+* SpaDES.addins (NA)
+* SpaDES.core   (NA)

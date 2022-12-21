@@ -324,7 +324,7 @@ cc <- function(secs, ..., verbose = getOption("reproducible.verbose")) {
 #' By default the return of `showCache` is sorted by `cacheId`. For convenience,
 #' a user can optionally have it unsorted (passing `sorted = FALSE`),
 #' which may be noticeably faster when
-#' the cache is large (>1e4 entries).
+#' the cache is large (`> 1e4` entries).
 #'
 #' @inheritParams clearCache
 #' @inheritParams Cache

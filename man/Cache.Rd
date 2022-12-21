@@ -100,7 +100,7 @@ without evalutating the \code{FUN(...)}.}
 new files following function completion. See Details.
 \emph{NOTE: this argument is experimental and may change in future releases.}}
 
-\item{makeCopy}{Now deprecated. Ignored if uesd.}
+\item{makeCopy}{Now deprecated. Ignored if used.}
 
 \item{quick}{Logical or character. If \code{TRUE},
 no disk-based information will be assessed, i.e., only
@@ -303,7 +303,7 @@ Rather, this randomness should be passed to \code{.cacheExtra}, e.g.,
 By default, \code{drv} uses an SQLite database. This can be sufficient for most cases.
 However, if a user has dozens or more cores making requests to the Cache database,
 it may be insufficient. A user can set up a different database backend, e.g.,
-PostGres that can handle multiple simultaneous read-write situations. See
+PostgreSQL that can handle multiple simultaneous read-write situations. See
 \url{https://github.com/PredictiveEcology/SpaDES/wiki/Using-alternate-database-backends-for-Cache}.
 }
 
@@ -503,7 +503,7 @@ if (interactive())
 \seealso{
 \code{\link[=showCache]{showCache()}}, \code{\link[=clearCache]{clearCache()}}, \code{\link[=keepCache]{keepCache()}},
 \code{\link[=CacheDigest]{CacheDigest()}} to determine the digest of a given function or expression,
-as used internallyl within \code{Cache}, \code{\link[=movedCache]{movedCache()}}, \code{\link[=.robustDigest]{.robustDigest()}}, and
+as used internally within \code{Cache}, \code{\link[=movedCache]{movedCache()}}, \code{\link[=.robustDigest]{.robustDigest()}}, and
 for more advanced uses there are several helper functions,
 e.g., \code{\link[=rmFromCache]{rmFromCache()}}, \code{\link[=CacheStorageDir]{CacheStorageDir()}}
 }
