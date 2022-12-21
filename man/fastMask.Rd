@@ -8,7 +8,7 @@ fastMask(
   x,
   y,
   cores = NULL,
-  useGDAL = getOption("reproducible.useGDAL", TRUE),
+  useGDAL = getOption("reproducible.useGDAL", FALSE),
   verbose = getOption("reproducible.verbose", 1),
   ...,
   skipDeprecastedMsg = FALSE
@@ -25,15 +25,9 @@ triggered. \code{'AUTO'} will calculate 90\% of the total
 number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.}
 
-\item{useGDAL}{Logical or \code{"force"}.
-Defaults to \code{getOption("reproducible.useGDAL" = TRUE)}.
-If \code{TRUE}, then this function will use \code{gdalwarp} only when not
-small enough to fit in memory (i.e., \emph{if the operation fails} the
-\code{raster::canProcessInMemory(x, 3)} test). Using \code{gdalwarp} will
-usually be faster than \code{raster::projectRaster}, the function used
-if this is \code{FALSE}. Since since the two options use different algorithms,
-there may be different projection results. \code{"force"} will cause it to
-use GDAL regardless of the memory test described here.}
+\item{useGDAL}{Logical or \code{"force"}. This is defunct; internals now can use
+\code{terra} if \code{options("reproducible.useTerra" = TRUE)}, which is not (yet)
+the default.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
