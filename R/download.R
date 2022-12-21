@@ -337,7 +337,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       fp <- future::plan()
       if (!is(fp, getOption("reproducible.futurePlan"))) {
         fpNew <- getOption("reproducible.futurePlan")
-        future::plan(fpNew, workers = 2)
+        future::plan(fpNew, workers = 1)
         on.exit({
           future::plan(fp)
         })

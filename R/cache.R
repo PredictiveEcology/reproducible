@@ -906,11 +906,11 @@ Cache <-
                        'Please specify a plan by name, e.g.,\n',
                        '  options("reproducible.futurePlan" = "multiprocess")',
                        verbose = verbose)
-          future::plan("multiprocess", workers = 2)
+          future::plan("multiprocess", workers = 1)
         } else {
           if (!is(future::plan(), getOption("reproducible.futurePlan"))) {
             thePlan <- getOption("reproducible.futurePlan")
-            future::plan(thePlan, workers = 2)
+            future::plan(thePlan, workers = 1)
           }
         }
         .reproEnv$futureEnv[[paste0("future_", rndstr(1,10))]] <-
