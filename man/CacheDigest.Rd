@@ -40,6 +40,7 @@ This can be used by a user to pre-test their arguments before running
 \code{Cache}, for example to determine whether there is a cached copy.
 }
 \examples{
+data.table::setDTthreads(2)
 a <- Cache(rnorm, 1)
 
 # like with Cache, user can pass function and args in a few ways

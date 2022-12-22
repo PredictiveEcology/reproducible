@@ -129,6 +129,7 @@ database files.
 is actually a functioning cache.
 }
 \examples{
+data.table::setDTthreads(2)
 newCache <- tempdir2("cacheHelperExamples")
 createCache(newCache)
 
@@ -141,6 +142,7 @@ rmFromCache(newCache, cacheId = cacheId)
 # clean up
 unlink(dirname(newCache), recursive = TRUE)
 
+data.table::setDTthreads(2)
 newCache <- tempdir2("cacheHelperExamples")
 
 # Given the drv and conn, creates the minimum infrastructure for a cache

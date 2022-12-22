@@ -1,3 +1,4 @@
+data.table::setDTthreads(2)
 tmpDir <- file.path(tempdir())
 opts <- options(reproducible.cachePath = tmpDir)
 

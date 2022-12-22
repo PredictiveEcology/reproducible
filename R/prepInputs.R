@@ -212,6 +212,7 @@ if (getRversion() >= "3.1.0") {
 #'          [postProcess()].
 #' @examples
 #' \donttest{
+#' data.table::setDTthreads(2)
 #' origDir <- getwd()
 #' setwd(reproducible::tempdir2()) # use a temporary directory
 #' # download a zip file from internet, unzip all files, load as shapefile, Cache the call

@@ -2,7 +2,14 @@
 
 This is a new submission to restore the package to CRAN following archival due to removal of dependency package `Require`.
 This version now includes changes to documentation as requested on Nov 28, 2022 upon a previous submission to CRAN.
-We have also simplified and removed tests and examples that were causing some systems on CRAN to take >10 minutes to complete package checking. This version also includes modifications requested by CRAN on Dec 18, 2022 including: all exported functions have /value entries, we edited the DESCRIPTION of the package for clarity, limited parallel threads (used internally by data.table and future) to 1, we removed all cases of triple colon (:::), we removed `if (FALSE)` blocks in examples and either replaced them with /donttest or they were actually intended as comments to user and have been commented instead.
+We have also simplified and removed tests and examples that were causing some systems on CRAN to take >10 minutes to complete package checking.
+This version also includes modifications requested by CRAN on Dec 18, 2022 including:
+
+- all exported functions have `\value` entries;
+- edited the DESCRIPTION of the package for clarity;
+- limited parallel threads (used internally by `data.table` and `future`) to 2;
+- removed all cases of triple colon (`:::`);
+- removed `if (FALSE)` blocks in examples and either replaced them with `\donttest` or they were actually intended as comments to user and have been commented instead.
 
 See `NEWS.md` for a full list of changes.
 
