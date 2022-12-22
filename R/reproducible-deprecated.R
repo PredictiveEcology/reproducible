@@ -19,6 +19,7 @@
 #' @rdname clearStubArtifacts
 #'
 #' @examples
+#' data.table::setDTthreads(2)
 #' tmpDir <- file.path(tempdir(), "reproducible_examples", "clearStubArtifacts")
 #'
 #' lapply(c(runif, rnorm), function(f) {

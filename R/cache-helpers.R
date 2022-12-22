@@ -999,6 +999,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' @inheritParams Cache
 #' @rdname prepareFileBackedRaster
 #' @examples
+#' data.table::setDTthreads(2)
 #' library(raster)
 #' # make a cache repository
 #' a <- Cache(rnorm, 1)

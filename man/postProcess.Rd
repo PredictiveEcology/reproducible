@@ -119,7 +119,7 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \value{
-A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+A GIS file (e.g., \code{RasterLayer}, \code{SpatRaster} etc.) that has been
 appropriately cropped, reprojected, masked, depending on the inputs.
 }
 \description{

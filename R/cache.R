@@ -1528,6 +1528,7 @@ getFunctionName2 <- function(mc) {
 #' @export
 #'
 #' @examples
+#' data.table::setDTthreads(2)
 #' a <- Cache(rnorm, 1)
 #'
 #' # like with Cache, user can pass function and args in a few ways

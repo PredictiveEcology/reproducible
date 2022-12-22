@@ -191,6 +191,7 @@ a message and a pause, if interactive, to prevent accidentally deleting of a
 large cache repository.
 }
 \examples{
+data.table::setDTthreads(2)
 library(raster)
 
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
@@ -220,6 +221,7 @@ toRemove <- cache1[tagKey == "object.size"][as.numeric(tagValue) > 700]$cacheId
 clearCache(tmpDir, userTags = toRemove, ask = FALSE)
 cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 
+data.table::setDTthreads(2)
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear
 

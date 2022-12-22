@@ -144,7 +144,7 @@ postProcess.list <- function(x, ...) {
 #' @importFrom raster removeTmpFiles
 #' @example inst/examples/example_postProcess.R
 #' @rdname postProcess
-#' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+#' @return A GIS file (e.g., `RasterLayer`, `SpatRaster` etc.) that has been
 #' appropriately cropped, reprojected, masked, depending on the inputs.
 #'
 postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = NULL,

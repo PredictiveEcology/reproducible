@@ -43,6 +43,7 @@ and changes the pointer (i.e., \code{filename(object)}) so that it is pointing
 to the new file.
 }
 \examples{
+data.table::setDTthreads(2)
 library(raster)
 # make a cache repository
 a <- Cache(rnorm, 1)

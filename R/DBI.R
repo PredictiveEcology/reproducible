@@ -20,6 +20,7 @@
 #'
 #' @export
 #' @examples
+#' data.table::setDTthreads(2)
 #' newCache <- tempdir2("cacheHelperExamples")
 #' createCache(newCache)
 #'
@@ -415,6 +416,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 #' `CacheStoredFile` returns the file path to the file with the specified hash value.
 #'
 #' @examples
+#' data.table::setDTthreads(2)
 #' newCache <- tempdir2("cacheHelperExamples")
 #'
 #' # Given the drv and conn, creates the minimum infrastructure for a cache
@@ -609,7 +611,9 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 #' name mismatch.
 #' @return
 #' `movedCache` does not return anything; it is called for its side effects.
+#'
 #' @examples
+#' data.table::setDTthreads(2)
 #' tmpdir <- "tmpdir"
 #' tmpCache <- "tmpCache"
 #' tmpCacheDir <- normalizePath(file.path(tempdir(), tmpCache), mustWork = FALSE)

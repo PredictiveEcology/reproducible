@@ -43,6 +43,7 @@ path, calls to \code{Cache} will attempt to call this internally if it detects a
 name mismatch.
 }
 \examples{
+data.table::setDTthreads(2)
 tmpdir <- "tmpdir"
 tmpCache <- "tmpCache"
 tmpCacheDir <- normalizePath(file.path(tempdir(), tmpCache), mustWork = FALSE)
