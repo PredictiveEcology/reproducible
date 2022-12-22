@@ -1402,6 +1402,8 @@ test_that("assessDataType doesn't work", {
 })
 
 test_that("assessDataType doesn't work for GDAL", {
+  skip_if_not_installed("googledrive")
+
   testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
                                                 "reproducible.inputPaths" = NULL),
                           needGoogle = TRUE)
