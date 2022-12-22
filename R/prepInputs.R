@@ -736,12 +736,13 @@ extractFromArchive <- function(archive,
     isRaster <- fileExt %in% funPoss[funPoss[, "type"] == "Raster", "extension"]
     isRDS <- fileExt %in% funPoss[funPoss[, "extension"] == "rds", "extension"]
     if (any(isShapefile)) {
-      if (requireNamespace("sf", quietly = TRUE) ) {
-        if (!isTRUE(grepl("st_read", fun)))
-          messagePrepInputs("Using sf::st_read on shapefile because sf package is available; to force old ",
-                            "behaviour with 'raster::shapefile' use fun = 'raster::shapefile' or ",
-                            "options('reproducible.shapefileRead' = 'raster::shapefile')")
-      }
+      if (is.null(fun))
+        if (requireNamespace("sf", quietly = TRUE) ) {
+          if (!isTRUE(grepl("st_read", fun)))
+            messagePrepInputs("Using sf::st_read on shapefile because sf package is available; to force old ",
+                              "behaviour with 'raster::shapefile' use fun = 'raster::shapefile' or ",
+                              "options('reproducible.shapefileRead' = 'raster::shapefile')")
+        }
     }
   }
   if (is.null(fun)) {
