@@ -906,11 +906,11 @@ Cache <-
                        'Please specify a plan by name, e.g.,\n',
                        '  options("reproducible.futurePlan" = "multiprocess")',
                        verbose = verbose)
-          future::plan("multiprocess", workers = 2)
+          future::plan("multiprocess", workers = 1)
         } else {
           if (!is(future::plan(), getOption("reproducible.futurePlan"))) {
             thePlan <- getOption("reproducible.futurePlan")
-            future::plan(thePlan, workers = 2)
+            future::plan(thePlan, workers = 1)
           }
         }
         .reproEnv$futureEnv[[paste0("future_", rndstr(1,10))]] <-
@@ -1039,6 +1039,12 @@ Cache <-
 #' @export
 #' @inheritParams Cache
 #' @inheritParams saveToCache
+#' @return
+#' Run for its side effect.
+#' This will add the `objectToSave` to the cachelocated at `cachePath`,
+#' using `cacheId` as its id, while
+#' updating the database entry. It will do this using the future package, so it is
+#' written in a future.
 writeFuture <- function(written, outputToSave, cachePath, userTags,
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL),
@@ -1498,6 +1504,11 @@ getFunctionName2 <- function(mc) {
 #'
 #' @export
 #' @importFrom data.table setattr
+#' @return
+#' This sets or updates the `subAttr` element of a list that is located at
+#' `attr(object, attr)`, with the `value`. This, therefore, updates a subelement
+#'  of a list attribute and returns that same object with the updated attribute.
+#'
 #' @rdname setSubAttrInList
 .setSubAttrInList <- function(object, attr, subAttr, value) {
   .CacheAttr <- attr(object, attr)

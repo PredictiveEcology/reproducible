@@ -921,6 +921,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 #' @author Alex Chubaty and Eliot McIntire
 #' @export
+#' @return
+#' This function is called for its side effects, which will be a `file.link` is that
+#' is available or `file.copy` if not (e.g., the two directories are not on the
+#' same physical disk).
 #'
 #' @examples
 #' library(datasets)

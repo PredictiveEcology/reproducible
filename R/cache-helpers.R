@@ -477,6 +477,8 @@ setAs(from = "character", to = "Path", function(from) {
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @rdname copyFile
+#' @return
+#' This function is called for its side effect, i.e., a file is copied `from` to `to`.
 #'
 #' @examples
 #' tmpDirFrom <- file.path(tempdir(), "example_fileCopy_from")
@@ -998,22 +1000,6 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' @importFrom raster dataType filename hasValues inMemory nlayers writeRaster
 #' @inheritParams Cache
 #' @rdname prepareFileBackedRaster
-#' @examples
-#' data.table::setDTthreads(2)
-#' library(raster)
-#' # make a cache repository
-#' a <- Cache(rnorm, 1)
-#'
-#' r <- raster(extent(0,10,0,10), vals = 1:100)
-#'
-#' # write to disk manually -- will be in tempdir()
-#' r <- writeRaster(r, file = tempfile())
-#'
-#' # copy it to the cache repository
-#' r <- reproducible:::.prepareFileBackedRaster(r, tempdir())
-#'
-#' r # now in "rasters" subfolder of tempdir()
-#'
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                      conn = getOption("reproducible.conn", NULL),

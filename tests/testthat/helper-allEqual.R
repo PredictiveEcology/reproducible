@@ -191,52 +191,6 @@ urlShapefilesZip <- "https://drive.google.com/file/d/1z1x0oI5jUDJQosOXacI8xbzbR1
 #targetFileLuxRDS <- "GADM_3.6_LUX_adm0.rds"
 targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
 
-.GADMtmp <- function(country, level, download, path, version) {
-  country <- raster:::.getCountry(country)
-  if (missing(level)) {
-    stop("provide a \"level=\" argument; levels can be 0, 1, or 2 for most countries, and higher for some")
-  }
-  filename <- paste(path, "GADM_", version, "_", country, "_adm",
-                    level, ".rds", sep = "")
-  if (!file.exists(filename)) {
-    if (download) {
-      baseurl <- paste0("https://biogeo.ucdavis.edu/data/gadm",version,"/Rsp/gadm36")
-      #baseurl <- paste0("http://biogeo.ucdavis.edu/data/gadm",
-      #    version)
-      if (version == 2) {
-        theurl <- paste(baseurl, "/R/", country, "_adm",
-                        level, ".RData", sep = "")
-      } else if (version == 3.6) {
-        # https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds
-        theurl <- paste(baseurl, "_", country, "_",
-                        level, "_sp.rds", sep = "")
-      } else {
-        theurl <- paste(baseurl, "/rds/", country, "_adm",
-                        level, ".rds", sep = "")
-      }
-      raster:::.download(theurl, filename)
-      if (!file.exists(filename)) {
-        messagePrepInputs("\nCould not download file -- perhaps it does not exist")
-      }
-    }
-    else {
-      messagePrepInputs("File not available locally. Use 'download = TRUE'")
-    }
-  }
-  if (file.exists(filename)) {
-    if (version == 2) {
-      thisenvir <- new.env(parent = emptyenv())
-      data <- get(load(filename, thisenvir), thisenvir)
-    }
-    else {
-      data <- readRDS(filename)
-    }
-    return(data)
-  }
-  else {
-    return(NULL)
-  }
-}
 
 ## TODO: switch to `geodata` package (raster::getData() is deprecated) (#256)
 getDataFn <- function(...) {
@@ -470,3 +424,4 @@ runTestsWithTimings <- function(nameOfOuterList = "ff", envir = parent.frame(), 
   gg[, TestFile := basename(TestFile)]
   gg
 }
+

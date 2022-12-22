@@ -5,6 +5,10 @@
 #' See Details below.
 #'
 #' @export
+#' @return
+#' This function returns a list of all the options that the `reproducible` package
+#' sets and uses. See below for details of each.
+#'
 #' @details
 #'
 #' Below are options that can be set with `options("reproducible.xxx" = newValue)`,
@@ -197,7 +201,7 @@ reproducibleOptions <- function() {
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
     reproducible.useDBI = TRUE,
-    reproducible.useGDAL = TRUE, #
+    reproducible.useGDAL = FALSE, #
     reproducible.useMemoise = FALSE, #memoise
     reproducible.useNewDigestAlgorithm = 2, # TODO: change in next release
     reproducible.useTerra = FALSE, # Default for now
