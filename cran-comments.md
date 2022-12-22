@@ -33,10 +33,10 @@ See `NEWS.md` for a full list of changes.
 * Windows                 (win-builder), R 4.2.2
 
 ### Development R version
-* Ubuntu 20.04                 (GitHub), R-devel (2022-12-18 r83472)
+* Ubuntu 20.04                 (GitHub), R-devel (2022-12-20 r83482)
 * Ubuntu 20.04                  (local), R-devel (2022-12-19 r83478)
-* Windows                      (GitHub), R-devel (2022-12-19 r83478 ucrt)
-* Windows                 (win-builder), R-devel (2022-12-19 r83478 ucrt)
+* Windows                      (GitHub), R-devel (2022-12-20 r83482 ucrt)
+* Windows                 (win-builder), R-devel (2022-12-21 r83491 ucrt)
 
 ## R CMD check results
 
