@@ -184,24 +184,25 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
 
   if (isRaster) {
     from <- terra::rast(from)
-  } else if (isVectorNonTerra) {
-    osFrom <- object.size(from)
-    lg <- osFrom > 5e8
-    if (lg) {
-      st <- Sys.time()
-      messagePrepInputs("  `from` is large, converting to terra object will take some time ...")
-    }
-    from <- suppressWarningsSpecific(terra::vect(sf::st_as_sf(from)), shldBeChar)
-    if (lg) {
-      messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
-                                             units = "secs", digits = 3))
-
-    }
-  }
+  } # else if (isVectorNonTerra) {
+  #   osFrom <- object.size(from)
+  #   lg <- osFrom > 5e8
+  #   if (lg) {
+  #     st <- Sys.time()
+  #     messagePrepInputs("  `from` is large, converting to terra object will take some time ...")
+  #   }
+  #   from <- suppressWarningsSpecific(terra::vect(sf::st_as_sf(from)), shldBeChar)
+  #   if (lg) {
+  #     messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
+  #                                            units = "secs", digits = 3))
+  #
+  #   }
+  # }
 
   #############################################################
   # crop project mask sequence ################################
   #############################################################
+  # browser()
   from <- cropTo(from, cropTo, needBuffer = TRUE, overwrite = overwrite) # crop first for speed
   from <- projectTo(from, projectTo, method = method, overwrite = overwrite) # need to project with edges intact
   from <- maskTo(from, maskTo, overwrite = overwrite)
@@ -230,8 +231,9 @@ isSpatial <- function(x) inherits(x, "Spatial")
 isSpat <- function(x) is(x, "SpatRaster") || is(x, "SpatVector")
 isSpat2 <- function(origClass) any(origClass %in% c("SpatVector", "SpatRaster"))
 isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
-isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || is(x, "sf")
+isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || isSF(x)
 isSpatialAny <- function(x) isGridded(x) || isVector(x)
+isSF <- function(x) is(x, "sf") || is(x, "sfc")
 
 
 #' Fix common errors in GIS layers, using `terra`
@@ -252,9 +254,16 @@ fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.ve
   if (isVector(x)) {
     if (!is.null(error))
       messageDeclareError(error, fromFnName, verbose)
-    xValids <- terra::is.valid(x)
-    if (any(!xValids))
-      x <- terra::makeValid(x)
+    if (isSF(x)) {
+      xValids <- sf::st_is_valid(x)
+      if (any(!xValids))
+        x <- sf::st_make_valid(x)
+    } else {
+      xValids <- terra::is.valid(x)
+      if (any(!xValids))
+        x <- terra::makeValid(x)
+    }
+
   }
   x
 }
@@ -272,9 +281,9 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
         maskTo <- terra::rast(maskTo)
       if (is(maskTo, "Spatial"))
         maskTo <- sf::st_as_sf(maskTo)
-      if (is(maskTo, "sf"))
-        maskTo <- terra::vect(maskTo)
-      if (!isSpat(from)) {
+      # if (isSF(maskTo))
+      #   maskTo <- terra::vect(maskTo)
+      if (!isSpat(from) && !isSF(from)) {
         if (isVector(from)) {
           from <- terra::vect(from)
         } else {
@@ -287,7 +296,12 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
         if (isGridded(maskTo)) {
           maskTo <- terra::project(maskTo, from, overwrite = overwrite)
         } else {
-          maskTo <- terra::project(maskTo, from)
+          if (isSF(maskTo)) {
+            maskTo <- sf::st_transform(maskTo, sf::st_crs(from))
+          } else {
+            maskTo <- terra::project(maskTo, from)
+          }
+
         }
       }
       messagePrepInputs("    masking...", appendLF = FALSE)
@@ -303,14 +317,28 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
       while (attempt <= 2) {
         fromInt <- try({
           if (isVector(maskTo))
-            if (length(maskTo) > 1)
-              maskTo <- terra::aggregate(maskTo)
+            if (length(maskTo) > 1) {
+              if (isSF(maskTo)) {
+                maskTo <- sf::st_union(maskTo)
+              } else {
+                maskTo <- terra::aggregate(maskTo)
+              }
+            }
+
           if (isVector(from)) {
-            terra::intersect(from, maskTo)
+            if (isSF(from)) {
+              sf::st_intersection(from, maskTo)
+            } else {
+              terra::intersect(from, maskTo)
+            }
+
           } else {
             if (isGridded(maskTo)) {
               terra::mask(from, maskTo, overwrite = overwrite)
             } else {
+              if (isSF(maskTo)) {
+                maskTo <- terra::vect(maskTo) # alternative is stars, and that is not Suggests
+              }
               terra::mask(from, maskTo, touches = touches, overwrite = overwrite)
             }
           }
@@ -412,7 +440,13 @@ projectTo <- function(from, projectTo, method, overwrite = FALSE) {
           isSpatial <- is(from, "Spatial")
           if (isSpatial)
             from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
-          from <- terra::project(from, projectTo)
+          isSF <- isSF(from)
+          if (isSF) {
+            from <- sf::st_transform(from, projectTo)
+          } else {
+            from <- terra::project(from, projectTo)
+          }
+
           if (isSpatial) from <- as(from, "Spatial")
           from
         } else {
@@ -462,7 +496,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
         }
         ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
       }
-      if (isVector(from))
+      if (isVector(from) && isSpat(from))
         ext <- terra::vect(ext)
 
       # This is only needed if crop happens before a projection... need to cells beyond edges so projection is accurate
@@ -480,7 +514,12 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
         if (isGridded(from)) {
           fromInt <- try(terra::crop(from, ext, overwrite = overwrite), silent = TRUE)
         } else {
-          fromInt <- try(terra::crop(from, ext), silent = TRUE)
+          if (isSF(from)) {
+            fromInt <- try(sf::st_crop(from, ext), silent = TRUE)
+          } else {
+            fromInt <- try(terra::crop(from, ext), silent = TRUE)
+          }
+
         }
         if (is(fromInt, "try-error")) {
           if (attempt == 1) {
@@ -590,7 +629,7 @@ is.naSpatial <- function(x) {
 
 cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")) {
   st <- Sys.time()
-  if (is(from, "sf") && (is(cropToVect, "sf") || is(cropToVect, "Spatial"))) {
+  if (isSF(from) && (isSF(cropToVect) || is(cropToVect, "Spatial"))) {
     messagePrepInputs("    pre-cropping because `from` is sf and cropTo is sf/Spatial*")
     attempt <- 1
     while (attempt <= 2) {
