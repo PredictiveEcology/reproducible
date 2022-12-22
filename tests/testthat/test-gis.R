@@ -1,8 +1,8 @@
 test_that("testing prepInputs with deauthorized googledrive", {
   skip_on_cran()
+  skip_if_not_installed("googledrive")
+
   if (interactive()) {
-    if (!requireNamespace("googledrive", quietly = TRUE))
-      stop(requireNamespaceMsg("googledrive", "to use google drive files"))
     testInitOut <- testInit(needGoogle = FALSE, "googledrive")
     on.exit({
       testOnExit(testInitOut)

@@ -431,6 +431,8 @@ test_that("message when extracting a file that is already present", {
 test_that("Test to fix issue #101 prepInputs on raster from disk", {
   skip_on_cran()
   skip_on_ci()
+  skip_if_not_installed("googledrive")
+
   testInitOut <- testInit("raster", needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)

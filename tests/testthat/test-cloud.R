@@ -1,17 +1,16 @@
 test_that("test Cache(useCloud=TRUE, ...)", {
-  if (!requireNamespace("googledrive", quietly = TRUE))
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
-
   skip_on_cran()
+  skip_if_not_installed("googledrive")
   skip_if_no_token()
+
   if (interactive()) {
     testInitOut <- testInit(
       c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
-      #needGoogle = TRUE,
+      needGoogle = TRUE,
       opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
                   "reproducible.ask" = FALSE)
     )
-    # googledrive::drive_auth("predictiveecology@gmail.com")
+
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
@@ -148,9 +147,12 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 })
 
 test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd", {
+  skip_if_not_installed("googledrive")
   skip_if_no_token()
   if (interactive()) {
-    testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
+    testInitOut <- testInit(c("googledrive", "raster"),
+                            tmpFileExt = c(".tif", ".grd"),
+                            needGoogle = TRUE,
                             opts = list("reproducible.ask" = FALSE))
 
     opts <- options("reproducible.cachePath" = tmpdir)
@@ -184,9 +186,12 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
 })
 
 test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
+  skip_if_not_installed("googledrive")
   skip_if_no_token()
   if (interactive()) {
-    testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
+    testInitOut <- testInit(c("googledrive", "raster"),
+                            tmpFileExt = c(".tif", ".grd"),
+                            needGoogle = TRUE,
                             opts = list("reproducible.ask" = FALSE))
 
     googledrive::drive_auth("predictiveecology@gmail.com")
@@ -207,9 +212,12 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
 })
 
 test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
+  skip_if_not_installed("googledrive")
   skip_if_no_token()
   if (interactive()) {
-    testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
+    testInitOut <- testInit(c("googledrive", "raster"),
+                            tmpFileExt = c(".tif", ".grd"),
+                            needGoogle = TRUE,
                             opts = list("reproducible.ask" = FALSE))
 
     opts <- options("reproducible.cachePath" = tmpdir)
@@ -234,10 +242,9 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
 })
 
 test_that("prepInputs works with team drives", {
-  if (!requireNamespace("googledrive", quietly = TRUE))
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
-
+  skip_if_not_installed("googledrive")
   skip_if_no_token()
+
   if (interactive()) {
     testInitOut <- testInit(
       "googledrive",
