@@ -11,7 +11,7 @@ output:
     toc: yes
 vignette: >
   %\VignetteIndexEntry{Introduction to Cache}
-  %\VignetteDepends{DBI, raster}
+  %\VignetteDepends{DBI, raster, data.table}
   %\VignetteKeyword{Cache}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
@@ -50,6 +50,8 @@ This is particularly useful for expensive operations.
 ```{r function-level, echo=TRUE}
 library(raster)
 library(reproducible)
+library(data.table)
+setDTthreads(1) # user can omit this with little effect
 
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 dir.create(tmpDir, recursive = TRUE)
@@ -95,7 +97,8 @@ ranNumsA <- Cache(rnorm, 10, 16, cachePath = tmpDir)
 
 # All same
 ranNumsB <- Cache(rnorm, 10, 16, cachePath = tmpDir) # recovers cached copy
-ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cachePath = tmpDir) # recovers cached copy
+ranNumsD1 <- Cache(quote(rnorm(n = 10, 16)), cachePath = tmpDir) # recovers cached copy
+ranNumsD2 <- Cache(rnorm(n = 10, 16), cachePath = tmpDir) # recovers cached copy
 
 # Any minor change makes it different
 ranNumsE <- Cache(rnorm, 10, 6, cachePath = tmpDir) # different
@@ -105,7 +108,7 @@ ranNumsE <- Cache(rnorm, 10, 6, cachePath = tmpDir) # different
 
 ```{r tags}
 ranNumsA <- Cache(rnorm, 4, cachePath = tmpDir, userTags = "objectName:a")
-ranNumsB <- Cache(runif, 4, cachePath = tmpDir, userTags = "objectName:b")
+ranNumsB <- Cache(runif(4), cachePath = tmpDir, userTags = "objectName:b")
 
 showCache(tmpDir, userTags = c("objectName"))
 showCache(tmpDir, userTags = c("^a$")) # regular expression ... "a" exactly
@@ -144,7 +147,7 @@ showCache(tmpDir) # still has more recently accessed
 
 ```{r keepCache}
 ranNumsA <- Cache(rnorm, 4, cachePath = tmpDir, userTags = "objectName:a")
-ranNumsB <- Cache(runif, 4, cachePath = tmpDir, userTags = "objectName:b")
+ranNumsB <- Cache(runif(4), cachePath = tmpDir, userTags = "objectName:b")
 
 # keep only those cached items from the last 24 hours
 oneDay <- 60 * 60 * 24

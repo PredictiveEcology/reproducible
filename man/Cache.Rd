@@ -380,6 +380,7 @@ This feature is now deprecated. Do not use as it is ignored.
 }
 
 \examples{
+data.table::setDTthreads(2)
 tmpDir <- file.path(tempdir())
 opts <- options(reproducible.cachePath = tmpDir)
 

@@ -91,14 +91,12 @@ g$one <- 3L
 g$one
 f$one
 e$one
+## To create a new deep copy method, use the following template
+## setMethod("Copy", signature = "the class", # where = specify here if not in a package,
+##           definition = function(object, filebackendDir, ...) {
+##           # write deep copy code here
+##           })
 
-# To create a new deep copy method, use the following template
-if (FALSE) {
-setMethod("Copy", signature = "the class", # where = specify here if not in a package,
-  definition = function(object, filebackendDir, ...) {
-  # write deep copy code here
-})
-}
 }
 \seealso{
 \code{\link[=.robustDigest]{.robustDigest()}}, \code{\link[=Filenames]{Filenames()}}

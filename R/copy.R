@@ -81,14 +81,12 @@
 #' g$one
 #' f$one
 #' e$one
+#' ## To create a new deep copy method, use the following template
+#' ## setMethod("Copy", signature = "the class", # where = specify here if not in a package,
+#' ##           definition = function(object, filebackendDir, ...) {
+#' ##           # write deep copy code here
+#' ##           })
 #'
-#' # To create a new deep copy method, use the following template
-#' if (FALSE) {
-#' setMethod("Copy", signature = "the class", # where = specify here if not in a package,
-#'   definition = function(object, filebackendDir, ...) {
-#'   # write deep copy code here
-#' })
-#' }
 setGeneric("Copy", function(object, ...) {
   standardGeneric("Copy")
 })

@@ -24,6 +24,11 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
+\value{
+This function is called for its side effects, which will be a \code{file.link} is that
+is available or \code{file.copy} if not (e.g., the two directories are not on the
+same physical disk).
+}
 \description{
 Attempt first to make a hardlink. If that fails, try to make
 a symlink (on non-windows systems and \code{symlink = TRUE}).

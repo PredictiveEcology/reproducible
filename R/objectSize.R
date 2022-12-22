@@ -66,7 +66,11 @@ objSize.default <- function(x, quick = FALSE, ...) {
   }
   if (is(x, "SpatRaster") || is(x, "SpatVector")) {
     if (.requireNamespace("terra"))
-      x <- terra::wrap(x)
+      if (is(x, "SpatVector")) # too slow for large SpatVectors
+        x <- list(terra::geom(x), terra::values(x)) # approximate
+    else
+      x <- list(terra::wrap(x))
+
   }
   out <- obj_size(x)
   if (exists("out2", inherits = FALSE)) {

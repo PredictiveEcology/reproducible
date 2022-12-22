@@ -1,6 +1,6 @@
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
-Version 1.2.15
+Version 1.2.16
 ==============
 
 ## Dependency changes
@@ -25,6 +25,7 @@ Version 1.2.15
 
 ## Deprecated and defunct
 * remove defunct argument `digestPathContent` from `Cache`
+* `options("reproducible.useGDAL")` is now deprecated; the package is moving towards `terra`. 
 
 Version 1.2.11
 ==============

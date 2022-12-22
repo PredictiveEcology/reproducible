@@ -44,6 +44,9 @@ rsync.}
 
 \item{silent}{Should a progress be printed.}
 }
+\value{
+This function is called for its side effect, i.e., a file is copied \code{from} to \code{to}.
+}
 \description{
 This is replacement for \code{file.copy}, but for one file at a time.
 The additional feature is that it will use \code{robocopy} (on Windows) or

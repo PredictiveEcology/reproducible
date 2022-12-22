@@ -42,22 +42,6 @@ This function creates an explicit file copy of the file that is backing the rast
 and changes the pointer (i.e., \code{filename(object)}) so that it is pointing
 to the new file.
 }
-\examples{
-library(raster)
-# make a cache repository
-a <- Cache(rnorm, 1)
-
-r <- raster(extent(0,10,0,10), vals = 1:100)
-
-# write to disk manually -- will be in tempdir()
-r <- writeRaster(r, file = tempfile())
-
-# copy it to the cache repository
-r <- reproducible:::.prepareFileBackedRaster(r, tempdir())
-
-r # now in "rasters" subfolder of tempdir()
-
-}
 \author{
 Eliot McIntire
 }

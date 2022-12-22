@@ -45,6 +45,13 @@ the object will be identical each time; this may be useful in operational code.}
 will be made to the file with that \code{cacheId} name in the cache repo.
 This is used when identical outputs exist in the cache. This will save disk space.}
 }
+\value{
+Run for its side effect.
+This will add the \code{objectToSave} to the cache located at \code{cachePath},
+using \code{cacheId} as its id, while
+updating the database entry. It will do this using the future package, so it is
+written in a future.
+}
 \description{
 This will be used internally if \code{options("reproducible.futurePlan" = TRUE)}.
 This is still experimental.
