@@ -39,7 +39,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
       </span>
     </div>
 
@@ -88,7 +88,7 @@
                         <h4 data-toc-skip class="author">Eliot J. B.
 McIntire</h4>
             
-            <h4 data-toc-skip class="date">December 19 2022</h4>
+            <h4 data-toc-skip class="date">December 22 2022</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/vignettes/Intro-to-Cache.Rmd" class="external-link"><code>vignettes/Intro-to-Cache.Rmd</code></a></small>
       <div class="hidden name"><code>Intro-to-Cache.Rmd</code></div>
@@ -150,6 +150,14 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <pre><code><span><span class="co">## Loading required package: sp</span></span></code></pre>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://reproducible.predictiveecology.org">reproducible</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">## Attaching package: 'data.table'</span></span></code></pre>
+<pre><code><span><span class="co">## The following object is masked from 'package:raster':</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##     shift</span></span></code></pre>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span> <span class="co"># user can omit this with little effect</span></span>
 <span></span>
 <span><span class="va">tmpDir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"reproducible_examples"</span>, <span class="st">"Cache"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">tmpDir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -162,8 +170,8 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co"># No Cache</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="va">map1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/raster/man/projectRaster.html" class="external-link">projectRaster</a></span><span class="op">(</span><span class="va">ras</span>, crs <span class="op">=</span> <span class="va">newCRS</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="co"># Warnings due to new PROJ</span></span></code></pre></div>
 <pre><code><span><span class="co">##    user  system elapsed </span></span>
-<span><span class="co">##   2.695   0.321   3.017</span></span></code></pre>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<span><span class="co">##   2.515   0.353   2.868</span></span></code></pre>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Try with memoise for this example -- for many simple cases, memoising will not be faster</span></span>
 <span><span class="va">opts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="st">"reproducible.useMemoise"</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co"># With Cache -- a little slower the first time because saving to disk</span></span>
@@ -173,8 +181,8 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span>  <span class="op">}</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##    user  system elapsed </span></span>
-<span><span class="co">##   2.796   0.344   3.146</span></span></code></pre>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<span><span class="co">##   2.765   0.314   3.084</span></span></code></pre>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># faster the second time</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>  <span class="va">map2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">projectRaster</span>, <span class="va">ras</span>, crs <span class="op">=</span> <span class="va">newCRS</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span><span class="op">)</span></span>
@@ -182,8 +190,8 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  ...(Object to retrieve (b96ade7aaca8821a.rds) is large: 6.5 Mb)</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">     loaded memoised result from previous projectRaster call</span></span></span></code></pre>
 <pre><code><span><span class="co">##    user  system elapsed </span></span>
-<span><span class="co">##   0.495   0.004   0.503</span></span></code></pre>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<span><span class="co">##   0.458   0.000   0.460</span></span></code></pre>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">opts</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">map1</span>, <span class="va">map2</span><span class="op">)</span> <span class="co"># TRUE</span></span></code></pre></div>
@@ -195,7 +203,7 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <div class="section level4">
 <h4 id="basic-use">Basic use<a class="anchor" aria-label="anchor" href="#basic-use"></a>
 </h4>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/raster" class="external-link">raster</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://magrittr.tidyverse.org" class="external-link">magrittr</a></span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
@@ -203,7 +211,7 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <pre><code><span><span class="co">## The following object is masked from 'package:raster':</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##     extract</span></span></code></pre>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu"><a href="../reference/viewCache.html">clearCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, ask <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>, silent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># just to make sure it is clear</span></span>
 <span></span>
 <span><span class="va">ranNumsA</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">10</span>, <span class="fl">16</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span><span class="op">)</span></span>
@@ -212,19 +220,23 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="va">ranNumsB</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">10</span>, <span class="fl">16</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span><span class="op">)</span> <span class="co"># recovers cached copy</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  ...(Object to retrieve (4fca280cda001fc9.rds))</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span></span></code></pre>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ranNumsD</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substitute.html" class="external-link">quote</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">10</span>, <span class="fl">16</span><span class="op">)</span><span class="op">)</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span><span class="op">)</span> <span class="co"># recovers cached copy</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ranNumsD1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substitute.html" class="external-link">quote</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">10</span>, <span class="fl">16</span><span class="op">)</span><span class="op">)</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span><span class="op">)</span> <span class="co"># recovers cached copy</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  ...(Object to retrieve (4fca280cda001fc9.rds))</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">     loaded cached result from previous quote call</span></span></span></code></pre>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ranNumsD2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">10</span>, <span class="fl">16</span><span class="op">)</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span><span class="op">)</span> <span class="co"># recovers cached copy</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #0000BB;">  ...(Object to retrieve (4fca280cda001fc9.rds))</span></span></span></code></pre>
+<pre><code><span><span class="co">## <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span></span></code></pre>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Any minor change makes it different</span></span>
 <span><span class="va">ranNumsE</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">10</span>, <span class="fl">6</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span><span class="op">)</span> <span class="co"># different</span></span></code></pre></div>
 <div class="section level5">
 <h5 id="example-1-basic-cache-use-with-tags">Example 1: Basic cache use with tags<a class="anchor" aria-label="anchor" href="#example-1-basic-cache-use-with-tags"></a>
 </h5>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ranNumsA</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">4</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"objectName:a"</span><span class="op">)</span></span>
-<span><span class="va">ranNumsB</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">runif</span>, <span class="fl">4</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"objectName:b"</span><span class="op">)</span></span>
+<span><span class="va">ranNumsB</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">4</span><span class="op">)</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"objectName:b"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"objectName"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
@@ -235,10 +247,10 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">##  2: ad0ea27476c50b66            function                 rnorm</span></span>
 <span><span class="co">##  3: ad0ea27476c50b66               class               numeric</span></span>
 <span><span class="co">##  4: ad0ea27476c50b66         object.size                  1008</span></span>
-<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-19 22:34:43</span></span>
+<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-22 04:00:27</span></span>
 <span><span class="co">##  6: ad0ea27476c50b66             inCloud                 FALSE</span></span>
 <span><span class="co">##  7: ad0ea27476c50b66          resultHash                      </span></span>
-<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002528429 secs</span></span>
+<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002405643 secs</span></span>
 <span><span class="co">##  9: ad0ea27476c50b66 elapsedTimeFirstRun     2.479553e-05 secs</span></span>
 <span><span class="co">## 10: ad0ea27476c50b66      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 11: ad0ea27476c50b66      otherFunctions               do.call</span></span>
@@ -256,16 +268,16 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 23: ad0ea27476c50b66           preDigest mean:c40c00762a0dac94</span></span>
 <span><span class="co">## 24: ad0ea27476c50b66           preDigest   sd:853b1797f54b229c</span></span>
 <span><span class="co">## 25: ad0ea27476c50b66           preDigest .FUN:4f604aa46882b368</span></span>
-<span><span class="co">## 26: ad0ea27476c50b66           file.size                   175</span></span>
+<span><span class="co">## 26: ad0ea27476c50b66           file.size                   174</span></span>
 <span><span class="co">## 27: deaa37372f85861b          objectName                     b</span></span>
 <span><span class="co">## 28: deaa37372f85861b            function                 runif</span></span>
 <span><span class="co">## 29: deaa37372f85861b               class               numeric</span></span>
 <span><span class="co">## 30: deaa37372f85861b         object.size                  1008</span></span>
-<span><span class="co">## 31: deaa37372f85861b            accessed   2022-12-19 22:34:43</span></span>
+<span><span class="co">## 31: deaa37372f85861b            accessed   2022-12-22 04:00:27</span></span>
 <span><span class="co">## 32: deaa37372f85861b             inCloud                 FALSE</span></span>
 <span><span class="co">## 33: deaa37372f85861b          resultHash                      </span></span>
-<span><span class="co">## 34: deaa37372f85861b   elapsedTimeDigest      0.002794504 secs</span></span>
-<span><span class="co">## 35: deaa37372f85861b elapsedTimeFirstRun     2.336502e-05 secs</span></span>
+<span><span class="co">## 34: deaa37372f85861b   elapsedTimeDigest      0.002358437 secs</span></span>
+<span><span class="co">## 35: deaa37372f85861b elapsedTimeFirstRun     2.241135e-05 secs</span></span>
 <span><span class="co">## 36: deaa37372f85861b      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 37: deaa37372f85861b      otherFunctions               do.call</span></span>
 <span><span class="co">## 38: deaa37372f85861b      otherFunctions          process_file</span></span>
@@ -282,63 +294,63 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 49: deaa37372f85861b           preDigest  min:c40c00762a0dac94</span></span>
 <span><span class="co">## 50: deaa37372f85861b           preDigest  max:853b1797f54b229c</span></span>
 <span><span class="co">## 51: deaa37372f85861b           preDigest .FUN:881ec847b7161f3c</span></span>
-<span><span class="co">## 52: deaa37372f85861b           file.size                   168</span></span>
+<span><span class="co">## 52: deaa37372f85861b           file.size                   170</span></span>
 <span><span class="co">##              cacheId              tagKey              tagValue</span></span>
 <span><span class="co">##             createdDate</span></span>
-<span><span class="co">##  1: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  2: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  3: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  4: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  5: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  6: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  7: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  8: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  9: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 10: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 11: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 12: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 13: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 14: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 15: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 16: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 17: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 18: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 19: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 20: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 21: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 22: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 23: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 24: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 25: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 26: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 27: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 28: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 29: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 30: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 31: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 32: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 33: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 34: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 35: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 36: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 37: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 38: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 39: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 40: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 41: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 42: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 43: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 44: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 45: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 46: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 47: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 48: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 49: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 50: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 51: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 52: 2022-12-19 22:34:43</span></span>
+<span><span class="co">##  1: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  2: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  3: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  4: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  5: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  6: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  7: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  8: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  9: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 10: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 11: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 12: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 13: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 14: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 15: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 16: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 17: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 18: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 19: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 20: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 21: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 22: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 23: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 24: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 25: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 26: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 27: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 28: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 29: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 30: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 31: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 32: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 33: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 34: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 35: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 36: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 37: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 38: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 39: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 40: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 41: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 42: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 43: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 44: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 45: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 46: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 47: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 48: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 49: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 50: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 51: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 52: 2022-12-22 04:00:27</span></span>
 <span><span class="co">##             createdDate</span></span></code></pre>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"^a$"</span><span class="op">)</span><span class="op">)</span> <span class="co"># regular expression ... "a" exactly</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Total (including Rasters): 252 bytes</span></span></span></code></pre>
@@ -348,10 +360,10 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">##  2: ad0ea27476c50b66            function                 rnorm</span></span>
 <span><span class="co">##  3: ad0ea27476c50b66               class               numeric</span></span>
 <span><span class="co">##  4: ad0ea27476c50b66         object.size                  1008</span></span>
-<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-19 22:34:43</span></span>
+<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-22 04:00:27</span></span>
 <span><span class="co">##  6: ad0ea27476c50b66             inCloud                 FALSE</span></span>
 <span><span class="co">##  7: ad0ea27476c50b66          resultHash                      </span></span>
-<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002528429 secs</span></span>
+<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002405643 secs</span></span>
 <span><span class="co">##  9: ad0ea27476c50b66 elapsedTimeFirstRun     2.479553e-05 secs</span></span>
 <span><span class="co">## 10: ad0ea27476c50b66      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 11: ad0ea27476c50b66      otherFunctions               do.call</span></span>
@@ -369,37 +381,37 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 23: ad0ea27476c50b66           preDigest mean:c40c00762a0dac94</span></span>
 <span><span class="co">## 24: ad0ea27476c50b66           preDigest   sd:853b1797f54b229c</span></span>
 <span><span class="co">## 25: ad0ea27476c50b66           preDigest .FUN:4f604aa46882b368</span></span>
-<span><span class="co">## 26: ad0ea27476c50b66           file.size                   175</span></span>
+<span><span class="co">## 26: ad0ea27476c50b66           file.size                   174</span></span>
 <span><span class="co">##              cacheId              tagKey              tagValue</span></span>
 <span><span class="co">##             createdDate</span></span>
-<span><span class="co">##  1: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  2: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  3: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  4: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  5: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  6: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  7: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  8: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  9: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 10: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 11: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 12: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 13: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 14: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 15: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 16: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 17: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 18: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 19: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 20: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 21: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 22: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 23: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 24: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 25: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 26: 2022-12-19 22:34:43</span></span>
+<span><span class="co">##  1: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  2: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  3: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  4: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  5: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  6: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  7: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  8: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  9: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 10: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 11: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 12: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 13: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 14: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 15: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 16: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 17: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 18: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 19: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 20: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 21: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 22: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 23: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 24: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 25: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 26: 2022-12-22 04:00:27</span></span>
 <span><span class="co">##             createdDate</span></span></code></pre>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"runif"</span><span class="op">)</span><span class="op">)</span> <span class="co"># show only cached objects made during runif call</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Total (including Rasters): 252 bytes</span></span></span></code></pre>
@@ -409,11 +421,11 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">##  2: deaa37372f85861b            function                 runif</span></span>
 <span><span class="co">##  3: deaa37372f85861b               class               numeric</span></span>
 <span><span class="co">##  4: deaa37372f85861b         object.size                  1008</span></span>
-<span><span class="co">##  5: deaa37372f85861b            accessed   2022-12-19 22:34:43</span></span>
+<span><span class="co">##  5: deaa37372f85861b            accessed   2022-12-22 04:00:27</span></span>
 <span><span class="co">##  6: deaa37372f85861b             inCloud                 FALSE</span></span>
 <span><span class="co">##  7: deaa37372f85861b          resultHash                      </span></span>
-<span><span class="co">##  8: deaa37372f85861b   elapsedTimeDigest      0.002794504 secs</span></span>
-<span><span class="co">##  9: deaa37372f85861b elapsedTimeFirstRun     2.336502e-05 secs</span></span>
+<span><span class="co">##  8: deaa37372f85861b   elapsedTimeDigest      0.002358437 secs</span></span>
+<span><span class="co">##  9: deaa37372f85861b elapsedTimeFirstRun     2.241135e-05 secs</span></span>
 <span><span class="co">## 10: deaa37372f85861b      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 11: deaa37372f85861b      otherFunctions               do.call</span></span>
 <span><span class="co">## 12: deaa37372f85861b      otherFunctions          process_file</span></span>
@@ -430,42 +442,42 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 23: deaa37372f85861b           preDigest  min:c40c00762a0dac94</span></span>
 <span><span class="co">## 24: deaa37372f85861b           preDigest  max:853b1797f54b229c</span></span>
 <span><span class="co">## 25: deaa37372f85861b           preDigest .FUN:881ec847b7161f3c</span></span>
-<span><span class="co">## 26: deaa37372f85861b           file.size                   168</span></span>
+<span><span class="co">## 26: deaa37372f85861b           file.size                   170</span></span>
 <span><span class="co">##              cacheId              tagKey              tagValue</span></span>
 <span><span class="co">##             createdDate</span></span>
-<span><span class="co">##  1: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  2: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  3: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  4: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  5: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  6: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  7: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  8: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  9: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 10: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 11: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 12: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 13: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 14: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 15: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 16: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 17: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 18: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 19: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 20: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 21: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 22: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 23: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 24: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 25: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 26: 2022-12-19 22:34:43</span></span>
+<span><span class="co">##  1: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  2: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  3: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  4: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  5: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  6: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  7: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  8: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  9: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 10: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 11: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 12: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 13: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 14: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 15: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 16: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 17: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 18: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 19: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 20: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 21: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 22: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 23: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 24: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 25: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 26: 2022-12-22 04:00:27</span></span>
 <span><span class="co">##             createdDate</span></span></code></pre>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/viewCache.html">clearCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"runif"</span><span class="op">)</span>, ask <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="co"># remove only cached objects made during runif call</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Total (including Rasters): 252 bytes</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Selected objects (not including Rasters): 252 bytes</span></span></span></code></pre>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpDir</span><span class="op">)</span> <span class="co"># only those made during rnorm call</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Total (including Rasters): 804 bytes</span></span></span></code></pre>
@@ -474,11 +486,11 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">##  1: 4fca280cda001fc9            function                 rnorm</span></span>
 <span><span class="co">##  2: 4fca280cda001fc9               class               numeric</span></span>
 <span><span class="co">##  3: 4fca280cda001fc9         object.size                  1104</span></span>
-<span><span class="co">##  4: 4fca280cda001fc9            accessed   2022-12-19 22:34:42</span></span>
+<span><span class="co">##  4: 4fca280cda001fc9            accessed   2022-12-22 04:00:27</span></span>
 <span><span class="co">##  5: 4fca280cda001fc9             inCloud                 FALSE</span></span>
 <span><span class="co">##  6: 4fca280cda001fc9          resultHash                      </span></span>
-<span><span class="co">##  7: 4fca280cda001fc9   elapsedTimeDigest      0.003311872 secs</span></span>
-<span><span class="co">##  8: 4fca280cda001fc9 elapsedTimeFirstRun      4.62532e-05 secs</span></span>
+<span><span class="co">##  7: 4fca280cda001fc9   elapsedTimeDigest      0.002795935 secs</span></span>
+<span><span class="co">##  8: 4fca280cda001fc9 elapsedTimeFirstRun       4.1008e-05 secs</span></span>
 <span><span class="co">##  9: 4fca280cda001fc9      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 10: 4fca280cda001fc9      otherFunctions               do.call</span></span>
 <span><span class="co">## 11: 4fca280cda001fc9      otherFunctions          process_file</span></span>
@@ -496,149 +508,151 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 23: 4fca280cda001fc9           preDigest   sd:853b1797f54b229c</span></span>
 <span><span class="co">## 24: 4fca280cda001fc9           preDigest .FUN:4f604aa46882b368</span></span>
 <span><span class="co">## 25: 4fca280cda001fc9           file.size                   223</span></span>
-<span><span class="co">## 26: 4fca280cda001fc9            accessed   2022-12-19 22:34:43</span></span>
-<span><span class="co">## 27: 4fca280cda001fc9     elapsedTimeLoad      0.002612114 secs</span></span>
-<span><span class="co">## 28: 4fca280cda001fc9            accessed   2022-12-19 22:34:43</span></span>
-<span><span class="co">## 29: 5efb386c43c29ce1            function                 rnorm</span></span>
-<span><span class="co">## 30: 5efb386c43c29ce1               class               numeric</span></span>
-<span><span class="co">## 31: 5efb386c43c29ce1         object.size                  1104</span></span>
-<span><span class="co">## 32: 5efb386c43c29ce1            accessed   2022-12-19 22:34:43</span></span>
-<span><span class="co">## 33: 5efb386c43c29ce1             inCloud                 FALSE</span></span>
-<span><span class="co">## 34: 5efb386c43c29ce1          resultHash                      </span></span>
-<span><span class="co">## 35: 5efb386c43c29ce1   elapsedTimeDigest      0.002357006 secs</span></span>
-<span><span class="co">## 36: 5efb386c43c29ce1 elapsedTimeFirstRun     2.670288e-05 secs</span></span>
-<span><span class="co">## 37: 5efb386c43c29ce1      otherFunctions               saveRDS</span></span>
-<span><span class="co">## 38: 5efb386c43c29ce1      otherFunctions               do.call</span></span>
-<span><span class="co">## 39: 5efb386c43c29ce1      otherFunctions          process_file</span></span>
-<span><span class="co">## 40: 5efb386c43c29ce1      otherFunctions         process_group</span></span>
-<span><span class="co">## 41: 5efb386c43c29ce1      otherFunctions   process_group.block</span></span>
-<span><span class="co">## 42: 5efb386c43c29ce1      otherFunctions            call_block</span></span>
-<span><span class="co">## 43: 5efb386c43c29ce1      otherFunctions            block_exec</span></span>
-<span><span class="co">## 44: 5efb386c43c29ce1      otherFunctions                 eng_r</span></span>
-<span><span class="co">## 45: 5efb386c43c29ce1      otherFunctions          in_input_dir</span></span>
-<span><span class="co">## 46: 5efb386c43c29ce1      otherFunctions                in_dir</span></span>
-<span><span class="co">## 47: 5efb386c43c29ce1      otherFunctions             timing_fn</span></span>
-<span><span class="co">## 48: 5efb386c43c29ce1      otherFunctions                handle</span></span>
-<span><span class="co">## 49: 5efb386c43c29ce1           preDigest    n:c5775c3b366fb719</span></span>
-<span><span class="co">## 50: 5efb386c43c29ce1           preDigest mean:152602b8ff81e5bb</span></span>
-<span><span class="co">## 51: 5efb386c43c29ce1           preDigest   sd:853b1797f54b229c</span></span>
-<span><span class="co">## 52: 5efb386c43c29ce1           preDigest .FUN:4f604aa46882b368</span></span>
-<span><span class="co">## 53: 5efb386c43c29ce1           file.size                   224</span></span>
-<span><span class="co">## 54: ad0ea27476c50b66          objectName                     a</span></span>
-<span><span class="co">## 55: ad0ea27476c50b66            function                 rnorm</span></span>
-<span><span class="co">## 56: ad0ea27476c50b66               class               numeric</span></span>
-<span><span class="co">## 57: ad0ea27476c50b66         object.size                  1008</span></span>
-<span><span class="co">## 58: ad0ea27476c50b66            accessed   2022-12-19 22:34:43</span></span>
-<span><span class="co">## 59: ad0ea27476c50b66             inCloud                 FALSE</span></span>
-<span><span class="co">## 60: ad0ea27476c50b66          resultHash                      </span></span>
-<span><span class="co">## 61: ad0ea27476c50b66   elapsedTimeDigest      0.002528429 secs</span></span>
-<span><span class="co">## 62: ad0ea27476c50b66 elapsedTimeFirstRun     2.479553e-05 secs</span></span>
-<span><span class="co">## 63: ad0ea27476c50b66      otherFunctions               saveRDS</span></span>
-<span><span class="co">## 64: ad0ea27476c50b66      otherFunctions               do.call</span></span>
-<span><span class="co">## 65: ad0ea27476c50b66      otherFunctions          process_file</span></span>
-<span><span class="co">## 66: ad0ea27476c50b66      otherFunctions         process_group</span></span>
-<span><span class="co">## 67: ad0ea27476c50b66      otherFunctions   process_group.block</span></span>
-<span><span class="co">## 68: ad0ea27476c50b66      otherFunctions            call_block</span></span>
-<span><span class="co">## 69: ad0ea27476c50b66      otherFunctions            block_exec</span></span>
-<span><span class="co">## 70: ad0ea27476c50b66      otherFunctions                 eng_r</span></span>
-<span><span class="co">## 71: ad0ea27476c50b66      otherFunctions          in_input_dir</span></span>
-<span><span class="co">## 72: ad0ea27476c50b66      otherFunctions                in_dir</span></span>
-<span><span class="co">## 73: ad0ea27476c50b66      otherFunctions             timing_fn</span></span>
-<span><span class="co">## 74: ad0ea27476c50b66      otherFunctions                handle</span></span>
-<span><span class="co">## 75: ad0ea27476c50b66           preDigest    n:7eef4eae85fd9229</span></span>
-<span><span class="co">## 76: ad0ea27476c50b66           preDigest mean:c40c00762a0dac94</span></span>
-<span><span class="co">## 77: ad0ea27476c50b66           preDigest   sd:853b1797f54b229c</span></span>
-<span><span class="co">## 78: ad0ea27476c50b66           preDigest .FUN:4f604aa46882b368</span></span>
-<span><span class="co">## 79: ad0ea27476c50b66           file.size                   175</span></span>
+<span><span class="co">## 26: 4fca280cda001fc9            accessed   2022-12-22 04:00:27</span></span>
+<span><span class="co">## 27: 4fca280cda001fc9     elapsedTimeLoad       0.00268364 secs</span></span>
+<span><span class="co">## 28: 4fca280cda001fc9            accessed   2022-12-22 04:00:27</span></span>
+<span><span class="co">## 29: 4fca280cda001fc9            accessed   2022-12-22 04:00:27</span></span>
+<span><span class="co">## 30: 5efb386c43c29ce1            function                 rnorm</span></span>
+<span><span class="co">## 31: 5efb386c43c29ce1               class               numeric</span></span>
+<span><span class="co">## 32: 5efb386c43c29ce1         object.size                  1104</span></span>
+<span><span class="co">## 33: 5efb386c43c29ce1            accessed   2022-12-22 04:00:27</span></span>
+<span><span class="co">## 34: 5efb386c43c29ce1             inCloud                 FALSE</span></span>
+<span><span class="co">## 35: 5efb386c43c29ce1          resultHash                      </span></span>
+<span><span class="co">## 36: 5efb386c43c29ce1   elapsedTimeDigest      0.002221107 secs</span></span>
+<span><span class="co">## 37: 5efb386c43c29ce1 elapsedTimeFirstRun     2.551079e-05 secs</span></span>
+<span><span class="co">## 38: 5efb386c43c29ce1      otherFunctions               saveRDS</span></span>
+<span><span class="co">## 39: 5efb386c43c29ce1      otherFunctions               do.call</span></span>
+<span><span class="co">## 40: 5efb386c43c29ce1      otherFunctions          process_file</span></span>
+<span><span class="co">## 41: 5efb386c43c29ce1      otherFunctions         process_group</span></span>
+<span><span class="co">## 42: 5efb386c43c29ce1      otherFunctions   process_group.block</span></span>
+<span><span class="co">## 43: 5efb386c43c29ce1      otherFunctions            call_block</span></span>
+<span><span class="co">## 44: 5efb386c43c29ce1      otherFunctions            block_exec</span></span>
+<span><span class="co">## 45: 5efb386c43c29ce1      otherFunctions                 eng_r</span></span>
+<span><span class="co">## 46: 5efb386c43c29ce1      otherFunctions          in_input_dir</span></span>
+<span><span class="co">## 47: 5efb386c43c29ce1      otherFunctions                in_dir</span></span>
+<span><span class="co">## 48: 5efb386c43c29ce1      otherFunctions             timing_fn</span></span>
+<span><span class="co">## 49: 5efb386c43c29ce1      otherFunctions                handle</span></span>
+<span><span class="co">## 50: 5efb386c43c29ce1           preDigest    n:c5775c3b366fb719</span></span>
+<span><span class="co">## 51: 5efb386c43c29ce1           preDigest mean:152602b8ff81e5bb</span></span>
+<span><span class="co">## 52: 5efb386c43c29ce1           preDigest   sd:853b1797f54b229c</span></span>
+<span><span class="co">## 53: 5efb386c43c29ce1           preDigest .FUN:4f604aa46882b368</span></span>
+<span><span class="co">## 54: 5efb386c43c29ce1           file.size                   223</span></span>
+<span><span class="co">## 55: ad0ea27476c50b66          objectName                     a</span></span>
+<span><span class="co">## 56: ad0ea27476c50b66            function                 rnorm</span></span>
+<span><span class="co">## 57: ad0ea27476c50b66               class               numeric</span></span>
+<span><span class="co">## 58: ad0ea27476c50b66         object.size                  1008</span></span>
+<span><span class="co">## 59: ad0ea27476c50b66            accessed   2022-12-22 04:00:27</span></span>
+<span><span class="co">## 60: ad0ea27476c50b66             inCloud                 FALSE</span></span>
+<span><span class="co">## 61: ad0ea27476c50b66          resultHash                      </span></span>
+<span><span class="co">## 62: ad0ea27476c50b66   elapsedTimeDigest      0.002405643 secs</span></span>
+<span><span class="co">## 63: ad0ea27476c50b66 elapsedTimeFirstRun     2.479553e-05 secs</span></span>
+<span><span class="co">## 64: ad0ea27476c50b66      otherFunctions               saveRDS</span></span>
+<span><span class="co">## 65: ad0ea27476c50b66      otherFunctions               do.call</span></span>
+<span><span class="co">## 66: ad0ea27476c50b66      otherFunctions          process_file</span></span>
+<span><span class="co">## 67: ad0ea27476c50b66      otherFunctions         process_group</span></span>
+<span><span class="co">## 68: ad0ea27476c50b66      otherFunctions   process_group.block</span></span>
+<span><span class="co">## 69: ad0ea27476c50b66      otherFunctions            call_block</span></span>
+<span><span class="co">## 70: ad0ea27476c50b66      otherFunctions            block_exec</span></span>
+<span><span class="co">## 71: ad0ea27476c50b66      otherFunctions                 eng_r</span></span>
+<span><span class="co">## 72: ad0ea27476c50b66      otherFunctions          in_input_dir</span></span>
+<span><span class="co">## 73: ad0ea27476c50b66      otherFunctions                in_dir</span></span>
+<span><span class="co">## 74: ad0ea27476c50b66      otherFunctions             timing_fn</span></span>
+<span><span class="co">## 75: ad0ea27476c50b66      otherFunctions                handle</span></span>
+<span><span class="co">## 76: ad0ea27476c50b66           preDigest    n:7eef4eae85fd9229</span></span>
+<span><span class="co">## 77: ad0ea27476c50b66           preDigest mean:c40c00762a0dac94</span></span>
+<span><span class="co">## 78: ad0ea27476c50b66           preDigest   sd:853b1797f54b229c</span></span>
+<span><span class="co">## 79: ad0ea27476c50b66           preDigest .FUN:4f604aa46882b368</span></span>
+<span><span class="co">## 80: ad0ea27476c50b66           file.size                   174</span></span>
 <span><span class="co">##              cacheId              tagKey              tagValue</span></span>
 <span><span class="co">##             createdDate</span></span>
-<span><span class="co">##  1: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  2: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  3: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  4: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  5: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  6: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  7: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  8: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  9: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 10: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 11: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 12: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 13: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 14: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 15: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 16: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 17: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 18: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 19: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 20: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 21: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 22: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 23: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 24: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 25: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 26: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 27: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 28: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 29: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 30: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 31: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 32: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 33: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 34: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 35: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 36: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 37: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 38: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 39: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 40: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 41: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 42: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 43: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 44: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 45: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 46: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 47: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 48: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 49: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 50: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 51: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 52: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 53: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 54: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 55: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 56: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 57: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 58: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 59: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 60: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 61: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 62: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 63: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 64: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 65: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 66: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 67: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 68: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 69: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 70: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 71: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 72: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 73: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 74: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 75: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 76: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 77: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 78: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 79: 2022-12-19 22:34:43</span></span>
+<span><span class="co">##  1: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  2: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  3: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  4: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  5: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  6: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  7: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  8: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  9: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 10: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 11: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 12: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 13: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 14: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 15: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 16: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 17: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 18: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 19: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 20: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 21: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 22: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 23: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 24: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 25: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 26: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 27: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 28: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 29: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 30: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 31: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 32: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 33: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 34: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 35: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 36: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 37: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 38: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 39: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 40: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 41: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 42: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 43: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 44: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 45: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 46: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 47: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 48: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 49: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 50: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 51: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 52: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 53: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 54: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 55: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 56: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 57: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 58: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 59: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 60: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 61: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 62: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 63: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 64: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 65: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 66: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 67: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 68: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 69: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 70: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 71: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 72: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 73: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 74: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 75: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 76: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 77: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 78: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 79: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 80: 2022-12-22 04:00:27</span></span>
 <span><span class="co">##             createdDate</span></span></code></pre>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/viewCache.html">clearCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, ask <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level5">
 <h5 id="example-2-using-the-accessed-tag">Example 2: using the “accessed” tag<a class="anchor" aria-label="anchor" href="#example-2-using-the-accessed-tag"></a>
 </h5>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ranNumsA</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">4</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"objectName:a"</span><span class="op">)</span></span>
 <span><span class="va">ranNumsB</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">runif</span>, <span class="fl">4</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"objectName:b"</span><span class="op">)</span></span>
 <span></span>
@@ -647,18 +661,18 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="va">ranNumsA</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">4</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"objectName:a"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  ...(Object to retrieve (ad0ea27476c50b66.rds))</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span></span></code></pre>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">wholeCache</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpDir</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Total (including Rasters): 504 bytes</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Selected objects (not including Rasters): 504 bytes</span></span></span></code></pre>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># keep only items accessed "recently" (i.e., only objectName:a)</span></span>
 <span><span class="va">onlyRecentlyAccessed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">wholeCache</span><span class="op">[</span><span class="va">tagKey</span> <span class="op">==</span> <span class="st">"accessed"</span><span class="op">]</span><span class="op">$</span><span class="va">tagValue</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Total (including Rasters): 252 bytes</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Selected objects (not including Rasters): 252 bytes</span></span></span></code></pre>
-<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># inverse join with 2 data.tables ... using: a[!b]</span></span>
 <span><span class="co"># i.e., return all of wholeCache that was not recently accessed</span></span>
 <span><span class="co">#   Note: the two different ways to access -- old way with "artifact" will be deprecated</span></span>
@@ -667,7 +681,7 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Total (including Rasters): 252 bytes</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Selected objects (not including Rasters): 252 bytes</span></span></span></code></pre>
-<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpDir</span><span class="op">)</span> <span class="co"># still has more recently accessed</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Total (including Rasters): 252 bytes</span></span></span></code></pre>
@@ -677,11 +691,11 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">##  2: ad0ea27476c50b66            function                 rnorm</span></span>
 <span><span class="co">##  3: ad0ea27476c50b66               class               numeric</span></span>
 <span><span class="co">##  4: ad0ea27476c50b66         object.size                  1008</span></span>
-<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-19 22:34:43</span></span>
+<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-22 04:00:27</span></span>
 <span><span class="co">##  6: ad0ea27476c50b66             inCloud                 FALSE</span></span>
 <span><span class="co">##  7: ad0ea27476c50b66          resultHash                      </span></span>
-<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002600431 secs</span></span>
-<span><span class="co">##  9: ad0ea27476c50b66 elapsedTimeFirstRun     2.861023e-05 secs</span></span>
+<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002401829 secs</span></span>
+<span><span class="co">##  9: ad0ea27476c50b66 elapsedTimeFirstRun     2.551079e-05 secs</span></span>
 <span><span class="co">## 10: ad0ea27476c50b66      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 11: ad0ea27476c50b66      otherFunctions               do.call</span></span>
 <span><span class="co">## 12: ad0ea27476c50b66      otherFunctions          process_file</span></span>
@@ -698,50 +712,50 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 23: ad0ea27476c50b66           preDigest mean:c40c00762a0dac94</span></span>
 <span><span class="co">## 24: ad0ea27476c50b66           preDigest   sd:853b1797f54b229c</span></span>
 <span><span class="co">## 25: ad0ea27476c50b66           preDigest .FUN:4f604aa46882b368</span></span>
-<span><span class="co">## 26: ad0ea27476c50b66           file.size                   174</span></span>
-<span><span class="co">## 27: ad0ea27476c50b66            accessed   2022-12-19 22:34:44</span></span>
-<span><span class="co">## 28: ad0ea27476c50b66     elapsedTimeLoad      0.003055334 secs</span></span>
+<span><span class="co">## 26: ad0ea27476c50b66           file.size                   175</span></span>
+<span><span class="co">## 27: ad0ea27476c50b66            accessed   2022-12-22 04:00:28</span></span>
+<span><span class="co">## 28: ad0ea27476c50b66     elapsedTimeLoad      0.002679586 secs</span></span>
 <span><span class="co">##              cacheId              tagKey              tagValue</span></span>
 <span><span class="co">##             createdDate</span></span>
-<span><span class="co">##  1: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  2: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  3: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  4: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  5: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  6: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  7: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  8: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  9: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 10: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 11: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 12: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 13: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 14: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 15: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 16: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 17: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 18: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 19: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 20: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 21: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 22: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 23: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 24: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 25: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 26: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 27: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 28: 2022-12-19 22:34:44</span></span>
+<span><span class="co">##  1: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  2: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  3: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  4: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  5: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  6: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  7: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  8: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  9: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 10: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 11: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 12: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 13: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 14: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 15: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 16: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 17: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 18: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 19: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 20: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 21: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 22: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 23: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 24: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 25: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 26: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 27: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 28: 2022-12-22 04:00:28</span></span>
 <span><span class="co">##             createdDate</span></span></code></pre>
 </div>
 <div class="section level5">
 <h5 id="example-3-using-keepcache">Example 3: using keepCache<a class="anchor" aria-label="anchor" href="#example-3-using-keepcache"></a>
 </h5>
-<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ranNumsA</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">4</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"objectName:a"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  ...(Object to retrieve (ad0ea27476c50b66.rds))</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span></span></code></pre>
-<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ranNumsB</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">runif</span>, <span class="fl">4</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"objectName:b"</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ranNumsB</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">4</span><span class="op">)</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"objectName:b"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># keep only those cached items from the last 24 hours</span></span>
 <span><span class="va">oneDay</span> <span class="op">&lt;-</span> <span class="fl">60</span> <span class="op">*</span> <span class="fl">60</span> <span class="op">*</span> <span class="fl">24</span></span>
@@ -754,11 +768,11 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">##  2: ad0ea27476c50b66            function                 rnorm</span></span>
 <span><span class="co">##  3: ad0ea27476c50b66               class               numeric</span></span>
 <span><span class="co">##  4: ad0ea27476c50b66         object.size                  1008</span></span>
-<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-19 22:34:43</span></span>
+<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-22 04:00:27</span></span>
 <span><span class="co">##  6: ad0ea27476c50b66             inCloud                 FALSE</span></span>
 <span><span class="co">##  7: ad0ea27476c50b66          resultHash                      </span></span>
-<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002600431 secs</span></span>
-<span><span class="co">##  9: ad0ea27476c50b66 elapsedTimeFirstRun     2.861023e-05 secs</span></span>
+<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002401829 secs</span></span>
+<span><span class="co">##  9: ad0ea27476c50b66 elapsedTimeFirstRun     2.551079e-05 secs</span></span>
 <span><span class="co">## 10: ad0ea27476c50b66      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 11: ad0ea27476c50b66      otherFunctions               do.call</span></span>
 <span><span class="co">## 12: ad0ea27476c50b66      otherFunctions          process_file</span></span>
@@ -775,19 +789,19 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 23: ad0ea27476c50b66           preDigest mean:c40c00762a0dac94</span></span>
 <span><span class="co">## 24: ad0ea27476c50b66           preDigest   sd:853b1797f54b229c</span></span>
 <span><span class="co">## 25: ad0ea27476c50b66           preDigest .FUN:4f604aa46882b368</span></span>
-<span><span class="co">## 26: ad0ea27476c50b66           file.size                   174</span></span>
-<span><span class="co">## 27: ad0ea27476c50b66            accessed   2022-12-19 22:34:44</span></span>
-<span><span class="co">## 28: ad0ea27476c50b66     elapsedTimeLoad      0.003396511 secs</span></span>
-<span><span class="co">## 29: ad0ea27476c50b66            accessed   2022-12-19 22:34:44</span></span>
+<span><span class="co">## 26: ad0ea27476c50b66           file.size                   175</span></span>
+<span><span class="co">## 27: ad0ea27476c50b66            accessed   2022-12-22 04:00:28</span></span>
+<span><span class="co">## 28: ad0ea27476c50b66     elapsedTimeLoad      0.002628088 secs</span></span>
+<span><span class="co">## 29: ad0ea27476c50b66            accessed   2022-12-22 04:00:28</span></span>
 <span><span class="co">## 30: deaa37372f85861b          objectName                     b</span></span>
 <span><span class="co">## 31: deaa37372f85861b            function                 runif</span></span>
 <span><span class="co">## 32: deaa37372f85861b               class               numeric</span></span>
 <span><span class="co">## 33: deaa37372f85861b         object.size                  1008</span></span>
-<span><span class="co">## 34: deaa37372f85861b            accessed   2022-12-19 22:34:44</span></span>
+<span><span class="co">## 34: deaa37372f85861b            accessed   2022-12-22 04:00:28</span></span>
 <span><span class="co">## 35: deaa37372f85861b             inCloud                 FALSE</span></span>
 <span><span class="co">## 36: deaa37372f85861b          resultHash                      </span></span>
-<span><span class="co">## 37: deaa37372f85861b   elapsedTimeDigest       0.00238204 secs</span></span>
-<span><span class="co">## 38: deaa37372f85861b elapsedTimeFirstRun     2.503395e-05 secs</span></span>
+<span><span class="co">## 37: deaa37372f85861b   elapsedTimeDigest        0.0023036 secs</span></span>
+<span><span class="co">## 38: deaa37372f85861b elapsedTimeFirstRun     2.217293e-05 secs</span></span>
 <span><span class="co">## 39: deaa37372f85861b      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 40: deaa37372f85861b      otherFunctions               do.call</span></span>
 <span><span class="co">## 41: deaa37372f85861b      otherFunctions          process_file</span></span>
@@ -804,66 +818,66 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 52: deaa37372f85861b           preDigest  min:c40c00762a0dac94</span></span>
 <span><span class="co">## 53: deaa37372f85861b           preDigest  max:853b1797f54b229c</span></span>
 <span><span class="co">## 54: deaa37372f85861b           preDigest .FUN:881ec847b7161f3c</span></span>
-<span><span class="co">## 55: deaa37372f85861b           file.size                   167</span></span>
+<span><span class="co">## 55: deaa37372f85861b           file.size                   168</span></span>
 <span><span class="co">##              cacheId              tagKey              tagValue</span></span>
 <span><span class="co">##             createdDate</span></span>
-<span><span class="co">##  1: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  2: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  3: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  4: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  5: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  6: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  7: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  8: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  9: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 10: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 11: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 12: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 13: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 14: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 15: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 16: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 17: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 18: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 19: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 20: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 21: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 22: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 23: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 24: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 25: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 26: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 27: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 28: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 29: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 30: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 31: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 32: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 33: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 34: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 35: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 36: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 37: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 38: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 39: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 40: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 41: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 42: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 43: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 44: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 45: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 46: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 47: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 48: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 49: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 50: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 51: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 52: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 53: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 54: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 55: 2022-12-19 22:34:44</span></span>
+<span><span class="co">##  1: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  2: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  3: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  4: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  5: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  6: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  7: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  8: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  9: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 10: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 11: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 12: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 13: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 14: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 15: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 16: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 17: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 18: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 19: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 20: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 21: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 22: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 23: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 24: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 25: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 26: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 27: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 28: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 29: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 30: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 31: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 32: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 33: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 34: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 35: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 36: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 37: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 38: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 39: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 40: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 41: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 42: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 43: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 44: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 45: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 46: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 47: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 48: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 49: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 50: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 51: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 52: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 53: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 54: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 55: 2022-12-22 04:00:28</span></span>
 <span><span class="co">##             createdDate</span></span></code></pre>
-<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Keep all Cache items created with an rnorm() call</span></span>
 <span><span class="fu"><a href="../reference/viewCache.html">keepCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"rnorm"</span>, ask <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
@@ -877,11 +891,11 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">##  2: ad0ea27476c50b66            function                 rnorm</span></span>
 <span><span class="co">##  3: ad0ea27476c50b66               class               numeric</span></span>
 <span><span class="co">##  4: ad0ea27476c50b66         object.size                  1008</span></span>
-<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-19 22:34:43</span></span>
+<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-22 04:00:27</span></span>
 <span><span class="co">##  6: ad0ea27476c50b66             inCloud                 FALSE</span></span>
 <span><span class="co">##  7: ad0ea27476c50b66          resultHash                      </span></span>
-<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002600431 secs</span></span>
-<span><span class="co">##  9: ad0ea27476c50b66 elapsedTimeFirstRun     2.861023e-05 secs</span></span>
+<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002401829 secs</span></span>
+<span><span class="co">##  9: ad0ea27476c50b66 elapsedTimeFirstRun     2.551079e-05 secs</span></span>
 <span><span class="co">## 10: ad0ea27476c50b66      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 11: ad0ea27476c50b66      otherFunctions               do.call</span></span>
 <span><span class="co">## 12: ad0ea27476c50b66      otherFunctions          process_file</span></span>
@@ -898,55 +912,55 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 23: ad0ea27476c50b66           preDigest mean:c40c00762a0dac94</span></span>
 <span><span class="co">## 24: ad0ea27476c50b66           preDigest   sd:853b1797f54b229c</span></span>
 <span><span class="co">## 25: ad0ea27476c50b66           preDigest .FUN:4f604aa46882b368</span></span>
-<span><span class="co">## 26: ad0ea27476c50b66           file.size                   174</span></span>
-<span><span class="co">## 27: ad0ea27476c50b66            accessed   2022-12-19 22:34:44</span></span>
-<span><span class="co">## 28: ad0ea27476c50b66     elapsedTimeLoad      0.003396511 secs</span></span>
-<span><span class="co">## 29: ad0ea27476c50b66            accessed   2022-12-19 22:34:44</span></span>
+<span><span class="co">## 26: ad0ea27476c50b66           file.size                   175</span></span>
+<span><span class="co">## 27: ad0ea27476c50b66            accessed   2022-12-22 04:00:28</span></span>
+<span><span class="co">## 28: ad0ea27476c50b66     elapsedTimeLoad      0.002628088 secs</span></span>
+<span><span class="co">## 29: ad0ea27476c50b66            accessed   2022-12-22 04:00:28</span></span>
 <span><span class="co">##              cacheId              tagKey              tagValue</span></span>
 <span><span class="co">##             createdDate</span></span>
-<span><span class="co">##  1: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  2: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  3: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  4: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  5: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  6: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  7: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  8: 2022-12-19 22:34:43</span></span>
-<span><span class="co">##  9: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 10: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 11: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 12: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 13: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 14: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 15: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 16: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 17: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 18: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 19: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 20: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 21: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 22: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 23: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 24: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 25: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 26: 2022-12-19 22:34:43</span></span>
-<span><span class="co">## 27: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 28: 2022-12-19 22:34:44</span></span>
-<span><span class="co">## 29: 2022-12-19 22:34:44</span></span>
+<span><span class="co">##  1: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  2: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  3: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  4: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  5: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  6: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  7: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  8: 2022-12-22 04:00:27</span></span>
+<span><span class="co">##  9: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 10: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 11: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 12: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 13: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 14: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 15: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 16: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 17: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 18: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 19: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 20: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 21: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 22: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 23: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 24: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 25: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 26: 2022-12-22 04:00:27</span></span>
+<span><span class="co">## 27: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 28: 2022-12-22 04:00:28</span></span>
+<span><span class="co">## 29: 2022-12-22 04:00:28</span></span>
 <span><span class="co">##             createdDate</span></span></code></pre>
-<div class="sourceCode" id="cb84"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb90"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Remove all Cache items that happened within a rnorm() call</span></span>
 <span><span class="fu"><a href="../reference/viewCache.html">clearCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"rnorm"</span>, ask <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Total (including Rasters): 252 bytes</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Selected objects (not including Rasters): 252 bytes</span></span></span></code></pre>
-<div class="sourceCode" id="cb88"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb94"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpDir</span><span class="op">)</span> <span class="co">## empty</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Total (including Rasters): 0 bytes</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Selected objects (not including Rasters): 0 bytes</span></span></span></code></pre>
 <pre><code><span><span class="co">## Empty data.table (0 rows and 4 cols): cacheId,tagKey,tagValue,createdDate</span></span></code></pre>
-<div class="sourceCode" id="cb93"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb99"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Also, can set a time before caching happens and remove based on this</span></span>
 <span><span class="co">#  --&gt; a useful, simple way to control Cache</span></span>
 <span><span class="va">ranNumsA</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">4</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"objectName:a"</span><span class="op">)</span></span>
@@ -965,11 +979,11 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">##  2: ccacbf62081a42b4            function                 rnorm</span></span>
 <span><span class="co">##  3: ccacbf62081a42b4               class               numeric</span></span>
 <span><span class="co">##  4: ccacbf62081a42b4         object.size                  1024</span></span>
-<span><span class="co">##  5: ccacbf62081a42b4            accessed   2022-12-19 22:34:45</span></span>
+<span><span class="co">##  5: ccacbf62081a42b4            accessed   2022-12-22 04:00:30</span></span>
 <span><span class="co">##  6: ccacbf62081a42b4             inCloud                 FALSE</span></span>
 <span><span class="co">##  7: ccacbf62081a42b4          resultHash                      </span></span>
-<span><span class="co">##  8: ccacbf62081a42b4   elapsedTimeDigest      0.002897501 secs</span></span>
-<span><span class="co">##  9: ccacbf62081a42b4 elapsedTimeFirstRun     2.479553e-05 secs</span></span>
+<span><span class="co">##  8: ccacbf62081a42b4   elapsedTimeDigest       0.00244689 secs</span></span>
+<span><span class="co">##  9: ccacbf62081a42b4 elapsedTimeFirstRun     2.551079e-05 secs</span></span>
 <span><span class="co">## 10: ccacbf62081a42b4      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 11: ccacbf62081a42b4      otherFunctions               do.call</span></span>
 <span><span class="co">## 12: ccacbf62081a42b4      otherFunctions          process_file</span></span>
@@ -986,43 +1000,43 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 23: ccacbf62081a42b4           preDigest mean:c40c00762a0dac94</span></span>
 <span><span class="co">## 24: ccacbf62081a42b4           preDigest   sd:853b1797f54b229c</span></span>
 <span><span class="co">## 25: ccacbf62081a42b4           preDigest .FUN:4f604aa46882b368</span></span>
-<span><span class="co">## 26: ccacbf62081a42b4           file.size                   181</span></span>
+<span><span class="co">## 26: ccacbf62081a42b4           file.size                   182</span></span>
 <span><span class="co">##              cacheId              tagKey              tagValue</span></span>
 <span><span class="co">##             createdDate</span></span>
-<span><span class="co">##  1: 2022-12-19 22:34:45</span></span>
-<span><span class="co">##  2: 2022-12-19 22:34:45</span></span>
-<span><span class="co">##  3: 2022-12-19 22:34:45</span></span>
-<span><span class="co">##  4: 2022-12-19 22:34:45</span></span>
-<span><span class="co">##  5: 2022-12-19 22:34:45</span></span>
-<span><span class="co">##  6: 2022-12-19 22:34:45</span></span>
-<span><span class="co">##  7: 2022-12-19 22:34:45</span></span>
-<span><span class="co">##  8: 2022-12-19 22:34:45</span></span>
-<span><span class="co">##  9: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 10: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 11: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 12: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 13: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 14: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 15: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 16: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 17: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 18: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 19: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 20: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 21: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 22: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 23: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 24: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 25: 2022-12-19 22:34:45</span></span>
-<span><span class="co">## 26: 2022-12-19 22:34:45</span></span>
+<span><span class="co">##  1: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  2: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  3: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  4: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  5: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  6: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  7: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  8: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  9: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 10: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 11: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 12: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 13: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 14: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 15: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 16: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 17: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 18: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 19: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 20: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 21: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 22: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 23: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 24: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 25: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 26: 2022-12-22 04:00:30</span></span>
 <span><span class="co">##             createdDate</span></span></code></pre>
-<div class="sourceCode" id="cb101"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb107"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/viewCache.html">clearCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, ask <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level5">
 <h5 id="example-4-searching-for-multiple-objects-in-the-cache">Example 4: searching for multiple objects in the cache<a class="anchor" aria-label="anchor" href="#example-4-searching-for-multiple-objects-in-the-cache"></a>
 </h5>
-<div class="sourceCode" id="cb102"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb108"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># default userTags is "and" matching; for "or" matching use |</span></span>
 <span><span class="va">ranNumsA</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">runif</span>, <span class="fl">4</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"objectName:a"</span><span class="op">)</span></span>
 <span><span class="va">ranNumsB</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">4</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"objectName:b"</span><span class="op">)</span></span>
@@ -1037,11 +1051,11 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">##  2: ad0ea27476c50b66            function                 rnorm</span></span>
 <span><span class="co">##  3: ad0ea27476c50b66               class               numeric</span></span>
 <span><span class="co">##  4: ad0ea27476c50b66         object.size                  1008</span></span>
-<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-19 22:34:46</span></span>
+<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-22 04:00:30</span></span>
 <span><span class="co">##  6: ad0ea27476c50b66             inCloud                 FALSE</span></span>
 <span><span class="co">##  7: ad0ea27476c50b66          resultHash                      </span></span>
-<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002826452 secs</span></span>
-<span><span class="co">##  9: ad0ea27476c50b66 elapsedTimeFirstRun     2.765656e-05 secs</span></span>
+<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002305269 secs</span></span>
+<span><span class="co">##  9: ad0ea27476c50b66 elapsedTimeFirstRun     2.503395e-05 secs</span></span>
 <span><span class="co">## 10: ad0ea27476c50b66      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 11: ad0ea27476c50b66      otherFunctions               do.call</span></span>
 <span><span class="co">## 12: ad0ea27476c50b66      otherFunctions          process_file</span></span>
@@ -1063,11 +1077,11 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 28: deaa37372f85861b            function                 runif</span></span>
 <span><span class="co">## 29: deaa37372f85861b               class               numeric</span></span>
 <span><span class="co">## 30: deaa37372f85861b         object.size                  1008</span></span>
-<span><span class="co">## 31: deaa37372f85861b            accessed   2022-12-19 22:34:46</span></span>
+<span><span class="co">## 31: deaa37372f85861b            accessed   2022-12-22 04:00:30</span></span>
 <span><span class="co">## 32: deaa37372f85861b             inCloud                 FALSE</span></span>
 <span><span class="co">## 33: deaa37372f85861b          resultHash                      </span></span>
-<span><span class="co">## 34: deaa37372f85861b   elapsedTimeDigest      0.002581835 secs</span></span>
-<span><span class="co">## 35: deaa37372f85861b elapsedTimeFirstRun     2.598763e-05 secs</span></span>
+<span><span class="co">## 34: deaa37372f85861b   elapsedTimeDigest      0.002427101 secs</span></span>
+<span><span class="co">## 35: deaa37372f85861b elapsedTimeFirstRun     2.360344e-05 secs</span></span>
 <span><span class="co">## 36: deaa37372f85861b      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 37: deaa37372f85861b      otherFunctions               do.call</span></span>
 <span><span class="co">## 38: deaa37372f85861b      otherFunctions          process_file</span></span>
@@ -1084,63 +1098,63 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 49: deaa37372f85861b           preDigest  min:c40c00762a0dac94</span></span>
 <span><span class="co">## 50: deaa37372f85861b           preDigest  max:853b1797f54b229c</span></span>
 <span><span class="co">## 51: deaa37372f85861b           preDigest .FUN:881ec847b7161f3c</span></span>
-<span><span class="co">## 52: deaa37372f85861b           file.size                   169</span></span>
+<span><span class="co">## 52: deaa37372f85861b           file.size                   170</span></span>
 <span><span class="co">##              cacheId              tagKey              tagValue</span></span>
 <span><span class="co">##             createdDate</span></span>
-<span><span class="co">##  1: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  2: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  3: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  4: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  5: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  6: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  7: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  8: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  9: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 10: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 11: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 12: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 13: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 14: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 15: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 16: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 17: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 18: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 19: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 20: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 21: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 22: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 23: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 24: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 25: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 26: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 27: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 28: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 29: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 30: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 31: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 32: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 33: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 34: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 35: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 36: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 37: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 38: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 39: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 40: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 41: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 42: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 43: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 44: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 45: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 46: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 47: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 48: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 49: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 50: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 51: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 52: 2022-12-19 22:34:46</span></span>
+<span><span class="co">##  1: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  2: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  3: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  4: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  5: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  6: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  7: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  8: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  9: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 10: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 11: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 12: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 13: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 14: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 15: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 16: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 17: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 18: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 19: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 20: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 21: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 22: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 23: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 24: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 25: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 26: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 27: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 28: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 29: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 30: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 31: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 32: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 33: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 34: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 35: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 36: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 37: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 38: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 39: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 40: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 41: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 42: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 43: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 44: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 45: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 46: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 47: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 48: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 49: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 50: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 51: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 52: 2022-12-22 04:00:30</span></span>
 <span><span class="co">##             createdDate</span></span></code></pre>
-<div class="sourceCode" id="cb107"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb113"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># show objects that are both runif and rnorm</span></span>
 <span><span class="co"># (i.e., none in this case, because objecs are either or, not both)</span></span>
 <span><span class="fu"><a href="../reference/viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"runif"</span>, <span class="st">"rnorm"</span><span class="op">)</span><span class="op">)</span> <span class="co">## empty</span></span></code></pre></div>
@@ -1148,7 +1162,7 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Total (including Rasters): 0 bytes</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Selected objects (not including Rasters): 0 bytes</span></span></span></code></pre>
 <pre><code><span><span class="co">## Empty data.table (0 rows and 4 cols): cacheId,tagKey,tagValue,createdDate</span></span></code></pre>
-<div class="sourceCode" id="cb112"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb118"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># show objects that are either runif or rnorm ("or" search)</span></span>
 <span><span class="fu"><a href="../reference/viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"runif|rnorm"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
@@ -1159,11 +1173,11 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">##  2: ad0ea27476c50b66            function                 rnorm</span></span>
 <span><span class="co">##  3: ad0ea27476c50b66               class               numeric</span></span>
 <span><span class="co">##  4: ad0ea27476c50b66         object.size                  1008</span></span>
-<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-19 22:34:46</span></span>
+<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-22 04:00:30</span></span>
 <span><span class="co">##  6: ad0ea27476c50b66             inCloud                 FALSE</span></span>
 <span><span class="co">##  7: ad0ea27476c50b66          resultHash                      </span></span>
-<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002826452 secs</span></span>
-<span><span class="co">##  9: ad0ea27476c50b66 elapsedTimeFirstRun     2.765656e-05 secs</span></span>
+<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002305269 secs</span></span>
+<span><span class="co">##  9: ad0ea27476c50b66 elapsedTimeFirstRun     2.503395e-05 secs</span></span>
 <span><span class="co">## 10: ad0ea27476c50b66      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 11: ad0ea27476c50b66      otherFunctions               do.call</span></span>
 <span><span class="co">## 12: ad0ea27476c50b66      otherFunctions          process_file</span></span>
@@ -1185,11 +1199,11 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 28: deaa37372f85861b            function                 runif</span></span>
 <span><span class="co">## 29: deaa37372f85861b               class               numeric</span></span>
 <span><span class="co">## 30: deaa37372f85861b         object.size                  1008</span></span>
-<span><span class="co">## 31: deaa37372f85861b            accessed   2022-12-19 22:34:46</span></span>
+<span><span class="co">## 31: deaa37372f85861b            accessed   2022-12-22 04:00:30</span></span>
 <span><span class="co">## 32: deaa37372f85861b             inCloud                 FALSE</span></span>
 <span><span class="co">## 33: deaa37372f85861b          resultHash                      </span></span>
-<span><span class="co">## 34: deaa37372f85861b   elapsedTimeDigest      0.002581835 secs</span></span>
-<span><span class="co">## 35: deaa37372f85861b elapsedTimeFirstRun     2.598763e-05 secs</span></span>
+<span><span class="co">## 34: deaa37372f85861b   elapsedTimeDigest      0.002427101 secs</span></span>
+<span><span class="co">## 35: deaa37372f85861b elapsedTimeFirstRun     2.360344e-05 secs</span></span>
 <span><span class="co">## 36: deaa37372f85861b      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 37: deaa37372f85861b      otherFunctions               do.call</span></span>
 <span><span class="co">## 38: deaa37372f85861b      otherFunctions          process_file</span></span>
@@ -1206,63 +1220,63 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 49: deaa37372f85861b           preDigest  min:c40c00762a0dac94</span></span>
 <span><span class="co">## 50: deaa37372f85861b           preDigest  max:853b1797f54b229c</span></span>
 <span><span class="co">## 51: deaa37372f85861b           preDigest .FUN:881ec847b7161f3c</span></span>
-<span><span class="co">## 52: deaa37372f85861b           file.size                   169</span></span>
+<span><span class="co">## 52: deaa37372f85861b           file.size                   170</span></span>
 <span><span class="co">##              cacheId              tagKey              tagValue</span></span>
 <span><span class="co">##             createdDate</span></span>
-<span><span class="co">##  1: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  2: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  3: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  4: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  5: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  6: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  7: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  8: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  9: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 10: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 11: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 12: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 13: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 14: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 15: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 16: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 17: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 18: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 19: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 20: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 21: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 22: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 23: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 24: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 25: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 26: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 27: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 28: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 29: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 30: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 31: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 32: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 33: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 34: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 35: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 36: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 37: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 38: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 39: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 40: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 41: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 42: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 43: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 44: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 45: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 46: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 47: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 48: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 49: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 50: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 51: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 52: 2022-12-19 22:34:46</span></span>
+<span><span class="co">##  1: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  2: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  3: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  4: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  5: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  6: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  7: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  8: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  9: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 10: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 11: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 12: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 13: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 14: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 15: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 16: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 17: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 18: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 19: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 20: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 21: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 22: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 23: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 24: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 25: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 26: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 27: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 28: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 29: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 30: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 31: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 32: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 33: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 34: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 35: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 36: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 37: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 38: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 39: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 40: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 41: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 42: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 43: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 44: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 45: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 46: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 47: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 48: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 49: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 50: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 51: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 52: 2022-12-22 04:00:30</span></span>
 <span><span class="co">##             createdDate</span></span></code></pre>
-<div class="sourceCode" id="cb117"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb123"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># keep only objects that are either runif or rnorm ("or" search)</span></span>
 <span><span class="fu"><a href="../reference/viewCache.html">keepCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"runif|rnorm"</span>, ask <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
@@ -1273,11 +1287,11 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">##  2: ad0ea27476c50b66            function                 rnorm</span></span>
 <span><span class="co">##  3: ad0ea27476c50b66               class               numeric</span></span>
 <span><span class="co">##  4: ad0ea27476c50b66         object.size                  1008</span></span>
-<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-19 22:34:46</span></span>
+<span><span class="co">##  5: ad0ea27476c50b66            accessed   2022-12-22 04:00:30</span></span>
 <span><span class="co">##  6: ad0ea27476c50b66             inCloud                 FALSE</span></span>
 <span><span class="co">##  7: ad0ea27476c50b66          resultHash                      </span></span>
-<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002826452 secs</span></span>
-<span><span class="co">##  9: ad0ea27476c50b66 elapsedTimeFirstRun     2.765656e-05 secs</span></span>
+<span><span class="co">##  8: ad0ea27476c50b66   elapsedTimeDigest      0.002305269 secs</span></span>
+<span><span class="co">##  9: ad0ea27476c50b66 elapsedTimeFirstRun     2.503395e-05 secs</span></span>
 <span><span class="co">## 10: ad0ea27476c50b66      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 11: ad0ea27476c50b66      otherFunctions               do.call</span></span>
 <span><span class="co">## 12: ad0ea27476c50b66      otherFunctions          process_file</span></span>
@@ -1299,11 +1313,11 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 28: deaa37372f85861b            function                 runif</span></span>
 <span><span class="co">## 29: deaa37372f85861b               class               numeric</span></span>
 <span><span class="co">## 30: deaa37372f85861b         object.size                  1008</span></span>
-<span><span class="co">## 31: deaa37372f85861b            accessed   2022-12-19 22:34:46</span></span>
+<span><span class="co">## 31: deaa37372f85861b            accessed   2022-12-22 04:00:30</span></span>
 <span><span class="co">## 32: deaa37372f85861b             inCloud                 FALSE</span></span>
 <span><span class="co">## 33: deaa37372f85861b          resultHash                      </span></span>
-<span><span class="co">## 34: deaa37372f85861b   elapsedTimeDigest      0.002581835 secs</span></span>
-<span><span class="co">## 35: deaa37372f85861b elapsedTimeFirstRun     2.598763e-05 secs</span></span>
+<span><span class="co">## 34: deaa37372f85861b   elapsedTimeDigest      0.002427101 secs</span></span>
+<span><span class="co">## 35: deaa37372f85861b elapsedTimeFirstRun     2.360344e-05 secs</span></span>
 <span><span class="co">## 36: deaa37372f85861b      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 37: deaa37372f85861b      otherFunctions               do.call</span></span>
 <span><span class="co">## 38: deaa37372f85861b      otherFunctions          process_file</span></span>
@@ -1320,70 +1334,70 @@ function call, or by using base pipe <code>|&gt;</code> or using:
 <span><span class="co">## 49: deaa37372f85861b           preDigest  min:c40c00762a0dac94</span></span>
 <span><span class="co">## 50: deaa37372f85861b           preDigest  max:853b1797f54b229c</span></span>
 <span><span class="co">## 51: deaa37372f85861b           preDigest .FUN:881ec847b7161f3c</span></span>
-<span><span class="co">## 52: deaa37372f85861b           file.size                   169</span></span>
+<span><span class="co">## 52: deaa37372f85861b           file.size                   170</span></span>
 <span><span class="co">##              cacheId              tagKey              tagValue</span></span>
 <span><span class="co">##             createdDate</span></span>
-<span><span class="co">##  1: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  2: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  3: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  4: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  5: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  6: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  7: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  8: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  9: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 10: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 11: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 12: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 13: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 14: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 15: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 16: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 17: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 18: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 19: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 20: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 21: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 22: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 23: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 24: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 25: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 26: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 27: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 28: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 29: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 30: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 31: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 32: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 33: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 34: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 35: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 36: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 37: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 38: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 39: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 40: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 41: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 42: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 43: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 44: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 45: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 46: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 47: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 48: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 49: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 50: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 51: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 52: 2022-12-19 22:34:46</span></span>
+<span><span class="co">##  1: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  2: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  3: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  4: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  5: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  6: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  7: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  8: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  9: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 10: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 11: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 12: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 13: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 14: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 15: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 16: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 17: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 18: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 19: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 20: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 21: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 22: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 23: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 24: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 25: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 26: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 27: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 28: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 29: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 30: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 31: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 32: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 33: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 34: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 35: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 36: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 37: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 38: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 39: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 40: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 41: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 42: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 43: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 44: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 45: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 46: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 47: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 48: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 49: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 50: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 51: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 52: 2022-12-22 04:00:30</span></span>
 <span><span class="co">##             createdDate</span></span></code></pre>
-<div class="sourceCode" id="cb122"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb128"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/viewCache.html">clearCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, ask <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level5">
 <h5 id="example-5-using-caching-to-speed-up-rerunning-expensive-computations">Example 5: using caching to speed up rerunning expensive
 computations<a class="anchor" aria-label="anchor" href="#example-5-using-caching-to-speed-up-rerunning-expensive-computations"></a>
 </h5>
-<div class="sourceCode" id="cb123"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb129"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ras</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/extent.html" class="external-link">extent</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">5</span>, <span class="fl">0</span>, <span class="fl">5</span><span class="op">)</span>, res <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>              vals <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, replace <span class="op">=</span> <span class="cn">TRUE</span>, size <span class="op">=</span> <span class="fl">25</span><span class="op">)</span>,</span>
 <span>              crs <span class="op">=</span> <span class="st">"+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"</span><span class="op">)</span></span>
@@ -1405,9 +1419,9 @@ computations<a class="anchor" aria-label="anchor" href="#example-5-using-caching
 <span>  <span class="co"># project raster generates warnings when run non-interactively</span></span>
 <span>  <span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">projectRaster</span>, <span class="va">ras</span>, crs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/terra/man/crs.html" class="external-link">crs</a></span><span class="op">(</span><span class="va">ras</span><span class="op">)</span>, res <span class="op">=</span> <span class="fl">5</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #0000BB;">  ...(Object to retrieve (8475c00183ce14cc.rds))</span></span></span></code></pre>
+<pre><code><span><span class="co">## <span style="color: #0000BB;">  ...(Object to retrieve (18597b39a09fc3c7.rds))</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">     loaded cached result from previous projectRaster call</span></span></span></code></pre>
-<div class="sourceCode" id="cb126"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb132"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># recovered cached version is same as non-cached version</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">notCached</span>, <span class="va">reRun</span><span class="op">)</span> <span class="co">## TRUE</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] TRUE</span></span></code></pre>
@@ -1425,7 +1439,7 @@ should be possible to get to any line of code starting from the very
 initial steps, running through everything up to that point, in less than
 a few seconds. If the workflow can be kept very fast like this, then
 there is a guarantee that it will work at any point.</p>
-<div class="sourceCode" id="cb128"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb134"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">##########################</span></span>
 <span><span class="co">## Nested Caching</span></span>
 <span><span class="co"># Make 2 functions</span></span>
@@ -1446,7 +1460,7 @@ there is a guarantee that it will work at any point.</p>
 <span><span class="co">#   Cache calls, unless individually overridden ... here inner</span></span>
 <span><span class="co">#   uses tmpdir2 repository</span></span>
 <span><span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">outer</span>, n <span class="op">=</span> <span class="fl">2</span>, cachePath <span class="op">=</span> <span class="va">tmpdir1</span>, notOlderThan <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1]  0.9961919  0.3680107 -0.9076198</span></span>
+<pre><code><span><span class="co">## [1] -0.9997912 -0.8593107 -1.2253537</span></span>
 <span><span class="co">## attr(,".Cache")</span></span>
 <span><span class="co">## attr(,".Cache")$newCache</span></span>
 <span><span class="co">## [1] TRUE</span></span>
@@ -1455,7 +1469,7 @@ there is a guarantee that it will work at any point.</p>
 <span><span class="co">## [1] "cacheId:dffc8e3bf8c23b6e"</span></span>
 <span><span class="co">## attr(,"call")</span></span>
 <span><span class="co">## [1] ""</span></span></code></pre>
-<div class="sourceCode" id="cb130"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb136"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpdir1</span><span class="op">)</span> <span class="co"># 2 function calls</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Total (including Rasters): 504 bytes</span></span></span></code></pre>
@@ -1464,11 +1478,11 @@ there is a guarantee that it will work at any point.</p>
 <span><span class="co">##  1: dffc8e3bf8c23b6e            function                 outer</span></span>
 <span><span class="co">##  2: dffc8e3bf8c23b6e               class               numeric</span></span>
 <span><span class="co">##  3: dffc8e3bf8c23b6e         object.size                  1008</span></span>
-<span><span class="co">##  4: dffc8e3bf8c23b6e            accessed   2022-12-19 22:34:46</span></span>
+<span><span class="co">##  4: dffc8e3bf8c23b6e            accessed   2022-12-22 04:00:30</span></span>
 <span><span class="co">##  5: dffc8e3bf8c23b6e             inCloud                 FALSE</span></span>
 <span><span class="co">##  6: dffc8e3bf8c23b6e          resultHash                      </span></span>
-<span><span class="co">##  7: dffc8e3bf8c23b6e   elapsedTimeDigest      0.002529144 secs</span></span>
-<span><span class="co">##  8: dffc8e3bf8c23b6e elapsedTimeFirstRun       0.04467583 secs</span></span>
+<span><span class="co">##  7: dffc8e3bf8c23b6e   elapsedTimeDigest      0.002347708 secs</span></span>
+<span><span class="co">##  8: dffc8e3bf8c23b6e elapsedTimeFirstRun       0.03776336 secs</span></span>
 <span><span class="co">##  9: dffc8e3bf8c23b6e      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 10: dffc8e3bf8c23b6e      otherFunctions               do.call</span></span>
 <span><span class="co">## 11: dffc8e3bf8c23b6e      otherFunctions          process_file</span></span>
@@ -1487,11 +1501,11 @@ there is a guarantee that it will work at any point.</p>
 <span><span class="co">## 24: efa1ccee79a31d4c            function                 rnorm</span></span>
 <span><span class="co">## 25: efa1ccee79a31d4c               class               numeric</span></span>
 <span><span class="co">## 26: efa1ccee79a31d4c         object.size                  1008</span></span>
-<span><span class="co">## 27: efa1ccee79a31d4c            accessed   2022-12-19 22:34:46</span></span>
+<span><span class="co">## 27: efa1ccee79a31d4c            accessed   2022-12-22 04:00:30</span></span>
 <span><span class="co">## 28: efa1ccee79a31d4c             inCloud                 FALSE</span></span>
 <span><span class="co">## 29: efa1ccee79a31d4c          resultHash                      </span></span>
-<span><span class="co">## 30: efa1ccee79a31d4c   elapsedTimeDigest      0.002523184 secs</span></span>
-<span><span class="co">## 31: efa1ccee79a31d4c elapsedTimeFirstRun     2.598763e-05 secs</span></span>
+<span><span class="co">## 30: efa1ccee79a31d4c   elapsedTimeDigest      0.002387047 secs</span></span>
+<span><span class="co">## 31: efa1ccee79a31d4c elapsedTimeFirstRun     2.479553e-05 secs</span></span>
 <span><span class="co">## 32: efa1ccee79a31d4c      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 33: efa1ccee79a31d4c      otherFunctions               do.call</span></span>
 <span><span class="co">## 34: efa1ccee79a31d4c      otherFunctions          process_file</span></span>
@@ -1513,58 +1527,58 @@ there is a guarantee that it will work at any point.</p>
 <span><span class="co">## 50: efa1ccee79a31d4c           file.size                   165</span></span>
 <span><span class="co">##              cacheId              tagKey              tagValue</span></span>
 <span><span class="co">##             createdDate</span></span>
-<span><span class="co">##  1: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  2: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  3: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  4: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  5: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  6: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  7: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  8: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  9: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 10: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 11: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 12: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 13: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 14: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 15: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 16: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 17: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 18: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 19: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 20: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 21: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 22: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 23: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 24: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 25: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 26: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 27: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 28: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 29: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 30: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 31: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 32: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 33: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 34: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 35: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 36: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 37: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 38: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 39: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 40: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 41: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 42: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 43: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 44: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 45: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 46: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 47: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 48: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 49: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 50: 2022-12-19 22:34:46</span></span>
+<span><span class="co">##  1: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  2: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  3: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  4: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  5: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  6: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  7: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  8: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  9: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 10: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 11: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 12: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 13: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 14: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 15: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 16: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 17: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 18: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 19: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 20: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 21: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 22: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 23: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 24: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 25: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 26: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 27: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 28: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 29: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 30: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 31: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 32: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 33: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 34: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 35: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 36: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 37: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 38: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 39: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 40: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 41: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 42: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 43: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 44: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 45: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 46: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 47: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 48: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 49: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 50: 2022-12-22 04:00:30</span></span>
 <span><span class="co">##             createdDate</span></span></code></pre>
-<div class="sourceCode" id="cb135"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb141"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpdir2</span><span class="op">)</span> <span class="co"># 1 function call</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Total (including Rasters): 252 bytes</span></span></span></code></pre>
@@ -1573,11 +1587,11 @@ there is a guarantee that it will work at any point.</p>
 <span><span class="co">##  1: 33ceb4fb525fd08f            function                 inner</span></span>
 <span><span class="co">##  2: 33ceb4fb525fd08f               class               numeric</span></span>
 <span><span class="co">##  3: 33ceb4fb525fd08f         object.size                  1008</span></span>
-<span><span class="co">##  4: 33ceb4fb525fd08f            accessed   2022-12-19 22:34:46</span></span>
+<span><span class="co">##  4: 33ceb4fb525fd08f            accessed   2022-12-22 04:00:30</span></span>
 <span><span class="co">##  5: 33ceb4fb525fd08f             inCloud                 FALSE</span></span>
 <span><span class="co">##  6: 33ceb4fb525fd08f          resultHash                      </span></span>
-<span><span class="co">##  7: 33ceb4fb525fd08f   elapsedTimeDigest      0.002371311 secs</span></span>
-<span><span class="co">##  8: 33ceb4fb525fd08f elapsedTimeFirstRun       0.01676869 secs</span></span>
+<span><span class="co">##  7: 33ceb4fb525fd08f   elapsedTimeDigest      0.002218008 secs</span></span>
+<span><span class="co">##  8: 33ceb4fb525fd08f elapsedTimeFirstRun       0.01450562 secs</span></span>
 <span><span class="co">##  9: 33ceb4fb525fd08f      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 10: 33ceb4fb525fd08f      otherFunctions               do.call</span></span>
 <span><span class="co">## 11: 33ceb4fb525fd08f      otherFunctions          process_file</span></span>
@@ -1596,32 +1610,32 @@ there is a guarantee that it will work at any point.</p>
 <span><span class="co">## 24: 33ceb4fb525fd08f           file.size                   165</span></span>
 <span><span class="co">##              cacheId              tagKey              tagValue</span></span>
 <span><span class="co">##             createdDate</span></span>
-<span><span class="co">##  1: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  2: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  3: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  4: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  5: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  6: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  7: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  8: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  9: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 10: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 11: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 12: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 13: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 14: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 15: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 16: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 17: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 18: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 19: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 20: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 21: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 22: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 23: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 24: 2022-12-19 22:34:46</span></span>
+<span><span class="co">##  1: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  2: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  3: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  4: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  5: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  6: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  7: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  8: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  9: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 10: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 11: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 12: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 13: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 14: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 15: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 16: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 17: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 18: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 19: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 20: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 21: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 22: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 23: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 24: 2022-12-22 04:00:30</span></span>
 <span><span class="co">##             createdDate</span></span></code></pre>
-<div class="sourceCode" id="cb140"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb146"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># userTags get appended</span></span>
 <span><span class="co"># all items have the outer tag propagate, plus inner ones only have inner ones</span></span>
 <span><span class="fu"><a href="../reference/viewCache.html">clearCache</a></span><span class="op">(</span><span class="va">tmpdir1</span>, ask <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -1644,11 +1658,11 @@ there is a guarantee that it will work at any point.</p>
 <span><span class="co">##  2: 88a34e1d033329e5            function                 outer</span></span>
 <span><span class="co">##  3: 88a34e1d033329e5               class               numeric</span></span>
 <span><span class="co">##  4: 88a34e1d033329e5         object.size                  1008</span></span>
-<span><span class="co">##  5: 88a34e1d033329e5            accessed   2022-12-19 22:34:46</span></span>
+<span><span class="co">##  5: 88a34e1d033329e5            accessed   2022-12-22 04:00:30</span></span>
 <span><span class="co">##  6: 88a34e1d033329e5             inCloud                 FALSE</span></span>
 <span><span class="co">##  7: 88a34e1d033329e5          resultHash                      </span></span>
-<span><span class="co">##  8: 88a34e1d033329e5   elapsedTimeDigest      0.002212763 secs</span></span>
-<span><span class="co">##  9: 88a34e1d033329e5 elapsedTimeFirstRun       0.03318977 secs</span></span>
+<span><span class="co">##  8: 88a34e1d033329e5   elapsedTimeDigest      0.002113342 secs</span></span>
+<span><span class="co">##  9: 88a34e1d033329e5 elapsedTimeFirstRun       0.02903295 secs</span></span>
 <span><span class="co">## 10: 88a34e1d033329e5      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 11: 88a34e1d033329e5      otherFunctions               do.call</span></span>
 <span><span class="co">## 12: 88a34e1d033329e5      otherFunctions          process_file</span></span>
@@ -1668,11 +1682,11 @@ there is a guarantee that it will work at any point.</p>
 <span><span class="co">## 26: b06af03d5a73dc7d            function                 inner</span></span>
 <span><span class="co">## 27: b06af03d5a73dc7d               class               numeric</span></span>
 <span><span class="co">## 28: b06af03d5a73dc7d         object.size                  1008</span></span>
-<span><span class="co">## 29: b06af03d5a73dc7d            accessed   2022-12-19 22:34:46</span></span>
+<span><span class="co">## 29: b06af03d5a73dc7d            accessed   2022-12-22 04:00:30</span></span>
 <span><span class="co">## 30: b06af03d5a73dc7d             inCloud                 FALSE</span></span>
 <span><span class="co">## 31: b06af03d5a73dc7d          resultHash                      </span></span>
-<span><span class="co">## 32: b06af03d5a73dc7d   elapsedTimeDigest      0.002207756 secs</span></span>
-<span><span class="co">## 33: b06af03d5a73dc7d elapsedTimeFirstRun        0.0173924 secs</span></span>
+<span><span class="co">## 32: b06af03d5a73dc7d   elapsedTimeDigest      0.002094507 secs</span></span>
+<span><span class="co">## 33: b06af03d5a73dc7d elapsedTimeFirstRun       0.01499915 secs</span></span>
 <span><span class="co">## 34: b06af03d5a73dc7d      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 35: b06af03d5a73dc7d      otherFunctions               do.call</span></span>
 <span><span class="co">## 36: b06af03d5a73dc7d      otherFunctions          process_file</span></span>
@@ -1694,11 +1708,11 @@ there is a guarantee that it will work at any point.</p>
 <span><span class="co">## 52: efa1ccee79a31d4c            function                 rnorm</span></span>
 <span><span class="co">## 53: efa1ccee79a31d4c               class               numeric</span></span>
 <span><span class="co">## 54: efa1ccee79a31d4c         object.size                  1008</span></span>
-<span><span class="co">## 55: efa1ccee79a31d4c            accessed   2022-12-19 22:34:46</span></span>
+<span><span class="co">## 55: efa1ccee79a31d4c            accessed   2022-12-22 04:00:30</span></span>
 <span><span class="co">## 56: efa1ccee79a31d4c             inCloud                 FALSE</span></span>
 <span><span class="co">## 57: efa1ccee79a31d4c          resultHash                      </span></span>
-<span><span class="co">## 58: efa1ccee79a31d4c   elapsedTimeDigest       0.00255394 secs</span></span>
-<span><span class="co">## 59: efa1ccee79a31d4c elapsedTimeFirstRun      2.69413e-05 secs</span></span>
+<span><span class="co">## 58: efa1ccee79a31d4c   elapsedTimeDigest      0.002403736 secs</span></span>
+<span><span class="co">## 59: efa1ccee79a31d4c elapsedTimeFirstRun      2.43187e-05 secs</span></span>
 <span><span class="co">## 60: efa1ccee79a31d4c      otherFunctions               saveRDS</span></span>
 <span><span class="co">## 61: efa1ccee79a31d4c      otherFunctions               do.call</span></span>
 <span><span class="co">## 62: efa1ccee79a31d4c      otherFunctions          process_file</span></span>
@@ -1720,84 +1734,84 @@ there is a guarantee that it will work at any point.</p>
 <span><span class="co">## 78: efa1ccee79a31d4c           file.size                   165</span></span>
 <span><span class="co">##              cacheId              tagKey              tagValue</span></span>
 <span><span class="co">##             createdDate</span></span>
-<span><span class="co">##  1: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  2: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  3: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  4: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  5: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  6: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  7: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  8: 2022-12-19 22:34:46</span></span>
-<span><span class="co">##  9: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 10: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 11: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 12: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 13: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 14: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 15: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 16: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 17: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 18: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 19: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 20: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 21: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 22: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 23: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 24: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 25: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 26: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 27: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 28: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 29: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 30: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 31: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 32: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 33: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 34: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 35: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 36: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 37: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 38: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 39: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 40: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 41: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 42: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 43: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 44: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 45: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 46: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 47: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 48: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 49: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 50: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 51: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 52: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 53: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 54: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 55: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 56: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 57: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 58: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 59: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 60: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 61: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 62: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 63: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 64: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 65: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 66: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 67: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 68: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 69: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 70: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 71: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 72: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 73: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 74: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 75: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 76: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 77: 2022-12-19 22:34:46</span></span>
-<span><span class="co">## 78: 2022-12-19 22:34:46</span></span>
+<span><span class="co">##  1: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  2: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  3: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  4: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  5: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  6: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  7: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  8: 2022-12-22 04:00:30</span></span>
+<span><span class="co">##  9: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 10: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 11: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 12: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 13: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 14: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 15: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 16: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 17: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 18: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 19: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 20: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 21: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 22: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 23: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 24: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 25: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 26: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 27: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 28: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 29: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 30: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 31: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 32: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 33: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 34: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 35: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 36: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 37: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 38: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 39: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 40: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 41: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 42: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 43: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 44: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 45: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 46: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 47: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 48: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 49: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 50: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 51: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 52: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 53: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 54: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 55: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 56: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 57: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 58: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 59: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 60: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 61: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 62: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 63: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 64: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 65: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 66: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 67: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 68: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 69: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 70: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 71: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 72: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 73: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 74: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 75: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 76: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 77: 2022-12-22 04:00:30</span></span>
+<span><span class="co">## 78: 2022-12-22 04:00:30</span></span>
 <span><span class="co">##             createdDate</span></span></code></pre>
 </div>
 <div class="section level4">
@@ -1811,7 +1825,7 @@ piece of code is run, then the <code>cacheId</code> can be manually
 extracted (it is reported at the end of a Cache call) and manually
 placed in the code, passed in as, say,
 <code>cacheId = "ad184ce64541972b50afd8e7b75f821b"</code>.</p>
-<div class="sourceCode" id="cb145"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb151"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">### cacheId</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">1</span>, cachePath <span class="op">=</span> <span class="va">tmpdir1</span><span class="op">)</span></span></code></pre></div>
@@ -1824,7 +1838,7 @@ placed in the code, passed in as, say,
 <span><span class="co">## [1] "cacheId:422bae4ed2f770cc"</span></span>
 <span><span class="co">## attr(,"call")</span></span>
 <span><span class="co">## [1] ""</span></span></code></pre>
-<div class="sourceCode" id="cb147"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb153"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># manually look at output attribute which shows cacheId: 7072c305d8c69df0</span></span>
 <span><span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">1</span>, cachePath <span class="op">=</span> <span class="va">tmpdir1</span>, cacheId <span class="op">=</span> <span class="st">"7072c305d8c69df0"</span><span class="op">)</span> <span class="co"># same value</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">cacheId is not same as calculated hash. Manually searching for cacheId:7072c305d8c69df0</span></span></span></code></pre>
@@ -1839,7 +1853,7 @@ placed in the code, passed in as, say,
 <span><span class="co">## [1] "cacheId:422bae4ed2f770cc"</span></span>
 <span><span class="co">## attr(,"call")</span></span>
 <span><span class="co">## [1] ""</span></span></code></pre>
-<div class="sourceCode" id="cb152"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb158"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># override even with different inputs:</span></span>
 <span><span class="fu"><a href="../reference/Cache.html">Cache</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">2</span>, cachePath <span class="op">=</span> <span class="va">tmpdir1</span>, cacheId <span class="op">=</span> <span class="st">"7072c305d8c69df0"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">cacheId is not same as calculated hash. Manually searching for cacheId:7072c305d8c69df0</span></span></span></code></pre>
@@ -1863,17 +1877,17 @@ database by default). In addition, there are several helpers in the
 <code>keepCache</code> and <code>clearCache</code> that may be useful.
 Also, one can access cached items manually (rather than simply rerunning
 the same <code>Cache</code> function again).</p>
-<div class="sourceCode" id="cb155"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb161"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># As of reproducible version 1.0, there is a new backend directly using DBI</span></span>
 <span><span class="va">mapHash</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="../reference/viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"projectRaster"</span><span class="op">)</span><span class="op">$</span><span class="va">cacheId</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">Cache size: </span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Total (including Rasters): 3.4 Kb</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #0000BB;">  Selected objects (not including Rasters): 3.4 Kb</span></span></span></code></pre>
-<div class="sourceCode" id="cb159"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb165"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">map</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CacheHelpers.html">loadFromCache</a></span><span class="op">(</span><span class="va">mapHash</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">map</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Intro-to-Cache_files/figure-html/manual-cache-1.png" width="700"></p>
-<div class="sourceCode" id="cb160"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb166"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## cleanup</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/basename.html" class="external-link">dirname</a></span><span class="op">(</span><span class="va">tmpDir</span><span class="op">)</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>

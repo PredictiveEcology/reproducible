@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
       </span>
     </div>
 
@@ -64,13 +64,13 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.2.15" id="version-1215">Version 1.2.15<a class="anchor" aria-label="anchor" href="#version-1215"></a></h2>
+<h2 class="page-header" data-toc-text="1.2.16" id="version-1216">Version 1.2.16<a class="anchor" aria-label="anchor" href="#version-1216"></a></h2>
 <div class="section level3">
-<h3 id="dependency-changes-1-2-15">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-1-2-15"></a></h3>
+<h3 id="dependency-changes-1-2-16">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-1-2-16"></a></h3>
 <ul><li>none</li>
 </ul></div>
 <div class="section level3">
-<h3 id="enhancements-1-2-15">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-1-2-15"></a></h3>
+<h3 id="enhancements-1-2-16">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-1-2-16"></a></h3>
 <ul><li>
 <code>Cache</code> now captures the first argument passed to it without evaluating it, so <code>Cache(rnorm(1))</code> now works as expected.</li>
 <li>As a result of previous, <code>Cache</code> now works with base pipe |&gt; (with R &gt;= 4.1).</li>
@@ -86,16 +86,18 @@
 </ul></li>
 </ul></div>
 <div class="section level3">
-<h3 id="bug-fixes-1-2-15">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-2-15"></a></h3>
+<h3 id="bug-fixes-1-2-16">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-2-16"></a></h3>
 <ul><li>
 <code>postProcess</code> now also checks resolution when assessing whether to project</li>
 <li>
 <code>prepInputs</code> has an internal <code>Cache</code> call for loading the object into memory; this was incorrectly evaluating all files if there were more than one file downloaded and extracted. This resulted in cases, e.g. shapefiles, being considered identical if they had the identical geometries, even if their data were different. This is fixed now as it uses the digest of all files extracted.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="deprecated-and-defunct-1-2-15">Deprecated and defunct<a class="anchor" aria-label="anchor" href="#deprecated-and-defunct-1-2-15"></a></h3>
+<h3 id="deprecated-and-defunct-1-2-16">Deprecated and defunct<a class="anchor" aria-label="anchor" href="#deprecated-and-defunct-1-2-16"></a></h3>
 <ul><li>remove defunct argument <code>digestPathContent</code> from <code>Cache</code>
 </li>
+<li>
+<code>options("reproducible.useGDAL")</code> is now deprecated; the package is moving towards <code>terra</code>.</li>
 </ul></div>
 </div>
     <div class="section level2">

@@ -24,7 +24,7 @@ This is still experimental.'><!-- mathjax --><script src="https://cdnjs.cloudfla
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
       </span>
     </div>
 
@@ -130,6 +130,16 @@ will be made to the file with that <code>cacheId</code> name in the cache repo.
 This is used when identical outputs exist in the cache. This will save disk space.</p></dd>
 
 </dl></div>
+    <div id="value">
+    <h2>Value</h2>
+    
+
+<p>Run for its side effect.
+This will add the <code>objectToSave</code> to the cache located at <code>cachePath</code>,
+using <code>cacheId</code> as its id, while
+updating the database entry. It will do this using the future package, so it is
+written in a future.</p>
+    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.15</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
       </span>
     </div>
 
@@ -86,7 +86,7 @@
 <span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  rasterToMatch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cores <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  useGDAL <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.useGDAL"</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  useGDAL <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.useGDAL"</span>, <span class="cn">FALSE</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -105,7 +105,7 @@
 <span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  rasterToMatch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cores <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  useGDAL <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.useGDAL"</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  useGDAL <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.useGDAL"</span>, <span class="cn">FALSE</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -163,15 +163,9 @@ float will be passed as the exact number of cores to be used.</p></dd>
 
 
 <dt>useGDAL</dt>
-<dd><p>Logical or <code>"force"</code>.
-Defaults to <code>getOption("reproducible.useGDAL" = TRUE)</code>.
-If <code>TRUE</code>, then this function will use <code>gdalwarp</code> only when not
-small enough to fit in memory (i.e., <em>if the operation fails</em> the
-<code>raster::canProcessInMemory(x, 3)</code> test). Using <code>gdalwarp</code> will
-usually be faster than <code><a href="https://rdrr.io/pkg/raster/man/projectRaster.html" class="external-link">raster::projectRaster</a></code>, the function used
-if this is <code>FALSE</code>. Since since the two options use different algorithms,
-there may be different projection results. <code>"force"</code> will cause it to
-use GDAL regardless of the memory test described here.</p></dd>
+<dd><p>Logical or <code>"force"</code>. This is defunct; internals now can use
+<code>terra</code> if <code>options("reproducible.useTerra" = TRUE)</code>, which is not (yet)
+the default.</p></dd>
 
 </dl></div>
     <div id="value">
