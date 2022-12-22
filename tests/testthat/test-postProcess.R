@@ -299,6 +299,7 @@ test_that("maskInputs errors when x is Lat-Long", {
 })
 
 test_that("prepInputs doesn't work (part 3)", {
+  skip_if_not_installed("googledrive")
   skip_if_no_token()
   if (interactive()) {
     testInitOut <- testInit()

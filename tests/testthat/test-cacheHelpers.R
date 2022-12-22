@@ -234,7 +234,9 @@ test_that("test cache-helpers with stacks", {
 
 ##########################
 test_that("test miscellaneous unit tests cache-helpers", {
-  testInitOut <- testInit()
+  skip_if_not_installed("googledrive")
+
+  testInitOut <- testInit("googledrive")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

@@ -1273,6 +1273,8 @@ test_that("prepInputs doesn't work (part 2)", {
 })
 
 test_that("load rdata in prepInputs", {
+  skip_if_not_installed("googledrive")
+
   testInitOut <- testInit("raster", opts = list(
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
