@@ -1982,7 +1982,8 @@ dealWithClassOnRecovery <- function(output, cachePath, cacheId,
   }
 
   if (is(output, "list")) {
-    isSpatVector <- all(names(output) %in% spatVectorNamesForCache)
+    anyNames <- names(output)
+    isSpatVector <- if (is.null(anyNames)) FALSE else all(names(output) %in% spatVectorNamesForCache)
     if (isTRUE(isSpatVector)) {
       output <- unwrapSpatVector(output)
     } else {

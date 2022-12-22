@@ -184,20 +184,20 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
 
   if (isRaster) {
     from <- terra::rast(from)
-  } # else if (isVectorNonTerra) {
-  #   osFrom <- object.size(from)
-  #   lg <- osFrom > 5e8
-  #   if (lg) {
-  #     st <- Sys.time()
-  #     messagePrepInputs("  `from` is large, converting to terra object will take some time ...")
-  #   }
-  #   from <- suppressWarningsSpecific(terra::vect(sf::st_as_sf(from)), shldBeChar)
-  #   if (lg) {
-  #     messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
-  #                                            units = "secs", digits = 3))
-  #
-  #   }
-  # }
+  } else if (isSpatial) {
+    osFrom <- object.size(from)
+    lg <- osFrom > 5e8
+    if (lg) {
+      st <- Sys.time()
+      messagePrepInputs("  `from` is large, converting to terra object will take some time ...")
+    }
+    from <- suppressWarningsSpecific(terra::vect(sf::st_as_sf(from)), shldBeChar)
+    if (lg) {
+      messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
+                                             units = "secs", digits = 3))
+
+    }
+  }
 
   #############################################################
   # crop project mask sequence ################################
@@ -279,8 +279,18 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
 
       if (is(maskTo, "Raster"))
         maskTo <- terra::rast(maskTo)
-      if (is(maskTo, "Spatial"))
-        maskTo <- sf::st_as_sf(maskTo)
+      if (isSpatial(from))
+        from <- sf::st_as_sf(from)
+      if (isSF(from)) {
+        if (!isSF(maskTo)) {
+          maskTo <- sf::st_as_sf(maskTo)
+        }
+      }
+      if (isSpat(from) && isVector(from)) {
+        if (!isSpat(maskTo)) {
+          maskTo <- terra::vect(maskTo)
+        }
+      }
       # if (isSF(maskTo))
       #   maskTo <- terra::vect(maskTo)
       if (!isSpat(from) && !isSF(from)) {
@@ -477,6 +487,8 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
 
     if (isSpatial(cropTo))
       cropTo <- terra::vect(cropTo)
+    if (isSpatial(from))
+      from <- terra::vect(from)
 
     if (!omit) {
       messagePrepInputs("    cropping..." , appendLF = FALSE)
@@ -496,7 +508,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
         }
         ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
       }
-      if (isVector(from) && isSpat(from))
+      if (isVector(from) && !isSF(from))
         ext <- terra::vect(ext)
 
       # This is only needed if crop happens before a projection... need to cells beyond edges so projection is accurate
