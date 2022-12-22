@@ -17,7 +17,7 @@
 }
 \value{
 This sets or updates the \code{subAttr} element of a list that is located at
-\code{attr(object, attr)}, with the \code{value}. This, therefore, updates a subelement
+\code{attr(object, attr)}, with the \code{value}. This, therefore, updates a sub-element
 of a list attribute and returns that same object with the updated attribute.
 }
 \description{

@@ -47,7 +47,7 @@ This is used when identical outputs exist in the cache. This will save disk spac
 }
 \value{
 Run for its side effect.
-This will add the \code{objectToSave} to the cachelocated at \code{cachePath},
+This will add the \code{objectToSave} to the cache located at \code{cachePath},
 using \code{cacheId} as its id, while
 updating the database entry. It will do this using the future package, so it is
 written in a future.
