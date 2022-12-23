@@ -1,5 +1,13 @@
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
+Version 1.2.17
+==============
+
+## enhancements
+- `postProcess` now uses `terra` and `sf` by default throughout the family.
+
+## bugfixes
+
 Version 1.2.16
 ==============
 
