@@ -1982,42 +1982,49 @@ dealWithClassOnRecovery <- function(output, cachePath, cacheId,
   }
 
   if (is(output, "list")) {
-    if (!"cacheRaster" %in% names(output)) { # recursive up until a list has cacheRaster name
-      output <- lapply(output, function(out) dealWithClassOnRecovery(out, cachePath, cacheId,
-                                                                   drv, conn))
+    anyNames <- names(output)
+    isSpatVector <- if (is.null(anyNames)) FALSE else all(names(output) %in% spatVectorNamesForCache)
+    if (isTRUE(isSpatVector)) {
+      output <- unwrapSpatVector(output)
     } else {
-      origFilenames <- if (is(output, "Raster")) {
-        Filenames(output) # This is legacy piece which allows backwards compatible
+      if (!"cacheRaster" %in% names(output)) { # recursive up until a list has cacheRaster name
+        output <- lapply(output, function(out) dealWithClassOnRecovery(out, cachePath, cacheId,
+                                                                       drv, conn))
       } else {
-        output$origRaster
-      }
-
-      filesExist <- file.exists(origFilenames)
-      cacheFilenames <- Filenames(output)
-      filesExistInCache <- file.exists(cacheFilenames)
-      if (any(!filesExistInCache)) {
-        fileTails <- gsub("^.+(rasters.+)$", "\\1", cacheFilenames)
-        correctFilenames <- file.path(cachePath, fileTails)
-        filesExistInCache <- file.exists(correctFilenames)
-        if (all(filesExistInCache)) {
-          cacheFilenames <- correctFilenames
+        origFilenames <- if (is(output, "Raster")) {
+          Filenames(output) # This is legacy piece which allows backwards compatible
         } else {
-          stop("File-backed raster files in the cache are corrupt for cacheId: ", cacheId)
+          output$origRaster
         }
 
-      }
-      out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
-                            origFilenames[filesExistInCache], overwrite = TRUE)
+        filesExist <- file.exists(origFilenames)
+        cacheFilenames <- Filenames(output)
+        filesExistInCache <- file.exists(cacheFilenames)
+        if (any(!filesExistInCache)) {
+          fileTails <- gsub("^.+(rasters.+)$", "\\1", cacheFilenames)
+          correctFilenames <- file.path(cachePath, fileTails)
+          filesExistInCache <- file.exists(correctFilenames)
+          if (all(filesExistInCache)) {
+            cacheFilenames <- correctFilenames
+          } else {
+            stop("File-backed raster files in the cache are corrupt for cacheId: ", cacheId)
+          }
 
-      newOutput <- updateFilenameSlots(output$cacheRaster,
-                                       Filenames(output, allowMultiple = FALSE),
-                                       newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
-      output <- newOutput
-      .setSubAttrInList(output, ".Cache", "newCache", FALSE)
+        }
+        out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
+                              origFilenames[filesExistInCache], overwrite = TRUE)
+
+        newOutput <- updateFilenameSlots(output$cacheRaster,
+                                         Filenames(output, allowMultiple = FALSE),
+                                         newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
+        output <- newOutput
+        .setSubAttrInList(output, ".Cache", "newCache", FALSE)
+
+      }
 
     }
-
   }
+
   if (any(inherits(output, "PackedSpatVector"))) {
     if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
       stop("Please install terra package")
@@ -2321,3 +2328,5 @@ whereInStack <- function(obj, startingEnv = parent.frame()) {
 browserCond <- function(expr) {
   any(startsWith(ls(.GlobalEnv), expr))
 }
+
+spatVectorNamesForCache <- c("x", "type", "atts", "crs")

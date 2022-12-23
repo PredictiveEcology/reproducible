@@ -87,7 +87,6 @@ test_that("testing terra", {
   t9 <- postProcessTerra(elevRas, cropTo = vRast)
   expect_true(terra::ext(v) <= terra::ext(t9))
 
-
   # SR, SV
   t2 <- postProcessTerra(elevRas, v)
 
@@ -95,12 +94,16 @@ test_that("testing terra", {
   t3 <- postProcessTerra(elevRas, maskTo = v)
   expect_true(terra::ext(t3) == terra::ext(elevRas))
 
+  vsf <- sf::st_as_sf(v)
+
   t4 <- postProcessTerra(elevRas, cropTo = v, maskTo = v)
   expect_true(terra::ext(t4) == terra::ext(t2))
 
   t5 <- postProcessTerra(elevRas, cropTo = v, maskTo = v, projectTo = v)
   expect_true(identical(t5[],t2[]))
 
+  t5sf <- postProcessTerra(elevRas, cropTo = vsf, maskTo = vsf, projectTo = vsf)
+  expect_true(identical(t5sf[],t2[]))
 
   t6 <- extract(elevRas, v, mean, na.rm = TRUE)
   expect_true(all(t6$elevation == 1))
@@ -200,17 +203,37 @@ test_that("testing terra", {
 
   # try NA to *To
   # Vectors
+  vutmSF <- sf::st_as_sf(vutm)
+  xVect2SF <- sf::st_as_sf(xVect2)
   t14 <- postProcessTerra(xVect2, vutm, projectTo = NA)
   expect_true(sf::st_crs(t14) == sf::st_crs(xVect2))
   expect_true(sf::st_crs(t14) != sf::st_crs(vutm))
+
+  suppressWarningsSpecific(falseWarnings = "attribute variables",
+                           t14SF <- postProcessTerra(xVect2SF, vutmSF, projectTo = NA)
+  )
+  expect_true(sf::st_crs(t14SF) == sf::st_crs(xVect2SF))
+  expect_true(sf::st_crs(t14SF) != sf::st_crs(vutmSF))
 
   t15 <- postProcessTerra(xVect2, vutm, maskTo = NA)
   expect_true(sf::st_crs(t15) != sf::st_crs(xVect2))
   expect_true(sf::st_crs(t15) == sf::st_crs(vutm))
 
+  suppressWarningsSpecific(falseWarnings = "attribute variables",
+                           t15SF <- postProcessTerra(xVect2SF, vutmSF, maskTo = NA)
+  )
+  expect_true(sf::st_crs(t15SF) != sf::st_crs(xVect2SF))
+  expect_true(sf::st_crs(t15SF) == sf::st_crs(vutmSF))
+
   t18 <- postProcessTerra(xVect2, vutm, cropTo = NA)
   expect_true(sf::st_crs(t18) != sf::st_crs(xVect2))
   expect_true(sf::st_crs(t18) == sf::st_crs(vutm))
+
+  suppressWarningsSpecific(falseWarnings = "attribute variables",
+                           t18SF <- postProcessTerra(xVect2SF, vutmSF, cropTo = NA)
+  )
+  expect_true(sf::st_crs(t18SF) != sf::st_crs(xVect2SF))
+  expect_true(sf::st_crs(t18SF) == sf::st_crs(vutmSF))
 
   # Rasters
   t16 <- postProcessTerra(elevRas, rutm, cropTo = NA)
@@ -232,18 +255,33 @@ test_that("testing terra", {
   expect_true(sf::st_crs(t16) != sf::st_crs(elevRas))
   expect_true(sf::st_crs(t16) == sf::st_crs(vutm))
 
+  t16SF <- postProcessTerra(elevRas, vutmSF, cropTo = NA)
+  expect_true(sf::st_crs(t16SF) != sf::st_crs(elevRas))
+  expect_true(sf::st_crs(t16SF) == sf::st_crs(vutmSF))
+
   t17 <- postProcessTerra(elevRas, vutm, projectTo = NA)
   expect_true(sf::st_crs(t17) == sf::st_crs(elevRas))
   expect_true(sf::st_crs(t17) != sf::st_crs(vutm))
+
+  t17SF <- postProcessTerra(elevRas, vutmSF, projectTo = NA)
+  expect_true(sf::st_crs(t17SF) == sf::st_crs(elevRas))
+  expect_true(sf::st_crs(t17SF) != sf::st_crs(vutmSF))
 
   t19 <- postProcessTerra(elevRas, vutm, maskTo = NA)
   expect_true(sf::st_crs(t19) != sf::st_crs(elevRas))
   expect_true(sf::st_crs(t19) == sf::st_crs(vutm))
   expect_true(sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
 
+  t19SF <- postProcessTerra(elevRas, vutmSF, maskTo = NA)
+  expect_true(sf::st_crs(t19SF) != sf::st_crs(elevRas))
+  expect_true(sf::st_crs(t19SF) == sf::st_crs(vutmSF))
+  expect_true(sum(terra::values(t19SF), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
+
   t21 <- postProcessTerra(elevRas, projectTo = vutm)
+  t21SF <- postProcessTerra(elevRas, projectTo = vutmSF)
   t20 <- postProcessTerra(elevRas, projectTo = sf::st_crs(vutm))
   expect_true(all.equal(t20, t21))
+  expect_true(all.equal(t20, t21SF))
   expect_true(identical(terra::size(elevRas), terra::size(t20)))
 
   ## same projection change resolution only (will likely affect extent)

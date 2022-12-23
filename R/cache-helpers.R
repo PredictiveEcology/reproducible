@@ -929,7 +929,20 @@ dealWithClass <- function(obj, cachePath, drv, conn, verbose = getOption("reprod
     if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
       stop("Please install terra package")
     messageCache("...wrapping terra object for saving...", verboseLevel = 1, verbose = verbose)
-    obj <- terra::wrap(obj)
+    # if (inherits(obj, "SpatVector"))
+    #   messageCache("... this may take a long time as terra vector objects are slow to terra::wrap")
+    attrs <- attr(obj, ".Cache")
+
+    # next is for terra objects --> terra::wrap is ridiculously slow for SpatVector objects; use
+    #   custom version in reproducible where here
+    if (inherits(obj, "SpatRaster")) {
+      obj <- terra::wrap(obj)
+    } else {
+      #browser()
+      obj <- wrapSpatVector(obj)
+    }
+    setattr(obj, ".Cache", attrs)
+
     messageCache("\b Done!", verboseLevel = 1, verbose = verbose)
   }
   obj
@@ -1114,3 +1127,21 @@ withoutFinalNumeric <- function(string) {
 }
 
 
+
+wrapSpatVector <- function(obj) {
+  geom1 <- terra::geom(obj)
+  geom1 <- terra::geom(obj)
+  geom1 <- list(cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),
+                cols34 = matrix(as.integer(geom1[, c(3, 4)]), ncol = 2))
+  geomtype1 <- terra::geomtype(obj)
+  dat1 <- terra::values(obj)
+  crs1 <- terra::crs(obj)
+  obj <- list(geom1, geomtype1, dat1, crs1)
+  names(obj) <- spatVectorNamesForCache
+  obj
+}
+
+unwrapSpatVector <- function(obj) {
+  obj$x <- cbind(obj$x$cols125[, 1:2, drop = FALSE], obj$x$cols34[, 1:2, drop = FALSE], obj$x$cols125[, 3, drop = FALSE])
+  do.call(terra::vect, obj)
+}
