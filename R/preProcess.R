@@ -152,10 +152,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   fun <- .checkFunInDots(fun = fun, dots = dots)
   dots <- .checkDeprecated(dots, verbose = verbose)
 
-  teamDrive <- if (packageVersion("googledrive") < "2.0.0") {
-    dots[["team_drive"]]
+  if (requireNamespace("googledrive", quietly = TRUE)) {
+    teamDrive <- if (packageVersion("googledrive") < "2.0.0") {
+      dots[["team_drive"]]
+    } else {
+      dots[["shared_drive"]]
+    }
   } else {
-    dots[["shared_drive"]]
+    teamDrive <- NULL
   }
 
   # remove trailing slash -- causes unzip fail if it is there
