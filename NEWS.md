@@ -7,6 +7,7 @@ Version 1.2.17
 - `postProcess` now uses `terra` and `sf` by default throughout the family.
 
 ## bugfixes
+- `Postgres` database backends were not working correctly because of a typo; fixed
 
 Version 1.2.16
 ==============

@@ -544,7 +544,7 @@ Cache <-
         }
         if (!identical(length(cachePaths), length(conn)))
           stop("conn and cachePath are both provided, but are different lengths which is not allowed")
-        names(conn) <- cachePath
+        names(conn) <- cachePaths
         conns <- conn
       }
       for (cachePath in cachePaths) {
