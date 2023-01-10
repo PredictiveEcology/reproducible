@@ -309,6 +309,9 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
           if (isSF(maskTo)) {
             maskTo <- sf::st_transform(maskTo, sf::st_crs(from))
           } else {
+            if (isSpatial(maskTo)) {
+              maskTo <- terra::vect(maskTo)
+            }
             maskTo <- terra::project(maskTo, from)
           }
 
