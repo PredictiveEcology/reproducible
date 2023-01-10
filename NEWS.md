@@ -8,6 +8,7 @@ Version 1.2.17
 
 ## bugfixes
 - `Postgres` database backends were not working correctly because of a typo; fixed
+- When working with revdep `SpaDES.core`, there were some cases where the `Cache` was failing as it could not find the module name; fixed.
 
 Version 1.2.16
 ==============
