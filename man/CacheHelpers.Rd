@@ -125,7 +125,7 @@ database files.
 
 \code{CacheStoredFile} returns the file path to the file with the specified hash value.
 
-\code{CacheIsACache} returns a logical of whether the specified cachePath
+\code{CacheIsACache} returns a logical of whether the specified \code{cachePath}
 is actually a functioning cache.
 }
 \examples{
