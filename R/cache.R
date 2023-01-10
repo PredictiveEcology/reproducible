@@ -2189,7 +2189,14 @@ evalTheFun <- function(FUNcaptured, isCapturedFUN, isSquiggly, matchedCall, envi
   if (isCapturedFUN || isSquiggly) { # if is wasn't "captured", then it is just a function, so now use it on the ...
      out <- eval(FUNcaptured, envir = envir)
   } else {
-    out <- eval(matchedCall, envir = envir)
+    out <- try(eval(matchedCall, envir = envir), silent = TRUE)
+    if (is(out, "try-error")) {
+      # This occurs when the Cached function is using the old approach (Cache(prepInputs, ...))
+      #   and when the arguments are not actually specified, but are provided in the ... from an
+      #   outer function. The following is not rigorously tested, but it works for cases provided
+      out <- eval(FUNcaptured)(...)
+    }
+
   }
 
   out
