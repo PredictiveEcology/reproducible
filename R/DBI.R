@@ -538,7 +538,7 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
 #' `CacheIsACache` returns a logical indicating whether the `cachePath` is currently
 #' a `reproducible` cache database.
 #' @details
-#' `CacheIsACache` returns a logical of whether the specified cachePath
+#' `CacheIsACache` returns a logical of whether the specified `cachePath`
 #'   is actually a functioning cache.
 CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), create = FALSE,
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
