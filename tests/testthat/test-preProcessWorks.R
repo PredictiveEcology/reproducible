@@ -432,6 +432,7 @@ test_that("Test to fix issue #101 prepInputs on raster from disk", {
   skip_on_cran()
   skip_on_ci()
   skip_if_not_installed("googledrive")
+  skip_if_no_token()
 
   testInitOut <- testInit("raster", needGoogle = TRUE)
   on.exit({
@@ -448,6 +449,7 @@ test_that("Test to fix issue #101 prepInputs on raster from disk", {
 
 test_that("Test of using future and progress indicator for lrg files on Google Drive", {
   skip_if_not_installed("future")
+  skip_if_no_token()
 
   if (interactive()) {
     testInitOut <- testInit(c("raster", "future"), needGoogle = TRUE, opts = list("reproducible.futurePlan" = "multiprocess"))
