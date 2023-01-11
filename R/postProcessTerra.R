@@ -346,7 +346,7 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
             if (isGridded(maskTo)) {
               terra::mask(from, maskTo, overwrite = overwrite)
             } else {
-              if (isSF(maskTo)) {
+              if (isSF(maskTo) || isSpatial(maskTo)) {
                 maskTo <- terra::vect(maskTo) # alternative is stars, and that is not Suggests
               }
               terra::mask(from, maskTo, touches = touches, overwrite = overwrite)
