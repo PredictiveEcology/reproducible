@@ -611,7 +611,12 @@ postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
   if (!missing(to)) {
     if (!is.null(to)) {
       if (!isSpatialAny(to)) stop("to must be a Raster*, Spat*, sf or Spatial object")
-      if (isVector(from)) if (!isVector(to)) stop("if from is a Vector object, to must also be a Vector object")
+      if (isVector(from))
+        if (!isVector(to)) {
+          # as long as maskTo and projectTo are supplied, then it is OK
+          if (!isVector(maskTo) && !isVector(projectTo))
+            stop("if from is a Vector object, to must also be a Vector object")
+        }
     }
   }
 
@@ -619,7 +624,8 @@ postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
     if (!is.naSpatial(cropTo))
       if (!is.null(cropTo)) {
         if (!isSpatialAny(cropTo)) stop("cropTo must be a Raster*, Spat*, sf or Spatial object")
-        if (isVector(from)) if (!isVector(cropTo)) stop("if from is a Vector object, cropTo must also be a Vector object")
+        # apparently, cropTo can be a gridded object no matter what
+        # if (isVector(from)) if (!isVector(cropTo)) stop("if from is a Vector object, cropTo must also be a Vector object")
       }
   }
   if (!missing(maskTo)) {
