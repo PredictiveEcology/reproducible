@@ -252,12 +252,23 @@ isSF <- function(x) is(x, "sf") || is(x, "sfc")
 #'
 fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.verbose"), fromFnName = "") {
   if (isVector(x)) {
-    if (!is.null(error))
+    os <- 0
+    if (!is.null(error)) {
       messageDeclareError(error, fromFnName, verbose)
+      os <- objSize(from)
+      if (os > 1e9)
+        messageColoured("... this may take a long time because the object is large (",
+                        format(os), ")", verbose = verbose)
+    }
     if (isSF(x)) {
       xValids <- sf::st_is_valid(x)
-      if (any(!xValids))
+      if (any(!xValids)) {
+        if (os > 1e9)
+          messageColoured("... found invalid components ... running sf::st_make_valid",
+                          verbose = verbose)
+
         x <- sf::st_make_valid(x)
+      }
     } else {
       xValids <- terra::is.valid(x)
       if (any(!xValids))
