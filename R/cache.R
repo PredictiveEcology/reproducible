@@ -1378,7 +1378,10 @@ getFunctionName2 <- function(mc) {
     FUNcaptured <- as.call(append(list(FUNcaptured), dotsCaptured))
   }
 
-  isDoCall <- any(grepl("^do.call", FUNcaptured)) || identical(do.call, FUNcaptured[[1]])
+  whCharName <- unlist(lapply(FUNcaptured, function(x) is.call(x) || is.name(x) || is.function(x) || is.character(x)))
+  isDoCall <- if (any(whCharName))
+    any(grepl("^do.call", FUNcaptured[whCharName])) || identical(do.call, FUNcaptured[[1]])
+  else FALSE
   needRmList <- FALSE
   fnNameInit <- NULL
   if (isDoCall) {
