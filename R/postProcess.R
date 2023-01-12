@@ -229,24 +229,31 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
                            ...) {
   .requireNamespace("sf", stopOnFALSE = TRUE)
 
-  # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
-  messagePrepInputs("postProcess with sf class objects is still experimental")
-  if (!is.null(rasterToMatch)) {
-    if (is.null(studyArea))
-      stop("sf class objects are not yet working with rasterToMatch argument")
-    messagePrepInputs("sf class objects can not be postProcessed directly from rasterToMatch yet;",
-                      "using studyArea. ")
-    rasterToMatch <- NULL
-  }
-  if (is(studyArea, "Spatial")) {
-    studyArea <- sf::st_as_sf(studyArea)
-  }
+  if (isTRUE(getOption("reproducible.useTerra"))) {
+    x <- postProcessTerra(from = x, studyArea = studyArea,
+                           rasterToMatch = rasterToMatch, useCache = useCache,
+                           filename1 = filename1, filename2 = filename2,
+                           useSAcrs = useSAcrs, overwrite = overwrite,
+                           verbose = verbose, ...)
+  } else {
+    # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
+    messagePrepInputs("postProcess with sf class objects is still experimental")
+    if (!is.null(rasterToMatch)) {
+      if (is.null(studyArea))
+        stop("sf class objects are not yet working with rasterToMatch argument")
+      messagePrepInputs("sf class objects can not be postProcessed directly from rasterToMatch yet;",
+                        "using studyArea. ")
+      rasterToMatch <- NULL
+    }
+    if (is(studyArea, "Spatial")) {
+      studyArea <- sf::st_as_sf(studyArea)
+    }
 
-  x <- postProcessAllSpatial(x = x, studyArea = studyArea,
-                             rasterToMatch = rasterToMatch, useCache = useCache,
-                             filename1 = filename1, filename2 = filename2,
-                             useSAcrs = useSAcrs, overwrite = overwrite, verbose = verbose, ...)
-
+    x <- postProcessAllSpatial(x = x, studyArea = studyArea,
+                               rasterToMatch = rasterToMatch, useCache = useCache,
+                               filename1 = filename1, filename2 = filename2,
+                               useSAcrs = useSAcrs, overwrite = overwrite, verbose = verbose, ...)
+  }
   return(x)
 }
 
