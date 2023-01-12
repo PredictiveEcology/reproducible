@@ -255,7 +255,7 @@ fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.ve
     os <- 0
     if (!is.null(error)) {
       messageDeclareError(error, fromFnName, verbose)
-      os <- objSize(from)
+      os <- objSize(x)
       if (os > 1e9)
         messageColoured("... this may take a long time because the object is large (",
                         format(os), ")", verbose = verbose)
