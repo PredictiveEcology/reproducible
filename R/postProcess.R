@@ -608,8 +608,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
     }
 
     if (isTRUE(getOption("reproducible.useTerra"))) {
-      x <- cropTo(from = suppressWarningsSpecific(terra::vect(x), shldBeChar),
-                  cropTo = cropTo)
+      x <- cropTo(from = x, cropTo = cropTo)
     } else {
 
       # have to project the extent to the x projection so crop will work -- this is temporary
@@ -1155,8 +1154,7 @@ projectInputs.sf <- function(x, targetCRS, verbose = getOption("reproducible.ver
   .requireNamespace("sf", stopOnFALSE = TRUE)
   if (!is.null(targetCRS)) {
     if (isTRUE(getOption("reproducible.useTerra"))) {
-      x <- projectTo(from = suppressWarningsSpecific(terra::vect(x), shldBeChar),
-                     projectTo = targetCRS)
+      x <- projectTo(from = x, projectTo = targetCRS)
     } else {
 
       warning("sf class objects not fully tested Use with caution.")
