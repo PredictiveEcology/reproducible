@@ -1836,8 +1836,21 @@ writeOutputs.quosure <- function(x, filename2, ...) {
 }
 
 #' @rdname writeOutputs
-writeOutputs.default <- function(x, filename2, ...) {
-  stop("Don't know how to write object of class ", class(x), " on disk.")
+writeOutputs.default <- function(x, filename2,
+                                 overwrite = getOption("reproducible.overwrite", FALSE),
+                                 verbose = getOption("reproducible.verbose", 1),
+                                 ...) {
+  if (is(x, "SpatRaster")) {
+    if (.requireNamespace("terra"))
+      x <- terra::writeRaster(x, filename = filename2, overwrite = overwrite, ...)
+  } else if (is(x, "SpatVector")) {
+    if (.requireNamespace("terra"))
+      x <- terra::writeVector(x, filename = filename2, overwrite = overwrite, ...)
+  } else {
+    stop("Don't know how to write object of class ", class(x), " on disk.")
+  }
+  return(x)
+
 }
 
 #' Assess the appropriate raster layer data type

@@ -41,7 +41,13 @@ writeOutputs(
 
 \method{writeOutputs}{quosure}(x, filename2, ...)
 
-\method{writeOutputs}{default}(x, filename2, ...)
+\method{writeOutputs}{default}(
+  x,
+  filename2,
+  overwrite = getOption("reproducible.overwrite", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
+  ...
+)
 }
 \arguments{
 \item{x}{The object save to disk i.e., write outputs}
