@@ -1428,10 +1428,12 @@ getFunctionName2 <- function(mc) {
           if (identical(as.name("..."), ee)) {
             out <- "..."
           } else {
-            env2 <- if (isDollarSqBrPkgColon(ee))
+            env2 <- try(if (isDollarSqBrPkgColon(ee))
               whereInStack(ee[[2]])
-            else
-              whereInStack(ee)
+              else
+                whereInStack(ee), silent = TRUE)
+            if (is(env2, "try-error"))
+              stop(out)
             out <- try(eval(ee, envir = env2), silent = TRUE)
             if (is(out, "try-error"))
               out <- as.character(parse(text = ee))
