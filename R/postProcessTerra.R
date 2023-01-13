@@ -170,7 +170,6 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
     if (is.null(projectTo)) projectTo <- to
   }
 
-
   # ASSERTION STEP
   postProcessTerraAssertions(from, to, cropTo, maskTo, projectTo)
 
@@ -242,7 +241,6 @@ isSpatialAny <- function(x) isGridded(x) || isVector(x)
 isSF <- function(x) is(x, "sf") || is(x, "sfc")
 isRaster <- function(x) is(x, "Raster")
 
-
 #' Fix common errors in GIS layers, using `terra`
 #'
 #' Currently, this only tests for validity of a SpatVect file, then if there is a problem,
@@ -255,7 +253,6 @@ isRaster <- function(x) is(x, "Raster")
 #'
 #' @return
 #' An object of the same class as `x`, but with some errors fixed via `terra::makeValid()`
-#'
 #'
 fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.verbose"), fromFnName = "") {
   if (isVector(x)) {
@@ -281,7 +278,6 @@ fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.ve
       if (any(!xValids))
         x <- terra::makeValid(x)
     }
-
   }
   x
 }
@@ -320,7 +316,6 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
         }
       }
 
-
       if (!sf::st_crs(from) == sf::st_crs(maskTo)) {
         if (isGridded(maskTo)) {
           maskTo <- terra::project(maskTo, from, overwrite = overwrite)
@@ -339,7 +334,6 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
       messagePrepInputs("    masking...", appendLF = FALSE)
       st <- Sys.time()
 
-
       # There are 2 tries; first is for `maskTo`, second is for `from`, rather than fix both in one step, which may be unnecessary
       maskAttempts <- 0
       env <- environment()
@@ -348,7 +342,7 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
       triedFrom <- NA
       while (attempt <= 2) {
         fromInt <- try({
-          if (isVector(maskTo))
+          if (isVector(maskTo)) {
             if (length(maskTo) > 1) {
               if (isSF(maskTo)) {
                 maskTo <- sf::st_union(maskTo)
@@ -356,6 +350,7 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
                 maskTo <- terra::aggregate(maskTo)
               }
             }
+          }
 
           if (isVector(from)) {
             if (isSF(from)) {
@@ -363,7 +358,6 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
             } else {
               terra::intersect(from, maskTo)
             }
-
           } else {
             if (isGridded(maskTo)) {
               terra::mask(from, maskTo, overwrite = overwrite)
@@ -417,7 +411,6 @@ projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE) {
       if (isRaster(projectTo)) {
         projectTo <- terra::rast(projectTo)
       }
-
 
       projectToOrig <- projectTo # keep for below
       sameProj <- sf::st_crs(projectTo) == sf::st_crs(from)
@@ -536,7 +529,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
           }
         } else {
           cropToInFromCRS <- terra::project(cropTo, terra::crs(from))
-          # THIS IS WHAN cropTo is a Gridded object
+          # THIS IS WHEN cropTo is a Gridded object
         }
         ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
       }
@@ -615,7 +608,6 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
         written <- terra::writeVector(from, filename = writeTo, overwrite = overwrite)
       }
       messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
-
     }
 
   from
