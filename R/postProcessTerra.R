@@ -148,7 +148,11 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
     projectTo <- dots$studyArea
   }
 
-  if (is.null(method)) method <- "bilinear"
+  if (is.null(method)) {
+    method <- "bilinear"
+  } else if (method == "ngb") {
+    method <- "near"
+  }
 
   # Deal with combinations of to and *To
   if (missing(to)) to <- NULL
@@ -402,7 +406,11 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
 
 #' @export
 #' @rdname postProcessTerra
-projectTo <- function(from, projectTo, method, overwrite = FALSE) {
+projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE) {
+  if (method == "ngb") {
+    method <- "near"
+  }
+
   if (!is.null(projectTo)) {
     origFromClass <- is(from)
     if (!is.naSpatial(projectTo)) {

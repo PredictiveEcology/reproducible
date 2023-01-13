@@ -29,7 +29,7 @@ maskTo(
   verbose = getOption("reproducible.verbose")
 )
 
-projectTo(from, projectTo, method, overwrite = FALSE)
+projectTo(from, projectTo, method = "bilinear", overwrite = FALSE)
 
 cropTo(
   from,
