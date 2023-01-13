@@ -613,7 +613,16 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
   from
 }
 
+#' @importFrom rlang eval_tidy
 postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
+
+  # sometimes there are quosures
+  for (y in ls()) {
+    ll <- get(y, inherits = FALSE)
+    if (inherits(ll, "quosure")) assign(y, eval_tidy(ll))
+  }
+
+
   if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
     stop("Need terra and sf: install.packages(c('terra', 'sf'))")
   if (!requireNamespace("sf", quietly = TRUE)) stop("Need sf: install.packages('sf')")
