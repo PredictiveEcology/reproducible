@@ -157,6 +157,9 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
     if (missing(maskTo)) maskTo <- NULL
     if (missing(projectTo)) projectTo <- NULL
   } else {
+    if (isRaster(to)) {
+      to <- terra::rast(to)
+    }
     # case where all *To are NULL --> use to as in the arg defaults
     if (is.null(cropTo)) cropTo <- to
     if (is.null(maskTo)) maskTo <- to
@@ -202,7 +205,6 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   #############################################################
   # crop project mask sequence ################################
   #############################################################
-  # browser()
   from <- cropTo(from, cropTo, needBuffer = TRUE, overwrite = overwrite) # crop first for speed
   from <- projectTo(from, projectTo, method = method, overwrite = overwrite) # need to project with edges intact
   from <- maskTo(from, maskTo, overwrite = overwrite)
@@ -234,6 +236,7 @@ isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
 isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || isSF(x)
 isSpatialAny <- function(x) isGridded(x) || isVector(x)
 isSF <- function(x) is(x, "sf") || is(x, "sfc")
+isRaster <- function(x) is(x, "Raster")
 
 
 #' Fix common errors in GIS layers, using `terra`
@@ -287,9 +290,10 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
   if (!is.null(maskTo)) {
     if (!is.naSpatial(maskTo)) {
       origFromClass <- class(from)
-
-      if (is(maskTo, "Raster"))
+      if (isRaster(maskTo)) {
         maskTo <- terra::rast(maskTo)
+      }
+
       if (isSpatial(from))
         from <- sf::st_as_sf(from)
       if (isSF(from)) {
@@ -402,8 +406,10 @@ projectTo <- function(from, projectTo, method, overwrite = FALSE) {
   if (!is.null(projectTo)) {
     origFromClass <- is(from)
     if (!is.naSpatial(projectTo)) {
-      if (is(projectTo, "Raster"))
+      if (isRaster(projectTo)) {
         projectTo <- terra::rast(projectTo)
+      }
+
 
       projectToOrig <- projectTo # keep for below
       sameProj <- sf::st_crs(projectTo) == sf::st_crs(from)
@@ -496,6 +502,10 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
     omit <- FALSE
     origFromClass <- is(from)
 
+    if (isRaster(cropTo)) {
+      cropTo <- terra::rast(cropTo)
+    }
+
     if (!isSpatialAny(cropTo))
       if (is.na(cropTo)) omit <- TRUE
 
@@ -538,6 +548,8 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
       attempt <- 1
       while (attempt <= 2) {
         if (isGridded(from)) {
+          if (!isSpat(from)) # terra::crop can handle Raster but only if ext is `extent`
+            ext <- extent(ext[])
           fromInt <- try(terra::crop(from, ext, overwrite = overwrite), silent = TRUE)
         } else {
           if (isSF(from)) {

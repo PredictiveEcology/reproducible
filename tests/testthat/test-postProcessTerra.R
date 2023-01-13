@@ -16,11 +16,15 @@ test_that("testing terra", {
   tf2 <- tempfile(fileext = ".tif")
   tf3 <- tempfile(fileext = ".tif")
   tf4 <- tempfile(fileext = ".tif")
+  tf5 <- tempfile(fileext = ".tif")
+  tf6 <- tempfile(fileext = ".tif")
   file.copy(f, tf)
   file.copy(f, tf1)
   file.copy(f, tf2)
   file.copy(f, tf3)
   file.copy(f, tf4)
+  file.copy(f, tf5)
+  file.copy(f, tf6)
   r <- list(terra::rast(f), terra::rast(tf))
   r1 <- list(terra::rast(tf1), terra::rast(tf2))
   r2 <- list(terra::rast(tf3), terra::rast(tf4))
@@ -301,4 +305,67 @@ test_that("testing terra", {
     t22 <- postProcessTerra(xVectSF, vutmSF)
   })
   #  }
+
+
+
+  if (.requireNamespace("raster")) {
+    ras1 <- raster::raster(tf5)
+    ras2 <- raster::raster(tf6)
+    ras1[] <- ras1[]
+    ras2[] <- ras2[]
+    r3 <- list(ras1, ras2) # this is for
+    r3[[1]][] <- r3[[1]][]; r3[[2]][] <- r3[[2]][] # bring to RAM
+
+    # Raster & SpatVect
+    ras1Small <- cropTo(ras1, t18)
+    ras1SmallMasked <- maskTo(ras1, t18)
+    ras1SmallAll <- postProcessTerra(ras1, t18)
+    expect_true(is(ras1Small, "Raster"))
+    expect_true(is(ras1SmallMasked, "Raster"))
+    expect_true(is(ras1SmallAll, "Raster"))
+
+    # Check that extents are similar
+    expect_true(terra::ext(ras1SmallAll) < terra::extend(terra::ext(t18), res(ras1SmallAll) * 2))
+
+    # SpatRaster & Raster
+    t20CroppedByRas <- cropTo(t20, ras1SmallAll)
+    t20MaskedByRas <- maskTo(t20, ras1SmallAll)
+    t20ProjectedByRas <- projectTo(t20, ras1SmallAll)
+    t20AllByRas <- postProcessTerra(t20, ras1SmallAll) # only does terra::rast 1x
+    expect_true(is(t20AllByRas, "SpatRaster"))
+    expect_true(is(t20CroppedByRas, "SpatRaster"))
+    expect_true(is(t20MaskedByRas, "SpatRaster"))
+    expect_true(is(t20ProjectedByRas, "SpatRaster"))
+    expect_equal(terra::res(t20ProjectedByRas), terra::res(ras1SmallAll))
+    expect_equal(terra::res(t20AllByRas), terra::res(ras1SmallAll))
+    expect_equal(terra::ext(t20AllByRas), terra::ext(ras1SmallAll))
+    expect_equal(terra::ext(t20ProjectedByRas), terra::ext(ras1SmallAll))
+    expect_true(
+      sum(!is.na(terra::values(ras1SmallAll))) <
+        sum(!is.na(terra::values(t20ProjectedByRas)))
+    )
+    expect_true(
+      sum(!is.na(terra::values(ras1SmallAll))) ==
+        sum(!is.na(terra::values(t20AllByRas)))
+    )
+    expect_true( #  these are 1 off b/c of projection probably
+      abs(sum(!is.na(terra::values(ras1SmallAll))) -
+        sum(!is.na(terra::values(t20MaskedByRas)))) < 2
+    )
+
+
+    if (interactive()) {
+      terra::plot(ras1SmallAll)
+      terra::plot(t18, add = TRUE)
+      terra::plot(t20AllByRas)
+      terra::plot(t20CroppedByRas)
+      terra::plot(t20MaskedByRas)
+      terra::plot(t20ProjectedByRas)
+
+
+    }
+
+
+  }
+
 })
