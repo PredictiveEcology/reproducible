@@ -2,15 +2,15 @@
 #'
 #' This function provides a single step to achieve the GIS operations "crop", "project",
 #' "mask" and possibly "write". This is intended to completely replace [postProcess()]
-#' (which primarily used GDAL, `Raster` and `sp`).
+#' (which primarily used GDAL, `raster` and `sp`).
 #' It uses primarily the `terra` package internally
 #' (with some minor functions from `sf` and `raster`)
 #' in an attempt to be as efficient as possible.
 #' For this function, Gridded means a `Raster*` class object from `raster` or
 #' a `SpatRaster` class object from `terra`.
 #' Vector means a `Spatial*` class object from `sp`, a `sf` class object
-#' from `sf`, or a `SpatVector` class object from `terra`. This function is currently
-#' part of the internals for some cases encountered by [postProcess()].
+#' from `sf`, or a `SpatVector` class object from `terra`.
+#' This function is currently part of the internals for some cases encountered by [postProcess()].
 #'
 #' @section Use Cases:
 #'
@@ -47,13 +47,11 @@
 #' }
 #'
 #' \subsection{`targetCRS`, `filename2`, `useSAcrs`:}{
-#'
 #'   `targetCRS` if supplied will be assigned to `projectTo`. `filename2` will
 #'   be assigned to `writeTo`. If `useSAcrs` is set, then the `studyArea`
 #'   will be assigned to `projectTo`. All of these will override any existing values
 #'   for these arguments.
 #' }
-#'
 #'
 #' @section Cropping:
 #' If `cropTo` is not `NA`, postProcessTerra does cropping twice, both the first and last steps.
@@ -65,7 +63,6 @@
 #' one step, but under some conditions, this is not true, and the mask leaves padded NAs out to
 #' the extent of the `from` (as it is after crop, project, mask). Thus the second
 #' crop removes all NA cells so they are tight to the mask.
-#'
 #'
 #' @return
 #' An object of the same class as `from`, but potentially cropped (via [cropTo()]),
@@ -87,19 +84,19 @@
 #'   The resolution and extent will be taken from `res(from)` (i.e. `ncol(from)*nrow(from)`).
 #'   If a Vector, the extent of the `projectTo` is not used (unless it is also passed to `cropTo`.
 #'   To omit projecting, set this to `NA`.
-#'   If supplied, this will override `to`
-#'   for the projecting step. Defaults to `NULL`, which means use `to`
+#'   If supplied, this will override `to` for the projecting step.
+#'   Defaults to `NULL`, which means use `to`.
 #' @param maskTo Optional Gridded or Vector dataset which,
-#'   if supplied, will supply the extent with which to mask `from`. If Gridded,
-#'   it will mask with the `NA` values on the `maskTo`; if Vector, it will
-#'   mask on the `terra::aggregate(maskTo)`. To omit
-#'   masking completely, set this to `NA`. If supplied,
-#'   this will override `to` for the masking step.
+#'   if supplied, will supply the extent with which to mask `from`.
+#'   If Gridded, it will mask with the `NA` values on the `maskTo`;
+#'   if Vector, it will mask on the `terra::aggregate(maskTo)`.
+#'   To omit masking completely, set this to `NA`.
+#'   If supplied, this will override `to` for the masking step.
 #'   Defaults to `NULL`, which means use `to`
 #' @param writeTo Optional character string of a filename to use `writeRaster` to save the final
 #'   object. Default is `NULL`, which means there is no `writeRaster`
 #' @param method Used if `projectTo` is not `NULL`, and is the method used for
-#'   interpolation. See `terra::project`. Defaults to `"bilinear"`
+#'   interpolation. See `terra::project`. Defaults to `"bilinear"`.
 #' @param datatype A character string, used if `writeTo` is not `NULL`. See `raster::writeRaster`
 #' @param overwrite Logical. Used if `writeTo` is not `NULL`; also if `terra` determines
 #'   that the object requires writing to disk during a `crop`, `mask` or `project` call
