@@ -1353,7 +1353,10 @@ getFunctionName2 <- function(mc) {
   FUNcapturedOrig <- FUNcaptured
 
   # Remove `quote`
-  isQuoted <- any(grepl("^quote", FUNcaptured)) # won't work for complicated quote
+  whCharName <- is.function(FUNcaptured)
+  isQuoted <- FALSE
+  if (!all(whCharName %in% TRUE))
+    isQuoted <- any(grepl("^quote", FUNcaptured)) # won't work for complicated quote
   if (isQuoted)
     FUNcaptured <- FUNcaptured[[2]]
 
