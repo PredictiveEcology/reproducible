@@ -1343,7 +1343,6 @@ getFunctionName2 <- function(mc) {
 
 }
 
-
 #' @importFrom utils modifyList isS3stdGeneric methods
 .fnCleanup <- function(FUN, ..., callingFun, FUNcaptured = NULL, CacheMatchedCall, callingEnv = parent.frame(2)) {
 
@@ -1374,7 +1373,6 @@ getFunctionName2 <- function(mc) {
     if (isDollarSqBrPkgColon(FUNcaptured[[1]])) { # this is TRUE ONLY if it is *just* b$fun(1), stats::runif(1)
       FUNcaptured[[1]] <- eval(FUNcaptured[[1]], envir = callingEnv)
     }
-
   }
 
   if (!is.call(FUNcaptured)) { # isDollarSqBrPkgColon(FUNcaptured)) { # turn the rnorm, 1, 2 into rnorm(1, 2)
