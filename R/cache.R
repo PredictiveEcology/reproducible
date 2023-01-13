@@ -1351,11 +1351,14 @@ getFunctionName2 <- function(mc) {
 
   FUNcapturedOrig <- FUNcaptured
 
+  whCharName <- is.function(FUNcaptured) # this is bad; it means that it was not captured. Happens when user
+  #  erroneously does do.call(Cache, args)
+  if (all(whCharName %in% TRUE)) {
+    stop("It looks like Cache is called incorrectly, possibly something like do.call(Cache, args); \n",
+         "Cache should be the outermost function. See examples for correct ways to use Cache")
+  }
   # Remove `quote`
-  whCharName <- is.function(FUNcaptured)
-  isQuoted <- FALSE
-  if (!all(whCharName %in% TRUE))
-    isQuoted <- any(grepl("^quote", FUNcaptured)) # won't work for complicated quote
+  isQuoted <- any(grepl("^quote", FUNcaptured)) # won't work for complicated quote
   if (isQuoted)
     FUNcaptured <- FUNcaptured[[2]]
 
@@ -1381,7 +1384,7 @@ getFunctionName2 <- function(mc) {
 
   whCharName <- unlist(lapply(FUNcaptured, function(x) is.call(x) || is.name(x) || is.function(x) || is.character(x)))
   isDoCall <- if (any(whCharName))
-    any(grepl("^do.call", FUNcaptured[whCharName])) || identical(do.call, FUNcaptured[[1]])
+    any(grepl("^do\\.call", FUNcaptured[whCharName])) || identical(do.call, FUNcaptured[[1]])
   else FALSE
   needRmList <- FALSE
   fnNameInit <- NULL
