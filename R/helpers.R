@@ -512,13 +512,15 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 
 .fileExtsKnown <- function() {
   shpFile <- getOption("reproducible.shapefileRead")
+  griddedFile <- getOption("reproducible.rasterRead")
   if (is.null(shpFile)) shpFile <- "sf::st_read"
+  if (is.null(griddedFile)) griddedFile <- "terra::rast"
 
   df <- data.frame(
     rbind(
       c("rds", "base::readRDS", "binary"),
       c("qs", "qs::qread", "qs"),
-      cbind(c("asc", "grd", "tif"), c("raster::raster"), "Raster"),
+      cbind(c("asc", "grd", "tif"), griddedFile, "Raster"),
       cbind(c("shp", "gdb"), shpFile, "shapefile")
     )
   )
