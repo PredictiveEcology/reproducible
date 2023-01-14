@@ -534,3 +534,50 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   length(strsplit(packageDescription("reproducible")$Version, "\\.")[[1]]) > 3
 }
 
+
+#' Get min or maximum value of a (Spat)Raster
+#'
+#' During the transition from raster to terra, some functions are not drop in
+#' replacements, such as `minValue` and `maxValue` became `terra::minmax`. This
+#' helper allows one function to be used, which calls the correct max or min
+#' function, depending on whether the object is a `Raster` or `SpatRaster`.
+#' @export
+#' @rdname minmax
+#' @param x A Raster or SpatRaster object.
+#' @return
+#' A vector (not matrix as in terra::minmax) with the minimum or maximum
+#' value on the Raster or SpatRaster, one value per layer.
+#' @examples
+#' if (requireNamespace("terra")) {
+#'   ras <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1:100)
+#'   maxFn(ras)
+#'   minFn(ras)
+#' }
+minFn <- function(x) {
+  minmaxFn(x, "min")
+}
+
+#' @export
+#' @rdname minmax
+maxFn <- function(x) {
+  minmaxFn(x, "max")
+}
+
+minmaxFn <- function(x, which = "max") {
+  out <- NULL
+  if (is(x, "Raster")) {
+    if (requireNamespace("raster")) {
+      fn <- get(paste0(which, "Value"), envir = asNamespace("Raster"))
+      out <- fn(x)
+    }
+  } else {
+    if (requireNamespace("terra")) {
+      fn <- ifelse(identical(which, "max"), tail, head)
+      out <- fn(terra::minmax(x), 1)[1, ]
+    }
+  }
+  if (is.null(out))
+    stop("To use maxFn or minFn, you need either terra or raster package installed")
+  out
+
+}
