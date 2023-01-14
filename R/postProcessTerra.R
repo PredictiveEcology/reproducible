@@ -208,7 +208,7 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   from <- cropTo(from, cropTo, needBuffer = TRUE, overwrite = overwrite) # crop first for speed
   from <- projectTo(from, projectTo, method = method, overwrite = overwrite) # need to project with edges intact
   from <- maskTo(from, maskTo, overwrite = overwrite)
-  from <- cropTo(from, cropTo, overwrite = overwrite) # need to recrop to trim excess pixels in new projection
+  from <- cropTo(from, cropTo, needBuffer = FALSE, overwrite = overwrite) # need to recrop to trim excess pixels in new projection
 
   # Put this message near the end so doesn't get lost
   if (is.naSpatial(cropTo) && isVector(maskTo))  {
