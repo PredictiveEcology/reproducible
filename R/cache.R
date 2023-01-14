@@ -1114,7 +1114,7 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
         if (is.name(xxxx)) {
           # exists(xxxx, envir = envir, inherits = FALSE)
           if (exists(xxxx, envir)) { # looks like variables that are in ... in the `envir` are not found; would need whereInStack
-            evd <- try(eval(xxxx, envir))
+            evd <- try(eval(xxxx, envir), silent = TRUE)
             isPrim <- is.primitive(evd)
             if (isPrim) {
               eval(xxxx)
