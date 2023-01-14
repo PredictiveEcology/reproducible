@@ -5,6 +5,7 @@ Version 1.2.17
 
 ## enhancements
 - `postProcess` now uses `terra` and `sf` by default throughout the family. These are only activated by a user deciding to use the new family of functions (`postProcessTerra`, `cropTo`, `maskTo`, `projectTo`, `writeTo`) or by setting the `option(reproducible.useTerra = TRUE)`
+- new functions to assist with transition from `raster` to `terra` --> `maxFn` and `minFn`
 
 ## bugfixes
 - `Postgres` database backends were not working correctly because of a typo; fixed
