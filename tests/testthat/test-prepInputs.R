@@ -386,7 +386,8 @@ test_that("preProcess doesn't work", {
   skip_on_ci()
   testInitOut <- testInit("raster", opts = list(
     "reproducible.overwrite" = TRUE,
-    "reproducible.inputPaths" = NULL
+    "reproducible.inputPaths" = NULL,
+    "reproducible.rasterRead" = "raster::raster"
   ),
   needGoogle = TRUE)
   on.exit({

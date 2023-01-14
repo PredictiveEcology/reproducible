@@ -229,24 +229,31 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
                            ...) {
   .requireNamespace("sf", stopOnFALSE = TRUE)
 
-  # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
-  messagePrepInputs("postProcess with sf class objects is still experimental")
-  if (!is.null(rasterToMatch)) {
-    if (is.null(studyArea))
-      stop("sf class objects are not yet working with rasterToMatch argument")
-    messagePrepInputs("sf class objects can not be postProcessed directly from rasterToMatch yet;",
-                      "using studyArea. ")
-    rasterToMatch <- NULL
-  }
-  if (is(studyArea, "Spatial")) {
-    studyArea <- sf::st_as_sf(studyArea)
-  }
+  if (isTRUE(getOption("reproducible.useTerra"))) {
+    x <- postProcessTerra(from = x, studyArea = studyArea,
+                           rasterToMatch = rasterToMatch, useCache = useCache,
+                           filename1 = filename1, filename2 = filename2,
+                           useSAcrs = useSAcrs, overwrite = overwrite,
+                           verbose = verbose, ...)
+  } else {
+    # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
+    messagePrepInputs("postProcess with sf class objects is still experimental")
+    if (!is.null(rasterToMatch)) {
+      if (is.null(studyArea))
+        stop("sf class objects are not yet working with rasterToMatch argument")
+      messagePrepInputs("sf class objects can not be postProcessed directly from rasterToMatch yet;",
+                        "using studyArea. ")
+      rasterToMatch <- NULL
+    }
+    if (is(studyArea, "Spatial")) {
+      studyArea <- sf::st_as_sf(studyArea)
+    }
 
-  x <- postProcessAllSpatial(x = x, studyArea = studyArea,
-                             rasterToMatch = rasterToMatch, useCache = useCache,
-                             filename1 = filename1, filename2 = filename2,
-                             useSAcrs = useSAcrs, overwrite = overwrite, verbose = verbose, ...)
-
+    x <- postProcessAllSpatial(x = x, studyArea = studyArea,
+                               rasterToMatch = rasterToMatch, useCache = useCache,
+                               filename1 = filename1, filename2 = filename2,
+                               useSAcrs = useSAcrs, overwrite = overwrite, verbose = verbose, ...)
+  }
   return(x)
 }
 
@@ -405,8 +412,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
     }
 
     if (isTRUE(getOption("reproducible.useTerra"))) {
-      x <- cropTo(from = suppressWarningsSpecific(terra::vect(x), shldBeChar),
-                  cropTo = cropTo)
+      x <- cropTo(from = x, cropTo = cropTo)
     } else {
 
       # have to project the extent to the x projection so crop will work -- this is temporary
@@ -609,8 +615,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
     }
 
     if (isTRUE(getOption("reproducible.useTerra"))) {
-      x <- cropTo(from = suppressWarningsSpecific(terra::vect(x), shldBeChar),
-                  cropTo = cropTo)
+      x <- cropTo(from = x, cropTo = cropTo)
     } else {
 
       # have to project the extent to the x projection so crop will work -- this is temporary
@@ -1156,8 +1161,7 @@ projectInputs.sf <- function(x, targetCRS, verbose = getOption("reproducible.ver
   .requireNamespace("sf", stopOnFALSE = TRUE)
   if (!is.null(targetCRS)) {
     if (isTRUE(getOption("reproducible.useTerra"))) {
-      x <- projectTo(from = suppressWarningsSpecific(terra::vect(x), shldBeChar),
-                     projectTo = targetCRS)
+      x <- projectTo(from = x, projectTo = targetCRS)
     } else {
 
       warning("sf class objects not fully tested Use with caution.")
@@ -1832,8 +1836,21 @@ writeOutputs.quosure <- function(x, filename2, ...) {
 }
 
 #' @rdname writeOutputs
-writeOutputs.default <- function(x, filename2, ...) {
-  stop("Don't know how to write object of class ", class(x), " on disk.")
+writeOutputs.default <- function(x, filename2,
+                                 overwrite = getOption("reproducible.overwrite", FALSE),
+                                 verbose = getOption("reproducible.verbose", 1),
+                                 ...) {
+  if (is(x, "SpatRaster")) {
+    if (.requireNamespace("terra"))
+      x <- terra::writeRaster(x, filename = filename2, overwrite = overwrite, ...)
+  } else if (is(x, "SpatVector")) {
+    if (.requireNamespace("terra"))
+      x <- terra::writeVector(x, filename = filename2, overwrite = overwrite, ...)
+  } else {
+    stop("Don't know how to write object of class ", class(x), " on disk.")
+  }
+  return(x)
+
 }
 
 #' Assess the appropriate raster layer data type

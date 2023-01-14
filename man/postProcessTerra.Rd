@@ -29,7 +29,7 @@ maskTo(
   verbose = getOption("reproducible.verbose")
 )
 
-projectTo(from, projectTo, method, overwrite = FALSE)
+projectTo(from, projectTo, method = "bilinear", overwrite = FALSE)
 
 cropTo(
   from,
@@ -69,22 +69,22 @@ to project the \code{from} to. If Vector, it will provide the \code{crs} only.
 The resolution and extent will be taken from \code{res(from)} (i.e. \code{ncol(from)*nrow(from)}).
 If a Vector, the extent of the \code{projectTo} is not used (unless it is also passed to \code{cropTo}.
 To omit projecting, set this to \code{NA}.
-If supplied, this will override \code{to}
-for the projecting step. Defaults to \code{NULL}, which means use \code{to}}
+If supplied, this will override \code{to} for the projecting step.
+Defaults to \code{NULL}, which means use \code{to}.}
 
 \item{maskTo}{Optional Gridded or Vector dataset which,
-if supplied, will supply the extent with which to mask \code{from}. If Gridded,
-it will mask with the \code{NA} values on the \code{maskTo}; if Vector, it will
-mask on the \code{terra::aggregate(maskTo)}. To omit
-masking completely, set this to \code{NA}. If supplied,
-this will override \code{to} for the masking step.
+if supplied, will supply the extent with which to mask \code{from}.
+If Gridded, it will mask with the \code{NA} values on the \code{maskTo};
+if Vector, it will mask on the \code{terra::aggregate(maskTo)}.
+To omit masking completely, set this to \code{NA}.
+If supplied, this will override \code{to} for the masking step.
 Defaults to \code{NULL}, which means use \code{to}}
 
 \item{writeTo}{Optional character string of a filename to use \code{writeRaster} to save the final
 object. Default is \code{NULL}, which means there is no \code{writeRaster}}
 
 \item{method}{Used if \code{projectTo} is not \code{NULL}, and is the method used for
-interpolation. See \code{terra::project}. Defaults to \code{"bilinear"}}
+interpolation. See \code{terra::project}. Defaults to \code{"bilinear"}.}
 
 \item{datatype}{A character string, used if \code{writeTo} is not \code{NULL}. See \code{raster::writeRaster}}
 
@@ -120,15 +120,15 @@ projected (via \code{\link[=projectTo]{projectTo()}}), masked (via \code{\link[=
 \description{
 This function provides a single step to achieve the GIS operations "crop", "project",
 "mask" and possibly "write". This is intended to completely replace \code{\link[=postProcess]{postProcess()}}
-(which primarily used GDAL, \code{Raster} and \code{sp}).
+(which primarily used GDAL, \code{raster} and \code{sp}).
 It uses primarily the \code{terra} package internally
 (with some minor functions from \code{sf} and \code{raster})
 in an attempt to be as efficient as possible.
 For this function, Gridded means a \verb{Raster*} class object from \code{raster} or
 a \code{SpatRaster} class object from \code{terra}.
 Vector means a \verb{Spatial*} class object from \code{sp}, a \code{sf} class object
-from \code{sf}, or a \code{SpatVector} class object from \code{terra}. This function is currently
-part of the internals for some cases encountered by \code{\link[=postProcess]{postProcess()}}.
+from \code{sf}, or a \code{SpatVector} class object from \code{terra}.
+This function is currently part of the internals for some cases encountered by \code{\link[=postProcess]{postProcess()}}.
 }
 \section{Use Cases}{
 
@@ -167,7 +167,6 @@ If both \code{rasterToMatch} and \code{studyArea} are supplied,
 }
 
 \subsection{\code{targetCRS}, \code{filename2}, \code{useSAcrs}:}{
-
 \code{targetCRS} if supplied will be assigned to \code{projectTo}. \code{filename2} will
 be assigned to \code{writeTo}. If \code{useSAcrs} is set, then the \code{studyArea}
 will be assigned to \code{projectTo}. All of these will override any existing values

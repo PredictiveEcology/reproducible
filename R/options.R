@@ -82,6 +82,10 @@
 #'     `file.size(file)` instead of the `digest::digest(file)`.
 #'     Less robust to changes, but faster. *NOTE: this will only affect objects on disk*.
 #'   }
+#'   \item{`rasterRead`}{
+#'     Default `raster::raster` for backwards compatibility. Used during `prepInputs` when reading a
+#'     `.tif`, `.grd`, and `.asc` files. This will eventually become `terra::rast`.
+#'   }
 #'   \item{`shapefileRead`}{
 #'     Default `NULL`. Used during `prepInputs` when reading a `.shp` file.
 #'     If `NULL`, it will use `sf::st_read` if `sf` package is available; otherwise,
@@ -194,7 +198,8 @@ reproducibleOptions <- function() {
     reproducible.overwrite = FALSE,
     reproducible.polygonShortcut = FALSE,
     reproducible.quick = FALSE,
-    reproducible.shapefileRead = NULL, # TODO: change in next release
+    reproducible.rasterRead = "raster::raster",
+    reproducible.shapefileRead = "sf::st_read", # TODO: change in next release
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = file.path(tempdir(), "reproducible"),

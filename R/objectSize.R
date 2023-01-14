@@ -60,7 +60,7 @@ objSize <- function(x, quick = FALSE, ...) {
 #' @importFrom lobstr obj_size
 objSize.default <- function(x, quick = FALSE, ...) {
   FNs <- Filenames(x)
-  if (!is.null(FNs)) {
+  if (!is.null(FNs) && nzchar(FNs)) {
     FNs <- asPath(FNs)
     out2 <- objSize(FNs, quick = FALSE)
   }

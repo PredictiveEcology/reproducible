@@ -2,15 +2,15 @@
 #'
 #' This function provides a single step to achieve the GIS operations "crop", "project",
 #' "mask" and possibly "write". This is intended to completely replace [postProcess()]
-#' (which primarily used GDAL, `Raster` and `sp`).
+#' (which primarily used GDAL, `raster` and `sp`).
 #' It uses primarily the `terra` package internally
 #' (with some minor functions from `sf` and `raster`)
 #' in an attempt to be as efficient as possible.
 #' For this function, Gridded means a `Raster*` class object from `raster` or
 #' a `SpatRaster` class object from `terra`.
 #' Vector means a `Spatial*` class object from `sp`, a `sf` class object
-#' from `sf`, or a `SpatVector` class object from `terra`. This function is currently
-#' part of the internals for some cases encountered by [postProcess()].
+#' from `sf`, or a `SpatVector` class object from `terra`.
+#' This function is currently part of the internals for some cases encountered by [postProcess()].
 #'
 #' @section Use Cases:
 #'
@@ -47,13 +47,11 @@
 #' }
 #'
 #' \subsection{`targetCRS`, `filename2`, `useSAcrs`:}{
-#'
 #'   `targetCRS` if supplied will be assigned to `projectTo`. `filename2` will
 #'   be assigned to `writeTo`. If `useSAcrs` is set, then the `studyArea`
 #'   will be assigned to `projectTo`. All of these will override any existing values
 #'   for these arguments.
 #' }
-#'
 #'
 #' @section Cropping:
 #' If `cropTo` is not `NA`, postProcessTerra does cropping twice, both the first and last steps.
@@ -65,7 +63,6 @@
 #' one step, but under some conditions, this is not true, and the mask leaves padded NAs out to
 #' the extent of the `from` (as it is after crop, project, mask). Thus the second
 #' crop removes all NA cells so they are tight to the mask.
-#'
 #'
 #' @return
 #' An object of the same class as `from`, but potentially cropped (via [cropTo()]),
@@ -87,19 +84,19 @@
 #'   The resolution and extent will be taken from `res(from)` (i.e. `ncol(from)*nrow(from)`).
 #'   If a Vector, the extent of the `projectTo` is not used (unless it is also passed to `cropTo`.
 #'   To omit projecting, set this to `NA`.
-#'   If supplied, this will override `to`
-#'   for the projecting step. Defaults to `NULL`, which means use `to`
+#'   If supplied, this will override `to` for the projecting step.
+#'   Defaults to `NULL`, which means use `to`.
 #' @param maskTo Optional Gridded or Vector dataset which,
-#'   if supplied, will supply the extent with which to mask `from`. If Gridded,
-#'   it will mask with the `NA` values on the `maskTo`; if Vector, it will
-#'   mask on the `terra::aggregate(maskTo)`. To omit
-#'   masking completely, set this to `NA`. If supplied,
-#'   this will override `to` for the masking step.
+#'   if supplied, will supply the extent with which to mask `from`.
+#'   If Gridded, it will mask with the `NA` values on the `maskTo`;
+#'   if Vector, it will mask on the `terra::aggregate(maskTo)`.
+#'   To omit masking completely, set this to `NA`.
+#'   If supplied, this will override `to` for the masking step.
 #'   Defaults to `NULL`, which means use `to`
 #' @param writeTo Optional character string of a filename to use `writeRaster` to save the final
 #'   object. Default is `NULL`, which means there is no `writeRaster`
 #' @param method Used if `projectTo` is not `NULL`, and is the method used for
-#'   interpolation. See `terra::project`. Defaults to `"bilinear"`
+#'   interpolation. See `terra::project`. Defaults to `"bilinear"`.
 #' @param datatype A character string, used if `writeTo` is not `NULL`. See `raster::writeRaster`
 #' @param overwrite Logical. Used if `writeTo` is not `NULL`; also if `terra` determines
 #'   that the object requires writing to disk during a `crop`, `mask` or `project` call
@@ -148,7 +145,11 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
     projectTo <- dots$studyArea
   }
 
-  if (is.null(method)) method <- "bilinear"
+  if (is.null(method)) {
+    method <- "bilinear"
+  } else if (method == "ngb") {
+    method <- "near"
+  }
 
   # Deal with combinations of to and *To
   if (missing(to)) to <- NULL
@@ -157,12 +158,14 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
     if (missing(maskTo)) maskTo <- NULL
     if (missing(projectTo)) projectTo <- NULL
   } else {
+    if (isRaster(to)) {
+      to <- terra::rast(to)
+    }
     # case where all *To are NULL --> use to as in the arg defaults
     if (is.null(cropTo)) cropTo <- to
     if (is.null(maskTo)) maskTo <- to
     if (is.null(projectTo)) projectTo <- to
   }
-
 
   # ASSERTION STEP
   postProcessTerraAssertions(from, to, cropTo, maskTo, projectTo)
@@ -202,11 +205,10 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   #############################################################
   # crop project mask sequence ################################
   #############################################################
-  # browser()
   from <- cropTo(from, cropTo, needBuffer = TRUE, overwrite = overwrite) # crop first for speed
   from <- projectTo(from, projectTo, method = method, overwrite = overwrite) # need to project with edges intact
   from <- maskTo(from, maskTo, overwrite = overwrite)
-  from <- cropTo(from, cropTo, overwrite = overwrite) # need to recrop to trim excess pixels in new projection
+  from <- cropTo(from, cropTo, needBuffer = FALSE, overwrite = overwrite) # need to recrop to trim excess pixels in new projection
 
   # Put this message near the end so doesn't get lost
   if (is.naSpatial(cropTo) && isVector(maskTo))  {
@@ -234,7 +236,7 @@ isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
 isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || isSF(x)
 isSpatialAny <- function(x) isGridded(x) || isVector(x)
 isSF <- function(x) is(x, "sf") || is(x, "sfc")
-
+isRaster <- function(x) is(x, "Raster")
 
 #' Fix common errors in GIS layers, using `terra`
 #'
@@ -249,21 +251,30 @@ isSF <- function(x) is(x, "sf") || is(x, "sfc")
 #' @return
 #' An object of the same class as `x`, but with some errors fixed via `terra::makeValid()`
 #'
-#'
 fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.verbose"), fromFnName = "") {
   if (isVector(x)) {
-    if (!is.null(error))
+    os <- 0
+    if (!is.null(error)) {
       messageDeclareError(error, fromFnName, verbose)
+      os <- objSize(x)
+      if (os > 1e9)
+        messageColoured("... this may take a long time because the object is large (",
+                        format(os), ")", verbose = verbose)
+    }
     if (isSF(x)) {
       xValids <- sf::st_is_valid(x)
-      if (any(!xValids))
+      if (any(!xValids)) {
+        if (os > 1e9)
+          messageColoured("... found invalid components ... running sf::st_make_valid",
+                          verbose = verbose)
+
         x <- sf::st_make_valid(x)
+      }
     } else {
       xValids <- terra::is.valid(x)
       if (any(!xValids))
         x <- terra::makeValid(x)
     }
-
   }
   x
 }
@@ -276,9 +287,10 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
   if (!is.null(maskTo)) {
     if (!is.naSpatial(maskTo)) {
       origFromClass <- class(from)
-
-      if (is(maskTo, "Raster"))
+      if (isRaster(maskTo)) {
         maskTo <- terra::rast(maskTo)
+      }
+
       if (isSpatial(from))
         from <- sf::st_as_sf(from)
       if (isSF(from)) {
@@ -301,7 +313,6 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
         }
       }
 
-
       if (!sf::st_crs(from) == sf::st_crs(maskTo)) {
         if (isGridded(maskTo)) {
           maskTo <- terra::project(maskTo, from, overwrite = overwrite)
@@ -320,7 +331,6 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
       messagePrepInputs("    masking...", appendLF = FALSE)
       st <- Sys.time()
 
-
       # There are 2 tries; first is for `maskTo`, second is for `from`, rather than fix both in one step, which may be unnecessary
       maskAttempts <- 0
       env <- environment()
@@ -329,7 +339,7 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
       triedFrom <- NA
       while (attempt <= 2) {
         fromInt <- try({
-          if (isVector(maskTo))
+          if (isVector(maskTo)) {
             if (length(maskTo) > 1) {
               if (isSF(maskTo)) {
                 maskTo <- sf::st_union(maskTo)
@@ -337,6 +347,7 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
                 maskTo <- terra::aggregate(maskTo)
               }
             }
+          }
 
           if (isVector(from)) {
             if (isSF(from)) {
@@ -344,9 +355,10 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
             } else {
               terra::intersect(from, maskTo)
             }
-
           } else {
             if (isGridded(maskTo)) {
+              if (terra::ext(from) != terra::ext(maskTo))
+                from <- terra::crop(from, maskTo)
               terra::mask(from, maskTo, overwrite = overwrite)
             } else {
               if (isSF(maskTo) || isSpatial(maskTo)) {
@@ -387,12 +399,17 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
 
 #' @export
 #' @rdname postProcessTerra
-projectTo <- function(from, projectTo, method, overwrite = FALSE) {
+projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE) {
+  if (method == "ngb") {
+    method <- "near"
+  }
+
   if (!is.null(projectTo)) {
     origFromClass <- is(from)
     if (!is.naSpatial(projectTo)) {
-      if (is(projectTo, "Raster"))
+      if (isRaster(projectTo)) {
         projectTo <- terra::rast(projectTo)
+      }
 
       projectToOrig <- projectTo # keep for below
       sameProj <- sf::st_crs(projectTo) == sf::st_crs(from)
@@ -485,6 +502,10 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
     omit <- FALSE
     origFromClass <- is(from)
 
+    if (isRaster(cropTo)) {
+      cropTo <- terra::rast(cropTo)
+    }
+
     if (!isSpatialAny(cropTo))
       if (is.na(cropTo)) omit <- TRUE
 
@@ -507,7 +528,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
           }
         } else {
           cropToInFromCRS <- terra::project(cropTo, terra::crs(from))
-          # THIS IS WHAN cropTo is a Gridded object
+          # THIS IS WHEN cropTo is a Gridded object
         }
         ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
       }
@@ -527,6 +548,8 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
       attempt <- 1
       while (attempt <= 2) {
         if (isGridded(from)) {
+          if (!isSpat(from)) # terra::crop can handle Raster but only if ext is `extent`
+            ext <- extent(ext[])
           fromInt <- try(terra::crop(from, ext, overwrite = overwrite), silent = TRUE)
         } else {
           if (isSF(from)) {
@@ -584,13 +607,21 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
         written <- terra::writeVector(from, filename = writeTo, overwrite = overwrite)
       }
       messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
-
     }
 
   from
 }
 
+#' @importFrom rlang eval_tidy
 postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
+
+  # sometimes there are quosures
+  for (y in ls()) {
+    ll <- get(y, inherits = FALSE)
+    if (inherits(ll, "quosure")) assign(y, eval_tidy(ll))
+  }
+
+
   if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
     stop("Need terra and sf: install.packages(c('terra', 'sf'))")
   if (!requireNamespace("sf", quietly = TRUE)) stop("Need sf: install.packages('sf')")
@@ -600,7 +631,12 @@ postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
   if (!missing(to)) {
     if (!is.null(to)) {
       if (!isSpatialAny(to)) stop("to must be a Raster*, Spat*, sf or Spatial object")
-      if (isVector(from)) if (!isVector(to)) stop("if from is a Vector object, to must also be a Vector object")
+      if (isVector(from))
+        if (!isVector(to)) {
+          # as long as maskTo and projectTo are supplied, then it is OK
+          if (!isVector(maskTo) && !isVector(projectTo))
+            stop("if from is a Vector object, to must also be a Vector object")
+        }
     }
   }
 
@@ -608,7 +644,8 @@ postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
     if (!is.naSpatial(cropTo))
       if (!is.null(cropTo)) {
         if (!isSpatialAny(cropTo)) stop("cropTo must be a Raster*, Spat*, sf or Spatial object")
-        if (isVector(from)) if (!isVector(cropTo)) stop("if from is a Vector object, cropTo must also be a Vector object")
+        # apparently, cropTo can be a gridded object no matter what
+        # if (isVector(from)) if (!isVector(cropTo)) stop("if from is a Vector object, cropTo must also be a Vector object")
       }
   }
   if (!missing(maskTo)) {

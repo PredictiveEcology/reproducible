@@ -1114,7 +1114,7 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
         if (is.name(xxxx)) {
           # exists(xxxx, envir = envir, inherits = FALSE)
           if (exists(xxxx, envir)) { # looks like variables that are in ... in the `envir` are not found; would need whereInStack
-            evd <- try(eval(xxxx, envir))
+            evd <- try(eval(xxxx, envir), silent = TRUE)
             isPrim <- is.primitive(evd)
             if (isPrim) {
               eval(xxxx)
@@ -1343,7 +1343,6 @@ getFunctionName2 <- function(mc) {
 
 }
 
-
 #' @importFrom utils modifyList isS3stdGeneric methods
 .fnCleanup <- function(FUN, ..., callingFun, FUNcaptured = NULL, CacheMatchedCall, callingEnv = parent.frame(2)) {
 
@@ -1352,6 +1351,12 @@ getFunctionName2 <- function(mc) {
 
   FUNcapturedOrig <- FUNcaptured
 
+  whCharName <- is.function(FUNcaptured) # this is bad; it means that it was not captured. Happens when user
+  #  erroneously does do.call(Cache, args)
+  if (all(whCharName %in% TRUE)) {
+    stop("It looks like Cache is called incorrectly, possibly something like do.call(Cache, args); \n",
+         "Cache should be the outermost function. See examples for correct ways to use Cache")
+  }
   # Remove `quote`
   isQuoted <- any(grepl("^quote", FUNcaptured)) # won't work for complicated quote
   if (isQuoted)
@@ -1371,14 +1376,16 @@ getFunctionName2 <- function(mc) {
     if (isDollarSqBrPkgColon(FUNcaptured[[1]])) { # this is TRUE ONLY if it is *just* b$fun(1), stats::runif(1)
       FUNcaptured[[1]] <- eval(FUNcaptured[[1]], envir = callingEnv)
     }
-
   }
 
   if (!is.call(FUNcaptured)) { # isDollarSqBrPkgColon(FUNcaptured)) { # turn the rnorm, 1, 2 into rnorm(1, 2)
     FUNcaptured <- as.call(append(list(FUNcaptured), dotsCaptured))
   }
 
-  isDoCall <- any(grepl("^do.call", FUNcaptured)) || identical(do.call, FUNcaptured[[1]])
+  whCharName <- unlist(lapply(FUNcaptured, function(x) is.call(x) || is.name(x) || is.function(x) || is.character(x)))
+  isDoCall <- if (any(whCharName))
+    any(grepl("^do\\.call", FUNcaptured[whCharName])) || identical(do.call, FUNcaptured[[1]])
+  else FALSE
   needRmList <- FALSE
   fnNameInit <- NULL
   if (isDoCall) {
@@ -1421,13 +1428,18 @@ getFunctionName2 <- function(mc) {
           if (identical(as.name("..."), ee)) {
             out <- "..."
           } else {
-            env2 <- if (isDollarSqBrPkgColon(ee))
+            env2 <- try(if (isDollarSqBrPkgColon(ee))
               whereInStack(ee[[2]])
-            else
-              whereInStack(ee)
-            out <- try(eval(ee, envir = env2), silent = TRUE)
-            if (is(out, "try-error"))
-              out <- as.character(parse(text = ee))
+              else
+                whereInStack(ee), silent = TRUE)
+            if (is(env2, "try-error")) {
+              out <- paste(format(ee$destinationPath), collapse = " ")
+            } else {
+              out <- try(eval(ee, envir = env2), silent = TRUE)
+              if (is(out, "try-error"))
+                out <- as.character(parse(text = ee))
+            }
+
           }
 
         }
