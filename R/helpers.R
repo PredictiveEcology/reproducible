@@ -567,7 +567,7 @@ minmaxFn <- function(x, which = "max") {
   out <- NULL
   if (is(x, "Raster")) {
     if (requireNamespace("raster")) {
-      fn <- get(paste0(which, "Value"), envir = asNamespace("Raster"))
+      fn <- get(paste0(which, "Value"), envir = asNamespace("raster"))
       out <- fn(x)
     }
   } else {
