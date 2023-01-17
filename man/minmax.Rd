@@ -10,11 +10,11 @@ minFn(x)
 maxFn(x)
 }
 \arguments{
-\item{x}{A Raster or SpatRaster object.}
+\item{x}{A \code{Raster} or \code{SpatRaster} object.}
 }
 \value{
-A vector (not matrix as in terra::minmax) with the minimum or maximum
-value on the Raster or SpatRaster, one value per layer.
+A vector (not matrix as in \code{terra::minmax}) with the minimum or maximum
+value on the \code{Raster} or \code{SpatRaster}, one value per layer.
 }
 \description{
 During the transition from raster to terra, some functions are not drop in

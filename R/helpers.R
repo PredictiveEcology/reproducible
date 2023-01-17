@@ -39,10 +39,9 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
   xf <- x %% 1
   numDecimals <- nchar(gsub("(.*)(\\.)|([0]*$)","",xf))
   newPadR <- ifelse(xf %==% 0, 0, pmax(numDecimals, padR))
-  xFCEnd <- sprintf(paste0("%0", padL+newPadR+1*(newPadR > 0),".", newPadR, "f"), x)
+  xFCEnd <- sprintf(paste0("%0", padL + newPadR + 1*(newPadR > 0),".", newPadR, "f"), x)
   return(xFCEnd)
 }
-
 
 #' Add a prefix or suffix to the basename part of a file path
 #'
@@ -541,12 +540,16 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 #' replacements, such as `minValue` and `maxValue` became `terra::minmax`. This
 #' helper allows one function to be used, which calls the correct max or min
 #' function, depending on whether the object is a `Raster` or `SpatRaster`.
+#'
+#' @param x A `Raster` or `SpatRaster` object.
+#'
+#' @return
+#' A vector (not matrix as in `terra::minmax`) with the minimum or maximum
+#' value on the `Raster` or `SpatRaster`, one value per layer.
+#'
 #' @export
 #' @rdname minmax
-#' @param x A Raster or SpatRaster object.
-#' @return
-#' A vector (not matrix as in terra::minmax) with the minimum or maximum
-#' value on the Raster or SpatRaster, one value per layer.
+#'
 #' @examples
 #' if (requireNamespace("terra")) {
 #'   ras <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1:100)
@@ -578,6 +581,6 @@ minmaxFn <- function(x, which = "max") {
   }
   if (is.null(out))
     stop("To use maxFn or minFn, you need either terra or raster package installed")
-  out
 
+  out
 }
