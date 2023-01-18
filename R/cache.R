@@ -1483,8 +1483,8 @@ getFunctionName2 <- function(mc) {
       modifiedDots <- formals2(FUNcapturedNamesEvaled) # this gets default values for methods;
     }
   } else {
-    browser() # This hasn't been tested yet -- args is wrong in next line
-    FUNcapturedNamesEvaled <- append(list(NULL), append(FUN, args)) # the first arg is supposed to be a function below; put NULL as placeholder
+    # This comes from `CacheDigest(something$something)`
+    FUNcapturedNamesEvaled <- append(list(NULL), FUNcaptured) # the first arg is supposed to be a function below; put NULL as placeholder
     forms <- names(FUNcapturedNamesEvaled[-1])
   }
 
