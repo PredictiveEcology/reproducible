@@ -237,6 +237,9 @@ isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || isSF(x)
 isSpatialAny <- function(x) isGridded(x) || isVector(x)
 isSF <- function(x) is(x, "sf") || is(x, "sfc")
 isRaster <- function(x) is(x, "Raster")
+isCRSANY <- function(x) isCRSSF(x) || isCRScharacter(x)
+isCRSSF <- function(x) is(x, "crs")
+isCRScharacter <- function(x) is.character(x) && grepl("DATUM")
 
 #' Fix common errors in GIS layers, using `terra`
 #'
@@ -286,112 +289,120 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
                    verbose = getOption("reproducible.verbose")) {
   if (!is.null(maskTo)) {
     if (!is.naSpatial(maskTo)) {
+      omit <- FALSE
       origFromClass <- class(from)
       if (isRaster(maskTo)) {
         maskTo <- terra::rast(maskTo)
       }
+      if (isGridded(maskTo) && isVector(from))
+        omit <- TRUE
+      if (!isSpatialAny(maskTo))
+        if (is.na(maskTo) || isCRSANY(maskTo)) omit <- TRUE
 
-      if (isSpatial(from))
-        from <- sf::st_as_sf(from)
-      if (isSF(from)) {
-        if (!isSF(maskTo)) {
-          maskTo <- sf::st_as_sf(maskTo)
-        }
-      }
-      if (isSpat(from) && isVector(from)) {
-        if (!isSpat(maskTo)) {
-          maskTo <- terra::vect(maskTo)
-        }
-      }
-      # if (isSF(maskTo))
-      #   maskTo <- terra::vect(maskTo)
-      if (!isSpat(from) && !isSF(from)) {
-        if (isVector(from)) {
-          from <- terra::vect(from)
-        } else {
-          from <- terra::rast(from)
-        }
-      }
+      if (!omit) {
 
-      if (!sf::st_crs(from) == sf::st_crs(maskTo)) {
-        if (isGridded(maskTo)) {
-          maskTo <- terra::project(maskTo, from, overwrite = overwrite)
-        } else {
-          if (isSF(maskTo)) {
-            maskTo <- sf::st_transform(maskTo, sf::st_crs(from))
-          } else {
-            if (isSpatial(maskTo)) {
-              maskTo <- terra::vect(maskTo)
-            }
-            maskTo <- terra::project(maskTo, from)
+        if (isSpatial(from))
+          from <- sf::st_as_sf(from)
+        if (isSF(from)) {
+          if (!isSF(maskTo)) {
+            maskTo <- sf::st_as_sf(maskTo)
           }
-
         }
-      }
-      messagePrepInputs("    masking...", appendLF = FALSE)
-      st <- Sys.time()
-
-      # There are 2 tries; first is for `maskTo`, second is for `from`, rather than fix both in one step, which may be unnecessary
-      maskAttempts <- 0
-      env <- environment()
-
-      attempt <- 1
-      triedFrom <- NA
-      while (attempt <= 2) {
-        fromInt <- try({
-          if (isVector(maskTo)) {
-            if (length(maskTo) > 1) {
-              if (isSF(maskTo)) {
-                maskTo <- sf::st_union(maskTo)
-              } else {
-                maskTo <- terra::aggregate(maskTo)
-              }
-            }
+        if (isSpat(from) && isVector(from)) {
+          if (!isSpat(maskTo)) {
+            maskTo <- terra::vect(maskTo)
           }
-
+        }
+        # if (isSF(maskTo))
+        #   maskTo <- terra::vect(maskTo)
+        if (!isSpat(from) && !isSF(from)) {
           if (isVector(from)) {
-            if (isSF(from)) {
-              sf::st_intersection(from, maskTo)
-            } else {
-              terra::intersect(from, maskTo)
-            }
+            from <- terra::vect(from)
           } else {
-            if (isGridded(maskTo)) {
-              if (terra::ext(from) != terra::ext(maskTo))
-                from <- terra::crop(from, maskTo)
-              terra::mask(from, maskTo, overwrite = overwrite)
-            } else {
-              if (isSF(maskTo) || isSpatial(maskTo)) {
-                maskTo <- terra::vect(maskTo) # alternative is stars, and that is not Suggests
-              }
-              terra::mask(from, maskTo, touches = touches, overwrite = overwrite)
-            }
+            from <- terra::rast(from)
           }
-        }, silent = TRUE)
-        if (is(fromInt, "try-error")) {
-          if (attempt >= 1) {
-            whichFailed <- grepl("geom 0", fromInt)
-            if (isTRUE(whichFailed) && !(triedFrom %in% TRUE)) { # don't try same one again
-              from <- fixErrorsTerra(from, error = fromInt, fromFnName = "maskTo", verbose = verbose)
-              triedFrom <- TRUE
-            } else {
-              maskTo <- fixErrorsTerra(maskTo, error = fromInt, fromFnName = "maskTo", verbose = verbose)
-              triedFrom <- FALSE
-            }
-          } else {
-            stop(fromInt)
-          }
-        } else {
-          if (attempt > 1)
-            messagePrepInputs("...fixed!", verbose = verbose, verboseLevel = 1 , appendLF = FALSE)
-          break
         }
-        attempt <- attempt + 1
-      }
 
-      from <- fromInt
-      messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
-      from <- revertClass(from, origFromClass = origFromClass)
+        if (!sf::st_crs(from) == sf::st_crs(maskTo)) {
+          if (isGridded(maskTo)) {
+            maskTo <- terra::project(maskTo, from, overwrite = overwrite)
+          } else {
+            if (isSF(maskTo)) {
+              maskTo <- sf::st_transform(maskTo, sf::st_crs(from))
+            } else {
+              if (isSpatial(maskTo)) {
+                maskTo <- terra::vect(maskTo)
+              }
+              maskTo <- terra::project(maskTo, from)
+            }
+
+          }
+        }
+        messagePrepInputs("    masking...", appendLF = FALSE)
+        st <- Sys.time()
+
+        # There are 2 tries; first is for `maskTo`, second is for `from`, rather than fix both in one step, which may be unnecessary
+        maskAttempts <- 0
+        env <- environment()
+
+        attempt <- 1
+        triedFrom <- NA
+        while (attempt <= 2) {
+          fromInt <- try({
+            if (isVector(maskTo)) {
+              if (length(maskTo) > 1) {
+                if (isSF(maskTo)) {
+                  maskTo <- sf::st_union(maskTo)
+                } else {
+                  maskTo <- terra::aggregate(maskTo)
+                }
+              }
+            }
+
+            if (isVector(from)) {
+              if (isSF(from)) {
+                sf::st_intersection(from, maskTo)
+              } else {
+                terra::intersect(from, maskTo)
+              }
+            } else {
+              if (isGridded(maskTo)) {
+                if (terra::ext(from) != terra::ext(maskTo))
+                  from <- terra::crop(from, maskTo)
+                terra::mask(from, maskTo, overwrite = overwrite)
+              } else {
+                if (isSF(maskTo) || isSpatial(maskTo)) {
+                  maskTo <- terra::vect(maskTo) # alternative is stars, and that is not Suggests
+                }
+                terra::mask(from, maskTo, touches = touches, overwrite = overwrite)
+              }
+            }
+          }, silent = TRUE)
+          if (is(fromInt, "try-error")) {
+            if (attempt >= 1) {
+              whichFailed <- grepl("geom 0", fromInt)
+              if (isTRUE(whichFailed) && !(triedFrom %in% TRUE)) { # don't try same one again
+                from <- fixErrorsTerra(from, error = fromInt, fromFnName = "maskTo", verbose = verbose)
+                triedFrom <- TRUE
+              } else {
+                maskTo <- fixErrorsTerra(maskTo, error = fromInt, fromFnName = "maskTo", verbose = verbose)
+                triedFrom <- FALSE
+              }
+            } else {
+              stop(fromInt)
+            }
+          } else {
+            if (attempt > 1)
+              messagePrepInputs("...fixed!", verbose = verbose, verboseLevel = 1 , appendLF = FALSE)
+            break
+          }
+          attempt <- attempt + 1
+        }
+
+        from <- fromInt
+        messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+        from <- revertClass(from, origFromClass = origFromClass)
+      }
     }
   }
   from
@@ -413,7 +424,7 @@ projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE) {
 
       projectToOrig <- projectTo # keep for below
       sameProj <- sf::st_crs(projectTo) == sf::st_crs(from)
-      isProjectToVecOrCRS <- is(projectTo, "crs") || isVector(projectTo)
+      isProjectToVecOrCRS <- isCRSANY(projectTo) || isVector(projectTo)
       sameRes <- if (isVector(from) || isProjectToVecOrCRS) {
         TRUE
       } else {
@@ -467,11 +478,14 @@ projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE) {
 
         # Since we only use the crs when projectTo is a Vector, no need to "fixErrorsTerra"
         from <- if (isVector(from)) {
-          isSpatial <- is(from, "Spatial")
+          isSpatial <- isSpatial(from)
           if (isSpatial)
             from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
           isSF <- isSF(from)
           if (isSF) {
+            if (isGridded(projectTo)) {
+              projectTo <- sf::st_crs(projectTo)
+            }
             from <- sf::st_transform(from, projectTo)
           } else {
             from <- terra::project(from, projectTo)
@@ -507,14 +521,14 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
     }
 
     if (!isSpatialAny(cropTo))
-      if (is.na(cropTo)) omit <- TRUE
-
-    if (isSpatial(cropTo))
-      cropTo <- terra::vect(cropTo)
-    if (isSpatial(from))
-      from <- terra::vect(from)
+      if (is.na(cropTo) || isCRSANY(cropTo)) omit <- TRUE
 
     if (!omit) {
+      if (isSpatial(cropTo))
+        cropTo <- terra::vect(cropTo)
+      if (isSpatial(from))
+        from <- terra::vect(from)
+
       messagePrepInputs("    cropping..." , appendLF = FALSE)
       st <- Sys.time()
 
@@ -630,39 +644,44 @@ postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
 
   if (!missing(to)) {
     if (!is.null(to)) {
-      if (!isSpatialAny(to)) stop("to must be a Raster*, Spat*, sf or Spatial object")
-      if (isVector(from))
-        if (!isVector(to)) {
-          # as long as maskTo and projectTo are supplied, then it is OK
-          if (!isVector(maskTo) && !isVector(projectTo))
-            stop("if from is a Vector object, to must also be a Vector object")
-        }
+      if (!isSpatialAny(to) && !isCRSANY(to)) stop("to must be a Raster*, Spat*, sf or Spatial object")
+      # if (isVector(from))
+      #   if (!isVector(to) && !isCRSANY(to)) {
+      #     # as long as maskTo and projectTo are supplied, then it is OK
+      #     if (!isVector(maskTo) && !isVector(projectTo))
+      #       stop("if from is a Vector object, to must also be a Vector or crs object")
+      #   }
     }
   }
 
   if (!missing(cropTo)) {
     if (!is.naSpatial(cropTo))
       if (!is.null(cropTo)) {
-        if (!isSpatialAny(cropTo)) stop("cropTo must be a Raster*, Spat*, sf or Spatial object")
+        if (!isSpatialAny(cropTo) && !isCRSANY(cropTo)) stop("cropTo must be a Raster*, Spat*, sf or Spatial object")
         # apparently, cropTo can be a gridded object no matter what
-        # if (isVector(from)) if (!isVector(cropTo)) stop("if from is a Vector object, cropTo must also be a Vector object")
+        # if (isVector(from)) if (!isVector(cropTo) && !isCRSANY(cropTo))
+        #   stop("if from is a Vector object, cropTo must also be a Vector object")
       }
   }
   if (!missing(maskTo)) {
     if (!is.naSpatial(maskTo))
       if (!is.null(maskTo)) {
-        if (!isSpatialAny(maskTo)) stop("maskTo must be a Raster*, Spat*, sf or Spatial object")
-        if (isVector(from)) if (!isVector(maskTo)) stop("if from is a Vector object, maskTo must also be a Vector object")
+        if (!isSpatialAny(maskTo) && !isCRSANY(maskTo))
+          stop("maskTo must be a Raster*, Spat*, sf or Spatial object")
+        # if (isVector(from)) if (!isVector(maskTo) && !isCRSANY(maskTo))
+        #   stop("if from is a Vector object, maskTo must also be a Vector object")
       }
   }
   if (!missing(projectTo)) {
     if (!is.naSpatial(projectTo))
       if (!is.null(projectTo)) {
-        if (is.character(projectTo))
+        if (isCRScharacter(projectTo))
           projectTo <- try(silent = TRUE, sf::st_crs(projectTo))
-        if (!is(projectTo, "crs")) {
-          if (!isSpatialAny(projectTo)) stop("projectTo must be a Raster*, Spat*, sf or Spatial object")
-          if (isVector(from)) if (!isVector(projectTo)) stop("if from is a Vector object, projectTo must also be a Vector object")
+        if (!isCRSANY(projectTo)) {
+          if (!isSpatialAny(projectTo))
+            stop("projectTo must be a Raster*, Spat*, sf or Spatial object")
+          # if (isVector(from)) if (!isVector(projectTo))
+          # stop("if from is a Vector object, projectTo must also be a Vector object")
         }
       }
   }

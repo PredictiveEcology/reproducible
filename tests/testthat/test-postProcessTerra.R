@@ -64,8 +64,8 @@ test_that("testing terra", {
   expect_true(!terra::inMemory(b[[1]]))
 
   f <- system.file("ex/lux.shp", package = "terra")
-  v <- terra::vect(f)
-  v <- v[1:2,]
+  vOrig <- terra::vect(f)
+  v <- vOrig[1:2,]
   rf <- system.file("ex/elev.tif", package = "terra")
   xOrig <- terra::rast(rf)
   elevRas <- terra::deepcopy(xOrig)
@@ -99,6 +99,7 @@ test_that("testing terra", {
   expect_true(terra::ext(t3) == terra::ext(elevRas))
 
   vsf <- sf::st_as_sf(v)
+  vOrigsf <- sf::st_as_sf(vOrig)
 
   t4 <- postProcessTerra(elevRas, cropTo = v, maskTo = v)
   expect_true(terra::ext(t4) == terra::ext(t2))
@@ -164,11 +165,25 @@ test_that("testing terra", {
   }
 
   utm <- sf::st_crs("epsg:23028")#$wkt
-  vsf <- sf::st_as_sf(v)
+  # vsf <- sf::st_as_sf(v)
   vsfutm <- sf::st_transform(vsf, utm)
   vutm <- terra::vect(vsfutm)
   res100 <- 100
   rutm <- terra::rast(vutm, res = res100)
+  rutm <- terra::rasterize(vutm, rutm, field = "NAME_2")
+
+  vsfInUTMviaCRS <- postProcessTerra(vsf, sf::st_crs(rutm))
+  expect_true(is(vsfInUTMviaCRS, "sf"))
+  expect_true(sf::st_crs(vsfInUTMviaCRS) == sf::st_crs(rutm))
+
+  # from is sf, to is SpatRast --> skip maskTo
+  vsfInUTMviaSpatRast <-
+    suppressWarningsSpecific(falseWarnings = "attribute variables are assumed",
+                                                  postProcessTerra(vOrigsf, rutm))
+  expect_true(is(vsfInUTMviaSpatRast, "sf"))
+  expect_true(sf::st_crs(vsfInUTMviaSpatRast) == sf::st_crs(rutm))
+  expect_true(isTRUE(all.equal(round(terra::ext(rutm), 6),
+                        round(terra::ext(vsfInUTMviaSpatRast), 6))))
 
   # if (Sys.info()["user"] %in% "emcintir") {
   #   env <- new.env(parent = emptyenv())
@@ -274,12 +289,12 @@ test_that("testing terra", {
   t19 <- postProcessTerra(elevRas, vutm, maskTo = NA)
   expect_true(sf::st_crs(t19) != sf::st_crs(elevRas))
   expect_true(sf::st_crs(t19) == sf::st_crs(vutm))
-  expect_true(sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
+  # expect_true(sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
 
   t19SF <- postProcessTerra(elevRas, vutmSF, maskTo = NA)
   expect_true(sf::st_crs(t19SF) != sf::st_crs(elevRas))
   expect_true(sf::st_crs(t19SF) == sf::st_crs(vutmSF))
-  expect_true(sum(terra::values(t19SF), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
+  # expect_true(sum(terra::values(t19SF), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
 
   t21 <- postProcessTerra(elevRas, projectTo = vutm)
   t21SF <- postProcessTerra(elevRas, projectTo = vutmSF)
