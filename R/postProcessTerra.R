@@ -239,7 +239,7 @@ isSF <- function(x) is(x, "sf") || is(x, "sfc")
 isRaster <- function(x) is(x, "Raster")
 isCRSANY <- function(x) isCRSSF(x) || isCRScharacter(x) || isCRSTerra(x)
 isCRSSF <- function(x) is(x, "crs")
-isCRScharacter <- function(x) is.character(x) && grepl("DATUM")
+isCRScharacter <- function(x) is.character(x) && grepl("DATUM", x)
 isCRSTerra <- function(x) is(x, "CRS")
 
 #' Fix common errors in GIS layers, using `terra`
