@@ -1190,7 +1190,7 @@ matchCall <- function(FUNcaptured, envir = parent.frame()) {
   mc
 }
 
-
+#' @importFrom methods .S4methods
 getMethodAll <- function(FUNcaptured, callingEnv) {
   FUN <- FUNcaptured[[1]]
   if (isS4(FUN)) {
@@ -1203,7 +1203,8 @@ getMethodAll <- function(FUNcaptured, callingEnv) {
     # package had signatures with more arguments.
     numArgsInSig <- try({
       suppressWarnings({
-        info <- attr(utils::methods(functionName), "info")# from hadley/sloop package s3_method_generic
+        info <- attr(methods::.S4methods(functionName), "info")# from hadley/sloop package s3_method_generic
+        # info <- attr(utils::methods(functionName), "info")# from hadley/sloop package s3_method_generic
       })
       max(unlist(lapply(strsplit(rownames(info), split = ","), length) ) - 1)
     }, silent = TRUE)
