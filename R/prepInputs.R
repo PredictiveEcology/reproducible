@@ -467,6 +467,9 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     if (!(all(is.null(out$dots$studyArea),
               is.null(out$dots$rasterToMatch),
               is.null(out$dots$targetCRS))) || !(all(is.null(out$dots$to)))) {
+
+      # This sequence puts all the objects that are needed for postProcessTerra into this environment
+      #   so that we can avoid using do.call
       argsPostProcessTerra <- formalArgs(postProcessTerra)
       argsOldPostProcess <- c("rasterToMatch", "studyArea", "targetCRS", "useSAcrs", "filename2",
                               "overwrite")
@@ -484,12 +487,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       } else {
         filename2 <- determineFilename(destinationPath = destinationPath, filename2 = filename2, verbose = verbose)
       }
-
       # pass everything, including NULL where it was NULL. This means don't have to deal with
       #    rlang quo issues
       x <- postProcessTerra(from = x, to = to, rasterToMatch = rasterToMatch, studyArea = studyArea,
                             cropTo = cropTo, projectTo = projectTo, maskTo = maskTo, writeTo = writeTo,
                             method = method, targetCRS = targetCRS, useSAcrs = useSAcrs,
+                            datatype = datatype,
                             filename2 = filename2,
                             overwrite = overwrite)
 
