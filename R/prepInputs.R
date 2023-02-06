@@ -915,12 +915,13 @@ extractFromArchive <- function(archive,
       }
     }
     if (!isTRUE(worked) | isTRUE(tooBig)) {
+      unz <- Sys.which("unzip")
+      sZip <- Sys.which("7z")
+
       if (!isTRUE(tooBig)) {
         messagePrepInputs("File unzipping using R does not appear to have worked.",
                           " Trying a system call of unzip...", verbose = verbose)
       } else {
-        unz <- Sys.which("unzip")
-        sZip <- Sys.which("7z")
         messPart1 <- "R's unzip utility cannot handle a zip file this size.\n"
         if (nchar(sZip) > 0) {
           messagePrepInputs(messPart1, verbose = verbose)
