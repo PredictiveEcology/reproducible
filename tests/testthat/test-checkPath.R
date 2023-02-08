@@ -1,16 +1,22 @@
 test_that("checkPath: normPath consistency", {
-  cwd <- getwd()
+  # testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  # on.exit({
+  #   testOnExit(testInitOut)
+  # }, add = TRUE)
 
-  # don't use checkPath here because we are testing normPath!
+  # Use the following here instead of above because it fails on Mac without this.
   tmpdir <- tempdir2("test_normPath")
   tmpdir <- normalizePath(tmpdir, winslash = "/", mustWork = FALSE)
 
+  cwd <- getwd()
   setwd(tmpdir)
 
   on.exit({
     setwd(cwd)
     unlink(tmpdir, recursive = TRUE)
   }, add = TRUE) # nolint
+
+  # don't use checkPath here because we are testing normPath!
 
   paths <- list("./aaa/zzz",
                 "./aaa/zzz/",
@@ -32,16 +38,20 @@ test_that("checkPath: normPath consistency", {
 })
 
 test_that("checkPath: checkPath consistency", {
-  currdir <- getwd()
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
   # don't use checkPath here because we are testing checkPath
-  tmpdir <- tempdir2("test_checkPath")
-
-  on.exit({
-    setwd(currdir)
-    unlink(tmpdir, recursive = TRUE)
-  }, add = TRUE) # nolint
-  setwd(tmpdir)
+  # currdir <- getwd()
+  # tmpdir <- tempdir2("test_checkPath")
+  #
+  # on.exit({
+  #   setwd(currdir)
+  #   unlink(tmpdir, recursive = TRUE)
+  # }, add = TRUE) # nolint
+  # setwd(tmpdir)
 
   dir.create("aaa/zzz", recursive = TRUE, showWarnings = FALSE)
   paths <- list("./aaa/zzz",
@@ -68,6 +78,8 @@ test_that("checkPath: checkPath consistency", {
   expect_true(file.create(f1)) ## TRUE
   expect_true(file.exists(f1)) ## TRUE
 
+  opts <- options("reproducible.verbose" = 1)
+  on.exit(options(opts), add = TRUE)
   expect_message(a <- checkPath(f1), "is an existing file")
 
 })

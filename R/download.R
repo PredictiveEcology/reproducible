@@ -1,19 +1,24 @@
 #' A wrapper around a set of downloading functions
 #'
-#' Currently, this only deals with \code{\link[googledrive]{drive_download}},
-#' and \code{\link[utils]{download.file}}.
+#' Currently, this only deals with [googledrive::drive_download()],
+#' and [utils::download.file()]. In general, this is not intended for use by a
+#' user.
 #'
 #' @inheritParams prepInputs
 #' @inheritParams extractFromArchive
-#' @importFrom Require normPath
-#' @param dlFun Optional "download function" name, such as \code{"raster::getData"}, which does
+#' @param dlFun Optional "download function" name, such as `"raster::getData"`, which does
 #'              custom downloading, in addition to loading into R. Still experimental.
-#' @param ... Passed to \code{dlFun}. Still experimental.
-#' @param checksumFile A character string indicating the absolute path to the \code{CHECKSUMS.txt}
+#' @param ... Passed to `dlFun`. Still experimental.
+#' @param checksumFile A character string indicating the absolute path to the `CHECKSUMS.txt`
 #'                     file.
 #'
 #' @inheritParams Cache
 #' @author Eliot McIntire
+#' @return
+#' This function is called for its side effects, which will be a downloaded file
+#' (`targetFile`), placed in `destinationPath`. This file will be checksummed, and
+#' that checksum will be appended to the `checksumFile`.
+#'
 #' @export
 #' @include checksums.R
 downloadFile <- function(archive, targetFile, neededFiles,
@@ -332,7 +337,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       fp <- future::plan()
       if (!is(fp, getOption("reproducible.futurePlan"))) {
         fpNew <- getOption("reproducible.futurePlan")
-        future::plan(fpNew, workers = 2)
+        future::plan(fpNew, workers = 1)
         on.exit({
           future::plan(fp)
         })
@@ -375,9 +380,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' Download file from generic source url
 #'
 #' @param url  The url (link) to the file.
-#' @param needChecksums Logical indicating whether to generate checksums.
-#'
-#' ## TODO: add overwrite arg to the function?
+#' @param needChecksums Logical indicating whether to generate checksums. ## TODO: add overwrite arg to the function?
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal

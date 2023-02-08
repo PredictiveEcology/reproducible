@@ -7,7 +7,7 @@
 writeFuture(
   written,
   outputToSave,
-  cacheRepo,
+  cachePath,
   userTags,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),
@@ -21,7 +21,7 @@ Should be 0 to start.}
 
 \item{outputToSave}{The R object to save to repository}
 
-\item{cacheRepo}{The file path of the repository}
+\item{cachePath}{The file path of the repository}
 
 \item{userTags}{Character string of tags to attach to this \code{outputToSave} in
 the \code{CacheRepo}}
@@ -34,7 +34,7 @@ object (in order to clone an existing connection).}
 \code{\link[DBI:dbConnect]{dbConnect()}}.}
 
 \item{cacheId}{Character string. If passed, this will override the calculated hash
-of the inputs, and return the result from this cacheId in the cacheRepo.
+of the inputs, and return the result from this cacheId in the \code{cachePath}.
 Setting this is equivalent to manually saving the output of this function, i.e.,
 the object will be on disk, and will be recovered in subsequent
 This may help in some particularly finicky situations
@@ -44,6 +44,13 @@ the object will be identical each time; this may be useful in operational code.}
 \item{linkToCacheId}{Optional. If a \code{cacheId} is provided here, then a \code{file.link}
 will be made to the file with that \code{cacheId} name in the cache repo.
 This is used when identical outputs exist in the cache. This will save disk space.}
+}
+\value{
+Run for its side effect.
+This will add the \code{objectToSave} to the cache located at \code{cachePath},
+using \code{cacheId} as its id, while
+updating the database entry. It will do this using the future package, so it is
+written in a future.
 }
 \description{
 This will be used internally if \code{options("reproducible.futurePlan" = TRUE)}.

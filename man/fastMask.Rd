@@ -8,38 +8,32 @@ fastMask(
   x,
   y,
   cores = NULL,
-  useGDAL = getOption("reproducible.useGDAL", TRUE),
+  useGDAL = getOption("reproducible.useGDAL", FALSE),
   verbose = getOption("reproducible.verbose", 1),
   ...,
   skipDeprecastedMsg = FALSE
 )
 }
 \arguments{
-\item{x}{A \code{Raster*} object.}
+\item{x}{A \verb{Raster*} object.}
 
 \item{y}{A \code{SpatialPolygons} object. If it is not in the same projection
 as \code{x}, it will be reprojected on the fly to that of \code{x}}
 
-\item{cores}{An \code{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
-triggered. \code{'AUTO'} will calculate 90% of the total
+\item{cores}{An \verb{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
+triggered. \code{'AUTO'} will calculate 90\% of the total
 number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.}
 
-\item{useGDAL}{Logical or \code{"force"}.
-Defaults to \code{getOption("reproducible.useGDAL" = TRUE)}.
-If \code{TRUE}, then this function will use \code{gdalwarp} only when not
-small enough to fit in memory (i.e., \emph{if the operation fails} the
-\code{raster::canProcessInMemory(x, 3)} test). Using \code{gdalwarp} will
-usually be faster than \code{raster::projectRaster}, the function used
-if this is \code{FALSE}. Since since the two options use different algorithms,
-there may be different projection results. \code{"force"} will cause it to
-use GDAL regardless of the memory test described here.}
+\item{useGDAL}{Logical or \code{"force"}. This is defunct; internals now can use
+\code{terra} if \code{options("reproducible.useTerra" = TRUE)}, which is not (yet)
+the default.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{...}{Currently unused.}
 
@@ -47,52 +41,11 @@ option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 being deprecated will be suppressed.}
 }
 \value{
-A \code{Raster*} object, masked (i.e., smaller extent and/or
-        several pixels converted to NA)
+A \verb{Raster*} object, masked (i.e., smaller extent and/or
+several pixels converted to NA)
 }
 \description{
 This alternative to \code{raster::mask} is included here.
-}
-\examples{
-
-# This function is mostly superfluous as terra::mask is fast
-library(sp)
-library(raster)
-
-Sr1 <- Polygon(cbind(c(2, 4, 4, 0.9, 2), c(2, 3, 5, 4, 2)))
-Sr2 <- Polygon(cbind(c(5, 4, 2, 5), c(2, 3, 2, 2)))
-Sr3 <- Polygon(cbind(c(4, 4, 5, 10, 4), c(5, 3, 2, 5, 5)))
-
-Srs1 <- Polygons(list(Sr1), "s1")
-Srs2 <- Polygons(list(Sr2), "s2")
-Srs3 <- Polygons(list(Sr3), "s3")
-shp <- SpatialPolygons(list(Srs1, Srs2, Srs3), 1:3)
-d <- data.frame(vals = 1:3, other = letters[3:1], stringsAsFactors = FALSE)
-row.names(d) <- names(shp)
-shp <- SpatialPolygonsDataFrame(shp, data = d)
-poly <- list()
-poly[[1]] <- raster(raster::extent(shp), vals = 0, res = c(1, 1))
-poly[[2]] <- raster(raster::extent(shp), vals = 1, res = c(1, 1))
-origStack <- stack(poly)
-
-# during transition from raster to terra, the following requires terra to run
-if (requireNamespace("terra", silent = TRUE)) {
-  newStack1 <- mask(x= terra::rast(origStack), mask = terra::vect(sf::st_as_sf(shp)))
-  newStack2 <- fastMask(x = origStack, y = sf::st_as_sf(shp))
-
-# test all equal
-  all.equal(newStack1, newStack2)
-
-  newStack1 <- stack(newStack1)
-  newStack2 <- stack(newStack2)
-
- if (interactive()) {
-  plot(newStack2[[1]])
-  plot(shp, add = TRUE)
- }
-
-}
-
 }
 \author{
 Eliot McIntire

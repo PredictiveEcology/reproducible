@@ -14,16 +14,4 @@ we use \code{testthat::with_mock}, and inside that we redefine \code{isInteracti
 just for the test. In all other times, this returns the same things as
 \code{interactive()}.
 }
-\examples{
-\dontrun{
-testthat::with_mock(
-`isInteractive` = function() {browser(); TRUE},
-{
-  tmpdir <- tempdir()
-  aa <- Cache(rnorm, 1, cacheRepo = tmpdir, userTags = "something2")
-  # Test clearCache -- has an internal isInteractive() call
-  clearCache(tmpdir, ask = FALSE)
-  })
-}
-}
 \keyword{internal}

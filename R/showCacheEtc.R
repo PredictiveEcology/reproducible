@@ -1,47 +1,48 @@
 #' @param x A simList or a directory containing a valid Cache repository. Note:
-#'   For compatibility with \code{Cache} argument, \code{cacheRepo} can also be
-#'   used instead of \code{x}, though \code{x} will take precedence.
+#'   For compatibility with `Cache` argument, `cachePath` can also be
+#'   used instead of `x`, though `x` will take precedence.
 #' @param after A time (POSIX, character understandable by data.table).
 #'                  Objects cached after this time will be shown or deleted.
 #' @param before A time (POSIX, character understandable by data.table).
 #'                   Objects cached before this time will be shown or deleted.
-#' @param ask Logical. If \code{FALSE}, then it will not ask to confirm deletions using
-#'            \code{clearCache} or \code{keepCache}. Default is \code{TRUE}
-#' @param ... Other arguments. Currently, \code{regexp}, a logical, can be provided.
-#'            This must be \code{TRUE} if the use is passing a regular expression.
-#'            Otherwise, \code{userTags} will need to be exact matches. Default is
-#'            missing, which is the same as \code{TRUE}. If there are errors due
-#'            to regular expression problem, try \code{FALSE}. For \code{cc}, it is
-#'            passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}
+#' @param ask Logical. If `FALSE`, then it will not ask to confirm deletions using
+#'            `clearCache` or `keepCache`. Default is `TRUE`
+#' @param ... Other arguments. Currently, `regexp`, a logical, can be provided.
+#'            This must be `TRUE` if the use is passing a regular expression.
+#'            Otherwise, `userTags` will need to be exact matches. Default is
+#'            missing, which is the same as `TRUE`. If there are errors due
+#'            to regular expression problem, try `FALSE`. For `cc`, it is
+#'            passed to `clearCache`, e.g., `ask`, `userTags`. For `showCache`,
+#'            it can also be `sorted = FALSE` to return the object unsorted.
 #' @param userTags Character vector. If used, this will be used in place of the
-#'                 \code{after} and \code{before}.
-#'                 Specifying one or more \code{userTag} here will clear all
+#'                 `after` and `before`.
+#'                 Specifying one or more `userTag` here will clear all
 #'                 objects that match those tags.
 #'                 Matching is via regular expression, meaning partial matches
-#'                 will work unless strict beginning (^) and end ($) of string
+#'                 will work unless strict beginning (`^`) and end (`$`) of string
 #'                 characters are used.
-#'                 Matching will be against any of the 3 columns returned by \code{showCache()},
-#'                 i.e., \code{artifact}, \code{tagValue} or \code{tagName}.
-#'                 Also, length \code{userTags} > 1, then matching is by `and`.
-#'                 For `or` matching, use \code{|} in a single character string.
+#'                 Matching will be against any of the 3 columns returned by `showCache()`,
+#'                 i.e., `artifact`, `tagValue` or `tagName`.
+#'                 Also, if `length(userTags) > 1`, then matching is by `and`.
+#'                 For `or` matching, use `|` in a single character string.
 #'                 See examples.
-#' @param useCloud Logical. If \code{TRUE}, then every object that is deleted locally will
-#'    also be deleted in the \code{cloudFolderID}, if it is non-\code{NULL}
+#' @param useCloud Logical. If `TRUE`, then every object that is deleted locally will
+#'    also be deleted in the `cloudFolderID`, if it is non-`NULL`
 #'
 #' @inheritParams Cache
 #'
 #' @details
-#' If neither \code{after} or \code{before} are provided, nor \code{userTags},
+#' If neither `after` or `before` are provided, nor `userTags`,
 #' then all objects will be removed.
-#' If both \code{after} and \code{before} are specified, then all objects between
-#' \code{after} and \code{before} will be deleted.
-#' If \code{userTags} is used, this will override \code{after} or \code{before}.
+#' If both `after` and `before` are specified, then all objects between
+#' `after` and `before` will be deleted.
+#' If `userTags` is used, this will override `after` or `before`.
 #'
-#' @return Will clear all objects (or those that match \code{userTags}, or those
-#' between \code{after} or \code{before}) from the repository located at
-#' \code{cachePath} of the sim object, if \code{sim} is provided, or located in
-#' \code{cacheRepo}.
-#' Invisibly returns a \code{data.table} of the removed items.
+#' @return Will clear all objects (or those that match `userTags`, or those
+#' between `after` or `before`) from the repository located at
+#' `cachePath` of the sim object, if `sim` is provided, or located in
+#' `cachePath`.
+#' Invisibly returns a `data.table` of the removed items.
 #'
 #' @note If the cache is larger than 10MB, and clearCache is used, there will be
 #' a message and a pause, if interactive, to prevent accidentally deleting of a
@@ -51,28 +52,31 @@
 #' @importFrom data.table setindex
 #' @importFrom methods setGeneric setMethod
 #' @importFrom utils object.size
+#' @name showCache
+#' @aliases clearCache
 #' @rdname viewCache
 #'
 #' @examples
+#' data.table::setDTthreads(2)
 #' library(raster)
 #'
 #' tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 #' try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear
 #'
 #' # Basic use
-#' ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
+#' ranNumsA <- Cache(rnorm, 10, 16, cachePath = tmpDir)
 #'
 #' # All same
-#' ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
-#' ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
+#' ranNumsB <- Cache(rnorm, 10, 16, cachePath = tmpDir) # recovers cached copy
+#' ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cachePath = tmpDir) # recovers cached copy
 #'
 #' # Any minor change makes it different
-#' ranNumsE <- Cache(rnorm, 10, 6, cacheRepo = tmpDir) # different
+#' ranNumsE <- Cache(rnorm, 10, 6, cachePath = tmpDir) # different
 #'
 #' ## Example 1: basic cache use with tags
-#' ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-#' ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
-#' ranNumsC <- Cache(runif, 40, cacheRepo = tmpDir, userTags = "objectName:b")
+#' ranNumsA <- Cache(rnorm, 4, cachePath = tmpDir, userTags = "objectName:a")
+#' ranNumsB <- Cache(runif, 4, cachePath = tmpDir, userTags = "objectName:b")
+#' ranNumsC <- Cache(runif, 40, cachePath = tmpDir, userTags = "objectName:b")
 #'
 #' showCache(tmpDir, userTags = c("objectName"))
 #' showCache(tmpDir, userTags = c("^a$")) # regular expression ... "a" exactly
@@ -88,7 +92,9 @@ setGeneric("clearCache", function(x, userTags = character(), after = NULL, befor
                                   useCloud = FALSE,
                                   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
                                   drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                                  conn = getOption("reproducible.conn", NULL), ...) {
+                                  conn = getOption("reproducible.conn", NULL),
+                                  verbose = getOption("reproducible.verbose"),
+                                  ...) {
   standardGeneric("clearCache")
 })
 
@@ -99,16 +105,18 @@ setMethod(
   definition = function(x, userTags, after = NULL, before = NULL, ask, useCloud = FALSE,
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                        conn = getOption("reproducible.conn", NULL), ...) {
+                        conn = getOption("reproducible.conn", NULL),
+                        verbose = getOption("reproducible.verbose"),
+                        ...) {
     # isn't clearing the raster bacekd file
     # browser(expr = exists("._clearCache_1"))
 
     if (missing(x)) {
-      x <- if (!is.null(list(...)$cacheRepo)) {
-        messageCache("x not specified, but cacheRepo is; using ", list(...)$cacheRepo)
-        list(...)$cacheRepo
+      x <- if (!is.null(list(...)$cachePath)) {
+        messageCache("x not specified, but cachePath is; using ", list(...)$cachePath, verbose = verbose)
+        list(...)$cachePath
       } else  {
-        messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
+        messageCache("x not specified; using ", getOption("reproducible.cachePath")[1], verbose = verbose)
         x <- getOption("reproducible.cachePath")[1]
       }
     }
@@ -117,13 +125,15 @@ setMethod(
     clearWholeCache <- all(missing(userTags), is.null(after), is.null(before))
 
     if (isTRUEorForce(useCloud) || !clearWholeCache) {
-      if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+      if (isTRUEorForce(useCloud))
+        if (!requireNamespace("googledrive", quietly = TRUE))
+          stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
       # browser(expr = exists("._clearCache_2"))
       # if (missing(after)) after <- NA # "1970-01-01"
       # if (missing(before)) before <- NA # Sys.time() + 1e5
 
-      args <- append(list(x = x, after = after, before = before, userTags = userTags),
+      args <- append(list(x = x, after = after, before = before, userTags = userTags, sorted = FALSE),
                      list(...))
 
       objsDT <- do.call(showCache, args = args, quote = TRUE)
@@ -138,7 +148,7 @@ setMethod(
           gdriveLs <- driveLs(cloudFolderID, pattern = userTags)
           cacheIds <- c(cacheIds, gsub("\\..*$", "", gdriveLs$name))
         }
-        rmFromCloudFolder(cloudFolderID, x, cacheIds)
+        rmFromCloudFolder(cloudFolderID, x, cacheIds, verbose = verbose)
 
       }
 
@@ -160,7 +170,7 @@ setMethod(
                   " Are you sure you would like to delete it all? Y or N")
           rl <- readline()
           if (!identical(toupper(rl), "Y")) {
-            messageCache("Aborting clearCache")
+            messageCache("Aborting clearCache", verbose = verbose)
             return(invisible())
           }
         }
@@ -219,7 +229,7 @@ setMethod(
                   " Are you sure you would like to delete it all? Y or N")
           rl <- readline()
           if (!identical(toupper(rl), "Y")) {
-            messageCache("Aborting clearCache")
+            messageCache("Aborting clearCache", verbose = verbose)
             return(invisible())
           }
         }
@@ -250,25 +260,28 @@ setMethod(
 })
 
 #' @details
-#' \code{cc(secs)} is just a shortcut for \code{clearCache(repo = Paths$cachePath, after = secs)},
-#' i.e., to remove any cache entries touched in the last \code{secs} seconds.
+#' `cc(secs)` is just a shortcut for `clearCache(repo = currentRepo, after = secs)`,
+#' i.e., to remove any cache entries touched in the last `secs` seconds. Since, `secs`
+#' can be missing, this is also be a shorthand for "remove most recent entry from
+#' the cache".
 #'
-#' @param secs Currently 3 options: the number of seconds to pass to \code{clearCache(after = secs)},
-#'     a \code{POSIXct} time e.g., from \code{Sys.time()}, or missing. If missing,
+#' @param secs Currently 3 options: the number of seconds to pass to `clearCache(after = secs)`,
+#'     a `POSIXct` time e.g., from `Sys.time()`, or missing. If missing,
 #'             the default, then it will delete the most recent entry in the Cache.
 #'
 #' @export
 #' @rdname viewCache
 #'
 #' @examples
+#' data.table::setDTthreads(2)
 #' tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 #' try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear
 #'
-#' Cache(rnorm, 1, cacheRepo = tmpDir)
+#' Cache(rnorm, 1, cachePath = tmpDir)
 #' thisTime <- Sys.time()
-#' Cache(rnorm, 2, cacheRepo = tmpDir)
-#' Cache(rnorm, 3, cacheRepo = tmpDir)
-#' Cache(rnorm, 4, cacheRepo = tmpDir)
+#' Cache(rnorm, 2, cachePath = tmpDir)
+#' Cache(rnorm, 3, cachePath = tmpDir)
+#' Cache(rnorm, 4, cachePath = tmpDir)
 #' showCache(x = tmpDir) # shows all 4 entries
 #' cc(ask = FALSE, x = tmpDir)
 #' showCache(x = tmpDir) # most recent is gone
@@ -276,16 +289,16 @@ setMethod(
 #' showCache(x = tmpDir) # all those after thisTime gone, i.e., only 1 left
 #' cc(ask = FALSE, x = tmpDir) # Cache is
 #' cc(ask = FALSE, x = tmpDir) # Cache is already empty
-cc <- function(secs, ...) {
-  # browser(expr = exists("jjjj"))
+cc <- function(secs, ..., verbose = getOption("reproducible.verbose")) {
   if (missing(secs)) {
-    messageCache("No time provided; removing the most recent entry to the Cache")
+    messageCache("No time provided; removing the most recent entry to the Cache",
+                 verbose = verbose)
     suppressMessages({theCache <- reproducible::showCache(...)})
     if (NROW(theCache) > 0) {
       accessed <- data.table::setkey(theCache[tagKey == "accessed"], tagValue)
       clearCache(userTags = tail(accessed, 1)[[.cacheTableHashColName()]], ...)
     } else {
-      messageCache("Cache already empty")
+      messageCache("Cache already empty", verbose = verbose)
     }
   } else {
     if (is(secs, "POSIXct")) {
@@ -298,29 +311,37 @@ cc <- function(secs, ...) {
 
 #' Examining and modifying the cache
 #'
-#' These are convenience wrappers around \code{DBI} package functions.
+#' These are convenience wrappers around `DBI` package functions.
 #' They allow the user a bit of control over what is being cached.
 #'
 #' \describe{
-#'   \item{\code{clearCache}}{remove items from the cache based on their
-#'                            \code{userTag} or \code{times} values.}
-#'   \item{\code{keepCache}}{remove all cached items \emph{except} those based on
-#'                           certain \code{userTags} or \code{times} values.}
-#'   \item{\code{showCache}}{display the contents of the cache.}
+#'   \item{`clearCache`}{remove items from the cache based on their
+#'                            `userTag` or `times` values.}
+#'   \item{`keepCache`}{remove all cached items *except* those based on
+#'                           certain `userTags` or `times` values.}
+#'   \item{`showCache`}{display the contents of the cache.}
 #' }
 #'
+#' @details
+#' By default the return of `showCache` is sorted by `cacheId`. For convenience,
+#' a user can optionally have it unsorted (passing `sorted = FALSE`),
+#' which may be noticeably faster when
+#' the cache is large (`> 1e4` entries).
+#'
 #' @inheritParams clearCache
+#' @inheritParams Cache
 #'
 #' @export
 #' @importFrom DBI dbSendQuery dbFetch dbClearResult
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
-#' @seealso \code{\link{mergeCache}}. Many more examples
-#' in \code{\link{Cache}}.
+#' @name showCache
+#' @seealso [mergeCache()]. Many more examples in [Cache()].
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                                 conn = getOption("reproducible.conn", NULL), ...) {
+                                 conn = getOption("reproducible.conn", NULL),
+                                 verbose = getOption("reproducible.verbose"), ...) {
   standardGeneric("showCache")
 })
 
@@ -331,7 +352,7 @@ setMethod(
   definition = function(x, userTags, after = NULL, before = NULL, drv, conn, ...) {
     # browser(expr = exists("rrrr"))
     if (missing(x)) {
-      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
+      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1], verbose = verbose)
       x <- getOption("reproducible.cachePath")[1]
     }
     # browser(expr = exists("jjjj"))
@@ -351,19 +372,19 @@ setMethod(
       if (is.null(after)) after <- "1970-01-01"
       if (is.null(before)) before <- Sys.time() + 1e5
     }
-    # if (is(x, "simList")) x <- x@paths$cachePath
 
     # not seeing userTags
     # Clear the futures that are resolved
     .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
       !isFALSE(getOption("reproducible.futurePlan"))
     if (.onLinux) {
-      if (exists("futureEnv", envir = .reproEnv))
+      if (exists("futureEnv", envir = .reproEnv)) {
         hasFuture <- .requireNamespace("future",
                                        messageStart = "To use reproducible.futurePlan, ")
         if (hasFuture) {
-          checkFutures()
+          checkFutures(verbose)
         }
+      }
     }
 
     if (useDBI()) {
@@ -391,7 +412,9 @@ setMethod(
         objsDT <- .emptyCacheTable
       else
         objsDT <- setDT(tab)
-      #setkeyv(objsDT, "cacheId")
+      sorted <- !isFALSE(list(...)$sorted) # NULL and TRUE are sorted
+      if (isTRUE(sorted))
+        data.table::setorderv(objsDT, "cacheId")
     }
 
     if (NROW(objsDT) > 0) {
@@ -437,23 +460,18 @@ setMethod(
         }
       }
     }
-    verboseMessaging <- TRUE
-    if (!is.null(list(...)$verboseMessaging)) {
-      if (!isTRUE(list(...)$verboseMessaging)) {
-        verboseMessaging <- FALSE
-      }
-    }
-    if (verboseMessaging)
-      .messageCacheSize(x, artifacts = unique(objsDT[[.cacheTableHashColName()]]),
-                        cacheTable = objsDT)
-    objsDT
+    .messageCacheSize(x, artifacts = unique(objsDT[[.cacheTableHashColName()]]),
+                        cacheTable = objsDT, verbose = verbose)
+    return(objsDT)
 })
 
 #' @rdname viewCache
 setGeneric("keepCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  ask  = getOption("reproducible.ask"),
                                  drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                                 conn = getOption("reproducible.conn", NULL), ...) {
+                                 conn = getOption("reproducible.conn", NULL),
+                                 verbose = getOption("reproducible.verbose"),
+                                 ...) {
   standardGeneric("keepCache")
 })
 
@@ -461,26 +479,23 @@ setGeneric("keepCache", function(x, userTags = character(), after = NULL, before
 #' @rdname viewCache
 setMethod(
   "keepCache",
-  definition = function(x, userTags, after, before, ask, drv, conn, ...) {
+  definition = function(x, userTags, after, before, ask, drv, conn,
+                        verbose = getOption("reproducible.verbose"),
+                        ...) {
     if (missing(x)) {
-      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
+      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1], verbose = verbose)
       x <- getOption("reproducible.cachePath")[1]
     }
-    # if (missing(after)) after <- NA # "1970-01-01"
-    # if (missing(before)) before <- NA # Sys.time() + 1e5
-    # if (is(x, "simList")) x <- x@paths$cachePath
-
     args <- append(list(x = x, after = after, before = before, userTags = userTags), list(...))
 
-    objsDTAll <- suppressMessages(showCache(x, verboseMessaging = FALSE))
+    objsDTAll <- suppressMessages(showCache(x, verbose = FALSE, sorted = FALSE))
     objsDT <- do.call(showCache, args = args)
     keep <- unique(objsDT[[.cacheTableHashColName()]])
     eliminate <- unique(objsDTAll[[.cacheTableHashColName()]][
       !(objsDTAll[[.cacheTableHashColName()]] %in% keep)])
 
     if (length(eliminate)) {
-      #eliminate <- paste(eliminate, collapse = "|") ## TODO: remove
-      clearCache(x, eliminate, verboseMessaging = FALSE, regexp = FALSE, ask = ask)
+      clearCache(x, eliminate, verbose = FALSE, regexp = FALSE, ask = ask)
     }
     return(objsDT)
 })
@@ -489,32 +504,32 @@ setMethod(
 #'
 #' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
 #'
-#' All the \code{cacheFrom} artifacts will be put into \code{cacheTo}
-#' repository. All \code{userTags} will be copied verbatim, including
-#' \code{accessed}, with 1 exception: \code{date} will be the
-#' current \code{Sys.time()} at the time of merging. The
-#' \code{createdDate} column will be similarly the current time
+#' All the `cacheFrom` artifacts will be put into `cacheTo`
+#' repository. All `userTags` will be copied verbatim, including
+#' `accessed`, with 1 exception: `date` will be the
+#' current `Sys.time()` at the time of merging. The
+#' `createdDate` column will be similarly the current time
 #' of merging.
 #'
 #' @param cacheTo The cache repository (character string of the file path)
 #'                that will become larger, i.e., merge into this
 #' @param cacheFrom The cache repository (character string of the file path)
 #'                  from which all objects will be taken and copied from
-#' @param drvTo The database driver for the \code{cacheTo}.
-#' @param drvFrom The database driver for the \code{cacheFrom}
-#' @param connTo The connection for the \code{cacheTo}. If not provided, then
-#'   a new one will be made from \code{drvTo} and \code{cacheTo}
-#' @param connFrom The database for the \code{cacheFrom}. If not provided, then
-#'   a new one will be made from \code{drvFrom} and \code{cacheFrom}
+#' @param drvTo The database driver for the `cacheTo`.
+#' @param drvFrom The database driver for the `cacheFrom`
+#' @param connTo The connection for the `cacheTo`. If not provided, then
+#'   a new one will be made from `drvTo` and `cacheTo`
+#' @param connFrom The database for the `cacheFrom`. If not provided, then
+#'   a new one will be made from `drvFrom` and `cacheFrom`
 #'
-#' @return The character string of the path of \code{cacheTo}, i.e., not the
+#' @return The character string of the path of `cacheTo`, i.e., not the
 #' objects themselves.
-#'
-#' @rdname mergeCache
+#' @inheritParams Cache
 setGeneric("mergeCache", function(cacheTo, cacheFrom,
                                   drvTo = getOption("reproducible.drv", RSQLite::SQLite()),
                                   drvFrom = getOption("reproducible.drv", RSQLite::SQLite()),
-                                  connTo = NULL, connFrom = NULL) {
+                                  connTo = NULL, connFrom = NULL,
+                                  verbose = getOption("reproducible.verbose")) {
   standardGeneric("mergeCache")
 })
 
@@ -522,7 +537,8 @@ setGeneric("mergeCache", function(cacheTo, cacheFrom,
 #' @rdname mergeCache
 setMethod(
   "mergeCache",
-  definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom) {
+  definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom,
+                        verbose = getOption("reproducible.verbose")) {
     if (is.null(connTo)) {
       connTo <- dbConnectAll(drvTo, cachePath = cacheTo)
       on.exit(dbDisconnect(connTo), add = TRUE)
@@ -534,12 +550,11 @@ setMethod(
     }
 
     suppressMessages({
-      cacheFromList <- showCache(cacheFrom, drv = drvFrom, connFrom = connFrom)
+      cacheFromList <- showCache(cacheFrom, drv = drvFrom, connFrom = connFrom, sorted = FALSE)
     })
     suppressMessages({
-      cacheToList <- showCache(cacheTo, drv = drvTo, connTo = connTo)
+      cacheToList <- showCache(cacheTo, drv = drvTo, connTo = connTo, sorted = FALSE)
     })
-    # browser(expr = exists("kkkk"))
 
     artifacts <- unique(cacheFromList[[.cacheTableHashColName()]])
     objectList <- lapply(artifacts, function(artifact) {
@@ -550,7 +565,7 @@ setMethod(
           try(loadFromCache(cacheFrom, artifact))
         }
         if (is(outputToSave, "try-error")) {
-          messageCache("Continuing to load others")
+          messageCache("Continuing to load others", verbose = verbose)
           outputToSave <- NULL
         }
 
@@ -560,25 +575,26 @@ setMethod(
         if (useDBI()) {
           output <- saveToCache(cacheTo, userTags = userTags, obj = outputToSave, cacheId = artifact) # nolint
         }
-        messageCache(artifact, " copied")
+        messageCache(artifact, " copied", verbose = verbose)
         outputToSave
       } else {
-        messageCache("Skipping ", artifact, "; already in ", cacheTo)
+        messageCache("Skipping ", artifact, "; already in ", cacheTo, verbose = verbose)
       }
     })
-    .messageCacheSize(cacheTo, cacheTable = showCache(cacheTo))
+    .messageCacheSize(cacheTo, cacheTable = showCache(cacheTo, sorted = FALSE), verbose = verbose)
 
     return(invisible(cacheTo))
 })
 
 #' @keywords internal
-.messageCacheSize <- function(x, artifacts = NULL, cacheTable) {
+.messageCacheSize <- function(x, artifacts = NULL, cacheTable,
+                              verbose = getOption("reproducible.verbose")) {
   # browser(expr = exists("ffff"))
 
   tagCol <- "tagValue"
   if (missing(cacheTable)) {
     if (useDBI()) {
-      a <- showCache(x, verboseMessaging = FALSE)
+      a <- showCache(x, verbose = verbose - 1, sorted = FALSE)
     }
 
   } else {
@@ -607,13 +623,14 @@ setMethod(
   class(fs) <- "object_size"
   preMessage <- "  Selected objects (not including Rasters): "
 
-  messageCache("Cache size: ")
-  messageCache(preMessage1, format(fsTotal, "auto"))
-  messageCache(preMessage, format(fs, "auto"))
+  messageCache("Cache size: ", verbose = verbose)
+  messageCache(preMessage1, format(fsTotal, "auto"), verbose = verbose)
+  messageCache(preMessage, format(fs, "auto"), verbose = verbose)
 }
 
 #' @keywords internal
-checkFutures <- function() {
+#' @inheritParams Cache
+checkFutures <- function(verbose = getOption("reproducible.verbose")) {
   # This takes a long time -- can't use it if
   resol1 <- FALSE
   count <- 0
@@ -630,7 +647,8 @@ checkFutures <- function() {
       if (count > 1 ) {
         Sys.sleep(0.001)
         if (count > 1e3) {
-          messageCache("Future is not resolved after 1 second of waiting. Allowing to proceed.")
+          messageCache("Future is not resolved after 1 second of waiting. Allowing to proceed.",
+                       verbose = verbose)
           break
         }
       }
@@ -643,88 +661,7 @@ checkFutures <- function() {
   }
 }
 
-#' Cache helpers
-#'
-#' A few helpers to get specific things from the cache repository
-#' @rdname cache-helpers
-#' @inheritParams Cache
-#' @export
-#' @param shownCache Primary way of supplying \code{cacheRepo}; the data.table obj
-#'   resulting from \code{showCache}, i.e., it will override \code{cacheRepo}.
-#'   If this and \code{cacheRepo} are missing, then it will default to
-#'   \code{getOption('reproducible.cachePath')}
-#' @param cacheId A character vector of cacheId values to use in the cache
-#' @param concatenated Logical. If \code{TRUE}, the returned \code{userTags} will
-#'   be concatenated \code{tagKey:tagValue}.
-getUserTags <- function(cacheRepo, shownCache, cacheId, concatenated = TRUE) {
-  stop("This function is deprecated")
-  if (missing(shownCache)) {
-    if (missing(cacheRepo)) {
-      cacheRepos <- .checkCacheRepo(create = TRUE)
-      cacheRepo <- cacheRepos[[1]]
-    }
-    suppressMessages({
-      shownCache <- showCache(cacheRepo)
-    })
-  }
-  arts <- getArtifact(shownCache = shownCache, cacheId = cacheId)
-  if (!missing(cacheId)) {
-    shownCache <- shownCache[artifact %in% arts]
-  }
 
-  userTags <- shownCache[!tagKey %in% c("format", "name", "class", "date", "cacheId"),
-                         list(tagKey, tagValue)]
-  if (concatenated)
-    userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
-  userTags
-}
-
-#' @param artifact Character vector of artifact values in the
-#'   \code{artifact} column of \code{showCache}
-#'
-#' @return \code{getCacheId} returns the \code{cacheId} values for 1 or more artifacts in the cache.
-#'
-#' @export
-#' @rdname cache-helpers
-getCacheId <- function(cacheRepo, shownCache, artifact) {
-  if (missing(shownCache)) {
-    if (missing(cacheRepo)) {
-      cacheRepos <- .checkCacheRepo(create = TRUE)
-      cacheRepo <- cacheRepos[[1]]
-    }
-    suppressMessages({
-      shownCache <- showCache(cacheRepo)
-    })
-  }
-  if (!missing(artifact)) {
-    artifacts <- artifact
-    shownCache <- shownCache[artifact %in% artifacts]
-  }
-  shownCache[tagKey == "cacheId"]$tagValue
-}
-
-#' @return
-#' \code{getArtifact} returns the \code{artifact} value for 1 or more
-#' entries in the cache, by \code{cacheId}.
-#'
-#' @export
-#' @rdname cache-helpers
-getArtifact <- function(cacheRepo, shownCache, cacheId) {
-  stop("This function is deprecated")
-  if (missing(shownCache)) {
-    if (missing(cacheRepo)) {
-      cacheRepos <- .checkCacheRepo(create = TRUE)
-      cacheRepo <- cacheRepos[[1]]
-    }
-    suppressMessages({
-      shownCache <- showCache(cacheRepo)
-    })
-  }
-  if (!missing(cacheId)) {
-    shownCache <- shownCache[tagValue %in% cacheId]
-  }
-  shownCache[tagKey == "cacheId", artifact]
-}
 
 useDBI <- function() {
   ud <- getOption("reproducible.useDBI", TRUE)
@@ -735,14 +672,12 @@ useDBI <- function() {
   ud
 }
 
-rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
+#' @inheritParams Cache
+rmFromCloudFolder <- function(cloudFolderID, x, cacheIds,
+                              verbose = getOption("reproducible.verbose")) {
   if (is.null(cloudFolderID)) {
-
-    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cacheRepo = x)
-    # stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
-    #      "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
+    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cachePath = x)
   }
-  # browser(expr = exists("._rmFromCloudFolder_1"))
 
   gdriveLs <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
   cacheIds <- gsub("\\..*", "", gdriveLs$name)
@@ -750,15 +685,15 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
   # filenamesToRm <- paste0(cacheIds, ".rda")
   isInCloud <- gdriveLs$name %in% filenamesToRm
   # Deal with Rasters
-  files <- CacheStoredFile(x, hash = cacheIds[isInCloud])
-  sc <- suppressMessages(showCache(x, userTags = cacheIds))
+  files <- CacheStoredFile(x, cacheId = cacheIds[isInCloud])
+  sc <- suppressMessages(showCache(x, userTags = cacheIds, sorted = FALSE))
   classes <- sc[tagKey == "class"]$tagValue
   rases <- classes %in% c("RasterLayer", "RasterStack", "RasterBrick")
   objs <- lapply(files[rases], readRDS)
   frmDisk <- unlist(lapply(objs, fromDisk))
   filenames <- unlist(lapply(objs[frmDisk], Filenames))
   toDelete <- gdriveLs[isInCloud,]
-  messageCache("Cloud:")
+  messageCache("Cloud:", verbose = verbose)
   if (!is.null(filenames)) {
     rasFiles <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
     toDelete <- rbind(rasFiles, toDelete)

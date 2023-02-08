@@ -1,20 +1,23 @@
 #' Change the absolute path of a file
 #'
-#' \code{convertPaths} is simply a wrapper around \code{gsub} for changing the
+#' `convertPaths` is simply a wrapper around `gsub` for changing the
 #' first part of a path.
-#' \code{convertRasterPaths} is useful for changing the path to a file-backed
+#' `convertRasterPaths` is useful for changing the path to a file-backed
 #' raster (e.g., after copying the file to a new location).
 #'
-#' @param x             For \code{convertPaths}, a character vector of file paths.
-#'                      For \code{convertRasterPaths}, a disk-backed \code{RasterLayer}
+#' @param x             For `convertPaths`, a character vector of file paths.
+#'                      For `convertRasterPaths`, a disk-backed `RasterLayer`
 #'                      object, or a list of such rasters.
-#' @param patterns      Character vector containing a pattern to match (see \code{?gsub}).
-#' @param replacements  Character vector of the same length of \code{patterns}
-#'                      containing replacement text (see \code{?gsub}).
+#' @param patterns      Character vector containing a pattern to match (see `?gsub`).
+#' @param replacements  Character vector of the same length of `patterns`
+#'                      containing replacement text (see `?gsub`).
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @export
 #' @rdname convertPaths
+#' @return
+#' A normalized path with the `patterns` replaced by `replacements`. Or a list of such
+#' objects if `x` was a list.
 #'
 #' @examples
 #' filenames <- c("/home/user1/Documents/file.txt", "/Users/user1/Documents/file.txt")
@@ -63,19 +66,26 @@ convertRasterPaths <- function(x, patterns, replacements) {
   x # handles null case
 }
 
-#' Return the filename(s) from a \code{Raster*} object
+#' Return the filename(s) from a `Raster*` object
 #'
-#' This is mostly just a wrapper around \code{filename} from the \pkg{raster} package, except that
-#' instead of returning an empty string for a \code{RasterStack} object, it will return a vector of
-#' length >1 for \code{RasterStack}.
+#' This is mostly just a wrapper around `filename` from the \pkg{raster} package, except that
+#' instead of returning an empty string for a `RasterStack` object, it will return a vector of
+#' length >1 for `RasterStack`.
 #'
-#' @param obj A \code{Raster*} object (i.e., \code{RasterLayer}, \code{RasterStack}, \code{RasterBrick})
-#' @param allowMultiple Logical. If \code{TRUE}, the default, then all relevant
-#'   filenames will be returned, i.e., in cases such as \code{.grd} where multiple files
-#'   are required. If \code{FALSE}, then only the first file will be returned,
-#'   e.g., \code{filename.grd}, in the case of default Raster format in R.
+#' @param obj A `Raster*` object (i.e., `RasterLayer`, `RasterStack`, `RasterBrick`)
+#' @param allowMultiple Logical. If `TRUE`, the default, then all relevant
+#'   filenames will be returned, i.e., in cases such as `.grd` where multiple files
+#'   are required. If `FALSE`, then only the first file will be returned,
+#'   e.g., `filename.grd`, in the case of default Raster format in R.
 #'
 #' @author Eliot McIntire
+#' @details
+#' New methods can be made for this generic.
+#'
+#' @return
+#' A character vector of filenames that are part of the objects passed to `obj`.
+#' This returns `NULL` is the object is not file-backed or does not have a method
+#' to recover the file-backed filename.
 #' @export
 #' @rdname Filenames
 setGeneric("Filenames", function(obj, allowMultiple = TRUE) {
@@ -89,7 +99,7 @@ setMethod(
   signature = "ANY",
   definition = function(obj, allowMultiple) {
     if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
-      if (!requireNamespace("terra") && getOption("reproducible.useTerra", FALSE))
+      if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
         stop("Please install terra package")
       fns <- terra::sources(obj)
     } else {
@@ -141,37 +151,6 @@ setMethod(
   signature = "environment",
   definition = function(obj, allowMultiple = TRUE) {
     rasterFilename <- Filenames(as.list(obj), allowMultiple = allowMultiple)
-    # rastersLogicalList <- isOrHasRaster(obj)
-    # rastersLogical <- vapply(rastersLogicalList, function(x) any(unlist(x)), logical(1))
-    # rastersLogicalLong <- unlist(rastersLogicalList)
-    # rasterFilename <- NULL
-    # if (any(rastersLogical)) {
-    #   rasterNames <- names(rastersLogical)[rastersLogical]
-    #   if (!is.null(rasterNames)) {
-    #     no <- names(obj)
-    #     names(no) <- no
-    #     ## TODO: sapply is not type-safe; use vapply
-    #     nestedOnes <- lapply(no, function(rn) grep(paste0("^", rn, "\\."), rasterNames, value = TRUE))
-    #     nestedOnes1 <- nestedOnes[sapply(nestedOnes, function(x) length(x) > 0)]
-    #     nonNested <- nestedOnes[sapply(nestedOnes, function(x) length(x) == 0)]
-    #     nonNestedRasterNames <- rasterNames[rasterNames %in% names(nonNested)]
-    #     diskBacked <- sapply(mget(nonNestedRasterNames, envir = obj), fromDisk)
-    #
-    #     names(rasterNames) <- rasterNames
-    #     rasterFilename <- if (sum(diskBacked) > 0) {
-    #       browser()
-    #       lapply(mget(rasterNames[diskBacked], envir = obj), Filenames,
-    #              allowMultiple = allowMultiple)
-    #     } else {
-    #       NULL
-    #     }
-    #     if (length(nestedOnes1) > 0) {
-    #       rasterFilename2 <- sapply(mget(names(nestedOnes1), envir = obj), Filenames,
-    #                                 allowMultiple = allowMultiple)
-    #       rasterFilename <- c(rasterFilename, rasterFilename2)
-    #     }
-    #   }
-    # }
     rasterFilenameDups <- lapply(rasterFilename, duplicated)
 
     if (any(unlist(rasterFilenameDups))) {

@@ -37,9 +37,11 @@ jobs:
       _SP_EVOLUTION_STATUS_: ${{ matrix.config.spevol }}
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      R_REPRODUCIBLE_RUN_ALL_EXAMPLES: true
+      R_REPRODUCIBLE_RUN_ALL_TESTS: true
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: r-lib/actions/setup-pandoc@v2
 
@@ -54,9 +56,10 @@ jobs:
           extra-packages: |
             any::rcmdcheck
             any::Rcpp
-            PredictiveEcology/Require@development
 
       - uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--no-manual", "--as-cran", "--run-dontrun", "--run-donttest")'
 
       - name: Show testthat output
         if: always()

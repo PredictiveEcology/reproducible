@@ -7,7 +7,7 @@
 \alias{Filenames,RasterStack-method}
 \alias{Filenames,environment-method}
 \alias{Filenames,list-method}
-\title{Return the filename(s) from a \code{Raster*} object}
+\title{Return the filename(s) from a \verb{Raster*} object}
 \usage{
 Filenames(obj, allowMultiple = TRUE)
 
@@ -22,17 +22,25 @@ Filenames(obj, allowMultiple = TRUE)
 \S4method{Filenames}{list}(obj, allowMultiple = TRUE)
 }
 \arguments{
-\item{obj}{A \code{Raster*} object (i.e., \code{RasterLayer}, \code{RasterStack}, \code{RasterBrick})}
+\item{obj}{A \verb{Raster*} object (i.e., \code{RasterLayer}, \code{RasterStack}, \code{RasterBrick})}
 
 \item{allowMultiple}{Logical. If \code{TRUE}, the default, then all relevant
 filenames will be returned, i.e., in cases such as \code{.grd} where multiple files
 are required. If \code{FALSE}, then only the first file will be returned,
 e.g., \code{filename.grd}, in the case of default Raster format in R.}
 }
+\value{
+A character vector of filenames that are part of the objects passed to \code{obj}.
+This returns \code{NULL} is the object is not file-backed or does not have a method
+to recover the file-backed filename.
+}
 \description{
 This is mostly just a wrapper around \code{filename} from the \pkg{raster} package, except that
 instead of returning an empty string for a \code{RasterStack} object, it will return a vector of
 length >1 for \code{RasterStack}.
+}
+\details{
+New methods can be made for this generic.
 }
 \author{
 Eliot McIntire

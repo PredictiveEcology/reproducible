@@ -32,17 +32,20 @@ copyFile(
 
 \item{useRobocopy}{For Windows, this will use a system call to \code{robocopy}
 which appears to be much faster than the internal \code{file.copy} function.
-Uses \code{/MIR} flag. Default \code{TRUE}.}
+Uses \verb{/MIR} flag. Default \code{TRUE}.}
 
 \item{overwrite}{Passed to \code{file.copy}}
 
 \item{delDestination}{Logical, whether the destination should have any files deleted,
-if they don't exist in the source. This is \code{/purge} for robocopy and --delete for
+if they don't exist in the source. This is \verb{/purge} for robocopy and --delete for
 rsync.}
 
 \item{create}{Passed to \code{checkPath}.}
 
 \item{silent}{Should a progress be printed.}
+}
+\value{
+This function is called for its side effect, i.e., a file is copied \code{from} to \code{to}.
 }
 \description{
 This is replacement for \code{file.copy}, but for one file at a time.
@@ -57,7 +60,7 @@ tmpDirFrom <- file.path(tempdir(), "example_fileCopy_from")
 tmpDirTo <- file.path(tempdir(), "example_fileCopy_to")
 tmpFile1 <- tempfile("file1", tmpDirFrom, ".csv")
 tmpFile2 <- tempfile("file2", tmpDirFrom, ".csv")
-checkPath(tmpDirFrom, create = TRUE)
+dir.create(tmpDirFrom, recursive = TRUE, showWarnings = FALSE)
 f1 <- normalizePath(tmpFile1, mustWork = FALSE)
 f2 <- normalizePath(tmpFile2, mustWork = FALSE)
 t1 <- normalizePath(file.path(tmpDirTo, basename(tmpFile1)), mustWork = FALSE)

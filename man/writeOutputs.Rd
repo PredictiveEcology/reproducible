@@ -41,93 +41,48 @@ writeOutputs(
 
 \method{writeOutputs}{quosure}(x, filename2, ...)
 
-\method{writeOutputs}{default}(x, filename2, ...)
+\method{writeOutputs}{default}(
+  x,
+  filename2,
+  overwrite = getOption("reproducible.overwrite", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
+  ...
+)
 }
 \arguments{
 \item{x}{The object save to disk i.e., write outputs}
 
-\item{filename2}{File name passed to \code{\link[raster]{writeRaster}}, or
-\code{\link[raster]{shapefile}} or \code{\link[sf]{st_write}}
+\item{filename2}{File name passed to \code{\link[raster:writeRaster]{raster::writeRaster()}}, or
+\code{\link[raster:shapefile]{raster::shapefile()}} or \code{\link[sf:st_write]{sf::st_write()}}
 (\code{dsn} argument).}
 
 \item{overwrite}{Logical. Should file being written overwrite an existing file if it exists.}
 
-\item{...}{Passed into \code{\link[raster]{shapefile}} or
-\code{\link[raster]{writeRaster}} or \code{\link[sf]{st_write}}}
+\item{...}{Passed into \code{\link[raster:shapefile]{raster::shapefile()}} or
+\code{\link[raster:writeRaster]{raster::writeRaster()}} or \code{\link[sf:st_write]{sf::st_write()}}}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+}
+\value{
+A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+appropriately written to disk. In the case of vector datasets, this will
+be a side effect. In the case of gridded objects (Raster*, SpatRaster), the
+object will have a file-backing.
 }
 \description{
 Can be used to write prepared inputs on disk.
 }
 \examples{
-# Add a study area to Crop and Mask to
-# Create a "study area"
 library(sp)
 library(raster)
-ow <- setwd(tempdir())
+r <- raster::raster(extent(0,100,0,100), vals = 1:1e2)
 
-# make a SpatialPolygon
-coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
-                     .Dim = c(5L, 2L))
-Sr1 <- Polygon(coords1)
-Srs1 <- Polygons(list(Sr1), "s1")
-shpEcozone <- SpatialPolygons(list(Srs1), 1L)
-crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-
-# make a "study area" that is subset of larger dataset
-coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                    .Dim = c(5L, 2L))
-Sr1 <- Polygon(coords)
-Srs1 <- Polygons(list(Sr1), "s1")
-StudyArea <- SpatialPolygons(list(Srs1), 1L)
-crs(StudyArea) <- crs(shpEcozone)
-projString <- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
-StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
-
-##########
-shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
-
-
-# Try manually, individual pieces
-shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
-shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
-shpEcozoneClean <- fixErrors(shpEcozone)
-shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
-
-# With terra
-if (require("terra")) {
-  opts <- options("reproducible.useTerra" = TRUE)
-  vectEcozone <- terra::vect(sf::st_as_sf(shpEcozone)) # direct conversion throws warning
-
-  # If input is Spatial object --> return will also be Spatial
-  shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
-  # Try manually, individual pieces -- Note functions are different
-  shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
-  shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
-  shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
-
-  # If input is Spat object --> return will also be Spat
-  vectEcozonePostProcessed <- postProcess(vectEcozone, studyArea = StudyArea)
-  # Try manually, individual pieces -- Note functions are different
-  vectEcozoneMasked <- maskInputs(vectEcozone, StudyArea)
-  VectEcozoneReprojected <- projectInputs(vectEcozone, StudyArea)
-  vectEcozoneCropped <- cropInputs(vectEcozone, StudyArea)
-
-
-
-  # Note these two have different function names --> methods for cropInputs and fixErrors
-  #    are not implemented yet
-  shpEcozoneClean <- fixErrorsTerra(vectEcozone)
-
-  options(opts)
-}
-
-setwd(ow)
+tf <- tempfile(fileext = ".tif")
+writeOutputs(r, tf)
 }
 \author{
 Eliot McIntire and Jean Marchal

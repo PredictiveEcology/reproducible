@@ -26,16 +26,12 @@ data type for writing from the raster packages, respectively, or
 \code{"projectRaster"} to return recommended resampling type.}
 }
 \value{
-The appropriate data type for the range of values in \code{ras}.
-        See \code{\link[raster]{dataType}} for details.
-
-The appropriate data type for the range of values in \code{ras} for using GDAL.
-        See \code{\link[raster]{dataType}} for details.
+A character string indicating the data type of the spatial layer
+(e.g., "INT2U"). See \code{\link[terra:geomtype]{terra::datatype()}} or \code{\link[raster:dataType]{raster::dataType()}}
 }
 \description{
-Can be used to write prepared inputs on disk.
-
-This is a convenience function around \code{assessDataType(ras, type = "GDAL")}
+When writing raster-type objects to disk, a \code{datatype} can be specified. These
+functions help identify what smallest \code{datatype} can be used.
 }
 \examples{
 ## LOG1S
@@ -144,74 +140,7 @@ ras1 <- raster(ncol = 10, nrow = 10)
 ras1[] <- round(runif(100, min = -1.7e+308, max = -1))
 sta <- stack(ras, ras1)
 assessDataType(sta)
-library(raster)
-
-## Byte
-ras <- raster(ncol = 10, nrow = 10)
-
-ras[] <- 1:100
-assessDataTypeGDAL(ras)
-
-ras[] <- c(NA, 2:100)
-assessDataTypeGDAL(ras)
-
-##Int16
-ras <- raster(ncol = 10, nrow = 10)
-
-ras <- setValues(ras, -1:98)
-assessDataTypeGDAL(ras)
-
-ras[] <- c(NA, -1:97)
-assessDataTypeGDAL(ras)
-
-ras[] <- round(runif(100, min = -32767, max = 32767))
-assessDataTypeGDAL(ras)
-
-## UInt16
-ras <- raster(ncol = 10, nrow = 10)
-ras[] <- round(runif(100, min = 64000, max = 65000))
-assessDataTypeGDAL(ras)
-
-
-## UInt32
-ras <- raster(ncol = 10, nrow = 10)
-ras[] <- round(runif(100, min = 0, max = 500000000))
-assessDataTypeGDAL(ras)
-
-ras[14] <- NA
-assessDataTypeGDAL(ras)
-
-## Int32
-ras <- raster(ncol = 10, nrow = 10)
-ras[] <- round(runif(100, min = -200000000, max = 200000000))
-assessDataTypeGDAL(ras)
-
-ras[14] <- NA
-assessDataTypeGDAL(ras)
-
-## Float32
-ras <- raster(ncol = 10, nrow = 10)
-ras[] <- runif(100, min = -10, max = 87)
-assessDataTypeGDAL(ras)
-
-ras <- raster(ncol = 10, nrow = 10)
-ras[] <- round(runif(100, min = -3.4e+26, max = 3.4e+28))
-assessDataTypeGDAL(ras)
-
-ras <- raster(ncol = 10, nrow = 10)
-ras[] <- round(runif(100, min = 3.4e+26, max = 3.4e+28))
-assessDataTypeGDAL(ras)
-
-ras <- raster(ncol = 10, nrow = 10)
-ras[] <- round(runif(100, min = -3.4e+26, max = -1))
-assessDataTypeGDAL(ras)
 }
 \author{
-Eliot McIntire
-
-Ceres Barros
-
-Ian Eddy
-
 Eliot McIntire, Ceres Barros, Ian Eddy, and Tati Micheletti
 }

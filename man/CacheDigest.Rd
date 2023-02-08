@@ -6,14 +6,16 @@
 \usage{
 CacheDigest(
   objsToDigest,
+  ...,
   algo = "xxhash64",
-  calledFrom = "Cache",
-  quick = FALSE,
-  ...
+  calledFrom = "CacheDigest",
+  quick = FALSE
 )
 }
 \arguments{
 \item{objsToDigest}{A list of all the objects (e.g., arguments) to be digested}
+
+\item{...}{passed to \code{.robustDigest}.}
 
 \item{algo}{The algorithms to be used; currently available choices are
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
@@ -26,10 +28,7 @@ robust CacheDigest results.}
 
 \item{quick}{Logical or character. If \code{TRUE},
 no disk-based information will be assessed, i.e., only
-memory content. See Details section about \code{quick} in \code{\link{Cache}}.}
-
-\item{...}{passed to \code{.robustDigest}; this is generally empty except
-for advanced use.}
+memory content. See Details section about \code{quick} in \code{\link[=Cache]{Cache()}}.}
 }
 \value{
 A list of length 2 with the \code{outputHash}, which is the digest
@@ -41,9 +40,11 @@ This can be used by a user to pre-test their arguments before running
 \code{Cache}, for example to determine whether there is a cached copy.
 }
 \examples{
-\dontrun{
-  a <- Cache(rnorm, 1)
-  CacheDigest(list(rnorm, 1))
+data.table::setDTthreads(2)
+a <- Cache(rnorm, 1)
 
-}
+# like with Cache, user can pass function and args in a few ways
+CacheDigest(rnorm(1)) # shows same cacheId as previous line
+CacheDigest(rnorm, 1) # shows same cacheId as previous line
+
 }

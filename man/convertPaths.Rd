@@ -19,6 +19,10 @@ object, or a list of such rasters.}
 \item{replacements}{Character vector of the same length of \code{patterns}
 containing replacement text (see \code{?gsub}).}
 }
+\value{
+A normalized path with the \code{patterns} replaced by \code{replacements}. Or a list of such
+objects if \code{x} was a list.
+}
 \description{
 \code{convertPaths} is simply a wrapper around \code{gsub} for changing the
 first part of a path.

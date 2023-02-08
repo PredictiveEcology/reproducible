@@ -27,7 +27,7 @@ downloadFile(
 containing \code{targetFile}, or a vector giving a set of nested archives
 (e.g., \code{c("xxx.tar", "inner.zip", "inner.rar")}). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the \code{targetFile}. See table in \code{\link{preProcess}}. If it is \code{NA},
+the \code{targetFile}. See table in \code{\link[=preProcess]{preProcess()}}. If it is \code{NA},
 then it will \emph{not} attempt to see it as an archive, even if it has archive-like
 file extension (e.g., \code{.zip}). This may be useful when an R function
 is expecting an archive directly.}
@@ -38,7 +38,7 @@ or tar archive. This is the file \emph{before} it is passed to
 \code{postProcess}. Currently, the internal checksumming does not checksum
 the file after it is \code{postProcess}ed (e.g., cropped/reprojected/masked).
 Using \code{Cache} around \code{prepInputs} will do a sufficient job in these cases.
-See table in \code{\link{preProcess}}.}
+See table in \code{\link[=preProcess]{preProcess()}}.}
 
 \item{neededFiles}{Character string giving the name of the file(s) to be extracted.}
 
@@ -50,9 +50,9 @@ To prevent repeated downloads in different locations, the user can also set
 search for the file before attempting to download. Default for that option is
 \code{NULL} meaning do not search locally.}
 
-\item{quick}{Logical. This is passed internally to \code{\link{Checksums}}
+\item{quick}{Logical. This is passed internally to \code{\link[=Checksums]{Checksums()}}
 (the quickCheck argument), and to
-\code{\link{Cache}} (the quick argument). This results in faster, though
+\code{\link[=Cache]{Cache()}} (the quick argument). This results in faster, though
 less robust checking of inputs. See the respective functions.}
 
 \item{checksumFile}{A character string indicating the absolute path to the \code{CHECKSUMS.txt}
@@ -69,7 +69,7 @@ exists in the \code{CHECKSUMS.txt} (in \code{destinationPath}), an entry
 will be created or appended to. This \code{CHECKSUMS.txt} entry will be used
 in subsequent calls to
 \code{prepInputs} or \code{preProcess}, comparing the file on hand with the ad hoc
-\code{CHECKSUMS.txt}. See table in \code{\link{preProcess}}.}
+\code{CHECKSUMS.txt}. See table in \code{\link[=preProcess]{preProcess()}}.}
 
 \item{needChecksums}{A numeric, with \code{0} indicating do not write a new checksums,
 \code{1} write a new one,
@@ -82,7 +82,7 @@ even if they pass the checksums or the files are all there.}
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing
 \code{CHECKSUMS.txt} file and
@@ -94,9 +94,15 @@ Will be cleared on.exit from this function.}
 
 \item{...}{Passed to \code{dlFun}. Still experimental.}
 }
+\value{
+This function is called for its side effects, which will be a downloaded file
+(\code{targetFile}), placed in \code{destinationPath}. This file will be checksummed, and
+that checksum will be appended to the \code{checksumFile}.
+}
 \description{
-Currently, this only deals with \code{\link[googledrive]{drive_download}},
-and \code{\link[utils]{download.file}}.
+Currently, this only deals with \code{\link[googledrive:drive_download]{googledrive::drive_download()}},
+and \code{\link[utils:download.file]{utils::download.file()}}. In general, this is not intended for use by a
+user.
 }
 \author{
 Eliot McIntire

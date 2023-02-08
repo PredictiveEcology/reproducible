@@ -1,5 +1,5 @@
 ################################################################################
-#' The \code{spatialClasses} class
+#' The `spatialClasses` class
 #'
 #' This class is the union of several spatial objects from \pkg{raster} and
 #' \pkg{sp} packages.
@@ -7,14 +7,14 @@
 #' Members:
 #'
 #' \itemize{
-#'   \item \code{RasterLayer}, \code{RasterLayerSparse}, \code{RasterStack};
-#'   \item \code{SpatialLines}, \code{SpatialLinesDataFrame};
-#'   \item \code{SpatialPixels}, \code{SpatialPixelsDataFrame};
-#'   \item \code{SpatialPoints}, \code{SpatialPointsDataFrame};
-#'   \item \code{SpatialPolygons}, \code{SpatialPolygonsDataFrame}.
+#'   \item `RasterLayer`, `RasterLayerSparse`, `RasterStack`;
+#'   \item `SpatialLines`, `SpatialLinesDataFrame`;
+#'   \item `SpatialPixels`, `SpatialPixelsDataFrame`;
+#'   \item `SpatialPoints`, `SpatialPointsDataFrame`;
+#'   \item `SpatialPolygons`, `SpatialPolygonsDataFrame`.
 #' }
 #'
-#' Notably missing is \code{RasterBrick}, for now.
+#' Notably missing is `RasterBrick`, for now.
 #'
 #' @aliases spatialClasses
 #' @importClassesFrom sp SpatialLines

@@ -31,9 +31,9 @@ object (in order to clone an existing connection).}
 }
 \value{
 A raster object and its newly located file backing.
-        Note that if this is a legitimate Cache repository, the new location
-        will be a subdirectory called \file{rasters/} of \file{repoDir/}.
-        If this is not a repository, the new location will be within \code{repoDir}.
+Note that if this is a legitimate Cache repository, the new location
+will be a subdirectory called \file{rasters/} of \file{repoDir/}.
+If this is not a repository, the new location will be within \code{repoDir}.
 }
 \description{
 Rasters are sometimes file-based, so the normal save and copy and assign
@@ -41,22 +41,6 @@ mechanisms in R don't work for saving, copying and assigning.
 This function creates an explicit file copy of the file that is backing the raster,
 and changes the pointer (i.e., \code{filename(object)}) so that it is pointing
 to the new file.
-}
-\examples{
-library(raster)
-# make a cache repository
-a <- Cache(rnorm, 1)
-
-r <- raster(extent(0,10,0,10), vals = 1:100)
-
-# write to disk manually -- will be in tempdir()
-r <- writeRaster(r, file = tempfile())
-
-# copy it to the cache repository
-r <- .prepareFileBackedRaster(r, tempdir())
-
-r # now in "rasters" subfolder of tempdir()
-
 }
 \author{
 Eliot McIntire

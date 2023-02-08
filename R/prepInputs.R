@@ -12,80 +12,80 @@ if (getRversion() >= "3.1.0") {
 #' The object of this function is to provide a reproducible version of
 #' a series of commonly used steps for getting, loading, and processing data.
 #' This function has two stages: Getting data (download, extracting from archives,
-#' loading into R) and post-processing (for \code{Spatial*} and \code{Raster*}
+#' loading into R) and post-processing (for `Spatial*` and `Raster*`
 #' objects, this is crop, reproject, mask/intersect).
-#' To trigger the first stage, provide \code{url} or \code{archive}.
-#' To trigger the second stage, provide \code{studyArea} or \code{rasterToMatch}.
+#' To trigger the first stage, provide `url` or `archive`.
+#' To trigger the second stage, provide `studyArea` or `rasterToMatch`.
 #' See examples.
 #'
 #' @note This function is still experimental: use with caution.
 #'
 #' @section Stage 1 - Getting data:
 #'
-#' See \code{\link{preProcess}} for combinations of arguments.
+#' See [preProcess()] for combinations of arguments.
 #'
 #'   \enumerate{
-#'     \item Download from the web via either \code{\link[googledrive]{drive_download}},
-#'     \code{\link[utils]{download.file}};
-#'     \item Extract from archive using \code{\link{unzip}} or \code{\link{untar}};
-#'     \item Load into R using \code{\link[raster]{raster}},
-#'     \code{\link[raster]{shapefile}}, or any other function passed in with \code{fun};
+#'     \item Download from the web via either [googledrive::drive_download()],
+#'     [utils::download.file()];
+#'     \item Extract from archive using [unzip()] or [untar()];
+#'     \item Load into R using [raster::raster()],
+#'     [raster::shapefile()], or any other function passed in with `fun`;
 #'     \item Checksumming of all files during this process. This is put into a
-#'     \file{CHECKSUMS.txt} file in the \code{destinationPath}, appending if it is
+#'     \file{CHECKSUMS.txt} file in the `destinationPath`, appending if it is
 #'     already there, overwriting the entries for same files if entries already exist.
 #'  }
 #'
 #' @section Stage 2 - Post processing:
 #'
-#'   This will be triggered if either \code{rasterToMatch} or \code{studyArea}
+#'   This will be triggered if either `rasterToMatch` or `studyArea`
 #'   is supplied.
 #'
 #'   \enumerate{
-#'     \item Fix errors. Currently only errors fixed are for \code{SpatialPolygons}
-#'     using \code{buffer(..., width = 0)};
-#'     \item Crop using \code{\link{cropInputs}};
-#'     \item Project using \code{\link{projectInputs}};
-#'     \item Mask using \code{\link{maskInputs}};
-#'     \item Determine file name \code{\link{determineFilename}} via \code{filename2};
-#'     \item Optionally, write that file name to disk via \code{\link{writeOutputs}}.
+#'     \item Fix errors. Currently only errors fixed are for `SpatialPolygons`
+#'     using `buffer(..., width = 0)`;
+#'     \item Crop using [cropInputs()];
+#'     \item Project using [projectInputs()];
+#'     \item Mask using [maskInputs()];
+#'     \item Determine file name [determineFilename()] via `filename2`;
+#'     \item Optionally, write that file name to disk via [writeOutputs()].
 #'    }
 #'
 #'   NOTE: checksumming does not occur during the post-processing stage, as
 #'   there are no file downloads. To achieve fast results, wrap
-#'   \code{prepInputs} with \code{Cache}.
+#'   `prepInputs` with `Cache`.
 #'
-#'   NOTE: \code{sf} objects are still very experimental.
+#'   NOTE: `sf` objects are still very experimental.
 #'
-#' \subsection{postProcessing of \code{Raster*} and \code{Spatial*} objects:}{
+#' \subsection{postProcessing of `Raster*` and `Spatial*` objects:}{
 #'
-#'   If \code{rasterToMatch} or \code{studyArea} are used, then this will
+#'   If `rasterToMatch` or `studyArea` are used, then this will
 #'   trigger several subsequent functions, specifically the sequence,
-#'   \emph{Crop, reproject, mask}, which appears to be a common sequence in
-#'   spatial simulation. See \code{\link{postProcess.spatialClasses}}.
+#'   *Crop, reproject, mask*, which appears to be a common sequence in
+#'   spatial simulation. See [postProcess.spatialClasses()].
 #'
-#'   \emph{Understanding various combinations of \code{rasterToMatch}
-#'   and/or \code{studyArea}:}
-#'   Please see \code{\link{postProcess.spatialClasses}}.
+#'   *Understanding various combinations of `rasterToMatch`
+#'   and/or `studyArea`:*
+#'   Please see [postProcess.spatialClasses()].
 #'  }
 #'
 #'
-#' @section \code{fun}:
+#' @section `fun`:
 #'
-#'  \code{fun} offers the ability to pass any custom function with which to load
+#'  `fun` offers the ability to pass any custom function with which to load
 #'  the object obtained by `preProcess` into the session. There are two cases that are
 #'  dealt with: when the `preProcess` downloads a file (including via `dlFun`),
 #'  `fun` must deal with a file; and, when `preProcess` creates an R object
 #'  (e.g., raster::getData returns an object), `fun` must deal with an object.
 #'
-#'  \code{fun} can be supplied in three ways: a function, a character string
+#'  `fun` can be supplied in three ways: a function, a character string
 #'   (i.e., a function name as a string), of a quoted expression.
 #'   If a character string or function, is should have the package name e.g.,
-#'   \code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
+#'   `"raster::raster"` or as an actual function, e.g., `base::readRDS`.
 #'   In these cases, it will evaluate this function call while passing `targetFile`
 #'   as the first argument. These will only work in the simplest of cases.
 #'
 #'   When more precision is required, the full call can be written, surrounded by
-#'   \code{quote}, and where the object can be referred to as `targetFile` if the function
+#'   `quote`, and where the object can be referred to as `targetFile` if the function
 #'   is loading a file or as `x` if it is loading the object that was returned by
 #'   `preProcess`. If `preProcess` returns an object, this must be used by `fun`; if
 #'   `preProcess` is only getting a file, then there will be no object, so `targetFile` is the
@@ -94,100 +94,100 @@ if (getRversion() >= "3.1.0") {
 #'   If there is a custom function call, is not in a package, `prepInputs` may not find it. In such
 #'   cases, simply pass the function as a named argument (with same name as function) to `prepInputs`.
 #'   See examples.
-#'   NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
-#'   replicate the functionality of simply calling \code{preProcess} directly.
+#'   NOTE: passing `NA` will skip loading object into R. Note this will essentially
+#'   replicate the functionality of simply calling `preProcess` directly.
 #'
-#' @section \code{purge}:
+#' @section `purge`:
 #'
-#' In options for control of purging the \code{CHECKSUMS.txt} file are:
+#' In options for control of purging the `CHECKSUMS.txt` file are:
 #'
 #'   \describe{
-#'     \item{\code{0}}{keep file}
-#'     \item{\code{1}}{delete file}
-#'     \item{\code{2}}{delete entry for \code{targetFile}}
-#'     \item{\code{4}}{delete entry for \code{alsoExtract}}
-#'     \item{\code{3}}{delete entry for \code{archive}}
-#'     \item{\code{5}}{delete entry for \code{targetFile} & \code{alsoExtract}}
-#'     \item{\code{6}}{delete entry for \code{targetFile}, \code{alsoExtract} & \code{archive}}
-#'     \item{\code{7}}{delete entry that is failing (i.e., for the file downloaded by the \code{url})}
+#'     \item{`0`}{keep file}
+#'     \item{`1`}{delete file}
+#'     \item{`2`}{delete entry for `targetFile`}
+#'     \item{`4`}{delete entry for `alsoExtract`}
+#'     \item{`3`}{delete entry for `archive`}
+#'     \item{`5`}{delete entry for `targetFile` & `alsoExtract`}
+#'     \item{`6`}{delete entry for `targetFile`, `alsoExtract` & `archive`}
+#'     \item{`7`}{delete entry that is failing (i.e., for the file downloaded by the `url`)}
 #'   }
-#' will only remove entries in the \code{CHECKSUMS.txt} that are associated with
-#'   \code{targetFile}, \code{alsoExtract} or \code{archive} When \code{prepInputs} is called,
-#'   it will write or append to a (if already exists) \code{CHECKSUMS.txt} file.
-#'   If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
+#' will only remove entries in the `CHECKSUMS.txt` that are associated with
+#'   `targetFile`, `alsoExtract` or `archive` When `prepInputs` is called,
+#'   it will write or append to a (if already exists) `CHECKSUMS.txt` file.
+#'   If the `CHECKSUMS.txt` is not correct, use this argument to remove it.
 #'
 #' @param targetFile Character string giving the path to the eventual file
 #'   (raster, shapefile, csv, etc.) after downloading and extracting from a zip
-#'   or tar archive. This is the file \emph{before} it is passed to
-#'   \code{postProcess}. Currently, the internal checksumming does not checksum
-#'   the file after it is \code{postProcess}ed (e.g., cropped/reprojected/masked).
-#'   Using \code{Cache} around \code{prepInputs} will do a sufficient job in these cases.
-#'   See table in \code{\link{preProcess}}.
+#'   or tar archive. This is the file *before* it is passed to
+#'   `postProcess`. Currently, the internal checksumming does not checksum
+#'   the file after it is `postProcess`ed (e.g., cropped/reprojected/masked).
+#'   Using `Cache` around `prepInputs` will do a sufficient job in these cases.
+#'   See table in [preProcess()].
 #'
 #' @param archive Optional character string giving the path of an archive
-#'   containing \code{targetFile}, or a vector giving a set of nested archives
-#'   (e.g., \code{c("xxx.tar", "inner.zip", "inner.rar")}). If there is/are (an) inner
+#'   containing `targetFile`, or a vector giving a set of nested archives
+#'   (e.g., `c("xxx.tar", "inner.zip", "inner.rar")`). If there is/are (an) inner
 #'   archive(s), but they are unknown, the function will try all until it finds
-#'   the \code{targetFile}. See table in \code{\link{preProcess}}. If it is \code{NA},
-#'   then it will \emph{not} attempt to see it as an archive, even if it has archive-like
-#'   file extension (e.g., \code{.zip}). This may be useful when an R function
+#'   the `targetFile`. See table in [preProcess()]. If it is `NA`,
+#'   then it will *not* attempt to see it as an archive, even if it has archive-like
+#'   file extension (e.g., `.zip`). This may be useful when an R function
 #'   is expecting an archive directly.
 #'
 #' @param url Optional character string indicating the URL to download from.
 #'   If not specified, then no download will be attempted. If not entry
-#'   exists in the \code{CHECKSUMS.txt} (in \code{destinationPath}), an entry
-#'   will be created or appended to. This \code{CHECKSUMS.txt} entry will be used
+#'   exists in the `CHECKSUMS.txt` (in `destinationPath`), an entry
+#'   will be created or appended to. This `CHECKSUMS.txt` entry will be used
 #'   in subsequent calls to
-#'   \code{prepInputs} or \code{preProcess}, comparing the file on hand with the ad hoc
-#'   \code{CHECKSUMS.txt}. See table in \code{\link{preProcess}}.
+#'   `prepInputs` or `preProcess`, comparing the file on hand with the ad hoc
+#'   `CHECKSUMS.txt`. See table in [preProcess()].
 #'
 #' @param alsoExtract Optional character string naming files other than
-#'   \code{targetFile} that must be extracted from the \code{archive}. If
-#'   \code{NULL}, the default, then it will extract all files. Other options:
-#'   \code{"similar"} will extract all files with the same filename without
-#'   file extension as \code{targetFile}. \code{NA} will extract nothing other
-#'   than \code{targetFile}. A character string of specific file names will cause
-#'   only those to be extracted. See table in \code{\link{preProcess}}.
+#'   `targetFile` that must be extracted from the `archive`. If
+#'   `NULL`, the default, then it will extract all files. Other options:
+#'   `"similar"` will extract all files with the same filename without
+#'   file extension as `targetFile`. `NA` will extract nothing other
+#'   than `targetFile`. A character string of specific file names will cause
+#'   only those to be extracted. See table in [preProcess()].
 #'
 #' @param destinationPath Character string of a directory in which to download
-#'   and save the file that comes from \code{url} and is also where the function
-#'   will look for \code{archive} or \code{targetFile}. NOTE (still experimental):
+#'   and save the file that comes from `url` and is also where the function
+#'   will look for `archive` or `targetFile`. NOTE (still experimental):
 #'   To prevent repeated downloads in different locations, the user can also set
-#'   \code{options("reproducible.inputPaths")} to one or more local file paths to
+#'   `options("reproducible.inputPaths")` to one or more local file paths to
 #'   search for the file before attempting to download. Default for that option is
-#'   \code{NULL} meaning do not search locally.
+#'   `NULL` meaning do not search locally.
 #'
 #' @param fun Function, character string, or quoted call with which to load the
-#'   \code{targetFile} or an object created by \code{dlFun}
-#'   into an \code{R} object. See details and examples below.
+#'   `targetFile` or an object created by `dlFun`
+#'   into an `R` object. See details and examples below.
 #'
-#' @param quick Logical. This is passed internally to \code{\link{Checksums}}
+#' @param quick Logical. This is passed internally to [Checksums()]
 #'   (the quickCheck argument), and to
-#'   \code{\link{Cache}} (the quick argument). This results in faster, though
+#'   [Cache()] (the quick argument). This results in faster, though
 #'   less robust checking of inputs. See the respective functions.
 #'
-#' @param purge Logical or Integer. \code{0/FALSE} (default) keeps existing
-#'    \code{CHECKSUMS.txt} file and
-#'    \code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
-#'    \code{CHECKSUMS.txt} file. Other options, see details.
+#' @param purge Logical or Integer. `0/FALSE` (default) keeps existing
+#'    `CHECKSUMS.txt` file and
+#'    `prepInputs` will write or append to it. `1/TRUE` will deleted the entire
+#'    `CHECKSUMS.txt` file. Other options, see details.
 #'
 #' @param overwrite Logical. Should downloading and all the other actions occur
 #'   even if they pass the checksums or the files are all there.
 #'
-#' @param ... Additional arguments passed to \code{fun} (i.e,. user supplied),
-#'   \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.
-#'  Since \code{...} is passed to \code{\link{postProcess}}, these will
-#'  \code{...} will also be passed into the inner
-#'  functions, e.g., \code{\link{cropInputs}}. Possibly useful other arguments include
-#'  \code{dlFun} which is passed to \code{preProcess}. See details and examples.
+#' @param ... Additional arguments passed to `fun` (i.e,. user supplied),
+#'   [postProcess()] and [reproducible::Cache()].
+#'  Since `...` is passed to [postProcess()], these will
+#'  `...` will also be passed into the inner
+#'  functions, e.g., [cropInputs()]. Possibly useful other arguments include
+#'  `dlFun` which is passed to `preProcess`. See details and examples.
 #'
-#' @param useCache Passed to \code{Cache} in various places.
-#'   Defaults to \code{getOption("reproducible.useCache", 2L)} in \code{prepInputs}, and
-#'   \code{getOption("reproducible.useCache", FALSE)} if calling any of the inner
-#'   functions manually. For \code{prepInputs}, this mean it will use \code{Cache}
-#'   only up to 2 nested levels, which will generally including \code{postProcess} and
-#'   the first level of \code{*Input} functions, e.g., \code{cropInputs}, \code{projectInputs},
-#'   \code{maskInputs}, but not \code{fixErrors}.
+#' @param useCache Passed to `Cache` in various places.
+#'   Defaults to `getOption("reproducible.useCache", 2L)` in `prepInputs`, and
+#'   `getOption("reproducible.useCache", FALSE)` if calling any of the inner
+#'   functions manually. For `prepInputs`, this mean it will use `Cache`
+#'   only up to 2 nested levels, which will generally including `postProcess` and
+#'   the first level of `*Input` functions, e.g., `cropInputs`, `projectInputs`,
+#'   `maskInputs`, but not `fixErrors`.
 #'
 #' @param .tempPath Optional temporary path for internal file intermediate steps.
 #'   Will be cleared on.exit from this function.
@@ -195,6 +195,12 @@ if (getRversion() >= "3.1.0") {
 #' @inheritParams Cache
 #' @author Eliot McIntire, Jean Marchal, and Tati Micheletti
 #' @export
+#' @return
+#' This is an omnibus function that will return an R object that will have resulted from
+#' the running of [preProcess()] and [postProcess()] or [postProcessTerra()]. Thus,
+#' if it is a GIS object, it may have been cropped, reprojected, "fixed", masked, and
+#' written to disk.
+#'
 #' @importFrom data.table data.table
 #' @importFrom digest digest
 #' @importFrom methods is
@@ -202,109 +208,118 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom utils methods modifyList
 #' @include checksums.R download.R postProcess.R
 #' @rdname prepInputs
-#' @seealso \code{\link{downloadFile}}, \code{\link{extractFromArchive}},
-#'          \code{\link{postProcess}}.
+#' @seealso [postProcessTerra()], [downloadFile()], [extractFromArchive()],
+#'          [postProcess()].
 #' @examples
-#' # This function works within a module; however, currently,
-#' #   \cde{sourceURL} is not yet working as desired. Use \code{url}.
-#' \dontrun{
+#' \donttest{
+#' data.table::setDTthreads(2)
+#' origDir <- getwd()
+#' setwd(reproducible::tempdir2()) # use a temporary directory
 #' # download a zip file from internet, unzip all files, load as shapefile, Cache the call
 #' # First time: don't know all files - prepInputs will guess, if download file is an archive,
 #' #   then extract all files, then if there is a .shp, it will load with raster::shapefile
 #' dPath <- file.path(tempdir(), "ecozones")
-#' shpEcozone <- prepInputs(destinationPath = dPath,
-#'                          url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
+#' shpUrl <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
 #'
-#' # Robust to partial file deletions:
-#' unlink(dir(dPath, full.names = TRUE)[1:3])
-#' shpEcozone <- prepInputs(destinationPath = dPath,
-#'                          url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
-#' unlink(dPath, recursive = TRUE)
+#' # Wrapped in a try because this particular url can be flaky
+#' shpEcozone <- try(prepInputs(destinationPath = dPath,
+#'                          url = shpUrl))
+#' if (!is(shpEcozone, "try-error")) {
+#'   # Robust to partial file deletions:
+#'   unlink(dir(dPath, full.names = TRUE)[1:3])
+#'   shpEcozone <- prepInputs(destinationPath = dPath,
+#'                            url = shpUrl)
+#'   unlink(dPath, recursive = TRUE)
 #'
-#' # Once this is done, can be more precise in operational code:
-#' #  specify targetFile, alsoExtract, and fun, wrap with Cache
-#' ecozoneFilename <- file.path(dPath, "ecozones.shp")
-#' ecozoneFiles <- c("ecozones.dbf", "ecozones.prj",
-#'                   "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx")
-#' shpEcozone <- prepInputs(targetFile = ecozoneFilename,
-#'                          url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-#'                          alsoExtract = ecozoneFiles,
-#'                          fun = "shapefile", destinationPath = dPath)
-#' unlink(dPath, recursive = TRUE)
+#'   # Once this is done, can be more precise in operational code:
+#'   #  specify targetFile, alsoExtract, and fun, wrap with Cache
+#'   ecozoneFilename <- file.path(dPath, "ecozones.shp")
+#'   ecozoneFiles <- c("ecozones.dbf", "ecozones.prj",
+#'                     "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx")
+#'   shpEcozone <- prepInputs(targetFile = ecozoneFilename,
+#'                            url = shpUrl,
+#'                            alsoExtract = ecozoneFiles,
+#'                            fun = "shapefile", destinationPath = dPath)
+#'   unlink(dPath, recursive = TRUE)
 #'
-#' #' # Add a study area to Crop and Mask to
-#' # Create a "study area"
-#' library(sp)
-#' library(raster)
-#' coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-#'                     .Dim = c(5L, 2L))
-#' Sr1 <- Polygon(coords)
-#' Srs1 <- Polygons(list(Sr1), "s1")
-#' StudyArea <- SpatialPolygons(list(Srs1), 1L)
-#' crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#'   # Add a study area to Crop and Mask to
+#'   # Create a "study area"
+#'   library(sp)
+#'   library(raster)
+#'   coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+#'                       .Dim = c(5L, 2L))
+#'   Sr1 <- Polygon(coords)
+#'   Srs1 <- Polygons(list(Sr1), "s1")
+#'   StudyArea <- SpatialPolygons(list(Srs1), 1L)
+#'   crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 #'
-#' #  specify targetFile, alsoExtract, and fun, wrap with Cache
-#' ecozoneFilename <- file.path(dPath, "ecozones.shp")
-#' # Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the
-#' #   targetFile is there, it will not redownload the archive.
-#' ecozoneFiles <- c("ecozones.dbf", "ecozones.prj",
-#'                   "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx")
-#' shpEcozoneSm <- Cache(prepInputs,
-#'                       url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-#'                       targetFile = reproducible::asPath(ecozoneFilename),
-#'                       alsoExtract = reproducible::asPath(ecozoneFiles),
-#'                       studyArea = StudyArea,
-#'                       fun = "shapefile", destinationPath = dPath,
-#'                       filename2 = "EcozoneFile.shp") # passed to determineFilename
+#'   #  specify targetFile, alsoExtract, and fun, wrap with Cache
+#'   ecozoneFilename <- file.path(dPath, "ecozones.shp")
+#'   # Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the
+#'   #   targetFile is there, it will not redownload the archive.
+#'   ecozoneFiles <- c("ecozones.dbf", "ecozones.prj",
+#'                     "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx")
+#'   shpEcozoneSm <- Cache(prepInputs,
+#'                         url = shpUrl,
+#'                         targetFile = reproducible::asPath(ecozoneFilename),
+#'                         alsoExtract = reproducible::asPath(ecozoneFiles),
+#'                         studyArea = StudyArea,
+#'                         fun = "shapefile", destinationPath = dPath,
+#'                         filename2 = "EcozoneFile.shp") # passed to determineFilename
 #'
-#' plot(shpEcozone)
-#' plot(shpEcozoneSm, add = TRUE, col = "red")
-#' unlink(dPath)
+#'   plot(shpEcozone)
+#'   plot(shpEcozoneSm, add = TRUE, col = "red")
+#'   unlink(dPath)
 #'
-#' # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
-#' #   but the StudyArea does get reprojected, need to use rasterToMatch
-#' dPath <- file.path(tempdir(), "LCC")
-#' lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
-#' url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
-#'                  "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
+#'   # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
+#'   #   but the StudyArea does get reprojected, need to use rasterToMatch
+#'   dPath <- file.path(tempdir(), "LCC")
+#'   lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
+#'   url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
+#'                    "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
 #'
-#' # messages received below may help for filling in more arguments in the subsequent call
-#' LCC2005 <- prepInputs(url = url,
-#'                       destinationPath = asPath(dPath),
-#'                       studyArea = StudyArea)
+#'   # messages received below may help for filling in more arguments in the subsequent call
+#'   # This is in a `try` because the url can be flaky
+#'   LCC2005 <- try(prepInputs(url = url,
+#'                         destinationPath = asPath(dPath),
+#'                         studyArea = StudyArea))
+#'   if (!is(LCC2005, "try-error")) {
 #'
-#' plot(LCC2005)
+#'     raster::plot(LCC2005)
 #'
-#' # if wrapped with Cache, will be very fast second time (via memoised copy)
-#' LCC2005 <- Cache(prepInputs, url = url,
-#'                  targetFile = lcc2005Filename,
-#'                  archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
-#'                  destinationPath = asPath(dPath),
-#'                  studyArea = StudyArea)
-#' # Using dlFun -- a custom download function -- passed to preProcess
-#' test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
-#'                     dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-#'                     path = dPath)
+#'     # if wrapped with Cache, will be very fast second time (via memoised copy)
+#'     LCC2005 <- Cache(prepInputs, url = url,
+#'                      targetFile = lcc2005Filename,
+#'                      archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
+#'                      destinationPath = asPath(dPath),
+#'                      studyArea = StudyArea)
+#'     # Using dlFun -- a custom download function -- passed to preProcess
+#'     test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
+#'                         dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+#'                         path = dPath)
+#'   }
+#'   }
+#'   setwd(origDir)
 #' }
 #'
-#' # Using quoted dlFun and fun
-#' \dontrun{
-#'   prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun)
-#'   # or more complex
-#'   test5 <- prepInputs(
-#'     targetFile = targetFileLuxRDS,
-#'     dlFun = quote({
-#'       getDataFn(name = "GADM", country = "LUX", level = 0) # preProcess keeps file from this!
-#'     }),
-#'     fun = quote({
-#'       out <- readRDS(targetFilePath)
-#'       out <- as(out, "SpatialPolygonsDataFrame")
-#'       sf::st_as_sf(out)})
-#'    )
-#' }
+#' ## Using quoted dlFun and fun -- this is not intended to be run but used as a template
+#' ## prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun)
+#' ##   # or more complex
+#' ##  test5 <- prepInputs(
+#' ##   targetFile = targetFileLuxRDS,
+#' ##   dlFun = quote({
+#' ##     getDataFn(name = "GADM", country = "LUX", level = 0) # preProcess keeps file from this!
+#' ##   }),
+#' ##   fun = quote({
+#' ##     out <- readRDS(targetFilePath)
+#' ##     out <- as(out, "SpatialPolygonsDataFrame")
+#' ##     sf::st_as_sf(out)})
+#' ##  )
+#'
 #'
 prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = getOption("reproducible.destinationPath", "."),
+
                        fun = NULL,
                        quick = getOption("reproducible.quick"),
                        overwrite = getOption("reproducible.overwrite", FALSE),
@@ -342,35 +357,51 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Load object to R
   # If it is simple call, then we can extract stuff from the function call; otherwise all bets off
-  fun <- if (is(out$fun, "call") || is(out$fun, "function") && is.null(out$object)) {
-    .fnCleanup(out$fun, callingFun = "prepInputs", ...)
-  } else {
-    NULL
-  }
-
+  theFun <- out$fun
+  # fun <- if (is(theFun, "call") || is(theFun, "function") && is.null(out$object)) {
+  #   fnNameInit <- deparse(substitute(out$fun))
+  #   browser()
+  #   argsPassingToTheFun <- out[!names(out) %in% c(formalArgs(prepInputs), "checkSums", "dots", "object")]
+  #   argsPassingToTheFun
+  #   match.call(theFun, as.call(append(list(theFun), argsPassingToTheFun)))
+  #               #)
+  # } else {
+  #   NULL
+  # }
+  #
   suppressWarnings({
-    naFun <- all(is.na(out$fun))
+    naFun <- all(is.na(theFun))
   })
 
-  ## dots will contain too many things for some functions
-  ## -- need to remove those that are known going into prepInputs
-  args <- out$dots[!(names(out$dots) %in% .argsToRemove)]
+  out <- modifyList(out, list(...))
 
-  # Only accept the ones that are the formals of the function -- above removals may be redunant
-  args <- args[(names(args) %in% fun$formalArgs)]
-  if (length(args) == 0) args <- NULL
+  argsFromPrepInputsFamily <- unique(c(.namesPostProcessFormals(), formalArgs(prepInputs), formalArgs(preProcess),
+                                "checkSums", "dots", "object"))
+  # keep the ones for theFun
+  formsForTheFun <- names(formals3(theFun))
+  argsFromPrepInputsFamily <- setdiff(argsFromPrepInputsFamily, names(formals3(theFun)))
+  argsPassingToTheFun <- out[!names(out) %in% argsFromPrepInputsFamily]
+  # args <- argsPassingToTheFun[!names(argsPassingToTheFun) %in% "targetFilePath"] # will replace it without a named arg
+  args <- argsPassingToTheFun[names(argsPassingToTheFun) %in% formsForTheFun]
 
-  if (!(naFun || is.null(out$fun))) {
+  otherFiles <- out$checkSums[result == "OK"]
+  .cacheExtra <- NULL
+  if (NROW(otherFiles)) {
+    .cacheExtra <- .robustDigest(otherFiles$checksum.x)
+  }
+  if (!(naFun || is.null(theFun))) {
     x <- if (is.null(out$object)) {
+
       messagePrepInputs("Loading object into R", verbose = verbose)
-      if (identical(out$fun, raster::raster) |
-          identical(out$fun, raster::stack) |
-          identical(out$fun, raster::brick)) {
+      if (identical(theFun, raster::raster) |
+          identical(theFun, raster::stack) |
+          identical(theFun, raster::brick) |
+          identical(theFun, terra::rast)) {
         ## Don't cache the reading of a raster
         ## -- normal reading of raster on disk is fast b/c only reads metadata
-        do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
+        do.call(theFun, append(list(asPath(out$targetFilePath)), args))
       } else {
-        if (identical(out$fun, base::load)) {
+        if (identical(theFun, base::load)) {
           if (is.null(args$envir)) {
             messagePrepInputs("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
                     "if you would like it loaded to a specific environment", verbose = verbose)
@@ -381,7 +412,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             args$envir <- NULL
             returnAsList <- FALSE
           }
-          objs <- do.call(out$fun, append(list(file = out$targetFilePath, envir = tmpEnv), args))
+          args2 <- append(list(file = out$targetFilePath, envir = tmpEnv), args)
+          objs <- do.call(theFun, args2)
           if (returnAsList)
             as.list(tmpEnv, all.names = TRUE)
         } else {
@@ -394,19 +426,19 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             messagePrepInputs("targetFile is already a binary; skipping Cache while loading")
           }
           withCallingHandlers(
-            if (is.call(out$fun)) {
+            if (is.call(theFun)) {
               # put `targetFilePath` in the first position -- allows quoted call to use first arg
               out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
                                    out[-which(names(out) == "targetFilePath")]),
                             args)
               if (length(fun[["functionName"]]) == 1)
                 out[[fun[["functionName"]]]] <- fun$FUN
-              obj <- Cache(eval, out$fun, envir = out, useCache = useCache2)
+              obj <- Cache(eval, theFun, envir = out, useCache = useCache2, .cacheExtra = .cacheExtra)
             } else {
-              obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
-                           useCache = useCache2)
+              args2 <- append(list(asPath(out$targetFilePath)), args)
+              obj <- Cache(do.call, theFun, args2, useCache = useCache2, .cacheExtra = .cacheExtra)
             }, message = function(m) {
-              m$message <- grep("No cacheRepo supplied|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
+              m$message <- grep("No cachePath supplied|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
               if (length(m$message)) {
                 mm <- gsub("(.*)\n$", "\\1", m$message)
                 messagePrepInputs(mm)
@@ -423,17 +455,21 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         x <- out$object
         env1 <- new.env()
         list2env(list(...), envir = env1)
-        eval(out$fun, envir = env1)
+        eval(theFun, envir = env1)
       }
     }
   } else {
-    messagePrepInputs("No loading of object into R; fun = ", out$fun, verbose = verbose)
+    messagePrepInputs("No loading of object into R; fun = ", theFun, verbose = verbose)
     x <- out
   }
-  if (requireNamespace("terra") && getOption("reproducible.useTerra", FALSE)) {
+
+  if (requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)) {
     if (!(all(is.null(out$dots$studyArea),
               is.null(out$dots$rasterToMatch),
               is.null(out$dots$targetCRS))) || !(all(is.null(out$dots$to)))) {
+
+      # This sequence puts all the objects that are needed for postProcessTerra into this environment
+      #   so that we can avoid using do.call
       argsPostProcessTerra <- formalArgs(postProcessTerra)
       argsOldPostProcess <- c("rasterToMatch", "studyArea", "targetCRS", "useSAcrs", "filename2",
                               "overwrite")
@@ -451,12 +487,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       } else {
         filename2 <- determineFilename(destinationPath = destinationPath, filename2 = filename2, verbose = verbose)
       }
-
       # pass everything, including NULL where it was NULL. This means don't have to deal with
       #    rlang quo issues
       x <- postProcessTerra(from = x, to = to, rasterToMatch = rasterToMatch, studyArea = studyArea,
                             cropTo = cropTo, projectTo = projectTo, maskTo = maskTo, writeTo = writeTo,
                             method = method, targetCRS = targetCRS, useSAcrs = useSAcrs,
+                            datatype = datatype,
                             filename2 = filename2,
                             overwrite = overwrite)
 
@@ -485,13 +521,14 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       out$dots[spatials] <- lapply(out$dots[spatials], function(x) rlang::quo(x))
       xquo <- rlang::quo(x)
 
+      fullList <- modifyList(list(x = xquo, filename1 = out$targetFilePath,
+                                  overwrite = overwrite,
+                                  destinationPath = out$destinationPath,
+                                  useCache = useCache,
+                                  verbose = verbose), # passed into postProcess
+                             out$dots)
       x <- Cache(
-        do.call, postProcess, modifyList(list(x = xquo, filename1 = out$targetFilePath,
-                                              overwrite = overwrite,
-                                              destinationPath = out$destinationPath,
-                                              useCache = useCache,
-                                              verbose = verbose), # passed into postProcess
-                                         out$dots),
+        do.call, postProcess, fullList,
         useCache = useCache, verbose = verbose # used here
       )
     }
@@ -507,9 +544,9 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' Extract zip or tar archive files, possibly nested in other zip or tar archives.
 #'
 #' @param archive Character string giving the path of the archive
-#' containing the \code{file} to be extracted. This path must exist or be \code{NULL}
+#' containing the `file` to be extracted. This path must exist or be `NULL`
 #'
-#' @param destinationPath Character string giving the path where \code{neededFiles} will be
+#' @param destinationPath Character string giving the path where `neededFiles` will be
 #' extracted. Defaults to the archive directory.
 #'
 #' @param neededFiles Character string giving the name of the file(s) to be extracted.
@@ -517,12 +554,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @param extractedArchives Used internally to track archives that have been extracted from.
 #' @param filesExtracted Used internally to track files that have been extracted.
 #' @param checkSums A checksums file, e.g., created by Checksums(..., write = TRUE)
-#' @param needChecksums A numeric, with \code{0} indicating do not write a new checksums,
-#'                      \code{1} write a new one,
-#'                      \code{2} append new information to existing one.
+#' @param needChecksums A numeric, with `0` indicating do not write a new checksums,
+#'                      `1` write a new one,
+#'                      `2` append new information to existing one.
 #' @param checkSumFilePath The full path to the checksum.txt file
-#' @param quick Passed to \code{Checksums}
-#' @param ... Passed to \code{unzip} or \code{untar}, e.g., \code{overwrite}
+#' @param quick Passed to `Checksums`
+#' @param ... Passed to `unzip` or `untar`, e.g., `overwrite`
 #' @inheritParams prepInputs
 #'
 #' @return A character vector listing the paths of the extracted archives.
@@ -704,12 +741,13 @@ extractFromArchive <- function(archive,
     isRaster <- fileExt %in% funPoss[funPoss[, "type"] == "Raster", "extension"]
     isRDS <- fileExt %in% funPoss[funPoss[, "extension"] == "rds", "extension"]
     if (any(isShapefile)) {
-      if (requireNamespace("sf", quietly = TRUE) ) {
-        if (!isTRUE(grepl("st_read", fun)))
-          messagePrepInputs("Using sf::st_read on shapefile because sf package is available; to force old ",
-                            "behaviour with 'raster::shapefile' use fun = 'raster::shapefile' or ",
-                            "options('reproducible.shapefileRead' = 'raster::shapefile')")
-      }
+      if (is.null(fun))
+        if (requireNamespace("sf", quietly = TRUE) ) {
+          if (!isTRUE(grepl("st_read", fun)))
+            messagePrepInputs("Using sf::st_read on shapefile because sf package is available; to force old ",
+                              "behaviour with 'raster::shapefile' use fun = 'raster::shapefile' or ",
+                              "options('reproducible.shapefileRead' = 'raster::shapefile')")
+        }
     }
   }
   if (is.null(fun)) {
@@ -810,8 +848,6 @@ extractFromArchive <- function(archive,
   if (is.character(fun)) {
     messagePrepInputs(paste0("The archive appears to be not a .zip. Trying a system call to ", fun), verbose = verbose)
     extractSystemCallPath <- .testForArchiveExtract()
-    #tempDir <- file.path(args$exdir, "extractedFiles") %>%
-    #  checkPath(create = TRUE)
     if (grepl(x = extractSystemCallPath, pattern = "7z")) {
       prependPath <- if (isWindows()) {
         paste0("\"", extractSystemCallPath, "\"")
@@ -842,7 +878,7 @@ extractFromArchive <- function(archive,
       invisible(lapply(
         X = extractedFiles,
         FUN = function(fileToMove) {
-          invisible(file.move(from = file.path(.tempPath, fileToMove),
+          invisible(.file.move(from = file.path(.tempPath, fileToMove),
                               to = file.path(args$exdir, basename(fileToMove)),
                               overwrite = overwrite))
         }
@@ -879,15 +915,23 @@ extractFromArchive <- function(archive,
       }
     }
     if (!isTRUE(worked) | isTRUE(tooBig)) {
+      unz <- Sys.which("unzip")
+      sZip <- Sys.which("7z")
+
       if (!isTRUE(tooBig)) {
         messagePrepInputs("File unzipping using R does not appear to have worked.",
                           " Trying a system call of unzip...", verbose = verbose)
       } else {
-        messagePrepInputs(
-          paste("R's unzip utility cannot handle a zip file this size.\n",
-                "Install 7zip and add it to your PATH (see https://www.7-zip.org/)."),
-          verbose = verbose
-        )
+        messPart1 <- "R's unzip utility cannot handle a zip file this size.\n"
+        if (nchar(sZip) > 0) {
+          messagePrepInputs(messPart1, verbose = verbose)
+        } else {
+          messagePrepInputs(
+            paste(messPart1,
+                  "Install 7zip and add it to your PATH (see https://www.7-zip.org/)."),
+            verbose = verbose
+          )
+        }
       }
 
       if (file.exists(args[[1]])) {
@@ -901,16 +945,28 @@ extractFromArchive <- function(archive,
                " The file might have been moved during unzipping or is corrupted.")
         }
       }
-      unz <- Sys.which("unzip")
-      sZip <- Sys.which("7z")
       if (nchar(sZip) > 0) {
         messagePrepInputs("Using '7zip'")
         op <- setwd(.tempPath)
         on.exit({
           setwd(op)
         }, add = TRUE)
+        lstFiles <- system(paste0(sZip, " l ", pathToFile), intern = TRUE, wait = TRUE)
+        startAndEnd <- grep("-----------", lstFiles)
+        if (diff(startAndEnd) > 1) {
+          lstFiles <- lstFiles[(startAndEnd[1]+1) : (startAndEnd[2]-1)]
+        }
+        if (length(files)) {
+          filesAreInArch <- unlist(lapply(files, function(x) any(grepl(x, lstFiles))))
+          if (all(filesAreInArch))
+            arg22 <- paste("e", pathToFile, paste(files, collapse = " "))
+          else
+            stop(paste(files, collapse = ", "), " not in ", basename2(pathToFile))
+        } else {
+          arg22 <- paste0(" e ", pathToFile)
+        }
         system2(sZip,
-                args = paste0(" e ", pathToFile),
+                args = arg22,
                 wait = TRUE,
                 stdout = NULL)
 
@@ -945,7 +1001,7 @@ extractFromArchive <- function(archive,
       })
 
       if (!isTRUE(all(out))) {
-        out <- try(file.move(from, to, overwrite))
+        out <- try(.file.move(from, to, overwrite))
       }
 
       if (!isTRUE(all(out))) {
@@ -1018,7 +1074,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     } else {
       setDT(cs)
       nonCurrentFiles <- cs[!file %in% filesToChecksum]
-      # if (requireNamespace("dplyr")) {
+      # if (requireNamespace("dplyr", quietly = TRUE)) {
       #   nonCurrentFiles1 <- cs %>%
       #     dplyr::filter(!file %in% filesToChecksum)
       #   # browser(expr = !identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
@@ -1035,13 +1091,12 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           "  you can specify targetFile (and optionally alsoExtract) so it knows\n",
           "  what to look for.", verbose = verbose)
   csf <- if (append) tempfile(fileext = ".TXT") else checkSumFilePath
-  capture.output(
-    type = "message",
+  capture.output(type = "message", {
     currentFiles <- Checksums(path = destinationPath, write = TRUE, #write = !append || NROW(nonCurrentFiles) == 0,
                               files = file.path(destinationPath, filesToChecksum),
                               checksumFile = csf,
                               verbose = verbose)
-  )
+  })
   if (append) { # a checksums file already existed, need to keep some of it
     currentFilesToRbind <- data.table::as.data.table(currentFiles)
     keepCols <- c("expectedFile", "checksum.x", "algorithm.x", "filesize.x")
@@ -1076,7 +1131,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' Currently, this is only used for shapefiles.
 #'
 #' @param neededFiles A character string of file name(s) that will be checked. Specifically
-#'        if the file extension is \code{.shp} it will output the names of files with
+#'        if the file extension is `.shp` it will output the names of files with
 #'        these extensions also:
 #'        c("shx", "dbf", "prj", "sbx", "sbn") files also.
 #' @keywords internal
@@ -1098,9 +1153,9 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   neededFiles
 }
 
-#' List files in either a \code{.zip} or or \code{.tar} file
+#' List files in either a `.zip` or or `.tar` file
 #'
-#' Makes the outputs from\code{.tar}\code{.zip} the same, which they aren't by default.
+#' Makes the outputs from`.tar``.zip` the same, which they aren't by default.
 #'
 #' @param archive A character string of a single file name to list files in.
 #'

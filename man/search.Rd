@@ -44,5 +44,5 @@ searchFull()
 searchFullEx()
 }
 \seealso{
-\code{\link[base]{search}}
+\code{\link[base:search]{base::search()}}
 }

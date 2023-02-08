@@ -1,5 +1,44 @@
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
+Version 1.2.17
+==============
+
+## enhancements
+- `postProcess` now uses `terra` and `sf` by default throughout the family. These are only activated by a user deciding to use the new family of functions (`postProcessTerra`, `cropTo`, `maskTo`, `projectTo`, `writeTo`) or by setting the `option(reproducible.useTerra = TRUE)`
+- new functions to assist with transition from `raster` to `terra` --> `maxFn` and `minFn`
+
+## bugfixes
+- `Postgres` database backends were not working correctly because of a typo; fixed
+- When working with revdep `SpaDES.core`, there were some cases where the `Cache` was failing as it could not find the module name; fixed.
+- during transition from `postProcess` (using `raster` and `sp`) to `postProcessTerra`, some cases are falling through the cracks; these are being addressed.
+
+Version 1.2.16
+==============
+
+## Dependency changes
+* none
+
+## Enhancements
+* `Cache` now captures the first argument passed to it without evaluating it, so `Cache(rnorm(1))` now works as expected.
+* As a result of previous, `Cache` now works with base pipe |> (with R >= 4.1). 
+* Due to some internal changes in the way arguments are evaluated and digested, there may be some cache entries that will be rerun. However, in simple cases of `FUN` passed to `Cache`, there should be no problems with previous cache databases being successfully recovered. 
+* Added more unit tests
+* Reworked `Cache` internals so that digesting is more accurate, as the correct methods for functions are more accurately found, objects within functions are more precisely evaluated.
+* Improved documentation:
+  - Examples were reworked, replaced, improved;
+  - All user-facing exported functions and methods now have complete documentation;
+  - Added `()` in DESCRIPTION for functions;
+  - Added `\value` in `.Rd` files for exported methods (structure, the class, the output meaning);
+  - Remove commented code in examples.
+
+## Bug fixes
+* `postProcess` now also checks resolution when assessing whether to project 
+* `prepInputs` has an internal `Cache` call for loading the object into memory; this was incorrectly evaluating all files if there were more than one file downloaded and extracted. This resulted in cases, e.g. shapefiles, being considered identical if they had the identical geometries, even if their data were different. This is fixed now as it uses the digest of all files extracted.
+
+## Deprecated and defunct
+* remove defunct argument `digestPathContent` from `Cache`
+* `options("reproducible.useGDAL")` is now deprecated; the package is moving towards `terra`. 
+
 Version 1.2.11
 ==============
 

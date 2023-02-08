@@ -33,5 +33,5 @@ provided as a character string.}
 Very experimental
 }
 \seealso{
-\code{\link{cloudSyncCacheOld}}, \code{\link{cloudCheckOld}}
+\code{\link[=cloudSyncCacheOld]{cloudSyncCacheOld()}}, \code{\link[=cloudCheckOld]{cloudCheckOld()}}
 }

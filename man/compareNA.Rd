@@ -11,6 +11,9 @@ compareNA(v1, v2)
 
 \item{v2}{A vector}
 }
+\value{
+A logical vector, indicating positions where two vectors are same or differ.
+}
 \description{
 Copied from
 \url{http://www.cookbook-r.com/Manipulating_data/Comparing_vectors_or_factors_with_NA/}.

@@ -20,7 +20,7 @@ for writing the object to disk. If
 \code{TRUE} (the default), it will give it a file name determined by
 \code{.prefix(basename(filename1), prefix)}. If
 a character string, it will use this as its file name. See
-\code{\link{determineFilename}}.}
+\code{\link[=determineFilename]{determineFilename()}}.}
 
 \item{filename1}{Character strings giving the file paths of
 the \emph{input} object (\code{filename1}) \code{filename1}
@@ -35,33 +35,35 @@ will be the directory of the resulting absolute file path.}
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{prefix}{The character string to prepend to \code{filename1}, if \code{filename2}
 not provided.}
 
 \item{...}{Additional arguments passed to methods. For \code{spatialClasses},
-           these are: \code{\link{cropInputs}}, \code{\link{fixErrors}},
-           \code{\link{projectInputs}}, \code{\link{maskInputs}},
-           \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
-           Each of these may also pass \code{...} into other functions, like
-           \code{\link[raster]{writeRaster}}, or \code{sf::st_write}.
-           This might include potentially important arguments like \code{datatype},
-           \code{format}. Also passed to \code{projectRaster},
-           with likely important arguments such as \code{method = "bilinear"}.
-           See details.
+these are: \code{\link[=cropInputs]{cropInputs()}}, \code{\link[=fixErrors]{fixErrors()}},
+\code{\link[=projectInputs]{projectInputs()}}, \code{\link[=maskInputs]{maskInputs()}},
+\code{\link[=determineFilename]{determineFilename()}}, and \code{\link[=writeOutputs]{writeOutputs()}}.
+Each of these may also pass \code{...} into other functions, like
+\code{\link[raster:writeRaster]{raster::writeRaster()}}, or \code{sf::st_write}.
+This might include potentially important arguments like \code{datatype},
+\code{format}. Also passed to \code{projectRaster},
+with likely important arguments such as \code{method = "bilinear"}.
+See details.
 
 \subsection{... passed to:}{
-  \describe{
-    \item{\code{cropInputs}:}{\code{\link[raster]{crop}}}
-    \item{\code{projectInputs}}{\code{\link[raster]{projectRaster}}}
-    \item{\code{maskInputs}}{\code{\link{fastMask}} or \code{\link[raster]{intersect}}}
-    \item{\code{fixErrors}}{\code{\link[raster]{buffer}}}
-    \item{\code{writeOutputs}}{\code{\link[raster]{writeRaster}} or \code{\link[raster]{shapefile}}}
-    \item{\code{determineFilename}}{}
-  }
-  * Can be overridden with \code{useSAcrs}
-  ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
+\describe{
+\item{\code{cropInputs}:}{\code{\link[raster:crop]{raster::crop()}}}
+\item{\code{projectInputs}}{\code{\link[raster:projectRaster]{raster::projectRaster()}}}
+\item{\code{maskInputs}}{\code{\link[=fastMask]{fastMask()}} or \code{\link[raster:intersect]{raster::intersect()}}}
+\item{\code{fixErrors}}{\code{\link[raster:buffer]{raster::buffer()}}}
+\item{\code{writeOutputs}}{\code{\link[raster:writeRaster]{raster::writeRaster()}} or \code{\link[raster:shapefile]{raster::shapefile()}}}
+\item{\code{determineFilename}}{}
+}
+\itemize{
+\item Can be overridden with \code{useSAcrs}
+** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
+}
 }}
 }
 \description{
@@ -71,101 +73,35 @@ Determine the filename, given various combinations of inputs.
 The post processing workflow, which includes this function,
 addresses several scenarios, and depending on which scenario, there are
 several file names at play. For example, \code{Raster} objects may have
-  file-backed data, and so \emph{possess a file name}, whereas \code{Spatial}
-  objects do not. Also, if post processing is part of a \code{\link{prepInputs}}
-  workflow, there will always be a file downloaded. From the perspective of
-  \code{postProcess}, these are the "inputs" or \code{filename1}.
-  Similarly, there may or may not be a desire to write an
-  object to disk after all post processing, \code{filename2}.
+file-backed data, and so \emph{possess a file name}, whereas \code{Spatial}
+objects do not. Also, if post processing is part of a \code{\link[=prepInputs]{prepInputs()}}
+workflow, there will always be a file downloaded. From the perspective of
+\code{postProcess}, these are the "inputs" or \code{filename1}.
+Similarly, there may or may not be a desire to write an
+object to disk after all post processing, \code{filename2}.
 
-  This subtlety means that there are two file names that may be at play:
-  the "input" file name (\code{filename1}), and the "output" filename (\code{filename2}).
-  When this is used within \code{postProcess}, it is straight forward.
+This subtlety means that there are two file names that may be at play:
+the "input" file name (\code{filename1}), and the "output" filename (\code{filename2}).
+When this is used within \code{postProcess}, it is straight forward.
 
+However, when \code{postProcess} is used within a \code{prepInputs} call,
+the \code{filename1} file is the file name of the downloaded file (usually
+automatically known following the downloading, and refered to as \code{targetFile})
+and the \code{filename2} is the file name of the of post-processed file.
 
-  However, when \code{postProcess} is used within a \code{prepInputs} call,
-  the \code{filename1} file is the file name of the downloaded file (usually
-  automatically known following the downloading, and refered to as \code{targetFile})
-  and the \code{filename2} is the file name of the of post-processed file.
+If \code{filename2} is \code{TRUE}, i.e., not an actual file name, then the cropped/masked
+raster will be written to disk with the original \code{filenam1/targetFile}
+name, with \code{prefix} prefixed to the basename(\code{targetFile}).
 
-  If \code{filename2} is \code{TRUE}, i.e., not an actual file name, then the cropped/masked
-  raster will be written to disk with the original \code{filenam1/targetFile}
-  name, with \code{prefix} prefixed to the basename(\code{targetFile}).
-
-  If \code{filename2} is a character string, it will be the path of the saved/written
-  object e.g., passed to \code{writeOutput}. It will be tested whether it is an
-  absolute or relative path and used as is if absolute or
-  prepended with \code{destinationPath} if relative.
+If \code{filename2} is a character string, it will be the path of the saved/written
+object e.g., passed to \code{writeOutput}. It will be tested whether it is an
+absolute or relative path and used as is if absolute or
+prepended with \code{destinationPath} if relative.
 
 If \code{filename2} is \code{logical}, then the output
- filename will be \code{prefix} prefixed to the basename(\code{filename1}).
- If a character string, it
- will be the path returned. It will be tested whether it is an
- absolute or relative path and used as is if absolute or prepended with
- \code{destinationPath} if provided, and if \code{filename2} is relative.
-}
-\examples{
-# Add a study area to Crop and Mask to
-# Create a "study area"
-library(sp)
-library(raster)
-ow <- setwd(tempdir())
-
-# make a SpatialPolygon
-coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
-                     .Dim = c(5L, 2L))
-Sr1 <- Polygon(coords1)
-Srs1 <- Polygons(list(Sr1), "s1")
-shpEcozone <- SpatialPolygons(list(Srs1), 1L)
-crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-
-# make a "study area" that is subset of larger dataset
-coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                    .Dim = c(5L, 2L))
-Sr1 <- Polygon(coords)
-Srs1 <- Polygons(list(Sr1), "s1")
-StudyArea <- SpatialPolygons(list(Srs1), 1L)
-crs(StudyArea) <- crs(shpEcozone)
-projString <- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
-StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
-
-##########
-shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
-
-
-# Try manually, individual pieces
-shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
-shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
-shpEcozoneClean <- fixErrors(shpEcozone)
-shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
-
-# With terra
-if (require("terra")) {
-  opts <- options("reproducible.useTerra" = TRUE)
-  vectEcozone <- terra::vect(sf::st_as_sf(shpEcozone)) # direct conversion throws warning
-
-  # If input is Spatial object --> return will also be Spatial
-  shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
-  # Try manually, individual pieces -- Note functions are different
-  shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
-  shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
-  shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
-
-  # If input is Spat object --> return will also be Spat
-  vectEcozonePostProcessed <- postProcess(vectEcozone, studyArea = StudyArea)
-  # Try manually, individual pieces -- Note functions are different
-  vectEcozoneMasked <- maskInputs(vectEcozone, StudyArea)
-  VectEcozoneReprojected <- projectInputs(vectEcozone, StudyArea)
-  vectEcozoneCropped <- cropInputs(vectEcozone, StudyArea)
-
-
-
-  # Note these two have different function names --> methods for cropInputs and fixErrors
-  #    are not implemented yet
-  shpEcozoneClean <- fixErrorsTerra(vectEcozone)
-
-  options(opts)
-}
-
-setwd(ow)
+filename will be \code{prefix} prefixed to the basename(\code{filename1}).
+If a character string, it
+will be the path returned. It will be tested whether it is an
+absolute or relative path and used as is if absolute or prepended with
+\code{destinationPath} if provided, and if \code{filename2} is relative.
 }

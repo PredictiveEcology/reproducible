@@ -24,7 +24,7 @@ dlGoogle(
 containing \code{targetFile}, or a vector giving a set of nested archives
 (e.g., \code{c("xxx.tar", "inner.zip", "inner.rar")}). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the \code{targetFile}. See table in \code{\link{preProcess}}. If it is \code{NA},
+the \code{targetFile}. See table in \code{\link[=preProcess]{preProcess()}}. If it is \code{NA},
 then it will \emph{not} attempt to see it as an archive, even if it has archive-like
 file extension (e.g., \code{.zip}). This may be useful when an R function
 is expecting an archive directly.}
@@ -35,7 +35,7 @@ or tar archive. This is the file \emph{before} it is passed to
 \code{postProcess}. Currently, the internal checksumming does not checksum
 the file after it is \code{postProcess}ed (e.g., cropped/reprojected/masked).
 Using \code{Cache} around \code{prepInputs} will do a sufficient job in these cases.
-See table in \code{\link{preProcess}}.}
+See table in \code{\link[=preProcess]{preProcess()}}.}
 
 \item{destinationPath}{Character string of a directory in which to download
 and save the file that comes from \code{url} and is also where the function
@@ -52,7 +52,7 @@ even if they pass the checksums or the files are all there.}
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \description{
 Download file from Google Drive

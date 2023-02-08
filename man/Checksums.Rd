@@ -64,22 +64,22 @@ This may be very important if there are many files listed in a
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Passed to \code{\link[digest]{digest}} and \code{\link[utils]{write.table}}.
+\item{...}{Passed to \code{\link[digest:digest]{digest::digest()}} and \code{\link[utils:write.table]{utils::write.table()}}.
 For \code{digest}, the notable argument is \code{algo}. For \code{write.table},
 the notable argument is \code{append}.}
 }
 \value{
 A \code{data.table} with columns: \code{result}, \code{expectedFile},
-        \code{actualFile}, \code{checksum.x}, \code{checksum.y},
-        \code{algorithm.x}, \code{algorithm.y}, \code{filesize.x}, \code{filesize.y}
-        indicating the result of comparison between local file (\code{x}) and
-        expectation based on the \code{CHECKSUMS.txt} file.
+\code{actualFile}, \code{checksum.x}, \code{checksum.y},
+\code{algorithm.x}, \code{algorithm.y}, \code{filesize.x}, \code{filesize.y}
+indicating the result of comparison between local file (\code{x}) and
+expectation based on the \code{CHECKSUMS.txt} file.
 }
 \description{
 Verify (and optionally write) checksums.
-Checksums are computed using \code{\link{.digest}}, which is simply a
+Checksums are computed using \code{\link[=.digest]{.digest()}}, which is simply a
 wrapper around \code{digest::digest}.
 }
 \note{
@@ -92,19 +92,16 @@ To update your \file{CHECKSUMS.txt} files using the new algorithm, see
 }
 \examples{
 \dontrun{
-moduleName <- "my_module"
-modulePath <- file.path("path", "to", "modules")
+modulePath <- file.path(tempdir(), "myModulePath")
+dir.create(modulePath, recursive = TRUE, showWarnings = FALSE)
+moduleName <- "myModule"
+cat("hi", file = file.path(modulePath, moduleName)) # put something there for this example
 
 ## verify checksums of all data files
-Checksums(moduleName, modulePath)
+Checksums(modulePath, files = moduleName)
 
 ## write new CHECKSUMS.txt file
-
-# 1. verify that all data files are present (and no extra files are present)
-list.files(file.path(modulePath, moduleName, "data"))
-
-# 2. calculate file checksums and write to file (this will overwrite CHECKSUMS.txt)
-Checksums(moduleName, modulePath, write = TRUE)
+Checksums(files = moduleName, modulePath, write = TRUE)
 }
 
 }

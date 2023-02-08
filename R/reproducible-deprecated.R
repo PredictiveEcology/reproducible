@@ -8,21 +8,22 @@
 #' threads. This function will clear entries in the SQLite database which
 #' have no actual file with data.
 #'
-#' @return Invoked for its side effect on the \code{repoDir}.
+#' @return Invoked for its side effect on the `repoDir`.
 #'
 #' @param repoDir A character denoting an existing directory of the repository for
-#' which metadata will be returned. If \code{NULL} (default), it will use the
-#' \code{repoDir} specified in \code{archivist::setLocalRepo}.
+#' which metadata will be returned. If `NULL` (default), it will use the
+#' `repoDir` specified in `archivist::setLocalRepo`.
 #'
 #' @author Eliot McIntire
 #' @export
 #' @rdname clearStubArtifacts
 #'
 #' @examples
+#' data.table::setDTthreads(2)
 #' tmpDir <- file.path(tempdir(), "reproducible_examples", "clearStubArtifacts")
 #'
 #' lapply(c(runif, rnorm), function(f) {
-#'   reproducible::Cache(f, 10, cacheRepo = tmpDir)
+#'   reproducible::Cache(f, 10, cachePath = tmpDir)
 #' })
 #'
 #' # clear out any stub artifacts
