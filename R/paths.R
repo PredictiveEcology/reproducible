@@ -108,7 +108,7 @@ setMethod(
 #'
 #' @return Character string denoting the cleaned up filepath.
 #'
-#' @seealso [file.exists()], [dir.create()].
+#' @seealso [file.exists()], [dir.create()], [normPath()]
 #'
 #' @export
 #' @rdname checkPath
@@ -206,9 +206,12 @@ setMethod(
 #'
 #' @param sub Character string, length 1. Can be a result of
 #'   `file.path("smth", "smth2")` for nested temporary subdirectories.
-#' @param tempdir Optional character string where the
-#'   temporary dir should be placed. Defaults to `getOption("reproducible.tempPath")`.
+#' @param tempdir Optional character string where the temporary
+#'   directory should be placed. Defaults to `getOption("reproducible.tempPath")`.
 #' @param create Logical. Should the directory be created. Default `TRUE`.
+#' @return
+#' A character string of a path (that will be created if `create = TRUE`) in a
+#' sub-directory of the `tempdir()`.
 #'
 #' @seealso [tempfile2]
 #' @export
@@ -222,13 +225,16 @@ tempdir2 <- function(sub = "",
   np
 }
 
-#' Make a temporary subfile in a temporary (sub-)directory
+#' Make a temporary file in a temporary (sub-)directory
 #'
 #' @param ... passed to `tempfile`, e.g., `fileext`
 #'
 #' @seealso [tempdir2]
 #' @inheritParams tempdir2
 #' @param ... passed to `tempfile`, e.g., `fileext`
+#' @return
+#' A character string of a path to a file in a
+#' sub-directory of the `tempdir()`. This file will likely not exist yet.
 #' @export
 tempfile2 <- function(sub = "",
                       tempdir = getOption("reproducible.tempPath", .reproducibleTempPath()),

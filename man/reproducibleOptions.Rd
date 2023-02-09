@@ -6,6 +6,10 @@
 \usage{
 reproducibleOptions()
 }
+\value{
+This function returns a list of all the options that the \code{reproducible} package
+sets and uses. See below for details of each.
+}
 \description{
 These provide top-level, powerful settings for a comprehensive
 reproducible workflow. To see defaults, run \code{reproducibleOptions()}.
@@ -54,7 +58,7 @@ Default: \code{FALSE}. On Linux OSes, \code{Cache} and \code{cloudCache} have so
 functionality that uses the \code{future} package.
 Default is to not use these, as they are experimental.
 They may, however, be very effective in speeding up some things, specifically,
-uploading cached elements via googledrive in \code{cloudCache}.
+uploading cached elements via \code{googledrive} in \code{cloudCache}.
 }
 \item{\code{inputPaths}}{
 Default: \code{NULL}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
@@ -83,6 +87,10 @@ Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}. This will cause \c
 \code{file.size(file)} instead of the \code{digest::digest(file)}.
 Less robust to changes, but faster. \emph{NOTE: this will only affect objects on disk}.
 }
+\item{\code{rasterRead}}{
+Default \code{raster::raster} for backwards compatibility. Used during \code{prepInputs} when reading a
+\code{.tif}, \code{.grd}, and \code{.asc} files. This will eventually become \code{terra::rast}.
+}
 \item{\code{shapefileRead}}{
 Default \code{NULL}. Used during \code{prepInputs} when reading a \code{.shp} file.
 If \code{NULL}, it will use \code{sf::st_read} if \code{sf} package is available; otherwise,
@@ -107,7 +115,7 @@ frequently, so any entry in the cache repository will be stale following changes
 functions, i.e., they will likely never be relevant again.
 This will therefore keep the cache repository clean of stale objects.
 If there is ambiguity in the \code{userTags}, i.e., they do not uniquely identify a single
-entry in the \code{cacheRepo}, then this option will default back to the non-dev-mode
+entry in the \code{cachePath}, then this option will default back to the non-dev-mode
 behaviour to avoid deleting objects.
 This, therefore, is most useful if the user is using unique values for \code{userTags}.
 }
@@ -123,7 +131,7 @@ Default \code{TRUE}. Passed to \code{useGDAL} in \code{projectInputs.Raster}.
 }
 \item{\code{useMemoise}}{
 Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}. If \code{TRUE}, recovery of cached
-elements from the \code{cacheRepo} will use \code{memoise::memoise}.
+elements from the \code{cachePath} will use \code{memoise::memoise}.
 This means that the 2nd time running a function will be much faster than the first
 in a session (which either will create a new cache entry to disk or read a cached
 entry from disk).

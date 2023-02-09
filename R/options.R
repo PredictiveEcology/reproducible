@@ -5,6 +5,10 @@
 #' See Details below.
 #'
 #' @export
+#' @return
+#' This function returns a list of all the options that the `reproducible` package
+#' sets and uses. See below for details of each.
+#'
 #' @details
 #'
 #' Below are options that can be set with `options("reproducible.xxx" = newValue)`,
@@ -49,7 +53,7 @@
 #'     functionality that uses the `future` package.
 #'     Default is to not use these, as they are experimental.
 #'     They may, however, be very effective in speeding up some things, specifically,
-#'     uploading cached elements via googledrive in `cloudCache`.
+#'     uploading cached elements via `googledrive` in `cloudCache`.
 #'   }
 #'   \item{`inputPaths`}{
 #'     Default: `NULL`. Used in [prepInputs()] and [preProcess()].
@@ -78,6 +82,10 @@
 #'     `file.size(file)` instead of the `digest::digest(file)`.
 #'     Less robust to changes, but faster. *NOTE: this will only affect objects on disk*.
 #'   }
+#'   \item{`rasterRead`}{
+#'     Default `raster::raster` for backwards compatibility. Used during `prepInputs` when reading a
+#'     `.tif`, `.grd`, and `.asc` files. This will eventually become `terra::rast`.
+#'   }
 #'   \item{`shapefileRead`}{
 #'     Default `NULL`. Used during `prepInputs` when reading a `.shp` file.
 #'     If `NULL`, it will use `sf::st_read` if `sf` package is available; otherwise,
@@ -102,7 +110,7 @@
 #'     functions, i.e., they will likely never be relevant again.
 #'     This will therefore keep the cache repository clean of stale objects.
 #'     If there is ambiguity in the `userTags`, i.e., they do not uniquely identify a single
-#'     entry in the `cacheRepo`, then this option will default back to the non-dev-mode
+#'     entry in the `cachePath`, then this option will default back to the non-dev-mode
 #'     behaviour to avoid deleting objects.
 #'     This, therefore, is most useful if the user is using unique values for `userTags`.
 #'   }
@@ -118,7 +126,7 @@
 #'   }
 #'   \item{`useMemoise`}{
 #'     Default: `FALSE`. Used in [Cache()]. If `TRUE`, recovery of cached
-#'     elements from the `cacheRepo` will use `memoise::memoise`.
+#'     elements from the `cachePath` will use `memoise::memoise`.
 #'     This means that the 2nd time running a function will be much faster than the first
 #'     in a session (which either will create a new cache entry to disk or read a cached
 #'     entry from disk).
@@ -190,14 +198,15 @@ reproducibleOptions <- function() {
     reproducible.overwrite = FALSE,
     reproducible.polygonShortcut = FALSE,
     reproducible.quick = FALSE,
-    reproducible.shapefileRead = NULL, # TODO: change in next release
+    reproducible.rasterRead = "raster::raster",
+    reproducible.shapefileRead = "sf::st_read", # TODO: change in next release
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
     reproducible.useDBI = TRUE,
-    reproducible.useGDAL = TRUE, #
+    reproducible.useGDAL = FALSE, #
     reproducible.useMemoise = FALSE, #memoise
     reproducible.useNewDigestAlgorithm = 2, # TODO: change in next release
     reproducible.useTerra = FALSE, # Default for now

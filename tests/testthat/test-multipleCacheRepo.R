@@ -1,5 +1,5 @@
 ##########################
-test_that("test multiple cacheRepo", {
+test_that("test multiple cachePath", {
   testInitOut <- testInit()
   on.exit({
     testOnExit(testInitOut)
@@ -7,19 +7,19 @@ test_that("test multiple cacheRepo", {
 
   opt <- options("reproducible.cachePath" = c(tmpdir, tmpCache))
 
-  a <- Cache(rnorm, 1, cacheRepo = tmpCache)
+  a <- Cache(rnorm, 1, cachePath = tmpCache)
   suppressMessages(aCache <- showCache(tmpCache))
   expect_true(length(unique(aCache[[.cacheTableHashColName()]]))==1)
 
-  b <- Cache(rnorm, 2, cacheRepo = tmpdir)
+  b <- Cache(rnorm, 2, cachePath = tmpdir)
   suppressMessages(bCache <- showCache(tmpdir))
   expect_true(length(unique(bCache[[.cacheTableHashColName()]]))==1)
 
-  d <- Cache(rnorm, 1, cacheRepo = c(tmpdir, tmpCache))
+  d <- Cache(rnorm, 1, cachePath = c(tmpdir, tmpCache))
   suppressMessages(dCache <- showCache(tmpCache))
   expect_true(length(unique(dCache[[.cacheTableHashColName()]]))==1)
 
-  f <- Cache(rnorm, 2, cacheRepo = c(tmpdir, tmpCache))
+  f <- Cache(rnorm, 2, cachePath = c(tmpdir, tmpCache))
   suppressMessages(fCache <- showCache(tmpdir))
   expect_true(length(unique(fCache[[.cacheTableHashColName()]]))==1)
 
@@ -37,8 +37,10 @@ test_that("test multiple cacheRepo", {
 })
 
 ##########################
-test_that("test multiple cacheRepo with 1 of them a cloudCache", {
+test_that("test multiple cachePath with 1 of them a cloudCache", {
   skip(message = "test cloudCache inside Cache -- Not fully written test")
+  skip_if_not_installed("googledrive")
+
   if (!requireNamespace("googledrive", quietly = TRUE))
     stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   #if (!interactive())
@@ -54,11 +56,11 @@ test_that("test multiple cacheRepo with 1 of them a cloudCache", {
   newDir <- googledrive::drive_mkdir("testFolder")
   on.exit(googledrive::drive_rm(googledrive::as_id(newDir$id), add = TRUE))
 
-  clearCache(ask = FALSE, cacheRepo = tmpCache)
-  cloudSyncCache(cloudFolderID = newDir$id, cacheRepo = tmpCache)
-  cloudCache(rnorm, 1, cloudFolderID = newDir$id, cacheRepo = tmpCache)
+  clearCache(ask = FALSE, cachePath = tmpCache)
+  cloudSyncCache(cloudFolderID = newDir$id, cachePath = tmpCache)
+  cloudCache(rnorm, 1, cloudFolderID = newDir$id, cachePath = tmpCache)
   mess <- capture_messages(cloudCache(rnorm, 1, cloudFolderID = newDir$id,
-                                      cacheRepo = tmpCache))
+                                      cachePath = tmpCache))
   # for (i in 1:4) cloudCache(rnorm, 1e4 + i, cloudFolderID = newDir$id)
   expect_true(all(grepl("local and cloud|loading cached result", mess)))
 

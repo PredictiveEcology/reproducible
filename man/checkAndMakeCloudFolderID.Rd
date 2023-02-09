@@ -6,7 +6,7 @@
 \usage{
 checkAndMakeCloudFolderID(
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-  cacheRepo = NULL,
+  cachePath = NULL,
   create = FALSE,
   overwrite = FALSE,
   verbose = getOption("reproducible.verbose", 1),
@@ -16,7 +16,7 @@ checkAndMakeCloudFolderID(
 \arguments{
 \item{cloudFolderID}{The google folder ID where cloud caching will occur.}
 
-\item{cacheRepo}{A repository used for storing cached objects.
+\item{cachePath}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{create}{Logical. If \code{TRUE}, then the \code{cloudFolderID} will be created.
@@ -32,6 +32,9 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{team_drive}{Logical indicating whether to check team drives.}
+}
+\value{
+Returns the character string of the cloud folder ID created or reported
 }
 \description{
 Will check for presence of a \code{cloudFolderID} and make a new one

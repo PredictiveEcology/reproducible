@@ -94,9 +94,15 @@ Will be cleared on.exit from this function.}
 
 \item{...}{Passed to \code{dlFun}. Still experimental.}
 }
+\value{
+This function is called for its side effects, which will be a downloaded file
+(\code{targetFile}), placed in \code{destinationPath}. This file will be checksummed, and
+that checksum will be appended to the \code{checksumFile}.
+}
 \description{
 Currently, this only deals with \code{\link[googledrive:drive_download]{googledrive::drive_download()}},
-and \code{\link[utils:download.file]{utils::download.file()}}.
+and \code{\link[utils:download.file]{utils::download.file()}}. In general, this is not intended for use by a
+user.
 }
 \author{
 Eliot McIntire

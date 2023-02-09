@@ -4,10 +4,28 @@
 \alias{fixErrorsTerra}
 \title{Fix common errors in GIS layers, using \code{terra}}
 \usage{
-fixErrorsTerra(x)
+fixErrorsTerra(
+  x,
+  error = NULL,
+  verbose = getOption("reproducible.verbose"),
+  fromFnName = ""
+)
 }
 \arguments{
 \item{x}{The SpatStat or SpatVect object to try to fix.}
+
+\item{error}{The error message, e.g., coming from \code{try(...)}}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{fromFnName}{The function name that produced the error, e.g., \code{maskTo}}
+}
+\value{
+An object of the same class as \code{x}, but with some errors fixed via \code{terra::makeValid()}
 }
 \description{
 Currently, this only tests for validity of a SpatVect file, then if there is a problem,

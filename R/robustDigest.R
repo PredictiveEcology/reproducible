@@ -19,7 +19,7 @@
 #' i.e., to create `.tif` or `.grd` backed rasters, use `writeRaster` first,
 #' then `Cache`.
 #' The \file{.tif} or \file{.grd} will be copied to the \file{raster/} subdirectory of the
-#' `cacheRepo`.
+#' `cachePath`.
 #' Their RAM representation (as an R object) will still be in the usual  \file{cacheOutputs/}
 #' (or formerly \file{gallery/}) directory.
 #' For `inMemory` raster objects, they will remain as binary `.RData` files.
@@ -298,7 +298,7 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    dig <- lapply(object, .robustDigest, algo = algo, classOptions = classOptions)
+    dig <- lapply(object, .robustDigest, algo = algo, quick = quick, classOptions = classOptions)
     .robustDigest(unlist(dig), quick = TRUE, algo = algo, classOptions = classOptions)
 })
 

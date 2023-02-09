@@ -10,8 +10,10 @@ basename2(x)
 \item{x}{A character vector of paths}
 }
 \value{
+\code{NULL} if x is \code{NULL}, otherwise, as \code{basename}.
+
 Same as \code{\link[base:basename]{base::basename()}}
 }
 \description{
-Returns \code{NULL} if x is \code{NULL}, otherwise, as \code{basename}.
+A version of \code{base::basename} that is \code{NULL} resistant
 }

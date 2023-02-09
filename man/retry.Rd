@@ -37,6 +37,9 @@ the \code{expr} again. For backwards compatibility, this still works).}
 
 \item{messageFn}{A function for messaging to console. Defaults to \code{message}}
 }
+\value{
+As with \code{try}, so the successfully returned \code{return()} from the \code{expr} or a \code{try-error}.
+}
 \description{
 This is useful for functions that are "flaky", such as \code{curl}, which may fail for unknown
 reasons that do not persist.

@@ -39,10 +39,9 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
   xf <- x %% 1
   numDecimals <- nchar(gsub("(.*)(\\.)|([0]*$)","",xf))
   newPadR <- ifelse(xf %==% 0, 0, pmax(numDecimals, padR))
-  xFCEnd <- sprintf(paste0("%0", padL+newPadR+1*(newPadR > 0),".", newPadR, "f"), x)
+  xFCEnd <- sprintf(paste0("%0", padL + newPadR + 1*(newPadR > 0),".", newPadR, "f"), x)
   return(xFCEnd)
 }
-
 
 #' Add a prefix or suffix to the basename part of a file path
 #'
@@ -56,6 +55,9 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
 #'
 #' @author Jean Marchal and Alex Chubaty
 #' @export
+#' @return
+#' A character string or vector with the prefix pre-pended or suffix post-pended
+#' on the `basename` of the `f`, before the file extension.
 #' @rdname prefix
 #'
 #' @examples
@@ -90,6 +92,10 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
 #' @param ... Other arguments (not currently used)
 #'
 #' @export
+#' @return
+#' A character string using the `digest` of the `studyArea`. This is only intended
+#' for use with spatial objects.
+#'
 #' @importFrom digest digest
 setGeneric("studyAreaName", function(studyArea, ...) {
   standardGeneric("studyAreaName")
@@ -139,6 +145,9 @@ setMethod(
 #'
 #' @keywords internal
 #' @export
+#' @return
+#' A list of the formals of the `fun` that are missing from the `...` or `dots`.
+#'
 #' @param fun A function
 #' @param ... The ... from inside a function. Will be ignored if `dots` is
 #'        provided explicitly.
@@ -187,7 +196,8 @@ isInteractive <- function() interactive()
 
 #' A version of `base::basename` that is `NULL` resistant
 #'
-#' Returns `NULL` if x is `NULL`, otherwise, as `basename`.
+#' @return
+#' `NULL` if x is `NULL`, otherwise, as `basename`.
 #'
 #' @param x A character vector of paths
 #' @export
@@ -224,6 +234,9 @@ basename2 <- function(x) {
 #'   specifying what object (that is used in `expr`) will be updated prior to running
 #'   the `expr` again. For backwards compatibility, this still works).
 #' @param messageFn A function for messaging to console. Defaults to `message`
+#'
+#' @return
+#' As with `try`, so the successfully returned `return()` from the `expr` or a `try-error`.
 #'
 #' @export
 retry <- function(expr, envir = parent.frame(), retries = 5,
@@ -299,6 +312,10 @@ isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
 #' detected via `requireNamespace`.
 #'
 #' @export
+#'
+#' @return
+#' A logical or stop if the namespace is not available to be loaded.
+#'
 #' @param pkg Character string indicating name of package required
 #' @param minVersion Character string indicating minimum version of package
 #'   that is needed
@@ -335,12 +352,20 @@ isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
 #'   column names even if there aren't any in the `df` (i.e., they will)
 #'   be `V1` etc., `NULL` will print them if they exist, and `FALSE`
 #'   which will omit them.
+#' @param verboseLevel The numeric value for this `message*` call, equal or above
+#'   which `verbose` must be. The higher this is set, the more unlikely the call
+#'   will show a message.
 #' @inheritParams base::message
 #'
 #' @export
+#' @return
+#' Used for side effects. This will produce a message of a structured `data.frame`.
+#'
 #' @importFrom data.table is.data.table as.data.table
 #' @importFrom utils capture.output
-messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE) {
+#' @inheritParams Cache
+messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE,
+                      verbose = getOption("reproducible.verbose"), verboseLevel = 1) {
   origColNames <- if (is.null(colnames) | isTRUE(colnames)) colnames(df) else NULL
 
   if (is.matrix(df))
@@ -359,12 +384,10 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE
   }
   outMess <- capture.output(df)
   if (skipColNames) outMess <- outMess[-1]
+  if (is.null(colour)) colour <- "red"
   out <- lapply(outMess, function(x) {
-    if (!is.null(colour)) {
-      messageColoured(x, colour = colour, appendLF = appendLF)
-    } else {
-      message(x, appendLF = appendLF)
-    }
+    messageColoured(x, colour = colour, appendLF = appendLF, verbose = verbose,
+                    verboseLevel = verboseLevel)
   })
 }
 
@@ -441,7 +464,7 @@ messageCache <- function(..., colour = getOption("reproducible.messageColourCach
 messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
   # force this message to print
   messageColoured(..., colour = getOption("reproducible.messageColourQuestion"),
-                  verboseLevel = verboseLevel, verbose = 0, appendLF = appendLF)
+                  verboseLevel = verboseLevel, verbose = 10, appendLF = appendLF)
 }
 
 messageColoured <- function(..., colour = NULL, verboseLevel = 1,
@@ -488,13 +511,15 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 
 .fileExtsKnown <- function() {
   shpFile <- getOption("reproducible.shapefileRead")
+  griddedFile <- getOption("reproducible.rasterRead")
   if (is.null(shpFile)) shpFile <- "sf::st_read"
+  if (is.null(griddedFile)) griddedFile <- "terra::rast"
 
   df <- data.frame(
     rbind(
       c("rds", "base::readRDS", "binary"),
       c("qs", "qs::qread", "qs"),
-      cbind(c("asc", "grd", "tif"), c("raster::raster"), "Raster"),
+      cbind(c("asc", "grd", "tif"), griddedFile, "Raster"),
       cbind(c("shp", "gdb"), shpFile, "shapefile")
     )
   )
@@ -508,11 +533,54 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   length(strsplit(packageDescription("reproducible")$Version, "\\.")[[1]]) > 3
 }
 
-.runLongTests <- function() {
-  .isDevelVersion() || Sys.getenv("R_REPRODUCIBLE_RUN_ALL_TESTS") == "true"
+
+#' Get min or maximum value of a (Spat)Raster
+#'
+#' During the transition from raster to terra, some functions are not drop in
+#' replacements, such as `minValue` and `maxValue` became `terra::minmax`. This
+#' helper allows one function to be used, which calls the correct max or min
+#' function, depending on whether the object is a `Raster` or `SpatRaster`.
+#'
+#' @param x A `Raster` or `SpatRaster` object.
+#'
+#' @return
+#' A vector (not matrix as in `terra::minmax`) with the minimum or maximum
+#' value on the `Raster` or `SpatRaster`, one value per layer.
+#'
+#' @export
+#' @rdname minmax
+#'
+#' @examples
+#' if (requireNamespace("terra")) {
+#'   ras <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1:100)
+#'   maxFn(ras)
+#'   minFn(ras)
+#' }
+minFn <- function(x) {
+  minmaxFn(x, "min")
 }
 
-.runLongExamples <- function() {
-  .isDevelVersion() ||
-    Sys.getenv("R_REPRODUCIBLE_RUN_ALL_EXAMPLES") == "true"
+#' @export
+#' @rdname minmax
+maxFn <- function(x) {
+  minmaxFn(x, "max")
+}
+
+minmaxFn <- function(x, which = "max") {
+  out <- NULL
+  if (is(x, "Raster")) {
+    if (requireNamespace("raster")) {
+      fn <- get(paste0(which, "Value"), envir = asNamespace("raster"))
+      out <- fn(x)
+    }
+  } else {
+    if (requireNamespace("terra")) {
+      fn <- ifelse(identical(which, "max"), tail, head)
+      out <- fn(terra::minmax(x), 1)[1, ]
+    }
+  }
+  if (is.null(out))
+    stop("To use maxFn or minFn, you need either terra or raster package installed")
+
+  out
 }

@@ -20,6 +20,13 @@ asPath(obj, nParentDirs = 0)
 \item{nParentDirs}{A numeric indicating the number of parent directories starting
 from basename(obj) = 0 to keep for the digest}
 }
+\value{
+A vector of class \code{Path}, which is similar to a character, but
+has an attribute indicating how deep the Path should be
+considered "digestible". In other words, most of the time, only some
+component of an absolute path is relevant for evaluating its purpose in
+a Cache situation. In general, this is usually equivalent to just the "relative" path
+}
 \description{
 Allows a user to specify that their character string is indeed a filepath.
 Thus, methods that require only a filepath can be dispatched correctly.

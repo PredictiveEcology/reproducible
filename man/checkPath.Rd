@@ -61,5 +61,5 @@ dir.exists(tmpdir) ## TRUE
 unlink(tmpdir, recursive = TRUE)
 }
 \seealso{
-\code{\link[=file.exists]{file.exists()}}, \code{\link[=dir.create]{dir.create()}}.
+\code{\link[=file.exists]{file.exists()}}, \code{\link[=dir.create]{dir.create()}}, \code{\link[=normPath]{normPath()}}
 }

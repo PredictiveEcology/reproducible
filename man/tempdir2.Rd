@@ -14,10 +14,14 @@ tempdir2(
 \item{sub}{Character string, length 1. Can be a result of
 \code{file.path("smth", "smth2")} for nested temporary subdirectories.}
 
-\item{tempdir}{Optional character string where the
-temporary dir should be placed. Defaults to \code{getOption("reproducible.tempPath")}.}
+\item{tempdir}{Optional character string where the temporary
+directory should be placed. Defaults to \code{getOption("reproducible.tempPath")}.}
 
 \item{create}{Logical. Should the directory be created. Default \code{TRUE}.}
+}
+\value{
+A character string of a path (that will be created if \code{create = TRUE}) in a
+sub-directory of the \code{tempdir()}.
 }
 \description{
 Create a temporary subdirectory in \code{getOption("reproducible.tempPath")}.

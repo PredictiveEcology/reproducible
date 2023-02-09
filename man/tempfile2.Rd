@@ -2,7 +2,7 @@
 % Please edit documentation in R/paths.R
 \name{tempfile2}
 \alias{tempfile2}
-\title{Make a temporary subfile in a temporary (sub-)directory}
+\title{Make a temporary file in a temporary (sub-)directory}
 \usage{
 tempfile2(
   sub = "",
@@ -14,13 +14,17 @@ tempfile2(
 \item{sub}{Character string, length 1. Can be a result of
 \code{file.path("smth", "smth2")} for nested temporary subdirectories.}
 
-\item{tempdir}{Optional character string where the
-temporary dir should be placed. Defaults to \code{getOption("reproducible.tempPath")}.}
+\item{tempdir}{Optional character string where the temporary
+directory should be placed. Defaults to \code{getOption("reproducible.tempPath")}.}
 
 \item{...}{passed to \code{tempfile}, e.g., \code{fileext}}
 }
+\value{
+A character string of a path to a file in a
+sub-directory of the \code{tempdir()}. This file will likely not exist yet.
+}
 \description{
-Make a temporary subfile in a temporary (sub-)directory
+Make a temporary file in a temporary (sub-)directory
 }
 \seealso{
 \link{tempdir2}

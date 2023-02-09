@@ -429,23 +429,27 @@ test_that("message when extracting a file that is already present", {
 })
 
 test_that("Test to fix issue #101 prepInputs on raster from disk", {
-  if (interactive()) {
-    testInitOut <- testInit("raster", needGoogle = TRUE)
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
-    smallRT <- prepInputs(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
-    a <- raster::extent(smallRT)
-    a <- raster::extend(a, -3.5e5) # make it small
-    test <- raster(a, res = 250, vals = 1)
-    crs(test) <- crs(smallRT)
-    a <- postProcess(x = test, rasterToMatch = smallRT, maskWithRTM = TRUE)
-    expect_true(is(a, "RasterLayer"))
-  }
+  skip_on_cran()
+  skip_on_ci()
+  skip_if_not_installed("googledrive")
+  skip_if_no_token()
+
+  testInitOut <- testInit("raster", needGoogle = TRUE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  smallRT <- prepInputs(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
+  a <- raster::extent(smallRT)
+  a <- raster::extend(a, -3.5e5) # make it small
+  test <- raster(a, res = 250, vals = 1)
+  crs(test) <- crs(smallRT)
+  a <- postProcess(x = test, rasterToMatch = smallRT, maskWithRTM = TRUE)
+  expect_true(is(a, "RasterLayer"))
 })
 
 test_that("Test of using future and progress indicator for lrg files on Google Drive", {
   skip_if_not_installed("future")
+  skip_if_no_token()
 
   if (interactive()) {
     testInitOut <- testInit(c("raster", "future"), needGoogle = TRUE, opts = list("reproducible.futurePlan" = "multiprocess"))

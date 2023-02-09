@@ -1,265 +1,3 @@
-################################################################################
-#' Add extra tags to an archive based on class
-#'
-#' This is a generic definition that can be extended according to class.
-#'
-#' @return A character vector of new tags.
-#'
-#' @param object Any R object.
-#'
-#' @author Eliot McIntire
-#' @export
-#' @rdname tagsByClass
-#' @examples
-#' .tagsByClass(character()) # Nothing interesting. Other packages will make methods
-#'
-setGeneric(".tagsByClass", function(object) {
-  standardGeneric(".tagsByClass")
-})
-
-#' @export
-#' @rdname tagsByClass
-setMethod(
-  ".tagsByClass",
-  signature = "ANY",
-  definition = function(object) {
-    NULL
-  })
-
-################################################################################
-#' Create a custom cache message by class
-#'
-#' This is a generic definition that can be extended according to class.
-#'
-#' @return Nothing; called for its messaging side effect.
-#'
-#' @param object Any R object.
-#' @param functionName A character string indicating the function name
-#' @param fromMemoise Logical. If `TRUE`, the message will be about
-#'        recovery from memoised copy
-#' @inheritParams Cache
-#'
-#' @author Eliot McIntire
-#' @export
-#' @rdname cacheMessage
-#' @examples
-#' a <- 1
-#' .cacheMessage(a, "mean")
-#'
-setGeneric(".cacheMessage", function(object, functionName,
-                                     fromMemoise = getOption("reproducible.useMemoise", TRUE),
-                                     verbose = getOption("reproducible.verbose", 1)) {
-  standardGeneric(".cacheMessage")
-})
-
-#' @export
-#' @rdname cacheMessage
-setMethod(
-  ".cacheMessage",
-  signature = "ANY",
-  definition = function(object, functionName, fromMemoise, verbose = getOption("reproducible.verbose", 1)) {
-    if (isTRUE(fromMemoise)) {
-      messageCache(.loadedCacheMsg(.loadedMemoisedResultMsg, functionName), verbose = verbose)
-    } else if (!is.na(fromMemoise)) {
-      messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName), " ",
-                   .addingToMemoisedMsg, sep = "", verbose = verbose)
-    } else {
-      messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName), verbose = verbose)
-    }
-  })
-
-################################################################################
-#' Add tags to object
-#'
-#' This is a generic definition that can be extended according to class.
-#' This function and methods should do "deep" copy for archiving purposes.
-#'
-#' @inheritParams Cache
-#'
-#' @param object Any R object.
-#'
-#' @param FUN A function
-#'
-#' @param preDigestByClass A list, usually from `.preDigestByClass`
-#'
-#' @return New object with tags attached.
-#'
-#' @author Eliot McIntire
-#' @export
-#' @rdname addTagsToOutput
-#'
-setGeneric(".addTagsToOutput", function(object, outputObjects, FUN, preDigestByClass) { # nolint
-  standardGeneric(".addTagsToOutput")
-})
-
-#' @export
-#' @rdname addTagsToOutput
-setMethod(
-  ".addTagsToOutput",
-  signature = "ANY",
-  definition = function(object, outputObjects, FUN, preDigestByClass) { # nolint
-    object
-  })
-
-################################################################################
-#' Any miscellaneous things to do before `.robustDigest` and after `FUN` call
-#'
-#' The default method for `preDigestByClass` and simply returns `NULL`.
-#' There may be methods in other packages.
-#'
-#' @param object Any R object.
-#'
-#' @return A list with elements that will likely be used in `.postProcessing`
-#'
-#' @author Eliot McIntire
-#' @export
-#' @rdname preDigestByClass
-#' @examples
-#' a <- 1
-#' .preDigestByClass(a) # returns NULL in the simple case here.
-#'
-setGeneric(".preDigestByClass", function(object) { # nolint
-  standardGeneric(".preDigestByClass")
-})
-
-#' @export
-#' @rdname preDigestByClass
-setMethod(
-  ".preDigestByClass",
-  signature = "ANY",
-  definition = function(object) { # nolint
-    NULL
-  })
-
-################################################################################
-#' Check for cache repository info in ...
-#'
-#' This is a generic definition that can be extended according to class.
-#' Normally, `checkPath` can be called directly, but does not have class-specific methods.
-#'
-#' @param object An R object
-#' @param create Logical. If TRUE, then it will create the path for cache.
-#' @inheritParams Cache
-#'
-#' @return A character string with a path to a cache repository.
-#'
-#' @author Eliot McIntire
-#' @export
-#' @rdname checkCacheRepo
-#' @examples
-#' a <- normalizePath(file.path(tempdir(), "test"), mustWork = FALSE)
-#' .checkCacheRepo(a, create = TRUE)
-#'
-setGeneric(".checkCacheRepo", function(object, create = FALSE,
-                                       verbose = getOption("reproducible.verbose", 1)) {
-  standardGeneric(".checkCacheRepo")
-})
-
-#' @export
-#' @rdname checkCacheRepo
-setMethod(
-  ".checkCacheRepo",
-  signature = "ANY",
-  definition = function(object, create, verbose = getOption("reproducible.verbose", 1)) {
-    cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
-      cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")[1]))) {
-        tmpDir <- .reproducibleTempCacheDir()
-        # Test whether the user has accepted the default. If yes, then give message.
-        #  If no, then user is aware and doesn't need a message
-        if (any(identical(normPath(tmpDir), normPath(getOption("reproducible.cachePath"))))) {
-          messageCache("No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;\n",
-                       "  this will not persist across R sessions.", verbose = verbose)
-        }
-        getOption("reproducible.cachePath", tmpDir)
-      } else {
-        messageCache("No cacheRepo supplied. Using ",.reproducibleTempCacheDir(), verbose = verbose)
-        .reproducibleTempCacheDir()
-      }
-      checkPath(path = cacheRepo, create = create)
-    })
-  })
-
-################################################################################
-#' Make any modifications to object recovered from cacheRepo
-#'
-#' This is a generic definition that can be extended according to class.
-#'
-#' @inheritParams Cache
-#'
-#' @param object Any R object
-#'
-#' @return The object, modified
-#'
-#' @author Eliot McIntire
-#' @export
-#' @rdname prepareOutput
-#' @examples
-#' a <- 1
-#' .prepareOutput(a) # does nothing
-#'
-#' b <- "NULL"
-#' .prepareOutput(b) # converts to NULL
-#'
-#' library(raster)
-#' r <- raster(extent(0,10,0,10), vals = 1:100)
-#'
-#' # write to disk manually -- will be in tempdir()
-#' r <- writeRaster(r, file = tempfile())
-#'
-#' # copy it to the cache repository
-#' r <- .prepareOutput(r, tempdir())
-setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
-  standardGeneric(".prepareOutput")
-})
-
-
-#' @export
-#' @rdname prepareOutput
-setMethod(
-  ".prepareOutput",
-  signature = "ANY",
-  definition = function(object, cacheRepo, ...) {
-    if (is.character(object)) {
-      if (length(object) == 1) {
-        # need something to attach tags to if it is actually NULL
-        if (identical(object, "NULL")) object <- NULL
-      }
-    }
-    object
-  })
-
-################################################################################
-#' Add an attribute to an object indicating which named elements change
-#'
-#' This is a generic definition that can be extended according to class.
-#'
-#' @param object Any R object returned from a function
-#' @param preDigest The full, element by element hash of the input arguments to that same function,
-#' e.g., from `.robustDigest`
-#' @param origArguments These are the actual arguments (i.e., the values, not the names) that
-#'        were the source for `preDigest`
-#' @param ... Anything passed to methods.
-#'
-#' @return The object, modified
-#'
-#' @author Eliot McIntire
-#' @export
-#' @rdname addChangedAttr
-#' @examples
-#' a <- 1
-#' .addChangedAttr(a) # does nothing because default method is just a pass through
-setGeneric(".addChangedAttr", function(object, preDigest, origArguments, ...) {
-  standardGeneric(".addChangedAttr")
-})
-
-#' @export
-#' @rdname addChangedAttr
-setMethod(
-  ".addChangedAttr",
-  signature = "ANY",
-  definition = function(object, preDigest, origArguments, ...) {
-    object
-  })
 
 #' A set of helpers for Cache
 #'
@@ -270,18 +8,20 @@ setMethod(
 #'        arguments to the `FUN`
 #' @param overrideCall A character string indicating a different (not "Cache") function
 #'        name to search for. Mostly so that this works with deprecated "cache".
-#' @param isPipe Logical. If the call to `getFunctionName` is coming from a pipe, there is more
-#'               information available. Specifically, `._lhs` which is already a call.
 #' @note If the function cannot figure out a clean function name, it returns "internal"
 #'
 #' @author Eliot McIntire
 #' @importFrom methods selectMethod showMethods
 #' @importFrom utils head
 #' @keywords internal
-#' @rdname cache-helpers
-getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # nolint
+getFunctionName <- function(FUN, ..., overrideCall) { # nolint
   callIndex <- numeric()
-  scalls <- sys.calls()
+  scalls <- sys.calls() # needed for nesting level
+  functionName <- NULL # initiate this here, so we can know if it is found
+  if (is(FUN, "list")) {
+    functionName <- names(FUN)
+    FUN <- FUN[[1]]
+  }
   if (isS4(FUN)) {
     # Have to extract the correct dispatched method
     firstElems <- strsplit(showMethods(FUN, inherited = TRUE, printTo = FALSE), split = ", ")
@@ -305,15 +45,9 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
     })
     signat <- unlist(sigArgs[unlist(lapply(sigArgs, function(y) any(y)))])
 
-    if (isPipe) {
-      matchedCall <- as.list(
-        match.call(FUN, list(...)$._lhs) # already a call
-      )
-    } else {
-      matchedCall <- as.list(
-        match.call(FUN, call(name = FUN@generic, list(...)))
-      )
-    }
+    matchedCall <- as.list(
+      match.call(FUN, call(name = FUN@generic, list(...)))
+    )
 
     matchedCall <- matchedCall[nzchar(names(matchedCall))]
     ff <- match(names(matchedCall), FUN@signature[signat])
@@ -332,70 +66,72 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
     functionName <- FUN@generic
     FUN <- methodUsed@.Data  # nolint
   } else {
-    if (!missing(overrideCall)) {
-      callIndices <- .grepSysCalls(scalls, pattern = paste0("^", overrideCall))
-      functionCall <- scalls[callIndices]
-    } else {
-      callIndices <- .grepSysCalls(scalls,
-                                   pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache|^cloudCache")
-      callIndicesDoCall <- .grepSysCalls(scalls, pattern = "^do.call")
-      doCall1st2Elements <- lapply(scalls[callIndicesDoCall], function(x) x[1:2])
-      callIndicesDoCall <- callIndicesDoCall[grep("Cache", doCall1st2Elements)]
-      # The next line takes too long to grep if scalls has enormous objects
-      # callIndices <- grep(scalls, pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache")
-      callIndices <- unique(sort(c(callIndices, callIndicesDoCall)))
-      functionCall <- scalls[callIndices]
-    }
-    if (length(functionCall)) {
-      # for() loop is a work around for R-devel that produces a different final call in the
-      # sys.calls() stack which is NOT .Method ... and produces a Cache(FUN = FUN...)
-      for (callIndex in head(rev(callIndices), 2)) {
-        if (!missing(overrideCall)) {
-          env <- sys.frames()[[callIndex]]
-          matchedCall <- match.call(get(overrideCall, envir = env), scalls[[callIndex]])#parse(text = callIndex))
-          forms <- tryCatch("FUN" %in% formalArgs(overrideCall), error = function(x) NULL)
-          if (!is.null(forms)) {
-            functionName <- matchedCall$FUN
-          } else {
-            functionName <- matchedCall[[2]]
-          }
-        } else {
-          foundCall <- FALSE
-          if (exists("callIndicesDoCall", inherits = FALSE))
-            if (length(callIndicesDoCall) > 0) {
-              if (callIndex %in% callIndicesDoCall) {
-                mcDoCall <- match.call(do.call, scalls[[callIndex]])
-                for (i in 1:2) {
-                  fnLookup <- try(eval(mcDoCall$args, envir = sys.frames()[[callIndex - i]]), silent = TRUE)
-                  if (!is(fnLookup, "try-error"))
-                    break
-                }
-                functionName <- if (isTRUE("FUN" %in% names(fnLookup)))
-                  fnLookup$FUN
-                else
-                  fnLookup[[1]]
-
-                foundCall <- TRUE
-              }
-            }
-          if (!foundCall) {
-            matchedCall <- try(match.call(Cache, scalls[[callIndex]]), silent = TRUE)#parse(text = callIndex))
-            functionName <- if (!is(matchedCall, "try-error"))
-              matchedCall$FUN
-            else
-              ""
-          }
-        }
-        functionName <- if (is(functionName, "name")) {
-          deparse(functionName, width.cutoff = 300)
-        } else {
-          "FUN"
-        }
-
-        if (all(functionName != c("FUN")) && all(functionName != c("NULL"))) break
+    if (is.null(functionName)) {
+      if (!missing(overrideCall)) {
+        callIndices <- .grepSysCalls(scalls, pattern = paste0("^", overrideCall))
+        functionCall <- scalls[callIndices]
+      } else {
+        callIndices <- .grepSysCalls(scalls,
+                                     pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache|^cloudCache")
+        callIndicesDoCall <- .grepSysCalls(scalls, pattern = "^do.call")
+        doCall1st2Elements <- lapply(scalls[callIndicesDoCall], function(x) x[1:2])
+        callIndicesDoCall <- callIndicesDoCall[grep("Cache", doCall1st2Elements)]
+        # The next line takes too long to grep if scalls has enormous objects
+        # callIndices <- grep(scalls, pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache")
+        callIndices <- unique(sort(c(callIndices, callIndicesDoCall)))
+        functionCall <- scalls[callIndices]
       }
-    } else {
-      functionName <- ""
+      if (length(functionCall)) {
+        # for() loop is a work around for R-devel that produces a different final call in the
+        # sys.calls() stack which is NOT .Method ... and produces a Cache(FUN = FUN...)
+        for (callIndex in head(rev(callIndices), 2)) {
+          if (!missing(overrideCall)) {
+            env <- sys.frames()[[callIndex]]
+            matchedCall <- match.call(get(overrideCall, envir = env), scalls[[callIndex]])#parse(text = callIndex))
+            forms <- tryCatch("FUN" %in% formalArgs(overrideCall), error = function(x) NULL)
+            if (!is.null(forms)) {
+              functionName <- matchedCall$FUN
+            } else {
+              functionName <- matchedCall[[2]]
+            }
+          } else {
+            foundCall <- FALSE
+            if (exists("callIndicesDoCall", inherits = FALSE))
+              if (length(callIndicesDoCall) > 0) {
+                if (callIndex %in% callIndicesDoCall) {
+                  mcDoCall <- match.call(do.call, scalls[[callIndex]])
+                  for (i in 1:2) {
+                    fnLookup <- try(eval(mcDoCall$args, envir = sys.frames()[[callIndex - i]]), silent = TRUE)
+                    if (!is(fnLookup, "try-error"))
+                      break
+                  }
+                  functionName <- if (isTRUE("FUN" %in% names(fnLookup)))
+                    fnLookup$FUN
+                  else
+                    fnLookup[[1]]
+
+                  foundCall <- TRUE
+                }
+              }
+            if (!foundCall) {
+              matchedCall <- try(match.call(Cache, scalls[[callIndex]]), silent = TRUE)#parse(text = callIndex))
+              functionName <- if (!is(matchedCall, "try-error"))
+                matchedCall$FUN
+              else
+                ""
+            }
+          }
+          functionName <- if (is(functionName, "name")) {
+            deparse(functionName, width.cutoff = 300)
+          } else {
+            "FUN"
+          }
+
+          if (all(functionName != c("FUN")) && all(functionName != c("NULL"))) break
+        }
+      } else {
+        functionName <- ""
+      }
     }
     .FUN <- FUN  # nolint
   }
@@ -451,6 +187,12 @@ setClass("Path", slots = c(.Data = "character"), contains = "character", prototy
 #'
 #' @export
 #' @rdname Path-class
+#' @return
+#' A vector of class `Path`, which is similar to a character, but
+#' has an attribute indicating how deep the Path should be
+#' considered "digestible". In other words, most of the time, only some
+#' component of an absolute path is relevant for evaluating its purpose in
+#' a Cache situation. In general, this is usually equivalent to just the "relative" path
 #'
 #' @examples
 #' tmpf <- tempfile(fileext = ".csv")
@@ -735,6 +477,8 @@ setAs(from = "character", to = "Path", function(from) {
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @rdname copyFile
+#' @return
+#' This function is called for its side effect, i.e., a file is copied `from` to `to`.
 #'
 #' @examples
 #' tmpDirFrom <- file.path(tempdir(), "example_fileCopy_from")
@@ -764,7 +508,6 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                            #copyRasterFile = TRUE, clearRepo = TRUE,
                            create = TRUE, silent = FALSE) {
   if (any(length(from) != 1, length(to) != 1)) stop("from and to must each be length 1")
-  origDir <- getwd()
   useFileCopy <- identical(dirname(from), dirname(to))
 
   lapply(unique(dirname(to)), checkPath, create = create)
@@ -826,7 +569,6 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
     file.copy(from = from, to = to, overwrite = overwrite, recursive = FALSE)
   }
 
-  setwd(origDir)
   return(invisible(to))
 }
 
@@ -837,7 +579,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #' @importFrom methods slotNames
 #' @importFrom digest digest
 #' @importFrom raster res crs extent
-#' @rdname cache-helpers
 .digestRasterLayer <- function(object, length, algo, quick) {
   # metadata -- only a few items of the long list because one thing (I don't recall)
   #  doesn't cache consistently
@@ -992,9 +733,8 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 
 
 ################################################################################
-#' Sort or order any named object with dotted names and underscores first
-#'
-#' Internal use only. This exists so Windows, Linux, and Mac machines can have
+#' @details
+#' `.sortDotsUnderscoreFirst`: This exists so Windows, Linux, and Mac machines can have
 #' the same order after a sort. It will put dots and underscores first
 #' (with the sort key based on their second character, see examples.
 #' It also sorts lower case before upper case.
@@ -1002,11 +742,13 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #' @param obj  An arbitrary R object for which a `names` function
 #'              returns a character vector.
 #'
-#' @return The same object as `obj`, but sorted with .objects first.
+#' @return `.sortDotsUnderscoreFirst`: the same object as `obj`,
+#'   but sorted with dots and underscores first,
+#'   lower case before upper case.
 #'
 #' @author Eliot McIntire
 #' @export
-#' @rdname sortDotsUnderscoreFirst
+#' @rdname exportedMethods
 #'
 #' @examples
 #' items <- c(A = "a", Z = "z", `.D` = ".d", `_C` = "_C")
@@ -1024,7 +766,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 }
 
 #' @export
-#' @rdname sortDotsUnderscoreFirst
+#' @rdname exportedMethods
 .orderDotsUnderscoreFirst <- function(obj) {
   if (!is.null(names(obj))) {
     namesObj <- names(obj)
@@ -1091,11 +833,18 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     otherFns <- character()
   }
 
-  # Figure out if it is in a .parseModule call, if yes, then extract the module
-  doEventFrameNum <- .grepSysCalls(scalls, "\\.parseModule")
-  #doEventFrameNum <- which(startsWith(as.character(scalls), prefix = ".parseModule"))
+  # Figure out if it is in SpaDES.core call, which could be either a .parseModule or .runModuleInputObjects call...
+  #   , if yes, then extract the module
+  doEventFrameNum <- .grepSysCalls(scalls, "\\.parseModule|\\.runModuleInputObjects")
   if (length(doEventFrameNum)) {
-    module <- get("m", envir = sys.frame(doEventFrameNum[2])) # always 2
+    module <- get0("m", envir = sys.frame(tail(doEventFrameNum, 1)))
+    if (is.null(module)) { # this block should cover any other cases, though is likely unnecessary
+      # This whole mechanism is predicated on the module name being called "m" in the above 2 functions
+      moduleEnv <- whereInStack("m")
+      module <- get0("m", envir = moduleEnv)
+    }
+
+    # module <- get("m", envir = sys.frame(doEventFrameNum[2])) # always 2
     otherFns <- c(paste0("module:", module), otherFns)
   }
   unique(otherFns)
@@ -1127,27 +876,10 @@ nextNumericName <- function(string) {
   paste0(out, ".", theExt)
 }
 
-#' Grep system calls
-#'
-#' A faster way of grepping the system call stack than just
-#' `grep(sys.calls(), pattern = "test")`
-#'
-#' @param sysCalls The return from `sys.calls()`
-#' @param pattern Character, passed to grep
-#' @return
-#' Numeric vector, equivalent to return from `grep(sys.calls(), pattern = "test")`,
-#' but faster if `sys.calls()` is very big.
-#'
-#' @export
-#' @keywords internal
-#' @rdname grepSysCalls
-.grepSysCalls <- function(sysCalls, pattern) {
-  scallsFirstElement <- lapply(sysCalls, function(x) x[1])
-  grep(scallsFirstElement, pattern = pattern)
-}
+
 
 #' @importFrom raster fromDisk
-dealWithClass <- function(obj, cachePath, drv, conn) {
+dealWithClass <- function(obj, cachePath, drv, conn, verbose = getOption("reproducible.verbose")) {
   # browser(expr = exists("._dealWithClass_1"))
   outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
 
@@ -1203,8 +935,22 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
   if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
     if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
       stop("Please install terra package")
+    messageCache("...wrapping terra object for saving...", verboseLevel = 1, verbose = verbose)
+    # if (inherits(obj, "SpatVector"))
+    #   messageCache("... this may take a long time as terra vector objects are slow to terra::wrap")
+    attrs <- attr(obj, ".Cache")
 
-    obj <- terra::wrap(obj)
+    # next is for terra objects --> terra::wrap is ridiculously slow for SpatVector objects; use
+    #   custom version in reproducible where here
+    if (inherits(obj, "SpatRaster")) {
+      obj <- terra::wrap(obj)
+    } else {
+      #browser()
+      obj <- wrapSpatVector(obj)
+    }
+    setattr(obj, ".Cache", attrs)
+
+    messageCache("\b Done!", verboseLevel = 1, verbose = verbose)
   }
   obj
 }
@@ -1221,131 +967,6 @@ dealWithClass <- function(obj, cachePath, drv, conn) {
 
 
 
-
-
-
-
-#' A helper function to change the filename slot of `Raster*` objects
-#'
-#' This is intended for internal use, though it is exported because other packages
-#' use this. This function exists because when copying file-backed rasters, the
-#' usual mechanism of `writeRaster` can be very slow. This function allows
-#' for a user to optionally create a hard link to the old file, give it a new
-#' name, then update the filename slot(s) in the `Raster*` class object. This
-#' can be 100s of times faster for large rasters.
-#'
-#' @export
-#' @keywords internal
-#' @param obj An object. This function only has useful methods for `Raster*`,
-#'   with all other classes being simply a pass-through
-#' @param curFilenames An optional character vector of filenames currently existing
-#'   and that are pointed to in the obj. If omitted, will take from the `obj`
-#'   using `Filenames(obj)`
-#' @param newFilenames An optional character vector of filenames to use instead of
-#'   the curFilenames. This can also be a single directory, in which case the
-#'   renaming will be given:
-#'   `file.path(newFilenames, basename(Filenames(obj, allowMultiple = FALSE)))`
-#' @rdname updateFilenameSlots
-updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL) {
-  UseMethod("updateFilenameSlots")
-}
-
-#' @rdname updateFilenameSlots
-#' @export
-#' @keywords internal
-updateFilenameSlots.default <- function(obj, ...)  {
-  obj
-}
-
-#' @rdname updateFilenameSlots
-#' @export
-#' @keywords internal
-updateFilenameSlots.list <- function(obj, ...)  {
-
-  areRasters <- vapply(obj, is, "RasterLayer", FUN.VALUE = logical(1))
-  if (all(areRasters)) {
-    # a separate option for list of RasterLayers because curFilename will be
-    #   as long as all the filenames because there is a method for lists;
-    #   passing this to updateFilaneSlots will fail if it is one RasterLayer
-    #   at a time
-    out <- updateFilenameSlots(raster::stack(obj), ...)
-    out <- raster::unstack(out)
-  } else {
-    out <- lapply(obj, function(o) {
-      updateFilenameSlots(o, ...)
-    })
-  }
-  out
-
-}
-
-#' @rdname updateFilenameSlots
-#' @export
-#' @keywords internal
-updateFilenameSlots.environment <- function(obj, ...)  {
-  if (is.null(names(obj))) {
-    names(obj) <- as.character(seq(obj))
-  }
-  lapply(obj, function(o) {
-    updateFilenameSlots(as.list(o), ...)
-  })
-}
-
-
-#' @rdname updateFilenameSlots
-#' @export
-#' @keywords internal
-updateFilenameSlots.Raster <- function(obj, curFilenames, newFilenames, isStack = NULL) {
-  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-    return(updateFilenameSlots2(obj, curFilenames, newFilenames, isStack))
-  }
-  if (missing(curFilenames)) {
-    curFilenames <- Filenames(obj, allowMultiple = FALSE)
-  }
-
-  if (missing(newFilenames)) stop("newFilenames can't be missing: either new filenames or a single directory")
-  # if newFilenames is a directory
-  areDirs <- dir.exists(newFilenames)
-  if (any(areDirs) && length(newFilenames) == 1) {
-    newFilenames <- file.path(newFilenames, basename(curFilenames))
-  }
-
-  if (length(curFilenames) > 1) {
-    for (i in seq_along(curFilenames)) {
-      if (is.list(obj)) {
-        slot(slot(obj[[i]], "file"), "name") <- newFilenames[i]
-      } else {
-        slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
-      }
-    }
-  } else {
-    if (is.null(isStack)) isStack <- is(obj, "RasterStack")
-    if (!isStack) {
-      slot(slot(obj, "file"), "name") <- newFilenames
-    } else {
-      # aiof <- allInOneFile(obj)
-
-      # if (isTRUE(aiof)) {
-      #   slot(obj, "filename") <- newFilenames
-      # } else {
-      if (length(newFilenames) == 1) {
-        newFilenames <- rep(newFilenames, nlayers(obj))
-      }
-      for (i in seq_len(nlayers(obj))) {
-        whFilename <- unique(match(withoutFinalNumeric(basename(newFilenames)),
-                                   withoutFinalNumeric(basename(curFilenames))))
-        isNAwhFn <- is.na(whFilename)
-        if (any(isNAwhFn))
-          whFilename <- i
-        slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
-      }
-      # }
-
-
-    }
-  }
-  obj
-}
 
 updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL) {
   whichNotGri <- grep("\\.gri$", curFilenames, invert = TRUE)
@@ -1394,27 +1015,11 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #'         If this is not a repository, the new location will be within `repoDir`.
 #'
 #' @author Eliot McIntire
-#' @export
 #' @importFrom digest digest
 #' @importFrom methods is selectMethod slot slot<-
 #' @importFrom raster dataType filename hasValues inMemory nlayers writeRaster
 #' @inheritParams Cache
 #' @rdname prepareFileBackedRaster
-#' @examples
-#' library(raster)
-#' # make a cache repository
-#' a <- Cache(rnorm, 1)
-#'
-#' r <- raster(extent(0,10,0,10), vals = 1:100)
-#'
-#' # write to disk manually -- will be in tempdir()
-#' r <- writeRaster(r, file = tempfile())
-#'
-#' # copy it to the cache repository
-#' r <- .prepareFileBackedRaster(r, tempdir())
-#'
-#' r # now in "rasters" subfolder of tempdir()
-#'
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                      conn = getOption("reproducible.conn", NULL),
@@ -1526,4 +1131,24 @@ withoutFinalNumeric <- function(string) {
   string1 <- filePathSansExt(string)
   woNumeric <- gsub("^(.+)\\_[[:digit:]]+$", "\\1", string1)
   paste0(woNumeric, ".", ext)
+}
+
+
+
+wrapSpatVector <- function(obj) {
+  geom1 <- terra::geom(obj)
+  geom1 <- terra::geom(obj)
+  geom1 <- list(cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),
+                cols34 = matrix(as.integer(geom1[, c(3, 4)]), ncol = 2))
+  geomtype1 <- terra::geomtype(obj)
+  dat1 <- terra::values(obj)
+  crs1 <- terra::crs(obj)
+  obj <- list(geom1, geomtype1, dat1, crs1)
+  names(obj) <- spatVectorNamesForCache
+  obj
+}
+
+unwrapSpatVector <- function(obj) {
+  obj$x <- cbind(obj$x$cols125[, 1:2, drop = FALSE], obj$x$cols34[, 1:2, drop = FALSE], obj$x$cols125[, 3, drop = FALSE])
+  do.call(terra::vect, obj)
 }

@@ -152,10 +152,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   fun <- .checkFunInDots(fun = fun, dots = dots)
   dots <- .checkDeprecated(dots, verbose = verbose)
 
-  teamDrive <- if (packageVersion("googledrive") < "2.0.0") {
-    dots[["team_drive"]]
+  if (requireNamespace("googledrive", quietly = TRUE)) {
+    teamDrive <- if (packageVersion("googledrive") < "2.0.0") {
+      dots[["team_drive"]]
+    } else {
+      dots[["shared_drive"]]
+    }
   } else {
-    dots[["shared_drive"]]
+    teamDrive <- NULL
   }
 
   # remove trailing slash -- causes unzip fail if it is there
@@ -921,6 +925,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 #' @author Alex Chubaty and Eliot McIntire
 #' @export
+#' @return
+#' This function is called for its side effects, which will be a `file.link` is that
+#' is available or `file.copy` if not (e.g., the two directories are not on the
+#' same physical disk).
 #'
 #' @examples
 #' library(datasets)
@@ -1168,7 +1176,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
         )
         newFileWithExtension <- file.path(normPath(dirname(downloadFileResult$downloaded)),
                                           downloadFileResult$neededFiles)
-        invisible(file.move(
+        invisible(.file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = newFileWithExtension))
         downloadFileResult$downloaded <- newFileWithExtension
@@ -1179,7 +1187,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
         )
         newFileWithExtension <- normPath(file.path(dirname(downloadFileResult$downloaded),
                                                    .basename(downloadFileResult$archive)))
-        invisible(file.move(
+        invisible(.file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = newFileWithExtension))
         downloadFileResult$downloaded <- newFileWithExtension
@@ -1192,7 +1200,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
         downloadFileResult$neededFiles <- .basename(archive)
         newFileWithExtension <- file.path(normPath(dirname(downloadFileResult$downloaded)),
                                            downloadFileResult$neededFiles)
-        invisible(file.move(
+        invisible(.file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = newFileWithExtension))
         downloadFileResult$downloaded <- newFileWithExtension
@@ -1209,7 +1217,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
         }
         downloadFileResult$archive <- file.path(normPath(destinationPath),
                                                 paste0(downloadFileResult$neededFiles, fileExt))
-        invisible(file.move(
+        invisible(.file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = normPath(downloadFileResult$archive)))
         downloadFileResult$neededFiles <- .listFilesInArchive(downloadFileResult$archive)

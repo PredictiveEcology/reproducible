@@ -144,9 +144,9 @@ testOnExit <- function(testInitOut) {
       try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab2))
   }
 
-  lapply(testInitOut$libs, function(lib) {
-    try(detach(paste0("package:", lib), character.only = TRUE), silent = TRUE)}
-  )
+  # lapply(testInitOut$libs, function(lib) {
+  #   try(detach(paste0("package:", lib), character.only = TRUE), silent = TRUE)}
+  # )
 }
 
 runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpdir, test) {
@@ -191,52 +191,6 @@ urlShapefilesZip <- "https://drive.google.com/file/d/1z1x0oI5jUDJQosOXacI8xbzbR1
 #targetFileLuxRDS <- "GADM_3.6_LUX_adm0.rds"
 targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
 
-.GADMtmp <- function(country, level, download, path, version) {
-  country <- raster:::.getCountry(country)
-  if (missing(level)) {
-    stop("provide a \"level=\" argument; levels can be 0, 1, or 2 for most countries, and higher for some")
-  }
-  filename <- paste(path, "GADM_", version, "_", country, "_adm",
-                    level, ".rds", sep = "")
-  if (!file.exists(filename)) {
-    if (download) {
-      baseurl <- paste0("https://biogeo.ucdavis.edu/data/gadm",version,"/Rsp/gadm36")
-      #baseurl <- paste0("http://biogeo.ucdavis.edu/data/gadm",
-      #    version)
-      if (version == 2) {
-        theurl <- paste(baseurl, "/R/", country, "_adm",
-                        level, ".RData", sep = "")
-      } else if (version == 3.6) {
-        # https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds
-        theurl <- paste(baseurl, "_", country, "_",
-                        level, "_sp.rds", sep = "")
-      } else {
-        theurl <- paste(baseurl, "/rds/", country, "_adm",
-                        level, ".rds", sep = "")
-      }
-      raster:::.download(theurl, filename)
-      if (!file.exists(filename)) {
-        messagePrepInputs("\nCould not download file -- perhaps it does not exist")
-      }
-    }
-    else {
-      messagePrepInputs("File not available locally. Use 'download = TRUE'")
-    }
-  }
-  if (file.exists(filename)) {
-    if (version == 2) {
-      thisenvir <- new.env(parent = emptyenv())
-      data <- get(load(filename, thisenvir), thisenvir)
-    }
-    else {
-      data <- readRDS(filename)
-    }
-    return(data)
-  }
-  else {
-    return(NULL)
-  }
-}
 
 ## TODO: switch to `geodata` package (raster::getData() is deprecated) (#256)
 getDataFn <- function(...) {
@@ -400,12 +354,12 @@ fnCacheHelper1 <- function() {
 }
 
 fnCacheHelper <- function(a, cacheRepo2) {
-  Cache(fnCacheHelper1, cacheRepo = cacheRepo2, verbose = 2)
+  Cache(fnCacheHelper1, cachePath = cacheRepo2, verbose = 2)
 }
 
 crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84"
 
-messageNoCacheRepo <- "No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is inside"
+messageNoCacheRepo <- "No cachePath supplied and getOption\\('reproducible.cachePath'\\) is inside"
 
 
 .writeRaster <- function(...) {
@@ -430,3 +384,44 @@ shapefileClassDefault <- function() {
   }
   if (identical(shpfl, raster::shapefile)) "SpatialPolygons" else "sf"
 }
+
+
+
+runTestsWithTimings <- function(nameOfOuterList = "ff", envir = parent.frame(), authorizeGoogle = FALSE) {
+  if (isTRUE(authorizeGoogle))
+    if (Sys.info()[["user"]] == "emcintir")
+      googledrive::drive_auth(cache = "~/.secret", email = "predictiveecology@gmail.com")
+  prepend <- "/home/emcintir/GitHub/reproducible/tests/testthat"
+  testFiles <- dir(prepend, pattern = "^test-", full.names = TRUE)
+  testFiles <- grep("large", testFiles, value = TRUE, invert = TRUE)
+  rrrr <- get(nameOfOuterList, envir = envir)
+  testFiles <- setdiff(testFiles, file.path(prepend, names(rrrr)))
+  for (tf in testFiles) {
+    messageDF(colour = "blue", basename(tf))
+    a <- parse(tf, keep.source = TRUE)
+    labels <- unlist(lapply(a, function(x) x[[2]]))
+    # Sys.setenv("NOT_CRAN" = "false") # doesn't work
+    dd <- Map(testLabel = labels, parsed = a, function(parsed, testLabel) {
+      message(testLabel)
+      skipOnCran <- any(grepl("skip_on_cran", parsed[[3]]))
+      start <- Sys.time()
+      try(eval(parsed))
+      end <- Sys.time()
+      b <- difftime(end, start)
+      print(format(b))
+      data.table(elapsed = as.numeric(b), skipOnCRAN = skipOnCran)
+    })
+    ee <- data.table::rbindlist(dd, idcol = "Label")
+    ee <- setNames(list(ee), basename(tf))
+    rrrr <- append(rrrr, ee)
+    assign(nameOfOuterList, rrrr, envir = envir)
+
+    testFiles <- testFiles[-1]
+  }
+
+  gg <- data.table::rbindlist(get(nameOfOuterList, envir = envir),
+                              idcol = "TestFile")
+  gg[, TestFile := basename(TestFile)]
+  gg
+}
+

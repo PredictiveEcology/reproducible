@@ -28,10 +28,11 @@ threads. This function will clear entries in the SQLite database which
 have no actual file with data.
 }
 \examples{
+data.table::setDTthreads(2)
 tmpDir <- file.path(tempdir(), "reproducible_examples", "clearStubArtifacts")
 
 lapply(c(runif, rnorm), function(f) {
-  reproducible::Cache(f, 10, cacheRepo = tmpDir)
+  reproducible::Cache(f, 10, cachePath = tmpDir)
 })
 
 # clear out any stub artifacts
