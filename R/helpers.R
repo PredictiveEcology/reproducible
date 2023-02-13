@@ -137,7 +137,13 @@ setMethod(
         is.character(studyArea)) {
       stop("studyAreaName expects a spatialClasses object, sf::sfc object, SpatVector, or character vector)")
     }
-    digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
+    if (is(studyArea, "SpatVector")) {
+      if (!requireNamespace("terra", quietly = TRUE))
+        stop("Please install terra package")
+      digest(terra::wrap(studyArea), algo = "xxhash64")
+    } else {
+      digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
+    }
 })
 
 #' Identify which formals to a function are not in the current `...`
