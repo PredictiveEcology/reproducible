@@ -882,12 +882,32 @@ nextNumericName <- function(string) {
 dealWithClass <- function(obj, cachePath, drv, conn, verbose = getOption("reproducible.verbose")) {
   # browser(expr = exists("._dealWithClass_1"))
   outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
+  outputToSaveIsEnv <- is(obj, "environment")
 
-  if (outputToSaveIsList) {
-    obj <- lapply(obj, dealWithClass, cachePath = cachePath, drv = drv, conn = conn)
+  # if (is(obj, "simList")) browser()
+  if (isTRUE(outputToSaveIsEnv) || isTRUE(outputToSaveIsList)) {
+    obj2 <- if (isTRUE(outputToSaveIsEnv))
+      as.list(obj, all.names = FALSE) else obj
+    out <- lapply(obj2, dealWithClass, cachePath = cachePath, drv = drv, conn = conn)
     innerTags <- lapply(obj, function(o) attr(o, "tags"))
     innerTags <- unique(unlist(innerTags))
     setattr(obj, "tags", innerTags)
+
+    if (isTRUE(outputToSaveIsEnv)) {
+      obj <- Copy(obj)
+      attempt <- try(list2env(out, obj), silent = TRUE)
+      if (is(attempt, "try-error")) {
+        # this is simList
+        attempt <- try(list2env(out, envir(obj)), silent = TRUE)
+        if (is(attempt, "try-error")) {
+          obj <- as.environment(out)
+        }
+      }
+
+    } else {
+      obj <- out
+    }
+    # obj <- lapply(obj, dealWithClass, cachePath = cachePath, drv = drv, conn = conn)
   }
 
 
@@ -945,7 +965,6 @@ dealWithClass <- function(obj, cachePath, drv, conn, verbose = getOption("reprod
     if (inherits(obj, "SpatRaster")) {
       obj <- terra::wrap(obj)
     } else {
-      #browser()
       obj <- wrapSpatVector(obj)
     }
     setattr(obj, ".Cache", attrs)

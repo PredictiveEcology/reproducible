@@ -1998,15 +1998,31 @@ dealWithClassOnRecovery <- function(output, cachePath, cacheId,
                                     drv, conn))
   }
 
-  if (is(output, "list")) {
+  isOutputList <- is(output, "list")
+  isOutputEnv <- is(output, "environment")
+  if (isOutputList || isOutputEnv) {
     anyNames <- names(output)
     isSpatVector <- if (is.null(anyNames)) FALSE else all(names(output) %in% spatVectorNamesForCache)
     if (isTRUE(isSpatVector)) {
       output <- unwrapSpatVector(output)
     } else {
       if (!"cacheRaster" %in% names(output)) { # recursive up until a list has cacheRaster name
-        output <- lapply(output, function(out) dealWithClassOnRecovery(out, cachePath, cacheId,
+
+        outList <- if (isOutputEnv) as.list(output) else output # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
+
+        outList <- lapply(outList, function(out) dealWithClassOnRecovery(out, cachePath, cacheId,
                                                                        drv, conn))
+
+        if (isOutputEnv) { # don't overwrite everything, just the ones in the list part
+          attempt <- try(list2env(outList, output), silent = TRUE)
+          if (is(attempt, "try-error")) {
+            attempt <- try(list2env(outList, envir(output)), silent = TRUE)
+            if (is(attempt, "try-error"))
+              output <- as.environment(outList)
+          }
+        } else {
+          output <- outList
+        }
       } else {
         origFilenames <- if (is(output, "Raster")) {
           Filenames(output) # This is legacy piece which allows backwards compatible
