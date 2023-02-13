@@ -1137,7 +1137,6 @@ withoutFinalNumeric <- function(string) {
 
 wrapSpatVector <- function(obj) {
   geom1 <- terra::geom(obj)
-  geom1 <- terra::geom(obj)
   geom1 <- list(cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),
                 cols34 = matrix(as.integer(geom1[, c(3, 4)]), ncol = 2))
   geomtype1 <- terra::geomtype(obj)
