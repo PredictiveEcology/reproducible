@@ -24,6 +24,12 @@ test_that("test miscellaneous unit tests cache-helpers", {
     expect_true(is(studyAreaName(h), "character"))
   }
 
+  # studyAreaName with SpatVector
+  if (require("terra")) {
+    v <- vect(system.file("ex/lux.shp", package="terra"))
+    expect_true(is(studyAreaName(v), "character"))
+  }
+
   # studyAreaName with SPDF/SP
   coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
                       .Dim = c(5L, 2L))
