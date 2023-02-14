@@ -1631,9 +1631,6 @@ test_that("test cache; SpatRaster attributes", {
   targetFile <- "rasterTest.tif"
   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
 
-  ## make sure file is not in iPaths
-  # file.remove(file.path(iPaths, biomassFile))
-
   testFun <- function(url, targetFile) {
     ras <- prepInputs(url = url,
                       targetFile = targetFile)
