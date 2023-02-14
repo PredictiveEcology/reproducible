@@ -1612,5 +1612,45 @@ test_that("test cache; new approach to match.call, postProcess", {
 
 })
 
+test_that("test cache; SpatRaster attributes", {
+  testInitOut <- testInit(c("raster", "sf"), tmpFileExt = c(".tif", ".tif"),
+                          opts = list(
+                            "rasterTmpDir" = tempdir2(rndstr(1,6)),
+                            "reproducible.inputPaths" = NULL,
+                            "reproducible.overwrite" = TRUE,
+                            "reproducible.useTerra" = TRUE,
+                            "reproducible.rasterRead" = "terra::rast")
+  )
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
+  options("reproducible.cachePath" = tmpdir)
+  dPath <- file.path(tmpdir, "inputs")
+
+  targetFile <- "rasterTest.tif"
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
+
+  ## make sure file is not in iPaths
+  # file.remove(file.path(iPaths, biomassFile))
+
+  testFun <- function(url, targetFile) {
+    ras <- prepInputs(url = url,
+                      targetFile = targetFile)
+    pixIDs <- which(as.vector(ras[]) == 1)
+    attr(ras, "pixIDs") <- pixIDs
+    ras
+  }
+
+  ras <- Cache(testFun,
+               url = url,
+               targetFile = targetFile)
+  expect_true(is.integer(attr(x = ras, "pixIDs")))
+
+  ## re-run. attributes still there?
+  ras <- Cache(testFun,
+               url = url,
+               targetFile = targetFile)
+  expect_true(is.integer(attr(x = ras, "pixIDs")))
+})
 
