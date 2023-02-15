@@ -116,6 +116,7 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
 
   startTime <- Sys.time()
   dots <- list(...)
+
   if (!is.null(dots$studyArea)) {
     messagePrepInputs("studyArea is supplied (deprecated); assigning it to `cropTo` & `maskTo`")
     if (isSpatial(dots$studyArea))
@@ -239,7 +240,7 @@ isSF <- function(x) is(x, "sf") || is(x, "sfc")
 isRaster <- function(x) is(x, "Raster")
 isCRSANY <- function(x) isCRSSF(x) || isCRScharacter(x) || isCRSTerra(x)
 isCRSSF <- function(x) is(x, "crs")
-isCRScharacter <- function(x) is.character(x) && grepl("DATUM", x)
+isCRScharacter <- function(x) is.character(x) && ( grepl("DATUM", x)  || grepl("+proj", x))
 isCRSTerra <- function(x) is(x, "CRS")
 
 #' Fix common errors in GIS layers, using `terra`
@@ -635,7 +636,6 @@ postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
     ll <- get(y, inherits = FALSE)
     if (inherits(ll, "quosure")) assign(y, eval_tidy(ll))
   }
-
 
   if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
     stop("Need terra and sf: install.packages(c('terra', 'sf'))")
