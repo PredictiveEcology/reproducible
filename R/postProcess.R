@@ -1146,11 +1146,19 @@ projectInputs.SpatRaster <- function(x, targetCRS = NULL,
                                      rasterToMatch = NULL, cores = NULL,
                                      useGDAL = getOption("reproducible.useGDAL", FALSE),
                                      ...) {
-  if (!is.null(targetCRS)) {
-    if (terra::crs(rasterToMatch) != targetCRS)
-      message("both rasterToMatch and targetCRS are supplied to projectInputs and they are different; using rasterToMatch")
+
+  if (!is.null(rasterToMatch)) {
+    if (!is.null(targetCRS)) {
+      if (terra::crs(rasterToMatch) != targetCRS)
+        message("both rasterToMatch and targetCRS are supplied to projectInputs and they are different; using rasterToMatch")
+    }
+    projectTo(from = x, projectTo = rasterToMatch)
+  } else {
+    if (!is.null(targetCRS)) {
+      projectTo(from = x, projectTo = targetCRS)
+    }
   }
-  projectTo(from = x, projectTo = rasterToMatch)
+
 
 }
 
