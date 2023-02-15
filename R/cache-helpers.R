@@ -895,7 +895,7 @@ dealWithClass <- function(obj, cachePath, drv, conn, verbose = getOption("reprod
 
     if (isTRUE(outputToSaveIsEnv)) {
       obj <- Copy(obj)
-      list2EnvAttempts(out, obj)
+      list2envAttempts(out, obj)
       # attempt <- try(list2env(out, obj), silent = TRUE)
       # if (is(attempt, "try-error")) {
       #   # this is simList
@@ -1119,6 +1119,7 @@ list2envAttempts <- function(x, envir) {
       output <- as.environment(x)
   }
 }
+
 .loadedCacheResultMsg <- "loaded cached result from previous"
 
 .loadedMemoisedResultMsg <- "loaded memoised result from previous"
