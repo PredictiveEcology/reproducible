@@ -584,3 +584,17 @@ minmaxFn <- function(x, which = "max") {
 
   out
 }
+
+
+#' A helper to `getOption("reproducible.rasterRead")`
+#'
+#' A helper to `getOption("reproducible.rasterRead")`
+#' @export
+#' @param ... Passed to the function parsed and evaluated from
+#'   `getOption("reproducible.rasterRead")`
+#'
+#' @return
+#' A function, that will be the evaluated, parsed character
+#' string, e.g., `eval(parse(text = "terra::rast"))`
+rasterRead <- function(...)
+  eval(parse(text = getOption("reproducible.rasterRead")))(...)

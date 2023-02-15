@@ -5,10 +5,11 @@ Version 1.2.17
 
 ## enhancements
 - `postProcess` now uses `terra` and `sf` by default throughout the family. These are only activated by a user deciding to use the new family of functions (`postProcessTerra`, `cropTo`, `maskTo`, `projectTo`, `writeTo`) or by setting the `option(reproducible.useTerra = TRUE)`
-- new functions to assist with transition from `raster` to `terra` --> `maxFn` and `minFn`
+- new functions to assist with transition from `raster` to `terra` --> `maxFn`, `minFn`, `rasterRead`
+
 
 ## bugfixes
-- `Postgres` database backends were not working correctly because of a typo; fixed
+- `Cache` was incorrectly dealing with `environment` and `environment-like` objects. Since some objects, e.g., `Spat*` objects in `terra`, must be wrapped prior to saving, environments must be scanned for these classes of objects prior to saving. This previously only occurred for `list` objects; fixed
 - When working with revdep `SpaDES.core`, there were some cases where the `Cache` was failing as it could not find the module name; fixed.
 - during transition from `postProcess` (using `raster` and `sp`) to `postProcessTerra`, some cases are falling through the cracks; these are being addressed.
 
