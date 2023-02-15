@@ -6,6 +6,10 @@
 \usage{
 rasterRead(...)
 }
+\arguments{
+\item{...}{Passed to the function parsed and evaluated from
+\code{getOption("reproducible.rasterRead")}}
+}
 \value{
 A function, that will be the evaluated, parsed character
 string, e.g., \code{eval(parse(text = "terra::rast"))}
