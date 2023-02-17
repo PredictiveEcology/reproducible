@@ -497,7 +497,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                               filename2 = filename2,
                               overwrite = overwrite),
         message = function(m) {
-          browser()
           hasTopoExcError <- grepl("TopologyException: Input geom 0 is invalid", m$message)
           if (any(hasTopoExcError)) {
             browser()
