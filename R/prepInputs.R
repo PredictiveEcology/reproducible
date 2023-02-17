@@ -489,12 +489,22 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
       # pass everything, including NULL where it was NULL. This means don't have to deal with
       #    rlang quo issues
-      x <- postProcessTerra(from = x, to = to, rasterToMatch = rasterToMatch, studyArea = studyArea,
-                            cropTo = cropTo, projectTo = projectTo, maskTo = maskTo, writeTo = writeTo,
-                            method = method, targetCRS = targetCRS, useSAcrs = useSAcrs,
-                            datatype = datatype,
-                            filename2 = filename2,
-                            overwrite = overwrite)
+      x <- withCallingHandlers(
+        postProcessTerra(from = x, to = to, rasterToMatch = rasterToMatch, studyArea = studyArea,
+                              cropTo = cropTo, projectTo = projectTo, maskTo = maskTo, writeTo = writeTo,
+                              method = method, targetCRS = targetCRS, useSAcrs = useSAcrs,
+                              datatype = datatype,
+                              filename2 = filename2,
+                              overwrite = overwrite),
+        message = function(m) {
+          browser()
+          hasTopoExcError <- grepl("TopologyException: Input geom 0 is invalid", m$message)
+          if (any(hasTopoExcError)) {
+            browser()
+          }
+        }
+      )
+
 
     }
   } else {
