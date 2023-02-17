@@ -895,7 +895,8 @@ dealWithClass <- function(obj, cachePath, drv, conn, verbose = getOption("reprod
 
     if (isTRUE(outputToSaveIsEnv)) {
       obj <- Copy(obj)
-      list2envAttempts(out, obj)
+      obj2 <- list2envAttempts(out, obj)
+      if (!is.null(obj2)) obj <- obj2
       # attempt <- try(list2env(out, obj), silent = TRUE)
       # if (is(attempt, "try-error")) {
       #   # this is simList
@@ -999,7 +1000,8 @@ dealWithClassOnRecovery <- function(output, cachePath, cacheId,
                                                                          drv, conn))
 
         if (isOutputEnv) { # don't overwrite everything, just the ones in the list part
-          list2envAttempts(outList, output)
+          output2 <- list2envAttempts(outList, output)
+          if (!is.null(output2)) output <- output2
           # attempt <- try(list2env(outList, output), silent = TRUE)
           # if (is(attempt, "try-error")) {
           #   attempt <- try(list2env(outList, output@.xData), silent = TRUE)
@@ -1112,12 +1114,14 @@ dealWithClassOnRecovery2 <- function(output, cachePath, cacheId,
 
 
 list2envAttempts <- function(x, envir) {
-  attempt <- try(list2env(x, output), silent = TRUE)
+  attempt <- try(list2env(x, envir), silent = TRUE)
+  output <- NULL
   if (is(attempt, "try-error")) {
-    attempt <- try(list2env(x, output@.xData), silent = TRUE)
+    attempt <- try(list2env(x, envir@.xData), silent = TRUE)
     if (is(attempt, "try-error"))
       output <- as.environment(x)
   }
+  output
 }
 
 .loadedCacheResultMsg <- "loaded cached result from previous"
