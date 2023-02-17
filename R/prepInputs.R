@@ -489,6 +489,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
       # pass everything, including NULL where it was NULL. This means don't have to deal with
       #    rlang quo issues
+      TopoErrors <- list() # eventually to update a Google ID #TODO
       x <- withCallingHandlers(
         postProcessTerra(from = x, to = to, rasterToMatch = rasterToMatch, studyArea = studyArea,
                               cropTo = cropTo, projectTo = projectTo, maskTo = maskTo, writeTo = writeTo,
@@ -499,7 +500,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         message = function(m) {
           hasTopoExcError <- grepl("TopologyException: Input geom 0 is invalid", m$message)
           if (any(hasTopoExcError)) {
-            browser()
+            TopoErrors <<- append(TopoErrors, list(m$message))
           }
         }
       )
