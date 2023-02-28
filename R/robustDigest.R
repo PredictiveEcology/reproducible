@@ -146,7 +146,7 @@ setMethod(
     if (any(inherits(object, "SpatVector"), inherits(object, "SpatRaster"))) {
       if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
         stop("Please install terra package")
-      out <- .doDigest(terra::wrap(object), algo)
+      out <- .doDigest(wrapSpatVector(object), algo)
       return(out)
     }
 
