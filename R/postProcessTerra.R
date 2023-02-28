@@ -231,10 +231,11 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
 }
 
 isSpatial <- function(x) inherits(x, "Spatial")
-isSpat <- function(x) is(x, "SpatRaster") || is(x, "SpatVector")
+isSpatVector <- is(x, "SpatVector")
+isSpat <- function(x) is(x, "SpatRaster") || isSpatVector(x)
 isSpat2 <- function(origClass) any(origClass %in% c("SpatVector", "SpatRaster"))
 isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
-isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || isSF(x)
+isVector <-  function(x) isSpatVector(x) || is(x, "Spatial") || isSF(x)
 isSpatialAny <- function(x) isGridded(x) || isVector(x)
 isSF <- function(x) is(x, "sf") || is(x, "sfc")
 isRaster <- function(x) is(x, "Raster")
@@ -611,16 +612,19 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
     if (!is.na(writeTo)) {
       messagePrepInputs("    writing...", appendLF = FALSE)
       st <- Sys.time()
-      if (isRaster)
-        from <- raster::writeRaster(from, filename = writeTo, overwrite = overwrite,
-                                    datatype = datatype)
-      if (isSpatRaster)
-        from <- terra::writeRaster(from, filename = writeTo, overwrite = overwrite,
-                                   datatype = datatype)
-      if (is(from, "SpatVector")) {
+      if (isSpatRaster || isSpatVector(x)) {
+        ## trying to prevent write failure and subsequent overwrite error with terra::writeRaster
         if (isTRUE(overwrite))
           unlink(writeTo, force = TRUE, recursive = TRUE)
-        written <- terra::writeVector(from, filename = writeTo, overwrite = overwrite)
+        if (isSpatRaster) {
+          from <- terra::writeRaster(from, filename = writeTo, overwrite = FALSE,
+                                   datatype = datatype)
+        } else {
+          written <- terra::writeVector(from, filename = writeTo, overwrite = FALSE)
+        }
+      } else if (isRaster) {
+        from <- raster::writeRaster(from, filename = writeTo, overwrite = overwrite,
+                                    datatype = datatype)
       }
       messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
     }
