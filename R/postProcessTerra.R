@@ -231,7 +231,7 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
 }
 
 isSpatial <- function(x) inherits(x, "Spatial")
-isSpatVector <- is(x, "SpatVector")
+isSpatVector <- function(x) is(x, "SpatVector")
 isSpat <- function(x) is(x, "SpatRaster") || isSpatVector(x)
 isSpat2 <- function(origClass) any(origClass %in% c("SpatVector", "SpatRaster"))
 isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
@@ -277,6 +277,7 @@ fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.ve
         x <- sf::st_make_valid(x)
       }
     } else {
+      browser()
       xValids <- terra::is.valid(x)
       if (any(!xValids))
         x <- terra::makeValid(x)
@@ -614,8 +615,12 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
       st <- Sys.time()
       if (isSpatRaster || isSpatVector(x)) {
         ## trying to prevent write failure and subsequent overwrite error with terra::writeRaster
-        if (isTRUE(overwrite))
+        if (file.exists(writeTo)) {
+          if (overwrite %in% FALSE) {
+            stop(writeTo, " already exists and `overwrite = FALSE`; please set `overwrite = TRUE` and run again.")
+          }
           unlink(writeTo, force = TRUE, recursive = TRUE)
+        }
         if (isSpatRaster) {
           from <- terra::writeRaster(from, filename = writeTo, overwrite = FALSE,
                                    datatype = datatype)
