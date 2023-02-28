@@ -277,14 +277,40 @@ fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.ve
         x <- sf::st_make_valid(x)
       }
     } else {
-      browser()
-      xValids <- terra::is.valid(x)
-      if (any(!xValids))
-        x <- terra::makeValid(x)
+      if (os > 1e9 && isTRUE(getOption("reproducible.useCache"))) {
+        messagePrepInputs("... Caching the fixErrorTerra call on this large object", verbose = verbose)
+        x <- Cache(makeVal(x))
+      } else {
+        x <- makeVal(x)
+      }
+
     }
   }
   x
 }
+
+makeVal <- function(x) {
+  xValids <- terra::is.valid(x)
+  whValid <- which(xValids)
+  se <- seq(NROW(x))
+  if (length(whValid)) {
+    whInValid <- se[-whValid]
+  } else {
+    whInValid <- se
+  }
+
+  if (any(!xValids)) {
+    xGood <- terra::makeValid(x[whInValid])
+    if (length(whValid)) {
+      r <- rbind(x[whValid, ], xGood[, ])
+      x <- r[order(c(whValid, whInValid)),]
+    } else {
+      x <- xGood
+    }
+
+  }
+}
+
 
 #' @export
 #' @rdname postProcessTerra
