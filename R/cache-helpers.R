@@ -957,9 +957,7 @@ dealWithClass <- function(obj, cachePath, drv, conn, verbose = getOption("reprod
   if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
     if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
       stop("Please install terra package")
-    messageCache("...wrapping terra object for saving...", verboseLevel = 1, verbose = verbose)
-    # if (inherits(obj, "SpatVector"))
-    #   messageCache("... this may take a long time as terra vector objects are slow to terra::wrap")
+    messageCache("...wrapping terra object for saving...", verboseLevel = 2, verbose = verbose)
     attrs <- attr(obj, ".Cache")
 
     # next is for terra objects --> terra::wrap is ridiculously slow for SpatVector objects; use
@@ -971,7 +969,7 @@ dealWithClass <- function(obj, cachePath, drv, conn, verbose = getOption("reprod
     }
     setattr(obj, ".Cache", attrs)
 
-    messageCache("\b Done!", verboseLevel = 1, verbose = verbose)
+    messageCache("\b Done!", verboseLevel = 2, verbose = verbose)
   }
   obj
 }
