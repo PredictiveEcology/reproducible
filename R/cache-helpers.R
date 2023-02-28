@@ -882,12 +882,34 @@ nextNumericName <- function(string) {
 dealWithClass <- function(obj, cachePath, drv, conn, verbose = getOption("reproducible.verbose")) {
   # browser(expr = exists("._dealWithClass_1"))
   outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
+  outputToSaveIsEnv <- is(obj, "environment")
 
-  if (outputToSaveIsList) {
-    obj <- lapply(obj, dealWithClass, cachePath = cachePath, drv = drv, conn = conn)
+  # if (is(obj, "simList")) browser()
+  if (isTRUE(outputToSaveIsEnv) || isTRUE(outputToSaveIsList)) {
+    obj2 <- if (isTRUE(outputToSaveIsEnv))
+      as.list(obj, all.names = FALSE) else obj
+    out <- lapply(obj2, dealWithClass, cachePath = cachePath, drv = drv, conn = conn)
     innerTags <- lapply(obj, function(o) attr(o, "tags"))
     innerTags <- unique(unlist(innerTags))
     setattr(obj, "tags", innerTags)
+
+    if (isTRUE(outputToSaveIsEnv)) {
+      obj <- Copy(obj)
+      obj2 <- list2envAttempts(out, obj)
+      if (!is.null(obj2)) obj <- obj2
+      # attempt <- try(list2env(out, obj), silent = TRUE)
+      # if (is(attempt, "try-error")) {
+      #   # this is simList
+      #   attempt <- try(list2env(out, obj@.xData), silent = TRUE)
+      #   if (is(attempt, "try-error")) {
+      #     obj <- as.environment(out)
+      #   }
+      # }
+
+    } else {
+      obj <- out
+    }
+    # obj <- lapply(obj, dealWithClass, cachePath = cachePath, drv = drv, conn = conn)
   }
 
 
@@ -945,7 +967,6 @@ dealWithClass <- function(obj, cachePath, drv, conn, verbose = getOption("reprod
     if (inherits(obj, "SpatRaster")) {
       obj <- terra::wrap(obj)
     } else {
-      #browser()
       obj <- wrapSpatVector(obj)
     }
     setattr(obj, ".Cache", attrs)
@@ -953,6 +974,154 @@ dealWithClass <- function(obj, cachePath, drv, conn, verbose = getOption("reprod
     messageCache("\b Done!", verboseLevel = 1, verbose = verbose)
   }
   obj
+}
+
+dealWithClassOnRecovery <- function(output, cachePath, cacheId,
+                                    drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                    conn = getOption("reproducible.conn", NULL)) {
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
+    return(dealWithClassOnRecovery2(output, cachePath, cacheId,
+                                    drv, conn))
+  }
+
+  isOutputList <- is(output, "list")
+  isOutputEnv <- is(output, "environment")
+  if (isOutputList || isOutputEnv) {
+    anyNames <- names(output)
+    isSpatVector <- if (is.null(anyNames)) FALSE else all(names(output) %in% spatVectorNamesForCache)
+    if (isTRUE(isSpatVector)) {
+      output <- unwrapSpatVector(output)
+    } else {
+      if (!"cacheRaster" %in% names(output)) { # recursive up until a list has cacheRaster name
+
+        outList <- if (isOutputEnv) as.list(output) else output # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
+
+        outList <- lapply(outList, function(out) dealWithClassOnRecovery(out, cachePath, cacheId,
+                                                                         drv, conn))
+
+        if (isOutputEnv) { # don't overwrite everything, just the ones in the list part
+          output2 <- list2envAttempts(outList, output)
+          if (!is.null(output2)) output <- output2
+          # attempt <- try(list2env(outList, output), silent = TRUE)
+          # if (is(attempt, "try-error")) {
+          #   attempt <- try(list2env(outList, output@.xData), silent = TRUE)
+          #   if (is(attempt, "try-error"))
+          #     output <- as.environment(outList)
+          # }
+        } else {
+          output <- outList
+        }
+      } else {
+        origFilenames <- if (is(output, "Raster")) {
+          Filenames(output) # This is legacy piece which allows backwards compatible
+        } else {
+          output$origRaster
+        }
+
+        filesExist <- file.exists(origFilenames)
+        cacheFilenames <- Filenames(output)
+        filesExistInCache <- file.exists(cacheFilenames)
+        if (any(!filesExistInCache)) {
+          fileTails <- gsub("^.+(rasters.+)$", "\\1", cacheFilenames)
+          correctFilenames <- file.path(cachePath, fileTails)
+          filesExistInCache <- file.exists(correctFilenames)
+          if (all(filesExistInCache)) {
+            cacheFilenames <- correctFilenames
+          } else {
+            stop("File-backed raster files in the cache are corrupt for cacheId: ", cacheId)
+          }
+
+        }
+        out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
+                              origFilenames[filesExistInCache], overwrite = TRUE)
+
+        newOutput <- updateFilenameSlots(output$cacheRaster,
+                                         Filenames(output, allowMultiple = FALSE),
+                                         newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
+        output <- newOutput
+        .setSubAttrInList(output, ".Cache", "newCache", FALSE)
+
+      }
+
+    }
+  }
+
+  if (any(inherits(output, "PackedSpatVector"))) {
+    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+      stop("Please install terra package")
+    output <- terra::vect(output)
+  }
+  if (any(inherits(output, "PackedSpatRaster"))) {
+    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+      stop("Please install terra package")
+    output <- terra::rast(output)
+  }
+  if (any(inherits(output, "data.table"))) {
+    output <- data.table::copy(output)
+  }
+
+  output
+}
+
+# This one is old, overly complicated; defunct
+dealWithClassOnRecovery2 <- function(output, cachePath, cacheId,
+                                     drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                     conn = getOption("reproducible.conn", NULL)) {
+  # This function is because the user doesn't want the path of the file-backed raster to
+  #   be in the cachePath --> they want it in its original file location
+  #   If it is in both, take the one in the original location; if it has been deleted
+  #   from the original location, then grab it from cache and put it in original place
+  if (is(output, "list")) {
+    if (identical(names(output), c("origRaster", "cacheRaster"))) {
+      origFilenames <- Filenames(output$origRaster)
+      cacheFilenames <- Filenames(output$cacheRaster)
+      origStillExist <- file.exists(origFilenames)
+      origFilenamesNeed <- origFilenames[!origStillExist]
+      cacheFilenamesNeed <- cacheFilenames[!origStillExist]
+      origFilenamesNeedDig <- origFilenames[origStillExist]
+      cacheFilenamesNeedDig <- cacheFilenames[origStillExist]
+      if (any(origStillExist)) {
+        cacheFilenamesDig <- unlist(.robustDigest(asPath(cacheFilenamesNeedDig)))
+        origFilenamesDig <- unlist(.robustDigest(asPath(origFilenamesNeedDig)))
+        whichUnchanged <- cacheFilenamesDig == origFilenamesDig
+        if (any(whichUnchanged)) {
+          origFilenamesNeedDig <- origFilenamesNeedDig[!whichUnchanged]
+          cacheFilenamesNeedDig <- cacheFilenamesNeedDig[!whichUnchanged]
+        }
+        cacheFilenamesNeed <- c(cacheFilenamesNeed, cacheFilenamesNeedDig)
+        origFilenamesNeed <- c(origFilenamesNeed, origFilenamesNeedDig)
+      }
+      dirnamesRasters <- unique(dirname(dirname(cacheFilenamesNeed)))
+      if (length(dirnamesRasters))
+        if (!isTRUE(all.equal(dirnamesRasters, cachePath))) { # if this is a moved cache, the filenames in the cache will be wrong
+          cacheFilenamesNeed2 <- gsub(dirnamesRasters, cachePath, cacheFilenamesNeed)
+          wrongFilenames <- file.exists(cacheFilenamesNeed2)
+          if (any(wrongFilenames)) {
+            output$cacheRaster <- updateFilenameSlots(output$cacheRaster, cacheFilenamesNeed[wrongFilenames],
+                                                      newFilenames = cacheFilenamesNeed2[wrongFilenames])
+            fs <- saveFileInCacheFolder(output, cachePath = cachePath, cacheId = cacheId)
+            cacheFilenamesNeed[wrongFilenames] <- cacheFilenamesNeed2[wrongFilenames]
+          }
+
+        }
+      copyFile(from = cacheFilenamesNeed, to = origFilenamesNeed, overwrite = TRUE)
+      output <- output$origRaster
+      .setSubAttrInList(output, ".Cache", "newCache", FALSE)
+    }
+  }
+  output
+}
+
+
+list2envAttempts <- function(x, envir) {
+  attempt <- try(list2env(x, envir), silent = TRUE)
+  output <- NULL
+  if (is(attempt, "try-error")) {
+    attempt <- try(list2env(x, envir@.xData), silent = TRUE)
+    if (is(attempt, "try-error"))
+      output <- as.environment(x)
+  }
+  output
 }
 
 .loadedCacheResultMsg <- "loaded cached result from previous"
@@ -1136,7 +1305,6 @@ withoutFinalNumeric <- function(string) {
 
 
 wrapSpatVector <- function(obj) {
-  geom1 <- terra::geom(obj)
   geom1 <- terra::geom(obj)
   geom1 <- list(cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),
                 cols34 = matrix(as.integer(geom1[, c(3, 4)]), ncol = 2))
