@@ -613,7 +613,7 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
     if (!is.na(writeTo)) {
       messagePrepInputs("    writing...", appendLF = FALSE)
       st <- Sys.time()
-      if (isSpatRaster || isSpatVector(writeTo)) {
+      if (isSpatRaster || isSpatVector(from)) {
         ## trying to prevent write failure and subsequent overwrite error with terra::writeRaster
         if (file.exists(writeTo)) {
           if (overwrite %in% FALSE) {
