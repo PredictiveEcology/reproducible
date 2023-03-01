@@ -494,22 +494,22 @@ unmakeMemoisable.default <- function(x) {
 #'
 #' @export
 #'
-dealWithClass <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+.dealWithClass <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                           conn = getOption("reproducible.conn", NULL),
                           verbose = getOption("reproducible.verbose")) {
-  UseMethod("dealWithClass")
+  UseMethod(".dealWithClass")
 }
 
 #' @export
-#' @rdname exportedMethods
-dealWithClass.list <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+#' @rdname dealWithClass
+.dealWithClass.list <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                conn = getOption("reproducible.conn", NULL),
                                verbose = getOption("reproducible.verbose")) {
 
   innerTags <- lapply(obj, function(o) attr(o, "tags"))
   innerTags <- unique(unlist(innerTags))
 
-  obj <- lapply(obj, dealWithClass, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
+  obj <- lapply(obj, .dealWithClass, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
 
   setattr(obj, "tags", innerTags)
   obj
@@ -518,13 +518,13 @@ dealWithClass.list <- function(obj, cachePath, drv = getOption("reproducible.drv
 
 
 #' @export
-#' @rdname exportedMethods
-dealWithClass.environment <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+#' @rdname dealWithClass
+.dealWithClass.environment <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                       conn = getOption("reproducible.conn", NULL),
                                       verbose = getOption("reproducible.verbose")) {
 
   obj2 <- as.list(obj, all.names = FALSE)
-  out <- dealWithClass(obj2, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
+  out <- .dealWithClass(obj2, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
   obj <- Copy(obj)
   obj2 <- list2envAttempts(out, obj)
   if (!is.null(obj2)) obj <- obj2
@@ -535,33 +535,13 @@ dealWithClass.environment <- function(obj, cachePath, drv = getOption("reproduci
 
 
 #' @export
-#' @rdname exportedMethods
-dealWithClass.default <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+#' @rdname dealWithClass
+.dealWithClass.default <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                   conn = getOption("reproducible.conn", NULL),
                                   verbose = getOption("reproducible.verbose")) {
-  # browser(expr = exists("._dealWithClass_1"))
-  # outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
-  # outputToSaveIsEnv <- is(obj, "environment")
-
-  # if (isTRUE(outputToSaveIsEnv) || isTRUE(outputToSaveIsList)) {
-  #   obj2 <- if (isTRUE(outputToSaveIsEnv))
-  #     as.list(obj, all.names = FALSE) else obj
-  #   out <- lapply(obj2, dealWithClass, cachePath = cachePath, drv = drv, conn = conn)
-  #   innerTags <- lapply(obj, function(o) attr(o, "tags"))
-  #   innerTags <- unique(unlist(innerTags))
-  #   setattr(obj, "tags", innerTags)
-  #
-  #   if (isTRUE(outputToSaveIsEnv)) {
-  #     obj <- Copy(obj)
-  #     obj2 <- list2envAttempts(out, obj)
-  #     if (!is.null(obj2)) obj <- obj2
-  #   } else {
-  #     obj <- out
-  #   }
-  # }
 
   rasters <- is(obj, "Raster")
-  isFromDisk <- FALSE # Default --> this will be updated
+  # isFromDisk <- FALSE # Default --> this will be updated
   if (any(rasters)) {
     objOrig <- obj
     atts <- attributes(obj)
@@ -621,50 +601,86 @@ dealWithClass.default <- function(obj, cachePath, drv = getOption("reproducible.
   obj
 }
 
-dealWithClassOnRecovery <- function(output, cachePath, cacheId,
+#' @export
+#' @rdname dealWithClass
+.dealWithClassOnRecovery.default <- function(obj, cachePath, cacheId,
                                     drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                     conn = getOption("reproducible.conn", NULL)) {
+
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-    return(dealWithClassOnRecovery2(output, cachePath, cacheId,
+    return(dealWithClassOnRecovery2(obj, cachePath, cacheId,
                                     drv, conn))
   }
 
-  isOutputList <- is(output, "list")
-  isOutputEnv <- is(output, "environment")
-  if (isOutputList || isOutputEnv) {
-    anyNames <- names(output)
-    isSpatVector <- if (is.null(anyNames)) FALSE else all(names(output) %in% spatVectorNamesForCache)
+  if (any(inherits(obj, "PackedSpatVector"))) {
+    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+      stop("Please install terra package")
+    obj <- terra::vect(obj)
+  }
+  if (any(inherits(obj, "PackedSpatRaster"))) {
+    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+      stop("Please install terra package")
+    obj <- terra::rast(obj)
+  }
+  if (any(inherits(obj, "data.table"))) {
+    obj <- data.table::copy(obj)
+  }
+
+  obj
+}
+
+#' @export
+#' @param cacheId Used strictly for messaging. This should be the cacheId of the object being recovered.
+#' @rdname dealWithClass
+.dealWithClassOnRecovery <- function(obj, cachePath, cacheId,
+                                    drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                    conn = getOption("reproducible.conn", NULL)) {
+  UseMethod(".dealWithClassOnRecovery")
+}
+
+#' @export
+#' @rdname dealWithClass
+.dealWithClassOnRecovery.environment <- function(obj, cachePath, cacheId,
+                                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                         conn = getOption("reproducible.conn", NULL)) {
+
+  # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
+  obj <- as.list(obj) # don't overwrite everything, just the ones in the list part
+
+  obj <- .dealWithClassOnRecovery(obj, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
+  output2 <- list2envAttempts(outList, obj)
+  if (!is.null(output2)) obj <- output2
+
+  obj
+
+}
+#' @export
+#' @rdname dealWithClass
+.dealWithClassOnRecovery.list <- function(obj, cachePath, cacheId,
+                                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                         conn = getOption("reproducible.conn", NULL)) {
+#   if (isOutputList || isOutputEnv) {
+    anyNames <- names(obj)
+    isSpatVector <- if (is.null(anyNames)) FALSE else all(names(obj) %in% spatVectorNamesForCache)
     if (isTRUE(isSpatVector)) {
-      output <- unwrapSpatVector(output)
+      obj <- unwrapSpatVector(obj)
     } else {
-      if (!"cacheRaster" %in% names(output)) { # recursive up until a list has cacheRaster name
+      if (!"cacheRaster" %in% names(obj)) { # recursive up until a list has cacheRaster name
 
-        outList <- if (isOutputEnv) as.list(output) else output # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
-
-        outList <- lapply(outList, function(out) dealWithClassOnRecovery(out, cachePath, cacheId,
+        outList <- obj
+        outList <- lapply(outList, function(out) .dealWithClassOnRecovery(out, cachePath, cacheId,
                                                                          drv, conn))
 
-        if (isOutputEnv) { # don't overwrite everything, just the ones in the list part
-          output2 <- list2envAttempts(outList, output)
-          if (!is.null(output2)) output <- output2
-          # attempt <- try(list2env(outList, output), silent = TRUE)
-          # if (is(attempt, "try-error")) {
-          #   attempt <- try(list2env(outList, output@.xData), silent = TRUE)
-          #   if (is(attempt, "try-error"))
-          #     output <- as.environment(outList)
-          # }
-        } else {
-          output <- outList
-        }
+          obj <- outList
       } else {
-        origFilenames <- if (is(output, "Raster")) {
-          Filenames(output) # This is legacy piece which allows backwards compatible
+        origFilenames <- if (is(obj, "Raster")) {
+          Filenames(obj) # This is legacy piece which allows backwards compatible
         } else {
-          output$origRaster
+          obj$origRaster
         }
 
         filesExist <- file.exists(origFilenames)
-        cacheFilenames <- Filenames(output)
+        cacheFilenames <- Filenames(obj)
         filesExistInCache <- file.exists(cacheFilenames)
         if (any(!filesExistInCache)) {
           fileTails <- gsub("^.+(rasters.+)$", "\\1", cacheFilenames)
@@ -680,30 +696,14 @@ dealWithClassOnRecovery <- function(output, cachePath, cacheId,
         out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
                               origFilenames[filesExistInCache], overwrite = TRUE)
 
-        newOutput <- updateFilenameSlots(output$cacheRaster,
-                                         Filenames(output, allowMultiple = FALSE),
+        newOutput <- updateFilenameSlots(obj$cacheRaster,
+                                         Filenames(obj, allowMultiple = FALSE),
                                          newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
-        output <- newOutput
-        .setSubAttrInList(output, ".Cache", "newCache", FALSE)
+        obj <- newOutput
+        .setSubAttrInList(obj, ".Cache", "newCache", FALSE)
 
       }
 
     }
-  }
-
-  if (any(inherits(output, "PackedSpatVector"))) {
-    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
-      stop("Please install terra package")
-    output <- terra::vect(output)
-  }
-  if (any(inherits(output, "PackedSpatRaster"))) {
-    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
-      stop("Please install terra package")
-    output <- terra::rast(output)
-  }
-  if (any(inherits(output, "data.table"))) {
-    output <- data.table::copy(output)
-  }
-
-  output
+  # }
 }

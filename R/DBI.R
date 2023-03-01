@@ -221,7 +221,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     }
     obj <- loadFile(f, format = format)
   }
-  obj <- dealWithClassOnRecovery(obj, cachePath = cachePath,
+  obj <- .dealWithClassOnRecovery(obj, cachePath = cachePath,
                                  cacheId = cacheId,
                                  drv = drv, conn = conn)
 

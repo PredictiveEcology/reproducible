@@ -796,7 +796,7 @@ Cache <-
       # Can make new methods by class to add tags to outputs
       if (useDBI()) {
         if (.CacheIsNew) {
-          outputToSave <- dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
+          outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
           outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
         } else {
           outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)

@@ -28,9 +28,6 @@
 \alias{makeMemoisable.data.table}
 \alias{unmakeMemoisable}
 \alias{unmakeMemoisable.default}
-\alias{dealWithClass.list}
-\alias{dealWithClass.environment}
-\alias{dealWithClass.default}
 \title{Exported generics and methods}
 \usage{
 .sortDotsUnderscoreFirst(obj)
@@ -102,30 +99,6 @@ makeMemoisable(x)
 unmakeMemoisable(x)
 
 \method{unmakeMemoisable}{default}(x)
-
-\method{dealWithClass}{list}(
-  obj,
-  cachePath,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = getOption("reproducible.conn", NULL),
-  verbose = getOption("reproducible.verbose")
-)
-
-\method{dealWithClass}{environment}(
-  obj,
-  cachePath,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = getOption("reproducible.conn", NULL),
-  verbose = getOption("reproducible.verbose")
-)
-
-\method{dealWithClass}{default}(
-  obj,
-  cachePath,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = getOption("reproducible.conn", NULL),
-  verbose = getOption("reproducible.verbose")
-)
 }
 \arguments{
 \item{obj}{An object. This function only has useful methods for \verb{Raster*},
@@ -175,13 +148,6 @@ renaming will be given:
 
 \item{x}{An object to make memoisable.
 See individual methods in other packages.}
-
-\item{drv}{an object that inherits from \linkS4class{DBIDriver},
-or an existing \linkS4class{DBIConnection}
-object (in order to clone an existing connection).}
-
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
 }
 \value{
 \code{.sortDotsUnderscoreFirst}: the same object as \code{obj},
