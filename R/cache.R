@@ -240,6 +240,10 @@ utils::globalVariables(c(
 #' @param .cacheExtra A an arbitrary R object that will be included in the `CacheDigest`,
 #'       but otherwise not passed into the `FUN`.
 #'
+#' @param .functionName A an arbitrary character string that provides a name that is different
+#'       than the actual function name (e.g., "rnorm") which will be used for messaging. This
+#'       can be useful when the actual function is not helpful for a user, such as `do.call`.
+#'
 #' @param outputObjects Optional character vector indicating which objects to
 #'                      return. This is only relevant for list, environment (or similar) objects
 #'
@@ -365,7 +369,7 @@ utils::globalVariables(c(
 #'
 Cache <-
   function(FUN, ..., notOlderThan = NULL,
-           .objects = NULL, .cacheExtra = NULL,
+           .objects = NULL, .cacheExtra = NULL, .functionName = NULL,
            outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL,
            cachePath = NULL,
@@ -400,7 +404,7 @@ Cache <-
     #  have modifications under many circumstances, e.g., do.call, specific methods etc.
     # Need the CacheMatchedCall so that args that are in both Cache and the FUN can be sent to both
     preCacheDigestTime <- Sys.time()
-    fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", ...,
+    fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", ..., .functionName = .functionName,
                             FUNcaptured = FUNcaptured, CacheMatchedCall = CacheMatchedCall)
 
     # next line is (1 && 1) && 1 -- if it has :: or $ or [] e.g., fun$b, it MUST be length 3 for it to not be "captured function"
@@ -1345,7 +1349,8 @@ getFunctionName2 <- function(mc) {
 }
 
 #' @importFrom utils modifyList isS3stdGeneric methods
-.fnCleanup <- function(FUN, ..., callingFun, FUNcaptured = NULL, CacheMatchedCall, callingEnv = parent.frame(2)) {
+.fnCleanup <- function(FUN, ..., callingFun, FUNcaptured = NULL, CacheMatchedCall,
+                       .functionName = NULL, callingEnv = parent.frame(2)) {
 
   if (is.null(FUNcaptured))
     FUNcaptured <- substitute(FUN)
@@ -1503,6 +1508,9 @@ getFunctionName2 <- function(mc) {
     FUNcapturedNamesEvaled <- as.call(append(as.list(FUNcapturedNamesEvaled), overlappingArgsAsList))
   }
 
+  if (!is.null(.functionName))
+    fnDetails$functionName <- .functionName
+
   return(append(fnDetails, list(FUN = FUN, matchedCall = FUNcapturedNamesEvaled,
                                 modifiedDots = modifiedDots, # isDoCall = isDoCall,
                                 formalArgs = forms,
@@ -1563,7 +1571,8 @@ getFunctionName2 <- function(mc) {
 #' CacheDigest(rnorm(1)) # shows same cacheId as previous line
 #' CacheDigest(rnorm, 1) # shows same cacheId as previous line
 #'
-CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "CacheDigest", quick = FALSE) {
+CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "CacheDigest",
+                        .functionName = NULL, quick = FALSE) {
 
   FUNcaptured <- substitute(objsToDigest)
   # origFUN <- quote(objsToDigest)
@@ -1575,7 +1584,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
                          # ... so not "just" an object in objsToDigest
        (NROW(forms) > 1 || is.null(forms)))) { # can be CacheDigest(rnorm, 1)
     fnDetails <- .fnCleanup(FUN = objsToDigest, callingFun = "Cache",  ..., FUNcaptured = FUNcaptured,
-                            CacheMatchedCall = match.call(CacheDigest))
+                            .functionName = .functionName, CacheMatchedCall = match.call(CacheDigest))
     modifiedDots <- fnDetails$modifiedDots
     modifiedDots$.FUN <- fnDetails$.FUN
     objsToDigest <- modifiedDots

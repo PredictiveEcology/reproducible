@@ -10,6 +10,7 @@ Cache(
   notOlderThan = NULL,
   .objects = NULL,
   .cacheExtra = NULL,
+  .functionName = NULL,
   outputObjects = NULL,
   algo = "xxhash64",
   cacheRepo = NULL,
@@ -51,6 +52,10 @@ objects, this will only be applied outermost first.}
 
 \item{.cacheExtra}{A an arbitrary R object that will be included in the \code{CacheDigest},
 but otherwise not passed into the \code{FUN}.}
+
+\item{.functionName}{A an arbitrary character string that provides a name that is different
+than the actual function name (e.g., "rnorm") which will be used for messaging. This
+can be useful when the actual function is not helpful for a user, such as \code{do.call}.}
 
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}
