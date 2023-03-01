@@ -648,14 +648,21 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
       if (isSpatRaster || isSpatVector(from)) {
         ## trying to prevent write failure and subsequent overwrite error with terra::writeRaster
         if (file.exists(writeTo)) {
-          if (overwrite %in% FALSE) {
+          if (isFALSE(overwrite)) {
             stop(writeTo, " already exists and `overwrite = FALSE`; please set `overwrite = TRUE` and run again.")
           }
           unlink(writeTo, force = TRUE, recursive = TRUE)
         }
         if (isSpatRaster) {
-          from <- terra::writeRaster(from, filename = writeTo, overwrite = FALSE,
-                                   datatype = datatype)
+          ## if the file still exists it's probably already "loaded"
+          ## and `terra` can't overwrite it even if `overwrite = TRUE`
+          ## this can happen when multiple modules touch the same object
+          if (!file.exists(writeTo)) {
+            from <- terra::writeRaster(from, filename = writeTo, overwrite = FALSE,
+                                       datatype = datatype)
+          } else {
+            stop("File can't be unliked for overwrite")
+          }
         } else {
           written <- terra::writeVector(from, filename = writeTo, overwrite = FALSE)
         }
