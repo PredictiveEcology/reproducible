@@ -660,6 +660,8 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
           if (!file.exists(writeTo)) {
             from <- terra::writeRaster(from, filename = writeTo, overwrite = FALSE,
                                        datatype = datatype)
+          } else {
+            stop("File can't be unliked for overwrite")
           }
         } else {
           written <- terra::writeVector(from, filename = writeTo, overwrite = FALSE)
