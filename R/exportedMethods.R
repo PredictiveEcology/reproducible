@@ -645,10 +645,10 @@ unmakeMemoisable.default <- function(x) {
                                          conn = getOption("reproducible.conn", NULL)) {
 
   # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
-  obj <- as.list(obj) # don't overwrite everything, just the ones in the list part
+  objList <- as.list(obj) # don't overwrite everything, just the ones in the list part
 
-  obj <- .dealWithClassOnRecovery(obj, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
-  output2 <- list2envAttempts(outList, obj)
+  outList <- .dealWithClassOnRecovery(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
+  output2 <- list2envAttempts(outList, obj) # don't return it if the list2env worked correctly
   if (!is.null(output2)) obj <- output2
 
   obj
