@@ -523,7 +523,6 @@ dealWithClass.environment <- function(obj, cachePath, drv = getOption("reproduci
                                       conn = getOption("reproducible.conn", NULL),
                                       verbose = getOption("reproducible.verbose")) {
 
-  browser()
   obj2 <- as.list(obj, all.names = FALSE)
   out <- dealWithClass(obj2, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
   obj <- Copy(obj)
