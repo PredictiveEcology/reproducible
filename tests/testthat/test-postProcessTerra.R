@@ -380,9 +380,9 @@ test_that("testing terra", {
 
     }
 
-    w <- vect("POLYGON ((0 -5, 10 0, 10 -10, 0 -5))")
-    w1 <- vect("POLYGON ((0 -5, 10 0, 10 -10, 4 -2, 0 -5))")
-    w1a <- vect("POLYGON ((20 15, 30 20, 30 10, 24 18, 20 15))")
+    w <- terra::vect("POLYGON ((0 -5, 10 0, 10 -10, 0 -5))")
+    w1 <- terra::vect("POLYGON ((0 -5, 10 0, 10 -10, 4 -2, 0 -5))")
+    w1a <- terra::vect("POLYGON ((20 15, 30 20, 30 10, 24 18, 20 15))")
     w2 <- rbind(w, w1, w, w1a, w)
     w3 <- fixErrorsTerra(w2)
     expect_true(!all(terra::is.valid(w2)))
