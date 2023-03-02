@@ -598,8 +598,8 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
           extTmp <- terra::ext(ext)
           if (terra::is.lonlat(ext)) {
             extTmp2 <- terra::extend(extTmp, 0.1) # hard code 0.1 lat/long, as long as it isn't past the from extent
-            extFrom <- ext(from)
-            ext <- ext(crop(rast(extTmp2), rast(extFrom)))
+            extFrom <- terra::ext(from)
+            ext <- ext(crop(terra::rast(extTmp2), terra::rast(extFrom)))
           } else {
             ext <- terra::extend(extTmp, res[1] * 2)
           }
