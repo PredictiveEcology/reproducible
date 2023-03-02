@@ -146,12 +146,31 @@ test_that("test miscellaneous unit tests cache-helpers", {
       expect_true(identical(dMessCacheId, bMessCacheId))
     }
 
+
+  rcompletelynew <- rmultinom
+  # Now check function is prefered over args
+  clearCache(tmpCache, ask = FALSE)
   eMess <- capture_messages({
-    b <- Cache(rlnorm, 4, sd = 5, showSimilar = TRUE, cachePath = tmpCache)
+    b <- Cache(rbinom, 4, 5, prob = 0.6, showSimilar = TRUE, cachePath = tmpCache)
   })
-  expect_true(any(grepl("different .FUN", eMess)))
-  expect_false(grepl(" n[ ,{\x1b}]", grep("different", eMess, value = TRUE)))
-  expect_false(grepl("[ ,]sd[ ,{\x1b}]", grep("different", eMess, value = TRUE)))
+  fMess <- capture_messages({
+    b <- Cache(rmultinom, 4, 5, prob = 0.6, showSimilar = TRUE, cachePath = tmpCache)
+  })
+  gMess <- capture_messages({
+    b <- Cache(rmultinom, 14, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
+  })
+  hMess <- capture_messages({
+    b <- Cache(rbinom, 14, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
+  })
+  iMess <- capture_messages({
+    b <- Cache(rcompletelynew, 12, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
+  })
+  expect_true(any(grepl("no similar item", eMess))) # shouldn't find b/c new
+  expect_true(any(grepl("no similar item", fMess))) # shouldn't find b/c args are same
+  expect_true(any(grepl("next closest.+rmultin", gMess))) # should only find rmultinom
+  expect_true(any(grepl("next closest.+rbinom", hMess))) # should only find rbinom
+  expect_true(sum(grepl(".+rcompletelynew|next closest.+rmultin", iMess)) == 2) # should notice different name, but still find
+
 
   ## debugCache -- "complete"
   thing <- 1

@@ -1657,6 +1657,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
                          verbose = getOption("reproducible.verbose", TRUE)) {
 
   setDT(localTags)
+  localTags <- localTags[nzchar(tagValue)]
   isDevMode <- identical("devMode", useCache)
   if (isDevMode) {
     showSimilar <- 1
@@ -1674,12 +1675,20 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     tag <- localTags[paste(tagKey , get(.cacheTableTagColName()), sep = ":"),
                      on = .cacheTableHashColName()][[hashName]]
   }
-  aa <- localTags[tag %in% userTags3][,.N, keyby = hashName]
+  aa <- localTags[tag %in% userTags3]
+  hasCommonFUN <- startsWith(aa$tagValue, ".FUN")
+  if (any(hasCommonFUN)) {
+    commonCacheId <- aa$cacheId[hasCommonFUN]
+    aa <- aa[aa$cacheId %in% commonCacheId]
+  } else {
+    aa <- aa[0]
+  }
+  aa <- aa[,.N, keyby = hashName]
   setkeyv(aa, "N")
   similar <- if (NROW(aa) > 0) {
     localTags[tail(aa, as.numeric(showSimilar)), on = hashName][N == max(N)]
   } else {
-    localTags
+    localTags[0]
   }
   if (NROW(similar)) {
     if (cn %in% "tag") {
@@ -1709,16 +1718,21 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     similar2[(hash %in% "other"), deeperThan3 := TRUE]
     similar2[(hash %in% "other"), differs := NA]
     differed <- FALSE
+    fnTxt <- paste0(if (!is.null(functionName)) paste0("of '",functionName,"' ") else "call ")
     if (isDevMode) {
       messageCache("    ------ devMode -------", verbose = verbose)
       messageCache("    This call to cache will replace", verbose = verbose)
     } else {
       # messageCache(" ------ showSimilar -------", verbose = verbose)
       messageCache("    Cache ",
-                   if (!is.null(functionName)) paste0("of '",functionName,"' ") else "call ",
+                   fnTxt,
                    "differs from", verbose = verbose)
     }
-    messageCache(paste0("    the next closest cacheId ", cacheIdOfSimilar), verbose = verbose)
+    simFun <- similar$tagValue[similar$tagKey == "function"]
+    if (!identical(simFun, functionName))
+      fnTxt <- paste0("(whose function name was '", simFun, "')")
+    messageCache(paste0("    the next closest cacheId ", cacheIdOfSimilar, " ",
+                        fnTxt), verbose = verbose)
 
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
       differed <- TRUE
@@ -1748,7 +1762,8 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
 
   } else {
     if (!identical("devMode", useCache))
-      messageCache("There is no similar item in the cachePath", verbose = verbose)
+      messageCache("There is no similar item in the cachePath ",
+                   if (!is.null(functionName)) paste0("of '",functionName,"' "), verbose = verbose)
   }
 }
 
