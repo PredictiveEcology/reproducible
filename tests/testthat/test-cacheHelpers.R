@@ -208,6 +208,25 @@ test_that("test miscellaneous unit tests cache-helpers", {
   }
 })
 
+test_that("test warnings from cached functions", {
+  testInitOut <- testInit(libraries = c("sf", "sp"), opts = list(reproducible.useMemoise = TRUE))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  # clearCache(tmpCache, ask = FALSE)
+  warn1 <- capture_warnings(b <- Cache(rbinom, 4, 5, prob = 6, cachePath = tmpCache))
+
+  fun <- function(n, size, prob) {
+    rbinom(n, size, prob)
+  }
+  warn2 <- capture_warnings(d <- Cache(fun, 4, 5, 6, cachePath = tmpCache))
+  warnCompare <- "rbinom.+NAs produced"
+  expect_true(grepl(warnCompare, warn1)) # includes the call because .call = FALSE, and call added manually in Cache
+  expect_true(grepl("NAs produced", warn2))
+  expect_false(grepl(warnCompare, warn2)) # this is false because the warning message doesn't include the call with normal warn
+
+})
+
 test_that("test cache-helpers with stacks", {
   testInitOut <- testInit("raster")
   on.exit({

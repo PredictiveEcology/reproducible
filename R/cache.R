@@ -2105,18 +2105,22 @@ isPkgColonFn <- function(x) {
 
 evalTheFun <- function(FUNcaptured, isCapturedFUN, isSquiggly, matchedCall, envir = parent.frame(),
                        verbose = getOption("reproducible.verbose"), ...) {
+  withCallingHandlers({
   if (isCapturedFUN || isSquiggly) { # if is wasn't "captured", then it is just a function, so now use it on the ...
      out <- eval(FUNcaptured, envir = envir)
   } else {
-    # out <- try(eval(matchedCall, envir = envir), silent = TRUE)
-    # if (is(out, "try-error")) {
-      # This occurs when the Cached function is using the old approach (Cache(prepInputs, ...))
-      #   and when the arguments are not actually specified, but are provided in the ... from an
-      #   outer function. The following is not rigorously tested, but it works for cases provided
       out <- eval(FUNcaptured, envir = envir)(...)
-    # }
-
   }
+  },
+  warning = function(w) {
+    asch <- as.character(w$call[[1]])
+    isEvalFUNCapCall <- all(vapply(c("eval", "FUNcaptured"),
+                                   function(p) any(startsWith(asch, prefix = p)), FUN.VALUE = logical(1)))
+    if (isTRUE(isEvalFUNCapCall)) {
+      warning("In ", format(matchedCall), ": ", w$message, call. = FALSE)
+      invokeRestart("muffleWarning")
+    }
+  })
 
   out
 }
