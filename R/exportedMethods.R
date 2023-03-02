@@ -648,7 +648,7 @@ unmakeMemoisable.default <- function(x) {
   objList <- as.list(obj) # don't overwrite everything, just the ones in the list part
 
   outList <- .dealWithClassOnRecovery(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
-  output2 <- list2envAttempts(outList, obj) # don't return it if the list2env worked correctly
+  output2 <- list2envAttempts(outList, obj) # don't return it if the list2env retured nothing (a normal environment situation; not simList)
   if (!is.null(output2)) obj <- output2
 
   obj

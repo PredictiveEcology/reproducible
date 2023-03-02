@@ -279,7 +279,7 @@ fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.ve
     } else {
       if (os > 1e9 && isTRUE(getOption("reproducible.useCache"))) {
         messagePrepInputs("... Caching the fixErrorTerra call on this large object", verbose = verbose)
-        x <- Cache(makeVal(x))
+        x <- Cache(makeVal(x), .functionName = "make.valid")
       } else {
         x <- makeVal(x)
       }

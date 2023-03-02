@@ -373,6 +373,9 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     naFun <- all(is.na(theFun))
   })
 
+  funChar <- if (is.character(out$funChar)) out$funChar else NULL
+
+
   out <- modifyList(out, list(...))
 
   argsFromPrepInputsFamily <- unique(c(.namesPostProcessFormals(), formalArgs(prepInputs), formalArgs(preProcess),
@@ -383,6 +386,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   argsPassingToTheFun <- out[!names(out) %in% argsFromPrepInputsFamily]
   # args <- argsPassingToTheFun[!names(argsPassingToTheFun) %in% "targetFilePath"] # will replace it without a named arg
   args <- argsPassingToTheFun[names(argsPassingToTheFun) %in% formsForTheFun]
+
 
   otherFiles <- out$checkSums[result == "OK"]
   .cacheExtra <- NULL
@@ -433,10 +437,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                             args)
               if (length(fun[["functionName"]]) == 1)
                 out[[fun[["functionName"]]]] <- fun$FUN
-              obj <- Cache(eval, theFun, envir = out, useCache = useCache2, .cacheExtra = .cacheExtra)
+              obj <- Cache(eval, theFun, envir = out, useCache = useCache2, .cacheExtra = .cacheExtra,
+                           .functionName = funChar)
             } else {
               args2 <- append(list(asPath(out$targetFilePath)), args)
-              obj <- Cache(do.call, theFun, args2, useCache = useCache2, .cacheExtra = .cacheExtra)
+              obj <- Cache(do.call, theFun, args2, useCache = useCache2, .cacheExtra = .cacheExtra,
+                           .functionName = funChar)
             }, message = function(m) {
               m$message <- grep("No cachePath supplied|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
               if (length(m$message)) {
