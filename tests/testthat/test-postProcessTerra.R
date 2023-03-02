@@ -363,11 +363,13 @@ test_that("testing terra", {
       sum(!is.na(terra::values(ras1SmallAll))) ==
         sum(!is.na(terra::values(t20AllByRas)))
     )
-    expect_true( #  these are 1 off b/c of projection probably
-      abs(sum(!is.na(terra::values(ras1SmallAll))) -
-        sum(!is.na(terra::values(t20MaskedByRas)))) < 2
-    )
 
+    # The below was slightly off because RasterLayer was not exactly same as t20 proj
+    spatRas1SmallAll <- projectTo(terra::rast(ras1SmallAll), t20)
+    expect_true( #  these are off b/c of projection probably
+      abs(sum(!is.na(terra::values(spatRas1SmallAll))) -
+        sum(!is.na(terra::values(t20MaskedByRas)))) <= 0
+    )
 
     if (interactive()) {
       terra::plot(ras1SmallAll)
@@ -376,8 +378,6 @@ test_that("testing terra", {
       terra::plot(t20CroppedByRas)
       terra::plot(t20MaskedByRas)
       terra::plot(t20ProjectedByRas)
-
-
     }
 
     w <- terra::vect("POLYGON ((0 -5, 10 0, 10 -10, 0 -5))")
