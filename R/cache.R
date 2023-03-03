@@ -1731,14 +1731,12 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
 
     simFun <- similar[tagKey == "function", list(funName = tail(tagValue, 1)), by = cacheId]
 
-    # simFun <- similar$tagValue[similar$tagKey == "function"]
     sameNames <- simFun$funName %in% functionName
     if (!all(sameNames)) {
       fnTxt <- paste0("(whose function name(s) was/were '", paste(simFun$funName, collapse = "', '"), "')")
+    }
       messageCache(paste0("    the next closest cacheId(s) ", paste(cacheIdOfSimilar, collapse = ", "), " ",
                           fnTxt, sep = "\n"), verbose = verbose)
-    }
-
 
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
       differed <- TRUE
