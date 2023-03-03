@@ -179,6 +179,8 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 #' @export
 #' @rdname CacheHelpers
 #' @inheritParams CacheStoredFile
+#' @param .dotsFromCache Optional. Used internally.
+#' @param .functionName Optional. Used for messaging when this function is called from `Cache`
 #' @details
 #' `loadFromCache` is a function to get a single object from the cache, given its `cacheId`.
 
@@ -188,9 +190,15 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                           cacheId,
                           format = getOption("reproducible.cacheSaveFormat", "rds"),
+                          .functionName = NULL, .dotsFromCache = NULL,
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                          conn = getOption("reproducible.conn", NULL) ) {
-  isMemoised <- FALSE
+                          conn = getOption("reproducible.conn", NULL),
+                          verbose = getOption("reproducible.verbose")) {
+  if (verbose > 3) {
+    startLoadTime <- Sys.time()
+  }
+
+  isMemoised <- NA
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     if (is.null(.pkgEnv[[cachePath]]))
       .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
@@ -220,15 +228,38 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
       }
     }
     obj <- loadFile(f, format = format)
-    # the .dealWithClassOnRecovery doesn't need to act on memoised because it is already correctly in RAM
-    obj <- .dealWithClassOnRecovery(obj, cachePath = cachePath,
-                                    cacheId = cacheId,
-                                    drv = drv, conn = conn)
   }
+
+  obj <- .dealWithClassOnRecovery(obj, cachePath = cachePath,
+                                  cacheId = cacheId,
+                                  drv = drv, conn = conn)
+  # Class-specific message
+  loadFromMgs <- .cacheMessage(obj, .functionName, fromMemoise = isMemoised, verbose = verbose)
+
+  # # This allows for any class specific things
+  obj <-
+    do.call(.prepareOutput, args = append(list(obj, cachePath), .dotsFromCache))
 
   if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
     assign(cacheId, obj, envir = .pkgEnv[[cachePath]])
   }
+
+  if (verbose > 3) {
+    endLoadTime <- Sys.time()
+    verboseDF <- data.frame(
+      functionName = .functionName,
+      component = gsub("(.+)(ed)(.+) result from.+$", "\\1ing\\3", loadFromMgs),
+      elapsedTime = as.numeric(difftime(endLoadTime, startLoadTime, units = "secs")),
+      units = "secs",
+      stringsAsFactors = FALSE
+    )
+
+    if (exists("verboseTiming", envir = .reproEnv)) {
+      .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+    }
+  }
+
+
   obj
 
 }
