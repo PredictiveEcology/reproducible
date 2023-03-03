@@ -221,10 +221,11 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
       }
     }
     obj <- loadFile(f, format = format)
+    # the .dealWithClassOnRecovery doesn't need to act on memoised because it is already correctly in RAM
+    obj <- .dealWithClassOnRecovery(obj, cachePath = cachePath,
+                                    cacheId = cacheId,
+                                    drv = drv, conn = conn)
   }
-  obj <- .dealWithClassOnRecovery(obj, cachePath = cachePath,
-                                 cacheId = cacheId,
-                                 drv = drv, conn = conn)
 
   if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
     assign(cacheId, obj, envir = .pkgEnv[[cachePath]])
