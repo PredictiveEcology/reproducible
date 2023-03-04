@@ -449,8 +449,9 @@ setMethod(
   namesFrom <- names(from)
   if (!is.null(namesFrom)) { # has to have names
     onDiskRaster <- all(namesFrom %in% c("origRaster", "cacheRaster"))
+    isSpatVector <- all(names(from) %in% c("x", "type", "atts", "crs"))
 
-    if ((is(from, "list") || is(from, "environment")) && onDiskRaster %in% FALSE) {
+    if ((is(from, "list") || is(from, "environment")) && onDiskRaster %in% FALSE && isSpatVector %in% FALSE) {
       if (length(from) && length(to)) {
         nams <- grep("^\\.mods$|^\\._", namesFrom, value = TRUE, invert = TRUE)
         for (nam in nams) {
