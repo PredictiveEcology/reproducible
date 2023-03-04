@@ -797,9 +797,12 @@ Cache <-
       if (useDBI()) {
         if (.CacheIsNew) {
           outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
-          outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
+          output <- .CopyCacheAtts(outputToSave, output, passByReference = TRUE)
+          # .dealWithClass added tags; these should be transfered to output
+#          outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
+#          output <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
         } else {
-          outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
+ #         outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
         }
       }
 
@@ -2267,3 +2270,4 @@ browserCond <- function(expr) {
 }
 
 spatVectorNamesForCache <- c("x", "type", "atts", "crs")
+

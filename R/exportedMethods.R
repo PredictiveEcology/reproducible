@@ -511,12 +511,12 @@ unmakeMemoisable.default <- function(x) {
                                conn = getOption("reproducible.conn", NULL),
                                verbose = getOption("reproducible.verbose")) {
 
-  innerTags <- lapply(obj, function(o) attr(o, "tags"))
-  innerTags <- unique(unlist(innerTags))
+#  innerTags <- lapply(obj, function(o) attr(o, "tags"))
+#  innerTags <- unique(unlist(innerTags))
 
   obj <- lapply(obj, .dealWithClass, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
 
-  setattr(obj, "tags", innerTags)
+  # setattr(obj, "tags", innerTags)
   obj
 
 }
@@ -546,7 +546,7 @@ unmakeMemoisable.default <- function(x) {
                                   verbose = getOption("reproducible.verbose")) {
 
   rasters <- is(obj, "Raster")
-  # isFromDisk <- FALSE # Default --> this will be updated
+
   if (any(rasters)) {
     objOrig <- obj
     atts <- attributes(obj)
@@ -555,7 +555,14 @@ unmakeMemoisable.default <- function(x) {
     isFromDisk <- fromDisk(obj)
 
     # have to reset all these attributes on the rasters as they were undone in prev steps
-    atts$tags <- c(atts$tags, paste("fromDisk", sep = ":", isFromDisk))
+    hasFromDisk <- if (!is.null(atts$tags)) startsWith(atts$tags, "fromDisk") else FALSE
+
+    if (any(hasFromDisk)) {
+      atts$tags[hasFromDisk] <- paste("fromDisk", sep = ":", isFromDisk)
+    } else {
+      atts$tags <- c(atts$tags, paste("fromDisk", sep = ":", isFromDisk))
+    }
+
     setattr(obj, "tags", atts$tags)
     .setSubAttrInList(obj, ".Cache", "newCache", atts$.Cache$newCache)
     setattr(obj, "call", atts$call)

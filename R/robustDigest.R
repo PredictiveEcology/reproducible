@@ -442,6 +442,31 @@ setMethod(
   x
 }
 
+
+.CopyCacheAtts <- function(from, to, passByReference = FALSE) {
+  if (is(from, "list") || is(from, "environment")) {
+    if (length(from)) {
+      nams <- grep("^\\.mods$|^\\._", names(from), value = TRUE, invert = TRUE)
+      for (nam in nams) {
+        to[[nam]] <- .CopyCacheAtts(from[[nam]], to[[nam]], passByReference = passByReference)
+      }
+    }
+
+    return(to)
+  }
+
+  for (i in c("tags", ".Cache", "call")) {
+    if (!is.null(attr(from, i)))
+      if (passByReference)  {
+        setattr(to, i, attr(from, i))
+      } else  {
+        attr(to, i) <- attr(from, i)
+      }
+  }
+  to
+
+}
+
 .robustDigestFormatOnly <- function(object, .objects, length, algo, quick,
                                classOptions) {
   object <- .removeCacheAtts(object)
