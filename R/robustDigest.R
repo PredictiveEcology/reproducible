@@ -444,7 +444,13 @@ setMethod(
 
 
 .CopyCacheAtts <- function(from, to, passByReference = FALSE) {
-  if (is(from, "list") || is(from, "environment")) {
+
+  onDiskRaster <- FALSE
+  namesFrom <- names(from)
+  if (!is.null(namesFrom))
+    onDiskRaster <- all(namesFrom %in% c("origRaster", "cacheRaster"))
+
+  if ((is(from, "list") || is(from, "environment")) && onDiskRaster %in% FALSE) {
     if (length(from)) {
       nams <- grep("^\\.mods$|^\\._", names(from), value = TRUE, invert = TRUE)
       for (nam in nams) {
