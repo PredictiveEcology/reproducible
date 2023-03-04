@@ -129,8 +129,8 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     if (is.null(.pkgEnv[[cachePath]]))
       .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
-    obj <- makeMemoisable(obj)
-    assign(cacheId, obj, envir = .pkgEnv[[cachePath]])
+    obj2 <- makeMemoisable(obj)
+    assign(cacheId, obj2, envir = .pkgEnv[[cachePath]])
   }
 
   fsChar <- as.character(fs)
@@ -241,7 +241,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     do.call(.prepareOutput, args = append(list(obj, cachePath), .dotsFromCache))
 
   if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
-    assign(cacheId, obj, envir = .pkgEnv[[cachePath]])
+    obj2 <- makeMemoisable(obj)
+    assign(cacheId, obj2, envir = .pkgEnv[[cachePath]])
   }
 
   if (verbose > 3) {
