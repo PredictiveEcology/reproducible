@@ -447,20 +447,21 @@ setMethod(
 
   onDiskRaster <- FALSE
   namesFrom <- names(from)
-  if (!is.null(namesFrom))
+  if (!is.null(namesFrom)) { # has to have names
     onDiskRaster <- all(namesFrom %in% c("origRaster", "cacheRaster"))
 
-  if ((is(from, "list") || is(from, "environment")) && onDiskRaster %in% FALSE) {
-    if (length(from)) {
-      nams <- grep("^\\.mods$|^\\._", names(from), value = TRUE, invert = TRUE)
-      for (nam in nams) {
-        lala <- try(.CopyCacheAtts(from[[nam]], to[[nam]], passByReference = passByReference))
-        if (is(lala, 'try-error')) browser()
-        to[[nam]] <- lala
+    if ((is(from, "list") || is(from, "environment")) && onDiskRaster %in% FALSE) {
+      if (length(from) && length(to)) {
+        nams <- grep("^\\.mods$|^\\._", namesFrom, value = TRUE, invert = TRUE)
+        for (nam in nams) {
+          lala <- try(.CopyCacheAtts(from[[nam]], to[[nam]], passByReference = passByReference))
+          if (is(lala, 'try-error')) browser()
+          to[[nam]] <- lala
+        }
       }
-    }
 
-    return(to)
+      return(to)
+    }
   }
 
   for (i in c("tags", ".Cache", "call")) {
