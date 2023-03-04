@@ -454,7 +454,9 @@ setMethod(
     if (length(from)) {
       nams <- grep("^\\.mods$|^\\._", names(from), value = TRUE, invert = TRUE)
       for (nam in nams) {
-        to[[nam]] <- .CopyCacheAtts(from[[nam]], to[[nam]], passByReference = passByReference)
+        lala <- try(.CopyCacheAtts(from[[nam]], to[[nam]], passByReference = passByReference))
+        if (is(lala, 'try-error')) browser()
+        to[[nam]] <- lala
       }
     }
 
