@@ -230,8 +230,6 @@ test_that("testing terra", {
   a <- try(ncol(t13a), silent = TRUE)
   expect_false(is(a, "try-error"))
 
-  suppressMessages(canProvs1 <- try({
-
   # try NA to *To
   # Vectors
   vutmSF <- sf::st_as_sf(vutm)
