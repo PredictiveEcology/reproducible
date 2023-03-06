@@ -220,6 +220,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                      fileExt(f), ")")
         obj <- loadFromCache(cachePath = cachePath, cacheId = cacheId,
                              format = fileExt(sameCacheID))
+        obj <- .dealWithClass(obj, cachePath = cachePath, drv = drv, conn = conn)
         fs <- saveToCache(obj = obj, cachePath = cachePath, drv = drv, conn = conn,
                           cacheId = cacheId)
         rmFromCache(cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,

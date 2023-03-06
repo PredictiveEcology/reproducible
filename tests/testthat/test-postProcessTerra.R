@@ -220,6 +220,18 @@ test_that("testing terra", {
   expect_true(sum(grepl("fixed", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
   expect_true(is(t13a, "SpatVector"))
 
+  # Switch from qs to rds with Cache
+  opts <- options(reproducible.cacheSaveFormat = "qs")
+  t13a <- Cache(postProcessTerra(xVect, vutmErrors))
+  opts <- options(reproducible.cacheSaveFormat = "rds")
+  t13a <- Cache(postProcessTerra(xVect, vutmErrors))
+  opts <- options(reproducible.cacheSaveFormat = "qs")
+  t13a <- try(Cache(postProcessTerra(xVect, vutmErrors)), silent = TRUE)
+  a <- try(ncol(t13a), silent = TRUE)
+  expect_false(is(a, "try-error"))
+
+  suppressMessages(canProvs1 <- try({
+
   # try NA to *To
   # Vectors
   vutmSF <- sf::st_as_sf(vutm)
