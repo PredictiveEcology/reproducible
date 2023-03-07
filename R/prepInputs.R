@@ -437,7 +437,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                             args)
               if (length(fun[["functionName"]]) == 1)
                 out[[fun[["functionName"]]]] <- fun$FUN
-              obj <- Cache(eval, theFun, envir = out, useCache = useCache2, .cacheExtra = .cacheExtra,
+              # obj <- Cache(eval, theFun, envir = out, useCache = useCache2, .cacheExtra = .cacheExtra,
+              obj <- Cache(eval(theFun, envir = out), useCache = useCache2, .cacheExtra = .cacheExtra,
                            .functionName = funChar)
             } else {
               args2 <- append(list(asPath(out$targetFilePath)), args)
