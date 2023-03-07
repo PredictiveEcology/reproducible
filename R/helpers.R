@@ -93,10 +93,9 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
 #'
 #' @export
 #' @return
-#' A character string using the `digest` of the `studyArea`. This is only intended
+#' A character string using the `.robustDigest` of the `studyArea`. This is only intended
 #' for use with spatial objects.
 #'
-#' @importFrom digest digest
 setGeneric("studyAreaName", function(studyArea, ...) {
   standardGeneric("studyAreaName")
 })
@@ -119,7 +118,7 @@ setMethod(
   signature = "character",
   definition = function(studyArea, ...) {
     sort(studyArea) ## ensure consistent hash for same subset of study area names
-    digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
+    .robustDigest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
 })
 
 #' @export
@@ -133,10 +132,11 @@ setMethod(
         studyArea <- sf::st_geometry(studyArea)
       }
     }
-    if (!(is(studyArea, "spatialClasses") || is(studyArea, "sfc")) || is.character(studyArea)) {
+    if (!(is(studyArea, "spatialClasses") || is(studyArea, "sfc") ||
+          is(studyArea, "SpatVector") || is.character(studyArea))) {
       stop("studyAreaName expects a spatialClasses object (or character vector)")
     }
-    digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
+    .robustDigest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
 })
 
 #' Identify which formals to a function are not in the current `...`
