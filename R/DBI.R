@@ -229,11 +229,11 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
       }
     }
     obj <- loadFile(f, format = format)
+    obj <- .dealWithClassOnRecovery(obj, cachePath = cachePath,
+                                    cacheId = cacheId,
+                                    drv = drv, conn = conn)
   }
 
-  obj <- .dealWithClassOnRecovery(obj, cachePath = cachePath,
-                                  cacheId = cacheId,
-                                  drv = drv, conn = conn)
   # Class-specific message
   loadFromMgs <- .cacheMessage(obj, .functionName, fromMemoise = isMemoised, verbose = verbose)
 
