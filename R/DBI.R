@@ -129,6 +129,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     if (is.null(.pkgEnv[[cachePath]]))
       .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
+    obj <- .dealWithClassOnRecovery(obj) # This takes time, but whether it happens now or later, same
     obj2 <- makeMemoisable(obj)
     assign(cacheId, obj2, envir = .pkgEnv[[cachePath]])
   }
