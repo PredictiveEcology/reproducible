@@ -1143,10 +1143,14 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
           }
         } else {
           if (is.call(xxxx)) {
-            if (identical(quote(eval), xxxx[[1]])) # basically "eval" should be evaluated
+            if (identical(quote(eval), xxxx[[1]])) { # basically "eval" should be evaluated
+              message("There is an `eval` call in a chain of calls for Cache; ",
+                      "\n  eval is evaluated before Cache which may be undesired. ",
+                      "\n  Perhaps use `do.call` if the evaluation should not occur prior to Cache")
               ret <- eval(xxxx, envir = envir)
-            else
+            } else {
               ret <- recursiveEvalNamesOnly(xxxx, envir, outer = FALSE)
+            }
           } else {
             ret <- xxxx
           }
