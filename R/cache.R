@@ -392,6 +392,9 @@ Cache <-
       if (!is.null(cacheRepo))
         cachePath <- cacheRepo
     }
+
+    userTagsOrig <- userTags # keep to distinguish actual user supplied userTags
+
     CacheMatchedCall <- match.call(Cache)
     # Capture everything -- so not evaluated
     FUNcaptured <- substitute(FUN)
@@ -643,7 +646,8 @@ Cache <-
         # It will not have the "localTags" object because of "direct db access" added Jan 20 2020
         if (!exists("localTags", inherits = FALSE)) #
           localTags <- showCache(cachePath, drv = drv, verbose = FALSE) # This is noisy
-        devModeOut <- devModeFn1(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose, isInRepo, outputHash)
+        devModeOut <- devModeFn1(localTags, userTags, userTagsOrig, scalls,
+                                 preDigestUnlistTrunc, useCache, verbose, isInRepo, outputHash)
         outputHash <- devModeOut$outputHash
         isInRepo <- devModeOut$isInRepo
         needFindByTags <- devModeOut$needFindByTags
@@ -705,7 +709,7 @@ Cache <-
             if (!exists("localTags", inherits = FALSE)) #
               localTags <- showCache(cachePath, drv = drv, verbose = FALSE) # This is noisy
             .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
-                         userTags, functionName = fnDetails$functionName,
+                         userTags, userTagsOrig, functionName = fnDetails$functionName,
                          useCache = useCache, verbose = verbose)
           }
         }
@@ -1659,7 +1663,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
 #' @importFrom data.table setDT setkeyv melt
 #' @keywords internal
 .findSimilar <- function(localTags, showSimilar, scalls, preDigestUnlistTrunc, userTags,
-                         functionName,
+                         userTagsOrig, functionName,
                          useCache = getOption("reproducible.useCache", TRUE),
                          verbose = getOption("reproducible.verbose", TRUE)) {
 
@@ -1681,10 +1685,14 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   if (!(cn %in% "tag")) {
     tag <- localTags[paste(tagKey , get(.cacheTableTagColName()), sep = ":"),
                      on = .cacheTableHashColName()][[hashName]]
+    utOrig <- paste0(userTagsOrig, ":", userTagsOrig)
   }
-  aa <- localTags[tag %in% userTags3]
+  aa <- localTags[tag %in% userTags3 | tag %in% utOrig]
   hasCommonFUN <- startsWith(aa$tagValue, ".FUN")
   if (any(hasCommonFUN)) {
+    hasCommonUserTagsOrig <- userTagsOrig %in% aa[[.cacheTableTagColName()]]
+    if (any(hasCommonUserTagsOrig %in% FALSE)) # Doesn't share userTagsOrig
+      hasCommonFUN <- rep(hasCommonUserTagsOrig, length(hasCommonFUN))
     commonCacheId <- aa$cacheId[hasCommonFUN]
     aa <- aa[aa$cacheId %in% commonCacheId]
   } else {
@@ -1697,6 +1705,9 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   } else {
     localTags[0]
   }
+
+  userTagsMess <- if (!is.null(userTagsOrig)) paste0("with user supplied tags: '",
+                                                     paste(userTagsOrig, collapse = ", "),"' ")
   if (NROW(similar)) {
     if (cn %in% "tag") {
       similar2 <- similar[grepl("preDigest", tag)]
@@ -1743,7 +1754,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
       fnTxt <- paste0("(whose function name(s) was/were '", paste(simFun$funName, collapse = "', '"), "')")
     }
       messageCache(paste0("    the next closest cacheId(s) ", paste(cacheIdOfSimilar, collapse = ", "), " ",
-                          fnTxt, sep = "\n"), verbose = verbose)
+                          fnTxt, userTagsMess, sep = "\n"), verbose = verbose)
 
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
       differed <- TRUE
@@ -1774,7 +1785,9 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   } else {
     if (!identical("devMode", useCache))
       messageCache("There is no similar item in the cachePath ",
-                   if (!is.null(functionName)) paste0("of '",functionName,"' "), verbose = verbose)
+                   if (!is.null(functionName)) paste0("of '",functionName,"' "),
+                   userTagsMess,
+                   verbose = verbose)
   }
 }
 
@@ -1953,7 +1966,7 @@ getCacheRepos <- function(cachePath, modifiedDots, verbose = getOption("reproduc
   return(cachePaths)
 }
 
-devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose,
+devModeFn1 <- function(localTags, userTags, userTagsOrig, scalls, preDigestUnlistTrunc, useCache, verbose,
                        isInRepo, outputHash) {
   # browser(expr = exists("._devModeFn1_1"))
   userTags <- gsub(".*:(.*)", "\\1", userTags)
@@ -1979,7 +1992,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
       mess <- capture.output(type = "output", {
         similars <- .findSimilar(newLocalTags, scalls = scalls,
                                  preDigestUnlistTrunc = preDigestUnlistTrunc,
-                                 userTags = userTags,
+                                 userTags = userTags, userTagsOrig = userTagsOrig,
                                  useCache = useCache,
                                  verbose = verbose)
       })
