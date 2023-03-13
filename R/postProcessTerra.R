@@ -668,12 +668,12 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
   if (isBrick) from <- raster::brick(from)
 
   if (!is.null(writeTo))
-    if (!is.na(writeTo)) {
+    if (!any(is.na(writeTo))) {
       messagePrepInputs("    writing...", appendLF = FALSE)
       st <- Sys.time()
       if (isSpatRaster || isSpatVector(from)) {
         ## trying to prevent write failure and subsequent overwrite error with terra::writeRaster
-        if (file.exists(writeTo)) {
+        if (any(file.exists(writeTo))) {
           if (isFALSE(overwrite)) {
             stop(writeTo, " already exists and `overwrite = FALSE`; please set `overwrite = TRUE` and run again.")
           }
@@ -683,7 +683,7 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
           ## if the file still exists it's probably already "loaded"
           ## and `terra` can't overwrite it even if `overwrite = TRUE`
           ## this can happen when multiple modules touch the same object
-          if (!file.exists(writeTo)) {
+          if (!any(file.exists(writeTo))) {
             from <- terra::writeRaster(from, filename = writeTo, overwrite = FALSE,
                                        datatype = datatype)
           } else {
