@@ -4,6 +4,7 @@ Version 1.2.17
 ==============
 
 ## enhancements
+- `preProcess` can now handle google docs files, if `type = ...` is passed.
 - `postProcess` now uses `terra` and `sf` by default throughout the family. These are only activated by a user deciding to use the new family of functions (`postProcessTerra`, `cropTo`, `maskTo`, `projectTo`, `writeTo`) or by setting the `option(reproducible.useTerra = TRUE)`
 - new functions to assist with transition from `raster` to `terra` --> `maxFn`, `minFn`, `rasterRead`
 - `.dealWithClass` and `.dealWithClassOnRecovery` are now exported generics, with several methods here, notably, list, environment, default

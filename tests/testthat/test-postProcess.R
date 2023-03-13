@@ -1,10 +1,12 @@
 test_that("prepInputs doesn't work (part 3)", {
   skip_on_cran() # too long
-  testInitOut <- testInit(c("raster", "sf"), tmpFileExt = c(".tif", ".tif"),
+  testInitOut <- testInit(c("raster", "sf"), tmpFileExt = c(".tif", ".tif", ".tif"),
                           opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.inputPaths" = NULL,
-    "reproducible.overwrite" = TRUE)
+    "reproducible.overwrite" = TRUE,
+    "rgdal_show_exportToProj4_warnings"="none") # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
+
   )
   on.exit({
     testOnExit(testInitOut)
@@ -50,44 +52,51 @@ test_that("prepInputs doesn't work (part 3)", {
   r1[] <- runif(ncell(rB))
   r2[] <- runif(ncell(rB))
 
-  b <- raster::brick(r1, r2)
+  b <- c(terra::rast(r1), terra::rast(r2))
+  crs(b) <- crs(nonLatLongProj)
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE)
-  expect_true(inherits(b1, "RasterBrick"))
+  expect_true(inherits(b1, "SpatRaster"))
 
-  s <- raster::stack(r1, r2)
+  s <- c(terra::rast(r1), terra::rast(r2))
+  crs(s) <- crs(nonLatLongProj)
   s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE)
-  expect_true(inherits(s1, "RasterStack"))
+  expect_true(inherits(s1, "SpatRaster"))
   expect_equal(s1[], b1[], ignore_attr = TRUE)
 
   b <- writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
-  expect_true(inherits(b1, "RasterBrick"))
+  expect_true(inherits(b1, "SpatRaster"))
 
-  s <- raster::stack(writeRaster(s, filename = tmpfile[1], overwrite = TRUE))
+  opts <- options(reproducible.useTerra = TRUE)
+  on.exit(options(opts), add = TRUE)
+  # s <- raster::writeRaster(s, filename = tmpfile[3], overwrite = TRUE)
+
+
+  # s <- raster::stack()
   s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
-  expect_true(inherits(s1, "RasterStack"))
+  expect_true(inherits(s1, "SpatRaster"))
 
   # Test datatype setting
   dt1 <- "INT2U"
-  s <- raster::stack(writeRaster(s, filename = tmpfile[2], overwrite = TRUE))
+  s <- writeRaster(s, filename = tmpfile[2], overwrite = TRUE)
   s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
                     datatype = dt1)
-  expect_identical(dataType(s1), rep(dt1, nlayers(s)))
+  expect_identical(terra::datatype(s1), rep(dt1, terra::nlyr(s)))
 
   # Test datatype setting
   dt1 <- c("INT2U", "INT4U")
-  s <- raster::stack(writeRaster(s, filename = tmpfile[1], overwrite = TRUE))
-  warns <- capture_warnings({
+  s <- writeRaster(s, filename = tmpfile[1], overwrite = TRUE)
+  warns <- capture_error({
     s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE,
                       datatype = dt1)
   })
-  expect_true(any(grepl("can only be length", warns)))
+  expect_true(any(grepl("Expecting a single", warns)))
 
   dt1 <- "INT4U"
   b <- writeRaster(b, filename = tmpfile[2], overwrite = TRUE)
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
                     datatype = dt1)
-  expect_identical(dataType(b1), dt1)
+  expect_identical(terra::datatype(b1), rep(dt1, terra::nlyr(b1)))
 
   # now raster with sf ## TODO: temporarily skip these tests due to fasterize not being updated yet for crs changes
   if (requireNamespace("fasterize", quietly = TRUE)) {
@@ -103,8 +112,8 @@ test_that("prepInputs doesn't work (part 3)", {
     # postProcess
     expect_true(identical(1, postProcess(1)))
     expect_true(identical(list(1, 1), postProcess(list(1, 1))))
-    expect_error(postProcess(nc1, rasterToMatch = r))
-    nc2 <- postProcess(nc1, studyArea = as(ncSmall, "Spatial"))
+
+    nc2 <- postProcess(nc1, studyArea = as(ncSmall, "sf"))
     expect_equal(st_area(nc2), st_area(ncSmall))
 
     # cropInputs
@@ -112,24 +121,25 @@ test_that("prepInputs doesn't work (part 3)", {
     nonLatLongProj2 <- paste("+proj=lcc +lat_1=51 +lat_2=77 +lat_0=0 +lon_0=-95",
                              "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
     nc3 <- suppressWarningsSpecific({
-      spTransform(as(nc1, "Spatial"), CRSobj = CRS(nonLatLongProj2))
+      sf::st_transform(nc1, CRSobj = CRS(nonLatLongProj2))
     }, falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition|PROJ support is provided by the sf and terra packages among others")
     nc4 <- cropInputs(nc3, studyArea = ncSmall)
     ncSmall2 <- suppressWarningsSpecific({
-      spTransform(as(ncSmall, "Spatial"), CRSobj = CRS(nonLatLongProj2))
+      sf::st_transform(ncSmall, CRSobj = CRS(nonLatLongProj2))
     }, falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition|PROJ support is provided by the sf and terra packages among others")
     expect_true(isTRUE(all.equal(extent(nc4), extent(ncSmall2))))
 
     mess <- capture_error({
       nc4 <- cropInputs(nc3, studyArea = 1)
     })
-    expect_true(grepl("studyArea does not have a crs", mess))
+    expect_true(grepl("anyNA.+is not TRUE", mess))
 
     ncSmallShifted <- ncSmall + 10000000
     ncSmallShifted <- st_as_sf(ncSmallShifted)
     st_crs(ncSmallShifted) <- st_crs(ncSmall)
-    mess <- capture_error(cropInputs(as(ncSmall, "Spatial"), studyArea = ncSmallShifted))
-    expect_true(any(grepl("polygons do not intersect", mess)))
+    mess <- capture_error(
+      aaa <- cropInputs(ncSmall, studyArea = ncSmallShifted))
+    expect_true(NROW(aaa) == 0)
 
     # cropInputs.sf
     nc3 <- st_transform(nc1, crs = CRS(nonLatLongProj2))
@@ -138,17 +148,14 @@ test_that("prepInputs doesn't work (part 3)", {
     expect_true(isTRUE(all.equal(extent(nc4), extent(ncSmall2))))
 
     # studyArea as spatial object
-    nc5 <- cropInputs(nc3, studyArea = as(ncSmall, "Spatial"))
+    nc5 <- cropInputs(nc3, studyArea = ncSmall)
     ncSmall2 <- st_transform(ncSmall, crs = CRS(nonLatLongProj2))
     expect_true(isTRUE(all.equal(extent(nc5), extent(ncSmall2))))
     expect_true(isTRUE(all.equal(extent(nc5), extent(nc4))))
 
-    # studyArea pass through
-    nc5 <- cropInputs(nc3, studyArea = 1)
-    expect_identical(nc5, nc3)
 
     # rasterToMatch
-    nc5 <- cropInputs(nc3, rasterToMatch = r)
+    nc5 <- cropTo(nc3, cropTo = r)
     nc5Extent_r <- st_transform(nc5, crs = crs(r))
     expect_true(isTRUE(abs(xmin(r) - xmin(as(nc5Extent_r, "Spatial"))) < res(r)[1]))
     expect_true(isTRUE(abs(ymin(r) - ymin(as(nc5Extent_r, "Spatial"))) < res(r)[1]))
@@ -201,7 +208,8 @@ test_that("cropInputs crops too closely when input projections are different", {
   testInitOut <- testInit("raster", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.overwrite" = TRUE,
-    "reproducible.inputPaths" = NULL
+    "reproducible.inputPaths" = NULL,
+    "rgdal_show_exportToProj4_warnings"="none" # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
   ), needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
@@ -323,5 +331,4 @@ test_that("prepInputs doesn't work (part 3)", {
     # These are suitably vague that they will capture the mask if it gets it right
     expect_true(sumNonNAs < 38000000)
     expect_true(sumNonNAs > 37000000)
-  }}
-)
+  }})

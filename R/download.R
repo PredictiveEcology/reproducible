@@ -8,7 +8,7 @@
 #' @inheritParams extractFromArchive
 #' @param dlFun Optional "download function" name, such as `"raster::getData"`, which does
 #'              custom downloading, in addition to loading into R. Still experimental.
-#' @param ... Passed to `dlFun`. Still experimental.
+#' @param ... Passed to `dlFun`. Still experimental. Can be e.g., `type` for google docs.
 #' @param checksumFile A character string indicating the absolute path to the `CHECKSUMS.txt`
 #'                     file.
 #'
@@ -305,11 +305,12 @@ downloadFile <- function(archive, targetFile, neededFiles,
 #' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal
 #' @inheritParams preProcess
+#' @param ... Not used here. Only used to allow other arguments to other fns to not fail.
 #'
 dlGoogle <- function(url, archive = NULL, targetFile = NULL,
-                     checkSums, skipDownloadMsg, destinationPath,
+                     checkSums, skipDownloadMsg, destinationPath, type = NULL,
                      overwrite, needChecksums, verbose = getOption("reproducible.verbose", 1),
-                     team_drive = NULL) {
+                     team_drive = NULL, ...) {
   .requireNamespace("googledrive", stopOnFALSE = TRUE)
 
   if (missing(destinationPath)) {
@@ -345,6 +346,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       a <- future::future({
         googledrive::drive_deauth()
         retry(quote(googledrive::drive_download(googledrive::as_id(url), path = destFile,
+                                                type = type,
                                                 overwrite = overwrite, verbose = TRUE)))
         },
         globals = list(drive_download = googledrive::drive_download,
@@ -352,6 +354,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                        retry = retry,
                        drive_deauth = googledrive::drive_deauth,
                        url = url,
+                       type = type,
                        overwrite = overwrite,
                        destFile = destFile))
       cat("\n")
@@ -368,6 +371,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       cat("\nDone!\n")
     } else {
       a <- retry(quote(googledrive::drive_download(googledrive::as_id(url), path = destFile,
+                                                   type = type,
                                                    overwrite = overwrite, verbose = TRUE))) ## TODO: unrecognized type "shp"
     }
   } else {
@@ -488,7 +492,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
               saveRDS(out, file = destFile)
           }
           downloadResults <- list(out = out, destFile = normPath(destFile), needChecksums = 2)
-        } else if (grepl("drive.google.com", url)) {
+        } else if (grepl("d.+.google.com", url)) {
           #browser(expr = exists("._downloadRemote_2"))
           if (!requireNamespace("googledrive", quietly = TRUE))
             stop(requireNamespaceMsg("googledrive", "to use google drive files"))
@@ -503,7 +507,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             overwrite = overwrite,
             needChecksums = needChecksums,
             verbose = verbose,
-            team_drive = teamDrive
+            team_drive = teamDrive,
+            ...
           )
 
         } else if (grepl("dl.dropbox.com", url)) {

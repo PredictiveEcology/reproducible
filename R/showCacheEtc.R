@@ -573,7 +573,9 @@ setMethod(
         userTags <- cacheFromList[artifact, on = .cacheTableHashColName()][
           !tagKey %in% c("format", "name", "date", "cacheId"), list(tagKey, tagValue)]
         if (useDBI()) {
-          output <- saveToCache(cacheTo, userTags = userTags, obj = outputToSave, cacheId = artifact) # nolint
+          outputToSave <- .dealWithClass(outputToSave, cachePath = cacheTo, drv = drvTo, conn = connTo)
+          output <- saveToCache(cacheTo, userTags = userTags, obj = outputToSave, cacheId = artifact,
+                                drv = drvTo, conn = connTo) # nolint
         }
         messageCache(artifact, " copied", verbose = verbose)
         outputToSave

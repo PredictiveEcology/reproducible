@@ -152,12 +152,62 @@ test_that("test miscellaneous unit tests cache-helpers", {
       expect_true(identical(dMessCacheId, bMessCacheId))
     }
 
+
+  rcompletelynew <- rmultinom
+  # Now check function is prefered over args
+  clearCache(tmpCache, ask = FALSE)
   eMess <- capture_messages({
-    b <- Cache(rlnorm, 4, sd = 5, showSimilar = TRUE, cachePath = tmpCache)
+    b <- Cache(rbinom, 4, 5, prob = 0.6, showSimilar = TRUE, cachePath = tmpCache)
   })
-  expect_true(any(grepl("different .FUN", eMess)))
-  expect_false(grepl(" n[ ,{\x1b}]", grep("different", eMess, value = TRUE)))
-  expect_false(grepl("[ ,]sd[ ,{\x1b}]", grep("different", eMess, value = TRUE)))
+  fMess <- capture_messages({
+    b <- Cache(rmultinom, 4, 5, prob = 0.6, showSimilar = TRUE, cachePath = tmpCache)
+  })
+  gMess <- capture_messages({
+    b <- Cache(rmultinom, 14, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
+  })
+  hMess <- capture_messages({
+    b <- Cache(rbinom, 14, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
+  })
+  iMess <- capture_messages({
+    b <- Cache(rcompletelynew, 12, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
+  })
+  expect_true(any(grepl("no similar item", eMess))) # shouldn't find b/c new
+  expect_true(any(grepl("no similar item", fMess))) # shouldn't find b/c args are same
+  expect_true(any(grepl("next closest.+rmultin", gMess))) # should only find rmultinom
+  expect_true(any(grepl("next closest.+rbinom", hMess))) # should only find rbinom
+  expect_true(sum(grepl(".+rcompletelynew|next closest.+rmultin", iMess)) == 2) # should notice different name, but still find
+
+
+  ### UserTags matching -- prefer similar if all userTags match
+  rcompletelynew <- rnorm
+  # Now check function is prefered over args
+  clearCache(tmpCache, ask = FALSE)
+  jMess <- capture_messages({
+    b <- Cache(rnorm, 1, 2, 3, showSimilar = TRUE, cachePath = tmpCache, userTags = c("Hi"))
+  })
+  kMess <- capture_messages({
+    b1 <- Cache(rnorm, 1, 3, 4, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # not similar
+  })
+  lMess <- capture_messages({
+    b <- Cache(rnorm, 1, 3, 4, showSimilar = TRUE, cachePath = tmpCache, userTags = c("Hi")) # same, recovered
+  })
+  mMess <- capture_messages({
+    b <- Cache(rnorm, 1, 2, 3, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # same recovered
+  })
+  nMess <- capture_messages({
+    b <- Cache(rnorm, 1, 2, 2, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # similar to kMess
+  })
+  oMess <- capture_messages({
+    b <- Cache(rnorm, 1, 2, 1, showSimilar = TRUE, cachePath = tmpCache) # similar to kMess
+  })
+  expect_true(any(grepl("no similar item", jMess))) # shouldn't find b/c new
+  expect_true(any(grepl("no similar item", kMess))) # shouldn't find b/c args are same
+  expect_true(any(grepl("loaded", lMess))) # should only find rmultinom
+  expect_true(any(grepl("loaded", mMess))) # should only find rmultinom
+  nMess <- grep("^.+next closest cacheId\\(s\\) (.+) of .+$", nMess, value = TRUE)
+  expect_true(grepl(x = attr(b1, "tags"),
+    gsub("^.+next closest cacheId\\(s\\) (.+) of .+$", "\\1", nMess))) # should only find kMess
+
 
   ## debugCache -- "complete"
   thing <- 1
@@ -193,6 +243,25 @@ test_that("test miscellaneous unit tests cache-helpers", {
     expect_true(any(grepl("fnCacheHelper", aMess))) # TODO: fix this;
     expect_true(any(grepl("The hashing details", aMess)))
   }
+})
+
+test_that("test warnings from cached functions", {
+  testInitOut <- testInit(libraries = c("sf", "sp"), opts = list(reproducible.useMemoise = TRUE))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  # clearCache(tmpCache, ask = FALSE)
+  warn1 <- capture_warnings(b <- Cache(rbinom, 4, 5, prob = 6, cachePath = tmpCache))
+
+  fun <- function(n, size, prob) {
+    rbinom(n, size, prob)
+  }
+  warn2 <- capture_warnings(d <- Cache(fun, 4, 5, 6, cachePath = tmpCache))
+  warnCompare <- "rbinom.+NAs produced"
+  expect_true(grepl(warnCompare, warn1)) # includes the call because .call = FALSE, and call added manually in Cache
+  expect_true(grepl("NAs produced", warn2))
+  expect_false(grepl(warnCompare, warn2)) # this is false because the warning message doesn't include the call with normal warn
+
 })
 
 test_that("test cache-helpers with stacks", {

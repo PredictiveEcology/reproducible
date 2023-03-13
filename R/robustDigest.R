@@ -146,7 +146,7 @@ setMethod(
     if (any(inherits(object, "SpatVector"), inherits(object, "SpatRaster"))) {
       if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
         stop("Please install terra package")
-      out <- .doDigest(terra::wrap(object), algo)
+      out <- .doDigest(wrapSpatVector(object), algo)
       return(out)
     }
 
@@ -440,6 +440,41 @@ setMethod(
       attr(x, "call") <- NULL
   }
   x
+}
+
+
+.CopyCacheAtts <- function(from, to, passByReference = FALSE) {
+
+  onDiskRaster <- FALSE
+  namesFrom <- names(from)
+  if (!is.null(namesFrom)) { # has to have names
+    onDiskRaster <- all(namesFrom %in% c("origRaster", "cacheRaster"))
+    isSpatVector <- all(names(from) %in% c("x", "type", "atts", "crs"))
+
+    if ((is(from, "list") || is(from, "environment")) && onDiskRaster %in% FALSE && isSpatVector %in% FALSE) {
+      if (length(from) && length(to)) {
+        nams <- grep("^\\.mods$|^\\._", namesFrom, value = TRUE, invert = TRUE)
+        for (nam in nams) {
+          lala <- try(.CopyCacheAtts(from[[nam]], to[[nam]], passByReference = passByReference))
+          if (is(lala, 'try-error')) browser()
+          to[[nam]] <- lala
+        }
+      }
+
+      return(to)
+    }
+  }
+
+  for (i in c("tags", ".Cache", "call")) {
+    if (!is.null(attr(from, i)))
+      if (passByReference)  {
+        setattr(to, i, attr(from, i))
+      } else  {
+        attr(to, i) <- attr(from, i)
+      }
+  }
+  to
+
 }
 
 .robustDigestFormatOnly <- function(object, .objects, length, algo, quick,

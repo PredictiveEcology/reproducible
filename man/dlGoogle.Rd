@@ -11,10 +11,12 @@ dlGoogle(
   checkSums,
   skipDownloadMsg,
   destinationPath,
+  type = NULL,
   overwrite,
   needChecksums,
   verbose = getOption("reproducible.verbose", 1),
-  team_drive = NULL
+  team_drive = NULL,
+  ...
 )
 }
 \arguments{
@@ -53,6 +55,8 @@ even if they pass the checksums or the files are all there.}
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{...}{Not used here. Only used to allow other arguments to other fns to not fail.}
 }
 \description{
 Download file from Google Drive

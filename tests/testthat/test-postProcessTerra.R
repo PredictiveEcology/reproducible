@@ -2,7 +2,8 @@ test_that("testing terra", {
   #if (interactive()) {
   testInitOut <- testInit(needGoogle = FALSE,
                           opts = list(reproducible.useMemoise = FALSE,
-                                      reproducible.useTerra = TRUE))
+                                      reproducible.useTerra = TRUE,
+                                      "rgdal_show_exportToProj4_warnings"="none"))
 
   on.exit({
     testOnExit(testInitOut)
@@ -220,6 +221,16 @@ test_that("testing terra", {
   expect_true(sum(grepl("fixed", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
   expect_true(is(t13a, "SpatVector"))
 
+  # Switch from qs to rds with Cache
+  opts <- options(reproducible.cacheSaveFormat = "qs")
+  t13a <- Cache(postProcessTerra(xVect, vutmErrors))
+  opts <- options(reproducible.cacheSaveFormat = "rds")
+  t13a <- Cache(postProcessTerra(xVect, vutmErrors))
+  opts <- options(reproducible.cacheSaveFormat = "qs")
+  t13a <- try(Cache(postProcessTerra(xVect, vutmErrors)), silent = TRUE)
+  a <- try(ncol(t13a), silent = TRUE)
+  expect_false(is(a, "try-error"))
+
   # try NA to *To
   # Vectors
   vutmSF <- sf::st_as_sf(vutm)
@@ -334,7 +345,8 @@ test_that("testing terra", {
     # Raster & SpatVect
     ras1Small <- cropTo(ras1, t18)
     ras1SmallMasked <- maskTo(ras1, t18)
-    ras1SmallAll <- postProcessTerra(ras1, t18)
+    # The warning is about some datum
+    suppressWarnings(ras1SmallAll <- postProcessTerra(ras1, t18))
     expect_true(is(ras1Small, "Raster"))
     expect_true(is(ras1SmallMasked, "Raster"))
     expect_true(is(ras1SmallAll, "Raster"))
@@ -363,11 +375,13 @@ test_that("testing terra", {
       sum(!is.na(terra::values(ras1SmallAll))) ==
         sum(!is.na(terra::values(t20AllByRas)))
     )
-    expect_true( #  these are 1 off b/c of projection probably
-      abs(sum(!is.na(terra::values(ras1SmallAll))) -
-        sum(!is.na(terra::values(t20MaskedByRas)))) < 2
-    )
 
+    # The below was slightly off because RasterLayer was not exactly same as t20 proj
+    spatRas1SmallAll <- projectTo(terra::rast(ras1SmallAll), t20)
+    expect_true( #  these are off b/c of projection probably
+      abs(sum(!is.na(terra::values(spatRas1SmallAll))) -
+        sum(!is.na(terra::values(t20MaskedByRas)))) <= 0
+    )
 
     if (interactive()) {
       terra::plot(ras1SmallAll)
@@ -376,9 +390,15 @@ test_that("testing terra", {
       terra::plot(t20CroppedByRas)
       terra::plot(t20MaskedByRas)
       terra::plot(t20ProjectedByRas)
-
-
     }
+
+    w <- terra::vect("POLYGON ((0 -5, 10 0, 10 -10, 0 -5))")
+    w1 <- terra::vect("POLYGON ((0 -5, 10 0, 10 -10, 4 -2, 0 -5))")
+    w1a <- terra::vect("POLYGON ((20 15, 30 20, 30 10, 24 18, 20 15))")
+    w2 <- rbind(w, w1, w, w1a, w)
+    w3 <- fixErrorsTerra(w2)
+    expect_true(!all(terra::is.valid(w2)))
+    expect_true(all(terra::is.valid(w3)))
 
 
   }

@@ -23,8 +23,11 @@ loadFromCache(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
   format = getOption("reproducible.cacheSaveFormat", "rds"),
+  .functionName = NULL,
+  .dotsFromCache = NULL,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = getOption("reproducible.conn", NULL)
+  conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose")
 )
 
 rmFromCache(
@@ -84,6 +87,10 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{format}{The text string representing the file extension used normally by
 different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
 to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
+
+\item{.functionName}{Optional. Used for messaging when this function is called from \code{Cache}}
+
+\item{.dotsFromCache}{Optional. Used internally.}
 
 \item{create}{Logical. Currently only affects non RQSLite default drivers. If this
 is \code{TRUE} and there is no Cache database, the function will create one.}

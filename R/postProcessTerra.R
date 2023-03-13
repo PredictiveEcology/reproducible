@@ -187,7 +187,10 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   from <- cropSF(from, cropTo)
 
   if (isRaster) {
+    fromCRS <- sf::st_crs(from)
     from <- terra::rast(from)
+    if (!nzchar(terra::crs(from)))
+      crs(from) <- fromCRS$input
   } else if (isSpatial) {
     osFrom <- object.size(from)
     lg <- osFrom > 5e8
@@ -231,10 +234,11 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
 }
 
 isSpatial <- function(x) inherits(x, "Spatial")
-isSpat <- function(x) is(x, "SpatRaster") || is(x, "SpatVector")
+isSpatVector <- function(x) is(x, "SpatVector")
+isSpat <- function(x) is(x, "SpatRaster") || isSpatVector(x)
 isSpat2 <- function(origClass) any(origClass %in% c("SpatVector", "SpatRaster"))
 isGridded <- function(x) is(x, "SpatRaster") || is(x, "Raster")
-isVector <-  function(x) is(x, "SpatVector") || is(x, "Spatial") || isSF(x)
+isVector <-  function(x) isSpatVector(x) || is(x, "Spatial") || isSF(x)
 isSpatialAny <- function(x) isGridded(x) || isVector(x)
 isSF <- function(x) is(x, "sf") || is(x, "sfc")
 isRaster <- function(x) is(x, "Raster")
@@ -276,13 +280,46 @@ fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.ve
         x <- sf::st_make_valid(x)
       }
     } else {
-      xValids <- terra::is.valid(x)
-      if (any(!xValids))
-        x <- terra::makeValid(x)
+      if (os > 1e9 && isTRUE(getOption("reproducible.useCache"))) {
+        messagePrepInputs("... Caching the fixErrorTerra call on this large object", verbose = verbose)
+        x <- Cache(makeVal(x), .functionName = "make.valid")
+      } else {
+        x <- makeVal(x)
+      }
+
     }
   }
   x
 }
+
+makeVal <- function(x) {
+  xValids <- terra::is.valid(x)
+
+  if (any(!xValids))
+    x <- terra::makeValid(x)
+
+  x
+  #
+  # whValid <- which(xValids)
+  # se <- seq(NROW(x))
+  # if (length(whValid)) {
+  #   whInValid <- se[-whValid]
+  # } else {
+  #   whInValid <- se
+  # }
+  #
+  # if (any(!xValids)) {
+  #   xGood <- terra::makeValid(x[whInValid])
+  #   if (length(whValid)) {
+  #     r <- rbind(x[whValid, ], xGood[, ])
+  #     x <- r[order(c(whValid, whInValid)),]
+  #   } else {
+  #     x <- xGood
+  #   }
+  #
+  # }
+}
+
 
 #' @export
 #' @rdname postProcessTerra
@@ -519,7 +556,11 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
     origFromClass <- is(from)
 
     if (isRaster(cropTo)) {
+      cropToCRS <- sf::st_crs(cropTo)
       cropTo <- terra::rast(cropTo)
+      if (!nzchar(terra::crs(cropTo))) {
+        terra::crs(cropTo) <- cropToCRS$input
+      }
     }
 
     if (!isSpatialAny(cropTo))
@@ -552,14 +593,33 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
         ext <- terra::vect(ext)
 
       # This is only needed if crop happens before a projection... need to cells beyond edges so projection is accurate
-      if (needBuffer)
-        if (isGridded(from)) {
-          res <- res(from)
+      if (needBuffer) {
+        if (isGridded(from) || isGridded(cropTo)) {
+          if (isGridded(from)) {
+            res <- res(from)
+          } else if (isGridded(cropTo)) {
+            res <- res(cropTo)
+          }
           if (!isSpat(ext))
             ext <- terra::vect(ext)
           extTmp <- terra::ext(ext)
-          ext <- terra::extend(extTmp, res[1] * 2)
+          if (terra::is.lonlat(ext)) {
+            extTmp2 <- terra::extend(extTmp, 0.1) # hard code 0.1 lat/long, as long as it isn't past the from extent
+            extFrom <- terra::ext(from)
+            ext <- terra::ext(xy = TRUE,
+              c(xmin = max(terra::xmin(extTmp2), terra::xmin(extFrom)),
+                ymin = max(terra::ymin(extTmp2), terra::ymin(extFrom)),
+                xmax = min(terra::xmax(extTmp2), terra::xmax(extFrom)),
+                ymax = min(terra::ymax(extTmp2), terra::ymax(extFrom))))
+            # ras2 <- terra::rast(extTmp2)
+            # ext <- terra::ext(terra::crop(terra::rast(extFrom), ras2))
+            # ext <- terra::ext(terra::crop(terra::rast(ext), ras2))
+          } else {
+            ext <- terra::extend(extTmp, res[1] * 2)
+          }
+
         }
+      }
 
       attempt <- 1
       while (attempt <= 2) {
@@ -608,19 +668,33 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
   if (isBrick) from <- raster::brick(from)
 
   if (!is.null(writeTo))
-    if (!is.na(writeTo)) {
+    if (!any(is.na(writeTo))) {
       messagePrepInputs("    writing...", appendLF = FALSE)
       st <- Sys.time()
-      if (isRaster)
+      if (isSpatRaster || isSpatVector(from)) {
+        ## trying to prevent write failure and subsequent overwrite error with terra::writeRaster
+        if (any(file.exists(writeTo))) {
+          if (isFALSE(overwrite)) {
+            stop(writeTo, " already exists and `overwrite = FALSE`; please set `overwrite = TRUE` and run again.")
+          }
+          unlink(writeTo, force = TRUE, recursive = TRUE)
+        }
+        if (isSpatRaster) {
+          ## if the file still exists it's probably already "loaded"
+          ## and `terra` can't overwrite it even if `overwrite = TRUE`
+          ## this can happen when multiple modules touch the same object
+          if (!any(file.exists(writeTo))) {
+            from <- terra::writeRaster(from, filename = writeTo, overwrite = FALSE,
+                                       datatype = datatype)
+          } else {
+            stop("File can't be unliked for overwrite")
+          }
+        } else {
+          written <- terra::writeVector(from, filename = writeTo, overwrite = FALSE)
+        }
+      } else if (isRaster) {
         from <- raster::writeRaster(from, filename = writeTo, overwrite = overwrite,
                                     datatype = datatype)
-      if (isSpatRaster)
-        from <- terra::writeRaster(from, filename = writeTo, overwrite = overwrite,
-                                   datatype = datatype)
-      if (is(from, "SpatVector")) {
-        if (isTRUE(overwrite))
-          unlink(writeTo, force = TRUE, recursive = TRUE)
-        written <- terra::writeVector(from, filename = writeTo, overwrite = overwrite)
       }
       messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
     }

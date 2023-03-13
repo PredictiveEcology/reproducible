@@ -581,7 +581,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                        fun, verbose = verbose) # passes through if all known
   targetFile <- .basename(targetParams$targetFilePath)
   targetFilePath <- targetParams$targetFilePath
-  fun <- targetParams$fun
+  funChar <- targetParams$fun
 
   ## targetFilePath might still be NULL, need destinationPath too
   if (is.null(targetFilePath)) {
@@ -599,7 +599,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # browser(expr = exists("._preProcess_9"))
 
   ## Convert the fun as character string to function class, if not already
-  fun <- .extractFunction(fun)
+  fun <- .extractFunction(funChar)
 
   if (!is.null(reproducible.inputPaths)) {
     destinationPath <- destinationPathUser
@@ -654,6 +654,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   out <- list(checkSums = checkSums,
               dots = dots,
               fun = fun,
+              funChar = funChar,
               targetFilePath = targetFilePath,
               destinationPath = destinationPath,
               object = downloadFileResult$object)

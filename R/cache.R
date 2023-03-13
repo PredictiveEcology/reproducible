@@ -240,6 +240,10 @@ utils::globalVariables(c(
 #' @param .cacheExtra A an arbitrary R object that will be included in the `CacheDigest`,
 #'       but otherwise not passed into the `FUN`.
 #'
+#' @param .functionName A an arbitrary character string that provides a name that is different
+#'       than the actual function name (e.g., "rnorm") which will be used for messaging. This
+#'       can be useful when the actual function is not helpful for a user, such as `do.call`.
+#'
 #' @param outputObjects Optional character vector indicating which objects to
 #'                      return. This is only relevant for list, environment (or similar) objects
 #'
@@ -365,7 +369,7 @@ utils::globalVariables(c(
 #'
 Cache <-
   function(FUN, ..., notOlderThan = NULL,
-           .objects = NULL, .cacheExtra = NULL,
+           .objects = NULL, .cacheExtra = NULL, .functionName = NULL,
            outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL,
            cachePath = NULL,
@@ -388,6 +392,9 @@ Cache <-
       if (!is.null(cacheRepo))
         cachePath <- cacheRepo
     }
+
+    userTagsOrig <- userTags # keep to distinguish actual user supplied userTags
+
     CacheMatchedCall <- match.call(Cache)
     # Capture everything -- so not evaluated
     FUNcaptured <- substitute(FUN)
@@ -400,7 +407,7 @@ Cache <-
     #  have modifications under many circumstances, e.g., do.call, specific methods etc.
     # Need the CacheMatchedCall so that args that are in both Cache and the FUN can be sent to both
     preCacheDigestTime <- Sys.time()
-    fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", ...,
+    fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", ..., .functionName = .functionName,
                             FUNcaptured = FUNcaptured, CacheMatchedCall = CacheMatchedCall)
 
     # next line is (1 && 1) && 1 -- if it has :: or $ or [] e.g., fun$b, it MUST be length 3 for it to not be "captured function"
@@ -639,7 +646,8 @@ Cache <-
         # It will not have the "localTags" object because of "direct db access" added Jan 20 2020
         if (!exists("localTags", inherits = FALSE)) #
           localTags <- showCache(cachePath, drv = drv, verbose = FALSE) # This is noisy
-        devModeOut <- devModeFn1(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose, isInRepo, outputHash)
+        devModeOut <- devModeFn1(localTags, userTags, userTagsOrig, scalls,
+                                 preDigestUnlistTrunc, useCache, verbose, isInRepo, outputHash)
         outputHash <- devModeOut$outputHash
         isInRepo <- devModeOut$isInRepo
         needFindByTags <- devModeOut$needFindByTags
@@ -701,7 +709,7 @@ Cache <-
             if (!exists("localTags", inherits = FALSE)) #
               localTags <- showCache(cachePath, drv = drv, verbose = FALSE) # This is noisy
             .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
-                         userTags, functionName = fnDetails$functionName,
+                         userTags, userTagsOrig, functionName = fnDetails$functionName,
                          useCache = useCache, verbose = verbose)
           }
         }
@@ -792,10 +800,13 @@ Cache <-
       # Can make new methods by class to add tags to outputs
       if (useDBI()) {
         if (.CacheIsNew) {
-          outputToSave <- dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
-          outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
+          outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
+          output <- .CopyCacheAtts(outputToSave, output, passByReference = TRUE)
+          # .dealWithClass added tags; these should be transfered to output
+#          outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
+#          output <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
         } else {
-          outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
+ #         outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
         }
       }
 
@@ -1136,10 +1147,14 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
           }
         } else {
           if (is.call(xxxx)) {
-            if (identical(quote(eval), xxxx[[1]])) # basically "eval" should be evaluated
+            if (identical(quote(eval), xxxx[[1]])) { # basically "eval" should be evaluated
+              message("There is an `eval` call in a chain of calls for Cache; ",
+                      "\n  eval is evaluated before Cache which may be undesired. ",
+                      "\n  Perhaps use `do.call` if the evaluation should not occur prior to Cache")
               ret <- eval(xxxx, envir = envir)
-            else
+            } else {
               ret <- recursiveEvalNamesOnly(xxxx, envir, outer = FALSE)
+            }
           } else {
             ret <- xxxx
           }
@@ -1345,7 +1360,8 @@ getFunctionName2 <- function(mc) {
 }
 
 #' @importFrom utils modifyList isS3stdGeneric methods
-.fnCleanup <- function(FUN, ..., callingFun, FUNcaptured = NULL, CacheMatchedCall, callingEnv = parent.frame(2)) {
+.fnCleanup <- function(FUN, ..., callingFun, FUNcaptured = NULL, CacheMatchedCall,
+                       .functionName = NULL, callingEnv = parent.frame(2)) {
 
   if (is.null(FUNcaptured))
     FUNcaptured <- substitute(FUN)
@@ -1503,6 +1519,9 @@ getFunctionName2 <- function(mc) {
     FUNcapturedNamesEvaled <- as.call(append(as.list(FUNcapturedNamesEvaled), overlappingArgsAsList))
   }
 
+  if (!is.null(.functionName))
+    fnDetails$functionName <- .functionName
+
   return(append(fnDetails, list(FUN = FUN, matchedCall = FUNcapturedNamesEvaled,
                                 modifiedDots = modifiedDots, # isDoCall = isDoCall,
                                 formalArgs = forms,
@@ -1563,7 +1582,8 @@ getFunctionName2 <- function(mc) {
 #' CacheDigest(rnorm(1)) # shows same cacheId as previous line
 #' CacheDigest(rnorm, 1) # shows same cacheId as previous line
 #'
-CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "CacheDigest", quick = FALSE) {
+CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "CacheDigest",
+                        .functionName = NULL, quick = FALSE) {
 
   FUNcaptured <- substitute(objsToDigest)
   # origFUN <- quote(objsToDigest)
@@ -1575,7 +1595,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
                          # ... so not "just" an object in objsToDigest
        (NROW(forms) > 1 || is.null(forms)))) { # can be CacheDigest(rnorm, 1)
     fnDetails <- .fnCleanup(FUN = objsToDigest, callingFun = "Cache",  ..., FUNcaptured = FUNcaptured,
-                            CacheMatchedCall = match.call(CacheDigest))
+                            .functionName = .functionName, CacheMatchedCall = match.call(CacheDigest))
     modifiedDots <- fnDetails$modifiedDots
     modifiedDots$.FUN <- fnDetails$.FUN
     objsToDigest <- modifiedDots
@@ -1643,11 +1663,12 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
 #' @importFrom data.table setDT setkeyv melt
 #' @keywords internal
 .findSimilar <- function(localTags, showSimilar, scalls, preDigestUnlistTrunc, userTags,
-                         functionName,
+                         userTagsOrig, functionName,
                          useCache = getOption("reproducible.useCache", TRUE),
                          verbose = getOption("reproducible.verbose", TRUE)) {
 
   setDT(localTags)
+  localTags <- localTags[nzchar(tagValue)]
   isDevMode <- identical("devMode", useCache)
   if (isDevMode) {
     showSimilar <- 1
@@ -1664,14 +1685,29 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   if (!(cn %in% "tag")) {
     tag <- localTags[paste(tagKey , get(.cacheTableTagColName()), sep = ":"),
                      on = .cacheTableHashColName()][[hashName]]
+    utOrig <- paste0(userTagsOrig, ":", userTagsOrig)
   }
-  aa <- localTags[tag %in% userTags3][,.N, keyby = hashName]
+  aa <- localTags[tag %in% userTags3 | tag %in% utOrig]
+  hasCommonFUN <- startsWith(aa$tagValue, ".FUN")
+  if (any(hasCommonFUN)) {
+    hasCommonUserTagsOrig <- userTagsOrig %in% aa[[.cacheTableTagColName()]]
+    if (any(hasCommonUserTagsOrig %in% FALSE)) # Doesn't share userTagsOrig
+      hasCommonFUN <- rep(hasCommonUserTagsOrig, length(hasCommonFUN))
+    commonCacheId <- aa$cacheId[hasCommonFUN]
+    aa <- aa[aa$cacheId %in% commonCacheId]
+  } else {
+    aa <- aa[0]
+  }
+  aa <- aa[,.N, keyby = hashName]
   setkeyv(aa, "N")
   similar <- if (NROW(aa) > 0) {
     localTags[tail(aa, as.numeric(showSimilar)), on = hashName][N == max(N)]
   } else {
-    localTags
+    localTags[0]
   }
+
+  userTagsMess <- if (!is.null(userTagsOrig)) paste0("with user supplied tags: '",
+                                                     paste(userTagsOrig, collapse = ", "),"' ")
   if (NROW(similar)) {
     if (cn %in% "tag") {
       similar2 <- similar[grepl("preDigest", tag)]
@@ -1700,16 +1736,25 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     similar2[(hash %in% "other"), deeperThan3 := TRUE]
     similar2[(hash %in% "other"), differs := NA]
     differed <- FALSE
+    fnTxt <- paste0(if (!is.null(functionName)) paste0("of '",functionName,"' ") else "call ")
     if (isDevMode) {
       messageCache("    ------ devMode -------", verbose = verbose)
       messageCache("    This call to cache will replace", verbose = verbose)
     } else {
       # messageCache(" ------ showSimilar -------", verbose = verbose)
       messageCache("    Cache ",
-                   if (!is.null(functionName)) paste0("of '",functionName,"' ") else "call ",
+                   fnTxt,
                    "differs from", verbose = verbose)
     }
-    messageCache(paste0("    the next closest cacheId ", cacheIdOfSimilar), verbose = verbose)
+
+    simFun <- similar[tagKey == "function", list(funName = tail(tagValue, 1)), by = cacheId]
+
+    sameNames <- simFun$funName %in% functionName
+    if (!all(sameNames)) {
+      fnTxt <- paste0("(whose function name(s) was/were '", paste(simFun$funName, collapse = "', '"), "')")
+    }
+      messageCache(paste0("    the next closest cacheId(s) ", paste(cacheIdOfSimilar, collapse = ", "), " ",
+                          fnTxt, userTagsMess, sep = "\n"), verbose = verbose)
 
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
       differed <- TRUE
@@ -1739,7 +1784,10 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
 
   } else {
     if (!identical("devMode", useCache))
-      messageCache("There is no similar item in the cachePath", verbose = verbose)
+      messageCache("There is no similar item in the cachePath ",
+                   if (!is.null(functionName)) paste0("of '",functionName,"' "),
+                   userTagsMess,
+                   verbose = verbose)
   }
 }
 
@@ -1918,7 +1966,7 @@ getCacheRepos <- function(cachePath, modifiedDots, verbose = getOption("reproduc
   return(cachePaths)
 }
 
-devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose,
+devModeFn1 <- function(localTags, userTags, userTagsOrig, scalls, preDigestUnlistTrunc, useCache, verbose,
                        isInRepo, outputHash) {
   # browser(expr = exists("._devModeFn1_1"))
   userTags <- gsub(".*:(.*)", "\\1", userTags)
@@ -1944,7 +1992,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
       mess <- capture.output(type = "output", {
         similars <- .findSimilar(newLocalTags, scalls = scalls,
                                  preDigestUnlistTrunc = preDigestUnlistTrunc,
-                                 userTags = userTags,
+                                 userTags = userTags, userTagsOrig = userTagsOrig,
                                  useCache = useCache,
                                  verbose = verbose)
       })
@@ -2081,18 +2129,22 @@ isPkgColonFn <- function(x) {
 
 evalTheFun <- function(FUNcaptured, isCapturedFUN, isSquiggly, matchedCall, envir = parent.frame(),
                        verbose = getOption("reproducible.verbose"), ...) {
+  withCallingHandlers({
   if (isCapturedFUN || isSquiggly) { # if is wasn't "captured", then it is just a function, so now use it on the ...
      out <- eval(FUNcaptured, envir = envir)
   } else {
-    # out <- try(eval(matchedCall, envir = envir), silent = TRUE)
-    # if (is(out, "try-error")) {
-      # This occurs when the Cached function is using the old approach (Cache(prepInputs, ...))
-      #   and when the arguments are not actually specified, but are provided in the ... from an
-      #   outer function. The following is not rigorously tested, but it works for cases provided
       out <- eval(FUNcaptured, envir = envir)(...)
-    # }
-
   }
+  },
+  warning = function(w) {
+    asch <- as.character(w$call[[1]])
+    isEvalFUNCapCall <- all(vapply(c("eval", "FUNcaptured"),
+                                   function(p) any(startsWith(asch, prefix = p)), FUN.VALUE = logical(1)))
+    if (isTRUE(isEvalFUNCapCall)) {
+      warning("In ", format(matchedCall), ": ", w$message, call. = FALSE)
+      invokeRestart("muffleWarning")
+    }
+  })
 
   out
 }
@@ -2235,3 +2287,4 @@ browserCond <- function(expr) {
 }
 
 spatVectorNamesForCache <- c("x", "type", "atts", "crs")
+
