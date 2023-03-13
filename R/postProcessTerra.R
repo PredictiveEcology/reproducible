@@ -187,7 +187,10 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   from <- cropSF(from, cropTo)
 
   if (isRaster) {
+    fromCRS <- sf::st_crs(from)
     from <- terra::rast(from)
+    if (!nzchar(terra::crs(from)))
+      crs(from) <- fromCRS$input
   } else if (isSpatial) {
     osFrom <- object.size(from)
     lg <- osFrom > 5e8
@@ -553,7 +556,11 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
     origFromClass <- is(from)
 
     if (isRaster(cropTo)) {
+      cropToCRS <- sf::st_crs(cropTo)
       cropTo <- terra::rast(cropTo)
+      if (!nzchar(terra::crs(cropTo))) {
+        terra::crs(cropTo) <- cropToCRS$input
+      }
     }
 
     if (!isSpatialAny(cropTo))
@@ -604,7 +611,6 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
                 ymin = max(terra::ymin(extTmp2), terra::ymin(extFrom)),
                 xmax = min(terra::xmax(extTmp2), terra::xmax(extFrom)),
                 ymax = min(terra::ymax(extTmp2), terra::ymax(extFrom))))
-            # browser()
             # ras2 <- terra::rast(extTmp2)
             # ext <- terra::ext(terra::crop(terra::rast(extFrom), ras2))
             # ext <- terra::ext(terra::crop(terra::rast(ext), ras2))
