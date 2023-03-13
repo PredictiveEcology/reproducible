@@ -1,10 +1,12 @@
 test_that("prepInputs doesn't work (part 3)", {
   skip_on_cran() # too long
-  testInitOut <- testInit(c("raster", "sf"), tmpFileExt = c(".tif", ".tif"),
+  testInitOut <- testInit(c("raster", "sf"), tmpFileExt = c(".tif", ".tif", ".tif"),
                           opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.inputPaths" = NULL,
-    "reproducible.overwrite" = TRUE)
+    "reproducible.overwrite" = TRUE,
+    "rgdal_show_exportToProj4_warnings"="none") # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
+
   )
   on.exit({
     testOnExit(testInitOut)
@@ -201,7 +203,8 @@ test_that("cropInputs crops too closely when input projections are different", {
   testInitOut <- testInit("raster", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.overwrite" = TRUE,
-    "reproducible.inputPaths" = NULL
+    "reproducible.inputPaths" = NULL,
+    "rgdal_show_exportToProj4_warnings"="none" # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
   ), needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
@@ -323,5 +326,4 @@ test_that("prepInputs doesn't work (part 3)", {
     # These are suitably vague that they will capture the mask if it gets it right
     expect_true(sumNonNAs < 38000000)
     expect_true(sumNonNAs > 37000000)
-  }}
-)
+  }})

@@ -2,7 +2,8 @@ test_that("testing terra", {
   #if (interactive()) {
   testInitOut <- testInit(needGoogle = FALSE,
                           opts = list(reproducible.useMemoise = FALSE,
-                                      reproducible.useTerra = TRUE))
+                                      reproducible.useTerra = TRUE,
+                                      "rgdal_show_exportToProj4_warnings"="none"))
 
   on.exit({
     testOnExit(testInitOut)
