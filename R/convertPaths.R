@@ -102,10 +102,21 @@ setMethod(
       if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
         stop("Please install terra package")
       fns <- terra::sources(obj)
+      if (isTRUE(allowMultiple)) {
+        anyGrd <- endsWith(fns, suffix = "grd")
+        if (any(anyGrd)) {
+          nonGrd <- if (any(!anyGrd)) fns[!anyGrd] else NULL
+          multiFns <- sort(c(fns[anyGrd], gsub("grd$", "gri", fns[anyGrd])))
+          fnsNew <- c(nonGrd, multiFns)
+          fns <- fnsNew[order(match(filePathSansExt(basename(fnsNew)),
+                                    filePathSansExt(basename(fns))))]
+        }
+      }
+
     } else {
       fns <- NULL
     }
-    fns
+    normPath(fns)
 })
 
 #' @export

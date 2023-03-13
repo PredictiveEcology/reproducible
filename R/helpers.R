@@ -391,10 +391,12 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE
   })
 }
 
+# This is directly from tools::file_ext_sans_ext
 filePathSansExt <- function(x) {
   sub("([^.]+)\\.[[:alnum:]]+$", "\\1", x)
 }
 
+# This is directly from tools::file_ext
 fileExt <- function(x) {
   pos <- regexpr("\\.([[:alnum:]]+)$", x)
   ifelse(pos > -1L, substring(x, pos + 1L), "")

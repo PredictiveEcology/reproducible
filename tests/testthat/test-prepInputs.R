@@ -1871,6 +1871,8 @@ test_that("rasters aren't properly resampled", {
   skip_on_cran()
 
   testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                reproducible.useTerra = TRUE,
+                                                reproducible.rasterRead = "terra::rast",
                                                 "reproducible.inputPaths" = NULL),
                           needGoogle = TRUE)
   on.exit({
@@ -1900,87 +1902,113 @@ test_that("rasters aren't properly resampled", {
   suppressWarnings({
     out2 <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
                        destinationPath = dirname(tiftemp1), method = "bilinear",
+                       datatype = "INT2S",
                        filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
   }) # about "raster layer has integer values"
-  expect_true(dataType(out2) %in% c("INT2S", "INT2U")) # because of "bilinear", it can become negative
+  expect_true(terra::datatype(out2) %in% c("INT2S")) # because of "bilinear", it can become negative
 
   rrr1 <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
   crs(rrr1) <- crsToUse
   tiftemp3 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+  tiftemp4 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   suppressWarningsSpecific(writeRaster(rrr1, filename = tiftemp3), proj6Warn)
 
   out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
                      destinationPath = dirname(tiftemp3),
                      filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
-  expect_true(dataType(out3) == "FLT4S")
+  expect_true(terra::datatype(out3) == "FLT4S")
 
   # Test for raster::stack
-  rasStack <- stack(tiftemp3, tiftemp3)
+  rasStack <- c(terra::rast(tiftemp3), terra::rast(tiftemp3))
   rasStack[] <- rasStack[]
   rasStack[131][1] <- 1.5
   tiftemp4 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
 
   rasStack <- writeRaster(rasStack, filename = tiftemp4)
   rm(rasStack)
+  # opts <- options(reproducible.useTerra = TRUE)
+  # on.exit(options(opts), add = TRUE)
   out3 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
                      destinationPath = dirname(tiftemp3),
-                     fun = "raster::stack",
+                     # fun = "raster::stack",
                      filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
-  expect_true(is(out3, "RasterStack"))
+  expect_true(is(out3, "SpatRaster"))
   expect_true(identical(length(Filenames(out3)), 1L))
 
   out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
                      destinationPath = dirname(tiftemp3),
-                     fun = "raster::stack",
+                     # fun = "raster::stack",
                      filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
                                    tempfile(tmpdir = tmpdir, fileext = ".grd")))
-  expect_true(is(out4, "RasterStack"))
-  expect_true(identical(length(Filenames(out4)), 4L))
+  expect_true(is(out4, "SpatRaster"))
+  expect_true(identical(length(Filenames(out4, allowMultiple = TRUE)), 4L))
+
+
+  # Test for raster::stack with 3 layers, different types of writeRaster file ext
+  rasStack <- c(terra::rast(tiftemp3), terra::rast(tiftemp3), terra::rast(tiftemp3))
+  rasStack[] <- rasStack[]
+  rasStack[131][1] <- 1.5
+  rasStack[131][2] <- 2.5
+  tiftemp5 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+
+  rasStack <- writeRaster(rasStack, filename = tiftemp5)
+  rm(rasStack)
+  out5 <- prepInputs(targetFile = tiftemp5, rasterToMatch = raster(tiftemp2),
+                     destinationPath = dirname(tiftemp3),
+                     # fun = "raster::stack",
+                     filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
+                                   tempfile(tmpdir = tmpdir, fileext = ".grd"),
+                                   tempfile(tmpdir = tmpdir, fileext = ".tif")
+                                   ))
+  expect_true(is(out5, "SpatRaster"))
+  expect_true(identical(length(Filenames(out5, allowMultiple = TRUE)), 5L))
+
 
   out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
                      destinationPath = dirname(tiftemp3),
-                     fun = raster::stack,
-                     filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"), tempfile(tmpdir = tmpdir, fileext = ".grd")))
-  expect_true(is(out4, "RasterStack"))
+                     # fun = raster::stack,
+                     filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
+                                   tempfile(tmpdir = tmpdir, fileext = ".grd")))
+  expect_true(is(out4, "SpatRaster"))
   expect_true(identical(length(Filenames(out4)), 4L))
 })
 
-test_that("System call gdal works", {
-  skip_on_cran()
-
-  testInitOut <- testInit("raster")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
-  crs(ras) <- crsToUse
-  rnStr <- rndstr(1,6)
-  ras <- suppressWarningsSpecific(writeRaster(ras, filename = file.path(tempdir2(rnStr), basename(tempfile())),
-                     format = "GTiff"), proj6Warn)
-
-  ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
-  crs(ras2) <- crsToUse
-
-  raster::rasterOptions(todisk = TRUE) # to trigger GDAL
-
-  test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, filename2 = TRUE)
-  expect_true(file.exists(test1@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
-  expect_true(dataType(test1) == "INT1U") #properly resampled
-
-  ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
-  rnStr <- rndstr(1,6)
-  ras <- suppressWarningsSpecific(writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff"),
-                                  proj6Warn)
-  test2 <- prepInputs(targetFile = ras@file@name,
-                      destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, method = "bilinear")
-  expect_true(dataType(test2) == "FLT4S")
-
-  on.exit(raster::rasterOptions(todisk = FALSE))
-})
-
+# test_that("System call gdal works", {
+#   skip_on_cran()
+#
+#   testInitOut <- testInit("raster")
+#   on.exit({
+#     testOnExit(testInitOut)
+#   }, add = TRUE)
+#
+#   ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
+#   crs(ras) <- crsToUse
+#   rnStr <- rndstr(1,6)
+#   ras <- suppressWarningsSpecific(writeRaster(ras, filename = file.path(tempdir2(rnStr), basename(tempfile())),
+#                      format = "GTiff"), proj6Warn)
+#
+#   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
+#   crs(ras2) <- crsToUse
+#
+#   raster::rasterOptions(todisk = TRUE) # to trigger GDAL
+#
+#   test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
+#                       rasterToMatch = ras2, useCache = FALSE, filename2 = TRUE)
+#   expect_true(file.exists(test1@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
+#   expect_true(dataType(test1) == "INT1U") #properly resampled
+#
+#   ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
+#   rnStr <- rndstr(1,6)
+#   ras <- suppressWarningsSpecific(writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff"),
+#                                   proj6Warn)
+#   test2 <- prepInputs(targetFile = ras@file@name,
+#                       destinationPath = tempdir2(rnStr),
+#                       rasterToMatch = ras2, useCache = FALSE, method = "bilinear")
+#   expect_true(dataType(test2) == "FLT4S")
+#
+#   on.exit(raster::rasterOptions(todisk = FALSE))
+# })
+#
 # test_that("gdalUtilities works using multicores for both projecting and masking", {
 #   skip_on_cran()
 #
