@@ -345,7 +345,8 @@ test_that("testing terra", {
     # Raster & SpatVect
     ras1Small <- cropTo(ras1, t18)
     ras1SmallMasked <- maskTo(ras1, t18)
-    ras1SmallAll <- postProcessTerra(ras1, t18)
+    # The warning is about some datum
+    suppressWarnings(ras1SmallAll <- postProcessTerra(ras1, t18))
     expect_true(is(ras1Small, "Raster"))
     expect_true(is(ras1SmallMasked, "Raster"))
     expect_true(is(ras1SmallAll, "Raster"))
