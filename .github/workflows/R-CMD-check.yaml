@@ -61,7 +61,6 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
         with:
           extra-repositories: 'https://r-spatial.r-universe.dev/'
-          extra-repositories: https://rcppcore.github.io/drat
           Ncpus: 2
           r-version: ${{ matrix.config.r }}
           use-public-rspm: true
