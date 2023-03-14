@@ -577,16 +577,27 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
 
       ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
       if (!sf::st_crs(from) == sf::st_crs(ext)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
-        if (isVector(cropTo)) {
-          if (isSpat(cropTo)) {
-            cropToInFromCRS <- terra::project(cropTo, terra::crs(from))
-          } else {
-            cropToInFromCRS <- sf::st_transform(sf::st_as_sf(cropTo), sf::st_crs(from))
-          }
+        if (isVector(cropTo) && !isSpat(cropTo)) {
+          cropToInFromCRS <- sf::st_transform(sf::st_as_sf(cropTo), sf::st_crs(from))
         } else {
-          cropToInFromCRS <- terra::project(cropTo, terra::crs(from))
-          # THIS IS WHEN cropTo is a Gridded object
+          terraCRSFrom <- terra::crs(from)
+          if (packageVersion("terra") <= "1.5.21") {# an older terra issue; may not be precise version
+            if (length(slotNames(terraCRSFrom)) > 0 ) {
+              terraCRSFrom <- terraCRSFrom@projargs
+            }
+          }
+          cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
         }
+        # if (isVector(cropTo)) {
+        #   if (isSpat(cropTo)) {
+        #     cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
+        #   } else {
+        #     cropToInFromCRS <- sf::st_transform(sf::st_as_sf(cropTo), sf::st_crs(from))
+        #   }
+        # } else {
+        #   cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
+        #   # THIS IS WHEN cropTo is a Gridded object
+        # }
         ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
       }
       if (isVector(from) && !isSF(from))
