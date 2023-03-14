@@ -606,14 +606,15 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
           if (terra::is.lonlat(ext)) {
             extTmp2 <- terra::extend(extTmp, 0.1) # hard code 0.1 lat/long, as long as it isn't past the from extent
             extFrom <- terra::ext(from)
-            ext <- terra::ext(xy = TRUE,
-              c(xmin = max(terra::xmin(extTmp2), terra::xmin(extFrom)),
-                ymin = max(terra::ymin(extTmp2), terra::ymin(extFrom)),
-                xmax = min(terra::xmax(extTmp2), terra::xmax(extFrom)),
-                ymax = min(terra::ymax(extTmp2), terra::ymax(extFrom))))
-            # ras2 <- terra::rast(extTmp2)
-            # ext <- terra::ext(terra::crop(terra::rast(extFrom), ras2))
-            # ext <- terra::ext(terra::crop(terra::rast(ext), ras2))
+            exts <- c(xmin = max(terra::xmin(extTmp2), terra::xmin(extFrom)),
+                      ymin = max(terra::ymin(extTmp2), terra::ymin(extFrom)),
+                      xmax = min(terra::xmax(extTmp2), terra::xmax(extFrom)),
+                      ymax = min(terra::ymax(extTmp2), terra::ymax(extFrom)))
+            ext <- if (packageVersion("terra") <= "1.5-21") {
+              terra::ext(exts)
+            } else {
+              terra::ext(xy = TRUE, exts)
+            }
           } else {
             ext <- terra::extend(extTmp, res[1] * 2)
           }
