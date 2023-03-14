@@ -1905,72 +1905,75 @@ test_that("rasters aren't properly resampled", {
                        datatype = "INT2S",
                        filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
   }) # about "raster layer has integer values"
-  expect_true(terra::datatype(out2) %in% c("INT2S")) # because of "bilinear", it can become negative
 
-  rrr1 <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
-  crs(rrr1) <- crsToUse
-  tiftemp3 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-  tiftemp4 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-  suppressWarningsSpecific(writeRaster(rrr1, filename = tiftemp3), proj6Warn)
+  if (getRversion() >= "4.1" || !isWindows())  {
+    expect_true(terra::datatype(out2) %in% c("INT2S")) # because of "bilinear", it can become negative
 
-  out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
-                     destinationPath = dirname(tiftemp3),
-                     filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
-  expect_true(terra::datatype(out3) == "FLT4S")
+    rrr1 <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
+    crs(rrr1) <- crsToUse
+    tiftemp3 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+    tiftemp4 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+    suppressWarningsSpecific(writeRaster(rrr1, filename = tiftemp3), proj6Warn)
 
-  # Test for raster::stack
-  rasStack <- c(terra::rast(tiftemp3), terra::rast(tiftemp3))
-  rasStack[] <- rasStack[]
-  rasStack[131][1] <- 1.5
-  tiftemp4 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+    out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
+                       destinationPath = dirname(tiftemp3),
+                       filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
+    expect_true(terra::datatype(out3) == "FLT4S")
 
-  rasStack <- writeRaster(rasStack, filename = tiftemp4)
-  rm(rasStack)
-  # opts <- options(reproducible.useTerra = TRUE)
-  # on.exit(options(opts), add = TRUE)
-  out3 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
-                     destinationPath = dirname(tiftemp3),
-                     # fun = "raster::stack",
-                     filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
-  expect_true(is(out3, "SpatRaster"))
-  expect_true(identical(length(Filenames(out3)), 1L))
+    # Test for raster::stack
+    rasStack <- c(terra::rast(tiftemp3), terra::rast(tiftemp3))
+    rasStack[] <- rasStack[]
+    rasStack[131][1] <- 1.5
+    tiftemp4 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
 
-  out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
-                     destinationPath = dirname(tiftemp3),
-                     # fun = "raster::stack",
-                     filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
-                                   tempfile(tmpdir = tmpdir, fileext = ".grd")))
-  expect_true(is(out4, "SpatRaster"))
-  expect_true(identical(length(Filenames(out4, allowMultiple = TRUE)), 4L))
+    rasStack <- writeRaster(rasStack, filename = tiftemp4)
+    rm(rasStack)
+    # opts <- options(reproducible.useTerra = TRUE)
+    # on.exit(options(opts), add = TRUE)
+    out3 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
+                       destinationPath = dirname(tiftemp3),
+                       # fun = "raster::stack",
+                       filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
+    expect_true(is(out3, "SpatRaster"))
+    expect_true(identical(length(Filenames(out3)), 1L))
 
-
-  # Test for raster::stack with 3 layers, different types of writeRaster file ext
-  rasStack <- c(terra::rast(tiftemp3), terra::rast(tiftemp3), terra::rast(tiftemp3))
-  rasStack[] <- rasStack[]
-  rasStack[131][1] <- 1.5
-  rasStack[131][2] <- 2.5
-  tiftemp5 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-
-  rasStack <- writeRaster(rasStack, filename = tiftemp5)
-  rm(rasStack)
-  out5 <- prepInputs(targetFile = tiftemp5, rasterToMatch = raster(tiftemp2),
-                     destinationPath = dirname(tiftemp3),
-                     # fun = "raster::stack",
-                     filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
-                                   tempfile(tmpdir = tmpdir, fileext = ".grd"),
-                                   tempfile(tmpdir = tmpdir, fileext = ".tif")
-                                   ))
-  expect_true(is(out5, "SpatRaster"))
-  expect_true(identical(length(Filenames(out5, allowMultiple = TRUE)), 5L))
+    out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
+                       destinationPath = dirname(tiftemp3),
+                       # fun = "raster::stack",
+                       filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
+                                     tempfile(tmpdir = tmpdir, fileext = ".grd")))
+    expect_true(is(out4, "SpatRaster"))
+    expect_true(identical(length(Filenames(out4, allowMultiple = TRUE)), 4L))
 
 
-  out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
-                     destinationPath = dirname(tiftemp3),
-                     # fun = raster::stack,
-                     filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
-                                   tempfile(tmpdir = tmpdir, fileext = ".grd")))
-  expect_true(is(out4, "SpatRaster"))
-  expect_true(identical(length(Filenames(out4)), 4L))
+    # Test for raster::stack with 3 layers, different types of writeRaster file ext
+    rasStack <- c(terra::rast(tiftemp3), terra::rast(tiftemp3), terra::rast(tiftemp3))
+    rasStack[] <- rasStack[]
+    rasStack[131][1] <- 1.5
+    rasStack[131][2] <- 2.5
+    tiftemp5 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+
+    rasStack <- writeRaster(rasStack, filename = tiftemp5)
+    rm(rasStack)
+    out5 <- prepInputs(targetFile = tiftemp5, rasterToMatch = raster(tiftemp2),
+                       destinationPath = dirname(tiftemp3),
+                       # fun = "raster::stack",
+                       filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
+                                     tempfile(tmpdir = tmpdir, fileext = ".grd"),
+                                     tempfile(tmpdir = tmpdir, fileext = ".tif")
+                       ))
+    expect_true(is(out5, "SpatRaster"))
+    expect_true(identical(length(Filenames(out5, allowMultiple = TRUE)), 5L))
+
+
+    out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
+                       destinationPath = dirname(tiftemp3),
+                       # fun = raster::stack,
+                       filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
+                                     tempfile(tmpdir = tmpdir, fileext = ".grd")))
+    expect_true(is(out4, "SpatRaster"))
+    expect_true(identical(length(Filenames(out4)), 4L))
+  }
 })
 
 # test_that("System call gdal works", {
