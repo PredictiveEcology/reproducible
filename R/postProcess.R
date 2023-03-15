@@ -1885,9 +1885,17 @@ assessDataType <- function(ras, type = 'writeRaster') {
 #' @export
 #' @importFrom raster getValues maxValue ncell
 #' @rdname assessDataType
-assessDataType.Raster <- function(ras, type = "writeRaster") {
+assessDataType.default <- function(ras, type = "writeRaster") {
   ## using ras@data@... is faster, but won't work for @values in large rasters
   N <- 1e5
+
+  if (nlayers2(ras) > 1) { # for RasterStack, RasterBrick, SpatRaster of nlyr > 1
+    xs <- lapply(seq(names(ras)), FUN = function(x){ # can't use names(ras) directly because can't have same name 2x in lapply, but can in SpatRaster
+      y <- assessDataType(ras = ras[[x]], type)
+      return(y)})
+
+    return(unlist(xs))
+  }
 
   # browser(expr = exists("._assessDataType_1"))
   datatype <- NULL
@@ -1941,11 +1949,6 @@ assessDataType.RasterStack <- function(ras, type = "writeRaster") {
   return(unlist(xs))
 }
 
-#' @export
-#' @rdname assessDataType
-assessDataType.default <- function(ras, type = "writeRaster") {
-  stop("No method for assessDataType for class ", class(ras))
-}
 
 #' `assessDataTypeGDAL` assesses the appropriate raster layer data type for GDAL.
 #' It is a convenience function around `assessDataType(ras, type = "GDAL")`

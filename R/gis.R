@@ -101,11 +101,15 @@ rebuildColors <- function(x, origColors) {
 
 
 .getColors <- function(object) {
-  nams <- names(object)
-  cols <- lapply(nams, function(x) {
-    as.character(object[[x]]@legend@colortable)
-  })
-  names(cols) <- nams
+  if (is(object, "SpatRaster")) {
+    cols <- terra::coltab(object)
+  } else {
+    nams <- names(object)
+    cols <- lapply(nams, function(x) {
+      as.character(object[[x]]@legend@colortable)
+    })
+    names(cols) <- nams
+  }
   return(cols)
 }
 
