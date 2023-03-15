@@ -83,3 +83,4 @@ test_that("checkPath: checkPath consistency", {
   expect_message(a <- checkPath(f1), "is an existing file")
 
 })
+
