@@ -30,8 +30,8 @@ test_that("testing terra", {
   r1 <- list(terra::rast(tf1), terra::rast(tf2))
   r2 <- list(terra::rast(tf3), terra::rast(tf4))
   rmem <- r2
-  values2(rmem[[1]]) <- values2(rmem[[1]])
-  values2(rmem[[2]]) <- values2(rmem[[2]])
+  terra::values(rmem[[1]]) <- values2(rmem[[1]])
+  terra::values(rmem[[2]]) <- values2(rmem[[2]])
 
   fn <- function(listOf) {
     listOf
@@ -76,7 +76,7 @@ test_that("testing terra", {
 
   y <- terra::deepcopy(elevRas)
   y[y > 200 & y < 300] <- NA
-  values2(elevRas) <- rep(1L, ncell(y))
+  terra::values(elevRas) <- rep(1L, ncell(y))
   vRast <- terra::rast(v, res = 0.008333333)
 
   # SR, SR
