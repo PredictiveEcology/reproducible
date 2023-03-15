@@ -73,6 +73,12 @@ test_that("setting options works correctly", {
   }, add = TRUE)
 
   a <- reproducibleOptions()
+
+  # The keep is during terra-migration
+  keep <- setdiff(names(a), c("reproducible.useTerra", "reproducible.rasterRead"))#,
+  #                            "reproducible.cacheSaveFormat"))
+  a <- a[keep]
+
   a1 <- a[sapply(a, function(x) !is.null(x))]
   b <- options()
   bbb <- match(names(b), names(a1))

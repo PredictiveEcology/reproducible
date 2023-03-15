@@ -9,6 +9,8 @@ setDTthreads(2)
 #  ff <- list()
 #  runTestsWithTimings("ff", authorizeGoogle = TRUE)
 #
+opts <- options(reproducible.useTerra = TRUE,
+                reproducible.rasterRead = "terra::rast")
 test_check("reproducible")
 # options(opts)
 setDTthreads(origDTthreads)

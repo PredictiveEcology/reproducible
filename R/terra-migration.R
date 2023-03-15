@@ -30,8 +30,6 @@ maxFn <- function(x) {
   minmaxFn(x, "max")
 }
 
-#' @export
-#' @rdname terra-migration
 minmaxFn <- function(x, which = "max") {
   out <- NULL
   if (is(x, "Raster")) {
@@ -52,6 +50,7 @@ minmaxFn <- function(x, which = "max") {
 }
 
 #' @export
+#' @param ... Passed to the functions in `raster` or `terra`, as needed.
 #' @rdname terra-migration
 dataType2 <- function(x, ...) {
   if (is(x, "Raster"))

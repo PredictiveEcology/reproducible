@@ -98,7 +98,7 @@ test_that(
                                                   destinationPath = tmpdir)
            })
            expect_true(exists("testZip7"))
-           expect_is(testZip7, "RasterLayer")
+           expect_is(testZip7, rasterType())
          })
 
 test_that(
@@ -132,7 +132,7 @@ test_that(
                 destinationPath = tmpdir)
             })
             expect_true(exists("testRar"))
-            expect_is(testRar, "RasterLayer")
+            expect_is(testRar, rasterType())
           }
 })
 
@@ -163,7 +163,7 @@ test_that(
                                                destinationPath = tmpdir)
         })
         expect_true(exists("testRar2"))
-        expect_is(testRar2, "RasterLayer")
+        expect_is(testRar2, rasterType())
       }
     })
 
@@ -194,7 +194,7 @@ test_that(paste0("prepInputs in a two files double nested rar file, with the wan
                                                             destinationPath = tmpdir)
                      })
                      expect_true(exists("testRar3"))
-                     expect_is(testRar3, "RasterLayer")
+                     expect_is(testRar3, rasterType())
                    }
 })
 
@@ -227,6 +227,6 @@ test_that("prepInputs works with nested rar file inside internal rar folder", {
                                            useCache = FALSE)
     })
     expect_true(exists("testRar4"))
-    expect_is(testRar4, "RasterLayer")
+    expect_is(testRar4, rasterType())
   }
 })

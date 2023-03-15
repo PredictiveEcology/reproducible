@@ -385,7 +385,13 @@ shapefileClassDefault <- function() {
   if (identical(shpfl, raster::shapefile)) "SpatialPolygons" else "sf"
 }
 
-
+rasterType <- function(nlayers = 1) {
+  rasterRead <- getOption("reproducible.rasterRead")
+  if (identical(rasterRead, "terra::rast"))
+    "SpatRaster"
+  else
+    if (nlayers == 1) "RasterLayer" else "RasterStack"
+}
 
 runTestsWithTimings <- function(nameOfOuterList = "ff", envir = parent.frame(), authorizeGoogle = FALSE) {
   if (isTRUE(authorizeGoogle))

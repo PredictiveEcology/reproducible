@@ -120,6 +120,7 @@ Collate:
     'search.R'
     'showCacheEtc.R'
     'spatialObjects-class.R'
+    'terra-migration.R'
     'zzz.R'
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3

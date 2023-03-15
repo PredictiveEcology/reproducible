@@ -11,7 +11,7 @@ test_that("prepInputs works with NULL archive + file without extension, but orig
                                       destinationPath = tempdir2(rndstr(1, 6)))
     })
   })
-  testthat::expect_is(object = ras, class = "RasterLayer")
+  testthat::expect_is(object = ras, class = rasterType())
 })
 
 test_that("prepInputs WORKS if the file is not originally a .zip, but archive is provided (only extension matters)", {
@@ -27,7 +27,7 @@ test_that("prepInputs WORKS if the file is not originally a .zip, but archive is
                                       destinationPath = tempdir2(rndstr(1, 6)))
     })
   )
-  testthat::expect_is(object = ras, class = "RasterLayer")
+  testthat::expect_is(object = ras, class = rasterType())
 })
 
 test_that("prepInputs WORKS if passing archive .zip", {
@@ -43,7 +43,7 @@ test_that("prepInputs WORKS if passing archive .zip", {
                                       alsoExtract = "similar", destinationPath = tempdir2(rndstr(1,6)))
     })
   )
-  testthat::expect_is(object = ras, class = "RasterLayer")
+  testthat::expect_is(object = ras, class = rasterType())
 })
 
 test_that("prepInputs WORKS passing just targetFile that is NOT an archive", {
@@ -59,7 +59,7 @@ test_that("prepInputs WORKS passing just targetFile that is NOT an archive", {
                                       destinationPath = tempdir2(rndstr(1, 6)))
     })
   })
-  testthat::expect_is(object = ras, class = "RasterLayer")
+  testthat::expect_is(object = ras, class = rasterType())
 })
 
 test_that("prepInputs WORKS passing archive + targetFile", {
@@ -76,5 +76,5 @@ test_that("prepInputs WORKS passing archive + targetFile", {
                                       destinationPath = tempdir2(rndstr(1, 6)))
     })
   })
-  testthat::expect_is(object = ras, class = "RasterLayer")
+  testthat::expect_is(object = ras, class = rasterType())
 })
