@@ -402,6 +402,9 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
               if (isSF(from)) {
                 sf::st_intersection(from, maskTo)
               } else {
+                if (getRversion() == "4.3.0") { # TODO: this is a work around for R crashing; shouldn't b/c this is in a `try`
+                  maskTo <- fixErrorsTerra(maskTo)
+                }
                 terra::intersect(from, maskTo)
               }
             } else {
