@@ -214,13 +214,13 @@ test_that("Filenames for environment", {
   expect_true(identical(Fns[["r"]], normPath(filename(s$r))))
   expect_true(identical(Fns[["r2"]], normPath(filename(s$r2))))
   expect_true(identical(c(Fns[["s1"]], Fns[["s2"]]),
-                        sapply(seq_len(nlayers(s$s)), function(rInd) normPath(filename(s$s[[rInd]])))))
+                        sapply(seq_len(nlayers2(s$s)), function(rInd) normPath(filename(s$s[[rInd]])))))
 
   FnsR <- Filenames(s$r)
   expect_true(identical(FnsR, normPath(filename(s$r))))
 
   FnsS <- Filenames(s$s)
-  expect_true(identical(FnsS, sapply(seq_len(nlayers(s$s)),
+  expect_true(identical(FnsS, sapply(seq_len(nlayers2(s$s)),
                                      function(rInd) normPath(filename(s$s[[rInd]])))))
 
   FnsB <- Filenames(s$b)

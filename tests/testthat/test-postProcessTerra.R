@@ -30,8 +30,8 @@ test_that("testing terra", {
   r1 <- list(terra::rast(tf1), terra::rast(tf2))
   r2 <- list(terra::rast(tf3), terra::rast(tf4))
   rmem <- r2
-  terra::values(rmem[[1]]) <- terra::values(rmem[[1]])
-  terra::values(rmem[[2]]) <- terra::values(rmem[[2]])
+  values2(rmem[[1]]) <- values2(rmem[[1]])
+  values2(rmem[[2]]) <- values2(rmem[[2]])
 
   fn <- function(listOf) {
     listOf
@@ -76,7 +76,7 @@ test_that("testing terra", {
 
   y <- terra::deepcopy(elevRas)
   y[y > 200 & y < 300] <- NA
-  terra::values(elevRas) <- rep(1L, ncell(y))
+  values2(elevRas) <- rep(1L, ncell(y))
   vRast <- terra::rast(v, res = 0.008333333)
 
   # SR, SR
@@ -286,7 +286,7 @@ test_that("testing terra", {
   t19 <- postProcessTerra(elevRas, rutm, maskTo = NA)
   expect_true(sf::st_crs(t19) != sf::st_crs(elevRas))
   expect_true(sf::st_crs(t19) == sf::st_crs(vutm))
-  expect_true(sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
+  expect_true(sum(values2(t19), na.rm = TRUE) > sum(values2(t13), na.rm = TRUE))
 
   # Raster with Vector
   t16 <- postProcessTerra(elevRas, vutm, cropTo = NA)
@@ -308,12 +308,12 @@ test_that("testing terra", {
   t19 <- postProcessTerra(elevRas, vutm, maskTo = NA)
   expect_true(sf::st_crs(t19) != sf::st_crs(elevRas))
   expect_true(sf::st_crs(t19) == sf::st_crs(vutm))
-  # expect_true(sum(terra::values(t19), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
+  # expect_true(sum(values2(t19), na.rm = TRUE) > sum(values2(t13), na.rm = TRUE))
 
   t19SF <- postProcessTerra(elevRas, vutmSF, maskTo = NA)
   expect_true(sf::st_crs(t19SF) != sf::st_crs(elevRas))
   expect_true(sf::st_crs(t19SF) == sf::st_crs(vutmSF))
-  # expect_true(sum(terra::values(t19SF), na.rm = TRUE) > sum(terra::values(t13), na.rm = TRUE))
+  # expect_true(sum(values2(t19SF), na.rm = TRUE) > sum(values2(t13), na.rm = TRUE))
 
   t21 <- postProcessTerra(elevRas, projectTo = vutm)
   t21SF <- postProcessTerra(elevRas, projectTo = vutmSF)
@@ -378,19 +378,19 @@ test_that("testing terra", {
     expect_equal(terra::ext(t20AllByRas), terra::ext(ras1SmallAll))
     expect_equal(terra::ext(t20ProjectedByRas), terra::ext(ras1SmallAll))
     expect_true(
-      sum(!is.na(terra::values(ras1SmallAll))) <
-        sum(!is.na(terra::values(t20ProjectedByRas)))
+      sum(!is.na(values2(ras1SmallAll))) <
+        sum(!is.na(values2(t20ProjectedByRas)))
     )
     expect_true(
-      sum(!is.na(terra::values(ras1SmallAll))) ==
-        sum(!is.na(terra::values(t20AllByRas)))
+      sum(!is.na(values2(ras1SmallAll))) ==
+        sum(!is.na(values2(t20AllByRas)))
     )
 
     # The below was slightly off because RasterLayer was not exactly same as t20 proj
     spatRas1SmallAll <- projectTo(terra::rast(ras1SmallAll), t20)
     expect_true( #  these are off b/c of projection probably
-      abs(sum(!is.na(terra::values(spatRas1SmallAll))) -
-        sum(!is.na(terra::values(t20MaskedByRas)))) <= 0
+      abs(sum(!is.na(values2(spatRas1SmallAll))) -
+        sum(!is.na(values2(t20MaskedByRas)))) <= 0
     )
 
     if (interactive()) {

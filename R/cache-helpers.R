@@ -253,7 +253,7 @@ setAs(from = "character", to = "Path", function(from) {
     im <- inMemory(obj)
     if (isBrick) {
       if (isTRUE(im))
-        im <- rep(im, raster::nlayers(obj))
+        im <- rep(im, nlayers2(obj))
     }
     im
   } else {
@@ -338,7 +338,7 @@ setAs(from = "character", to = "Path", function(from) {
       } else {
         curFilename[!file.exists(curFilename) & isFilebacked] <- trySaveFilename
         saveFilename <- curFilename
-        for (i in seq_len(nlayers(obj))) {
+        for (i in seq_len(nlayers2(obj))) {
           slot(slot(obj@layers[[i]], "file"), "name") <- saveFilename[i]
         }
       }
@@ -421,7 +421,7 @@ setAs(from = "character", to = "Path", function(from) {
       #   if (!isStack) {
       #     slot(slot(obj, "file"), "name") <- saveFilename2
       #   } else {
-      #     for (i in seq_len(nlayers(obj))) {
+      #     for (i in seq_len(nlayers2(obj))) {
       #       whFilename <- match(basename(saveFilename2), basename(curFilename2))
       #       slot(slot(obj@layers[[i]], "file"), "name") <- saveFilename2[whFilename]
       #     }
@@ -966,7 +966,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
     if (!isStack) {
       slot(slot(obj, "file"), "name") <- newFilenamesNotGri
     } else {
-      for (i in seq_len(nlayers(obj))) {
+      for (i in seq_len(nlayers2(obj))) {
         if (fromDisk(obj[[i]])) {
           whFilename <- match(withoutFinalNumeric(basename(newFilenamesNotGri)),
                               withoutFinalNumeric(basename(curFilenamesNotGri)))

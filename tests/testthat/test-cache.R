@@ -846,14 +846,14 @@ test_that("test cache-helpers", {
 
   b <- .writeRaster(b, filename = tmpfile, overwrite = TRUE)
   b <- raster::stack(b)
-  expect_true(nlayers(b) == 2)
+  expect_true(nlayers2(b) == 2)
   expect_true(identical(normPath(b$layer.1@file@name),
                         normPath(b$layer.2@file@name)))
 
   b1 <- .prepareFileBackedRaster(b, tmpCache)
-  expect_true(nlayers(b1) == 2)
+  expect_true(nlayers2(b1) == 2)
   b1a <- raster::stack(Filenames(b1)[1])
-  expect_true(nlayers(b1a) == 2)
+  expect_true(nlayers2(b1a) == 2)
 
 })
 

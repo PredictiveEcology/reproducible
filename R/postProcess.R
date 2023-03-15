@@ -1693,7 +1693,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
       # if (any(dots$datatype != dataType(x))) {
       #   if (is(x, "RasterStack")) {
       #     newDT <- if (length(dots$datatype) == 1) {
-      #       rep(dots$datatype, nlayers(x))
+      #       rep(dots$datatype, nlayers2(x))
       #     } else {
       #       dots$datatype
       #     }
@@ -1707,7 +1707,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
       argsForWrite <- append(list(filename = filename2, overwrite = overwrite), dots)
       if (is(x, "RasterStack")) {
         longerThanOne <- unlist(lapply(argsForWrite, function(x) length(unique(x)) > 1))
-        nLayers <- raster::nlayers(x)
+        nLayers <- nlayers2(x)
         if (any(unlist(longerThanOne))) {
           if (!identical(nLayers, length(argsForWrite$filename))) {
             argsForWrite$filename <- file.path(dirname(argsForWrite$filename),
@@ -1744,7 +1744,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
           })
 
         } else {
-          stop("filename2 must be length 1 or length nlayers(...)")
+          stop("filename2 must be length 1 or length nlayers(...) or nlyr(...)")
         }
         xTmp <- raster::stack(xTmp)
       } else {
@@ -1892,10 +1892,10 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
   # browser(expr = exists("._assessDataType_1"))
   datatype <- NULL
   if (ncell(ras) > 1e8) { # for very large rasters, try a different way
-    maxValCurrent <- maxValue(ras)
+    maxValCurrent <- maxFn(ras)
     ras <- setMinMaxIfNeeded(ras)
     # if (maxValCurrent != maxValue(ras))
-    datatype <- dataType(ras)
+    datatype <- dataType2(ras)
   } else {
     ras <- setMinMaxIfNeeded(ras)
   }
@@ -1906,10 +1906,10 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
       rasVals <- tryCatch(suppressWarnings(raster::sampleRandom(x = ras, size = N)),
                           error = function(x) rep(NA_integer_, N))
     } else {
-      rasVals <- raster::getValues(ras)
+      rasVals <- values2(ras)
     }
-    minVal <- min(ras@data@min)
-    maxVal <- max(ras@data@max)
+    minVal <- minFn(ras) # min(ras@data@min)
+    maxVal <- maxFn(ras) # max(ras@data@max)
     signVal <- minVal < 0
     doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
     datatype <- if (doubVal) {
@@ -1924,33 +1924,6 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
         names(MinVals)[min(which(minVal >= unlist(MinVals) & maxVal <= unlist(MaxVals)))]
       }
     }
-
-    #   if (!doubVal & !signVal) {
-    #     ## only check for binary if there are no decimals and no signs
-    #     logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
-    #
-    #     if (logi) {
-    #       datatype <- "LOG1S"
-    #     } else {
-    #       ## if() else is faster than if
-    #       datatype <- if (maxVal <= MaxVals$INT1U) "INT1U" else
-    #         if (maxVal <= MaxVals$INT2U) "INT2U" else
-    #           if (maxVal <= MaxVals$INT4U) "INT4U" else  ## note: ?dataType advises against INT4U
-    #             if (maxVal > MaxVals$FLT4S) "FLT8S" else "FLT4S"
-    #     }
-    #   } else {
-    #     if (signVal & !doubVal) {
-    #       ## if() else is faster than if
-    #       datatype <- if (minVal >= -MaxVals$INT1S & maxVal <= MaxVals$INT1S) "INT1S" else
-    #         if (minVal >= -MaxVals$INT2S & maxVal <= MaxVals$INT2S) "INT2S" else
-    #           if (minVal >= -MaxVals$INT4S & maxVal <=  MaxVals$INT4S) "INT4S" else  ## note: ?dataType advises against INT4U
-    #             if (minVal < -MaxVals$FLT4S | maxVal > MaxVals$FLT4S) "FLT8S" else "FLT4S"
-    #     } else {
-    #       if (doubVal)
-    #         datatype <- if (minVal < -MaxVals$FLT4S | maxVal > MaxVals$FLT4S) "FLT8S" else "FLT4S"
-    #     }
-    #   }
-    #   if (!identical(datatype, datatype1))
   }
   #convert datatype if needed
   datatype <- switchDataTypes(datatype, type = type)
@@ -2247,7 +2220,7 @@ roundToRes <- function(extent, x) {
 
 setMinMaxIfNeeded <- function(ras) {
   # special case where the colours already match the discrete values
-  suppressWarnings(maxValCurrent <- maxValue(ras))
+  suppressWarnings(maxValCurrent <- maxFn(ras))
   needSetMinMax <- FALSE
   if (isTRUE(any(is.na(maxValCurrent)))) {
     needSetMinMax <- TRUE
@@ -2255,8 +2228,8 @@ setMinMaxIfNeeded <- function(ras) {
 
     # if the colors are set and are the same length of the integer sequence between min and max, don't override
     if (length(.getColors(ras)[[1]])) {
-      if (!is.na(suppressWarnings(maxValue(ras))) && !is.na(suppressWarnings(minValue(ras))))
-        if (length(.getColors(ras)[[1]]) == (maxValue(ras) - minValue(ras) + 1)) {
+      if (!is.na(suppressWarnings(maxFn(ras))) && !is.na(suppressWarnings(minFn(ras))))
+        if (length(.getColors(ras)[[1]]) == (maxFn(ras) - minFn(ras) + 1)) {
           return(ras)
         }
     }
@@ -2266,7 +2239,7 @@ setMinMaxIfNeeded <- function(ras) {
     }
   }
   if (isTRUE(needSetMinMax)) {
-    large <- if (nlayers(ras) > 25 || ncell(ras) > 1e7) TRUE else FALSE
+    large <- if (nlayers2(ras) > 25 || ncell(ras) > 1e7) TRUE else FALSE
     if (large) message("  Large ",class(ras), " detected; setting minimum and maximum may take time")
     suppressWarnings(ras <- setMinMax(ras))
     if (large) message("  ... Done")

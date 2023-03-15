@@ -398,9 +398,9 @@ updateFilenameSlots.Raster <- function(obj, curFilenames, newFilenames, isStack 
       #   slot(obj, "filename") <- newFilenames
       # } else {
       if (length(newFilenames) == 1) {
-        newFilenames <- rep(newFilenames, nlayers(obj))
+        newFilenames <- rep(newFilenames, nlayers2(obj))
       }
-      for (i in seq_len(nlayers(obj))) {
+      for (i in seq_len(nlayers2(obj))) {
         whFilename <- unique(match(withoutFinalNumeric(basename(newFilenames)),
                                    withoutFinalNumeric(basename(curFilenames))))
         isNAwhFn <- is.na(whFilename)
