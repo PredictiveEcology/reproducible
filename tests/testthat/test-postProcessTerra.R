@@ -216,20 +216,22 @@ test_that("testing terra", {
     utm <- terra::crs("epsg:23028") # This is same as above, but terra way
     vutmErrors <- terra::project(v2, utm)
     mess <- capture_messages({
-    t13a <- postProcessTerra(xVect, vutmErrors)
-  })
-  ## Error : TopologyException: Input geom 1 is invalid:
-  ##  Self-intersection at 6095858.7074040668 6626138.068126983
-  expect_true(sum(grepl("error", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
-  expect_true(sum(grepl("fixed", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
-  expect_true(is(t13a, "SpatVector"))
+      t13a <- postProcessTerra(xVect, vutmErrors)
+    })
+    if (getRversion() != "4.3.0") { # this same error crashes the session in R 4.3.0 when it is R-devel
+      ## Error : TopologyException: Input geom 1 is invalid:
+      ##  Self-intersection at 6095858.7074040668 6626138.068126983
+      expect_true(sum(grepl("error", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
+      expect_true(sum(grepl("fixed", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
+    }
+    expect_true(is(t13a, "SpatVector"))
 
-  # Switch from qs to rds with Cache
-  opts <- options(reproducible.cacheSaveFormat = "qs")
-  t13a <- Cache(postProcessTerra(xVect, vutmErrors))
-  opts <- options(reproducible.cacheSaveFormat = "rds")
-  t13a <- Cache(postProcessTerra(xVect, vutmErrors))
-  opts <- options(reproducible.cacheSaveFormat = "qs")
+    # Switch from qs to rds with Cache
+    opts <- options(reproducible.cacheSaveFormat = "qs")
+    t13a <- Cache(postProcessTerra(xVect, vutmErrors))
+    opts <- options(reproducible.cacheSaveFormat = "rds")
+    t13a <- Cache(postProcessTerra(xVect, vutmErrors))
+    opts <- options(reproducible.cacheSaveFormat = "qs")
     t13a <- try(Cache(postProcessTerra(xVect, vutmErrors)), silent = TRUE)
     a <- try(ncol(t13a), silent = TRUE)
     expect_false(is(a, "try-error"))
