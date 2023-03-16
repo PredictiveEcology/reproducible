@@ -126,8 +126,7 @@ setMethod(
 
     if (isTRUEorForce(useCloud) || !clearWholeCache) {
       if (isTRUEorForce(useCloud))
-        if (!requireNamespace("googledrive", quietly = TRUE))
-          stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+        .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
 
       # browser(expr = exists("._clearCache_2"))
       # if (missing(after)) after <- NA # "1970-01-01"

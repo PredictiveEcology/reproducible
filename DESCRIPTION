@@ -60,10 +60,8 @@ Imports:
     lobstr,
     magrittr,
     methods,
-    raster (>= 3.5-15),
     RSQLite,
     rlang,
-    sp (>= 1.4-2),
     utils
 Suggests:
     covr,
@@ -73,14 +71,15 @@ Suggests:
     future,
     googledrive,
     httr,
-    lwgeom,
     qs,
     knitr,
     parallel,
+    raster (>= 3.5-15),
     RCurl (>= 1.95-4.8),
     rgdal,
     rmarkdown,
     sf,
+    sp (>= 1.4-2),
     stats,
     terra (>= 1.5-17),
     testthat

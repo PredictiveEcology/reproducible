@@ -24,8 +24,7 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
                                       overwrite = FALSE,
                                       verbose = getOption("reproducible.verbose", 1),
                                       team_drive = NULL) {
-  if (!requireNamespace("googledrive", quietly = TRUE))
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
 
   browser(expr = exists("._checkAndMakeCloudFolderID_1"))
   if (!is(cloudFolderID, "dribble")) {
@@ -82,9 +81,8 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
 driveLs <- function(cloudFolderID = NULL, pattern = NULL,
                     verbose = getOption("reproducible.verbose", 1),
                     team_drive = NULL) {
-  if (!requireNamespace("googledrive", quietly = TRUE))
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
-  #browser(expr = exists("kkkk"))
+  .requireNamespace("googledrive", stopOnFALSE = TRUE,
+                    messageStart = "to use google drive files")
 
   if (!is(cloudFolderID, "tbl")) {
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = FALSE,
@@ -122,8 +120,8 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL,
 #' @param output The output object of FUN that was run in `Cache`
 #' @inheritParams Cache
 cloudUpload <- function(isInRepo, outputHash, gdriveLs, cachePath, cloudFolderID, output) {
-  if (!requireNamespace("googledrive", quietly = TRUE))
-      stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  .requireNamespace("googledrive", stopOnFALSE = TRUE,
+                    messageStart = "to use google drive files")
 
   artifact <- isInRepo[[.cacheTableHashColName()]][1]
   # browser(expr = exists("._cloudUpload_1"))
@@ -170,8 +168,8 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cachePath, cloudFolderID
 cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFolderID,
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
                           conn = getOption("reproducible.conn", NULL)) {
-  if (!requireNamespace("googledrive", quietly = TRUE))
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  .requireNamespace("googledrive", stopOnFALSE = TRUE,
+                    messageStart = "to use google drive files")
 
   #browser(expr = exists("._cloudDownload_1"))
   messageCache("Downloading cloud copy of ", newFileName,", with cacheId: ", outputHash)
@@ -208,9 +206,8 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
 #' @keywords internal
 cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID,
                                  outputToSave, rasters) {
-  if (!requireNamespace("googledrive", quietly = TRUE))
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
-
+  .requireNamespace("googledrive", stopOnFALSE = TRUE,
+                    messageStart = "to use google drive files")
   #browser(expr = exists("._cloudUploadFromCache_1"))
   if (!any(isInCloud)) {
     cacheIdFileName <- CacheStoredFile(cachePath, outputHash)
@@ -231,8 +228,8 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
 }
 
 cloudUploadRasterBackends <- function(obj, cloudFolderID) {
-  if (!requireNamespace("googledrive", quietly = TRUE))
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  .requireNamespace("googledrive", stopOnFALSE = TRUE,
+                    messageStart = "to use google drive files")
 
   #browser(expr = exists("._cloudUploadRasterBackends_1"))
   rasterFilename <- Filenames(obj)
@@ -250,8 +247,8 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
 cloudDownloadRasterBackend <- function(output, cachePath, cloudFolderID,
                                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                        conn = getOption("reproducible.conn", NULL)) {
-  if (!requireNamespace("googledrive", quietly = TRUE))
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  .requireNamespace("googledrive", stopOnFALSE = TRUE,
+                    messageStart = "to use google drive files")
 
   #browser(expr = exists("._cloudDownloadRasterBackend_1"))
   rasterFilename <- Filenames(output)
@@ -294,10 +291,10 @@ cloudDownloadRasterBackend <- function(output, cachePath, cloudFolderID,
   output
 }
 
-#' @importFrom rlang inherits_only
 isOrHasRaster <- function(obj) {
   rasters <- if (is(obj, "environment")) {
-    if (inherits_only(obj, "environment")) {
+    .requireNamespace("rlang", stopOnFALSE = TRUE)
+    if (rlang::inherits_only(obj, "environment")) {
       lapply(mget(ls(obj), envir = obj), function(x) isOrHasRaster(x))
     } else {
       tryCatch(lapply(mget(ls(obj), envir = obj@.xData),

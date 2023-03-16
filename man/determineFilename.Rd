@@ -45,7 +45,7 @@ these are: \code{\link[=cropInputs]{cropInputs()}}, \code{\link[=fixErrors]{fixE
 \code{\link[=projectInputs]{projectInputs()}}, \code{\link[=maskInputs]{maskInputs()}},
 \code{\link[=determineFilename]{determineFilename()}}, and \code{\link[=writeOutputs]{writeOutputs()}}.
 Each of these may also pass \code{...} into other functions, like
-\code{\link[raster:writeRaster]{raster::writeRaster()}}, or \code{sf::st_write}.
+\code{\link[=writeTo]{writeTo()}}, or \code{sf::st_write}.
 This might include potentially important arguments like \code{datatype},
 \code{format}. Also passed to \code{projectRaster},
 with likely important arguments such as \code{method = "bilinear"}.
@@ -57,7 +57,7 @@ See details.
 \item{\code{projectInputs}}{\code{\link[raster:projectRaster]{raster::projectRaster()}}}
 \item{\code{maskInputs}}{\code{\link[=fastMask]{fastMask()}} or \code{\link[raster:intersect]{raster::intersect()}}}
 \item{\code{fixErrors}}{\code{\link[raster:buffer]{raster::buffer()}}}
-\item{\code{writeOutputs}}{\code{\link[raster:writeRaster]{raster::writeRaster()}} or \code{\link[raster:shapefile]{raster::shapefile()}}}
+\item{\code{writeOutputs}}{\code{\link[=writeTo]{writeTo()}} or \code{\link[raster:shapefile]{raster::shapefile()}}}
 \item{\code{determineFilename}}{}
 }
 \itemize{

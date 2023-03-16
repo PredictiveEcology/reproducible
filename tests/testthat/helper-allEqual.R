@@ -35,8 +35,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
 
 
   if (isTRUE(needGoogle)) {
-    if (!requireNamespace("googledrive", quietly = TRUE))
-      stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+    .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
 
     if (!utils::packageVersion("googledrive") >= "1.0.0")
       # googledrive::drive_deauth()
@@ -122,8 +121,7 @@ testOnExit <- function(testInitOut) {
   setwd(testInitOut$origDir)
   unlink(testInitOut$tmpdir, recursive = TRUE)
   if (isTRUE(testInitOut$needGoogle)) {
-    if (!requireNamespace("googledrive", quietly = TRUE))
-      stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+    .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
     if (utils::packageVersion("googledrive") < "1.0.0")
       googledrive::drive_auth_config(active = FALSE)
   }
@@ -201,8 +199,7 @@ getDataFn <- function(...) {
 
 testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
                               type = c("Raster", "Stack", "Brick")) {
-  if (!requireNamespace("googledrive", quietly = TRUE))
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
 
   # Second test .grd which has two files
   ####################################################

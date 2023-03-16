@@ -26,7 +26,6 @@
 #' @export
 #' @inheritParams Cache
 #' @inheritParams projectInputs
-#' @importFrom sp SpatialPolygonsDataFrame spTransform
 #'
 fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", FALSE),
                      verbose = getOption("reproducible.verbose", 1), ..., skipDeprecastedMsg = FALSE) {
@@ -66,9 +65,7 @@ attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", FALSE),
 }
 
 maskWithRasterNAs <- function(x, y) {
-  if (!requireNamespace("raster"))
-    stop("raster package needs installing; install.packages('raster')")
-
+  .requireNamespace("raster", stopOnFALSE = TRUE)
   origColors <- checkColors(x)
   if (raster::canProcessInMemory(x, 3) && raster::fromDisk(x))
     x[] <- x[]

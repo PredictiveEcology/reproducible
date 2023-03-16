@@ -617,8 +617,8 @@ Cache <-
 
       # compare outputHash to existing Cache record
       if (useCloud) {
-        if (!requireNamespace("googledrive", quietly = TRUE))
-          stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+        .requireNamespace("googledrive", stopOnFALSE = TRUE,
+                          messageStart = "to use google drive files")
         # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
         #  returns NROW 0 gdriveLs if not present
         if (is.null(cloudFolderID))
@@ -1653,8 +1653,8 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") > 0)) {
     .robustDigest(unname(sort(unlist(preDigest))), algo = algo, quick = TRUE, ...)
   } else {
-    if (!requireNamespace("fastdigest", quietly = TRUE))
-      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+    .requireNamespace("fastdigest", stopOnFALSE = TRUE,
+                      messageStart = "to use options('reproducible.useNewDigestAlgorithm' = FALSE")
     fastdigest::fastdigest(preDigest)
   }
   list(outputHash = res, preDigest = preDigest)

@@ -33,15 +33,15 @@ maxFn <- function(x) {
 minmaxFn <- function(x, which = "max") {
   out <- NULL
   if (is(x, "Raster")) {
-    if (requireNamespace("raster")) {
-      fn <- get(paste0(which, "Value"), envir = asNamespace("raster"))
-      out <- fn(x)
-    }
+    .requireNamespace("raster", stopOnFALSE = TRUE)
+    fn <- get(paste0(which, "Value"), envir = asNamespace("raster"))
+    out <- fn(x)
+
   } else {
-    if (requireNamespace("terra")) {
-      fn <- ifelse(identical(which, "max"), tail, head)
-      out <- fn(terra::minmax(x), 1)[1, ]
-    }
+    .requireNamespace("terra", stopOnFALSE = TRUE)
+    fn <- ifelse(identical(which, "max"), tail, head)
+    out <- fn(terra::minmax(x), 1)[1, ]
+
   }
   if (is.null(out))
     stop("To use maxFn or minFn, you need either terra or raster package installed")

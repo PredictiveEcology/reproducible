@@ -7,7 +7,6 @@
 #'           See individual methods. This can be provided as a
 #'           `rlang::quosure` or a normal R object.
 #' @importFrom utils capture.output
-#' @importFrom sp spTransform
 #' @seealso `prepInputs`
 #' @inheritParams prepInputs
 #' @rdname postProcess
@@ -18,14 +17,13 @@ postProcess <- function(x, ...) {
 #' @export
 #' @rdname postProcess
 postProcess.default <- function(x, ...) {
+  if (inherits(x, "quosure")) {
+    .requireNamespace("rlang", stopOnFALSE = TRUE)
+    postProcess(rlang::eval_tidy(x), ...)
+  }
   x
 }
 
-#' @importFrom rlang eval_tidy
-postProcess.quosure <- function(x, ...) {
-  # browser(expr = exists("._postProcess.quosure_1"))
-  postProcess(eval_tidy(x), ...)
-}
 
 #' @export
 #' @rdname postProcess
@@ -90,7 +88,7 @@ postProcess.list <- function(x, ...) {
 #'            [projectInputs()], [maskInputs()],
 #'            [determineFilename()], and [writeOutputs()].
 #'            Each of these may also pass `...` into other functions, like
-#'            [raster::writeRaster()], or `sf::st_write`.
+#'            [writeTo()], or `sf::st_write`.
 #'            This might include potentially important arguments like `datatype`,
 #'            `format`. Also passed to `projectRaster`,
 #'            with likely important arguments such as `method = "bilinear"`.
@@ -102,7 +100,7 @@ postProcess.list <- function(x, ...) {
 #'     \item{`projectInputs`}{[raster::projectRaster()]}
 #'     \item{`maskInputs`}{[fastMask()] or [raster::intersect()]}
 #'     \item{`fixErrors`}{[raster::buffer()]}
-#'     \item{`writeOutputs`}{[raster::writeRaster()] or [raster::shapefile()]}
+#'     \item{`writeOutputs`}{[writeTo()] or [raster::shapefile()]}
 #'     \item{`determineFilename`}{}
 #'   }
 #'   * Can be overridden with `useSAcrs`
@@ -241,8 +239,7 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
                            useSAcrs = useSAcrs, overwrite = overwrite,
                            verbose = verbose, ...)
   } else {
-    if (!requireNamespace("raster"))
-      stop("raster package needs installing; install.packages('raster')")
+    .requireNamespace("raster", stopOnFALSE = TRUE)
 
     # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
     messagePrepInputs("postProcess with sf class objects is still experimental")
@@ -293,7 +290,6 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
 #' @author Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti
 #' @export
 #' @importFrom methods is
-#' @importFrom sp SpatialPolygonsDataFrame spTransform CRS proj4string
 #' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 #' appropriately cropped.
 #' @rdname deprecated
@@ -1548,12 +1544,12 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #'
 #' @param overwrite Logical. Should file being written overwrite an existing file if it exists.
 #'
-#' @param filename2 File name passed to [raster::writeRaster()], or
+#' @param filename2 File name passed to [writeTo()], or
 #'                  [raster::shapefile()] or [sf::st_write()]
 #'                  (`dsn` argument).
 #'
 #' @param ... Passed into [raster::shapefile()] or
-#'             [raster::writeRaster()] or [sf::st_write()]
+#'             [writeTo()] or [sf::st_write()]
 #'
 #' @inheritParams prepInputs
 #'
@@ -1564,7 +1560,6 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #' be a side effect. In the case of gridded objects (Raster*, SpatRaster), the
 #' object will have a file-backing.
 #' @importFrom methods is
-#' @importFrom terra writeRaster
 #' @rdname deprecated
 #'
 #' @examples
@@ -1891,9 +1886,9 @@ assessDataType.default <- function(ras, type = "writeRaster") {
     return(unlist(xs))
   }
 
-  # browser(expr = exists("._assessDataType_1"))
   datatype <- NULL
-  if (ncell(ras) > 1e8) { # for very large rasters, try a different way
+  .requireNamespace("terra", stopOnFALSE = TRUE)
+  if (terra::ncell(ras) > 1e8) { # for very large rasters, try a different way
     maxValCurrent <- maxFn(ras)
     ras <- setMinMaxIfNeeded(ras)
     # if (maxValCurrent != maxValue(ras))
@@ -1955,7 +1950,6 @@ assessDataType.default <- function(ras, type = "writeRaster") {
 #   assessDataType(ras, type = "GDAL")
 # }
 
-# @importFrom rlang eval_tidy
 # postProcessChecks <- function(studyArea, rasterToMatch, dots,
 #                               verbose = getOption("reproducible.verbose", 1)) {
 #   if (!is.null(studyArea) & !is(studyArea, "Spatial")) {
@@ -1983,7 +1977,6 @@ assessDataType.default <- function(ras, type = "writeRaster") {
 #   list(dots = dots, filename1 = filename1)
 # }
 
-#' @importFrom sp wkt
 postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                                   useCache = getOption("reproducible.useCache", FALSE),
                                   filename1,
@@ -2386,21 +2379,21 @@ progressBarCode <- function(..., doProgress = TRUE, message,
   out
 }
 
-isProjected <- function(x) {
-  if (is(x, "sf")) {
-    txt <- sf::st_crs(x)
-  } else {
-    txt <- suppressWarningsSpecific(falseWarnings = "no wkt comment", wkt(x))
-  }
-
-  if (identical(nchar(txt), 0L) || is.null(txt)) {
-    txt <- crs(x)
-    out <- any(!grepl("(longlat)", txt))
-  } else {
-    out <- tryCatch(any(!grepl("(longitude).*(latitude)", txt)), error = function(yy) NULL)
-  }
-  out
-}
+# isProjected <- function(x) {
+#   if (is(x, "sf")) {
+#     txt <- sf::st_crs(x)
+#   } else {
+#     txt <- suppressWarningsSpecific(falseWarnings = "no wkt comment", wkt(x))
+#   }
+#
+#   if (identical(nchar(txt), 0L) || is.null(txt)) {
+#     txt <- crs(x)
+#     out <- any(!grepl("(longlat)", txt))
+#   } else {
+#     out <- tryCatch(any(!grepl("(longitude).*(latitude)", txt)), error = function(yy) NULL)
+#   }
+#   out
+# }
 
 # messageRgeosMissing <- "Please run install.packages('rgeos') to address minor GIS issues"
 

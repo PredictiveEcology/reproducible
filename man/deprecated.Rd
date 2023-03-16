@@ -86,7 +86,7 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{...}{Passed into \code{\link[raster:shapefile]{raster::shapefile()}} or
-\code{\link[raster:writeRaster]{raster::writeRaster()}} or \code{\link[sf:st_write]{sf::st_write()}}}
+\code{\link[=writeTo]{writeTo()}} or \code{\link[sf:st_write]{sf::st_write()}}}
 
 \item{objectName}{Optional. This is only for messaging; if provided, then messages relayed
 to user will mention this.}
@@ -109,7 +109,7 @@ If \code{NA}, then all testing and buffering will be skipped.}
 
 \item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
 
-\item{filename2}{File name passed to \code{\link[raster:writeRaster]{raster::writeRaster()}}, or
+\item{filename2}{File name passed to \code{\link[=writeTo]{writeTo()}}, or
 \code{\link[raster:shapefile]{raster::shapefile()}} or \code{\link[sf:st_write]{sf::st_write()}}
 (\code{dsn} argument).}
 

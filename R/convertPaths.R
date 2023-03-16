@@ -49,8 +49,8 @@ convertPaths <- function(x, patterns, replacements) {
 #' @export
 #' @rdname convertPaths
 convertRasterPaths <- function(x, patterns, replacements) {
-  if (!requireNamespace("raster"))
-    stop("raster package needs installing; install.packages('raster')")
+  .requireNamespace("raster", stopOnFALSE = TRUE)
+
   if (is.list(x)) {
     x <- lapply(x, convertRasterPaths, patterns, replacements)
   } else if (!is.null(x)) {

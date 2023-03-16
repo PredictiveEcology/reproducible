@@ -204,7 +204,6 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom data.table data.table
 #' @importFrom digest digest
 #' @importFrom methods is
-#' @importFrom rlang quo
 #' @importFrom utils methods modifyList
 #' @include checksums.R download.R postProcess.R
 #' @rdname prepInputs
@@ -535,6 +534,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
       # make quosure out of all spatial objects and x
       spatials <- sapply(out$dots, function(x) is(x, "Raster") || is(x, "Spatial") || is(x, "sf"))
+      .requireNamespace("rlang", stopOnFALSE = TRUE)
       out$dots[spatials] <- lapply(out$dots[spatials], function(x) rlang::quo(x))
       xquo <- rlang::quo(x)
 
