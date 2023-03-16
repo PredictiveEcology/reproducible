@@ -115,36 +115,36 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
                              overwrite = TRUE, ...) {
 
   startTime <- Sys.time()
-  dots <- list(...)
+  remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
-  if (!is.null(dots$studyArea)) {
-    messagePrepInputs("studyArea is supplied (deprecated); assigning it to `cropTo` & `maskTo`")
-    if (isSpatial(dots$studyArea))
-      dots$studyArea <- terra::vect(dots$studyArea)
-    maskTo <- dots$studyArea
-    cropTo <- dots$studyArea
-  }
-
-  if (!is.null(dots$rasterToMatch)) {
-    messagePrepInputs("rasterToMatch is supplied (deprecated); assigning it to `projectTo` and `cropTo`")
-    to <- dots$rasterToMatch
-    projectTo <- dots$rasterToMatch # be explicit here in case studyArea is supplied
-    cropTo <- dots$rasterToMatch # be explicit here in case studyArea is supplied
-  }
-
-  # These are unambiguous
-  if (!is.null(dots$filename2)) {
-    messagePrepInputs("filename2 is supplied (deprecated); assigning it to `writeTo`")
-    writeTo <- dots$filename2
-  }
-  if (!is.null(dots$targetCRS)) {
-    messagePrepInputs("targetCRS is supplied (deprecated); assigning it to `projectTo`")
-    projectTo <- dots$targetCRS
-  }
-  if (isTRUE(dots$useSAcrs)) {
-    messagePrepInputs("useSAcrs is supplied (deprecated); assigning studyArea to `projectTo`")
-    projectTo <- dots$studyArea
-  }
+  # if (!is.null(dots$studyArea)) {
+  #   messagePrepInputs("studyArea is supplied (deprecated); assigning it to `cropTo` & `maskTo`")
+  #   if (isSpatial(dots$studyArea))
+  #     dots$studyArea <- terra::vect(dots$studyArea)
+  #   maskTo <- dots$studyArea
+  #   cropTo <- dots$studyArea
+  # }
+  #
+  # if (!is.null(dots$rasterToMatch)) {
+  #   messagePrepInputs("rasterToMatch is supplied (deprecated); assigning it to `projectTo` and `cropTo`")
+  #   to <- dots$rasterToMatch
+  #   projectTo <- dots$rasterToMatch # be explicit here in case studyArea is supplied
+  #   cropTo <- dots$rasterToMatch # be explicit here in case studyArea is supplied
+  # }
+  #
+  # # These are unambiguous
+  # if (!is.null(dots$filename2)) {
+  #   messagePrepInputs("filename2 is supplied (deprecated); assigning it to `writeTo`")
+  #   writeTo <- dots$filename2
+  # }
+  # if (!is.null(dots$targetCRS)) {
+  #   messagePrepInputs("targetCRS is supplied (deprecated); assigning it to `projectTo`")
+  #   projectTo <- dots$targetCRS
+  # }
+  # if (isTRUE(dots$useSAcrs)) {
+  #   messagePrepInputs("useSAcrs is supplied (deprecated); assigning studyArea to `projectTo`")
+  #   projectTo <- dots$studyArea
+  # }
 
   if (is.null(method)) {
     method <- "bilinear"
@@ -325,7 +325,10 @@ makeVal <- function(x) {
 #' @rdname postProcessTerra
 #' @param touches See `terra::mask`
 maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
-                   verbose = getOption("reproducible.verbose")) {
+                   verbose = getOption("reproducible.verbose"), ...) {
+
+  remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
+
   if (!is.null(maskTo)) {
     if (!is.naSpatial(maskTo)) {
       omit <- FALSE
@@ -452,7 +455,10 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
 
 #' @export
 #' @rdname postProcessTerra
-projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE) {
+projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE, ...) {
+
+  remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
+
   if (method == "ngb") {
     method <- "near"
   }
@@ -553,7 +559,10 @@ projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE) {
 #' @export
 #' @rdname postProcessTerra
 cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
-                   verbose = getOption("reproducible.verbose")) {
+                   verbose = getOption("reproducible.verbose"), ...) {
+
+  remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
+
   if (!is.null(cropTo)) {
     omit <- FALSE
     origFromClass <- is(from)
@@ -678,7 +687,10 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
 #'   back to these classes prior to writing.
 #'
 writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, isRaster = FALSE,
-                    isSpatRaster = FALSE, datatype = "FLT4S") {
+                    isSpatRaster = FALSE, datatype = "FLT4S", ...) {
+
+  remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
+
   if (isStack) from <- raster::stack(from)
   if (isBrick) from <- raster::brick(from)
 
@@ -734,7 +746,7 @@ postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
 
   if (!missing(to)) {
     if (!is.null(to)) {
-      if (!isSpatialAny(to) && !isCRSANY(to)) stop("to must be a Raster*, Spat*, sf or Spatial object")
+      if (!isSpatialAny(to) && !isCRSANY(to)) stop("to must be a ", .msg$anySpatialClass)
       # if (isVector(from))
       #   if (!isVector(to) && !isCRSANY(to)) {
       #     # as long as maskTo and projectTo are supplied, then it is OK
@@ -747,7 +759,8 @@ postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
   if (!missing(cropTo)) {
     if (!is.naSpatial(cropTo))
       if (!is.null(cropTo)) {
-        if (!isSpatialAny(cropTo) && !isCRSANY(cropTo)) stop("cropTo must be a Raster*, Spat*, sf or Spatial object")
+        if (!isSpatialAny(cropTo) && !isCRSANY(cropTo))
+          stop("cropTo must be a ", .msg$anySpatialClass)
         # apparently, cropTo can be a gridded object no matter what
         # if (isVector(from)) if (!isVector(cropTo) && !isCRSANY(cropTo))
         #   stop("if from is a Vector object, cropTo must also be a Vector object")
@@ -757,7 +770,7 @@ postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
     if (!is.naSpatial(maskTo))
       if (!is.null(maskTo)) {
         if (!isSpatialAny(maskTo) && !isCRSANY(maskTo))
-          stop("maskTo must be a Raster*, Spat*, sf or Spatial object")
+          stop("maskTo must be a ", .msg$anySpatialClass)
         # if (isVector(from)) if (!isVector(maskTo) && !isCRSANY(maskTo))
         #   stop("if from is a Vector object, maskTo must also be a Vector object")
       }
@@ -769,7 +782,7 @@ postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
           projectTo <- try(silent = TRUE, sf::st_crs(projectTo))
         if (!isCRSANY(projectTo)) {
           if (!isSpatialAny(projectTo))
-            stop("projectTo must be a Raster*, Spat*, sf or Spatial object")
+            stop("projectTo must be a ", .msg$anySpatialClass)
           # if (isVector(from)) if (!isVector(projectTo))
           # stop("if from is a Vector object, projectTo must also be a Vector object")
         }
@@ -856,3 +869,53 @@ messageDeclareError <- function(error, fromFnName, verbose) {
   messagePrepInputs("    ", fromFnName, " resulted in following error: \n    - ", errWOWordError, "    --> attempting to fix",
                     appendLF = FALSE, verbose = verbose, verboseLevel = 1)
 }
+
+remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.frame()) {
+
+  forms <- formals(fn)
+  dots <- list(...)
+  dots <- dots[!vapply(dots, is.null, FUN.VALUE = logical(1))]
+
+  ret <- list()
+
+  # First, what is supplied has to be one of the .remappings
+  oldUsed <- intersect(names(dots), names(.remappings))
+  oldUsed <- oldUsed[na.omit(match(names(.remappings), oldUsed))] # order provided in .remappings; not user
+
+  # Second, what is supplied
+  remap <- .remappings[oldUsed]
+
+  newHereAll <- intersect(unname(unlist(remap)),
+                          names(forms))
+
+  if (length(newHereAll)) {
+
+    # remove iterative duplication e.g., cropTo should only come from rtm if both rtm and sa supplied
+    newHere <- character()
+    Map(re = rev(remap), nam = names(rev(remap)), function(re, nam) {
+      newOnes <<- setdiff(re, newHere)
+      newHere <<- c(newHere, newOnes)
+      remap[[nam]] <<- newOnes
+    })
+
+    Map(elem = oldUsed, newHere = remap,
+        function(elem, newHere) {
+          if (length(elem)) {
+            mes <- paste(newHere, collapse = ", ")
+            messagePrepInputs(elem, " is supplied (deprecated); assigning it to ", mes)
+            lapply(newHere, function(nh) ret[nh] <<- list(dots[[elem]]))
+          }
+        })
+    # ret <- ret[!vapply(ret, is.null, FUN.VALUE = logical(1))]
+    list2env(ret, envir)
+  }
+  invisible(ret)
+}
+
+
+.remappings <- list(studyArea = c("cropTo", "maskTo"),
+                    rasterToMatch = c("cropTo", "projectTo", "to"),
+                    filename2 = "writeTo",
+                    targetCRS = "projectTo",
+                    useSAcrs = "projectTo")
+
