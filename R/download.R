@@ -92,14 +92,13 @@ downloadFile <- function(archive, targetFile, neededFiles,
           NA # means nothing to download because the archive is already in hand
         }
       }
-      skipDownloadMsg <- "Skipping download of url; local copy already exists and passes checksums"
 
       # The download step
       failed <- 1
       while (failed > 0  && failed < 4) {
         downloadResults <- try(downloadRemote(url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
                                               targetFile = targetFile, fileToDownload = fileToDownload,
-                                              skipDownloadMsg = skipDownloadMsg,
+                                              messSkipDownload = messSkipDownload,
                                               checkSums = checkSums,
                                               dlFun = dlFun,
                                               destinationPath = destinationPath,
@@ -308,7 +307,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
 #' @param ... Not used here. Only used to allow other arguments to other fns to not fail.
 #'
 dlGoogle <- function(url, archive = NULL, targetFile = NULL,
-                     checkSums, skipDownloadMsg, destinationPath, type = NULL,
+                     checkSums, messSkipDownload, destinationPath, type = NULL,
                      overwrite, needChecksums, verbose = getOption("reproducible.verbose", 1),
                      team_drive = NULL, ...) {
   .requireNamespace("googledrive", stopOnFALSE = TRUE)
@@ -375,7 +374,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                                                    overwrite = overwrite, verbose = TRUE))) ## TODO: unrecognized type "shp"
     }
   } else {
-    messagePrepInputs(skipDownloadMsg, verbose = verbose)
+    messagePrepInputs(messSkipDownload, verbose = verbose)
     needChecksums <- 0
   }
   return(list(destFile = destFile, needChecksums = needChecksums))
@@ -417,7 +416,7 @@ dlGeneric <- function(url, needChecksums, destinationPath, verbose = getOption("
 
 #' @inheritParams prepInputs
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
-                           fileToDownload, skipDownloadMsg,
+                           fileToDownload, messSkipDownload,
                            destinationPath, overwrite, needChecksums, .tempPath,
                            verbose = getOption("reproducible.verbose", 1), ...) {
   # browser(expr = exists("._downloadRemote_1"))
@@ -502,7 +501,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             archive = archive,
             targetFile = targetFile,
             checkSums = checkSums,
-            skipDownloadMsg = skipDownloadMsg,
+            messSkipDownload = messSkipDownload,
             destinationPath = .tempPath,
             overwrite = overwrite,
             needChecksums = needChecksums,
@@ -564,7 +563,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         }
       #}
     } else {
-      messagePrepInputs(skipDownloadMsg, verbose = verbose)
+      messagePrepInputs(messSkipDownload, verbose = verbose)
       downloadResults <- list(needChecksums = 0, destFile = NULL)
     }
   } else {
@@ -654,3 +653,4 @@ requireNamespaceMsg <- function(pkg, extraMsg = character(), minVersion = NULL) 
   }
   isRstudioServer
 }
+
