@@ -84,7 +84,7 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
-\code{Cache} is used internally.}
+Cache is used on the internal \code{terra::buffer} command.}
 }
 \value{
 A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been

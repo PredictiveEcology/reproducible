@@ -9,7 +9,7 @@ dlGoogle(
   archive = NULL,
   targetFile = NULL,
   checkSums,
-  skipDownloadMsg,
+  messSkipDownload,
   destinationPath,
   type = NULL,
   overwrite,

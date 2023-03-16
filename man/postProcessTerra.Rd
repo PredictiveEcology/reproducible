@@ -26,17 +26,19 @@ maskTo(
   maskTo,
   touches = FALSE,
   overwrite = FALSE,
-  verbose = getOption("reproducible.verbose")
+  verbose = getOption("reproducible.verbose"),
+  ...
 )
 
-projectTo(from, projectTo, method = "bilinear", overwrite = FALSE)
+projectTo(from, projectTo, method = "bilinear", overwrite = FALSE, ...)
 
 cropTo(
   from,
   cropTo = NULL,
   needBuffer = TRUE,
   overwrite = FALSE,
-  verbose = getOption("reproducible.verbose")
+  verbose = getOption("reproducible.verbose"),
+  ...
 )
 
 writeTo(
@@ -47,7 +49,8 @@ writeTo(
   isBrick = FALSE,
   isRaster = FALSE,
   isSpatRaster = FALSE,
-  datatype = "FLT4S"
+  datatype = "FLT4S",
+  ...
 )
 }
 \arguments{

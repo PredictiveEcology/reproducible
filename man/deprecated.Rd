@@ -2,9 +2,8 @@
 % Please edit documentation in R/postProcess.R
 \name{cropInputs}
 \alias{cropInputs}
-\alias{cropInputs.default}
-\alias{cropInputs.spatialClasses}
-\alias{cropInputs.sf}
+\alias{fixErrors}
+\alias{fixErrors.default}
 \title{Crop a \verb{Spatial*} or \verb{Raster*} object}
 \usage{
 cropInputs(
@@ -15,33 +14,28 @@ cropInputs(
   ...
 )
 
-\method{cropInputs}{default}(x, studyArea, rasterToMatch, ...)
-
-\method{cropInputs}{spatialClasses}(
+fixErrors(
   x,
-  studyArea = NULL,
-  rasterToMatch = NULL,
-  verbose = getOption("reproducible.verbose", 1),
-  extentToMatch = NULL,
-  extentCRS = NULL,
-  useGDAL = getOption("reproducible.useGDAL", FALSE),
+  objectName,
+  attemptErrorFixes = TRUE,
   useCache = getOption("reproducible.useCache", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
+  testValidity = getOption("reproducible.testValidity", TRUE),
   ...
 )
 
-\method{cropInputs}{sf}(
+\method{fixErrors}{default}(
   x,
-  studyArea = NULL,
-  rasterToMatch = NULL,
-  verbose = getOption("reproducible.verbose", 1),
-  extentToMatch = NULL,
-  extentCRS = NULL,
+  objectName,
+  attemptErrorFixes = TRUE,
   useCache = getOption("reproducible.useCache", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
+  testValidity = getOption("reproducible.testValidity", TRUE),
   ...
 )
 }
 \arguments{
-\item{x}{A \verb{Spatial*}, \code{sf}, or \verb{Raster*} object.}
+\item{x}{A \verb{SpatialPolygons*} or \code{sf} object.}
 
 \item{studyArea}{\verb{SpatialPolygons*} object used for masking and possibly cropping
 if no \code{rasterToMatch} is provided.
@@ -60,29 +54,39 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Passed to \code{raster::crop}}
+\item{...}{Passed to methods. None currently implemented.}
 
-\item{extentToMatch}{Optional. Can pass an extent here and a \code{crs} to
-\code{extentCRS} instead of \code{rasterToMatch}. These
-will override \code{rasterToMatch}, with a warning if both
-passed.}
+\item{objectName}{Optional. This is only for messaging; if provided, then messages relayed
+to user will mention this.}
 
-\item{extentCRS}{Optional. Can pass a \code{crs} here with an extent to
-\code{extentTomatch} instead of \code{rasterToMatch}}
-
-\item{useGDAL}{Logical or \code{"force"}. This is defunct; internals now can use
-\code{terra} if \code{options("reproducible.useTerra" = TRUE)}, which is not (yet)
-the default.}
+\item{attemptErrorFixes}{Will attempt to fix known errors. Currently only some failures
+for \verb{SpatialPolygons*} are attempted.
+Notably with \code{terra::buffer(..., width = 0)}.
+Default \code{TRUE}, though this may not be the right action for all cases.}
 
 \item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
-\code{Cache} is used internally.}
+Cache is used on the internal \code{terra::buffer} command.}
+
+\item{testValidity}{Logical. If \code{TRUE}, the a test for validity will happen
+before actually running buffering (which is the solution in most
+cases). However, sometimes it takes longer to test for validity
+than just buffer without testing (there are no consequences of
+buffering if everything is valid). If \code{FALSE}, then the
+test will be skipped and the buffering will happen regardless.
+If \code{NA}, then all testing and buffering will be skipped.}
 }
 \value{
 A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 appropriately cropped.
+
+A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+attempted to be fixed, if it finds errors.
 }
 \description{
-This function can be used to crop or reproject module inputs from raw data.
+This function is deprecated. Use \code{cropTo}. If used, all arguments will be passed
+to \code{cropTo} anyway.
+
+\code{fixErrors} --> \code{fixErrosTerra}
 }
 \examples{
 library(sp)
@@ -106,7 +110,22 @@ crs(StudyArea) <- crs(shpEcozone)
 projString <- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
 StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
 cropInputs(shpEcozone, StudyArea)
+library(sp)
+library(raster)
+
+# make a SpatialPolygon
+coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
+                       .Dim = c(5L, 2L))
+Sr1 <- Polygon(coords1)
+Srs1 <- Polygons(list(Sr1), "s1")
+shpEcozone <- SpatialPolygons(list(Srs1), 1L)
+crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+fixErrors(shpEcozone)
+}
+\seealso{
+\code{\link[=fixErrorsTerra]{fixErrorsTerra()}}, \code{\link[=postProcessTerra]{postProcessTerra()}}, \code{\link[=postProcess]{postProcess()}}
 }
 \author{
 Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti
 }
+\keyword{internal}

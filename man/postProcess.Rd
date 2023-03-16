@@ -21,7 +21,7 @@ postProcess(x, ...)
   studyArea = NULL,
   rasterToMatch = NULL,
   overwrite = getOption("reproducible.overwrite", TRUE),
-  useSAcrs = FALSE,
+  useSAcrs = NULL,
   useCache = getOption("reproducible.useCache", FALSE),
   verbose = getOption("reproducible.verbose", 1),
   ...
@@ -34,7 +34,7 @@ postProcess(x, ...)
   studyArea = NULL,
   rasterToMatch = NULL,
   overwrite = getOption("reproducible.overwrite", TRUE),
-  useSAcrs = FALSE,
+  useSAcrs = NULL,
   useCache = getOption("reproducible.useCache", FALSE),
   verbose = getOption("reproducible.verbose", 1),
   ...
