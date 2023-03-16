@@ -47,9 +47,10 @@ convertPaths <- function(x, patterns, replacements) {
 
 #' @author Eliot McIntire and Alex Chubaty
 #' @export
-#' @importFrom raster filename raster
 #' @rdname convertPaths
 convertRasterPaths <- function(x, patterns, replacements) {
+  if (!requireNamespace("raster"))
+    stop("raster package needs installing; install.packages('raster')")
   if (is.list(x)) {
     x <- lapply(x, convertRasterPaths, patterns, replacements)
   } else if (!is.null(x)) {
@@ -57,11 +58,11 @@ convertRasterPaths <- function(x, patterns, replacements) {
       if (length(x) > 1) {
         x <- lapply(x, convertRasterPaths, patterns, replacements)
       } else {
-        x <- raster(x)
+        x <- raster::raster(x)
       }
     }
 
-    x@file@name <- convertPaths(filename(x), patterns, replacements)
+    x@file@name <- convertPaths(raster::filename(x), patterns, replacements)
   }
   x # handles null case
 }
@@ -98,7 +99,28 @@ setMethod(
   "Filenames",
   signature = "ANY",
   definition = function(obj, allowMultiple) {
-    if (inherits(obj, "SpatRaster")) {
+
+    if (inherits(obj, "RasterStack")) {
+      fns <- unlist(lapply(seq_along(names(obj)), function(index)
+        Filenames(obj[[index]], allowMultiple = allowMultiple)))
+
+      dups <- duplicated(fns)
+      if (any(dups)) {
+        theNames <- names(fns)
+        fns <- fns[!dups]
+        names(fns) <- theNames[!dups]
+      }
+
+    } else if (inherits(obj, "RasterLayer")) {
+      fns <- raster::filename(obj)
+      if (exists("._Filenames_1")) browser()
+      if (length(fns) == 0)
+        fns <- ""
+      # browser(expr = exists("._Filenames_1"))
+      if (isTRUE(allowMultiple))
+        if (endsWith(fns, suffix = "grd"))
+          fns <- c(fns, gsub("grd$", "gri", fns))
+    } else if (inherits(obj, "SpatRaster")) {
       if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
         stop("Please install terra package")
       fns <- terra::sources(obj)
@@ -119,41 +141,6 @@ setMethod(
     normPath(fns)
 })
 
-#' @export
-#' @rdname Filenames
-setMethod(
-  "Filenames",
-  signature = "Raster",
-  definition = function(obj, allowMultiple = TRUE) {
-    fn <- filename(obj)
-    if (exists("._Filenames_1")) browser()
-    if (length(fn) == 0)
-      fn <- ""
-    # browser(expr = exists("._Filenames_1"))
-    if (isTRUE(allowMultiple))
-      if (endsWith(fn, suffix = "grd"))
-        fn <- c(fn, gsub("grd$", "gri", fn))
-    normPath(fn)
-})
-
-#' @export
-#' @rdname Filenames
-setMethod(
-  "Filenames",
-  signature = "RasterStack",
-  definition = function(obj, allowMultiple = TRUE) {
-    fn <- unlist(lapply(seq_along(names(obj)), function(index)
-      Filenames(obj[[index]], allowMultiple = allowMultiple)))
-
-    dups <- duplicated(fn)
-    if (any(dups)) {
-      theNames <- names(fn)
-      fn <- fn[!dups]
-      names(fn) <- theNames[!dups]
-    }
-
-    return(fn)
-})
 
 #' @export
 #' @rdname Filenames

@@ -493,7 +493,6 @@ unmakeMemoisable.default <- function(x) {
 #' @param obj Any arbitrary R object.
 #' @inheritParams Cache
 #' @rdname dealWithClass
-#' @importFrom raster fromDisk
 #' @return
 #' Returns an object that can be saved to disk e.g., via `saveRDS`.
 #'
@@ -552,7 +551,7 @@ unmakeMemoisable.default <- function(x) {
     atts <- attributes(obj)
     obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,
                                     overwrite = FALSE, drv = drv, conn = conn)
-    isFromDisk <- fromDisk(obj)
+    isFromDisk <- raster::fromDisk(obj)
 
     # have to reset all these attributes on the rasters as they were undone in prev steps
     hasFromDisk <- if (!is.null(atts$tags)) startsWith(atts$tags, "fromDisk") else FALSE

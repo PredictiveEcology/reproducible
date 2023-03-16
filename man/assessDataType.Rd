@@ -3,20 +3,14 @@
 \name{assessDataType}
 \alias{assessDataType}
 \alias{assessDataType.default}
-\alias{assessDataType.RasterStack}
-\alias{assessDataTypeGDAL}
 \title{Assess the appropriate raster layer data type}
 \usage{
 assessDataType(ras, type = "writeRaster")
 
 \method{assessDataType}{default}(ras, type = "writeRaster")
-
-\method{assessDataType}{RasterStack}(ras, type = "writeRaster")
-
-assessDataTypeGDAL(ras)
 }
 \arguments{
-\item{ras}{The RasterLayer or RasterStack for which data type will be assessed.}
+\item{ras}{The \code{RasterLayer} or \code{RasterStack} for which data type will be assessed.}
 
 \item{type}{Character. \code{"writeRaster"} (default) or \code{"GDAL"} to return the recommended
 data type for writing from the raster packages, respectively, or
@@ -147,7 +141,4 @@ for (fn in list(raster::raster, terra::rast)) {
     sta <- c(ras, ras1)
   assessDataType(sta)
 }
-}
-\author{
-Eliot McIntire, Ceres Barros, Ian Eddy, and Tati Micheletti
 }

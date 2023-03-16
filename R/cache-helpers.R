@@ -245,24 +245,24 @@ setAs(from = "character", to = "Path", function(from) {
   numFiles <- sum(nchar(unique(Filenames(obj)))>0)
   allInOneFile <- allInOneFile(obj)
   # if (isStack && numFiles > 0) {
-  #   innerFilenames <- unlist(lapply(obj@layers, filename))
+  #   innerFilenames <- unlist(lapply(obj@layers, raster::filename))
   #   allInOneFile <- isTRUE(sum(nchar(innerFilenames)>0) == length(obj@layers))
   # }
 
   whichInMemory <- if (!isStack) {
-    im <- inMemory(obj)
+    im <- raster::inMemory(obj)
     if (isBrick) {
       if (isTRUE(im))
         im <- rep(im, nlayers2(obj))
     }
     im
   } else {
-    sapply(obj@layers, inMemory)
+    sapply(obj@layers, raster::inMemory)
   }
   whichHasValues <- if (!isStack) {
-    hasValues(obj)
+    raster::hasValues(obj)
   } else {
-    sapply(obj@layers, hasValues)
+    sapply(obj@layers, raster::hasValues)
   }
 
   isFilebacked <- !(whichInMemory | !whichHasValues)
@@ -302,7 +302,7 @@ setAs(from = "character", to = "Path", function(from) {
     #   curFilename <- normalizePath(Filenames(obj), winslash = "/", mustWork = FALSE)
     # } else  {
     #   curFilenames <- unlist(lapply(obj@layers, function(x)
-    #     normalizePath(filename(x), winslash = "/", mustWork = FALSE)))
+    #     normalizePath(raster::filename(x), winslash = "/", mustWork = FALSE)))
     #   curFilename[isFilebacked] <- curFilenames[isFilebacked]
     # }
   }
@@ -436,10 +436,10 @@ setAs(from = "character", to = "Path", function(from) {
       checkPath(unique(dirname(saveFilename[!notSameButBacked])), create = TRUE)
       if (any(!whichInMemory[!notSameButBacked])) {
         if (!isStack) {
-          obj <- writeRaster(obj, filename = saveFilename[!notSameButBacked], datatype = dataType(obj))
+          obj <- writeRaster(obj, filename = saveFilename[!notSameButBacked], datatype = raster::dataType(obj))
         } else {
           for (i in which(!notSameButBacked)) {
-            obj@layers[[i]] <- writeRaster(obj@layers[[i]], filename = saveFilename[i], datatype = dataType(obj@layers[[i]]))
+            obj@layers[[i]] <- writeRaster(obj@layers[[i]], filename = saveFilename[i], datatype = raster::dataType(obj@layers[[i]]))
           }
         }
       }
@@ -578,8 +578,10 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 
 #' @importFrom methods slotNames
 #' @importFrom digest digest
-#' @importFrom raster res crs extent
+#' @importFrom terra crs
 .digestRasterLayer <- function(object, length, algo, quick) {
+  if (!requireNamespace("raster"))
+    stop("raster package needs installing; install.packages('raster')")
   # metadata -- only a few items of the long list because one thing (I don't recall)
   #  doesn't cache consistently
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
@@ -603,14 +605,14 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     theData <- .robustDigest(object@data@values)
     dataSlotsToDigest$values <- NULL
     if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") > 0))
-      dig <- .robustDigest(append(list(dim(object), res(object), crs(object),
-                                       extent(object), theData), dataSlotsToDigest), length = length, quick = quick,
+      dig <- .robustDigest(append(list(dim(object), raster::res(object), crs(object),
+                                       raster::extent(object), theData), dataSlotsToDigest), length = length, quick = quick,
                            algo = algo) # don't include object@data -- these are volatile
     else {
       if (!requireNamespace("fastdigest", quietly = TRUE))
         stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
-      dig <- fastdigest::fastdigest(append(list(dim(object), res(object), crs(object),
-                                                extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
+      dig <- fastdigest::fastdigest(append(list(dim(object), raster::res(object), crs(object),
+                                                raster::extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
     }
 
     # Legend
@@ -673,14 +675,14 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   ))]
   dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-    dig <- .robustDigest(append(list(dim(object), res(object), crs(object),
-                                     extent(object)), dataSlotsToDigest), length = length, quick = quick,
+    dig <- .robustDigest(append(list(dim(object), raster::res(object), crs(object),
+                                     raster::extent(object)), dataSlotsToDigest), length = length, quick = quick,
                          algo = algo) # don't include object@data -- these are volatile
   else {
     if (!requireNamespace("fastdigest", quietly = TRUE))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
-    dig <- fastdigest::fastdigest(append(list(dim(object), res(object), crs(object),
-                                              extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
+    dig <- fastdigest::fastdigest(append(list(dim(object), raster::res(object), crs(object),
+                                              raster::extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
   }
 
   # Legend
@@ -1002,7 +1004,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' @author Eliot McIntire
 #' @importFrom digest digest
 #' @importFrom methods is selectMethod slot slot<-
-#' @importFrom raster dataType filename hasValues inMemory nlayers writeRaster
+#' @importFrom terra writeRaster
 #' @inheritParams Cache
 #' @rdname prepareFileBackedRaster
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
@@ -1104,7 +1106,7 @@ allInOneFile <- function(obj) {
     aiof <- FALSE
     numFiles <- sum(nchar(unique(Filenames(obj)))>0)
     if (numFiles > 0) {
-      innerFilenames <- unlist(lapply(obj@layers, filename))
+      innerFilenames <- unlist(lapply(obj@layers, raster::filename))
       aiof <- isTRUE(sum(nchar(innerFilenames)>0) == length(obj@layers))
     }
   }

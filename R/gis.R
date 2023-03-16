@@ -26,8 +26,6 @@
 #' @export
 #' @inheritParams Cache
 #' @inheritParams projectInputs
-#' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
-#' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
 #'
 fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", FALSE),
@@ -38,7 +36,6 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
   maskTo(from = x, maskTo = y, touches = isTRUE(touches))
 }
 
-#' @importFrom raster tmpDir
 bigRastersTmpFolder <- function() checkPath(tempdir2(sub = "bigRasters"), create = TRUE)
 
 bigRastersTmpFile <- function() file.path(bigRastersTmpFolder(), "bigRasInput.tif")
@@ -69,8 +66,11 @@ attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", FALSE),
 }
 
 maskWithRasterNAs <- function(x, y) {
+  if (!requireNamespace("raster"))
+    stop("raster package needs installing; install.packages('raster')")
+
   origColors <- checkColors(x)
-  if (canProcessInMemory(x, 3) && fromDisk(x))
+  if (raster::canProcessInMemory(x, 3) && raster::fromDisk(x))
     x[] <- x[]
   x <- rebuildColors(x, origColors)
   m <- which(is.na(y[]))
@@ -78,11 +78,10 @@ maskWithRasterNAs <- function(x, y) {
   x
 }
 
-#' @importFrom raster maxValue minValue
 checkColors <- function(x) {
   origColors <- .getColors(x)
-  origMaxValue <- maxValue(x)
-  origMinValue <- minValue(x)
+  origMaxValue <- maxFn(x)
+  origMinValue <- minFn(x)
   list(origColors = origColors[[1]], origMinValue = origMinValue, origMaxValue = origMaxValue)
 }
 

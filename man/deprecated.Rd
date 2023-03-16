@@ -7,6 +7,8 @@
 \alias{fixErrors.default}
 \alias{projectInputs}
 \alias{projectInputs.default}
+\alias{writeOutputs}
+\alias{writeOutputs.default}
 \title{Crop a \verb{Spatial*} or \verb{Raster*} object}
 \usage{
 cropInputs(
@@ -47,9 +49,24 @@ projectInputs(
 )
 
 \method{projectInputs}{default}(x, targetCRS, ...)
+
+writeOutputs(
+  x,
+  filename2,
+  overwrite = getOption("reproducible.overwrite", NULL),
+  ...
+)
+
+\method{writeOutputs}{default}(
+  x,
+  filename2,
+  overwrite = getOption("reproducible.overwrite", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
+  ...
+)
 }
 \arguments{
-\item{x}{A \verb{Raster*}, \verb{Spatial*} or \code{sf} object}
+\item{x}{The object save to disk i.e., write outputs}
 
 \item{studyArea}{\verb{SpatialPolygons*} object used for masking and possibly cropping
 if no \code{rasterToMatch} is provided.
@@ -68,7 +85,8 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Passed to \code{\link[raster:projectRaster]{raster::projectRaster()}}.}
+\item{...}{Passed into \code{\link[raster:shapefile]{raster::shapefile()}} or
+\code{\link[raster:writeRaster]{raster::writeRaster()}} or \code{\link[sf:st_write]{sf::st_write()}}}
 
 \item{objectName}{Optional. This is only for messaging; if provided, then messages relayed
 to user will mention this.}
@@ -91,6 +109,12 @@ If \code{NA}, then all testing and buffering will be skipped.}
 
 \item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
 
+\item{filename2}{File name passed to \code{\link[raster:writeRaster]{raster::writeRaster()}}, or
+\code{\link[raster:shapefile]{raster::shapefile()}} or \code{\link[sf:st_write]{sf::st_write()}}
+(\code{dsn} argument).}
+
+\item{overwrite}{Logical. Should file being written overwrite an existing file if it exists.}
+
 \item{cores}{An \verb{integer*} or \code{'AUTO'}. This will be used if \code{gdalwarp} is
 triggered. \verb{'AUTO'*} will calculate 90\% of the total
 number of cores in the system, while an integer or rounded
@@ -108,6 +132,11 @@ other characteristics, including resolution, origin, extent if changed).
 
 A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 appropriately reprojected.
+
+A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+appropriately written to disk. In the case of vector datasets, this will
+be a side effect. In the case of gridded objects (Raster*, SpatRaster), the
+object will have a file-backing.
 }
 \description{
 This function is deprecated. Use \code{cropTo}. If used, all arguments will be passed
@@ -116,6 +145,8 @@ to \code{cropTo} anyway.
 \code{fixErrors} --> \code{fixErrosTerra}
 
 Deprecated. Use \code{\link[=projectTo]{projectTo()}}.
+
+See \code{\link[=writeTo]{writeTo()}}
 }
 \examples{
 library(sp)
@@ -150,6 +181,12 @@ Srs1 <- Polygons(list(Sr1), "s1")
 shpEcozone <- SpatialPolygons(list(Srs1), 1L)
 crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 fixErrors(shpEcozone)
+library(sp)
+library(raster)
+r <- raster::raster(extent(0,100,0,100), vals = 1:1e2)
+
+tf <- tempfile(fileext = ".tif")
+writeOutputs(r, tf)
 }
 \seealso{
 \code{\link[=fixErrorsTerra]{fixErrorsTerra()}}, \code{\link[=postProcessTerra]{postProcessTerra()}}, \code{\link[=postProcess]{postProcess()}}
@@ -158,5 +195,7 @@ fixErrors(shpEcozone)
 }
 \author{
 Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti
+
+Eliot McIntire and Jean Marchal
 }
 \keyword{internal}
