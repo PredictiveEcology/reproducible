@@ -13,6 +13,9 @@
 #'           float will be passed as the exact number of cores to be used.
 #' @param skipDeprecastedMsg Logical. If `TRUE`, then the message about this function
 #'   being deprecated will be suppressed.
+#' @param useGDAL Logical or `"force"`. This is defunct; internals now can use
+#'     `terra` if `options("reproducible.useTerra" = TRUE)`, which is not (yet)
+#'     the default.
 #'
 #' @param ... Currently unused.
 #'

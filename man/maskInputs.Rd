@@ -70,9 +70,9 @@ CRS of \code{x} before masking. Currently, this function will not reproject the
 
 \item{...}{Passed to methods. None currently implemented.}
 
-\item{rasterToMatch}{Template \verb{Raster*} object used for cropping (so extent should be
-the extent of desired outcome) and reprojecting (including changing the
-resolution and projection).
+\item{rasterToMatch}{Template \verb{Raster*} object passed to the \code{to} argument of
+\code{\link[raster:projectRaster]{raster::projectRaster()}}, thus will changing the
+resolution and projection of \code{x}.
 See details in \code{\link[=postProcess]{postProcess()}}.}
 
 \item{maskWithRTM}{Logical. If \code{TRUE}, then the default,}

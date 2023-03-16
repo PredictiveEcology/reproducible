@@ -2,8 +2,11 @@
 % Please edit documentation in R/postProcess.R
 \name{cropInputs}
 \alias{cropInputs}
+\alias{cropInputs.default}
 \alias{fixErrors}
 \alias{fixErrors.default}
+\alias{projectInputs}
+\alias{projectInputs.default}
 \title{Crop a \verb{Spatial*} or \verb{Raster*} object}
 \usage{
 cropInputs(
@@ -13,6 +16,8 @@ cropInputs(
   verbose = getOption("reproducible.verbose", 1),
   ...
 )
+
+\method{cropInputs}{default}(x, ...)
 
 fixErrors(
   x,
@@ -33,9 +38,18 @@ fixErrors(
   testValidity = getOption("reproducible.testValidity", TRUE),
   ...
 )
+
+projectInputs(
+  x,
+  targetCRS,
+  verbose = getOption("reproducible.verbose", 1),
+  ...
+)
+
+\method{projectInputs}{default}(x, targetCRS, ...)
 }
 \arguments{
-\item{x}{A \verb{SpatialPolygons*} or \code{sf} object.}
+\item{x}{A \verb{Raster*}, \verb{Spatial*} or \code{sf} object}
 
 \item{studyArea}{\verb{SpatialPolygons*} object used for masking and possibly cropping
 if no \code{rasterToMatch} is provided.
@@ -43,9 +57,9 @@ If not in same CRS, then it will be \code{spTransform}ed to
 CRS of \code{x} before masking. Currently, this function will not reproject the
 \code{x}. Optional in \code{postProcess}.}
 
-\item{rasterToMatch}{Template \verb{Raster*} object used for cropping (so extent should be
-the extent of desired outcome) and reprojecting (including changing the
-resolution and projection).
+\item{rasterToMatch}{Template \verb{Raster*} object passed to the \code{to} argument of
+\code{\link[raster:projectRaster]{raster::projectRaster()}}, thus will changing the
+resolution and projection of \code{x}.
 See details in \code{\link[=postProcess]{postProcess()}}.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
@@ -54,7 +68,7 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Passed to methods. None currently implemented.}
+\item{...}{Passed to \code{\link[raster:projectRaster]{raster::projectRaster()}}.}
 
 \item{objectName}{Optional. This is only for messaging; if provided, then messages relayed
 to user will mention this.}
@@ -74,6 +88,13 @@ than just buffer without testing (there are no consequences of
 buffering if everything is valid). If \code{FALSE}, then the
 test will be skipped and the buffering will happen regardless.
 If \code{NA}, then all testing and buffering will be skipped.}
+
+\item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
+
+\item{cores}{An \verb{integer*} or \code{'AUTO'}. This will be used if \code{gdalwarp} is
+triggered. \verb{'AUTO'*} will calculate 90\% of the total
+number of cores in the system, while an integer or rounded
+float will be passed as the exact number of cores to be used.}
 }
 \value{
 A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
@@ -81,12 +102,20 @@ appropriately cropped.
 
 A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 attempted to be fixed, if it finds errors.
+
+A file of the same type as starting, but with projection (and possibly
+other characteristics, including resolution, origin, extent if changed).
+
+A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+appropriately reprojected.
 }
 \description{
 This function is deprecated. Use \code{cropTo}. If used, all arguments will be passed
 to \code{cropTo} anyway.
 
 \code{fixErrors} --> \code{fixErrosTerra}
+
+Deprecated. Use \code{\link[=projectTo]{projectTo()}}.
 }
 \examples{
 library(sp)
@@ -124,6 +153,8 @@ fixErrors(shpEcozone)
 }
 \seealso{
 \code{\link[=fixErrorsTerra]{fixErrorsTerra()}}, \code{\link[=postProcessTerra]{postProcessTerra()}}, \code{\link[=postProcess]{postProcess()}}
+
+\code{\link[=projectTo]{projectTo()}}
 }
 \author{
 Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti

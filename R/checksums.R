@@ -79,6 +79,7 @@ setGeneric("Checksums", function(path, write, quickCheck = FALSE,
 
 #' @importFrom data.table setnames
 #' @importFrom methods formalArgs
+#' @importFrom stats na.omit
 #' @importFrom utils read.table write.table
 #' @rdname Checksums
 setMethod(

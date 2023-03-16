@@ -839,6 +839,7 @@ messageDeclareError <- function(error, fromFnName, verbose) {
                     appendLF = FALSE, verbose = verbose, verboseLevel = 1)
 }
 
+#' @importFrom stats na.omit
 remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.frame()) {
 
   forms <- formals(fn)

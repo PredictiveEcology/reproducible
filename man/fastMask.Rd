@@ -2,7 +2,7 @@
 % Please edit documentation in R/gis.R
 \name{fastMask}
 \alias{fastMask}
-\title{Faster operations on rasters (DEPRECATED as \code{terra::mask} is fast)}
+\title{Faster operations on rasters (DEPRECATED because \code{terra::mask} is fast)}
 \usage{
 fastMask(
   x,
@@ -45,7 +45,7 @@ A \verb{Raster*} object, masked (i.e., smaller extent and/or
 several pixels converted to NA)
 }
 \description{
-This alternative to \code{raster::mask} is included here.
+Deprecated. Use \code{\link[=maskTo]{maskTo()}}.
 }
 \author{
 Eliot McIntire
