@@ -5,9 +5,9 @@
 messSkipDownload <- "Skipping download of url; local copy already exists and passes checksums"
 
 .msgGrep <- list(
-  grepStudyArea_Spatial = "The \\'studyArea\\' provided is not a Spatial\\* object.",
-  grepRasterToMatch_Raster = "The \\'rasterToMatch\\' provided is not a Raster\\* object.",
-  grepAnySpatialClass = "Raster\\*, Spat\\*, sf or Spatial object"
+  studyArea_Spatial = "The \\'studyArea\\' provided is not a Spatial\\* object.",
+  rasterToMatch_Raster = "The \\'rasterToMatch\\' provided is not a Raster\\* object.",
+  anySpatialClass = "Raster\\*, Spat\\*, sf or Spatial object"
 )
 
 .msg <- lapply(.msgGrep, gsub, pattern = "\\\\", replacement = "")
