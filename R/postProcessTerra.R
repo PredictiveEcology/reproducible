@@ -862,7 +862,7 @@ remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.fr
     # remove iterative duplication e.g., cropTo should only come from rtm if both rtm and sa supplied
     newHere <- character()
     Map(re = rev(remap), nam = names(rev(remap)), function(re, nam) {
-      newOnes <<- setdiff(re, newHere)
+      newOnes <- setdiff(re, newHere)
       newHere <<- c(newHere, newOnes)
       remap[[nam]] <<- newOnes
     })
