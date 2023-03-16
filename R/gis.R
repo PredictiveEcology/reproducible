@@ -1,6 +1,6 @@
-#' Faster operations on rasters (DEPRECATED as `terra::mask` is fast)
+#' Faster operations on rasters (DEPRECATED because `terra::mask` is fast)
 #'
-#' This alternative to `raster::mask` is included here.
+#' Deprecated. Use [maskTo()].
 #'
 #' @param x  A `Raster*` object.
 #'
@@ -22,7 +22,7 @@
 #' @author Eliot McIntire
 #' @export
 #' @inheritParams Cache
-#' @inheritParams projectInputs.Raster
+#' @inheritParams projectInputs
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
 #' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
 #' @importFrom sp SpatialPolygonsDataFrame spTransform

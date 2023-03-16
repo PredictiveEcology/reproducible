@@ -323,7 +323,7 @@ cropInputs <- function(x, studyArea, rasterToMatch, verbose = getOption("reprodu
 }
 
 #' @export
-#' @rdname cropInputs
+#' @rdname deprecated
 cropInputs.default <- function(x, ...) {
   cropTo(x, ...)
 }
@@ -389,7 +389,7 @@ cropInputs.default <- function(x, ...) {
 # #'
 # #' @export
 # #' @importFrom raster compareCRS projectExtent tmpDir
-# #' @rdname cropInputs
+# #' @rdname deprecated
 # cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #                                       verbose = getOption("reproducible.verbose", 1),
 #                                       extentToMatch = NULL, extentCRS = NULL,
@@ -598,7 +598,7 @@ cropInputs.default <- function(x, ...) {
 #'
 # #' @export
 # #' @importFrom raster compareCRS crs extent projectExtent raster
-# #' @rdname cropInputs
+# #' @rdname deprecated
 # cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #                           verbose = getOption("reproducible.verbose", 1),
 #                           extentToMatch = NULL, extentCRS = NULL,
@@ -874,7 +874,7 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
 
 #' Project `Raster*` or `Spatial*` or `sf` objects
 #'
-#' A simple wrapper around the various different tools for these GIS types.
+#' Deprecated. Use [projectTo()].
 #'
 #' @param x A `Raster*`, `Spatial*` or `sf` object
 #'
@@ -898,336 +898,314 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
 #' @export
 #' @inheritParams prepInputs
 #' @importFrom raster canProcessInMemory
-#' @rdname projectInputs
+#' @rdname deprecated
 #' @seealso [projectTo()]
 #' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 #' appropriately reprojected.
 #'
-#' @examples
-#' library(sp)
-#' library(raster)
-#'
-#' # make a SpatialPolygon
-#' coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
-#'                        .Dim = c(5L, 2L))
-#' Sr1 <- Polygon(coords1)
-#' Srs1 <- Polygons(list(Sr1), "s1")
-#' shpEcozone <- SpatialPolygons(list(Srs1), 1L)
-#' crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-#'
-#' # make a "study area" that is subset of larger dataset
-#' coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-#'                       .Dim = c(5L, 2L))
-#' Sr1 <- Polygon(coords)
-#' Srs1 <- Polygons(list(Sr1), "s1")
-#' StudyArea <- SpatialPolygons(list(Srs1), 1L)
-#' crs(StudyArea) <- crs(shpEcozone)
-#' projString <- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
-#' StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
-#' projectInputs(shpEcozone, StudyArea)
 projectInputs <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
   UseMethod("projectInputs")
 }
 
 #' @export
-#' @rdname projectInputs
+#' @rdname deprecated
 projectInputs.default <- function(x, targetCRS, ...) {
-  x
+  projectTo(x, ...)
 }
 
-#' @export
-#' @rdname projectInputs
-#' @param useGDAL Logical or `"force"`. This is defunct; internals now can use
-#'     `terra` if `options("reproducible.useTerra" = TRUE)`, which is not (yet)
-#'     the default.
-#'
-#' @importFrom fpCompare %==%
-#' @importFrom stats na.omit
-#' @importFrom raster crs dataType res res<- dataType<-
-projectInputs.Raster <- function(x, targetCRS = NULL,
-                                 verbose = getOption("reproducible.verbose", 1),
-                                 rasterToMatch = NULL, cores = NULL,
-                                 useGDAL = getOption("reproducible.useGDAL", FALSE),
-                                 ...) {
-  messagePrepInputs("    reprojecting ...", verbose = verbose, verboseLevel = 0)
-  dots <- list(...)
-  # browser(expr = exists("._projectInputs_1"))
-
-  isFactorRaster <- FALSE
-  isStack <- is(x, "RasterStack")
-  if (isTRUE(raster::is.factor(x))) {
-    isFactorRaster <- TRUE
-    rasterFactorLevels <- raster::levels(x)
-  }
-
-  if (is.null(rasterToMatch) && is.null(targetCRS)) {
-    messagePrepInputs("     no reprojecting because no rasterToMatch & targetCRS are FALSE (or NULL).",
-                      verbose = verbose, verboseLevel = 0)
-  } else if (is.null(rasterToMatch) & identical(.crs(x), targetCRS)) {
-    messagePrepInputs("    no reprojecting because target CRS is same as input CRS.", verbose = verbose,
-                      verboseLevel = 0)
-  } else {
-    if (is.null(targetCRS)) {
-      targetCRS <- .crs(rasterToMatch)
-    }
-    srcCRS <- .crs(x)
-
-    dontSpecifyResBCLongLat <- isLongLat(targetCRS, srcCRS)
-
-    doProjection <- FALSE
-    if (is.null(rasterToMatch)) {
-      if (!identical(.crs(x), targetCRS))  doProjection <- TRUE
-    } else if (differentRasters(x, rasterToMatch, targetCRS)) {
-      doProjection <- TRUE
-    }
-
-    if (doProjection) {
-      # need to double check that gdal executable exists before going down this path
-      attemptGDAL <- attemptGDAL(x, useGDAL, verbose = verbose) #!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
-
-      if (attemptGDAL) {
-        message("GDAL is deprecated in cropInputs")
-      }
-        origDataType <- dataType(x)
-
-        # Capture problems that projectRaster has with objects of class integers,
-        #   which is different than if they are integers (i.e., a numeric class object)
-        #   can be integers, without being classified and stored in R as integer
-
-        # should be faster than assessDataType, as it is a class determination,
-        # not a numeric assessment:
-        isInteger <- if (is.integer(x[])) TRUE else FALSE
-
-        if (isInteger) {
-          if (!is.null(dots$method)) {
-            if (dots$method != "ngb") {
-              warning("This raster layer has integer values; it will be reprojected to float. ",
-                      "Did you want to pass 'method = \"ngb\"'?")
-            }
-          }
-        }
-
-        if (is.null(dots$method)) {
-          # not foolproof method of determining reclass method:
-          dots$method <- assessDataType(x, type = "projectRaster")
-          uniqueDotsMethod <- unique(dots$method)
-          if (length(uniqueDotsMethod) > 1) {
-            if (length(intersect(uniqueDotsMethod, "ngb")) == 1)
-              uniqueDotsMethod <- "ngb"
-            else
-              uniqueDotsMethod <- uniqueDotsMethod[1]
-            messagePrepInputs("There is more than one dataType in the layers of the Raster* object; reprojection will use",
-                              uniqueDotsMethod, verbose = verbose)
-          } else {
-            dots$method <- uniqueDotsMethod
-          }
-        }
-
-        messagePrepInputs("      reprojecting using ", dots$method, "...", verbose = verbose)
-
-        falseWarns <- paste0(projNotWKT2warn, "|input and ouput crs|no non-missing arguments")
-
-        if (requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)) {
-          m1 <- methodFormals(terra::project, "SpatRaster")
-          m2 <- methodFormals(terra::writeRaster, signature = c("SpatRaster", "character"))
-          if (!is.null(dots$method)) {
-            if (identical(dots$method, "ngb"))
-              dots$method <- "near"
-          }
-        }
-
-        if (is.null(rasterToMatch)) {
-          if (requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)) {
-            messagePrepInputs("Using terra::project for reprojection")
-            Args <- append(dots, list(x = terra::rast(x), y = targetCRS))
-            keepers <- na.omit(match(union(names(m1), names(m2)), names(Args)))
-            if (length(keepers))
-              Args <- Args[keepers]
-
-            x1 <- # captureWarningsToAttr( Eliot
-              suppressWarningsSpecific(falseWarnings = falseWarns,
-                                       do.call(terra::project, args = Args), verbose = verbose)
-            x <- if (terra::nlyr(x1) > 1) raster::stack(x1) else raster::raster(x1)
-          } else {
-            Args <- append(dots, list(from = x, crs = targetCRS))
-            x <- # captureWarningsToAttr( Eliot
-              suppressWarningsSpecific(do.call(projectRaster, args = Args),
-                                       falseWarnings = falseWarns)
-            #)
-            #warn <- attr(x, "warning")
-            #attr(x, "warning") <- NULL
-          }
-        } else {
-          # projectRaster does silly things with integers, i.e., it converts to numeric
-          if (is.na(targetCRS))
-            stop("rasterToMatch needs to have a projection (crs)")
-          tempRas <- suppressWarningsSpecific(
-            projectExtent(object = rasterToMatch, crs = targetCRS), projNotWKT2warn)
-          if (requireNamespace("terra", quietly = TRUE) &&
-              getOption("reproducible.useTerra", FALSE)) {
-            messagePrepInputs("      Using terra::project for reprojection")
-            Args <- append(dots, list(x = terra::rast(x), y = terra::rast(tempRas)))
-
-            keepers <- na.omit(match(union(names(m1), names(m2)), names(Args)))
-            if (length(keepers))
-              Args <- Args[keepers]
-
-            x1 <- # captureWarningsToAttr( Eliot
-              suppressWarningsSpecific(falseWarnings = falseWarns,
-                                       do.call(terra::project, args = Args), verbose = verbose)
-            x <- if (terra::nlyr(x1) > 1) raster::stack(x1) else raster::raster(x1)
-          } else {
-
-            Args <- append(dots, list(from = x, to = tempRas))
-            x <- # captureWarningsToAttr( Eliot
-              suppressWarningsSpecific(falseWarnings = falseWarns,
-                                       do.call(projectRaster, args = Args), verbose = verbose)
-            #)
-          }
-          if (isStack)
-            if (!is(x, "RasterStack")) x <- raster::stack(x)
-          # check for faulty datatype --> namely if it is an integer but classified as flt because of floating point problems
-          if (isTRUE(grepl("FLT", dataType(x)))) {
-            rrr <- round(x[], 0) %==% x[]
-            if (isTRUE(sum(!rrr[!is.na(rrr)]) == 0)) # if (isTRUE(sum(!na.omit(rrr)) == 0))
-              x[] <- round(x[], 0)
-          }
-          #warn <- attr(x, "warning")
-          #attr(x, "warning") <- NULL
-
-          if (identical(.crs(x), .crs(rasterToMatch)) & any(res(x) != res(rasterToMatch))) {
-            if (all(res(x) %==% res(rasterToMatch))) {
-              res(x) <- res(rasterToMatch) # TODO: This is irrelevant. Should not happen. TO Omit.
-            } else {
-              stop("Error: input and output resolutions are not similar after using projectRaster.",
-                   "\nTry increasing error tolerance in options('fpCompare.tolerance').")
-            }
-          }
-        }
-        if (!compareCRS(x, targetCRS)) {
-          crs(x) <- targetCRS # sometimes the proj4string is rearranged, so they are not identical:
-          #  they should be
-        }
-
-        # return the integer class to the data in the raster object
-        if (isTRUE(isInteger)) {
-          x[] <- as.integer(x[])
-          dataType(x) <- origDataType
-        }
-
-        #warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
-        #if (length(warn))
-        #  warnings(warn)
-        ## projectRaster doesn't always ensure equal res (floating point number issue)
-        ## if resolutions are close enough, re-write res(x)
-        ## note that when useSAcrs = TRUE, the different resolutions may be due to
-        ## the different projections (e.g. degree based and meter based). This should be fine
-
-     #}
-    } else {
-      messagePrepInputs("    no reprojecting because target characteristics same as input Raster.",
-                        verbose = verbose,
-                        verboseLevel = 0)
-    }
-  }
-
-  if (isFactorRaster) {
-    levels(x) <- rasterFactorLevels
-  }
-
-  x
-}
-
-
-#' @export
-#' @rdname projectInputs
-projectInputs.SpatVector <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
-  projectTo(from = x, projectTo = targetCRS)
-
-}
-
-#' @export
-#' @rdname projectInputs
-projectInputs.SpatRaster <- function(x, targetCRS = NULL,
-                                     verbose = getOption("reproducible.verbose", 1),
-                                     rasterToMatch = NULL, cores = NULL,
-                                     useGDAL = getOption("reproducible.useGDAL", FALSE),
-                                     ...) {
-
-  if (!is.null(rasterToMatch)) {
-    if (!is.null(targetCRS)) {
-      if (terra::crs(rasterToMatch) != targetCRS)
-        message("both rasterToMatch and targetCRS are supplied to projectInputs and they are different; using rasterToMatch")
-    }
-    projectTo(from = x, projectTo = rasterToMatch)
-  } else {
-    if (!is.null(targetCRS)) {
-      projectTo(from = x, projectTo = targetCRS)
-    }
-  }
+# @export
+# @rdname deprecated
+# @param useGDAL Logical or `"force"`. This is defunct; internals now can use
+#     `terra` if `options("reproducible.useTerra" = TRUE)`, which is not (yet)
+#     the default.
+#
+# @importFrom fpCompare %==%
+# @importFrom stats na.omit
+# @importFrom raster crs dataType res res<- dataType<- compareCRS
+# projectInputs.Raster <- function(x, targetCRS = NULL,
+#                                  verbose = getOption("reproducible.verbose", 1),
+#                                  rasterToMatch = NULL, cores = NULL,
+#                                  useGDAL = getOption("reproducible.useGDAL", FALSE),
+#                                  ...) {
+#   messagePrepInputs("    reprojecting ...", verbose = verbose, verboseLevel = 0)
+#   dots <- list(...)
+#   # browser(expr = exists("._projectInputs_1"))
+#
+#   isFactorRaster <- FALSE
+#   isStack <- is(x, "RasterStack")
+#   if (isTRUE(raster::is.factor(x))) {
+#     isFactorRaster <- TRUE
+#     rasterFactorLevels <- raster::levels(x)
+#   }
+#
+#   if (is.null(rasterToMatch) && is.null(targetCRS)) {
+#     messagePrepInputs("     no reprojecting because no rasterToMatch & targetCRS are FALSE (or NULL).",
+#                       verbose = verbose, verboseLevel = 0)
+#   } else if (is.null(rasterToMatch) & identical(.crs(x), targetCRS)) {
+#     messagePrepInputs("    no reprojecting because target CRS is same as input CRS.", verbose = verbose,
+#                       verboseLevel = 0)
+#   } else {
+#     if (is.null(targetCRS)) {
+#       targetCRS <- .crs(rasterToMatch)
+#     }
+#     srcCRS <- .crs(x)
+#
+#     dontSpecifyResBCLongLat <- isLongLat(targetCRS, srcCRS)
+#
+#     doProjection <- FALSE
+#     if (is.null(rasterToMatch)) {
+#       if (!identical(.crs(x), targetCRS))  doProjection <- TRUE
+#     } else if (differentRasters(x, rasterToMatch, targetCRS)) {
+#       doProjection <- TRUE
+#     }
+#
+#     if (doProjection) {
+#       # need to double check that gdal executable exists before going down this path
+#       attemptGDAL <- attemptGDAL(x, useGDAL, verbose = verbose) #!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
+#
+#       if (attemptGDAL) {
+#         message("GDAL is deprecated in cropInputs")
+#       }
+#         origDataType <- dataType(x)
+#
+#         # Capture problems that projectRaster has with objects of class integers,
+#         #   which is different than if they are integers (i.e., a numeric class object)
+#         #   can be integers, without being classified and stored in R as integer
+#
+#         # should be faster than assessDataType, as it is a class determination,
+#         # not a numeric assessment:
+#         isInteger <- if (is.integer(x[])) TRUE else FALSE
+#
+#         if (isInteger) {
+#           if (!is.null(dots$method)) {
+#             if (dots$method != "ngb") {
+#               warning("This raster layer has integer values; it will be reprojected to float. ",
+#                       "Did you want to pass 'method = \"ngb\"'?")
+#             }
+#           }
+#         }
+#
+#         if (is.null(dots$method)) {
+#           # not foolproof method of determining reclass method:
+#           dots$method <- assessDataType(x, type = "projectRaster")
+#           uniqueDotsMethod <- unique(dots$method)
+#           if (length(uniqueDotsMethod) > 1) {
+#             if (length(intersect(uniqueDotsMethod, "ngb")) == 1)
+#               uniqueDotsMethod <- "ngb"
+#             else
+#               uniqueDotsMethod <- uniqueDotsMethod[1]
+#             messagePrepInputs("There is more than one dataType in the layers of the Raster* object; reprojection will use",
+#                               uniqueDotsMethod, verbose = verbose)
+#           } else {
+#             dots$method <- uniqueDotsMethod
+#           }
+#         }
+#
+#         messagePrepInputs("      reprojecting using ", dots$method, "...", verbose = verbose)
+#
+#         falseWarns <- paste0(projNotWKT2warn, "|input and ouput crs|no non-missing arguments")
+#
+#         if (requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)) {
+#           m1 <- methodFormals(terra::project, "SpatRaster")
+#           m2 <- methodFormals(terra::writeRaster, signature = c("SpatRaster", "character"))
+#           if (!is.null(dots$method)) {
+#             if (identical(dots$method, "ngb"))
+#               dots$method <- "near"
+#           }
+#         }
+#
+#         if (is.null(rasterToMatch)) {
+#           if (requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)) {
+#             messagePrepInputs("Using terra::project for reprojection")
+#             Args <- append(dots, list(x = terra::rast(x), y = targetCRS))
+#             keepers <- na.omit(match(union(names(m1), names(m2)), names(Args)))
+#             if (length(keepers))
+#               Args <- Args[keepers]
+#
+#             x1 <- # captureWarningsToAttr( Eliot
+#               suppressWarningsSpecific(falseWarnings = falseWarns,
+#                                        do.call(terra::project, args = Args), verbose = verbose)
+#             x <- if (terra::nlyr(x1) > 1) raster::stack(x1) else raster::raster(x1)
+#           } else {
+#             Args <- append(dots, list(from = x, crs = targetCRS))
+#             x <- # captureWarningsToAttr( Eliot
+#               suppressWarningsSpecific(do.call(projectRaster, args = Args),
+#                                        falseWarnings = falseWarns)
+#             #)
+#             #warn <- attr(x, "warning")
+#             #attr(x, "warning") <- NULL
+#           }
+#         } else {
+#           # projectRaster does silly things with integers, i.e., it converts to numeric
+#           if (is.na(targetCRS))
+#             stop("rasterToMatch needs to have a projection (crs)")
+#           tempRas <- suppressWarningsSpecific(
+#             projectExtent(object = rasterToMatch, crs = targetCRS), projNotWKT2warn)
+#           if (requireNamespace("terra", quietly = TRUE) &&
+#               getOption("reproducible.useTerra", FALSE)) {
+#             messagePrepInputs("      Using terra::project for reprojection")
+#             Args <- append(dots, list(x = terra::rast(x), y = terra::rast(tempRas)))
+#
+#             keepers <- na.omit(match(union(names(m1), names(m2)), names(Args)))
+#             if (length(keepers))
+#               Args <- Args[keepers]
+#
+#             x1 <- # captureWarningsToAttr( Eliot
+#               suppressWarningsSpecific(falseWarnings = falseWarns,
+#                                        do.call(terra::project, args = Args), verbose = verbose)
+#             x <- if (terra::nlyr(x1) > 1) raster::stack(x1) else raster::raster(x1)
+#           } else {
+#
+#             Args <- append(dots, list(from = x, to = tempRas))
+#             x <- # captureWarningsToAttr( Eliot
+#               suppressWarningsSpecific(falseWarnings = falseWarns,
+#                                        do.call(projectRaster, args = Args), verbose = verbose)
+#             #)
+#           }
+#           if (isStack)
+#             if (!is(x, "RasterStack")) x <- raster::stack(x)
+#           # check for faulty datatype --> namely if it is an integer but classified as flt because of floating point problems
+#           if (isTRUE(grepl("FLT", dataType(x)))) {
+#             rrr <- round(x[], 0) %==% x[]
+#             if (isTRUE(sum(!rrr[!is.na(rrr)]) == 0)) # if (isTRUE(sum(!na.omit(rrr)) == 0))
+#               x[] <- round(x[], 0)
+#           }
+#           #warn <- attr(x, "warning")
+#           #attr(x, "warning") <- NULL
+#
+#           if (identical(.crs(x), .crs(rasterToMatch)) & any(res(x) != res(rasterToMatch))) {
+#             if (all(res(x) %==% res(rasterToMatch))) {
+#               res(x) <- res(rasterToMatch) # TODO: This is irrelevant. Should not happen. TO Omit.
+#             } else {
+#               stop("Error: input and output resolutions are not similar after using projectRaster.",
+#                    "\nTry increasing error tolerance in options('fpCompare.tolerance').")
+#             }
+#           }
+#         }
+#         if (!compareCRS(x, targetCRS)) {
+#           crs(x) <- targetCRS # sometimes the proj4string is rearranged, so they are not identical:
+#           #  they should be
+#         }
+#
+#         # return the integer class to the data in the raster object
+#         if (isTRUE(isInteger)) {
+#           x[] <- as.integer(x[])
+#           dataType(x) <- origDataType
+#         }
+#
+#         #warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
+#         #if (length(warn))
+#         #  warnings(warn)
+#         ## projectRaster doesn't always ensure equal res (floating point number issue)
+#         ## if resolutions are close enough, re-write res(x)
+#         ## note that when useSAcrs = TRUE, the different resolutions may be due to
+#         ## the different projections (e.g. degree based and meter based). This should be fine
+#
+#      #}
+#     } else {
+#       messagePrepInputs("    no reprojecting because target characteristics same as input Raster.",
+#                         verbose = verbose,
+#                         verboseLevel = 0)
+#     }
+#   }
+#
+#   if (isFactorRaster) {
+#     levels(x) <- rasterFactorLevels
+#   }
+#
+#   x
+# }
 
 
-}
+# @export
+# @rdname deprecated
+# projectInputs.SpatVector <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
+#   projectTo(from = x, projectTo = targetCRS)
+#
+# }
 
-#' @export
-#' @rdname projectInputs
-projectInputs.sf <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
-  messagePrepInputs("    reprojecting ...", verbose = verbose, verboseLevel = 0)
-  .requireNamespace("sf", stopOnFALSE = TRUE)
-  if (!is.null(targetCRS)) {
-    if (isTRUE(getOption("reproducible.useTerra"))) {
-      x <- projectTo(from = x, projectTo = targetCRS)
-    } else {
+# @export
+# @rdname deprecated
+# projectInputs.SpatRaster <- function(x, targetCRS = NULL,
+#                                      verbose = getOption("reproducible.verbose", 1),
+#                                      rasterToMatch = NULL, cores = NULL,
+#                                      useGDAL = getOption("reproducible.useGDAL", FALSE),
+#                                      ...) {
+#
+#   if (!is.null(rasterToMatch)) {
+#     if (!is.null(targetCRS)) {
+#       if (terra::crs(rasterToMatch) != targetCRS)
+#         message("both rasterToMatch and targetCRS are supplied to projectInputs and they are different; using rasterToMatch")
+#     }
+#     projectTo(from = x, projectTo = rasterToMatch)
+#   } else {
+#     if (!is.null(targetCRS)) {
+#       projectTo(from = x, projectTo = targetCRS)
+#     }
+#   }
+#
+#
+# }
 
-      warning("sf class objects not fully tested Use with caution.")
-      .requireNamespace("sf", stopOnFALSE = TRUE)
-      isValid <- sf::st_is_valid(x)
-      if (any(sf::st_is(x, c("POLYGON", "MULTIPOLYGON"))) && !any(isValid)) {
-        x[!isValid] <- sf::st_buffer(x[!isValid], dist = 0, ...)
-      }
+# @export
+# @rdname deprecated
+# projectInputs.sf <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
+#   messagePrepInputs("    reprojecting ...", verbose = verbose, verboseLevel = 0)
+#   .requireNamespace("sf", stopOnFALSE = TRUE)
+#   if (!is.null(targetCRS)) {
+#     if (isTRUE(getOption("reproducible.useTerra"))) {
+#       x <- projectTo(from = x, projectTo = targetCRS)
+#     } else {
+#
+#       warning("sf class objects not fully tested Use with caution.")
+#       .requireNamespace("sf", stopOnFALSE = TRUE)
+#       isValid <- sf::st_is_valid(x)
+#       if (any(sf::st_is(x, c("POLYGON", "MULTIPOLYGON"))) && !any(isValid)) {
+#         x[!isValid] <- sf::st_buffer(x[!isValid], dist = 0, ...)
+#       }
+#
+#       if ("projargs" %in% slotNames(targetCRS) )
+#         targetCRS <- sf::st_crs(targetCRS@projargs)
+#       x <- sf::st_transform(x = x, crs = targetCRS, ...)
+#       if (!identical(sf::st_crs(x), targetCRS)) {
+#         ## sometimes the proj4string is rearranged, so they are not identical; they should be
+#         sf::st_crs(x) <- targetCRS
+#       }
+#     }
+#   }
+#   x
+# }
 
-      if ("projargs" %in% slotNames(targetCRS) )
-        targetCRS <- sf::st_crs(targetCRS@projargs)
-      x <- sf::st_transform(x = x, crs = targetCRS, ...)
-      if (!identical(sf::st_crs(x), targetCRS)) {
-        ## sometimes the proj4string is rearranged, so they are not identical; they should be
-        sf::st_crs(x) <- targetCRS
-      }
-    }
-  }
-  x
-}
-
-#' @export
-#' @rdname projectInputs
-#' @importFrom raster crs
-projectInputs.Spatial <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
-  messagePrepInputs("    reprojecting ...", verbose = verbose, verboseLevel = 0)
-  if (!is.null(targetCRS)) {
-
-    if (isTRUE(getOption("reproducible.useTerra"))) {
-      x <- projectTo(from = suppressWarningsSpecific(x, shldBeChar),
-                     projectTo = targetCRS)
-    } else {
-      if (!is(targetCRS, "CRS")) {
-        if (!is.character(targetCRS)) {
-          if (is(targetCRS, "spatialClasses")) {
-            targetCRS <- .crs(targetCRS)
-          } else {
-            stop("targetCRS in projectInputs must be a CRS object or a class from",
-                 " which a crs can be extracted with raster::crs")
-          }
-        }
-      }
-      x <- spTransform(x = x, CRSobj = targetCRS)
-      if (!identical(.crs(x), targetCRS)) {
-        ## sometimes the proj4string is rearranged, so they are not identical; they should be
-        crs(x) <- targetCRS
-      }
-    }
-  }
-  x
-}
+# @export
+# @rdname deprecated
+# @importFrom raster crs
+# projectInputs.Spatial <- function(x, targetCRS, verbose = getOption("reproducible.verbose", 1), ...) {
+#   messagePrepInputs("    reprojecting ...", verbose = verbose, verboseLevel = 0)
+#   if (!is.null(targetCRS)) {
+#
+#     if (isTRUE(getOption("reproducible.useTerra"))) {
+#       x <- projectTo(from = suppressWarningsSpecific(x, shldBeChar),
+#                      projectTo = targetCRS)
+#     } else {
+#       if (!is(targetCRS, "CRS")) {
+#         if (!is.character(targetCRS)) {
+#           if (is(targetCRS, "spatialClasses")) {
+#             targetCRS <- .crs(targetCRS)
+#           } else {
+#             stop("targetCRS in projectInputs must be a CRS object or a class from",
+#                  " which a crs can be extracted with raster::crs")
+#           }
+#         }
+#       }
+#       x <- spTransform(x = x, CRSobj = targetCRS)
+#       if (!identical(.crs(x), targetCRS)) {
+#         ## sometimes the proj4string is rearranged, so they are not identical; they should be
+#         crs(x) <- targetCRS
+#       }
+#     }
+#   }
+#   x
+# }
 
 #' Hierarchically get crs from `Raster*`, `Spatial*`
 #'
