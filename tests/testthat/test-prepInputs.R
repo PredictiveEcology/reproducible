@@ -1521,11 +1521,11 @@ test_that("lightweight tests for code coverage", {
   crs(ras) <- crsToUse
 
   if (getOption("reproducible.useTerra")) {
-    expect_error(postProcess(ras, studyArea = 1), grepPostProcess$anySpatialClass)
-    expect_error(postProcess(ras, rasterToMatch = 1), grepPostProcess$anySpatialClass)
+    expect_error(postProcess(ras, studyArea = 1), .msgGrep$anySpatialClass)
+    expect_error(postProcess(ras, rasterToMatch = 1), .msgGrep$anySpatialClass)
   } else {
-    expect_error(postProcess(ras, studyArea = 1), messPostProcess$studyArea_Spatial)
-    expect_error(postProcess(ras, rasterToMatch = 1), grepPostProcess$rasterToMatch_Raster)
+    expect_error(postProcess(ras, studyArea = 1), .msg$studyArea_Spatial)
+    expect_error(postProcess(ras, rasterToMatch = 1), .msgGrep$rasterToMatch_Raster)
     mess <- capture_messages(postProcess(ras, inputFilePath = "test"))
     expect_true(all(grepl("inputFilePath is being deprecated", mess)))
     mess <- capture_messages(postProcess(ras, targetFilePath = "test"))
