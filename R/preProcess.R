@@ -651,6 +651,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
          "Possibly, it does not exist in the specified archive, ",
          "or the file doesn't exist in destinationPath")
 
+  archiveInChecksums <- checkSums$actualFile %in% .basename(archive)
+  if (any(archiveInChecksums))
+    checkSums[which(archiveInChecksums), result := "ArchiveOK"]
+
+
   out <- list(checkSums = checkSums,
               dots = dots,
               fun = fun,
