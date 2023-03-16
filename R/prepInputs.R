@@ -391,7 +391,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   otherFiles <- out$checkSums[result == "OK"]
   .cacheExtra <- NULL
   if (NROW(otherFiles)) {
-    .cacheExtra <- .robustDigest(otherFiles$checksum.x)
+    .cacheExtra <- .robustDigest(sort(otherFiles$checksum.x))
   }
   if (!(naFun || is.null(theFun))) {
     x <- if (is.null(out$object)) {
