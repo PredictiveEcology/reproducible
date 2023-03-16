@@ -2,10 +2,15 @@ test_that("prepInputs doesn't work (part 1)", {
   skip_on_cran()
   skip_on_ci()
 
+  suppressWarnings(rm(aaaa, envir = .GlobalEnv))
   testInitOut <- testInit("raster", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.inputPaths" = NULL,
-    "reproducible.overwrite" = TRUE)
+    "reproducible.overwrite" = TRUE,
+    # reproducible.useTerra = FALSE,
+    # reproducible.rasterRead = "raster::raster",
+    #reproducible.rasterRead = "terra::rast",
+    reproducible.showSimilar = TRUE)
   )
   on.exit({
     testOnExit(testInitOut)
@@ -99,21 +104,21 @@ test_that("prepInputs doesn't work (part 1)", {
   # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
   noisyOutput <- capture.output({
     warn <- suppressWarningsSpecific(
-    falseWarnings = "attribute variables are assumed to be spatially constant", {
-    mess <- capture_messages({
-      shpEcozoneSm <- Cache(
-        prepInputs,
-        url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-        targetFile = reproducible::asPath(ecozoneFilename),
-        alsoExtract = reproducible::asPath(ecozoneFiles),
-        studyArea = StudyArea,
-        fun = "shapefile",
-        destinationPath = dPath,
-        filename2 = "EcozoneFile.shp",
-        useCache = FALSE
-      )
-    })
-    })
+      falseWarnings = "attribute variables are assumed to be spatially constant", {
+        mess <- capture_messages({
+          shpEcozoneSm <- Cache(
+            prepInputs,
+            url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+            targetFile = reproducible::asPath(ecozoneFilename),
+            alsoExtract = reproducible::asPath(ecozoneFiles),
+            studyArea = StudyArea,
+            #fun = "shapefile",
+            destinationPath = dPath,
+            filename2 = "EcozoneFile.shp",
+            useCache = FALSE
+          )
+        })
+      })
   })
   expect_false(all(grepl("loading", mess)))
 
@@ -122,16 +127,16 @@ test_that("prepInputs doesn't work (part 1)", {
     warn <- suppressWarningsSpecific(
       falseWarnings = "attribute variables are assumed to be spatially constant", {
         shpEcozoneSm <- Cache(
-          prepInputs,
-          url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-          targetFile = reproducible::asPath(ecozoneFilename),
-          alsoExtract = reproducible::asPath(ecozoneFiles),
-          studyArea = StudyArea,
-          fun = "shapefile",
-          destinationPath = dPath,
-          filename2 = "EcozoneFile.shp",
-          useCache = TRUE
-        )
+          prepInputs(
+            url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+            targetFile = reproducible::asPath(ecozoneFilename),
+            alsoExtract = reproducible::asPath(ecozoneFiles),
+            studyArea = StudyArea,
+            #  fun = "shapefile",
+            destinationPath = dPath,
+            filename2 = "EcozoneFile.shp",
+            useCache = TRUE # with useTerra = TRUE, this is only for loading, not postProcess
+          ))
       })
   })
 
@@ -208,6 +213,15 @@ test_that("prepInputs doesn't work (part 1)", {
   ######################################
   ## don't pass url -- use local copy of archive only
   ## use purge = TRUE to rm checksums file, rewrite it here
+
+
+
+
+
+
+
+
+
   noisyOutput <- capture.output({
     shpEcozone <- prepInputs(destinationPath = dPath,
                              archive = file.path(dPath, "ecozone_shp.zip"), purge = TRUE)
@@ -384,6 +398,7 @@ test_that("interactive prepInputs", {
 test_that("preProcess doesn't work", {
   skip_on_cran()
   skip_on_ci()
+  skip_if_no_token()
   testInitOut <- testInit("raster", opts = list(
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL,
@@ -1505,13 +1520,18 @@ test_that("lightweight tests for code coverage", {
   ras <- raster(extent(0,10,0,10), res = 1, vals = 1:100)
   crs(ras) <- crsToUse
 
-  expect_error(postProcess(ras, studyArea = 1), "The 'studyArea")
-  expect_error(postProcess(ras, rasterToMatch = 1), "The 'rasterToMatch")
-  mess <- capture_messages(postProcess(ras, inputFilePath = "test"))
-  expect_true(all(grepl("inputFilePath is being deprecated", mess)))
+  if (getOption("reproducible.useTerra")) {
+    expect_error(postProcess(ras, studyArea = 1), grepPostProcess$anySpatialClass)
+    expect_error(postProcess(ras, rasterToMatch = 1), grepPostProcess$anySpatialClass)
+  } else {
+    expect_error(postProcess(ras, studyArea = 1), messPostProcess$studyArea_Spatial)
+    expect_error(postProcess(ras, rasterToMatch = 1), grepPostProcess$rasterToMatch_Raster)
+    mess <- capture_messages(postProcess(ras, inputFilePath = "test"))
+    expect_true(all(grepl("inputFilePath is being deprecated", mess)))
+    mess <- capture_messages(postProcess(ras, targetFilePath = "test"))
+    expect_true(all(grepl("targetFilePath is being deprecated", mess)))
+  }
 
-  mess <- capture_messages(postProcess(ras, targetFilePath = "test"))
-  expect_true(all(grepl("targetFilePath is being deprecated", mess)))
 
   ## cropInputs.default
   b <- 1
@@ -1527,7 +1547,9 @@ test_that("lightweight tests for code coverage", {
   sp4 <- as(raster::extent(ras4), "SpatialPolygons")
   crs(sp4) <- crsToUse
 
-  expect_error(cropInputs(ras2, studyArea = sp4), "extents do not overlap")
+  grepMessHere <- if (getOption("reproducible.useTerra"))
+    "invalid extent" else "extents do not overlap"
+  expect_error(cropInputs(ras2, studyArea = sp4), grepMessHere)
 
   ras3 <- raster(extent(0,5,0,5), res = 1, vals = 1:25)
   crs(ras3) <- crsToUse
