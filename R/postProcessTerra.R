@@ -117,35 +117,6 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
   startTime <- Sys.time()
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
-  # if (!is.null(dots$studyArea)) {
-  #   messagePrepInputs("studyArea is supplied (deprecated); assigning it to `cropTo` & `maskTo`")
-  #   if (isSpatial(dots$studyArea))
-  #     dots$studyArea <- terra::vect(dots$studyArea)
-  #   maskTo <- dots$studyArea
-  #   cropTo <- dots$studyArea
-  # }
-  #
-  # if (!is.null(dots$rasterToMatch)) {
-  #   messagePrepInputs("rasterToMatch is supplied (deprecated); assigning it to `projectTo` and `cropTo`")
-  #   to <- dots$rasterToMatch
-  #   projectTo <- dots$rasterToMatch # be explicit here in case studyArea is supplied
-  #   cropTo <- dots$rasterToMatch # be explicit here in case studyArea is supplied
-  # }
-  #
-  # # These are unambiguous
-  # if (!is.null(dots$filename2)) {
-  #   messagePrepInputs("filename2 is supplied (deprecated); assigning it to `writeTo`")
-  #   writeTo <- dots$filename2
-  # }
-  # if (!is.null(dots$targetCRS)) {
-  #   messagePrepInputs("targetCRS is supplied (deprecated); assigning it to `projectTo`")
-  #   projectTo <- dots$targetCRS
-  # }
-  # if (isTRUE(dots$useSAcrs)) {
-  #   messagePrepInputs("useSAcrs is supplied (deprecated); assigning studyArea to `projectTo`")
-  #   projectTo <- dots$studyArea
-  # }
-
   if (is.null(method)) {
     method <- "bilinear"
   } else if (method == "ngb") {
@@ -425,7 +396,7 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
           }, silent = TRUE)
           if (is(fromInt, "try-error")) {
             if (attempt >= 1) {
-              whichFailed <- grepl("geom 0", fromInt)
+              whichFailed <- grepl("geom 0|Loop 0", fromInt)
               if (isTRUE(whichFailed) && !(triedFrom %in% TRUE)) { # don't try same one again
                 from <- fixErrorsTerra(from, error = fromInt, fromFnName = "maskTo", verbose = verbose)
                 triedFrom <- TRUE
@@ -520,8 +491,6 @@ projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE, .
           } else {
             projectTo <- sf::st_crs(projectTo)$wkt
           }
-          #
-          # projectToIsMaskTo <- FALSE
         }
 
         # Since we only use the crs when projectTo is a Vector, no need to "fixErrorsTerra"
