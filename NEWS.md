@@ -11,6 +11,9 @@ Version 1.2.17
 - `.dealWithClass` and `.dealWithClassOnRecovery` are now exported generics, with several methods here, notably, list, environment, default
 - other miscellaneous changes to deal with `raster` to `terra` transition (e.g. `studyAreaName` can deal with `SpatVector`)
 
+## Dependency changes
+- removed entirely: `fasterize`, `fpCompare`, `magrittr`
+- moved to `Suggests`: `raster`, `sp`, `rlang`
 
 ## bugfixes
 - `Cache` was incorrectly dealing with `environment` and `environment-like` objects. Since some objects, e.g., `Spat*` objects in `terra`, must be wrapped prior to saving, environments must be scanned for these classes of objects prior to saving. This previously only occurred for `list` objects; fixed

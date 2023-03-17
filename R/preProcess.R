@@ -938,10 +938,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 #' @examples
 #' library(datasets)
-#' library(magrittr)
 #' library(raster)
 #'
-#' tmpDir <- file.path(tempdir(), "symlink-test") %>%
+#' tmpDir <- file.path(tempdir(), "symlink-test") |>
 #'   normalizePath(winslash = '/', mustWork = FALSE)
 #' dir.create(tmpDir)
 #'

@@ -113,6 +113,33 @@ setMethod(
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     # browser(expr = exists("._robustDigest_1"))
+    if (inherits(object, "Spatial")) {
+      object <- .removeCacheAtts(object, passByReference = FALSE)
+
+      if (is(object, "SpatialPoints")) {
+        forDig <- as.data.frame(object)
+      } else {
+        forDig <- object
+      }
+
+      # The following Rounding is necessary to make digest equal on linux and windows
+      if (inherits(forDig, "SpatialPolygonsDataFrame")) {
+        bbb <- unlist(lapply(as.data.frame(forDig), is.numeric))
+        if (sum(bbb)) {
+          bbbWh <- which(bbb)
+          for (i in bbbWh) { # changed because may not have correct names, can be NAs, Eliot March 2019
+            #  Error was: Error in round(in[[i]], 4) :
+            # non-numeric argument to mathematical function
+            forDig[[i]] <- round(forDig[[i]], 4)
+          }
+        }
+      }
+
+#       out <- .doDigest(forDig, algo = algo)
+
+    }
+
+
 
     if (is(object, "Raster")) {
       object <- .removeCacheAtts(object)
@@ -134,21 +161,15 @@ setMethod(
         dig <- suppressWarnings(
           .digestRasterLayer(object, length = length, algo = algo, quick = quick))
       }
-      dig <- .doDigest(unlist(dig))
-      return(dig)
-    }
-
-    if (is(object, "quosure")) {# can't get this class from rlang via importClass rlang quosure
+      forDig <- unlist(dig)
+#       out <- .doDigest(unlist(dig))
+    } else if (is(object, "quosure")) {# can't get this class from rlang via importClass rlang quosure
       if (!requireNamespace("rlang")) stop("Please `install.packages('rlang')`")
-        object <- rlang::eval_tidy(object)
-    }
-
-    if (is(object, "cluster")) {# can't get this class from parallel via importClass parallel cluster
-      out <- .doDigest(NULL, algo)
-      return(out)
-    }
-
-    if (inherits(object, "SpatRaster")) {
+      object <- rlang::eval_tidy(object)
+    } else if (is(object, "cluster")) {# can't get this class from parallel via importClass parallel cluster
+      forDig <- NULL
+#      out <- .doDigest(NULL, algo)
+    } else if (inherits(object, "SpatRaster")) {
       if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
         stop("Please install terra package")
       if (any(nchar(terra::sources(object)) > 0)) {
@@ -160,26 +181,28 @@ setMethod(
                terra::ext(object)), object@ptr$names, ),
           length = length, quick = quick,
           algo = algo, classOptions = classOptions) # don't include object@data -- these are volatile
-        out <- .doDigest(list(out, dig), algo = algo)
+        forDig <- list(out, dig)
+#         out <- .doDigest(list(out, dig), algo = algo)
       } else {
-        out <- .doDigest(terra::wrap(object), algo)
+        forDig <- terra::wrap(object)
+        # out <- .doDigest(terra::wrap(object), algo)
       }
-
-      return(out)
-    }
-
-    if (any(inherits(object, "SpatVector"), inherits(object, "SpatRaster"))) {
+    } else if (any(inherits(object, "SpatVector"), inherits(object, "SpatRaster"))) {
       if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
         stop("Please install terra package")
-      out <- .doDigest(wrapSpatVector(object), algo)
-      return(out)
-    }
+      forDig <- wrapSpatVector(object)
+      # out <- .doDigest(wrapSpatVector(object), algo)
+    } else {
 
-    # passByReference -- while doing pass by reference attribute setting is faster, is
-    #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
-    object1 <- .removeCacheAtts(object)
-    .doDigest(object1, algo)
-})
+      # passByReference -- while doing pass by reference attribute setting is faster, is
+      #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
+      forDig <- .removeCacheAtts(object)
+      # out <- .doDigest(object1, algo)
+    }
+    out <- .doDigest(forDig, algo)
+    return(out)
+
+  })
 
 #' @rdname robustDigest
 #' @export
@@ -395,36 +418,36 @@ setMethod(
 # })
 
 
-#' @rdname robustDigest
-#' @export
-setMethod(
-  ".robustDigest",
-  signature = "Spatial",
-  definition = function(object, .objects, length, algo, quick, classOptions) {
-    object <- .removeCacheAtts(object, passByReference = FALSE)
-
-  if (is(object, "SpatialPoints")) {
-      aaa <- as.data.frame(object)
-    } else {
-      aaa <- object
-    }
-
-    # The following Rounding is necessary to make digest equal on linux and windows
-    if (inherits(aaa, "SpatialPolygonsDataFrame")) {
-      bbb <- unlist(lapply(as.data.frame(aaa), is.numeric))
-      if (sum(bbb)) {
-        bbbWh <- which(bbb)
-        for (i in bbbWh) { # changed because may not have correct names, can be NAs, Eliot March 2019
-                           #  Error was: Error in round(aaa[[i]], 4) :
-                           # non-numeric argument to mathematical function
-          aaa[[i]] <- round(aaa[[i]], 4)
-        }
-      }
-    }
-
-    #
-    .doDigest(aaa, algo = algo)
-})
+# @rdname robustDigest
+# @export
+# setMethod(
+#   ".robustDigest",
+#   signature = "Spatial",
+#   definition = function(object, .objects, length, algo, quick, classOptions) {
+#     object <- .removeCacheAtts(object, passByReference = FALSE)
+#
+#   if (is(object, "SpatialPoints")) {
+#       aaa <- as.data.frame(object)
+#     } else {
+#       aaa <- object
+#     }
+#
+#     # The following Rounding is necessary to make digest equal on linux and windows
+#     if (inherits(aaa, "SpatialPolygonsDataFrame")) {
+#       bbb <- unlist(lapply(as.data.frame(aaa), is.numeric))
+#       if (sum(bbb)) {
+#         bbbWh <- which(bbb)
+#         for (i in bbbWh) { # changed because may not have correct names, can be NAs, Eliot March 2019
+#                            #  Error was: Error in round(aaa[[i]], 4) :
+#                            # non-numeric argument to mathematical function
+#           aaa[[i]] <- round(aaa[[i]], 4)
+#         }
+#       }
+#     }
+#
+#     #
+#     .doDigest(aaa, algo = algo)
+# })
 
 .basenames <- function(object, nParentDirs) {
   if (missing(nParentDirs)) {

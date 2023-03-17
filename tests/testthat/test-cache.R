@@ -227,8 +227,6 @@ test_that("test memory backed raster robustDigest", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  # library(raster)
-  # tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
   set.seed(123)
   r1 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
   r2 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
@@ -541,7 +539,7 @@ test_that("test wrong ways of calling Cache", {
 
 
 test_that("test quoted FUN in Cache", {
-  testInitOut <- testInit("magrittr")
+  testInitOut <- testInit()
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -552,7 +550,7 @@ test_that("test quoted FUN in Cache", {
   B <- Cache(rnorm, 10, 16, cachePath = tmpdir) # nolint
   C <- Cache(quote(rnorm(n = 10, 16)), cachePath = tmpdir) # nolint
 
-  D <- try(Cache(cachePath = tmpdir) %>% rnorm(10, 16) , silent = TRUE) # nolint
+  D <- try(Cache(cachePath = tmpdir) |> rnorm(10, 16) , silent = TRUE) # nolint
 
   expect_true(all.equalWONewCache(A,B))
   expect_true(all.equalWONewCache(A, C))

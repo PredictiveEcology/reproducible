@@ -297,14 +297,6 @@ setAs(from = "character", to = "Path", function(from) {
       curFiles <- normPath(Filenames(obj, allowMultiple = FALSE)[isFilebacked])
     }
     curFilename[isFilebacked] <- curFiles
-    # if (is(obj, "RasterLayer") || is(obj, "RasterBrick") ||
-    #     (is(obj, "RasterStack") && numFiles == 1)) {
-    #   curFilename <- normalizePath(Filenames(obj), winslash = "/", mustWork = FALSE)
-    # } else  {
-    #   curFilenames <- unlist(lapply(obj@layers, function(x)
-    #     normalizePath(raster::filename(x), winslash = "/", mustWork = FALSE)))
-    #   curFilename[isFilebacked] <- curFilenames[isFilebacked]
-    # }
   }
 
   ## check for files that should've been backed, but don't exist
@@ -377,9 +369,9 @@ setAs(from = "character", to = "Path", function(from) {
 
       pathExists <- dir.exists(dirname(saveFilename2))
       if (any(!pathExists)) {
-        dirname(saveFilename2) %>%
-          unique() %>%
-          sapply(., dir.create, recursive = TRUE)
+        dirname(saveFilename2) |>
+          unique() |>
+          sapply(FUN = dir.create, recursive = TRUE)
       }
 
       saveFilename2 <- sapply(seq_along(curFilename2), function(x) {
@@ -662,6 +654,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   }
   dig
 }
+
 
 .digestRasterLayer2 <- function(object, length, algo, quick) {
   # metadata -- only a few items of the long list because one thing (I don't recall)
@@ -1055,13 +1048,9 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
       }
     }
     #################
-
-
     saveFilename <- fns
     bn <- basename(fns)
     bnFB <- bn[FB]
-
-
     saveFilename[FB] <- if (isRepo) {
       file.path(repoDir, "rasters"[isRepo], bnFB)
     } else {
@@ -1076,19 +1065,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
       saveFilename[exist] <- unlist(lapply(saveFilename[exist], nextNumericName))
     }
     FBAll <- nchar(fnsAll) > 0
-
     out <- hardLinkOrCopy(from = fnsAll[FBAll], to = saveFilename[FBAll])
-
-    # out <- Map(from = fnsAll[FBAll], to = saveFilename[FBAll],
-    #     function(from, to) {
-    #   linkTry <- suppressWarningsSpecific(file.link(from = from, to = to),
-    #                                   falseWarnings = "already exists|Invalid cross-device")
-    #   if (!linkTry)
-    #     linkTry <- copyFile(from = from, to = to, overwrite = TRUE, silent = TRUE)
-    #   linkTry
-    # })
-
-    # FBshort <- nchar(fnsShort) > 0
     saveFilenamesToUpdateSlot <- saveFilename[basename(saveFilenamePreNumeric) %in%
                                                 basename(fnsShort)]
     obj <- updateFilenameSlots(obj, fnsShort, saveFilenamesToUpdateSlot)

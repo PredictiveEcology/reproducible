@@ -28,7 +28,6 @@
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @export
-#' @importFrom fpCompare %==%
 #' @rdname paddedFloatToChar
 #'
 #' @examples
@@ -100,16 +99,16 @@ setGeneric("studyAreaName", function(studyArea, ...) {
   standardGeneric("studyAreaName")
 })
 
-#' @export
-#' @rdname studyAreaName
-setMethod(
-  "studyAreaName",
-  signature = "SpatialPolygonsDataFrame",
-  definition = function(studyArea, ...) {
-    studyArea <- studyArea[, -c(1:ncol(studyArea))]
-    studyArea <- as(studyArea, "SpatialPolygons")
-    studyAreaName(studyArea, ...)
-})
+# @export
+# @rdname studyAreaName
+# setMethod(
+#   "studyAreaName",
+#   signature = "SpatialPolygonsDataFrame",
+#   definition = function(studyArea, ...) {
+#     studyArea <- studyArea[, -c(1:ncol(studyArea))]
+#     studyArea <- as(studyArea, "SpatialPolygons")
+#     studyAreaName(studyArea, ...)
+# })
 
 #' @export
 #' @rdname studyAreaName
@@ -127,13 +126,16 @@ setMethod(
   "studyAreaName",
   signature = "ANY",
   definition = function(studyArea, ...) {
-    if (is(studyArea, "sf")) {
+    if (inherits(studyArea, "sf")) {
       if (requireNamespace("sf")) {
         studyArea <- sf::st_geometry(studyArea)
       }
-    }
-    if (!(is(studyArea, "spatialClasses") || is(studyArea, "sfc") ||
-          is(studyArea, "SpatVector") || is.character(studyArea))) {
+    } else if (inherits(studyArea, "SpatialPolygonsDataFrame")) {
+      studyArea <- studyArea[, -c(1:ncol(studyArea))]
+      studyArea <- as(studyArea, "SpatialPolygons")
+      studyAreaName(studyArea, ...)
+    } else if (!(inherits(studyArea, "spatialClasses") || inherits(studyArea, "sfc") ||
+          inherits(studyArea, "SpatVector") || is.character(studyArea))) {
       stop("studyAreaName expects a spatialClasses object (or character vector)")
     }
     .robustDigest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`

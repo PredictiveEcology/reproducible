@@ -39,10 +39,9 @@ Use caution with files-backed objects (e.g., rasters). See examples.
 }
 \examples{
 library(datasets)
-library(magrittr)
 library(raster)
 
-tmpDir <- file.path(tempdir(), "symlink-test") \%>\%
+tmpDir <- file.path(tempdir(), "symlink-test") |>
   normalizePath(winslash = '/', mustWork = FALSE)
 dir.create(tmpDir)
 

@@ -27,8 +27,8 @@ test_that("all exported functions have examples", {
   } else {
     system.file("man", package = "reproducible")
   }
-  exFiles <- list.files(manDir, full.names = TRUE, pattern = "[.]Rd$") %>%
-    normalizePath(.)
+  exFiles <- list.files(manDir, full.names = TRUE, pattern = "[.]Rd$") |>
+    normalizePath()
 
   # use for loop as it keeps control at top level
   # owd <- getwd()

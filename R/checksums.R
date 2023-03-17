@@ -104,8 +104,8 @@ setMethod(
     }
 
     if (is.null(files)) {
-      files <- list.files(path, full.names = TRUE) %>%
-        grep(basename(checksumFile), ., value = TRUE, invert = TRUE)
+      files <- list.files(path, full.names = TRUE) |>
+        grep(pattern = basename(checksumFile), value = TRUE, invert = TRUE)
     } else {
       isAbs <- isAbsolutePath(files)
       if (!all(isAbs))
@@ -233,51 +233,8 @@ setMethod(
       "filesize.y" = filesize
     )]
 
-    # results.df1 <- out1 %>%
-    #   dplyr::mutate(actualFile = file) %>%
-    #   {
-    #     if (write) {
-    #       dplyr::right_join(txt, ., by = "file")
-    #     } else {
-    #       dplyr::left_join(txt, ., by = "file")
-    #     }
-    #   } %>%
-    #   dplyr::rename(expectedFile = file) %>%
-    #   dplyr::group_by(expectedFile) %>%
-    #   {
-    #     if (quickCheck) {
-    #       mutate(., result = ifelse(filesize.x != filesize.y, "FAIL", "OK"))
-    #     } else {
-    #       mutate(., result = ifelse(checksum.x != checksum.y, "FAIL", "OK"))
-    #     }
-    #   } %>%
-    #   dplyr::arrange(desc(result)) %>%
-    #   {
-    #     #if (quickCheck) {
-    #     select(
-    #       .,
-    #       "result",
-    #       "expectedFile",
-    #       "actualFile",
-    #       "checksum.x",
-    #       "checksum.y",
-    #       "algorithm.x",
-    #       "algorithm.y",
-    #       "filesize.x",
-    #       "filesize.y"
-    #     )
-    #     #} else {
-    #     #  select(., "result", "expectedFile", "actualFile", "checksum.x", "checksum.y",
-    #     #         "algorithm.x", "algorithm.y", "filesize.x", "filesize.y")
-    #     #}
-    #   } %>%
-    #   dplyr::filter(row_number() == 1L)
-
-    # if (!isTRUE(all.equal(as.data.frame(results.df1), as.data.frame(results.df))))
-    #   stop()
 
     return(invisible(results.df))
-    #}
   })
 
 #' @rdname Checksums
@@ -323,10 +280,10 @@ setMethod(
   signature = c(file = "character"),
   definition = function(file, quickCheck, algo = "xxhash64", ...) {
     if (quickCheck) {
-      file.size(file) %>% as.character() # need as.character for empty case
+      file.size(file) |> as.character() # need as.character for empty case
     } else {
       lapply(file, function(f) {
         digest::digest(object = f, file = TRUE, algo = algo, ...)
-      }) %>% unlist() %>% unname() %>% as.character() # need as.character for empty case # nolint
+      }) |> unlist() |> unname() |> as.character() # need as.character for empty case # nolint
     }
   })

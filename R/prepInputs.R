@@ -1092,12 +1092,6 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     } else {
       setDT(cs)
       nonCurrentFiles <- cs[!file %in% filesToChecksum]
-      # if (requireNamespace("dplyr", quietly = TRUE)) {
-      #   nonCurrentFiles1 <- cs %>%
-      #     dplyr::filter(!file %in% filesToChecksum)
-      #   # browser(expr = !identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
-      #   stopifnot(identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
-      # }
       setDF(cs)
 
     }
@@ -1273,9 +1267,9 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @rdname archiveExtractBinary
 #' @name archiveExtractBinary
 .archiveExtractBinary <- function(verbose = getOption("reproducible.verbose", 1)) {
-    possPrograms <- c("7z", "unrar") %>%
-      lapply(., Sys.which) %>%
-      unlist() %>%
+    possPrograms <- c("7z", "unrar") |>
+      lapply(Sys.which) |>
+      unlist() |>
       unique()
     extractSystemCallPath <- if (!all(possPrograms == "")) {
       possPrograms[nzchar(possPrograms)][1] # take first one if there are more than one
@@ -1284,8 +1278,8 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     }
     if (!(isWindows())) { ## TODO: macOS ?? #266
       if (grepl("7z", extractSystemCallPath)) {
-        SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE) %>%
-          grepl("installed", .)
+        SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE) |>
+          grepl(pattern = "installed")
         if (isFALSE(SevenZrarExists))
           messagePrepInputs("To extract .rar files, you will need p7zip-rar, not just p7zip-full. Try: \n",
                   "--------------------------\n",

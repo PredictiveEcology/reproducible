@@ -59,44 +59,6 @@
 }
 
 
-.CachePipeFn1 <- function(modifiedDots, fnDetails, FUN) {
-  if (!is.call(modifiedDots$._lhs)) {
-    # usually means it is the result of a pipe
-    modifiedDots$._pipeFn <- "constant" # nolint
-  }
-
-  pipeFns <- paste(lapply(modifiedDots$._rhss, function(x) x[[1]]), collapse = ", ") %>%
-    paste(modifiedDots$._pipeFn, ., sep = ", ") %>%
-    gsub(., pattern = ", $", replacement = "") %>%
-    paste0("'", ., "' pipe sequence")
-
-  fnDetails$functionName <- pipeFns
-
-  if (is.function(FUN)) {
-    firstCall <- match.call(FUN, modifiedDots$._lhs)
-    modifiedDots <- append(modifiedDots, lapply(as.list(firstCall[-1]), function(x) {
-      eval(x, envir = modifiedDots$._envir)
-    }))
-  } else {
-    modifiedDots <- append(modifiedDots, as.list(FUN))
-  }
-
-  for (fns in seq_along(modifiedDots$._rhss)) {
-    functionName <- as.character(modifiedDots$._rhss[[fns]][[1]])
-    FUN <- eval(parse(text = functionName)) # nolint
-    if (is.primitive(FUN)) {
-      otherCall <- modifiedDots$._rhss[[fns]]
-    } else {
-      otherCall <- match.call(definition = FUN, modifiedDots$._rhss[[fns]])
-    }
-    modifiedDots[[paste0("functionName", fns)]] <- as.character(modifiedDots$._rhss[[fns]][[1]])
-    modifiedDots[[paste0(".FUN", fns)]] <-
-      eval(parse(text = modifiedDots[[paste0("functionName", fns)]]))
-    modifiedDots <- append(modifiedDots, as.list(otherCall[-1]))
-  }
-  return(list(modifiedDots = modifiedDots, fnDetails = fnDetails))
-}
-
 .CacheFn1 <- function(FUN, scalls) {
   if (!is(FUN, "function")) {
     # scalls <- sys.calls()

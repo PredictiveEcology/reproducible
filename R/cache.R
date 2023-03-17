@@ -347,7 +347,6 @@ utils::globalVariables(c(
 #' @importFrom digest digest
 #' @importFrom data.table setDT := setkeyv .N .SD setattr
 #' @importFrom glue glue_sql double_quote
-#' @importFrom magrittr %>%
 #' @importFrom utils object.size tail
 #' @importFrom methods formalArgs
 #' @rdname Cache

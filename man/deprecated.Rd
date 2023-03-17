@@ -7,6 +7,7 @@
 \alias{fixErrors.default}
 \alias{projectInputs}
 \alias{projectInputs.default}
+\alias{maskInputs}
 \alias{writeOutputs}
 \alias{writeOutputs.default}
 \title{Crop a \verb{Spatial*} or \verb{Raster*} object}
@@ -49,6 +50,8 @@ projectInputs(
 )
 
 \method{projectInputs}{default}(x, targetCRS, ...)
+
+maskInputs(x, studyArea, ...)
 
 writeOutputs(
   x,
@@ -134,6 +137,9 @@ A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 appropriately reprojected.
 
 A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+appropriately masked.
+
+A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 appropriately written to disk. In the case of vector datasets, this will
 be a side effect. In the case of gridded objects (Raster*, SpatRaster), the
 object will have a file-backing.
@@ -146,41 +152,11 @@ to \code{cropTo} anyway.
 
 Deprecated. Use \code{\link[=projectTo]{projectTo()}}.
 
+\code{maskInputs} is deprecated. Use \code{\link[=maskTo]{maskTo()}}
+
 See \code{\link[=writeTo]{writeTo()}}
 }
 \examples{
-library(sp)
-library(raster)
-
-# make a SpatialPolygon
-coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
-                       .Dim = c(5L, 2L))
-Sr1 <- Polygon(coords1)
-Srs1 <- Polygons(list(Sr1), "s1")
-shpEcozone <- SpatialPolygons(list(Srs1), 1L)
-crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-
-# make a "study area" that is subset of larger dataset
-coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                      .Dim = c(5L, 2L))
-Sr1 <- Polygon(coords)
-Srs1 <- Polygons(list(Sr1), "s1")
-StudyArea <- SpatialPolygons(list(Srs1), 1L)
-crs(StudyArea) <- crs(shpEcozone)
-projString <- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
-StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
-cropInputs(shpEcozone, StudyArea)
-library(sp)
-library(raster)
-
-# make a SpatialPolygon
-coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
-                       .Dim = c(5L, 2L))
-Sr1 <- Polygon(coords1)
-Srs1 <- Polygons(list(Sr1), "s1")
-shpEcozone <- SpatialPolygons(list(Srs1), 1L)
-crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-fixErrors(shpEcozone)
 library(sp)
 library(raster)
 r <- raster::raster(extent(0,100,0,100), vals = 1:1e2)
@@ -192,6 +168,8 @@ writeOutputs(r, tf)
 \code{\link[=fixErrorsTerra]{fixErrorsTerra()}}, \code{\link[=postProcessTerra]{postProcessTerra()}}, \code{\link[=postProcess]{postProcess()}}
 
 \code{\link[=projectTo]{projectTo()}}
+
+\code{\link[=maskTo]{maskTo()}}, \code{\link[=postProcess]{postProcess()}} for related examples
 }
 \author{
 Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti

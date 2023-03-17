@@ -49,7 +49,6 @@
 #' @author Eliot McIntire
 #' @export
 #' @importFrom data.table copy
-#' @inheritParams Cache
 #' @rdname Copy
 #' @return
 #' The same object as `object`, but with pass-by-reference class elements "deep" copied.
@@ -97,64 +96,55 @@ setMethod(
   signature(object = "ANY"),
   definition = function(object, # filebackedDir,
                         ...) {
+    out <- object # many methods just do a pass through
     if (any(grepl("DBIConnection", is(object)))) {
       messageCache("Copy will not do a deep copy of a DBI connection object; no copy being made. ",
               "This may have unexpected consequences...")
-    }
-
-    if (is(object, "proto")) { # don't want to import class for reproducible package; an edge case
-      return(get(class(object)[1])(object))
-    }
-
+    } else if (is(object, "proto")) { # don't want to import class for reproducible package; an edge case
+      out <- get(class(object)[1])(object)
+    } else if (inherits(object, "SQLiteConnection")) {
+      con <- dbConnect(RSQLite::SQLite(), ":memory:")
+      messageCache("Making a copy of the entire SQLite database: ",object@dbname,
+                   "; this may not be desireable ...")
+      out <- RSQLite::sqliteCopyDatabase(object, con)
+    } else if (!identical(is(object)[1], "environment") && is.environment(object)) {
     # keep this environment method here, as it will intercept "proto"
     #   and other environments that it shouldn't
-    if (!identical(is(object)[1], "environment") && is.environment(object)) {
       messageCache("Trying to do a deep copy (Copy) of object of class ", class(object),
               "which does not appear to be a normal environment. If it can be copied ",
               "like a normal environment, ignore this message; otherwise, may need to create ",
               "a Copy method for this class. See ?Copy")
 
-    }
-    if (is.environment(object)) {
-      # if (missing(filebackedDir)) {
-      #   filebackedDir <- tempdir2(rndstr(1, 9))
-      # }
-      listVersion <- Copy(as.list(object, all.names = TRUE),
-                          #filebackedDir = filebackedDir,
-                          ...)
+    } else if (is.environment(object)) {
+      listVersion <- Copy(as.list(object, all.names = TRUE), ...)
 
       parentEnv <- parent.env(object)
-      newEnv <- new.env(parent = parentEnv)
-      list2env(listVersion, envir = newEnv)
-      attr(newEnv, "name") <- attr(object, "name")
-      return(newEnv)
+      out <- new.env(parent = parentEnv)
+      list2env(listVersion, envir = out)
+      attr(out, "name") <- attr(object, "name")
 
-    }
-
-    if (inherits(object, "Raster")) {
+    } else if (inherits(object, "Raster")) {
       if (any(nchar(Filenames(object)) > 0)) {
         if (missing(filebackedDir)) {
           filebackedDir <- tempdir2(rndstr(1, 11))
         }
         if (!is.null(filebackedDir))
-          object <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn)
+          out <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn)
       }
-      object
-
     }
-    return(object)
+    return(out)
 })
 
 
-#' @rdname Copy
-setMethod("Copy",
-          signature(object = "SQLiteConnection"),
-          definition = function(object, ...) {
-            con <- dbConnect(RSQLite::SQLite(), ":memory:")
-            messageCache("Making a copy of the entire SQLite database: ",object@dbname,
-                    "; this may not be desireable ...")
-            RSQLite::sqliteCopyDatabase(object, con)
-})
+# # @rdname Copy
+# setMethod("Copy",
+#           signature(object = "SQLiteConnection"),
+#           definition = function(object, ...) {
+#             con <- dbConnect(RSQLite::SQLite(), ":memory:")
+#             messageCache("Making a copy of the entire SQLite database: ",object@dbname,
+#                     "; this may not be desireable ...")
+#             RSQLite::sqliteCopyDatabase(object, con)
+# })
 
 #' @rdname Copy
 setMethod("Copy",

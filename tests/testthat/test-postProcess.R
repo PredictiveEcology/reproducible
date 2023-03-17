@@ -99,9 +99,9 @@ test_that("prepInputs doesn't work (part 3)", {
                     datatype = dt1)
   expect_identical(terra::datatype(b1), rep(dt1, terra::nlyr(b1)))
 
-  # now raster with sf ## TODO: temporarily skip these tests due to fasterize not being updated yet for crs changes
-  if (requireNamespace("fasterize", quietly = TRUE)) {
-    r1 <- fasterize::fasterize(nc1, r)
+  # now raster with sf
+  if (requireNamespace("terra", quietly = TRUE)) {
+    r1 <- terra::rasterize(nc1, r)
     r2 <- postProcess(r1, studyArea = ncSmall, filename2 = NULL)
     expect_true(is(r2, "RasterLayer"))
     expect_true(ncell(r2) < ncell(r1))

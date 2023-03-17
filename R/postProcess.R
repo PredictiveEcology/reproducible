@@ -314,28 +314,6 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
 #' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 #' appropriately cropped.
 #' @rdname deprecated
-#' @examples
-#' library(sp)
-#' library(raster)
-#'
-#' # make a SpatialPolygon
-#' coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
-#'                        .Dim = c(5L, 2L))
-#' Sr1 <- Polygon(coords1)
-#' Srs1 <- Polygons(list(Sr1), "s1")
-#' shpEcozone <- SpatialPolygons(list(Srs1), 1L)
-#' crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-#'
-#' # make a "study area" that is subset of larger dataset
-#' coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-#'                       .Dim = c(5L, 2L))
-#' Sr1 <- Polygon(coords)
-#' Srs1 <- Polygons(list(Sr1), "s1")
-#' StudyArea <- SpatialPolygons(list(Srs1), 1L)
-#' crs(StudyArea) <- crs(shpEcozone)
-#' projString <- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
-#' StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
-#' cropInputs(shpEcozone, StudyArea)
 cropInputs <- function(x, studyArea, rasterToMatch, verbose = getOption("reproducible.verbose", 1), ...) {
   UseMethod("cropInputs")
 }
@@ -717,17 +695,6 @@ cropInputs.default <- function(x, ...) {
 #' @seealso [fixErrorsTerra()], [postProcessTerra()], [postProcess()]
 #'
 #' @examples
-#' library(sp)
-#' library(raster)
-#'
-#' # make a SpatialPolygon
-#' coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
-#'                        .Dim = c(5L, 2L))
-#' Sr1 <- Polygon(coords1)
-#' Srs1 <- Polygons(list(Sr1), "s1")
-#' shpEcozone <- SpatialPolygons(list(Srs1), 1L)
-#' crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-#' fixErrors(shpEcozone)
 fixErrors <- function(x, objectName, attemptErrorFixes = TRUE,
                       useCache = getOption("reproducible.useCache", FALSE),
                       verbose = getOption("reproducible.verbose", 1),
@@ -933,8 +900,6 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #     `terra` if `options("reproducible.useTerra" = TRUE)`, which is not (yet)
 #     the default.
 #
-# @importFrom fpCompare %==%
-# @importFrom stats na.omit
 # projectInputs.Raster <- function(x, targetCRS = NULL,
 #                                  verbose = getOption("reproducible.verbose", 1),
 #                                  rasterToMatch = NULL, cores = NULL,
@@ -1241,9 +1206,7 @@ projectInputs.default <- function(x, targetCRS, ...) {
 
 #' Mask module inputs
 #'
-#' This function can be used to mask inputs from data. Masking here is
-#' equivalent to `raster::mask` (though [fastMask()] is used here)
-#' or `raster::intersect`.
+#' `maskInputs` is deprecated. Use [maskTo()]
 #'
 #' @param x An object to do a geographic raster::mask/raster::intersect.
 #'          See methods.
@@ -1254,33 +1217,11 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #' @author Eliot McIntire and Jean Marchal
 #' @export
 #' @importFrom utils capture.output
-#' @rdname maskInputs
+#' @rdname deprecated
 #' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 #' appropriately masked.
 #' @seealso [maskTo()], [postProcess()] for related examples
 #' @examples
-#' library(sp)
-#' library(raster)
-#'
-#' # make a SpatialPolygon
-#' coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
-#'                        .Dim = c(5L, 2L))
-#' Sr1 <- Polygon(coords1)
-#' Srs1 <- Polygons(list(Sr1), "s1")
-#' shpEcozone <- SpatialPolygons(list(Srs1), 1L)
-#' crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-#'
-#' # make a "study area" that is subset of larger dataset
-#' coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-#'                       .Dim = c(5L, 2L))
-#' Sr1 <- Polygon(coords)
-#' Srs1 <- Polygons(list(Sr1), "s1")
-#' StudyArea <- SpatialPolygons(list(Srs1), 1L)
-#' crs(StudyArea) <- crs(shpEcozone)
-#' projString <- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
-#' StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
-#' maskInputs(shpEcozone, StudyArea)
-#'
 maskInputs <- function(x, studyArea, ...) {
   UseMethod("maskInputs")
 }
