@@ -78,9 +78,9 @@ CRS of \code{x} before masking. Currently, this function will not reproject the
 \code{x}. Optional in \code{postProcess}.}
 
 \item{rasterToMatch}{Template \verb{Raster*} object passed to the \code{to} argument of
-\code{\link[raster:projectRaster]{raster::projectRaster()}}, thus will changing the
+\code{\link[=projectTo]{projectTo()}}, thus will changing the
 resolution and projection of \code{x}.
-See details in \code{\link[=postProcess]{postProcess()}}.}
+See details in \code{\link[=postProcessTo]{postProcessTo()}}.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
@@ -88,8 +88,7 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Passed into \code{\link[raster:shapefile]{raster::shapefile()}} or
-\code{\link[=writeTo]{writeTo()}} or \code{\link[sf:st_write]{sf::st_write()}}}
+\item{...}{Passed into \code{\link[=writeTo]{writeTo()}}}
 
 \item{objectName}{Optional. This is only for messaging; if provided, then messages relayed
 to user will mention this.}
@@ -113,8 +112,7 @@ If \code{NA}, then all testing and buffering will be skipped.}
 \item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
 
 \item{filename2}{File name passed to \code{\link[=writeTo]{writeTo()}}, or
-\code{\link[raster:shapefile]{raster::shapefile()}} or \code{\link[sf:st_write]{sf::st_write()}}
-(\code{dsn} argument).}
+\code{\link[=writeTo]{writeTo()}}.}
 
 \item{overwrite}{Logical. Should file being written overwrite an existing file if it exists.}
 
@@ -157,19 +155,19 @@ Deprecated. Use \code{\link[=projectTo]{projectTo()}}.
 See \code{\link[=writeTo]{writeTo()}}
 }
 \examples{
-library(sp)
-library(raster)
-r <- raster::raster(extent(0,100,0,100), vals = 1:1e2)
+if (requireNamespace("terra")) {
+  r <- terra::rast(terra:ext(0,100,0,100), vals = 1:1e2)
 
-tf <- tempfile(fileext = ".tif")
-writeOutputs(r, tf)
+  tf <- tempfile(fileext = ".tif")
+  writeOutputs(r, tf)
+}
 }
 \seealso{
-\code{\link[=fixErrorsTerra]{fixErrorsTerra()}}, \code{\link[=postProcessTerra]{postProcessTerra()}}, \code{\link[=postProcess]{postProcess()}}
+\code{\link[=fixErrorsIn]{fixErrorsIn()}}, \code{\link[=postProcessTo]{postProcessTo()}}, \code{\link[=postProcess]{postProcess()}}
 
 \code{\link[=projectTo]{projectTo()}}
 
-\code{\link[=maskTo]{maskTo()}}, \code{\link[=postProcess]{postProcess()}} for related examples
+\code{\link[=maskTo]{maskTo()}}, \code{\link[=postProcessTo]{postProcessTo()}} for related examples
 }
 \author{
 Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti

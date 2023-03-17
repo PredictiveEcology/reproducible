@@ -334,6 +334,7 @@ updateFilenameSlots.list <- function(obj, ...)  {
 
   areRasters <- vapply(obj, is, "RasterLayer", FUN.VALUE = logical(1))
   if (all(areRasters)) {
+    .requireNamespace("raster", stopOnFALSE = TRUE)
     # a separate option for list of RasterLayers because curFilename will be
     #   as long as all the filenames because there is a method for lists;
     #   passing this to updateFilaneSlots will fail if it is one RasterLayer
@@ -548,6 +549,7 @@ unmakeMemoisable.default <- function(x) {
   rasters <- is(obj, "Raster")
 
   if (any(rasters)) {
+    .requireNamespace("raster", stopOnFALSE = TRUE)
     objOrig <- obj
     atts <- attributes(obj)
     obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,

@@ -26,7 +26,7 @@ postProcess.list <- function(x, ...) {
 #'
 #' The method for GIS objects (terra `Spat*` & sf classes) will
 #' crop, reproject, and mask, in that order.
-#' This is a wrapper for [cropTo()], [fixErrorsTerra()],
+#' This is a wrapper for [cropTo()], [fixErrorsIn()],
 #' [projectTo()], [maskTo()] and [writeTo()],
 #' with a decent amount of data manipulation between these calls so that the crs match.
 #'
@@ -36,11 +36,11 @@ postProcess.list <- function(x, ...) {
 #'   the following sequence will occur:
 #'
 #'   \enumerate{
-#'     \item Fix errors [fixErrors()]. Currently only errors fixed are for
+#'     \item Fix errors [fixErrorsIn()]. Currently only errors fixed are for
 #'            `SpatialPolygons` using `buffer(..., width = 0)`.
-#'     \item Crop using [cropInputs()]
-#'     \item Project using [projectInputs()]
-#'     \item Mask using [maskInputs()]
+#'     \item Crop using [cropTo()]
+#'     \item Project using [projectTo()]
+#'     \item Mask using [maskTo()]
 #'     \item Determine file name [determineFilename()]
 #'     \item Write that file name to disk, optionally [writeOutputs()]
 #'   }
@@ -75,24 +75,20 @@ postProcess.list <- function(x, ...) {
 #'                 in details below.
 #'
 #' @param ... Additional arguments passed to methods. For `spatialClasses`,
-#'            these are: [cropInputs()], [fixErrors()],
-#'            [projectInputs()], [maskInputs()],
-#'            [determineFilename()], and [writeOutputs()].
+#'            these are: [cropTo()], [fixErrorsIn()],
+#'            [projectTo()], [maskTo()],
+#'            [determineFilename()], and [writeTo()].
 #'            Each of these may also pass `...` into other functions, like
-#'            [writeTo()], or `sf::st_write`.
+#'            [writeTo()].
 #'            This might include potentially important arguments like `datatype`,
-#'            `format`. Also passed to `projectRaster`,
+#'            `format`. Also passed to `terra::project`,
 #'            with likely important arguments such as `method = "bilinear"`.
 #'            See details.
 #'
 #' \subsection{... passed to:}{
 #'   \describe{
-#'     \item{`cropInputs`:}{[raster::crop()]}
-#'     \item{`projectInputs`}{[raster::projectRaster()]}
-#'     \item{`maskInputs`}{[fastMask()] or [raster::intersect()]}
-#'     \item{`fixErrors`}{[raster::buffer()]}
-#'     \item{`writeOutputs`}{[writeTo()] or [raster::shapefile()]}
-#'     \item{`determineFilename`}{}
+#'     \item{[cropTo()], [projectTo()], [maskTo()], [fixErrorsIn()],
+#'     [writeTo()], [determineFilename()]}
 #'   }
 #'   * Can be overridden with `useSAcrs`
 #'   ** Will mask with `NA`s from `rasterToMatch` if `maskWithRTM`
@@ -144,7 +140,7 @@ postProcess.default <- function(x, ...) {
   # browser(expr = exists("._postProcess.spatialClasses_1"))
   if (isTRUE(getOption("reproducible.useTerra"))) {
     if (isFALSE(useSAcrs)) useSAcrs <- NULL
-    x1 <- postProcessTerra(from = x, studyArea = studyArea,
+    x1 <- postProcessTo(from = x, studyArea = studyArea,
                            rasterToMatch = rasterToMatch, useCache = useCache,
                            filename1 = filename1, filename2 = filename2,
                            useSAcrs = useSAcrs, overwrite = overwrite,
@@ -176,7 +172,7 @@ postProcess.default <- function(x, ...) {
 #   # browser(expr = exists("._postProcess.spatialClasses_1"))
 #   if (isTRUE(getOption("reproducible.useTerra"))) {
 #     if (isFALSE(useSAcrs)) useSAcrs <- NULL
-#     x1 <- postProcessTerra(from = x, studyArea = studyArea,
+#     x1 <- postProcessTo(from = x, studyArea = studyArea,
 #                            rasterToMatch = rasterToMatch, useCache = useCache,
 #                            filename1 = filename1, filename2 = filename2,
 #                            useSAcrs = useSAcrs, overwrite = overwrite,
@@ -210,7 +206,7 @@ postProcess.SpatRaster <- function(x, filename1 = NULL, filename2 = NULL,
   # browser(expr = exists("._postProcess.spatialClasses_1"))
   if (isFALSE(useSAcrs)) useSAcrs <- NULL
 
-  x1 <- postProcessTerra(from = x, studyArea = studyArea,
+  x1 <- postProcessTo(from = x, studyArea = studyArea,
                          rasterToMatch = rasterToMatch, useCache = useCache,
                          filename1 = filename1, filename2 = filename2,
                          useSAcrs = useSAcrs, overwrite = overwrite,
@@ -233,7 +229,7 @@ postProcess.SpatVector <- function(x, filename1 = NULL, filename2 = NULL,
   # browser(expr = exists("._postProcess.spatialClasses_1"))
   if (isFALSE(useSAcrs)) useSAcrs <- NULL
 
-  x1 <- postProcessTerra(from = x, studyArea = studyArea,
+  x1 <- postProcessTo(from = x, studyArea = studyArea,
                          rasterToMatch = rasterToMatch, useCache = useCache,
                          filename1 = filename1, filename2 = filename2,
                          useSAcrs = useSAcrs, overwrite = overwrite,
@@ -254,7 +250,7 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
 
   if (isTRUE(getOption("reproducible.useTerra"))) {
     if (isFALSE(useSAcrs)) useSAcrs <- NULL
-    x <- postProcessTerra(from = x, studyArea = studyArea,
+    x <- postProcessTo(from = x, studyArea = studyArea,
                            rasterToMatch = rasterToMatch, useCache = useCache,
                            filename1 = filename1, filename2 = filename2,
                            useSAcrs = useSAcrs, overwrite = overwrite,
@@ -301,7 +297,7 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
 #'                      resolution and projection).
 #'                      See details in [postProcess()].
 #'
-#' @param ... Passed to `raster::crop`
+#' @param ... Passed to `[cropTo()]`
 #'
 #' @param useCache Logical, default `getOption("reproducible.useCache", FALSE)`, whether
 #'                 `Cache` is used internally.
@@ -692,9 +688,8 @@ cropInputs.default <- function(x, ...) {
 #' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 #' attempted to be fixed, if it finds errors.
 #' @keywords internal
-#' @seealso [fixErrorsTerra()], [postProcessTerra()], [postProcess()]
+#' @seealso [fixErrorsIn()], [postProcessTo()], [postProcess()]
 #'
-#' @examples
 fixErrors <- function(x, objectName, attemptErrorFixes = TRUE,
                       useCache = getOption("reproducible.useCache", FALSE),
                       verbose = getOption("reproducible.verbose", 1),
@@ -711,7 +706,7 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
                               verbose = getOption("reproducible.verbose", 1),
                               testValidity = getOption("reproducible.testValidity", TRUE),
                               ...) {
-  fixErrorsTerra(x)
+  fixErrorsIn(x)
 }
 
 #
@@ -862,12 +857,12 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
 #'
 #' @param targetCRS The CRS of x at the end  of this function (i.e., the goal)
 #'
-#' @param ... Passed to [raster::projectRaster()].
+#' @param ... Passed to [projectTo()].
 #'
 #' @param rasterToMatch Template `Raster*` object passed to the `to` argument of
-#'                      [raster::projectRaster()], thus will changing the
+#'                      [projectTo()], thus will changing the
 #'                      resolution and projection of `x`.
-#'                      See details in [postProcess()].
+#'                      See details in [postProcessTo()].
 #'
 #' @param cores An `integer*` or `'AUTO'`. This will be used if `gdalwarp` is
 #'              triggered. `'AUTO'*` will calculate 90% of the total
@@ -1220,8 +1215,7 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #' @rdname deprecated
 #' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 #' appropriately masked.
-#' @seealso [maskTo()], [postProcess()] for related examples
-#' @examples
+#' @seealso [maskTo()], [postProcessTo()] for related examples
 maskInputs <- function(x, studyArea, ...) {
   UseMethod("maskInputs")
 }
@@ -1507,11 +1501,9 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #' @param overwrite Logical. Should file being written overwrite an existing file if it exists.
 #'
 #' @param filename2 File name passed to [writeTo()], or
-#'                  [raster::shapefile()] or [sf::st_write()]
-#'                  (`dsn` argument).
+#'                  [writeTo()].
 #'
-#' @param ... Passed into [raster::shapefile()] or
-#'             [writeTo()] or [sf::st_write()]
+#' @param ... Passed into [writeTo()]
 #'
 #' @inheritParams prepInputs
 #'
@@ -1525,12 +1517,12 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #' @rdname deprecated
 #'
 #' @examples
-#' library(sp)
-#' library(raster)
-#' r <- raster::raster(extent(0,100,0,100), vals = 1:1e2)
+#' if (requireNamespace("terra")) {
+#'   r <- terra::rast(terra:ext(0,100,0,100), vals = 1:1e2)
 #'
-#' tf <- tempfile(fileext = ".tif")
-#' writeOutputs(r, tf)
+#'   tf <- tempfile(fileext = ".tif")
+#'   writeOutputs(r, tf)
+#' }
 writeOutputs <- function(x, filename2,
                          overwrite = getOption("reproducible.overwrite", NULL),
                          ...) {
@@ -1816,7 +1808,7 @@ writeOutputs.default <- function(x, filename2,
 #'
 #' @export
 #' @return A character string indicating the data type of the spatial layer
-#' (e.g., "INT2U"). See [terra::datatype()] or [raster::dataType()]
+#' (e.g., "INT2U"). See [terra::datatype()]
 #' @rdname assessDataType
 #'
 #' @example inst/examples/example_assessDataType.R
@@ -1861,7 +1853,7 @@ assessDataType.default <- function(ras, type = "writeRaster") {
   if (is.null(datatype)) {
 
     if (terra::ncell(ras) > N) {
-      rasVals <- tryCatch(suppressWarnings(raster::sampleRandom(x = ras, size = N)),
+      rasVals <- tryCatch(suppressWarnings(terra::spatSample(x = ras, size = N)),
                           error = function(x) rep(NA_integer_, N))
     } else {
       rasVals <- values2(ras)
@@ -1947,7 +1939,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                                   verbose = getOption("reproducible.verbose", 1),
                                   ...) {
 
-  out <- postProcessTerra(x, ...)
+  out <- postProcessTo(x, ...)
   return(out)
   # dots <- list(...)
   # # browser(expr = exists("._postProcessAllSpatial_1"))
@@ -2164,10 +2156,12 @@ bufferWarningSuppress <- function(# warn,
 }
 
 roundToRes <- function(extent, x) {
-  if (is(x, "Raster"))
+  if (is(x, "Raster")) {
+    .requireNamespace("raster", stopOnFALSE = TRUE)
     extent <- raster::extent(
-      c(round(c(xmin(extent), xmax(extent))/res(x)[1],0)*res(x)[1],
-        round(c(ymin(extent), ymax(extent))/res(x)[2],0)*res(x)[2]))
+      c(round(c(raster::xmin(extent), raster::xmax(extent))/raster::res(x)[1],0)*raster::res(x)[1],
+        round(c(raster::ymin(extent), raster::ymax(extent))/raster::res(x)[2],0)*raster::res(x)[2]))
+  }
   extent
 }
 
@@ -2192,7 +2186,7 @@ setMinMaxIfNeeded <- function(ras) {
     }
   }
   if (isTRUE(needSetMinMax)) {
-    large <- if (nlayers2(ras) > 25 || terra::ncel(ras) > 1e7) TRUE else FALSE
+    large <- if (nlayers2(ras) > 25 || terra::ncell(ras) > 1e7) TRUE else FALSE
     if (large) message("  Large ",class(ras), " detected; setting minimum and maximum may take time")
     suppressWarnings(ras <- setMinMax(ras))
     if (large) message("  ... Done")

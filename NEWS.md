@@ -6,7 +6,7 @@ Version 1.2.17
 ## enhancements
 - starting to deprecate `raster` and `sp`; not complete, but where deprecated, warnings occur with instructions and automatically passed to new ways
 - `preProcess` can now handle google docs files, if `type = ...` is passed.
-- `postProcess` now uses `terra` and `sf` by default throughout the family. These are only activated by a user deciding to use the new family of functions (`postProcessTerra`, `cropTo`, `maskTo`, `projectTo`, `writeTo`) or by setting the `option(reproducible.useTerra = TRUE)`
+- `postProcess` now uses `terra` and `sf` by default throughout the family. These are only activated by a user deciding to use the new family of functions (`postProcessTo`, `cropTo`, `maskTo`, `projectTo`, `writeTo`) or by setting the `option(reproducible.useTerra = TRUE)`
 - new functions to assist with transition from `raster` to `terra` --> `maxFn`, `minFn`, `rasterRead`
 - `.dealWithClass` and `.dealWithClassOnRecovery` are now exported generics, with several methods here, notably, list, environment, default
 - other miscellaneous changes to deal with `raster` to `terra` transition (e.g. `studyAreaName` can deal with `SpatVector`)
@@ -18,7 +18,7 @@ Version 1.2.17
 ## bugfixes
 - `Cache` was incorrectly dealing with `environment` and `environment-like` objects. Since some objects, e.g., `Spat*` objects in `terra`, must be wrapped prior to saving, environments must be scanned for these classes of objects prior to saving. This previously only occurred for `list` objects; fixed
 - When working with revdep `SpaDES.core`, there were some cases where the `Cache` was failing as it could not find the module name; fixed.
-- during transition from `postProcess` (using `raster` and `sp`) to `postProcessTerra`, some cases are falling through the cracks; these are being addressed.
+- during transition from `postProcess` (using `raster` and `sp`) to `postProcessTo`, some cases are falling through the cracks; these are being addressed.
 
 Version 1.2.16
 ==============
@@ -57,7 +57,7 @@ Version 1.2.11
 * none
 
 ## Bug fixes
-* fix tests for `postProcessTerra` to deal with changes in GDAL/PROJ/GEOS (#253; @rsbivand)
+* fix tests for `postProcessTo` to deal with changes in GDAL/PROJ/GEOS (#253; @rsbivand)
 * fixed issue with masking
 
 Version 1.2.10
@@ -74,7 +74,7 @@ Version 1.2.10
 * `preProcess` arg `dlFun` can now be a quoted expression
 * changes to the internals and outputs of `objSize`; now is primarily a wrapper around `lobstr::obj_size`, but has an option to get more detail for lists and environments.
 * `.robustDigest` now deals explicitly with numerics, which digest differently on different OSs. Namely, they get rounded prior to digesting. Through trial and error, it was found that setting `options("reproducible.digestDigits" = 7)` was sufficient for all known cases. Rounding to deeper than 7 decimal places was insufficient. There are also new methods for `language`, `integer`, `data.frame` (which does each column one at a time to address the numeric issue)
-* New version of `postProcess` called `postProcessTerra`. This will eventually replace `postProcess` as it is much faster in all cases and simpler code base thanks to the fantastic work of Robert Hijmans (`terra`) and all the upstream work that `terra` relies on
+* New version of `postProcess` called `postProcessTo`. This will eventually replace `postProcess` as it is much faster in all cases and simpler code base thanks to the fantastic work of Robert Hijmans (`terra`) and all the upstream work that `terra` relies on
 * Minor message updates, especially for "adding to memoised copy...". The three dots made it seem like it was taking a long time. When in reality, it is instantaneous and is the last thing that happens in the `Cache` call. If there is a delay after this message, then it is the code following the `Cache` call that is (silently) slow.
 * `retry` can now return a named list for the `exprBetween`, which allows for more than one object to be modified between retries.
  

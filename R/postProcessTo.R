@@ -10,7 +10,11 @@
 #' a `SpatRaster` class object from `terra`.
 #' Vector means a `Spatial*` class object from `sp`, a `sf` class object
 #' from `sf`, or a `SpatVector` class object from `terra`.
-#' This function is currently part of the internals for some cases encountered by [postProcess()].
+#' This function is also used internally with the deprecated family [postProcess()],
+#' `*Inputs`, such as [cropInputs()].
+#'
+#' @details
+#' `postProcessTerra` is the early name of this function that is now `postProcessTo`.
 #'
 #' @section Use Cases:
 #'
@@ -37,7 +41,7 @@
 #'
 #' \subsection{`rasterToMatch` and `studyArea`:}{
 #'
-#'   If these are supplied, `postProcessTerra` will use them instead
+#'   If these are supplied, `postProcessTo` will use them instead
 #'   of `to`. If only `rasterToMatch` is supplied, it will be assigned to
 #'   `to`. If only `studyArea` is supplied, it will be used for `cropTo`
 #'   and `maskTo`; it will only be used for `projectTo` if `useSAcrs = TRUE`.
@@ -54,7 +58,7 @@
 #' }
 #'
 #' @section Cropping:
-#' If `cropTo` is not `NA`, postProcessTerra does cropping twice, both the first and last steps.
+#' If `cropTo` is not `NA`, postProcessTo does cropping twice, both the first and last steps.
 #' It does it first for speed, as cropping is a very fast algorithm. This will quickly remove
 #' a bunch of pixels that are not necessary. But, to not create bias, this first crop is padded
 #' by  `2 * res(from)[1]`), so that edge cells still have a complete set of neighbours.
@@ -97,7 +101,7 @@
 #'   object. Default is `NULL`, which means there is no `writeRaster`
 #' @param method Used if `projectTo` is not `NULL`, and is the method used for
 #'   interpolation. See `terra::project`. Defaults to `"bilinear"`.
-#' @param datatype A character string, used if `writeTo` is not `NULL`. See `raster::writeRaster`
+#' @param datatype A character string, used if `writeTo` is not `NULL`. See `terra::writeRaster`
 #' @param overwrite Logical. Used if `writeTo` is not `NULL`; also if `terra` determines
 #'   that the object requires writing to disk during a `crop`, `mask` or `project` call
 #'   e.g., because it is too large.
@@ -110,7 +114,7 @@
 #' @seealso This function is meant to replace [postProcess()] with the more efficient
 #' and faster `terra` functions.
 #'
-postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NULL,
+postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NULL,
                              writeTo = NULL, method = NULL, datatype = "FLT4S",
                              overwrite = TRUE, ...) {
 
@@ -199,10 +203,14 @@ postProcessTerra <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo =
 
   # REVERT TO ORIGINAL INPUT CLASS
   from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial)
-  messagePrepInputs("  postProcessTerra done in ", format(difftime(Sys.time(), startTime),
+  messagePrepInputs("  postProcessTo done in ", format(difftime(Sys.time(), startTime),
                                                           units = "secs", digits = 3))
   from
 }
+
+#' @export
+#' @rdname postProcess
+postProcessTerra <- postProcessTo
 
 isSpatial <- function(x) inherits(x, "Spatial")
 isSpatVector <- function(x) is(x, "SpatVector")
@@ -231,7 +239,7 @@ isCRSTerra <- function(x) is(x, "CRS")
 #' @return
 #' An object of the same class as `x`, but with some errors fixed via `terra::makeValid()`
 #'
-fixErrorsTerra <- function(x, error = NULL, verbose = getOption("reproducible.verbose"), fromFnName = "") {
+fixErrorsIn <- function(x, error = NULL, verbose = getOption("reproducible.verbose"), fromFnName = "") {
   if (isVector(x)) {
     os <- 0
     if (!is.null(error)) {
@@ -293,7 +301,7 @@ makeVal <- function(x) {
 
 
 #' @export
-#' @rdname postProcessTerra
+#' @rdname postProcessTo
 #' @param touches See `terra::mask`
 maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
                    verbose = getOption("reproducible.verbose"), ...) {
@@ -377,7 +385,7 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
                 sf::st_intersection(from, maskTo)
               } else {
                 if (getRversion() == "4.3.0") { # TODO: this is a work around for R crashing; shouldn't b/c this is in a `try`
-                  maskTo <- fixErrorsTerra(maskTo)
+                  maskTo <- fixErrorsIn(maskTo)
                 }
                 terra::intersect(from, maskTo)
               }
@@ -398,10 +406,10 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
             if (attempt >= 1) {
               whichFailed <- grepl("geom 0|Loop 0", fromInt)
               if (isTRUE(whichFailed) && !(triedFrom %in% TRUE)) { # don't try same one again
-                from <- fixErrorsTerra(from, error = fromInt, fromFnName = "maskTo", verbose = verbose)
+                from <- fixErrorsIn(from, error = fromInt, fromFnName = "maskTo", verbose = verbose)
                 triedFrom <- TRUE
               } else {
-                maskTo <- fixErrorsTerra(maskTo, error = fromInt, fromFnName = "maskTo", verbose = verbose)
+                maskTo <- fixErrorsIn(maskTo, error = fromInt, fromFnName = "maskTo", verbose = verbose)
                 triedFrom <- FALSE
               }
             } else {
@@ -425,7 +433,7 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
 }
 
 #' @export
-#' @rdname postProcessTerra
+#' @rdname postProcessTo
 projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE, ...) {
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
@@ -493,7 +501,7 @@ projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE, .
           }
         }
 
-        # Since we only use the crs when projectTo is a Vector, no need to "fixErrorsTerra"
+        # Since we only use the crs when projectTo is a Vector, no need to "fixErrorsIn"
         from <- if (isVector(from)) {
           isSpatial <- isSpatial(from)
           if (isSpatial)
@@ -526,7 +534,7 @@ projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE, .
 #'   has to happen on the `cropTo` prior to using it as a crop layer, then a buffer
 #'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
 #' @export
-#' @rdname postProcessTerra
+#' @rdname postProcessTo
 cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
                    verbose = getOption("reproducible.verbose"), ...) {
 
@@ -630,7 +638,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
         }
         if (is(fromInt, "try-error")) {
           if (attempt == 1) {
-            from <- fixErrorsTerra(from, error = fromInt, fromFnName = "cropTo", verbose = verbose)
+            from <- fixErrorsIn(from, error = fromInt, fromFnName = "cropTo", verbose = verbose)
           } else {
             stop(fromInt)
           }
@@ -651,7 +659,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
 }
 
 #' @export
-#' @rdname postProcessTerra
+#' @rdname postProcessTo
 #' @param isStack,isBrick,isRaster,isSpatRaster Logical. Default `FALSE`. Used to convert `from`
 #'   back to these classes prior to writing.
 #'

@@ -58,7 +58,6 @@
 #'
 #' @examples
 #' data.table::setDTthreads(2)
-#' library(raster)
 #'
 #' tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 #' try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear

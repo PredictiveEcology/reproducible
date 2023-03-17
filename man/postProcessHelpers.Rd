@@ -14,9 +14,9 @@ CRS of \code{x} before masking. Currently, this function will not reproject the
 \code{x}. Optional in \code{postProcess}.}
 
 \item{rasterToMatch}{Template \verb{Raster*} object passed to the \code{to} argument of
-\code{\link[raster:projectRaster]{raster::projectRaster()}}, thus will changing the
+\code{\link[=projectTo]{projectTo()}}, thus will changing the
 resolution and projection of \code{x}.
-See details in \code{\link[=postProcess]{postProcess()}}.}
+See details in \code{\link[=postProcessTo]{postProcessTo()}}.}
 
 \item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
 }

@@ -29,7 +29,7 @@ This returns \code{NULL} is the object is not file-backed or does not have a met
 to recover the file-backed filename.
 }
 \description{
-This is mostly just a wrapper around \code{filename} from the \pkg{raster} package, except that
+This is mostly just a wrapper around \code{filename} from the \code{raster} package, except that
 instead of returning an empty string for a \code{RasterStack} object, it will return a vector of
 length >1 for \code{RasterStack}.
 }

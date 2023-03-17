@@ -193,7 +193,7 @@ targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
 ## TODO: switch to `geodata` package (raster::getData() is deprecated) (#256)
 getDataFn <- function(...) {
   suppressWarningsSpecific({
-    raster::getData(...)
+    geodata::gadm(...)
   }, falseWarnings = "getData will be removed in a future version of raster")
 }
 

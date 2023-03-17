@@ -937,8 +937,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' same physical disk).
 #'
 #' @examples
-#' library(datasets)
-#' library(raster)
 #'
 #' tmpDir <- file.path(tempdir(), "symlink-test") |>
 #'   normalizePath(winslash = '/', mustWork = FALSE)
@@ -965,20 +963,22 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' file.exists(f0) ## FALSE
 #' file.exists(f2) ## TRUE
 #'
-#' ## using rasters and other file-backed objects
-#' f3a <- system.file("external/test.grd", package = "raster")
-#' f3b <- system.file("external/test.gri", package = "raster")
-#' r3a <- raster(f3a)
-#' f4a <- file.path(tmpDir, "raster4.grd")
-#' f4b <- file.path(tmpDir, "raster4.gri")
-#' linkOrCopy(f3a, f4a) ## hardlink
-#' linkOrCopy(f3b, f4b) ## hardlink
-#' r4a <- raster(f4a)
+#' if (requireNamespace("terra")) {
+#'   ## using spatRasters and other file-backed objects
+#'   f3a <- system.file("ex/test.grd", package = "terra")
+#'   f3b <- system.file("ex/test.gri", package = "terra")
+#'   r3a <- terra::rast(f3a)
+#'   f4a <- file.path(tmpDir, "raster4.grd")
+#'   f4b <- file.path(tmpDir, "raster4.gri")
+#'   linkOrCopy(f3a, f4a) ## hardlink
+#'   linkOrCopy(f3b, f4b) ## hardlink
+#'   r4a <- terra::rast(f4a)
 #'
-#' isTRUE(all.equal(r3a, r4a)) # TRUE
+#'   isTRUE(all.equal(r3a, r4a)) # TRUE
 #'
-#' ## cleanup
-#' unlink(tmpDir, recursive = TRUE)
+#'   ## cleanup
+#'   unlink(tmpDir, recursive = TRUE)
+#' }
 linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducible.verbose", 1)) {
   existsLogical <- file.exists(from)
   toCollapsed <- paste(to, collapse = ", ")

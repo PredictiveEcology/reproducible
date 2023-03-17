@@ -25,13 +25,15 @@
 #' newPaths <- c("/home/user2/Desktop", "/Users/user2/Desktop")
 #' convertPaths(filenames, oldPaths, newPaths)
 #'
-#' r1 <- raster::raster(system.file("external/test.grd", package = "raster"))
-#' r2 <- raster::raster(system.file("external/rlogo.grd", package = "raster"))
-#' rasters <- list(r1, r2)
-#' oldPaths <- system.file("external", package = "raster")
-#' newPaths <- file.path("~/rasters")
-#' rasters <- convertRasterPaths(rasters, oldPaths, newPaths)
-#' lapply(rasters, raster::filename)
+#' if (requireNamespace("raster")) {
+#'   r1 <- raster::raster(system.file("external/test.grd", package = "raster"))
+#'   r2 <- raster::raster(system.file("external/rlogo.grd", package = "raster"))
+#'   rasters <- list(r1, r2)
+#'   oldPaths <- system.file("external", package = "raster")
+#'   newPaths <- file.path("~/rasters")
+#'   rasters <- convertRasterPaths(rasters, oldPaths, newPaths)
+#'   lapply(rasters, raster::filename)
+#' }
 #'
 convertPaths <- function(x, patterns, replacements) {
   stopifnot(is(x, "character"))
@@ -69,7 +71,7 @@ convertRasterPaths <- function(x, patterns, replacements) {
 
 #' Return the filename(s) from a `Raster*` object
 #'
-#' This is mostly just a wrapper around `filename` from the \pkg{raster} package, except that
+#' This is mostly just a wrapper around `filename` from the `raster` package, except that
 #' instead of returning an empty string for a `RasterStack` object, it will return a vector of
 #' length >1 for `RasterStack`.
 #'

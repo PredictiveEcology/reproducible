@@ -15,8 +15,7 @@ determineFilename(
 }
 \arguments{
 \item{filename2}{File name passed to \code{\link[=writeTo]{writeTo()}}, or
-\code{\link[raster:shapefile]{raster::shapefile()}} or \code{\link[sf:st_write]{sf::st_write()}}
-(\code{dsn} argument).}
+\code{\link[=writeTo]{writeTo()}}.}
 
 \item{destinationPath}{Optional. If \code{filename2} is a relative file path, then this
 will be the directory of the resulting absolute file path.}
@@ -30,8 +29,7 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{prefix}{The character string to prepend to \code{filename1}, if \code{filename2}
 not provided.}
 
-\item{...}{Passed into \code{\link[raster:shapefile]{raster::shapefile()}} or
-\code{\link[=writeTo]{writeTo()}} or \code{\link[sf:st_write]{sf::st_write()}}}
+\item{...}{Passed into \code{\link[=writeTo]{writeTo()}}}
 }
 \description{
 Determine the filename, given various combinations of inputs.

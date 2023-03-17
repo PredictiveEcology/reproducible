@@ -171,7 +171,7 @@ test_that("prepInputs doesn't work (part 3)", {
 
     # LINEARRING Example
     p6 = terra::vect("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
-    p6a <- fixErrorsTerra(p6)
+    p6a <- fixErrorsIn(p6)
     expect_true(terra::is.valid(p6a))
     expect_false(terra::is.valid(p6))
     # projectInputs pass through

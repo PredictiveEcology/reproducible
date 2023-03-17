@@ -105,7 +105,7 @@ functions, e.g., \code{\link[=cropInputs]{cropInputs()}}. Possibly useful other 
 }
 \value{
 This is an omnibus function that will return an R object that will have resulted from
-the running of \code{\link[=preProcess]{preProcess()}} and \code{\link[=postProcess]{postProcess()}} or \code{\link[=postProcessTerra]{postProcessTerra()}}. Thus,
+the running of \code{\link[=preProcess]{preProcess()}} and \code{\link[=postProcess]{postProcess()}} or \code{\link[=postProcessTo]{postProcessTo()}}. Thus,
 if it is a GIS object, it may have been cropped, reprojected, "fixed", masked, and
 written to disk.
 }
@@ -135,8 +135,8 @@ See \code{\link[=preProcess]{preProcess()}} for combinations of arguments.
 \item Download from the web via either \code{\link[googledrive:drive_download]{googledrive::drive_download()}},
 \code{\link[utils:download.file]{utils::download.file()}};
 \item Extract from archive using \code{\link[=unzip]{unzip()}} or \code{\link[=untar]{untar()}};
-\item Load into R using \code{\link[raster:raster]{raster::raster()}},
-\code{\link[raster:shapefile]{raster::shapefile()}}, or any other function passed in with \code{fun};
+\item Load into R using \code{terra::rast},
+\code{sf::st_read}, or any other function passed in with \code{fun};
 \item Checksumming of all files during this process. This is put into a
 \file{CHECKSUMS.txt} file in the \code{destinationPath}, appending if it is
 already there, overwriting the entries for same files if entries already exist.
@@ -170,11 +170,11 @@ NOTE: \code{sf} objects are still very experimental.
 If \code{rasterToMatch} or \code{studyArea} are used, then this will
 trigger several subsequent functions, specifically the sequence,
 \emph{Crop, reproject, mask}, which appears to be a common sequence in
-spatial simulation. See \code{\link[=postProcessTerra]{postProcessTerra()}}.
+spatial simulation. See \code{\link[=postProcessTo]{postProcessTo()}}.
 
 \emph{Understanding various combinations of \code{rasterToMatch}
 and/or \code{studyArea}:}
-Please see \code{\link[=postProcessTerra]{postProcessTerra()}}.
+Please see \code{\link[=postProcessTo]{postProcessTo()}}.
 }
 }
 
@@ -231,95 +231,65 @@ If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
 
 \examples{
 \donttest{
-data.table::setDTthreads(2)
-origDir <- getwd()
-setwd(reproducible::tempdir2()) # use a temporary directory
-# download a zip file from internet, unzip all files, load as shapefile, Cache the call
-# First time: don't know all files - prepInputs will guess, if download file is an archive,
-#   then extract all files, then if there is a .shp, it will load with raster::shapefile
-dPath <- file.path(tempdir(), "ecozones")
-shpUrl <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
+if (requireNamespace("terra") && requireNamespace("sf")) {
+  data.table::setDTthreads(2)
+  origDir <- getwd()
+  setwd(reproducible::tempdir2()) # use a temporary directory
+  # download a zip file from internet, unzip all files, load as shapefile, Cache the call
+  # First time: don't know all files - prepInputs will guess, if download file is an archive,
+  #   then extract all files, then if there is a .shp, it will load with raster::shapefile
+  dPath <- file.path(tempdir(), "ecozones")
+  shpUrl <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
 
-# Wrapped in a try because this particular url can be flaky
-shpEcozone <- try(prepInputs(destinationPath = dPath,
-                         url = shpUrl))
-if (!is(shpEcozone, "try-error")) {
-  # Robust to partial file deletions:
-  unlink(dir(dPath, full.names = TRUE)[1:3])
-  shpEcozone <- prepInputs(destinationPath = dPath,
-                           url = shpUrl)
-  unlink(dPath, recursive = TRUE)
+  # Wrapped in a try because this particular url can be flaky
+  shpEcozone <- try(prepInputs(destinationPath = dPath,
+                               url = shpUrl))
+  if (!is(shpEcozone, "try-error")) {
+    # Robust to partial file deletions:
+    unlink(dir(dPath, full.names = TRUE)[1:3])
+    shpEcozone <- prepInputs(destinationPath = dPath,
+                             url = shpUrl)
+    unlink(dPath, recursive = TRUE)
 
-  # Once this is done, can be more precise in operational code:
-  #  specify targetFile, alsoExtract, and fun, wrap with Cache
-  ecozoneFilename <- file.path(dPath, "ecozones.shp")
-  ecozoneFiles <- c("ecozones.dbf", "ecozones.prj",
-                    "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx")
-  shpEcozone <- prepInputs(targetFile = ecozoneFilename,
-                           url = shpUrl,
-                           alsoExtract = ecozoneFiles,
-                           fun = "shapefile", destinationPath = dPath)
-  unlink(dPath, recursive = TRUE)
+    # Once this is done, can be more precise in operational code:
+    #  specify targetFile, alsoExtract, and fun, wrap with Cache
+    ecozoneFilename <- file.path(dPath, "ecozones.shp")
+    ecozoneFiles <- c("ecozones.dbf", "ecozones.prj",
+                      "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx")
+    shpEcozone <- prepInputs(targetFile = ecozoneFilename,
+                             url = shpUrl,
+                             fun = "terra::vect",
+                             alsoExtract = ecozoneFiles,
+                             destinationPath = dPath)
+    unlink(dPath, recursive = TRUE)
 
-  # Add a study area to Crop and Mask to
-  # Create a "study area"
-  library(sp)
-  library(raster)
-  coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                      .Dim = c(5L, 2L))
-  Sr1 <- Polygon(coords)
-  Srs1 <- Polygons(list(Sr1), "s1")
-  StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    # Add a study area to Crop and Mask to
+    # Create a "study area"
+    coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+                        .Dim = c(5L, 2L))
+    studyArea <- terra::vect(coords, "polygons")
+    terra::crs(studyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-  #  specify targetFile, alsoExtract, and fun, wrap with Cache
-  ecozoneFilename <- file.path(dPath, "ecozones.shp")
-  # Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the
-  #   targetFile is there, it will not redownload the archive.
-  ecozoneFiles <- c("ecozones.dbf", "ecozones.prj",
-                    "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx")
-  shpEcozoneSm <- Cache(prepInputs,
-                        url = shpUrl,
-                        targetFile = reproducible::asPath(ecozoneFilename),
-                        alsoExtract = reproducible::asPath(ecozoneFiles),
-                        studyArea = StudyArea,
-                        fun = "shapefile", destinationPath = dPath,
-                        filename2 = "EcozoneFile.shp") # passed to determineFilename
+    #  specify targetFile, alsoExtract, and fun, wrap with Cache
+    ecozoneFilename <- file.path(dPath, "ecozones.shp")
+    # Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the
+    #   targetFile is there, it will not redownload the archive.
+    ecozoneFiles <- c("ecozones.dbf", "ecozones.prj",
+                      "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx")
+    shpEcozoneSm <- Cache(prepInputs,
+                          url = shpUrl,
+                          targetFile = reproducible::asPath(ecozoneFilename),
+                          alsoExtract = reproducible::asPath(ecozoneFiles),
+                          studyArea = studyArea,
+                          fun = "terra::vect",
+                          destinationPath = dPath,
+                          filename2 = "EcozoneFile.shp") # passed to determineFilename
 
-  plot(shpEcozone)
-  plot(shpEcozoneSm, add = TRUE, col = "red")
-  unlink(dPath)
-
-  # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
-  #   but the StudyArea does get reprojected, need to use rasterToMatch
-  dPath <- file.path(tempdir(), "LCC")
-  lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
-  url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
-                   "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
-
-  # messages received below may help for filling in more arguments in the subsequent call
-  # This is in a `try` because the url can be flaky
-  LCC2005 <- try(prepInputs(url = url,
-                        destinationPath = asPath(dPath),
-                        studyArea = StudyArea))
-  if (!is(LCC2005, "try-error")) {
-
-    raster::plot(LCC2005)
-
-    # if wrapped with Cache, will be very fast second time (via memoised copy)
-    LCC2005 <- Cache(prepInputs, url = url,
-                     targetFile = lcc2005Filename,
-                     archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
-                     destinationPath = asPath(dPath),
-                     studyArea = StudyArea)
-    # Using dlFun -- a custom download function -- passed to preProcess
-    test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
-                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                        path = dPath)
-  }
-  }
-  setwd(origDir)
-}
+    terra::plot(shpEcozone[, 1])
+    terra::plot(shpEcozoneSm[, 1], add = TRUE, col = "red")
+    unlink(dPath)
+   }
+ }
 
 ## Using quoted dlFun and fun -- this is not intended to be run but used as a template
 ## prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun)
@@ -331,14 +301,12 @@ if (!is(shpEcozone, "try-error")) {
 ##   }),
 ##   fun = quote({
 ##     out <- readRDS(targetFilePath)
-##     out <- as(out, "SpatialPolygonsDataFrame")
 ##     sf::st_as_sf(out)})
 ##  )
-
-
+}
 }
 \seealso{
-\code{\link[=postProcessTerra]{postProcessTerra()}}, \code{\link[=downloadFile]{downloadFile()}}, \code{\link[=extractFromArchive]{extractFromArchive()}},
+\code{\link[=postProcessTo]{postProcessTo()}}, \code{\link[=downloadFile]{downloadFile()}}, \code{\link[=extractFromArchive]{extractFromArchive()}},
 \code{\link[=postProcess]{postProcess()}}.
 }
 \author{

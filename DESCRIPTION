@@ -65,16 +65,15 @@ Suggests:
     covr,
     crayon,
     fastdigest,
-    fasterize,
     future,
+    geodata,
     googledrive,
     httr,
-    qs,
     knitr,
     parallel,
+    qs,
     raster (>= 3.5-15),
     RCurl (>= 1.95-4.8),
-    rgdal,
     rlang,
     rmarkdown,
     sf,
@@ -110,7 +109,7 @@ Collate:
     'paths.R'
     'pipe.R'
     'postProcess.R'
-    'postProcessTerra.R'
+    'postProcessTo.R'
     'preProcess.R'
     'prepInputs.R'
     'reproducible-deprecated.R'
