@@ -343,19 +343,6 @@ utils::globalVariables(c(
 #'
 #' @author Eliot McIntire
 #' @export
-#' @importClassesFrom raster RasterBrick
-#' @importClassesFrom raster RasterLayer
-#' @importClassesFrom raster RasterLayerSparse
-#' @importClassesFrom raster RasterStack
-#' @importClassesFrom sp Spatial
-#' @importClassesFrom sp SpatialLines
-#' @importClassesFrom sp SpatialLinesDataFrame
-#' @importClassesFrom sp SpatialPixels
-#' @importClassesFrom sp SpatialPixelsDataFrame
-#' @importClassesFrom sp SpatialPoints
-#' @importClassesFrom sp SpatialPointsDataFrame
-#' @importClassesFrom sp SpatialPolygons
-#' @importClassesFrom sp SpatialPolygonsDataFrame
 #' @importFrom DBI SQL
 #' @importFrom digest digest
 #' @importFrom data.table setDT := setkeyv .N .SD setattr

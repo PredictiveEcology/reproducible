@@ -7,11 +7,6 @@
 .getTargetCRS(useSAcrs, studyArea, rasterToMatch, targetCRS = NULL)
 }
 \arguments{
-\item{useSAcrs}{Logical. If \code{FALSE}, the default, then the desired projection
-will be taken from \code{rasterToMatch} or none at all.
-If \code{TRUE}, it will be taken from \code{studyArea}. See table
-in details below.}
-
 \item{studyArea}{\verb{SpatialPolygons*} object used for masking and possibly cropping
 if no \code{rasterToMatch} is provided.
 If not in same CRS, then it will be \code{spTransform}ed to
@@ -22,6 +17,8 @@ CRS of \code{x} before masking. Currently, this function will not reproject the
 \code{\link[raster:projectRaster]{raster::projectRaster()}}, thus will changing the
 resolution and projection of \code{x}.
 See details in \code{\link[=postProcess]{postProcess()}}.}
+
+\item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
 }
 \description{
 This is the function that follows the table of order of

@@ -3,8 +3,8 @@
 #' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
 #'
 #' @export
-#' @param x  An object of postProcessing, e.g., `spatialClasses`.
-#'           See individual methods. This can be provided as a
+#' @param x  A GIS object of postProcessing,
+#'           e.g., Spat* or sf*. This can be provided as a
 #'           `rlang::quosure` or a normal R object.
 #' @importFrom utils capture.output
 #' @seealso `prepInputs`
@@ -14,15 +14,6 @@ postProcess <- function(x, ...) {
   UseMethod("postProcess")
 }
 
-#' @export
-#' @rdname postProcess
-postProcess.default <- function(x, ...) {
-  if (inherits(x, "quosure")) {
-    .requireNamespace("rlang", stopOnFALSE = TRUE)
-    postProcess(rlang::eval_tidy(x), ...)
-  }
-  x
-}
 
 
 #' @export
@@ -31,12 +22,12 @@ postProcess.list <- function(x, ...) {
   lapply(x, function(y) postProcess(y, ...))
 }
 
-#' Post processing for `spatialClasses`
+#' Post processing for GIS objects
 #'
-#' The method for `spatialClasses` (`Raster*` and `Spatial*`) will
+#' The method for GIS objects (terra `Spat*` & sf classes) will
 #' crop, reproject, and mask, in that order.
-#' This is a wrapper for [cropInputs()], [fixErrors()],
-#' [projectInputs()], [maskInputs()] and [writeOutputs()],
+#' This is a wrapper for [cropTo()], [fixErrorsTerra()],
+#' [projectTo()], [maskTo()] and [writeTo()],
 #' with a decent amount of data manipulation between these calls so that the crs match.
 #'
 #' @section Post processing sequence:
@@ -143,13 +134,11 @@ postProcess.list <- function(x, ...) {
 #' @return A GIS file (e.g., `RasterLayer`, `SpatRaster` etc.) that has been
 #' appropriately cropped, reprojected, masked, depending on the inputs.
 #'
-postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = NULL,
-                                       studyArea = NULL, rasterToMatch = NULL,
-                                       overwrite = getOption("reproducible.overwrite", TRUE),
-                                       useSAcrs = NULL,
-                                       useCache = getOption("reproducible.useCache", FALSE),
-                                       verbose = getOption("reproducible.verbose", 1),
-                                       ...) {
+postProcess.default <- function(x, ...) {
+  if (inherits(x, "quosure")) {
+    .requireNamespace("rlang", stopOnFALSE = TRUE)
+    x <- rlang::eval_tidy(x)
+  }
 
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
   # browser(expr = exists("._postProcess.spatialClasses_1"))
@@ -171,8 +160,40 @@ postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = NULL,
                                 verbose = verbose, ...)
   }
 
-  return(x1)
+
+  x
 }
+
+# postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = NULL,
+#                                        studyArea = NULL, rasterToMatch = NULL,
+#                                        overwrite = getOption("reproducible.overwrite", TRUE),
+#                                        useSAcrs = NULL,
+#                                        useCache = getOption("reproducible.useCache", FALSE),
+#                                        verbose = getOption("reproducible.verbose", 1),
+#                                        ...) {
+#
+#   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
+#   # browser(expr = exists("._postProcess.spatialClasses_1"))
+#   if (isTRUE(getOption("reproducible.useTerra"))) {
+#     if (isFALSE(useSAcrs)) useSAcrs <- NULL
+#     x1 <- postProcessTerra(from = x, studyArea = studyArea,
+#                            rasterToMatch = rasterToMatch, useCache = useCache,
+#                            filename1 = filename1, filename2 = filename2,
+#                            useSAcrs = useSAcrs, overwrite = overwrite,
+#                            verbose = verbose, ...)
+#   } else {
+#
+#     on.exit(raster::removeTmpFiles(h = 0), add = TRUE)
+#
+#     x1 <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
+#                                 rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
+#                                 filename1 = filename1, filename2 = filename2,
+#                                 useSAcrs = useSAcrs, overwrite = overwrite,
+#                                 verbose = verbose, ...)
+#   }
+#
+#   return(x1)
+# }
 
 #' @export
 postProcess.SpatRaster <- function(x, filename1 = NULL, filename2 = NULL,
@@ -1202,7 +1223,7 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #'
 #' This is the function that follows the table of order of
 #' preference for determining CRS. See [postProcess()]
-#' @inheritParams postProcess.spatialClasses
+#' @inheritParams projectInputs
 #' @keywords internal
 #' @rdname postProcessHelpers
 .getTargetCRS <- function(useSAcrs, studyArea, rasterToMatch, targetCRS = NULL) {
@@ -1449,7 +1470,7 @@ maskInputs.default <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM =
 #'   absolute or relative path and used as is if absolute or
 #'   prepended with `destinationPath` if relative.
 #'
-#' @inheritParams postProcess.spatialClasses
+#' @inheritParams projectInputs
 #'
 #' @param destinationPath Optional. If `filename2` is a relative file path, then this
 #'                        will be the directory of the resulting absolute file path.
@@ -1863,7 +1884,6 @@ assessDataType <- function(ras, type = 'writeRaster') {
 }
 
 #' @export
-#' @importFrom terra ncell
 #' @rdname assessDataType
 assessDataType.default <- function(ras, type = "writeRaster") {
   ## using ras@data@... is faster, but won't work for @values in large rasters
@@ -1899,7 +1919,7 @@ assessDataType.default <- function(ras, type = "writeRaster") {
 
   if (is.null(datatype)) {
 
-    if (ncell(ras) > N) {
+    if (terra::ncell(ras) > N) {
       rasVals <- tryCatch(suppressWarnings(raster::sampleRandom(x = ras, size = N)),
                           error = function(x) rep(NA_integer_, N))
     } else {
@@ -2231,7 +2251,7 @@ setMinMaxIfNeeded <- function(ras) {
     }
   }
   if (isTRUE(needSetMinMax)) {
-    large <- if (nlayers2(ras) > 25 || ncell(ras) > 1e7) TRUE else FALSE
+    large <- if (nlayers2(ras) > 25 || terra::ncel(ras) > 1e7) TRUE else FALSE
     if (large) message("  Large ",class(ras), " detected; setting minimum and maximum may take time")
     suppressWarnings(ras <- setMinMax(ras))
     if (large) message("  ... Done")

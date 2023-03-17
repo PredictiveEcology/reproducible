@@ -170,11 +170,11 @@ NOTE: \code{sf} objects are still very experimental.
 If \code{rasterToMatch} or \code{studyArea} are used, then this will
 trigger several subsequent functions, specifically the sequence,
 \emph{Crop, reproject, mask}, which appears to be a common sequence in
-spatial simulation. See \code{\link[=postProcess.spatialClasses]{postProcess.spatialClasses()}}.
+spatial simulation. See \code{\link[=postProcessTerra]{postProcessTerra()}}.
 
 \emph{Understanding various combinations of \code{rasterToMatch}
 and/or \code{studyArea}:}
-Please see \code{\link[=postProcess.spatialClasses]{postProcess.spatialClasses()}}.
+Please see \code{\link[=postProcessTerra]{postProcessTerra()}}.
 }
 }
 

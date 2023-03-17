@@ -113,6 +113,31 @@ setMethod(
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     # browser(expr = exists("._robustDigest_1"))
+
+    if (is(object, "Raster")) {
+      object <- .removeCacheAtts(object)
+
+      if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
+        if (is(object, "RasterStack")) {
+          # have to do one file at a time with Stack
+          dig <- suppressWarnings(
+            lapply(object@layers, function(yy) {
+              .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
+            })
+          )
+        } else {
+          # Brick and Layers have only one file
+          dig <- suppressWarnings(
+            .digestRasterLayer(object, length = length, algo = algo, quick = quick))
+        }
+      } else {
+        dig <- suppressWarnings(
+          .digestRasterLayer(object, length = length, algo = algo, quick = quick))
+      }
+      dig <- .doDigest(unlist(dig))
+      return(dig)
+    }
+
     if (is(object, "quosure")) {# can't get this class from rlang via importClass rlang quosure
       if (!requireNamespace("rlang")) stop("Please `install.packages('rlang')`")
         object <- rlang::eval_tidy(object)
@@ -340,34 +365,34 @@ setMethod(
     .doDigest(object, algo = algo)
   })
 
-#' @rdname robustDigest
-#' @export
-setMethod(
-  ".robustDigest",
-  signature = "Raster",
-  definition = function(object, .objects, length, algo, quick, classOptions) {
-    object <- .removeCacheAtts(object)
-
-    if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
-      if (is(object, "RasterStack")) {
-        # have to do one file at a time with Stack
-        dig <- suppressWarnings(
-          lapply(object@layers, function(yy) {
-            .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
-          })
-        )
-      } else {
-        # Brick and Layers have only one file
-        dig <- suppressWarnings(
-          .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-      }
-    } else {
-      dig <- suppressWarnings(
-        .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-    }
-    dig <- .doDigest(unlist(dig))
-    return(dig)
-})
+# @rdname robustDigest
+# @export
+# setMethod(
+#   ".robustDigest",
+#   signature = "Raster",
+#   definition = function(object, .objects, length, algo, quick, classOptions) {
+#     object <- .removeCacheAtts(object)
+#
+#     if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
+#       if (is(object, "RasterStack")) {
+#         # have to do one file at a time with Stack
+#         dig <- suppressWarnings(
+#           lapply(object@layers, function(yy) {
+#             .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
+#           })
+#         )
+#       } else {
+#         # Brick and Layers have only one file
+#         dig <- suppressWarnings(
+#           .digestRasterLayer(object, length = length, algo = algo, quick = quick))
+#       }
+#     } else {
+#       dig <- suppressWarnings(
+#         .digestRasterLayer(object, length = length, algo = algo, quick = quick))
+#     }
+#     dig <- .doDigest(unlist(dig))
+#     return(dig)
+# })
 
 
 #' @rdname robustDigest

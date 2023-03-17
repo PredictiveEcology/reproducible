@@ -2,30 +2,16 @@
 % Please edit documentation in R/postProcess.R
 \name{postProcess}
 \alias{postProcess}
-\alias{postProcess.default}
 \alias{postProcess.list}
-\alias{postProcess.spatialClasses}
+\alias{postProcess.default}
 \alias{postProcess.sf}
 \title{Generic function to post process objects}
 \usage{
 postProcess(x, ...)
 
-\method{postProcess}{default}(x, ...)
-
 \method{postProcess}{list}(x, ...)
 
-\method{postProcess}{spatialClasses}(
-  x,
-  filename1 = NULL,
-  filename2 = NULL,
-  studyArea = NULL,
-  rasterToMatch = NULL,
-  overwrite = getOption("reproducible.overwrite", TRUE),
-  useSAcrs = NULL,
-  useCache = getOption("reproducible.useCache", FALSE),
-  verbose = getOption("reproducible.verbose", 1),
-  ...
-)
+\method{postProcess}{default}(x, ...)
 
 \method{postProcess}{sf}(
   x,
@@ -41,8 +27,8 @@ postProcess(x, ...)
 )
 }
 \arguments{
-\item{x}{An object of postProcessing, e.g., \code{spatialClasses}.
-See individual methods. This can be provided as a
+\item{x}{A GIS object of postProcessing,
+e.g., Spat* or sf*. This can be provided as a
 \code{rlang::quosure} or a normal R object.}
 
 \item{...}{Additional arguments passed to methods. For \code{spatialClasses},
@@ -125,10 +111,10 @@ appropriately cropped, reprojected, masked, depending on the inputs.
 \description{
 \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
 
-The method for \code{spatialClasses} (\verb{Raster*} and \verb{Spatial*}) will
+The method for GIS objects (terra \verb{Spat*} & sf classes) will
 crop, reproject, and mask, in that order.
-This is a wrapper for \code{\link[=cropInputs]{cropInputs()}}, \code{\link[=fixErrors]{fixErrors()}},
-\code{\link[=projectInputs]{projectInputs()}}, \code{\link[=maskInputs]{maskInputs()}} and \code{\link[=writeOutputs]{writeOutputs()}},
+This is a wrapper for \code{\link[=cropTo]{cropTo()}}, \code{\link[=fixErrorsTerra]{fixErrorsTerra()}},
+\code{\link[=projectTo]{projectTo()}}, \code{\link[=maskTo]{maskTo()}} and \code{\link[=writeTo]{writeTo()}},
 with a decent amount of data manipulation between these calls so that the crs match.
 }
 \section{Post processing sequence}{

@@ -14,19 +14,9 @@ determineFilename(
 )
 }
 \arguments{
-\item{filename2}{\code{filename2} is optional, and is either
-NULL (no writing of outputs to disk), or several options
-for writing the object to disk. If
-\code{TRUE} (the default), it will give it a file name determined by
-\code{.prefix(basename(filename1), prefix)}. If
-a character string, it will use this as its file name. See
-\code{\link[=determineFilename]{determineFilename()}}.}
-
-\item{filename1}{Character strings giving the file paths of
-the \emph{input} object (\code{filename1}) \code{filename1}
-is only used for messaging (i.e., the object itself is passed
-in as \code{x}) and possibly naming of output (see details
-and \code{filename2}).}
+\item{filename2}{File name passed to \code{\link[=writeTo]{writeTo()}}, or
+\code{\link[raster:shapefile]{raster::shapefile()}} or \code{\link[sf:st_write]{sf::st_write()}}
+(\code{dsn} argument).}
 
 \item{destinationPath}{Optional. If \code{filename2} is a relative file path, then this
 will be the directory of the resulting absolute file path.}
@@ -40,31 +30,8 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{prefix}{The character string to prepend to \code{filename1}, if \code{filename2}
 not provided.}
 
-\item{...}{Additional arguments passed to methods. For \code{spatialClasses},
-these are: \code{\link[=cropInputs]{cropInputs()}}, \code{\link[=fixErrors]{fixErrors()}},
-\code{\link[=projectInputs]{projectInputs()}}, \code{\link[=maskInputs]{maskInputs()}},
-\code{\link[=determineFilename]{determineFilename()}}, and \code{\link[=writeOutputs]{writeOutputs()}}.
-Each of these may also pass \code{...} into other functions, like
-\code{\link[=writeTo]{writeTo()}}, or \code{sf::st_write}.
-This might include potentially important arguments like \code{datatype},
-\code{format}. Also passed to \code{projectRaster},
-with likely important arguments such as \code{method = "bilinear"}.
-See details.
-
-\subsection{... passed to:}{
-\describe{
-\item{\code{cropInputs}:}{\code{\link[raster:crop]{raster::crop()}}}
-\item{\code{projectInputs}}{\code{\link[raster:projectRaster]{raster::projectRaster()}}}
-\item{\code{maskInputs}}{\code{\link[=fastMask]{fastMask()}} or \code{\link[raster:intersect]{raster::intersect()}}}
-\item{\code{fixErrors}}{\code{\link[raster:buffer]{raster::buffer()}}}
-\item{\code{writeOutputs}}{\code{\link[=writeTo]{writeTo()}} or \code{\link[raster:shapefile]{raster::shapefile()}}}
-\item{\code{determineFilename}}{}
-}
-\itemize{
-\item Can be overridden with \code{useSAcrs}
-** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
-}
-}}
+\item{...}{Passed into \code{\link[raster:shapefile]{raster::shapefile()}} or
+\code{\link[=writeTo]{writeTo()}} or \code{\link[sf:st_write]{sf::st_write()}}}
 }
 \description{
 Determine the filename, given various combinations of inputs.

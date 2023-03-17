@@ -61,11 +61,11 @@ if (getRversion() >= "3.1.0") {
 #'   If `rasterToMatch` or `studyArea` are used, then this will
 #'   trigger several subsequent functions, specifically the sequence,
 #'   *Crop, reproject, mask*, which appears to be a common sequence in
-#'   spatial simulation. See [postProcess.spatialClasses()].
+#'   spatial simulation. See [postProcessTerra()].
 #'
 #'   *Understanding various combinations of `rasterToMatch`
 #'   and/or `studyArea`:*
-#'   Please see [postProcess.spatialClasses()].
+#'   Please see [postProcessTerra()].
 #'  }
 #'
 #'
@@ -374,6 +374,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   funChar <- if (is.character(out$funChar)) out$funChar else NULL
 
+  browser()
 
   out <- modifyList(out, list(...))
 
