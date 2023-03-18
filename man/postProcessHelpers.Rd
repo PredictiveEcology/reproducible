@@ -7,6 +7,11 @@
 .getTargetCRS(useSAcrs, studyArea, rasterToMatch, targetCRS = NULL)
 }
 \arguments{
+\item{useSAcrs}{Logical. If \code{FALSE}, the default, then the desired projection
+will be taken from \code{rasterToMatch} or none at all.
+If \code{TRUE}, it will be taken from \code{studyArea}. See table
+in details below.}
+
 \item{studyArea}{\verb{SpatialPolygons*} object used for masking and possibly cropping
 if no \code{rasterToMatch} is provided.
 If not in same CRS, then it will be \code{spTransform}ed to

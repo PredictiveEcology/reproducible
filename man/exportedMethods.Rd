@@ -22,7 +22,6 @@
 \alias{updateFilenameSlots.default}
 \alias{updateFilenameSlots.list}
 \alias{updateFilenameSlots.environment}
-\alias{updateFilenameSlots.Raster}
 \alias{makeMemoisable}
 \alias{makeMemoisable.default}
 \alias{makeMemoisable.data.table}
@@ -87,8 +86,6 @@ updateFilenameSlots(obj, curFilenames, newFilenames, isStack = NULL)
 \method{updateFilenameSlots}{list}(obj, ...)
 
 \method{updateFilenameSlots}{environment}(obj, ...)
-
-\method{updateFilenameSlots}{Raster}(obj, curFilenames, newFilenames, isStack = NULL)
 
 makeMemoisable(x)
 

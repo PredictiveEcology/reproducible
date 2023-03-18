@@ -135,7 +135,7 @@ if (.requireNamespace("raster") && .requireNamespace("terra"))
     ras1 <- fn(ncol = 10, nrow = 10)
     ras1[] <- round(runif(100, min = -1.7e+308, max = -1))
     if (is(ras1, "Raster"))
-      sta <- stack(ras, ras1)
+      sta <- raster::stack(ras, ras1)
     else
       sta <- c(ras, ras1)
     assessDataType(sta)

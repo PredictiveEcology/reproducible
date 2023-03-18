@@ -2,6 +2,7 @@
 % Please edit documentation in R/postProcessTo.R
 \name{postProcessTo}
 \alias{postProcessTo}
+\alias{postProcessTerra}
 \alias{maskTo}
 \alias{projectTo}
 \alias{cropTo}
@@ -9,6 +10,19 @@
 \title{Transform a GIS dataset so it has the properties (extent, projection, mask) of another}
 \usage{
 postProcessTo(
+  from,
+  to,
+  cropTo = NULL,
+  projectTo = NULL,
+  maskTo = NULL,
+  writeTo = NULL,
+  method = NULL,
+  datatype = "FLT4S",
+  overwrite = TRUE,
+  ...
+)
+
+postProcessTerra(
   from,
   to,
   cropTo = NULL,

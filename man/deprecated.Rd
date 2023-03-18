@@ -53,12 +53,7 @@ projectInputs(
 
 maskInputs(x, studyArea, ...)
 
-writeOutputs(
-  x,
-  filename2,
-  overwrite = getOption("reproducible.overwrite", NULL),
-  ...
-)
+writeOutputs(x, overwrite = getOption("reproducible.overwrite", NULL), ...)
 
 \method{writeOutputs}{default}(
   x,
@@ -110,14 +105,14 @@ If \code{NA}, then all testing and buffering will be skipped.}
 
 \item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
 
-\item{filename2}{File name passed to \code{\link[=writeTo]{writeTo()}}.}
-
 \item{overwrite}{Logical. Should file being written overwrite an existing file if it exists.}
 
 \item{cores}{An \verb{integer*} or \code{'AUTO'}. This will be used if \code{gdalwarp} is
 triggered. \verb{'AUTO'*} will calculate 90\% of the total
 number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.}
+
+\item{filename2}{File name passed to \code{\link[=writeTo]{writeTo()}}.}
 }
 \value{
 A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been

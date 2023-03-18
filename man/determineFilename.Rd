@@ -14,7 +14,19 @@ determineFilename(
 )
 }
 \arguments{
-\item{filename2}{File name passed to \code{\link[=writeTo]{writeTo()}}.}
+\item{filename2}{\code{filename2} is optional, and is either
+NULL (no writing of outputs to disk), or several options
+for writing the object to disk. If
+\code{TRUE} (the default), it will give it a file name determined by
+\code{.prefix(basename(filename1), prefix)}. If
+a character string, it will use this as its file name. See
+\code{\link[=determineFilename]{determineFilename()}}.}
+
+\item{filename1}{Character strings giving the file paths of
+the \emph{input} object (\code{filename1}) \code{filename1}
+is only used for messaging (i.e., the object itself is passed
+in as \code{x}) and possibly naming of output (see details
+and \code{filename2}).}
 
 \item{destinationPath}{Optional. If \code{filename2} is a relative file path, then this
 will be the directory of the resulting absolute file path.}
