@@ -192,93 +192,93 @@ postProcess.default <- function(x, ...) {
 #   return(x1)
 # }
 
-#' @export
-postProcess.SpatRaster <- function(x, filename1 = NULL, filename2 = NULL,
-                                   studyArea = NULL, rasterToMatch = NULL,
-                                   overwrite = getOption("reproducible.overwrite", TRUE),
-                                   useSAcrs = NULL,
-                                   useCache = getOption("reproducible.useCache", FALSE),
-                                   verbose = getOption("reproducible.verbose", 1),
-                                   ...) {
+# @export
+# postProcess.SpatRaster <- function(x, filename1 = NULL, filename2 = NULL,
+#                                    studyArea = NULL, rasterToMatch = NULL,
+#                                    overwrite = getOption("reproducible.overwrite", TRUE),
+#                                    useSAcrs = NULL,
+#                                    useCache = getOption("reproducible.useCache", FALSE),
+#                                    verbose = getOption("reproducible.verbose", 1),
+#                                    ...) {
+#
+#   on.exit(removeTmpFiles(h = 0), add = TRUE)
+#
+#   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
+#   # browser(expr = exists("._postProcess.spatialClasses_1"))
+#   if (isFALSE(useSAcrs)) useSAcrs <- NULL
+#
+#   x1 <- postProcessTo(from = x, studyArea = studyArea,
+#                          rasterToMatch = rasterToMatch, useCache = useCache,
+#                          filename1 = filename1, filename2 = filename2,
+#                          useSAcrs = useSAcrs, overwrite = overwrite,
+#                          verbose = verbose, ...)
+#   return(x1)
+# }
 
-  on.exit(removeTmpFiles(h = 0), add = TRUE)
+# @export
+# postProcess.SpatVector <- function(x, filename1 = NULL, filename2 = NULL,
+#                                    studyArea = NULL, rasterToMatch = NULL,
+#                                    overwrite = getOption("reproducible.overwrite", TRUE),
+#                                    useSAcrs = NULL,
+#                                    useCache = getOption("reproducible.useCache", FALSE),
+#                                    verbose = getOption("reproducible.verbose", 1),
+#                                    ...) {
+#
+#   on.exit(removeTmpFiles(h = 0), add = TRUE)
+#
+#   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
+#   # browser(expr = exists("._postProcess.spatialClasses_1"))
+#   if (isFALSE(useSAcrs)) useSAcrs <- NULL
+#
+#   x1 <- postProcessTo(from = x, studyArea = studyArea,
+#                          rasterToMatch = rasterToMatch, useCache = useCache,
+#                          filename1 = filename1, filename2 = filename2,
+#                          useSAcrs = useSAcrs, overwrite = overwrite,
+#                          verbose = verbose, ...)
+#   return(x1)
+# }
 
-  # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
-  # browser(expr = exists("._postProcess.spatialClasses_1"))
-  if (isFALSE(useSAcrs)) useSAcrs <- NULL
-
-  x1 <- postProcessTo(from = x, studyArea = studyArea,
-                         rasterToMatch = rasterToMatch, useCache = useCache,
-                         filename1 = filename1, filename2 = filename2,
-                         useSAcrs = useSAcrs, overwrite = overwrite,
-                         verbose = verbose, ...)
-  return(x1)
-}
-
-#' @export
-postProcess.SpatVector <- function(x, filename1 = NULL, filename2 = NULL,
-                                   studyArea = NULL, rasterToMatch = NULL,
-                                   overwrite = getOption("reproducible.overwrite", TRUE),
-                                   useSAcrs = NULL,
-                                   useCache = getOption("reproducible.useCache", FALSE),
-                                   verbose = getOption("reproducible.verbose", 1),
-                                   ...) {
-
-  on.exit(removeTmpFiles(h = 0), add = TRUE)
-
-  # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
-  # browser(expr = exists("._postProcess.spatialClasses_1"))
-  if (isFALSE(useSAcrs)) useSAcrs <- NULL
-
-  x1 <- postProcessTo(from = x, studyArea = studyArea,
-                         rasterToMatch = rasterToMatch, useCache = useCache,
-                         filename1 = filename1, filename2 = filename2,
-                         useSAcrs = useSAcrs, overwrite = overwrite,
-                         verbose = verbose, ...)
-  return(x1)
-}
-
-#' @export
-#' @rdname postProcess
-postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
-                           studyArea = NULL, rasterToMatch = NULL,
-                           overwrite = getOption("reproducible.overwrite", TRUE),
-                           useSAcrs = NULL,
-                           useCache = getOption("reproducible.useCache", FALSE),
-                           verbose = getOption("reproducible.verbose", 1),
-                           ...) {
-  .requireNamespace("sf", stopOnFALSE = TRUE)
-
-  if (isTRUE(getOption("reproducible.useTerra"))) {
-    if (isFALSE(useSAcrs)) useSAcrs <- NULL
-    x <- postProcessTo(from = x, studyArea = studyArea,
-                           rasterToMatch = rasterToMatch, useCache = useCache,
-                           filename1 = filename1, filename2 = filename2,
-                           useSAcrs = useSAcrs, overwrite = overwrite,
-                           verbose = verbose, ...)
-  } else {
-    .requireNamespace("raster", stopOnFALSE = TRUE)
-
-    # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
-    messagePrepInputs("postProcess with sf class objects is still experimental")
-    if (!is.null(rasterToMatch)) {
-      if (is.null(studyArea))
-        stop("sf class objects are not yet working with rasterToMatch argument")
-      messagePrepInputs("sf class objects can not be postProcessed directly from rasterToMatch yet;",
-                        "using studyArea. ")
-      rasterToMatch <- NULL
-    }
-    if (is(studyArea, "Spatial")) {
-      studyArea <- sf::st_as_sf(studyArea)
-    }
-
-    x <- postProcessAllSpatial(x = x, studyArea = studyArea,
-                               rasterToMatch = rasterToMatch, useCache = useCache,
-                               filename1 = filename1, filename2 = filename2,
-                               useSAcrs = useSAcrs, overwrite = overwrite, verbose = verbose, ...)
-  }
-  return(x)
-}
+# @export
+# @rdname postProcess
+# postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
+#                            studyArea = NULL, rasterToMatch = NULL,
+#                            overwrite = getOption("reproducible.overwrite", TRUE),
+#                            useSAcrs = NULL,
+#                            useCache = getOption("reproducible.useCache", FALSE),
+#                            verbose = getOption("reproducible.verbose", 1),
+#                            ...) {
+#   .requireNamespace("sf", stopOnFALSE = TRUE)
+#
+#   if (isTRUE(getOption("reproducible.useTerra"))) {
+#     if (isFALSE(useSAcrs)) useSAcrs <- NULL
+#     x <- postProcessTo(from = x, studyArea = studyArea,
+#                            rasterToMatch = rasterToMatch, useCache = useCache,
+#                            filename1 = filename1, filename2 = filename2,
+#                            useSAcrs = useSAcrs, overwrite = overwrite,
+#                            verbose = verbose, ...)
+#   } else {
+#     .requireNamespace("raster", stopOnFALSE = TRUE)
+#
+#     # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
+#     messagePrepInputs("postProcess with sf class objects is still experimental")
+#     if (!is.null(rasterToMatch)) {
+#       if (is.null(studyArea))
+#         stop("sf class objects are not yet working with rasterToMatch argument")
+#       messagePrepInputs("sf class objects can not be postProcessed directly from rasterToMatch yet;",
+#                         "using studyArea. ")
+#       rasterToMatch <- NULL
+#     }
+#     if (is(studyArea, "Spatial")) {
+#       studyArea <- sf::st_as_sf(studyArea)
+#     }
+#
+#     x <- postProcessAllSpatial(x = x, studyArea = studyArea,
+#                                rasterToMatch = rasterToMatch, useCache = useCache,
+#                                filename1 = filename1, filename2 = filename2,
+#                                useSAcrs = useSAcrs, overwrite = overwrite, verbose = verbose, ...)
+#   }
+#   return(x)
+# }
 
 #' Crop a `Spatial*` or `Raster*` object
 #'
