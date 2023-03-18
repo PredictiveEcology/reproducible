@@ -81,7 +81,7 @@
 
 updateFilenameSlots(obj, curFilenames, newFilenames, isStack = NULL)
 
-\method{updateFilenameSlots}{default}(obj, ...)
+\method{updateFilenameSlots}{default}(obj, curFilenames, newFilenames, isStack = NULL, ...)
 
 \method{updateFilenameSlots}{list}(obj, ...)
 

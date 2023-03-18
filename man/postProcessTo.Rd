@@ -44,7 +44,7 @@ maskTo(
   ...
 )
 
-projectTo(from, projectTo, method = "bilinear", overwrite = FALSE, ...)
+projectTo(from, projectTo, method = NULL, overwrite = FALSE, ...)
 
 cropTo(
   from,
@@ -101,7 +101,10 @@ Defaults to \code{NULL}, which means use \code{to}}
 object. Default is \code{NULL}, which means there is no \code{writeRaster}}
 
 \item{method}{Used if \code{projectTo} is not \code{NULL}, and is the method used for
-interpolation. See \code{terra::project}. Defaults to \code{"bilinear"}.}
+interpolation. See \code{terra::project}. Defaults to \code{"NULL"}. In this case, it will
+attempt to estimate based on whether the values are integers (or factors) and should
+likely be ngb vs. real numbers and should likely be bilinear. A user should specify
+this to be sure.}
 
 \item{datatype}{A character string, used if \code{writeTo} is not \code{NULL}. See \code{terra::writeRaster}}
 
@@ -126,8 +129,8 @@ of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a r
 has to happen on the \code{cropTo} prior to using it as a crop layer, then a buffer
 of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.}
 
-\item{isStack, isBrick, isRaster, isSpatRaster}{Logical. Default \code{FALSE}. Used to convert \code{from}
-back to these classes prior to writing.}
+\item{isStack, isBrick, isRaster, isSpatRaster}{Logical. Default \code{NULL}. Used to convert \code{from}
+back to these classes prior to writing, if provided.}
 }
 \value{
 An object of the same class as \code{from}, but potentially cropped (via \code{\link[=cropTo]{cropTo()}}),

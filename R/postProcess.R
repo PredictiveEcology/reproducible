@@ -8,7 +8,6 @@
 #'           `rlang::quosure` or a normal R object.
 #' @importFrom utils capture.output
 #' @seealso `prepInputs`
-#' @inheritParams prepInputs
 #' @rdname postProcess
 postProcess <- function(x, ...) {
   UseMethod("postProcess")
@@ -50,10 +49,6 @@ postProcess.list <- function(x, ...) {
 #'   `prepInputs` with `Cache`
 #'
 #'   NOTE: `sf` objects are still very experimental.
-#'
-#' @inheritParams prepInputs
-#'
-#' @inheritParams cropInputs
 #'
 #'
 #' @param ... Additional arguments passed to methods. For `spatialClasses`,
@@ -861,7 +856,7 @@ projectInputs <- function(x, targetCRS, verbose = getOption("reproducible.verbos
 #' @export
 #' @rdname deprecated
 projectInputs.default <- function(x, targetCRS, ...) {
-  projectTo(x, ...)
+  projectTo(x, projectTo = targetCRS, ...)
 }
 
 # @export
@@ -1512,15 +1507,37 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #'
 #' @examples
 #' if (requireNamespace("terra")) {
-#'   r <- terra::rast(terra:ext(0,100,0,100), vals = 1:1e2)
+#'   r <- terra::rast(terra::ext(0,100,0,100), vals = 1:1e2)
 #'
 #'   tf <- tempfile(fileext = ".tif")
 #'   writeOutputs(r, tf)
 #' }
-writeOutputs <- function(x, # filename2,
+writeOutputs <- function(x, ..., # filename2,
                          overwrite = getOption("reproducible.overwrite", NULL),
-                         ...) {
+                         verbose = getOption("reproducible.verbose", 1)
+                         ) {
   UseMethod("writeOutputs")
+}
+
+#' @rdname deprecated
+#' @export
+writeOutputs.default <- function(x, ..., # filename2,
+                                 overwrite = getOption("reproducible.overwrite", FALSE),
+                                 verbose = getOption("reproducible.verbose", 1)
+                                 ) {
+
+  writeTo(x, ..., overwrite = overwrite, verbose = verbose)
+  # if (is(x, "SpatRaster")) {
+  #   if (.requireNamespace("terra"))
+  #     x <- terra::writeRaster(x, filename = filename2, overwrite = overwrite, ...)
+  # } else if (is(x, "SpatVector")) {
+  #   if (.requireNamespace("terra"))
+  #     x <- terra::writeVector(x, filename = filename2, overwrite = overwrite, ...)
+  # } else {
+  #   stop("Don't know how to write object of class ", class(x), " on disk.")
+  # }
+  # return(x)
+  #
 }
 
 # @export
@@ -1770,26 +1787,6 @@ writeOutputs <- function(x, # filename2,
 #   writeOutputs(eval_tidy(x), filename2 = filename2, ...)
 # }
 
-#' @rdname deprecated
-#' @export
-writeOutputs.default <- function(x, # filename2,
-                                 overwrite = getOption("reproducible.overwrite", FALSE),
-                                 verbose = getOption("reproducible.verbose", 1),
-                                 ...) {
-
-  writeTo(x, ..., overwrite = overwrite, verbose = verbose)
-  # if (is(x, "SpatRaster")) {
-  #   if (.requireNamespace("terra"))
-  #     x <- terra::writeRaster(x, filename = filename2, overwrite = overwrite, ...)
-  # } else if (is(x, "SpatVector")) {
-  #   if (.requireNamespace("terra"))
-  #     x <- terra::writeVector(x, filename = filename2, overwrite = overwrite, ...)
-  # } else {
-  #   stop("Don't know how to write object of class ", class(x), " on disk.")
-  # }
-  # return(x)
-  #
-}
 
 #' Assess the appropriate raster layer data type
 #'

@@ -135,7 +135,7 @@ setMethod(
       studyArea <- studyArea[, -c(1:ncol(studyArea))]
       studyArea <- as(studyArea, "SpatialPolygons")
       studyAreaName(studyArea, ...)
-    } else if (!(inherits(studyArea, "spatialClasses") || inherits(studyArea, "sfc") ||
+    } else if (!(inherits(studyArea, "Spatial") || inherits(studyArea, "sfc") ||
           inherits(studyArea, "SpatVector") || is.character(studyArea))) {
       stop("studyAreaName expects a spatialClasses object (or character vector)")
     }

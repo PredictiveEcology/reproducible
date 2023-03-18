@@ -360,8 +360,9 @@ messageNoCacheRepo <- "No cachePath supplied and getOption\\('reproducible.cache
 
 
 .writeRaster <- function(...) {
+  .requireNamespace("terra", stopOnFALSE = TRUE)
   suppressWarningsSpecific(falseWarnings = "NOT UPDATED FOR PROJ",
-                           writeRaster(...))
+                           terra::writeRaster(...))
 }
 
 theRasterTests <- "https://github.com/tati-micheletti/host/raw/master/data/"

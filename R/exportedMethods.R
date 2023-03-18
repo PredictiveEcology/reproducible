@@ -321,7 +321,7 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
 #' @rdname exportedMethods
 #' @export
 #' @keywords internal
-updateFilenameSlots.default <- function(obj, ...)  {
+updateFilenameSlots.default <- function(obj, curFilenames, newFilenames, isStack = NULL, ...)  {
 
   if (inherits(obj, "Raster")) {
     if (missing(curFilenames)) {

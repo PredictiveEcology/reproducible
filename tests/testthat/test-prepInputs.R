@@ -1508,16 +1508,14 @@ test_that("lightweight tests for code coverage", {
 
   ## postProcess.default
   b <- 1
-  a <- postProcess(b)
-  expect_true(identical(a, b))
+  expect_error(a <- postProcess(b), "from must be a")
 
   ## postProcess.list
   b <- list(1,1)
-  a <- postProcess(b)
-  expect_true(identical(a, b))
+  expect_error(a <- postProcess(b), "from must be a")
 
-  ras <- raster(extent(0,10,0,10), res = 1, vals = 1:100)
-  crs(ras) <- crsToUse
+  ras <- terra::rast(terra::ext(0,10,0,10), res = 1, vals = 1:100)
+  terra::crs(ras) <- crsToUse
 
   if (getOption("reproducible.useTerra")) {
     expect_error(postProcess(ras, studyArea = 1), .msgGrep$anySpatialClass)
@@ -1537,33 +1535,33 @@ test_that("lightweight tests for code coverage", {
   a <- cropInputs(b)
   expect_true(identical(a, b))
 
-  ras2 <- raster(extent(0,5,0,5), res = 1, vals = 1:25)
-  crs(ras2) <- crsToUse
-  a <- cropInputs(ras, extentToMatch = extent(ras2), extentCRS = crs(ras2))
-  expect_true(inherits(a, "RasterLayer"))
+  ras2 <- terra::rast(terra::ext(0,5,0,5), res = 1, vals = 1:25)
+  terra::crs(ras2) <- crsToUse
+  a <- cropInputs(ras, extentToMatch = terra::ext(ras2), extentCRS = terra::crs(ras2))
+  expect_true(inherits(a, "SpatRaster"))
 
-  ras4 <- raster(extent(6,10,6,10), res = 1, vals = 1:16)
-  sp4 <- as(raster::extent(ras4), "SpatialPolygons")
-  crs(sp4) <- crsToUse
+  ras4 <- terra::rast(terra::ext(6,10,6,10), res = 1, vals = 1:16)
+  sp4 <- sf::st_as_sfc(sf::st_bbox(ras4))
+  sf::st_crs(sp4) <- crsToUse
 
   grepMessHere <- if (getOption("reproducible.useTerra"))
     "invalid extent" else "extents do not overlap"
   expect_error(cropInputs(ras2, studyArea = sp4), grepMessHere)
 
-  ras3 <- raster(extent(0,5,0,5), res = 1, vals = 1:25)
-  crs(ras3) <- crsToUse
+  ras3 <- terra::rast(terra::ext(0,5,0,5), res = 1, vals = 1:25)
+  terra::crs(ras3) <- crsToUse
 
   ################################################
   # Different crs
   # Because studyArea is a Raster, then it doesn't work correctly
   a <- cropInputs(ras2, studyArea = ras3)
-  expect_true(inherits(a, "RasterLayer"))
-  expect_true(identical(crs(a), crs(ras2)))
+  expect_true(inherits(a, "SpatRaster"))
+  expect_true(identical(terra::crs(a), terra::crs(ras2)))
 
   # Now rasterToMatch used -- internally reprojects it to x
   a <- cropInputs(ras2, rasterToMatch = ras3)
-  expect_true(inherits(a, "RasterLayer"))
-  expect_true(identical(crs(a), crs(ras2)))
+  expect_true(inherits(a, "SpatRaster"))
+  expect_true(identical(terra::crs(a), terra::crs(ras2)))
 
   ## fixErrors.default
   b <- 1
@@ -1572,15 +1570,15 @@ test_that("lightweight tests for code coverage", {
 
   ## projectInputs.Raster
   a <- projectInputs(ras2, rasterToMatch = ras3, method = "ngb")
-  expect_true(inherits(a, "RasterLayer"))
-  expect_true(identical(crs(a), crs(ras3)))
+  expect_true(inherits(a, "SpatRaster"))
+  expect_true(identical(terra::crs(a), terra::crs(ras3)))
 
-  a <- projectInputs(ras2, targetCRS = crs(ras3), rasterToMatch = ras3, method = "ngb")
-  expect_true(inherits(a, "RasterLayer"))
-  expect_true(identical(crs(a), crs(ras3)))
+  a <- projectInputs(ras2, targetCRS = terra::crs(ras3), rasterToMatch = ras3, method = "ngb")
+  expect_true(inherits(a, "SpatRaster"))
+  expect_true(identical(terra::crs(a), terra::crs(ras3)))
 
   #warns if bilinear is passed for reprojecting integer
-  expect_warning(projectInputs(ras2, targetCRS = crs(shpFile), method = "bilinear"))
+  expect_warning(projectInputs(ras2, targetCRS = terra::crs(shpFile), method = "bilinear"))
 
   #Works with no rasterToMatch
   a <- projectInputs(ras2, targetCRS = crs(ras3), method = "ngb")

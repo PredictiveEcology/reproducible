@@ -195,7 +195,7 @@ test_that("test miscellaneous fns (part 2)", {
 })
 
 test_that("Filenames for environment", {
-  testInitOut <- testInit(c("raster"), tmpFileExt = c(".tif", ".grd", ".tif", ".tif", ".grd"),
+  testInitOut <- testInit(c("terra"), tmpFileExt = c(".tif", ".grd", ".tif", ".tif", ".grd"),
                           opts = list("reproducible.ask" = FALSE))
   on.exit({
     testOnExit(testInitOut)
@@ -204,54 +204,54 @@ test_that("Filenames for environment", {
   }, add = TRUE)
 
   s <- new.env(parent = emptyenv())
-  s$r <- raster(extent(0, 10, 0, 10), vals = 1, res = 1)
-  s$r2 <- raster(extent(0, 10, 0, 10), vals = 1, res = 1)
-  s$r <- suppressWarningsSpecific(writeRaster(s$r, filename = tmpfile[1], overwrite = TRUE),
+  s$r <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1, res = 1)
+  s$r2 <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1, res = 1)
+  s$r <- suppressWarningsSpecific(terra::writeRaster(s$r, filename = tmpfile[1], overwrite = TRUE),
                                   "NOT UPDATED FOR PROJ >= 6")
-  s$r2 <- suppressWarningsSpecific(writeRaster(s$r2, filename = tmpfile[3], overwrite = TRUE),
+  s$r2 <- suppressWarningsSpecific(terra::writeRaster(s$r2, filename = tmpfile[3], overwrite = TRUE),
                                    "NOT UPDATED FOR PROJ >= 6")
-  s$s <- stack(s$r, s$r2)
-  s$b <- writeRaster(s$s, filename = tmpfile[5], overwrite = TRUE)
+  s$s <- c(s$r, s$r2)
+  s$b <- terra::writeRaster(s$s, filename = tmpfile[5], overwrite = TRUE)
 
   Fns <- Filenames(s)
 
-  fnsGrd <- unlist(normPath(c(filename(s$b), gsub("grd$", "gri", filename(s$b)))))
+  fnsGrd <- unlist(normPath(Filenames(s$b)))
   expect_true(identical(c(Fns[["b1"]], Fns[["b2"]]), fnsGrd))
-  expect_true(identical(Fns[["r"]], normPath(filename(s$r))))
-  expect_true(identical(Fns[["r2"]], normPath(filename(s$r2))))
+  expect_true(identical(Fns[["r"]], normPath(Filenames(s$r))))
+  expect_true(identical(Fns[["r2"]], normPath(Filenames(s$r2))))
   expect_true(identical(c(Fns[["s1"]], Fns[["s2"]]),
-                        sapply(seq_len(nlayers2(s$s)), function(rInd) normPath(filename(s$s[[rInd]])))))
+                        sapply(seq_len(nlayers2(s$s)), function(rInd) normPath(Filenames(s$s[[rInd]])))))
 
   FnsR <- Filenames(s$r)
-  expect_true(identical(FnsR, normPath(filename(s$r))))
+  expect_true(identical(FnsR, normPath(Filenames(s$r))))
 
   FnsS <- Filenames(s$s)
   expect_true(identical(FnsS, sapply(seq_len(nlayers2(s$s)),
-                                     function(rInd) normPath(filename(s$s[[rInd]])))))
+                                     function(rInd) normPath(Filenames(s$s[[rInd]])))))
 
   FnsB <- Filenames(s$b)
   expect_true(identical(FnsB, fnsGrd))
 
   # Another stack with identical files
-  rlogoFiles <- system.file("external/rlogo.grd", package = "raster")
+  rlogoFiles <- system.file("ex/test.grd", package = "terra")
   rlogoFiles <- c(rlogoFiles, gsub("grd$", "gri", rlogoFiles))
   secondSet <- file.path(tmpdir, c("one.grd", "one.gri"))
   res <- suppressWarnings(file.link(rlogoFiles, secondSet))
   if (all(res)) {
-    b <- raster::stack(rlogoFiles[1], secondSet[1])
+    b <- c(terra::rast(rlogoFiles[1]), terra::rast(secondSet[1]))
     expect_true(identical(sort(normPath(c(rlogoFiles, secondSet))), sort(Filenames(b))))
   }
 
   # Test duplicated filenames in same Stack
-  b <- raster::stack(rlogoFiles[1], rlogoFiles[1])
-  expect_true(identical(sort(normPath(c(rlogoFiles))), sort(Filenames(b))))
+  b <- c(terra::rast(rlogoFiles[1]), terra::rast(rlogoFiles[1]))
+  expect_true(identical(sort(normPath(c(rlogoFiles))), unique(sort(Filenames(b)))))
 
-  rlogoFiles <- system.file("external/rlogo.grd", package = "raster")
+  rlogoFiles <- system.file("ex/test.grd", package = "terra")
   rlogoDir <- dirname(rlogoFiles)
-  b <- raster::brick(rlogoFiles)
+  b <- terra::rast(rlogoFiles)
   rlogoFiles <- c(rlogoFiles, gsub("grd$", "gri", rlogoFiles))
   expect_true(identical(
-    sort(normPath(dir(pattern = "rlogo", rlogoDir, full.names = TRUE))),
+    sort(normPath(dir(pattern = "test", rlogoDir, full.names = TRUE))),
     sort(Filenames(b))))
 })
 

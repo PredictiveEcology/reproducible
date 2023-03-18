@@ -53,13 +53,18 @@ projectInputs(
 
 maskInputs(x, studyArea, ...)
 
-writeOutputs(x, overwrite = getOption("reproducible.overwrite", NULL), ...)
+writeOutputs(
+  x,
+  ...,
+  overwrite = getOption("reproducible.overwrite", NULL),
+  verbose = getOption("reproducible.verbose", 1)
+)
 
 \method{writeOutputs}{default}(
   x,
+  ...,
   overwrite = getOption("reproducible.overwrite", FALSE),
-  verbose = getOption("reproducible.verbose", 1),
-  ...
+  verbose = getOption("reproducible.verbose", 1)
 )
 }
 \arguments{
@@ -149,7 +154,7 @@ See \code{\link[=writeTo]{writeTo()}}
 }
 \examples{
 if (requireNamespace("terra")) {
-  r <- terra::rast(terra:ext(0,100,0,100), vals = 1:1e2)
+  r <- terra::rast(terra::ext(0,100,0,100), vals = 1:1e2)
 
   tf <- tempfile(fileext = ".tif")
   writeOutputs(r, tf)

@@ -100,7 +100,10 @@
 #' @param writeTo Optional character string of a filename to use `writeRaster` to save the final
 #'   object. Default is `NULL`, which means there is no `writeRaster`
 #' @param method Used if `projectTo` is not `NULL`, and is the method used for
-#'   interpolation. See `terra::project`. Defaults to `"bilinear"`.
+#'   interpolation. See `terra::project`. Defaults to `"NULL"`. In this case, it will
+#'   attempt to estimate based on whether the values are integers (or factors) and should
+#'   likely be ngb vs. real numbers and should likely be bilinear. A user should specify
+#'   this to be sure.
 #' @param datatype A character string, used if `writeTo` is not `NULL`. See `terra::writeRaster`
 #' @param overwrite Logical. Used if `writeTo` is not `NULL`; also if `terra` determines
 #'   that the object requires writing to disk during a `crop`, `mask` or `project` call
@@ -121,11 +124,6 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
   startTime <- Sys.time()
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
-  if (is.null(method)) {
-    method <- "bilinear"
-  } else if (method == "ngb") {
-    method <- "near"
-  }
 
   # Deal with combinations of to and *To
   if (missing(to)) to <- NULL
@@ -144,7 +142,14 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
   }
 
   # ASSERTION STEP
-  postProcessTerraAssertions(from, to, cropTo, maskTo, projectTo)
+  postProcessToAssertions(from, to, cropTo, maskTo, projectTo)
+
+  if (is.null(method)) {
+    method <- assessDataType(from, type = "projectRaster")
+  }
+  if (method == "ngb") {
+    method <- "near"
+  }
 
   # Get the original class of from so that it can be recovered
   origFromClass <- is(from)
@@ -434,12 +439,20 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
 
 #' @export
 #' @rdname postProcessTo
-projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE, ...) {
+projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE, ...) {
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
-  if (method == "ngb") {
-    method <- "near"
+  if (isGridded(from)) {
+    if (is.null(method)) {
+      method <- assessDataType(x, type = "projectRaster")
+    }
+    if (isTRUE(method == "bilinear") && terra::is.int(from)) {
+      warning("method is bilinear, but the data are integer; please confirm this is correct")
+    }
+    if (method == "ngb") {
+      method <- "near"
+    }
   }
 
   if (!is.null(projectTo)) {
@@ -664,8 +677,8 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
 
 #' @export
 #' @rdname postProcessTo
-#' @param isStack,isBrick,isRaster,isSpatRaster Logical. Default `FALSE`. Used to convert `from`
-#'   back to these classes prior to writing.
+#' @param isStack,isBrick,isRaster,isSpatRaster Logical. Default `NULL`. Used to convert `from`
+#'   back to these classes prior to writing, if provided.
 #'
 writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, isRaster = NULL,
                     isSpatRaster = NULL, datatype = "FLT4S", ...) {
@@ -723,7 +736,7 @@ writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, is
   from
 }
 
-postProcessTerraAssertions <- function(from, to, cropTo, maskTo, projectTo) {
+postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo) {
 
   # sometimes there are quosures
   for (y in ls()) {
