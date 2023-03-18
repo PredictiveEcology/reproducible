@@ -41,9 +41,14 @@ This can be extremely useful for web apps built with, say `shiny`.
 Any function can be cached by wrapping `Cache` around the function call, or by using base pipe `|>` or using: `Cache(FUN = functionName, ...)`
 
 This will be a slight change to a function call, such as:
-`projectRaster(raster, crs = crs(newRaster))`
+`terra::project(raster, crs = terra::crs(newRaster))`
 to
-`Cache(projectRaster, raster, crs = crs(newRaster))`.
+`Cache(terra::project(raster, crs = terra::crs(newRaster)))`
+or
+`Cache(terra::project, raster, crs = terra::crs(newRaster))`
+or with the pipe
+`terra::project(raster, crs = terra::crs(newRaster)) |> Cache()`
+
 
 This is particularly useful for expensive operations.
 
