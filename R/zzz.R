@@ -35,7 +35,7 @@
 .reproducibleTempCacheDir <- function()  getOption("reproducible.cachePath")
 .reproducibleTempInputDir <- function() file.path(tempdir(), "reproducible", "inputs")
 
-.argsToRemove <- argsToRemove <- unique(c(names(formals(prepInputs)),
+.argsToRemove <- unique(c(names(formals(prepInputs)),
                                           names(formals(cropInputs)),
                                           names(formals(cropTo)),
                                           names(formals(maskTo)),
@@ -43,8 +43,8 @@
                                           names(formals(postProcessTo)),
                                           names(formals(fixErrors)),
                                           names(formals(fixErrorsIn)),
-                                          names(formals(raster::writeRaster)),
-                                          names(formals(raster::projectRaster)),
+                                          # names(formals(raster::writeRaster)),
+                                          # names(formals(raster::projectRaster)),
                                           names(formals(determineFilename)),
                                           names(formals(writeOutputs)),
                                           names(formals(writeTo)),

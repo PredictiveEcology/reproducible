@@ -690,15 +690,19 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds,
   classes <- sc[tagKey == "class"]$tagValue
   rases <- classes %in% c("RasterLayer", "RasterStack", "RasterBrick")
   objs <- lapply(files[rases], readRDS)
-  frmDisk <- unlist(lapply(objs, fromDisk))
-  filenames <- unlist(lapply(objs[frmDisk], Filenames))
-  toDelete <- gdriveLs[isInCloud,]
-  messageCache("Cloud:", verbose = verbose)
-  if (!is.null(filenames)) {
-    rasFiles <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
-    toDelete <- rbind(rasFiles, toDelete)
+  if (length(objs)) {
+    .requireNamespace("raster", stopOnFALSE = TRUE)
+    frmDisk <- unlist(lapply(objs, raster::fromDisk))
+    filenames <- unlist(lapply(objs[frmDisk], Filenames))
+    toDelete <- gdriveLs[isInCloud,]
+    messageCache("Cloud:", verbose = verbose)
+    if (!is.null(filenames)) {
+      rasFiles <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
+      toDelete <- rbind(rasFiles, toDelete)
+    }
+    retry(quote(googledrive::drive_rm(toDelete)))
   }
-  retry(quote(googledrive::drive_rm(toDelete)))
+  return(invisible())
 }
 
 

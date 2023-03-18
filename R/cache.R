@@ -1192,6 +1192,7 @@ matchCall <- function(FUNcaptured, envir = parent.frame()) {
 }
 
 #' @importFrom methods .S4methods
+#' @importFrom utils getFromNamespace
 getMethodAll <- function(FUNcaptured, callingEnv) {
   FUN <- FUNcaptured[[1]]
   if (isS4(FUN)) {

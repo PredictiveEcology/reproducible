@@ -91,10 +91,13 @@ setGeneric("Copy", function(object, ...) {
 })
 
 #' @rdname Copy
+#' @inheritParams Cache
 setMethod(
   "Copy",
   signature(object = "ANY"),
-  definition = function(object, # filebackedDir,
+  definition = function(object, filebackedDir,
+                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        conn = getOption("reproducible.conn", NULL),
                         ...) {
     out <- object # many methods just do a pass through
     if (any(grepl("DBIConnection", is(object)))) {

@@ -122,7 +122,7 @@
 #'     \pkg{archivist}.
 #'   }
 #'   \item{`useGDAL`}{
-#'     Default `TRUE`. Passed to `useGDAL` in `projectInputs.Raster`.
+#'     Default `TRUE`. Passed to `useGDAL`. Deprecated.
 #'   }
 #'   \item{`useMemoise`}{
 #'     Default: `FALSE`. Used in [Cache()]. If `TRUE`, recovery of cached
@@ -163,7 +163,7 @@
 #' \describe{
 #'   \item{`cloudChecksumsFilename`}{
 #'     Default: `file.path(dirname(.reproducibleTempCacheDir()), "checksums.rds")`.
-#'     Used in [cloudCache()]
+#'     Used as an experimental argument in [Cache()]
 #'   }
 #'   \item{`length`}{
 #'     Default: `Inf`. Used in [Cache()], specifically to the internal

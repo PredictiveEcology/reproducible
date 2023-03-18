@@ -40,29 +40,29 @@ bigRastersTmpFolder <- function() checkPath(tempdir2(sub = "bigRasters"), create
 bigRastersTmpFile <- function() file.path(bigRastersTmpFolder(), "bigRasInput.tif")
 
 
-attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", FALSE),
-                        verbose = getOption("reproducible.verbose", 1)) {
-  attemptGDAL <- FALSE
-  if (is(x, "Raster")) {
-    crsIsNA <- is.na(.crs(x))
-    cpim <- canProcessInMemory(x, 3)
-    isTRUEuseGDAL <- isTRUE(useGDAL)
-    forceGDAL <- identical(useGDAL, "force")
-    shouldUseGDAL <- (!cpim && isTRUEuseGDAL || forceGDAL)
-    attemptGDAL <- if (shouldUseGDAL && !crsIsNA) {
-      TRUE
-    } else {
-      if (crsIsNA && shouldUseGDAL)
-        messagePrepInputs("      Can't use GDAL because crs is NA", verbose = verbose)
-      if (cpim && isTRUEuseGDAL)
-        messagePrepInputs("      useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
-                          "useGDAL = 'force' to override", verbose = verbose)
-
-      FALSE
-    }
-  }
-  attemptGDAL
-}
+# attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", FALSE),
+#                         verbose = getOption("reproducible.verbose", 1)) {
+#   attemptGDAL <- FALSE
+#   if (is(x, "Raster")) {
+#     crsIsNA <- is.na(.crs(x))
+#     cpim <- canProcessInMemory(x, 3)
+#     isTRUEuseGDAL <- isTRUE(useGDAL)
+#     forceGDAL <- identical(useGDAL, "force")
+#     shouldUseGDAL <- (!cpim && isTRUEuseGDAL || forceGDAL)
+#     attemptGDAL <- if (shouldUseGDAL && !crsIsNA) {
+#       TRUE
+#     } else {
+#       if (crsIsNA && shouldUseGDAL)
+#         messagePrepInputs("      Can't use GDAL because crs is NA", verbose = verbose)
+#       if (cpim && isTRUEuseGDAL)
+#         messagePrepInputs("      useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
+#                           "useGDAL = 'force' to override", verbose = verbose)
+#
+#       FALSE
+#     }
+#   }
+#   attemptGDAL
+# }
 
 maskWithRasterNAs <- function(x, y) {
   .requireNamespace("raster", stopOnFALSE = TRUE)
@@ -83,13 +83,13 @@ checkColors <- function(x) {
 }
 
 rebuildColors <- function(x, origColors) {
-  if (isTRUE(all(origColors$origMinValue != minValue(x)) || all(origColors$origMaxValue != maxValue(x)) ||
+  if (isTRUE(all(origColors$origMinValue != minFn(x)) || all(origColors$origMaxValue != maxFn(x)) ||
              !identical(.getColors(x)[[1]], origColors$origColors))) {
     colorSequences <- unlist(lapply(seq(length(origColors$origMinValue)), function(ind) {
       origColors$origMinValue[ind]:origColors$origMaxValue[ind]
     }))
     if (isTRUE(length(origColors$origColors) == length(colorSequences))) {
-      newSeq <- minValue(x):maxValue(x)
+      newSeq <- minFn(x):maxFn(x)
       oldSeq <- origColors$origMinValue:origColors$origMaxValue
       whFromOld <- match(newSeq, oldSeq)
       x@legend@colortable <- origColors$origColors[whFromOld]

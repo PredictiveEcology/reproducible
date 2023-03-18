@@ -698,6 +698,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                          algorithm = character())
 
 #' @keywords internal
+#' @importFrom utils getFromNamespace
 .extractFunction <- function(fun) {
   if (!is.null(fun)) {
     if (is.call(fun)) {

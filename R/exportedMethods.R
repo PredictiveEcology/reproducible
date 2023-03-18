@@ -322,6 +322,54 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
 #' @export
 #' @keywords internal
 updateFilenameSlots.default <- function(obj, ...)  {
+
+  if (inherits(obj, "Raster")) {
+    if (missing(curFilenames)) {
+      curFilenames <- Filenames(obj, allowMultiple = FALSE)
+    }
+
+    if (missing(newFilenames)) stop("newFilenames can't be missing: either new filenames or a single directory")
+    # if newFilenames is a directory
+    areDirs <- dir.exists(newFilenames)
+    if (any(areDirs) && length(newFilenames) == 1) {
+      newFilenames <- file.path(newFilenames, basename(curFilenames))
+    }
+
+    if (length(curFilenames) > 1) {
+      for (i in seq_along(curFilenames)) {
+        if (is.list(obj)) {
+          slot(slot(obj[[i]], "file"), "name") <- newFilenames[i]
+        } else {
+          slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
+        }
+      }
+    } else {
+      if (is.null(isStack)) isStack <- is(obj, "RasterStack")
+      if (!isStack) {
+        slot(slot(obj, "file"), "name") <- newFilenames
+      } else {
+        # aiof <- allInOneFile(obj)
+
+        # if (isTRUE(aiof)) {
+        #   slot(obj, "filename") <- newFilenames
+        # } else {
+        if (length(newFilenames) == 1) {
+          newFilenames <- rep(newFilenames, nlayers2(obj))
+        }
+        for (i in seq_len(nlayers2(obj))) {
+          whFilename <- unique(match(withoutFinalNumeric(basename(newFilenames)),
+                                     withoutFinalNumeric(basename(curFilenames))))
+          isNAwhFn <- is.na(whFilename)
+          if (any(isNAwhFn))
+            whFilename <- i
+          slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
+        }
+        # }
+
+
+      }
+    }
+  }
   obj
 }
 
@@ -363,60 +411,57 @@ updateFilenameSlots.environment <- function(obj, ...)  {
 }
 
 
-#' @rdname exportedMethods
-#' @export
-#' @keywords internal
-updateFilenameSlots.Raster <- function(obj, curFilenames, newFilenames, isStack = NULL) {
-  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-    return(updateFilenameSlots2(obj, curFilenames, newFilenames, isStack))
-  }
-  if (missing(curFilenames)) {
-    curFilenames <- Filenames(obj, allowMultiple = FALSE)
-  }
-
-  if (missing(newFilenames)) stop("newFilenames can't be missing: either new filenames or a single directory")
-  # if newFilenames is a directory
-  areDirs <- dir.exists(newFilenames)
-  if (any(areDirs) && length(newFilenames) == 1) {
-    newFilenames <- file.path(newFilenames, basename(curFilenames))
-  }
-
-  if (length(curFilenames) > 1) {
-    for (i in seq_along(curFilenames)) {
-      if (is.list(obj)) {
-        slot(slot(obj[[i]], "file"), "name") <- newFilenames[i]
-      } else {
-        slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
-      }
-    }
-  } else {
-    if (is.null(isStack)) isStack <- is(obj, "RasterStack")
-    if (!isStack) {
-      slot(slot(obj, "file"), "name") <- newFilenames
-    } else {
-      # aiof <- allInOneFile(obj)
-
-      # if (isTRUE(aiof)) {
-      #   slot(obj, "filename") <- newFilenames
-      # } else {
-      if (length(newFilenames) == 1) {
-        newFilenames <- rep(newFilenames, nlayers2(obj))
-      }
-      for (i in seq_len(nlayers2(obj))) {
-        whFilename <- unique(match(withoutFinalNumeric(basename(newFilenames)),
-                                   withoutFinalNumeric(basename(curFilenames))))
-        isNAwhFn <- is.na(whFilename)
-        if (any(isNAwhFn))
-          whFilename <- i
-        slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
-      }
-      # }
-
-
-    }
-  }
-  obj
-}
+# @rdname exportedMethods
+# @export
+# @keywords internal
+# updateFilenameSlots.Raster <- function(obj, curFilenames, newFilenames, isStack = NULL) {
+#   if (missing(curFilenames)) {
+#     curFilenames <- Filenames(obj, allowMultiple = FALSE)
+#   }
+#
+#   if (missing(newFilenames)) stop("newFilenames can't be missing: either new filenames or a single directory")
+#   # if newFilenames is a directory
+#   areDirs <- dir.exists(newFilenames)
+#   if (any(areDirs) && length(newFilenames) == 1) {
+#     newFilenames <- file.path(newFilenames, basename(curFilenames))
+#   }
+#
+#   if (length(curFilenames) > 1) {
+#     for (i in seq_along(curFilenames)) {
+#       if (is.list(obj)) {
+#         slot(slot(obj[[i]], "file"), "name") <- newFilenames[i]
+#       } else {
+#         slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
+#       }
+#     }
+#   } else {
+#     if (is.null(isStack)) isStack <- is(obj, "RasterStack")
+#     if (!isStack) {
+#       slot(slot(obj, "file"), "name") <- newFilenames
+#     } else {
+#       # aiof <- allInOneFile(obj)
+#
+#       # if (isTRUE(aiof)) {
+#       #   slot(obj, "filename") <- newFilenames
+#       # } else {
+#       if (length(newFilenames) == 1) {
+#         newFilenames <- rep(newFilenames, nlayers2(obj))
+#       }
+#       for (i in seq_len(nlayers2(obj))) {
+#         whFilename <- unique(match(withoutFinalNumeric(basename(newFilenames)),
+#                                    withoutFinalNumeric(basename(curFilenames))))
+#         isNAwhFn <- is.na(whFilename)
+#         if (any(isNAwhFn))
+#           whFilename <- i
+#         slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
+#       }
+#       # }
+#
+#
+#     }
+#   }
+#   obj
+# }
 
 #' @details
 #' `makeMemoiseable` and `unmakeMemoisable` methods are run during `Cache`. The

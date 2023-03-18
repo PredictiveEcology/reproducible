@@ -29,6 +29,7 @@
 #' @author Eliot McIntire and Alex Chubaty
 #' @export
 #' @rdname paddedFloatToChar
+#' @importFrom fpCompare %==%
 #'
 #' @examples
 #' paddedFloatToChar(1.25)
@@ -471,6 +472,7 @@ messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
                   verboseLevel = verboseLevel, verbose = 10, appendLF = appendLF)
 }
 
+#' @importFrom utils getFromNamespace
 messageColoured <- function(..., colour = NULL, verboseLevel = 1,
                             verbose = getOption("reproducible.verbose", 1),
                             appendLF = TRUE) {

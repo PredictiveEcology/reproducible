@@ -55,6 +55,7 @@ Imports:
     data.table (>= 1.10.4),
     DBI,
     digest,
+    fpCompare,
     glue,
     lobstr,
     methods,
@@ -86,6 +87,8 @@ License: GPL-3
 VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
 Collate: 
     'DBI.R'
     'cache-helpers.R'
@@ -94,13 +97,11 @@ Collate:
     'cache.R'
     'checksums.R'
     'cloud.R'
-    'cloudOld.R'
     'convertPaths.R'
     'copy.R'
     'download.R'
     'exportedMethods.R'
     'gis.R'
-    'git.R'
     'helpers.R'
     'messages.R'
     'objectSize.R'
@@ -119,5 +120,3 @@ Collate:
     'spatialObjects-class.R'
     'terra-migration.R'
     'zzz.R'
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3

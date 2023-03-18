@@ -55,24 +55,6 @@ postProcess.list <- function(x, ...) {
 #'
 #' @inheritParams cropInputs
 #'
-#' @param filename1  Character strings giving the file paths of
-#'                   the *input* object (`filename1`) `filename1`
-#'                   is only used for messaging (i.e., the object itself is passed
-#'                   in as `x`) and possibly naming of output (see details
-#'                   and `filename2`).
-#'
-#' @param filename2   `filename2` is optional, and is either
-#'                   NULL (no writing of outputs to disk), or several options
-#'                   for writing the object to disk. If
-#'                   `TRUE` (the default), it will give it a file name determined by
-#'                   `.prefix(basename(filename1), prefix)`. If
-#'                   a character string, it will use this as its file name. See
-#'                   [determineFilename()].
-#'
-#' @param useSAcrs Logical. If `FALSE`, the default, then the desired projection
-#'                 will be taken from `rasterToMatch` or none at all.
-#'                 If `TRUE`, it will be taken from `studyArea`. See table
-#'                 in details below.
 #'
 #' @param ... Additional arguments passed to methods. For `spatialClasses`,
 #'            these are: [cropTo()], [fixErrorsIn()],
@@ -85,14 +67,6 @@ postProcess.list <- function(x, ...) {
 #'            with likely important arguments such as `method = "bilinear"`.
 #'            See details.
 #'
-#' \subsection{... passed to:}{
-#'   \describe{
-#'     \item{[cropTo()], [projectTo()], [maskTo()], [fixErrorsIn()],
-#'     [writeTo()], [determineFilename()]}
-#'   }
-#'   * Can be overridden with `useSAcrs`
-#'   ** Will mask with `NA`s from `rasterToMatch` if `maskWithRTM`
-#' }
 #'
 #' @section Passing `rasterToMatch` and/or `studyArea`:
 #'
@@ -1186,6 +1160,11 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #' preference for determining CRS. See [postProcess()]
 #' @inheritParams projectInputs
 #' @keywords internal
+#' @param useSAcrs Logical. If `FALSE`, the default, then the desired projection
+#'                 will be taken from `rasterToMatch` or none at all.
+#'                 If `TRUE`, it will be taken from `studyArea`. See table
+#'                 in details below.
+#'
 #' @rdname postProcessHelpers
 .getTargetCRS <- function(useSAcrs, studyArea, rasterToMatch, targetCRS = NULL) {
   if (is.null(targetCRS)) {
@@ -1425,6 +1404,21 @@ maskInputs.default <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM =
 #'  `destinationPath` if provided, and if `filename2` is relative.
 #'
 #' @rdname determineFilename
+#' @param filename1  Character strings giving the file paths of
+#'                   the *input* object (`filename1`) `filename1`
+#'                   is only used for messaging (i.e., the object itself is passed
+#'                   in as `x`) and possibly naming of output (see details
+#'                   and `filename2`).
+#'
+#' @param filename2   `filename2` is optional, and is either
+#'                   NULL (no writing of outputs to disk), or several options
+#'                   for writing the object to disk. If
+#'                   `TRUE` (the default), it will give it a file name determined by
+#'                   `.prefix(basename(filename1), prefix)`. If
+#'                   a character string, it will use this as its file name. See
+#'                   [determineFilename()].
+#'
+#' @inheritParams postProcess
 determineFilename <- function(filename2 = NULL, filename1 = NULL,
                               destinationPath = getOption("reproducible.destinationPath", "."),
                               verbose = getOption("reproducible.verbose", 1),
@@ -1523,7 +1517,7 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #'   tf <- tempfile(fileext = ".tif")
 #'   writeOutputs(r, tf)
 #' }
-writeOutputs <- function(x, filename2,
+writeOutputs <- function(x, # filename2,
                          overwrite = getOption("reproducible.overwrite", NULL),
                          ...) {
   UseMethod("writeOutputs")
@@ -2187,20 +2181,21 @@ setMinMaxIfNeeded <- function(ras) {
     }
   }
   if (isTRUE(needSetMinMax)) {
+    .requireNamespace("terra", stopOnFALSE = TRUE)
     large <- if (nlayers2(ras) > 25 || terra::ncell(ras) > 1e7) TRUE else FALSE
     if (large) message("  Large ",class(ras), " detected; setting minimum and maximum may take time")
-    suppressWarnings(ras <- setMinMax(ras))
+    suppressWarnings(ras <- terra::setMinMax(ras))
     if (large) message("  ... Done")
   }
   ras
 }
 
-differentRasters <- function(ras1, ras2, targetCRS) {
-
-  (!isTRUE(all.equal(.crs(ras1), targetCRS)) |
-     !isTRUE(all.equal(res(ras1), res(ras2))) |
-     !isTRUE(all.equal(extent(ras1), extent(ras2))))
-}
+# differentRasters <- function(ras1, ras2, targetCRS) {
+#
+#   (!isTRUE(all.equal(.crs(ras1), targetCRS)) |
+#      !isTRUE(all.equal(res(ras1), res(ras2))) |
+#      !isTRUE(all.equal(extent(ras1), extent(ras2))))
+# }
 
 roundTo6Dec <- function(x) {
   # check if integer

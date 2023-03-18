@@ -165,7 +165,7 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
     fromCRS <- sf::st_crs(from)
     from <- terra::rast(from)
     if (!nzchar(terra::crs(from)))
-      crs(from) <- fromCRS$input
+      terra::crs(from) <- fromCRS$input
   } else if (isSpatial) {
     osFrom <- object.size(from)
     lg <- osFrom > 5e8
@@ -209,7 +209,7 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
 }
 
 #' @export
-#' @rdname postProcess
+#' @rdname postProcessTo
 postProcessTerra <- postProcessTo
 
 isSpatial <- function(x) inherits(x, "Spatial")
@@ -455,7 +455,7 @@ projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE, .
       sameRes <- if (isVector(from) || isProjectToVecOrCRS) {
         TRUE
       } else {
-        all(res(projectTo) == res(from))
+        all(terra::res(projectTo) == terra::res(from))
       }
 
       if (sameProj && sameRes) {
@@ -482,13 +482,15 @@ projectTo <- function(from, projectTo, method = "bilinear", overwrite = FALSE, .
             messagePrepInputs("")
             messagePrepInputs("         projectTo is a Vector dataset, which does not define all metadata required. ")
             if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
-              newRes <- res(from)
+              newRes <- terra::res(from)
               messagePrepInputs("         Using resolution of ",paste(newRes, collapse = "x"),"m; ")
               projectTo <- terra::rast(projectTo, resolution = newRes)
             } else {
               projectTo <- terra::rast(ncols = terra::ncol(from), nrows = terra::nrow(from),
                                        crs = sf::st_crs(projectTo)$wkt, extent = terra::ext(projectTo))
-              messagePrepInputs("         Projecting to ", paste(collapse = "x", round(res(projectTo), 2))," resolution (same # pixels as `from`)")
+              messagePrepInputs("         Projecting to ",
+                                paste(collapse = "x", round(terra::res(projectTo), 2)),
+                                " resolution (same # pixels as `from`)")
             }
 
             messagePrepInputs("         in the projection of `projectTo`, using the origin and extent")
@@ -596,9 +598,9 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
       if (needBuffer) {
         if (isGridded(from) || isGridded(cropTo)) {
           if (isGridded(from)) {
-            res <- res(from)
+            res <- terra::res(from)
           } else if (isGridded(cropTo)) {
-            res <- res(cropTo)
+            res <- terra::res(cropTo)
           }
           if (!isSpat(ext))
             ext <- terra::vect(ext)
@@ -625,8 +627,10 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
       attempt <- 1
       while (attempt <= 2) {
         if (isGridded(from)) {
-          if (!isSpat(from)) # terra::crop can handle Raster but only if ext is `extent`
-            ext <- extent(ext[])
+          if (!isSpat(from)) {# terra::crop can handle Raster but only if ext is `extent`
+            .requireNamespace("raster", stopOnFALSE = TRUE)
+            ext <- raster::extent(ext[])
+          }
           fromInt <- try(terra::crop(from, ext, overwrite = overwrite), silent = TRUE)
         } else {
           if (isSF(from)) {
