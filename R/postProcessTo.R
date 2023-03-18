@@ -751,7 +751,7 @@ postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo) {
     stop("Need terra and sf: install.packages(c('terra', 'sf'))")
   if (!requireNamespace("sf", quietly = TRUE)) stop("Need sf: install.packages('sf')")
 
-  if (!(isSpatialAny(from))) stop("from must be a Raster* or SpatRaster")
+  if (!(isSpatialAny(from))) stop("from must be a Spat* or sf*")
 
   if (!missing(to)) {
     if (!is.null(to)) {
