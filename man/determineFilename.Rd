@@ -14,8 +14,7 @@ determineFilename(
 )
 }
 \arguments{
-\item{filename2}{File name passed to \code{\link[=writeTo]{writeTo()}}, or
-\code{\link[=writeTo]{writeTo()}}.}
+\item{filename2}{File name passed to \code{\link[=writeTo]{writeTo()}}.}
 
 \item{destinationPath}{Optional. If \code{filename2} is a relative file path, then this
 will be the directory of the resulting absolute file path.}

@@ -62,7 +62,6 @@ writeOutputs(
 
 \method{writeOutputs}{default}(
   x,
-  filename2,
   overwrite = getOption("reproducible.overwrite", FALSE),
   verbose = getOption("reproducible.verbose", 1),
   ...
@@ -111,8 +110,7 @@ If \code{NA}, then all testing and buffering will be skipped.}
 
 \item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
 
-\item{filename2}{File name passed to \code{\link[=writeTo]{writeTo()}}, or
-\code{\link[=writeTo]{writeTo()}}.}
+\item{filename2}{File name passed to \code{\link[=writeTo]{writeTo()}}.}
 
 \item{overwrite}{Logical. Should file being written overwrite an existing file if it exists.}
 
@@ -137,7 +135,7 @@ appropriately reprojected.
 A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 appropriately masked.
 
-A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+A GIS file (e.g., SpatRaster etc.) that has been
 appropriately written to disk. In the case of vector datasets, this will
 be a side effect. In the case of gridded objects (Raster*, SpatRaster), the
 object will have a file-backing.

@@ -45,10 +45,10 @@ writeTo(
   from,
   writeTo,
   overwrite,
-  isStack = FALSE,
-  isBrick = FALSE,
-  isRaster = FALSE,
-  isSpatRaster = FALSE,
+  isStack = NULL,
+  isBrick = NULL,
+  isRaster = NULL,
+  isSpatRaster = NULL,
   datatype = "FLT4S",
   ...
 )
