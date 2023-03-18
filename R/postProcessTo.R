@@ -663,18 +663,25 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
 #' @param isStack,isBrick,isRaster,isSpatRaster Logical. Default `FALSE`. Used to convert `from`
 #'   back to these classes prior to writing.
 #'
-writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, isRaster = FALSE,
-                    isSpatRaster = FALSE, datatype = "FLT4S", ...) {
+writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, isRaster = NULL,
+                    isSpatRaster = NULL, datatype = "FLT4S", ...) {
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
-  if (isStack) from <- raster::stack(from)
-  if (isBrick) from <- raster::brick(from)
+  if (isTRUE(isStack)) from <- raster::stack(from)
+  if (isTRUE(isBrick)) from <- raster::brick(from)
+
+  writeDone <- FALSE
 
   if (!is.null(writeTo))
     if (!any(is.na(writeTo))) {
+      .requireNamespace("terra", stopOnFALSE = TRUE)
       messagePrepInputs("    writing...", appendLF = FALSE)
       st <- Sys.time()
+
+      if (is.null(isSpatRaster)) isSpatRaster <- isSpat(from) && isGridded(from)
+      if (is.null(isRaster)) isRaster <- inherits(from, "Raster")
+
       if (isSpatRaster || isSpatVector(from)) {
         ## trying to prevent write failure and subsequent overwrite error with terra::writeRaster
         if (any(file.exists(writeTo))) {
@@ -690,17 +697,23 @@ writeTo <- function(from, writeTo, overwrite, isStack = FALSE, isBrick = FALSE, 
           if (!any(file.exists(writeTo))) {
             from <- terra::writeRaster(from, filename = writeTo, overwrite = FALSE,
                                        datatype = datatype)
+            writeDone <- TRUE
           } else {
             stop("File can't be unliked for overwrite")
           }
         } else {
           written <- terra::writeVector(from, filename = writeTo, overwrite = FALSE)
+          writeDone <- TRUE
         }
       } else if (isRaster) {
-        from <- raster::writeRaster(from, filename = writeTo, overwrite = overwrite,
+        from <- terra::writeRaster(from, filename = writeTo, overwrite = overwrite,
                                     datatype = datatype)
+        writeDone <- TRUE
+      } else {
+        messagePrepInputs("... nothing written; object not a known object type to write.")
       }
-      messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+      if (isTRUE(writeDone))
+        messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
     }
 
   from

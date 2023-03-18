@@ -135,29 +135,30 @@ postProcess.default <- function(x, ...) {
     .requireNamespace("rlang", stopOnFALSE = TRUE)
     x <- rlang::eval_tidy(x)
   }
+  return(postProcessTo(from = x, ...))
 
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
   # browser(expr = exists("._postProcess.spatialClasses_1"))
-  if (isTRUE(getOption("reproducible.useTerra"))) {
-    if (isFALSE(useSAcrs)) useSAcrs <- NULL
-    x1 <- postProcessTo(from = x, studyArea = studyArea,
-                           rasterToMatch = rasterToMatch, useCache = useCache,
-                           filename1 = filename1, filename2 = filename2,
-                           useSAcrs = useSAcrs, overwrite = overwrite,
-                           verbose = verbose, ...)
-  } else {
-
-    on.exit(raster::removeTmpFiles(h = 0), add = TRUE)
-
-    x1 <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
-                                rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
-                                filename1 = filename1, filename2 = filename2,
-                                useSAcrs = useSAcrs, overwrite = overwrite,
-                                verbose = verbose, ...)
-  }
-
-
-  x
+  # if (isTRUE(getOption("reproducible.useTerra"))) {
+  #   if (isFALSE(useSAcrs)) useSAcrs <- NULL
+  #   x1 <- postProcessTo(from = x, studyArea = studyArea,
+  #                          rasterToMatch = rasterToMatch, useCache = useCache,
+  #                          filename1 = filename1, filename2 = filename2,
+  #                          useSAcrs = useSAcrs, overwrite = overwrite,
+  #                          verbose = verbose, ...)
+  # } else {
+  #
+  #   on.exit(raster::removeTmpFiles(h = 0), add = TRUE)
+  #
+  #   x1 <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
+  #                               rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
+  #                               filename1 = filename1, filename2 = filename2,
+  #                               useSAcrs = useSAcrs, overwrite = overwrite,
+  #                               verbose = verbose, ...)
+  # }
+  #
+  #
+  # x
 }
 
 # postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = NULL,
@@ -1500,20 +1501,19 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #'
 #' @param overwrite Logical. Should file being written overwrite an existing file if it exists.
 #'
-#' @param filename2 File name passed to [writeTo()], or
-#'                  [writeTo()].
+#' @param filename2 File name passed to [writeTo()].
 #'
 #' @param ... Passed into [writeTo()]
 #'
 #' @inheritParams prepInputs
 #'
 #' @author Eliot McIntire and Jean Marchal
-#' @export
-#' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
+#' @return A GIS file (e.g., SpatRaster etc.) that has been
 #' appropriately written to disk. In the case of vector datasets, this will
 #' be a side effect. In the case of gridded objects (Raster*, SpatRaster), the
 #' object will have a file-backing.
 #' @importFrom methods is
+#' @export
 #' @rdname deprecated
 #'
 #' @examples
@@ -1777,12 +1777,13 @@ writeOutputs <- function(x, filename2,
 # }
 
 #' @rdname deprecated
-writeOutputs.default <- function(x, filename2,
+#' @export
+writeOutputs.default <- function(x, # filename2,
                                  overwrite = getOption("reproducible.overwrite", FALSE),
                                  verbose = getOption("reproducible.verbose", 1),
                                  ...) {
 
-  writeTo(x, ...)
+  writeTo(x, ..., overwrite = overwrite, verbose = verbose)
   # if (is(x, "SpatRaster")) {
   #   if (.requireNamespace("terra"))
   #     x <- terra::writeRaster(x, filename = filename2, overwrite = overwrite, ...)

@@ -70,10 +70,6 @@ test_that("prepInputs doesn't work (part 3)", {
 
   opts <- options(reproducible.useTerra = TRUE)
   on.exit(options(opts), add = TRUE)
-  # s <- raster::writeRaster(s, filename = tmpfile[3], overwrite = TRUE)
-
-
-  # s <- raster::stack()
   s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
   expect_true(inherits(s1, "SpatRaster"))
 
@@ -111,8 +107,8 @@ test_that("prepInputs doesn't work (part 3)", {
     expect_true((xmax(extent(ncSmall)) - xmax(r2)) > -(res(r2)[2] * 2))
 
     # postProcess
-    expect_true(identical(1, postProcess(1)))
-    expect_true(identical(list(1, 1), postProcess(list(1, 1))))
+    expect_error(postProcess(1), regexp = "from must be a")
+    expect_error(postProcess(list(1, 1)), regexp = "from must be a")
 
     nc2 <- postProcess(nc1, studyArea = as(ncSmall, "sf"))
     expect_equal(st_area(nc2), st_area(ncSmall))
@@ -175,31 +171,30 @@ test_that("prepInputs doesn't work (part 3)", {
     expect_true(terra::is.valid(p6a))
     expect_false(terra::is.valid(p6))
     # projectInputs pass through
-    nc5 <- projectInputs(x = 1)
-    expect_identical(nc5, 1)
+    expect_error(projectInputs(x = 1), "argument .+ is missing")
   }
 })
 
 test_that("writeOutputs with non-matching filename2", {
-  testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
+  testInitOut <- testInit(c("terra"), tmpFileExt = c(".grd", ".tif"))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  r <- raster(extent(0,10,0,10), vals = rnorm(100))
-  r <- writeRaster(r, file = tmpfile[1], overwrite = TRUE)
+  r <- terra::rast(terra::ext(0,10,0,10), vals = rnorm(100))
+  r <- terra::writeRaster(r, file = tmpfile[1], overwrite = TRUE)
+  r[] <- r[]
   warn <- capture_warnings({
     r1 <- writeOutputs(r, filename2 = tmpfile[2])
   })
-  expect_true(any(grepl("filename2 file type", warn)))
-  r2 <- raster(filename(r1))
+  r2 <- terra::rast(Filenames(r1))
   vals1 <- r2[]
   vals2 <- r1[]
   vals3 <- r[]
   expect_true(identical(vals1, vals2))
   expect_true(identical(vals1, vals3))
-  expect_false(identical(normPath(filename(r)), normPath(filename(r1))))
-  expect_true(identical(normPath(filename(r2)), normPath(filename(r1))))
+  expect_false(identical(normPath(Filenames(r)), normPath(Filenames(r1))))
+  expect_true(identical(normPath(Filenames(r2)), normPath(Filenames(r1))))
 })
 
 test_that("cropInputs crops too closely when input projections are different", {
@@ -216,29 +211,33 @@ test_that("cropInputs crops too closely when input projections are different", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  ext <- new("Extent",
-             xmin = -3229772.32501426,
-             xmax = 3680227.67498574,
-             ymin = -365833.605586135,
-             ymax = 3454166.39441387)
-  x <- raster(ext,
+  ext2 <- terra::ext(c(xmin = -3229772.32501426,
+               xmax = 3680227.67498574,
+               ymin = -365833.605586135,
+               ymax = 3454166.39441387))
+  # ext <- new("Extent",
+  #            xmin = -3229772.32501426,
+  #            xmax = 3680227.67498574,
+  #            ymin = -365833.605586135,
+  #            ymax = 3454166.39441387)
+  x <- terra::rast(ext2,
               crs = paste("+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0",
                           "+a=6370997 +b=6370997 +units=m +no_defs"),
               res = c(10000, 10000))
   x <- setValues(x, 1)
 
-  RTMext <- new("Extent",
+  RTMext <- terra::ext(c(
                 xmin = -1613500.00000023,
                 xmax = -882500.000000228,
                 ymin = 7904500,
-                ymax = 9236000)
-  RTM <- raster(RTMext,
+                ymax = 9236000))
+  RTM <- terra::rast(RTMext,
                 crs = paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0",
                             "+ellps=GRS80 +units=m +no_defs"),
                 res = c(250, 250))
   RTM <- setValues(RTM, 2)
   out <- postProcess(x = x, rasterToMatch = RTM, filename2 = NULL)
-  expect_null(out[is.na(out) & !is.na(RTM)])
+  expect_true(nrow(out[is.na(out[]) & is.na(RTM[])]) == 0)
 })
 
 test_that("maskInputs errors when x is Lat-Long", {
