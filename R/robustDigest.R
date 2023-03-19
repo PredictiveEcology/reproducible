@@ -88,7 +88,7 @@
 #'   digest::digest(r)
 #'   digest::digest(r3) # different but should be same
 #'   .robustDigest(r1)
-#'   .robustDigest(r2) # same... data & metadata are the same
+#'   .robustDigest(r3) # same... data & metadata are the same
 #'
 #'   # note, this is not true for comparing memory and file-backed rasters
 #'   .robustDigest(r)
@@ -111,15 +111,18 @@ setMethod(
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     # browser(expr = exists("._robustDigest_1"))
+    if (is(object, "quosure")) {# can't get this class from rlang via importClass rlang quosure
+      if (!requireNamespace("rlang")) stop("Please `install.packages('rlang')`")
+      object <- rlang::eval_tidy(object)
+    }
+
     if (inherits(object, "Spatial")) {
       object <- .removeCacheAtts(object, passByReference = FALSE)
-
       if (is(object, "SpatialPoints")) {
         forDig <- as.data.frame(object)
       } else {
         forDig <- object
       }
-
       # The following Rounding is necessary to make digest equal on linux and windows
       if (inherits(forDig, "SpatialPolygonsDataFrame")) {
         bbb <- unlist(lapply(as.data.frame(forDig), is.numeric))
@@ -132,14 +135,7 @@ setMethod(
           }
         }
       }
-
-#       out <- .doDigest(forDig, algo = algo)
-
-    }
-
-
-
-    if (is(object, "Raster")) {
+    } else if (is(object, "Raster")) {
       object <- .removeCacheAtts(object)
 
       if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
@@ -160,13 +156,8 @@ setMethod(
           .digestRasterLayer(object, length = length, algo = algo, quick = quick))
       }
       forDig <- unlist(dig)
-#       out <- .doDigest(unlist(dig))
-    } else if (is(object, "quosure")) {# can't get this class from rlang via importClass rlang quosure
-      if (!requireNamespace("rlang")) stop("Please `install.packages('rlang')`")
-      object <- rlang::eval_tidy(object)
     } else if (is(object, "cluster")) {# can't get this class from parallel via importClass parallel cluster
       forDig <- NULL
-#      out <- .doDigest(NULL, algo)
     } else if (inherits(object, "SpatRaster")) {
       if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
         stop("Please install terra package")
@@ -180,22 +171,17 @@ setMethod(
           length = length, quick = quick,
           algo = algo, classOptions = classOptions) # don't include object@data -- these are volatile
         forDig <- list(out, dig)
-#         out <- .doDigest(list(out, dig), algo = algo)
       } else {
         forDig <- terra::wrap(object)
-        # out <- .doDigest(terra::wrap(object), algo)
       }
-    } else if (any(inherits(object, "SpatVector"), inherits(object, "SpatRaster"))) {
+    } else if (inherits(object, "SpatVector")) {
       if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
         stop("Please install terra package")
       forDig <- wrapSpatVector(object)
-      # out <- .doDigest(wrapSpatVector(object), algo)
     } else {
-
       # passByReference -- while doing pass by reference attribute setting is faster, is
       #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
       forDig <- .removeCacheAtts(object)
-      # out <- .doDigest(object1, algo)
     }
     out <- .doDigest(forDig, algo)
     return(out)

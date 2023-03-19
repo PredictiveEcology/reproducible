@@ -164,7 +164,7 @@ if (requireNamespace("terra")) {
   digest::digest(r)
   digest::digest(r3) # different but should be same
   .robustDigest(r1)
-  .robustDigest(r2) # same... data & metadata are the same
+  .robustDigest(r3) # same... data & metadata are the same
 
   # note, this is not true for comparing memory and file-backed rasters
   .robustDigest(r)

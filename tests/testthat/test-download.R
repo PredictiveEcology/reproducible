@@ -1,5 +1,6 @@
 test_that("dlGeneric works", {
   if (interactive()) {
+    skip_if_no_token()
     url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
     noisyOutput <- capture.output({
       res <- dlGeneric(url, FALSE, tempdir2(rndstr(1,6)))
