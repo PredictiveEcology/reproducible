@@ -658,8 +658,8 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 #' # Copy all files from tmpCache to tmpdir
 #' froms <- normalizePath(dir(tmpCacheDir, recursive = TRUE, full.names = TRUE),
 #'                        mustWork = FALSE)
-#' dir.create(file.path(tmpdirPath, "rasters"), recursive = TRUE)
-#' dir.create(file.path(tmpdirPath, "cacheOutputs"), recursive = TRUE)
+#' dir.create(file.path(tmpdirPath, "rasters"), recursive = TRUE, showWarnings = FALSE)
+#' dir.create(file.path(tmpdirPath, "cacheOutputs"), recursive = TRUE, showWarnings = FALSE)
 #' file.copy(from = froms, overwrite = TRUE,
 #'           to = gsub(tmpCache, tmpdir, froms))
 #'

@@ -47,7 +47,7 @@ test_that("all exported functions have examples", {
       cat(paste(file, " -- ", "\n"), file = tmpExFile, append = TRUE)
     }
     # for debugging only
-    message(file)
+    print(file)
     test_example(file)
   }
 })

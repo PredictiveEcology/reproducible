@@ -920,7 +920,10 @@ assessDataTypeOuter <- function(from, method) {
       method <- assessDataType(from, type = "projectRaster")
     }
     whMethodBilin <- method == "bilinear"
-    isInt <- if (inherits(from, "Raster")) apply(from[], 2, is.integer) else terra::is.int(from)
+
+    isInt <- if (inherits(from, "Raster")) {
+      if (nlayers2(from) == 1) is.integer(from[]) else apply(from[], 2, is.integer)
+    } else { terra::is.int(from) }
 
     if (isTRUE(any(whMethodBilin & isInt))) {
       warning("method is bilinear, but the data are integer; please confirm this is correct")
