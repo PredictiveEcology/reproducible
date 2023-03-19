@@ -143,13 +143,7 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
 
   # ASSERTION STEP
   postProcessToAssertions(from, to, cropTo, maskTo, projectTo)
-
-  if (is.null(method)) {
-    method <- assessDataType(from, type = "projectRaster")
-  }
-  if (method == "ngb") {
-    method <- "near"
-  }
+  method <- assessDataTypeOuter(from, method)
 
   # Get the original class of from so that it can be recovered
   origFromClass <- is(from)
@@ -443,17 +437,7 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE, ...) {
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
-  if (isGridded(from)) {
-    if (is.null(method)) {
-      method <- assessDataType(x, type = "projectRaster")
-    }
-    if (isTRUE(method == "bilinear") && terra::is.int(from)) {
-      warning("method is bilinear, but the data are integer; please confirm this is correct")
-    }
-    if (method == "ngb") {
-      method <- "near"
-    }
-  }
+  method <- assessDataTypeOuter(from, method)
 
   if (!is.null(projectTo)) {
     origFromClass <- is(from)
@@ -929,3 +913,20 @@ remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.fr
                     targetCRS = "projectTo",
                     useSAcrs = "projectTo")
 
+
+assessDataTypeOuter <- function(from, method) {
+  if (isGridded(from)) {
+    if (is.null(method)) {
+      method <- assessDataType(from, type = "projectRaster")
+    }
+    whMethodBilin <- method == "bilinear"
+    if (isTRUE(any(whMethodBilin & terra::is.int(from)))) {
+      warning("method is bilinear, but the data are integer; please confirm this is correct")
+    }
+    whMethodNGB <- method == "ngb"
+    if (any(whMethodNGB)) {
+      method[whMethodNGB] <- "near"
+    }
+  }
+  method
+}

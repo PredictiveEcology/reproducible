@@ -28,18 +28,18 @@ if (require("terra")) {
   vectEcozone <- terra::vect(shpEcozone)
 
   # If input is Spatial object --> return will also be Spatial
-  shpEcozonePostProcessed <- postProcessTo(shpEcozone, studyArea = StudyArea)
+  shpEcozonePostProcessed <- postProcessTo(shpEcozone, studyArea = studyArea)
   # Try manually, individual pieces -- Note functions are different
-  shpEcozoneReprojected <- projectTo(shpEcozone, StudyArea)
-  shpEcozoneMasked <- maskTo(shpEcozone, StudyArea)
-  shpEcozoneCropped <- cropTo(shpEcozone, StudyArea)
+  shpEcozoneReprojected <- projectTo(shpEcozone, studyArea)
+  shpEcozoneMasked <- maskTo(shpEcozone, studyArea)
+  shpEcozoneCropped <- cropTo(shpEcozone, studyArea)
 
   # If input is Spat object --> return will also be Spat
-  vectEcozonePostProcessed <- postProcessTo(vectEcozone, studyArea = StudyArea)
+  vectEcozonePostProcessed <- postProcessTo(vectEcozone, studyArea = studyArea)
   # Try manually, individual pieces -- Note functions are different
-  vectEcozoneMasked <- maskTo(vectEcozone, StudyArea)
-  VectEcozoneReprojected <- projectTo(vectEcozone, StudyArea)
-  vectEcozoneCropped <- cropTo(vectEcozone, StudyArea)
+  vectEcozoneMasked <- maskTo(vectEcozone, studyArea)
+  VectEcozoneReprojected <- projectTo(vectEcozone, studyArea)
+  vectEcozoneCropped <- cropTo(vectEcozone, studyArea)
 
   # fixErrorsIn --> generally not called on its own
   shpEcozoneClean <- fixErrorsIn(vectEcozone)

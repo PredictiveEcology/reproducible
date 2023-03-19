@@ -54,7 +54,7 @@ test_that("prepInputs doesn't work (part 3)", {
   r2[] <- runif(ncell(rB))
 
   b <- c(terra::rast(r1), terra::rast(r2))
-  crs(b) <- crs(nonLatLongProj)
+  terra::crs(b) <- terra::crs(nonLatLongProj)
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE)
   expect_true(inherits(b1, "SpatRaster"))
 

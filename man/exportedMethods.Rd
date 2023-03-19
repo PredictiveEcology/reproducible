@@ -253,10 +253,10 @@ b <- "NULL"
 .prepareOutput(b) # converts to NULL
 
 if (requireNamespace("raster")) {
-  r <- raster(extent(0,10,0,10), vals = 1:100)
+  r <- raster::raster(raster::extent(0,10,0,10), vals = 1:100)
 
   # write to disk manually -- will be in tempdir()
-  r <- writeRaster(r, file = tempfile())
+  r <- terra::writeRaster(r, file = tempfile())
 
   # copy it to the cache repository
   r <- .prepareOutput(r, tempdir())

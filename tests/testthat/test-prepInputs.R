@@ -2,13 +2,10 @@ test_that("prepInputs doesn't work (part 1)", {
   skip_on_cran()
   skip_on_ci()
 
-  testInitOut <- testInit("raster", opts = list(
+  testInitOut <- testInit("terra", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.inputPaths" = NULL,
     "reproducible.overwrite" = TRUE,
-    # reproducible.useTerra = FALSE,
-    # reproducible.rasterRead = "raster::raster",
-    #reproducible.rasterRead = "terra::rast",
     reproducible.showSimilar = TRUE)
   )
   on.exit({
@@ -21,10 +18,8 @@ test_that("prepInputs doesn't work (part 1)", {
   # Create a "study area"
   coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
                       .Dim = c(5L, 2L))
-  Sr1 <- Polygon(coords)
-  Srs1 <- Polygons(list(Sr1), "s1")
-  StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- crsToUse
+  StudyArea <- terra::vect(coords, "polygons")
+  terra::crs(StudyArea) <- crsToUse
 
   dPath <- file.path(tmpdir, "ecozones")
 
@@ -45,7 +40,7 @@ test_that("prepInputs doesn't work (part 1)", {
 
   # Robust to partial file deletions:
   unlink(dir(dPath, full.names = TRUE)[1:3])
-  expect_error(raster::shapefile(file.path(dPath, "ecozone_shp.zip")))
+  expect_error(terra::vect(file.path(dPath, "ecozone_shp.zip")))
   rm(shpEcozone)
   noisyOutput <- capture.output({
     shpEcozone1 <- prepInputs(destinationPath = dPath, url = url)
@@ -72,13 +67,13 @@ test_that("prepInputs doesn't work (part 1)", {
       targetFile = ecozoneFilename,
       url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
       alsoExtract = ecozoneFiles,
-      fun = "shapefile",
+      # fun = "shapefile",
       destinationPath = dPath
     )
   })
 
-  expect_true(is(shpEcozone2, "Spatial"))
-  testObj <- if (!is(shpEcozone1, "Spatial")) as(shpEcozone1, "Spatial") else shpEcozone1
+  expect_true(is(shpEcozone2, "sf"))
+  testObj <- if (!is(shpEcozone1, "sf")) as(shpEcozone1, "sf") else shpEcozone1
 
   # As of Jan 2022 -- these objects are very different; character encoding of accents, numbers interpretted as character
   # expect_equivalent(testObj, shpEcozone2) # different attribute newCache
@@ -259,7 +254,7 @@ test_that("interactive prepInputs", {
   skip_on_cran()
   skip_on_ci()
   skip_if_no_token()
-  testInitOut <- testInit("raster",
+  testInitOut <- testInit("terra",
                           opts = list(
                             "rasterTmpDir" = tempdir2(rndstr(1,6)),
                             "reproducible.overwrite" = TRUE,
@@ -308,7 +303,7 @@ test_that("interactive prepInputs", {
 
   # From Bird/Tati project
   testOnExit(testInitOut)
-  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+  testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                 "reproducible.inputPaths" = NULL),
                           needGoogle = TRUE)
   birdSpecies <- c("BBWA", "YRWA")
@@ -398,7 +393,7 @@ test_that("preProcess doesn't work", {
   skip_on_cran()
   skip_on_ci()
   skip_if_no_token()
-  testInitOut <- testInit("raster", opts = list(
+  testInitOut <- testInit("terra", opts = list(
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL,
     "reproducible.rasterRead" = "raster::raster"
@@ -1095,7 +1090,7 @@ test_that("prepInputs doesn't work (part 2)", {
   skip_on_cran()
   skip_if_not(getRversion() > "3.3.0")
 
-  testInitOut <- testInit(c("sf", "raster"), opts = list(
+  testInitOut <- testInit(c("sf", "terra"), opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
@@ -1105,10 +1100,8 @@ test_that("prepInputs doesn't work (part 2)", {
   }, add = TRUE)
 
   coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5), .Dim = c(5L, 2L))
-  Sr1 <- Polygon(coords)
-  Srs1 <- Polygons(list(Sr1), "s1")
-  StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- crsToUse
+  StudyArea <- terra::vect(coords, "polygons")
+  terra::crs(StudyArea) <- crsToUse
 
   noisyOutput <- capture.output(type = "message", {
     mess1 <- capture_messages({
@@ -1190,107 +1183,13 @@ test_that("prepInputs doesn't work (part 2)", {
       # expect_true(all(sf::st_bbox(test5) == sf::st_bbox(test6)))
     }
 
-#
-#     mess2 <- capture_messages({
-#       test2 <- prepInputs(targetFile = targetFileLuxRDS,
-#                           dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-#                           path = tmpdir)
-#     })
-#
-#     runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
-#             filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
-#     runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-#             filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
-#     mess2 <- capture_messages({
-#       warn <- capture_warnings({
-#         test3 <- prepInputs(targetFile = targetFileLuxRDS,
-#                             dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-#                             path = tmpdir, filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
-#       })
-#     })
-#     # Why is no longer "although coordinates are longitude"?
-#     runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
-#             filePattern = targetFileLuxRDS, tmpdir = tmpdir,
-#             test = test3)
-#
-#     testOnExit(testInitOut)
-#     testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
-#                                                   "reproducible.overwrite" = TRUE),
-#                             needGoogle = TRUE)
-#     noisyOutput <- capture.output(type = "message", {
-#       mess2 <- capture_messages({
-#         warn <- capture_warnings({
-#           test3 <- prepInputs(targetFile = targetFileLuxRDS, dlFun = getDataFn, name = "GADM",
-#                               country = "LUX", level = 0, path = tmpdir,
-#                               filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
-#         })
-#       })
-#     })
-#     runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
-#             filePattern = targetFileLuxRDS, tmpdir = tmpdir,
-#             test = test3)
-#
-#     runTest("1_2_3_4", "SpatialPolygonsDataFrame", 5, mess2,
-#             expectedMess = expectedMessagePostProcess,
-#             filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
-#
-#     testOnExit(testInitOut)
-#     testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
-#                                                   "reproducible.inputPaths" = NULL),
-#                             needGoogle = TRUE)
-#   }
-#
-#   # Add a study area to Crop and Mask to
-#   # Create a "study area"
-#   coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5), .Dim = c(5L, 2L))
-#   Sr1 <- Polygon(coords)
-#   Srs1 <- Polygons(list(Sr1), "s1")
-#   StudyArea <- SpatialPolygons(list(Srs1), 1L)
-#   crs(StudyArea) <- crsToUse
-#
-#   noisyOutput <- capture.output({
-#     mess1 <- capture_messages({
-#       test <- prepInputs(
-#         targetFile = "DEM.tif",
-#         url = urlTif1,
-#         destinationPath = tmpdir,
-#         useCache = TRUE
-#       )
-#     })
-#   })
-#   runTest("1_2_5_6_7_13", "Raster", 1, mess1, expectedMess = expectedMessage,
-#           filePattern = "DEM", tmpdir = tmpdir, test = test)
-#
-#   if (interactive()) {
-#     testOnExit(testInitOut)
-#     testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
-#                                                   "reproducible.overwrite" = TRUE),
-#                             needGoogle = TRUE)
-#     opts <- options("reproducible.cachePath" = tmpCache)
-#     on.exit({
-#       options(opts)
-#     }, add = TRUE)
-#
-#     mess2 <- capture_messages({
-#       warn <- capture_warnings({
-#         test3 <- prepInputs(
-#           url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing", #nolint
-#           studyArea = StudyArea,
-#           destinationPath = tmpdir,
-#           fun = "base::readRDS"
-#         )
-#       })
-#     })
-#     runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
-#             expectedMess = expectedMessagePostProcess,
-#             filePattern = "GADM_2.8_LUX_adm0.rds$", tmpdir = tmpdir, test = test3)
   }
 })
 
 test_that("load rdata in prepInputs", {
   skip_if_not_installed("googledrive")
 
-  testInitOut <- testInit("raster", opts = list(
+  testInitOut <- testInit("terra", opts = list(
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
   ), needGoogle = TRUE)
@@ -1312,7 +1211,7 @@ test_that("load rdata in prepInputs", {
 test_that("assessDataType doesn't work", {
   skip_if_not_installed("googledrive")
 
-  testInitOut <- testInit("raster", opts = list(
+  testInitOut <- testInit("terra", opts = list(
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
   ), needGoogle = TRUE)
@@ -1321,11 +1220,11 @@ test_that("assessDataType doesn't work", {
   }, add = TRUE)
 
   ## LOG1S
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- c(0, NaN, rep(c(0,1),49))
   expect_true(assessDataType(ras) == "LOG1S")
 
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- rep(c(0,1),50)
   expect_true(assessDataType(ras) == "LOG1S")
 
@@ -1343,7 +1242,7 @@ test_that("assessDataType doesn't work", {
   expect_true(assessDataType(ras) == "INT1S")
 
   ## INT1U
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- 1:100
   expect_true(assessDataType(ras) == "INT1U")
 
@@ -1351,12 +1250,12 @@ test_that("assessDataType doesn't work", {
   expect_true(assessDataType(ras) == "INT1U")
 
   ## INT2U
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- round(runif(100, min = 64000, max = 65000))
   expect_true(assessDataType(ras) == "INT2U")
 
   ## INT2S
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- round(runif(100, min = -32767, max = 32767))
   expect_true(assessDataType(ras) == "INT2S")
 
@@ -1364,7 +1263,7 @@ test_that("assessDataType doesn't work", {
   expect_true(assessDataType(ras) == "INT2S")
 
   ## INT4U
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- round(runif(100, min = 0, max = 500000000))
   expect_true(assessDataType(ras) == "INT4U")
 
@@ -1372,7 +1271,7 @@ test_that("assessDataType doesn't work", {
   expect_true(assessDataType(ras) == "INT4U")
 
   ## INT4S
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- round(runif(100, min = -200000000, max = 200000000))
   expect_true(assessDataType(ras) == "INT4S")
 
@@ -1380,66 +1279,42 @@ test_that("assessDataType doesn't work", {
   expect_true(assessDataType(ras) == "INT4S")
 
   ## FLT4S
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- runif(100, min = -10, max = 87)
   expect_true(assessDataType(ras) == "FLT4S")
 
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- round(runif(100, min = -3.4e+26, max = 3.4e+28))
   expect_true(assessDataType(ras) == "FLT4S")
 
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- round(runif(100, min = 3.4e+26, max = 3.4e+28))
   expect_true(assessDataType(ras) == "FLT4S")
 
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- round(runif(100, min = -3.4e+26, max = -1))
   expect_true(assessDataType(ras) == "FLT4S")
 
   ## FLT8S
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- round(runif(100, min = -1.7e+30, max = 1.7e+308))
   expect_true(assessDataType(ras) == "FLT8S")
 
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- round(runif(100, min = 1.7e+30, max = 1.7e+308))
   expect_true(assessDataType(ras) == "FLT8S")
 
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- round(runif(100, min = -1.7e+308, max = -1))
   expect_true(assessDataType(ras) == "FLT8S")
 
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- c(-Inf, 1, rep(c(0,1),49))
   expect_true(assessDataType(ras) == "FLT8S")
 
-  ras <- raster(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- c(Inf, 1, rep(c(0,1),49))
   expect_true(assessDataType(ras) == "FLT8S")
-})
-
-test_that("assessDataType doesn't work for GDAL", {
-  skip_if_not_installed("googledrive")
-
-  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
-                                                "reproducible.inputPaths" = NULL),
-                          needGoogle = TRUE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  ## Float32
-  ras <- raster(ncol = 10, nrow = 10)
-  ras[] <- runif(100, 0, 1)
-  expect_true(assessDataType(ras, type = "GDAL") == "Float32")
-
-  ## UInt16
-  ras[] <- c(201:300)
-  expect_true(assessDataType(ras, type = "GDAL") == "UInt16")
-
-  ##Byte
-  ras[] <- 1:100
-  expect_true(assessDataType(ras, type = "GDAL") == "Byte")
 })
 
 test_that("lightweight tests for code coverage", {
@@ -1447,7 +1322,7 @@ test_that("lightweight tests for code coverage", {
 
   # if (interactive()) {
 
-  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+  testInitOut <- testInit(c("sf", "terra"), opts = list("reproducible.overwrite" = TRUE,
                                                 "reproducible.inputPaths" = NULL),
                           needGoogle = TRUE)
   on.exit({
@@ -1485,7 +1360,7 @@ test_that("lightweight tests for code coverage", {
   file.copy(filesForShp, tmpCache)
   # Need these in a test further down -- mostly just need the CRS
   filesForShp2 <- dir(file.path(tmpCache), pattern = "ecozones", full.names = TRUE)
-  shpFile <- shapefile(grep(filesForShp2, pattern = "\\.shp", value = TRUE))
+  shpFile <- sf::st_read(grep(filesForShp2, pattern = "\\.shp", value = TRUE))
   # Test when wrong archive exists, wrong checkSums
   file.remove(file.path(tmpdir, "ecozone_shp.zip"))
   file.remove(filesForShp)
@@ -1591,7 +1466,7 @@ test_that("lightweight tests for code coverage", {
 test_that("lightweight tests 2 for code coverage", {
   testthat::skip_on_cran()
 
-  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+  testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                 "reproducible.inputPaths" = NULL),
                           needGoogle = TRUE)
   on.exit({
@@ -1654,7 +1529,7 @@ test_that("lightweight tests 2 for code coverage", {
 test_that("options inputPaths", {
   skip_on_cran()
 
-  testInitOut <- testInit(c("raster"),
+  testInitOut <- testInit(c("terra"),
                           opts = list("reproducible.inputPaths" = NULL,
                                       "reproducible.inputPathsRecursive" = FALSE))
   on.exit({
@@ -1768,7 +1643,7 @@ test_that("options inputPaths", {
   }
   ## Try download to inputPath, intercepting the destination, creating a link
   testOnExit(testInitOut)
-  testInitOut <- testInit("raster",
+  testInitOut <- testInit("terra",
                           opts = list("reproducible.inputPaths" = NULL,
                                       "reproducible.inputPathsRecursive" = FALSE))
   options("reproducible.inputPaths" = tmpdir)
@@ -1852,7 +1727,7 @@ test_that("options inputPaths", {
       })
     })
   })
-  expect_true(is(test1, "spatialClasses"))
+  expect_true(is(test1, "SpatVector"))
   test11 <- grep(hardlinkMessagePrefixForGrep, mess1, value = TRUE)
   test11 <- grep(tmpdir, test11, invert = TRUE)
   expect_true(length(test11) == 0) # no link made b/c identical dir
@@ -1862,34 +1737,32 @@ test_that("options inputPaths", {
 test_that("writeOutputs saves factor rasters with .grd class to preserve levels", {
   skip_on_cran()
 
-  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+  testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                 "reproducible.inputPaths" = NULL),
                           needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  a <- raster(extent(0, 2, 0, 2), res = 1, vals = c(1, 1, 2, 2))
+  a <- terra::rast(terra::ext(0, 2, 0, 2), res = 1, vals = c(1, 1, 2, 2))
   levels(a) <- data.frame(ID = 1:2, Factor = c("This", "That"))
   tifTmp <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   file.create(tifTmp)
   tifTmp <- normPath(tifTmp)
 
-  b1 <- suppressWarnings(writeRaster(a, filename = tifTmp, overwrite = TRUE)) # the GDAL>6 issue
+  b1 <- suppressWarnings(terra::writeRaster(a, filename = tifTmp, overwrite = TRUE)) # the GDAL>6 issue
   expect_warning({
     b1a <- writeOutputs(a, filename2 = tifTmp)
   })
   expect_false(identical(b1, b1a))
-  expect_true(identical(as.integer(b1[]), b1a[]))
+  expect_true(all.equal(b1[], b1a[]))
 
-  expect_true(identical(normPath(filename(b1)), normPath(tifTmp)))
-  expect_true(identical(normPath(filename(b1a)),
-                        normPath(gsub(tifTmp, pattern = "tif", replacement = "grd"))))
+  expect_true(identical(normPath(Filenames(b1)), normPath(tifTmp)))
 })
 
 test_that("rasters aren't properly resampled", {
   skip_on_cran()
 
-  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+  testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                 reproducible.useTerra = TRUE,
                                                 reproducible.rasterRead = "terra::rast",
                                                 "reproducible.inputPaths" = NULL),
@@ -1898,8 +1771,8 @@ test_that("rasters aren't properly resampled", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  a <- raster(extent(0, 20, 0, 20), res = 2, vals = as.integer(1:100*4))
-  b <- raster(extent(0, 30, 0, 30), res = c(3,3), vals = 1L:100L)
+  a <- terra::rast(terra::ext(0, 20, 0, 20), res = 2, vals = as.integer(1:100*4))
+  b <- terra::rast(terra::ext(0, 30, 0, 30), res = c(3,3), vals = 1L:100L)
   #suppressWarnings({
   crs(a) <- crsToUse
   crs(b) <- crsToUse
@@ -1909,17 +1782,14 @@ test_that("rasters aren't properly resampled", {
   tiftemp2 <- normPath(tempfile(tmpdir = tmpdir, fileext = ".tif"))
 
   suppressWarnings({
-    a <- writeRaster(a, filename = tiftemp1, datatype = "INT2U")
-    b <- writeRaster(b, filename = tiftemp2, datatype = "INT2U")
+    a <- terra::writeRaster(a, filename = tiftemp1, datatype = "INT2U")
+    b <- terra::writeRaster(b, filename = tiftemp2, datatype = "INT2U")
   }) ## TODO: temporary GDAL>6
 
-  # out <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
-  #                   destinationPath = dirname(tiftemp1), useCache = FALSE)
-  # expect_true(dataType(out) == "INT2U")
 
   # Test bilinear --> but keeps integer if it is integer
   suppressWarnings({
-    out2 <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
+    out2 <- prepInputs(targetFile = tiftemp1, rasterToMatch = terra::rast(tiftemp2),
                        destinationPath = dirname(tiftemp1), method = "bilinear",
                        datatype = "INT2S",
                        filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
@@ -1928,13 +1798,13 @@ test_that("rasters aren't properly resampled", {
   if (getRversion() >= "4.1" || !isWindows())  {
     expect_true(terra::datatype(out2) %in% c("INT2S")) # because of "bilinear", it can become negative
 
-    rrr1 <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
-    crs(rrr1) <- crsToUse
+    rrr1 <- terra::rast(terra::ext(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
+    terra::crs(rrr1) <- crsToUse
     tiftemp3 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
     tiftemp4 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-    suppressWarningsSpecific(writeRaster(rrr1, filename = tiftemp3), proj6Warn)
+    suppressWarningsSpecific(terra::writeRaster(rrr1, filename = tiftemp3), proj6Warn)
 
-    out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
+    out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = terra::rast(tiftemp2),
                        destinationPath = dirname(tiftemp3),
                        filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
     expect_true(terra::datatype(out3) == "FLT4S")
@@ -1949,14 +1819,14 @@ test_that("rasters aren't properly resampled", {
     rm(rasStack)
     # opts <- options(reproducible.useTerra = TRUE)
     # on.exit(options(opts), add = TRUE)
-    out3 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
+    out3 <- prepInputs(targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
                        destinationPath = dirname(tiftemp3),
                        # fun = "raster::stack",
                        filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
     expect_true(is(out3, "SpatRaster"))
     expect_true(identical(length(Filenames(out3)), 1L))
 
-    out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
+    out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
                        destinationPath = dirname(tiftemp3),
                        # fun = "raster::stack",
                        filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
@@ -1974,7 +1844,7 @@ test_that("rasters aren't properly resampled", {
 
     rasStack <- writeRaster(rasStack, filename = tiftemp5)
     rm(rasStack)
-    out5 <- prepInputs(targetFile = tiftemp5, rasterToMatch = raster(tiftemp2),
+    out5 <- prepInputs(targetFile = tiftemp5, rasterToMatch = terra::rast(tiftemp2),
                        destinationPath = dirname(tiftemp3),
                        # fun = "raster::stack",
                        filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
@@ -1985,7 +1855,7 @@ test_that("rasters aren't properly resampled", {
     expect_true(identical(length(Filenames(out5, allowMultiple = TRUE)), 5L))
 
 
-    out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
+    out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
                        destinationPath = dirname(tiftemp3),
                        # fun = raster::stack,
                        filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
