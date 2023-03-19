@@ -1,5 +1,5 @@
 test_that("all exported functions have examples", {
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  testInitOut <- testInit("terra", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

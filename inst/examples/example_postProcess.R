@@ -1,10 +1,6 @@
 # Add a study area to Crop and Mask to
 # Create a "study area"
 library(reproducible)
-ow <- setwd(tempdir())
-
-origDir <- getwd()
-setwd(tempdir2()) # use a temporary directory
 # download a zip file from internet, unzip all files, load as shapefile, Cache the call
 # First time: don't know all files - prepInputs will guess, if download file is an archive,
 #   then extract all files, then if there is a .shp, it will load with raster::shapefile
@@ -47,4 +43,3 @@ if (require("terra")) {
   options(opts)
 }
 
-setwd(ow)
