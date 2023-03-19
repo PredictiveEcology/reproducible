@@ -23,12 +23,14 @@ if (require("terra")) {
   opts <- options("reproducible.useTerra" = TRUE)
   vectEcozone <- terra::vect(shpEcozone)
 
+  # warnings: "attribute variables are assumed to be spatially constant throughout all geometries"
+  #  --> these are relevant for a user to know, but can be safely ignored in examples
   # If input is Spatial object --> return will also be Spatial
-  shpEcozonePostProcessed <- postProcessTo(shpEcozone, studyArea = studyArea)
+  shpEcozonePostProcessed <- suppressWarnings(postProcessTo(vectEcozone, studyArea = studyArea))
   # Try manually, individual pieces -- Note functions are different
   shpEcozoneReprojected <- projectTo(shpEcozone, studyArea)
-  shpEcozoneMasked <- maskTo(shpEcozone, studyArea)
-  shpEcozoneCropped <- cropTo(shpEcozone, studyArea)
+  shpEcozoneMasked <- suppressWarnings(maskTo(shpEcozone, studyArea))
+  shpEcozoneCropped <- suppressWarnings(cropTo(shpEcozone, studyArea))
 
   # If input is Spat object --> return will also be Spat
   vectEcozonePostProcessed <- postProcessTo(vectEcozone, studyArea = studyArea)

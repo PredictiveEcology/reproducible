@@ -269,6 +269,7 @@ setAs(from = "character", to = "Path", function(from) {
 #' tmpFile1 <- tempfile("file1", tmpDirFrom, ".csv")
 #' tmpFile2 <- tempfile("file2", tmpDirFrom, ".csv")
 #' dir.create(tmpDirFrom, recursive = TRUE, showWarnings = FALSE)
+#' dir.create(tmpDirTo, recursive = TRUE, showWarnings = FALSE)
 #' f1 <- normalizePath(tmpFile1, mustWork = FALSE)
 #' f2 <- normalizePath(tmpFile2, mustWork = FALSE)
 #' t1 <- normalizePath(file.path(tmpDirTo, basename(tmpFile1)), mustWork = FALSE)
@@ -283,8 +284,6 @@ setAs(from = "character", to = "Path", function(from) {
 #' identical(read.csv(f1), read.csv(t1)) ## TRUE
 #' identical(read.csv(f2), read.csv(t2)) ## TRUE
 #'
-#' unlink(tmpDirFrom, recursive = TRUE)
-#' unlink(tmpDirTo, recursive = TRUE)
 #'
 copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                            overwrite = TRUE, delDestination = FALSE,
@@ -336,12 +335,18 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
         rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
         opts <- if (silent) " -a " else " -avP "
         # rsync command can't handle spaces file/dir names -- must protect them
+        toDir <- normalizePath(toDir, mustWork = FALSE)
         toDir <- gsub("\ ", "\\ ", toDir, fixed = TRUE)
+        if (!dir.exists(toDir)) dir.create(toDir, recursive = TRUE, showWarnings = FALSE)
+        from <- normalizePath(from, mustWork = TRUE)
         rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
-                        "'", normalizePath(from, mustWork = TRUE), "' ",
-                        normalizePath(toDir, mustWork = FALSE), "/")
+                        "'", from, "' ", toDir, "/")
 
-        useFileCopy <- tryCatch(system(rsync, intern = TRUE), error = function(x) TRUE)
+        # THe warnings here are being caught; and use file.copy
+        useFileCopy <- system(rsync, intern = TRUE, ignore.stderr = TRUE)
+        filesCopied <- file.exists(file.path(toDir, basename(from)))
+        useFileCopy <- any(!filesCopied)
+
       }
     } else {
       useFileCopy <- TRUE
