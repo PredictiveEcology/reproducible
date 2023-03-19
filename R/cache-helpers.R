@@ -343,7 +343,7 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                         "'", from, "' ", toDir, "/")
 
         # THe warnings here are being caught; and use file.copy
-        useFileCopy <- system(rsync, intern = TRUE, ignore.stderr = TRUE)
+        useFileCopy <- capture.output(system(rsync, intern = FALSE, ignore.stderr = TRUE, ignore.stdout = TRUE))
         filesCopied <- file.exists(file.path(toDir, basename(from)))
         useFileCopy <- any(!filesCopied)
 
