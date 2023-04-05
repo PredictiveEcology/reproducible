@@ -39,8 +39,8 @@ Use caution with files-backed objects (e.g., rasters). See examples.
 }
 \examples{
 
-tmpDir <- file.path(tempdir(), "symlink-test") |>
-  normalizePath(winslash = '/', mustWork = FALSE)
+tmpDir <- file.path(tempdir(), "symlink-test")
+tmpDir <- normalizePath(tmpDir, winslash = '/', mustWork = FALSE)
 dir.create(tmpDir)
 
 f0 <- file.path(tmpDir, "file0.csv")

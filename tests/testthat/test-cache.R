@@ -550,12 +550,8 @@ test_that("test quoted FUN in Cache", {
   B <- Cache(rnorm, 10, 16, cachePath = tmpdir) # nolint
   C <- Cache(quote(rnorm(n = 10, 16)), cachePath = tmpdir) # nolint
 
-  D <- try(Cache(cachePath = tmpdir) |> rnorm(10, 16) , silent = TRUE) # nolint
-
   expect_true(all.equalWONewCache(A,B))
   expect_true(all.equalWONewCache(A, C))
-  if (!is(D, "try-error"))
-    expect_true(all.equalWONewCache(A, D))
 })
 
 test_that("test Cache argument inheritance to inner functions", {
