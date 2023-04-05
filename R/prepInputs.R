@@ -56,16 +56,18 @@ if (getRversion() >= "3.1.0") {
 #'
 #'   NOTE: `sf` objects are still very experimental.
 #'
-#' \subsection{postProcessing of `Raster*` and `Spatial*` objects:}{
+#' \subsection{postProcessing of `spat*`, `sf`, `Raster*` and `Spatial*` objects:}{
 #'
-#'   If `rasterToMatch` or `studyArea` are used, then this will
+#'   The following has been DEPRECATED because there are a sufficient number of
+#'   ambiguities that this has been changed in favour of `from` and the `*to` family.
+#'   See [postProcessTo()].
+#'
+#'   DEPRECATED: If `rasterToMatch` or `studyArea` are used, then this will
 #'   trigger several subsequent functions, specifically the sequence,
-#'   *Crop, reproject, mask*, which appears to be a common sequence in
-#'   spatial simulation. See [postProcessTo()].
-#'
-#'   *Understanding various combinations of `rasterToMatch`
-#'   and/or `studyArea`:*
-#'   Please see [postProcessTo()].
+#'   *Crop, reproject, mask*, which appears to be a common sequence while
+#'   preparing spatial data from diverse sources.
+#'   See [postProcessTo()]. *Understanding various combinations of `rasterToMatch`
+#'   and/or `studyArea`:* Please see [postProcessTo()].
 #'  }
 #'
 #'
@@ -216,7 +218,7 @@ if (getRversion() >= "3.1.0") {
 #'   origDir <- getwd()
 #'   # download a zip file from internet, unzip all files, load as shapefile, Cache the call
 #'   # First time: don't know all files - prepInputs will guess, if download file is an archive,
-#'   #   then extract all files, then if there is a .shp, it will load with raster::shapefile
+#'   #   then extract all files, then if there is a .shp, it will load with sf::st_read
 #'   dPath <- file.path(tempdir(), "ecozones")
 #'   shpUrl <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
 #'

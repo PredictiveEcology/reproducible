@@ -165,16 +165,18 @@ there are no file downloads. To achieve fast results, wrap
 
 NOTE: \code{sf} objects are still very experimental.
 
-\subsection{postProcessing of \verb{Raster*} and \verb{Spatial*} objects:}{
+\subsection{postProcessing of \verb{spat*}, \code{sf}, \verb{Raster*} and \verb{Spatial*} objects:}{
 
-If \code{rasterToMatch} or \code{studyArea} are used, then this will
+The following has been DEPRECATED because there are a sufficient number of
+ambiguities that this has been changed in favour of \code{from} and the \verb{*to} family.
+See \code{\link[=postProcessTo]{postProcessTo()}}.
+
+DEPRECATED: If \code{rasterToMatch} or \code{studyArea} are used, then this will
 trigger several subsequent functions, specifically the sequence,
-\emph{Crop, reproject, mask}, which appears to be a common sequence in
-spatial simulation. See \code{\link[=postProcessTo]{postProcessTo()}}.
-
-\emph{Understanding various combinations of \code{rasterToMatch}
-and/or \code{studyArea}:}
-Please see \code{\link[=postProcessTo]{postProcessTo()}}.
+\emph{Crop, reproject, mask}, which appears to be a common sequence while
+preparing spatial data from diverse sources.
+See \code{\link[=postProcessTo]{postProcessTo()}}. \emph{Understanding various combinations of \code{rasterToMatch}
+and/or \code{studyArea}:} Please see \code{\link[=postProcessTo]{postProcessTo()}}.
 }
 }
 
@@ -236,7 +238,7 @@ if (requireNamespace("terra") && requireNamespace("sf")) {
   origDir <- getwd()
   # download a zip file from internet, unzip all files, load as shapefile, Cache the call
   # First time: don't know all files - prepInputs will guess, if download file is an archive,
-  #   then extract all files, then if there is a .shp, it will load with raster::shapefile
+  #   then extract all files, then if there is a .shp, it will load with sf::st_read
   dPath <- file.path(tempdir(), "ecozones")
   shpUrl <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
 
