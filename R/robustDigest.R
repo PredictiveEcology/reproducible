@@ -127,8 +127,11 @@ setMethod(
       if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
         stop("Please install terra package")
       if (any(nchar(terra::sources(object)) > 0)) {
-        out <- lapply(terra::sources(object), function(x)
-          digest(file = x, length = length, algo = algo))
+        out <- lapply(terra::sources(object), function(x) {
+          x <- sub(r"(^.*:\")", "", x)
+          x <- sub(r"(\":.*$)", "", x)
+          digest(file = x, length = length, algo = algo)
+        })
         dig <- .robustDigest(append(
           list(terra::nrow(object), terra::ncol(object), terra::nlyr(object),
                terra::res(object), terra::crs(object),
