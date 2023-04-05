@@ -225,7 +225,15 @@ setMethod(
 
     simpleDigest <- TRUE
     if (!quick) {
-      if (any(unlist(lapply(object[1:10], file.exists)))) { # only try first 10 elements
+      # If a character string has nonASCII characters e.g., from french
+      #  "Cordill\xe8re arctique", file.exists will fail with "file name conversion problem" error
+      howMany <- min(10, NROW(object))
+      whCheck <- object[1:howMany]
+      asc <- iconv(whCheck, "latin1", "ASCII")
+      if (anyNA(asc))
+        whCheck <- whCheck[!is.na(asc)]
+
+      if (any(unlist(lapply(whCheck, file.exists)))) { # only try first 10 elements
         simpleDigest <- FALSE
       }}
     if (!simpleDigest) {
