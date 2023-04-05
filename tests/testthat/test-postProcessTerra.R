@@ -153,10 +153,13 @@ test_that("testing terra", {
   # v2 <- is.valid(v2)
 
   terra::crs(v2) <- terra::crs(v)
-  t10 <- try(postProcessTo(xVect, v2))
-  ## Error : TopologyException: Input geom 1 is invalid:
-  ##  Self-intersection at 6.0905735768254896 49.981782482072084
-  expect_true(!is(t10, "try-error"))
+  # v2 <- terra::makeValid(v2)
+  if (getRversion() < "4.3.0") { # this same error crashes the session in R 4.3.0 when it is R-devel
+    t10 <- try(postProcessTo(xVect, v2))
+    ## Error : TopologyException: Input geom 1 is invalid:
+    ##  Self-intersection at 6.0905735768254896 49.981782482072084
+    expect_true(!is(t10, "try-error"))
+  }
 
   # Projection --> BAD BUG HERE ... CAN"T REPRODUCE ALWAYS --> use sf for testing Dec 9, 2022
   if (FALSE) {
@@ -214,17 +217,20 @@ test_that("testing terra", {
   # projection with errors
   if (getRversion() >= "4.1" && isWindows()) { # bug in older `terra` that is not going to be fixed here
     utm <- terra::crs("epsg:23028") # This is same as above, but terra way
-    vutmErrors <- terra::project(v2, utm)
-    mess <- capture_messages({
-      t13a <- postProcessTo(xVect, vutmErrors)
-    })
-    if (getRversion() != "4.3.0") { # this same error crashes the session in R 4.3.0 when it is R-devel
+    if (getRversion() < "4.3.0") { # this same error crashes the session in R 4.3.0 when it is R-devel
+      vutmErrors <- terra::project(v2, utm)
+      mess <- capture_messages({
+        t13a <- postProcessTo(xVect, vutmErrors)
+      })
       ## Error : TopologyException: Input geom 1 is invalid:
       ##  Self-intersection at 6095858.7074040668 6626138.068126983
       expect_true(sum(grepl("error", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
       expect_true(sum(grepl("fixed", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
+      expect_true(is(t13a, "SpatVector"))
+    } else {
+      v2 <- terra::makeValid(v2)
+      vutmErrors <- terra::project(v2, utm)
     }
-    expect_true(is(t13a, "SpatVector"))
 
     # Switch from qs to rds with Cache
     opts <- options(reproducible.cacheSaveFormat = "qs")
