@@ -135,7 +135,7 @@ setMethod(
         dig <- .robustDigest(append(
           list(terra::nrow(object), terra::ncol(object), terra::nlyr(object),
                terra::res(object), terra::crs(object),
-               terra::ext(object)), object@ptr$names, ),
+               terra::ext(object)), names(object), ),
           length = length, quick = quick,
           algo = algo, classOptions = classOptions) # don't include object@data -- these are volatile
         out <- .doDigest(list(out, dig), algo = algo)
