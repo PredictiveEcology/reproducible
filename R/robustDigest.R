@@ -226,7 +226,7 @@ setMethod(
     simpleDigest <- TRUE
     if (!quick) {
       # If a character string has nonASCII characters e.g., from french
-      #  "Cordill\xe8re arctique", file.exists will fail with "file name conversion problem" error
+      #  "Cordill\xe8re arctique", file.exists fails with "file name conversion problem" error
       howMany <- min(10, NROW(object))
       whCheck <- object[1:howMany]
       asc <- iconv(whCheck, "latin1", "ASCII")

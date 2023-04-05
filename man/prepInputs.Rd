@@ -234,7 +234,6 @@ If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
 if (requireNamespace("terra") && requireNamespace("sf")) {
   data.table::setDTthreads(2)
   origDir <- getwd()
-  setwd(reproducible::tempdir2()) # use a temporary directory
   # download a zip file from internet, unzip all files, load as shapefile, Cache the call
   # First time: don't know all files - prepInputs will guess, if download file is an archive,
   #   then extract all files, then if there is a .shp, it will load with raster::shapefile
