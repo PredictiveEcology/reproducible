@@ -536,8 +536,6 @@ test_that("test wrong ways of calling Cache", {
   expect_true(1 == Cache(sample, 1, cachePath = tmpdir))
 })
 
-
-
 test_that("test quoted FUN in Cache", {
   testInitOut <- testInit()
   on.exit({
