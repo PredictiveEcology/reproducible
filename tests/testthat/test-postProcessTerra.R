@@ -76,7 +76,7 @@ test_that("testing terra", {
 
   y <- terra::deepcopy(elevRas)
   y[y > 200 & y < 300] <- NA
-  terra::values(elevRas) <- rep(1L, ncell(y))
+  terra::values(elevRas) <- rep(1L, terra::ncell(y))
   vRast <- terra::rast(v, res = 0.008333333)
 
   # SR, SR
@@ -111,7 +111,7 @@ test_that("testing terra", {
   t5sf <- postProcessTo(elevRas, cropTo = vsf, maskTo = vsf, projectTo = vsf)
   expect_true(identical(t5sf[],t2[]))
 
-  t6 <- extract(elevRas, v, mean, na.rm = TRUE)
+  t6 <- terra::extract(elevRas, v, mean, na.rm = TRUE)
   expect_true(all(t6$elevation == 1))
   expect_true(NROW(t6) == 2)
 
@@ -207,7 +207,7 @@ test_that("testing terra", {
 
   # use raster dataset -- take the projectTo resolution, i.e., res100
   t13 <- postProcessTo(elevRas, rutm)
-  expect_true(identical(res(t13)[1], res100))
+  expect_true(identical(terra::res(t13)[1], res100))
   expect_true(sf::st_crs(t13) == sf::st_crs(vutm))
 
   # no projection
@@ -331,14 +331,14 @@ test_that("testing terra", {
   expect_true(identical(terra::size(elevRas), terra::size(t20)))
 
   ## same projection change resolution only (will likely affect extent)
-  y2 <- terra::rast(crs = crs(y), res = 0.008333333*2, extent = terra::ext(y))
-  y2 <- terra::setValues(y2, rep(1, ncell(y2)))
+  y2 <- terra::rast(crs = terra::crs(y), res = 0.008333333*2, extent = terra::ext(y))
+  y2 <- terra::setValues(y2, rep(1, terra::ncell(y2)))
 
   t22 <- postProcessTo(elevRas, to = y2, overwrite = TRUE) # not sure why need this; R devel on Winbuilder Nov 26, 2022
   expect_true(sf::st_crs(t22) == sf::st_crs(elevRas))
   expect_true(terra::ext(t22) == terra::ext(y2))   ## "identical" may say FALSE (decimal plates?)
-  expect_true(identical(res(t22), res(y2)))
-  expect_false(identical(res(t22), res(elevRas)))
+  expect_true(identical(terra::res(t22), terra::res(y2)))
+  expect_false(identical(terra::res(t22), terra::res(elevRas)))
 
   vutmSF <- sf::st_as_sf(vutm)
   xVectSF <- sf::st_as_sf(xVect)
@@ -370,7 +370,7 @@ test_that("testing terra", {
     expect_true(is(ras1SmallAll, "Raster"))
 
     # Check that extents are similar
-    expect_true(terra::ext(ras1SmallAll) < terra::extend(terra::ext(t18), res(ras1SmallAll) * 2))
+    expect_true(terra::ext(ras1SmallAll) < terra::extend(terra::ext(t18), terra::res(ras1SmallAll) * 2))
 
     # SpatRaster & Raster
     t20CroppedByRas <- cropTo(t20, ras1SmallAll)
