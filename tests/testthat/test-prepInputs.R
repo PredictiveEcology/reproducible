@@ -1528,10 +1528,12 @@ test_that("lightweight tests 2 for code coverage", {
 
 test_that("options inputPaths", {
   skip_on_cran()
+  if (!requireNamespace("geodata", quietly = TRUE)) skip("Need geodata package")
 
-  testInitOut <- testInit(c("terra"),
+  testInitOut <- testInit(c("terra", "geodata"),
                           opts = list("reproducible.inputPaths" = NULL,
                                       "reproducible.inputPathsRecursive" = FALSE))
+
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
