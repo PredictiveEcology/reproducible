@@ -207,7 +207,7 @@ reproducibleOptions <- function() {
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
     reproducible.useDBI = TRUE,
-    reproducible.useGDAL = FALSE, #
+    # reproducible.useGDAL = FALSE, #
     reproducible.useMemoise = FALSE, #memoise
     reproducible.useNewDigestAlgorithm = 2, # TODO: change in next release
     reproducible.useTerra = TRUE, # Default for now

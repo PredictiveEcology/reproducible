@@ -8,7 +8,7 @@ fastMask(
   x,
   y,
   cores = NULL,
-  useGDAL = getOption("reproducible.useGDAL", FALSE),
+  useGDAL = FALSE,
   verbose = getOption("reproducible.verbose", 1),
   ...,
   skipDeprecastedMsg = FALSE
@@ -25,7 +25,7 @@ triggered. \code{'AUTO'} will calculate 90\% of the total
 number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.}
 
-\item{useGDAL}{Logical or \code{"force"}. This is defunct; internals now can use
+\item{useGDAL}{Deprecated. Logical or \code{"force"}. This is defunct; internals now can use
 \code{terra} if \code{options("reproducible.useTerra" = TRUE)}, which is not (yet)
 the default.}
 

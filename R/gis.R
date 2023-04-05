@@ -13,7 +13,7 @@
 #'           float will be passed as the exact number of cores to be used.
 #' @param skipDeprecastedMsg Logical. If `TRUE`, then the message about this function
 #'   being deprecated will be suppressed.
-#' @param useGDAL Logical or `"force"`. This is defunct; internals now can use
+#' @param useGDAL Deprecated. Logical or `"force"`. This is defunct; internals now can use
 #'     `terra` if `options("reproducible.useTerra" = TRUE)`, which is not (yet)
 #'     the default.
 #'
@@ -27,7 +27,7 @@
 #' @inheritParams Cache
 #' @inheritParams projectInputs
 #'
-fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", FALSE),
+fastMask <- function(x, y, cores = NULL, useGDAL = FALSE,
                      verbose = getOption("reproducible.verbose", 1), ..., skipDeprecastedMsg = FALSE) {
   if (!skipDeprecastedMsg)
     .Deprecated("mask", "terra", "fastMask is deprecated; using maskTo and terra")
