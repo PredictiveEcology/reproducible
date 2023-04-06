@@ -259,10 +259,12 @@ test_that("prepInputs works with team drives", {
     zipUrl <- "https://drive.google.com/file/d/1zRX2c55ebJbQtjijCErEfGxhsa7Ieph2"
     if (packageVersion("googledrive") < "2.0.0") {
       wb <- prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
-                       alsoExtract = "similar", fun = "shapefile", team_drive = TRUE)
+                       alsoExtract = "similar",
+                       team_drive = TRUE)
     } else {
       wb <- prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
-                       alsoExtract = "similar", fun = "shapefile", shared_drive = TRUE)
+                       alsoExtract = "similar",
+                       shared_drive = TRUE)
     }
   }
 })

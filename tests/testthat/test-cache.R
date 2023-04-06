@@ -1610,8 +1610,7 @@ test_that("test cache; SpatRaster attributes", {
                             "rasterTmpDir" = tempdir2(rndstr(1,6)),
                             "reproducible.inputPaths" = NULL,
                             "reproducible.overwrite" = TRUE,
-                            "reproducible.useTerra" = TRUE,
-                            "reproducible.rasterRead" = "terra::rast")
+                            "reproducible.useTerra" = TRUE)
   )
   on.exit({
     testOnExit(testInitOut)

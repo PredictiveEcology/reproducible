@@ -722,8 +722,8 @@ extractFromArchive <- function(archive,
   funPoss <- lapply(fileExt, function(fe) feKnown[startsWith(prefix = feKnown[[1]], fe), ])
   funPoss <- do.call(rbind, funPoss)
   if (length(funPoss)) {
-    isShapefile <- fileExt %in% funPoss[funPoss[, "type"] == "shapefile", "extension"]
-    isRaster <- fileExt %in% funPoss[funPoss[, "type"] == "Raster", "extension"]
+    isShapefile <- fileExt %in% funPoss[funPoss[, "type"] == vectorType(), "extension"]
+    isRaster <- fileExt %in% funPoss[funPoss[, "type"] == rasterType(), "extension"]
     isRDS <- fileExt %in% funPoss[funPoss[, "extension"] == "rds", "extension"]
     if (any(isShapefile)) {
       if (is.null(fun))
@@ -740,7 +740,7 @@ extractFromArchive <- function(archive,
     if (length(fun) > 1) {
       if (sum(isRaster) > 0 && sum(isShapefile) > 0) {
         isRaster[isRaster] <- FALSE
-        funPoss <- funPoss[funPoss$type == "shapefile", ]
+        funPoss <- funPoss[funPoss$type == vectorType(), ]
         fun <- unique(funPoss[, "fun"])
         message("The archive has both a shapefile and a raster; selecting the shapefile. If this is incorrect, specify targetFile")
       } else

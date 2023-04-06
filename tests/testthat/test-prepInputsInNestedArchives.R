@@ -1,6 +1,6 @@
 test_that("prepInputs in a simple one double nested zip file, passing only destinationPath and url", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("terra", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -79,7 +79,7 @@ test_that(
       })
     })
     expect_true(exists("testZip6"))
-    expect_is(testZip6, shapefileClassDefault())
+    expect_is(testZip6, vectorType())
 })
 
 test_that(
@@ -230,3 +230,4 @@ test_that("prepInputs works with nested rar file inside internal rar folder", {
     expect_is(testRar4, rasterType())
   }
 })
+
