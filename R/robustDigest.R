@@ -127,8 +127,13 @@ setMethod(
       if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
         stop("Please install terra package")
       if (any(nchar(terra::sources(object)) > 0)) {
-        out <- lapply(terra::sources(object), function(x)
-          digest(file = x, length = length, algo = algo))
+        out <- lapply(terra::sources(object), function(x) {
+          if (grepl("^NETCDF:", x)) {
+            x <- sub("^NETCDF:\"", "", x)
+            x <- sub("\":.*$", "", x)
+          }
+          digest(file = x, length = length, algo = algo)
+        })
         dig <- .robustDigest(append(
           list(terra::nrow(object), terra::ncol(object), terra::nlyr(object),
                terra::res(object), terra::crs(object),
