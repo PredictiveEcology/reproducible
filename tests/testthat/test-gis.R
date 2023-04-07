@@ -1,10 +1,9 @@
 test_that("testing prepInputs with deauthorized googledrive", {
   skip_on_cran()
   skip_if_not_installed("googledrive")
-  skip_if_no_token()
 
   if (interactive()) {
-    testInitOut <- testInit(needGoogle = FALSE, "googledrive")
+    testInitOut <- testInit(needGoogleDriveAuth = TRUE, "googledrive")
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
@@ -48,7 +47,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
 })
 
 test_that("testing rebuildColors", {
-  testInitOut <- testInit(needGoogle = FALSE, "raster")
+  testInitOut <- testInit(needGoogleDriveAuth = FALSE, "raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

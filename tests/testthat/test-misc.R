@@ -125,8 +125,8 @@ test_that("unrar is working as expected", {
 
 test_that("test miscellaneous fns (part 2)", {
   skip_if_not_installed("googledrive")
-  skip_if_no_token()
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"), needGoogle = TRUE)
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"),
+                          needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
     try(googledrive::drive_rm(googledrive::as_id(cloudFolderID)))

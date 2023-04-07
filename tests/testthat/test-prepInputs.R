@@ -256,7 +256,7 @@ test_that("interactive prepInputs", {
                             "reproducible.overwrite" = TRUE,
                             "reproducible.inputPaths" = NULL
                           ),
-                          needGoogle = TRUE)
+                          needGoogleDriveAuth = TRUE)
 
   on.exit({
     testOnExit(testInitOut)
@@ -301,7 +301,7 @@ test_that("interactive prepInputs", {
   testOnExit(testInitOut)
   testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                 "reproducible.inputPaths" = NULL),
-                          needGoogle = TRUE)
+                          needGoogleDriveAuth = TRUE)
   birdSpecies <- c("BBWA", "YRWA")
   urls <- c("https://drive.google.com/open?id=1CmzYNpxwWr82PoRSbHWG8yg2cC3hncfb",
             "https://drive.google.com/open?id=11Hxk0CcwJsoAnUgfrwbJhXBJNM5Xbd9e")
@@ -392,7 +392,7 @@ test_that("preProcess doesn't work", {
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
   ),
-  needGoogle = TRUE)
+  needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1091,7 +1091,7 @@ test_that("prepInputs doesn't work (part 2)", {
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
-  ), needGoogle = TRUE)
+  ), needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1189,7 +1189,7 @@ test_that("load rdata in prepInputs", {
   testInitOut <- testInit("terra", opts = list(
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
-  ), needGoogle = TRUE)
+  ), needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1211,7 +1211,7 @@ test_that("assessDataType doesn't work", {
   testInitOut <- testInit("terra", opts = list(
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
-  ), needGoogle = TRUE)
+  ), needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1321,7 +1321,7 @@ test_that("lightweight tests for code coverage", {
 
   testInitOut <- testInit(c("sf", "terra"), opts = list("reproducible.overwrite" = TRUE,
                                                 "reproducible.inputPaths" = NULL),
-                          needGoogle = TRUE)
+                          needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1465,7 +1465,7 @@ test_that("lightweight tests 2 for code coverage", {
 
   testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                 "reproducible.inputPaths" = NULL),
-                          needGoogle = TRUE)
+                          needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1738,7 +1738,7 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
 
   testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                 "reproducible.inputPaths" = NULL),
-                          needGoogle = TRUE)
+                          needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1764,7 +1764,7 @@ test_that("rasters aren't properly resampled", {
   testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                 # reproducible.useTerra = TRUE,
                                                 "reproducible.inputPaths" = NULL),
-                          needGoogle = TRUE)
+                          needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

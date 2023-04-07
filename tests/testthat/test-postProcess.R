@@ -206,7 +206,7 @@ test_that("cropInputs crops too closely when input projections are different", {
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL,
     "rgdal_show_exportToProj4_warnings"="none" # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
-  ), needGoogle = TRUE)
+  ), needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -244,13 +244,12 @@ test_that("maskInputs errors when x is Lat-Long", {
   skip_on_cran()
   skip_on_ci()
   skip_if_not(requireNamespace("sf", quietly = TRUE))
-  skip_if_no_token()
 
   testInitOut <- testInit("raster", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
-  ), needGoogle = TRUE)
+  ), needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -307,10 +306,8 @@ test_that("maskInputs errors when x is Lat-Long", {
 })
 
 test_that("prepInputs doesn't work (part 3)", {
-  skip_if_not_installed("googledrive")
-  skip_if_no_token()
   if (interactive()) {
-    testInitOut <- testInit()
+    testInitOut <- testInit(needGoogleDriveAuth = TRUE)
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)

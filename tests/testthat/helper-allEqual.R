@@ -13,7 +13,7 @@ skip_if_no_token <- function() {
 # loads and libraries indicated plus testthat,
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
 testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
-                     opts = NULL, needGoogle = FALSE) {
+                     opts = NULL, needGoogleDriveAuth = FALSE) {
   optsAsk <- if (!ask)
     options("reproducible.ask" = ask)
   else
@@ -33,39 +33,30 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   tmpCache <- checkPath(file.path(tmpdir, "testCache"), create = TRUE)
   .pkgEnv$testCacheCounter <- .pkgEnv$testCacheCounter + 1L
 
-
-  if (isTRUE(needGoogle)) {
-    .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
-
-    if (!utils::packageVersion("googledrive") >= "1.0.0")
-      # googledrive::drive_deauth()
-    #else
-      googledrive::drive_auth_config(active = TRUE)
-
-    if (.isRstudioServer()) {
-      .requireNamespace("httr", stopOnFALSE = TRUE)
-      options(httr_oob_default = TRUE)
-    }
-
-    ## #119 changed use of .httr-oauth (i.e., no longer used)
-    ## instead, uses ~/.R/gargle/gargle-oauth/long_random_token_name_with_email
-    if (interactive()) {
-      options(gargle_oauth_cache = ".secret")
-      if (utils::packageVersion("googledrive") >= "1.0.0") {
-        # googledrive::drive_deauth()
-      } else {
-        if (file.exists("~/.httr-oauth")) {
-          linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
-        } else {
-          googledrive::drive_auth()
-          messagePrepInputs("copying .httr-oauth to ~/.httr-oauth")
-          file.copy(".httr-oauth", "~/.httr-oauth", overwrite = TRUE)
-        }
-
-        if (!file.exists("~/.httr-oauth"))
-          messagePrepInputs("Please put an .httr-oauth file in your ~ directory")
+  if (isTRUE(needGoogleDriveAuth)) {
+    skip_if_not_installed("googledrive")
+    if (!googledrive::drive_has_token()) {
+      getAuth <- FALSE
+      if (is.null(getOption("gargle_oauth_email"))) {
+        switch(Sys.info()["user"],
+               emcintir = {options("gargle_oauth_email" = "eliotmcintire@gmail.com")},
+               NULL)
       }
+      if (is.null(getOption("gargle_oauth_email"))) {
+        if (interactive()) {
+          if (.isRstudioServer()) {
+            .requireNamespace("httr", stopOnFALSE = TRUE)
+            options(httr_oob_default = TRUE)
+          }
+          getAuth <- TRUE
+        }
+      } else {
+        getAuth <- TRUE
+      }
+      if (isTRUE(getAuth))
+        googledrive::drive_auth()
     }
+    skip_if_no_token()
   }
 
   origDir <- setwd(tmpdir)
@@ -82,7 +73,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   opts <- defaultOpts
 
   if (!is.null(opts)) {
-    if (needGoogle) {
+    if (needGoogleDriveAuth) {
       optsGoogle <- if (utils::packageVersion("googledrive") >= "1.0.0") {
       } else {
         list(httr_oob_default = .isRstudioServer())
@@ -106,7 +97,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   outList <- list(tmpdir = tmpdir, origDir = origDir, libs = libraries,
                   tmpCache = tmpCache, optsAsk = optsAsk,
                   optsVerbose = optsVerbose, tmpfile = tmpfile,
-                  opts = opts, needGoogle = needGoogle)
+                  opts = opts, needGoogleDriveAuth = needGoogleDriveAuth)
   list2env(outList, envir = parent.frame())
   return(outList)
 }
@@ -120,7 +111,7 @@ testOnExit <- function(testInitOut) {
     options(testInitOut$opts)
   setwd(testInitOut$origDir)
   unlink(testInitOut$tmpdir, recursive = TRUE)
-  if (isTRUE(testInitOut$needGoogle)) {
+  if (isTRUE(testInitOut$needGoogleDriveAuth)) {
     .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
     if (utils::packageVersion("googledrive") < "1.0.0")
       googledrive::drive_auth_config(active = FALSE)
@@ -373,23 +364,6 @@ theRasterTestZip <- theRasterTestFilename(theRasterTests, "zip") # "https://gith
 theRasterTestRar <- theRasterTestFilename(theRasterTests, "rar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
 theRasterTestTar <- theRasterTestFilename(theRasterTests, "tar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tar"
 
-
-shapefileClassDefault <- function() {
-  shpfl <- if (is.character(getOption("reproducible.shapefileRead"))) {
-    eval(parse(text = getOption("reproducible.shapefileRead")))
-  } else {
-    getOption("reproducible.shapefileRead")
-  }
-  if (identical(shpfl, raster::shapefile)) "SpatialPolygons" else "sf"
-}
-
-rasterType <- function(nlayers = 1) {
-  rasterRead <- getOption("reproducible.rasterRead")
-  if (identical(rasterRead, "terra::rast"))
-    "SpatRaster"
-  else
-    if (nlayers == 1) "RasterLayer" else "RasterStack"
-}
 
 runTestsWithTimings <- function(nameOfOuterList = "ff", envir = parent.frame(), authorizeGoogle = FALSE) {
   if (isTRUE(authorizeGoogle))
