@@ -707,8 +707,17 @@ writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, is
           writeDone <- TRUE
         }
       } else if (isRaster) {
-        from <- terra::writeRaster(from, filename = writeTo, overwrite = overwrite,
-                                    datatype = datatype)
+        nlyrsFrom <- nlayers2(from)
+        if (nlyrsFrom == 1 || length(writeTo) == 1) {
+          from <- terra::writeRaster(from, filename = writeTo, overwrite = overwrite,
+                                     datatype = datatype)
+        } else {
+          outs <- lapply(seq(nlyrsFrom), function(ind) {
+            out <- terra::writeRaster(from[[ind]], filename = writeTo[ind], overwrite = overwrite,
+                                      datatype = datatype)
+          })
+          from <- raster::stack(outs)
+        }
         writeDone <- TRUE
       } else {
         messagePrepInputs("... nothing written; object not a known object type to write.")

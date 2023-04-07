@@ -204,9 +204,10 @@
 #   return(output)
 # }
 
-.getFromRepo <- function(FUN, isInRepo, notOlderThan, lastOne, cachePath, fnDetails,
+.getFromRepo <- function(FUN, isInRepo, fullCacheTableForObj,
+                         notOlderThan, lastOne, cachePath, fnDetails,
                          modifiedDots, debugCache, verbose, # sideEffect,
-                         quick,
+                         quick, fileFormat = NULL,
                          algo, preDigest, startCacheTime,
                          drv = getOption("reproducible.drv", RSQLite::SQLite()),
                          conn = getOption("reproducible.conn", NULL), ...) {
@@ -217,52 +218,16 @@
   cacheObj <- isInRepo[[.cacheTableHashColName()]][lastOne]
 
   fromMemoise <- NA
-  # if (getOption("reproducible.useMemoise")) {
-  #   fromMemoise <- FALSE
-  #   if (!is.null(.pkgEnv[[cachePath]]))
-  #     if (exists(cacheObj, envir = .pkgEnv[[cachePath]]))
-  #       fromMemoise <- TRUE
-  #   loadFromMgs <- "Loading from memoised version of repo"
-  #   output <- .loadFromLocalRepoMem(md5hash = cacheObj, repoDir = cachePath, value = TRUE)
-  # } else {
-  #   loadFromMgs <- "Loading from repo"
-  #   if (useDBI()) {
-  # browser()
-      output <- loadFromCache(cachePath, isInRepo[[.cacheTableHashColName()[lastOne]]],
-                              .functionName = fnDetails$functionName, .dotsFromCache = modifiedDots,
-                              drv = drv, conn = conn)
-  #   }
-  # }
-
-  # if (verbose > 3) {
-  #   endLoadTime <- Sys.time()
-  #   verboseDF <- data.frame(
-  #     functionName = fnDetails$functionName,
-  #     component = loadFromMgs,
-  #     elapsedTime = as.numeric(difftime(endLoadTime, startLoadTime, units = "secs")),
-  #     units = "secs",
-  #     stringsAsFactors = FALSE
-  #   )
-  #
-  #   if (exists("verboseTiming", envir = .reproEnv)) {
-  #     .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
-  #   }
-  # }
-  #
-  # # Class-specific message
-  # .cacheMessage(output, fnDetails$functionName, fromMemoise = fromMemoise, verbose = verbose)
-  #
+  output <- loadFromCache(cachePath, isInRepo[[.cacheTableHashColName()[lastOne]]],
+                          fullCacheTableForObj = fullCacheTableForObj,
+                          # format = fileFormat, loadFun = loadFun,
+                          .functionName = fnDetails$functionName, .dotsFromCache = modifiedDots,
+                          drv = drv, conn = conn)
   # This is protected from multiple-write to SQL collisions
   .addTagsRepo(cacheId = isInRepo[[.cacheTableHashColName()]][lastOne],
                cachePath = cachePath, drv = drv, conn = conn)
-  #
-  # # This allows for any class specific things
-  # output <-
-  #   do.call(.prepareOutput, args = append(list(output, cachePath), modifiedDots))
-
   if (length(debugCache)) {
     if (!is.na(pmatch(debugCache, "complete")) | isTRUE(debugCache))
-      #output <- do.call(.debugCache, args = append(list(output, preDigest), modifiedDots$args))
       output <- .debugCache(output, preDigest, ...)
   }
 

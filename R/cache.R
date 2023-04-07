@@ -2206,7 +2206,8 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
                verbose = verbose)
 
   preLoadTime <- Sys.time()
-  output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
+  output <- try(.getFromRepo(FUN, isInRepo = isInRepo, fullCacheTableForObj = fullCacheTableForObj,
+                             notOlderThan = notOlderThan,
                              lastOne = lastOne, cachePath = cachePath,
                              fnDetails = fnDetails,
                              modifiedDots = modifiedDots, debugCache = debugCache,

@@ -201,16 +201,14 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   }
 
   mc <- match.call()
-  r1Orig <- raster(extent(0,200, 0, 200), vals = 1, res = 1)
-  r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  r1Orig <- terra::rast(terra::ext(0,200, 0, 200), vals = 1, res = 1)
+  r1Orig <- terra::writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
 
   if (mc$type == "Stack") {
-    r1Orig2 <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-    r1Orig <- stack(r1Orig, r1Orig2)
+    r1Orig2 <- terra::writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    r1Orig <- c(r1Orig, r1Orig2)
   } else if (mc$type == "Brick") {
-    r1Orig2 <- r1Orig
-    r1Orig <- brick(r1Orig, r1Orig2)
-    r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    message("Brick is deprecated; not tested any more")
   }
 
   # ._clearCache_3 <<- ._cloudUpload_1 <<- ._cloudDownloadRasterBackend_1 <<- 1
@@ -230,15 +228,11 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   ####################################################
   # cloud copy exists only -- should download to local copy
   ####################################################
-  r2Orig <- raster(extent(0,200, 0, 200), vals = 1, res = 1)
-  r2Orig <- writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  r2Orig <- terra::rast(terra::ext(0,200, 0, 200), vals = 1, res = 1)
+  r2Orig <- terra::writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
   if (mc$type == "Stack") {
-    r2Orig2 <- writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-    r2Orig <- stack(r2Orig, r2Orig2)
-  } else if (mc$type == "Brick") {
-    r2Orig2 <- r2Orig
-    r2Orig <- brick(r2Orig, r2Orig2)
-    r2Orig <- writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    r2Orig2 <- terra::writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    r2Orig <- c(r2Orig, r2Orig2)
   }
   # ._clearCache_3 <<- ._cloudUpload_1 <<- ._cloudDownloadRasterBackend_1 <<- 1
   r2End <- Cache(fn, r2Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
