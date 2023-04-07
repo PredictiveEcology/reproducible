@@ -560,6 +560,7 @@ setMethod(
       if (!(artifact %in% cacheToList[[.cacheTableHashColName()]])) {
         # browser(expr = exists("gggg"))
         outputToSave <- if (useDBI()) {
+          browser()# need to add  fullCacheTableForObj = fullCacheTableForObj,
           try(loadFromCache(cacheFrom, artifact))
         }
         if (is(outputToSave, "try-error")) {
@@ -690,18 +691,21 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds,
   classes <- sc[tagKey == "class"]$tagValue
   rases <- classes %in% c("RasterLayer", "RasterStack", "RasterBrick")
   objs <- lapply(files[rases], readRDS)
+  toDelete <- gdriveLs[isInCloud,]
   if (length(objs)) {
     .requireNamespace("raster", stopOnFALSE = TRUE)
     frmDisk <- unlist(lapply(objs, raster::fromDisk))
     filenames <- unlist(lapply(objs[frmDisk], Filenames))
-    toDelete <- gdriveLs[isInCloud,]
     messageCache("Cloud:", verbose = verbose)
     if (!is.null(filenames)) {
       rasFiles <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
       toDelete <- rbind(rasFiles, toDelete)
     }
+  }
+  if (any(isInCloud)) {
     retry(quote(googledrive::drive_rm(toDelete)))
   }
+
   return(invisible())
 }
 

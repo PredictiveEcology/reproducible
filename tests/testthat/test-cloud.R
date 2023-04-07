@@ -4,7 +4,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   if (interactive()) {
     testInitOut <- testInit(
       c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
-      needGoogle = TRUE,
+      needGoogleDriveAuth = TRUE,
       opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
                   "reproducible.ask" = FALSE)
     )
@@ -14,12 +14,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     }, add = TRUE)
     clearCache(x = tmpCache)
     testsForPkgs <- "testsForPkgs"
-    if (packageVersion("googledrive") < "2.0.0") {
-      df <- googledrive::drive_find(pattern = testsForPkgs, team_drive = NULL)
-    } else {
-      df <- googledrive::drive_find(pattern = testsForPkgs, shared_drive = NULL)
-    }
-    if (NROW(df) == 0)
+    if (isTRUE(tryCatch(googledrive::drive_ls(testsForPkgs), error = function(e) TRUE)))
       testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = testsForPkgs)))
     newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = testsForPkgs)))
     cloudFolderID = newDir
@@ -33,7 +28,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     mess1 <- capture_messages({
       a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
     })
-    expect_true(any(grepl("uploaded", mess1)))
+    expect_true(any(grepl("Uploaded", mess1)))
 
     #######################################
     # local present, cloud present
@@ -41,8 +36,8 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     mess2 <- capture_messages({
       a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
     })
-    expect_true(any(grepl("loading cached", mess2)))
-    expect_false(all(grepl("uploaded", mess2)))
+    expect_true(any(grepl("loaded cached", mess2)))
+    expect_false(all(grepl("uploaded", ignore.case = TRUE, mess2)))
     expect_false(all(grepl("download", mess2)))
 
     #######################################
@@ -54,9 +49,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     mess3 <- capture_messages({
       a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
     })
-    expect_false(any(grepl("loading cached", mess3)))
-    expect_false(any(grepl("uploaded", mess3)))
-    expect_true(any(grepl("download", mess3)))
+    expect_false(any(grepl("loaded cached", mess3)))
+    expect_false(any(grepl("Uploaded", mess3)))
+    expect_true(any(grepl("Downloading", mess3)))
 
     #######################################
     # local present, cloud absent
@@ -67,9 +62,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
       a2 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
     })
 
-    expect_true(any(grepl("loading cached", mess4)))
-    expect_true(any(grepl("uploaded", mess4)))
-    expect_false(any(grepl("download", mess4)))
+    expect_true(any(grepl("loaded cached", mess4)))
+    expect_true(any(grepl("Uploaded", mess4)))
+    expect_false(any(grepl("Download", mess4)))
 
     #######################################
     # cloudFolderID missing
@@ -89,7 +84,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     # }, add = TRUE)
     expect_true(any(grepl("Created Drive file", mess5)))
     expect_true(any(grepl("Uploading", mess5)))
-    expect_false(any(grepl("download", mess5)))
+    expect_false(any(grepl("Download", mess5)))
     # expect_true(any(grepl("No cloudFolderID", warn5)))
 
     warn6 <- capture_warnings({
@@ -100,12 +95,12 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
     expect_false(any(grepl("Folder created", mess6)))
     expect_false(any(grepl("Uploading", mess6)))
-    expect_false(any(grepl("download", mess6)))
-    expect_true(any(grepl("loading cached", mess6)))
+    expect_false(any(grepl("Download", mess6)))
+    expect_true(any(grepl("loaded cached", mess6)))
     expect_true(isTRUE(all.equal(length(warn6), 0)))
 
     ########
-    retry(quote(googledrive::drive_rm(newDir))) # clear the original one
+    try(googledrive::drive_rm(newDir), silent = TRUE) # clear the original one
     cloudFolderID <- getOption("reproducible.cloudFolderID")
     clearCache(x = tmpCache, useCloud = TRUE)#, cloudFolderID = cloudFolderID)
     # Add 3 things to cloud and local -- then clear them all
@@ -134,7 +129,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     Cache(rnorm, 2, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
     expect_silent({
       mess2 <- capture_messages(
-        clearCache(x = tmpCache, userTags = .robustDigest(1), useCloud = TRUE, cloudFolderID = cloudFolderID)
+        clearCache(x = tmpCache, userTags = CacheDigest(rnorm(1))$outputHash, useCloud = TRUE, cloudFolderID = cloudFolderID)
       )
     })
 
@@ -149,13 +144,12 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
   if (interactive()) {
     testInitOut <- testInit(c("googledrive", "raster"),
                             tmpFileExt = c(".tif", ".grd"),
-                            needGoogle = TRUE,
+                            needGoogleDriveAuth = TRUE,
                             opts = list("reproducible.ask" = FALSE))
 
     opts <- options("reproducible.cachePath" = tmpdir)
     suppressWarnings(rm(list = "aaa", envir = .GlobalEnv))
 
-    # googledrive::drive_auth("predictiveecology@gmail.com")
     on.exit({
       testOnExit(testInitOut)
       retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
@@ -187,7 +181,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
   if (interactive()) {
     testInitOut <- testInit(c("googledrive", "raster"),
                             tmpFileExt = c(".tif", ".grd"),
-                            needGoogle = TRUE,
+                            needGoogleDriveAuth = TRUE,
                             opts = list("reproducible.ask" = FALSE))
 
     googledrive::drive_auth("predictiveecology@gmail.com")
@@ -212,7 +206,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
   if (interactive()) {
     testInitOut <- testInit(c("googledrive", "raster"),
                             tmpFileExt = c(".tif", ".grd"),
-                            needGoogle = TRUE,
+                            needGoogleDriveAuth = TRUE,
                             opts = list("reproducible.ask" = FALSE))
 
     opts <- options("reproducible.cachePath" = tmpdir)
@@ -241,7 +235,7 @@ test_that("prepInputs works with team drives", {
 
   if (interactive()) {
     testInitOut <- testInit(
-      needGoogle = TRUE,
+      needGoogleDriveAuth = TRUE,
       "googledrive",
       opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
                   "reproducible.ask" = FALSE)
