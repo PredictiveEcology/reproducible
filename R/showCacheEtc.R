@@ -560,8 +560,8 @@ setMethod(
       if (!(artifact %in% cacheToList[[.cacheTableHashColName()]])) {
         # browser(expr = exists("gggg"))
         outputToSave <- if (useDBI()) {
-          browser()# need to add  fullCacheTableForObj = fullCacheTableForObj,
-          try(loadFromCache(cacheFrom, artifact))
+          try(loadFromCache(cachePath = cacheFrom, fullCacheTableForObj = cacheToList,
+                            cacheId = artifact))
         }
         if (is(outputToSave, "try-error")) {
           messageCache("Continuing to load others", verbose = verbose)
