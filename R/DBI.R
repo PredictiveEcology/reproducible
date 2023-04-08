@@ -180,11 +180,12 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 #' @export
 #' @rdname CacheHelpers
 #' @inheritParams CacheStoredFile
+#' @param fullCacheTableForObj The result of `showCache`, but subsetted for only
+#'   the `cacheId` being loaded or selected
 #' @param .dotsFromCache Optional. Used internally.
 #' @param .functionName Optional. Used for messaging when this function is called from `Cache`
 #' @details
 #' `loadFromCache` is a function to get a single object from the cache, given its `cacheId`.
-
 #' @return
 #' `loadFromCache` returns the object from the cache that has the particular `cacheId`.
 #'
