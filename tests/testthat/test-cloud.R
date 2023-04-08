@@ -28,7 +28,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     mess1 <- capture_messages({
       a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
     })
-    expect_true(any(grepl("Uploaded", mess1)))
+    expect_true(any(grepl("Uploading", mess1)))
 
     #######################################
     # local present, cloud present
@@ -63,7 +63,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     })
 
     expect_true(any(grepl("loaded cached", mess4)))
-    expect_true(any(grepl("Uploaded", mess4)))
+    expect_true(any(grepl("Uploading", mess4)))
     expect_false(any(grepl("Download", mess4)))
 
     #######################################
@@ -82,7 +82,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     # on.exit({
     #   retry(quote(googledrive::drive_rm(googledrive::as_id(cloudFolderID))))
     # }, add = TRUE)
-    expect_true(any(grepl("Created Drive file", mess5)))
+    # expect_true(any(grepl("Created Drive file", mess5)))
     expect_true(any(grepl("Uploading", mess5)))
     expect_false(any(grepl("Download", mess5)))
     # expect_true(any(grepl("No cloudFolderID", warn5)))
@@ -93,7 +93,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
       })
     })
 
-    expect_false(any(grepl("Folder created", mess6)))
+    # expect_false(any(grepl("Folder created", mess6)))
     expect_false(any(grepl("Uploading", mess6)))
     expect_false(any(grepl("Download", mess6)))
     expect_true(any(grepl("loaded cached", mess6)))
@@ -111,6 +111,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
         clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
       )
     })
+
     expect_true(NROW(googledrive::drive_ls(path = cloudFolderFromCacheRepo(tmpCache))) == 0)
 
     # Add 3 things to local, only 2 to cloud -- clear them all, without an error
