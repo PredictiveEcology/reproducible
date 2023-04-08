@@ -35,26 +35,28 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
 
   if (isTRUE(needGoogleDriveAuth)) {
     skip_if_not_installed("googledrive")
-    if (!googledrive::drive_has_token()) {
-      getAuth <- FALSE
-      if (is.null(getOption("gargle_oauth_email"))) {
-        switch(Sys.info()["user"],
-               emcintir = {options("gargle_oauth_email" = "predictiveecology@gmail.com")},
-               NULL)
-      }
-      if (is.null(getOption("gargle_oauth_email"))) {
-        if (interactive()) {
-          if (.isRstudioServer()) {
-            .requireNamespace("httr", stopOnFALSE = TRUE)
-            options(httr_oob_default = TRUE)
+    if (interactive()) {
+      if (!googledrive::drive_has_token()) {
+        getAuth <- FALSE
+        if (is.null(getOption("gargle_oauth_email"))) {
+          switch(Sys.info()["user"],
+                 emcintir = {options("gargle_oauth_email" = "predictiveecology@gmail.com")},
+                 NULL)
+        }
+        if (is.null(getOption("gargle_oauth_email"))) {
+          if (interactive()) {
+            if (.isRstudioServer()) {
+              .requireNamespace("httr", stopOnFALSE = TRUE)
+              options(httr_oob_default = TRUE)
+            }
+            getAuth <- TRUE
           }
+        } else {
           getAuth <- TRUE
         }
-      } else {
-        getAuth <- TRUE
+        if (isTRUE(getAuth))
+          googledrive::drive_auth()
       }
-      if (isTRUE(getAuth))
-        googledrive::drive_auth()
     }
     skip_if_no_token()
   }
