@@ -22,6 +22,7 @@ createCache(
 loadFromCache(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
+  fullCacheTableForObj = NULL,
   format = getOption("reproducible.cacheSaveFormat", "rds"),
   .functionName = NULL,
   .dotsFromCache = NULL,
@@ -49,7 +50,7 @@ CacheStorageDir(cachePath = getOption("reproducible.cachePath"))
 CacheStoredFile(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
-  format = getOption("reproducible.cacheSaveFormat", "rds")
+  format = NULL
 )
 
 CacheDBTableName(

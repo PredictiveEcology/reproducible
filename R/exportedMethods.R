@@ -662,7 +662,6 @@ unmakeMemoisable.default <- function(x) {
                                paste0("saveRawFile:", TRUE),
                                paste0("loadFun:", "terra::rast")
                                )
-        browser()
       } else {
         obj <- terra::wrap(obj)
       }

@@ -39,7 +39,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
       getAuth <- FALSE
       if (is.null(getOption("gargle_oauth_email"))) {
         switch(Sys.info()["user"],
-               emcintir = {options("gargle_oauth_email" = "eliotmcintire@gmail.com")},
+               emcintir = {options("gargle_oauth_email" = "predictiveecology@gmail.com")},
                NULL)
       }
       if (is.null(getOption("gargle_oauth_email"))) {
@@ -362,7 +362,7 @@ theRasterTestTar <- theRasterTestFilename(theRasterTests, "tar") # "https://gith
 runTestsWithTimings <- function(nameOfOuterList = "ff", envir = parent.frame(), authorizeGoogle = FALSE) {
   if (isTRUE(authorizeGoogle))
     if (Sys.info()[["user"]] == "emcintir")
-      googledrive::drive_auth(cache = "~/.secret", email = "predictiveecology@gmail.com")
+      googledrive::drive_auth(email = "predictiveecology@gmail.com")
   prepend <- "/home/emcintir/GitHub/reproducible/tests/testthat"
   testFiles <- dir(prepend, pattern = "^test-", full.names = TRUE)
   testFiles <- grep("large", testFiles, value = TRUE, invert = TRUE)

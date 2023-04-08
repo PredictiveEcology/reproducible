@@ -189,8 +189,8 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 #' `loadFromCache` returns the object from the cache that has the particular `cacheId`.
 #'
 loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
-                          fullCacheTableForObj = NULL,
                           cacheId,
+                          fullCacheTableForObj = NULL,
                           format = getOption("reproducible.cacheSaveFormat", "rds"),
                           .functionName = NULL, .dotsFromCache = NULL,
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -531,7 +531,9 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 #' `CacheStoredFile` returns the name of the file in which the cacheId object is stored.
 #' This can be loaded to memory with e.g., `loadFile`.
 CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cacheId,
-                            format = getOption("reproducible.cacheSaveFormat", "rds")) {
+                            format = NULL) {
+
+  if (is.null(format)) format <- getOption("reproducible.cacheSaveFormat", "rds")
   csf <- if (isTRUE(useDBI()) == FALSE) {
     "rda"
   } else {
@@ -733,7 +735,6 @@ loadFile <- function(file, format, loadFun = NULL) {
       obj <- readRDS(file = file)
     }
   } else {
-    browser()
     obj <- eval(parse(text = loadFun))(file)
   }
 }
@@ -743,7 +744,6 @@ saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
     fts <- CacheStoredFile(cachePath, cacheId)
 
   if (any(attr(obj, "tags") == "saveRawFile:TRUE")) {
-    browser()
     newFN <- paste0(tools::file_path_sans_ext(fts), ".", tools::file_ext(obj))
     linkOrCopy(obj, newFN)
     fs <- file.size(fts)
