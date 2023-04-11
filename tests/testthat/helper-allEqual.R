@@ -39,8 +39,12 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
       if (!googledrive::drive_has_token()) {
         getAuth <- FALSE
         if (is.null(getOption("gargle_oauth_email"))) {
+          possLocalCache <- "c:/Eliot/.secret"
+          if (file.exists(possLocalCache))
+            cache <- possLocalCache else FALSE
           switch(Sys.info()["user"],
-                 emcintir = {options("gargle_oauth_email" = "eliotmcintire@gmail.com")},
+                 emcintir = {options(gargle_oauth_email = "eliotmcintire@gmail.com",
+                                     gargle_oauth_cache = cache)},
                  NULL)
         }
         if (is.null(getOption("gargle_oauth_email"))) {
