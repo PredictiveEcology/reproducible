@@ -390,8 +390,10 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
               }
             } else {
               if (isGridded(maskTo)) {
-                if (terra::ext(from) != terra::ext(maskTo))
+                if (terra::ext(from) > terra::ext(maskTo))
                   from <- terra::crop(from, maskTo)
+                if (terra::ext(maskTo) > terra::ext(from))
+                  maskTo <- terra::crop(maskTo, from)
                 terra::mask(from, maskTo, overwrite = overwrite)
               } else {
                 if (isSF(maskTo) || isSpatial(maskTo)) {

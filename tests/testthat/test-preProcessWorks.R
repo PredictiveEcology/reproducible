@@ -428,7 +428,7 @@ test_that("message when extracting a file that is already present", {
   })
 })
 
-test_that("Test to fix issue #101 prepInputs on raster from disk", {
+test_that("masking with larger extent obj", {
   skip_on_cran()
   skip_on_ci()
 
@@ -437,12 +437,15 @@ test_that("Test to fix issue #101 prepInputs on raster from disk", {
     testOnExit(testInitOut)
   }, add = TRUE)
   smallRT <- prepInputs(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
-  a <- raster::extent(smallRT)
-  a <- raster::extend(a, -3.5e5) # make it small
-  test <- raster(a, res = 250, vals = 1)
-  crs(test) <- crs(smallRT)
-  a <- postProcess(x = test, rasterToMatch = smallRT, maskWithRTM = TRUE)
-  expect_true(is(a, "RasterLayer"))
+  sam <- sample(terra::ncell(smallRT), size = terra::ncell(smallRT)/2)
+  smallRT[] <- NA
+  smallRT[sam] <- 1L
+  a <- terra::ext(smallRT)
+  a <- terra::extend(a, -3e5) # make it small
+  test <- terra::rast(a, res = 250, vals = 2)
+  terra::crs(test) <- terra::crs(smallRT)
+  b <- postProcess(x = test, rasterToMatch = smallRT, maskWithRTM = TRUE)
+  expect_true(is(b, "SpatRaster"))
 })
 
 test_that("Test of using future and progress indicator for lrg files on Google Drive", {
@@ -454,7 +457,6 @@ test_that("Test of using future and progress indicator for lrg files on Google D
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
-    #future::plan("multiprocess")
     noisyOutput <- capture.output({
       ccc <- testthat::capture_output({
         smallRT <- preProcess(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
