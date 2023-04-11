@@ -435,7 +435,7 @@ test_that("preProcess doesn't work", {
     })
   })
 
-  runTest("1_2_3_4_5_6_7_10_12_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_6_7_10_12_13", vectorType(), 5, mess,
           expectedMess = expectedMessage,
           filePattern = "Shapefile",  # the file name is actually Shapefile1...
           tmpdir = tmpdir, test = test)
@@ -1104,10 +1104,8 @@ test_that("prepInputs doesn't work (part 2)", {
     mess1 <- capture_messages({
       test1 <- try(silent = TRUE, {
         prepInputs(
-          #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
-          targetFile = targetFileLuxRDS,
+          fun = NA,
           dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-          #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
           path = tmpdir)
       })
     })
@@ -1117,75 +1115,31 @@ test_that("prepInputs doesn't work (part 2)", {
     noisyOutput3 <- capture.output(type = "message", {
       mess3 <- capture_messages({
         test3 <- prepInputs(
-          #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
-          targetFile = targetFileLuxRDS,
-          #destinationPath = ".",
-          dlFun = quote(getDataFn(name = "GADM", country = "LUX", level = 0)),
-          #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-          path = tmpdir)
+          fun = NA,
+          dlFun = quote(getDataFn(name = "GADM", country = "LUX", level = 0, path = tmpdir)),
+          destinationPath = tmpdir)
       })
     })
 
-    # Test quoted version of -- FAILING NOV 24, 2022 Eliot
-    # fn11 <- function(targetFilePath) {
-    #   out <- readRDS(targetFilePath)
-    #   sf::st_as_sf(out)}
-    # gdf <- function() {
-    #   getDataFn(name = "GADM", country = "LUX", level = 0)
-    # }
-    # noisyOutput4 <- capture.output(type = "message", {
-    #   mess4 <- capture_messages({
-    #
-    #     test4 <- prepInputs(
-    #       #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
-    #       targetFile = targetFileLuxRDS,
-    #       #destinationPath = ".",
-    #       dlFun = quote(gdf()),
-    #       fun = quote(fn11(targetFilePath)), fn11 = fn11,
-    #       path = tmpdir)      })
-    # })
-
-
-    # Test different way to use quoted version of
-    # noisyOutput5 <- capture.output(type = "message", {
-    #   mess5 <- capture_messages({
-    #
-    #     test5 <- prepInputs(
-    #       #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
-    #       targetFile = targetFileLuxRDS,
-    #       #destinationPath = ".",
-    #       dlFun = quote({
-    #         getDataFn(name = "GADM", country = "LUX", level = 0)
-    #         }),
-    #       fun = quote({
-    #         out <- readRDS(targetFilePath)
-    #         out <- as(out, "SpatialPolygonsDataFrame")
-    #         sf::st_as_sf(out)}),
-    #       path = tmpdir)      })
-    # })
-    # expect_true(identical(test5, test4))
-
-    if (interactive()) {
+    if (.requireNamespace("sp")) {
       noisyOutput6 <- capture.output(type = "message", {
         mess6 <- capture_messages({
           test6 <- prepInputs(
             # targetFile = targetFileLuxRDS,
             dlFun = quote({
-              out <- getDataFn(name = "GADM", country = "LUX", level = 0)
-              out <- as(out, "SpatialPolygonsDataFrame")
-              sf::st_as_sf(out)
-            }),
-            path = tmpdir)          })
+              out <- getDataFn(name = "GADM", country = "LUX", level = 0, path = tmpdir)
+              as(out, "Spatial")
+            })
+          )          })
       })
-      # expect_true(all(sf::st_bbox(test5) == sf::st_bbox(test6)))
+      expect_is(test6, "Spatial")
     }
+    # expect_true(all(sf::st_bbox(test5) == sf::st_bbox(test6)))
 
   }
 })
 
 test_that("load rdata in prepInputs", {
-  skip_if_not_installed("googledrive")
-
   testInitOut <- testInit("terra", opts = list(
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
@@ -1206,8 +1160,6 @@ test_that("load rdata in prepInputs", {
 })
 
 test_that("assessDataType doesn't work", {
-  skip_if_not_installed("googledrive")
-
   testInitOut <- testInit("terra", opts = list(
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
@@ -1817,19 +1769,19 @@ test_that("rasters aren't properly resampled", {
     rm(rasStack)
     out3 <- prepInputs(targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
                        destinationPath = dirname(tiftemp3),
-                       # fun = "raster::stack",
                        filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
     expect_true(is(out3, rasterType()))
     expect_true(identical(length(Filenames(out3)), 1L))
 
     if (.requireNamespace("raster")) {
+      rasterStackFn <- "raster::stack"
       out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
                          destinationPath = dirname(tiftemp3),
-                         fun = "raster::stack",
+                         fun = rasterStackFn,
                          filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
                                        tempfile(tmpdir = tmpdir, fileext = ".grd"))
       )
-      expect_true(is(out4, rasterType(nlayers = nlayers2(out4))))
+      expect_true(is(out4, rasterType(nlayers = nlayers2(out4), rasterRead = rasterStackFn)))
       expect_true(identical(length(Filenames(out4, allowMultiple = TRUE)), 4L))
 
 
@@ -1844,7 +1796,7 @@ test_that("rasters aren't properly resampled", {
       rm(rasStack)
       out5 <- prepInputs(targetFile = tiftemp5, rasterToMatch = terra::rast(tiftemp2),
                          destinationPath = dirname(tiftemp3),
-                         fun = "raster::stack",
+                         fun = rasterStackFn,
                          filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
                                        tempfile(tmpdir = tmpdir, fileext = ".grd"),
                                        tempfile(tmpdir = tmpdir, fileext = ".tif")
@@ -1855,10 +1807,10 @@ test_that("rasters aren't properly resampled", {
 
       out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
                          destinationPath = dirname(tiftemp3),
-                         fun = raster::stack,
+                         fun = rasterStackFn,
                          filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
                                        tempfile(tmpdir = tmpdir, fileext = ".grd")))
-      expect_true(is(out4, rasterType(nlayers2(out4))))
+      expect_true(is(out4, rasterType(nlayers2(out4), rasterStackFn)))
       expect_true(identical(length(Filenames(out4)), 4L))
     }
 

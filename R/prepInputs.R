@@ -347,12 +347,15 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   argsFromPrepInputsFamily <- unique(c(.namesPostProcessFormals(), formalArgs(prepInputs), formalArgs(preProcess),
                                 "checkSums", "dots", "object"))
+  args <- NULL
   # keep the ones for theFun
-  formsForTheFun <- names(formals3(theFun))
-  argsFromPrepInputsFamily <- setdiff(argsFromPrepInputsFamily, names(formals3(theFun)))
-  argsPassingToTheFun <- out[!names(out) %in% argsFromPrepInputsFamily]
-  # args <- argsPassingToTheFun[!names(argsPassingToTheFun) %in% "targetFilePath"] # will replace it without a named arg
-  args <- argsPassingToTheFun[names(argsPassingToTheFun) %in% formsForTheFun]
+  if (naFun %in% FALSE) {
+    formsForTheFun <- names(formals3(theFun))
+    argsFromPrepInputsFamily <- setdiff(argsFromPrepInputsFamily, names(formals3(theFun)))
+    argsPassingToTheFun <- out[!names(out) %in% argsFromPrepInputsFamily]
+    # args <- argsPassingToTheFun[!names(argsPassingToTheFun) %in% "targetFilePath"] # will replace it without a named arg
+    args <- argsPassingToTheFun[names(argsPassingToTheFun) %in% formsForTheFun]
+  }
 
 
   otherFiles <- out$checkSums[result == "OK"]
@@ -423,7 +426,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         }
       }
     } else {
-      if (is.null(fun)) {
+      if (is.null(fun) || is.na(fun)) {
         out$object
       } else {
         x <- out$object
@@ -433,8 +436,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
     }
   } else {
-    messagePrepInputs("No loading of object into R; fun = ", theFun, verbose = verbose)
-    x <- out
+    x <- if (is.null(fun) || is.na(fun) || !is.null(out$object)) {
+      out$object
+    } else {
+      messagePrepInputs("No loading of object into R; fun = ", theFun, verbose = verbose)
+      out
+    }
   }
 
   if (requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)) {

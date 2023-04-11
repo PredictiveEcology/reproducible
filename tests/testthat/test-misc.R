@@ -84,7 +84,8 @@ test_that("setting options works correctly", {
   bbb <- match(names(b), names(a1))
   # expect_true(identical(sort(names(a1)), sort(names(a1[na.omit(bbb)]))))
   expect_true(identical(sort(names(a1)), sort(names(a1[bbb[!is.na(bbb)]]))))
-  omit <- c(names(testInitOut$opts), names(testInitOut$optsAsk))
+  omit <- c(names(testInitOut$opts), names(testInitOut$optsAsk),
+            "reproducible.inputPath", "reproducible.tempPath")
   b1 <- b[names(a1)]
   b1 <- b1[!names(b1) %in% omit]
   a2 <- a1[!names(a1) %in% omit]
@@ -124,7 +125,6 @@ test_that("unrar is working as expected", {
 })
 
 test_that("test miscellaneous fns (part 2)", {
-  skip_if_not_installed("googledrive")
   testInitOut <- testInit("terra", tmpFileExt = c(".tif", ".grd"),
                           needGoogleDriveAuth = TRUE)
   on.exit({

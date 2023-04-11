@@ -442,7 +442,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           dlFunName <- dlFun
           dlFun <- .extractFunction(dlFun)
           fun <- if (is(dlFun, "call")) {
-            .fnCleanup(dlFun, callingFun = "downloadRemote")
+            CacheMatchedCall <-  match.call(call = dlFun)
+            .fnCleanup(dlFun, callingFun = "downloadRemote", CacheMatchedCall = CacheMatchedCall)
           } else {
             NULL
           }
