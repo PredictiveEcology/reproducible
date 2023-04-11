@@ -325,15 +325,18 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   if (!isTRUE(checkSums[checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {
     messagePrepInputs("  Downloading from Google Drive.", verbose = verbose)
     fs <- attr(archive, "fileSize")
-    if (is.null(fs))
-      fs <- attr(assessGoogle(url, verbose = verbose, team_drive = team_drive), "fileSize")
+    if (is.null(fs)) {
+      fs <- attr(downloadFilename, "fileSize")
+      if (is.null(fs))
+        fs <- attr(assessGoogle(url, verbose = verbose, team_drive = team_drive), "fileSize")
+    }
     if (!is.null(fs))
       class(fs) <- "object_size"
 
     isLargeFile <- ifelse(is.null(fs), FALSE, fs > 1e6)
     if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&
         !isFALSE(getOption("reproducible.futurePlan"))) {
-      messagePrepInputs("Downloading a large file", verbose = verbose)
+      messagePrepInputs("Downloading a large file in background using future", verbose = verbose)
       fp <- future::plan()
       if (!is(fp, getOption("reproducible.futurePlan"))) {
         fpNew <- getOption("reproducible.futurePlan")
@@ -343,7 +346,6 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
         })
       }
       a <- future::future({
-        googledrive::drive_deauth()
         retry(quote(googledrive::drive_download(googledrive::as_id(url), path = destFile,
                                                 type = type,
                                                 overwrite = overwrite, verbose = TRUE)))
@@ -351,7 +353,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
         globals = list(drive_download = googledrive::drive_download,
                        as_id = googledrive::as_id,
                        retry = retry,
-                       drive_deauth = googledrive::drive_deauth,
+                       # drive_deauth = googledrive::drive_deauth,
                        url = url,
                        type = type,
                        overwrite = overwrite,
@@ -498,7 +500,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           }
           downloadResults <- list(out = out, destFile = normPath(destFile), needChecksums = 2)
         } else if (grepl("d.+.google.com", url)) {
-          #browser(expr = exists("._downloadRemote_2"))
+
           if (!requireNamespace("googledrive", quietly = TRUE))
             stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
