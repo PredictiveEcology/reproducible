@@ -462,9 +462,15 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           }
           # browser(expr = exists("._downloadRemote_1"))
           out <- if (is.call(dlFun)) {
-            env1 <- new.env()
-            list2env(args, env1)
-            eval(dlFun, envir = env1)
+            sfs <- sys.frames()
+            for (i in seq_along(sfs)) {
+              env1 <- new.env(parent = sys.frame(-i))
+              list2env(args, env1)
+              outIn <- try(eval(dlFun, envir = env1), silent = TRUE)
+              if (!is(outIn, "try-error"))
+                break
+            }
+            outIn
           } else {
             do.call(dlFun, args = args)
           }
