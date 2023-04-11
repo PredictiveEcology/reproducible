@@ -214,7 +214,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   fileFormatRow <- fullCacheTableForObj[["tagKey"]] == "fileFormat"
   fileFormat = if (any(fileFormatRow))
-    fullCacheTableForObj[["tagValue"]][fileFormatRow] else NULL
+    fullCacheTableForObj[["tagValue"]][fileFormatRow] else format
 
   loadFunRow <- fullCacheTableForObj[["tagKey"]] == "loadFun"
   loadFun = if (any(loadFunRow))
@@ -241,7 +241,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
         return(fs)
       }
     }
-    obj <- loadFile(f, format = format, loadFun = loadFun)
+    obj <- loadFile(f, format = fileFormat, loadFun = loadFun)
     obj <- .dealWithClassOnRecovery(obj, cachePath = cachePath,
                                     cacheId = cacheId,
                                     drv = drv, conn = conn)
