@@ -1,6 +1,5 @@
 test_that("dlGeneric works", {
   if (interactive()) {
-    skip_if_no_token()
     url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
     noisyOutput <- capture.output({
       res <- dlGeneric(url, FALSE, tempdir2(rndstr(1,6)))
@@ -10,6 +9,7 @@ test_that("dlGeneric works", {
 
 
 
+    skip_if_no_token()
     userDist <- prepInputs(
       url = "https://docs.google.com/spreadsheets/d/1fOikb83aOuLlFYIn6pjmC7Jydjcy77TH", ##
       targetFile = "userDist.csv", # <---------------------------------------------------------------- specify targeFile

@@ -22,6 +22,7 @@ createCache(
 loadFromCache(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
+  fullCacheTableForObj = NULL,
   format = getOption("reproducible.cacheSaveFormat", "rds"),
   .functionName = NULL,
   .dotsFromCache = NULL,
@@ -49,7 +50,7 @@ CacheStorageDir(cachePath = getOption("reproducible.cachePath"))
 CacheStoredFile(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
-  format = getOption("reproducible.cacheSaveFormat", "rds")
+  format = NULL
 )
 
 CacheDBTableName(
@@ -83,6 +84,9 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{cacheId}{The cacheId or otherwise digested hash value, as character string.}
+
+\item{fullCacheTableForObj}{The result of \code{showCache}, but subsetted for only
+the \code{cacheId} being loaded or selected}
 
 \item{format}{The text string representing the file extension used normally by
 different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults

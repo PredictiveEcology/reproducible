@@ -124,37 +124,39 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cachePath, cloudFolderID
                     messageStart = "to use google drive files")
 
   artifact <- isInRepo[[.cacheTableHashColName()]][1]
-  # browser(expr = exists("._cloudUpload_1"))
-  artifactFileName <- CacheStoredFile(cachePath, cacheId = artifact)
-  #artifactFileName <- paste0(artifact, ".rda")
-  if (useDBI()) {
-    newFileName <- basename2(artifactFileName)
-  } else {
-    newFileName <- paste0(outputHash,".rda")
-  }
-  isInCloud <- gsub(gdriveLs$name,
-                    pattern = paste0("\\.", fileExt(CacheStoredFile(cachePath, outputHash))),
-                    replacement = "") %in% outputHash
-
-  if (!any(isInCloud)) {
-    messageCache("Uploading local copy of ", artifactFileName,", with cacheId: ",
-                 outputHash," to cloud folder")
-    numRetries <- 1
-    while (numRetries < 6) {
-      du <- try(retry(retries = numRetries,
-                      quote(googledrive::drive_upload(media = artifactFileName, path = cloudFolderID,
-                                         name = newFileName, overwrite = FALSE))))
-      if (is(du, "try-error")) {
-        if (!isTRUE(any(grepl("overwrite", du)))) {
-          numRetries <- numRetries + 4
-        } else {
-          return(du)
-        }
-      } else {
-        numRetries <- 6
-      }
+  if (!is.null(artifact)) {
+    # browser(expr = exists("._cloudUpload_1"))
+    artifactFileName <- CacheStoredFile(cachePath, cacheId = artifact)
+    #artifactFileName <- paste0(artifact, ".rda")
+    if (useDBI()) {
+      newFileName <- basename2(artifactFileName)
+    } else {
+      newFileName <- paste0(outputHash,".rda")
     }
-    cloudUploadRasterBackends(obj = output, cloudFolderID)
+    isInCloud <- gsub(gdriveLs$name,
+                      pattern = paste0("\\.", fileExt(CacheStoredFile(cachePath, outputHash))),
+                      replacement = "") %in% outputHash
+
+    if (!any(isInCloud)) {
+      messageCache("Uploading local copy of ", artifactFileName,", with cacheId: ",
+                   outputHash," to cloud folder")
+      numRetries <- 1
+      while (numRetries < 6) {
+        du <- try(retry(retries = numRetries,
+                        quote(googledrive::drive_upload(media = artifactFileName, path = cloudFolderID,
+                                                        name = newFileName, overwrite = FALSE))))
+        if (is(du, "try-error")) {
+          if (!isTRUE(any(grepl("overwrite", du)))) {
+            numRetries <- numRetries + 4
+          } else {
+            return(du)
+          }
+        } else {
+          numRetries <- 6
+        }
+      }
+      cloudUploadRasterBackends(obj = output, cloudFolderID)
+    }
   }
 }
 
@@ -303,7 +305,7 @@ isOrHasRaster <- function(obj) {
   } else if (is.list(obj)) {
     lapply(obj, function(x) isOrHasRaster(x))
   } else {
-    is(obj, "Raster")
+    is(obj, "Raster") || is(obj, "SpatRaster")
   }
   return(rasters)
 }

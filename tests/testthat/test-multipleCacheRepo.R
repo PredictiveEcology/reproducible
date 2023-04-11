@@ -39,12 +39,8 @@ test_that("test multiple cachePath", {
 ##########################
 test_that("test multiple cachePath with 1 of them a cloudCache", {
   skip(message = "test cloudCache inside Cache -- Not fully written test")
-  skip_if_not_installed("googledrive")
 
-  if (!requireNamespace("googledrive", quietly = TRUE))
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
-  #if (!interactive())
-  testInitOut <- testInit(libraries = "googledrive")
+  testInitOut <- testInit(libraries = "googledrive", needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

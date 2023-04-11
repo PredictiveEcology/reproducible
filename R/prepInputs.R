@@ -347,12 +347,15 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   argsFromPrepInputsFamily <- unique(c(.namesPostProcessFormals(), formalArgs(prepInputs), formalArgs(preProcess),
                                 "checkSums", "dots", "object"))
+  args <- NULL
   # keep the ones for theFun
-  formsForTheFun <- names(formals3(theFun))
-  argsFromPrepInputsFamily <- setdiff(argsFromPrepInputsFamily, names(formals3(theFun)))
-  argsPassingToTheFun <- out[!names(out) %in% argsFromPrepInputsFamily]
-  # args <- argsPassingToTheFun[!names(argsPassingToTheFun) %in% "targetFilePath"] # will replace it without a named arg
-  args <- argsPassingToTheFun[names(argsPassingToTheFun) %in% formsForTheFun]
+  if (naFun %in% FALSE) {
+    formsForTheFun <- names(formals3(theFun))
+    argsFromPrepInputsFamily <- setdiff(argsFromPrepInputsFamily, names(formals3(theFun)))
+    argsPassingToTheFun <- out[!names(out) %in% argsFromPrepInputsFamily]
+    # args <- argsPassingToTheFun[!names(argsPassingToTheFun) %in% "targetFilePath"] # will replace it without a named arg
+    args <- argsPassingToTheFun[names(argsPassingToTheFun) %in% formsForTheFun]
+  }
 
 
   otherFiles <- out$checkSums[result == "OK"]
@@ -360,6 +363,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (NROW(otherFiles)) {
     .cacheExtra <- .robustDigest(sort(otherFiles$checksum.x))
   }
+
   if (!(naFun || is.null(theFun))) {
     x <- if (is.null(out$object)) {
 
@@ -389,7 +393,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             as.list(tmpEnv, all.names = TRUE)
         } else {
           # browser(expr = exists("._prepInputs_3"))
-          #err <- tryCatch(error = function(xx) xx,
           useCache2 <- useCache
           if (fileExt(out$targetFilePath) %in% c("qs", "rds") &&
               !isTRUE(getOption("reproducible.useMemoise"))) {
@@ -423,18 +426,22 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         }
       }
     } else {
-      if (is.null(fun)) {
+      if (is.null(fun) || is.na(fun)) {
         out$object
       } else {
-        x <- out$object
+        # x <- out$object
         env1 <- new.env()
         list2env(list(...), envir = env1)
         eval(theFun, envir = env1)
       }
     }
   } else {
-    messagePrepInputs("No loading of object into R; fun = ", theFun, verbose = verbose)
-    x <- out
+    x <- if (is.null(fun) || is.na(fun) || !is.null(out$object)) {
+      out$object
+    } else {
+      messagePrepInputs("No loading of object into R; fun = ", theFun, verbose = verbose)
+      out
+    }
   }
 
   if (requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)) {
@@ -722,8 +729,8 @@ extractFromArchive <- function(archive,
   funPoss <- lapply(fileExt, function(fe) feKnown[startsWith(prefix = feKnown[[1]], fe), ])
   funPoss <- do.call(rbind, funPoss)
   if (length(funPoss)) {
-    isShapefile <- fileExt %in% funPoss[funPoss[, "type"] == "shapefile", "extension"]
-    isRaster <- fileExt %in% funPoss[funPoss[, "type"] == "Raster", "extension"]
+    isShapefile <- fileExt %in% funPoss[funPoss[, "type"] == vectorType(), "extension"]
+    isRaster <- fileExt %in% funPoss[funPoss[, "type"] == rasterType(), "extension"]
     isRDS <- fileExt %in% funPoss[funPoss[, "extension"] == "rds", "extension"]
     if (any(isShapefile)) {
       if (is.null(fun))
@@ -740,7 +747,7 @@ extractFromArchive <- function(archive,
     if (length(fun) > 1) {
       if (sum(isRaster) > 0 && sum(isShapefile) > 0) {
         isRaster[isRaster] <- FALSE
-        funPoss <- funPoss[funPoss$type == "shapefile", ]
+        funPoss <- funPoss[funPoss$type == vectorType(), ]
         fun <- unique(funPoss[, "fun"])
         message("The archive has both a shapefile and a raster; selecting the shapefile. If this is incorrect, specify targetFile")
       } else

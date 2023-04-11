@@ -1,8 +1,6 @@
 test_that("prepInputs correctly unzips large files", {
   skip_on_cran()
-
   skip_on_ci()
-
   skip_if_not(isInteractive(), "tests extracting large files should be run manually")
 
   ## based on #145. extracted file is ~30 GB so this takes a long time to test!

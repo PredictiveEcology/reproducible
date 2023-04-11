@@ -1926,7 +1926,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                                   useCache = getOption("reproducible.useCache", FALSE),
                                   filename1,
                                   filename2, useSAcrs, overwrite, targetCRS = NULL,
-                                  useGDAL = getOption("reproducible.useGDAL", FALSE),
+                                  useGDAL = FALSE,
                                   cores = getOption("reproducible.GDALcores", 2),
                                   verbose = getOption("reproducible.verbose", 1),
                                   ...) {

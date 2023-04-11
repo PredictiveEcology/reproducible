@@ -1,6 +1,6 @@
 test_that("prepInputs works with NULL archive + file without extension, but originally a .zip", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -16,7 +16,7 @@ test_that("prepInputs works with NULL archive + file without extension, but orig
 
 test_that("prepInputs WORKS if the file is not originally a .zip, but archive is provided (only extension matters)", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -32,7 +32,7 @@ test_that("prepInputs WORKS if the file is not originally a .zip, but archive is
 
 test_that("prepInputs WORKS if passing archive .zip", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -48,7 +48,7 @@ test_that("prepInputs WORKS if passing archive .zip", {
 
 test_that("prepInputs WORKS passing just targetFile that is NOT an archive", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -64,7 +64,7 @@ test_that("prepInputs WORKS passing just targetFile that is NOT an archive", {
 
 test_that("prepInputs WORKS passing archive + targetFile", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

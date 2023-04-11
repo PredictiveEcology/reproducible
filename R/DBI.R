@@ -180,16 +180,18 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 #' @export
 #' @rdname CacheHelpers
 #' @inheritParams CacheStoredFile
+#' @param fullCacheTableForObj The result of `showCache`, but subsetted for only
+#'   the `cacheId` being loaded or selected
 #' @param .dotsFromCache Optional. Used internally.
 #' @param .functionName Optional. Used for messaging when this function is called from `Cache`
 #' @details
 #' `loadFromCache` is a function to get a single object from the cache, given its `cacheId`.
-
 #' @return
 #' `loadFromCache` returns the object from the cache that has the particular `cacheId`.
 #'
 loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                           cacheId,
+                          fullCacheTableForObj = NULL,
                           format = getOption("reproducible.cacheSaveFormat", "rds"),
                           .functionName = NULL, .dotsFromCache = NULL,
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -209,8 +211,17 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
       obj <- unmakeMemoisable(obj)
     }
   }
+
+  fileFormatRow <- fullCacheTableForObj[["tagKey"]] == "fileFormat"
+  fileFormat = if (any(fileFormatRow))
+    fullCacheTableForObj[["tagValue"]][fileFormatRow] else format
+
+  loadFunRow <- fullCacheTableForObj[["tagKey"]] == "loadFun"
+  loadFun = if (any(loadFunRow))
+    fullCacheTableForObj[["tagValue"]][loadFunRow] else NULL
+
   if (!isTRUE(isMemoised)) {
-    f <- CacheStoredFile(cachePath, cacheId, format)
+    f <- CacheStoredFile(cachePath, cacheId, fileFormat)
     f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
 
     # First test if it is correct format
@@ -219,7 +230,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
       if (length(sameCacheID)) {
         messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
                      fileExt(f), ")")
-        obj <- loadFromCache(cachePath = cachePath, cacheId = cacheId,
+        obj <- loadFromCache(cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
+                             cacheId = cacheId,
                              format = fileExt(sameCacheID))
         obj <- .dealWithClass(obj, cachePath = cachePath, drv = drv, conn = conn)
         fs <- saveToCache(obj = obj, cachePath = cachePath, drv = drv, conn = conn,
@@ -229,7 +241,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
         return(fs)
       }
     }
-    obj <- loadFile(f, format = format)
+    obj <- loadFile(f, format = fileFormat, loadFun = loadFun)
     obj <- .dealWithClassOnRecovery(obj, cachePath = cachePath,
                                     cacheId = cacheId,
                                     drv = drv, conn = conn)
@@ -520,7 +532,9 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 #' `CacheStoredFile` returns the name of the file in which the cacheId object is stored.
 #' This can be loaded to memory with e.g., `loadFile`.
 CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cacheId,
-                            format = getOption("reproducible.cacheSaveFormat", "rds")) {
+                            format = NULL) {
+
+  if (is.null(format)) format <- getOption("reproducible.cacheSaveFormat", "rds")
   csf <- if (isTRUE(useDBI()) == FALSE) {
     "rda"
   } else {
@@ -531,7 +545,10 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
   } else if (isTRUE("rds" %in% csf)) {
     "rds"
   } else {
-    "rda"
+    if (is.character(format))
+      format
+    else
+      "rda"
   }
   filename <- paste(cacheId, csExtension, sep = ".")
   file.path(CacheStorageDir(cachePath), filename)
@@ -707,15 +724,19 @@ movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQ
   dbClearResult(res)
 }
 
-loadFile <- function(file, format) {
+loadFile <- function(file, format, loadFun = NULL) {
   # browser(expr = exists("._loadFile_1"))
   if (missing(format))
     format <- fileExt(file)
-  if (format == "qs") {
-    .requireNamespace("qs", stopOnFALSE = TRUE)
-    obj <- qs::qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
+  if (is.null(loadFun)) {
+    if (format == "qs") {
+      .requireNamespace("qs", stopOnFALSE = TRUE)
+      obj <- qs::qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
+    } else {
+      obj <- readRDS(file = file)
+    }
   } else {
-    obj <- readRDS(file = file)
+    obj <- eval(parse(text = loadFun))(file)
   }
 }
 
@@ -723,26 +744,35 @@ saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
   if (missing(fts))
     fts <- CacheStoredFile(cachePath, cacheId)
 
-  if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
-    .requireNamespace("qs", stopOnFALSE = TRUE)
-    for (attempt in 1:2) {
-      fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
-                      preset = getOption("reproducible.qsavePreset", "high"))
-      fs1 <- file.size(fts)
-      if (!identical(fs, fs1)) {
-        if (attempt == 1) {
-          warning("Attempted to save to Cache, but save seemed to fail; trying again")
-        } else {
-          stop("Saving to Cache did not work correctly; file appears corrupted. Please retry")
-        }
-      } else {
-        break
-      }
-    }
-  } else {
-    saveRDS(obj, file = fts)
+  if (any(attr(obj, "tags") == "saveRawFile:TRUE")) {
+    newFN <- paste0(tools::file_path_sans_ext(fts), ".", tools::file_ext(obj))
+    linkOrCopy(obj, newFN)
     fs <- file.size(fts)
+
+  } else {
+
+    if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
+      .requireNamespace("qs", stopOnFALSE = TRUE)
+      for (attempt in 1:2) {
+        fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
+                        preset = getOption("reproducible.qsavePreset", "high"))
+        fs1 <- file.size(fts)
+        if (!identical(fs, fs1)) {
+          if (attempt == 1) {
+            warning("Attempted to save to Cache, but save seemed to fail; trying again")
+          } else {
+            stop("Saving to Cache did not work correctly; file appears corrupted. Please retry")
+          }
+        } else {
+          break
+        }
+      }
+    } else {
+      saveRDS(obj, file = fts)
+      fs <- file.size(fts)
+    }
   }
+
   fs
 }
 

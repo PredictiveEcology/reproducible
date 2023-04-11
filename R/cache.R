@@ -584,9 +584,6 @@ Cache <-
       fullCacheTableForObj <- inRepos$fullCacheTableForObj
       cachePath <- inRepos$cachePath # i.e., if there was > 1, then we now know which one
 
-
-
-
       if (!is.null(cacheId)) {
         outputHashManual <- cacheId
         if (identical(outputHashManual, outputHash)) {
@@ -785,7 +782,7 @@ Cache <-
       }
       # Can make new methods by class to add tags to outputs
       if (useDBI()) {
-        if (.CacheIsNew) {
+        if (.CacheIsNew || any(isInCloud)) {
           outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
           output <- .CopyCacheAtts(outputToSave, output, passByReference = TRUE)
           # .dealWithClass added tags; these should be transfered to output
@@ -991,13 +988,14 @@ Cache <-
 #' @keywords internal
 .namesCacheFormalsSendToBoth <- intersect("verbose", names(.formalsCache)[])
 
-#' @keywords internal
-.loadFromLocalRepoMem <- function(md5hash, repoDir, ...) {
-  if (useDBI()) {
-    out <- loadFromCache(cachePath = repoDir, cacheId = md5hash)
-  }
-  return(out)
-}
+# @keywords internal
+# .loadFromLocalRepoMem <- function(md5hash, repoDir, ...) {
+#   if (useDBI()) {
+#     out <- loadFromCache(cachePath = repoDir, cacheId = md5hash,
+#                          fullCacheTableForObj = fullCacheTableForObj)
+#   }
+#   return(out)
+# }
 
 
 #' @keywords internal
@@ -2206,7 +2204,8 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
                verbose = verbose)
 
   preLoadTime <- Sys.time()
-  output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
+  output <- try(.getFromRepo(FUN, isInRepo = isInRepo, fullCacheTableForObj = fullCacheTableForObj,
+                             notOlderThan = notOlderThan,
                              lastOne = lastOne, cachePath = cachePath,
                              fnDetails = fnDetails,
                              modifiedDots = modifiedDots, debugCache = debugCache,

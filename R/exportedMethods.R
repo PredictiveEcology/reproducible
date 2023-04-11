@@ -649,7 +649,22 @@ unmakeMemoisable.default <- function(x) {
     # next is for terra objects --> terra::wrap is ridiculously slow for SpatVector objects; use
     #   custom version in reproducible where here
     if (inherits(obj, "SpatRaster")) {
-      obj <- terra::wrap(obj)
+      if (nzchar(Filenames(obj))) {
+        cls <- class(obj)
+        obj <- Filenames(obj)
+        attr(obj, "tags") <- c(attr(obj, "tags"),
+                               paste0("origFilename:", basename2(obj)),
+                               paste0("origDirname:", dirname(obj)),
+                               paste0("origGetWd:", getwd()),
+                               paste0("fromDisk:", TRUE),
+                               paste0("class:", cls),
+                               paste0("fileFormat:", tools::file_ext(obj)),
+                               paste0("saveRawFile:", TRUE),
+                               paste0("loadFun:", "terra::rast")
+                               )
+      } else {
+        obj <- terra::wrap(obj)
+      }
     } else {
       obj <- wrapSpatVector(obj)
     }

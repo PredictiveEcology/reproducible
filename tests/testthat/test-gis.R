@@ -1,10 +1,9 @@
 test_that("testing prepInputs with deauthorized googledrive", {
   skip_on_cran()
   skip_if_not_installed("googledrive")
-  skip_if_no_token()
 
   if (interactive()) {
-    testInitOut <- testInit(needGoogle = FALSE, "googledrive")
+    testInitOut <- testInit(needGoogleDriveAuth = TRUE, "googledrive")
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
@@ -15,7 +14,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
       }, {
         noisyOutput <- capture.output({
           warn <- capture_warnings({
-            BCR6_VT <- prepInputs(
+            BCR6_VT <- prepInputs(alsoExtract = "similar",
               url = "https://drive.google.com/open?id=1sEiXKnAOCi-f1BF7b4kTg-6zFlGr0YOH",
               targetFile = "BCR6.shp",
               overwrite = TRUE
@@ -23,7 +22,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
           })
         })
       })
-    expect_true(is(BCR6_VT, shapefileClassDefault()))
+    expect_true(is(BCR6_VT, vectorType()))
 
     NFDB_PT <- #Cache(
       prepInputs(
@@ -48,7 +47,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
 })
 
 test_that("testing rebuildColors", {
-  testInitOut <- testInit(needGoogle = FALSE, "raster")
+  testInitOut <- testInit(needGoogleDriveAuth = FALSE, "raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
