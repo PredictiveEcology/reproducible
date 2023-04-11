@@ -14,7 +14,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
       }, {
         noisyOutput <- capture.output({
           warn <- capture_warnings({
-            BCR6_VT <- prepInputs(
+            BCR6_VT <- prepInputs(alsoExtract = "similar",
               url = "https://drive.google.com/open?id=1sEiXKnAOCi-f1BF7b4kTg-6zFlGr0YOH",
               targetFile = "BCR6.shp",
               overwrite = TRUE
