@@ -393,7 +393,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             as.list(tmpEnv, all.names = TRUE)
         } else {
           # browser(expr = exists("._prepInputs_3"))
-          #err <- tryCatch(error = function(xx) xx,
           useCache2 <- useCache
           if (fileExt(out$targetFilePath) %in% c("qs", "rds") &&
               !isTRUE(getOption("reproducible.useMemoise"))) {
@@ -430,7 +429,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       if (is.null(fun) || is.na(fun)) {
         out$object
       } else {
-        x <- out$object
+        # x <- out$object
         env1 <- new.env()
         list2env(list(...), envir = env1)
         eval(theFun, envir = env1)
