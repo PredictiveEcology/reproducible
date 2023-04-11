@@ -306,6 +306,7 @@ test_that("maskInputs errors when x is Lat-Long", {
 })
 
 test_that("prepInputs doesn't work (part 3)", {
+  skip("The Google Drive url is dead")
   if (interactive()) {
     testInitOut <- testInit(needGoogleDriveAuth = TRUE)
     on.exit({
@@ -313,7 +314,7 @@ test_that("prepInputs doesn't work (part 3)", {
     }, add = TRUE)
 
     # Tati's reprex
-    tmpdir <- "/mnt/d/temp/Cache"
+    # tmpdir <- "/mnt/d/temp/Cache"
     wd <- checkPath(file.path(tmpdir, "reprex"), create = TRUE)
     ranges <- prepInputs(url = "https://drive.google.com/file/d/1AfGfRjaDsdq3JqcsidGRo3N66OUjRJnn",
                          destinationPath = wd,
