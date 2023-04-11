@@ -198,9 +198,10 @@ reproducibleOptions <- function() {
     reproducible.overwrite = FALSE,
     reproducible.polygonShortcut = FALSE,
     reproducible.quick = FALSE,
-    reproducible.rasterRead = "terra::rast", #"raster::raster",
+    reproducible.rasterRead = "terra::rast",
     # reproducible.rasterRead = "raster::raster",
-    reproducible.shapefileRead = "sf::st_read", # TODO: change in next release
+    reproducible.shapefileRead = "sf::st_read",
+    # reproducible.shapefileRead = "raster::shapefile",
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
