@@ -48,16 +48,12 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
                  NULL)
         }
         if (is.null(getOption("gargle_oauth_email"))) {
-          if (interactive()) {
-            if (.isRstudioServer()) {
-              .requireNamespace("httr", stopOnFALSE = TRUE)
-              options(httr_oob_default = TRUE)
-            }
-            getAuth <- TRUE
+          if (.isRstudioServer()) {
+            .requireNamespace("httr", stopOnFALSE = TRUE)
+            options(httr_oob_default = TRUE)
           }
-        } else {
-          getAuth <- TRUE
         }
+        getAuth <- TRUE
         if (isTRUE(getAuth))
           googledrive::drive_auth()
       }
