@@ -40,8 +40,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
         getAuth <- FALSE
         if (is.null(getOption("gargle_oauth_email"))) {
           possLocalCache <- "c:/Eliot/.secret"
-          if (file.exists(possLocalCache))
-            cache <- possLocalCache else FALSE
+          cache <- if (file.exists(possLocalCache))
+            possLocalCache else TRUE
           switch(Sys.info()["user"],
                  emcintir = {options(gargle_oauth_email = "eliotmcintire@gmail.com",
                                      gargle_oauth_cache = cache)},
