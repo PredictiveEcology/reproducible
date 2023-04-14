@@ -1,6 +1,6 @@
 test_that("prepInputs works with NULL archive + file without extension, but originally a .zip", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit()
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

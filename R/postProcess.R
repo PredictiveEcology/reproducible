@@ -2147,15 +2147,6 @@ bufferWarningSuppress <- function(# warn,
   x1
 }
 
-roundToRes <- function(extent, x) {
-  if (is(x, "Raster")) {
-    .requireNamespace("raster", stopOnFALSE = TRUE)
-    extent <- raster::extent(
-      c(round(c(raster::xmin(extent), raster::xmax(extent))/raster::res(x)[1],0)*raster::res(x)[1],
-        round(c(raster::ymin(extent), raster::ymax(extent))/raster::res(x)[2],0)*raster::res(x)[2]))
-  }
-  extent
-}
 
 setMinMaxIfNeeded <- function(ras) {
   # special case where the colours already match the discrete values

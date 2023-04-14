@@ -265,6 +265,7 @@ test_that("test warnings from cached functions", {
 })
 
 test_that("test cache-helpers with stacks", {
+  # THIS TEST CAN BE DELETED AFTER RASTER IS DEFUNCT
   testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)

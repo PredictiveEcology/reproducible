@@ -4,7 +4,7 @@ test_that("prepInputs correctly unzips large files", {
   skip_if_not(isInteractive(), "tests extracting large files should be run manually")
 
   ## based on #145. extracted file is ~30 GB so this takes a long time to test!
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   tmpdir <- "/mnt/d/temp" # need a drive that is large enough
   if (!"emcintir" %in% Sys.info()["user"] || (!dir.exists(tmpdir)))
     skip("This requires a lot of drive space")

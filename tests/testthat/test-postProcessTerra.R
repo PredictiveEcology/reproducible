@@ -4,9 +4,10 @@ test_that("testing terra", {
                           opts = list(reproducible.useMemoise = FALSE,
                                       reproducible.useTerra = TRUE,
                                       "rgdal_show_exportToProj4_warnings"="none"))
-
+  opts <- options(reproducible.cachePath = tmpCache)
   on.exit({
     testOnExit(testInitOut)
+    options(opts)
   }, add = TRUE)
 
   if (!(requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)))

@@ -369,12 +369,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 .digestRasterLayer <- function(object, length, algo, quick) {
   .requireNamespace("raster", stopOnFALSE = TRUE)
 
-  # metadata -- only a few items of the long list because one thing (I don't recall)
-  #  doesn't cache consistently
-  # if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-  #   return(.digestRasterLayer2(object, length, algo, quick))
-  # }
-
   isRasterStack <- is(object, "RasterStack")
   if (!isRasterStack) {
     objList <- list(object)

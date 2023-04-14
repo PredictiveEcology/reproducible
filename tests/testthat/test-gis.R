@@ -47,6 +47,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
 })
 
 test_that("testing rebuildColors", {
+  # ONLY RELEVANT FOR RASTER
   testInitOut <- testInit(needGoogleDriveAuth = FALSE, "raster")
   on.exit({
     testOnExit(testInitOut)

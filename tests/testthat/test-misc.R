@@ -1,4 +1,5 @@
 test_that("test miscellaneous fns (part 1)", {
+  # ONLY RELEVANT FOR RASTERS
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)

@@ -252,11 +252,11 @@ a <- 1
 b <- "NULL"
 .prepareOutput(b) # converts to NULL
 
-if (requireNamespace("raster")) {
-  r <- raster::raster(raster::extent(0,10,0,10), vals = 1:100)
+if (requireNamespace("terra")) {
+  r <- terra::rast(terra::ext(0,10,0,10), vals = 1:100)
 
   # write to disk manually -- will be in tempdir()
-  r <- terra::writeRaster(r, file = tempfile())
+  r <- terra::writeRaster(r, file = tempfile(fileext = ".tif"))
 
   # copy it to the cache repository
   r <- .prepareOutput(r, tempdir())
