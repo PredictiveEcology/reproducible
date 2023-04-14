@@ -30,7 +30,7 @@ Cache(
   useCloud = FALSE,
   cloudFolderID = NULL,
   showSimilar = getOption("reproducible.showSimilar", FALSE),
-  drv = getOption("reproducible.drv"),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL)
 )
 }
