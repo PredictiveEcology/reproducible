@@ -1646,8 +1646,7 @@ test_that("test cache; SpatRaster attributes", {
                           opts = list(
                             "rasterTmpDir" = tempdir2(rndstr(1,6)),
                             "reproducible.inputPaths" = NULL,
-                            "reproducible.overwrite" = TRUE,
-                            "reproducible.useTerra" = TRUE)
+                            "reproducible.overwrite" = TRUE)
   )
   on.exit({
     testOnExit(testInitOut)

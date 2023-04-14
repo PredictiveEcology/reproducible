@@ -742,7 +742,7 @@ postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo) {
     }
   }
 
-  if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+  if (!requireNamespace("terra", quietly = TRUE))
     stop("Need terra and sf: install.packages(c('terra', 'sf'))")
   if (!requireNamespace("sf", quietly = TRUE)) stop("Need sf: install.packages('sf')")
 

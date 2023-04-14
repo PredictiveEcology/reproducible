@@ -1341,17 +1341,8 @@ test_that("lightweight tests for code coverage", {
   ras <- terra::rast(terra::ext(0,10,0,10), res = 1, vals = 1:100)
   terra::crs(ras) <- crsToUse
 
-  if (getOption("reproducible.useTerra")) {
-    expect_error(postProcess(ras, studyArea = 1), .msgGrep$anySpatialClass)
-    expect_error(postProcess(ras, rasterToMatch = 1), .msgGrep$anySpatialClass)
-  } else {
-    expect_error(postProcess(ras, studyArea = 1), .msg$studyArea_Spatial)
-    expect_error(postProcess(ras, rasterToMatch = 1), .msgGrep$rasterToMatch_Raster)
-    mess <- capture_messages(postProcess(ras, inputFilePath = "test"))
-    expect_true(all(grepl("inputFilePath is being deprecated", mess)))
-    mess <- capture_messages(postProcess(ras, targetFilePath = "test"))
-    expect_true(all(grepl("targetFilePath is being deprecated", mess)))
-  }
+  expect_error(postProcess(ras, studyArea = 1), .msgGrep$anySpatialClass)
+  expect_error(postProcess(ras, rasterToMatch = 1), .msgGrep$anySpatialClass)
 
 
   ## cropInputs.default
@@ -1368,8 +1359,7 @@ test_that("lightweight tests for code coverage", {
   sp4 <- sf::st_as_sfc(sf::st_bbox(ras4))
   sf::st_crs(sp4) <- crsToUse
 
-  grepMessHere <- if (getOption("reproducible.useTerra"))
-    "invalid extent" else "extents do not overlap"
+  grepMessHere <- "invalid extent"
   expect_error(cropInputs(ras2, studyArea = sp4), grepMessHere)
 
   ras3 <- terra::rast(terra::ext(0,5,0,5), res = 1, vals = 1:25)
@@ -1714,7 +1704,6 @@ test_that("rasters aren't properly resampled", {
   skip_on_cran()
 
   testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
-                                                # reproducible.useTerra = TRUE,
                                                 "reproducible.inputPaths" = NULL),
                           needGoogleDriveAuth = TRUE)
   on.exit({

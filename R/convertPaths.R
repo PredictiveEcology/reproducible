@@ -113,9 +113,9 @@ setMethod(
         if (endsWith(fns, suffix = "grd"))
           fns <- c(fns, gsub("grd$", "gri", fns))
     } else if (inherits(obj, "SpatRaster")) {
-      if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+      if (!requireNamespace("terra", quietly = TRUE))
         stop("Please install terra package")
-      fns <- terra::sources(obj)
+      fns <- Filenames(obj)
       if (isTRUE(allowMultiple)) {
         anyGrd <- endsWith(fns, suffix = "grd")
         if (any(anyGrd)) {

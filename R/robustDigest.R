@@ -159,7 +159,7 @@ setMethod(
     } else if (is(object, "cluster")) {# can't get this class from parallel via importClass parallel cluster
       forDig <- NULL
     } else if (inherits(object, "SpatRaster")) {
-      if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+      if (!requireNamespace("terra", quietly = TRUE))
         stop("Please install terra package")
       terraSrcs <- Filenames(object)
       if (any(nchar(terraSrcs) > 0)) {
@@ -176,7 +176,7 @@ setMethod(
         forDig <- terra::wrap(object)
       }
     } else if (inherits(object, "SpatVector")) {
-      if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+      if (!requireNamespace("terra", quietly = TRUE))
         stop("Please install terra package")
       forDig <- wrapSpatVector(object)
     } else {

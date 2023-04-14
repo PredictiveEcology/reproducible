@@ -641,7 +641,7 @@ unmakeMemoisable.default <- function(x) {
   }
 
   if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
-    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+    if (!requireNamespace("terra", quietly = TRUE))
       stop("Please install terra package")
     messageCache("...wrapping terra object for saving...", verboseLevel = 2, verbose = verbose)
     attrs <- attr(obj, ".Cache")
@@ -689,12 +689,12 @@ unmakeMemoisable.default <- function(x) {
   # }
 
   if (any(inherits(obj, "PackedSpatVector"))) {
-    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+    if (!requireNamespace("terra", quietly = TRUE))
       stop("Please install terra package")
     obj <- terra::vect(obj)
   }
   if (any(inherits(obj, "PackedSpatRaster"))) {
-    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+    if (!requireNamespace("terra", quietly = TRUE))
       stop("Please install terra package")
     obj <- terra::rast(obj)
   }

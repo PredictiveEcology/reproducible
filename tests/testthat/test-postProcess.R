@@ -68,8 +68,6 @@ test_that("prepInputs doesn't work (part 3)", {
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
   expect_true(inherits(b1, "SpatRaster"))
 
-  opts <- options(reproducible.useTerra = TRUE)
-  on.exit(options(opts), add = TRUE)
   s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
   expect_true(inherits(s1, "SpatRaster"))
 

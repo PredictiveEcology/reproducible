@@ -444,7 +444,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     }
   }
 
-  if (requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)) {
+  if (requireNamespace("terra", quietly = TRUE)) {
     if (!(all(is.null(out$dots$studyArea),
               is.null(out$dots$rasterToMatch),
               is.null(out$dots$targetCRS))) || !(all(is.null(out$dots$to)))) {
