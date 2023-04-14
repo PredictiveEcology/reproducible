@@ -545,7 +545,7 @@ unmakeMemoisable.default <- function(x) {
 #'
 #' @export
 #'
-.dealWithClass <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+.dealWithClass <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL),
                           verbose = getOption("reproducible.verbose")) {
   UseMethod(".dealWithClass")
@@ -553,7 +553,7 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClass.list <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+.dealWithClass.list <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                conn = getOption("reproducible.conn", NULL),
                                verbose = getOption("reproducible.verbose")) {
 
@@ -570,7 +570,7 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClass.environment <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+.dealWithClass.environment <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                       conn = getOption("reproducible.conn", NULL),
                                       verbose = getOption("reproducible.verbose")) {
 
@@ -587,7 +587,7 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClass.default <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+.dealWithClass.default <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                   conn = getOption("reproducible.conn", NULL),
                                   verbose = getOption("reproducible.verbose")) {
 
@@ -680,7 +680,7 @@ unmakeMemoisable.default <- function(x) {
 #' @export
 #' @rdname dealWithClass
 .dealWithClassOnRecovery.default <- function(obj, cachePath, cacheId,
-                                    drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                    drv = getDrv(getOption("reproducible.drv", NULL)),
                                     conn = getOption("reproducible.conn", NULL)) {
 
   # if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
@@ -709,7 +709,7 @@ unmakeMemoisable.default <- function(x) {
 #' @param cacheId Used strictly for messaging. This should be the cacheId of the object being recovered.
 #' @rdname dealWithClass
 .dealWithClassOnRecovery <- function(obj, cachePath, cacheId,
-                                    drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                    drv = getDrv(getOption("reproducible.drv", NULL)),
                                     conn = getOption("reproducible.conn", NULL)) {
   UseMethod(".dealWithClassOnRecovery")
 }
@@ -717,7 +717,7 @@ unmakeMemoisable.default <- function(x) {
 #' @export
 #' @rdname dealWithClass
 .dealWithClassOnRecovery.environment <- function(obj, cachePath, cacheId,
-                                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                         drv = getDrv(getOption("reproducible.drv", NULL)),
                                          conn = getOption("reproducible.conn", NULL)) {
 
   # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
@@ -733,7 +733,7 @@ unmakeMemoisable.default <- function(x) {
 #' @export
 #' @rdname dealWithClass
 .dealWithClassOnRecovery.list <- function(obj, cachePath, cacheId,
-                                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                         drv = getDrv(getOption("reproducible.drv", NULL)),
                                          conn = getOption("reproducible.conn", NULL)) {
 #   if (isOutputList || isOutputEnv) {
     anyNames <- names(obj)

@@ -14,7 +14,7 @@
 .dealWithClass(
   obj,
   cachePath,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")
 )
@@ -22,7 +22,7 @@
 \method{.dealWithClass}{list}(
   obj,
   cachePath,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")
 )
@@ -30,7 +30,7 @@
 \method{.dealWithClass}{environment}(
   obj,
   cachePath,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")
 )
@@ -38,7 +38,7 @@
 \method{.dealWithClass}{default}(
   obj,
   cachePath,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")
 )
@@ -47,7 +47,7 @@
   obj,
   cachePath,
   cacheId,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL)
 )
 
@@ -55,7 +55,7 @@
   obj,
   cachePath,
   cacheId,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL)
 )
 
@@ -63,7 +63,7 @@
   obj,
   cachePath,
   cacheId,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL)
 )
 
@@ -71,7 +71,7 @@
   obj,
   cachePath,
   cacheId,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL)
 )
 }

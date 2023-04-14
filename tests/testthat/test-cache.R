@@ -1044,7 +1044,7 @@ test_that("test pre-creating conn", {
   testInitOut <- testInit(ask = FALSE, tmpFileExt = c(".tif", ".tif"))
   on.exit({
     testOnExit(testInitOut)
-    dbDisconnect(conn)
+    DBI::dbDisconnect(conn)
 
   }, add = TRUE)
 

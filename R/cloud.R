@@ -169,7 +169,7 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL,
 #' @inheritParams cloudUpload
 #' @inheritParams Cache
 cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFolderID,
-                          drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                          drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL)) {
   .requireNamespace("googledrive", stopOnFALSE = TRUE,
                     messageStart = "to use google drive files")
@@ -249,7 +249,7 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
 }
 
 cloudDownloadRasterBackend <- function(output, cachePath, cloudFolderID,
-                                       drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                       drv = getDrv(getOption("reproducible.drv", NULL)),
                                        conn = getOption("reproducible.conn", NULL)) {
   .requireNamespace("googledrive", stopOnFALSE = TRUE,
                     messageStart = "to use google drive files")

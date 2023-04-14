@@ -96,7 +96,7 @@ setMethod(
   "Copy",
   signature(object = "ANY"),
   definition = function(object, filebackedDir,
-                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL),
                         ...) {
     out <- object # many methods just do a pass through
@@ -189,7 +189,7 @@ setMethod("Copy",
 # setMethod("Copy",
 #           signature(object = "Raster"),
 #           definition = function(object, filebackedDir,
-#                                 drv = getOption("reproducible.drv", RSQLite::SQLite()),
+#                                 drv = getDrv(getOption("reproducible.drv", NULL)),
 #                                 conn = getOption("reproducible.conn", NULL), ...) {
 #             # raster::fromDisk fails when only some of the RasterLayers in a RasterStack are fromDisk
 #             #  --> changing to Filenames

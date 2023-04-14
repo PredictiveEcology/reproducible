@@ -14,7 +14,7 @@ Copy(object, ...)
 \S4method{Copy}{ANY}(
   object,
   filebackedDir,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
 )

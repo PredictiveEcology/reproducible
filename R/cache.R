@@ -343,10 +343,8 @@ utils::globalVariables(c(
 #'
 #' @author Eliot McIntire
 #' @export
-#' @importFrom DBI SQL
 #' @importFrom digest digest
 #' @importFrom data.table setDT := setkeyv .N .SD setattr
-#' @importFrom glue glue_sql double_quote
 #' @importFrom utils object.size tail
 #' @importFrom methods formalArgs
 #' @rdname Cache
@@ -591,7 +589,7 @@ Cache <-
         if (useDBI())
           if (!isTRUE(userConn)) {
             done <- lapply(conns, function(co) {
-              try(dbDisconnect(co), silent = TRUE)
+              try(DBI::dbDisconnect(co), silent = TRUE)
             })
           }
       }, add = TRUE)
@@ -1053,7 +1051,7 @@ Cache <-
 #' updating the database entry. It will do this using the future package, so it is
 #' written in a future.
 writeFuture <- function(written, outputToSave, cachePath, userTags,
-                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL),
                         cacheId, linkToCacheId = NULL) {
   counter <- 0
@@ -2148,17 +2146,17 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
         dbTabNam <- CacheDBTableName(repo, drv = drv)
 
         if (tries > 1) {
-          dbDisconnect(conn)
+          DBI::dbDisconnect(conn)
           conn <- dbConnectAll(drv, cachePath = repo)
         }
-        qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
+        qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(glue::double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
                               dbTabName = dbTabNam,
                               outputHash = outputHash,
                               .con = conn)
         res <- retry(retries = 15, exponentialDecayBase = 1.01,
-                     quote(dbSendQuery(conn, qry)))
-        isInRepo <- setDT(dbFetch(res))
-        dbClearResult(res)
+                     quote(DBI::dbSendQuery(conn, qry)))
+        isInRepo <- setDT(DBI::dbFetch(res))
+        DBI::dbClearResult(res)
     } else {
       # The next line will find it whether it is qs, rds or other; this is necessary for "change cacheSaveFormat"
       csf <- CacheStoredFile(cachePath = repo, cacheId = outputHash, format = "check")

@@ -6,7 +6,7 @@
 \usage{
 saveToCache(
   cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   obj,
   userTags,

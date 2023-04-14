@@ -10,7 +10,7 @@ cloudDownload(
   gdriveLs,
   cachePath,
   cloudFolderID,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL)
 )
 }

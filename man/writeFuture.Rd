@@ -9,7 +9,7 @@ writeFuture(
   outputToSave,
   cachePath,
   userTags,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   cacheId,
   linkToCacheId = NULL

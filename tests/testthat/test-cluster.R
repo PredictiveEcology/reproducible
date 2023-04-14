@@ -11,7 +11,7 @@ test_that("test parallel collisions", {
   if (require(parallel, quietly = TRUE)) {
     # make cluster -- note this works if cluster is FORK also, but for simplicity, using default
     #   which works on Linux, Mac, Windows
-    N <- min(4, detectCores())
+    N <- min(2, detectCores())
 
     if (useDBI())
       if (!file.exists(CacheDBFile(tmpdir))) {

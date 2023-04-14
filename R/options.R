@@ -185,7 +185,7 @@ reproducibleOptions <- function() {
     reproducible.cacheSpeed = "slow",
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
-    reproducible.drv = RSQLite::SQLite(),
+    reproducible.drv = NULL, # RSQLite::SQLite(),
     reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
     reproducible.inputPaths = NULL,
@@ -211,7 +211,7 @@ reproducibleOptions <- function() {
     # reproducible.useGDAL = FALSE, #
     reproducible.useMemoise = FALSE, #memoise
     # reproducible.useNewDigestAlgorithm = 2, # TODO: change in next release
-    reproducible.useMultipleDBFiles = FALSE,
+    reproducible.useMultipleDBFiles = TRUE,
     reproducible.useTerra = TRUE, # Default for now
     # reproducible.useTerra = FALSE, # Default for now
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",

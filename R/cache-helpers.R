@@ -670,7 +670,7 @@ nextNumericName <- function(string) {
 
 # This one is old, overly complicated; defunct
 dealWithClassOnRecovery2 <- function(output, cachePath, cacheId,
-                                     drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                     drv = getDrv(getOption("reproducible.drv", NULL)),
                                      conn = getOption("reproducible.conn", NULL)) {
   # This function is because the user doesn't want the path of the file-backed raster to
   #   be in the cachePath --> they want it in its original file location
@@ -770,7 +770,7 @@ list2envAttempts <- function(x, envir) {
 #' @inheritParams Cache
 #' @rdname prepareFileBackedRaster
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
-                                     drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                     drv = getDrv(getOption("reproducible.drv", NULL)),
                                      conn = getOption("reproducible.conn", NULL),
                                      ...) {
   fnsAll <- Filenames(obj)

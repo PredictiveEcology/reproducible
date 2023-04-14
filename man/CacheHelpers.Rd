@@ -13,7 +13,7 @@
 \usage{
 createCache(
   cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   force = FALSE,
   verbose = getOption("reproducible.verbose")
@@ -26,7 +26,7 @@ loadFromCache(
   format = getOption("reproducible.cacheSaveFormat", "rds"),
   .functionName = NULL,
   .dotsFromCache = NULL,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")
 )
@@ -34,14 +34,14 @@ loadFromCache(
 rmFromCache(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   format = getOption("reproducible.cacheSaveFormat", "rds")
 )
 
 CacheDBFile(
   cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL)
 )
 
@@ -56,13 +56,13 @@ CacheStoredFile(
 
 CacheDBTableName(
   cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite())
+  drv = getDrv(getOption("reproducible.drv", NULL))
 )
 
 CacheIsACache(
   cachePath = getOption("reproducible.cachePath"),
   create = FALSE,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL)
 )
 }

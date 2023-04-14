@@ -90,7 +90,7 @@ setGeneric("clearCache", function(x, userTags = character(), after = NULL, befor
                                   ask = getOption("reproducible.ask"),
                                   useCloud = FALSE,
                                   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-                                  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                  drv = getDrv(getOption("reproducible.drv", NULL)),
                                   conn = getOption("reproducible.conn", NULL),
                                   verbose = getOption("reproducible.verbose"),
                                   ...) {
@@ -103,7 +103,7 @@ setMethod(
   "clearCache",
   definition = function(x, userTags, after = NULL, before = NULL, ask, useCloud = FALSE,
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL),
                         verbose = getOption("reproducible.verbose"),
                         ...) {
@@ -242,7 +242,7 @@ setMethod(
       if (useDBI()) {
         if (is.null(conn)) {
           conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
-          on.exit({dbDisconnect(conn)})
+          on.exit({DBI::dbDisconnect(conn)})
         }
       }
       rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
@@ -331,14 +331,13 @@ cc <- function(secs, ..., verbose = getOption("reproducible.verbose")) {
 #' @inheritParams Cache
 #'
 #' @export
-#' @importFrom DBI dbSendQuery dbFetch dbClearResult
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
 #' @name showCache
 #' @seealso [mergeCache()]. Many more examples in [Cache()].
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
-                                 drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                 drv = getDrv(getOption("reproducible.drv", NULL)),
                                  conn = getOption("reproducible.conn", NULL),
                                  verbose = getOption("reproducible.verbose"), ...) {
   standardGeneric("showCache")
@@ -402,7 +401,7 @@ setMethod(
           return(invisible(.emptyCacheTable))
         }
         on.exit({
-          dbDisconnect(conn)
+          DBI::dbDisconnect(conn)
         })
       }
       if (!CacheIsACache(x, drv = drv, conn = conn))
@@ -411,9 +410,9 @@ setMethod(
       dbTabNam <- CacheDBTableName(x, drv = drv)
       # tab <- dbReadTable(conn, dbTabNam)
       res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-        dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
-      tab <- dbFetch(res)
-      dbClearResult(res)
+        DBI::dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
+      tab <- DBI::dbFetch(res)
+      DBI::dbClearResult(res)
       if (is(tab, "try-error"))
         objsDT <- .emptyCacheTable
       else
@@ -475,7 +474,7 @@ setMethod(
 #' @rdname viewCache
 setGeneric("keepCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  ask  = getOption("reproducible.ask"),
-                                 drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                 drv = getDrv(getOption("reproducible.drv", NULL)),
                                  conn = getOption("reproducible.conn", NULL),
                                  verbose = getOption("reproducible.verbose"),
                                  ...) {
@@ -533,8 +532,8 @@ setMethod(
 #' objects themselves.
 #' @inheritParams Cache
 setGeneric("mergeCache", function(cacheTo, cacheFrom,
-                                  drvTo = getOption("reproducible.drv", RSQLite::SQLite()),
-                                  drvFrom = getOption("reproducible.drv", RSQLite::SQLite()),
+                                  drvTo = getDrv(getOption("reproducible.drv", NULL)),
+                                  drvFrom = getDrv(getOption("reproducible.drv", NULL)),
                                   connTo = NULL, connFrom = NULL,
                                   verbose = getOption("reproducible.verbose")) {
   standardGeneric("mergeCache")
@@ -549,12 +548,12 @@ setMethod(
     if (useDBI()) {
       if (is.null(connTo)) {
         connTo <- dbConnectAll(drvTo, cachePath = cacheTo)
-        on.exit(dbDisconnect(connTo), add = TRUE)
+        on.exit(DBI::dbDisconnect(connTo), add = TRUE)
       }
 
       if (is.null(connFrom)) {
         connFrom <- dbConnectAll(drvFrom, cachePath = cacheFrom)
-        on.exit(dbDisconnect(connFrom), add = TRUE)
+        on.exit(DBI::dbDisconnect(connFrom), add = TRUE)
       }
     }
 
