@@ -51,19 +51,19 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
       conn <- dbConnectAll(drv, cachePath = cachePath)
       on.exit(dbDisconnect(conn))
     }
-  }
-  dt <- .emptyCacheTable
+    dt <- .emptyCacheTable
 
-  # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
-  a <- retry(retries = 250, exponentialDecayBase = 1.01,
-        quote(dbListTables(conn)))
+    # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
+    a <- retry(retries = 250, exponentialDecayBase = 1.01,
+               quote(dbListTables(conn)))
 
-  if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
-    #retry(retries = 5, exponentialDecayBase = 1.5, quote(
+    if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
+      #retry(retries = 5, exponentialDecayBase = 1.5, quote(
       try(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
-                   field.types = c(cacheId = "text", tagKey = "text",
-                                   tagValue = "text", createdDate = "text")), silent = TRUE)
+                       field.types = c(cacheId = "text", tagKey = "text",
+                                       tagValue = "text", createdDate = "text")), silent = TRUE)
     #)
+  }
 }
 
 #' Save an object to Cache

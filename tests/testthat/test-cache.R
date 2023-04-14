@@ -1015,6 +1015,7 @@ test_that("test cc", {
 })
 
 test_that("test pre-creating conn", {
+  if (!useDBI()) skip("Only relevant for DBI backend")
   testInitOut <- testInit(ask = FALSE, tmpFileExt = c(".tif", ".tif"))
   on.exit({
     testOnExit(testInitOut)
@@ -1050,6 +1051,7 @@ test_that("test .defaultUserTags", {
 })
 
 test_that("test failed Cache recovery -- message to delete cacheId", {
+  if (!useDBI()) skip("Not relevant for multipleDBfiles")
   testInitOut <- testInit(opts = list("reproducible.useMemoise" = FALSE))
   on.exit({
     testOnExit(testInitOut)

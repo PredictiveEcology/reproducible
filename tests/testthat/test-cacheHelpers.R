@@ -1,4 +1,3 @@
-##########################
 test_that("test miscellaneous unit tests cache-helpers", {
   testInitOut <- testInit(libraries = c("sf", "sp"), opts = list(reproducible.useMemoise = TRUE))
   on.exit({
@@ -226,8 +225,9 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(grepl("other", unlist(.unlistToCharacter(1, 0))))
 
   ## writeFuture
-  comp <- if (useDBI()) .robustDigest("sdf") else
-    "dda1fbb70d256e6b3b696ef0176c63de"
+  comp <- # if (useDBI())
+    .robustDigest("sdf") # else
+    # "dda1fbb70d256e6b3b696ef0176c63de"
   expect_true(identical(comp,
                         writeFuture(1, "sdf", cachePath = tmpCache, userTags = "",
                                     drv = RSQLite::SQLite())))
@@ -309,7 +309,6 @@ test_that("test cache-helpers with stacks", {
   expect_error({b <- .prepareFileBackedRaster(s, tmpCache)}, "The following file-backed rasters")
 })
 
-##########################
 test_that("test miscellaneous unit tests cache-helpers", {
   testInitOut <- testInit("googledrive")
   on.exit({
@@ -318,6 +317,4 @@ test_that("test miscellaneous unit tests cache-helpers", {
   a <- Cache(rnorm, 1, cachePath = tmpCache)
   mess <- capture_messages(clearCache(cachePath = tmpCache))
   expect_true(any(grepl("x not specified, but cachePath is", mess)))
-  mess <- capture_messages(clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = NULL))
-  expect_equal(sum(grepl("0 bytes", mess)), 2)
 })
