@@ -848,7 +848,7 @@ Cache <-
       # This is for write conflicts to the SQLite database
       #   (i.e., keep trying until it is written)
 
-      objSize <- lobstr::obj_size(outputToSave)
+      objSize <- sum(objSize(outputToSave))
       resultHash <- ""
       linkToCacheId <- NULL
       if (objSize > 1e6) {
@@ -2192,7 +2192,7 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
   class(objSize) <- "object_size"
   bigFile <- isTRUE(objSize > 1e6)
   messageCache("  ...(Object to retrieve (",
-               basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]])),
+               basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]], format = fileFormat)),
                ")",
                if (bigFile) " is large: ",
                if (bigFile) format(objSize, units = "auto"),
