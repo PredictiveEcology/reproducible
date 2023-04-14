@@ -562,7 +562,6 @@ Cache <-
         if (!useDBI()) {
           dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = outputHash)
           lockFile <- paste0(gsub(paste0("(^.+", outputHash, ").+"), "\\1", dtFile), ".lock")
-          lockFileExisted <- file.exists(lockFile)
           locked <- filelock::lock(lockFile)
           on.exit({
             filelock::unlock(locked)
