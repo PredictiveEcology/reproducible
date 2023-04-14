@@ -1050,15 +1050,15 @@ writeFuture <- function(written, outputToSave, cachePath, userTags,
     stop("That cachePath does not exist")
   }
 
-  if (useDBI()) {
-    if (missing(cacheId)) {
-      cacheId <- .robustDigest(outputToSave)
-    }
-    output <- saveToCache(cachePath = cachePath, drv = drv, userTags = userTags,
-                          conn = conn, obj = outputToSave, cacheId = cacheId,
-                          linkToCacheId = linkToCacheId)
-    saved <- cacheId
+  # if (useDBI()) {
+  if (missing(cacheId)) {
+    cacheId <- .robustDigest(outputToSave)
   }
+  output <- saveToCache(cachePath = cachePath, drv = drv, userTags = userTags,
+                        conn = conn, obj = outputToSave, cacheId = cacheId,
+                        linkToCacheId = linkToCacheId)
+  saved <- cacheId
+
   return(saved)
 }
 
