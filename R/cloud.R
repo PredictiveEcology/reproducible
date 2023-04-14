@@ -166,7 +166,8 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL,
 #' Meant for internal use, as there are internal objects as arguments.
 #'
 #' @param newFileName The character string of the local filename that the downloaded object will have
-#' @inheritParams cloudUpload
+#' @param outputHash The `cacheId` of the object to upload
+#' @param gdriveLs The result of `googledrive::drive_ls(googledrive::as_id(cloudFolderID), pattern = "outputHash")`
 #' @inheritParams Cache
 cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFolderID,
                           drv = getDrv(getOption("reproducible.drv", NULL)),
@@ -198,7 +199,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
 #'                      This is the `Raster*` object.
 #' @param rasters       A logical vector of length >= 1 indicating which elements in
 #'                      `outputToSave` are `Raster*` objects.
-#' @inheritParams cloudUpload
+#' @inheritParams cloudDownload
 #'
 #' @keywords internal
 cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID,

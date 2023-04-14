@@ -559,6 +559,8 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 #' `CacheStoredFile` returns the file path to the file with the specified hash value.
 #'
 #' @rdname CacheHelpers
+#' @param obj The optional object that is of interest; it may have an attribute "saveRawFile"
+#'   that would be important.
 #' @export
 #' @param cacheId The cacheId or otherwise digested hash value, as character string.
 #' @param format The text string representing the file extension used normally by

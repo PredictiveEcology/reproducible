@@ -96,6 +96,9 @@ to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 
 \item{.dotsFromCache}{Optional. Used internally.}
 
+\item{obj}{The optional object that is of interest; it may have an attribute "saveRawFile"
+that would be important.}
+
 \item{create}{Logical. Currently only affects non RQSLite default drivers. If this
 is \code{TRUE} and there is no Cache database, the function will create one.}
 }
