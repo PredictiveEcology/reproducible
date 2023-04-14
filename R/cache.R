@@ -720,11 +720,15 @@ Cache <-
       if (useCloud) {
         # browser(expr = exists("._Cache_9"))
         # Here, download cloud copy to local folder, skip the running of FUN
-        newFileName <- CacheStoredFile(cachePath, outputHash) # paste0(outputHash,".rda")
-        isInCloud <- gsub(gdriveLs$name,
-                          pattern = paste0("\\.", fileExt(CacheStoredFile(cachePath, outputHash))),
-                          replacement = "") %in% outputHash
+        # browser()
+        isInCloud <- grepl(outputHash, gdriveLs$name)
+
+        # newFileName <- CacheStoredFile(cachePath, outputHash) # paste0(outputHash,".rda")
+        # gsub(gdriveLs$name,
+                          # pattern = paste0("\\.", fileExt(CacheStoredFile(cachePath, outputHash))),
+                          # replacement = "") %in% outputHash
         if (any(isInCloud)) {
+          newFileName <- gdriveLs$name[isInCloud] # paste0(outputHash,".rda")
           output <- cloudDownload(outputHash, newFileName, gdriveLs, cachePath, cloudFolderID,
                                   drv = drv)
           if (is.null(output)) {
@@ -860,18 +864,14 @@ Cache <-
       # This is for write conflicts to the SQLite database
       #   (i.e., keep trying until it is written)
 
-      objSize <- lobstr::obj_size(outputToSave)
+      objSize <- sum(objSize(outputToSave))
       resultHash <- ""
       linkToCacheId <- NULL
       if (objSize > 1e6) {
-        resultHash <- CacheDigest(outputToSave, .objects = .objects, calledFrom = "Cache")$outputHash
-        qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))}",
-                              dbTabName = dbTabNam,
-                              .con = conn)
-        res <- retry(retries = 15, exponentialDecayBase = 1.01,
-                     quote(dbSendQuery(conn, qry)))
-        allCache <- setDT(dbFetch(res))
-        dbClearResult(res)
+        resultHash <- CacheDigest(outputToSave, .objects = .objects,
+                                  length = length, algo = algo, quick = quick,
+                                  classOptions = classOptions, calledFrom = "Cache")$outputHash
+        allCache <- showCache(cachePath, verbose = -2)
         if (NROW(allCache)) {
           alreadyExists <- allCache[allCache$tagKey == "resultHash" & allCache$tagValue %in% resultHash]
           if (NROW(alreadyExists)) {
@@ -1643,7 +1643,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     }
     .robustDigest(x, algo = algo, quick = FALSE, ...)
   })
-  if (is.character(quick)) {
+  if (is.character(quick)  || isTRUE(quick)) {
     preDigest <- append(preDigest, preDigestQuick)
   }
 
@@ -2204,7 +2204,7 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
   bigFile <- isTRUE(objSize > 1e6)
   fileFormat <- extractFromCache(fullCacheTableForObj, elem = "fileFormat")
   messageCache("  ...(Object to retrieve (",
-               basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]])),
+               basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]], format = fileFormat)),
                ")",
                if (bigFile) " is large: ",
                if (bigFile) format(objSize, units = "auto"),
@@ -2244,8 +2244,13 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
   if (useCloud) {
     # browser(expr = exists("._Cache_7b"))
     # Here, upload local copy to cloud folder
-    cu <- try(retry(quote(isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cachePath,
-                                                   cloudFolderID, output))))
+    isInCloud <- grepl(outputHash, gdriveLs$name)
+    outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
+
+    cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cachePath, cloudFolderID, ## TODO: saved not found
+                                     outputToSave))
+    # cu <- try(retry(quote(isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cachePath,
+    #                                                cloudFolderID, output))))
     .updateTagsRepo(outputHash, cachePath, "inCloud", "TRUE", drv = drv, conn = conn)
   }
 

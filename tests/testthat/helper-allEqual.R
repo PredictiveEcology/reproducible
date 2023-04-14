@@ -29,6 +29,10 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   require("testthat", quietly = TRUE)
 
   .pkgEnv <- getFromNamespace(".pkgEnv", "reproducible")
+
+  # Set a new seed each time
+  set.randomseed()
+
   tmpdir <- tempdir2(sprintf("%s_%03d", rndstr(1, 6), .pkgEnv$testCacheCounter))
   tmpCache <- checkPath(file.path(tmpdir, "testCache"), create = TRUE)
   .pkgEnv$testCacheCounter <- .pkgEnv$testCacheCounter + 1L

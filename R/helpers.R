@@ -579,3 +579,27 @@ vectorType <- function(vectorRead = getOption("reproducible.shapefileRead", "sf:
 }
 
 
+#' Set seed with a random value using Sys.time()
+#'
+#' This will set a random seed.
+#' @export
+#' @param set.seed Logical. If `TRUE`, the default, then the function will call
+#' `set.seed` internally with the new random seed.
+#' @details
+#' This function uses 6 decimal places of `Sys.time()`, i.e., microseconds. Due to
+#' integer limits, it also truncates at 1000 seconds, so there is a possibility that
+#' this will be non-unique after 1000 seconds (at the microsecond level). In
+#' tests, this showed no duplicates after 1e7 draws in a loop, as expected.
+#'
+#'
+#' @return
+#' This will return the new seed invisibly. However, this is also called for
+#' its side effects, which is a new seed set using `set.seed`
+set.randomseed <- function(set.seed = TRUE) {
+  digits <- 9
+  newSeed <- as.numeric(Sys.time()) * (digits - 3) # microseconds
+  newSeed <- as.integer(round(newSeed, -digits) - newSeed)
+  if (isTRUE(set.seed))
+    set.seed(newSeed)
+  return(invisible(newSeed))
+}

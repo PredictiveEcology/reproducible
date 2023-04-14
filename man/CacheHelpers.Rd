@@ -50,7 +50,8 @@ CacheStorageDir(cachePath = getOption("reproducible.cachePath"))
 CacheStoredFile(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
-  format = NULL
+  format = NULL,
+  obj = NULL
 )
 
 CacheDBTableName(

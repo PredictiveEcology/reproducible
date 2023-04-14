@@ -161,14 +161,14 @@ setMethod(
     } else if (inherits(object, "SpatRaster")) {
       if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
         stop("Please install terra package")
-      terraSrcs <- terra::sources(object)
+      terraSrcs <- Filenames(object)
       if (any(nchar(terraSrcs) > 0)) {
         out <- lapply(terraSrcs, function(x)
-          digest(file = x, length = length, algo = algo))
+          .robustDigest(x, length = length, algo = algo, quick = quick))
         dig <- .robustDigest(append(
           list(terra::nrow(object), terra::ncol(object), terra::nlyr(object),
                terra::res(object), terra::crs(object),
-               terra::ext(object)), object@ptr$names, ),
+               terra::ext(object)), names(object)),
           length = length, quick = quick,
           algo = algo, classOptions = classOptions) # don't include object@data -- these are volatile
         forDig <- list(out, dig)

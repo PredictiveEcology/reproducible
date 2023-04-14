@@ -102,7 +102,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     tagValue <- sub(userTags, pattern = "^[^:]*:", replacement = "")
   }
 
-  fts <- CacheStoredFile(cachePath, cacheId)
+  fts <- CacheStoredFile(cachePath, cacheId, obj = obj)
 
   # browser(expr = exists("._saveToCache_2"))
 
@@ -136,7 +136,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   }
 
   if (is.null(linkToCacheId)) {
-    fs <- saveFileInCacheFolder(obj, fts)
+    fs <- saveFileInCacheFolder(cachePath = cachePath, obj, fts, cacheId = cacheId)
   }
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     if (is.null(.pkgEnv[[cachePath]]))
@@ -225,20 +225,14 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     }
   }
 
-  fileFormatRow <- fullCacheTableForObj[["tagKey"]] == "fileFormat"
-  fileFormat = if (any(fileFormatRow))
-    fullCacheTableForObj[["tagValue"]][fileFormatRow] else format
-
-  loadFunRow <- fullCacheTableForObj[["tagKey"]] == "loadFun"
-  loadFun = if (any(loadFunRow))
-    fullCacheTableForObj[["tagValue"]][loadFunRow] else NULL
+  fileFormat <- extractFromCache(fullCacheTableForObj, "fileFormat", ifNot = format)
 
   if (!isTRUE(isMemoised)) {
     f <- CacheStoredFile(cachePath, cacheId, fileFormat)
     f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
 
     # First test if it is correct format
-    if (!file.exists(f)) {
+    if (!all(file.exists(f))) {
       sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
       if (!useDBI()) {
         srch <- paste0(gsub("\\.", "\\\\.", multipleDBFilesSuffix()), "|\\.lock")
@@ -259,7 +253,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
         return(fs)
       }
     }
-    obj <- loadFile(f, format = fileFormat, loadFun = loadFun)
+    # Need exclusive lock
+    obj <- loadFile(f, format = fileFormat, fullCacheTableForObj = fullCacheTableForObj)
     obj <- .dealWithClassOnRecovery(obj, cachePath = cachePath,
                                     cacheId = cacheId,
                                     drv = drv, conn = conn)
@@ -296,6 +291,16 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   obj
 
 }
+
+
+extractFromCache <- function(sc, elem, ifNot = NULL) {
+
+  rowNum <- sc[["tagKey"]] == elem
+  elemExtracted = if (any(rowNum))
+    sc[["tagValue"]][rowNum] else ifNot
+  elemExtracted
+}
+
 
 #' Low level tools to work with Cache
 #'
@@ -623,17 +628,29 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 #' `CacheStoredFile` returns the name of the file in which the cacheId object is stored.
 #' This can be loaded to memory with e.g., `loadFile`.
 CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cacheId,
-                            format = NULL) {
+                            format = NULL, obj = NULL) {
 
   if (is.null(format)) format <- getOption("reproducible.cacheSaveFormat", "rds")
-  csf <- if (isTRUE(useDBI()) == FALSE) {
-    "rda"
-  } else {
-    format
+  if (!is.null(obj)) {
+    theAttr <- attr(obj, "tags")
+    if (!is.null(theAttr)) {
+      if (any(theAttr == "saveRawFile:TRUE")) {
+        theGrep <- "fileFormat:"
+        format <- vapply(strsplit(split = ":", grep(theGrep, theAttr, value = TRUE)),
+                         function(fn) fn[2], FUN.VALUE = character(1))
+      }
+    }
   }
-  csExtension <- if (isTRUE("qs" %in% csf)) {
+  if (any(format %in% "check")) {
+    format <- formatCheck(cachePath, cacheId, format)
+    # altFile <- dir(dirname(CacheStoredFile(cachePath, cacheId)), pattern = cacheId)
+    # altFile <- grep(paste0(multipleDBFilesSuffix(), "|\\.lock"), altFile, invert = TRUE, value = TRUE)
+    # format <- tools::file_ext(altFile)
+  }
+  csf <- format
+  csExtension <- if (isTRUE(any("qs" %in% csf))) {
     "qs"
-  } else if (isTRUE("rds" %in% csf)) {
+  } else if (isTRUE(any("rds" %in% csf))) {
     "rds"
   } else {
     if (is.character(format))
@@ -821,33 +838,60 @@ movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQ
   return(invisible())
 }
 
-loadFile <- function(file, format, loadFun = NULL) {
+loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL) {
   # browser(expr = exists("._loadFile_1"))
-  if (missing(format))
+  if (is.null(format))
     format <- fileExt(file)
-  if (is.null(loadFun)) {
-    if (format == "qs") {
+
+  tv <- fullCacheTableForObj$tagValue
+  tk <- fullCacheTableForObj$tagKey
+  loadFun <- tv[tk == "loadFun"]
+
+  if (length(loadFun) == 0) {
+    if (format %in% "qs") {
       .requireNamespace("qs", stopOnFALSE = TRUE)
       obj <- qs::qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
     } else {
       obj <- readRDS(file = file)
     }
   } else {
-    obj <- eval(parse(text = loadFun))(file)
+
+    whichFiles <- tv[tk == "whichFiles"]
+    origFilename <- tv[tk == "origFilename"]
+    origDirname <- tv[tk == "origDirname"]
+    origGetWd <- tv[tk == "origGetWd"]
+
+    relPath <- gsub(normPath(origGetWd), "", normPath(origDirname))
+    newName <- file.path(getwd(), relPath, origFilename)
+    whFiles <- newName[match(basename(whichFiles), origFilename)]
+    linkOrCopy(file, newName, verbose = 0)
+    obj <- eval(parse(text = loadFun))(whFiles)
   }
 }
 
 saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
   if (missing(fts))
-    fts <- CacheStoredFile(cachePath, cacheId)
+    fts <- CacheStoredFile(cachePath, cacheId = cacheId, obj = obj)
+
+  # if (!useDBI()) {
+  #   if (!exists("dtFile", inherits = FALSE))
+  #     dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
+  #   lockFile <- paste0(gsub(paste0("(^.+", cacheId, ").+"), "\\1", dtFile), ".lock")
+  #   lockFileExisted <- file.exists(lockFile)
+  #   locked <- filelock::lock(lockFile)
+  #   on.exit({
+  #     filelock::unlock(locked)
+  #     if (!isTRUE(lockFileExisted))
+  #       unlink(lockFile)
+  #   }, add = TRUE)
+  # }
 
   if (any(attr(obj, "tags") == "saveRawFile:TRUE")) {
-    newFN <- paste0(tools::file_path_sans_ext(fts), ".", tools::file_ext(obj))
-    linkOrCopy(obj, newFN)
-    fs <- file.size(fts)
+    # newFN <- paste0(tools::file_path_sans_ext(fts), ".", tools::file_ext(obj))
+    linkOrCopy(obj, fts, verbose = -2)
+    fs <- sum(file.size(fts))
 
   } else {
-
     if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
       .requireNamespace("qs", stopOnFALSE = TRUE)
       for (attempt in 1:2) {
