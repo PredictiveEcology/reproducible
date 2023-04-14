@@ -704,11 +704,15 @@ Cache <-
       if (useCloud) {
         # browser(expr = exists("._Cache_9"))
         # Here, download cloud copy to local folder, skip the running of FUN
-        newFileName <- CacheStoredFile(cachePath, outputHash) # paste0(outputHash,".rda")
-        isInCloud <- gsub(gdriveLs$name,
-                          pattern = paste0("\\.", fileExt(CacheStoredFile(cachePath, outputHash))),
-                          replacement = "") %in% outputHash
+        # browser()
+        isInCloud <- grepl(outputHash, gdriveLs$name)
+
+        # newFileName <- CacheStoredFile(cachePath, outputHash) # paste0(outputHash,".rda")
+        # gsub(gdriveLs$name,
+                          # pattern = paste0("\\.", fileExt(CacheStoredFile(cachePath, outputHash))),
+                          # replacement = "") %in% outputHash
         if (any(isInCloud)) {
+          newFileName <- gdriveLs$name[isInCloud] # paste0(outputHash,".rda")
           output <- cloudDownload(outputHash, newFileName, gdriveLs, cachePath, cloudFolderID,
                                   drv = drv)
           if (is.null(output)) {
@@ -2232,8 +2236,13 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
   if (useCloud) {
     # browser(expr = exists("._Cache_7b"))
     # Here, upload local copy to cloud folder
-    cu <- try(retry(quote(isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cachePath,
-                                                   cloudFolderID, output))))
+    isInCloud <- grepl(outputHash, gdriveLs$name)
+    outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
+
+    cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cachePath, cloudFolderID, ## TODO: saved not found
+                                     outputToSave))
+    # cu <- try(retry(quote(isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cachePath,
+    #                                                cloudFolderID, output))))
     .updateTagsRepo(outputHash, cachePath, "inCloud", "TRUE", drv = drv, conn = conn)
   }
 
