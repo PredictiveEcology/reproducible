@@ -949,4 +949,3 @@ CacheDBFileSingleExt <- function(suff = getOption("reproducible.cacheSaveFormat"
 
 multipleDBFilesSuffix <- function()
   ".dtFile."
-}
