@@ -328,17 +328,19 @@ isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
 #'   it simply returns `FALSE`
 .requireNamespace <- function(pkg = "methods", minVersion = NULL,
                               stopOnFALSE = FALSE,
-                              messageStart = paste0(pkg, if (!is.null(minVersion))
-                                paste0("(>=", minVersion, ")"), " is required. Try: ")) {
+                              messageStart = NULL) {
   need <- FALSE
-  if (suppressWarnings(!requireNamespace(pkg, quietly = TRUE))) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
     need <- TRUE
   } else {
-    if (isTRUE(packageVersion(pkg) < minVersion))
-      need <- TRUE
+    if (!is.null(minVersion))
+      if (isTRUE(packageVersion(pkg) < minVersion))
+        need <- TRUE
   }
-  if (isTRUE(stopOnFALSE) && isTRUE(need))
-    stop(requireNamespaceMsg(pkg))
+
+  if (need) # separate these so it is faster
+    if (isTRUE(stopOnFALSE))
+      stop(requireNamespaceMsg(pkg, extraMsg = messageStart, minVersion = minVersion))
   !need
 }
 
