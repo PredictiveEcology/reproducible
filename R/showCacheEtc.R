@@ -670,7 +670,10 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
 
 
 
-useDBI <- function() {
+useDBI <- function(set = NULL) {
+  if (!is.null(set)) {
+    options("reproducible.useDBI" = set)
+  }
   ud <- getOption("reproducible.useDBI", TRUE)
   if (isTRUE(ud)) {
     drv <- getOption("reproducible.drv")
