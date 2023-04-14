@@ -404,7 +404,7 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
             }
           }, silent = TRUE)
           if (is(fromInt, "try-error")) {
-            if (attempt >= 1) {
+            if (attempt == 1) {
               whichFailed <- grepl("geom 0|Loop 0", fromInt)
               if (isTRUE(whichFailed) && !(triedFrom %in% TRUE)) { # don't try same one again
                 from <- fixErrorsIn(from, error = fromInt, fromFnName = "maskTo", verbose = verbose)
