@@ -597,7 +597,7 @@ vectorType <- function(vectorRead = getOption("reproducible.shapefileRead", "sf:
 #' its side effects, which is a new seed set using `set.seed`
 set.randomseed <- function(set.seed = TRUE) {
   digits <- 9
-  newSeed <- as.numeric(Sys.time()) * (digits - 3) # microseconds
+  newSeed <- as.numeric(Sys.time()) * 10^(digits - 3) # microseconds
   newSeed <- as.integer(round(newSeed, -digits) - newSeed)
   if (isTRUE(set.seed))
     set.seed(newSeed)
