@@ -164,7 +164,7 @@ setMethod(
       terraSrcs <- terra::sources(object)
       if (any(nchar(terraSrcs) > 0)) {
         out <- lapply(terraSrcs, function(x)
-          digest(file = x, length = length, algo = algo))
+          .robustDigest(x, length = length, algo = algo, quick = quick))
         dig <- .robustDigest(append(
           list(terra::nrow(object), terra::ncol(object), terra::nlyr(object),
                terra::res(object), terra::crs(object),
