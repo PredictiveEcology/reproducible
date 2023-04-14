@@ -2192,13 +2192,9 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
                               debugCache, # sideEffect,
                               quick, algo, preDigest, startCacheTime, drv, conn,
                               outputHash, useCloud, gdriveLs, cloudFolderID, lastEntry, lastOne, ...) {
-  # browser(expr = exists("._Cache_6"))
   objSize <- # if (useDBI()) {
     as.numeric(tail(fullCacheTableForObj[["tagValue"]][
       fullCacheTableForObj$tagKey == "file.size"], 1))
-  # } else {
-  #   file.size(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]]))
-  # }
   class(objSize) <- "object_size"
   bigFile <- isTRUE(objSize > 1e6)
   fileFormat <- extractFromCache(fullCacheTableForObj, elem = "fileFormat")

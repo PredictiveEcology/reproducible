@@ -387,7 +387,7 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
       dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                       "tagValue" = tagValue,
                       "createdDate" = as.character(Sys.time()))
-      dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, format = "check")
+      dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
       dt2 <- loadFile(dtFile)
       dt <- rbindlist(list(dt2, dt))
       saveFileInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
