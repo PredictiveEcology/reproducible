@@ -7,8 +7,6 @@
 #' @param force Logical. Should it create a cache in the `cachePath`,
 #'   even if it already exists, overwriting.
 #' @importFrom data.table data.table
-#' @inheritParams DBI::dbConnect
-#' @inheritParams DBI::dbWriteTable
 #' @rdname CacheHelpers
 #' @details
 #' `createCache` function will create a Cache folder structure and necessary files, based on

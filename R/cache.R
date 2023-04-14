@@ -327,9 +327,10 @@ utils::globalVariables(c(
 #'        If a number larger than `1`, then it will report the N most similar archived
 #'        objects.
 #'
+#' @param drv if using a database backend, drv must be an object that
+#'   inherits from DBIDriver e.g., `RSQLite::SQLite()`
+#' @param conn an optional DBIConnection object, as returned by dbConnect().
 #' @inheritParams digest::digest
-#' @inheritParams DBI::dbConnect
-#' @inheritParams DBI::dbWriteTable
 #'
 #' @return Returns the value of the
 #' function call or the cached version (i.e., the result from a previous call
