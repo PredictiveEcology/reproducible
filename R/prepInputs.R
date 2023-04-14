@@ -1055,7 +1055,7 @@ extractFromArchive <- function(archive,
 #' @importFrom utils capture.output
 #' @importFrom data.table rbindlist as.data.table setDT setDF
 appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
-                                 destinationPath = getOption("reproducible.destinationPath"),
+                                 destinationPath = getOption("reproducible.destinationPath", "."),
                                  append = TRUE, verbose = getOption("reproducible.verbose", 1)) {
   if (append) {
     # a checksums file already existed, need to keep some of it
