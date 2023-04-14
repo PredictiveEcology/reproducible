@@ -148,6 +148,7 @@ test_that("test miscellaneous fns (part 2)", {
     {
       if (useDBI()) {
 
+        # Need to convert to cloudUpload
         mess1 <- capture_messages(#expect_error(
           cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
                       gdriveLs = gdriveLs1, cachePath = tmpCache))#)
@@ -288,3 +289,16 @@ test_that("test miscellaneous fns", {
   expect_true(is.numeric(as.numeric(gsub("\033.*", "", gsub(".*: ", "", out)[2]))))
 })
 
+test_that("test set.randomseed", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  N <- 1e4
+  a <- integer(N)
+  for (i in 1:N) {
+    a[i] <- set.randomseed()
+  }
+  expect_false(any(duplicated(a)))
+})
