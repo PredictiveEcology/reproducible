@@ -845,10 +845,7 @@ CacheDBFileSingle <- function(cachePath, cacheId, format = NULL) {
     if (!is.null(format))
       fullSuff <- CacheDBFileSingleExt(format)
   }
-  browser()
-  out <- paste0(CacheStoredFile(cachePath = cachePath, cacheId = cacheId, format = format),
-         fullSuff)
-
+  out <- file.path(CacheStorageDir(cachePath), paste0(cacheId, fullSuff))
   out
 
 }
@@ -857,7 +854,7 @@ CacheDBFileSingleExt <- function(suff = getOption("reproducible.cacheSaveFormat"
   paste0(suffixMultipleDBFiles(), suff)
 
 suffixMultipleDBFiles <- function()
-  ".dtFile."
+  ".dbFile."
 
 suffixLockFile <- function() ".lock"
 
