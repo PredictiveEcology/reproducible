@@ -852,14 +852,10 @@ Cache <-
       resultHash <- ""
       linkToCacheId <- NULL
       if (objSize > 1e6) {
-        resultHash <- CacheDigest(outputToSave, .objects = .objects, calledFrom = "Cache")$outputHash
-        qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))}",
-                              dbTabName = dbTabNam,
-                              .con = conn)
-        res <- retry(retries = 15, exponentialDecayBase = 1.01,
-                     quote(dbSendQuery(conn, qry)))
-        allCache <- setDT(dbFetch(res))
-        dbClearResult(res)
+        resultHash <- CacheDigest(outputToSave, .objects = .objects,
+                                  length = length, algo = algo, quick = quick,
+                                  classOptions = classOptions, calledFrom = "Cache")$outputHash
+        allCache <- showCache(cachePath, verbose = -2)
         if (NROW(allCache)) {
           alreadyExists <- allCache[allCache$tagKey == "resultHash" & allCache$tagValue %in% resultHash]
           if (NROW(alreadyExists)) {
