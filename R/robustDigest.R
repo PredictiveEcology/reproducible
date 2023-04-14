@@ -532,20 +532,17 @@ setMethod(
   out <- if (!missing(file)) {
     digest::digest(file = x, algo = algo, length = length)
   } else {
-    # if (isTRUE(newAlgo > 0)) {
     if (cacheSpeed == "fast") {
       cacheSpeed <- 2L
     } else if (cacheSpeed == "slow") {
       cacheSpeed <- 1L
     }
-    # } else {
-    #   cacheSpeed <- 2L
-    # }
+    if (!.requireNamespace("fastdigest", stopOnFALSE = FALSE))
+      cacheSpeed <- 1L
+
     out <- if (cacheSpeed == 1) {
       digest(x, algo = algo)
     } else if (cacheSpeed == 2) {
-      .requireNamespace("fastdigest", quietly = TRUE)
-      #   stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
       fastdigest::fastdigest(x)
     } else {
       stop("options('reproducible.cacheSpeed') must be 1, 2, 'slow' or 'fast'")
