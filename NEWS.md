@@ -15,6 +15,9 @@ Version 1.2.17
 - removed entirely: `fasterize`, `fpCompare`, `magrittr`
 - moved to `Suggests`: `raster`, `sp`, `rlang`
 
+## Defunct
+- `reproducible.useNewDigestAlgorithm` is not longer an option as the old algorithms do not work reliably.
+
 ## bugfixes
 - `Cache` was incorrectly dealing with `environment` and `environment-like` objects. Since some objects, e.g., `Spat*` objects in `terra`, must be wrapped prior to saving, environments must be scanned for these classes of objects prior to saving. This previously only occurred for `list` objects; fixed
 - When working with revdep `SpaDES.core`, there were some cases where the `Cache` was failing as it could not find the module name; fixed.

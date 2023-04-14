@@ -138,23 +138,23 @@ setMethod(
     } else if (is(object, "Raster")) {
       object <- .removeCacheAtts(object)
 
-      if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
-        if (is(object, "RasterStack")) {
-          # have to do one file at a time with Stack
-          dig <- suppressWarnings(
-            lapply(object@layers, function(yy) {
-              .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
-            })
-          )
-        } else {
-          # Brick and Layers have only one file
-          dig <- suppressWarnings(
-            .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-        }
-      } else {
+      # if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
+      #   if (is(object, "RasterStack")) {
+      #     # have to do one file at a time with Stack
+      #     dig <- suppressWarnings(
+      #       lapply(object@layers, function(yy) {
+      #         .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
+      #       })
+      #     )
+      #   } else {
+      #     # Brick and Layers have only one file
+      #     dig <- suppressWarnings(
+      #       .digestRasterLayer(object, length = length, algo = algo, quick = quick))
+      #   }
+      # } else {
         dig <- suppressWarnings(
           .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-      }
+      # }
       forDig <- unlist(dig)
     } else if (is(object, "cluster")) {# can't get this class from parallel via importClass parallel cluster
       forDig <- NULL
@@ -525,27 +525,27 @@ setMethod(
 }
 
 .doDigest <- function(x, algo, length = Inf, file,
-                      newAlgo = getOption("reproducible.useNewDigestAlgorithm"),
+                      newAlgo = NULL, #getOption("reproducible.useNewDigestAlgorithm"),
                       cacheSpeed = getOption("reproducible.cacheSpeed", "slow")) {
   if (missing(algo)) algo = formals(.robustDigest)$algo
 
   out <- if (!missing(file)) {
     digest::digest(file = x, algo = algo, length = length)
   } else {
-    if (isTRUE(newAlgo > 0)) {
-      if (cacheSpeed == "fast") {
-        cacheSpeed <- 2L
-      } else if (cacheSpeed == "slow") {
-        cacheSpeed <- 1L
-      }
-    } else {
+    # if (isTRUE(newAlgo > 0)) {
+    if (cacheSpeed == "fast") {
       cacheSpeed <- 2L
+    } else if (cacheSpeed == "slow") {
+      cacheSpeed <- 1L
     }
+    # } else {
+    #   cacheSpeed <- 2L
+    # }
     out <- if (cacheSpeed == 1) {
       digest(x, algo = algo)
     } else if (cacheSpeed == 2) {
-      if (!requireNamespace("fastdigest", quietly = TRUE))
-        stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+      .requireNamespace("fastdigest", quietly = TRUE)
+      #   stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
       fastdigest::fastdigest(x)
     } else {
       stop("options('reproducible.cacheSpeed') must be 1, 2, 'slow' or 'fast'")

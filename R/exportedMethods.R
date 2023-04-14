@@ -627,11 +627,11 @@ unmakeMemoisable.default <- function(x) {
         stop("There is an unknown error 04")
     }
     if (isFromDisk) {
-      if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-        obj <- list(origRaster = objOrig, cacheRaster = obj)
-      } else {
+      # if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
+      #   obj <- list(origRaster = objOrig, cacheRaster = obj)
+      # } else {
         obj <- list(origRaster = Filenames(objOrig), cacheRaster = obj)
-      }
+      # }
       setattr(obj, "tags",
               c(attributes(obj$cacheRaster)$tags,
                 paste0("origRaster:", obj$origRaster),
@@ -683,10 +683,10 @@ unmakeMemoisable.default <- function(x) {
                                     drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                     conn = getOption("reproducible.conn", NULL)) {
 
-  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-    return(dealWithClassOnRecovery2(obj, cachePath, cacheId,
-                                    drv, conn))
-  }
+  # if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
+  #   return(dealWithClassOnRecovery2(obj, cachePath, cacheId,
+  #                                   drv, conn))
+  # }
 
   if (any(inherits(obj, "PackedSpatVector"))) {
     if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
