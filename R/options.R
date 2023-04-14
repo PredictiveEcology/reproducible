@@ -196,22 +196,16 @@ reproducibleOptions <- function() {
     reproducible.messageColourQuestion = "green",
     reproducible.nThreads = 1,
     reproducible.overwrite = FALSE,
-    # reproducible.polygonShortcut = FALSE,
     reproducible.quick = FALSE,
     reproducible.rasterRead = "terra::rast",
-    # reproducible.rasterRead = "raster::raster",
     reproducible.shapefileRead = "sf::st_read",
-    # reproducible.shapefileRead = "raster::shapefile",
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
     reproducible.useDBI = FALSE, # `FALSE` is useMultipleDBFiles now
-    # reproducible.useGDAL = FALSE, #
     reproducible.useMemoise = FALSE, #memoise
-    # reproducible.useNewDigestAlgorithm = 2, # TODO: change in next release
-    # reproducible.useMultipleDBFiles = TRUE,
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1
   )
