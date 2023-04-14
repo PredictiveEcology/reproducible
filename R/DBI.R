@@ -219,9 +219,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     # First test if it is correct format
     if (!all(file.exists(f))) {
       sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
-      if (!useDBI()) {
-        srch <- paste0(gsub("\\.", "\\\\.", multipleDBFilesSuffix()), "|\\.lock")
-        sameCacheID <- grep(srch, sameCacheID, value = TRUE, invert = TRUE)
+      if (!useDBI() || length(sameCacheID) > 1) {
+        sameCacheID <- onlyStorageFiles(sameCacheID)
       }
 
       if (length(sameCacheID)) {
@@ -323,20 +322,6 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     DBI::dbClearResult(res)
   } else {
     dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, format = format)
-
-    # if (!useDBI()) {
-    #   if (!exists("dtFile", inherits = FALSE))
-    #     dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
-    #   lockFile <- paste0(gsub(paste0("(^.+", cacheId, ").+"), "\\1", dtFile), ".lock")
-    #   lockFileExisted <- file.exists(lockFile)
-    #   locked <- filelock::lock(lockFile)
-    #   on.exit({
-    #     filelock::unlock(locked)
-    #     if (!isTRUE(lockFileExisted))
-    #       unlink(lockFile)
-    #   }, add = TRUE)
-    # }
-
     unlink(dtFile)
   }
   unlink(CacheStoredFile(cachePath, cacheId = cacheId, format = format))
@@ -403,20 +388,6 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
                       "tagValue" = tagValue,
                       "createdDate" = as.character(Sys.time()))
       dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
-
-      # if (!useDBI()) {
-      #   if (!exists("dtFile", inherits = FALSE))
-      #     dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
-      #   lockFile <- paste0(gsub(paste0("(^.+", cacheId, ").+"), "\\1", dtFile), ".lock")
-      #   lockFileExisted <- file.exists(lockFile)
-      #   locked <- filelock::lock(lockFile)
-      #   on.exit({
-      #     filelock::unlock(locked)
-      #     if (!isTRUE(lockFileExisted))
-      #       unlink(lockFile)
-      #   }, add = TRUE)
-      # }
-
       dt2 <- loadFile(dtFile)
       dt <- rbindlist(list(dt2, dt))
       saveFileInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
@@ -467,20 +438,6 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
                       "tagValue" = tagValue,
                       "createdDate" = as.character(Sys.time()))
       dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
-
-      # if (!useDBI()) {
-      #   if (!exists("dtFile", inherits = FALSE))
-      #     dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
-      #   lockFile <- paste0(gsub(paste0("(^.+", cacheId, ").+"), "\\1", dtFile), ".lock")
-      #   lockFileExisted <- file.exists(lockFile)
-      #   locked <- filelock::lock(lockFile)
-      #   on.exit({
-      #     filelock::unlock(locked)
-      #     if (!isTRUE(lockFileExisted))
-      #       unlink(lockFile)
-      #   }, add = TRUE)
-      # }
-
       dt2 <- loadFile(dtFile)
       tk <- tagKey
       alreadyThere <- sum(dt2$tagKey == tk & dt2$cacheId == cacheId)
@@ -626,9 +583,6 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
   }
   if (any(format %in% "check")) {
     format <- formatCheck(cachePath, cacheId, format)
-    # altFile <- dir(dirname(CacheStoredFile(cachePath, cacheId)), pattern = cacheId)
-    # altFile <- grep(paste0(multipleDBFilesSuffix(), "|\\.lock"), altFile, invert = TRUE, value = TRUE)
-    # format <- tools::file_ext(altFile)
   }
   csf <- format
   csExtension <- if (isTRUE(any("qs" %in% csf))) {
@@ -836,7 +790,6 @@ loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL) {
       obj <- readRDS(file = file)
     }
   } else {
-
     whichFiles <- tv[tk == "whichFiles"]
     origFilename <- tv[tk == "origFilename"]
     origDirname <- tv[tk == "origDirname"]
@@ -853,19 +806,6 @@ loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL) {
 saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
   if (missing(fts))
     fts <- CacheStoredFile(cachePath, cacheId = cacheId, obj = obj)
-
-  # if (!useDBI()) {
-  #   if (!exists("dtFile", inherits = FALSE))
-  #     dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
-  #   lockFile <- paste0(gsub(paste0("(^.+", cacheId, ").+"), "\\1", dtFile), ".lock")
-  #   lockFileExisted <- file.exists(lockFile)
-  #   locked <- filelock::lock(lockFile)
-  #   on.exit({
-  #     filelock::unlock(locked)
-  #     if (!isTRUE(lockFileExisted))
-  #       unlink(lockFile)
-  #   }, add = TRUE)
-  # }
 
   if (any(attr(obj, "tags") == "saveRawFile:TRUE")) {
     # newFN <- paste0(tools::file_path_sans_ext(fts), ".", tools::file_ext(obj))
@@ -904,20 +844,8 @@ CacheDBFileSingle <- function(cachePath, cacheId, format = NULL) {
     format <- formatCheck(cachePath, cacheId, format)
     if (!is.null(format))
       fullSuff <- CacheDBFileSingleExt(format)
-
-    # altFile <- dir(dirname(CacheStoredFile(cachePath, cacheId)), pattern = cacheId)
-    # altFile <- grep(paste0(multipleDBFilesSuffix(), "|\\.lock"), altFile, invert = TRUE, value = TRUE)
-    # if (length(altFile)) {
-    #   format <- tools::file_ext(altFile)
-    #   fullSuff <- CacheDBFileSingleExt(format)
-    # } else {
-    #   format <- NULL
-    # }
-    # fullCacheTableForObj <- showCache(cachePath, userTags = cacheId)
-    # fileFormatRow <- fullCacheTableForObj[["tagKey"]] == "fileFormat"
-    # format = if (any(fileFormatRow))
-    #   fullCacheTableForObj[["tagValue"]][fileFormatRow] else format
   }
+  browser()
   out <- paste0(CacheStoredFile(cachePath = cachePath, cacheId = cacheId, format = format),
          fullSuff)
 
@@ -926,20 +854,24 @@ CacheDBFileSingle <- function(cachePath, cacheId, format = NULL) {
 }
 
 CacheDBFileSingleExt <- function(suff = getOption("reproducible.cacheSaveFormat"))
-  paste0(multipleDBFilesSuffix(), suff)
+  paste0(suffixMultipleDBFiles(), suff)
 
-multipleDBFilesSuffix <- function()
+suffixMultipleDBFiles <- function()
   ".dtFile."
+
+suffixLockFile <- function() ".lock"
+
+onlyStorageFiles <- function(files)
+  grep(gsub("\\.", "\\\\.", paste0(suffixMultipleDBFiles(), "|", suffixLockFile())),
+       files, invert = TRUE, value = TRUE)
 
 formatCheck <- function(cachePath, cacheId, format) {
   altFile <- dir(dirname(CacheStoredFile(cachePath, cacheId)), pattern = cacheId)
-  altFile <- grep(paste0(multipleDBFilesSuffix(), "|\\.lock"), altFile, invert = TRUE, value = TRUE)
+  altFile <- onlyStorageFiles(altFile)
   if (length(altFile)) {
     format <- tools::file_ext(altFile)
-    # fullSuff <- CacheDBFileSingleExt(format)
   }
   format
-
 }
 
 

@@ -561,7 +561,8 @@ Cache <-
         # Need exclusive lock
         if (!useDBI()) {
           dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = outputHash)
-          lockFile <- paste0(gsub(paste0("(^.+", outputHash, ").+"), "\\1", dtFile), ".lock")
+          lockFile <- file.path(CacheStorageDir(cachePath = cachePath), paste0(outputHash, suffixLockFile()))
+          # lockFile <- paste0(gsub(paste0("(^.+", outputHash, ").+"), "\\1", dtFile), suffixLockFile())
           locked <- filelock::lock(lockFile)
           on.exit({
             filelock::unlock(locked)
