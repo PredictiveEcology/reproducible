@@ -148,9 +148,9 @@ test_that("test miscellaneous fns (part 2)", {
     {
       if (useDBI()) {
 
-        # Need to convert to cloudUpload
+        # Need to convert to cloudUpload from Cache
         mess1 <- capture_messages(#expect_error(
-          cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
+          cloudUploadFromCache(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
                       gdriveLs = gdriveLs1, cachePath = tmpCache))#)
       }
     })

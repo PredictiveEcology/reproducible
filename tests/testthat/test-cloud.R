@@ -185,7 +185,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
                             needGoogleDriveAuth = TRUE,
                             opts = list("reproducible.ask" = FALSE))
 
-    googledrive::drive_auth("predictiveecology@gmail.com")
+    # googledrive::drive_auth("predictiveecology@gmail.com")
     on.exit({
       testOnExit(testInitOut)
       retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
@@ -211,7 +211,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
                             opts = list("reproducible.ask" = FALSE))
 
     opts <- options("reproducible.cachePath" = tmpdir)
-    googledrive::drive_auth("predictiveecology@gmail.com")
+    # googledrive::drive_auth("predictiveecology@gmail.com")
     on.exit({
       testOnExit(testInitOut)
       retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
