@@ -29,7 +29,8 @@ test_that("test parallel collisions", {
     # This will produce "database is locked" on Windows or Linux *most* of the time without the fix
     if (interactive()) {
       of <- tmpfile[3]
-      of <- "c:/Eliot/tmpCache/log.txt"
+      if (isWindows() && Sys.info()["user"] == "emcintir")
+        of <- "c:/Eliot/tmpCache/log.txt"
       cl <- makeCluster(N, outfile = of)
       print(paste("log file is", of))
     } else {
@@ -37,7 +38,8 @@ test_that("test parallel collisions", {
     }
     on.exit(stopCluster(cl), add = TRUE)
 
-    tmpdir <- 'c:/Eliot/tmpCache/'
+    if (isWindows() && Sys.info()["user"] == "emcintir")
+      tmpdir <- 'c:/Eliot/tmpCache/'
     clusterSetRNGStream(cl)
     parallel::clusterEvalQ(cl, {
       library(reproducible)
