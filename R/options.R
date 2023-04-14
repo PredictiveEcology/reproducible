@@ -196,7 +196,7 @@ reproducibleOptions <- function() {
     reproducible.messageColourQuestion = "green",
     reproducible.nThreads = 1,
     reproducible.overwrite = FALSE,
-    reproducible.polygonShortcut = FALSE,
+    # reproducible.polygonShortcut = FALSE,
     reproducible.quick = FALSE,
     reproducible.rasterRead = "terra::rast",
     # reproducible.rasterRead = "raster::raster",
