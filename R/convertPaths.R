@@ -172,3 +172,4 @@ setMethod(
     unlist(lapply(obj, function(o) Filenames(o, allowMultiple = allowMultiple)))
     # Filenames(as.environment(obj), allowMultiple = allowMultiple)
 })
+

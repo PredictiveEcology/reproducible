@@ -110,55 +110,56 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL,
   gdriveLs
 }
 
-#' Upload to cloud, if necessary
-#'
-#' Meant for internal use, as there are internal objects as arguments.
-#'
-#' @param isInRepo A data.table with the information about an object that is in the local cachePath
-#' @param outputHash The `cacheId` of the object to upload
-#' @param gdriveLs The result of `googledrive::drive_ls(googledrive::as_id(cloudFolderID), pattern = "outputHash")`
-#' @param output The output object of FUN that was run in `Cache`
-#' @inheritParams Cache
-cloudUpload <- function(isInRepo, outputHash, gdriveLs, cachePath, cloudFolderID, output) {
-  .requireNamespace("googledrive", stopOnFALSE = TRUE,
-                    messageStart = "to use google drive files")
-
-  artifact <- isInRepo[[.cacheTableHashColName()]][1]
-  if (!is.null(artifact)) {
-    # browser(expr = exists("._cloudUpload_1"))
-    artifactFileName <- CacheStoredFile(cachePath, cacheId = artifact)
-    #artifactFileName <- paste0(artifact, ".rda")
-    if (useDBI()) {
-      newFileName <- basename2(artifactFileName)
-    } else {
-      newFileName <- paste0(outputHash,".rda")
-    }
-    isInCloud <- gsub(gdriveLs$name,
-                      pattern = paste0("\\.", fileExt(CacheStoredFile(cachePath, outputHash))),
-                      replacement = "") %in% outputHash
-
-    if (!any(isInCloud)) {
-      messageCache("Uploading local copy of ", artifactFileName,", with cacheId: ",
-                   outputHash," to cloud folder")
-      numRetries <- 1
-      while (numRetries < 6) {
-        du <- try(retry(retries = numRetries,
-                        quote(googledrive::drive_upload(media = artifactFileName, path = cloudFolderID,
-                                                        name = newFileName, overwrite = FALSE))))
-        if (is(du, "try-error")) {
-          if (!isTRUE(any(grepl("overwrite", du)))) {
-            numRetries <- numRetries + 4
-          } else {
-            return(du)
-          }
-        } else {
-          numRetries <- 6
-        }
-      }
-      cloudUploadRasterBackends(obj = output, cloudFolderID)
-    }
-  }
-}
+# Upload to cloud, if necessary
+#
+# Meant for internal use, as there are internal objects as arguments.
+#
+# @param isInRepo A data.table with the information about an object that is in the local cachePath
+# @param outputHash The `cacheId` of the object to upload
+# @param gdriveLs The result of `googledrive::drive_ls(googledrive::as_id(cloudFolderID), pattern = "outputHash")`
+# @param output The output object of FUN that was run in `Cache`
+# @inheritParams Cache
+# cloudUpload <- function(isInRepo, outputHash, gdriveLs, cachePath, cloudFolderID, output) {
+#   .requireNamespace("googledrive", stopOnFALSE = TRUE,
+#                     messageStart = "to use google drive files")
+#
+#   artifact <- isInRepo[[.cacheTableHashColName()]][1]
+#   if (!is.null(artifact)) {
+#     # browser(expr = exists("._cloudUpload_1"))
+#     artifactFileName <- CacheStoredFile(cachePath, cacheId = artifact)
+#     #artifactFileName <- paste0(artifact, ".rda")
+#     if (useDBI()) {
+#       newFileName <- basename2(artifactFileName)
+#     } else {
+#       newFileName <- paste0(outputHash,".rda")
+#     }
+#     isInCloud <- gsub(gdriveLs$name,
+#                       pattern = paste0("\\.", fileExt(CacheStoredFile(cachePath, outputHash))),
+#                       replacement = "") %in% outputHash
+#
+#     if (!any(isInCloud)) {
+#       messageCache("Uploading local copy of ", artifactFileName,", with cacheId: ",
+#                    outputHash," to cloud folder")
+#       numRetries <- 1
+#       browser()
+#       while (numRetries < 6) {
+#         du <- try(retry(retries = numRetries,
+#                         quote(googledrive::drive_upload(media = artifactFileName, path = cloudFolderID,
+#                                                         name = newFileName, overwrite = FALSE))))
+#         if (is(du, "try-error")) {
+#           if (!isTRUE(any(grepl("overwrite", du)))) {
+#             numRetries <- numRetries + 4
+#           } else {
+#             return(du)
+#           }
+#         } else {
+#           numRetries <- 6
+#         }
+#       }
+#       cloudUploadRasterBackends(obj = output, cloudFolderID)
+#     }
+#   }
+# }
 
 #' Download from cloud, if necessary
 #'
@@ -176,20 +177,21 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
   #browser(expr = exists("._cloudDownload_1"))
   messageCache("Downloading cloud copy of ", newFileName,", with cacheId: ", outputHash)
   localNewFilename <- file.path(tempdir2(), basename2(newFileName))
-  isInCloud <- gsub(gdriveLs$name,
-                    pattern = paste0("\\.", fileExt(CacheStoredFile(cachePath, outputHash))),
-                    replacement = "") %in% outputHash
+  isInCloud <- grepl(outputHash, gdriveLs$name)
+                    # gsub(gdriveLs$name,
+                    # pattern = paste0("\\.", fileExt(CacheStoredFile(cachePath, outputHash))),
+                    # replacement = "") %in% outputHash
 
   retry(quote(googledrive::drive_download(file = googledrive::as_id(gdriveLs$id[isInCloud][1]),
                              path = localNewFilename, # take first if there are duplicates
                              overwrite = TRUE)))
-  if (useDBI()) {
+  # if (useDBI()) {
     output <- loadFile(localNewFilename)
-  } else {
-    ee <- new.env(parent = emptyenv())
-    loadedObjName <- load(localNewFilename)
-    output <- get(loadedObjName, inherits = FALSE)
-  }
+  # } else {
+  #   ee <- new.env(parent = emptyenv())
+  #   loadedObjName <- load(localNewFilename)
+  #   output <- get(loadedObjName, inherits = FALSE)
+  # }
   output <- cloudDownloadRasterBackend(output, cachePath, cloudFolderID, drv = drv)
   output
 }
@@ -212,14 +214,14 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
                     messageStart = "to use google drive files")
   #browser(expr = exists("._cloudUploadFromCache_1"))
   if (!any(isInCloud)) {
-    cacheIdFileName <- CacheStoredFile(cachePath, outputHash)
+    cacheIdFileName <- CacheStoredFile(cachePath, outputHash, "check")
     newFileName <- if (useDBI()) {
       basename2(cacheIdFileName)
     }
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
     messageCache("Uploading new cached object ", newFileName,", with cacheId: ",
             outputHash," to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id)
-    du <- try(retry(quote(googledrive::drive_upload(media = CacheStoredFile(cachePath, outputHash),
+    du <- try(retry(quote(googledrive::drive_upload(media = cacheIdFileName,
                                        path = googledrive::as_id(cloudFolderID), name = newFileName,
                                        overwrite = FALSE))))
     if (is(du, "try-error")) {
