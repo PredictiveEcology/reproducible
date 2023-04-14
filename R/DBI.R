@@ -123,7 +123,6 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
   if (!useDBI()) {
-    # if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
     dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
     saveFileInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
 
@@ -172,17 +171,6 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
               verbose = verbose)
     }
   }
-  # dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
-  #                  "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
-  # if (!useDBI()) {
-  # # if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
-  #   dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
-  #   saveFileInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
-  #
-  # } else {
-  #   a <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-  #     dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
-  # }
 
   return(obj)
 }
@@ -958,7 +946,8 @@ formatCheck <- function(cachePath, cacheId, format) {
 getDrv <- function(drv  = NULL) {
   if (useDBI()) {
     if (is.null(drv)) {
-      .requireNamespace("RSQLite", stopOnFALSE = TRUE)
+      if (!requireNamespace("RSQLite", quietly = TRUE))
+        stop("Need RSQLite package when using DBI; install.packages('RSQLite')")
       drv <- RSQLite::SQLite()
     }
   } else {

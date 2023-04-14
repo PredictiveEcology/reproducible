@@ -40,7 +40,6 @@ test_that("test parallel collisions", {
     tmpdir <- 'c:/Eliot/tmpCache/'
     clusterSetRNGStream(cl)
     parallel::clusterEvalQ(cl, {
-      # options(reproducible.useMultipleDBFiles = TRUE)
       library(reproducible)
       })
     numToRun <- 140

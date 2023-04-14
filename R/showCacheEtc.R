@@ -386,7 +386,6 @@ setMethod(
     }
 
     if (!useDBI()) {
-      #   if (getOption("reproducible.useMultipleDBFiles", FALSE)) {
       objsDT <- rbindlist(lapply(
         dir(CacheStorageDir(x), pattern = CacheDBFileSingleExt(),
             full.names = TRUE)
@@ -672,13 +671,12 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
 
 
 useDBI <- function() {
-  ud <- !getOption("reproducible.useMultipleDBFiles", FALSE)
-  if (isTRUE(ud))
-    ud <- getOption("reproducible.useDBI", TRUE)
-  # if (isFALSE(ud)) {
-  #   stop("options('reproducible.useDBI') can only be TRUE in this and future versions of reproducible",
-  #        call. = FALSE)
-  # }
+  ud <- getOption("reproducible.useDBI", TRUE)
+  if (isTRUE(ud)) {
+    drv <- getOption("reproducible.drv")
+    if (is.null(drv))
+      .requireNamespace("RSQLite", stopOnFALSE = TRUE)
+  }
   ud
 }
 

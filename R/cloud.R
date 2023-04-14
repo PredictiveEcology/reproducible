@@ -174,7 +174,6 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
   .requireNamespace("googledrive", stopOnFALSE = TRUE,
                     messageStart = "to use google drive files")
 
-  #browser(expr = exists("._cloudDownload_1"))
   messageCache("Downloading cloud copy of ", newFileName,", with cacheId: ", outputHash)
   localNewFilename <- file.path(tempdir2(), basename2(newFileName))
   isInCloud <- grepl(outputHash, gdriveLs$name)
@@ -185,13 +184,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
   retry(quote(googledrive::drive_download(file = googledrive::as_id(gdriveLs$id[isInCloud][1]),
                              path = localNewFilename, # take first if there are duplicates
                              overwrite = TRUE)))
-  # if (useDBI()) {
-    output <- loadFile(localNewFilename)
-  # } else {
-  #   ee <- new.env(parent = emptyenv())
-  #   loadedObjName <- load(localNewFilename)
-  #   output <- get(loadedObjName, inherits = FALSE)
-  # }
+  output <- loadFile(localNewFilename)
   output <- cloudDownloadRasterBackend(output, cachePath, cloudFolderID, drv = drv)
   output
 }
