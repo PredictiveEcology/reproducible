@@ -1647,7 +1647,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     preDigest <- append(preDigest, preDigestQuick)
   }
 
-  # res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") > 0)) {
+  res <- # if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") > 0)) {
     .robustDigest(unname(sort(unlist(preDigest))), algo = algo, quick = TRUE, ...)
   # } else {
   #   .requireNamespace("fastdigest", stopOnFALSE = TRUE,
