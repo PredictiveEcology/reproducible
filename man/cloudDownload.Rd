@@ -15,11 +15,7 @@ cloudDownload(
 )
 }
 \arguments{
-\item{outputHash}{The \code{cacheId} of the object to upload}
-
 \item{newFileName}{The character string of the local filename that the downloaded object will have}
-
-\item{gdriveLs}{The result of \code{googledrive::drive_ls(googledrive::as_id(cloudFolderID), pattern = "outputHash")}}
 
 \item{cachePath}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
