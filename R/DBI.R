@@ -945,6 +945,18 @@ CacheDBFileSingleExt <- function(suff = getOption("reproducible.cacheSaveFormat"
 multipleDBFilesSuffix <- function()
   ".dtFile."
 
+formatCheck <- function(cachePath, cacheId, format) {
+  altFile <- dir(dirname(CacheStoredFile(cachePath, cacheId)), pattern = cacheId)
+  altFile <- grep(paste0(multipleDBFilesSuffix(), "|\\.lock"), altFile, invert = TRUE, value = TRUE)
+  if (length(altFile)) {
+    format <- tools::file_ext(altFile)
+    # fullSuff <- CacheDBFileSingleExt(format)
+  }
+  format
+
+}
+
+
 getDrv <- function(drv  = NULL) {
   if (useDBI()) {
     if (is.null(drv)) {
