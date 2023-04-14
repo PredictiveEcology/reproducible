@@ -1063,14 +1063,14 @@ writeFuture <- function(written, outputToSave, cachePath, userTags,
   }
 
   # if (useDBI()) {
-    if (missing(cacheId)) {
-      cacheId <- .robustDigest(outputToSave)
-    }
-    output <- saveToCache(cachePath = cachePath, drv = drv, userTags = userTags,
-                          conn = conn, obj = outputToSave, cacheId = cacheId,
-                          linkToCacheId = linkToCacheId)
-    saved <- cacheId
+  if (missing(cacheId)) {
+    cacheId <- .robustDigest(outputToSave)
   }
+  output <- saveToCache(cachePath = cachePath, drv = drv, userTags = userTags,
+                        conn = conn, obj = outputToSave, cacheId = cacheId,
+                        linkToCacheId = linkToCacheId)
+  saved <- cacheId
+
   return(saved)
 }
 
