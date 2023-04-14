@@ -211,6 +211,7 @@ reproducibleOptions <- function() {
     # reproducible.useGDAL = FALSE, #
     reproducible.useMemoise = FALSE, #memoise
     reproducible.useNewDigestAlgorithm = 2, # TODO: change in next release
+    reproducible.useMultipleDBFiles = FALSE,
     reproducible.useTerra = TRUE, # Default for now
     # reproducible.useTerra = FALSE, # Default for now
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
