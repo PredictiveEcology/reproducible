@@ -387,7 +387,7 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
       dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                       "tagValue" = tagValue,
                       "createdDate" = as.character(Sys.time()))
-      dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
+      dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, format = "check")
       dt2 <- loadFile(dtFile)
       dt <- rbindlist(list(dt2, dt))
       saveFileInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
@@ -838,8 +838,9 @@ saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
   fs
 }
 
-CacheDBFileSingle <- function(cachePath, cacheId, format = NULL) {
-  fullSuff <- CacheDBFileSingleExt()
+CacheDBFileSingle <- function(cachePath, cacheId,
+                              format = getOption("reproducible.cacheSaveFormat")) {
+  fullSuff <- CacheDBFileSingleExt(format = format)
   if (any(format %in% "check")) {
     format <- formatCheck(cachePath, cacheId, format)
     if (!is.null(format))
@@ -850,8 +851,8 @@ CacheDBFileSingle <- function(cachePath, cacheId, format = NULL) {
 
 }
 
-CacheDBFileSingleExt <- function(suff = getOption("reproducible.cacheSaveFormat"))
-  paste0(suffixMultipleDBFiles(), suff)
+CacheDBFileSingleExt <- function(format = getOption("reproducible.cacheSaveFormat"))
+  paste0(suffixMultipleDBFiles(), format)
 
 suffixMultipleDBFiles <- function()
   ".dbFile."
