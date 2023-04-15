@@ -76,7 +76,7 @@ test_that("setting options works correctly", {
   a <- reproducibleOptions()
 
   # The keep is during terra-migration
-  keep <- setdiff(names(a), c("reproducible.useTerra", "reproducible.rasterRead",
+  keep <- setdiff(names(a), c("reproducible.rasterRead", "reproducible.useDBI",
                               "reproducible.cacheSaveFormat"))
   a <- a[keep]
 
