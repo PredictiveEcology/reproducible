@@ -295,8 +295,8 @@ test_that("maskInputs errors when x is Lat-Long", {
   # diffs <- sum(abs(unlist(lapply(sf::st_geometry(roads[[1]]), as.numeric)) -
   #                    unlist(lapply(sf::st_geometry(roads[[2]]), as.numeric))))
   # expect_true(diffs < 0.0001)
-  expect_true(compareRaster(terra::rast(terra::ext(roads1)), terra::rast(terra::ext(smallSA))))
-  expect_error(compareRaster(terra::rast(terra::ext(roads2)), terra::rast(terra::ext(smallSA))))
+  expect_true(terra::compareGeom(terra::rast(terra::ext(roads1)), terra::rast(terra::ext(smallSA))))
+  expect_error(terra::compareGeom(terra::rast(terra::ext(roads2)), terra::rast(terra::ext(smallSA))))
   expect_true(terra::ext(roads2) > terra::ext(roads1))
 })
 
