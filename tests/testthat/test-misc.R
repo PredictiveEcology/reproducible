@@ -148,11 +148,13 @@ test_that("test miscellaneous fns (part 2)", {
     "reproducible::retry" = function(..., retries = 1) TRUE,
     {
       if (useDBI()) {
-
         # Need to convert to cloudUpload from Cache
-        mess1 <- capture_messages(#expect_error(
-          cloudUploadFromCache(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
-                      gdriveLs = gdriveLs1, cachePath = tmpCache))#)
+        mess1 <- capture_messages(expect_error(
+          cloudUploadFromCache(#outputToSave = ,
+                               isInCloud = FALSE, outputHash = "sdfsiodfja",
+                      #gdriveLs = gdriveLs1,
+                      cloudFolderID = cloudFolderID,
+                      cachePath = tmpCache)))
       }
     })
 

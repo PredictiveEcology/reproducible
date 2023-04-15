@@ -26,7 +26,6 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
                                       team_drive = NULL) {
   .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
 
-  browser(expr = exists("._checkAndMakeCloudFolderID_1"))
   if (!is(cloudFolderID, "dribble")) {
     isNullCFI <- is.null(cloudFolderID)
     if (isNullCFI) {
@@ -38,19 +37,15 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
     isID <- isTRUE(32 <= nchar(cloudFolderID) && nchar(cloudFolderID) <= 33)
     driveLs <- if (isID) {
       if (packageVersion("googledrive") < "2.0.0") {
-        tryCatch(googledrive::drive_get(googledrive::as_id(cloudFolderID), team_drive = team_drive),
-                 error = function(x) {character()})
+        suppressMessages(googledrive::drive_get(googledrive::as_id(cloudFolderID), team_drive = team_drive))
       } else {
-        tryCatch(googledrive::drive_get(googledrive::as_id(cloudFolderID), shared_drive = team_drive),
-                 error = function(x) {character()})
+        suppressMessages(googledrive::drive_get(googledrive::as_id(cloudFolderID), shared_drive = team_drive))
       }
     } else {
       if (packageVersion("googledrive") < "2.0.0") {
-        tryCatch(googledrive::drive_get(cloudFolderID, team_drive = team_drive),
-                 error = function(x) { character() })
+        suppressMessages(googledrive::drive_get(cloudFolderID, team_drive = team_drive))
       } else {
-        tryCatch(googledrive::drive_get(cloudFolderID, shared_drive = team_drive),
-                 error = function(x) { character() })
+        suppressMessages(googledrive::drive_get(cloudFolderID, shared_drive = team_drive))
       }
     }
 
