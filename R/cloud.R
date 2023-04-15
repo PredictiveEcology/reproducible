@@ -177,10 +177,19 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
                     # pattern = paste0("\\.", fileExt(CacheStoredFile(cachePath, outputHash))),
                     # replacement = "") %in% outputHash
 
-  retry(quote(googledrive::drive_download(file = googledrive::as_id(gdriveLs$id[isInCloud][1]),
-                             path = localNewFilename, # take first if there are duplicates
-                             overwrite = TRUE)))
-  output <- loadFile(localNewFilename)
+  outs <- lapply(seq_along(isInCloud), function(ind) {
+    retry(quote(googledrive::drive_download(file = googledrive::as_id(gdriveLs$id[ind]),
+                                            path = localNewFilename[ind], # take first if there are duplicates
+                                            overwrite = TRUE)))
+  })
+
+  outs <- rbindlist(outs)
+  dtFile <- grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE)
+
+  dt <- loadFile(dtFile, format = fileExt(dtFile))
+  objFile <- grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE, invert = TRUE)
+  output <- loadFile(objFile, format = fileExt(objFile), fullCacheTableForObj = dt)
+
   output <- cloudDownloadRasterBackend(output, cachePath, cloudFolderID, drv = drv)
   output
 }
@@ -204,15 +213,27 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
   #browser(expr = exists("._cloudUploadFromCache_1"))
   if (!any(isInCloud)) {
     cacheIdFileName <- CacheStoredFile(cachePath, outputHash, "check")
-    newFileName <- if (useDBI()) {
-      basename2(cacheIdFileName)
+    if (useDBI()) {
+      dt <- showCache(userTags = outputHash)
+      td <- tempdir()
+      useDBI(FALSE)
+      on.exit(useDBI(TRUE))
+      suppress <- saveToCache(cachePath = td, cacheId = outputHash, obj = dt)
+      cacheDB <- CacheDBFileSingle(td, outputHash)
+    } else {
+      cacheDB <- CacheDBFileSingle(cachePath, outputHash)
     }
+    newFileName <- basename2(cacheIdFileName)
+
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
     messageCache("Uploading new cached object ", newFileName,", with cacheId: ",
             outputHash," to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id)
     du <- try(retry(quote(googledrive::drive_upload(media = cacheIdFileName,
                                        path = googledrive::as_id(cloudFolderID), name = newFileName,
                                        overwrite = FALSE))))
+    du2 <- try(retry(quote(googledrive::drive_upload(media = cacheDB,
+                                                    path = googledrive::as_id(cloudFolderID), name = basename2(cacheDB),
+                                                    overwrite = FALSE))))
     if (is(du, "try-error")) {
       return(du)
     }

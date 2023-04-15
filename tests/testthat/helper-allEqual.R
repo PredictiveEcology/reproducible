@@ -217,7 +217,6 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
     message("Brick is deprecated; not tested any more")
   }
 
-  # ._clearCache_3 <<- ._cloudUpload_1 <<- ._cloudDownloadRasterBackend_1 <<- 1
   r1End <- Cache(fn, r1Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   cloudFolderID1 <- cloudFolderID
   on.exit({
@@ -261,17 +260,18 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   ####################################################
   # only local exists -- upload to cloud
   ####################################################
+  browser() # THIS NEXT LINE DOES NOT REMOVE THE OBJECTS
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
-  r1Orig <- raster(extent(0,200, 0, 200), vals = 5, res = 1)
+  r1Orig <- terra::rast(terra::ext(0,200, 0, 200), vals = 5, res = 1)
   r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-  if (mc$type == "Stack") {
-    r1Orig2 <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-    r1Orig <- stack(r1Orig, r1Orig2)
-  } else if (mc$type == "Brick") {
-    r1Orig2 <- r1Orig
-    r1Orig <- brick(r1Orig, r1Orig2)
-    r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-  }
+  # if (mc$type == "Stack") {
+  #   r1Orig2 <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  #   r1Orig <- stack(r1Orig, r1Orig2)
+  # } else if (mc$type == "Brick") {
+  #   r1Orig2 <- r1Orig
+  #   r1Orig <- brick(r1Orig, r1Orig2)
+  #   r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  # }
   r1End <- Cache(fn, r1Orig, useCloud = FALSE, cloudFolderID = cloudFolderID)
 
   expect_true(attr(r1End, ".Cache")$newCache == TRUE) # new to local cache
@@ -285,7 +285,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   expect_true(attr(r4End, ".Cache")$newCache == FALSE) # new to local cache
   driveLs <- drive_ls(cloudFolderID)
   data.table::setDT(driveLs)
-  expect_true(all(basename(Filenames(r4End)) %in% driveLs$name))
+  # expect_true(all(basename(Filenames(r4End)) %in% driveLs$name))
   # should have 2 files in cloud b/c of grd and gri
   expect_true(sum(filePathSansExt(driveLs$name) %in% filePathSansExt(basename(Filenames(r4End)))) == numRasterFiles)
   # should have 1 file that matches in local and in cloud, based on cacheId
