@@ -115,7 +115,7 @@ setMethod(
     } else if (inherits(obj, "SpatRaster")) {
       if (!requireNamespace("terra", quietly = TRUE))
         stop("Please install terra package")
-      fns <- Filenames(obj)
+      fns <- terra::sources(obj)
       if (isTRUE(allowMultiple)) {
         anyGrd <- endsWith(fns, suffix = "grd")
         if (any(anyGrd)) {
