@@ -455,7 +455,6 @@ Cache <-
       cachePaths <- getCacheRepos(cachePath, modifiedDots, verbose = verbose)
       modifiedDots$.FUN <- fnDetails$.FUN # put in modifiedDots for digesting  # nolint
       scalls <- if (!is(FUN, "function")) try(.CacheFn1(FUN, sys.calls())) else NULL
-      if (is(scalls, "try-error")) browser()
 
       # extract other function names that are not the ones the focus of the Cache call
       otherFns <- .getOtherFnNamesAndTags(scalls = scalls)
@@ -630,7 +629,6 @@ Cache <-
                                         verbose = verbose)))
       }
 
-
       userTags <- c(userTags, if (!is.na(fnDetails$functionName))
         paste0("function:", fnDetails$functionName)
       )
@@ -654,9 +652,8 @@ Cache <-
 
       # Deal with overwrite, needFindByTags (which is related to "devMode")
       isInCloud <- FALSE
-      if (useCloud && identical("overwrite", useCache)) {
-        # browser(expr = exists("._Cache_16"))
-        isInCloud <- isTRUE(any(gdriveLs$name %in% basename2(CacheStoredFile(cachePath, outputHash))))
+      if (useCloud) {
+        isInCloud <- any(grepl(outputHash, gdriveLs$name))
       }
 
       if (identical("overwrite", useCache)  && (NROW(isInRepo) > 0 || isInCloud) || needFindByTags) {
@@ -680,6 +677,24 @@ Cache <-
         }
       }
 
+      # It is in the cloud, but not local
+      if (useCloud) {
+        if (isInCloud && NROW(isInRepo) == 0) {
+          # Here, download cloud copy to local folder, skip the running of FUN
+          newFileName <- gdriveLs$name[isInCloud] # paste0(outputHash,".rda")
+          inReposPoss <- cloudDownload(outputHash, newFileName, gdriveLs, cachePath, cloudFolderID,
+                                  drv = drv, conn = conn)
+          isInRepo <- inReposPoss$isInRepo
+          fullCacheTableForObj <- inReposPoss$fullCacheTableForObj
+          if (is.null(isInRepo)) {
+            retry(quote(googledrive::drive_rm(gdriveLs[isInCloud,])))
+            isInCloud[isInCloud] <- FALSE
+          } else {
+            .CacheIsNew <- FALSE
+          }
+        }
+      }
+
       # If it is in the existing record:
       if (NROW(isInRepo) > 0) {
 
@@ -687,7 +702,6 @@ Cache <-
         lastEntry <- # as.POSIXct(
           max(isInRepo$createdDate)# ) # + 1 # This is necessary for very fast functions; basically, allow at least 1 second before refreshing
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
-        # if (exists("aaaa", envir = .GlobalEnv) && !(is.null(notOlderThan) || (notOlderThan <= lastEntry))) browser()
         if (is.null(notOlderThan) || (notOlderThan <= lastEntry)) {
           out <- returnObjFromRepo(isInRepo = isInRepo, notOlderThan = notOlderThan,
                                    fullCacheTableForObj = fullCacheTableForObj, cachePath = cachePath,
@@ -716,28 +730,6 @@ Cache <-
       startRunTime <- verboseTime(verbose, verboseLevel = 3)
 
       .CacheIsNew <- TRUE
-      if (useCloud) {
-        # browser(expr = exists("._Cache_9"))
-        # Here, download cloud copy to local folder, skip the running of FUN
-        # browser()
-        isInCloud <- grepl(outputHash, gdriveLs$name)
-
-        # newFileName <- CacheStoredFile(cachePath, outputHash) # paste0(outputHash,".rda")
-        # gsub(gdriveLs$name,
-                          # pattern = paste0("\\.", fileExt(CacheStoredFile(cachePath, outputHash))),
-                          # replacement = "") %in% outputHash
-        if (any(isInCloud)) {
-          newFileName <- gdriveLs$name[isInCloud] # paste0(outputHash,".rda")
-          output <- cloudDownload(outputHash, newFileName, gdriveLs, cachePath, cloudFolderID,
-                                  drv = drv)
-          if (is.null(output)) {
-            retry(quote(googledrive::drive_rm(gdriveLs[isInCloud,])))
-            isInCloud[isInCloud] <- FALSE
-          } else {
-            .CacheIsNew <- FALSE
-          }
-        }
-      }
 
       # check that it didn't come from cloud or failed to find complete cloud (i.e., output is NULL)
       # browser(expr = exists("._Cache_10"))
@@ -761,7 +753,7 @@ Cache <-
       #   but do this AFTER new run on previous line, in case function call
       #   makes it crash, or user interrupts long function call and wants
       #   a previous version
-      if (nrow(isInRepo) > 0) {
+      if (NROW(isInRepo) > 0) {
         # flush it if notOlderThan is violated
         if (notOlderThan >= lastEntry) {
           suppressMessages(clearCache(userTags = isInRepo[[.cacheTableHashColName()]][lastOne],
@@ -788,19 +780,13 @@ Cache <-
       if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash)))
         stop("attributes are not correct 5")
 
-      # browser(expr = exists("._Cache_11"))
-      # if (sideEffect != FALSE) {
-      #   output <- .CacheSideEffectFn2(sideEffect, cachePath, priorRepo, algo, output,
-      #                                 makeCopy, quick)
-      # }
-
       if (isS4(FUN)) {
         setattr(output, "function", FUN@generic)
         if (!identical(attr(output, "function"), FUN@generic))
           stop("There is an unknown error 03")
       }
       # Can make new methods by class to add tags to outputs
-      if (.CacheIsNew || any(isInCloud)) {
+      if (.CacheIsNew) {
         outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
         output <- .CopyCacheAtts(outputToSave, output, passByReference = TRUE)
         # .dealWithClass added tags; these should be transfered to output
@@ -814,45 +800,8 @@ Cache <-
       if (isTRUE(any(alreadyIn)))
         otherFns <- otherFns[!alreadyIn]
 
-      # if (!useDBI()) {
-      #   # browser(expr = exists("._Cache_12"))
-      #   outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
-      #   if (outputToSaveIsList) {
-      #     rasters <- unlist(lapply(outputToSave, is, "Raster"))
-      #   } else {
-      #     rasters <- is(outputToSave, "Raster")
-      #   }
-      #   if (any(rasters)) {
-      #     if (outputToSaveIsList) {
-      #       outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
-      #         .prepareFileBackedRaster(x, repoDir = cachePath, overwrite = FALSE, drv = drv, conn = conn))
-      #     } else {
-      #       outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cachePath,
-      #                                                overwrite = FALSE, drv = drv, conn = conn)
-      #     }
-      #
-      #     # have to reset all these attributes on the rasters as they were undone in prev steps
-      #     setattr(outputToSave, "tags", attr(output, "tags"))
-      #     .setSubAttrInList(outputToSave, ".Cache", "newCache", attr(output, ".Cache")$newCache)
-      #     setattr(outputToSave, "call", attr(output, "call"))
-      #
-      #     if (!identical(attr(outputToSave, ".Cache")$newCache, attr(output, ".Cache")$newCache))
-      #       stop("attributes are not correct 6")
-      #     if (!identical(attr(outputToSave, "call"), attr(output, "call")))
-      #       stop("attributes are not correct 7")
-      #     if (!identical(attr(outputToSave, "tags"), attr(output, "tags")))
-      #       stop("attributes are not correct 8")
-      #
-      #     if (isS4(FUN)) {
-      #       setattr(outputToSave, "function", attr(output, "function"))
-      #       if (!identical(attr(outputToSave, "function"), attr(output, "function")))
-      #         stop("There is an unknown error 04")
-      #     }
-      #     # For Rasters, there will be a new name if file-backed ... it must be conveyed to output too
-      #     output <- outputToSave
-      #   }
-      # }
-      if (length(debugCache)) {
+
+      if (length(debugCache) && .CacheIsNew) {
         if (!is.na(pmatch(debugCache, "complete"))) {
           output <- .debugCache(output, preDigest, ...)
           outputToSave <- .debugCache(outputToSave, preDigest, ...)
@@ -947,7 +896,6 @@ Cache <-
         class(otsObjSize) <- "object_size"
         isBig <- otsObjSize > 1e7
 
-        # if (useDBI()) {
         outputToSave <- progressBarCode(
           saveToCache(cachePath = cachePath, drv = drv, userTags = userTags,
                       conn = conn, obj = outputToSave, cacheId = outputHash,
@@ -958,7 +906,6 @@ Cache <-
           verboseLevel = 2 - isBig, verbose = verbose,
           colour = getOption("reproducible.messageColourCache"))
 
-        # }
       }
 
       if (useCloud && .CacheIsNew) {
@@ -2244,8 +2191,6 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
 
     cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cachePath, cloudFolderID, ## TODO: saved not found
                                      outputToSave))
-    # cu <- try(retry(quote(isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cachePath,
-    #                                                cloudFolderID, output))))
     .updateTagsRepo(outputHash, cachePath, "inCloud", "TRUE", drv = drv, conn = conn)
   }
 

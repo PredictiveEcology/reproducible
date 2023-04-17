@@ -87,7 +87,7 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL,
   messageCache("Retrieving file list in cloud folder", verbose = verbose)
   gdriveLs <- retry(quote({
     googledrive::drive_ls(path = cloudFolderID, ## TODO: team drives needs a dribble
-                          pattern = paste0(collapse = "|", c(cloudFolderID$id ,pattern)))
+                          pattern = paste0(collapse = "|", c(pattern)))
   }))
   if (is(gdriveLs, "try-error")) {
     fnf <- grepl("File not found", gdriveLs)
@@ -185,13 +185,24 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
 
   outs <- rbindlist(outs)
   dtFile <- grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE)
+  if (!useDBI()) {
+    dtFileInCache <- CacheDBFileSingle(cachePath, cacheId = outputHash)
+    linkOrCopy(dtFile, dtFileInCache)
+  }
+  objFiles <- grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE, invert = TRUE)
+  filenamesInCache <- file.path(CacheStorageDir(), basename2(objFiles))
+  linkOrCopy(objFiles, to = filenamesInCache, symlink = FALSE)
 
   dt <- loadFile(dtFile, format = fileExt(dtFile))
-  objFile <- grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE, invert = TRUE)
-  output <- loadFile(objFile, format = fileExt(objFile), fullCacheTableForObj = dt)
 
-  output <- cloudDownloadRasterBackend(output, cachePath, cloudFolderID, drv = drv)
-  output
+  # output <- loadFile(filenamesInCache, format = fileExt(filenamesInCache), fullCacheTableForObj = dt)
+  # output <- cloudDownloadRasterBackend(output, cachePath, cloudFolderID, drv = drv)
+  Map(tv = dt$tagValue, tk = dt$tagKey, function(tv, tk)
+    .addTagsRepo(outputHash, cachePath, tagKey = tk, tagValue = tv, drv = drv, conn = conn)
+  )
+  inReposPoss <- searchInRepos(cachePath = cachePath, drv = drv,
+                            outputHash = outputHash, conn = conn)
+  inReposPoss
 }
 
 #' Upload a file to cloud directly from local `cachePath`
@@ -211,6 +222,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
   .requireNamespace("googledrive", stopOnFALSE = TRUE,
                     messageStart = "to use google drive files")
   #browser(expr = exists("._cloudUploadFromCache_1"))
+
   if (!any(isInCloud)) {
     cacheIdFileName <- CacheStoredFile(cachePath, outputHash, "check")
     if (useDBI()) {
@@ -218,8 +230,14 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
       td <- tempdir()
       useDBI(FALSE)
       on.exit(useDBI(TRUE))
-      suppress <- saveToCache(cachePath = td, cacheId = outputHash, obj = dt)
-      cacheDB <- CacheDBFileSingle(td, outputHash)
+      cacheDB <- CacheDBFileSingle(cachePath = td, outputHash) # put it in a temp location b/c don't want persistent
+      on.exit(unlink(cacheDB), add = TRUE)
+      if (!dir.exists(dirname(cacheDB))) {
+        checkPath(dirname(cacheDB), create = TRUE)
+        on.exit(unlink(dirname(cacheDB)), add = TRUE)
+      }
+      suppress <- saveFileInCacheFolder(obj = dt, fts = cacheDB, cacheId = outputHash, cachePath = cachePath)
+      useDBI(TRUE)
     } else {
       cacheDB <- CacheDBFileSingle(cachePath, outputHash)
     }
@@ -228,9 +246,12 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
     messageCache("Uploading new cached object ", newFileName,", with cacheId: ",
             outputHash," to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id)
-    du <- try(retry(quote(googledrive::drive_upload(media = cacheIdFileName,
-                                       path = googledrive::as_id(cloudFolderID), name = newFileName,
-                                       overwrite = FALSE))))
+    du <- Map(med = cacheIdFileName, nam = newFileName, function(med, nam) {
+      try(retry(quote(
+        googledrive::drive_upload(media = med, path = googledrive::as_id(cloudFolderID),
+                                  name = nam, overwrite = FALSE))))
+    })
+
     du2 <- try(retry(quote(googledrive::drive_upload(media = cacheDB,
                                                     path = googledrive::as_id(cloudFolderID), name = basename2(cacheDB),
                                                     overwrite = FALSE))))
@@ -264,42 +285,43 @@ cloudDownloadRasterBackend <- function(output, cachePath, cloudFolderID,
   .requireNamespace("googledrive", stopOnFALSE = TRUE,
                     messageStart = "to use google drive files")
 
-  #browser(expr = exists("._cloudDownloadRasterBackend_1"))
-  rasterFilename <- Filenames(output)
-  if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0) {
-    gdriveLs2 <- NULL
-    cacheRepoRasterDir <- file.path(cachePath, "rasters")
-    checkPath(cacheRepoRasterDir, create = TRUE)
-    simpleFilenames <- unique(filePathSansExt(basename2(unlist(rasterFilename))))
-    retry(quote({
-      gdriveLs2 <- googledrive::drive_ls(path = as_id(cloudFolderID),
-                            pattern = paste(collapse = "|", simpleFilenames))
-    }))
-
-    if (all(simpleFilenames %in% filePathSansExt(gdriveLs2$name))) {
-      filenameMismatches <- unlist(lapply(seq_len(NROW(gdriveLs2)), function(idRowNum) {
-        localNewFilename <- file.path(cacheRepoRasterDir, basename2(gdriveLs2$name[idRowNum]))
-        filenameMismatch <- identical(localNewFilename, rasterFilename)
-        retry(quote(googledrive::drive_download(file = gdriveLs2[idRowNum,],
-                                   path = localNewFilename, # take first if there are duplicates
-                                   overwrite = TRUE)))
-        return(filenameMismatch)
-
+  if (is(output, "Raster")) {
+    rasterFilename <- Filenames(output)
+    if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0) {
+      gdriveLs2 <- NULL
+      cacheRepoRasterDir <- file.path(cachePath, "rasters")
+      checkPath(cacheRepoRasterDir, create = TRUE)
+      simpleFilenames <- unique(filePathSansExt(basename2(unlist(rasterFilename))))
+      retry(quote({
+        gdriveLs2 <- googledrive::drive_ls(path = as_id(cloudFolderID),
+                                           pattern = paste(collapse = "|", simpleFilenames))
       }))
-      if (any(filenameMismatches)) {
-        fnM <- seq_along(filenameMismatches)
-        if (is(output, "RasterStack")) {
-          for (i in fnM[filenameMismatches]) {
-            output@layers[[i]]@file@name <- file.path(cacheRepoRasterDir, basename2(rasterFilename)[i])
+
+      if (all(simpleFilenames %in% filePathSansExt(gdriveLs2$name))) {
+        filenameMismatches <- unlist(lapply(seq_len(NROW(gdriveLs2)), function(idRowNum) {
+          localNewFilename <- file.path(cacheRepoRasterDir, basename2(gdriveLs2$name[idRowNum]))
+          filenameMismatch <- identical(localNewFilename, rasterFilename)
+          retry(quote(googledrive::drive_download(file = gdriveLs2[idRowNum,],
+                                                  path = localNewFilename, # take first if there are duplicates
+                                                  overwrite = TRUE)))
+          return(filenameMismatch)
+
+        }))
+        if (any(filenameMismatches)) {
+          fnM <- seq_along(filenameMismatches)
+          if (is(output, "RasterStack")) {
+            for (i in fnM[filenameMismatches]) {
+              output@layers[[i]]@file@name <- file.path(cacheRepoRasterDir, basename2(rasterFilename)[i])
+            }
+          } else {
+            output@filename <- file.path(cacheRepoRasterDir, basename2(rasterFilename))
           }
-        } else {
-          output@filename <- file.path(cacheRepoRasterDir, basename2(rasterFilename))
         }
+      } else {
+        warning("Raster backed files are not available in googledrive; \n",
+                "will proceed with rerunning code because cloud copy is incomplete")
+        output <- NULL
       }
-    } else {
-      warning("Raster backed files are not available in googledrive; \n",
-              "will proceed with rerunning code because cloud copy is incomplete")
-      output <- NULL
     }
   }
   output

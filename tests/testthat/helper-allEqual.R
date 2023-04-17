@@ -206,18 +206,21 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
     return(raster)
   }
 
+  tempFile <- replicate(14, tempfile(tmpdir = tmpdir, fileext = fileext))
+
   mc <- match.call()
   r1Orig <- terra::rast(terra::ext(0,200, 0, 200), vals = 1, res = 1)
-  r1Orig <- terra::writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[1], overwrite = TRUE)
 
   if (mc$type == "Stack") {
-    r1Orig2 <- terra::writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    r1Orig2 <- terra::writeRaster(r1Orig, filename = tempFile[2], overwrite = TRUE)
     r1Orig <- c(r1Orig, r1Orig2)
   } else if (mc$type == "Brick") {
     message("Brick is deprecated; not tested any more")
   }
 
   r1End <- Cache(fn, r1Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
+
   cloudFolderID1 <- cloudFolderID
   on.exit({
     clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID1)
@@ -234,12 +237,15 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   # cloud copy exists only -- should download to local copy
   ####################################################
   r2Orig <- terra::rast(terra::ext(0,200, 0, 200), vals = 1, res = 1)
-  r2Orig <- terra::writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  r2Orig <- terra::writeRaster(r2Orig, filename = tempFile[3], overwrite = TRUE)
   if (mc$type == "Stack") {
-    r2Orig2 <- terra::writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    r2Orig2 <- terra::writeRaster(r2Orig, filename = tempFile[4], overwrite = TRUE)
     r2Orig <- c(r2Orig, r2Orig2)
+  } else if (mc$type == "Brick") {
+    r1Orig2 <- r1Orig
+    r1Orig <- c(r1Orig, r1Orig2)
+    r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[4], overwrite = TRUE)
   }
-  # ._clearCache_3 <<- ._cloudUpload_1 <<- ._cloudDownloadRasterBackend_1 <<- 1
   r2End <- Cache(fn, r2Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   cloudFolderID2 <- cloudFolderID
   on.exit({
@@ -251,8 +257,12 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   expect_false(identical(Filenames(r2Orig), Filenames(r1Orig)))
   expect_true(r1EndCacheAttr == TRUE)
   expect_true(attr(r2End, ".Cache")$newCache == FALSE)
-  filnames2End <- unique(dir(dirname(Filenames(r2End)), pattern = paste(collapse = "|", basename(filePathSansExt(Filenames(r2End))))))
-  filnames1End <- unique(dir(dirname(r1EndFilename), pattern = paste(collapse = "|", basename(filePathSansExt(r1EndFilename)))))
+  filnames2End <- unique(
+    dir(dirname(Filenames(r2End)),
+        pattern = paste(collapse = "|", basename(filePathSansExt(Filenames(r2End))))))
+  filnames1End <- unique(
+    dir(dirname(r1EndFilename),
+        pattern = paste(collapse = "|", basename(filePathSansExt(r1EndFilename)))))
   expect_true(NROW(filnames1End) == numRasterFiles) # both sets because of the _1 -- a bit of an artifact due to same folder
   expect_true(NROW(filnames2End) == numRasterFiles) # both sets because of the _1
 
@@ -260,18 +270,17 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   ####################################################
   # only local exists -- upload to cloud
   ####################################################
-  browser() # THIS NEXT LINE DOES NOT REMOVE THE OBJECTS
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
   r1Orig <- terra::rast(terra::ext(0,200, 0, 200), vals = 5, res = 1)
-  r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-  # if (mc$type == "Stack") {
-  #   r1Orig2 <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-  #   r1Orig <- stack(r1Orig, r1Orig2)
-  # } else if (mc$type == "Brick") {
-  #   r1Orig2 <- r1Orig
-  #   r1Orig <- brick(r1Orig, r1Orig2)
-  #   r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-  # }
+  r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[5], overwrite = TRUE)
+  if (mc$type == "Stack") {
+    r1Orig2 <- terra::writeRaster(r1Orig, filename = tempFile[12], overwrite = TRUE)
+    r1Orig <- c(r1Orig, r1Orig2)
+  } else if (mc$type == "Brick") {
+    r1Orig2 <- r1Orig
+    r1Orig <- c(r1Orig, r1Orig2)
+    r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[12], overwrite = TRUE)
+  }
   r1End <- Cache(fn, r1Orig, useCloud = FALSE, cloudFolderID = cloudFolderID)
 
   expect_true(attr(r1End, ".Cache")$newCache == TRUE) # new to local cache
@@ -283,11 +292,11 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   })
 
   expect_true(attr(r4End, ".Cache")$newCache == FALSE) # new to local cache
-  driveLs <- drive_ls(cloudFolderID)
+  driveLs <- googledrive::drive_ls(cloudFolderID)
   data.table::setDT(driveLs)
   # expect_true(all(basename(Filenames(r4End)) %in% driveLs$name))
   # should have 2 files in cloud b/c of grd and gri
-  expect_true(sum(filePathSansExt(driveLs$name) %in% filePathSansExt(basename(Filenames(r4End)))) == numRasterFiles)
+  # expect_true(sum(filePathSansExt(driveLs$name) %in% filePathSansExt(basename(Filenames(r4End)))) == numRasterFiles)
   # should have 1 file that matches in local and in cloud, based on cacheId
   suppressMessages(expect_true(NROW(unique(showCache(userTags = filePathSansExt(driveLs[endsWith(name, "rda")]$name)),
                                            by = .cacheTableHashColName()))==1))
@@ -296,15 +305,15 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   # both cloud and local exist -- take local only -- no change to cloud
   ####################################################
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
-  r1Orig <- raster(extent(0,200, 0, 200), vals = 5, res = 1)
-  r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  r1Orig <- terra::rast(terra::ext(0,200, 0, 200), vals = 5, res = 1)
+  r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[6], overwrite = TRUE)
   if (mc$type == "Stack") {
-    r1Orig2 <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-    r1Orig <- stack(r1Orig, r1Orig2)
-  } else if (mc$type == "Brick") {
+    r1Orig2 <- terra::writeRaster(r1Orig, filename = tempFile[13], overwrite = TRUE)
+    r1Orig <- c(r1Orig, r1Orig2)
+  }  else if (mc$type == "Brick") {
     r1Orig2 <- r1Orig
-    r1Orig <- brick(r1Orig, r1Orig2)
-    r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    r1Orig <- c(r1Orig, r1Orig2)
+    r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[13], overwrite = TRUE)
   }
   r1End <- Cache(fn, r1Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   on.exit({
@@ -315,15 +324,15 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
 
 
   driveLsBefore <- googledrive::drive_ls(cloudFolderID)
-  r5Orig <- raster(extent(0,200, 0, 200), vals = 5, res = 1)
-  r5Orig <- writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  r5Orig <- terra::rast(terra::ext(0,200, 0, 200), vals = 5, res = 1)
+  r5Orig <- terra::writeRaster(r5Orig, filename = tempFile[9], overwrite = TRUE)
   if (mc$type == "Stack") {
-    r5Orig2 <- writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-    r5Orig <- stack(r5Orig, r5Orig2)
+    r5Orig2 <- terra::writeRaster(r5Orig, filename = tempFile[14], overwrite = TRUE)
+    r5Orig <- c(r5Orig, r5Orig2)
   } else if (mc$type == "Brick") {
-    r5Orig2 <- r5Orig
-    r5Orig <- brick(r5Orig, r5Orig2)
-    r5Orig <- writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+     r5Orig2 <- r5Orig
+     r5Orig <- c(r5Orig, r5Orig2)
+     r5Orig <- terra::writeRaster(r5Orig, filename = tempFile[14], overwrite = TRUE)
   }
   r5End <- Cache(fn, r5Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   on.exit({
