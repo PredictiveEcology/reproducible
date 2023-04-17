@@ -165,10 +165,11 @@ setMethod(
       if (any(nchar(terraSrcs) > 0)) {
         out <- lapply(terraSrcs, function(x)
           .robustDigest(x, length = length, algo = algo, quick = quick))
-        dig <- .robustDigest(append(
+        dig <- .robustDigest(
           list(terra::nrow(object), terra::ncol(object), terra::nlyr(object),
                terra::res(object), terra::crs(object),
-               terra::ext(object)), names(object)),
+               as.vector(terra::ext(object)), # There is something weird with this pointer that doesn't cache consistently
+               names(object)),
           length = length, quick = quick,
           algo = algo, classOptions = classOptions) # don't include object@data -- these are volatile
         forDig <- list(out, dig)
