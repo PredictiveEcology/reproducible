@@ -200,7 +200,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
   Map(tv = dt$tagValue, tk = dt$tagKey, function(tv, tk)
     .addTagsRepo(outputHash, cachePath, tagKey = tk, tagValue = tv, drv = drv, conn = conn)
   )
-  inReposPoss <- searchInRepos(cachePath = cachePath, drv = drv,
+  inReposPoss <- searchInRepos(cachePaths = cachePath, drv = drv,
                             outputHash = outputHash, conn = conn)
   inReposPoss
 }
