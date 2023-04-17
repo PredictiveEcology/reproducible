@@ -988,7 +988,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
     toDirs <- unique(dirname(to))
     dirDoesntExist <- !dir.exists(toDirs)
     if (any(dirDoesntExist)) {
-      lapply(toDirs[dirDoesntExist], dir.create)
+      lapply(toDirs[dirDoesntExist], dir.create, recursive = TRUE)
     }
     dups <- duplicated(.basename(from))
 

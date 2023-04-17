@@ -89,12 +89,14 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     opts <- options(opts)
   }
 
-  if (!is.null(tmpFileExt)) {
+  if (!is.null(tmpFileExt) && any(nzchar(tmpFileExt))) {
     ranfiles <- unlist(lapply(tmpFileExt, function(x) paste0(rndstr(1, 7), ".", x)))
     tmpfile <- file.path(tmpdir, ranfiles)
     tmpfile <- gsub(pattern = "\\.\\.", tmpfile, replacement = "\\.")
     file.create(tmpfile)
     tmpfile <- normPath(tmpfile)
+  } else {
+    tmpfile <- NULL
   }
 
   try(clearCache(tmpCache, ask = FALSE), silent = TRUE)
