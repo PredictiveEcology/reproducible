@@ -241,7 +241,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
     } else {
       cacheDB <- CacheDBFileSingle(cachePath, outputHash)
     }
-    if (file.exists(cacheIdFileName)) {
+    if (all(file.exists(cacheIdFileName))) {
       newFileName <- basename2(cacheIdFileName)
 
       cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
@@ -260,7 +260,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
         return(du)
       }
     } else {
-      stop("There is no file to upload")
+      stop("File(s) to upload are not available")
     }
   }
   cloudUploadRasterBackends(obj = outputToSave, cloudFolderID)
