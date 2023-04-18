@@ -1,6 +1,6 @@
 test_that("testing prepInputs with deauthorized googledrive", {
   skip_on_cran()
-  skip_if_not_installed("googledrive")
+  skip_on_ci()
 
   if (interactive()) {
     testInitOut <- testInit(needGoogleDriveAuth = TRUE, "googledrive")
@@ -30,7 +30,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
         overwrite = TRUE,
         #targetFile = "NFDB_point_20181129.shp",
         #  alsoExtract = "similar",
-        fun = "sf::st_read"
+        fun = quote(sf::st_read(targetFile, quiet = TRUE))
       )
     expect_is(NFDB_PT, "sf")
     expect_true(all(c("zip", "sbx", "shp", "xml", "shx", "sbn") %in%
