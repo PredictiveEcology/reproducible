@@ -705,9 +705,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       fun
     } else {
       suppressWarnings(isNAFun <- is.na(fun))
-      if (!isNAFun) {
+      if (!any(isNAFun)) {
         if (!is.function(fun)) {
-          if (grepl("::", fun)) {
+          if (any(grepl("::", fun))) {
             fun2 <- strsplit(fun, "::")[[1]]
             pkg <- fun2[1]
             fun <- fun2[2]
