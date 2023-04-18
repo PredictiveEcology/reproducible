@@ -441,9 +441,11 @@ test_that("preProcess doesn't work", {
           tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
-  mess <- capture_messages(
-    warns <- capture_warnings(
-      test <- prepInputs( url = urlShapefiles1Zip, destinationPath = tmpdir)
+  noisyOutput <- capture.output(
+    mess <- capture_messages(
+      warns <- capture_warnings(
+        test <- prepInputs( url = urlShapefiles1Zip, destinationPath = tmpdir)
+      )
     )
   )
   runTest("1_2_5_6_8_9_10_12", vectorType(), 5, mess, expectedMess = expectedMessage,
@@ -486,11 +488,13 @@ test_that("preProcess doesn't work", {
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   ## 2nd time; can checksums
-  mess <- capture_messages(
+  noisyOutput <- capture.output(
+    mess <- capture_messages(
     warns <- capture_warnings(
       test <- prepInputs(url = urlShapefiles1Zip, targetFile = "Shapefile1.shp",
                          destinationPath = tmpdir)
     )
+  )
   )
   runTest("1_2_5_6_8_9", vectorType(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
@@ -524,7 +528,8 @@ test_that("preProcess doesn't work", {
   unlink(dir(tmpdir, full.names = TRUE))
 
   # url is an archive on googledrive --
-  mess <- capture_messages(
+  noisyOutput <- capture.output(
+    mess <- capture_messages(
     warns <- capture_warnings(
       test <- prepInputs(
         url = urlShapefiles1Zip,
@@ -533,16 +538,19 @@ test_that("preProcess doesn't work", {
       )
     )
   )
+  )
   runTest("1_2_4_5_6_7_10_13", vectorType(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can't checksums because no targetfile
-  mess <- capture_messages(
-    warns <- capture_warnings(
-      test <- prepInputs(
-        url = urlShapefiles1Zip,
-        alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
-        destinationPath = tmpdir
+  noisyOutput <- capture.output(
+    mess <- capture_messages(
+      warns <- capture_warnings(
+        test <- prepInputs(
+          url = urlShapefiles1Zip,
+          alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
+          destinationPath = tmpdir
+        )
       )
     )
   )
@@ -587,7 +595,8 @@ test_that("preProcess doesn't work", {
   ###### url, archive, targetFile                            #####
   ################################################################
   # url is an archive on googledrive --
-  mess <- capture_messages(
+  noisyOutput <- capture.output(
+    mess <- capture_messages(
     warns <- capture_warnings(
       test <- prepInputs(
         url = urlShapefiles1Zip,
@@ -597,11 +606,13 @@ test_that("preProcess doesn't work", {
       )
     )
   )
+  )
   runTest("1_2_4_5_6_7_13", vectorType(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
-  mess <- capture_messages(
+  noisyOutput <- capture.output(
+    mess <- capture_messages(
     warns <- capture_warnings(
       test <- prepInputs(
         url = urlShapefiles1Zip,
@@ -610,6 +621,7 @@ test_that("preProcess doesn't work", {
         destinationPath = tmpdir
       )
     )
+  )
   )
   runTest("1_2_5_6_8_9", vectorType(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
@@ -1313,7 +1325,9 @@ test_that("lightweight tests for code coverage", {
   file.copy(filesForShp, tmpCache)
   # Need these in a test further down -- mostly just need the CRS
   filesForShp2 <- dir(file.path(tmpCache), pattern = "ecozones", full.names = TRUE)
-  shpFile <- sf::st_read(grep(filesForShp2, pattern = "\\.shp", value = TRUE))
+  noisyOutput <- capture.output(
+    shpFile <- sf::st_read(grep(filesForShp2, pattern = "\\.shp", value = TRUE))
+  )
   # Test when wrong archive exists, wrong checkSums
   file.remove(file.path(tmpdir, "ecozone_shp.zip"))
   file.remove(filesForShp)
