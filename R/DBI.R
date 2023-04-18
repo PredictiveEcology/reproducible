@@ -44,23 +44,43 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
   checkPath(cachePath, create = TRUE)
   checkPath(CacheStorageDir(cachePath), create = TRUE)
   if (useDBI()) {
-    if (is.null(conn)) {
-      conn <- dbConnectAll(drv, cachePath = cachePath)
-      on.exit(DBI::dbDisconnect(conn))
-    }
-    dt <- .emptyCacheTable
-
-    # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
-    a <- retry(retries = 250, exponentialDecayBase = 1.01,
-               quote(DBI::dbListTables(conn)))
-
-    if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
-      #retry(retries = 5, exponentialDecayBase = 1.5, quote(
-      try(DBI::dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
-                       field.types = c(cacheId = "text", tagKey = "text",
-                                       tagValue = "text", createdDate = "text")), silent = TRUE)
-    #)
+    .createCache(cachePath = cachePath, drv = drv, conn = conn)
+  #   if (is.null(conn)) {
+  #     conn <- dbConnectAll(drv, cachePath = cachePath)
+  #     on.exit(DBI::dbDisconnect(conn))
+  #   }
+  #   dt <- .emptyCacheTable
+  #
+  #   # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
+  #   a <- retry(retries = 250, exponentialDecayBase = 1.01,
+  #              quote(DBI::dbListTables(conn)))
+  #
+  #   if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
+  #     #retry(retries = 5, exponentialDecayBase = 1.5, quote(
+  #     try(DBI::dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
+  #                      field.types = c(cacheId = "text", tagKey = "text",
+  #                                      tagValue = "text", createdDate = "text")), silent = TRUE)
+  #   #)
   }
+}
+
+.createCache <- function(cachePath, drv, conn) {
+  if (is.null(conn)) {
+    conn <- dbConnectAll(drv, cachePath = cachePath)
+    on.exit(DBI::dbDisconnect(conn))
+  }
+  dt <- .emptyCacheTable
+
+  # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
+  a <- retry(retries = 250, exponentialDecayBase = 1.01,
+             quote(DBI::dbListTables(conn)))
+
+  if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
+    #retry(retries = 5, exponentialDecayBase = 1.5, quote(
+    try(DBI::dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
+                          field.types = c(cacheId = "text", tagKey = "text",
+                                          tagValue = "text", createdDate = "text")), silent = TRUE)
+  #)
 }
 
 #' Save an object to Cache
@@ -123,8 +143,9 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
   if (!useDBI()) {
-    dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
-    saveFileInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
+    dtFile <- saveDBFileSingle(dt = dt, cachePath, cacheId)
+    # dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
+    # saveFileInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
 
   } else {
     a <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
@@ -643,20 +664,20 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
                           conn = getOption("reproducible.conn", NULL)) {
   checkPath(cachePath, create = TRUE)
   if (useDBI()) {
-    # if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
       on.exit(DBI::dbDisconnect(conn))
     }
     type <- gsub("Connection", "", class(conn))
-    # }
 
     ret <- FALSE
     # browser(expr = exists("jjjj"))
     ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
                  list.files(cachePath))
-    # if (useDBI()) {
-    # browser(expr = exists("._CacheIsACache_2"))
+
+    checkOtherDB(cachePath, drv, conn)
+
+    if (exists("aaaa")) browser()
     if (ret) {
       tablesInDB <- retry(retries = 250, exponentialDecayBase = 1.01,
                           quote(DBI::dbListTables(conn)))
@@ -685,7 +706,9 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
     }
     # }
   } else {
-    ret <-  all(basename2(CacheStorageDir(cachePath)) %in% list.files(cachePath))
+    ret <- all(basename2(CacheStorageDir(cachePath)) %in% list.files(cachePath))
+    checkOtherDB(cachePath, drv, conn)
+
   }
   return(ret)
 }
@@ -776,7 +799,6 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
 }
 
 loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL) {
-  # browser(expr = exists("._loadFile_1"))
   if (is.null(format))
     format <- fileExt(file)
 
@@ -888,4 +910,50 @@ getDrv <- function(drv  = NULL) {
     drv <- NULL
   }
   drv
+}
+
+saveDBFileSingle <- function(dt, cachePath, cacheId) {
+  dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
+  saveFileInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
+  dtFile
+}
+
+checkOtherDB <- function(cachePath, drv, conn, verbose = getOption("reproducible.verbose")) {
+  origDBI <- useDBI()
+  useDBI(!origDBI)
+  on.exit(useDBI(origDBI))
+  drv <- getDrv(drv)
+  if (isTRUE(origDBI)) {
+    ext <- CacheDBFileSingleExt()
+    dtFile <- dir(CacheStorageDir(cachePath), pattern = ext, full.names = TRUE)
+    if (length(dtFile)) {
+      messageColoured("This cache repository previously did not use DBI; it is now; converting...",
+                   verbose = verbose, verboseLevel = 2, colour = "red")
+      sc <- showCache(cachePath, drv = drv, conn = conn)
+      if (NROW(sc)) {
+        useDBI(origDBI)
+        .createCache(cachePath, drv = drv, conn = conn)
+        Map(tv = sc$tagValue, tk = sc$tagKey, oh = sc$cacheId, function(tv, tk, oh)
+          .addTagsRepo(cacheId = oh, cachePath = cachePath,
+                       tagKey = tk, tagValue = tv, drv = drv, conn = conn)
+        )
+        unlink(dtFile)
+      }
+    }
+  } else {
+    theOtherDBFile <- CacheDBFile(cachePath, drv, conn)
+    if (basename2(theOtherDBFile) %in% list.files(cachePath)) {
+      messageColoured("This cache repository previously used DBI; it is now not; converting...",
+                      verbose = verbose, verboseLevel = 2, colour = "red")
+      sc <- showCache(cachePath)
+      if (NROW(sc)) {
+        singles <- split(sc, by = "cacheId")
+        Map(dt = singles, ci = names(singles), function(dt, ci)
+          saveDBFileSingle(dt, cachePath = cachePath, cacheId = ci)
+        )
+        unlink(theOtherDBFile)
+      }
+    }
+  }
+
 }

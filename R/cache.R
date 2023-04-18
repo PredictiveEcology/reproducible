@@ -2091,28 +2091,35 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
   while (tries <= length(cachePaths)) {
     repo <- cachePaths[[tries]]
     if (useDBI()) {
-        dbTabNam <- CacheDBTableName(repo, drv = drv)
+      if (exists("aaaa")) browser()
+      dbTabNam <- CacheDBTableName(repo, drv = drv)
 
-        if (tries > 1) {
-          DBI::dbDisconnect(conn)
-          conn <- dbConnectAll(drv, cachePath = repo)
-        }
-        qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(glue::double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
-                              dbTabName = dbTabNam,
-                              outputHash = outputHash,
-                              .con = conn)
-        res <- retry(retries = 15, exponentialDecayBase = 1.01,
-                     quote(DBI::dbSendQuery(conn, qry)))
-        isInRepo <- setDT(DBI::dbFetch(res))
-        DBI::dbClearResult(res)
+      if (tries > 1) {
+        DBI::dbDisconnect(conn)
+        conn <- dbConnectAll(drv, cachePath = repo)
+      }
+      qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(glue::double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
+                            dbTabName = dbTabNam,
+                            outputHash = outputHash,
+                            .con = conn)
+      res <- retry(retries = 15, exponentialDecayBase = 1.01,
+                   quote(DBI::dbSendQuery(conn, qry)))
+      isInRepo <- setDT(DBI::dbFetch(res))
+      DBI::dbClearResult(res)
     } else {
       # The next line will find it whether it is qs, rds or other; this is necessary for "change cacheSaveFormat"
       csf <- CacheStoredFile(cachePath = repo, cacheId = outputHash, format = "check")
 
       if (all(file.exists(csf))) {
         dtFile <- CacheDBFileSingle(cachePath = repo, cacheId = outputHash)
-        if (!file.exists(dtFile))
+
+        if (!file.exists(dtFile)) { # check first for wrong rds vs qs
           dtFile <- CacheDBFileSingle(cachePath = repo, cacheId = outputHash, format = "check")
+          if (!file.exists(dtFile)) { # still doesn't == means it is changing from SQLite
+
+          }
+        }
+
         isInRepo <- loadFile(dtFile)
       } else {
         isInRepo <- data.table::copy(.emptyCacheTable)
