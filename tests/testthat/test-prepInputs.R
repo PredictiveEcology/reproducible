@@ -269,10 +269,12 @@ test_that("interactive prepInputs", {
   #tmpdir <- "data/FMA"
   #checkPath(tmpdir, create = TRUE)
 
-  warns <- capture_warnings(
-    test <- prepInputs(
-      url = "https://drive.google.com/file/d/1BNsUiMqENJa0I8gzhO68K307ySPHbdGk/view?usp=sharing",
-      destinationPath = tmpdir
+  noisyOutput <- capture.output(
+    warns <- capture_warnings(
+      test <- prepInputs(
+        url = "https://drive.google.com/file/d/1BNsUiMqENJa0I8gzhO68K307ySPHbdGk/view?usp=sharing",
+        destinationPath = tmpdir
+      )
     )
   )
   files <- dir(tmpdir, pattern = "FMA_Boundary")
@@ -285,11 +287,13 @@ test_that("interactive prepInputs", {
   # need authentication for this
   #tmpdir <- "data/FMA"
   #checkPath(tmpdir, create = TRUE)
-  warns <- capture_warnings(
-    test <- prepInputs(
-      targetFile = "FMA_Boundary_Updated.shp",
-      url = "https://drive.google.com/file/d/1BNsUiMqENJa0I8gzhO68K307ySPHbdGk",
-      destinationPath = tmpdir
+  noisyOutput <- capture.output(
+    warns <- capture_warnings(
+      test <- prepInputs(
+        targetFile = "FMA_Boundary_Updated.shp",
+        url = "https://drive.google.com/file/d/1BNsUiMqENJa0I8gzhO68K307ySPHbdGk",
+        destinationPath = tmpdir
+      )
     )
   )
   # There is a meaningless warning for this unit test -- ignore it :
