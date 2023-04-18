@@ -195,11 +195,10 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
 
   dt <- loadFile(dtFile, format = fileExt(dtFile))
 
-  # output <- loadFile(filenamesInCache, format = fileExt(filenamesInCache), fullCacheTableForObj = dt)
-  # output <- cloudDownloadRasterBackend(output, cachePath, cloudFolderID, drv = drv)
-  Map(tv = dt$tagValue, tk = dt$tagKey, function(tv, tk)
-    .addTagsRepo(outputHash, cachePath, tagKey = tk, tagValue = tv, drv = drv, conn = conn)
-  )
+  if (useDBI()) # with useDBI = FALSE, the dbFile is already there.
+    Map(tv = dt$tagValue, tk = dt$tagKey, function(tv, tk)
+      .addTagsRepo(outputHash, cachePath, tagKey = tk, tagValue = tv, drv = drv, conn = conn)
+    )
   inReposPoss <- searchInRepos(cachePaths = cachePath, drv = drv,
                             outputHash = outputHash, conn = conn)
   inReposPoss
