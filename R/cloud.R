@@ -241,22 +241,26 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
     } else {
       cacheDB <- CacheDBFileSingle(cachePath, outputHash)
     }
-    newFileName <- basename2(cacheIdFileName)
+    if (file.exists(cacheIdFileName)) {
+      newFileName <- basename2(cacheIdFileName)
 
-    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
-    messageCache("Uploading new cached object ", newFileName,", with cacheId: ",
-            outputHash," to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id)
-    du <- Map(med = cacheIdFileName, nam = newFileName, function(med, nam) {
-      try(retry(quote(
-        googledrive::drive_upload(media = med, path = googledrive::as_id(cloudFolderID),
-                                  name = nam, overwrite = FALSE))))
-    })
+      cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
+      messageCache("Uploading new cached object ", newFileName,", with cacheId: ",
+                   outputHash," to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id)
+      du <- Map(med = cacheIdFileName, nam = newFileName, function(med, nam) {
+        try(retry(quote(
+          googledrive::drive_upload(media = med, path = googledrive::as_id(cloudFolderID),
+                                    name = nam, overwrite = FALSE))))
+      })
 
-    du2 <- try(retry(quote(googledrive::drive_upload(media = cacheDB,
-                                                    path = googledrive::as_id(cloudFolderID), name = basename2(cacheDB),
-                                                    overwrite = FALSE))))
-    if (is(du, "try-error")) {
-      return(du)
+      du2 <- try(retry(quote(googledrive::drive_upload(media = cacheDB,
+                                                       path = googledrive::as_id(cloudFolderID), name = basename2(cacheDB),
+                                                       overwrite = FALSE))))
+      if (is(du, "try-error")) {
+        return(du)
+      }
+    } else {
+      stop("There is no file to upload")
     }
   }
   cloudUploadRasterBackends(obj = outputToSave, cloudFolderID)

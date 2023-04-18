@@ -870,6 +870,8 @@ formatCheck <- function(cachePath, cacheId, format) {
   altFile <- onlyStorageFiles(altFile)
   if (length(altFile)) {
     format <- tools::file_ext(altFile)
+  } else if (format == "check") {
+    format <- getOption("reproducible.cacheSaveFormat")
   }
   format
 }

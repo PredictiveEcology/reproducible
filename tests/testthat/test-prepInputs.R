@@ -1140,7 +1140,8 @@ test_that("prepInputs doesn't work (part 2)", {
 })
 
 test_that("load rdata in prepInputs", {
-  testInitOut <- testInit("terra", opts = list(
+  testInitOut <- testInit("terra", tmpFileExt = "rda",
+                          opts = list(
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
   ), needGoogleDriveAuth = TRUE)
