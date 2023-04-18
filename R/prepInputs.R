@@ -159,9 +159,14 @@ if (getRversion() >= "3.1.0") {
 #'   search for the file before attempting to download. Default for that option is
 #'   `NULL` meaning do not search locally.
 #'
-#' @param fun Function, character string, or quoted call with which to load the
-#'   `targetFile` or an object created by `dlFun`
-#'   into an `R` object. See details and examples below.
+#' @param fun Optional. If specified, this will attempt to load whatever
+#'   file was downloaded during `preProcess` via `dlFun`. This can be either a
+#'   function (e.g., sf::st_read), character string (e.g., "base::load"),
+#'   NA (for no loading, useful if `dlFun` already loaded the file) or
+#'   if extra arguments are required
+#'   in the function call, it must be a quoted call naming
+#'   `targetFile` (e.g., `quote(sf::st_read(targetFile, quiet = TRUE))`)
+#'   as the file path to the file to load. See details and examples below.
 #'
 #' @param quick Logical. This is passed internally to [Checksums()]
 #'   (the quickCheck argument), and to
@@ -176,7 +181,7 @@ if (getRversion() >= "3.1.0") {
 #' @param overwrite Logical. Should downloading and all the other actions occur
 #'   even if they pass the checksums or the files are all there.
 #'
-#' @param ... Additional arguments passed to `fun` (i.e,. user supplied),
+#' @param ... Additional arguments passed to
 #'   [postProcess()] and [reproducible::Cache()].
 #'  Since `...` is passed to [postProcess()], these will
 #'  `...` will also be passed into the inner
@@ -273,7 +278,7 @@ if (getRversion() >= "3.1.0") {
 #'  }
 #'
 #' ## Using quoted dlFun and fun -- this is not intended to be run but used as a template
-#' ## prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun)
+#' ## prepInputs(..., fun = quote(customFun(x = targetFile)), customFun = customFun)
 #' ##   # or more complex
 #' ##  test5 <- prepInputs(
 #' ##   targetFile = targetFileLuxRDS,
@@ -281,7 +286,7 @@ if (getRversion() >= "3.1.0") {
 #' ##     getDataFn(name = "GADM", country = "LUX", level = 0) # preProcess keeps file from this!
 #' ##   }),
 #' ##   fun = quote({
-#' ##     out <- readRDS(targetFilePath)
+#' ##     out <- readRDS(targetFile)
 #' ##     sf::st_as_sf(out)})
 #' ##  )
 #' }
@@ -306,6 +311,10 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
   mess <- character(0)
 
+  ##################################################################
+  # preProcess
+  ##################################################################
+
   messagePrepInputs("Running preProcess", verbose = verbose, verboseLevel = 0)
   out <- preProcess(
     targetFile = targetFile,
@@ -323,20 +332,11 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     ...
   )
 
+  ##################################################################
   # Load object to R
+  ##################################################################
   # If it is simple call, then we can extract stuff from the function call; otherwise all bets off
   theFun <- out$fun
-  # fun <- if (is(theFun, "call") || is(theFun, "function") && is.null(out$object)) {
-  #   fnNameInit <- deparse(substitute(out$fun))
-  #   browser()
-  #   argsPassingToTheFun <- out[!names(out) %in% c(formalArgs(prepInputs), "checkSums", "dots", "object")]
-  #   argsPassingToTheFun
-  #   match.call(theFun, as.call(append(list(theFun), argsPassingToTheFun)))
-  #               #)
-  # } else {
-  #   NULL
-  # }
-  #
   suppressWarnings({
     naFun <- all(is.na(theFun))
   })
@@ -349,14 +349,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                 "checkSums", "dots", "object"))
   args <- NULL
   # keep the ones for theFun
-  if (naFun %in% FALSE) {
+  if (naFun %in% FALSE && !is.call(theFun)) {
     formsForTheFun <- names(formals3(theFun))
     argsFromPrepInputsFamily <- setdiff(argsFromPrepInputsFamily, names(formals3(theFun)))
     argsPassingToTheFun <- out[!names(out) %in% argsFromPrepInputsFamily]
-    # args <- argsPassingToTheFun[!names(argsPassingToTheFun) %in% "targetFilePath"] # will replace it without a named arg
     args <- argsPassingToTheFun[names(argsPassingToTheFun) %in% formsForTheFun]
   }
-
 
   otherFiles <- out$checkSums[result == "OK"]
   .cacheExtra <- NULL
@@ -392,22 +390,20 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           if (returnAsList)
             as.list(tmpEnv, all.names = TRUE)
         } else {
-          # browser(expr = exists("._prepInputs_3"))
           useCache2 <- useCache
           if (fileExt(out$targetFilePath) %in% c("qs", "rds") &&
               !isTRUE(getOption("reproducible.useMemoise"))) {
             useCache2 <- FALSE
             messagePrepInputs("targetFile is already a binary; skipping Cache while loading")
           }
+
           withCallingHandlers(
-            if (is.call(theFun)) {
+            if (is.call(theFun)) { # an actual call, not just captured function name
               # put `targetFilePath` in the first position -- allows quoted call to use first arg
               out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
                                    out[-which(names(out) == "targetFilePath")]),
                             args)
-              if (length(fun[["functionName"]]) == 1)
-                out[[fun[["functionName"]]]] <- fun$FUN
-              # obj <- Cache(eval, theFun, envir = out, useCache = useCache2, .cacheExtra = .cacheExtra,
+              out[["targetFile"]] <- out[["targetFilePath"]] # handle both
               obj <- Cache(eval(theFun, envir = out), useCache = useCache2, .cacheExtra = .cacheExtra,
                            .functionName = funChar)
             } else {
@@ -444,6 +440,9 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     }
   }
 
+  ##################################################################
+  # postProcess
+  ##################################################################
   if (requireNamespace("terra", quietly = TRUE)) {
     if (!(all(is.null(out$dots$studyArea),
               is.null(out$dots$rasterToMatch),
