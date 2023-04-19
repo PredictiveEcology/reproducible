@@ -1023,7 +1023,7 @@ findFun <- function(FUNcaptured, envir) {
 isDollarSqBrPkgColon <- function(args) {
   ret <- FALSE
   if (length(args) == 3) # i.e., only possible if it is just b$fun or stats::runif, not stats::runif(1) or b$fun(1)
-    ret <- isTRUE(any(try(grepl("^\\$|\\[|\\:\\:", args), silent = TRUE)))
+    ret <- isTRUE(any(try(grepl("^\\$|\\[|\\:\\:", args)[1], silent = TRUE)))
   ret
 }
 
@@ -1309,7 +1309,7 @@ getFunctionName2 <- function(mc) {
          "Cache should be the outermost function. See examples for correct ways to use Cache")
   }
   # Remove `quote`
-  isQuoted <- any(grepl("^quote", FUNcaptured)) # won't work for complicated quote
+  isQuoted <- any(grepl("^quote", FUNcaptured)[1]) # won't work for complicated quote
   if (isQuoted)
     FUNcaptured <- FUNcaptured[[2]]
 
@@ -2053,11 +2053,10 @@ isPkgColonFn <- function(x) {
 evalTheFun <- function(FUNcaptured, isCapturedFUN, isSquiggly, matchedCall, envir = parent.frame(),
                        verbose = getOption("reproducible.verbose"), ...) {
   withCallingHandlers({
-  if (isCapturedFUN || isSquiggly) { # if is wasn't "captured", then it is just a function, so now use it on the ...
-     out <- eval(FUNcaptured, envir = envir)
-  } else {
-      out <- eval(FUNcaptured, envir = envir)(...)
-  }
+    out <- eval(FUNcaptured, envir = envir)
+    if (is.function(out)) { # if is wasn't "captured", then it is just a function, so now use it on the ...
+      out <- out(...)
+    }
   },
   warning = function(w) {
     asch <- as.character(w$call[[1]])
