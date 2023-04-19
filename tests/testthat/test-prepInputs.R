@@ -1146,14 +1146,15 @@ test_that("prepInputs doesn't work (part 2)", {
             # targetFile = targetFileLuxRDS,
             dlFun = quote({
               out <- getDataFn(name = "GADM", country = "LUX", level = 0, path = tmpdir)
-              as(out, "Spatial")
-            })
+              sf::st_as_sf(out)
+            }),
+            tmpdir = tmpdir
           )
-      )
-    })
-      expect_is(test6, "Spatial")
-  }
-  # expect_true(all(sf::st_bbox(test5) == sf::st_bbox(test6)))
+        )
+      })
+      expect_is(test6, "sf")
+    }
+    # expect_true(all(sf::st_bbox(test5) == sf::st_bbox(test6)))
 
   }
 })
