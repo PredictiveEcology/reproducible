@@ -21,10 +21,11 @@ prepInputs(
 )
 }
 \arguments{
-\item{targetFile}{Character string giving the path to the eventual file
+\item{targetFile}{Character string giving the filename (without relative or
+absolute path) to the eventual file
 (raster, shapefile, csv, etc.) after downloading and extracting from a zip
 or tar archive. This is the file \emph{before} it is passed to
-\code{postProcess}. Currently, the internal checksumming does not checksum
+\code{postProcess}. The internal checksumming does not checksum
 the file after it is \code{postProcess}ed (e.g., cropped/reprojected/masked).
 Using \code{Cache} around \code{prepInputs} will do a sufficient job in these cases.
 See table in \code{\link[=preProcess]{preProcess()}}.}
@@ -189,29 +190,27 @@ and/or \code{studyArea}:} Please see \code{\link[=postProcessTo]{postProcessTo()
 
 
 \code{fun} offers the ability to pass any custom function with which to load
-the object obtained by \code{preProcess} into the session. There are two cases that are
+the file obtained by \code{preProcess} into the session. There are two cases that are
 dealt with: when the \code{preProcess} downloads a file (including via \code{dlFun}),
 \code{fun} must deal with a file; and, when \code{preProcess} creates an R object
 (e.g., raster::getData returns an object), \code{fun} must deal with an object.
 
 \code{fun} can be supplied in three ways: a function, a character string
-(i.e., a function name as a string), of a quoted expression.
+(i.e., a function name as a string), or a quoted expression.
 If a character string or function, is should have the package name e.g.,
-\code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
+\code{"terra::rast"} or as an actual function, e.g., \code{base::readRDS}.
 In these cases, it will evaluate this function call while passing \code{targetFile}
 as the first argument. These will only work in the simplest of cases.
 
 When more precision is required, the full call can be written, surrounded by
-\code{quote}, and where the object can be referred to as \code{targetFile} if the function
-is loading a file or as \code{x} if it is loading the object that was returned by
-\code{preProcess}. If \code{preProcess} returns an object, this must be used by \code{fun}; if
-\code{preProcess} is only getting a file, then there will be no object, so \code{targetFile} is the
-only option.
+\code{quote}, and where the filename can be referred to as \code{targetFile} if the function
+is loading a file. If \code{preProcess} returns an object, \code{fun} should be set to
+\code{fun = NA}.
 
 If there is a custom function call, is not in a package, \code{prepInputs} may not find it. In such
 cases, simply pass the function as a named argument (with same name as function) to \code{prepInputs}.
 See examples.
-NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
+NOTE: passing \code{fun = NA} will skip loading object into R. Note this will essentially
 replicate the functionality of simply calling \code{preProcess} directly.
 }
 
@@ -237,8 +236,26 @@ If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
 }
 
 \examples{
-\donttest{
 if (requireNamespace("terra") && requireNamespace("sf")) {
+
+# Make a dummy study area map -- user would supply this normally
+  coords <- structure(c(-122.9, -116.1, -99.2, -106, -122.9, 59.9, 65.7, 63.6, 54.8, 59.9),
+                      .Dim = c(5L, 2L))
+  studyArea <- terra::vect(coords, "polygons")
+  terra::crs(studyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+# Make dummy "large" map that must be cropped to the study area
+  outerSA <- terra::buffer(studyArea, 50000)
+  terra::crs(outerSA) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  tf <- file.path(tempfile2(fileext = ".shp"))
+  terra::writeVector(outerSA, tf, overwrite = TRUE)
+
+# run prepInputs -- load file, postProcess it to the studyArea
+suppressWarnings(studyArea2 <- prepInputs(targetFile = tf, to = studyArea))
+
+##########################################
+# Remote file using `url`
+##########################################
+\donttest{
   data.table::setDTthreads(2)
   origDir <- getwd()
   # download a zip file from internet, unzip all files, load as shapefile, Cache the call
@@ -249,7 +266,7 @@ if (requireNamespace("terra") && requireNamespace("sf")) {
 
   # Wrapped in a try because this particular url can be flaky
   shpEcozone <- try(prepInputs(destinationPath = dPath,
-                               url = shpUrl))
+                             url = shpUrl))
   if (!is(shpEcozone, "try-error")) {
     # Robust to partial file deletions:
     unlink(dir(dPath, full.names = TRUE)[1:3])
@@ -294,8 +311,9 @@ if (requireNamespace("terra") && requireNamespace("sf")) {
     terra::plot(shpEcozone[, 1])
     terra::plot(shpEcozoneSm[, 1], add = TRUE, col = "red")
     unlink(dPath)
-   }
  }
+ }
+}
 
 ## Using quoted dlFun and fun -- this is not intended to be run but used as a template
 ## prepInputs(..., fun = quote(customFun(x = targetFile)), customFun = customFun)
@@ -309,7 +327,6 @@ if (requireNamespace("terra") && requireNamespace("sf")) {
 ##     out <- readRDS(targetFile)
 ##     sf::st_as_sf(out)})
 ##  )
-}
 }
 \seealso{
 \code{\link[=postProcessTo]{postProcessTo()}}, \code{\link[=downloadFile]{downloadFile()}}, \code{\link[=extractFromArchive]{extractFromArchive()}},

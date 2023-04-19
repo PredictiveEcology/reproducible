@@ -28,10 +28,11 @@ preProcess(
 E.g., passing \code{n = 1} returns combinations with only a single non-NULL parameter.
 If \code{NULL} (default), all parameter combinations are returned.}
 
-\item{targetFile}{Character string giving the path to the eventual file
+\item{targetFile}{Character string giving the filename (without relative or
+absolute path) to the eventual file
 (raster, shapefile, csv, etc.) after downloading and extracting from a zip
 or tar archive. This is the file \emph{before} it is passed to
-\code{postProcess}. Currently, the internal checksumming does not checksum
+\code{postProcess}. The internal checksumming does not checksum
 the file after it is \code{postProcess}ed (e.g., cropped/reprojected/masked).
 Using \code{Cache} around \code{prepInputs} will do a sufficient job in these cases.
 See table in \code{\link[=preProcess]{preProcess()}}.}

@@ -230,7 +230,7 @@ if (getRversion() >= "3.1.0") {
 #'   terra::writeVector(outerSA, tf, overwrite = TRUE)
 #'
 #' # run prepInputs -- load file, postProcess it to the studyArea
-#' studyArea2 <- prepInputs(targetFile = tf, to = studyArea)
+#' suppressWarnings(studyArea2 <- prepInputs(targetFile = tf, to = studyArea))
 #'
 #' ##########################################
 #' # Remote file using `url`
