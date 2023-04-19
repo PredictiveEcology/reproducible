@@ -1,5 +1,5 @@
 test_that("test miscellaneous unit tests cache-helpers", {
-  testInitOut <- testInit(libraries = c("sf", "sp"), opts = list(reproducible.useMemoise = TRUE))
+  testInitOut <- testInit(libraries = c("sf"), opts = list(reproducible.useMemoise = TRUE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -30,16 +30,22 @@ test_that("test miscellaneous unit tests cache-helpers", {
   }
 
   # studyAreaName with SPDF/SP
+  # coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+  #                     .Dim = c(5L, 2L))
+  # Sr1 <- Polygon(coords)
+  # Srs1 <- Polygons(list(Sr1), "s1")
+  # StudyArea <- SpatialPolygons(list(Srs1), 1L)
+
   coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
                       .Dim = c(5L, 2L))
-  Sr1 <- Polygon(coords)
-  Srs1 <- Polygons(list(Sr1), "s1")
-  StudyArea <- SpatialPolygons(list(Srs1), 1L)
+  StudyArea <- terra::vect(coords, "polygons")
+  terra::crs(StudyArea) <- crsToUse
+
   df <- data.frame(a = 1, row.names = row.names(StudyArea))
 
-  SPDF <- SpatialPolygonsDataFrame(StudyArea, df, match.ID = TRUE)
+  # SPDF <- SpatialPolygonsDataFrame(StudyArea, df, match.ID = TRUE)
   expect_true(is(studyAreaName(StudyArea), "character"))
-  expect_true(is(studyAreaName(SPDF), "character"))
+  # expect_true(is(studyAreaName(SPDF), "character"))
 
   # studyAreaName with random object
   expect_error(studyAreaName(integer(0)))
@@ -55,28 +61,6 @@ test_that("test miscellaneous unit tests cache-helpers", {
   }, add = TRUE)
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl("No cachePath supplied. Using", mess)))
-
-  # # getFunctionName
-  # fn <- function(FUN) {
-  #   getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
-  # }
-  # expect_true(fn(1)$functionName == "FUN")
-  #
-  # fn <- function(FUN) {
-  #   getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
-  # }
-  # expect_true(fn(2)$functionName == "FUN")
-  #
-  # fn <- function(FUN) {
-  #   getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
-  # }
-  # expect_true(fn(2)$functionName == "FUN")
-  # expect_true(is.null(fn(2)$.FUN))
-  #
-  # fn <- function(FUN) {
-  #   getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
-  # }
-  # expect_true(fn(log(1))$functionName == "FUN")
 
   ## nextNumericName
   b <- nextNumericName("test.pdf")
@@ -246,7 +230,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
 })
 
 test_that("test warnings from cached functions", {
-  testInitOut <- testInit(libraries = c("sf", "sp"), opts = list(reproducible.useMemoise = TRUE))
+  testInitOut <- testInit(libraries = c("sf"), opts = list(reproducible.useMemoise = TRUE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

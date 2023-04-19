@@ -657,7 +657,14 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
 
 useDBI <- function(set = NULL) {
   if (!is.null(set)) {
-    options("reproducible.useDBI" = set)
+    canSwitch <- TRUE
+    if (isTRUE(set))
+      canSwitch <- .requireNamespace("RSQLite", stopOnFALSE = FALSE)
+    if (isTRUE(canSwitch))
+      options("reproducible.useDBI" = set)
+    else
+      message("User has requested to change to useDBI(TRUE), but DBI and/or RSQLite not ",
+              "installed. Not changing.")
   }
   ud <- getOption("reproducible.useDBI", TRUE)
   if (isTRUE(ud)) {

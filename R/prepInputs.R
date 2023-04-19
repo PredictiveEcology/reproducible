@@ -310,6 +310,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     }, add = TRUE)
   }
   mess <- character(0)
+  funCaptured <- substitute(fun)
 
   ##################################################################
   # preProcess
@@ -366,10 +367,10 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     x <- if (is.null(out$object)) {
 
       messagePrepInputs("Loading object into R", verbose = verbose)
-      if (identical(theFun, raster::raster) |
-          identical(theFun, raster::stack) |
-          identical(theFun, raster::brick) |
-          identical(theFun, terra::rast)) {
+      needRaster <- any(grepl("raster$|stack$|brick$", funCaptured))
+      if (needRaster)
+        .requireNamespace("raster", stopOnFALSE = TRUE)
+      if (needRaster | identical(theFun, terra::rast)) {
         ## Don't cache the reading of a raster
         ## -- normal reading of raster on disk is fast b/c only reads metadata
         do.call(theFun, append(list(asPath(out$targetFilePath)), args))

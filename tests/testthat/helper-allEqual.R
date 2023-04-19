@@ -25,7 +25,13 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     list()
 
   if (missing(libraries)) libraries <- list()
-  unlist(lapply(libraries, require, character.only = TRUE, quietly = TRUE))
+  if (length(libraries)) {
+    pkgsLoaded <- unlist(lapply(libraries, require, character.only = TRUE, quietly = TRUE))
+    if (!any(pkgsLoaded)) {
+      lapply(libraries[!pkgsLoaded], skip_if_not_installed)
+    }
+  }
+
   require("testthat", quietly = TRUE)
 
   .pkgEnv <- getFromNamespace(".pkgEnv", "reproducible")
@@ -99,8 +105,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     tmpfile <- NULL
   }
 
-  try(clearCache(tmpCache, ask = FALSE), silent = TRUE)
-  try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
+  try(suppressMessages(clearCache(tmpCache, ask = FALSE)), silent = TRUE)
+  try(suppressMessages(clearCache(tmpdir, ask = FALSE)), silent = TRUE)
 
   outList <- list(tmpdir = tmpdir, origDir = origDir, libs = libraries,
                   tmpCache = tmpCache, optsAsk = optsAsk,

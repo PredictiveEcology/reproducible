@@ -584,16 +584,27 @@ rasterType <- function(nlayers = 1,
 
 
 vectorType <- function(vectorRead = getOption("reproducible.shapefileRead", "sf::st_read")) {
+  needRasterPkg <- FALSE
+  vectorReadSubs <- substitute(vectorRead)
+  if (any(grepl("^shapefile$", vectorReadSubs))) {
+    .requireNamespace("raster", stopOnFALSE = TRUE)
+    needRasterPkg <- TRUE
+  }
   if (is.character(vectorRead)) {
+    if (endsWith(suffix = "shapefile", vectorRead)) {
+      if (.requireNamespace("raster", stopOnFALSE = TRUE))
+        needRasterPkg <- TRUE
+    }
     vectorRead <- eval(parse(text = vectorRead))
   }
-  if (identical(vectorRead, raster::shapefile)) {
+  if (identical(vectorRead, terra::vect)) {
+    "SpatVector"
+  } else if (needRasterPkg) {
+    .requireNamespace("raster", stopOnFALSE = TRUE)
     "SpatialPolygons"
-    } else if (identical(vectorRead, terra::vect)) {
-      "SpatVector"
-    } else {
-      "sf"
-    }
+  }  else {
+    "sf"
+  }
 }
 
 

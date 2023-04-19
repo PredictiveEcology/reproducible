@@ -911,35 +911,38 @@ saveDBFileSingle <- function(dt, cachePath, cacheId) {
 convertDBbackendIfIncorrect <- function(cachePath, drv, conn,
                                         verbose = getOption("reproducible.verbose")) {
   origDBI <- useDBI()
-  useDBI(!origDBI) # switch to the other
-  on.exit(useDBI(origDBI))
-  drv <- getDrv(drv)
-  DBFileWrong <- CacheDBFile(cachePath, drv, conn)
-  if (file.exists(DBFileWrong)) {
-    sc <- showCache(cachePath, drv = drv, conn = conn, verbose = -2)
-    if (NROW(sc)) {
-      messageCache("This cache repository previously was using a ",
-                   messConvert()[[as.character(useDBI())]],".\n",
-                   "User has requested to change this using ",
-                   "e.g., `useDBI(",useDBI(),")`. Converting now ...",
-                   verbose = verbose, verboseLevel = 1)
-      if (isTRUE(origDBI)) { # using DBI --> convert all data to a DBI database
-        useDBI(origDBI)
-        .createCache(cachePath, drv = drv, conn = conn)
-        Map(tv = sc$tagValue, tk = sc$tagKey, oh = sc$cacheId, function(tv, tk, oh)
-          .addTagsRepo(cacheId = oh, cachePath = cachePath,
-                       tagKey = tk, tagValue = tv, drv = drv, conn = conn)
-        )
-        unlink(CacheDBFiles(cachePath))
-      } else { # using multifile DB --> convert all data to multi-file backend
-        singles <- split(sc, by = "cacheId")
-        Map(dt = singles, ci = names(singles), function(dt, ci)
-          saveDBFileSingle(dt, cachePath = cachePath, cacheId = ci)
-        )
+  newDBI <- suppressMessages(useDBI(!origDBI)) # switch to the other
+  if (!identical(newDBI, origDBI)) { # if they are same, then DBI is not installed; not point proceeding
+    on.exit(suppressMessages(useDBI(origDBI)))
+    drv <- getDrv(drv)
+    DBFileWrong <- CacheDBFile(cachePath, drv, conn)
+    if (file.exists(DBFileWrong)) {
+      sc <- showCache(cachePath, drv = drv, conn = conn, verbose = -2)
+      if (NROW(sc)) {
+        messageCache("This cache repository previously was using a ",
+                     messConvert()[[as.character(useDBI())]],".\n",
+                     "User has requested to change this using ",
+                     "e.g., `useDBI(",useDBI(),")`. Converting now ...",
+                     verbose = verbose, verboseLevel = 1)
+        if (isTRUE(origDBI)) { # using DBI --> convert all data to a DBI database
+          suppressMessagse(useDBI(origDBI))
+          .createCache(cachePath, drv = drv, conn = conn)
+          Map(tv = sc$tagValue, tk = sc$tagKey, oh = sc$cacheId, function(tv, tk, oh)
+            .addTagsRepo(cacheId = oh, cachePath = cachePath,
+                         tagKey = tk, tagValue = tv, drv = drv, conn = conn)
+          )
+          unlink(CacheDBFiles(cachePath))
+        } else { # using multifile DB --> convert all data to multi-file backend
+          singles <- split(sc, by = "cacheId")
+          Map(dt = singles, ci = names(singles), function(dt, ci)
+            saveDBFileSingle(dt, cachePath = cachePath, cacheId = ci)
+          )
+        }
+        messageCache("... Done!", verbose = verbose, verboseLevel = 1)
       }
-      messageCache("... Done!", verbose = verbose, verboseLevel = 1)
+      unlink(DBFileWrong)
     }
-    unlink(DBFileWrong)
+
   }
 
 }
