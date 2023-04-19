@@ -109,7 +109,10 @@ is \code{TRUE} and there is no Cache database, the function will create one.}
 
 \code{rmFromCache} has no return value; it is called for its side effects.
 
-\code{CacheDBFile} returns the name of the database file for a given Cache.
+\code{CacheDBFile} returns the name of the database file for a given Cache,
+when \code{useDBI() == FALSE}, or \code{NULL} if \code{TRUE}.
+\code{CacheDBFiles} (i.e,. plural) returns the name of all the database files for
+a given Cache when \code{useDBI() == TRUE}, or \code{NULL} if \code{FALSE}
 
 \code{CacheStorageDir} returns the name of the directory where cached objects are
 stored.

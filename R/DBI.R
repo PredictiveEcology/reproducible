@@ -235,7 +235,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                      verbose = verbose)
         obj <- loadFromCache(cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
                              cacheId = cacheId,
-                             format = fileExt(sameCacheID))
+                             format = fileExt(sameCacheID),
+                             verbose = verbose)
         obj <- .dealWithClass(obj, cachePath = cachePath, drv = drv, conn = conn)
         fs <- saveToCache(obj = obj, cachePath = cachePath, drv = drv, conn = conn,
                           cacheId = cacheId)
@@ -496,7 +497,10 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 #' @rdname CacheHelpers
 #' @export
 #' @return
-#' `CacheDBFile` returns the name of the database file for a given Cache.
+#' `CacheDBFile` returns the name of the database file for a given Cache,
+#' when `useDBI() == FALSE`, or `NULL` if `TRUE`.
+#' `CacheDBFiles` (i.e,. plural) returns the name of all the database files for
+#' a given Cache when `useDBI() == TRUE`, or `NULL` if `FALSE`
 #' @details
 #' `CacheStoredFile` returns the file path to the file with the specified hash value.
 #'
@@ -543,7 +547,7 @@ CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
       file.path(cachePath, "cache.txt")
     }
   } else {
-    NULL
+    file.path(cachePath, "multifileDB.txt")
   }
 }
 
@@ -653,15 +657,16 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
       on.exit(DBI::dbDisconnect(conn))
     }
     type <- gsub("Connection", "", class(conn))
+  }
 
-    ret <- FALSE
-    # browser(expr = exists("jjjj"))
-    ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
-                 list.files(cachePath))
+  ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
+               list.files(cachePath))
 
-    checkOtherDB(cachePath, drv, conn)
+  # Need to check even if ret is TRUE because we may be in the process of changing
+  convertDBbackendIfIncorrect(cachePath, drv, conn)
 
-    if (exists("aaaa")) browser()
+  needCreate <- FALSE
+  if (useDBI()) {
     if (ret) {
       tablesInDB <- retry(retries = 250, exponentialDecayBase = 1.01,
                           quote(DBI::dbListTables(conn)))
@@ -680,20 +685,20 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
       }
       ret <- ret && any(grepl(tableShouldBe, tablesInDB))
     }
-    # }
 
-    # if (useDBI()) {
     if (isFALSE(ret) && isTRUE(create)) {
       if (grepl(type, "Pq")) {
-        file.create(CacheDBFile(cachePath, drv = drv, conn = conn))
+        needCreate <- TRUE
       }
     }
-    # }
-  } else {
-    ret <- all(basename2(CacheStorageDir(cachePath)) %in% list.files(cachePath))
-    checkOtherDB(cachePath, drv, conn)
-
+  } else { # This is for DBI = FALSE
+    if (isTRUE(create)) {
+      needCreate <- TRUE
+    }
   }
+  if (isTRUE(needCreate))
+    file.create(CacheDBFile(cachePath, drv = drv, conn = conn))
+
   return(ret)
 }
 
@@ -903,42 +908,50 @@ saveDBFileSingle <- function(dt, cachePath, cacheId) {
   dtFile
 }
 
-checkOtherDB <- function(cachePath, drv, conn, verbose = getOption("reproducible.verbose")) {
+convertDBbackendIfIncorrect <- function(cachePath, drv, conn,
+                                        verbose = getOption("reproducible.verbose")) {
   origDBI <- useDBI()
-  useDBI(!origDBI)
+  useDBI(!origDBI) # switch to the other
   on.exit(useDBI(origDBI))
   drv <- getDrv(drv)
-  if (isTRUE(origDBI)) {
-    ext <- CacheDBFileSingleExt()
-    dtFile <- dir(CacheStorageDir(cachePath), pattern = ext, full.names = TRUE)
-    if (length(dtFile)) {
-      messageColoured("This cache repository previously did not use DBI; it is now; converting...",
-                   verbose = verbose, verboseLevel = 2, colour = "red")
-      sc <- showCache(cachePath, drv = drv, conn = conn)
-      if (NROW(sc)) {
+  DBFileWrong <- CacheDBFile(cachePath, drv, conn)
+  if (file.exists(DBFileWrong)) {
+    sc <- showCache(cachePath, drv = drv, conn = conn, verbose = -2)
+    if (NROW(sc)) {
+      messageCache("This cache repository previously was using a ",
+                   messConvert()[[as.character(useDBI())]],".\n",
+                   "User has requested to change this using ",
+                   "e.g., `useDBI(",useDBI(),")`. Converting now ...",
+                   verbose = verbose, verboseLevel = 1)
+      if (isTRUE(origDBI)) { # using DBI --> convert all data to a DBI database
         useDBI(origDBI)
         .createCache(cachePath, drv = drv, conn = conn)
         Map(tv = sc$tagValue, tk = sc$tagKey, oh = sc$cacheId, function(tv, tk, oh)
           .addTagsRepo(cacheId = oh, cachePath = cachePath,
                        tagKey = tk, tagValue = tv, drv = drv, conn = conn)
         )
-        unlink(dtFile)
-      }
-    }
-  } else {
-    theOtherDBFile <- CacheDBFile(cachePath, drv, conn)
-    if (basename2(theOtherDBFile) %in% list.files(cachePath)) {
-      messageColoured("This cache repository previously used DBI; it is now not; converting...",
-                      verbose = verbose, verboseLevel = 2, colour = "red")
-      sc <- showCache(cachePath)
-      if (NROW(sc)) {
+        unlink(CacheDBFiles(cachePath))
+      } else { # using multifile DB --> convert all data to multi-file backend
         singles <- split(sc, by = "cacheId")
         Map(dt = singles, ci = names(singles), function(dt, ci)
           saveDBFileSingle(dt, cachePath = cachePath, cacheId = ci)
         )
-        unlink(theOtherDBFile)
       }
+      messageCache("... Done!", verbose = verbose, verboseLevel = 1)
     }
+    unlink(DBFileWrong)
   }
 
+}
+
+messConvert <- function() {
+  list(`TRUE` = c("multi-file backend"),
+       `FALSE` = c("DBI backend"))
+
+}
+
+CacheDBFiles <- function(cachePath = getOption("reproducible.cachePath")) {
+  ext <- CacheDBFileSingleExt()
+  dtFiles <- dir(CacheStorageDir(cachePath), pattern = ext, full.names = TRUE)
+  dtFiles
 }

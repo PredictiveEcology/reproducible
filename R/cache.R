@@ -2103,12 +2103,16 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
 
         if (!file.exists(dtFile)) { # check first for wrong rds vs qs
           dtFile <- CacheDBFileSingle(cachePath = repo, cacheId = outputHash, format = "check")
-          if (!file.exists(dtFile)) { # still doesn't == means it is changing from SQLite
-
+          if (!file.exists(dtFile)) { # still doesn't == means it is broken state
+            unlink(csf)
+            dtFile <- NULL
+            warning("The Cache file exists, but there is no database entry for it; removing ",
+                    "the file and rerunning the call")
           }
         }
 
-        isInRepo <- loadFile(dtFile)
+        isInRepo <- if (!is.null(dtFile))
+          loadFile(dtFile) else NULL
       } else {
         isInRepo <- data.table::copy(.emptyCacheTable)
       }

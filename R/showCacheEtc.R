@@ -559,7 +559,7 @@ setMethod(
       if (!(artifact %in% cacheToList[[.cacheTableHashColName()]])) {
         outputToSave <- # if (useDBI()) {
           try(loadFromCache(cachePath = cacheFrom, fullCacheTableForObj = cacheToList,
-                            cacheId = artifact))
+                            cacheId = artifact, verbose = verbose))
         if (is(outputToSave, "try-error")) {
           messageCache("Continuing to load others", verbose = verbose)
           outputToSave <- NULL

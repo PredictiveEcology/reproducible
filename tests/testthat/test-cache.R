@@ -1665,7 +1665,7 @@ test_that("test useDBI TRUE <--> FALSE", {
   testInitOut <- testInit()
   on.exit({
     testOnExit(testInitOut)
-    useDBI(!orig)
+    useDBI(orig)
   }, add = TRUE)
   options(reproducible.cachePath = tmpdir)
   orig <- useDBI()

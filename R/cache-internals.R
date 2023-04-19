@@ -102,10 +102,6 @@
                          algo, preDigest, startCacheTime,
                          drv = getDrv(getOption("reproducible.drv", NULL)),
                          conn = getOption("reproducible.conn", NULL), ...) {
-  # if (verbose > 3) {
-  #   startLoadTime <- Sys.time()
-  # }
-
   cacheObj <- isInRepo[[.cacheTableHashColName()]][lastOne]
 
   fromMemoise <- NA
@@ -113,7 +109,8 @@
                           fullCacheTableForObj = fullCacheTableForObj,
                           # format = fileFormat, loadFun = loadFun,
                           .functionName = fnDetails$functionName, .dotsFromCache = modifiedDots,
-                          drv = drv, conn = conn)
+                          drv = drv, conn = conn,
+                          verbose = verbose)
   # This is protected from multiple-write to SQL collisions
   .addTagsRepo(cacheId = isInRepo[[.cacheTableHashColName()]][lastOne],
                cachePath = cachePath, drv = drv, conn = conn)
