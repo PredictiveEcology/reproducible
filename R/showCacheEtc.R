@@ -656,22 +656,29 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
 
 
 useDBI <- function(set = NULL) {
+  canSwitch <- TRUE
   if (!is.null(set)) {
-    canSwitch <- TRUE
     if (isTRUE(set))
       canSwitch <- .requireNamespace("RSQLite", stopOnFALSE = FALSE)
     if (isTRUE(canSwitch))
       options("reproducible.useDBI" = set)
-    else
-      message("User has requested to change to useDBI(TRUE), but DBI and/or RSQLite not ",
-              "installed. Not changing.")
+
   }
   ud <- getOption("reproducible.useDBI", TRUE)
   if (isTRUE(ud)) {
     drv <- getOption("reproducible.drv")
-    if (is.null(drv))
-      .requireNamespace("RSQLite", stopOnFALSE = TRUE)
+    if (is.null(drv)) {
+      canSwitch <- .requireNamespace("RSQLite", stopOnFALSE = FALSE)
+      if (isFALSE(canSwitch)) {
+        options("reproducible.useDBI" = FALSE)
+        ud <- getOption("reproducible.useDBI")
+      }
+    }
   }
+
+  if (isFALSE(canSwitch))
+    message("User has requested to use DBI as the backend, but DBI and/or RSQLite not ",
+            "installed. Using the non-DBI backend.")
   ud
 }
 

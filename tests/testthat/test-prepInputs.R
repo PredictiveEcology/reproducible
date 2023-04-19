@@ -325,10 +325,10 @@ test_that("interactive prepInputs", {
                            overwrite = TRUE
                          )
                        })
-  expect_true(inherits(outsideModule[[1]], "Raster"))
-  expect_true(inherits(outsideModule[[2]], "Raster"))
-  expect_true(inherits(crs(outsideModule[[2]]), "CRS"))
-  expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
+  expect_true(inherits(outsideModule[[1]], "SpatRaster"))
+  expect_true(inherits(outsideModule[[2]], "SpatRaster"))
+  # expect_true(inherits(terra::crs(outsideModule[[2]]), "CRS"))
+  # expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
 
   # remove the .prj files -- test "similar"
@@ -346,16 +346,16 @@ test_that("interactive prepInputs", {
                            targetFile = paste0(x, "_currmean.asc"),
                            archive = paste0(x, "_current.zip"),
                            url = url,
-                           fun = "raster::raster",
+                           # fun = "raster::raster",
                            alsoExtract = "similar",
                            destinationPath = tmpdir,
                            overwrite = TRUE
                          )
                        })
-  expect_true(inherits(outsideModule[[1]], "Raster"))
-  expect_true(inherits(outsideModule[[2]], "Raster"))
-  expect_true(inherits(crs(outsideModule[[2]]), "CRS"))
-  expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
+  expect_true(inherits(outsideModule[[1]], "SpatRaster"))
+  expect_true(inherits(outsideModule[[2]], "SpatRaster"))
+  # expect_true(inherits(crs(outsideModule[[2]]), "CRS"))
+  # expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
   expect_true(!is.na(crs(outsideModule[[1]])))
   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
 
@@ -375,16 +375,16 @@ test_that("interactive prepInputs", {
                            targetFile = paste0(x, "_currmean.asc"),
                            archive = paste0(x, "_current.zip"),
                            url = url,
-                           fun = "raster::raster",
+                           # fun = "raster::raster",
                            alsoExtract = NA,
                            destinationPath = tmpdir,
                            overwrite = TRUE
                          )
                        })
-  expect_true(inherits(outsideModule[[1]], "Raster"))
-  expect_true(inherits(outsideModule[[2]], "Raster"))
-  expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
-  expect_true(is.na(crs(outsideModule[[1]])))
+  expect_true(inherits(outsideModule[[1]], "SpatRaster"))
+  expect_true(inherits(outsideModule[[2]], "SpatRaster"))
+  # expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
+  expect_true(identical(terra::crs(outsideModule[[1]]), ""))
   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
 
 })
