@@ -74,29 +74,27 @@ if (getRversion() >= "3.1.0") {
 #' @section `fun`:
 #'
 #'  `fun` offers the ability to pass any custom function with which to load
-#'  the object obtained by `preProcess` into the session. There are two cases that are
+#'  the file obtained by `preProcess` into the session. There are two cases that are
 #'  dealt with: when the `preProcess` downloads a file (including via `dlFun`),
 #'  `fun` must deal with a file; and, when `preProcess` creates an R object
 #'  (e.g., raster::getData returns an object), `fun` must deal with an object.
 #'
 #'  `fun` can be supplied in three ways: a function, a character string
-#'   (i.e., a function name as a string), of a quoted expression.
+#'   (i.e., a function name as a string), or a quoted expression.
 #'   If a character string or function, is should have the package name e.g.,
-#'   `"raster::raster"` or as an actual function, e.g., `base::readRDS`.
+#'   `"terra::rast"` or as an actual function, e.g., `base::readRDS`.
 #'   In these cases, it will evaluate this function call while passing `targetFile`
 #'   as the first argument. These will only work in the simplest of cases.
 #'
 #'   When more precision is required, the full call can be written, surrounded by
-#'   `quote`, and where the object can be referred to as `targetFile` if the function
-#'   is loading a file or as `x` if it is loading the object that was returned by
-#'   `preProcess`. If `preProcess` returns an object, this must be used by `fun`; if
-#'   `preProcess` is only getting a file, then there will be no object, so `targetFile` is the
-#'   only option.
+#'   `quote`, and where the filename can be referred to as `targetFile` if the function
+#'   is loading a file. If `preProcess` returns an object, `fun` should be set to
+#'   `fun = NA`.
 #'
 #'   If there is a custom function call, is not in a package, `prepInputs` may not find it. In such
 #'   cases, simply pass the function as a named argument (with same name as function) to `prepInputs`.
 #'   See examples.
-#'   NOTE: passing `NA` will skip loading object into R. Note this will essentially
+#'   NOTE: passing `fun = NA` will skip loading object into R. Note this will essentially
 #'   replicate the functionality of simply calling `preProcess` directly.
 #'
 #' @section `purge`:
@@ -118,10 +116,11 @@ if (getRversion() >= "3.1.0") {
 #'   it will write or append to a (if already exists) `CHECKSUMS.txt` file.
 #'   If the `CHECKSUMS.txt` is not correct, use this argument to remove it.
 #'
-#' @param targetFile Character string giving the path to the eventual file
+#' @param targetFile Character string giving the filename (without relative or
+#'   absolute path) to the eventual file
 #'   (raster, shapefile, csv, etc.) after downloading and extracting from a zip
 #'   or tar archive. This is the file *before* it is passed to
-#'   `postProcess`. Currently, the internal checksumming does not checksum
+#'   `postProcess`. The internal checksumming does not checksum
 #'   the file after it is `postProcess`ed (e.g., cropped/reprojected/masked).
 #'   Using `Cache` around `prepInputs` will do a sufficient job in these cases.
 #'   See table in [preProcess()].
@@ -217,8 +216,26 @@ if (getRversion() >= "3.1.0") {
 #' @seealso [postProcessTo()], [downloadFile()], [extractFromArchive()],
 #'          [postProcess()].
 #' @examples
-#' \donttest{
 #' if (requireNamespace("terra") && requireNamespace("sf")) {
+#'
+#' # Make a dummy study area map -- user would supply this normally
+#'   coords <- structure(c(-122.9, -116.1, -99.2, -106, -122.9, 59.9, 65.7, 63.6, 54.8, 59.9),
+#'                       .Dim = c(5L, 2L))
+#'   studyArea <- terra::vect(coords, "polygons")
+#'   terra::crs(studyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#' # Make dummy "large" map that must be cropped to the study area
+#'   outerSA <- terra::buffer(studyArea, 50000)
+#'   terra::crs(outerSA) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#'   tf <- file.path(tempfile2(fileext = ".shp"))
+#'   terra::writeVector(outerSA, tf, overwrite = TRUE)
+#'
+#' # run prepInputs -- load file, postProcess it to the studyArea
+#' studyArea2 <- prepInputs(targetFile = tf, to = studyArea)
+#'
+#' ##########################################
+#' # Remote file using `url`
+#' ##########################################
+#' \donttest{
 #'   data.table::setDTthreads(2)
 #'   origDir <- getwd()
 #'   # download a zip file from internet, unzip all files, load as shapefile, Cache the call
@@ -229,7 +246,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #'   # Wrapped in a try because this particular url can be flaky
 #'   shpEcozone <- try(prepInputs(destinationPath = dPath,
-#'                                url = shpUrl))
+#'                              url = shpUrl))
 #'   if (!is(shpEcozone, "try-error")) {
 #'     # Robust to partial file deletions:
 #'     unlink(dir(dPath, full.names = TRUE)[1:3])
@@ -274,8 +291,9 @@ if (getRversion() >= "3.1.0") {
 #'     terra::plot(shpEcozone[, 1])
 #'     terra::plot(shpEcozoneSm[, 1], add = TRUE, col = "red")
 #'     unlink(dPath)
-#'    }
 #'  }
+#'  }
+#' }
 #'
 #' ## Using quoted dlFun and fun -- this is not intended to be run but used as a template
 #' ## prepInputs(..., fun = quote(customFun(x = targetFile)), customFun = customFun)
@@ -289,10 +307,8 @@ if (getRversion() >= "3.1.0") {
 #' ##     out <- readRDS(targetFile)
 #' ##     sf::st_as_sf(out)})
 #' ##  )
-#' }
 prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = getOption("reproducible.destinationPath", "."),
-
                        fun = NULL,
                        quick = getOption("reproducible.quick"),
                        overwrite = getOption("reproducible.overwrite", FALSE),
@@ -498,14 +514,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
       # The do.call doesn't quote its arguments, so it doesn't work for "debugging"
       #  This rlang stuff is a way to pass through objects without evaluating them
-
-      # argList <- append(list(x = x, filename1 = out$targetFilePath,
-      #                        overwrite = overwrite,
-      #                        destinationPath = out$destinationPath,
-      #                        useCache = useCache), # passed into postProcess
-      #                   out$dots)
-      # rdal <- .robustDigest(argList)
-      # browser(expr = exists("._prepInputs_2"))
 
       # make quosure out of all spatial objects and x
       spatials <- sapply(out$dots, function(x) is(x, "Raster") || is(x, "Spatial") || is(x, "sf"))
