@@ -209,7 +209,7 @@
                          modifiedDots, debugCache, verbose, # sideEffect,
                          quick, fileFormat = NULL,
                          algo, preDigest, startCacheTime,
-                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                         drv = getDrv(getOption("reproducible.drv", NULL)),
                          conn = getOption("reproducible.conn", NULL), ...) {
   # if (verbose > 3) {
   #   startLoadTime <- Sys.time()

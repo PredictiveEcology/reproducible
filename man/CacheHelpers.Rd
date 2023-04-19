@@ -13,7 +13,7 @@
 \usage{
 createCache(
   cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   force = FALSE,
   verbose = getOption("reproducible.verbose")
@@ -26,7 +26,7 @@ loadFromCache(
   format = getOption("reproducible.cacheSaveFormat", "rds"),
   .functionName = NULL,
   .dotsFromCache = NULL,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")
 )
@@ -34,14 +34,14 @@ loadFromCache(
 rmFromCache(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   format = getOption("reproducible.cacheSaveFormat", "rds")
 )
 
 CacheDBFile(
   cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL)
 )
 
@@ -56,13 +56,13 @@ CacheStoredFile(
 
 CacheDBTableName(
   cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite())
+  drv = getDrv(getOption("reproducible.drv", NULL))
 )
 
 CacheIsACache(
   cachePath = getOption("reproducible.cachePath"),
   create = FALSE,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL)
 )
 }
@@ -72,8 +72,7 @@ the database file(s)}
 
 \item{drv}{A driver, passed to \code{dbConnect}}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{an optional DBIConnection object, as returned by dbConnect().}
 
 \item{force}{Logical. Should it create a cache in the \code{cachePath},
 even if it already exists, overwriting.}
@@ -96,6 +95,9 @@ to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 \item{.functionName}{Optional. Used for messaging when this function is called from \code{Cache}}
 
 \item{.dotsFromCache}{Optional. Used internally.}
+
+\item{obj}{The optional object that is of interest; it may have an attribute "saveRawFile"
+that would be important.}
 
 \item{create}{Logical. Currently only affects non RQSLite default drivers. If this
 is \code{TRUE} and there is no Cache database, the function will create one.}

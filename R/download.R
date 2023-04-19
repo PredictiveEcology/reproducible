@@ -22,7 +22,7 @@
 #' @export
 #' @include checksums.R
 downloadFile <- function(archive, targetFile, neededFiles,
-                         destinationPath = getOption("reproducible.destinationPath"), quick,
+                         destinationPath = getOption("reproducible.destinationPath", "."), quick,
                          checksumFile, dlFun = NULL,
                          checkSums, url, needChecksums,
                          overwrite = getOption("reproducible.overwrite", TRUE),
@@ -594,7 +594,7 @@ missingFiles <- function(files, checkSums, targetFile) {
 }
 
 assessGoogle <- function(url, archive = NULL, targetFile = NULL,
-                         destinationPath = getOption("reproducible.destinationPath"),
+                         destinationPath = getOption("reproducible.destinationPath", "."),
                          verbose = getOption("reproducible.verbose", 1),
                          team_drive = NULL) {
   if (!requireNamespace("googledrive", quietly = TRUE))

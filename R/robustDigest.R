@@ -138,37 +138,38 @@ setMethod(
     } else if (is(object, "Raster")) {
       object <- .removeCacheAtts(object)
 
-      if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
-        if (is(object, "RasterStack")) {
-          # have to do one file at a time with Stack
-          dig <- suppressWarnings(
-            lapply(object@layers, function(yy) {
-              .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
-            })
-          )
-        } else {
-          # Brick and Layers have only one file
-          dig <- suppressWarnings(
-            .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-        }
-      } else {
+      # if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
+      #   if (is(object, "RasterStack")) {
+      #     # have to do one file at a time with Stack
+      #     dig <- suppressWarnings(
+      #       lapply(object@layers, function(yy) {
+      #         .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
+      #       })
+      #     )
+      #   } else {
+      #     # Brick and Layers have only one file
+      #     dig <- suppressWarnings(
+      #       .digestRasterLayer(object, length = length, algo = algo, quick = quick))
+      #   }
+      # } else {
         dig <- suppressWarnings(
           .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-      }
+      # }
       forDig <- unlist(dig)
     } else if (is(object, "cluster")) {# can't get this class from parallel via importClass parallel cluster
       forDig <- NULL
     } else if (inherits(object, "SpatRaster")) {
-      if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+      if (!requireNamespace("terra", quietly = TRUE))
         stop("Please install terra package")
       terraSrcs <- Filenames(object)
       if (any(nchar(terraSrcs) > 0)) {
         out <- lapply(terraSrcs, function(x)
           .robustDigest(x, length = length, algo = algo, quick = quick))
-        dig <- .robustDigest(append(
+        dig <- .robustDigest(
           list(terra::nrow(object), terra::ncol(object), terra::nlyr(object),
                terra::res(object), terra::crs(object),
-               terra::ext(object)), names(object)),
+               as.vector(terra::ext(object)), # There is something weird with this pointer that doesn't cache consistently
+               names(object)),
           length = length, quick = quick,
           algo = algo, classOptions = classOptions) # don't include object@data -- these are volatile
         forDig <- list(out, dig)
@@ -176,7 +177,7 @@ setMethod(
         forDig <- terra::wrap(object)
       }
     } else if (inherits(object, "SpatVector")) {
-      if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+      if (!requireNamespace("terra", quietly = TRUE))
         stop("Please install terra package")
       forDig <- wrapSpatVector(object)
     } else {
@@ -525,27 +526,24 @@ setMethod(
 }
 
 .doDigest <- function(x, algo, length = Inf, file,
-                      newAlgo = getOption("reproducible.useNewDigestAlgorithm"),
+                      newAlgo = NULL, #getOption("reproducible.useNewDigestAlgorithm"),
                       cacheSpeed = getOption("reproducible.cacheSpeed", "slow")) {
   if (missing(algo)) algo = formals(.robustDigest)$algo
 
   out <- if (!missing(file)) {
     digest::digest(file = x, algo = algo, length = length)
   } else {
-    if (isTRUE(newAlgo > 0)) {
-      if (cacheSpeed == "fast") {
-        cacheSpeed <- 2L
-      } else if (cacheSpeed == "slow") {
-        cacheSpeed <- 1L
-      }
-    } else {
+    if (cacheSpeed == "fast") {
       cacheSpeed <- 2L
+    } else if (cacheSpeed == "slow") {
+      cacheSpeed <- 1L
     }
+    if (!.requireNamespace("fastdigest", stopOnFALSE = FALSE))
+      cacheSpeed <- 1L
+
     out <- if (cacheSpeed == 1) {
       digest(x, algo = algo)
     } else if (cacheSpeed == 2) {
-      if (!requireNamespace("fastdigest", quietly = TRUE))
-        stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
       fastdigest::fastdigest(x)
     } else {
       stop("options('reproducible.cacheSpeed') must be 1, 2, 'slow' or 'fast'")

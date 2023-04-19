@@ -4,16 +4,22 @@ Version 1.2.17
 ==============
 
 ## enhancements
-- starting to deprecate `raster` and `sp`; not complete, but where deprecated, warnings occur with instructions and automatically passed to new ways
+- new optional backend for `Cache` via `options(reproducible.useDBI = FALSE)` is single data files with the same `basename` as the cached object, i.e., with the same `cacheId` in the file name. This is a replacement for `RSQLite` and will become the default in the next release. Helpers to transition will be supplied at that time. This approach makes cloud caching easier as all metadata are available in small binary files for each cached object. 
+- moved `raster` and `sp` to `Suggests`; no more internal functions use these. User can still work with `Raster` class objects as before.
 - `preProcess` can now handle google docs files, if `type = ...` is passed.
-- `postProcess` now uses `terra` and `sf` by default throughout the family. These are only activated by a user deciding to use the new family of functions (`postProcessTo`, `cropTo`, `maskTo`, `projectTo`, `writeTo`) or by setting the `option(reproducible.useTerra = TRUE)`
+- `postProcess` now uses `terra` and `sf` internally by default throughout the family of `*Inputs` and `*To` functions. The old behaviour, which is no longer supported, can be approximated by setting the `option(reproducible.useTerra = FALSE)`
 - new functions to assist with transition from `raster` to `terra` --> `maxFn`, `minFn`, `rasterRead`
 - `.dealWithClass` and `.dealWithClassOnRecovery` are now exported generics, with several methods here, notably, list, environment, default
 - other miscellaneous changes to deal with `raster` to `terra` transition (e.g. `studyAreaName` can deal with `SpatVector`)
 
 ## Dependency changes
+- no spatial packages are automatically installed any more; to work with `prepInputs` and family, the user will have to install `terra` and `sf` at a minimum.
+- `terra`, `sf` are in `Suggests`
 - removed entirely: `fasterize`, `fpCompare`, `magrittr`
 - moved to `Suggests`: `raster`, `sp`, `rlang`
+
+## Defunct
+- `reproducible.useNewDigestAlgorithm` is not longer an option as the old algorithms do not work reliably.
 
 ## bugfixes
 - `Cache` was incorrectly dealing with `environment` and `environment-like` objects. Since some objects, e.g., `Spat*` objects in `terra`, must be wrapped prior to saving, environments must be scanned for these classes of objects prior to saving. This previously only occurred for `list` objects; fixed

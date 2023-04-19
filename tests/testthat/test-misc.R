@@ -1,4 +1,5 @@
 test_that("test miscellaneous fns (part 1)", {
+  # ONLY RELEVANT FOR RASTERS
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
@@ -75,7 +76,7 @@ test_that("setting options works correctly", {
   a <- reproducibleOptions()
 
   # The keep is during terra-migration
-  keep <- setdiff(names(a), c("reproducible.useTerra", "reproducible.rasterRead",
+  keep <- setdiff(names(a), c("reproducible.rasterRead", "reproducible.useDBI",
                               "reproducible.cacheSaveFormat"))
   a <- a[keep]
 
@@ -129,8 +130,8 @@ test_that("test miscellaneous fns (part 2)", {
                           needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
-    try(googledrive::drive_rm(googledrive::as_id(cloudFolderID)))
-    try(googledrive::drive_rm(googledrive::as_id(tmpCloudFolderID)))
+    try(googledrive::drive_rm(googledrive::as_id(cloudFolderID)), silent = TRUE)
+    try(googledrive::drive_rm(googledrive::as_id(tmpCloudFolderID)), silent = TRUE)
   }, add = TRUE)
 
   ras <- terra::rast(terra::ext(0,1,0,1), res  = 1, vals = 1)
@@ -147,11 +148,15 @@ test_that("test miscellaneous fns (part 2)", {
     "reproducible::retry" = function(..., retries = 1) TRUE,
     {
       if (useDBI()) {
-
-        # Need to convert to cloudUpload
-        mess1 <- capture_messages(#expect_error(
-          cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
-                      gdriveLs = gdriveLs1, cachePath = tmpCache))#)
+        # Need to convert to cloudUpload from Cache
+        mess1 <- capture_messages(
+          capture_warnings( # about cache repo -- not the point here
+            expect_error(
+          cloudUploadFromCache(#outputToSave = ,
+                               isInCloud = FALSE, outputHash = "sdfsiodfja",
+                      #gdriveLs = gdriveLs1,
+                      cloudFolderID = cloudFolderID,
+                      cachePath = tmpCache))))
       }
     })
 
@@ -173,17 +178,18 @@ test_that("test miscellaneous fns (part 2)", {
       expect_true(is.null(err))
     })
 
-  testthat::with_mock(
-    "reproducible::retry" = function(..., retries = 1) TRUE,
-    {
-      mess1 <- capture_messages({
-        err <- capture_error({
-          cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs", # saved = "life",
-                               cachePath = tmpCache)
-        })
-      })
-      expect_true(all(grepl("cloudFolderID.*is missing, with no default", err)))
-    })
+  # testthat::with_mock(
+  #   "reproducible::retry" = function(..., retries = 1) TRUE,
+  #   {
+  #     mess1 <- capture_messages({
+  #       warn <- capture_warnings(
+  #       err <- capture_error({
+  #         cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs", # saved = "life",
+  #                              cachePath = tmpCache)
+  #       }))
+  #     })
+  #     expect_true(all(grepl("cloudFolderID.*is missing, with no default", err)))
+  #   })
 
   a <- new.env(parent = emptyenv())
   a$a = list(ras, ras)

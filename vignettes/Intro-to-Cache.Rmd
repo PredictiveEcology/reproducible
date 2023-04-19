@@ -289,9 +289,9 @@ Once a piece of code is run, then the `cacheId` can be manually extracted (it is
 set.seed(1)
 Cache(rnorm, 1, cachePath = tmpdir1)
 # manually look at output attribute which shows cacheId: 7072c305d8c69df0
-Cache(rnorm, 1, cachePath = tmpdir1, cacheId = "7072c305d8c69df0") # same value
+Cache(rnorm, 1, cachePath = tmpdir1, cacheId = "422bae4ed2f770cc") # same value
 # override even with different inputs:
-Cache(rnorm, 2, cachePath = tmpdir1, cacheId = "7072c305d8c69df0")
+Cache(rnorm, 2, cachePath = tmpdir1, cacheId = "422bae4ed2f770cc")
 
 ```
 

@@ -96,7 +96,7 @@ setMethod(
   "Copy",
   signature(object = "ANY"),
   definition = function(object, filebackedDir,
-                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL),
                         ...) {
     out <- object # many methods just do a pass through
@@ -106,7 +106,7 @@ setMethod(
     } else if (is(object, "proto")) { # don't want to import class for reproducible package; an edge case
       out <- get(class(object)[1])(object)
     } else if (inherits(object, "SQLiteConnection")) {
-      con <- dbConnect(RSQLite::SQLite(), ":memory:")
+      con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
       messageCache("Making a copy of the entire SQLite database: ",object@dbname,
                    "; this may not be desireable ...")
       out <- RSQLite::sqliteCopyDatabase(object, con)
@@ -184,22 +184,3 @@ setMethod("Copy",
             object
 })
 
-# @rdname Copy
-# @inheritParams DBI::dbConnect
-# setMethod("Copy",
-#           signature(object = "Raster"),
-#           definition = function(object, filebackedDir,
-#                                 drv = getOption("reproducible.drv", RSQLite::SQLite()),
-#                                 conn = getOption("reproducible.conn", NULL), ...) {
-#             # raster::fromDisk fails when only some of the RasterLayers in a RasterStack are fromDisk
-#             #  --> changing to Filenames
-#             # if (fromDisk(object)) {
-#             if (any(nchar(Filenames(object)) > 0)) {
-#               if (missing(filebackedDir)) {
-#                 filebackedDir <- tempdir2(rndstr(1, 11))
-#               }
-#               if (!is.null(filebackedDir))
-#                 object <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn)
-#             }
-#             object
-# })

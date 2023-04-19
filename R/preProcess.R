@@ -705,9 +705,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       fun
     } else {
       suppressWarnings(isNAFun <- is.na(fun))
-      if (!isNAFun) {
+      if (!any(isNAFun)) {
         if (!is.function(fun)) {
-          if (grepl("::", fun)) {
+          if (any(grepl("::", fun))) {
             fun2 <- strsplit(fun, "::")[[1]]
             pkg <- fun2[1]
             fun <- fun2[2]
@@ -988,7 +988,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
     toDirs <- unique(dirname(to))
     dirDoesntExist <- !dir.exists(toDirs)
     if (any(dirDoesntExist)) {
-      lapply(toDirs[dirDoesntExist], dir.create)
+      lapply(toDirs[dirDoesntExist], dir.create, recursive = TRUE)
     }
     dups <- duplicated(.basename(from))
 

@@ -185,7 +185,7 @@ reproducibleOptions <- function() {
     reproducible.cacheSpeed = "slow",
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
-    reproducible.drv = RSQLite::SQLite(),
+    reproducible.drv = NULL, # RSQLite::SQLite(),
     reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
     reproducible.inputPaths = NULL,
@@ -196,23 +196,16 @@ reproducibleOptions <- function() {
     reproducible.messageColourQuestion = "green",
     reproducible.nThreads = 1,
     reproducible.overwrite = FALSE,
-    reproducible.polygonShortcut = FALSE,
     reproducible.quick = FALSE,
     reproducible.rasterRead = "terra::rast",
-    # reproducible.rasterRead = "raster::raster",
     reproducible.shapefileRead = "sf::st_read",
-    # reproducible.shapefileRead = "raster::shapefile",
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
-    reproducible.useDBI = TRUE,
-    # reproducible.useGDAL = FALSE, #
+    reproducible.useDBI = TRUE, # `FALSE` is useMultipleDBFiles now
     reproducible.useMemoise = FALSE, #memoise
-    reproducible.useNewDigestAlgorithm = 2, # TODO: change in next release
-    reproducible.useTerra = TRUE, # Default for now
-    # reproducible.useTerra = FALSE, # Default for now
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1
   )

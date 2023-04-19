@@ -7,7 +7,7 @@
 movedCache(
   new,
   old,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL)
 )
 }
@@ -19,12 +19,10 @@ the new DB Table Name}
 Either the path of the previous \code{cachePath} where the cache was moved or copied from, or
 the old DB Table Name}
 
-\item{drv}{an object that inherits from \linkS4class{DBIDriver},
-or an existing \linkS4class{DBIConnection}
-object (in order to clone an existing connection).}
+\item{drv}{if using a database backend, drv must be an object that
+inherits from DBIDriver e.g., \code{RSQLite::SQLite()}}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{an optional DBIConnection object, as returned by dbConnect().}
 }
 \value{
 \code{movedCache} does not return anything; it is called for its side effects.

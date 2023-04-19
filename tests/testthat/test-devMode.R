@@ -1,6 +1,5 @@
 test_that("test devMode", {
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"),
-                          opts = list("reproducible.useCache" = "devMode",
+  testInitOut <- testInit(opts = list("reproducible.useCache" = "devMode",
                                       "reproducible.useNewDigestAlgorithm" = 2))
   on.exit({
     testOnExit(testInitOut)

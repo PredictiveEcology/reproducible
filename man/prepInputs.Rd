@@ -62,9 +62,14 @@ To prevent repeated downloads in different locations, the user can also set
 search for the file before attempting to download. Default for that option is
 \code{NULL} meaning do not search locally.}
 
-\item{fun}{Function, character string, or quoted call with which to load the
-\code{targetFile} or an object created by \code{dlFun}
-into an \code{R} object. See details and examples below.}
+\item{fun}{Optional. If specified, this will attempt to load whatever
+file was downloaded during \code{preProcess} via \code{dlFun}. This can be either a
+function (e.g., sf::st_read), character string (e.g., "base::load"),
+NA (for no loading, useful if \code{dlFun} already loaded the file) or
+if extra arguments are required
+in the function call, it must be a quoted call naming
+\code{targetFile} (e.g., \code{quote(sf::st_read(targetFile, quiet = TRUE))})
+as the file path to the file to load. See details and examples below.}
 
 \item{quick}{Logical. This is passed internally to \code{\link[=Checksums]{Checksums()}}
 (the quickCheck argument), and to
@@ -96,7 +101,7 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Additional arguments passed to \code{fun} (i.e,. user supplied),
+\item{...}{Additional arguments passed to
 \code{\link[=postProcess]{postProcess()}} and \code{\link[=Cache]{Cache()}}.
 Since \code{...} is passed to \code{\link[=postProcess]{postProcess()}}, these will
 \code{...} will also be passed into the inner
@@ -293,7 +298,7 @@ if (requireNamespace("terra") && requireNamespace("sf")) {
  }
 
 ## Using quoted dlFun and fun -- this is not intended to be run but used as a template
-## prepInputs(..., fun = quote(customFun(x = targetFilePath)), customFun = customFun)
+## prepInputs(..., fun = quote(customFun(x = targetFile)), customFun = customFun)
 ##   # or more complex
 ##  test5 <- prepInputs(
 ##   targetFile = targetFileLuxRDS,
@@ -301,7 +306,7 @@ if (requireNamespace("terra") && requireNamespace("sf")) {
 ##     getDataFn(name = "GADM", country = "LUX", level = 0) # preProcess keeps file from this!
 ##   }),
 ##   fun = quote({
-##     out <- readRDS(targetFilePath)
+##     out <- readRDS(targetFile)
 ##     sf::st_as_sf(out)})
 ##  )
 }

@@ -8,7 +8,7 @@ downloadFile(
   archive,
   targetFile,
   neededFiles,
-  destinationPath = getOption("reproducible.destinationPath"),
+  destinationPath = getOption("reproducible.destinationPath", "."),
   quick,
   checksumFile,
   dlFun = NULL,

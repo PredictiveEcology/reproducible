@@ -35,16 +35,6 @@ oldPaths <- dirname(filenames)
 newPaths <- c("/home/user2/Desktop", "/Users/user2/Desktop")
 convertPaths(filenames, oldPaths, newPaths)
 
-if (requireNamespace("raster")) {
-  r1 <- raster::raster(system.file("external/test.grd", package = "raster"))
-  r2 <- raster::raster(system.file("external/rlogo.grd", package = "raster"))
-  rasters <- list(r1, r2)
-  oldPaths <- system.file("external", package = "raster")
-  newPaths <- file.path("~/rasters")
-  rasters <- convertRasterPaths(rasters, oldPaths, newPaths)
-  lapply(rasters, raster::filename)
-}
-
 }
 \author{
 Eliot McIntire and Alex Chubaty

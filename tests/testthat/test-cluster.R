@@ -8,55 +8,59 @@ test_that("test parallel collisions", {
     try(testOnExit(testInitOut), silent = TRUE)
   }, add = TRUE)
 
-  if (require(parallel, quietly = TRUE)) {
-    # make cluster -- note this works if cluster is FORK also, but for simplicity, using default
-    #   which works on Linux, Mac, Windows
-    N <- min(4, detectCores())
+  skip_if_not_installed("parallel")
+  # make cluster -- note this works if cluster is FORK also, but for simplicity, using default
+  #   which works on Linux, Mac, Windows
+  N <- min(2L, detectCores())
 
-    if (useDBI())
-      if (!file.exists(CacheDBFile(tmpdir))) {
-        createCache(tmpdir)
-      }
-
-    # make function that will write to cache repository from with clusters
-    fun <- function(x, cachePath) {
-      #print(x)
-      Cache(rnorm, 10, sd = x %% 2 + 1, cachePath = cachePath,
-            # useCache = "overwrite",
-            verbose = 4) # The "overwrite" means delete, rewrite, delete, rewrite over and over
+  if (useDBI())
+    if (!file.exists(CacheDBFile(tmpdir))) {
+      createCache(tmpdir)
     }
-    # Run something that will write many times
-    # This will produce "database is locked" on Windows or Linux *most* of the time without the fix
-    if (interactive()) {
-      of <- tmpfile[3]
-      of <- "c:/Eliot/tmpCache/log.txt"
-      cl <- makeCluster(N, outfile = of)
-      print(paste("log file is", of))
-    } else {
-      cl <- makeCluster(N)
-    }
-    on.exit(stopCluster(cl), add = TRUE)
 
+  # make function that will write to cache repository from with clusters
+  numNew <- 20
+  fun <- function(x, cachePath, numNew, keepLog) {
+    library(reproducible)
+    if (keepLog) {
+      fn <- file.path("c:/Eliot/tmpCache/log", Sys.getpid())
+      checkPath(dirname(fn), create = TRUE)
+    }
+    withCallingHandlers(
+      Cache(rnorm, 10, sd = x %% numNew + 1, cachePath = cachePath,
+            verbose = 4), # The "overwrite" means delete, rewrite, delete, rewrite over and over
+      message = function(m) if (keepLog)
+        cat(m$message, file = fn, append = TRUE))
+  }
+  cl <- makeCluster(N)
+  on.exit(stopCluster(cl), add = TRUE)
+
+  keepLog <- FALSE
+  if (isWindows() && Sys.info()["user"] == "emcintir") {
     tmpdir <- 'c:/Eliot/tmpCache/'
-    clusterSetRNGStream(cl)
-    parallel::clusterEvalQ(cl, {
-      # options(reproducible.useMultipleDBFiles = TRUE)
-      library(reproducible)
-      })
-    numToRun <- 140
-    if (interactive())
-      print(tmpdir)
+    keepLog <- TRUE
+  }
 
-    # There is a 'creating Cache at the same time' problem -- haven't resolved
-    #  Just make cache first and it seems fine
-    Cache(rnorm, 1, cachePath = tmpdir)
-    a <- try(clusterMap(cl = cl, fun, seq(numToRun), cachePath = tmpdir,
-                        .scheduling = "dynamic"),
-             silent = FALSE)
-    if (!is(a, "try-error")) {
-      expect_true(is.list(a))
-      expect_true(length(a) == numToRun)
-    }
+  clusterSetRNGStream(cl)
+  parallel::clusterEvalQ(cl, {
+    library(reproducible)
+  })
+  numToRun <- 140
+  if (interactive())
+    print(tmpdir)
+
+  # There is a 'creating Cache at the same time' problem -- haven't resolved
+  #  Just make cache first and it seems fine
+  clearCache(tmpdir) # If in c:/Eliot, then it may be reused
+  Cache(rnorm, 1, cachePath = tmpdir)
+  a <- try(clusterMap(cl = cl, fun, seq(numToRun), numNew = numNew, keepLog = keepLog,
+                      cachePath = tmpdir, .scheduling = "dynamic"),
+           silent = FALSE)
+  if (!is(a, "try-error")) {
+    expect_true(is.list(a))
+    expect_true(length(a) == numToRun)
+    news <- vapply(a, function(x) attr(x, ".Cache")$newCache, FUN.VALUE = logical(1))
+    expect_equal(sum(news), numNew)
   }
   endTime <- Sys.time()
   if (interactive())

@@ -222,11 +222,11 @@ setMethod(
 #' b <- "NULL"
 #' .prepareOutput(b) # converts to NULL
 #'
-#' if (requireNamespace("raster")) {
-#'   r <- raster::raster(raster::extent(0,10,0,10), vals = 1:100)
+#' if (requireNamespace("terra")) {
+#'   r <- terra::rast(terra::ext(0,10,0,10), vals = 1:100)
 #'
 #'   # write to disk manually -- will be in tempdir()
-#'   r <- terra::writeRaster(r, file = tempfile())
+#'   r <- terra::writeRaster(r, file = tempfile(fileext = ".tif"))
 #'
 #'   # copy it to the cache repository
 #'   r <- .prepareOutput(r, tempdir())
@@ -545,7 +545,7 @@ unmakeMemoisable.default <- function(x) {
 #'
 #' @export
 #'
-.dealWithClass <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+.dealWithClass <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL),
                           verbose = getOption("reproducible.verbose")) {
   UseMethod(".dealWithClass")
@@ -553,7 +553,7 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClass.list <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+.dealWithClass.list <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                conn = getOption("reproducible.conn", NULL),
                                verbose = getOption("reproducible.verbose")) {
 
@@ -570,7 +570,7 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClass.environment <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+.dealWithClass.environment <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                       conn = getOption("reproducible.conn", NULL),
                                       verbose = getOption("reproducible.verbose")) {
 
@@ -587,7 +587,7 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClass.default <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+.dealWithClass.default <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                   conn = getOption("reproducible.conn", NULL),
                                   verbose = getOption("reproducible.verbose")) {
 
@@ -627,11 +627,11 @@ unmakeMemoisable.default <- function(x) {
         stop("There is an unknown error 04")
     }
     if (isFromDisk) {
-      if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-        obj <- list(origRaster = objOrig, cacheRaster = obj)
-      } else {
+      # if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
+      #   obj <- list(origRaster = objOrig, cacheRaster = obj)
+      # } else {
         obj <- list(origRaster = Filenames(objOrig), cacheRaster = obj)
-      }
+      # }
       setattr(obj, "tags",
               c(attributes(obj$cacheRaster)$tags,
                 paste0("origRaster:", obj$origRaster),
@@ -641,7 +641,7 @@ unmakeMemoisable.default <- function(x) {
   }
 
   if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
-    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+    if (!requireNamespace("terra", quietly = TRUE))
       stop("Please install terra package")
     messageCache("...wrapping terra object for saving...", verboseLevel = 2, verbose = verbose)
     attrs <- attr(obj, ".Cache")
@@ -680,21 +680,21 @@ unmakeMemoisable.default <- function(x) {
 #' @export
 #' @rdname dealWithClass
 .dealWithClassOnRecovery.default <- function(obj, cachePath, cacheId,
-                                    drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                    drv = getDrv(getOption("reproducible.drv", NULL)),
                                     conn = getOption("reproducible.conn", NULL)) {
 
-  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-    return(dealWithClassOnRecovery2(obj, cachePath, cacheId,
-                                    drv, conn))
-  }
+  # if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
+  #   return(dealWithClassOnRecovery2(obj, cachePath, cacheId,
+  #                                   drv, conn))
+  # }
 
   if (any(inherits(obj, "PackedSpatVector"))) {
-    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+    if (!requireNamespace("terra", quietly = TRUE))
       stop("Please install terra package")
     obj <- terra::vect(obj)
   }
   if (any(inherits(obj, "PackedSpatRaster"))) {
-    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+    if (!requireNamespace("terra", quietly = TRUE))
       stop("Please install terra package")
     obj <- terra::rast(obj)
   }
@@ -709,7 +709,7 @@ unmakeMemoisable.default <- function(x) {
 #' @param cacheId Used strictly for messaging. This should be the cacheId of the object being recovered.
 #' @rdname dealWithClass
 .dealWithClassOnRecovery <- function(obj, cachePath, cacheId,
-                                    drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                    drv = getDrv(getOption("reproducible.drv", NULL)),
                                     conn = getOption("reproducible.conn", NULL)) {
   UseMethod(".dealWithClassOnRecovery")
 }
@@ -717,7 +717,7 @@ unmakeMemoisable.default <- function(x) {
 #' @export
 #' @rdname dealWithClass
 .dealWithClassOnRecovery.environment <- function(obj, cachePath, cacheId,
-                                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                         drv = getDrv(getOption("reproducible.drv", NULL)),
                                          conn = getOption("reproducible.conn", NULL)) {
 
   # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
@@ -733,7 +733,7 @@ unmakeMemoisable.default <- function(x) {
 #' @export
 #' @rdname dealWithClass
 .dealWithClassOnRecovery.list <- function(obj, cachePath, cacheId,
-                                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                         drv = getDrv(getOption("reproducible.drv", NULL)),
                                          conn = getOption("reproducible.conn", NULL)) {
 #   if (isOutputList || isOutputEnv) {
     anyNames <- names(obj)

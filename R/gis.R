@@ -64,16 +64,6 @@ bigRastersTmpFile <- function() file.path(bigRastersTmpFolder(), "bigRasInput.ti
 #   attemptGDAL
 # }
 
-maskWithRasterNAs <- function(x, y) {
-  .requireNamespace("raster", stopOnFALSE = TRUE)
-  origColors <- checkColors(x)
-  if (raster::canProcessInMemory(x, 3) && raster::fromDisk(x))
-    x[] <- x[]
-  x <- rebuildColors(x, origColors)
-  m <- which(is.na(y[]))
-  x[m] <- NA
-  x
-}
 
 checkColors <- function(x) {
   origColors <- .getColors(x)

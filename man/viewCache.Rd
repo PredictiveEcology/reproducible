@@ -18,7 +18,7 @@ clearCache(
   ask = getOption("reproducible.ask"),
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   ...
@@ -32,7 +32,7 @@ clearCache(
   ask = getOption("reproducible.ask"),
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   ...
@@ -45,7 +45,7 @@ showCache(
   userTags = character(),
   after = NULL,
   before = NULL,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   ...
@@ -56,7 +56,7 @@ showCache(
   userTags = character(),
   after = NULL,
   before = NULL,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   ...
@@ -68,7 +68,7 @@ keepCache(
   after = NULL,
   before = NULL,
   ask = getOption("reproducible.ask"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   ...
@@ -80,7 +80,7 @@ keepCache(
   after = NULL,
   before = NULL,
   ask = getOption("reproducible.ask"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   ...
@@ -124,12 +124,10 @@ This \code{cloudFolderID} will be added to \code{options("reproducible.cloudFold
 but this will not persist across sessions. If this is a character string, it will
 treat this as a folder name to create or use on GoogleDrive.}
 
-\item{drv}{an object that inherits from \linkS4class{DBIDriver},
-or an existing \linkS4class{DBIConnection}
-object (in order to clone an existing connection).}
+\item{drv}{if using a database backend, drv must be an object that
+inherits from DBIDriver e.g., \code{RSQLite::SQLite()}}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{an optional DBIConnection object, as returned by dbConnect().}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.

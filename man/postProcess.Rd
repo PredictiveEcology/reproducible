@@ -123,7 +123,6 @@ terra::crs(studyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towg
 
 # With terra
 if (require("terra")) {
-  opts <- options("reproducible.useTerra" = TRUE)
   vectEcozone <- terra::vect(shpEcozone)
 
   # warnings: "attribute variables are assumed to be spatially constant throughout all geometries"
@@ -145,7 +144,6 @@ if (require("terra")) {
   # fixErrorsIn --> generally not called on its own
   shpEcozoneClean <- fixErrorsIn(vectEcozone)
 
-  options(opts)
 }
 
 }

@@ -1040,10 +1040,11 @@ test_that("test cc", {
 })
 
 test_that("test pre-creating conn", {
+  if (!useDBI()) skip("Only relevant for DBI backend")
   testInitOut <- testInit(ask = FALSE, tmpFileExt = c(".tif", ".tif"))
   on.exit({
     testOnExit(testInitOut)
-    dbDisconnect(conn)
+    DBI::dbDisconnect(conn)
 
   }, add = TRUE)
 
@@ -1076,6 +1077,7 @@ test_that("test .defaultUserTags", {
 })
 
 test_that("test failed Cache recovery -- message to delete cacheId", {
+  if (!useDBI()) skip("Not relevant for multipleDBfiles")
   testInitOut <- testInit(opts = list("reproducible.useMemoise" = FALSE))
   on.exit({
     testOnExit(testInitOut)
@@ -1644,8 +1646,7 @@ test_that("test cache; SpatRaster attributes", {
                           opts = list(
                             "rasterTmpDir" = tempdir2(rndstr(1,6)),
                             "reproducible.inputPaths" = NULL,
-                            "reproducible.overwrite" = TRUE,
-                            "reproducible.useTerra" = TRUE)
+                            "reproducible.overwrite" = TRUE)
   )
   on.exit({
     testOnExit(testInitOut)
@@ -1675,5 +1676,32 @@ test_that("test cache; SpatRaster attributes", {
                url = url,
                targetFile = targetFile)
   expect_true(is.integer(attr(x = ras, "pixIDs")))
+})
+
+
+test_that("test useDBI TRUE <--> FALSE", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+    useDBI(!orig)
+  }, add = TRUE)
+  options(reproducible.cachePath = tmpdir)
+  orig <- useDBI()
+  useDBI(TRUE)
+  d <- b <- a <- list()
+  b[[1]] <- Cache(rnorm(1))
+  b[[2]] <- Cache(rnorm(2))
+  b[[3]] <- Cache(runif(3))
+  useDBI(FALSE)
+  a[[1]] <- Cache(rnorm(1))
+  a[[2]] <- Cache(rnorm(2))
+  a[[3]] <- Cache(runif(3))
+  useDBI(TRUE)
+  d[[1]] <- Cache(rnorm(1))
+  d[[2]] <- Cache(rnorm(2))
+  d[[3]] <- Cache(runif(3))
+  lapply(a, function(aa) expect_false(attr(aa, ".Cache")$newCache))
+  lapply(b, function(aa) expect_true(attr(aa, ".Cache")$newCache))
+  lapply(d, function(aa) expect_false(attr(aa, ".Cache")$newCache))
 })
 

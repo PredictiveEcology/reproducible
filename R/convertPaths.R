@@ -25,16 +25,6 @@
 #' newPaths <- c("/home/user2/Desktop", "/Users/user2/Desktop")
 #' convertPaths(filenames, oldPaths, newPaths)
 #'
-#' if (requireNamespace("raster")) {
-#'   r1 <- raster::raster(system.file("external/test.grd", package = "raster"))
-#'   r2 <- raster::raster(system.file("external/rlogo.grd", package = "raster"))
-#'   rasters <- list(r1, r2)
-#'   oldPaths <- system.file("external", package = "raster")
-#'   newPaths <- file.path("~/rasters")
-#'   rasters <- convertRasterPaths(rasters, oldPaths, newPaths)
-#'   lapply(rasters, raster::filename)
-#' }
-#'
 convertPaths <- function(x, patterns, replacements) {
   stopifnot(is(x, "character"))
   stopifnot(length(patterns) == length(replacements))
@@ -123,7 +113,7 @@ setMethod(
         if (endsWith(fns, suffix = "grd"))
           fns <- c(fns, gsub("grd$", "gri", fns))
     } else if (inherits(obj, "SpatRaster")) {
-      if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+      if (!requireNamespace("terra", quietly = TRUE))
         stop("Please install terra package")
       fns <- terra::sources(obj)
       if (isTRUE(allowMultiple)) {

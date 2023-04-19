@@ -2,15 +2,14 @@ test_that("testing terra", {
   #if (interactive()) {
   testInitOut <- testInit(needGoogleDriveAuth = FALSE,
                           opts = list(reproducible.useMemoise = FALSE,
-                                      reproducible.useTerra = TRUE,
                                       "rgdal_show_exportToProj4_warnings"="none"))
-
+  opts <- options(reproducible.cachePath = tmpCache)
   on.exit({
     testOnExit(testInitOut)
+    options(opts)
   }, add = TRUE)
 
-  if (!(requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE)))
-    skip("no terra or no reproducible.useTerra = TRUE")
+  skip_if_not_installed("terra")
   f <- system.file("ex/elev.tif", package = "terra")
   tf <- tempfile(fileext = ".tif")
   tf1 <- tempfile(fileext = ".tif")
