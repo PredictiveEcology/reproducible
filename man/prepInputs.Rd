@@ -250,7 +250,12 @@ if (requireNamespace("terra") && requireNamespace("sf")) {
   terra::writeVector(outerSA, tf, overwrite = TRUE)
 
 # run prepInputs -- load file, postProcess it to the studyArea
-suppressWarnings(studyArea2 <- prepInputs(targetFile = tf, to = studyArea))
+
+studyArea2 <- prepInputs(targetFile = tf, to = studyArea) |>
+  suppressWarnings() # not relevant warning here
+
+# clean up
+unlink("CHECKSUMS.txt")
 
 ##########################################
 # Remote file using `url`
