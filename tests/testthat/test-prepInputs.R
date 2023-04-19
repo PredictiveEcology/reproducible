@@ -319,7 +319,7 @@ test_that("interactive prepInputs", {
                          ras <- prepInputs(
                            targetFile = paste0(x, "_currmean.asc"),
                            archive = paste0(x, "_current.zip"),
-                           fun = "raster::raster",
+                           # fun = "raster::raster",
                            url = url,
                            destinationPath = tmpdir,
                            overwrite = TRUE

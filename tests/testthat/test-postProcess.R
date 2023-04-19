@@ -17,19 +17,30 @@ test_that("prepInputs doesn't work (part 3)", {
 
   # Add a study area to Crop and Mask to
   # Create a "study area"
+
   coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
                       .Dim = c(5L, 2L))
   coords2 <- structure(c(-115.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
                        .Dim = c(5L, 2L))
-  Sr1 <- Polygon(coords)
-  Srs1 <- Polygons(list(Sr1), "s1")
-  StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- crsToUse
 
-  Sr1 <- Polygon(coords2)
-  Srs1 <- Polygons(list(Sr1), "s1")
-  StudyArea2 <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea2) <- crsToUse
+  StudyArea <- terra::vect(coords, "polygons")
+  terra::crs(StudyArea) <- crsToUse
+  StudyArea2 <- terra::vect(coords2, "polygons")
+  terra::crs(StudyArea2) <- crsToUse
+
+  # coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+  #                     .Dim = c(5L, 2L))
+  # coords2 <- structure(c(-115.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+  #                      .Dim = c(5L, 2L))
+  # Sr1 <- Polygon(coords)
+  # Srs1 <- Polygons(list(Sr1), "s1")
+  # StudyArea <- SpatialPolygons(list(Srs1), 1L)
+  # crs(StudyArea) <- crsToUse
+  #
+  # Sr1 <- Polygon(coords2)
+  # Srs1 <- Polygons(list(Sr1), "s1")
+  # StudyArea2 <- SpatialPolygons(list(Srs1), 1L)
+  # crs(StudyArea2) <- crsToUse
 
   nonLatLongProj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
                           "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
@@ -116,11 +127,11 @@ test_that("prepInputs doesn't work (part 3)", {
   nonLatLongProj2 <- paste("+proj=lcc +lat_1=51 +lat_2=77 +lat_0=0 +lon_0=-95",
                            "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
   nc3 <- suppressWarningsSpecific({
-    sf::st_transform(nc1, CRSobj = CRS(nonLatLongProj2))
+    sf::st_transform(nc1, CRSobj = nonLatLongProj2)
   }, falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition|PROJ support is provided by the sf and terra packages among others")
   nc4 <- cropInputs(nc3, studyArea = ncSmall)
   ncSmall2 <- suppressWarningsSpecific({
-    sf::st_transform(ncSmall, CRSobj = CRS(nonLatLongProj2))
+    sf::st_transform(ncSmall, CRSobj = nonLatLongProj2)
   }, falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition|PROJ support is provided by the sf and terra packages among others")
   expect_true(isTRUE(all.equal(terra::ext(nc4), terra::ext(ncSmall2))))
 
@@ -137,14 +148,14 @@ test_that("prepInputs doesn't work (part 3)", {
   expect_true(NROW(aaa) == 0)
 
   # cropInputs.sf
-  nc3 <- st_transform(nc1, crs = CRS(nonLatLongProj2))
+  nc3 <- st_transform(nc1, crs = nonLatLongProj2)
   nc4 <- cropInputs(nc3, studyArea = ncSmall)
-  ncSmall2 <- st_transform(ncSmall, crs = CRS(nonLatLongProj2))
+  ncSmall2 <- st_transform(ncSmall, crs = nonLatLongProj2)
   expect_true(isTRUE(all.equal(terra::ext(nc4), terra::ext(ncSmall2))))
 
   # studyArea as spatial object
   nc5 <- cropInputs(nc3, studyArea = ncSmall)
-  ncSmall2 <- st_transform(ncSmall, crs = CRS(nonLatLongProj2))
+  ncSmall2 <- st_transform(ncSmall, crs = nonLatLongProj2)
   expect_true(isTRUE(all.equal(terra::ext(nc5), terra::ext(ncSmall2))))
   expect_true(isTRUE(all.equal(terra::ext(nc5), terra::ext(nc4))))
 
@@ -152,10 +163,10 @@ test_that("prepInputs doesn't work (part 3)", {
   # rasterToMatch
   nc5 <- cropTo(nc3, cropTo = r)
   nc5Extent_r <- st_transform(nc5, crs = crs(r))
-  expect_true(isTRUE(abs(xmin(r) - xmin(as(nc5Extent_r, "Spatial"))) < res(r)[1]))
-  expect_true(isTRUE(abs(ymin(r) - ymin(as(nc5Extent_r, "Spatial"))) < res(r)[1]))
-  expect_true(isTRUE(abs(xmax(r) - xmax(as(nc5Extent_r, "Spatial"))) < res(r)[1]))
-  expect_true(isTRUE(abs(ymax(r) - ymax(as(nc5Extent_r, "Spatial"))) < res(r)[1]))
+  expect_true(isTRUE(abs(terra::xmin(r) - sf::st_bbox(nc5Extent_r)["xmin"]) < terra::res(r)[1]))
+  expect_true(isTRUE(abs(terra::ymin(r) - sf::st_bbox(nc5Extent_r)["ymin"]) < terra::res(r)[1]))
+  expect_true(isTRUE(abs(terra::xmax(r) - sf::st_bbox(nc5Extent_r)["xmax"]) < terra::res(r)[1]))
+  expect_true(isTRUE(abs(terra::ymax(r) - sf::st_bbox(nc5Extent_r)["ymax"]) < terra::res(r)[1]))
 
   ncSmallShifted <- ncSmall + 10000000
   ncSmallShifted <- st_as_sf(ncSmallShifted)
