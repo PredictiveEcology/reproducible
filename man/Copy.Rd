@@ -16,6 +16,7 @@ Copy(object, ...)
   filebackedDir,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 
@@ -44,6 +45,12 @@ file backing them.}
 inherits from DBIDriver e.g., \code{RSQLite::SQLite()}}
 
 \item{conn}{an optional DBIConnection object, as returned by dbConnect().}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \value{
 The same object as \code{object}, but with pass-by-reference class elements "deep" copied.

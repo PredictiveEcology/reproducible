@@ -39,7 +39,7 @@ The method for GIS objects (terra \verb{Spat*} & sf classes) will
 crop, reproject, and mask, in that order.
 This is a wrapper for \code{\link[=cropTo]{cropTo()}}, \code{\link[=fixErrorsIn]{fixErrorsIn()}},
 \code{\link[=projectTo]{projectTo()}}, \code{\link[=maskTo]{maskTo()}} and \code{\link[=writeTo]{writeTo()}},
-with a decent amount of data manipulation between these calls so that the crs match.
+with a required amount of data manipulation between these calls so that the crs match.
 }
 \section{Post processing sequence}{
 

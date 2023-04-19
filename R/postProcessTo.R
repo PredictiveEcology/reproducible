@@ -903,7 +903,8 @@ messageDeclareError <- function(error, fromFnName, verbose = getOption("reproduc
 }
 
 #' @importFrom stats na.omit
-remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.frame()) {
+remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.frame(),
+                         verbose = getOption("reproducible.verbose")) {
 
   forms <- formals(fn)
   dots <- list(...)
