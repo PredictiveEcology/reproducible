@@ -1,10 +1,10 @@
 test_that("test Copy", {
-  testInitOut <- testInit(c("raster", "data.table"), tmpFileExt = ".tif")
+  testInitOut <- testInit(c("terra", "data.table"), tmpFileExt = ".tif")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  ras <- raster(extent(0, 10, 0, 10), vals = 1)
+  ras <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1)
   ras <- suppressWarningsSpecific(falseWarnings = proj6Warn,
                                   writeRaster(ras, filename = tmpfile, overwrite = TRUE))
   # This will make hardlink
@@ -21,7 +21,7 @@ test_that("test Copy", {
 
   # same content
   expect_true(all(unlist(lapply(seq_along(li), function(i) {
-    if (is(li[[i]], "Raster")) {
+    if (is(li[[i]], "SpatRaster")) {
        all.equal(values2(li[[i]]), values2(li2[[i]]))
      } else {
       all.equal(li[[i]], li2[[i]])
@@ -46,7 +46,7 @@ test_that("test Copy", {
   li2 <- Copy(li, tmpdir)
 
   expect_true(all(unlist(lapply(names(li), function(i) {
-    if (is(li[[i]], "Raster")) {
+    if (is(li[[i]], "SpatRaster")) {
       all.equal(li[[i]][], li2[[i]][])
     } else {
       all.equal(li[[i]], li2[[i]])
@@ -74,7 +74,7 @@ test_that("test Copy", {
   liEnv2 <- Copy(liEnv, tmpdir)
 
   expect_true(all(unlist(lapply(names(liEnv[["env"]]), function(i) {
-    if (is(li[[i]], "Raster")) {
+    if (is(li[[i]], "SpatRaster")) {
       all.equal(liEnv[["env"]][[i]][], liEnv2[["env"]][[i]][])
     } else {
       all.equal(liEnv[["env"]][[i]], liEnv2[["env"]][[i]])
@@ -93,7 +93,7 @@ test_that("test Copy", {
   ###################
   # This is an aside on testing whether the hard link can be messed with by overwrite
   fn <- Filenames(ras)
-  ras3 <- raster(extent(0, 10, 0, 10), vals = 2)
+  ras3 <- terra::rast(terra::ext(0, 10, 0, 10), vals = 2)
   ras3 <- suppressWarningsSpecific(writeRaster(ras3, filename = tmpfile, overwrite = TRUE),
                                    "NOT UPDATED FOR PROJ >= 6")# overwrite the original
   # The hardlink is not affected by "overwrite = TRUE" -- it is not by filename, but by file location
