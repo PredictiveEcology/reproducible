@@ -11,7 +11,7 @@ test_that("test Copy", {
   ras2 <- suppressWarningsSpecific(Copy(ras, tmpdir), "NOT UPDATED FOR PROJ >= 6")
 
   expect_true(all.equal(ras2[], ras[]))
-  expect_false(filename(ras2) == filename(ras))
+  expect_false(Filenames(ras2) == Filenames(ras))
 
   dt <- data.table(a = 1:2, b = rev(LETTERS[1:2]))
   tmpdir <- normPath(tempdir2("ras2"))
@@ -30,7 +30,7 @@ test_that("test Copy", {
 
   # different filenames for Rasters
   expect_false(all(unlist(lapply(seq_along(li)[-1], function(i) {
-    isTRUE(all.equal(filename(li[[i]]), filename(li2[[i]])))
+    isTRUE(all.equal(Filenames(li[[i]]), Filenames(li2[[i]])))
   }))))
 
   # data.table
@@ -55,7 +55,7 @@ test_that("test Copy", {
 
   # different filenames for Rasters
   expect_false(all(unlist(lapply(names(li)[-1], function(i) {
-    isTRUE(all.equal(filename(li[[i]]), filename(li2[[i]])))
+    isTRUE(all.equal(Filenames(li[[i]]), Filenames(li2[[i]])))
   }))))
 
   # data.table
@@ -83,7 +83,7 @@ test_that("test Copy", {
 
   # different filenames for Rasters
   expect_false(all(unlist(lapply(names(liEnv[["env"]])[-1], function(i) {
-    isTRUE(all.equal(filename(liEnv[["env"]][[i]]), filename(liEnv2[["env"]][[i]])))
+    isTRUE(all.equal(Filenames(liEnv[["env"]][[i]]), Filenames(liEnv2[["env"]][[i]])))
   }))))
 
   # data.table

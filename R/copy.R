@@ -135,6 +135,13 @@ setMethod(
         if (!is.null(filebackedDir))
           out <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn)
       }
+    } else if (inherits(object, "SpatRaster")) {
+      fns <- Filenames(object, allowMultiple = FALSE)
+      if (any(nzchar(fns))) {
+        newFns <- nextNumericName(fns)
+        copyFile(fns, newFns)
+        out <- terra::rast(newFns)
+      }
     }
     return(out)
 })
