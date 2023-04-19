@@ -147,6 +147,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     on.exit({unlink(.tempPath, recursive = TRUE)},
             add = TRUE)
   }
+  dlFunCaptured <- substitute(dlFun)
+  isAlreadyQuoted <- any(grepl("quote", dlFunCaptured))
+  if (isAlreadyQuoted)
+    dlFunCaptured <- eval(dlFunCaptured)
+
   dots <- list(...)
 
   fun <- .checkFunInDots(fun = fun, dots = dots)
@@ -191,7 +196,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   } else {
     if (length(targetFile) > 1)
       stop("targetFile should be only 1 file")
-    targetFile <- .basename(targetFile)
+    if (!identical(targetFile, .basename(targetFile))) {
+      destinationPath <- dirname(targetFile)
+      targetFile <- .basename(targetFile)
+    }
+
     targetFilePath <- file.path(destinationPath, targetFile)
     if (is.null(alsoExtract)) {
       if (file.exists(checkSumFilePath)) {
@@ -396,7 +405,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ###############################################################
   # Download
   ###############################################################
-  # browser(expr = exists("._preProcess_7"))
   downloadFileResult <- downloadFile(
     archive = if (isTRUE(is.na(archive))) NULL else archive,
     targetFile = targetFile,
@@ -404,7 +412,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     destinationPath = destinationPath,
     quick = quick,
     checkSums = checkSums,
-    dlFun = dlFun,
+    dlFun = dlFunCaptured,
     url = url,
     checksumFile = asPath(checkSumFilePath),
     needChecksums = needChecksums,
@@ -638,7 +646,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                   # on.exit because it is done here
   }
 
-  # browser(expr = exists("._preProcess_10"))
   failStop <- if (is.null(targetFilePath)) {
     TRUE
   } else if (!isTRUE(file.exists(targetFilePath))) {
