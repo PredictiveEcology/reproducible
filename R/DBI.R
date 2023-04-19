@@ -925,7 +925,7 @@ convertDBbackendIfIncorrect <- function(cachePath, drv, conn,
                      "e.g., `useDBI(",useDBI(),")`. Converting now ...",
                      verbose = verbose, verboseLevel = 1)
         if (isTRUE(origDBI)) { # using DBI --> convert all data to a DBI database
-          suppressMessagse(useDBI(origDBI))
+          suppressMessages(useDBI(origDBI))
           .createCache(cachePath, drv = drv, conn = conn)
           Map(tv = sc$tagValue, tk = sc$tagKey, oh = sc$cacheId, function(tv, tk, oh)
             .addTagsRepo(cacheId = oh, cachePath = cachePath,
