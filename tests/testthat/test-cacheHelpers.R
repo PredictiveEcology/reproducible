@@ -212,9 +212,11 @@ test_that("test miscellaneous unit tests cache-helpers", {
   comp <- # if (useDBI())
     .robustDigest("sdf") # else
     # "dda1fbb70d256e6b3b696ef0176c63de"
+  drvHere <- if (useDBI() && .requireNamespace("RSQLite")) RSQLite::SQLite() else NULL
+
   expect_true(identical(comp,
                         writeFuture(1, "sdf", cachePath = tmpCache, userTags = "",
-                                    drv = RSQLite::SQLite())))
+                                    drv = drvHere)))
   expect_error(writeFuture(1, "sdf", cachePath = "sdfd", userTags = ""))
 
   if (interactive()) {
