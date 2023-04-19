@@ -586,14 +586,9 @@ setMethod(
 #' @keywords internal
 .messageCacheSize <- function(x, artifacts = NULL, cacheTable,
                               verbose = getOption("reproducible.verbose")) {
-  # browser(expr = exists("ffff"))
-
   tagCol <- "tagValue"
   if (missing(cacheTable)) {
-    # if (useDBI()) {
-      a <- showCache(x, verbose = verbose - 1, sorted = FALSE)
-    # }
-
+    a <- showCache(x, verbose = verbose - 1, sorted = FALSE)
   } else {
     a <- cacheTable
   }
@@ -681,36 +676,10 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds,
   }
 
   gdriveLs <- driveLs(cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
-#   if (!useDBI()) {
     isInCloud <- any(vapply(cacheIds, function(ci) any(startsWith(prefix = ci, gdriveLs$name)),
                         FUN.VALUE = logical(1)))
     if (isInCloud)
       toDelete <- gdriveLs
-  # } else {
-  #   # gdriveLs <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
-  #   # cacheIds <- gsub("\\..*", "", gdriveLs$name)
-  #   filenamesToRm <- basename2(CacheStoredFile(x, cacheIds))
-  #   # filenamesToRm <- paste0(cacheIds, ".rda")
-  #   isInCloud <- gdriveLs$name %in% filenamesToRm
-  #   # Deal with Rasters
-  #   files <- CacheStoredFile(x, cacheId = cacheIds[isInCloud])
-  #   sc <- suppressMessages(showCache(x, userTags = cacheIds, sorted = FALSE))
-  #   classes <- sc[tagKey == "class"]$tagValue
-  #   rases <- classes %in% c("RasterLayer", "RasterStack", "RasterBrick")
-  #   objs <- lapply(files[rases], readRDS)
-  #   toDelete <- gdriveLs[isInCloud,]
-  #   if (length(objs)) {
-  #     .requireNamespace("raster", stopOnFALSE = TRUE)
-  #     frmDisk <- unlist(lapply(objs, raster::fromDisk))
-  #     filenames <- unlist(lapply(objs[frmDisk], Filenames))
-  #     messageCache("Cloud:", verbose = verbose)
-  #     if (!is.null(filenames)) {
-  #       rasFiles <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
-  #       toDelete <- rbind(rasFiles, toDelete)
-  #     }
-  #   }
-  # }
-
   if (any(isInCloud)) {
     retry(quote(googledrive::drive_rm(toDelete)))
   }

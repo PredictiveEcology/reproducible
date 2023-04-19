@@ -156,31 +156,13 @@ test_that("test file-backed raster caching", {
   }
   nOT <- Sys.time() + 1
 
-  #if (useDBI()) {
-    for (i in 1:2) {
-      strt <- Sys.time()
-      assign(paste0("a", i), Cache(rasterTobinary, a, cachePath = tmpCache, notOlderThan = nOT))
-      fin <- Sys.time()
-      assign(paste0("b", i), fin - strt)
-      nOT <- Sys.time() - 100
-    }
-  # } else {
-  #   env <- environment()
-  #   lapply(1:2, function(i) {
-  #     strt <- Sys.time()
-  #     assign(paste0("a", i), Cache(rasterTobinary, a, cachePath = tmpCache, notOlderThan = nOT),
-  #            envir = env)
-  #     assign("aaaa",  1, envir = .GlobalEnv)
-  #     fin <- Sys.time()
-  #     assign(paste0("b", i), fin - strt, envir = env)
-  #     nOT <- Sys.time() - 100
-  #   })
-  # }
-  # on.exit(suppressWarnings(rm(aaaa, envir = .GlobalEnv)))
-  # suppressWarnings(rm(aaaa, envir = .GlobalEnv))
-  #   attr(a1, ".Cache")$newCache <- NULL
-  #  attr(a2, ".Cache")$newCache <- NULL
-  # test that they are identical
+  for (i in 1:2) {
+    strt <- Sys.time()
+    assign(paste0("a", i), Cache(rasterTobinary, a, cachePath = tmpCache, notOlderThan = nOT))
+    fin <- Sys.time()
+    assign(paste0("b", i), fin - strt)
+    nOT <- Sys.time() - 100
+  }
   expect_true(all.equalWONewCache(a1, a2))
   expect_true(identical(attr(a1, ".Cache")$newCache, TRUE))
   expect_true(identical(attr(a2, ".Cache")$newCache, FALSE))

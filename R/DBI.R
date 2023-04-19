@@ -37,7 +37,8 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
   # browser(expr = exists("aaaa"))
   alreadyExists <- CacheIsACache(cachePath, drv = drv, conn = conn, create = TRUE)
   if (alreadyExists && force == FALSE) {
-    messageCache("Cache already exists at ", cachePath, " and force = FALSE. Not creating new cache.")
+    messageCache("Cache already exists at ", cachePath, " and force = FALSE. Not creating new cache.",
+                 verbose = verbose)
     return(invisible(cachePath))
   }
 
@@ -45,22 +46,6 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
   checkPath(CacheStorageDir(cachePath), create = TRUE)
   if (useDBI()) {
     .createCache(cachePath = cachePath, drv = drv, conn = conn)
-  #   if (is.null(conn)) {
-  #     conn <- dbConnectAll(drv, cachePath = cachePath)
-  #     on.exit(DBI::dbDisconnect(conn))
-  #   }
-  #   dt <- .emptyCacheTable
-  #
-  #   # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
-  #   a <- retry(retries = 250, exponentialDecayBase = 1.01,
-  #              quote(DBI::dbListTables(conn)))
-  #
-  #   if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
-  #     #retry(retries = 5, exponentialDecayBase = 1.5, quote(
-  #     try(DBI::dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
-  #                      field.types = c(cacheId = "text", tagKey = "text",
-  #                                      tagValue = "text", createdDate = "text")), silent = TRUE)
-  #   #)
   }
 }
 
@@ -246,7 +231,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
       if (length(sameCacheID)) {
         messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
-                     fileExt(f), ")")
+                     fileExt(f), ")",
+                     verbose = verbose)
         obj <- loadFromCache(cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
                              cacheId = cacheId,
                              format = fileExt(sameCacheID))
@@ -359,7 +345,7 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
   }
   conn <- try(do.call(DBI::dbConnect, args), silent = TRUE)
   if (is(conn, "try-error")) {
-    messageCache("There is no Cache at this location", verbose = verbose, verboseLevel = 1)
+    messageCache("There is no Cache at this location", verbose = verbose)
     return(invisible(NULL))
   }
   conn
@@ -468,8 +454,6 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
         dt2[tagKey == tk & cacheId == cacheId, tagValue := dt$tagValue]
       }
       saveFileInCacheFolder(dt2, dtFile, cachePath = cachePath, cacheId = cacheId)
-
-      # warning("updateTagsRepo not implemented when useDBI = FALSE")
     }
 
   }
@@ -758,7 +742,8 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 #' bb <- Cache(rnorm, 1, cachePath = tmpdirPath) # should recover the previous call
 #'
 movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL)),
-                       conn = getOption("reproducible.conn", NULL)) {
+                       conn = getOption("reproducible.conn", NULL),
+                       verbose = getOption("reproducible.verbose")) {
   if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = new)
@@ -766,10 +751,10 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
     }
 
     tables <- DBI::dbListTables(conn)
-    # browser(expr = exists("._movedCache_2"))
     if (missing(old)) {
       if (length(tables) == 1) {
-        messageCache("Assuming old database table is ", tables)
+        messageCache("Assuming old database table is ", tables,
+                     verbose = verbose)
       } else {
         dbname <- try(conn@dbname, silent = TRUE)
         if (is(dbname, "try-error"))

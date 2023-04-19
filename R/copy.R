@@ -98,17 +98,18 @@ setMethod(
   definition = function(object, filebackedDir,
                         drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL),
+                        verbose = getOption("reproducible.verbose"),
                         ...) {
     out <- object # many methods just do a pass through
     if (any(grepl("DBIConnection", is(object)))) {
       messageCache("Copy will not do a deep copy of a DBI connection object; no copy being made. ",
-              "This may have unexpected consequences...")
+              "This may have unexpected consequences...", verbose = verbose)
     } else if (is(object, "proto")) { # don't want to import class for reproducible package; an edge case
       out <- get(class(object)[1])(object)
     } else if (inherits(object, "SQLiteConnection")) {
       con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
       messageCache("Making a copy of the entire SQLite database: ",object@dbname,
-                   "; this may not be desireable ...")
+                   "; this may not be desireable ...", verbose = verbose)
       out <- RSQLite::sqliteCopyDatabase(object, con)
     } else if (!identical(is(object)[1], "environment") && is.environment(object)) {
     # keep this environment method here, as it will intercept "proto"
@@ -116,7 +117,7 @@ setMethod(
       messageCache("Trying to do a deep copy (Copy) of object of class ", class(object),
               "which does not appear to be a normal environment. If it can be copied ",
               "like a normal environment, ignore this message; otherwise, may need to create ",
-              "a Copy method for this class. See ?Copy")
+              "a Copy method for this class. See ?Copy", verbose = verbose)
 
     } else if (is.environment(object)) {
       listVersion <- Copy(as.list(object, all.names = TRUE), ...)
@@ -138,16 +139,6 @@ setMethod(
     return(out)
 })
 
-
-# # @rdname Copy
-# setMethod("Copy",
-#           signature(object = "SQLiteConnection"),
-#           definition = function(object, ...) {
-#             con <- dbConnect(RSQLite::SQLite(), ":memory:")
-#             messageCache("Making a copy of the entire SQLite database: ",object@dbname,
-#                     "; this may not be desireable ...")
-#             RSQLite::sqliteCopyDatabase(object, con)
-# })
 
 #' @rdname Copy
 setMethod("Copy",

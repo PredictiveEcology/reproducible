@@ -2,16 +2,28 @@
 % Please edit documentation in R/helpers.R
 \name{messageDF}
 \alias{messageDF}
-\title{Use message to print a clean square data structure}
+\alias{messageQuestion}
+\alias{messageColoured}
+\title{Use \code{message} with a consistent use of \code{verbose}}
 \usage{
 messageDF(
   df,
   round,
   colour = NULL,
   colnames = NULL,
-  appendLF = TRUE,
   verbose = getOption("reproducible.verbose"),
-  verboseLevel = 1
+  verboseLevel = 1,
+  appendLF = TRUE
+)
+
+messageQuestion(..., verboseLevel = 0, appendLF = TRUE)
+
+messageColoured(
+  ...,
+  colour = NULL,
+  verbose = getOption("reproducible.verbose", 1),
+  verboseLevel = 1,
+  appendLF = TRUE
 )
 }
 \arguments{
@@ -19,16 +31,12 @@ messageDF(
 
 \item{round}{An optional numeric to pass to \code{round}}
 
-\item{colour}{Passed to \code{getFromNamespace(colour, ns = "crayon")},
-so any colour that \code{crayon} can use}
+\item{colour}{Any colour that can be understood by \code{crayon}}
 
 \item{colnames}{Logical or \code{NULL}. If \code{TRUE}, then it will print
 column names even if there aren't any in the \code{df} (i.e., they will)
 be \code{V1} etc., \code{NULL} will print them if they exist, and \code{FALSE}
 which will omit them.}
-
-\item{appendLF}{logical: should messages given as a character string
-    have a newline appended?}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
@@ -39,11 +47,22 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{verboseLevel}{The numeric value for this \verb{message*} call, equal or above
 which \code{verbose} must be. The higher this is set, the more unlikely the call
 will show a message.}
+
+\item{appendLF}{logical: should messages given as a character string
+    have a newline appended?}
+
+\item{...}{zero or more objects which can be coerced to character
+    (and which are pasted together with no separator) or (for
+    \code{message} only) a single condition object.}
 }
 \value{
 Used for side effects. This will produce a message of a structured \code{data.frame}.
 }
 \description{
-Sends to \code{message}, but in a structured way so that a data.frame-like can
-be cleanly sent to messaging.
+This family has a consistent use of \code{verbose} allowing messages to be
+turned on or off or verbosity increased or decreased throughout the family of
+messaging in \code{reproducible}. \code{messageDF} uses \code{message} to print a clean
+square data structure. \code{messageColoured}
+allows specific colours to be used. \code{messageQuestion} sets a high level for
+\code{verbose} so that the message always gets asked.
 }

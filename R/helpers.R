@@ -344,57 +344,6 @@ isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
   !need
 }
 
-#' Use message to print a clean square data structure
-#'
-#' Sends to `message`, but in a structured way so that a data.frame-like can
-#' be cleanly sent to messaging.
-#'
-#' @param df A data.frame, data.table, matrix
-#' @param round An optional numeric to pass to `round`
-#' @param colour Passed to `getFromNamespace(colour, ns = "crayon")`,
-#'   so any colour that `crayon` can use
-#' @param colnames Logical or `NULL`. If `TRUE`, then it will print
-#'   column names even if there aren't any in the `df` (i.e., they will)
-#'   be `V1` etc., `NULL` will print them if they exist, and `FALSE`
-#'   which will omit them.
-#' @param verboseLevel The numeric value for this `message*` call, equal or above
-#'   which `verbose` must be. The higher this is set, the more unlikely the call
-#'   will show a message.
-#' @inheritParams base::message
-#'
-#' @export
-#' @return
-#' Used for side effects. This will produce a message of a structured `data.frame`.
-#'
-#' @importFrom data.table is.data.table as.data.table
-#' @importFrom utils capture.output
-#' @inheritParams Cache
-messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE,
-                      verbose = getOption("reproducible.verbose"), verboseLevel = 1) {
-  origColNames <- if (is.null(colnames) | isTRUE(colnames)) colnames(df) else NULL
-
-  if (is.matrix(df))
-    df <- as.data.frame(df)
-  if (!is.data.table(df)) {
-    df <- as.data.table(df)
-  }
-  df <- Copy(df)
-  skipColNames <- if (is.null(origColNames) & !isTRUE(colnames)) TRUE else FALSE
-  if (!missing(round)) {
-    isNum <- sapply(df, is.numeric)
-    isNum <- colnames(df)[isNum]
-    for (Col in isNum) {
-      set(df, NULL, Col, round(df[[Col]], round))
-    }
-  }
-  outMess <- capture.output(df)
-  if (skipColNames) outMess <- outMess[-1]
-  if (is.null(colour)) colour <- "red"
-  out <- lapply(outMess, function(x) {
-    messageColoured(x, colour = colour, appendLF = appendLF, verbose = verbose,
-                    verboseLevel = verboseLevel)
-  })
-}
 
 # This is directly from tools::file_ext_sans_ext
 filePathSansExt <- function(x) {
@@ -458,26 +407,93 @@ isAbsolutePath <- function(pathnames) {
 isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
 
 
-messagePrepInputs <- function(..., appendLF = TRUE) {
+#' Use `message` with a consistent use of `verbose`
+#'
+#' This family has a consistent use of `verbose` allowing messages to be
+#' turned on or off or verbosity increased or decreased throughout the family of
+#' messaging in `reproducible`. `messageDF` uses `message` to print a clean
+#' square data structure. `messageColoured`
+#' allows specific colours to be used. `messageQuestion` sets a high level for
+#' `verbose` so that the message always gets asked.
+#'
+#' @param df A data.frame, data.table, matrix
+#' @param round An optional numeric to pass to `round`
+#' @param colour Passed to `getFromNamespace(colour, ns = "crayon")`,
+#'   so any colour that `crayon` can use
+#' @param colnames Logical or `NULL`. If `TRUE`, then it will print
+#'   column names even if there aren't any in the `df` (i.e., they will)
+#'   be `V1` etc., `NULL` will print them if they exist, and `FALSE`
+#'   which will omit them.
+#' @param verboseLevel The numeric value for this `message*` call, equal or above
+#'   which `verbose` must be. The higher this is set, the more unlikely the call
+#'   will show a message.
+#' @inheritParams base::message
+#'
+#' @export
+#' @return
+#' Used for side effects. This will produce a message of a structured `data.frame`.
+#'
+#' @importFrom data.table is.data.table as.data.table
+#' @importFrom utils capture.output
+#' @rdname messageColoured
+#' @inheritParams Cache
+messageDF <- function(df, round, colour = NULL, colnames = NULL,
+                      verbose = getOption("reproducible.verbose"), verboseLevel = 1,
+                      appendLF = TRUE) {
+
+  if (isTRUE(verboseLevel <= verbose)) {
+    origColNames <- if (is.null(colnames) | isTRUE(colnames)) colnames(df) else NULL
+
+    if (is.matrix(df))
+      df <- as.data.frame(df)
+    if (!is.data.table(df)) {
+      df <- as.data.table(df)
+    }
+    df <- Copy(df)
+    skipColNames <- if (is.null(origColNames) & !isTRUE(colnames)) TRUE else FALSE
+    if (!missing(round)) {
+      isNum <- sapply(df, is.numeric)
+      isNum <- colnames(df)[isNum]
+      for (Col in isNum) {
+        set(df, NULL, Col, round(df[[Col]], round))
+      }
+    }
+    outMess <- capture.output(df)
+    if (skipColNames) outMess <- outMess[-1]
+    out <- lapply(outMess, function(x) {
+      messageColoured(x, colour = colour, appendLF = appendLF, verbose = verbose,
+                      verboseLevel = verboseLevel)
+    })
+  }
+}
+
+messagePrepInputs <- function(..., appendLF = TRUE,
+                              verbose = getOption("reproducible.verbose"),
+                              verboseLevel = 1) {
   messageColoured(..., colour = getOption("reproducible.messageColourPrepInputs"),
-                  appendLF = appendLF)
+                  verboseLevel = verboseLevel, verbose = verbose, appendLF = appendLF)
 }
 
 messageCache <- function(..., colour = getOption("reproducible.messageColourCache"),
+                         verbose = getOption("reproducible.verbose"), verboseLevel = 1,
                          appendLF = TRUE) {
-  messageColoured(..., colour = colour, appendLF = appendLF)
+  messageColoured(..., colour = colour, appendLF = appendLF,
+                  verboseLevel = verboseLevel, verbose = verbose)
 }
 
+#' @rdname messageColoured
 messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
   # force this message to print
   messageColoured(..., colour = getOption("reproducible.messageColourQuestion"),
-                  verboseLevel = verboseLevel, verbose = 10, appendLF = appendLF)
+                  verbose = 10, verboseLevel = verboseLevel, appendLF = appendLF)
 }
 
 #' @importFrom utils getFromNamespace
-messageColoured <- function(..., colour = NULL, verboseLevel = 1,
+#' @param colour Any colour that can be understood by `crayon`
+#' @rdname messageColoured
+messageColoured <- function(..., colour = NULL,
                             verbose = getOption("reproducible.verbose", 1),
-                            appendLF = TRUE) {
+                            verboseLevel = 1, appendLF = TRUE) {
   if (isTRUE(verboseLevel <= verbose)) {
     needCrayon <- FALSE
     if (!is.null(colour)) {
@@ -487,7 +503,7 @@ messageColoured <- function(..., colour = NULL, verboseLevel = 1,
     if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
       message(getFromNamespace(colour, "crayon")(paste0(...)), appendLF = appendLF)
     } else {
-      if (!isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("crayon")) {
+      if (needCrayon && !isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("crayon")) {
         message("To add colours to messages, install.packages('crayon')", appendLF = appendLF)
         .pkgEnv$.checkedCrayon <- TRUE
       }

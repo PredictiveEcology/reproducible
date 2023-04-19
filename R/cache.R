@@ -464,7 +464,8 @@ Cache <-
       # userTags added based on object class
       userTags <- c(userTags, unlist(lapply(modifiedDots, .tagsByClass)))
 
-      if (sideEffect != FALSE) messageCache("sideEffect is deprecated; being ignored", verbose = verbose, verboseLevel = 0)
+      if (sideEffect != FALSE) messageCache("sideEffect is deprecated; being ignored",
+                                            verbose = verbose, verboseLevel = 0)
 
       # List file prior to cache
       # if (sideEffect != FALSE) {
@@ -683,7 +684,7 @@ Cache <-
           # Here, download cloud copy to local folder, skip the running of FUN
           newFileName <- gdriveLs$name[isInCloud] # paste0(outputHash,".rda")
           inReposPoss <- cloudDownload(outputHash, newFileName, gdriveLs, cachePath, cloudFolderID,
-                                  drv = drv, conn = conn)
+                                  drv = drv, conn = conn, verbose = verbose)
           isInRepo <- inReposPoss$isInRepo
           fullCacheTableForObj <- inReposPoss$fullCacheTableForObj
           if (is.null(isInRepo)) {
@@ -912,7 +913,7 @@ Cache <-
         # Here, upload local copy to cloud folder if it isn't already there
         # browser(expr = exists("._Cache_15"))
         cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cachePath, cloudFolderID, ## TODO: saved not found
-                                         outputToSave)) #, rasters))
+                                         outputToSave, verbose = verbose)) #, rasters))
         if (is(cufc, "try-error"))
           .updateTagsRepo(outputHash, cachePath, "inCloud", "FALSE", drv = drv, conn = conn)
       }
@@ -945,15 +946,6 @@ Cache <-
 
 #' @keywords internal
 .namesCacheFormalsSendToBoth <- intersect("verbose", names(.formalsCache)[])
-
-# @keywords internal
-# .loadFromLocalRepoMem <- function(md5hash, repoDir, ...) {
-#   if (useDBI()) {
-#     out <- loadFromCache(cachePath = repoDir, cacheId = md5hash,
-#                          fullCacheTableForObj = fullCacheTableForObj)
-#   }
-#   return(out)
-# }
 
 
 #' @keywords internal
@@ -1008,7 +1000,6 @@ writeFuture <- function(written, outputToSave, cachePath, userTags,
     stop("That cachePath does not exist")
   }
 
-  # if (useDBI()) {
   if (missing(cacheId)) {
     cacheId <- .robustDigest(outputToSave)
   }
@@ -1684,7 +1675,6 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
       messageCache("    ------ devMode -------", verbose = verbose)
       messageCache("    This call to cache will replace", verbose = verbose)
     } else {
-      # messageCache(" ------ showSimilar -------", verbose = verbose)
       messageCache("    Cache ",
                    fnTxt,
                    "differs from", verbose = verbose)
@@ -1721,9 +1711,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     }
     if (isDevMode) {
       messageCache(" ------ end devMode -------", verbose = verbose)
-    } #else {
-    #messageCache(" ------ end showSimilar -------", verbose = verbose)
-    #}
+    }
 
   } else {
     if (!identical("devMode", useCache))
@@ -2142,7 +2130,8 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
 
 
 returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cachePath,
-                              verbose, FUN, fnDetails, modifiedDots,
+                              verbose = getOption("reproducible.verbose"),
+                              FUN, fnDetails, modifiedDots,
                               debugCache, # sideEffect,
                               quick, algo, preDigest, startCacheTime, drv, conn,
                               outputHash, useCloud, gdriveLs, cloudFolderID, lastEntry, lastOne, ...) {
@@ -2185,19 +2174,16 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
          "\nclearCache(userTags = '", cID, "')")
   }
 
-  # if (useDBI())
   .updateTagsRepo(outputHash, cachePath, "elapsedTimeLoad",
                   format(elapsedTimeLoad, units = "secs"),
                   add = TRUE,
                   drv = drv, conn = conn)
   if (useCloud) {
-    # browser(expr = exists("._Cache_7b"))
     # Here, upload local copy to cloud folder
     isInCloud <- grepl(outputHash, gdriveLs$name)
     outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
-
     cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cachePath, cloudFolderID, ## TODO: saved not found
-                                     outputToSave))
+                                     outputToSave, verbose = verbose))
     .updateTagsRepo(outputHash, cachePath, "inCloud", "TRUE", drv = drv, conn = conn)
   }
 

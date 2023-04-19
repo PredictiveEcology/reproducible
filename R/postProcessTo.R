@@ -118,8 +118,9 @@
 #' and faster `terra` functions.
 #'
 postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NULL,
-                             writeTo = NULL, method = NULL, datatype = "FLT4S",
-                             overwrite = TRUE, ...) {
+                          writeTo = NULL, method = NULL, datatype = "FLT4S",
+                          overwrite = TRUE, verbose = getOption("reproducible.verbose"),
+                          ...) {
 
   startTime <- Sys.time()
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
@@ -170,12 +171,14 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
     lg <- osFrom > 5e8
     if (lg) {
       st <- Sys.time()
-      messagePrepInputs("  `from` is large, converting to terra object will take some time ...")
+      messagePrepInputs("  `from` is large, converting to terra object will take some time ...",
+                        verbose = verbose)
     }
     from <- suppressWarningsSpecific(terra::vect(sf::st_as_sf(from)), shldBeChar)
     if (lg) {
       messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
-                                             units = "secs", digits = 3))
+                                             units = "secs", digits = 3),
+                        verbose = verbose)
 
     }
   }
@@ -190,8 +193,10 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
 
   # Put this message near the end so doesn't get lost
   if (is.naSpatial(cropTo) && isVector(maskTo))  {
-    messagePrepInputs("    ** cropTo is NA, but maskTo is a Vector dataset; ")
-    messagePrepInputs("      this has the effect of cropping anyway")
+    messagePrepInputs("    ** cropTo is NA, but maskTo is a Vector dataset; ",
+                      verbose = verbose)
+    messagePrepInputs("      this has the effect of cropping anyway",
+                      verbose = verbose)
   }
 
   # from <- terra::setMinMax(from)
@@ -203,7 +208,8 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
   # REVERT TO ORIGINAL INPUT CLASS
   from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial)
   messagePrepInputs("  postProcessTo done in ", format(difftime(Sys.time(), startTime),
-                                                          units = "secs", digits = 3))
+                                                          units = "secs", digits = 3),
+                    verbose = verbose)
   from
 }
 
@@ -358,7 +364,7 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
 
           }
         }
-        messagePrepInputs("    masking...", appendLF = FALSE)
+        messagePrepInputs("    masking...", appendLF = FALSE, verbose = verbose)
         st <- Sys.time()
 
         # There are 2 tries; first is for `maskTo`, second is for `from`, rather than fix both in one step, which may be unnecessary
@@ -425,7 +431,9 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
         }
 
         from <- fromInt
-        messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+        messagePrepInputs("...done in ",
+                          format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                          verbose = verbose)
         from <- revertClass(from, origFromClass = origFromClass)
       }
     }
@@ -435,7 +443,8 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
 
 #' @export
 #' @rdname postProcessTo
-projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE, ...) {
+projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE,
+                      verbose = getOption("reproducible.verbose"), ...) {
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
@@ -458,9 +467,11 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE, ...) {
       }
 
       if (sameProj && sameRes) {
-        messagePrepInputs("    projection of from is same as projectTo, not projecting")
+        messagePrepInputs("    projection of from is same as projectTo, not projecting",
+                          verbose = verbose)
       } else {
-        messagePrepInputs("    projecting...", appendLF = FALSE)
+        messagePrepInputs("    projecting...", appendLF = FALSE,
+                          verbose = verbose)
         st <- Sys.time()
         if (isProjectToVecOrCRS) {
           projectToTmp <- sf::st_as_sfc(sf::st_bbox(from))
@@ -478,24 +489,31 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE, ...) {
             # if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
             #   projectTo <- terra::rast(projectTo, resolution = res(from))
             # }
-            messagePrepInputs("")
-            messagePrepInputs("         projectTo is a Vector dataset, which does not define all metadata required. ")
+            messagePrepInputs("", verbose = verbose)
+            messagePrepInputs("         projectTo is a Vector dataset, which does not define all metadata required. ",
+                              verbose = verbose)
             if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
               newRes <- terra::res(from)
-              messagePrepInputs("         Using resolution of ",paste(newRes, collapse = "x"),"m; ")
+              messagePrepInputs("         Using resolution of ",paste(newRes, collapse = "x"),"m; ",
+                                verbose = verbose)
               projectTo <- terra::rast(projectTo, resolution = newRes)
             } else {
               projectTo <- terra::rast(ncols = terra::ncol(from), nrows = terra::nrow(from),
                                        crs = sf::st_crs(projectTo)$wkt, extent = terra::ext(projectTo))
               messagePrepInputs("         Projecting to ",
                                 paste(collapse = "x", round(terra::res(projectTo), 2)),
-                                " resolution (same # pixels as `from`)")
+                                " resolution (same # pixels as `from`)",
+                                verbose = verbose)
             }
 
-            messagePrepInputs("         in the projection of `projectTo`, using the origin and extent")
-            messagePrepInputs("         from `ext(from)` (in the projection from `projectTo`).")
-            messagePrepInputs("         If this is not correct, create a template gridded object and pass that to projectTo...")
-            messagePrepInputs("         ", appendLF = FALSE)
+            messagePrepInputs("         in the projection of `projectTo`, using the origin and extent",
+                              verbose = verbose)
+            messagePrepInputs("         from `ext(from)` (in the projection from `projectTo`).",
+                              verbose = verbose)
+            messagePrepInputs("         If this is not correct, create a template gridded object and pass that to projectTo...",
+                              verbose = verbose)
+            messagePrepInputs("         ", appendLF = FALSE,
+                              verbose = verbose)
 
           } else {
             projectTo <- sf::st_crs(projectTo)$wkt
@@ -522,7 +540,8 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE, ...) {
         } else {
           terra::project(from, projectTo, method = method, overwrite = overwrite)
         }
-        messagePrepInputs("done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+        messagePrepInputs("done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                          verbose = verbose)
       }
     }
     from <- revertClass(from, origFromClass = origFromClass)
@@ -562,7 +581,8 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
       if (isSpatial(from))
         from <- terra::vect(from)
 
-      messagePrepInputs("    cropping..." , appendLF = FALSE)
+      messagePrepInputs("    cropping..." , appendLF = FALSE,
+                        verbose = verbose)
       st <- Sys.time()
 
       ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
@@ -654,7 +674,8 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
         attempt <- attempt + 1
       }
       from <- fromInt
-      messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+      messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                        verbose = verbose)
     }
     from <- revertClass(from, origFromClass = origFromClass)
   }
@@ -667,7 +688,8 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
 #'   back to these classes prior to writing, if provided.
 #'
 writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, isRaster = NULL,
-                    isSpatRaster = NULL, datatype = "FLT4S", ...) {
+                    isSpatRaster = NULL, datatype = "FLT4S",
+                    verbose = getOption("reproducible.verbose"), ...) {
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
@@ -679,7 +701,8 @@ writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, is
   if (!is.null(writeTo))
     if (!any(is.na(writeTo))) {
       .requireNamespace("terra", stopOnFALSE = TRUE)
-      messagePrepInputs("    writing...", appendLF = FALSE)
+      messagePrepInputs("    writing...", appendLF = FALSE,
+                        verbose = verbose)
       st <- Sys.time()
 
       if (is.null(isSpatRaster)) isSpatRaster <- isSpat(from) && isGridded(from)
@@ -722,16 +745,19 @@ writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, is
         }
         writeDone <- TRUE
       } else {
-        messagePrepInputs("... nothing written; object not a known object type to write.")
+        messagePrepInputs("... nothing written; object not a known object type to write.",
+                          verbose = verbose)
       }
       if (isTRUE(writeDone))
-        messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3))
+        messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                          verbose = verbose)
     }
 
   from
 }
 
-postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo) {
+postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo,
+                                    verbose = getOption("reproducible.verbose")) {
 
   # sometimes there are quosures
   for (y in ls()) {
@@ -808,7 +834,8 @@ is.naSpatial <- function(x) {
 cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")) {
   st <- Sys.time()
   if (isSF(from) && (isSF(cropToVect) || is(cropToVect, "Spatial"))) {
-    messagePrepInputs("    pre-cropping because `from` is sf and cropTo is sf/Spatial*")
+    messagePrepInputs("    pre-cropping because `from` is sf and cropTo is sf/Spatial*",
+                      verbose = verbose)
     attempt <- 1
     while (attempt <= 2) {
 
@@ -835,7 +862,8 @@ cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")
     if (!is(from2, "try-error"))
       from <- from2
     messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
-                                           units = "secs", digits = 3))
+                                           units = "secs", digits = 3),
+                      verbose = verbose)
 
   }
   from
@@ -868,7 +896,7 @@ revertClass <- function(from, isStack = FALSE, isBrick = FALSE, isRasterLayer = 
   from
 }
 
-messageDeclareError <- function(error, fromFnName, verbose) {
+messageDeclareError <- function(error, fromFnName, verbose = getOption("reproducible.verbose")) {
   errWOWordError <- gsub("Error {0,1}: ", "", error)
   messagePrepInputs("    ", fromFnName, " resulted in following error: \n    - ", errWOWordError, "    --> attempting to fix",
                     appendLF = FALSE, verbose = verbose, verboseLevel = 1)
@@ -907,7 +935,8 @@ remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.fr
         function(elem, newHere) {
           if (length(elem)) {
             mes <- paste(newHere, collapse = ", ")
-            messagePrepInputs(elem, " is supplied (deprecated); assigning it to ", mes)
+            messagePrepInputs(elem, " is supplied (deprecated); assigning it to ", mes,
+                              verbose = verbose)
             lapply(newHere, function(nh) ret[nh] <<- list(dots[[elem]]))
           }
         })

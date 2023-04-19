@@ -19,6 +19,7 @@ postProcessTo(
   method = NULL,
   datatype = "FLT4S",
   overwrite = TRUE,
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 
@@ -32,6 +33,7 @@ postProcessTerra(
   method = NULL,
   datatype = "FLT4S",
   overwrite = TRUE,
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 
@@ -44,7 +46,14 @@ maskTo(
   ...
 )
 
-projectTo(from, projectTo, method = NULL, overwrite = FALSE, ...)
+projectTo(
+  from,
+  projectTo,
+  method = NULL,
+  overwrite = FALSE,
+  verbose = getOption("reproducible.verbose"),
+  ...
+)
 
 cropTo(
   from,
@@ -64,6 +73,7 @@ writeTo(
   isRaster = NULL,
   isSpatRaster = NULL,
   datatype = "FLT4S",
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 }
@@ -112,17 +122,17 @@ this to be sure.}
 that the object requires writing to disk during a \code{crop}, \code{mask} or \code{project} call
 e.g., because it is too large.}
 
-\item{...}{Currently can be either \code{rasterToMatch}, \code{studyArea}, \code{filename2},
-\code{useSAcrs}, or \code{targetCRS} to allow backwards
-compatibility with \code{postProcess}. See section below for details.}
-
-\item{touches}{See \code{terra::mask}}
-
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{...}{Currently can be either \code{rasterToMatch}, \code{studyArea}, \code{filename2},
+\code{useSAcrs}, or \code{targetCRS} to allow backwards
+compatibility with \code{postProcess}. See section below for details.}
+
+\item{touches}{See \code{terra::mask}}
 
 \item{needBuffer}{Logical. Defaults to \code{TRUE}, meaning nothing is done out
 of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
