@@ -203,8 +203,8 @@ reproducibleOptions <- function() {
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
     reproducible.useCache = TRUE, # override Cache function
-    reproducible.useCloud = useDBI(TRUE, verbose = 0), #
-    reproducible.useDBI = TRUE, # `FALSE` is useMultipleDBFiles now
+    reproducible.useCloud = FALSE, #
+    reproducible.useDBI = useDBI(TRUE, verbose = 0), # `FALSE` is useMultipleDBFiles now
     reproducible.useMemoise = FALSE, #memoise
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1
