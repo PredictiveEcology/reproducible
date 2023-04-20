@@ -1101,13 +1101,14 @@ test_that("preProcess doesn't work", {
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 })
 
-test_that("prepInputs doesn't work (part 2)", {
+test_that("prepInputs when fun = NA", {
   skip_on_cran()
   skip_if_not(getRversion() > "3.3.0")
 
   testInitOut <- testInit(c("sf", "terra"), opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.overwrite" = TRUE,
+    reproducible.interactiveOnDownloadFail = FALSE,
     "reproducible.inputPaths" = NULL
   ), needGoogleDriveAuth = TRUE)
   on.exit({
@@ -1117,6 +1118,7 @@ test_that("prepInputs doesn't work (part 2)", {
   coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5), .Dim = c(5L, 2L))
   StudyArea <- terra::vect(coords, "polygons")
   terra::crs(StudyArea) <- crsToUse
+
 
   noisyOutput <- capture.output(type = "message", {
     mess1 <- capture_messages(
@@ -1128,6 +1130,7 @@ test_that("prepInputs doesn't work (part 2)", {
       })
     )
   })
+  expect_true(is(test1, "try-error"))
   if (!is(test1, "try-error")) {
     # test quoted version of `dlFun`
     noisyOutput3 <- capture.output(type = "message", {
@@ -1509,6 +1512,14 @@ test_that("options inputPaths", {
   noisyOutput <- capture.output(
     noisyOutput <- capture.output(type = "message", {
       mess1 <- capture_messages(
+        test0 <- try(getDataFn(path = tmpdir, country = "LUX"), silent = TRUE)
+    )}))
+  useGADM <- !is(test0, "try-error")
+
+  if (useGADM)
+  noisyOutput <- capture.output(
+    noisyOutput <- capture.output(type = "message", {
+      mess1 <- capture_messages(
         test1 <- try(prepInputs(destinationPath = tmpdir,
                                 #url = if (!useGADM) url2 else f$url,
                                 #targetFile = if (useGADM) theFile else f$targetFile,
@@ -1521,7 +1532,6 @@ test_that("options inputPaths", {
     })
   )
 
-  useGADM <- !is(test1, "try-error")
   theFile <- if (useGADM) {
     targetFileLuxRDS
   } else {
@@ -1691,7 +1701,8 @@ test_that("options inputPaths", {
       )
     })
   )
-  expect_true(is(test1, "SpatVector"))
+  objType <- if (useGADM) vectorType() else rasterType()
+  expect_true(is(test1, objType) || is(test1, "SpatVector"))
   test11 <- grep(hardlinkMessagePrefixForGrep, mess1, value = TRUE)
   test11 <- grep(tmpdir, test11, invert = TRUE)
   expect_true(length(test11) == 0) # no link made b/c identical dir
