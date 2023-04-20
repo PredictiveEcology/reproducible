@@ -441,6 +441,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
     #if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
       if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE)))  {
         ## NA means archive already in hand
+        out <- NULL
+
         if (!is.null(dlFun)) {
           dlFunName <- dlFun
           dlFun <- .extractFunction(dlFun)
@@ -465,7 +467,6 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             fileInfo <- file.info(dir(destinationPath))
           }
 
-          out <- NULL
           if (is.call(dlFun)) {
             sfs <- sys.frames()
             for (i in seq_along(sfs)) {
@@ -480,11 +481,10 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             }
           }
 
-
           if (!is.call(dlFun))
             out <- do.call(dlFun, args = args)
 
-          needSave <- TRUE
+          needSave <- !is.null(out)#TRUE
           if (is.null(targetFile)) {
             fileInfoAfter <- file.info(dir(destinationPath))
             possibleTargetFile <- setdiff(rownames(fileInfoAfter), rownames(fileInfo))
@@ -505,32 +505,36 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
               saveRDS(out, file = destFile)
           }
           downloadResults <- list(out = out, destFile = normPath(destFile), needChecksums = 2)
-        } else if (grepl("d.+.google.com", url)) {
+        } #else
 
-          if (!requireNamespace("googledrive", quietly = TRUE))
-            stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+        if (is.null(out)) {
+          if (grepl("d.+.google.com", url)) {
 
-          downloadResults <- dlGoogle(
-            url = url,
-            archive = archive,
-            targetFile = targetFile,
-            checkSums = checkSums,
-            messSkipDownload = messSkipDownload,
-            destinationPath = .tempPath,
-            overwrite = overwrite,
-            needChecksums = needChecksums,
-            verbose = verbose,
-            team_drive = teamDrive,
-            ...
-          )
+            if (!requireNamespace("googledrive", quietly = TRUE))
+              stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
-        } else if (grepl("dl.dropbox.com", url)) {
-          stop("Dropbox downloading is currently not supported")
-        } else if (grepl("onedrive.live.com", url)) {
-          stop("Onedrive downloading is currently not supported")
-        } else {
-          downloadResults <- dlGeneric(url = url, needChecksums = needChecksums,
-                                       destinationPath = .tempPath)
+            downloadResults <- dlGoogle(
+              url = url,
+              archive = archive,
+              targetFile = targetFile,
+              checkSums = checkSums,
+              messSkipDownload = messSkipDownload,
+              destinationPath = .tempPath,
+              overwrite = overwrite,
+              needChecksums = needChecksums,
+              verbose = verbose,
+              team_drive = teamDrive,
+              ...
+            )
+
+          } else if (grepl("dl.dropbox.com", url)) {
+            stop("Dropbox downloading is currently not supported")
+          } else if (grepl("onedrive.live.com", url)) {
+            stop("Onedrive downloading is currently not supported")
+          } else {
+            downloadResults <- dlGeneric(url = url, needChecksums = needChecksums,
+                                         destinationPath = .tempPath)
+          }
         }
         # if destinationPath is tempdir, then don't copy and remove
 
