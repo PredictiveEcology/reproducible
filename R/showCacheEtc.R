@@ -655,7 +655,7 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
 
 
 
-useDBI <- function(set = NULL) {
+useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose")) {
   canSwitch <- TRUE
   if (!is.null(set)) {
     if (isTRUE(set))
@@ -676,9 +676,15 @@ useDBI <- function(set = NULL) {
     }
   }
 
-  if (isFALSE(canSwitch))
-    message("User has requested to use DBI as the backend, but DBI and/or RSQLite not ",
-            "installed. Using the non-DBI backend.")
+  if (isFALSE(canSwitch)) {
+    messageColoured("User has requested to use DBI as the backend, but DBI and/or RSQLite not ",
+                    "installed.", verboseLevel = 1, verbose = verbose)
+  }
+  if (!is.null(set)) {
+    messageColoured("Using non-DBI backend.",
+                    verboseLevel = 0, verbose = verbose)
+  }
+
   ud
 }
 
