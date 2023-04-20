@@ -96,18 +96,32 @@ downloadFile <- function(archive, targetFile, neededFiles,
       # The download step
       failed <- 1
       while (failed > 0  && failed < 4) {
-        downloadResults <- try(downloadRemote(url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
-                                              targetFile = targetFile, fileToDownload = fileToDownload,
-                                              messSkipDownload = messSkipDownload,
-                                              checkSums = checkSums,
-                                              dlFun = dlFun,
-                                              destinationPath = destinationPath,
-                                              overwrite = overwrite,
-                                              needChecksums = needChecksums, verbose = verbose,
-                                              .tempPath = .tempPath, ...))
+        messOrig <- capture.output(
+          type = "message",
+          downloadResults <- try(downloadRemote(url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
+                                                targetFile = targetFile, fileToDownload = fileToDownload,
+                                                messSkipDownload = messSkipDownload,
+                                                checkSums = checkSums,
+                                                dlFun = dlFun,
+                                                destinationPath = destinationPath,
+                                                overwrite = overwrite,
+                                                needChecksums = needChecksums, verbose = verbose,
+                                                .tempPath = .tempPath, ...)))
+
         if (is(downloadResults, "try-error")) {
           if (isTRUE(grepl("already exists", downloadResults)))
             stop(downloadResults)
+
+          if (any(grepl("SSL peer certificate or SSH remote key was not OK", messOrig))) {
+            # THIS IS A MAJOR WORK AROUND FOR SSL ISSUES IN SOME WORK ENVIRONMENTS. NOT ADVERTISED.
+            # https://stackoverflow.com/questions/46331066/quantmod-ssl-unable-to-get-local-issuer-certificate-in-r
+            if (isFALSE(as.logical(Sys.getenv("REPRODUCIBLE_SSL_VERIFYPEER")))) {
+              .requireNamespace("httr", stopOnFALSE = TRUE)
+              sslOrig <- httr::set_config(httr::config(ssl_verifypeer = FALSE))
+              on.exit(httr::set_config(sslOrig), add = TRUE)
+            }
+          }
+
           failed <- failed + 1
           if (failed >= 4) {
             messCommon <- paste0("Download of ", targetFile, " from ", url, " failed. Please check the url that it is correct.\n",
@@ -124,12 +138,13 @@ downloadFile <- function(archive, targetFile, neededFiles,
               resultOfPrompt <- .readline("Type y if you have attempted a manual download and put it in the correct place: ")
               resultOfPrompt <- tolower(resultOfPrompt)
               if (!identical(resultOfPrompt, "y")) {
-                stop("Download failed")
+                stop(downloadResults, "\n", messOrig, "\nDownload failed")
               }
               downloadResults <- list(destFile = file.path(destinationPath, targetFile),
                                       needChecksums = 2)
             } else {
-              stop(messCommon, ".\n-------------------\n",
+              message(downloadResults)
+              stop(downloadResults, "\n", messOrig, "\n", messCommon, ".\n-------------------\n",
                    "If manual download was successful, you will likely also need to run Checksums",
                    " manually after you download the file with this command: ",
                    "reproducible:::appendChecksumsTable(checkSumFilePath = '", checksumFile, "', filesToChecksum = '", targetFile,
