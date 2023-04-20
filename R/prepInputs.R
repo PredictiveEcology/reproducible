@@ -338,6 +338,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # preProcess
   ##################################################################
 
+  if (exists("aaaa")) browser()
   messagePrepInputs("Running preProcess", verbose = verbose, verboseLevel = 0)
   out <- preProcess(
     targetFile = targetFile,
@@ -462,6 +463,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       out
     }
   }
+
 
   ##################################################################
   # postProcess
@@ -628,6 +630,8 @@ extractFromArchive <- function(archive,
       } else {
         FALSE
       }
+      if (exists("aaaa")) browser()
+
       # recheck, now that we have the whole file liast
       if (!(all(isOK)) ||
           NROW(result) == 0) {
@@ -1234,6 +1238,8 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   isOK <- NULL
   if (!is.null(files)) {
     checkSumsDT <- data.table(checkSums)
+    if (NCOL(checkSumsDT) == 0)
+      checkSumsDT <- Copy(.emptyChecksumsResult)
     filesDT <- data.table(files = .basename(files))
     isOKDT <- checkSumsDT[filesDT, on = c(expectedFile = "files")]
     isOKDT2 <- checkSumsDT[filesDT, on = c(actualFile = "files")]
