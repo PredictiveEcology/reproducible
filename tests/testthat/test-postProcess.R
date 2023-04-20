@@ -265,11 +265,15 @@ test_that("maskInputs errors when x is Lat-Long", {
   roads <- list()
   clearCache()
 
-  smallSA <- new("Extent", xmin = -117.580383168455, xmax = -117.43120279669,
-                 ymin = 61.0576330401172, ymax = 61.0937107807574)
-  crs <- new("CRS", projargs = "+proj=longlat +ellps=GRS80 +no_defs")
-  smallSA <- as(smallSA, "SpatialPolygons");
-  crs(smallSA) <- crs
+  smallSA <- terra::ext(c(-117.580383168455, -117.43120279669,
+                          61.0576330401172, 61.0937107807574))
+
+  x <- terra::rast(smallSA,
+                   crs = "+proj=longlat +ellps=GRS80 +no_defs",
+                   res = c(0.001, 0.001))
+  suppressWarnings(smallSA <- terra::vect(terra::ext(x), "polygons"))
+  terra::crs(smallSA) <- terra::crs(x)
+
 
   # for (ii in c(TRUE, FALSE)) {
   # i <- i + 1
@@ -296,9 +300,7 @@ test_that("maskInputs errors when x is Lat-Long", {
                                  destinationPath = tmpdir,
                                  filename2 = "miniRoads")
   )
-  # clearCache()
   attr(roads1, "tags") <- NULL
-  # }
 
   # There are floating point issues with 32 bit vs 64 bit approaches. The following fails:
   # expect_true(all.equal(roads[[1]], roads[[2]], check.attributes = FALSE))

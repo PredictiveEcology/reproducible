@@ -232,11 +232,10 @@ test_that("test miscellaneous unit tests cache-helpers", {
 })
 
 test_that("test warnings from cached functions", {
-  testInitOut <- testInit(libraries = c("sf"), opts = list(reproducible.useMemoise = TRUE))
+  testInitOut <- testInit(libraries = c("sf"), opts = list(reproducible.useMemoise = FALSE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  # clearCache(tmpCache, ask = FALSE)
   warn1 <- capture_warnings(b <- Cache(rbinom, 4, 5, prob = 6, cachePath = tmpCache))
 
   fun <- function(n, size, prob) {

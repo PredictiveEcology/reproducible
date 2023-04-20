@@ -142,7 +142,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd", {
   skip_on_cran()
   skip_on_ci()
-  testInitOut <- testInit(c("googledrive", "raster"),
+  testInitOut <- testInit(c("googledrive", "terra"),
                           # tmpFileExt = c(".tif", ".grd"),
                           needGoogleDriveAuth = TRUE,
                           opts = list("reproducible.ask" = FALSE))
