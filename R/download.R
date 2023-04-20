@@ -392,6 +392,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' @inheritParams preProcess
 dlGeneric <- function(url, needChecksums, destinationPath, verbose = getOption("reproducible.verbose", 1)) {
   .requireNamespace("httr", stopOnFALSE = TRUE)
+  .requireNamespace("curl", stopOnFALSE = TRUE)
   if (missing(destinationPath)) {
     destinationPath <- tempdir2(rndstr(1, 6))
   }
@@ -463,20 +464,25 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           if (is.null(targetFile)) {
             fileInfo <- file.info(dir(destinationPath))
           }
-          # browser(expr = exists("._downloadRemote_1"))
-          out <- if (is.call(dlFun)) {
+
+          out <- NULL
+          if (is.call(dlFun)) {
             sfs <- sys.frames()
             for (i in seq_along(sfs)) {
               env1 <- new.env(parent = sys.frame(-i))
               list2env(args, env1)
-              outIn <- try(eval(dlFun, envir = env1), silent = TRUE)
-              if (!is(outIn, "try-error"))
+              out <- try(eval(dlFun, envir = env1), silent = TRUE)
+              if (is.function(out)) { # in the previous "call", it may have just returned an unevaluated function
+                dlFun <- out
+              }
+              if (!is(out, "try-error"))
                 break
             }
-            outIn
-          } else {
-            do.call(dlFun, args = args)
           }
+
+
+          if (!is.call(dlFun))
+            out <- do.call(dlFun, args = args)
 
           needSave <- TRUE
           if (is.null(targetFile)) {
