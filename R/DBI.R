@@ -34,7 +34,6 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL), force = FALSE,
                         verbose = getOption("reproducible.verbose")) {
-  # browser(expr = exists("aaaa"))
   alreadyExists <- CacheIsACache(cachePath, drv = drv, conn = conn, create = TRUE)
   if (alreadyExists && force == FALSE) {
     messageCache("Cache already exists at ", cachePath, " and force = FALSE. Not creating new cache.",

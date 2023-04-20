@@ -338,7 +338,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # preProcess
   ##################################################################
 
-  if (exists("aaaa")) browser()
   messagePrepInputs("Running preProcess", verbose = verbose, verboseLevel = 0)
   out <- preProcess(
     targetFile = targetFile,
@@ -630,7 +629,6 @@ extractFromArchive <- function(archive,
       } else {
         FALSE
       }
-      if (exists("aaaa")) browser()
 
       # recheck, now that we have the whole file liast
       if (!(all(isOK)) ||

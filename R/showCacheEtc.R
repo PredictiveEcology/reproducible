@@ -647,7 +647,6 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
       resol <- future::resolved(.reproEnv$futureEnv)
       resol1 <- resol[!startsWith(names(resol), "cloudCheckSums")]
     }
-    # browser(expr = exists("aaaa"))
     if (length(resol) > 0)
       .reproEnv$futureEnv[[lsFutureEnv]] <- NULL
   }

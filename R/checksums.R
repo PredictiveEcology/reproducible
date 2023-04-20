@@ -87,6 +87,7 @@ setMethod(
   signature = c(path = "character", quickCheck = "ANY",
                 write = "logical", files = "ANY"),
   definition = function(path, write, quickCheck, checksumFile, files, verbose = getOption("reproducible.verbose", 1), ...) {
+
     defaultHashAlgo <- "xxhash64"
     defaultWriteHashAlgo <- "xxhash64"
     dots <- list(...)
@@ -250,6 +251,7 @@ setMethod(
 #' @keywords internal
 writeChecksumsTable <- function(out, checksumFile, dots) {
   out <- out[.orderDotsUnderscoreFirst(out$file), ] ## sort by filename alphabetically
+
   do.call(write.table,
           args = append(list(x = out, file = checksumFile, eol = "\n",
                              col.names = !isTRUE(dots$append),

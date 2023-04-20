@@ -2079,7 +2079,6 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
   while (tries <= length(cachePaths)) {
     repo <- cachePaths[[tries]]
     if (useDBI()) {
-      if (exists("aaaa")) browser()
       dbTabNam <- CacheDBTableName(repo, drv = drv)
 
       if (tries > 1) {
