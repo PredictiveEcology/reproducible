@@ -117,6 +117,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
             # https://stackoverflow.com/questions/46331066/quantmod-ssl-unable-to-get-local-issuer-certificate-in-r
             if (isFALSE(as.logical(Sys.getenv("REPRODUCIBLE_SSL_VERIFYPEER")))) {
               .requireNamespace("httr", stopOnFALSE = TRUE)
+              message("Temporarily setting ssl_verifypeer to FALSE because ",
+                      "'SSL peer certificate or SSH remote key was not OK'")
               sslOrig <- httr::set_config(httr::config(ssl_verifypeer = FALSE))
               on.exit(httr::set_config(sslOrig), add = TRUE)
             }
