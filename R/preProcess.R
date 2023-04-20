@@ -257,6 +257,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checkSumsTmp1 <- try(Checksums(path = dp, write = FALSE, checksumFile = checkSumFilePath,
                                files = basename2(filesToCheck),
                                verbose = verbose), silent = TRUE)
+    checkSums <- NULL
     if (!is(checkSumsTmp1, "try-error")) {
       checkSums <- checkSumsTmp1
       if (!all(is.na(checkSums$result))) { # found something
