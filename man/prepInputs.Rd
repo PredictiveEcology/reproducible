@@ -238,6 +238,7 @@ If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
 \examples{
 if (requireNamespace("terra") && requireNamespace("sf")) {
 
+  library(reproducible)
 # Make a dummy study area map -- user would supply this normally
   coords <- structure(c(-122.9, -116.1, -99.2, -106, -122.9, 59.9, 65.7, 63.6, 54.8, 59.9),
                       .Dim = c(5L, 2L))
