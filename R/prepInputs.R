@@ -232,7 +232,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #' # run prepInputs -- load file, postProcess it to the studyArea
 #'
-#' studyArea2 <- prepInputs(targetFile = tf, to = studyArea) |>
+#' studyArea2 <- prepInputs(targetFile = tf, to = studyArea, destinationPath = tempdir2()) |>
 #'   suppressWarnings() # not relevant warning here
 #'
 #' # clean up
