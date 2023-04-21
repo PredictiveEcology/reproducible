@@ -1009,8 +1009,7 @@ extractFromArchive <- function(archive,
         out <- linkOrCopy(from, to, symlink = FALSE)
       })
 
-      browser()
-      if (!isTRUE(all(out))) {
+      if (!isTRUE(all(file.exists(to)))) {
         stop(paste("Could not move extractedfiles from", .tempPath, "to", args$exdir))
       }
       extractedFiles <- to
