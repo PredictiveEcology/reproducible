@@ -264,12 +264,20 @@ fixErrorsIn <- function(x, error = NULL, verbose = getOption("reproducible.verbo
         x <- sf::st_make_valid(x)
       }
     } else {
+      if (!isSpat(x)) {
+        origClass <- class(x)
+        isSp <- isSpatial(x)
+        x <- terra::vect(x)
+
+      }
       if (os > 1e9 && isTRUE(getOption("reproducible.useCache"))) {
         messagePrepInputs("... Caching the fixErrorTerra call on this large object", verbose = verbose)
         x <- Cache(makeVal(x), .functionName = "make.valid")
       } else {
         x <- makeVal(x)
       }
+      if (exists("origClass", inherits = FALSE))
+        x <- revertClass(x, isSpatial = isSp, origFromClass = origClass)
 
     }
   }
