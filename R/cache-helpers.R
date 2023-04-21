@@ -209,7 +209,7 @@ asPath <- function(obj, nParentDirs = 0) {
 #' @importFrom methods is
 #' @rdname Path-class
 asPath.character <- function(obj, nParentDirs = 0) {  # nolint
-  class(obj) <- c("Path", is(obj))
+  class(obj) <- unique(c("Path", class(obj)))
   attr(obj, "nParentDirs") <- nParentDirs
   return(obj)
 }
