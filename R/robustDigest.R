@@ -138,23 +138,8 @@ setMethod(
     } else if (is(object, "Raster")) {
       object <- .removeCacheAtts(object)
 
-      # if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
-      #   if (is(object, "RasterStack")) {
-      #     # have to do one file at a time with Stack
-      #     dig <- suppressWarnings(
-      #       lapply(object@layers, function(yy) {
-      #         .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
-      #       })
-      #     )
-      #   } else {
-      #     # Brick and Layers have only one file
-      #     dig <- suppressWarnings(
-      #       .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-      #   }
-      # } else {
-        dig <- suppressWarnings(
-          .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-      # }
+      dig <- suppressWarnings(
+        .digestRasterLayer(object, length = length, algo = algo, quick = quick))
       forDig <- unlist(dig)
     } else if (is(object, "cluster")) {# can't get this class from parallel via importClass parallel cluster
       forDig <- NULL
@@ -388,66 +373,6 @@ setMethod(
     .doDigest(object, algo = algo)
   })
 
-# @rdname robustDigest
-# @export
-# setMethod(
-#   ".robustDigest",
-#   signature = "Raster",
-#   definition = function(object, .objects, length, algo, quick, classOptions) {
-#     object <- .removeCacheAtts(object)
-#
-#     if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
-#       if (is(object, "RasterStack")) {
-#         # have to do one file at a time with Stack
-#         dig <- suppressWarnings(
-#           lapply(object@layers, function(yy) {
-#             .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
-#           })
-#         )
-#       } else {
-#         # Brick and Layers have only one file
-#         dig <- suppressWarnings(
-#           .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-#       }
-#     } else {
-#       dig <- suppressWarnings(
-#         .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-#     }
-#     dig <- .doDigest(unlist(dig))
-#     return(dig)
-# })
-
-
-# @rdname robustDigest
-# @export
-# setMethod(
-#   ".robustDigest",
-#   signature = "Spatial",
-#   definition = function(object, .objects, length, algo, quick, classOptions) {
-#     object <- .removeCacheAtts(object, passByReference = FALSE)
-#
-#   if (is(object, "SpatialPoints")) {
-#       aaa <- as.data.frame(object)
-#     } else {
-#       aaa <- object
-#     }
-#
-#     # The following Rounding is necessary to make digest equal on linux and windows
-#     if (inherits(aaa, "SpatialPolygonsDataFrame")) {
-#       bbb <- unlist(lapply(as.data.frame(aaa), is.numeric))
-#       if (sum(bbb)) {
-#         bbbWh <- which(bbb)
-#         for (i in bbbWh) { # changed because may not have correct names, can be NAs, Eliot March 2019
-#                            #  Error was: Error in round(aaa[[i]], 4) :
-#                            # non-numeric argument to mathematical function
-#           aaa[[i]] <- round(aaa[[i]], 4)
-#         }
-#       }
-#     }
-#
-#     #
-#     .doDigest(aaa, algo = algo)
-# })
 
 .basenames <- function(object, nParentDirs) {
   if (missing(nParentDirs)) {
@@ -532,7 +457,7 @@ setMethod(
 }
 
 .doDigest <- function(x, algo, length = Inf, file,
-                      newAlgo = NULL, #getOption("reproducible.useNewDigestAlgorithm"),
+                      newAlgo = NULL,
                       cacheSpeed = getOption("reproducible.cacheSpeed", "slow")) {
   if (missing(algo)) algo = formals(.robustDigest)$algo
 
