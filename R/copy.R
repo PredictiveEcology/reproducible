@@ -115,7 +115,7 @@ setMethod(
     # keep this environment method here, as it will intercept "proto"
     #   and other environments that it shouldn't
       messageCache("Trying to do a deep copy (Copy) of object of class ", class(object),
-              "which does not appear to be a normal environment. If it can be copied ",
+              ", which does not appear to be a normal environment. If it can be copied ",
               "like a normal environment, ignore this message; otherwise, may need to create ",
               "a Copy method for this class. See ?Copy", verbose = verbose)
 
