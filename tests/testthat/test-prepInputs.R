@@ -1130,8 +1130,8 @@ test_that("prepInputs when fun = NA", {
       })
     )
   })
-  expect_true(is(test1, "try-error"))
   if (!is(test1, "try-error")) {
+    expect_true(is(test1, "SpatVector"))
     # test quoted version of `dlFun`
     noisyOutput3 <- capture.output(type = "message", {
       mess3 <- capture_messages(
@@ -1141,8 +1141,9 @@ test_that("prepInputs when fun = NA", {
           destinationPath = tmpdir)
       )
     })
+    expect_true(is(test3, "SpatVector"))
 
-    if (.requireNamespace("sp")) {
+    if (.requireNamespace("sf")) {
       noisyOutput6 <- capture.output(type = "message", {
         mess6 <- capture_messages(
           test6 <- prepInputs(
@@ -1157,7 +1158,6 @@ test_that("prepInputs when fun = NA", {
       })
       expect_is(test6, "sf")
     }
-    # expect_true(all(sf::st_bbox(test5) == sf::st_bbox(test6)))
 
   }
 })

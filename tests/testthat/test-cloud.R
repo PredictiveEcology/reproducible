@@ -232,7 +232,6 @@ test_that("prepInputs works with team drives", {
     opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
                 "reproducible.ask" = FALSE)
   )
-  # googledrive::drive_auth("predictiveecology@gmail.com")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -243,8 +242,9 @@ test_that("prepInputs works with team drives", {
                      alsoExtract = "similar",
                      team_drive = TRUE)
   } else {
-    wb <- prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
-                     alsoExtract = "similar",
-                     shared_drive = TRUE)
+    noisy <- capture.output(
+      wb <- prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
+                       alsoExtract = "similar",
+                       shared_drive = TRUE))
   }
 })
