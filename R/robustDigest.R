@@ -153,7 +153,7 @@ setMethod(
             x <- sub("^NETCDF:\"", "", x)
             x <- sub("\":.*$", "", x)
           }
-          .robustDigest(file = x, length = length, algo = algo, quick = quick)
+          .robustDigest(object = x, length = length, algo = algo, quick = quick)
         })
 
         dig <- .robustDigest(
