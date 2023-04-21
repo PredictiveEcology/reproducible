@@ -236,15 +236,25 @@ test_that("prepInputs works with team drives", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  zipUrl <- "https://drive.google.com/file/d/1zRX2c55ebJbQtjijCErEfGxhsa7Ieph2"
+  # zipUrl <- "https://drive.google.com/file/d/1zRX2c55ebJbQtjijCErEfGxhsa7Ieph2" # Orig
+  zipUrl <- "https://drive.google.com/file/d/1JpdvM8QiyCyNyQAvSaFU0rAY-1I3mcbp"
+
+  # This will fail if it is hit too many times -- we don't want the test to report
+  #  fail because of this
+  opts <- options("reproducible.interactiveOnDownloadFail" = FALSE)
+  on.exit(options(opts), add = TRUE)
   if (packageVersion("googledrive") < "2.0.0") {
     wb <- prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
                      alsoExtract = "similar",
                      team_drive = TRUE)
   } else {
-    noisy <- capture.output(
+    err <- capture_error(
+      noisy <- capture.output(
       wb <- prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
                        alsoExtract = "similar",
-                       shared_drive = TRUE))
+                       shared_drive = TRUE)
+    ))
+    if (is.null(err))
+      expect_true(is(wb, "sf"))
   }
 })
