@@ -183,12 +183,13 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
     }
   }
 
+  browser()
   #############################################################
   # crop project mask sequence ################################
   #############################################################
   from <- cropTo(from, cropTo, needBuffer = TRUE, overwrite = overwrite) # crop first for speed
   from <- projectTo(from, projectTo, method = method, overwrite = overwrite) # need to project with edges intact
-  from <- maskTo(from, maskTo, overwrite = overwrite)
+  from <- maskTo(from, maskTo, ..., overwrite = overwrite)
   from <- cropTo(from, cropTo, needBuffer = FALSE, overwrite = overwrite) # need to recrop to trim excess pixels in new projection
 
   # Put this message near the end so doesn't get lost
@@ -949,6 +950,9 @@ remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.fr
             lapply(newHere, function(nh) ret[nh] <<- list(dots[[elem]]))
           }
         })
+    if (isTRUE(dots$useSAcrs)) {
+      ret$projectTo <- dots$studyArea
+    }
     # ret <- ret[!vapply(ret, is.null, FUN.VALUE = logical(1))]
     list2env(ret, envir)
   }

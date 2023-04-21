@@ -474,14 +474,17 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
       # This sequence puts all the objects that are needed for postProcessTo into this environment
       #   so that we can avoid using do.call
-      argsPostProcessTerra <- formalArgs(postProcessTo)
+      argsPostProcessTerra <- unique(c(formalArgs(postProcessTo),
+                                       formalArgs(reproducible::fixErrorsIn),
+                                       formalArgs(reproducible::maskTo),
+                                       formalArgs(reproducible::cropTo),
+                                       formalArgs(reproducible::projectTo)))
       argsOldPostProcess <- c("rasterToMatch", "studyArea", "targetCRS", "useSAcrs", "filename2",
                               "overwrite")
       envHere <- environment()
       argsHere <- union(argsPostProcessTerra, argsOldPostProcess)
       argsHere <- setdiff(argsHere, "...")
       for (ar in argsHere) {
-        # print(ar)
         if (!exists(ar, envir = envHere, inherits = FALSE)) {
           assign(ar, out$dots[[ar]], envHere)
         }
@@ -498,7 +501,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         postProcessTo(from = x, to = to, rasterToMatch = rasterToMatch, studyArea = studyArea,
                               cropTo = cropTo, projectTo = projectTo, maskTo = maskTo, writeTo = writeTo,
                               method = method, targetCRS = targetCRS, useSAcrs = useSAcrs,
-                              datatype = datatype,
+                              datatype = datatype, touches = touches, needBuffer = needBuffer,
                               filename2 = filename2,
                               overwrite = overwrite),
         message = function(m) {
