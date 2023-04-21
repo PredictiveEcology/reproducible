@@ -95,7 +95,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
 
       # The download step
       failed <- 1
-      while (failed > 0  && failed < 4) {
+      numTries <- 2
+      while (failed > 0  && failed <= numTries) {
         messOrig <- capture.output(
           type = "message",
           downloadResults <- try(downloadRemote(url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
@@ -124,17 +125,17 @@ downloadFile <- function(archive, targetFile, neededFiles,
             }
           }
 
-          failed <- failed + 1
-          if (failed >= 4) {
-            messCommon <- paste0("Download of ", targetFile, " from ", url, " failed. Please check the url that it is correct.\n",
-                                         "If the url is correct, it is possible that manually downloading it will work. ",
-                                         "To try this, with your browser, go to\n",
-                                         url, ",\n ... then download it manually, give it this name: '", .basename(fileToDownload),
-                                         "', and place file here: ", destinationPath)
+          if (failed >= numTries) {
+            messCommon <- paste0("Download of ", url, " failed. This may be a permissions issue. ",
+                                 "Please check the url and permissions are correct.\n",
+                                 "If the url is correct, it is possible that manually downloading it will work. ",
+                                 "To try this, with your browser, go to\n",
+                                 url, ",\n ... then download it manually, give it this name: '", .basename(fileToDownload),
+                                 "', and place file here: ", destinationPath)
             if (isInteractive() && getOption('reproducible.interactiveOnDownloadFail', TRUE)) {
               mess <- paste0(messCommon,
-                   ".\n ------- \nIf you have completed a manual download, press 'y' to continue; otherwise press any other key to stop now. ",
-                   "\n(To prevent this behaviour in the future, set options('reproducible.interactiveOnDownloadFail' = FALSE)  )"
+                             ".\n ------- \nIf you have completed a manual download, press 'y' to continue; otherwise press any other key to stop now. ",
+                             "\n(To prevent this behaviour in the future, set options('reproducible.interactiveOnDownloadFail' = FALSE)  )"
               )
               message(mess)
               resultOfPrompt <- .readline("Type y if you have attempted a manual download and put it in the correct place: ")
@@ -156,6 +157,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
           } else {
             Sys.sleep(0.5)
           }
+          failed <- failed + 1
         } else {
           # This is so that we essentially treat it as a file, not an object, which means
           #   the second time we try this call, we can access the file locally, without needed to download
@@ -363,7 +365,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
         })
       }
       a <- future::future({
-        retry(quote(googledrive::drive_download(googledrive::as_id(url), path = destFile,
+        retry(retries = 2, quote(googledrive::drive_download(googledrive::as_id(url), path = destFile,
                                                 type = type,
                                                 overwrite = overwrite, verbose = TRUE)))
         },
@@ -388,7 +390,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       }
       cat("\nDone!\n")
     } else {
-      a <- retry(quote(googledrive::drive_download(googledrive::as_id(url), path = destFile,
+      a <- retry(retries = 2, quote(googledrive::drive_download(googledrive::as_id(url), path = destFile,
                                                    type = type,
                                                    overwrite = overwrite, verbose = TRUE))) ## TODO: unrecognized type "shp"
     }
@@ -634,10 +636,10 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
 
   if (is.null(archive) || is.na(archive)) {
     if (packageVersion("googledrive") < "2.0.0") {
-      fileAttr <- retry(quote(googledrive::drive_get(googledrive::as_id(url),
+      fileAttr <- retry(retries = 1, quote(googledrive::drive_get(googledrive::as_id(url),
                                                      team_drive = team_drive)))
     } else {
-      fileAttr <- retry(quote(googledrive::drive_get(googledrive::as_id(url),
+      fileAttr <- retry(retries = 1, quote(googledrive::drive_get(googledrive::as_id(url),
                                                      shared_drive = team_drive)))
     }
     fileSize <- fileAttr$drive_resource[[1]]$size ## TODO: not returned with team drive (i.e., NULL)
