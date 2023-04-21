@@ -163,7 +163,6 @@ setMethod(
         stop("Please install terra package")
       terraSrcs <- Filenames(object)
       if (any(nchar(terraSrcs) > 0)) {
-
         out <- lapply(terraSrcs, function(x) {
           if (grepl("^NETCDF:", x)) {
             x <- sub("^NETCDF:\"", "", x)

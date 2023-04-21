@@ -183,9 +183,11 @@ version 1.2.1
 ==============
 
 ## New features
-* harmonized message colours: `blue` for all `Cache` functions; `cyan` for all `prepInputs` functions; `green` for questions that require user input. These are therefore user-visible colour changes.
+* harmonized message colours that are use adjustable via options: `reproducible.messageColourPrepInputs` for all `prepInputs` functions;  `reproducible.messageColourCache` for all `Cache` functions; and `reproducible.messageColourQuestion` for questions that require user input. Defaults are `cyan`, `blue` and `green` respectively. These are user-visible colour changes.
 * improved messaging for `Cache` cases where a `file.link` is used instead of saving.
+* with improved messaging, now `options(reproducible.verbose = 0)` will turn off almost all messaging.
 * `postProcess` and family now have `filename2 = NULL` as the default, so not saved to disk. This is a change.
+* `verbose` is now an argument throughout, whose default is `getOption(reproducible.verbose)`, which is set by default to `1`. Thus, individual function calls can be more or less verbose, or the whole session via option. 
 
 ## Bug fixes
 * `RasterStack` objects were not correctly saved to disk under some conditions in `postProcess` - fixed
