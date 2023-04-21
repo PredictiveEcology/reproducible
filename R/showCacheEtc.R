@@ -680,8 +680,12 @@ useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose")) {
                     "installed.", verboseLevel = 1, verbose = verbose)
   }
   if (!is.null(set)) {
-    messageColoured("Using non-DBI backend.",
-                    verboseLevel = 0, verbose = verbose)
+    messSet <- if (isTRUE(set)) {
+      "Using DBI backend."
+    } else {
+      "Using non-DBI backend."
+    }
+    messageColoured(messSet, verboseLevel = 0, verbose = verbose)
   }
 
   ud
