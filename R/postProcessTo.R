@@ -183,7 +183,6 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
     }
   }
 
-  browser()
   #############################################################
   # crop project mask sequence ################################
   #############################################################

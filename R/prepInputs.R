@@ -1,7 +1,7 @@
 if (getRversion() >= "3.1.0") {
   utils::globalVariables(c("expectedFile", "objName", "V1",
                            "method", "rasterToMatch", "studyArea", "targetCRS",
-                           "to", "useSAcrs", "datatype"))
+                           "to", "useSAcrs", "datatype", "touches", "needBuffer"))
 }
 
 #' Download and optionally post-process files
@@ -1006,14 +1006,10 @@ extractFromArchive <- function(archive,
       to <- file.path(args$exdir, extractedFiles)
 
       suppressWarnings({
-        out <- try(file.link(from, to))
+        out <- linkOrCopy(from, to, symlink = FALSE)
       })
 
       browser()
-      if (!isTRUE(all(out))) {
-        out <- try(.file.move(from, to, overwrite))
-      }
-
       if (!isTRUE(all(out))) {
         stop(paste("Could not move extractedfiles from", .tempPath, "to", args$exdir))
       }
