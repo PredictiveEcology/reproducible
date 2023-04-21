@@ -2174,7 +2174,7 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
     #   gsub("cacheId:", "", isInRepo[[.cacheTableTagColName()]])
     stop(output, "\nError in trying to recover cacheID: ", cID,
          "\nYou will likely need to remove that item from Cache, e.g., ",
-         "\nclearCache(userTags = '", cID, "')")
+         "\nclearCache('", cachePath,"', userTags = '", cID, "')")
   }
 
   .updateTagsRepo(outputHash, cachePath, "elapsedTimeLoad",
