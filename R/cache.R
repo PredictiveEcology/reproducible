@@ -374,8 +374,10 @@ Cache <-
            conn = getOption("reproducible.conn", NULL)) {
 
     if (is.null(cachePath)) {
-      if (!is.null(cacheRepo))
+      if (!is.null(cacheRepo)) {
+        message("The cacheRepo argument is being deprecated. Please use cachePath")
         cachePath <- cacheRepo
+      }
     }
 
     userTagsOrig <- userTags # keep to distinguish actual user supplied userTags

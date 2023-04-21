@@ -324,15 +324,15 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        verbose = getOption("reproducible.verbose", 1),
                        ...) {
   # Download, Checksum, Extract from Archive
-  # browser(expr = exists("._prepInputs_1"))
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit({
       unlink(.tempPath, recursive = TRUE)
     }, add = TRUE)
   }
-  mess <- character(0)
   funCaptured <- substitute(fun)
+  prepInputsAssertions(environment())
+  mess <- character(0)
 
   ##################################################################
   # preProcess
@@ -584,7 +584,6 @@ extractFromArchive <- function(archive,
                                verbose = getOption("reproducible.verbose", 1),
                                .tempPath, ...) {
 
-  # browser(expr = exists('._extractFromArchive_1'))
   if (!is.null(archive)) {
     if (!(any(c(knownInternalArchiveExtensions, knownSystemArchiveExtensions) %in% fileExt(archive)))) {
       stop("Archives of type ", fileExt(archive), " are not currently supported. ",
@@ -607,7 +606,6 @@ extractFromArchive <- function(archive,
     FALSE
   }
 
-  # browser(expr = exists('._extractFromArchive_2'))
   if (!(all(compareNA(result, "OK")) && hasAllFiles)) {
     if (!is.null(archive)) {
       if (!file.exists(archive[1]))
@@ -1011,6 +1009,7 @@ extractFromArchive <- function(archive,
         out <- try(file.link(from, to))
       })
 
+      browser()
       if (!isTRUE(all(out))) {
         out <- try(.file.move(from, to, overwrite))
       }
@@ -1368,3 +1367,30 @@ knownInternalArchiveExtensions <- c("zip", "tar", "tar.gz", "gz")
 knownSystemArchiveExtensions <- c("rar", "7z")
 knownArchiveExtensions <- c(knownInternalArchiveExtensions, knownSystemArchiveExtensions)
 
+
+prepInputsAssertions <- function(env) {
+  noisy <- nullOr(c("character", "logical"), c("alsoExtract"), env = env)
+  noisy <- nullOr(c("character", "logical"), "useCache", env)
+  noisy <- nullOr(c("numeric", "logical"), c("purge", "verbose"), env)
+  noisy <- nullOr("character", c("destinationPath", "targetFile", "url", "archive",
+                             ".tempPath"), env = env)
+  noisy <- nullOr("logical", c("quick", "overwrite"), env = env)
+}
+
+nullOr <- function(clses, vals, env) {
+  vapply(vals, function(val) {
+    out <- is.null(env[[val]])
+    if (out) # pull out fast if NULL
+      return(out)
+    out <- inherits(env[[val]], clses)
+    if (isFALSE(out)) {
+      stop(val, " must be of class", "(es)"[(length(clses) > 1)], " ",
+           paste(clses, collapse = ", "),
+           " or set to its default. It is currently ", class(env[[val]]), ".")
+    }
+    out
+
+  }, logical(1))
+}
+
+is.nulls <- function(x) lapply(x, is.null)

@@ -139,7 +139,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        quick = getOption("reproducible.quick"),
                        overwrite = getOption("reproducible.overwrite", FALSE),
                        purge = FALSE,
-                       # useCache = getOption("reproducible.useCache", FALSE),
                        verbose = getOption("reproducible.verbose", 1),
                        .tempPath, ...) {
   if (missing(.tempPath)) {
@@ -148,6 +147,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             add = TRUE)
   }
   dlFunCaptured <- substitute(dlFun)
+  prepInputsAssertions(environment())
   isAlreadyQuoted <- any(grepl("quote", dlFunCaptured))
   if (isAlreadyQuoted)
     dlFunCaptured <- eval(dlFunCaptured)
