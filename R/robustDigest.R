@@ -163,8 +163,15 @@ setMethod(
         stop("Please install terra package")
       terraSrcs <- Filenames(object)
       if (any(nchar(terraSrcs) > 0)) {
-        out <- lapply(terraSrcs, function(x)
-          .robustDigest(x, length = length, algo = algo, quick = quick))
+
+        out <- lapply(terraSrcs, function(x) {
+          if (grepl("^NETCDF:", x)) {
+            x <- sub("^NETCDF:\"", "", x)
+            x <- sub("\":.*$", "", x)
+          }
+          .robustDigest(file = x, length = length, algo = algo, quick = quick)
+        })
+
         dig <- .robustDigest(
           list(terra::nrow(object), terra::ncol(object), terra::nlyr(object),
                terra::res(object), terra::crs(object),
