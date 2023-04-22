@@ -188,7 +188,27 @@ test_that("testing terra", {
     expect_true(sf::st_crs(vsfInUTMviaSpatRast) == sf::st_crs(rutm))
     expect_true(isTRUE(all.equal(round(terra::ext(rutm), 6),
                                  round(terra::ext(vsfInUTMviaSpatRast), 6))))
+
   }
+
+  # Check for cases where `to` does not overlap with `from`
+  ext1 <- terra::ext(vsf) + c(-2, 2, -2, 2)
+  ext1SR <- terra::rast(ext1)
+  if (.requireNamespace("raster")) {
+    ext1Ra <- raster::raster(ext1SR)
+    ext1Ex <- raster::extent(ext1Ra)
+  }
+  ext2 <- terra::vect(ext1)
+  terra::crs(ext2) <- terra::crs(vsf)
+  ext3 <- sf::st_as_sf(ext2)
+  expect_warning(expect_error(postProcessTo(vOrigsf, ext3))) # sf gives warning too
+  expect_error(postProcessTo(terra::vect(vOrigsf), ext2))
+  if (.requireNamespace("sp"))
+    expect_error(postProcessTo(as(vOrigsf, "Spatial"), as(ext2, "Spatial")))
+  if (.requireNamespace("raster"))
+    expect_error(postProcessTo(as(vOrigsf, "Spatial"), ext1Ra))
+
+
 
   # if (Sys.info()["user"] %in% "emcintir") {
   #   env <- new.env(parent = emptyenv())

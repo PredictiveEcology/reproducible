@@ -667,6 +667,24 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
           }
 
         }
+
+        wasError <- is(fromInt, "try-error")
+        noOverlap <- NROW(fromInt) == 0
+        if (noOverlap || wasError) {
+          fail <- FALSE
+          if (wasError)
+            if (grepl("extents do not overlap", fromInt))
+              fail <- TRUE
+          if (NROW(fromInt) == 0) { # likely don't overlap
+            fromInt <- "It looks like the extents do not overlap; stopping"
+            fail <- TRUE
+          }
+          if (fail)
+            stop(fromInt)
+        }
+
+
+
         if (is(fromInt, "try-error")) {
           if (attempt == 1) {
             from <- fixErrorsIn(from, error = fromInt, fromFnName = "cropTo", verbose = verbose)
