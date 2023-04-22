@@ -619,6 +619,8 @@ vectorType <- function(vectorRead = getOption("reproducible.shapefileRead", "sf:
 #' this will be non-unique after 1000 seconds (at the microsecond level). In
 #' tests, this showed no duplicates after 1e7 draws in a loop, as expected.
 #'
+#' @note
+#' This function does not appear to be as reliable on R <= 4.1.3
 #'
 #' @return
 #' This will return the new seed invisibly. However, this is also called for

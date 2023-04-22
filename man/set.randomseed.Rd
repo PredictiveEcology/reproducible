@@ -23,3 +23,6 @@ integer limits, it also truncates at 1000 seconds, so there is a possibility tha
 this will be non-unique after 1000 seconds (at the microsecond level). In
 tests, this showed no duplicates after 1e7 draws in a loop, as expected.
 }
+\note{
+This function does not appear to be as reliable on R <= 4.1.3
+}
