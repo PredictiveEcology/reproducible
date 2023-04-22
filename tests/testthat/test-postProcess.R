@@ -144,8 +144,8 @@ test_that("prepInputs doesn't work (part 3)", {
   ncSmallShifted <- st_as_sf(ncSmallShifted)
   st_crs(ncSmallShifted) <- st_crs(ncSmall)
   mess <- capture_error(
-    aaa <- cropInputs(ncSmall, studyArea = ncSmallShifted))
-  expect_true(NROW(aaa) == 0)
+    cropInputs(ncSmall, studyArea = ncSmallShifted))
+  expect_true(grepl("extents", mess))
 
   # cropInputs.sf
   nc3 <- st_transform(nc1, crs = nonLatLongProj2)
@@ -171,8 +171,8 @@ test_that("prepInputs doesn't work (part 3)", {
   ncSmallShifted <- ncSmall + 10000000
   ncSmallShifted <- st_as_sf(ncSmallShifted)
   st_crs(ncSmallShifted) <- st_crs(ncSmall)
-  out11 <- cropInputs(ncSmall, studyArea = ncSmallShifted)
-  expect_true(NROW(out11) == 0)
+  expect_error(cropInputs(ncSmall, studyArea = ncSmallShifted))
+  # expect_true(NROW(out11) == 0)
 
   # LINEARRING Example
   p6 = terra::vect("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
