@@ -1,45 +1,57 @@
-# Add a study area to Crop and Mask to
-# Create a "study area"
 library(reproducible)
-# download a zip file from internet, unzip all files, load as shapefile, Cache the call
-# First time: don't know all files - prepInputs will guess, if download file is an archive,
-#   then extract all files, then if there is a .shp, it will load with raster::shapefile
-dPath <- file.path(tempdir(), "ecozones")
-shpUrl <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
+# download a (spatial) file from remote url (which often is an archive) load into R
+# need 3 files for this example; 1 from remote, 2 local
+dPath <- file.path(tempdir(), "testing")
+remoteTifUrl <- "https://github.com/rspatial/terra/raw/master/inst/ex/elev.tif"
+localFileLuxSm <- system.file("luxSmall.shp", package = "reproducible")
+localFileLux <- system.file("ex/lux.shp", package = "terra")
 
-# Wrapped in a try because this particular url can be flaky
-shpEcozone <- try(prepInputs(destinationPath = dPath,
-                             url = shpUrl))
+# 1 step for each layer
+# 1st step -- get study area
+studyArea <- prepInputs(localFileLuxSm, fun = "terra::vect") # default is sf::st_read
+# 2nd step: make the input data layer like the studyArea map
+elevForStudy <- prepInputs(url = remoteTifUrl, to = studyArea, res = 250,
+                           destinationPath = dPath)
 
-# Add a study area to Crop and Mask to
-# Create a "study area"
-coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                    .Dim = c(5L, 2L))
-studyArea <- terra::vect(coords, "polygons")
-terra::crs(studyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+# Alternate way, one step at a time. Must know each of these steps, and perform for each layer
+\donttest{
+  dir.create(dPath, recursive = TRUE, showWarnings = FALSE)
+  file.copy(localFileLuxSm, file.path(dPath, basename(localFileLuxSm)))
+  studyArea2 <- terra::vect(localFileLuxSm)
+  if (!all(terra::is.valid(studyArea2))) studyArea2 <- terra::makeValid(studyArea2)
+  tf <- tempfile(fileext = ".tif")
+  download.file(url = remoteTifUrl, destfile = tf, mode = "wb")
+  Checksums(dPath, write = TRUE, files = tf)
+  elevOrig <- terra::rast(tf)
+  elevForStudy2 <- terra::project(elevOrig, terra::crs(studyArea2), res = 250) |>
+    terra::crop(studyArea2) |>
+    terra::mask(studyArea2)
+
+  isTRUE(all.equal(studyArea, studyArea2)) # Yes!
+}
 
 # With terra
-if (require("terra")) {
-  vectEcozone <- terra::vect(shpEcozone)
+if (requireNamespace("terra") && requireNamespace("sf")) {
+  # sf class
+  studyAreaSmall <- prepInputs(localFileLuxSm)
+  studyAreas <- list()
+  studyAreas[["orig"]] <- prepInputs(localFileLux)
+  studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
+  studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
+  studyAreas[["masked"]] <- suppressWarnings(maskTo(studyAreas[["orig"]], studyAreaSmall))
 
-  # warnings: "attribute variables are assumed to be spatially constant throughout all geometries"
-  #  --> these are relevant for a user to know, but can be safely ignored in examples
-  # If input is Spatial object --> return will also be Spatial
-  shpEcozonePostProcessed <- suppressWarnings(postProcessTo(vectEcozone, studyArea = studyArea))
-  # Try manually, individual pieces -- Note functions are different
-  shpEcozoneReprojected <- projectTo(shpEcozone, studyArea)
-  shpEcozoneMasked <- suppressWarnings(maskTo(shpEcozone, studyArea))
-  shpEcozoneCropped <- suppressWarnings(cropTo(shpEcozone, studyArea))
+  # SpatVector-- note: doesn't matter what class the "to" object is, only the "from"
+  studyAreas <- list()
+  studyAreas[["orig"]] <- prepInputs(localFileLux, fun = "terra::vect")
+  studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
+  studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
+  studyAreas[["masked"]] <- suppressWarnings(maskTo(studyAreas[["orig"]], studyAreaSmall))
+  if (interactive()) {
+    par(mfrow = c(2,2));
+    out <- lapply(studyAreas, function(x) terra::plot(x))
+  }
 
-  # If input is Spat object --> return will also be Spat
-  vectEcozonePostProcessed <- postProcessTo(vectEcozone, studyArea = studyArea)
-  # Try manually, individual pieces -- Note functions are different
-  vectEcozoneMasked <- maskTo(vectEcozone, studyArea)
-  VectEcozoneReprojected <- projectTo(vectEcozone, studyArea)
-  vectEcozoneCropped <- cropTo(vectEcozone, studyArea)
-
-  # fixErrorsIn --> generally not called on its own
-  shpEcozoneClean <- fixErrorsIn(vectEcozone)
 
 }
 
