@@ -134,6 +134,7 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
     if (missing(projectTo)) projectTo <- NULL
   } else {
     if (isRaster(to)) {
+      .requireNamespace("terra", stopOnFALSE = TRUE)
       to <- terra::rast(to)
     }
     # case where all *To are NULL --> use to as in the arg defaults
@@ -162,10 +163,10 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
   from <- cropSF(from, cropTo)
 
   if (isRaster) {
-    fromCRS <- sf::st_crs(from)
+    fromCRS <- terra::crs(from)
     from <- terra::rast(from)
     if (!nzchar(terra::crs(from)))
-      terra::crs(from) <- fromCRS$input
+      terra::crs(from) <- fromCRS#$input
   } else if (isSpatial) {
     osFrom <- object.size(from)
     lg <- osFrom > 5e8
@@ -174,7 +175,7 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
       messagePrepInputs("  `from` is large, converting to terra object will take some time ...",
                         verbose = verbose)
     }
-    from <- suppressWarningsSpecific(terra::vect(sf::st_as_sf(from)), shldBeChar)
+    from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
     if (lg) {
       messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
                                              units = "secs", digits = 3),
@@ -186,10 +187,10 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
   #############################################################
   # crop project mask sequence ################################
   #############################################################
-  from <- cropTo(from, cropTo, needBuffer = TRUE, overwrite = overwrite) # crop first for speed
-  from <- projectTo(from, projectTo, method = method, overwrite = overwrite) # need to project with edges intact
+  from <- cropTo(from, cropTo, needBuffer = TRUE, ..., overwrite = overwrite) # crop first for speed
+  from <- projectTo(from, projectTo, method = method, ..., overwrite = overwrite) # need to project with edges intact
   from <- maskTo(from, maskTo, ..., overwrite = overwrite)
-  from <- cropTo(from, cropTo, needBuffer = FALSE, overwrite = overwrite) # need to recrop to trim excess pixels in new projection
+  from <- cropTo(from, cropTo, needBuffer = FALSE, ..., overwrite = overwrite) # need to recrop to trim excess pixels in new projection
 
   # Put this message near the end so doesn't get lost
   if (is.naSpatial(cropTo) && isVector(maskTo))  {
@@ -203,7 +204,7 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
 
   # WRITE STEP
   from <- writeTo(from, writeTo, overwrite, isStack, isBrick, isRaster, isSpatRaster,
-                  datatype = datatype)
+                  datatype = datatype, ...)
 
   # REVERT TO ORIGINAL INPUT CLASS
   from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial)
@@ -255,6 +256,7 @@ fixErrorsIn <- function(x, error = NULL, verbose = getOption("reproducible.verbo
                         format(os), ")", verbose = verbose)
     }
     if (isSF(x)) {
+      .requireNamespace("sf", stopOnFALSE = TRUE)
       xValids <- sf::st_is_valid(x)
       if (any(!xValids)) {
         if (os > 1e9)
@@ -316,7 +318,8 @@ makeVal <- function(x) {
 #' @export
 #' @rdname postProcessTo
 #' @param touches See `terra::mask`
-maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
+maskTo <- function(from, maskTo, # touches = FALSE,
+                   overwrite = FALSE,
                    verbose = getOption("reproducible.verbose"), ...) {
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
@@ -334,9 +337,10 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
         if (is.na(maskTo) || isCRSANY(maskTo)) omit <- TRUE
 
       if (!omit) {
-
-        if (isSpatial(from))
+        .requireNamespace("sf", stopOnFALSE = TRUE)
+        if (isSpatial(from)) {
           from <- sf::st_as_sf(from)
+        }
         if (isSF(from)) {
           if (!isSF(maskTo)) {
             maskTo <- sf::st_as_sf(maskTo)
@@ -413,7 +417,13 @@ maskTo <- function(from, maskTo, touches = FALSE, overwrite = FALSE,
                 if (isSF(maskTo) || isSpatial(maskTo)) {
                   maskTo <- terra::vect(maskTo) # alternative is stars, and that is not Suggests
                 }
-                terra::mask(from, maskTo, touches = touches, overwrite = overwrite)
+                # if (is.null(touches))
+                #   touches <- FALSE
+                dotArgs <- intersect(...names(), writeRasterArgs)
+                do.call(terra::mask, append(list(from, maskTo, overwrite = overwrite), dotArgs))
+
+                # terra::mask(from, maskTo, touches = touches, overwrite = overwrite)
+                # terra::mask(from, maskTo, ..., overwrite = overwrite)
               }
             }
           }, silent = TRUE)
@@ -459,6 +469,7 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE,
   method <- assessDataTypeOuter(from, method)
 
   if (!is.null(projectTo)) {
+    .requireNamespace("sf", stopOnFALSE = TRUE)
     origFromClass <- is(from)
     if (!is.naSpatial(projectTo)) {
       if (isRaster(projectTo)) {
@@ -466,7 +477,10 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE,
       }
 
       projectToOrig <- projectTo # keep for below
+      browser()
       sameProj <- sf::st_crs(projectTo) == sf::st_crs(from)
+      sameProj <- terra::crs(projectTo) == terra::crs(from)
+
       isProjectToVecOrCRS <- isCRSANY(projectTo) || isVector(projectTo)
       sameRes <- if (isVector(from) || isProjectToVecOrCRS) {
         TRUE
@@ -506,12 +520,13 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE,
                                 verbose = verbose)
               projectTo <- terra::rast(projectTo, resolution = newRes)
             } else {
-              projectTo <- terra::rast(ncols = terra::ncol(from), nrows = terra::nrow(from),
-                                       crs = sf::st_crs(projectTo)$wkt, extent = terra::ext(projectTo))
-              messagePrepInputs("         Projecting to ",
-                                paste(collapse = "x", round(terra::res(projectTo), 2)),
-                                " resolution (same # pixels as `from`)",
-                                verbose = verbose)
+              projectTo <- terra::crs(projectTo)
+              # projectTo <- terra::rast(ncols = terra::ncol(from), nrows = terra::nrow(from),
+              #                          crs = sf::st_crs(projectTo)$wkt, extent = terra::ext(projectTo))
+              # messagePrepInputs("         Projecting to ",
+              #                   paste(collapse = "x", round(terra::res(projectTo), 2)),
+              #                   " resolution (same # pixels as `from`)",
+              #                   verbose = verbose)
             }
 
             messagePrepInputs("         in the projection of `projectTo`, using the origin and extent",
@@ -546,7 +561,11 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE,
           if (isSpatial) from <- as(from, "Spatial")
           from
         } else {
-          terra::project(from, projectTo, method = method, overwrite = overwrite)
+          dotArgs <- intersect(...names(), c(writeRasterArgs, projectArgs))
+          if (length(dotArgs))
+            dotArgs <- list(...)[dotArgs]
+          ll <- append(list(from, projectTo, method = method, overwrite = overwrite), dotArgs)
+          do.call(terra::project, ll)
         }
         messagePrepInputs("done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
                           verbose = verbose)
@@ -718,6 +737,12 @@ writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, is
                     verbose = getOption("reproducible.verbose"), ...) {
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
+
+  dPath <- which(...names() %in% "destinationPath")
+  destinationPath <- if (length(dPath)) destinationPath <- ...elt(dPath) else
+    getOption("reproducible.destinationPath", ".")
+
+  writeTo <- determineFilename(writeTo, destinationPath = destinationPath, verbose = verbose)
 
   if (isTRUE(isStack)) from <- raster::stack(from)
   if (isTRUE(isBrick)) from <- raster::brick(from)
@@ -1005,3 +1030,12 @@ assessDataTypeOuter <- function(from, method) {
   }
   method
 }
+
+
+writeRasterArgs <- c("filename", "overwrite", "ncopies", "steps", "filetype", "progressbar", "tempdir", "datatype",
+                     "todisk", "memfrac", "progress", "verbose", "memmin", "filetype",
+                     "verbose", "names", "tolerance", "overwrite", "datatype", "memmax"
+)
+
+projectArgs <- c("x", "y", "method", "mask", "align", "gdal", "res", "origin", "threads", "filename")
+

@@ -375,7 +375,6 @@ test_that("interactive prepInputs", {
                            targetFile = paste0(x, "_currmean.asc"),
                            archive = paste0(x, "_current.zip"),
                            url = url,
-                           # fun = "raster::raster",
                            alsoExtract = NA,
                            destinationPath = tmpdir,
                            overwrite = TRUE

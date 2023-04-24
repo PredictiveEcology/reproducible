@@ -347,7 +347,11 @@ test_that("testing terra", {
   t20 <- postProcessTo(elevRas, projectTo = sf::st_crs(vutm))
   expect_true(all.equal(t20, t21))
   expect_true(all.equal(t20, t21SF))
-  expect_true(identical(terra::size(elevRas), terra::size(t20)))
+  # This is now (Apr 24, 2023) because passing all to terra::project --> which keep square pixels
+  expect_false(identical(terra::size(elevRas), terra::size(t20)))
+
+  t20res250 <- postProcessTo(elevRas, projectTo = sf::st_crs(vutm), res = 250)
+  expect_true(all(terra::res(t20res250) == 250))
 
   ## same projection change resolution only (will likely affect extent)
   y2 <- terra::rast(crs = terra::crs(y), res = 0.008333333*2, extent = terra::ext(y))

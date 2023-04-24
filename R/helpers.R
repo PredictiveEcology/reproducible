@@ -127,9 +127,8 @@ setMethod(
   signature = "ANY",
   definition = function(studyArea, ...) {
     if (inherits(studyArea, "sf")) {
-      if (requireNamespace("sf")) {
-        studyArea <- sf::st_geometry(studyArea)
-      }
+      .requireNamespace("sf", stopOnFALSE = TRUE)
+      studyArea <- sf::st_geometry(studyArea)
     } else if (inherits(studyArea, "SpatialPolygonsDataFrame")) {
       studyArea <- studyArea[, -c(1:ncol(studyArea))]
       studyArea <- as(studyArea, "SpatialPolygons")
@@ -172,7 +171,7 @@ setMethod(
   if (!missing(dots)) {
     out <- names(dots)[!(names(dots) %in% formalNames)]
   } else {
-    out <- names(list(...))[!(names(list(...)) %in% formalNames)]
+    out <- ...names()[!(...names() %in% formalNames)]
   }
   out
 }
