@@ -236,32 +236,32 @@ If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
 }
 
 \examples{
-if (requireNamespace("terra") && requireNamespace("sf")) {
+\donttest{
+  if (requireNamespace("terra") && requireNamespace("sf")) {
 
-  library(reproducible)
-# Make a dummy study area map -- user would supply this normally
-  coords <- structure(c(-122.9, -116.1, -99.2, -106, -122.9, 59.9, 65.7, 63.6, 54.8, 59.9),
+    library(reproducible)
+  # Make a dummy study area map -- user would supply this normally
+    coords <- structure(c(-122.9, -116.1, -99.2, -106, -122.9, 59.9, 65.7, 63.6, 54.8, 59.9),
                       .Dim = c(5L, 2L))
-  studyArea <- terra::vect(coords, "polygons")
-  terra::crs(studyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-# Make dummy "large" map that must be cropped to the study area
-  outerSA <- terra::buffer(studyArea, 50000)
-  terra::crs(outerSA) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  tf <- normPath(file.path(tempdir2("prepInputsEx"), "prepInputs2.shp"))
-  terra::writeVector(outerSA, tf, overwrite = TRUE)
+    studyArea <- terra::vect(coords, "polygons")
+    terra::crs(studyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  # Make dummy "large" map that must be cropped to the study area
+    outerSA <- terra::buffer(studyArea, 50000)
+    terra::crs(outerSA) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    tf <- normPath(file.path(tempdir2("prepInputsEx"), "prepInputs2.shp"))
+    terra::writeVector(outerSA, tf, overwrite = TRUE)
 
-# run prepInputs -- load file, postProcess it to the studyArea
+  # run prepInputs -- load file, postProcess it to the studyArea
 
-studyArea2 <- prepInputs(targetFile = tf, to = studyArea, destinationPath = tempdir2()) |>
-  suppressWarnings() # not relevant warning here
+  studyArea2 <- prepInputs(targetFile = tf, to = studyArea, destinationPath = tempdir2()) |>
+    suppressWarnings() # not relevant warning here
 
-# clean up
-unlink("CHECKSUMS.txt")
+  # clean up
+  unlink("CHECKSUMS.txt")
 
 ##########################################
 # Remote file using `url`
 ##########################################
-\donttest{
   data.table::setDTthreads(2)
   origDir <- getwd()
   # download a zip file from internet, unzip all files, load as shapefile, Cache the call
