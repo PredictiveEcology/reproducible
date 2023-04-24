@@ -746,7 +746,7 @@ writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, is
       if (is.null(isSpatRaster)) isSpatRaster <- isSpat(from) && isGridded(from)
       if (is.null(isRaster)) isRaster <- inherits(from, "Raster")
 
-      if (isSpatRaster || isSpatVector(from)) {
+      if (isSpatRaster || isVector(from)) {
         ## trying to prevent write failure and subsequent overwrite error with terra::writeRaster
         if (any(file.exists(writeTo))) {
           if (isFALSE(overwrite)) {
@@ -766,7 +766,11 @@ writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, is
             stop("File can't be unliked for overwrite")
           }
         } else {
-          written <- terra::writeVector(from, filename = writeTo, overwrite = FALSE)
+          if (isSF(from)) {
+            written <- sf::st_write(from, dsn = writeTo)
+          } else {
+            written <- terra::writeVector(from, filename = writeTo, overwrite = FALSE)
+          }
           writeDone <- TRUE
         }
       } else if (isRaster) {
