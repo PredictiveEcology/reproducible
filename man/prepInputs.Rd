@@ -247,7 +247,7 @@ if (requireNamespace("terra") && requireNamespace("sf")) {
 # Make dummy "large" map that must be cropped to the study area
   outerSA <- terra::buffer(studyArea, 50000)
   terra::crs(outerSA) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  tf <- file.path(tempfile2(fileext = ".shp"))
+  tf <- normPath(file.path(tempdir2("prepInputsEx"), "prepInputs2.shp"))
   terra::writeVector(outerSA, tf, overwrite = TRUE)
 
 # run prepInputs -- load file, postProcess it to the studyArea
