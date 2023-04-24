@@ -1,11 +1,14 @@
 #' Transform a GIS dataset so it has the properties (extent, projection, mask) of another
 #'
-#' This function provides a single step to achieve the GIS operations "crop", "project",
-#' "mask" and possibly "write". This is intended to completely replace [postProcess()]
-#' (which primarily used GDAL, `raster` and `sp`).
+#' This function provides a single step to achieve the GIS operations
+#' "pre-crop-with-buffer-to-speed-up-projection", "project",
+#' "post-projection-crop", "mask" and possibly "write".
 #' It uses primarily the `terra` package internally
-#' (with some minor functions from `sf` and `raster`)
-#' in an attempt to be as efficient as possible.
+#' (with some minor functions from `sf`)
+#' in an attempt to be as efficient as possible. Currently, this function is tested
+#' with `sf`, `SpatVector`, `SpatRaster`, `Raster*` and `Spatial*` objects passed
+#' to `from`, and the same plus `SpatExtent`, and `crs` passed to `to` or the
+#' relevant `*to` functions.
 #' For this function, Gridded means a `Raster*` class object from `raster` or
 #' a `SpatRaster` class object from `terra`.
 #' Vector means a `Spatial*` class object from `sp`, a `sf` class object
@@ -14,6 +17,9 @@
 #' `*Inputs`, such as [cropInputs()].
 #'
 #' @details
+#' `postProcessTo` is a wrapper around `cropTo(needBuffer = TRUE)`, `projectTo`, `cropTo`,
+#' `maskTo`, `writeTo`. Users can call each of these individually.
+#'
 #' `postProcessTerra` is the early name of this function that is now `postProcessTo`.
 #'
 #' @section Use Cases:

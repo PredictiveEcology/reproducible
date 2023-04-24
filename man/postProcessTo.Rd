@@ -132,12 +132,15 @@ projected (via \code{\link[=projectTo]{projectTo()}}), masked (via \code{\link[=
 (via \code{\link[=writeTo]{writeTo()}}).
 }
 \description{
-This function provides a single step to achieve the GIS operations "crop", "project",
-"mask" and possibly "write". This is intended to completely replace \code{\link[=postProcess]{postProcess()}}
-(which primarily used GDAL, \code{raster} and \code{sp}).
+This function provides a single step to achieve the GIS operations
+"pre-crop-with-buffer-to-speed-up-projection", "project",
+"post-projection-crop", "mask" and possibly "write".
 It uses primarily the \code{terra} package internally
-(with some minor functions from \code{sf} and \code{raster})
-in an attempt to be as efficient as possible.
+(with some minor functions from \code{sf})
+in an attempt to be as efficient as possible. Currently, this function is tested
+with \code{sf}, \code{SpatVector}, \code{SpatRaster}, \verb{Raster*} and \verb{Spatial*} objects passed
+to \code{from}, and the same plus \code{SpatExtent}, and \code{crs} passed to \code{to} or the
+relevant \verb{*to} functions.
 For this function, Gridded means a \verb{Raster*} class object from \code{raster} or
 a \code{SpatRaster} class object from \code{terra}.
 Vector means a \verb{Spatial*} class object from \code{sp}, a \code{sf} class object
@@ -146,6 +149,9 @@ This function is also used internally with the deprecated family \code{\link[=po
 \verb{*Inputs}, such as \code{\link[=cropInputs]{cropInputs()}}.
 }
 \details{
+\code{postProcessTo} is a wrapper around \code{cropTo(needBuffer = TRUE)}, \code{projectTo}, \code{cropTo},
+\code{maskTo}, \code{writeTo}. Users can call each of these individually.
+
 \code{postProcessTerra} is the early name of this function that is now \code{postProcessTo}.
 }
 \section{Use Cases}{
