@@ -467,84 +467,22 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ##################################################################
   # postProcess
   ##################################################################
-  if (requireNamespace("terra", quietly = TRUE)) {
-    if (!(all(is.null(out$dots$studyArea),
-              is.null(out$dots$rasterToMatch),
-              is.null(out$dots$targetCRS))) || !(all(is.null(out$dots$to)))) {
+  needPostProcess <- ...names() %in% c("studyArea", "rasterToMatch", "targetCRS", "to", "cropTo",
+                    "maskTo", "projectTo", "fixErrorsIn", "useSAcrs", "writeTo")
+  if (any(needPostProcess)) {
+    .requireNamespace("terra", stopOnFALSE = TRUE)
 
-      # This sequence puts all the objects that are needed for postProcessTo into this environment
-      #   so that we can avoid using do.call
-      argsPostProcessTerra <- unique(c(formalArgs(postProcessTo),
-                                       formalArgs(reproducible::fixErrorsIn),
-                                       formalArgs(reproducible::maskTo),
-                                       formalArgs(reproducible::cropTo),
-                                       formalArgs(reproducible::projectTo)))
-      argsOldPostProcess <- c("rasterToMatch", "studyArea", "targetCRS", "useSAcrs", "filename2",
-                              "overwrite")
-      envHere <- environment()
-      argsHere <- union(argsPostProcessTerra, argsOldPostProcess)
-      argsHere <- setdiff(argsHere, "...")
-      for (ar in argsHere) {
-        if (!exists(ar, envir = envHere, inherits = FALSE)) {
-          assign(ar, out$dots[[ar]], envHere)
+    TopoErrors <- list() # eventually to update a Google ID #TODO
+    x <- withCallingHandlers(
+      postProcessTo(from = x, ..., destinationPath = destinationPath, overwrite = overwrite),
+      message = function(m) {
+        hasTopoExcError <- grepl("TopologyException: Input geom 0 is invalid", m$message)
+        if (any(hasTopoExcError)) {
+          TopoErrors <<- append(TopoErrors, list(m$message))
         }
       }
-      if (is.null(filename2)) {
-        writeTo <- determineFilename(destinationPath = destinationPath, filename2 = writeTo, verbose = verbose)
-      } else {
-        filename2 <- determineFilename(destinationPath = destinationPath, filename2 = filename2, verbose = verbose)
-      }
-      # pass everything, including NULL where it was NULL. This means don't have to deal with
-      #    rlang quo issues
-      TopoErrors <- list() # eventually to update a Google ID #TODO
-      x <- withCallingHandlers(
-        postProcessTo(from = x, to = to, rasterToMatch = rasterToMatch, studyArea = studyArea,
-                              cropTo = cropTo, projectTo = projectTo, maskTo = maskTo, writeTo = writeTo,
-                              method = method, targetCRS = targetCRS, useSAcrs = useSAcrs,
-                              datatype = datatype, touches = touches, needBuffer = needBuffer,
-                              filename2 = filename2,
-                              overwrite = overwrite),
-        message = function(m) {
-          hasTopoExcError <- grepl("TopologyException: Input geom 0 is invalid", m$message)
-          if (any(hasTopoExcError)) {
-            TopoErrors <<- append(TopoErrors, list(m$message))
-          }
-        }
-      )
-
-
-    }
-  } else {
-
-    ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise
-    if (!(all(is.null(out$dots$studyArea),
-              is.null(out$dots$rasterToMatch),
-              is.null(out$dots$targetCRS)))) {
-      messagePrepInputs("Running postProcess", verbose = verbose, verboseLevel = 0)
-
-      # The do.call doesn't quote its arguments, so it doesn't work for "debugging"
-      #  This rlang stuff is a way to pass through objects without evaluating them
-
-      # make quosure out of all spatial objects and x
-      spatials <- sapply(out$dots, function(x) is(x, "Raster") || is(x, "Spatial") || is(x, "sf"))
-      .requireNamespace("rlang", stopOnFALSE = TRUE)
-      out$dots[spatials] <- lapply(out$dots[spatials], function(x) rlang::quo(x))
-      xquo <- rlang::quo(x)
-
-      fullList <- modifyList(list(x = xquo, filename1 = out$targetFilePath,
-                                  overwrite = overwrite,
-                                  destinationPath = out$destinationPath,
-                                  useCache = useCache,
-                                  verbose = verbose), # passed into postProcess
-                             out$dots)
-      x <- Cache(
-        do.call, postProcess, fullList,
-        useCache = useCache, verbose = verbose # used here
-      )
-    }
-
+    )
   }
-
 
   return(x)
 }
