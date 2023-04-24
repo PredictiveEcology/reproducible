@@ -40,7 +40,6 @@ postProcessTerra(
 maskTo(
   from,
   maskTo,
-  touches = FALSE,
   overwrite = FALSE,
   verbose = getOption("reproducible.verbose"),
   ...
@@ -132,8 +131,6 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \code{useSAcrs}, or \code{targetCRS} to allow backwards
 compatibility with \code{postProcess}. See section below for details.}
 
-\item{touches}{See \code{terra::mask}}
-
 \item{needBuffer}{Logical. Defaults to \code{TRUE}, meaning nothing is done out
 of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
 has to happen on the \code{cropTo} prior to using it as a crop layer, then a buffer
@@ -141,6 +138,8 @@ of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.}
 
 \item{isStack, isBrick, isRaster, isSpatRaster}{Logical. Default \code{NULL}. Used to convert \code{from}
 back to these classes prior to writing, if provided.}
+
+\item{touches}{See \code{terra::mask}}
 }
 \value{
 An object of the same class as \code{from}, but potentially cropped (via \code{\link[=cropTo]{cropTo()}}),

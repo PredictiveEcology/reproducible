@@ -1,38 +1,37 @@
-library(reproducible)
-# download a (spatial) file from remote url (which often is an archive) load into R
-# need 3 files for this example; 1 from remote, 2 local
-dPath <- file.path(tempdir(), "testing")
-remoteTifUrl <- "https://github.com/rspatial/terra/raw/master/inst/ex/elev.tif"
-localFileLuxSm <- system.file("luxSmall.shp", package = "reproducible")
-localFileLux <- system.file("ex/lux.shp", package = "terra")
-
-# 1 step for each layer
-# 1st step -- get study area
-studyArea <- prepInputs(localFileLuxSm, fun = "terra::vect") # default is sf::st_read
-# 2nd step: make the input data layer like the studyArea map
-elevForStudy <- prepInputs(url = remoteTifUrl, to = studyArea, res = 250,
-                           destinationPath = dPath)
-
-
-# Alternate way, one step at a time. Must know each of these steps, and perform for each layer
-\donttest{
-  dir.create(dPath, recursive = TRUE, showWarnings = FALSE)
-  file.copy(localFileLuxSm, file.path(dPath, basename(localFileLuxSm)))
-  studyArea2 <- terra::vect(localFileLuxSm)
-  if (!all(terra::is.valid(studyArea2))) studyArea2 <- terra::makeValid(studyArea2)
-  tf <- tempfile(fileext = ".tif")
-  download.file(url = remoteTifUrl, destfile = tf, mode = "wb")
-  Checksums(dPath, write = TRUE, files = tf)
-  elevOrig <- terra::rast(tf)
-  elevForStudy2 <- terra::project(elevOrig, terra::crs(studyArea2), res = 250) |>
-    terra::crop(studyArea2) |>
-    terra::mask(studyArea2)
-
-  isTRUE(all.equal(studyArea, studyArea2)) # Yes!
-}
-
-# With terra
 if (requireNamespace("terra") && requireNamespace("sf")) {
+  library(reproducible)
+  # download a (spatial) file from remote url (which often is an archive) load into R
+  # need 3 files for this example; 1 from remote, 2 local
+  dPath <- file.path(tempdir(), "testing")
+  remoteTifUrl <- "https://github.com/rspatial/terra/raw/master/inst/ex/elev.tif"
+  localFileLuxSm <- system.file("ex/luxSmall.shp", package = "reproducible")
+  localFileLux <- system.file("ex/lux.shp", package = "terra")
+
+  # 1 step for each layer
+  # 1st step -- get study area
+  studyArea <- prepInputs(localFileLuxSm, fun = "terra::vect") # default is sf::st_read
+  # 2nd step: make the input data layer like the studyArea map
+  elevForStudy <- prepInputs(url = remoteTifUrl, to = studyArea, res = 250,
+                             destinationPath = dPath)
+
+
+  # Alternate way, one step at a time. Must know each of these steps, and perform for each layer
+  \donttest{
+    dir.create(dPath, recursive = TRUE, showWarnings = FALSE)
+    file.copy(localFileLuxSm, file.path(dPath, basename(localFileLuxSm)))
+    studyArea2 <- terra::vect(localFileLuxSm)
+    if (!all(terra::is.valid(studyArea2))) studyArea2 <- terra::makeValid(studyArea2)
+    tf <- tempfile(fileext = ".tif")
+    download.file(url = remoteTifUrl, destfile = tf, mode = "wb")
+    Checksums(dPath, write = TRUE, files = tf)
+    elevOrig <- terra::rast(tf)
+    elevForStudy2 <- terra::project(elevOrig, terra::crs(studyArea2), res = 250) |>
+      terra::crop(studyArea2) |>
+      terra::mask(studyArea2)
+
+    isTRUE(all.equal(studyArea, studyArea2)) # Yes!
+  }
+
   # sf class
   studyAreaSmall <- prepInputs(localFileLuxSm)
   studyAreas <- list()
