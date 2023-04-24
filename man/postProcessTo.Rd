@@ -16,8 +16,6 @@ postProcessTo(
   projectTo = NULL,
   maskTo = NULL,
   writeTo = NULL,
-  method = NULL,
-  datatype = "FLT4S",
   overwrite = TRUE,
   verbose = getOption("reproducible.verbose"),
   ...
@@ -30,8 +28,6 @@ postProcessTerra(
   projectTo = NULL,
   maskTo = NULL,
   writeTo = NULL,
-  method = NULL,
-  datatype = "FLT4S",
   overwrite = TRUE,
   verbose = getOption("reproducible.verbose"),
   ...
@@ -48,7 +44,6 @@ maskTo(
 projectTo(
   from,
   projectTo,
-  method = NULL,
   overwrite = FALSE,
   verbose = getOption("reproducible.verbose"),
   ...
@@ -71,7 +66,6 @@ writeTo(
   isBrick = NULL,
   isRaster = NULL,
   isSpatRaster = NULL,
-  datatype = "FLT4S",
   verbose = getOption("reproducible.verbose"),
   ...
 )
@@ -109,14 +103,6 @@ Defaults to \code{NULL}, which means use \code{to}}
 \item{writeTo}{Optional character string of a filename to use \code{writeRaster} to save the final
 object. Default is \code{NULL}, which means there is no \code{writeRaster}}
 
-\item{method}{Used if \code{projectTo} is not \code{NULL}, and is the method used for
-interpolation. See \code{terra::project}. Defaults to \code{"NULL"}. In this case, it will
-attempt to estimate based on whether the values are integers (or factors) and should
-likely be ngb vs. real numbers and should likely be bilinear. A user should specify
-this to be sure.}
-
-\item{datatype}{A character string, used if \code{writeTo} is not \code{NULL}. See \code{terra::writeRaster}}
-
 \item{overwrite}{Logical. Used if \code{writeTo} is not \code{NULL}; also if \code{terra} determines
 that the object requires writing to disk during a \code{crop}, \code{mask} or \code{project} call
 e.g., because it is too large.}
@@ -127,9 +113,7 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Currently can be either \code{rasterToMatch}, \code{studyArea}, \code{filename2},
-\code{useSAcrs}, or \code{targetCRS} to allow backwards
-compatibility with \code{postProcess}. See section below for details.}
+\item{...}{Passed to \code{terra::writeRaster}}
 
 \item{needBuffer}{Logical. Defaults to \code{TRUE}, meaning nothing is done out
 of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
@@ -138,8 +122,6 @@ of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.}
 
 \item{isStack, isBrick, isRaster, isSpatRaster}{Logical. Default \code{NULL}. Used to convert \code{from}
 back to these classes prior to writing, if provided.}
-
-\item{touches}{See \code{terra::mask}}
 }
 \value{
 An object of the same class as \code{from}, but potentially cropped (via \code{\link[=cropTo]{cropTo()}}),

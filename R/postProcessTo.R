@@ -99,18 +99,12 @@
 #'   Defaults to `NULL`, which means use `to`
 #' @param writeTo Optional character string of a filename to use `writeRaster` to save the final
 #'   object. Default is `NULL`, which means there is no `writeRaster`
-#' @param method Used if `projectTo` is not `NULL`, and is the method used for
-#'   interpolation. See `terra::project`. Defaults to `"NULL"`. In this case, it will
-#'   attempt to estimate based on whether the values are integers (or factors) and should
-#'   likely be ngb vs. real numbers and should likely be bilinear. A user should specify
-#'   this to be sure.
-#' @param datatype A character string, used if `writeTo` is not `NULL`. See `terra::writeRaster`
 #' @param overwrite Logical. Used if `writeTo` is not `NULL`; also if `terra` determines
 #'   that the object requires writing to disk during a `crop`, `mask` or `project` call
 #'   e.g., because it is too large.
-#' @param ... Currently can be either `rasterToMatch`, `studyArea`, `filename2`,
-#'   `useSAcrs`, or `targetCRS` to allow backwards
-#'   compatibility with `postProcess`. See section below for details.
+#' @param ... Passed to `terra::mask` (for `maskTo`), `terra::project` (for `projectTo`)
+#' or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`. Commonly used might be
+#' `method`, `touches`, and `datatype`.
 #' @inheritParams Cache
 #' @export
 #'
@@ -118,7 +112,7 @@
 #' and faster `terra` functions.
 #'
 postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NULL,
-                          writeTo = NULL, method = NULL, datatype = "FLT4S",
+                          writeTo = NULL,
                           overwrite = TRUE, verbose = getOption("reproducible.verbose"),
                           ...) {
 
@@ -145,7 +139,6 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
 
   # ASSERTION STEP
   postProcessToAssertions(from, to, cropTo, maskTo, projectTo)
-  method <- assessDataTypeOuter(from, method)
 
   # Get the original class of from so that it can be recovered
   origFromClass <- is(from)
@@ -204,7 +197,7 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
 
   # WRITE STEP
   from <- writeTo(from, writeTo, overwrite, isStack, isBrick, isRaster, isSpatRaster,
-                  datatype = datatype, ...)
+                  ...)
 
   # REVERT TO ORIGINAL INPUT CLASS
   from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial)
@@ -317,7 +310,8 @@ makeVal <- function(x) {
 
 #' @export
 #' @rdname postProcessTo
-#' @param touches See `terra::mask`
+#' @param ... Passed to `terra::mask` (for `maskTo`), `terra::project` (for `projectTo`)
+#' or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`.
 maskTo <- function(from, maskTo, # touches = FALSE,
                    overwrite = FALSE,
                    verbose = getOption("reproducible.verbose"), ...) {
@@ -351,8 +345,6 @@ maskTo <- function(from, maskTo, # touches = FALSE,
             maskTo <- terra::vect(maskTo)
           }
         }
-        # if (isSF(maskTo))
-        #   maskTo <- terra::vect(maskTo)
         if (!isSpat(from) && !isSF(from)) {
           if (isVector(from)) {
             from <- terra::vect(from)
@@ -417,13 +409,14 @@ maskTo <- function(from, maskTo, # touches = FALSE,
                 if (isSF(maskTo) || isSpatial(maskTo)) {
                   maskTo <- terra::vect(maskTo) # alternative is stars, and that is not Suggests
                 }
-                # if (is.null(touches))
-                #   touches <- FALSE
-                dotArgs <- intersect(...names(), writeRasterArgs)
-                do.call(terra::mask, append(list(from, maskTo, overwrite = overwrite), dotArgs))
+
+                dotArgs <- intersect(...names(), c(writeRasterArgs, maskArgs))
+                if (length(dotArgs))
+                  dotArgs <- list(...)[dotArgs]
+                ll <- append(list(from, maskTo, overwrite = overwrite), dotArgs)
+                do.call(terra::mask, ll)
 
                 # terra::mask(from, maskTo, touches = touches, overwrite = overwrite)
-                # terra::mask(from, maskTo, ..., overwrite = overwrite)
               }
             }
           }, silent = TRUE)
@@ -461,12 +454,18 @@ maskTo <- function(from, maskTo, # touches = FALSE,
 
 #' @export
 #' @rdname postProcessTo
-projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE,
+#' @param ... Passed to `terra::project`
+projectTo <- function(from, projectTo, overwrite = FALSE,
                       verbose = getOption("reproducible.verbose"), ...) {
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
-  method <- assessDataTypeOuter(from, method)
+  hasMethod <- which(...names() %in% "method")
+  method <- if (length(hasMethod)) {
+    method <- assessDataTypeOuter(from, ...elt(hasMethod))
+  } else {
+    NULL
+  }
 
   if (!is.null(projectTo)) {
     origFromClass <- is(from)
@@ -554,7 +553,7 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE,
           dotArgs <- intersect(...names(), c(writeRasterArgs, projectArgs))
           if (length(dotArgs))
             dotArgs <- list(...)[dotArgs]
-          ll <- append(list(from, projectTo, method = method, overwrite = overwrite), dotArgs)
+          ll <- append(list(from, projectTo, overwrite = overwrite), dotArgs)
           do.call(terra::project, ll)
         }
         messagePrepInputs("done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
@@ -572,6 +571,7 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE,
 #'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
 #' @export
 #' @rdname postProcessTo
+#' @param ... Not used
 cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
                    verbose = getOption("reproducible.verbose"), ...) {
 
@@ -712,9 +712,10 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
 #' @rdname postProcessTo
 #' @param isStack,isBrick,isRaster,isSpatRaster Logical. Default `NULL`. Used to convert `from`
 #'   back to these classes prior to writing, if provided.
+#' @param ... Passed to `terra::writeRaster`
 #'
 writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, isRaster = NULL,
-                    isSpatRaster = NULL, datatype = "FLT4S",
+                    isSpatRaster = NULL,
                     verbose = getOption("reproducible.verbose"), ...) {
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
@@ -724,6 +725,9 @@ writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, is
     getOption("reproducible.destinationPath", ".")
 
   writeTo <- determineFilename(writeTo, destinationPath = destinationPath, verbose = verbose)
+
+  hasDatatype <- which(...names() %in% "datatype")
+  datatype <- if (length(hasDatatype)) ...elt(hasDatatype) else NULL
 
   if (isTRUE(isStack)) from <- raster::stack(from)
   if (isTRUE(isBrick)) from <- raster::brick(from)
@@ -1015,10 +1019,11 @@ assessDataTypeOuter <- function(from, method) {
 }
 
 
-writeRasterArgs <- c("filename", "overwrite", "ncopies", "steps", "filetype", "progressbar", "tempdir", "datatype",
+writeRasterArgs <- c("filename", "overwrite", "ncopies", "steps", "filetype", "progressbar", "tempdir",
                      "todisk", "memfrac", "progress", "verbose", "memmin", "filetype",
                      "verbose", "names", "tolerance", "overwrite", "datatype", "memmax"
 )
 
 projectArgs <- c("x", "y", "method", "mask", "align", "gdal", "res", "origin", "threads", "filename")
 
+maskArgs <- c("x", "inverse", "mask", "updatevalue", "touches", "filename")
