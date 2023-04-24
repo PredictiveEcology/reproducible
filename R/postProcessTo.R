@@ -104,15 +104,16 @@
 #'   e.g., because it is too large.
 #' @param ... Passed to `terra::mask` (for `maskTo`), `terra::project` (for `projectTo`)
 #' or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`. Commonly used might be
-#' `method`, `touches`, and `datatype`.
+#' `method`, `touches`, and `datatype`. If `filename` is passed, it will be ignored; use
+#' `writeTo = `.
 #' @inheritParams Cache
 #' @export
 #'
 #' @seealso This function is meant to replace [postProcess()] with the more efficient
 #' and faster `terra` functions.
 #'
-postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NULL,
-                          writeTo = NULL,
+postProcessTo <- function(from, to,
+                          cropTo = NULL, projectTo = NULL, maskTo = NULL, writeTo = NULL,
                           overwrite = TRUE, verbose = getOption("reproducible.verbose"),
                           ...) {
 
@@ -181,7 +182,7 @@ postProcessTo <- function(from, to, cropTo = NULL, projectTo = NULL, maskTo = NU
   # crop project mask sequence ################################
   #############################################################
   from <- cropTo(from, cropTo, needBuffer = TRUE, ..., overwrite = overwrite) # crop first for speed
-  from <- projectTo(from, projectTo, method = method, ..., overwrite = overwrite) # need to project with edges intact
+  from <- projectTo(from, projectTo, ..., overwrite = overwrite) # need to project with edges intact
   from <- maskTo(from, maskTo, ..., overwrite = overwrite)
   from <- cropTo(from, cropTo, needBuffer = FALSE, ..., overwrite = overwrite) # need to recrop to trim excess pixels in new projection
 
@@ -310,8 +311,6 @@ makeVal <- function(x) {
 
 #' @export
 #' @rdname postProcessTo
-#' @param ... Passed to `terra::mask` (for `maskTo`), `terra::project` (for `projectTo`)
-#' or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`.
 maskTo <- function(from, maskTo, # touches = FALSE,
                    overwrite = FALSE,
                    verbose = getOption("reproducible.verbose"), ...) {
@@ -454,7 +453,6 @@ maskTo <- function(from, maskTo, # touches = FALSE,
 
 #' @export
 #' @rdname postProcessTo
-#' @param ... Passed to `terra::project`
 projectTo <- function(from, projectTo, overwrite = FALSE,
                       verbose = getOption("reproducible.verbose"), ...) {
 
@@ -571,7 +569,6 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
 #'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
 #' @export
 #' @rdname postProcessTo
-#' @param ... Not used
 cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
                    verbose = getOption("reproducible.verbose"), ...) {
 
@@ -712,7 +709,6 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
 #' @rdname postProcessTo
 #' @param isStack,isBrick,isRaster,isSpatRaster Logical. Default `NULL`. Used to convert `from`
 #'   back to these classes prior to writing, if provided.
-#' @param ... Passed to `terra::writeRaster`
 #'
 writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, isRaster = NULL,
                     isSpatRaster = NULL,

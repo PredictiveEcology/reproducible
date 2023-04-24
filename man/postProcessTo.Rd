@@ -113,7 +113,10 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Passed to \code{terra::writeRaster}}
+\item{...}{Passed to \code{terra::mask} (for \code{maskTo}), \code{terra::project} (for \code{projectTo})
+or \code{terra::writeRaster} (for \code{writeTo}) and not used for \code{cropTo}. Commonly used might be
+\code{method}, \code{touches}, and \code{datatype}. If \code{filename} is passed, it will be ignored; use
+\verb{writeTo = }.}
 
 \item{needBuffer}{Logical. Defaults to \code{TRUE}, meaning nothing is done out
 of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
