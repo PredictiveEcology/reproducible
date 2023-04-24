@@ -469,7 +469,6 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE,
   method <- assessDataTypeOuter(from, method)
 
   if (!is.null(projectTo)) {
-    .requireNamespace("sf", stopOnFALSE = TRUE)
     origFromClass <- is(from)
     if (!is.naSpatial(projectTo)) {
       if (isRaster(projectTo)) {
@@ -477,11 +476,9 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE,
       }
 
       projectToOrig <- projectTo # keep for below
-      browser()
-      sameProj <- sf::st_crs(projectTo) == sf::st_crs(from)
-      sameProj <- terra::crs(projectTo) == terra::crs(from)
+      sameProj <- isTRUE(terra::crs(projectTo) == terra::crs(from))
 
-      isProjectToVecOrCRS <- isCRSANY(projectTo) || isVector(projectTo)
+      isProjectToVecOrCRS <- isCRSANY(projectTo) || (isVector(projectTo))
       sameRes <- if (isVector(from) || isProjectToVecOrCRS) {
         TRUE
       } else {
@@ -492,6 +489,7 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE,
         messagePrepInputs("    projection of from is same as projectTo, not projecting",
                           verbose = verbose)
       } else {
+        .requireNamespace("sf", stopOnFALSE = TRUE)
         messagePrepInputs("    projecting...", appendLF = FALSE,
                           verbose = verbose)
         st <- Sys.time()
@@ -508,9 +506,6 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE,
             if (!isSpat(projectTo))
               projectTo <- terra::vect(projectTo)
 
-            # if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
-            #   projectTo <- terra::rast(projectTo, resolution = res(from))
-            # }
             messagePrepInputs("", verbose = verbose)
             messagePrepInputs("         projectTo is a Vector dataset, which does not define all metadata required. ",
                               verbose = verbose)
@@ -521,12 +516,6 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE,
               projectTo <- terra::rast(projectTo, resolution = newRes)
             } else {
               projectTo <- terra::crs(projectTo)
-              # projectTo <- terra::rast(ncols = terra::ncol(from), nrows = terra::nrow(from),
-              #                          crs = sf::st_crs(projectTo)$wkt, extent = terra::ext(projectTo))
-              # messagePrepInputs("         Projecting to ",
-              #                   paste(collapse = "x", round(terra::res(projectTo), 2)),
-              #                   " resolution (same # pixels as `from`)",
-              #                   verbose = verbose)
             }
 
             messagePrepInputs("         in the projection of `projectTo`, using the origin and extent",
@@ -539,7 +528,8 @@ projectTo <- function(from, projectTo, method = NULL, overwrite = FALSE,
                               verbose = verbose)
 
           } else {
-            projectTo <- sf::st_crs(projectTo)$wkt
+            projectTo <- terra::crs(projectTo)
+            # projectTo <- sf::st_crs(projectTo)$wkt
           }
         }
 
@@ -588,6 +578,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
   if (!is.null(cropTo)) {
+    .requireNamespace("sf", stopOnFALSE = TRUE)
     omit <- FALSE
     origFromClass <- is(from)
 
@@ -625,16 +616,6 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
           }
           cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
         }
-        # if (isVector(cropTo)) {
-        #   if (isSpat(cropTo)) {
-        #     cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
-        #   } else {
-        #     cropToInFromCRS <- sf::st_transform(sf::st_as_sf(cropTo), sf::st_crs(from))
-        #   }
-        # } else {
-        #   cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
-        #   # THIS IS WHEN cropTo is a Gridded object
-        # }
         ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
       }
       if (isVector(from) && !isSF(from))
@@ -885,6 +866,7 @@ is.naSpatial <- function(x) {
 cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")) {
   st <- Sys.time()
   if (isSF(from) && (isSF(cropToVect) || is(cropToVect, "Spatial"))) {
+    .requireNamespace("sf", stopOnFALSE = TRUE)
     messagePrepInputs("    pre-cropping because `from` is sf and cropTo is sf/Spatial*",
                       verbose = verbose)
     attempt <- 1
@@ -938,6 +920,7 @@ revertClass <- function(from, isStack = FALSE, isBrick = FALSE, isRasterLayer = 
     if (isBrick && !is(from, "RasterBrick")) from <- raster::brick(from) # coming out of writeRaster, becomes brick
     if (isRasterLayer && !is(from, "RasterLayer")) from <- raster::raster(from) # coming out of writeRaster, becomes brick
     if (isSF || isSpatial) {
+      .requireNamespace("sf", stopOnFALSE = TRUE)
       from <- sf::st_as_sf(from)
       if (isSpatial) {
         from <- sf::as_Spatial(from)
