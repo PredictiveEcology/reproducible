@@ -4,17 +4,27 @@ Version 1.2.17
 ==============
 
 ## enhancements
+- new optional backend for `Cache` via `options(reproducible.useDBI = FALSE)` is single data files with the same `basename` as the cached object, i.e., with the same `cacheId` in the file name. This is a replacement for `RSQLite` and will become the default in the next release. Helpers to transition will be supplied at that time. This approach makes cloud caching easier as all metadata are available in small binary files for each cached object. 
+- moved `raster` and `sp` to `Suggests`; no more internal functions use these. User can still work with `Raster` class objects as before.
 - `preProcess` can now handle google docs files, if `type = ...` is passed.
-- `postProcess` now uses `terra` and `sf` by default throughout the family. These are only activated by a user deciding to use the new family of functions (`postProcessTerra`, `cropTo`, `maskTo`, `projectTo`, `writeTo`) or by setting the `option(reproducible.useTerra = TRUE)`
+- `postProcess` now uses `terra` and `sf` internally by default throughout the family of `*Inputs` and `*To` functions. The old behaviour, which is no longer supported, can be approximated by setting the `option(reproducible.useTerra = FALSE)`
 - new functions to assist with transition from `raster` to `terra` --> `maxFn`, `minFn`, `rasterRead`
 - `.dealWithClass` and `.dealWithClassOnRecovery` are now exported generics, with several methods here, notably, list, environment, default
 - other miscellaneous changes to deal with `raster` to `terra` transition (e.g. `studyAreaName` can deal with `SpatVector`)
 
+## Dependency changes
+- no spatial packages are automatically installed any more; to work with `prepInputs` and family, the user will have to install `terra` and `sf` at a minimum.
+- `terra`, `sf` are in `Suggests`
+- removed entirely: `fasterize`, `fpCompare`, `magrittr`
+- moved to `Suggests`: `raster`, `sp`, `rlang`
+
+## Defunct
+- `reproducible.useNewDigestAlgorithm` is not longer an option as the old algorithms do not work reliably.
 
 ## bugfixes
 - `Cache` was incorrectly dealing with `environment` and `environment-like` objects. Since some objects, e.g., `Spat*` objects in `terra`, must be wrapped prior to saving, environments must be scanned for these classes of objects prior to saving. This previously only occurred for `list` objects; fixed
 - When working with revdep `SpaDES.core`, there were some cases where the `Cache` was failing as it could not find the module name; fixed.
-- during transition from `postProcess` (using `raster` and `sp`) to `postProcessTerra`, some cases are falling through the cracks; these are being addressed.
+- during transition from `postProcess` (using `raster` and `sp`) to `postProcessTo`, some cases are falling through the cracks; these are being addressed.
 
 Version 1.2.16
 ==============
@@ -53,7 +63,7 @@ Version 1.2.11
 * none
 
 ## Bug fixes
-* fix tests for `postProcessTerra` to deal with changes in GDAL/PROJ/GEOS (#253; @rsbivand)
+* fix tests for `postProcessTo` to deal with changes in GDAL/PROJ/GEOS (#253; @rsbivand)
 * fixed issue with masking
 
 Version 1.2.10
@@ -70,7 +80,7 @@ Version 1.2.10
 * `preProcess` arg `dlFun` can now be a quoted expression
 * changes to the internals and outputs of `objSize`; now is primarily a wrapper around `lobstr::obj_size`, but has an option to get more detail for lists and environments.
 * `.robustDigest` now deals explicitly with numerics, which digest differently on different OSs. Namely, they get rounded prior to digesting. Through trial and error, it was found that setting `options("reproducible.digestDigits" = 7)` was sufficient for all known cases. Rounding to deeper than 7 decimal places was insufficient. There are also new methods for `language`, `integer`, `data.frame` (which does each column one at a time to address the numeric issue)
-* New version of `postProcess` called `postProcessTerra`. This will eventually replace `postProcess` as it is much faster in all cases and simpler code base thanks to the fantastic work of Robert Hijmans (`terra`) and all the upstream work that `terra` relies on
+* New version of `postProcess` called `postProcessTo`. This will eventually replace `postProcess` as it is much faster in all cases and simpler code base thanks to the fantastic work of Robert Hijmans (`terra`) and all the upstream work that `terra` relies on
 * Minor message updates, especially for "adding to memoised copy...". The three dots made it seem like it was taking a long time. When in reality, it is instantaneous and is the last thing that happens in the `Cache` call. If there is a delay after this message, then it is the code following the `Cache` call that is (silently) slow.
 * `retry` can now return a named list for the `exprBetween`, which allows for more than one object to be modified between retries.
  
@@ -173,9 +183,11 @@ version 1.2.1
 ==============
 
 ## New features
-* harmonized message colours: `blue` for all `Cache` functions; `cyan` for all `prepInputs` functions; `green` for questions that require user input. These are therefore user-visible colour changes.
+* harmonized message colours that are use adjustable via options: `reproducible.messageColourPrepInputs` for all `prepInputs` functions;  `reproducible.messageColourCache` for all `Cache` functions; and `reproducible.messageColourQuestion` for questions that require user input. Defaults are `cyan`, `blue` and `green` respectively. These are user-visible colour changes.
 * improved messaging for `Cache` cases where a `file.link` is used instead of saving.
+* with improved messaging, now `options(reproducible.verbose = 0)` will turn off almost all messaging.
 * `postProcess` and family now have `filename2 = NULL` as the default, so not saved to disk. This is a change.
+* `verbose` is now an argument throughout, whose default is `getOption(reproducible.verbose)`, which is set by default to `1`. Thus, individual function calls can be more or less verbose, or the whole session via option. 
 
 ## Bug fixes
 * `RasterStack` objects were not correctly saved to disk under some conditions in `postProcess` - fixed

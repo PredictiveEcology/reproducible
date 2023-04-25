@@ -206,6 +206,7 @@ setMethod(
 #'
 #' @param sub Character string, length 1. Can be a result of
 #'   `file.path("smth", "smth2")` for nested temporary subdirectories.
+#'   If the zero length character, then a random sub-directory will be created.
 #' @param tempdir Optional character string where the temporary
 #'   directory should be placed. Defaults to `getOption("reproducible.tempPath")`.
 #' @param create Logical. Should the directory be created. Default `TRUE`.
@@ -218,6 +219,9 @@ setMethod(
 tempdir2 <- function(sub = "",
                      tempdir = getOption("reproducible.tempPath", .reproducibleTempPath()),
                      create = TRUE) {
+  if (!nzchar(sub)) {
+    sub <- rndstr(1)
+  }
   np <- normPath(file.path(tempdir, sub))
   if (isTRUE(create)) {
     checkPath(np, create = TRUE)
@@ -243,3 +247,4 @@ tempfile2 <- function(sub = "",
 }
 
 SysInfo <- Sys.info() # do this on load; nothing can change, so repeated calls are a waste
+

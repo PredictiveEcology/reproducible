@@ -1,5 +1,5 @@
 test_that("all exported functions have examples", {
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  testInitOut <- testInit()
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -27,8 +27,8 @@ test_that("all exported functions have examples", {
   } else {
     system.file("man", package = "reproducible")
   }
-  exFiles <- list.files(manDir, full.names = TRUE, pattern = "[.]Rd$") %>%
-    normalizePath(.)
+  exFiles <- normalizePath(list.files(manDir, full.names = TRUE, pattern = "[.]Rd$"))
+
 
   # use for loop as it keeps control at top level
   # owd <- getwd()
@@ -47,7 +47,7 @@ test_that("all exported functions have examples", {
       cat(paste(file, " -- ", "\n"), file = tmpExFile, append = TRUE)
     }
     # for debugging only
-    message(file)
+    print(file)
     test_example(file)
   }
 })

@@ -9,6 +9,7 @@ test_that("dlGeneric works", {
 
 
 
+    skip_if_no_token()
     userDist <- prepInputs(
       url = "https://docs.google.com/spreadsheets/d/1fOikb83aOuLlFYIn6pjmC7Jydjcy77TH", ##
       targetFile = "userDist.csv", # <---------------------------------------------------------------- specify targeFile

@@ -139,7 +139,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        quick = getOption("reproducible.quick"),
                        overwrite = getOption("reproducible.overwrite", FALSE),
                        purge = FALSE,
-                       # useCache = getOption("reproducible.useCache", FALSE),
                        verbose = getOption("reproducible.verbose", 1),
                        .tempPath, ...) {
   if (missing(.tempPath)) {
@@ -147,6 +146,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     on.exit({unlink(.tempPath, recursive = TRUE)},
             add = TRUE)
   }
+  dlFunCaptured <- substitute(dlFun)
+  prepInputsAssertions(environment())
+  isAlreadyQuoted <- any(grepl("quote", dlFunCaptured))
+  if (isAlreadyQuoted)
+    dlFunCaptured <- eval(dlFunCaptured)
+
   dots <- list(...)
 
   fun <- .checkFunInDots(fun = fun, dots = dots)
@@ -191,7 +196,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   } else {
     if (length(targetFile) > 1)
       stop("targetFile should be only 1 file")
-    targetFile <- .basename(targetFile)
+    if (!identical(targetFile, .basename(targetFile))) {
+      destinationPath <- dirname(targetFile)
+      targetFile <- .basename(targetFile)
+    }
+
     targetFilePath <- file.path(destinationPath, targetFile)
     if (is.null(alsoExtract)) {
       if (file.exists(checkSumFilePath)) {
@@ -248,6 +257,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checkSumsTmp1 <- try(Checksums(path = dp, write = FALSE, checksumFile = checkSumFilePath,
                                files = basename2(filesToCheck),
                                verbose = verbose), silent = TRUE)
+    checkSums <- NULL
     if (!is(checkSumsTmp1, "try-error")) {
       checkSums <- checkSumsTmp1
       if (!all(is.na(checkSums$result))) { # found something
@@ -396,7 +406,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ###############################################################
   # Download
   ###############################################################
-  # browser(expr = exists("._preProcess_7"))
   downloadFileResult <- downloadFile(
     archive = if (isTRUE(is.na(archive))) NULL else archive,
     targetFile = targetFile,
@@ -404,7 +413,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     destinationPath = destinationPath,
     quick = quick,
     checkSums = checkSums,
-    dlFun = dlFun,
+    dlFun = dlFunCaptured,
     url = url,
     checksumFile = asPath(checkSumFilePath),
     needChecksums = needChecksums,
@@ -638,7 +647,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                   # on.exit because it is done here
   }
 
-  # browser(expr = exists("._preProcess_10"))
   failStop <- if (is.null(targetFilePath)) {
     TRUE
   } else if (!isTRUE(file.exists(targetFilePath))) {
@@ -650,6 +658,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     stop("targetFile appears to be misspecified at: ", targetFilePath, ". ",
          "Possibly, it does not exist in the specified archive, ",
          "or the file doesn't exist in destinationPath")
+
+  archiveInChecksums <- checkSums$actualFile %in% .basename(archive)
+  if (any(archiveInChecksums))
+    checkSums[which(archiveInChecksums), result := "ArchiveOK"]
+
 
   out <- list(checkSums = checkSums,
               dots = dots,
@@ -693,15 +706,16 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                          algorithm = character())
 
 #' @keywords internal
+#' @importFrom utils getFromNamespace
 .extractFunction <- function(fun) {
   if (!is.null(fun)) {
     if (is.call(fun)) {
       fun
     } else {
       suppressWarnings(isNAFun <- is.na(fun))
-      if (!isNAFun) {
+      if (!any(isNAFun)) {
         if (!is.function(fun)) {
-          if (grepl("::", fun)) {
+          if (any(grepl("::", fun))) {
             fun2 <- strsplit(fun, "::")[[1]]
             pkg <- fun2[1]
             fun <- fun2[2]
@@ -932,12 +946,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' same physical disk).
 #'
 #' @examples
-#' library(datasets)
-#' library(magrittr)
-#' library(raster)
 #'
-#' tmpDir <- file.path(tempdir(), "symlink-test") %>%
-#'   normalizePath(winslash = '/', mustWork = FALSE)
+#' tmpDir <- file.path(tempdir(), "symlink-test")
+#' tmpDir <- normalizePath(tmpDir, winslash = '/', mustWork = FALSE)
 #' dir.create(tmpDir)
 #'
 #' f0 <- file.path(tmpDir, "file0.csv")
@@ -961,20 +972,22 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' file.exists(f0) ## FALSE
 #' file.exists(f2) ## TRUE
 #'
-#' ## using rasters and other file-backed objects
-#' f3a <- system.file("external/test.grd", package = "raster")
-#' f3b <- system.file("external/test.gri", package = "raster")
-#' r3a <- raster(f3a)
-#' f4a <- file.path(tmpDir, "raster4.grd")
-#' f4b <- file.path(tmpDir, "raster4.gri")
-#' linkOrCopy(f3a, f4a) ## hardlink
-#' linkOrCopy(f3b, f4b) ## hardlink
-#' r4a <- raster(f4a)
+#' if (requireNamespace("terra")) {
+#'   ## using spatRasters and other file-backed objects
+#'   f3a <- system.file("ex/test.grd", package = "terra")
+#'   f3b <- system.file("ex/test.gri", package = "terra")
+#'   r3a <- terra::rast(f3a)
+#'   f4a <- file.path(tmpDir, "raster4.grd")
+#'   f4b <- file.path(tmpDir, "raster4.gri")
+#'   linkOrCopy(f3a, f4a) ## hardlink
+#'   linkOrCopy(f3b, f4b) ## hardlink
+#'   r4a <- terra::rast(f4a)
 #'
-#' isTRUE(all.equal(r3a, r4a)) # TRUE
+#'   isTRUE(all.equal(r3a, r4a)) # TRUE
 #'
-#' ## cleanup
-#' unlink(tmpDir, recursive = TRUE)
+#'   ## cleanup
+#'   unlink(tmpDir, recursive = TRUE)
+#' }
 linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducible.verbose", 1)) {
   existsLogical <- file.exists(from)
   toCollapsed <- paste(to, collapse = ", ")
@@ -983,7 +996,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
     toDirs <- unique(dirname(to))
     dirDoesntExist <- !dir.exists(toDirs)
     if (any(dirDoesntExist)) {
-      lapply(toDirs[dirDoesntExist], dir.create)
+      lapply(toDirs[dirDoesntExist], dir.create, recursive = TRUE)
     }
     dups <- duplicated(.basename(from))
 

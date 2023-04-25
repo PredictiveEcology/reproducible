@@ -19,8 +19,8 @@ SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.ra
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2023-03-14
-Version: 1.2.16.9034
+Date: 2023-04-24
+Version: 1.2.16.9043
 Authors@R: 
     c(person(given = "Eliot J B",
              family = "McIntire",
@@ -50,38 +50,36 @@ Authors@R:
       person(given = "His Majesty the King in Right of Canada, as represented by the Minister of Natural Resources Canada",
              role = "cph"))
 Depends:
-    R (>= 4.0)
+    R (>= 4.1)
 Imports:
     data.table (>= 1.10.4),
-    DBI,
     digest,
+    filelock,
     fpCompare,
-    glue,
     lobstr,
-    magrittr,
     methods,
-    raster (>= 3.5-15),
-    RSQLite,
-    rlang,
-    sp (>= 1.4-2),
+    stats,
     utils
 Suggests:
     covr,
     crayon,
+    DBI,
     fastdigest,
-    fasterize,
     future,
+    geodata,
+    glue,
     googledrive,
     httr,
-    lwgeom,
-    qs,
     knitr,
     parallel,
+    qs,
+    raster (>= 3.5-15),
     RCurl (>= 1.95-4.8),
-    rgdal,
+    rlang,
     rmarkdown,
+    RSQLite,
     sf,
-    stats,
+    sp (>= 1.4-2),
     terra (>= 1.5-17),
     testthat
 Encoding: UTF-8
@@ -90,29 +88,31 @@ License: GPL-3
 VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
 Collate: 
     'DBI.R'
     'cache-helpers.R'
     'cache-internals.R'
     'robustDigest.R'
     'cache.R'
+    'cacheGeo.R'
     'checksums.R'
     'cloud.R'
-    'cloudOld.R'
     'convertPaths.R'
     'copy.R'
     'download.R'
     'exportedMethods.R'
     'gis.R'
-    'git.R'
     'helpers.R'
+    'messages.R'
     'objectSize.R'
     'options.R'
     'packages.R'
     'paths.R'
     'pipe.R'
     'postProcess.R'
-    'postProcessTerra.R'
+    'postProcessTo.R'
     'preProcess.R'
     'prepInputs.R'
     'reproducible-deprecated.R'
@@ -120,6 +120,5 @@ Collate:
     'search.R'
     'showCacheEtc.R'
     'spatialObjects-class.R'
+    'terra-migration.R'
     'zzz.R'
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3

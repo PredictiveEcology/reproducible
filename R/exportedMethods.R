@@ -222,14 +222,15 @@ setMethod(
 #' b <- "NULL"
 #' .prepareOutput(b) # converts to NULL
 #'
-#' library(raster)
-#' r <- raster(extent(0,10,0,10), vals = 1:100)
+#' if (requireNamespace("terra")) {
+#'   r <- terra::rast(terra::ext(0,10,0,10), vals = 1:100)
 #'
-#' # write to disk manually -- will be in tempdir()
-#' r <- writeRaster(r, file = tempfile())
+#'   # write to disk manually -- will be in tempdir()
+#'   r <- terra::writeRaster(r, file = tempfile(fileext = ".tif"))
 #'
-#' # copy it to the cache repository
-#' r <- .prepareOutput(r, tempdir())
+#'   # copy it to the cache repository
+#'   r <- .prepareOutput(r, tempdir())
+#' }
 setGeneric(".prepareOutput", function(object, cachePath, ...) {
   standardGeneric(".prepareOutput")
 })
@@ -320,7 +321,55 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
 #' @rdname exportedMethods
 #' @export
 #' @keywords internal
-updateFilenameSlots.default <- function(obj, ...)  {
+updateFilenameSlots.default <- function(obj, curFilenames, newFilenames, isStack = NULL, ...)  {
+
+  if (inherits(obj, "Raster")) {
+    if (missing(curFilenames)) {
+      curFilenames <- Filenames(obj, allowMultiple = FALSE)
+    }
+
+    if (missing(newFilenames)) stop("newFilenames can't be missing: either new filenames or a single directory")
+    # if newFilenames is a directory
+    areDirs <- dir.exists(newFilenames)
+    if (any(areDirs) && length(newFilenames) == 1) {
+      newFilenames <- file.path(newFilenames, basename(curFilenames))
+    }
+
+    if (length(curFilenames) > 1) {
+      for (i in seq_along(curFilenames)) {
+        if (is.list(obj)) {
+          slot(slot(obj[[i]], "file"), "name") <- newFilenames[i]
+        } else {
+          slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
+        }
+      }
+    } else {
+      if (is.null(isStack)) isStack <- is(obj, "RasterStack")
+      if (!isStack) {
+        slot(slot(obj, "file"), "name") <- newFilenames
+      } else {
+        # aiof <- allInOneFile(obj)
+
+        # if (isTRUE(aiof)) {
+        #   slot(obj, "filename") <- newFilenames
+        # } else {
+        if (length(newFilenames) == 1) {
+          newFilenames <- rep(newFilenames, nlayers2(obj))
+        }
+        for (i in seq_len(nlayers2(obj))) {
+          whFilename <- unique(match(withoutFinalNumeric(basename(newFilenames)),
+                                     withoutFinalNumeric(basename(curFilenames))))
+          isNAwhFn <- is.na(whFilename)
+          if (any(isNAwhFn))
+            whFilename <- i
+          slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
+        }
+        # }
+
+
+      }
+    }
+  }
   obj
 }
 
@@ -333,6 +382,7 @@ updateFilenameSlots.list <- function(obj, ...)  {
 
   areRasters <- vapply(obj, is, "RasterLayer", FUN.VALUE = logical(1))
   if (all(areRasters)) {
+    .requireNamespace("raster", stopOnFALSE = TRUE)
     # a separate option for list of RasterLayers because curFilename will be
     #   as long as all the filenames because there is a method for lists;
     #   passing this to updateFilaneSlots will fail if it is one RasterLayer
@@ -361,60 +411,57 @@ updateFilenameSlots.environment <- function(obj, ...)  {
 }
 
 
-#' @rdname exportedMethods
-#' @export
-#' @keywords internal
-updateFilenameSlots.Raster <- function(obj, curFilenames, newFilenames, isStack = NULL) {
-  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-    return(updateFilenameSlots2(obj, curFilenames, newFilenames, isStack))
-  }
-  if (missing(curFilenames)) {
-    curFilenames <- Filenames(obj, allowMultiple = FALSE)
-  }
-
-  if (missing(newFilenames)) stop("newFilenames can't be missing: either new filenames or a single directory")
-  # if newFilenames is a directory
-  areDirs <- dir.exists(newFilenames)
-  if (any(areDirs) && length(newFilenames) == 1) {
-    newFilenames <- file.path(newFilenames, basename(curFilenames))
-  }
-
-  if (length(curFilenames) > 1) {
-    for (i in seq_along(curFilenames)) {
-      if (is.list(obj)) {
-        slot(slot(obj[[i]], "file"), "name") <- newFilenames[i]
-      } else {
-        slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
-      }
-    }
-  } else {
-    if (is.null(isStack)) isStack <- is(obj, "RasterStack")
-    if (!isStack) {
-      slot(slot(obj, "file"), "name") <- newFilenames
-    } else {
-      # aiof <- allInOneFile(obj)
-
-      # if (isTRUE(aiof)) {
-      #   slot(obj, "filename") <- newFilenames
-      # } else {
-      if (length(newFilenames) == 1) {
-        newFilenames <- rep(newFilenames, nlayers(obj))
-      }
-      for (i in seq_len(nlayers(obj))) {
-        whFilename <- unique(match(withoutFinalNumeric(basename(newFilenames)),
-                                   withoutFinalNumeric(basename(curFilenames))))
-        isNAwhFn <- is.na(whFilename)
-        if (any(isNAwhFn))
-          whFilename <- i
-        slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
-      }
-      # }
-
-
-    }
-  }
-  obj
-}
+# @rdname exportedMethods
+# @export
+# @keywords internal
+# updateFilenameSlots.Raster <- function(obj, curFilenames, newFilenames, isStack = NULL) {
+#   if (missing(curFilenames)) {
+#     curFilenames <- Filenames(obj, allowMultiple = FALSE)
+#   }
+#
+#   if (missing(newFilenames)) stop("newFilenames can't be missing: either new filenames or a single directory")
+#   # if newFilenames is a directory
+#   areDirs <- dir.exists(newFilenames)
+#   if (any(areDirs) && length(newFilenames) == 1) {
+#     newFilenames <- file.path(newFilenames, basename(curFilenames))
+#   }
+#
+#   if (length(curFilenames) > 1) {
+#     for (i in seq_along(curFilenames)) {
+#       if (is.list(obj)) {
+#         slot(slot(obj[[i]], "file"), "name") <- newFilenames[i]
+#       } else {
+#         slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
+#       }
+#     }
+#   } else {
+#     if (is.null(isStack)) isStack <- is(obj, "RasterStack")
+#     if (!isStack) {
+#       slot(slot(obj, "file"), "name") <- newFilenames
+#     } else {
+#       # aiof <- allInOneFile(obj)
+#
+#       # if (isTRUE(aiof)) {
+#       #   slot(obj, "filename") <- newFilenames
+#       # } else {
+#       if (length(newFilenames) == 1) {
+#         newFilenames <- rep(newFilenames, nlayers2(obj))
+#       }
+#       for (i in seq_len(nlayers2(obj))) {
+#         whFilename <- unique(match(withoutFinalNumeric(basename(newFilenames)),
+#                                    withoutFinalNumeric(basename(curFilenames))))
+#         isNAwhFn <- is.na(whFilename)
+#         if (any(isNAwhFn))
+#           whFilename <- i
+#         slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
+#       }
+#       # }
+#
+#
+#     }
+#   }
+#   obj
+# }
 
 #' @details
 #' `makeMemoiseable` and `unmakeMemoisable` methods are run during `Cache`. The
@@ -493,13 +540,12 @@ unmakeMemoisable.default <- function(x) {
 #' @param obj Any arbitrary R object.
 #' @inheritParams Cache
 #' @rdname dealWithClass
-#' @importFrom raster fromDisk
 #' @return
 #' Returns an object that can be saved to disk e.g., via `saveRDS`.
 #'
 #' @export
 #'
-.dealWithClass <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+.dealWithClass <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL),
                           verbose = getOption("reproducible.verbose")) {
   UseMethod(".dealWithClass")
@@ -507,7 +553,7 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClass.list <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+.dealWithClass.list <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                conn = getOption("reproducible.conn", NULL),
                                verbose = getOption("reproducible.verbose")) {
 
@@ -524,7 +570,7 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClass.environment <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+.dealWithClass.environment <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                       conn = getOption("reproducible.conn", NULL),
                                       verbose = getOption("reproducible.verbose")) {
 
@@ -541,18 +587,19 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClass.default <- function(obj, cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+.dealWithClass.default <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                   conn = getOption("reproducible.conn", NULL),
                                   verbose = getOption("reproducible.verbose")) {
 
   rasters <- is(obj, "Raster")
 
   if (any(rasters)) {
+    .requireNamespace("raster", stopOnFALSE = TRUE)
     objOrig <- obj
     atts <- attributes(obj)
     obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,
                                     overwrite = FALSE, drv = drv, conn = conn)
-    isFromDisk <- fromDisk(obj)
+    isFromDisk <- raster::fromDisk(obj)
 
     # have to reset all these attributes on the rasters as they were undone in prev steps
     hasFromDisk <- if (!is.null(atts$tags)) startsWith(atts$tags, "fromDisk") else FALSE
@@ -580,11 +627,7 @@ unmakeMemoisable.default <- function(x) {
         stop("There is an unknown error 04")
     }
     if (isFromDisk) {
-      if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-        obj <- list(origRaster = objOrig, cacheRaster = obj)
-      } else {
-        obj <- list(origRaster = Filenames(objOrig), cacheRaster = obj)
-      }
+      obj <- list(origRaster = Filenames(objOrig), cacheRaster = obj)
       setattr(obj, "tags",
               c(attributes(obj$cacheRaster)$tags,
                 paste0("origRaster:", obj$origRaster),
@@ -594,7 +637,7 @@ unmakeMemoisable.default <- function(x) {
   }
 
   if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
-    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+    if (!requireNamespace("terra", quietly = TRUE))
       stop("Please install terra package")
     messageCache("...wrapping terra object for saving...", verboseLevel = 2, verbose = verbose)
     attrs <- attr(obj, ".Cache")
@@ -602,7 +645,24 @@ unmakeMemoisable.default <- function(x) {
     # next is for terra objects --> terra::wrap is ridiculously slow for SpatVector objects; use
     #   custom version in reproducible where here
     if (inherits(obj, "SpatRaster")) {
-      obj <- terra::wrap(obj)
+      if (all(nzchar(Filenames(obj)))) {
+        cls <- class(obj)
+        obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
+        obj <- asPath(Filenames(obj))
+        attr(obj, "tags") <- c(attr(obj, "tags"),
+                               paste0("origFilename:", basename2(obj)),
+                               paste0("origDirname:", dirname(obj)),
+                               paste0("origGetWd:", getwd()),
+                               paste0("fromDisk:", TRUE),
+                               paste0("class:", cls),
+                               paste0("fileFormat:", tools::file_ext(obj)),
+                               paste0("saveRawFile:", TRUE),
+                               paste0("loadFun:", "terra::rast"),
+                               paste0("whichFiles:", obj2)
+                               )
+      } else {
+        obj <- terra::wrap(obj)
+      }
     } else {
       obj <- wrapSpatVector(obj)
     }
@@ -616,21 +676,16 @@ unmakeMemoisable.default <- function(x) {
 #' @export
 #' @rdname dealWithClass
 .dealWithClassOnRecovery.default <- function(obj, cachePath, cacheId,
-                                    drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                    drv = getDrv(getOption("reproducible.drv", NULL)),
                                     conn = getOption("reproducible.conn", NULL)) {
 
-  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-    return(dealWithClassOnRecovery2(obj, cachePath, cacheId,
-                                    drv, conn))
-  }
-
   if (any(inherits(obj, "PackedSpatVector"))) {
-    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+    if (!requireNamespace("terra", quietly = TRUE))
       stop("Please install terra package")
     obj <- terra::vect(obj)
   }
   if (any(inherits(obj, "PackedSpatRaster"))) {
-    if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+    if (!requireNamespace("terra", quietly = TRUE))
       stop("Please install terra package")
     obj <- terra::rast(obj)
   }
@@ -645,7 +700,7 @@ unmakeMemoisable.default <- function(x) {
 #' @param cacheId Used strictly for messaging. This should be the cacheId of the object being recovered.
 #' @rdname dealWithClass
 .dealWithClassOnRecovery <- function(obj, cachePath, cacheId,
-                                    drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                    drv = getDrv(getOption("reproducible.drv", NULL)),
                                     conn = getOption("reproducible.conn", NULL)) {
   UseMethod(".dealWithClassOnRecovery")
 }
@@ -653,7 +708,7 @@ unmakeMemoisable.default <- function(x) {
 #' @export
 #' @rdname dealWithClass
 .dealWithClassOnRecovery.environment <- function(obj, cachePath, cacheId,
-                                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                         drv = getDrv(getOption("reproducible.drv", NULL)),
                                          conn = getOption("reproducible.conn", NULL)) {
 
   # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
@@ -669,7 +724,7 @@ unmakeMemoisable.default <- function(x) {
 #' @export
 #' @rdname dealWithClass
 .dealWithClassOnRecovery.list <- function(obj, cachePath, cacheId,
-                                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                         drv = getDrv(getOption("reproducible.drv", NULL)),
                                          conn = getOption("reproducible.conn", NULL)) {
 #   if (isOutputList || isOutputEnv) {
     anyNames <- names(obj)

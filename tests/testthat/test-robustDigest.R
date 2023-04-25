@@ -1,4 +1,4 @@
-test_that("test file-backed raster caching", {
+test_that("test data.table caching", {
   testInitOut <- testInit("data.table")
   on.exit({
     testOnExit(testInitOut)

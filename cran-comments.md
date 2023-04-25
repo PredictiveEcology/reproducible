@@ -31,7 +31,7 @@ See `NEWS.md` for a full list of changes.
 
 ## R CMD check results
 
-There were no ERRORs nor WARNINGs or NOTEs.
+There is only a NOTE about the email address, which is correct, and unchanged, for the maintainer.
 
 ## Downstream dependencies
 

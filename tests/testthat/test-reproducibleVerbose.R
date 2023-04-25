@@ -1,6 +1,6 @@
 ##########################
 test_that("test reproducible.verbose", {
-  testInitOut <- testInit("raster", verbose = 4, tmpFileExt = ".rds")
+  testInitOut <- testInit(verbose = 4, tmpFileExt = ".rds")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

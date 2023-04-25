@@ -127,7 +127,7 @@ Default: \code{TRUE}. As of version 0.3, the backend is now \pkg{DBI} instead of
 \pkg{archivist}.
 }
 \item{\code{useGDAL}}{
-Default \code{TRUE}. Passed to \code{useGDAL} in \code{projectInputs.Raster}.
+Default \code{TRUE}. Passed to \code{useGDAL}. Deprecated.
 }
 \item{\code{useMemoise}}{
 Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}. If \code{TRUE}, recovery of cached
@@ -169,7 +169,7 @@ The following options are likely not needed by a user.
 \describe{
 \item{\code{cloudChecksumsFilename}}{
 Default: \code{file.path(dirname(.reproducibleTempCacheDir()), "checksums.rds")}.
-Used in \code{\link[=cloudCache]{cloudCache()}}
+Used as an experimental argument in \code{\link[=Cache]{Cache()}}
 }
 \item{\code{length}}{
 Default: \code{Inf}. Used in \code{\link[=Cache]{Cache()}}, specifically to the internal

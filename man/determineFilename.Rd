@@ -40,31 +40,7 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{prefix}{The character string to prepend to \code{filename1}, if \code{filename2}
 not provided.}
 
-\item{...}{Additional arguments passed to methods. For \code{spatialClasses},
-these are: \code{\link[=cropInputs]{cropInputs()}}, \code{\link[=fixErrors]{fixErrors()}},
-\code{\link[=projectInputs]{projectInputs()}}, \code{\link[=maskInputs]{maskInputs()}},
-\code{\link[=determineFilename]{determineFilename()}}, and \code{\link[=writeOutputs]{writeOutputs()}}.
-Each of these may also pass \code{...} into other functions, like
-\code{\link[raster:writeRaster]{raster::writeRaster()}}, or \code{sf::st_write}.
-This might include potentially important arguments like \code{datatype},
-\code{format}. Also passed to \code{projectRaster},
-with likely important arguments such as \code{method = "bilinear"}.
-See details.
-
-\subsection{... passed to:}{
-\describe{
-\item{\code{cropInputs}:}{\code{\link[raster:crop]{raster::crop()}}}
-\item{\code{projectInputs}}{\code{\link[raster:projectRaster]{raster::projectRaster()}}}
-\item{\code{maskInputs}}{\code{\link[=fastMask]{fastMask()}} or \code{\link[raster:intersect]{raster::intersect()}}}
-\item{\code{fixErrors}}{\code{\link[raster:buffer]{raster::buffer()}}}
-\item{\code{writeOutputs}}{\code{\link[raster:writeRaster]{raster::writeRaster()}} or \code{\link[raster:shapefile]{raster::shapefile()}}}
-\item{\code{determineFilename}}{}
-}
-\itemize{
-\item Can be overridden with \code{useSAcrs}
-** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
-}
-}}
+\item{...}{Passed into \code{\link[=writeTo]{writeTo()}}}
 }
 \description{
 Determine the filename, given various combinations of inputs.

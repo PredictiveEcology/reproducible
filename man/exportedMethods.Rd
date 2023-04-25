@@ -22,7 +22,6 @@
 \alias{updateFilenameSlots.default}
 \alias{updateFilenameSlots.list}
 \alias{updateFilenameSlots.environment}
-\alias{updateFilenameSlots.Raster}
 \alias{makeMemoisable}
 \alias{makeMemoisable.default}
 \alias{makeMemoisable.data.table}
@@ -82,13 +81,11 @@
 
 updateFilenameSlots(obj, curFilenames, newFilenames, isStack = NULL)
 
-\method{updateFilenameSlots}{default}(obj, ...)
+\method{updateFilenameSlots}{default}(obj, curFilenames, newFilenames, isStack = NULL, ...)
 
 \method{updateFilenameSlots}{list}(obj, ...)
 
 \method{updateFilenameSlots}{environment}(obj, ...)
-
-\method{updateFilenameSlots}{Raster}(obj, curFilenames, newFilenames, isStack = NULL)
 
 makeMemoisable(x)
 
@@ -255,14 +252,15 @@ a <- 1
 b <- "NULL"
 .prepareOutput(b) # converts to NULL
 
-library(raster)
-r <- raster(extent(0,10,0,10), vals = 1:100)
+if (requireNamespace("terra")) {
+  r <- terra::rast(terra::ext(0,10,0,10), vals = 1:100)
 
-# write to disk manually -- will be in tempdir()
-r <- writeRaster(r, file = tempfile())
+  # write to disk manually -- will be in tempdir()
+  r <- terra::writeRaster(r, file = tempfile(fileext = ".tif"))
 
-# copy it to the cache repository
-r <- .prepareOutput(r, tempdir())
+  # copy it to the cache repository
+  r <- .prepareOutput(r, tempdir())
+}
 a <- 1
 .addChangedAttr(a) # does nothing because default method is just a pass through
 }

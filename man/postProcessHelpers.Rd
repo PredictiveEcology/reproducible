@@ -18,10 +18,12 @@ If not in same CRS, then it will be \code{spTransform}ed to
 CRS of \code{x} before masking. Currently, this function will not reproject the
 \code{x}. Optional in \code{postProcess}.}
 
-\item{rasterToMatch}{Template \verb{Raster*} object used for cropping (so extent should be
-the extent of desired outcome) and reprojecting (including changing the
-resolution and projection).
-See details in \code{\link[=postProcess]{postProcess()}}.}
+\item{rasterToMatch}{Template \verb{Raster*} object passed to the \code{to} argument of
+\code{\link[=projectTo]{projectTo()}}, thus will changing the
+resolution and projection of \code{x}.
+See details in \code{\link[=postProcessTo]{postProcessTo()}}.}
+
+\item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
 }
 \description{
 This is the function that follows the table of order of
