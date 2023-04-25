@@ -12,7 +12,8 @@ tempfile2(
 }
 \arguments{
 \item{sub}{Character string, length 1. Can be a result of
-\code{file.path("smth", "smth2")} for nested temporary subdirectories.}
+\code{file.path("smth", "smth2")} for nested temporary subdirectories.
+If the zero length character, then a random sub-directory will be created.}
 
 \item{tempdir}{Optional character string where the temporary
 directory should be placed. Defaults to \code{getOption("reproducible.tempPath")}.}
