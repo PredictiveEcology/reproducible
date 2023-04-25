@@ -100,7 +100,6 @@ setMethod(
     # checksumFile <- file.path(path, basename(checksumFile))
 
     if (!file.exists(checksumFile)) {
-      #file.create(checksumFile)
       writeChecksumsTable(.emptyChecksumsFileContent, checksumFile, dotsWriteTable)
     }
 

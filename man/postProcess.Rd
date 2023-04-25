@@ -105,7 +105,7 @@ if (requireNamespace("terra") && requireNamespace("sf")) {
   library(reproducible)
   # download a (spatial) file from remote url (which often is an archive) load into R
   # need 3 files for this example; 1 from remote, 2 local
-  dPath <- file.path(tempdir(), "testing")
+  dPath <- file.path(tempdir2())
   remoteTifUrl <- "https://github.com/rspatial/terra/raw/master/inst/ex/elev.tif"
   localFileLuxSm <- system.file("ex/luxSmall.shp", package = "reproducible")
   localFileLux <- system.file("ex/lux.shp", package = "terra")

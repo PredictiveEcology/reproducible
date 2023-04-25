@@ -431,7 +431,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                            .functionName = funChar)
             } else {
               args2 <- append(list(asPath(out$targetFilePath)), args)
-              if (exists("aaaa")) browser()
               obj <- Cache(do.call, theFun, args2, useCache = useCache2, .cacheExtra = .cacheExtra,
                            .functionName = funChar)
             }, message = function(m) {

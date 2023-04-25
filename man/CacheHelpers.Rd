@@ -147,7 +147,7 @@ is actually a functioning cache.
 }
 \examples{
 data.table::setDTthreads(2)
-newCache <- tempdir2("cacheHelperExamples")
+newCache <- tempdir2()
 createCache(newCache)
 
 out <- Cache(rnorm(1), cachePath = newCache)
@@ -157,10 +157,10 @@ loadFromCache(newCache, cacheId = cacheId)
 rmFromCache(newCache, cacheId = cacheId)
 
 # clean up
-unlink(dirname(newCache), recursive = TRUE)
+unlink(newCache, recursive = TRUE)
 
 data.table::setDTthreads(2)
-newCache <- tempdir2("cacheHelperExamples")
+newCache <- tempdir2()
 
 # Given the drv and conn, creates the minimum infrastructure for a cache
 createCache(newCache)
@@ -178,5 +178,5 @@ CacheDBTableName(newCache)
 CacheIsACache(newCache) # returns TRUE
 
 # clean up
-unlink(dirname(newCache), recursive = TRUE)
+unlink(newCache, recursive = TRUE)
 }

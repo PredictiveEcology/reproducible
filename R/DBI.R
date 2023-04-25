@@ -18,7 +18,7 @@
 #' @export
 #' @examples
 #' data.table::setDTthreads(2)
-#' newCache <- tempdir2("cacheHelperExamples")
+#' newCache <- tempdir2()
 #' createCache(newCache)
 #'
 #' out <- Cache(rnorm(1), cachePath = newCache)
@@ -28,7 +28,7 @@
 #' rmFromCache(newCache, cacheId = cacheId)
 #'
 #' # clean up
-#' unlink(dirname(newCache), recursive = TRUE)
+#' unlink(newCache, recursive = TRUE)
 #'
 createCache <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getDrv(getOption("reproducible.drv", NULL)),
@@ -505,7 +505,7 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 #'
 #' @examples
 #' data.table::setDTthreads(2)
-#' newCache <- tempdir2("cacheHelperExamples")
+#' newCache <- tempdir2()
 #'
 #' # Given the drv and conn, creates the minimum infrastructure for a cache
 #' createCache(newCache)
@@ -523,7 +523,7 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 #' CacheIsACache(newCache) # returns TRUE
 #'
 #' # clean up
-#' unlink(dirname(newCache), recursive = TRUE)
+#' unlink(newCache, recursive = TRUE)
 CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL)) {
