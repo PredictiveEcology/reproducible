@@ -36,6 +36,7 @@
 #'   2) a googledrive id or 3) an absolute path to a (possibly non-existent yet)
 #'   folder on your google drive.
 #' @param useCloud A logical.
+#' @param ... Any named objects that are needed for FUN
 #' @inheritParams prepInputs
 #' @inheritParams Cache
 #' @param action A character string, with one of c("nothing", "update",
@@ -94,6 +95,7 @@
 #'       targetFile = "fireSenseParams.rds",
 #'       domain = z,
 #'       FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
+#'       fun = fun, # pass whatever is needed into the function
 #'       destinationPath = dPath,
 #'       action = "update"
 #'       #, cloudFolderID = "cachedObjects" # to upload/download from cloud
@@ -107,7 +109,8 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
                      cloudFolderID = NULL,
                      purge = FALSE, useCache = getOption("reproducible.useCache"),
                      overwrite = getOption("reproducible.overwrite"),
-                     action = c("nothing", "update", "replace", "append")) {
+                     action = c("nothing", "update", "replace", "append"),
+                     ...) {
   objExisted <- TRUE
   if (is.null(targetFile) && is.null(url))
     objExisted <- FALSE
@@ -175,6 +178,7 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
   if (isFALSE(objExisted) || isFALSE(domainExisted)) {
     message("Domain is not contained within the targetFile; running FUN")
     FUNcaptured <- substitute(FUN)
+    list2env(list(...), envir = environment()) # need the ... to be "here"
     newObj <- eval(FUNcaptured, envir = environment())
     newObjSF <- if (is(newObj, "sf")) newObj else sf::st_as_sf(newObj)
   }

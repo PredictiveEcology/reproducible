@@ -15,7 +15,8 @@ CacheGeo(
   purge = FALSE,
   useCache = getOption("reproducible.useCache"),
   overwrite = getOption("reproducible.overwrite"),
-  action = c("nothing", "update", "replace", "append")
+  action = c("nothing", "update", "replace", "append"),
+  ...
 )
 }
 \arguments{
@@ -70,6 +71,8 @@ i.e., "read only". \code{append} will add the spatial elements in domain to
 \code{targetFile} (and writing it back to disk). \code{update} will do the same as
 \code{append}, but will also remove any identical geometries before appending.
 \code{replace} does nothing currently.}
+
+\item{...}{Any named objects that are needed for FUN}
 }
 \value{
 Returns an object that results from \code{FUN}, which will possibly be a subset
@@ -143,6 +146,7 @@ for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE))
       targetFile = "fireSenseParams.rds",
       domain = z,
       FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
+      fun = fun, # pass whatever is needed into the function
       destinationPath = dPath,
       action = "update"
       #, cloudFolderID = "cachedObjects" # to upload/download from cloud

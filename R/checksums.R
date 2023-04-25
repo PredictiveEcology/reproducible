@@ -234,7 +234,6 @@ setMethod(
       "filesize.y" = filesize
     )]
 
-
     return(invisible(results.df))
   })
 
