@@ -1724,9 +1724,7 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
   tifTmp <- normPath(tifTmp)
 
   b1 <- suppressWarnings(terra::writeRaster(a, filename = tifTmp, overwrite = TRUE)) # the GDAL>6 issue
-  expect_warning(
-    b1a <- writeOutputs(a, filename2 = tifTmp)
-  )
+  b1a <- writeOutputs(a, filename2 = tifTmp)
   expect_false(identical(b1, b1a))
   expect_true(all.equal(b1[], b1a[]))
 

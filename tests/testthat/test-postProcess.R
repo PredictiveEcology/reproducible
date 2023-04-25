@@ -274,10 +274,6 @@ test_that("maskInputs errors when x is Lat-Long", {
   suppressWarnings(smallSA <- terra::vect(terra::ext(x), "polygons"))
   terra::crs(smallSA) <- terra::crs(x)
 
-
-  # for (ii in c(TRUE, FALSE)) {
-  # i <- i + 1
-  # options(reproducible.polygonShortcut = ii)
   noisyOutput <- capture.output(
     suppressWarningsSpecific(falseWarnings = "attribute variables|st_buffer does not correctly buffer longitude",
                              roads1 <- prepInputs(targetFile = "miniRoad.shp",
@@ -287,7 +283,7 @@ test_that("maskInputs errors when x is Lat-Long", {
                                                       useCache = FALSE,
                                                       fun = "sf::st_read",
                                                       destinationPath = tmpdir,
-                                                      filename2 = "miniRoads"))
+                                                      filename2 = "miniRoad.shp"))
   )
   # clearCache()
   noisyOutput <- capture.output(
