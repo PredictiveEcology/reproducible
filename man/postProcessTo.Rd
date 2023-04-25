@@ -61,7 +61,7 @@ cropTo(
 writeTo(
   from,
   writeTo,
-  overwrite,
+  overwrite = getOption("reproducible.overwrite"),
   isStack = NULL,
   isBrick = NULL,
   isRaster = NULL,

@@ -716,7 +716,8 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
 #' @param isStack,isBrick,isRaster,isSpatRaster Logical. Default `NULL`. Used to convert `from`
 #'   back to these classes prior to writing, if provided.
 #'
-writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, isRaster = NULL,
+writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite"),
+                    isStack = NULL, isBrick = NULL, isRaster = NULL,
                     isSpatRaster = NULL,
                     verbose = getOption("reproducible.verbose"), ...) {
 
@@ -727,7 +728,7 @@ writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, is
       dPath <- which(...names() %in% "destinationPath")
       destinationPath <- if (length(dPath)) destinationPath <- ...elt(dPath) else
         getOption("reproducible.destinationPath", ".")
-      if (isAbsolutePath(writeTo)) {
+      if (all(isAbsolutePath(writeTo))) {
         destinationPath <- dirname(writeTo)
         writeTo <- basename(writeTo)
       }
