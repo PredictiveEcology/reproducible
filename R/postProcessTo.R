@@ -721,81 +721,113 @@ writeTo <- function(from, writeTo, overwrite, isStack = NULL, isBrick = NULL, is
                     verbose = getOption("reproducible.verbose"), ...) {
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
+  if (!missing(writeTo)) {
+    if (!is.null(writeTo)) {
 
-  dPath <- which(...names() %in% "destinationPath")
-  destinationPath <- if (length(dPath)) destinationPath <- ...elt(dPath) else
-    getOption("reproducible.destinationPath", ".")
+      dPath <- which(...names() %in% "destinationPath")
+      destinationPath <- if (length(dPath)) destinationPath <- ...elt(dPath) else
+        getOption("reproducible.destinationPath", ".")
+      if (isAbsolutePath(writeTo)) {
+        destinationPath <- dirname(writeTo)
+        writeTo <- basename(writeTo)
+      }
 
-  writeTo <- determineFilename(writeTo, destinationPath = destinationPath, verbose = verbose)
+      writeTo <- determineFilename(writeTo, destinationPath = destinationPath, verbose = verbose)
 
-  hasDatatype <- which(...names() %in% "datatype")
-  datatype <- if (length(hasDatatype)) ...elt(hasDatatype) else NULL
+      hasDatatype <- which(...names() %in% "datatype")
+      datatype <- if (length(hasDatatype)) ...elt(hasDatatype) else NULL
 
-  if (isTRUE(isStack)) from <- raster::stack(from)
-  if (isTRUE(isBrick)) from <- raster::brick(from)
+      if (isTRUE(isStack)) from <- raster::stack(from)
+      if (isTRUE(isBrick)) from <- raster::brick(from)
 
-  writeDone <- FALSE
+      writeDone <- FALSE
 
-  if (!is.null(writeTo))
-    if (!any(is.na(writeTo))) {
-      .requireNamespace("terra", stopOnFALSE = TRUE)
-      messagePrepInputs("    writing...", appendLF = FALSE,
-                        verbose = verbose)
-      st <- Sys.time()
+      if (!any(is.na(writeTo))) {
+        .requireNamespace("terra", stopOnFALSE = TRUE)
+        messagePrepInputs("    writing...", appendLF = FALSE,
+                          verbose = verbose)
+        st <- Sys.time()
 
-      if (is.null(isSpatRaster)) isSpatRaster <- isSpat(from) && isGridded(from)
-      if (is.null(isRaster)) isRaster <- inherits(from, "Raster")
+        if (is.null(isSpatRaster)) isSpatRaster <- isSpat(from) && isGridded(from)
+        if (is.null(isRaster)) isRaster <- inherits(from, "Raster")
 
-      if (isSpatRaster || isVector(from)) {
-        ## trying to prevent write failure and subsequent overwrite error with terra::writeRaster
-        if (any(file.exists(writeTo))) {
-          if (isFALSE(overwrite)) {
-            stop(writeTo, " already exists and `overwrite = FALSE`; please set `overwrite = TRUE` and run again.")
+        if (isSpatRaster || isVector(from)) {
+          ## trying to prevent write failure and subsequent overwrite error with terra::writeRaster
+          if (any(file.exists(writeTo))) {
+            if (isFALSE(overwrite)) {
+              stop(writeTo, " already exists and `overwrite = FALSE`; please set `overwrite = TRUE` and run again.")
+            }
+            unlink(writeTo, force = TRUE, recursive = TRUE)
           }
-          unlink(writeTo, force = TRUE, recursive = TRUE)
-        }
-        if (isSpatRaster) {
-          ## if the file still exists it's probably already "loaded"
-          ## and `terra` can't overwrite it even if `overwrite = TRUE`
-          ## this can happen when multiple modules touch the same object
-          if (!any(file.exists(writeTo))) {
-            from <- terra::writeRaster(from, filename = writeTo, overwrite = FALSE,
-                                       datatype = datatype)
+          if (isSpatRaster) {
+            ## if the file still exists it's probably already "loaded"
+            ## and `terra` can't overwrite it even if `overwrite = TRUE`
+            ## this can happen when multiple modules touch the same object
+            if (!any(file.exists(writeTo))) {
+              from <- terra::writeRaster(from, filename = writeTo, overwrite = FALSE,
+                                         datatype = datatype)
+              writeDone <- TRUE
+            } else {
+              stop("File can't be unliked for overwrite")
+            }
+          } else {
+            if (isSF(from)) {
+              written <- sf::st_write(from, dsn = writeTo)
+            } else {
+              written <- terra::writeVector(from, filename = writeTo, overwrite = FALSE)
+            }
             writeDone <- TRUE
-          } else {
-            stop("File can't be unliked for overwrite")
           }
-        } else {
-          if (isSF(from)) {
-            written <- sf::st_write(from, dsn = writeTo)
+        } else if (isRaster) {
+          nlyrsFrom <- nlayers2(from)
+          if (nlyrsFrom == 1 || length(writeTo) == 1) {
+            from <- terra::writeRaster(from, filename = writeTo, overwrite = overwrite,
+                                       datatype = datatype)
           } else {
-            written <- terra::writeVector(from, filename = writeTo, overwrite = FALSE)
+            outs <- lapply(seq(nlyrsFrom), function(ind) {
+              out <- terra::writeRaster(from[[ind]], filename = writeTo[ind], overwrite = overwrite,
+                                        datatype = datatype)
+            })
+            from <- raster::stack(outs)
           }
           writeDone <- TRUE
-        }
-      } else if (isRaster) {
-        nlyrsFrom <- nlayers2(from)
-        if (nlyrsFrom == 1 || length(writeTo) == 1) {
-          from <- terra::writeRaster(from, filename = writeTo, overwrite = overwrite,
-                                     datatype = datatype)
         } else {
-          outs <- lapply(seq(nlyrsFrom), function(ind) {
-            out <- terra::writeRaster(from[[ind]], filename = writeTo[ind], overwrite = overwrite,
-                                      datatype = datatype)
-          })
-          from <- raster::stack(outs)
+          fe <- .fileExtsKnown()
+          whType <- fe$extension %in% tools::file_ext(writeTo)
+          if (any(whType)) {
+            eval(parse(text = fe$saveFun[whType]))(from, writeTo)
+          } else {
+            messagePrepInputs("... nothing written; object not a known object type to write.",
+                              verbose = verbose)
+          }
         }
-        writeDone <- TRUE
-      } else {
-        messagePrepInputs("... nothing written; object not a known object type to write.",
-                          verbose = verbose)
+        if (isTRUE(writeDone)) {
+          messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                            verbose = verbose)
+        } else {
+          messagePrepInputs("", verbose = verbose) # need to "end" the line
+        }
       }
-      if (isTRUE(writeDone))
-        messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
-                          verbose = verbose)
     }
+  }
 
   from
+}
+
+saveTo <- function(x, file) {
+  fe <- .fileExtsKnown()
+  whType <- fe$extension %in% tools::file_ext(file)
+  if (any(whType)) {
+    eval(parse(text = fe$saveFun[whType]))(x, file)
+  }
+}
+
+readFrom <- function(file) {
+  fe <- .fileExtsKnown()
+  whType <- fe$extension %in% tools::file_ext(file)
+  if (any(whType)) {
+    eval(parse(text = fe$fun[whType]))(file)
+  }
 }
 
 postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo,
