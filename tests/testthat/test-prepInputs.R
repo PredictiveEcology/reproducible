@@ -49,7 +49,7 @@ test_that("prepInputs doesn't work (part 1)", {
   unlink(dPath, recursive = TRUE)
 
 
-  ### url, targetFile, alsoExtract ######
+  ### url, targetFile, alsoExtract ######g
   # Once this is done, can be more precise in operational code:
   #  specify targetFile, alsoExtract, and fun, wrap with Cache
   ecozoneFilename <- file.path(dPath, "Ecozones/ecozones.shp")

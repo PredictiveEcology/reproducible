@@ -157,15 +157,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   fun <- .checkFunInDots(fun = fun, dots = dots)
   dots <- .checkDeprecated(dots, verbose = verbose)
 
-  if (requireNamespace("googledrive", quietly = TRUE)) {
-    teamDrive <- if (packageVersion("googledrive") < "2.0.0") {
-      dots[["team_drive"]]
-    } else {
-      dots[["shared_drive"]]
-    }
-  } else {
-    teamDrive <- NULL
-  }
+  teamDrive <- getTeamDrive(dots)
 
   # remove trailing slash -- causes unzip fail if it is there
   destinationPath <- gsub("\\\\$|/$", "", destinationPath)
@@ -177,54 +169,112 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         archive <- as.character(archive)
       }
 
-  if (is.null(targetFile)) {
-    fileGuess <- .guessAtFile(url = url, archive = archive, targetFile = targetFile,
-                              destinationPath = destinationPath, verbose = verbose,
-                              team_drive = teamDrive)
-    if (is.null(archive))
-      archive <- .isArchive(fileGuess)
-    if (isTRUE(!is.na(archive)))
-      archive <- moveAttributes(fileGuess, archive)
-    if ((is.null(archive) || is.na(archive)) && !is.null(fileGuess)) {
-      messagePrepInputs("targetFile was not supplied; guessed and will try ", fileGuess,
-              ". If this is incorrect, please supply targetFile", verbose = verbose)
-      targetFile <- basename2(fileGuess)
-      targetFilePath <- file.path(destinationPath, targetFile)
-    } else {
-      targetFilePath <- NULL
-    }
-  } else {
-    if (length(targetFile) > 1)
-      stop("targetFile should be only 1 file")
-    if (!identical(targetFile, basename2(targetFile))) {
-      destinationPath <- dirname(targetFile)
-      targetFile <- basename2(targetFile)
-    }
+# <<<<<<< Updated upstream
+#   if (is.null(targetFile)) {
+#     fileGuess <- .guessAtFile(url = url, archive = archive, targetFile = targetFile,
+#                               destinationPath = destinationPath, verbose = verbose,
+#                               team_drive = teamDrive)
+#     if (is.null(archive))
+#       archive <- .isArchive(fileGuess)
+#     if (isTRUE(!is.na(archive)))
+#       archive <- moveAttributes(fileGuess, archive)
+#     if ((is.null(archive) || is.na(archive)) && !is.null(fileGuess)) {
+#       messagePrepInputs("targetFile was not supplied; guessed and will try ", fileGuess,
+#               ". If this is incorrect, please supply targetFile", verbose = verbose)
+#       targetFile <- basename2(fileGuess)
+#       targetFilePath <- file.path(destinationPath, targetFile)
+#     } else {
+#       targetFilePath <- NULL
+#     }
+#   } else {
+#     if (length(targetFile) > 1)
+#       stop("targetFile should be only 1 file")
+#     if (!identical(targetFile, basename2(targetFile))) {
+#       destinationPath <- dirname(targetFile)
+#       targetFile <- basename2(targetFile)
+#     }
+#
+#     targetFilePath <- file.path(destinationPath, targetFile)
+#     if (is.null(alsoExtract)) {
+#       if (file.exists(checkSumFilePath)) {
+#         if (file.size(checkSumFilePath) > 0) {
+#           # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with
+#           # same base name, without extension
+#           checksumsTmp <- as.data.table(read.table(checkSumFilePath))
+#           alsoExtract <- grep(paste0(filePathSansExt(targetFile),"\\."), checksumsTmp$file,
+#                               value = TRUE)
+#           rm(checksumsTmp) # clean up
+#         }
+#       }
+#     }
+#   }
+#   if (!is.null(alsoExtract)) {
+#     alsoExtract <- if (isTRUE(all(is.na(alsoExtract)))) {
+#       character()
+#     } else {
+#       file.path(destinationPath, basename2(alsoExtract))
+#     }
+#   }
+# =======
+  targetFileGuess <- .guessAtFile(url = url, archive = archive, targetFile = targetFile,
+                            destinationPath = destinationPath, verbose = verbose,
+                            team_drive = teamDrive)
 
-    targetFilePath <- file.path(destinationPath, targetFile)
-    if (is.null(alsoExtract)) {
-      if (file.exists(checkSumFilePath)) {
-        if (file.size(checkSumFilePath) > 0) {
-          # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with
-          # same base name, without extension
-          checksumsTmp <- as.data.table(read.table(checkSumFilePath))
-          alsoExtract <- grep(paste0(filePathSansExt(targetFile),"\\."), checksumsTmp$file,
-                              value = TRUE)
-          rm(checksumsTmp) # clean up
-        }
-      }
-    }
-  }
-  if (!is.null(alsoExtract)) {
-    alsoExtract <- if (isTRUE(all(is.na(alsoExtract)))) {
-      character()
-    } else {
-      file.path(destinationPath, basename2(alsoExtract))
-    }
-  }
+  browser()
+  archive <- updateArchiveWithGuess(archive, targetFileGuess)
+  # if (is.null(archive))
+  #   archive <- .isArchive(targetFileGuess)
+  # if (isTRUE(!is.na(archive)))
+  #   archive <- moveAttributes(targetFileGuess, archive)
+
+  targetFilePath <- getTargetFilePath(targetFile, archive, targetFileGuess, verbose,
+                                destinationPath, alsoExtract, checkSumFilePath)
+  # if (is.null(targetFile)) {
+  #   fileGuess <- .guessAtFile(url = url, archive = archive, targetFile = targetFile,
+  #                             destinationPath = destinationPath, verbose = verbose,
+  #                             team_drive = teamDrive)
+  #   if (is.null(archive))
+  #     archive <- .isArchive(fileGuess)
+  #   if (isTRUE(!is.na(archive)))
+  #     archive <- moveAttributes(fileGuess, archive)
+  #   if ((is.null(archive) || is.na(archive)) && !is.null(fileGuess)) {
+  #     messagePrepInputs("targetFile was not supplied; guessed and will try ", fileGuess,
+  #             ". If this is incorrect, please supply targetFile", verbose = verbose)
+  #     abab <- fileGuess; if (!identical(basename2(abab), abab)) browser()
+  #     targetFile <- basename2(fileGuess)
+  #     targetFilePath <- makeAbsolute(targetFile, destinationPath)
+  #   } else {
+  #     targetFilePath <- NULL
+  #   }
+  # } else {
+  #   if (length(targetFile) > 1)
+  #     stop("targetFile should be only 1 file")
+  #
+  #   targetFilePath <- makeAbsolute(targetFile, destinationPath)
+  #   if (is.null(alsoExtract)) {
+  #     if (file.exists(checkSumFilePath)) {
+  #       if (file.size(checkSumFilePath) > 0) {
+  #         # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with
+  #         # same base name, without extension
+  #         checksumsTmp <- as.data.table(read.table(checkSumFilePath))
+  #         alsoExtract <- grep(paste0(filePathSansExt(targetFile),"\\."), checksumsTmp$file,
+  #                             value = TRUE)
+  #         rm(checksumsTmp) # clean up
+  #       }
+  #     }
+  #   }
+  # }
+
+  alsoExtract <- guessAlsoExtract(targetFile, alsoExtract, checkSumFilePath)
+
+  # if (!is.null(alsoExtract)) { # must keep relative because user may not know what path is in archive
+  #   if (isTRUE(all(is.na(alsoExtract)))) {
+  #     alsoExtract <- character()
+  #   }
+  # }
+# >>>>>>> Stashed changes
 
   if (!dir.exists(destinationPath)) {
-    # if (!identical(file.exists(destinationPath), isFile(destinationPath))) stop("isFile is not same as file.exists")
     if (isFile(destinationPath)) {
       stop("destinationPath must be a directory")
     }
@@ -1432,3 +1482,90 @@ hardlinkMessagePrefixForGrep <- escapeRegexChars(hardlinkMessagePrefix)
 
 whPointsToMess <- "which point(s) to"
 whPointsToMessForGrep <- escapeRegexChars(whPointsToMess)
+
+
+getTeamDrive <- function(dots) {
+  if (requireNamespace("googledrive", quietly = TRUE)) {
+    teamDrive <- if (packageVersion("googledrive") < "2.0.0") {
+      dots[["team_drive"]]
+    } else {
+      dots[["shared_drive"]]
+    }
+  } else {
+    teamDrive <- NULL
+  }
+}
+
+
+getTargetFilePath <- function(targetFile, archive, fileGuess, verbose,
+                              destinationPath, alsoExtract, checkSumFilePath) {
+  if (is.null(targetFile)) {
+    # fileGuess <- .guessAtFile(url = url, archive = archive, targetFile = targetFile,
+    #                           destinationPath = destinationPath, verbose = verbose,
+    #                           team_drive = teamDrive)
+    # if (is.null(archive))
+    #   archive <- .isArchive(fileGuess)
+    # if (isTRUE(!is.na(archive)))
+    #   archive <- moveAttributes(fileGuess, archive)
+    if ((is.null(archive) || is.na(archive)) && !is.null(fileGuess)) {
+      messagePrepInputs("targetFile was not supplied; guessed and will try ", fileGuess,
+                        ". If this is incorrect, please supply targetFile", verbose = verbose)
+      abab <- fileGuess; if (!identical(basename2(abab), abab)) browser()
+      targetFile <- basename2(fileGuess)
+      targetFilePath <- makeAbsolute(targetFile, destinationPath)
+    } else {
+      targetFilePath <- NULL
+    }
+  } else {
+    if (length(targetFile) > 1)
+      stop("targetFile should be only 1 file")
+
+    targetFilePath <- makeAbsolute(targetFile, destinationPath)
+    # if (is.null(alsoExtract)) {
+    #   if (file.exists(checkSumFilePath)) {
+    #     if (file.size(checkSumFilePath) > 0) {
+    #       # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with
+    #       # same base name, without extension
+    #       checksumsTmp <- as.data.table(read.table(checkSumFilePath))
+    #       alsoExtract <- grep(paste0(filePathSansExt(targetFile),"\\."), checksumsTmp$file,
+    #                           value = TRUE)
+    #       rm(checksumsTmp) # clean up
+    #     }
+    #   }
+    # }
+  }
+  targetFilePath
+}
+
+
+guessAlsoExtract <- function(targetFile, alsoExtract, checkSumFilePath) {
+  if (is.null(alsoExtract)) {
+    if (file.exists(checkSumFilePath)) {
+      if (file.size(checkSumFilePath) > 0) {
+        # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with
+        # same base name, without extension
+        checksumsTmp <- as.data.table(read.table(checkSumFilePath))
+        alsoExtract <- grep(paste0(filePathSansExt(targetFile),"\\."), checksumsTmp$file,
+                            value = TRUE)
+        rm(checksumsTmp) # clean up
+      }
+    }
+  }
+  if (!is.null(alsoExtract)) { # must keep relative because user may not know what path is in archive
+    if (isTRUE(all(is.na(alsoExtract)))) {
+      alsoExtract <- character()
+    }
+  }
+
+  alsoExtract
+}
+
+updateArchiveWithGuess <- function(archive, guess) {
+  if (!is.null(guess)) {
+    if (is.null(archive))
+      archive <- .isArchive(guess)
+    if (isTRUE(!is.na(archive)))
+      archive <- moveAttributes(guess, archive)
+  }
+  archive
+}
