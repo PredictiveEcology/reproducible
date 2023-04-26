@@ -7,27 +7,28 @@ See `NEWS.md` for a full list of changes.
 ## Test environments
 
 ### Previous R versions
-* Ubuntu 20.04                 (GitHub), R 4.0.5
+* macOS (m2) Ventura 13.2.1     (local), R 4.2.2
 * Ubuntu 20.04                 (GitHub), R 4.1.3
-* Windows                      (GitHub), R 4.0.5
+* Ubuntu 20.04                 (GitHub), R 4.2.3
 * Windows                      (GitHub), R 4.1.3
-* Windows                 (win-builder), R 4.1.3
+* Windows                      (GitHub), R 4.2.3
+* Windows                 (win-builder), R 4.2.3
 
 ### Current R versions
-* macOS 11.7 Big Sur           (GitHub), R 4.2.2
-* macOS 11.7 Big Sur            (local), R 4.2.2
-* macOs (m1) Big Sur             (rhub), R 4.2.2
-* Ubuntu 20.04                 (GitHub), R 4.2.2
-* Ubuntu 20.04                  (local), R 4.2.2 Patched (2022-11-10 r83330)
-* Windows                      (GitHub), R 4.2.2
-* Windows                       (local), R 4.2.2
-* Windows                 (win-builder), R 4.2.2
+* macOS Monterey 12.6.5        (GitHub), R 4.3.0
+* macOS (m2) Ventura 13.2.1     (local), R 4.3.0
+* macOs (m1) Big Sur             (rhub), R 4.3.0
+* Ubuntu 20.04                 (GitHub), R 4.3.0
+* Ubuntu 20.04                  (local), R 4.3.0
+* Windows                      (GitHub), R 4.3.0
+* Windows                       (local), R 4.3.0
+* Windows                 (win-builder), R 4.3.0
 
 ### Development R version
-* Ubuntu 20.04                 (GitHub), R-devel (2022-12-20 r83482)
-* Ubuntu 20.04                  (local), R-devel (2022-12-19 r83478)
-* Windows                      (GitHub), R-devel (2022-12-20 r83482 ucrt)
-* Windows                 (win-builder), R-devel (2022-12-21 r83491 ucrt)
+* Ubuntu 20.04 LTS             (GitHub), R-devel (2023-04-25 r84327)
+* Ubuntu 20.04 LTS              (local), R-devel (2023-04-25 r84327)
+* Windows                      (GitHub), R-devel (2023-04-25 r84327 ucrt)
+* Windows                 (win-builder), R-devel (2023-04-25 r84327 ucrt)
 
 ## R CMD check results
 
