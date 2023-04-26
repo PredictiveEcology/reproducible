@@ -188,7 +188,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     if ((is.null(archive) || is.na(archive)) && !is.null(fileGuess)) {
       messagePrepInputs("targetFile was not supplied; guessed and will try ", fileGuess,
               ". If this is incorrect, please supply targetFile", verbose = verbose)
-      targetFile <- .basename(fileGuess)
+      targetFile <- basename2(fileGuess)
       targetFilePath <- file.path(destinationPath, targetFile)
     } else {
       targetFilePath <- NULL
@@ -196,9 +196,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   } else {
     if (length(targetFile) > 1)
       stop("targetFile should be only 1 file")
-    if (!identical(targetFile, .basename(targetFile))) {
+    if (!identical(targetFile, basename2(targetFile))) {
       destinationPath <- dirname(targetFile)
-      targetFile <- .basename(targetFile)
+      targetFile <- basename2(targetFile)
     }
 
     targetFilePath <- file.path(destinationPath, targetFile)
@@ -219,7 +219,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     alsoExtract <- if (isTRUE(all(is.na(alsoExtract)))) {
       character()
     } else {
-      file.path(destinationPath, .basename(alsoExtract))
+      file.path(destinationPath, basename2(alsoExtract))
     }
   }
 
