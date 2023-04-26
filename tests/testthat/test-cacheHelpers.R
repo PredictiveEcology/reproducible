@@ -1,6 +1,5 @@
-##########################
 test_that("test miscellaneous unit tests cache-helpers", {
-  testInitOut <- testInit(libraries = c("sf", "sp"), opts = list(reproducible.useMemoise = TRUE))
+  testInitOut <- testInit(libraries = c("sf"), opts = list(reproducible.useMemoise = TRUE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -24,17 +23,29 @@ test_that("test miscellaneous unit tests cache-helpers", {
     expect_true(is(studyAreaName(h), "character"))
   }
 
+  # studyAreaName with SpatVector
+  if (require("terra")) {
+    v <- terra::vect(system.file("ex/lux.shp", package="terra"))
+    expect_true(is(studyAreaName(v), "character"))
+  }
+
   # studyAreaName with SPDF/SP
+  # coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+  #                     .Dim = c(5L, 2L))
+  # Sr1 <- Polygon(coords)
+  # Srs1 <- Polygons(list(Sr1), "s1")
+  # StudyArea <- SpatialPolygons(list(Srs1), 1L)
+
   coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
                       .Dim = c(5L, 2L))
-  Sr1 <- Polygon(coords)
-  Srs1 <- Polygons(list(Sr1), "s1")
-  StudyArea <- SpatialPolygons(list(Srs1), 1L)
+  StudyArea <- terra::vect(coords, "polygons")
+  terra::crs(StudyArea) <- crsToUse
+
   df <- data.frame(a = 1, row.names = row.names(StudyArea))
 
-  SPDF <- SpatialPolygonsDataFrame(StudyArea, df, match.ID = TRUE)
+  # SPDF <- SpatialPolygonsDataFrame(StudyArea, df, match.ID = TRUE)
   expect_true(is(studyAreaName(StudyArea), "character"))
-  expect_true(is(studyAreaName(SPDF), "character"))
+  # expect_true(is(studyAreaName(SPDF), "character"))
 
   # studyAreaName with random object
   expect_error(studyAreaName(integer(0)))
@@ -50,28 +61,6 @@ test_that("test miscellaneous unit tests cache-helpers", {
   }, add = TRUE)
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl("No cachePath supplied. Using", mess)))
-
-  # # getFunctionName
-  # fn <- function(FUN) {
-  #   getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
-  # }
-  # expect_true(fn(1)$functionName == "FUN")
-  #
-  # fn <- function(FUN) {
-  #   getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
-  # }
-  # expect_true(fn(2)$functionName == "FUN")
-  #
-  # fn <- function(FUN) {
-  #   getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
-  # }
-  # expect_true(fn(2)$functionName == "FUN")
-  # expect_true(is.null(fn(2)$.FUN))
-  #
-  # fn <- function(FUN) {
-  #   getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
-  # }
-  # expect_true(fn(log(1))$functionName == "FUN")
 
   ## nextNumericName
   b <- nextNumericName("test.pdf")
@@ -146,12 +135,62 @@ test_that("test miscellaneous unit tests cache-helpers", {
       expect_true(identical(dMessCacheId, bMessCacheId))
     }
 
+
+  rcompletelynew <- rmultinom
+  # Now check function is prefered over args
+  clearCache(tmpCache, ask = FALSE)
   eMess <- capture_messages({
-    b <- Cache(rlnorm, 4, sd = 5, showSimilar = TRUE, cachePath = tmpCache)
+    b <- Cache(rbinom, 4, 5, prob = 0.6, showSimilar = TRUE, cachePath = tmpCache)
   })
-  expect_true(any(grepl("different .FUN", eMess)))
-  expect_false(grepl(" n[ ,{\x1b}]", grep("different", eMess, value = TRUE)))
-  expect_false(grepl("[ ,]sd[ ,{\x1b}]", grep("different", eMess, value = TRUE)))
+  fMess <- capture_messages({
+    b <- Cache(rmultinom, 4, 5, prob = 0.6, showSimilar = TRUE, cachePath = tmpCache)
+  })
+  gMess <- capture_messages({
+    b <- Cache(rmultinom, 14, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
+  })
+  hMess <- capture_messages({
+    b <- Cache(rbinom, 14, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
+  })
+  iMess <- capture_messages({
+    b <- Cache(rcompletelynew, 12, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
+  })
+  expect_true(any(grepl("no similar item", eMess))) # shouldn't find b/c new
+  expect_true(any(grepl("no similar item", fMess))) # shouldn't find b/c args are same
+  expect_true(any(grepl("next closest.+rmultin", gMess))) # should only find rmultinom
+  expect_true(any(grepl("next closest.+rbinom", hMess))) # should only find rbinom
+  expect_true(sum(grepl(".+rcompletelynew|next closest.+rmultin", iMess)) == 2) # should notice different name, but still find
+
+
+  ### UserTags matching -- prefer similar if all userTags match
+  rcompletelynew <- rnorm
+  # Now check function is prefered over args
+  clearCache(tmpCache, ask = FALSE)
+  jMess <- capture_messages({
+    b <- Cache(rnorm, 1, 2, 3, showSimilar = TRUE, cachePath = tmpCache, userTags = c("Hi"))
+  })
+  kMess <- capture_messages({
+    b1 <- Cache(rnorm, 1, 3, 4, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # not similar
+  })
+  lMess <- capture_messages({
+    b <- Cache(rnorm, 1, 3, 4, showSimilar = TRUE, cachePath = tmpCache, userTags = c("Hi")) # same, recovered
+  })
+  mMess <- capture_messages({
+    b <- Cache(rnorm, 1, 2, 3, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # same recovered
+  })
+  nMess <- capture_messages({
+    b <- Cache(rnorm, 1, 2, 2, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # similar to kMess
+  })
+  oMess <- capture_messages({
+    b <- Cache(rnorm, 1, 2, 1, showSimilar = TRUE, cachePath = tmpCache) # similar to kMess
+  })
+  expect_true(any(grepl("no similar item", jMess))) # shouldn't find b/c new
+  expect_true(any(grepl("no similar item", kMess))) # shouldn't find b/c args are same
+  expect_true(any(grepl("loaded", lMess))) # should only find rmultinom
+  expect_true(any(grepl("loaded", mMess))) # should only find rmultinom
+  nMess <- grep("^.+next closest cacheId\\(s\\) (.+) of .+$", nMess, value = TRUE)
+  expect_true(grepl(x = attr(b1, "tags"),
+    gsub("^.+next closest cacheId\\(s\\) (.+) of .+$", "\\1", nMess))) # should only find kMess
+
 
   ## debugCache -- "complete"
   thing <- 1
@@ -170,11 +209,14 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(grepl("other", unlist(.unlistToCharacter(1, 0))))
 
   ## writeFuture
-  comp <- if (useDBI()) .robustDigest("sdf") else
-    "dda1fbb70d256e6b3b696ef0176c63de"
+  comp <- # if (useDBI())
+    .robustDigest("sdf") # else
+    # "dda1fbb70d256e6b3b696ef0176c63de"
+  drvHere <- if (useDBI() && .requireNamespace("RSQLite")) RSQLite::SQLite() else NULL
+
   expect_true(identical(comp,
                         writeFuture(1, "sdf", cachePath = tmpCache, userTags = "",
-                                    drv = RSQLite::SQLite())))
+                                    drv = drvHere)))
   expect_error(writeFuture(1, "sdf", cachePath = "sdfd", userTags = ""))
 
   if (interactive()) {
@@ -189,7 +231,26 @@ test_that("test miscellaneous unit tests cache-helpers", {
   }
 })
 
+test_that("test warnings from cached functions", {
+  testInitOut <- testInit(libraries = c("sf"), opts = list(reproducible.useMemoise = FALSE))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  warn1 <- capture_warnings(b <- Cache(rbinom, 4, 5, prob = 6, cachePath = tmpCache))
+
+  fun <- function(n, size, prob) {
+    rbinom(n, size, prob)
+  }
+  warn2 <- capture_warnings(d <- Cache(fun, 4, 5, 6, cachePath = tmpCache))
+  warnCompare <- "rbinom.+NAs produced"
+  expect_true(grepl(warnCompare, warn1)) # includes the call because .call = FALSE, and call added manually in Cache
+  expect_true(grepl("NAs produced", warn2))
+  expect_false(grepl(warnCompare, warn2)) # this is false because the warning message doesn't include the call with normal warn
+
+})
+
 test_that("test cache-helpers with stacks", {
+  # THIS TEST CAN BE DELETED AFTER RASTER IS DEFUNCT
   testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
@@ -221,8 +282,10 @@ test_that("test cache-helpers with stacks", {
   expect_true(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
 
   ## removing entry from Cache
-  grep(basename(tmpfile), list.files(tmpCache, recursive = TRUE, full.names = TRUE), value = TRUE) %>%
-    file.remove(.)
+  fls <- grep(basename(tmpfile),
+              list.files(tmpCache, recursive = TRUE, full.names = TRUE),
+              value = TRUE)
+  file.remove(fls)
   expect_false(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
   b <- .prepareFileBackedRaster(s, tmpCache)
   expect_true(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
@@ -232,10 +295,7 @@ test_that("test cache-helpers with stacks", {
   expect_error({b <- .prepareFileBackedRaster(s, tmpCache)}, "The following file-backed rasters")
 })
 
-##########################
 test_that("test miscellaneous unit tests cache-helpers", {
-  skip_if_not_installed("googledrive")
-
   testInitOut <- testInit("googledrive")
   on.exit({
     testOnExit(testInitOut)
@@ -243,6 +303,4 @@ test_that("test miscellaneous unit tests cache-helpers", {
   a <- Cache(rnorm, 1, cachePath = tmpCache)
   mess <- capture_messages(clearCache(cachePath = tmpCache))
   expect_true(any(grepl("x not specified, but cachePath is", mess)))
-  mess <- capture_messages(clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = NULL))
-  expect_equal(sum(grepl("0 bytes", mess)), 2)
 })

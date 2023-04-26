@@ -76,7 +76,7 @@ test_that("Checksums read and written correctly", {
   expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
   # expect_true(all(sort(txt$expectedFile) == sort(basename(sampleFiles))))
   a <- sort(grep("\\.R$", txt$expectedFile, value = TRUE))
-  print(txt$expectedFile)
+  # print(txt$expectedFile)
   expect_identical(a, b)
   # expect_identical(a[1], b[1])
   # expect_identical(a[2], b[2])

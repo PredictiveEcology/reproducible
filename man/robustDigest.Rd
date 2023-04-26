@@ -14,8 +14,6 @@
 \alias{.robustDigest,numeric-method}
 \alias{.robustDigest,matrix-method}
 \alias{.robustDigest,integer-method}
-\alias{.robustDigest,Raster-method}
-\alias{.robustDigest,Spatial-method}
 \title{Create reproducible digests of objects in R}
 \usage{
 .robustDigest(
@@ -51,10 +49,6 @@
 \S4method{.robustDigest}{matrix}(object, .objects, length, algo, quick, classOptions)
 
 \S4method{.robustDigest}{integer}(object, .objects, length, algo, quick, classOptions)
-
-\S4method{.robustDigest}{Raster}(object, .objects, length, algo, quick, classOptions)
-
-\S4method{.robustDigest}{Spatial}(object, .objects, length, algo, quick, classOptions)
 }
 \arguments{
 \item{object}{an object to digest.}
@@ -140,6 +134,8 @@ using \code{asPath(thePath)}
 a <- 2
 tmpfile1 <- tempfile()
 tmpfile2 <- tempfile()
+tmpfile3 <- tempfile(fileext = ".grd")
+tmpfile4 <- tempfile(fileext = ".grd")
 save(a, file = tmpfile1)
 save(a, file = tmpfile2)
 
@@ -159,25 +155,21 @@ digest::digest(tmpfile2)
 .robustDigest(asPath(tmpfile1), quick = FALSE)
 .robustDigest(asPath(tmpfile2), quick = FALSE) # same because using file content
 
-# Rasters are interesting because it is not know a priori if it
-#   it has a file name associated with it.
-library(raster)
-r <- raster(extent(0,10,0,10), vals = 1:100)
+# SpatRasters are have pointers
+if (requireNamespace("terra")) {
+  r <- terra::rast(system.file("ex/elev.tif", package = "terra"))
+  r3 <- terra::deepcopy(r)
+  r1 <- terra::writeRaster(r, filename = tmpfile3)
 
-# write to disk
-r1 <- writeRaster(r, file = tmpfile1)
-r2 <- writeRaster(r, file = tmpfile2)
+  digest::digest(r)
+  digest::digest(r3) # different but should be same
+  .robustDigest(r1)
+  .robustDigest(r3) # same... data & metadata are the same
 
-digest::digest(r1)
-digest::digest(r2) # different
-digest::digest(r1)
-digest::digest(r2) # different
-.robustDigest(r1)
-.robustDigest(r2) # same... data are the same in the file
-
-# note, this is not true for comparing memory and file-backed rasters
-.robustDigest(r)
-.robustDigest(r1) # different
+  # note, this is not true for comparing memory and file-backed rasters
+  .robustDigest(r)
+  .robustDigest(r1) # different
+}
 
 }
 \author{

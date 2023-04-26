@@ -9,12 +9,14 @@ dlGoogle(
   archive = NULL,
   targetFile = NULL,
   checkSums,
-  skipDownloadMsg,
+  messSkipDownload,
   destinationPath,
+  type = NULL,
   overwrite,
   needChecksums,
   verbose = getOption("reproducible.verbose", 1),
-  team_drive = NULL
+  team_drive = NULL,
+  ...
 )
 }
 \arguments{
@@ -29,10 +31,11 @@ then it will \emph{not} attempt to see it as an archive, even if it has archive-
 file extension (e.g., \code{.zip}). This may be useful when an R function
 is expecting an archive directly.}
 
-\item{targetFile}{Character string giving the path to the eventual file
+\item{targetFile}{Character string giving the filename (without relative or
+absolute path) to the eventual file
 (raster, shapefile, csv, etc.) after downloading and extracting from a zip
 or tar archive. This is the file \emph{before} it is passed to
-\code{postProcess}. Currently, the internal checksumming does not checksum
+\code{postProcess}. The internal checksumming does not checksum
 the file after it is \code{postProcess}ed (e.g., cropped/reprojected/masked).
 Using \code{Cache} around \code{prepInputs} will do a sufficient job in these cases.
 See table in \code{\link[=preProcess]{preProcess()}}.}
@@ -53,6 +56,8 @@ even if they pass the checksums or the files are all there.}
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{...}{Not used here. Only used to allow other arguments to other fns to not fail.}
 }
 \description{
 Download file from Google Drive

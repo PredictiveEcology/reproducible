@@ -79,6 +79,7 @@ setGeneric("Checksums", function(path, write, quickCheck = FALSE,
 
 #' @importFrom data.table setnames
 #' @importFrom methods formalArgs
+#' @importFrom stats na.omit
 #' @importFrom utils read.table write.table
 #' @rdname Checksums
 setMethod(
@@ -86,6 +87,7 @@ setMethod(
   signature = c(path = "character", quickCheck = "ANY",
                 write = "logical", files = "ANY"),
   definition = function(path, write, quickCheck, checksumFile, files, verbose = getOption("reproducible.verbose", 1), ...) {
+
     defaultHashAlgo <- "xxhash64"
     defaultWriteHashAlgo <- "xxhash64"
     dots <- list(...)
@@ -98,13 +100,12 @@ setMethod(
     # checksumFile <- file.path(path, basename(checksumFile))
 
     if (!file.exists(checksumFile)) {
-      #file.create(checksumFile)
       writeChecksumsTable(.emptyChecksumsFileContent, checksumFile, dotsWriteTable)
     }
 
     if (is.null(files)) {
-      files <- list.files(path, full.names = TRUE) %>%
-        grep(basename(checksumFile), ., value = TRUE, invert = TRUE)
+      files <- list.files(path, full.names = TRUE)
+      files <- grep(files, pattern = basename(checksumFile), value = TRUE, invert = TRUE)
     } else {
       isAbs <- isAbsolutePath(files)
       if (!all(isAbs))
@@ -232,51 +233,7 @@ setMethod(
       "filesize.y" = filesize
     )]
 
-    # results.df1 <- out1 %>%
-    #   dplyr::mutate(actualFile = file) %>%
-    #   {
-    #     if (write) {
-    #       dplyr::right_join(txt, ., by = "file")
-    #     } else {
-    #       dplyr::left_join(txt, ., by = "file")
-    #     }
-    #   } %>%
-    #   dplyr::rename(expectedFile = file) %>%
-    #   dplyr::group_by(expectedFile) %>%
-    #   {
-    #     if (quickCheck) {
-    #       mutate(., result = ifelse(filesize.x != filesize.y, "FAIL", "OK"))
-    #     } else {
-    #       mutate(., result = ifelse(checksum.x != checksum.y, "FAIL", "OK"))
-    #     }
-    #   } %>%
-    #   dplyr::arrange(desc(result)) %>%
-    #   {
-    #     #if (quickCheck) {
-    #     select(
-    #       .,
-    #       "result",
-    #       "expectedFile",
-    #       "actualFile",
-    #       "checksum.x",
-    #       "checksum.y",
-    #       "algorithm.x",
-    #       "algorithm.y",
-    #       "filesize.x",
-    #       "filesize.y"
-    #     )
-    #     #} else {
-    #     #  select(., "result", "expectedFile", "actualFile", "checksum.x", "checksum.y",
-    #     #         "algorithm.x", "algorithm.y", "filesize.x", "filesize.y")
-    #     #}
-    #   } %>%
-    #   dplyr::filter(row_number() == 1L)
-
-    # if (!isTRUE(all.equal(as.data.frame(results.df1), as.data.frame(results.df))))
-    #   stop()
-
     return(invisible(results.df))
-    #}
   })
 
 #' @rdname Checksums
@@ -292,6 +249,7 @@ setMethod(
 #' @keywords internal
 writeChecksumsTable <- function(out, checksumFile, dots) {
   out <- out[.orderDotsUnderscoreFirst(out$file), ] ## sort by filename alphabetically
+
   do.call(write.table,
           args = append(list(x = out, file = checksumFile, eol = "\n",
                              col.names = !isTRUE(dots$append),
@@ -322,10 +280,16 @@ setMethod(
   signature = c(file = "character"),
   definition = function(file, quickCheck, algo = "xxhash64", ...) {
     if (quickCheck) {
-      file.size(file) %>% as.character() # need as.character for empty case
+      fs <- file.size(file)
+      as.character(fs) # need as.character for empty case
     } else {
-      lapply(file, function(f) {
-        digest::digest(object = f, file = TRUE, algo = algo, ...)
-      }) %>% unlist() %>% unname() %>% as.character() # need as.character for empty case # nolint
+      as.character(
+        unname(
+          unlist(
+
+            lapply(file, function(f) {
+              digest::digest(object = f, file = TRUE, algo = algo, ...)
+            })
+          )))# need as.character for empty case # nolint
     }
   })

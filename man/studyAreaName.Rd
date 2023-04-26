@@ -2,14 +2,11 @@
 % Please edit documentation in R/helpers.R
 \name{studyAreaName}
 \alias{studyAreaName}
-\alias{studyAreaName,SpatialPolygonsDataFrame-method}
 \alias{studyAreaName,character-method}
 \alias{studyAreaName,ANY-method}
 \title{Get a unique name for a given study area}
 \usage{
 studyAreaName(studyArea, ...)
-
-\S4method{studyAreaName}{SpatialPolygonsDataFrame}(studyArea, ...)
 
 \S4method{studyAreaName}{character}(studyArea, ...)
 
@@ -21,7 +18,7 @@ studyAreaName(studyArea, ...)
 \item{...}{Other arguments (not currently used)}
 }
 \value{
-A character string using the \code{digest} of the \code{studyArea}. This is only intended
+A character string using the \code{.robustDigest} of the \code{studyArea}. This is only intended
 for use with spatial objects.
 }
 \description{

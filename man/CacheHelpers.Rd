@@ -13,7 +13,7 @@
 \usage{
 createCache(
   cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   force = FALSE,
   verbose = getOption("reproducible.verbose")
@@ -22,22 +22,26 @@ createCache(
 loadFromCache(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
+  fullCacheTableForObj = NULL,
   format = getOption("reproducible.cacheSaveFormat", "rds"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = getOption("reproducible.conn", NULL)
+  .functionName = NULL,
+  .dotsFromCache = NULL,
+  drv = getDrv(getOption("reproducible.drv", NULL)),
+  conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose")
 )
 
 rmFromCache(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   format = getOption("reproducible.cacheSaveFormat", "rds")
 )
 
 CacheDBFile(
   cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL)
 )
 
@@ -46,18 +50,19 @@ CacheStorageDir(cachePath = getOption("reproducible.cachePath"))
 CacheStoredFile(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
-  format = getOption("reproducible.cacheSaveFormat", "rds")
+  format = NULL,
+  obj = NULL
 )
 
 CacheDBTableName(
   cachePath = getOption("reproducible.cachePath"),
-  drv = getOption("reproducible.drv", RSQLite::SQLite())
+  drv = getDrv(getOption("reproducible.drv", NULL))
 )
 
 CacheIsACache(
   cachePath = getOption("reproducible.cachePath"),
   create = FALSE,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL)
 )
 }
@@ -67,8 +72,7 @@ the database file(s)}
 
 \item{drv}{A driver, passed to \code{dbConnect}}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{an optional DBIConnection object, as returned by dbConnect().}
 
 \item{force}{Logical. Should it create a cache in the \code{cachePath},
 even if it already exists, overwriting.}
@@ -81,9 +85,19 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{cacheId}{The cacheId or otherwise digested hash value, as character string.}
 
+\item{fullCacheTableForObj}{The result of \code{showCache}, but subsetted for only
+the \code{cacheId} being loaded or selected}
+
 \item{format}{The text string representing the file extension used normally by
 different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
 to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
+
+\item{.functionName}{Optional. Used for messaging when this function is called from \code{Cache}}
+
+\item{.dotsFromCache}{Optional. Used internally.}
+
+\item{obj}{The optional object that is of interest; it may have an attribute "saveRawFile"
+that would be important.}
 
 \item{create}{Logical. Currently only affects non RQSLite default drivers. If this
 is \code{TRUE} and there is no Cache database, the function will create one.}
@@ -95,7 +109,10 @@ is \code{TRUE} and there is no Cache database, the function will create one.}
 
 \code{rmFromCache} has no return value; it is called for its side effects.
 
-\code{CacheDBFile} returns the name of the database file for a given Cache.
+\code{CacheDBFile} returns the name of the database file for a given Cache,
+when \code{useDBI() == FALSE}, or \code{NULL} if \code{TRUE}.
+\code{CacheDBFiles} (i.e,. plural) returns the name of all the database files for
+a given Cache when \code{useDBI() == TRUE}, or \code{NULL} if \code{FALSE}
 
 \code{CacheStorageDir} returns the name of the directory where cached objects are
 stored.
@@ -130,7 +147,7 @@ is actually a functioning cache.
 }
 \examples{
 data.table::setDTthreads(2)
-newCache <- tempdir2("cacheHelperExamples")
+newCache <- tempdir2()
 createCache(newCache)
 
 out <- Cache(rnorm(1), cachePath = newCache)
@@ -140,10 +157,10 @@ loadFromCache(newCache, cacheId = cacheId)
 rmFromCache(newCache, cacheId = cacheId)
 
 # clean up
-unlink(dirname(newCache), recursive = TRUE)
+unlink(newCache, recursive = TRUE)
 
 data.table::setDTthreads(2)
-newCache <- tempdir2("cacheHelperExamples")
+newCache <- tempdir2()
 
 # Given the drv and conn, creates the minimum infrastructure for a cache
 createCache(newCache)
@@ -161,5 +178,5 @@ CacheDBTableName(newCache)
 CacheIsACache(newCache) # returns TRUE
 
 # clean up
-unlink(dirname(newCache), recursive = TRUE)
+unlink(newCache, recursive = TRUE)
 }

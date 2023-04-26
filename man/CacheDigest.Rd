@@ -9,6 +9,7 @@ CacheDigest(
   ...,
   algo = "xxhash64",
   calledFrom = "CacheDigest",
+  .functionName = NULL,
   quick = FALSE
 )
 }
@@ -25,6 +26,10 @@ CacheDigest(
 \item{calledFrom}{a Character string, length 1, with the function to
 compare with. Default is "Cache". All other values may not produce
 robust CacheDigest results.}
+
+\item{.functionName}{A an arbitrary character string that provides a name that is different
+than the actual function name (e.g., "rnorm") which will be used for messaging. This
+can be useful when the actual function is not helpful for a user, such as \code{do.call}.}
 
 \item{quick}{Logical or character. If \code{TRUE},
 no disk-based information will be assessed, i.e., only

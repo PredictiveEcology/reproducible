@@ -2,13 +2,13 @@
 % Please edit documentation in R/gis.R
 \name{fastMask}
 \alias{fastMask}
-\title{Faster operations on rasters (DEPRECATED as \code{terra::mask} is fast)}
+\title{Faster operations on rasters (DEPRECATED because \code{terra::mask} is fast)}
 \usage{
 fastMask(
   x,
   y,
   cores = NULL,
-  useGDAL = getOption("reproducible.useGDAL", FALSE),
+  useGDAL = FALSE,
   verbose = getOption("reproducible.verbose", 1),
   ...,
   skipDeprecastedMsg = FALSE
@@ -25,7 +25,7 @@ triggered. \code{'AUTO'} will calculate 90\% of the total
 number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.}
 
-\item{useGDAL}{Logical or \code{"force"}. This is defunct; internals now can use
+\item{useGDAL}{Deprecated. Logical or \code{"force"}. This is defunct; internals now can use
 \code{terra} if \code{options("reproducible.useTerra" = TRUE)}, which is not (yet)
 the default.}
 
@@ -45,7 +45,7 @@ A \verb{Raster*} object, masked (i.e., smaller extent and/or
 several pixels converted to NA)
 }
 \description{
-This alternative to \code{raster::mask} is included here.
+Deprecated. Use \code{\link[=maskTo]{maskTo()}}.
 }
 \author{
 Eliot McIntire
