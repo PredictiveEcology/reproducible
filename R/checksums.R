@@ -95,21 +95,17 @@ setMethod(
     dots <- dots[names(dots) %in% formalArgs(digest::digest)]
     checkPath(path, create = write)
 
-    # If it is a SpaDES module, then CHECKSUM.txt must be in the data folder
-    # Eliot -- removed this Oct 5
-    # checksumFile <- file.path(path, basename(checksumFile))
-
     if (!file.exists(checksumFile)) {
       writeChecksumsTable(.emptyChecksumsFileContent, checksumFile, dotsWriteTable)
     }
 
     if (is.null(files)) {
       files <- list.files(path, full.names = TRUE)
-      files <- grep(files, pattern = basename(checksumFile), value = TRUE, invert = TRUE)
+      files <- grep(files, pattern = basename2(checksumFile), value = TRUE, invert = TRUE)
     } else {
       isAbs <- isAbsolutePath(files)
-      if (!all(isAbs))
-        files <- file.path(path, basename(files))
+      if (any(!isAbs))
+        files[!isAbs] <- file.path(path, files[!isAbs])
     }
 
     txt <- if (file.size(checksumFile) == 0) {
@@ -144,7 +140,7 @@ setMethod(
 
     messagePrepInputs("Checking local files...", sep = "", verbose = verbose)
     filesToCheck <-  if (length(txt$file) & length(files)) {
-      files[basename(files) %in% txt$file]
+      files[basename2(files) %in% txt$file]
     } else {
       files
     }
@@ -153,7 +149,7 @@ setMethod(
 
     if (!is.null(txt$algorithm)) {
       if (!write) {
-        dots$algo <- unique(txt[txt$file %in% basename(filesToCheck),][["algorithm"]])
+        dots$algo <- unique(txt[txt$file %in% basename2(filesToCheck),][["algorithm"]])
         dots$algo <- dots$algo[!is.na(dots$algo)][1]
         # dots$algo <- na.omit(dots$algo)[1]
         if (is.na(dots$algo)) dots$algo <- defaultWriteHashAlgo
@@ -191,7 +187,7 @@ setMethod(
     messagePrepInputs("Finished checking local files.", sep = "", verbose = verbose)
 
     out <- if (length(filesToCheck)) {
-      data.table(file = basename(filesToCheck), checksum = checksums[[1]],
+      data.table(file = basename2(filesToCheck), checksum = checksums[[1]],
                  filesize = checksums[[2]], algorithm = dots$algo, stringsAsFactors = FALSE)
     } else {
       data.table(file = character(0), checksum = character(0), filesize = character(0),

@@ -48,12 +48,11 @@ test_that("prepInputs doesn't work (part 1)", {
   expect_true(is(shpEcozone1, vectorType()))
   unlink(dPath, recursive = TRUE)
 
-  #######################################
+
   ### url, targetFile, alsoExtract ######
-  #######################################
   # Once this is done, can be more precise in operational code:
   #  specify targetFile, alsoExtract, and fun, wrap with Cache
-  ecozoneFilename <- file.path(dPath, "ecozones.shp")
+  ecozoneFilename <- file.path(dPath, "Ecozones/ecozones.shp")
   ecozoneFiles <- c(
     "ecozones.dbf",
     "ecozones.prj",
@@ -204,15 +203,6 @@ test_that("prepInputs doesn't work (part 1)", {
   ######################################
   ## don't pass url -- use local copy of archive only
   ## use purge = TRUE to rm checksums file, rewrite it here
-
-
-
-
-
-
-
-
-
   noisyOutput <- capture.output(
     shpEcozone <- prepInputs(destinationPath = dPath,
                              archive = file.path(dPath, "ecozone_shp.zip"), purge = TRUE)

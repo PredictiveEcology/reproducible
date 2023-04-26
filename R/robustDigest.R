@@ -270,11 +270,11 @@ setMethod(
           digest::digest(file = x, length = length, algo = algo)
         } else {
           # just do file basename as a character string, if file does not exist
-          .doDigest(.basenames(x, nParentDirs), algo = algo)
+          .doDigest(basenames3(x, nParentDirs), algo = algo)
         }
       })
     } else {
-      .doDigest(.basenames(object, nParentDirs), algo = algo)
+      .doDigest(basenames3(object, nParentDirs), algo = algo)
     }
 })
 
@@ -374,7 +374,7 @@ setMethod(
   })
 
 
-.basenames <- function(object, nParentDirs) {
+basenames3 <- function(object, nParentDirs) {
   if (missing(nParentDirs)) {
     nParentDirs <- 0
   }
