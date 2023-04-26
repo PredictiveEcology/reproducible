@@ -1,14 +1,19 @@
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
-Version 1.2.17
-==============
+Version 2.0.0
+=============
 
-## enhancements
+## Breaking changes
+- removed `assessDataTypeGDAL()`, `clearStubArtifacts()`, `maskInputs()`, `writeOutputs()`;
+- cached objects created using `raster` and `sp` will not be retrieved due to the use of `terra` and `sf` throughout - users may wish to prune stale cache entries;
+- changes to caching of environments requires downstream packages to e.g., implement custom `Copy` methods (see #298).
+
+## Enhancements
 - new optional backend for `Cache` via `options(reproducible.useDBI = FALSE)` is single data files with the same `basename` as the cached object, i.e., with the same `cacheId` in the file name. This is a replacement for `RSQLite` and will become the default in the next release. Helpers to transition will be supplied at that time. This approach makes cloud caching easier as all metadata are available in small binary files for each cached object. 
 - moved `raster` and `sp` to `Suggests`; no more internal functions use these. User can still work with `Raster` class objects as before.
 - `preProcess` can now handle google docs files, if `type = ...` is passed.
-- `postProcess` now uses `terra` and `sf` internally by default throughout the family of `*Inputs` and `*To` functions. The old behaviour, which is no longer supported, can be approximated by setting the `option(reproducible.useTerra = FALSE)`
-- new functions to assist with transition from `raster` to `terra` --> `maxFn`, `minFn`, `rasterRead`
+- `postProcess` now uses `terra` and `sf` internally by default (with #253) throughout the family of `*Inputs` and `*To` functions. The old behaviour, which is no longer supported, can be approximated by setting the `option(reproducible.useTerra = FALSE)`
+- new functions to assist with transition from `raster` to `terra`: `maxFn`, `minFn`, `rasterRead`
 - `.dealWithClass` and `.dealWithClassOnRecovery` are now exported generics, with several methods here, notably, list, environment, default
 - other miscellaneous changes to deal with `raster` to `terra` transition (e.g. `studyAreaName` can deal with `SpatVector`)
 
@@ -21,9 +26,9 @@ Version 1.2.17
 ## Defunct
 - `reproducible.useNewDigestAlgorithm` is not longer an option as the old algorithms do not work reliably.
 
-## bugfixes
-- `Cache` was incorrectly dealing with `environment` and `environment-like` objects. Since some objects, e.g., `Spat*` objects in `terra`, must be wrapped prior to saving, environments must be scanned for these classes of objects prior to saving. This previously only occurred for `list` objects; fixed
-- When working with revdep `SpaDES.core`, there were some cases where the `Cache` was failing as it could not find the module name; fixed.
+## Bugfixes
+- `Cache` was incorrectly dealing with `environment` and `environment-like` objects. Since some objects, e.g., `Spat*` objects in `terra`, must be wrapped prior to saving, environments must be scanned for these classes of objects prior to saving. This previously only occurred for `list` objects;
+- When working with revdep `SpaDES.core`, there were some cases where the `Cache` was failing as it could not find the module name;
 - during transition from `postProcess` (using `raster` and `sp`) to `postProcessTo`, some cases are falling through the cracks; these are being addressed.
 
 Version 1.2.16
