@@ -890,6 +890,7 @@ extractFromArchive <- function(archive,
 #' @keywords internal
 .checkSums <- function(filesToCheck, fileinfo, chksumsFilePath, quick,
                        verbose = getOption("reproducible.verbose", 1)) {
+  browser()
   if (missing(chksumsFilePath)) {
     chksumsFilePath <- file.path(dirname(filesToCheck), "CHECKSUMS.txt")
   }
