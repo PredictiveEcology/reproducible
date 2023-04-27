@@ -360,111 +360,11 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ##################################################################
   # Load object to R
   ##################################################################
-  # If it is simple call, then we can extract stuff from the function call; otherwise all bets off
-  theFun <- out$fun
-  suppressWarnings({
-    naFun <- all(is.na(theFun))
-  })
-
-  funChar <- if (is.character(out$funChar)) out$funChar else NULL
-
-  out <- modifyList(out, list(...))
-
-  argsFromPrepInputsFamily <- unique(c(.namesPostProcessFormals(), formalArgs(prepInputs), formalArgs(preProcess),
-                                "checkSums", "dots", "object"))
-  args <- NULL
-  # keep the ones for theFun
-  if (naFun %in% FALSE && !is.call(theFun)) {
-    formsForTheFun <- names(formals3(theFun))
-    argsFromPrepInputsFamily <- setdiff(argsFromPrepInputsFamily, names(formals3(theFun)))
-    argsPassingToTheFun <- out[!names(out) %in% argsFromPrepInputsFamily]
-    args <- argsPassingToTheFun[names(argsPassingToTheFun) %in% formsForTheFun]
+  if (!is.null(out$targetFilePath)) {
+    messagePrepInputs("targetFile located at ", out$targetFilePath, verbose = verbose)
   }
-
-  otherFiles <- out$checkSums[result == "OK"]
-  .cacheExtra <- NULL
-  if (NROW(otherFiles)) {
-    .cacheExtra <- .robustDigest(sort(otherFiles$checksum.x))
-  }
-
-  if (!(naFun || is.null(theFun))) {
-    x <- if (is.null(out$object)) {
-
-      messagePrepInputs("Loading object into R", verbose = verbose)
-      needRaster <- any(grepl("raster$|stack$|brick$", funCaptured))
-      if (needRaster)
-        .requireNamespace("raster", stopOnFALSE = TRUE)
-      if (needRaster | identical(theFun, terra::rast)) {
-        ## Don't cache the reading of a raster
-        ## -- normal reading of raster on disk is fast b/c only reads metadata
-        do.call(theFun, append(list(asPath(out$targetFilePath)), args))
-      } else {
-        if (identical(theFun, base::load)) {
-          if (is.null(args$envir)) {
-            messagePrepInputs("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
-                    "if you would like it loaded to a specific environment", verbose = verbose)
-            tmpEnv <- new.env(parent = emptyenv())
-            returnAsList <- TRUE
-          } else {
-            tmpEnv <- args$envir
-            args$envir <- NULL
-            returnAsList <- FALSE
-          }
-          args2 <- append(list(file = out$targetFilePath, envir = tmpEnv), args)
-          objs <- do.call(theFun, args2)
-          if (returnAsList)
-            as.list(tmpEnv, all.names = TRUE)
-        } else {
-          useCache2 <- useCache
-          if (fileExt(out$targetFilePath) %in% c("qs", "rds") &&
-              !isTRUE(getOption("reproducible.useMemoise"))) {
-            useCache2 <- FALSE
-            messagePrepInputs("targetFile is already a binary; skipping Cache while loading")
-          }
-
-          withCallingHandlers(
-            if (is.call(theFun)) { # an actual call, not just captured function name
-              # put `targetFilePath` in the first position -- allows quoted call to use first arg
-              out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
-                                   out[-which(names(out) == "targetFilePath")]),
-                            args)
-              out[["targetFile"]] <- out[["targetFilePath"]] # handle both
-              obj <- Cache(eval(theFun, envir = out), useCache = useCache2, .cacheExtra = .cacheExtra,
-                           .functionName = funChar)
-            } else {
-              args2 <- append(list(asPath(out$targetFilePath)), args)
-              obj <- Cache(do.call, theFun, args2, useCache = useCache2, .cacheExtra = .cacheExtra,
-                           .functionName = funChar)
-            }, message = function(m) {
-              m$message <- grep("No cachePath supplied|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
-              if (length(m$message)) {
-                mm <- gsub("(.*)\n$", "\\1", m$message)
-                messagePrepInputs(mm)
-              }
-              tryInvokeRestart("muffleMessage")
-            })
-          obj
-        }
-      }
-    } else {
-      if (is.null(fun) || is.na(fun)) {
-        out$object
-      } else {
-        # x <- out$object
-        env1 <- new.env()
-        list2env(list(...), envir = env1)
-        eval(theFun, envir = env1)
-      }
-    }
-  } else {
-    x <- if (is.null(fun) || is.na(fun) || !is.null(out$object)) {
-      out$object
-    } else {
-      messagePrepInputs("No loading of object into R; fun = ", theFun, verbose = verbose)
-      out
-    }
-  }
-
+  x <- process(out, funCaptured = funCaptured,
+               useCache = useCache, verbose = verbose, ...)
 
   ##################################################################
   # postProcess
@@ -628,13 +528,14 @@ extractFromArchive <- function(archive,
                              pattern = paste0("(",paste(knownArchiveExtensions, collapse = "|"), ")"), ignore.case = TRUE)
 
           if (any(isArchive)) {
-            arch <- basename2(filesInArchive[isArchive])
+            arch <- makeRelative(filesInArchive[isArchive], destinationPath)
             filesExtracted <- c(filesExtracted,
                                 .callArchiveExtractFn(funWArgs$fun, funWArgs$args, files = arch,
                                                       absolutePrefix = destinationPath,
                                                       .tempPath = .tempPath))
+            filesExtracted <- unique(filesExtracted) # maybe unnecessary
 
-            prevExtract <- lapply(file.path(destinationPath, arch), function(ap)
+            prevExtract <- lapply(makeAbsolute(arch, destinationPath), function(ap)
               extractFromArchive(archive = ap, destinationPath = destinationPath,
                                  neededFiles = neededFiles,
                                  extractedArchives = extractedArchives,
@@ -1380,3 +1281,116 @@ nullOr <- function(clses, vals, env) {
 }
 
 is.nulls <- function(x) lapply(x, is.null)
+
+
+
+
+process <- function(out, funCaptured,
+                    useCache = getOption("reproducible.useCache"),
+                    verbose = getOption("reproducible.verbose"),
+                    ...) {
+  theFun <- out$fun
+  suppressWarnings({
+    naFun <- all(is.na(theFun))
+  })
+
+  funChar <- if (is.character(out$funChar)) out$funChar else NULL
+
+  out <- modifyList(out, list(...))
+
+  argsFromPrepInputsFamily <- unique(c(.namesPostProcessFormals(), formalArgs(prepInputs), formalArgs(preProcess),
+                                       "checkSums", "dots", "object"))
+  args <- NULL
+  # keep the ones for theFun
+  if (naFun %in% FALSE && !is.call(theFun)) {
+    formsForTheFun <- names(formals3(theFun))
+    argsFromPrepInputsFamily <- setdiff(argsFromPrepInputsFamily, names(formals3(theFun)))
+    argsPassingToTheFun <- out[!names(out) %in% argsFromPrepInputsFamily]
+    args <- argsPassingToTheFun[names(argsPassingToTheFun) %in% formsForTheFun]
+  }
+
+  otherFiles <- out$checkSums[result == "OK"]
+  .cacheExtra <- NULL
+  if (NROW(otherFiles)) {
+    .cacheExtra <- .robustDigest(sort(otherFiles$checksum.x))
+  }
+
+  if (!(naFun || is.null(theFun))) {
+    x <- if (is.null(out$object)) {
+
+      messagePrepInputs("Loading object into R", verbose = verbose)
+      needRaster <- any(grepl("raster$|stack$|brick$", funCaptured))
+      if (needRaster)
+        .requireNamespace("raster", stopOnFALSE = TRUE)
+      if (needRaster | identical(theFun, terra::rast)) {
+        ## Don't cache the reading of a raster
+        ## -- normal reading of raster on disk is fast b/c only reads metadata
+        do.call(theFun, append(list(asPath(out$targetFilePath)), args))
+      } else {
+        if (identical(theFun, base::load)) {
+          if (is.null(args$envir)) {
+            messagePrepInputs("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
+                              "if you would like it loaded to a specific environment", verbose = verbose)
+            tmpEnv <- new.env(parent = emptyenv())
+            returnAsList <- TRUE
+          } else {
+            tmpEnv <- args$envir
+            args$envir <- NULL
+            returnAsList <- FALSE
+          }
+          args2 <- append(list(file = out$targetFilePath, envir = tmpEnv), args)
+          objs <- do.call(theFun, args2)
+          if (returnAsList)
+            as.list(tmpEnv, all.names = TRUE)
+        } else {
+          useCache2 <- useCache
+          if (fileExt(out$targetFilePath) %in% c("qs", "rds") &&
+              !isTRUE(getOption("reproducible.useMemoise"))) {
+            useCache2 <- FALSE
+            messagePrepInputs("targetFile is already a binary; skipping Cache while loading")
+          }
+
+          withCallingHandlers(
+            if (is.call(theFun)) { # an actual call, not just captured function name
+              # put `targetFilePath` in the first position -- allows quoted call to use first arg
+              out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
+                                   out[-which(names(out) == "targetFilePath")]),
+                            args)
+              out[["targetFile"]] <- out[["targetFilePath"]] # handle both
+              obj <- Cache(eval(theFun, envir = out), useCache = useCache2, .cacheExtra = .cacheExtra,
+                           .functionName = funChar)
+            } else {
+              args2 <- append(list(asPath(out$targetFilePath)), args)
+              obj <- Cache(do.call, theFun, args2, useCache = useCache2, .cacheExtra = .cacheExtra,
+                           .functionName = funChar)
+            }, message = function(m) {
+              m$message <- grep("No cachePath supplied|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
+              if (length(m$message)) {
+                mm <- gsub("(.*)\n$", "\\1", m$message)
+                messagePrepInputs(mm)
+              }
+              tryInvokeRestart("muffleMessage")
+            })
+          obj
+        }
+      }
+    } else {
+      #if (is.null(fun) || is.na(fun)) {
+      x <- out$object
+      #} else {
+      #  # x <- out$object
+      #  env1 <- new.env()
+      #  list2env(list(...), envir = env1)
+      #  eval(theFun, envir = env1)
+      #}
+    }
+  } else {
+    x <- if ((is.null(theFun) || is.na(theFun)) && !is.null(out$object)) {
+      out$object
+    } else {
+      messagePrepInputs("No loading of object into R; fun = ", theFun, verbose = verbose)
+      out
+    }
+  }
+  x
+}
