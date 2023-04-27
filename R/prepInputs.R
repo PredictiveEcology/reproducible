@@ -894,7 +894,7 @@ extractFromArchive <- function(archive,
   to <- file.path(args$exdir, extractedFiles)
 
   suppressWarnings({
-    out <- linkOrCopy(from, to, symlink = FALSE, verbose = 0)
+    out <- hardLinkOrCopy(from, to, verbose = 0)
   })
 
   if (!isTRUE(all(file.exists(to)))) {

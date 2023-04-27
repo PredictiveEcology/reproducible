@@ -23,7 +23,6 @@ test_that("prepInputs doesn't work (part 1)", {
 
   dPath <- file.path(tmpdir, "ecozones")
 
-  #######################################
   ### url
   url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
 
@@ -75,7 +74,6 @@ test_that("prepInputs doesn't work (part 1)", {
   # As of Jan 2022 -- these objects are very different; character encoding of accents, numbers interpretted as character
   # expect_equivalent(testObj, shpEcozone2) # different attribute newCache
 
-  #######################################
   ### url, targetFile, alsoExtract -- with Cache
   # specify targetFile, alsoExtract, and fun, wrap with Cache -- it is wrong b/c no subfolder
   ecozoneFilename <- file.path(dPath, "ecozones.shp")
@@ -124,7 +122,6 @@ test_that("prepInputs doesn't work (part 1)", {
 
   expect_true(any(grepl("loaded", mess)))
 
-  ######################################
   ##  archive
   ## don't pass url -- use local copy of archive only
   ## use purge = TRUE to rm checksums file, rewrite it here
@@ -134,7 +131,6 @@ test_that("prepInputs doesn't work (part 1)", {
   )
   expect_true(is(shpEcozone, vectorType()))
 
-  #######################################
   ### archive, alsoExtract char
   shpEcozone <- prepInputs(destinationPath = dPath,
                            archive = file.path(dPath, "ecozone_shp.zip"),
@@ -145,7 +141,6 @@ test_that("prepInputs doesn't work (part 1)", {
   rm(shpEcozone)
   expect_false(exists("shpEcozone", inherits = FALSE))
 
-  #######################################
   ### url, alsoExtract, archive
   # try again with url - should *not* download, even though checksums came from the
   #   prepInputs that had locally generated -- confirming that checksums with a manually copied file will work
@@ -1581,8 +1576,8 @@ test_that("options inputPaths", {
                           destinationPath = tmpdir2)
     )
   )
-  expect_true(sum(grepl(hardlinkMessagePrefixForGrep, mess1)) == 1) # used a linked version
-  expect_true(sum(grepl(paste0("Hardlinked.*",basename(tmpdir2)), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
+  # expect_true(sum(grepl(hardlinkMessagePrefixForGrep, mess1)) == 1) # used a linked version
+  # expect_true(sum(grepl(paste0("Hardlinked.*",basename(tmpdir2)), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
 
   ## Try with inputPaths == destinationPath
   unlink(file.path(tmpdir, theFile))

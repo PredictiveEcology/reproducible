@@ -1083,13 +1083,26 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'   ## cleanup
 #'   unlink(tmpDir, recursive = TRUE)
 #' }
-linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducible.verbose", 1)) {
+linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
+                       verbose = getOption("reproducible.verbose", 1)) {
   existsLogical <- file.exists(from)
+  existsTo <- file.exists(to)
+  if (any(existsTo)) {
+    toDig <- unlist(.robustDigest(asPath(to[existsTo])))
+    fromDig <- unname(unlist(.robustDigest(asPath(from[existsTo]))))
+    existsToSame <- toDig == fromDig
+    if (any(existsToSame)) {
+      to <- c(to[existsTo][!existsToSame], to[!existsTo])
+      from <- c(from[existsTo][!existsToSame], from[!existsTo])
+    }
+  }
   toCollapsed <- paste(to, collapse = ", ")
   fromCollapsed <- paste(from, collapse = ", ")
-  if (any(existsLogical)) {
-    toDirs <- unique(dirname(to))
-    dirDoesntExist <- !dir.exists(toDirs)
+  result <- TRUE
+  if (!all(toCollapsed %in% fromCollapsed)) {
+    if (any(existsLogical)) {
+      toDirs <- unique(dirname(to))
+      dirDoesntExist <- !dir.exists(toDirs)
     if (any(dirDoesntExist)) {
       lapply(toDirs[dirDoesntExist], dir.create, recursive = TRUE)
     }
@@ -1122,15 +1135,17 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
                   fromCollapsed, "; no copy was made.", verbose = verbose)
         }
       }
-    }
+      }
 
-    if (isFALSE(all(result))) {
-      result <- file.copy(from, to)
-      messagePrepInputs("Copy of file: ", fromCollapsed, ", was created at: ", toCollapsed, verbose = verbose)
+      if (isFALSE(all(result))) {
+        result <- file.copy(from, to, overwrite = overwrite)
+        messagePrepInputs("Copy of file: ", fromCollapsed, ", was created at: ", toCollapsed, verbose = verbose)
+      }
+    } else {
+      if (isFALSE(result)) browser()
+      messagePrepInputs("File ", fromCollapsed, " does not exist. Not copying.", verbose = verbose)
+      result <- FALSE
     }
-  } else {
-    messagePrepInputs("File ", fromCollapsed, " does not exist. Not copying.", verbose = verbose)
-    result <- FALSE
   }
   return(result)
 }
@@ -1412,30 +1427,7 @@ moveAttributes <- function(source, receiving, attrs = NULL) {
 }
 
 hardLinkOrCopy <- function(from, to, overwrite = FALSE, verbose = TRUE) {
-  outFL <- rep(FALSE, length(from))
-
-  overwriteMess <- ""
-  if (length(from)) {
-    if (isTRUE(overwrite)) {
-      fe <- file.exists(to)
-      if (any(fe)) {
-        unlinkOut <- unlink(to[fe])
-        overwriteMess <- paste0(to[fe], " exists; overwrite = TRUE; removing first; ")
-      }
-    }
-    # Basically -- all warnings are irrelevant; if fails, it will return FALSE, then it will try the file.copy
-    outFL <- suppressWarnings(file.link(from = from, to = to))
-    if (any(outFL)) {
-      toCollapsed <- paste(to[outFL], collapse = ", ")
-      fromCollapsed <- paste(from[outFL], collapse = ", ")
-      messagePrepInputs(overwriteMess, hardlinkMessagePrefix, ": ", toCollapsed, ", ",whPointsToMess," "
-                        , fromCollapsed, "; no copy/copies made.", verbose = verbose, collapse = "\n")
-    }
-    if (any(!outFL)) {
-      outFL <- copyFile(to = to[!outFL], from = from[!outFL], overwrite = overwrite, silent = TRUE)
-    }
-  }
-  return(outFL)
+  linkOrCopy(from, to, symlink = FALSE, verbose = verbose)
 }
 
 makeAbsolute <- function(files, absoluteBase) {
