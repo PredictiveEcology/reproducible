@@ -584,9 +584,6 @@ extractFromArchive <- function(archive,
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  filesExtracted, fun = NULL, verbose = getOption("reproducible.verbose", 1)) {
-  # if (!is.null(fun) && !is.character(fun)) {
-  #   stop("fun must be a character string, not the function")
-  # }
   possibleFiles <- unique(c(targetFilePath, filesExtracted))
   whichPossFile <- possibleFiles %in% targetFilePath
   if (isTRUE(any(whichPossFile)))
@@ -854,26 +851,6 @@ extractFromArchive <- function(archive,
         stop("There was no way to unzip all files; try manually. The file is located at: \n",
              pathToFile)
       }
-      # extractedFiles <- list.files(path = .tempPath,
-      #                              # list of full paths of all extracted files!
-      #                              recursive = TRUE,
-      #                              include.dirs = TRUE)
-      # from <- file.path(.tempPath, extractedFiles)
-      # on.exit({
-      #   if (any(file.exists(from)))
-      #     suppressWarnings(try(unlink(from), silent = TRUE))
-      # }, add = TRUE)
-      # to <- file.path(args$exdir, extractedFiles)
-      #
-      # suppressWarnings({
-      #   out <- linkOrCopy(from, to, symlink = FALSE)
-      # })
-      #
-      # if (!isTRUE(all(file.exists(to)))) {
-      #   stop(paste("Could not move extractedfiles from", .tempPath, "to", args$exdir))
-      # }
-      # extractedFiles <- to
-      # unlink(.tempPath, recursive = TRUE)
     }
     if (!isUnzip) {
       extractedFiles <- files
