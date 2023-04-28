@@ -247,16 +247,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                        destinationPath = destinationPath, checkSums,
                                        checkSumFilePath = checkSumFilePath, url)
     list2env(outFromSimilar, environment()) # neededFiles, checkSums
-    # neededFiles <- outFromSimilar$neededFiles
-    # checkSums <- outFromSimilar$checkSums
   }
-  # abab <- archive; if (!identical(basename2(abab), abab)) browser() # DONE
   neededFiles <- makeAbsolute(neededFiles, destinationPath)
 
   filesToChecksum <- if (is.null(archive) || isTRUE(is.na(archive))) {
     NULL
   } else {
-    # basename2(archive)
     archive
   }
 
@@ -528,19 +524,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                   # on.exit because it is done here
   }
 
-  failStop <- if (is.null(targetFilePath)) {
-    TRUE
+  failStop <- FALSE
+  if (is.null(targetFilePath)) {
+    failStop <- TRUE
   } else if (!isTRUE(file.exists(targetFilePath))) {
-    TRUE
-  } else {
-    FALSE
+    failStop <- TRUE
   }
   if (isTRUE(failStop))
     stop("targetFile appears to be misspecified at: ", targetFilePath, ". ",
          "Possibly, it does not exist in the specified archive, ",
          "or the file doesn't exist in destinationPath")
 
-  # abab <- archive; if (!identical(basename2(abab), abab)) browser()
   archiveInChecksums <- checkSums$actualFile %in% basename2(archive) # basename2 is needed in checksums
   if (any(archiveInChecksums))
     checkSums[which(archiveInChecksums), result := "ArchiveOK"]
