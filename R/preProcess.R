@@ -1470,7 +1470,6 @@ updateArchiveWithGuess <- function(archive, guess) {
   archive
 }
 
-
 setupArchive <- function(archive, destinationPath) {
   if (!is.null(archive)) {
     if (!is.na(archive)) {
