@@ -333,7 +333,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (!is.null(reproducible.inputPaths)) {
     # may already have been changed above
     if (!file.exists(targetFilePath)) { # skip if it already existed locally
-      if (!exists("destinationPathUser", inherits = FALSE))
+      if (is.null(destinationPathUser))
         destinationPathUser <- destinationPath
       on.exit({
         destinationPath <- destinationPathUser
@@ -473,7 +473,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # link back to destinationPath if options("reproducible.inputPaths") was used.
   #  destinationPath had been overwritten to be options("reproducible.inputPaths")
   if (!is.null(reproducible.inputPaths)) {
-    if (exists("destinationPathUser", inherits = FALSE)) { # retrieved file locally
+    if (!is.null(destinationPathUser)) { # retrieved file locally
       foundInInputPaths <- grepl(normPath(destinationPath), normPath(filesExtr))
       # Make sure they are all in options("reproducible.inputPaths"), accounting for
       #   the fact that some may have been in sub-folders -- i.e., don't deal with these
