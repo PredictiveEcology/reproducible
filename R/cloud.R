@@ -137,11 +137,11 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
   dtFile <- grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE)
   if (!useDBI()) {
     dtFileInCache <- CacheDBFileSingle(cachePath, cacheId = outputHash)
-    linkOrCopy(dtFile, dtFileInCache)
+    hardLinkOrCopy(dtFile, dtFileInCache)
   }
   objFiles <- grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE, invert = TRUE)
   filenamesInCache <- file.path(CacheStorageDir(), basename2(objFiles))
-  linkOrCopy(objFiles, to = filenamesInCache, symlink = FALSE)
+  hardLinkOrCopy(objFiles, to = filenamesInCache)
 
   dt <- loadFile(dtFile, format = fileExt(dtFile))
 

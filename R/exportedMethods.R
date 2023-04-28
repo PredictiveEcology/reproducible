@@ -664,7 +664,10 @@ unmakeMemoisable.default <- function(x) {
         obj <- terra::wrap(obj)
       }
     } else {
-      obj <- wrapSpatVector(obj)
+      if (missing(cachePath)) # not in Cache call
+        obj <- terra::wrap(obj)
+      else
+        obj <- wrapSpatVector(obj)
     }
     setattr(obj, ".Cache", attrs)
 
