@@ -508,7 +508,6 @@ extractFromArchive <- function(archive,
           neededFilesRel <- makeRelative(neededFiles[!isOK], destinationPath)
           filesToExtractNow <- intersect(filesInArchive, neededFilesRel)
           extractingTheseFiles <- paste(filesToExtractNow, collapse = "\n")
-          browser()
           # extractingTheseFiles <- paste(basename2(filesInArchive[basename2(filesInArchive) %in%
           #                                                         neededFiles]), collapse = ", ")
           # if (!any(nzchar(filesToExtractNow)))
@@ -1105,7 +1104,8 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     checkSumsDT <- data.table(checkSums)
     if (NCOL(checkSumsDT) == 0)
       checkSumsDT <- Copy(.emptyChecksumsResult)
-    filesDT <- data.table(files = basename2(files))
+    dirs <- basename2(unique(dirname(files)))
+    filesDT <- data.table(files = basename2(unique(c(files, dirs))))
     isOKDT <- checkSumsDT[filesDT, on = c(expectedFile = "files")]
     isOKDT2 <- checkSumsDT[filesDT, on = c(actualFile = "files")]
     # fill in any OKs from "actualFile" intot he isOKDT

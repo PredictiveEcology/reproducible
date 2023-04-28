@@ -145,7 +145,7 @@ setMethod(
       files
     }
     filesToCheck <- filesToCheck[file.exists(filesToCheck)] # remove non existing files
-    filesToCheck <- filesToCheck[!dir.exists(filesToCheck)] # remove directories
+    # filesToCheck <- filesToCheck[!dir.exists(filesToCheck)] # remove directories # need to keep directories b/c e.g., gdb files need directories
 
     if (!is.null(txt$algorithm)) {
       if (!write) {
@@ -173,17 +173,24 @@ setMethod(
                               "    CHECKSUMS.txt file does not have filesizes", sep = "", verbose = verbose)
     }
     checksums <- rep(list(rep("", length(filesToCheck))), 2)
+    dirs <- dir.exists(filesToCheck)
+    filesToCheckWODirs <- filesToCheck[!dirs]
     if (quickCheck | write) {
-      checksums[[2]] <- do.call(.digest,
-                                args = append(list(file = filesToCheck, quickCheck = TRUE),
+      checksums[[2]][!dirs] <- do.call(.digest,
+                                args = append(list(file = filesToCheckWODirs, quickCheck = TRUE),
                                               dots))
     }
 
     if (!quickCheck | write) {
-      checksums[[1]] <- do.call(.digest,
-                                args = append(list(file = filesToCheck, quickCheck = FALSE),
+      checksums[[1]][!dirs] <- do.call(.digest,
+                                args = append(list(file = filesToCheckWODirs, quickCheck = FALSE),
                                               dots))
     }
+    if (any(dirs)) {
+      checksums[[1]][dirs] <- "dir"
+      checksums[[2]][dirs] <- 0
+    }
+
     messagePrepInputs("Finished checking local files.", sep = "", verbose = verbose)
 
     out <- if (length(filesToCheck)) {

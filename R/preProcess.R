@@ -272,7 +272,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     neededFiles <- unique(c(neededFiles, filesInsideArchive))
   } else {
     outFromSimilar <- .checkForSimilar(neededFiles, alsoExtract, archive, targetFile,
-                                       destinationPath = destinationPath, checkSums, url)
+                                       destinationPath = destinationPath, checkSums,
+                                       checkSumFilePath = checkSumFilePath, url)
     list2env(outFromSimilar, environment()) # neededFiles, checkSums
     # neededFiles <- outFromSimilar$neededFiles
     # checkSums <- outFromSimilar$checkSums
@@ -405,6 +406,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   outFromSimilar <- .checkForSimilar(neededFiles = neededFiles, alsoExtract = alsoExtract,
                                      archive = archive, targetFile = targetFile,
                                      destinationPath = destinationPath, checkSums = checkSums,
+                                     checkSumFilePath = checkSumFilePath,
                                      url =  url)
   list2env(outFromSimilar, environment()) # neededFiles, checkSums
   # neededFiles <- outFromSimilar$neededFiles
@@ -504,6 +506,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                        neededFiles = nestedTargetFile,
                                        destinationPath = destinationPath,
                                        checkSums = checkSums,
+                                       checkSumFilePath = checkSumFilePath,
                                        targetFile = targetFile)
     neededFiles <- outFromSimilar$neededFiles
     checkSums <- outFromSimilar$checkSums
@@ -763,7 +766,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 #' @keywords internal
 .checkForSimilar <- function(neededFiles, alsoExtract, archive, targetFile,
-                             destinationPath, checkSums, url, verbose = getOption("reproducible.verbose", 1)) {
+                             destinationPath, checkSums, checkSumFilePath,
+                             url, verbose = getOption("reproducible.verbose", 1)) {
   lookForSimilar <- if (is.null(alsoExtract) || length(alsoExtract) == 0) {
     "all"
   } else {
@@ -803,7 +807,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     neededFiles <- makeAbsolute(neededFiles, destinationPath)
     if (!is.null(neededFiles) && rerunChecksums) {
       checkSums <- .checkSumsUpdate(destinationPath = destinationPath, newFilesToCheck = neededFiles,
-                                    checkSums = checkSums, verbose = verbose)
+                                    checkSums = checkSums,
+                                    checkSumFilePath = checkSumFilePath, verbose = verbose)
     }
   }
   list(neededFiles = neededFiles, checkSums = checkSums)
@@ -1064,7 +1069,6 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
     if (!is.na(archive)) {
       if (any(file.exists(archive))) {
 
-        browser()
         filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
                                              neededFiles = neededFiles,
                                              checkSums = checkSums, needChecksums = needChecksums,
@@ -1339,20 +1343,21 @@ makeRelative <- function(files, absoluteBase) {
 #' This confirms that the `files` which may be absolute actually
 #   exist when compared makeRelative(knownRelativeFiles, absolutePrefix)
 checkRelative <- function(files, absolutePrefix, knownRelativeFiles) {
-  browser()
   neededFilesRel <- makeRelative(files, absolutePrefix)
   relativeNamesCorrect <- neededFilesRel %in% knownRelativeFiles
 
   if (!is.null(knownRelativeFiles)) {
     if (!all(relativeNamesCorrect)) {# means user has asked for incorrect relative path
+
       #  must include directory names
-      knownRelativeFiles <- c(knownRelativeFiles, unique(dirname(knownRelativeFiles)))
+      knownRelativeFiles <- unique(c(knownRelativeFiles, dirname(knownRelativeFiles)))
       knownRelativeFilesBase <- basename2(knownRelativeFiles)
       basenamesCorrect <- basename2(neededFilesRel) %in% knownRelativeFilesBase
-      needUpdateRelNames <- basenamesCorrect & !relativeNamesCorrect
+      needUpdateRelNames <- basenamesCorrect & !relativeNamesCorrect # filename is correct, but not nesting structure
       if (any(needUpdateRelNames)) { # means basenames
-        needUpdateFromArchive <- knownRelativeFilesBase %in% basename2(neededFilesRel)
-        files[needUpdateRelNames] <- knownRelativeFiles[needUpdateFromArchive]
+        # needUpdateFromArchive <- !knownRelativeFilesBase %in% basename2(neededFilesRel)
+        needUpdateFromArchive <- match(basename2(neededFilesRel)[needUpdateRelNames], knownRelativeFilesBase)
+        files[needUpdateRelNames] <- makeAbsolute(knownRelativeFiles[needUpdateFromArchive], absolutePrefix)
         files <- unique(files)
         messagePrepInputs("User supplied alsoExtract that doesn't correctly specify the ",
                           "files in the archive; \n",
