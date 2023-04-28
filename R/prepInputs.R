@@ -505,8 +505,10 @@ extractFromArchive <- function(archive,
           if (sum(possibleFolders)) {
             filesInArchive <- setdiff(filesInArchive, possibleFolders)
           }
-          filesToExtractNow <- neededFiles[!isOK]
+          neededFilesRel <- makeRelative(neededFiles[!isOK], destinationPath)
+          filesToExtractNow <- intersect(filesInArchive, neededFilesRel)
           extractingTheseFiles <- paste(filesToExtractNow, collapse = "\n")
+          browser()
           # extractingTheseFiles <- paste(basename2(filesInArchive[basename2(filesInArchive) %in%
           #                                                         neededFiles]), collapse = ", ")
           # if (!any(nzchar(filesToExtractNow)))
@@ -517,8 +519,6 @@ extractFromArchive <- function(archive,
           filesExtracted <- c(filesExtracted,
                               .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
                                                     absolutePrefix = destinationPath,
-                                                    # files = filesInArchive[basename2(filesInArchive) %in%
-                                                    #                          neededFiles],
                                                     files = filesToExtractNow,
                                                     .tempPath = .tempPath))
         } else {

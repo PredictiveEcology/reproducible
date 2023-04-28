@@ -193,43 +193,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   needChecksums <- 0
 
-  filesToCheck <- c(targetFilePath, alsoExtract)
-  if (!is.null(archive)) {
-    if (!is.na(archive)) {
-      tmpArchive <- archive
-      # abab <- archive; if (!identical(basename2(abab), abab)) browser()
-      archive <- makeAbsolute(archive, destinationPath)
-      # archive <- file.path(destinationPath, basename2(archive))
-      filesToCheck <- unique(c(filesToCheck, archive))
-      archive <- moveAttributes(tmpArchive, archive)
-    }
-  }
+  # filesToCheck <- c(targetFilePath, alsoExtract)
+  archive <- setupArchive(archive, destinationPath)
+  filesToCheck <- unique(c(archive, targetFilePath, alsoExtract))
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
   #   want if targetFile, archive, alsoExtract not specified
-  reproducible.inputPaths <- getOption("reproducible.inputPaths", NULL)
-  if (!is.null(reproducible.inputPaths))
-    reproducible.inputPaths <- checkPath(reproducible.inputPaths, create = TRUE)
-  if (!is.null(reproducible.inputPaths))
-    reproducible.inputPaths <- path.expand(reproducible.inputPaths)
-
-  for (dp in unique(c(destinationPath, reproducible.inputPaths))) {
-    checkSumsTmp1 <- try(Checksums(path = dp, write = FALSE, checksumFile = checkSumFilePath,
-                               files = filesToCheck,
-                               verbose = verbose), silent = TRUE)
-    checkSums <- NULL
-    if (!is(checkSumsTmp1, "try-error")) {
-      checkSums <- checkSumsTmp1
-      if (!all(is.na(checkSums$result))) { # found something
-        if (identical(dp, reproducible.inputPaths)) {
-          destinationPathUser <- destinationPath
-          destinationPath <- dp
-          on.exit({destinationPath <- destinationPathUser}, add = TRUE)
-        }
-        break
-      }
-    }
-  }
+  inputPaths <- dealWithInputPaths(destinationPath, checkSumFilePath, filesToCheck, verbose)
+  list2env(inputPaths, environment()) # reproducible.inputPaths, destinationPathUser, destinationPath, checkSums
 
   if (is(checkSums, "try-error")) {
     needChecksums <- 1
@@ -238,36 +209,37 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # browser(expr = exists("._preProcess_5"))
 
   # This will populate a NULL archive if archive is local or
-  if (is.null(archive)) {
-    if (!is.null(url)) {
-      allOK <- .similarFilesInCheckSums(targetFile, checkSums)
-
-      if (!allOK) { # skip identification of archive if we have all files with same basename as targetFile
-        # BUT if we don't have all files with identical root name (basename sans ext), then assess for
-        #   an archive, either remotely, in the case of google or from the basename of url
-        fileGuess <- .guessAtFile(url = url, archive = archive,
-                                  targetFile = targetFile, destinationPath = destinationPath,
-                                  verbose = verbose, team_drive = teamDrive)
-        archive <- .isArchive(fileGuess)
-        # The fileGuess MAY have a fileSize attribute, which can be attached to "archive"
-        archive <- moveAttributes(fileGuess, receiving = archive)
-        sourceAttributes <- attributes(fileGuess)
-        if (length(sourceAttributes) > 0 && !is.null(archive)) {
-          for (i in length(sourceAttributes))
-            setattr(archive, names(sourceAttributes)[i], sourceAttributes[[i]])
-        }
-
-        checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
-                                      newFilesToCheck = archive,
-                                      checkSums = checkSums,
-                                      verbose = verbose)
-      }
-    }
-  }
+  archiveOut <- dealWithArchive(archive, url, targetFile, checkSums, destinationPath, teamDrive, verbose)
+  list2env(archiveOut, envir = environment()) # checkSums, archive, fileGuess
+  #   if (is.null(archive)) {
+  #     if (!is.null(url)) {
+  #       allOK <- .similarFilesInCheckSums(targetFile, checkSums)
+  #
+  #       if (!allOK) { # skip identification of archive if we have all files with same basename as targetFile
+  #         # BUT if we don't have all files with identical root name (basename sans ext), then assess for
+  #         #   an archive, either remotely, in the case of google or from the basename of url
+  #         fileGuess <- .guessAtFile(url = url, archive = archive,
+  #                                   targetFile = targetFile, destinationPath = destinationPath,
+  #                                   verbose = verbose, team_drive = teamDrive)
+  #         archive <- .isArchive(fileGuess)
+  #         # The fileGuess MAY have a fileSize attribute, which can be attached to "archive"
+  #         archive <- moveAttributes(fileGuess, receiving = archive)
+  #         sourceAttributes <- attributes(fileGuess)
+  #         if (length(sourceAttributes) > 0 && !is.null(archive)) {
+  #           for (i in length(sourceAttributes))
+  #             setattr(archive, names(sourceAttributes)[i], sourceAttributes[[i]])
+  #         }
+  #
+  #         checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
+  #                                       newFilesToCheck = archive,
+  #                                       checkSums = checkSums,
+  #                                       verbose = verbose)
+  #       }
+  #     }
+  #   }
+  # }
   # NOW -- archive will exist if it didn't before
   # Double check that targetFile and alsoExtract are correct paths, given that in archive, they may be in sub-folders
-
-
   needEmptyChecksums <- FALSE
   if (is.logical(purge)) purge <- as.numeric(purge)
   if (purge == 1) {
@@ -301,8 +273,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   } else {
     outFromSimilar <- .checkForSimilar(neededFiles, alsoExtract, archive, targetFile,
                                        destinationPath = destinationPath, checkSums, url)
-    neededFiles <- outFromSimilar$neededFiles
-    checkSums <- outFromSimilar$checkSums
+    list2env(outFromSimilar, environment()) # neededFiles, checkSums
+    # neededFiles <- outFromSimilar$neededFiles
+    # checkSums <- outFromSimilar$checkSums
   }
   # abab <- archive; if (!identical(basename2(abab), abab)) browser() # DONE
   neededFiles <- makeAbsolute(neededFiles, destinationPath)
@@ -318,7 +291,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (isTRUE(!all(isOK))) {
     results <- .tryExtractFromArchive(archive = if (isTRUE(is.na(archive))) NULL else archive,
                                       neededFiles = neededFiles,
-                                      alsoExtract = alsoExtract, destinationPath = dp,
+                                      alsoExtract = alsoExtract, destinationPath = destinationPath,
                                       checkSums = checkSums, needChecksums = needChecksums,
                                       checkSumFilePath = checkSumFilePath,
                                       filesToChecksum = filesToChecksum,
@@ -490,7 +463,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     filesExtr <- c(filesToChecksum, neededFiles)
     filesExtr <- setdiff(filesExtr, .isArchive(filesExtr))
   }
-  if (exists("aaaa")) browser()
 
   # abab <- filesExtr; if (!identical(basename2(abab), abab)) browser()
   # abab <- filesToChecksum; if (!identical(basename2(abab), abab)) browser()
@@ -1092,6 +1064,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
     if (!is.na(archive)) {
       if (any(file.exists(archive))) {
 
+        browser()
         filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
                                              neededFiles = neededFiles,
                                              checkSums = checkSums, needChecksums = needChecksums,
@@ -1366,21 +1339,27 @@ makeRelative <- function(files, absoluteBase) {
 #' This confirms that the `files` which may be absolute actually
 #   exist when compared makeRelative(knownRelativeFiles, absolutePrefix)
 checkRelative <- function(files, absolutePrefix, knownRelativeFiles) {
+  browser()
   neededFilesRel <- makeRelative(files, absolutePrefix)
   relativeNamesCorrect <- neededFilesRel %in% knownRelativeFiles
-  if (!all(relativeNamesCorrect)) {# means user has asked for incorrect relative path
-    basenamesCorrect <- basename2(neededFilesRel) %in% basename2(knownRelativeFiles)
-    needUpdateRelNames <- basenamesCorrect & !relativeNamesCorrect
-    if (any(needUpdateRelNames)) { # means basenames
-      needUpdateFromArchive <- basename2(knownRelativeFiles) %in% basename2(neededFilesRel)
-      files[needUpdateRelNames] <-
-        makeAbsolute(knownRelativeFiles[needUpdateFromArchive], absolutePrefix)
-      files <- unique(files)
-      messagePrepInputs("User supplied alsoExtract that doesn't correctly specify the ",
-                        "files in the archive; \n",
-                        "using items in archive with same basenames. Renaming to these: \n",
-                        paste(files[needUpdateRelNames], collapse = "\n")
-      )
+
+  if (!is.null(knownRelativeFiles)) {
+    if (!all(relativeNamesCorrect)) {# means user has asked for incorrect relative path
+      #  must include directory names
+      knownRelativeFiles <- c(knownRelativeFiles, unique(dirname(knownRelativeFiles)))
+      knownRelativeFilesBase <- basename2(knownRelativeFiles)
+      basenamesCorrect <- basename2(neededFilesRel) %in% knownRelativeFilesBase
+      needUpdateRelNames <- basenamesCorrect & !relativeNamesCorrect
+      if (any(needUpdateRelNames)) { # means basenames
+        needUpdateFromArchive <- knownRelativeFilesBase %in% basename2(neededFilesRel)
+        files[needUpdateRelNames] <- knownRelativeFiles[needUpdateFromArchive]
+        files <- unique(files)
+        messagePrepInputs("User supplied alsoExtract that doesn't correctly specify the ",
+                          "files in the archive; \n",
+                          "using items in archive with same basenames. Renaming to these: \n",
+                          paste(files[needUpdateRelNames], collapse = "\n")
+        )
+      }
     }
   }
   files
@@ -1484,4 +1463,84 @@ updateArchiveWithGuess <- function(archive, guess) {
       archive <- moveAttributes(guess, archive)
   }
   archive
+}
+
+
+setupArchive <- function(archive, destinationPath) {
+  if (!is.null(archive)) {
+    if (!is.na(archive)) {
+      tmpArchive <- archive
+      # abab <- archive; if (!identical(basename2(abab), abab)) browser()
+      archive <- makeAbsolute(archive, destinationPath)
+      # archive <- file.path(destinationPath, basename2(archive))
+      # filesToCheck <- unique(c(filesToCheck, archive))
+      archive <- moveAttributes(tmpArchive, archive)
+    }
+  }
+  archive
+}
+
+dealWithInputPaths <- function(destinationPath, checkSumFilePath, filesToCheck, verbose) {
+  reproducible.inputPaths <- getOption("reproducible.inputPaths", NULL)
+  if (!is.null(reproducible.inputPaths))
+    reproducible.inputPaths <- checkPath(reproducible.inputPaths, create = TRUE)
+  if (!is.null(reproducible.inputPaths))
+    reproducible.inputPaths <- path.expand(reproducible.inputPaths)
+
+  destinationPathUser <- NULL
+  for (dp in unique(c(destinationPath, reproducible.inputPaths))) {
+    checkSumsTmp1 <- try(Checksums(path = dp, write = FALSE, checksumFile = checkSumFilePath,
+                                   files = filesToCheck,
+                                   verbose = verbose), silent = TRUE)
+    checkSums <- NULL
+    if (!is(checkSumsTmp1, "try-error")) {
+      checkSums <- checkSumsTmp1
+      if (!all(is.na(checkSums$result))) { # found something
+        if (identical(dp, reproducible.inputPaths)) {
+          destinationPathUser <- destinationPath
+          destinationPath <- dp
+          on.exit({destinationPath <- destinationPathUser}, add = TRUE)
+        }
+        break
+      }
+    }
+  }
+  list(reproducible.inputPaths = reproducible.inputPaths,
+       destinationPathUser  = destinationPathUser,
+       destinationPath = destinationPath,
+       checkSums = checkSums)
+}
+
+
+dealWithArchive <- function(archive, url, targetFile, checkSums, destinationPath, teamDrive, verbose) {
+  fileGuess <- NULL
+  if (is.null(archive)) {
+    if (!is.null(url)) {
+      allOK <- .similarFilesInCheckSums(targetFile, checkSums)
+
+      if (!allOK) { # skip identification of archive if we have all files with same basename as targetFile
+        # BUT if we don't have all files with identical root name (basename sans ext), then assess for
+        #   an archive, either remotely, in the case of google or from the basename of url
+        fileGuess <- .guessAtFile(url = url, archive = archive,
+                                  targetFile = targetFile, destinationPath = destinationPath,
+                                  verbose = verbose, team_drive = teamDrive)
+        archive <- .isArchive(fileGuess)
+        # The fileGuess MAY have a fileSize attribute, which can be attached to "archive"
+        archive <- moveAttributes(fileGuess, receiving = archive)
+        sourceAttributes <- attributes(fileGuess)
+        if (length(sourceAttributes) > 0 && !is.null(archive)) {
+          for (i in length(sourceAttributes))
+            setattr(archive, names(sourceAttributes)[i], sourceAttributes[[i]])
+        }
+
+        checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
+                                      newFilesToCheck = archive,
+                                      checkSums = checkSums,
+                                      verbose = verbose)
+      }
+    }
+  }
+  list(checkSums = checkSums,
+       archive = archive,
+       fileGuess = fileGuess)
 }
