@@ -2056,12 +2056,7 @@ evalTheFun <- function(FUNcaptured, isCapturedFUN, isSquiggly, matchedCall, envi
   },
   warning = function(w) {
     asch <- format(w$call[[1]])
-    # isEvalFUNCapCall <- all(vapply(c("out", "FUNcaptured"),
-    #                                function(p) identical(startsWith(asch, prefix = p)),
-    #                                FUN.VALUE = logical(1)))
-    # if (isTRUE(isEvalFUNCapCall)) {
     warning("In ", format(matchedCall), ": ", w$message, call. = FALSE)
-    browser()
     invokeRestart("muffleWarning")
     #    }
   })
