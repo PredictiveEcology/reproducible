@@ -193,7 +193,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   needChecksums <- 0
 
-  # filesToCheck <- c(targetFilePath, alsoExtract)
   archive <- setupArchive(archive, destinationPath)
   filesToCheck <- unique(c(archive, targetFilePath, alsoExtract))
 
@@ -206,38 +205,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     needChecksums <- 1
     checkSums <- .emptyChecksumsResult
   }
-  # browser(expr = exists("._preProcess_5"))
 
   # This will populate a NULL archive if archive is local or
   archiveOut <- dealWithArchive(archive, url, targetFile, checkSums, destinationPath, teamDrive, verbose)
   list2env(archiveOut, envir = environment()) # checkSums, archive, fileGuess
-  #   if (is.null(archive)) {
-  #     if (!is.null(url)) {
-  #       allOK <- .similarFilesInCheckSums(targetFile, checkSums)
-  #
-  #       if (!allOK) { # skip identification of archive if we have all files with same basename as targetFile
-  #         # BUT if we don't have all files with identical root name (basename sans ext), then assess for
-  #         #   an archive, either remotely, in the case of google or from the basename of url
-  #         fileGuess <- .guessAtFile(url = url, archive = archive,
-  #                                   targetFile = targetFile, destinationPath = destinationPath,
-  #                                   verbose = verbose, team_drive = teamDrive)
-  #         archive <- .isArchive(fileGuess)
-  #         # The fileGuess MAY have a fileSize attribute, which can be attached to "archive"
-  #         archive <- moveAttributes(fileGuess, receiving = archive)
-  #         sourceAttributes <- attributes(fileGuess)
-  #         if (length(sourceAttributes) > 0 && !is.null(archive)) {
-  #           for (i in length(sourceAttributes))
-  #             setattr(archive, names(sourceAttributes)[i], sourceAttributes[[i]])
-  #         }
-  #
-  #         checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
-  #                                       newFilesToCheck = archive,
-  #                                       checkSums = checkSums,
-  #                                       verbose = verbose)
-  #       }
-  #     }
-  #   }
-  # }
+
   # NOW -- archive will exist if it didn't before
   # Double check that targetFile and alsoExtract are correct paths, given that in archive, they may be in sub-folders
   needEmptyChecksums <- FALSE
@@ -298,14 +270,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                       filesToChecksum = filesToChecksum,
                                       targetFilePath = targetFilePath, quick = quick,
                                       verbose = verbose, .tempPath = .tempPath)
-    checkSums <- results$checkSums
-    needChecksums <- results$needChecksums
-    neededFiles <- results$neededFiles
-    targetFilePath <- results$targetFilePath
-    filesExtr <- results$filesExtr
+    list2env(results, environment()) # neededFiles, checkSums, filesExtr, targetFilePath, filesToChecksum, needChecksums
 
     if (results$needChecksums > 0) {
-      # abab <- results$filesToChecksum; if (!identical(basename2(abab), abab)) browser()
       checkSums <- appendChecksumsTable(
         checkSumFilePath = checkSumFilePath,
         filesToChecksum = unique(results$filesToChecksum),
@@ -323,10 +290,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                     otherPaths = reproducible.inputPaths,
                                     destinationPath, needChecksums = needChecksums, verbose = verbose)
   list2env(localChecks, environment()) # neededFiles, checkSums, needChecksums, successfulDir, successfulCheckSumFilePath
-  # checkSums <- localChecks$checkSums
-  # needChecksums <- localChecks$needChecksums
-  # successfulCheckSumFilePath <- localChecks$successfulCheckSumFilePath
-  # successfulDir <- localChecks$successfulDir
 
   # Change the destinationPath to the reproducible.inputPaths temporarily, so
   #   download happens there. Later it will be linked to the user destinationPath
@@ -361,24 +324,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ###############################################################
   # Download
   ###############################################################
-  downloadFileResult <- downloadFile(
-    archive = if (isTRUE(is.na(archive))) NULL else archive,
-    targetFile = targetFile,
-    neededFiles = neededFiles,
-    destinationPath = destinationPath,
-    quick = quick,
-    checkSums = checkSums,
-    dlFun = dlFunCaptured,
-    url = url,
-    checksumFile = asPath(checkSumFilePath),
-    needChecksums = needChecksums,
-    overwrite = overwrite,
-    purge = purge, # may need to try purging again if no target,
+  downloadFileResult <- downloadFile(archive = if (isTRUE(is.na(archive))) NULL else archive,
+    targetFile = targetFile, neededFiles = neededFiles, destinationPath = destinationPath,
+    quick = quick, checkSums = checkSums, dlFun = dlFunCaptured, url = url,
+    checksumFile = asPath(checkSumFilePath), needChecksums = needChecksums,
+    overwrite = overwrite, purge = purge, # may need to try purging again if no target,
                    #    archive or alsoExtract were known yet
-    verbose = verbose,
-    .tempPath = .tempPath,
-    ...
-  )
+    verbose = verbose, .tempPath = .tempPath, ...)
 
   downloadFileResult <- .fixNoFileExtension(downloadFileResult = downloadFileResult,
                                             targetFile = targetFile, archive = archive,
@@ -392,8 +344,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   neededFiles <- downloadFileResult$neededFiles
   # If the download was of an archive, then it is possible the archive path is wrong
   if (!isTRUE(is.na(archive))) {
-    # abab <- downloadFileResult$downloaded; if (!identical(basename2(abab), abab)) browser() # DONE
-    # abab <- downloadFileResult$archive; if (!identical(basename2(abab), abab)) browser() # DONE
     if (identical(downloadFileResult$downloaded, downloadFileResult$archive))
       archive <- downloadFileResult$downloaded
     # archive specified, alsoExtract is NULL --> now means will extract all
@@ -409,8 +359,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                      checkSumFilePath = checkSumFilePath,
                                      url =  url)
   list2env(outFromSimilar, environment()) # neededFiles, checkSums
-  # neededFiles <- outFromSimilar$neededFiles
-  # checkSums <- outFromSimilar$checkSums
 
   # don't include targetFile in neededFiles -- extractFromArchive deals with it separately
   if (length(neededFiles) > 1) alsoExtract <- setdiff(neededFiles, targetFile)
@@ -420,15 +368,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   filesToChecksum <- if (isTRUE(is.na(archive)) || (is.null(archive))) {
     downloadFileResult$downloaded
   } else {
-    # basename2(archive)
     archive
   }
   on.exit({
     if (needChecksums > 0) {
-      # needChecksums 1 --> write a new checksums.txt file
-      # needChecksums 2 --> append to checksums.txt
-      # abab <- filesToChecksum; if (!identical(basename2(abab), abab)) browser()
-
       appendChecksumsTable(checkSumFilePath = checkSumFilePath,
                            filesToChecksum = basename2(filesToChecksum),
                            destinationPath = destinationPath,
@@ -452,12 +395,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                              quick = quick, verbose = verbose,
                                              .tempPath = .tempPath)
     list2env(filesExtracted, environment()) # neededFiles, checkSums, filesExtr, targetFilePath, filesToChecksum, needChecksums
-    # filesExtr <- filesExtracted$filesExtr
-    # neededFiles <- filesExtracted$neededFiles
-    # targetFilePath <- filesExtracted$targetFilePath
-    # filesToChecksum <- filesExtracted$filesToChecksum
-    # needChecksums <- filesExtracted$needChecksums
-    # checkSums <- filesExtracted$checkSums
   } else {
     if (!is.null(.isArchive(archive)))
       messagePrepInputs("  Skipping extractFromArchive attempt: no files missing", verbose = verbose)
@@ -466,8 +403,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     filesExtr <- setdiff(filesExtr, .isArchive(filesExtr))
   }
 
-  # abab <- filesExtr; if (!identical(basename2(abab), abab)) browser()
-  # abab <- filesToChecksum; if (!identical(basename2(abab), abab)) browser()
   filesExtr <- unique(c(filesExtr, filesToChecksum))
 
   # link back to destinationPath if options("reproducible.inputPaths") was used.
@@ -493,7 +428,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
   # if it was a nested file
   if (any(fileExt(neededFiles) %in% c("zip", "tar", "rar")) && !isTRUE(is.na(archive))) {
-    abab <- neededFiles[fileExt(neededFiles) %in% c("zip", "tar", "rar")]; if (!identical(basename2(abab), abab)) browser()
     nestedArchives <- basename2(neededFiles[fileExt(neededFiles) %in% c("zip", "tar", "rar")])
     nestedArchives <- normPath(file.path(destinationPath, nestedArchives[1]))
     messagePrepInputs("There are still archives in the extracted files.",
@@ -515,13 +449,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     if (length(neededFiles) > 1) alsoExtract <- setdiff(neededFiles, targetFile)
 
     # To this point, we only have the archive in hand -- include this in the list of filesToChecksum
-    abab <- archive; if (!identical(basename2(abab), abab)) browser()
     filesToChecksum <- if (is.null(archive)) downloadFileResult$downloaded else basename2(archive)
     on.exit({
       if (needChecksums > 0) {
         # needChecksums 1 --> write a new checksums.txt file
         # needChecksums 2 --> append to checksums.txt
-        abab <- filesToChecksum; if (!identical(basename2(abab), abab)) browser()
         appendChecksumsTable(checkSumFilePath = checkSumFilePath,
                              filesToChecksum = basename2(filesToChecksum),
                              destinationPath = destinationPath,
@@ -529,24 +461,18 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
       needChecksums <- 0
     }, add = TRUE)
-    extractedFiles <- .tryExtractFromArchive(archive = nestedArchives,
-                                             neededFiles = neededFiles,
-                                             alsoExtract = alsoExtract,
-                                             destinationPath = destinationPath,
-                                             checkSums = checkSums,
-                                             needChecksums = needChecksums,
-                                             checkSumFilePath = checkSumFilePath,
-                                             filesToChecksum = filesToChecksum,
-                                             targetFilePath = targetFilePath,
-                                             quick = quick,
-                                             verbose = verbose,
-                                             .tempPath = .tempPath)
+    extractedFiles <-
+      .tryExtractFromArchive(archive = nestedArchives, neededFiles = neededFiles,
+                             alsoExtract = alsoExtract, destinationPath = destinationPath,
+                             checkSums = checkSums, needChecksums = needChecksums,
+                             checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
+                             targetFilePath = targetFilePath, quick = quick,
+                             verbose = verbose, .tempPath = .tempPath)
     filesExtr <- c(filesExtr, extractedFiles$filesExtr)
   }
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
                                        filesExtracted = filesExtr,
                                        fun, verbose = verbose) # passes through if all known
-  # abab <- targetParams$targetFilePath; if (!identical(basename2(abab), abab)) browser()
   targetFile <- makeRelative(targetParams$targetFilePath, destinationPath)
   targetFilePath <- targetParams$targetFilePath
   funChar <- targetParams$fun
@@ -562,17 +488,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   if (is.null(targetFile) && !is.null(targetFilePath)) {
-    # abab <- targetFilePath; if (!identical(basename2(abab), abab)) browser()
     targetFile <- makeRelative(targetFilePath, destinationPath)
   }
-  # browser(expr = exists("._preProcess_9"))
 
   ## Convert the fun as character string to function class, if not already
   fun <- .extractFunction(funChar)
 
-  # if (!is.null(reproducible.inputPaths)) {
-  #   destinationPath <- destinationPathUser
-  # }
   if (needChecksums > 0) {
     ## needChecksums 1 --> write a new CHECKSUMS.txt file
     ## needChecksums 2 --> append  to CHECKSUMS.txt file
@@ -584,7 +505,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         checkSumFilePath <- file.path(successfulDir, "CHECKSUMS.txt")   #   run Checksums in IP
       }
     }
-    # abab <- filesToChecksum; if (!identical(basename2(abab), abab)) browser()
     checkSums <- appendChecksumsTable(
       checkSumFilePath = checkSumFilePath,
       filesToChecksum = unique(filesToChecksum),
@@ -593,7 +513,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     )
     if (!is.null(reproducible.inputPaths) && needChecksums != 3) {
       checkSumFilePathInputPaths <- file.path(reproducible.inputPaths[[1]], "CHECKSUMS.txt")
-      # abab <- filesToChecksum; if (!identical(basename2(abab), abab)) browser()
       suppressMessages({
         checkSums <- appendChecksumsTable(
           checkSumFilePath = checkSumFilePathInputPaths,
