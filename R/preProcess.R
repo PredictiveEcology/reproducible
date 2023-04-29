@@ -1153,7 +1153,6 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
         invisible(.file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = normPath(downloadFileResult$archive)))
-        browser()
         downloadFileResult$neededFiles <- .listFilesInArchive(downloadFileResult$archive)
         downloadFileResult$downloaded <- downloadFileResult$archive
         downloadFileResult$targetFilePath <- file.path(normPath(destinationPath), downloadFileResult$neededFiles)
