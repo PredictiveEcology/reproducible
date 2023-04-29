@@ -182,12 +182,15 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
                           needGoogleDriveAuth = TRUE,
                           opts = list("reproducible.ask" = FALSE))
 
+
   # googledrive::drive_auth("predictiveecology@gmail.com")
   on.exit({
     testOnExit(testInitOut)
     retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
     options(opts)
   }, add = TRUE)
+  opts <- options("reproducible.cachePath" = tmpdir)
+  on.exit(options(opts), add = TRUE)
   clearCache(x = tmpCache)
   clearCache(x = tmpdir)
   newDir <- retry(quote(googledrive::drive_mkdir(name = basename2(tmpdir), path = "testsForPkgs")))

@@ -606,6 +606,11 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
       "rda"
   }
   filename <- paste(cacheId, csExtension, sep = ".")
+  if (length(filename) > 1) {
+    filename <- nextNumericName(filename)
+    for (i in seq(filename[-1]) + 1)
+      filename[i] <- basename2(nextNumericName(filename[i - 1]))
+  }
   file.path(CacheStorageDir(cachePath), filename)
 }
 
