@@ -704,7 +704,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     } else {
       allOK <- .similarFilesInCheckSums(targetFile, checkSums)
       if (!allOK) {
-        abab <- targetFile; if (!identical(basename2(abab), abab)) browser()
+        # abab <- targetFile; if (!identical(basename2(abab), abab)) browser()
         filePatternToKeep <- gsub(basename2(targetFile),
                                   pattern = fileExt(basename2(targetFile)), replacement = "")
         filesToGet <- grep(allFiles, pattern = filePatternToKeep, value = TRUE)
