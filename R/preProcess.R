@@ -902,11 +902,17 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
   result <- TRUE
   if (!all(toCollapsed %in% fromCollapsed)) {
     if (any(existsLogical)) {
+
+      toDirs1 <- unique(dirname(to))
+
       fromDirs <- dir.exists(from)
-      toDirs <- to[fromDirs]
-      dirDoesntExist <- !dir.exists(toDirs)
-      if (any(dirDoesntExist)) {
-        lapply(toDirs[dirDoesntExist], dir.create, recursive = TRUE)
+      toDirs2 <- to[fromDirs]
+      dirDoesntExist1 <- !dir.exists(toDirs1)
+      dirDoesntExist2 <- !dir.exists(toDirs2)
+
+      if (any(dirDoesntExist1) || any(dirDoesntExist2)) {
+        needCreate <- unique(c(toDirs1[dirDoesntExist1], toDirs2[dirDoesntExist2]))
+        lapply(needCreate, dir.create, recursive = TRUE)
       }
       isDir <- dir.exists(to)
       dups <- duplicated(from)
