@@ -1095,6 +1095,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
                                 destinationPath, verbose = getOption("reproducible.verbose", 1)) {
   # abab <- downloadFileResult$downloaded; if (!identical(basename2(abab), abab)) browser()
 
+  needFinalCopy <- TRUE
   if (!is.null(downloadFileResult$downloaded) &&
       identical(fileExt(downloadFileResult$downloaded), "")) {
     if (!is.null(targetFile) && !identical(fileExt(normPath(basename2(downloadFileResult$neededFiles))), "")) {
@@ -1104,39 +1105,21 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
           " Downloaded file will be considered as the targetFile. If the downloaded file is an archive\n",
           " that contains the targetFile, please specify both archive and targetFile.", verbose = verbose
         )
-        newFileWithExtension <- file.path(normPath(dirname(downloadFileResult$downloaded)),
-                                          downloadFileResult$neededFiles)
-        invisible(.file.move(
-          from = file.path(normPath(downloadFileResult$downloaded)),
-          to = newFileWithExtension))
-        downloadFileResult$downloaded <- newFileWithExtension
+        newFileWithExtension <- downloadFileResult$neededFiles
       } else {
         messagePrepInputs(
           "Downloaded file has no extension: both targetFile and archive are provided.\n",
           " Downloaded file will be considered as the archive.", verbose = verbose
         )
-        abab <- downloadFileResult$archive; if (!identical(basename2(abab), abab)) browser()
-
-        newFileWithExtension <- normPath(file.path(dirname(downloadFileResult$downloaded),
-                                                   basename2(downloadFileResult$archive)))
-        invisible(.file.move(
-          from = file.path(normPath(downloadFileResult$downloaded)),
-          to = newFileWithExtension))
-        downloadFileResult$downloaded <- newFileWithExtension
+        newFileWithExtension <- downloadFileResult$archive
       }
     } else {
       if (!is.null(archive)) {
-        abab <- archive; if (!identical(basename2(abab), abab)) browser()
         messagePrepInputs(
           "Downloaded file has no extension: archive is provided. \n",
           " downloaded file will be considered as the archive.", verbose = verbose)
-        downloadFileResult$neededFiles <- basename2(archive)
-        newFileWithExtension <- file.path(normPath(dirname(downloadFileResult$downloaded)),
-                                           downloadFileResult$neededFiles)
-        invisible(.file.move(
-          from = file.path(normPath(downloadFileResult$downloaded)),
-          to = newFileWithExtension))
-        downloadFileResult$downloaded <- newFileWithExtension
+        downloadFileResult$neededFiles <- archive
+        newFileWithExtension <- downloadFileResult$neededFiles
       } else {
         messagePrepInputs(
           "Downloaded file has no extension: neither archive nor targetFile are provided. \n",
@@ -1148,16 +1131,19 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
                   "If this is incorrect or return error, please supply archive or targetFile", verbose = verbose)
           fileExt <- ".zip"
         }
-        downloadFileResult$archive <- file.path(normPath(destinationPath),
-                                                paste0(downloadFileResult$neededFiles, fileExt))
-        invisible(.file.move(
-          from = file.path(normPath(downloadFileResult$downloaded)),
-          to = normPath(downloadFileResult$archive)))
-        downloadFileResult$neededFiles <- .listFilesInArchive(downloadFileResult$archive)
-        downloadFileResult$downloaded <- downloadFileResult$archive
-        downloadFileResult$targetFilePath <- file.path(normPath(destinationPath), downloadFileResult$neededFiles)
+        newFileWithExtension <- paste0(downloadFileResult$neededFiles, fileExt)
+        hardLinkOrCopy(downloadFileResult$neededFiles, newFileWithExtension, verbose = 0)
+        needFinalCopy <- FALSE
+        downloadFileResult$neededFiles <- makeAbsolute(.listFilesInArchive(newFileWithExtension), destinationPath)
+        downloadFileResult$archive <- newFileWithExtension
+        downloadFileResult$targetFilePath <- file.path(downloadFileResult$neededFiles)
       }
     }
+    if (isTRUE(needFinalCopy))
+      hardLinkOrCopy(verbose = 0,
+                               from = normPath(downloadFileResult$downloaded),
+                               to = normPath(newFileWithExtension))
+    downloadFileResult$downloaded <- newFileWithExtension
   }
   downloadFileResult
 }
