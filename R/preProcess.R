@@ -154,6 +154,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   dots <- list(...)
 
+  browser()
   fun <- .checkFunInDots(fun = fun, dots = dots)
   dots <- .checkDeprecated(dots, verbose = verbose)
 
@@ -320,6 +321,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ###############################################################
   # Download
   ###############################################################
+  browser()
   downloadFileResult <- downloadFile(archive = if (isTRUE(is.na(archive))) NULL else archive,
     targetFile = targetFile, neededFiles = neededFiles, destinationPath = destinationPath,
     quick = quick, checkSums = checkSums, dlFun = dlFunCaptured, url = url,
@@ -631,7 +633,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   #} else {
   #  guessedFile <- NULL
   #}
-  guessedFile
+  normPath(guessedFile)
 }
 
 #' @keywords internal
@@ -1225,7 +1227,7 @@ makeAbsolute <- function(files, absoluteBase) {
     if (any(!areAbs))
       files[!areAbs] <- file.path(absoluteBase, files[!areAbs])
   }
-  files
+  normPath(files)
 }
 
 makeRelative <- function(files, absoluteBase) {
@@ -1318,7 +1320,7 @@ getTargetFilePath <- function(targetFile, archive, fileGuess, verbose,
     if (length(targetFile) > 1)
       stop("targetFile should be only 1 file")
 
-    targetFilePath <- makeAbsolute(targetFile, destinationPath)
+    targetFilePath <- normPath(makeAbsolute(targetFile, destinationPath))
     # if (is.null(alsoExtract)) {
     #   if (file.exists(checkSumFilePath)) {
     #     if (file.size(checkSumFilePath) > 0) {
