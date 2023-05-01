@@ -903,18 +903,21 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
   if (!all(toCollapsed %in% fromCollapsed)) {
     if (any(existsLogical)) {
 
-      toDirs1 <- unique(dirname(to))
+      # short -- only dirs
+      toDirs <- unique(dirname(to))
+      toDirsDontExist <- toDirs[!dir.exists(toDirs)]
 
-      fromDirs <- dir.exists(from)
-      toDirs2 <- to[fromDirs]
-      dirDoesntExist1 <- !dir.exists(toDirs1)
-      dirDoesntExist2 <- !dir.exists(toDirs2)
+      # full length
+      dirDoesntExist2 <- !dir.exists(from) # determine if a dir; not determine if it exists; it will
+      fromDirsDontExistInTo <- unique(dirname(to[dirDoesntExist2]))
 
-      if (any(dirDoesntExist1) || any(dirDoesntExist2)) {
-        needCreate <- unique(c(toDirs1[dirDoesntExist1], toDirs2[dirDoesntExist2]))
-        lapply(needCreate, dir.create, recursive = TRUE)
+      if (length(toDirsDontExist) || length(fromDirsDontExistInTo)) {
+        needCreate <- unique(c(toDirsDontExist, fromDirsDontExistInTo))
+        needCreate <- needCreate[!dir.exists(needCreate)]
+        if (length(needCreate))
+          lapply(needCreate, dir.create, recursive = TRUE)
       }
-      isDir <- dir.exists(to)
+      isDir <- dir.exists(to) # have to redo because it will be joint to and from
       dups <- duplicated(from)
 
       # Try hard link first -- the only type that R deeply recognizes
