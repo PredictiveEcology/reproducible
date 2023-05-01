@@ -1463,7 +1463,8 @@ test_that("options inputPaths", {
                           country = if (useGADM) "LUX" else NULL,
                           level = if (useGADM) 0 else NULL,
                           path = if (useGADM) tmpdir else NULL,
-                          destinationPath = tmpCache)
+                          destinationPath = tmpCache,
+                          getDataFn = getDataFn)
     )
   )
   expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ": ", tmpCache), mess1)) == 1)
