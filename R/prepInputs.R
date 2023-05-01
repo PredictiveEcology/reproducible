@@ -516,7 +516,8 @@ extractFromArchive <- function(archive,
           messagePrepInputs("From:\n", archive[1], "  \nExtracting\n",
                   extractingTheseFiles, verbose = verbose)
           filesExtracted <- c(filesExtracted,
-                              .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
+                              .callArchiveExtractFn(funWArgs$fun,
+                                                    funWArgs$args,
                                                     absolutePrefix = destinationPath,
                                                     files = filesToExtractNow,
                                                     .tempPath = .tempPath))
