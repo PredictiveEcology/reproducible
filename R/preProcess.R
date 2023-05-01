@@ -292,6 +292,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Change the destinationPath to the reproducible.inputPaths temporarily, so
   #   download happens there. Later it will be linked to the user destinationPath
+
   if (!is.null(reproducible.inputPaths)) {
     # may already have been changed above
     if (!file.exists(targetFilePath)) { # skip if it already existed locally
@@ -323,7 +324,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ###############################################################
   # Download
   ###############################################################
-  browser()
   downloadFileResult <- downloadFile(archive = if (isTRUE(is.na(archive))) NULL else archive,
     targetFile = targetFile, neededFiles = neededFiles, destinationPath = destinationPath,
     quick = quick, checkSums = checkSums, dlFun = dlFunCaptured, url = url,

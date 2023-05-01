@@ -518,7 +518,6 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             possibleTargetFile <- setdiff(rownames(fileInfoAfter), rownames(fileInfo))
             possibleTargetFile <- makeAbsolute(possibleTargetFile, destinationPath)
 
-            browser()
             if (length(possibleTargetFile)) {
               destFile <- targetFile <- possibleTargetFile
               needSave <- FALSE

@@ -623,7 +623,7 @@ extractFromArchive <- function(archive,
     }
     if (length(fun) == 0) stop("Can't guess at which function to use to read in the object; please supply 'fun'")
   }
-  if (is.null(targetFilePath)) {
+  if (is.null(targetFilePath) || length(targetFilePath) == 0) {
     secondPartOfMess <- if (any(isShapefile)) {
       c(" Trying ",fun," on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
         " If that is not correct, please specify a different targetFile",
