@@ -11,6 +11,10 @@ Version 2.0.0
 - new functions to assist with transition from `raster` to `terra`: `maxFn`, `minFn`, `rasterRead`
 - `.dealWithClass` and `.dealWithClassOnRecovery` are now exported generics, with several methods here, notably, list, environment, default
 - other miscellaneous changes to deal with `raster` to `terra` transition (e.g. `studyAreaName` can deal with `SpatVector`)
+- `prepInputs` now deals with archives that have sub-folder structure are now dealt with correctly in all examples and tests esp. #181. 
+- `prepInputs` can now deal with `.gdb` files. Though, it is limited to `sf` out of the box, so e.g., Raster layers inside `gdb` files are not supported (yet?). User can pass `fun = NA` to not try to load it, but at least have the `.gdb` file locally on disk.
+- `hardLinkOrCopy` now uses `linkOrCopy(symlink = FALSE)`; more cases dealt with especially nested directory structures that do not exist in the `to`.
+- many GitHub issues closed after transition to using `terra` and `sf`. 
 
 ## Dependency changes
 - no spatial packages are automatically installed any more; to work with `prepInputs` and family, the user will have to install `terra` and `sf` at a minimum.
@@ -24,6 +28,9 @@ Version 2.0.0
 
 ## Defunct and removed
 - removed `assessDataTypeGDAL()`, `clearStubArtifacts()`;
+
+## Non exported function changes
+- `.basename` renamed to `basename2`
 
 
 ## Bugfixes
