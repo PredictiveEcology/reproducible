@@ -908,21 +908,23 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
   if (!all(toCollapsed %in% fromCollapsed)) {
     if (any(existsLogical)) {
 
-      # short -- only dirs
-      toDirs <- unique(dirname(to))
-      toDirsDontExist <- toDirs[!dir.exists(toDirs)]
+      toDirs1 <- unique(dirname(to))
+      dirDoesntExist1 <- !dir.exists(toDirs1)
 
-      # full length
-      dirDoesntExist2 <- !dir.exists(from) # determine if a dir; not determine if it exists; it will
-      fromDirsDontExistInTo <- unique(dirname(to[dirDoesntExist2]))
+      # some directories in from won't look like directories in the prev "to"
+      #  e.g., test\folder1\folder2 --> folder 2 could be a file or a dir, and "dir.exists(to)" won't know which
+      #  because test\folder1 didn't exist
+      # So, identify the dirs in the `from`, and those ones will also be dirs in to
+      fromDirs <- dir.exists(from)
+      toDirs2 <- to[fromDirs]
+      dirDoesntExist2 <- rep(TRUE, length(toDirs2))
 
-      if (length(toDirsDontExist) || length(fromDirsDontExistInTo)) {
-        needCreate <- unique(c(toDirsDontExist, fromDirsDontExistInTo))
-        needCreate <- needCreate[!dir.exists(needCreate)]
-        if (length(needCreate))
-          lapply(needCreate, dir.create, recursive = TRUE)
+      if (any(dirDoesntExist1) || any(dirDoesntExist2)) {
+        needCreate <- unique(c(toDirs1[dirDoesntExist1], toDirs2[dirDoesntExist2]))
+        if (any(is.na(needCreate))) browser()
+        lapply(needCreate, dir.create, recursive = TRUE)
       }
-      isDir <- dir.exists(to) # have to redo because it will be joint to and from
+      isDir <- dir.exists(to)
       dups <- duplicated(from)
 
       # Try hard link first -- the only type that R deeply recognizes
