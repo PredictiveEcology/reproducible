@@ -449,6 +449,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, messSkipDownload,
                            destinationPath, overwrite, needChecksums, .tempPath,
                            verbose = getOption("reproducible.verbose", 1), ...) {
+  noTargetFile <- is.null(targetFile) || length(targetFile) == 0
   # browser(expr = exists("._downloadRemote_1"))
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
@@ -490,7 +491,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             list(...)
           }
           args <- args[!names(args) %in% forms]
-          if (is.null(targetFile)) {
+          if (noTargetFile) {
             fileInfo <- file.info(dir(destinationPath))
           }
 
@@ -512,11 +513,12 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             out <- do.call(dlFun, args = args)
 
           needSave <- !is.null(out)#TRUE
-          if (is.null(targetFile)) {
+          if (noTargetFile) {
             fileInfoAfter <- file.info(dir(destinationPath))
             possibleTargetFile <- setdiff(rownames(fileInfoAfter), rownames(fileInfo))
             possibleTargetFile <- makeAbsolute(possibleTargetFile, destinationPath)
 
+            browser()
             if (length(possibleTargetFile)) {
               destFile <- targetFile <- possibleTargetFile
               needSave <- FALSE
