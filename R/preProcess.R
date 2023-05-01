@@ -1,3 +1,8 @@
+utils::globalVariables(c(
+  "reproducible.inputPaths", "successfulCheckSumFilePath", "successfulDir"
+))
+
+
 #' @param n Number of non-null arguments passed to `preProcess`.
 #' E.g., passing `n = 1` returns combinations with only a single non-NULL parameter.
 #' If `NULL` (default), all parameter combinations are returned.
@@ -1247,8 +1252,18 @@ makeRelative <- function(files, absoluteBase) {
   files
 }
 
+#' An alternative to `basename` and `dirname` when there are sub-folders
+#'
 #' This confirms that the `files` which may be absolute actually
-#   exist when compared makeRelative(knownRelativeFiles, absolutePrefix)
+#'   exist when compared makeRelative(knownRelativeFiles, absolutePrefix).
+#'   This is different than just using `basename` because it will include any
+#'   sub-folder structure within the `knownRelativePaths`
+#' @param files A character vector of files to check to see if they are the same
+#'   as `knownRelativeFiles`, once the `absolutePrefix` is removed
+#' @param absolutePrefix A directory to "remove" from `files` to compare
+#'   to `knownRelativeFiles`
+#' @param knownRelativeFiles A character vector of relative filenames, that could
+#'   have sub-folder structure.
 checkRelative <- function(files, absolutePrefix, knownRelativeFiles) {
   neededFilesRel <- makeRelative(files, absolutePrefix)
   relativeNamesCorrect <- neededFilesRel %in% knownRelativeFiles

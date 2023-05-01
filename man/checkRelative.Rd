@@ -2,10 +2,23 @@
 % Please edit documentation in R/preProcess.R
 \name{checkRelative}
 \alias{checkRelative}
-\title{This confirms that the \code{files} which may be absolute actually}
+\title{An alternative to \code{basename} and \code{dirname} when there are sub-folders}
 \usage{
 checkRelative(files, absolutePrefix, knownRelativeFiles)
 }
+\arguments{
+\item{files}{A character vector of files to check to see if they are the same
+as \code{knownRelativeFiles}, once the \code{absolutePrefix} is removed}
+
+\item{absolutePrefix}{A directory to "remove" from \code{files} to compare
+to \code{knownRelativeFiles}}
+
+\item{knownRelativeFiles}{A character vector of relative filenames, that could
+have sub-folder structure.}
+}
 \description{
 This confirms that the \code{files} which may be absolute actually
+exist when compared makeRelative(knownRelativeFiles, absolutePrefix).
+This is different than just using \code{basename} because it will include any
+sub-folder structure within the \code{knownRelativePaths}
 }
