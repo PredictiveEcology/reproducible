@@ -931,7 +931,6 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       result <-  captureWarningsToAttr(
         file.link(from[!dups & !isDir], to[!dups & !isDir])
       )
-      if (any(!result)) browser()
       warns <- attr(result, "warning")
       attr(result, "warning") <- NULL
 
