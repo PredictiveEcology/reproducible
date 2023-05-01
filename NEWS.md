@@ -3,28 +3,31 @@ Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 Version 2.0.0
 =============
 
-## Breaking changes
-- removed `assessDataTypeGDAL()`, `clearStubArtifacts()`, `maskInputs()`, `writeOutputs()`;
-- cached objects created using `raster` and `sp` will not be retrieved due to the use of `terra` and `sf` throughout - users may wish to prune stale cache entries;
-- changes to caching of environments requires downstream packages to e.g., implement custom `Copy` methods (see #298).
-
 ## Enhancements
 - new optional backend for `Cache` via `options(reproducible.useDBI = FALSE)` is single data files with the same `basename` as the cached object, i.e., with the same `cacheId` in the file name. This is a replacement for `RSQLite` and will become the default in the next release. Helpers to transition will be supplied at that time. This approach makes cloud caching easier as all metadata are available in small binary files for each cached object. 
 - moved `raster` and `sp` to `Suggests`; no more internal functions use these. User can still work with `Raster` class objects as before.
 - `preProcess` can now handle google docs files, if `type = ...` is passed.
-- `postProcess` now uses `terra` and `sf` internally by default (with #253) throughout the family of `*Inputs` and `*To` functions. The old behaviour, which is no longer supported, can be approximated by setting the `option(reproducible.useTerra = FALSE)`
+- `postProcess` now uses `terra` and `sf` internally by default (with #253) throughout the family of `postProcess` functions. The previous `*Input` and `*Output` functions now redirect to the new `*To*` functions. These are faster, more stable, and cover vastly more cases than the previous `*Inputs` family. The old behaviour, which is no longer maintained, should be functional by setting `option(reproducible.useTerra = FALSE)` and having all necessary packages (e.g., `raster` and `sp`) installed (noting that these will not be installed any more by default with `install packages`.
 - new functions to assist with transition from `raster` to `terra`: `maxFn`, `minFn`, `rasterRead`
 - `.dealWithClass` and `.dealWithClassOnRecovery` are now exported generics, with several methods here, notably, list, environment, default
 - other miscellaneous changes to deal with `raster` to `terra` transition (e.g. `studyAreaName` can deal with `SpatVector`)
+
+## Potentially breaking changes
+- changes to caching of environment-like objects may require downstream packages to implement custom `Copy` methods (see #298), depending on how they were implemented. Most should be fine.
 
 ## Dependency changes
 - no spatial packages are automatically installed any more; to work with `prepInputs` and family, the user will have to install `terra` and `sf` at a minimum.
 - `terra`, `sf` are in `Suggests`
 - removed entirely: `fasterize`, `fpCompare`, `magrittr`
 - moved to `Suggests`: `raster`, `sp`, `rlang`
+- A normal (minimal) install of `reproducible` no longer installs `DBI`, nor does it use `RSQLite`. All cache repositories database files will be in binary individual files in the `cacheOutputs` file. If a user has `DBI` and a `SQLite` engine, then the previous behaviour will be used. 
 
-## Defunct
+## Defunct 
 - `reproducible.useNewDigestAlgorithm` is not longer an option as the old algorithms do not work reliably.
+
+## Defunct and removed
+- removed `assessDataTypeGDAL()`, `clearStubArtifacts()`;
+
 
 ## Bugfixes
 - `Cache` was incorrectly dealing with `environment` and `environment-like` objects. Since some objects, e.g., `Spat*` objects in `terra`, must be wrapped prior to saving, environments must be scanned for these classes of objects prior to saving. This previously only occurred for `list` objects;
