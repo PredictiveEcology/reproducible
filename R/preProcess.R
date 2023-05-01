@@ -154,14 +154,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   dots <- list(...)
 
-  browser()
   fun <- .checkFunInDots(fun = fun, dots = dots)
   dots <- .checkDeprecated(dots, verbose = verbose)
 
   teamDrive <- getTeamDrive(dots)
 
   # remove trailing slash -- causes unzip fail if it is there
-  destinationPath <- gsub("\\\\$|/$", "", destinationPath)
+  destinationPath <- normPath(destinationPath)
   checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
 
   if (!is.null(archive))
@@ -224,8 +223,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checkSums <- .purge(checkSums = checkSums, purge = purge)
     needChecksums <- 2
   }
-
-  # abab <- alsoExtract; if (!identical(basename2(abab), abab)) browser()
 
   neededFiles <- c(targetFile, makeAbsolute(alsoExtract, destinationPath)) # if (!is.null(alsoExtract)) basename2(alsoExtract))
   if (is.null(neededFiles)) neededFiles <- makeAbsolute(archive)
@@ -321,7 +318,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ###############################################################
   # Download
   ###############################################################
-  browser()
   downloadFileResult <- downloadFile(archive = if (isTRUE(is.na(archive))) NULL else archive,
     targetFile = targetFile, neededFiles = neededFiles, destinationPath = destinationPath,
     quick = quick, checkSums = checkSums, dlFun = dlFunCaptured, url = url,
@@ -906,7 +902,8 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
   result <- TRUE
   if (!all(toCollapsed %in% fromCollapsed)) {
     if (any(existsLogical)) {
-      toDirs <- unique(dirname(to))
+      fromDirs <- dir.exists(from)
+      toDirs <- to[fromDirs]
       dirDoesntExist <- !dir.exists(toDirs)
       if (any(dirDoesntExist)) {
         lapply(toDirs[dirDoesntExist], dir.create, recursive = TRUE)
@@ -935,7 +932,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       # On *nix types -- try symlink
       if (isFALSE(all(result)) && isTRUE(symlink)) {
         if (!isWindows()) {
-          result <- suppressWarnings(file.symlink(from, to))
+          result <- suppressWarnings(file.symlink(from[!result], to[!result]))
           if (isTRUE(all(result))) {
             messagePrepInputs("Symlinked version of file created at: ", toCollapsed, ", ",whPointsToMess," ",
                               fromCollapsed, "; no copy was made.", verbose = verbose)
@@ -944,7 +941,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       }
 
       if (isFALSE(all(result))) {
-        result <- file.copy(from, to, overwrite = overwrite)
+        result <- file.copy(from[!result], to[!result], overwrite = overwrite)
         messagePrepInputs("Copy of file: ", fromCollapsed, ", was created at: ", toCollapsed, verbose = verbose)
       }
     } else {
@@ -1234,6 +1231,7 @@ makeRelative <- function(files, absoluteBase) {
   if (length(files)) {
     areAbs <- isAbsolutePath(files)
     if (any(areAbs)) {
+      absoluteBase <- normPath(absoluteBase) # can be "." which means 'any character' in a grep
       files[areAbs] <- gsub(paste0(absoluteBase, "/*"), "", files[areAbs])
     }
   }
