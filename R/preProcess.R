@@ -617,20 +617,15 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                          verbose = getOption("reproducible.verbose", 1), team_drive = NULL) {
   #if (is.null(targetFile)) {
   guessedFile <- if (!is.null(url)) {
+    gf <- file.path(destinationPath, basename2(url))
     if (grepl("drive.google.com", url)) {
       ie <- isTRUE(internetExists())
       if (ie) {
-        assessGoogle(url = url, archive = archive, targetFile = targetFile,
+        gf <- assessGoogle(url = url, archive = archive, targetFile = targetFile,
                      destinationPath = destinationPath, verbose = verbose, team_drive = NULL)
-      } else {
-        # likely offline
-        abab <- url; if (!identical(basename2(abab), abab)) browser()
-        file.path(destinationPath, basename2(url))
       }
-    } else {
-      # abab <- url; if (!identical(basename2(abab), abab)) browser()
-      file.path(destinationPath, basename2(url))
     }
+    gr
   } else {
     NULL
   }
