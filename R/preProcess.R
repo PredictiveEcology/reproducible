@@ -260,7 +260,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     archive
   }
 
-  isOK <- .compareChecksumsAndFiles(checkSums, c(filesToChecksum, neededFiles))
+  filesToChecksum <- unique(c(filesToChecksum, neededFiles))
+  isOK <- .compareChecksumsAndFiles(checkSums, filesToChecksum)
   if (isTRUE(!all(isOK))) {
     results <- .tryExtractFromArchive(archive = if (isTRUE(is.na(archive))) NULL else archive,
                                       neededFiles = neededFiles,
@@ -272,10 +273,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                       verbose = verbose, .tempPath = .tempPath)
     list2env(results, environment()) # neededFiles, checkSums, filesExtr, targetFilePath, filesToChecksum, needChecksums
 
-    if (results$needChecksums > 0) {
+    if (needChecksums > 0) {
       checkSums <- appendChecksumsTable(
         checkSumFilePath = checkSumFilePath,
-        filesToChecksum = unique(results$filesToChecksum),
+        filesToChecksum = unique(filesToChecksum),
         destinationPath = destinationPath,
         append = results$needChecksums >= 2
       )
@@ -381,7 +382,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }, add = TRUE)
 
   # Stage 1 - Extract from archive
-  isOK <- .compareChecksumsAndFiles(checkSums, unique(c(filesToChecksum, neededFiles)))
+  filesToChecksum <- unique(c(filesToChecksum, neededFiles))
+  isOK <- .compareChecksumsAndFiles(checkSums, filesToChecksum)
   if (isTRUE(!all(isOK))) {
     filesExtracted <- .tryExtractFromArchive(archive = archive,
                                              neededFiles = neededFiles,
