@@ -1402,6 +1402,7 @@ test_that("options inputPaths", {
   }, add = TRUE)
 
   f <- formals3(prepInputs)
+  getDataFn <- getDataFn # not exported from reproducible; can access here, not in the dlFun
 
   if (getRversion() <= "3.3.0")  skip("Doesn't work on R 3.3.0") # Not sure why this fails on 3.3.0
   options("reproducible.inputPaths" = NULL)

@@ -192,12 +192,6 @@ targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
 
 
 ## TODO: switch to `geodata` package (raster::getData() is deprecated) (#256)
-getDataFn <- function(...) {
-  suppressWarningsSpecific({
-    geodata::gadm(...)
-  }, falseWarnings = "getData will be removed in a future version of raster")
-}
-
 testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
                               type = c("Raster", "Stack", "Brick")) {
   .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
