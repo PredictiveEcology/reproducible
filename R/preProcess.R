@@ -973,7 +973,6 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
     on.exit({unlink(.tempPath, recursive = TRUE)},
             add = TRUE)
   }
-  # abab <- alsoExtract; if (!identical(basename2(abab), abab)) browser() # DONE
   neededFiles <- c(neededFiles, if (!is.null(alsoExtract)) alsoExtract)
   neededFiles <- setdiff(neededFiles, "similar") # remove "similar" from neededFiles; for extracting
   neededFiles <- unique(makeAbsolute(neededFiles, destinationPath)) # unique is b/c neededFiles was absolute and alsoExtract was rel

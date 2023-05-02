@@ -609,8 +609,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           #   result <- file.copy(downloadResults$destFile, desiredPath)
           # }
 
-          tmpFile <- downloadResults$destFile
-          downloadResults$destFile <- makeAbsolute(downloadResults$destFile, destinationPath)
+          tmpFile <- makeRelative(downloadResults$destFile, dirname(downloadResults$destFile))
+          downloadResults$destFile <- makeAbsolute(tmpFile, destinationPath)
           # downloadResults$destFile <- file.path(destinationPath, basename(downloadResults$destFile))
         }
       #}
