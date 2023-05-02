@@ -625,7 +625,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                      destinationPath = destinationPath, verbose = verbose, team_drive = NULL)
       }
     }
-    gr
+    gf
   } else {
     NULL
   }
