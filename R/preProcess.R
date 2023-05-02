@@ -203,7 +203,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
   #   want if targetFile, archive, alsoExtract not specified
-  inputPaths <- dealWithInputPaths(destinationPath, checkSumFilePath, filesToCheck, verbose)
+  inputPaths <- runChecksums(destinationPath, checkSumFilePath, filesToCheck, verbose)
   list2env(inputPaths, environment()) # reproducible.inputPaths, destinationPathUser, destinationPath, checkSums
 
   if (is(checkSums, "try-error")) {
@@ -1374,7 +1374,7 @@ setupArchive <- function(archive, destinationPath) {
   archive
 }
 
-dealWithInputPaths <- function(destinationPath, checkSumFilePath, filesToCheck, verbose) {
+runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbose) {
   reproducible.inputPaths <- getOption("reproducible.inputPaths", NULL)
   if (!is.null(reproducible.inputPaths))
     reproducible.inputPaths <- checkPath(reproducible.inputPaths, create = TRUE)
