@@ -365,7 +365,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (length(neededFiles) > 1) alsoExtract <- setdiff(neededFiles, targetFile)
 
   # To this point, we only have the archive in hand -- include this in the list of filesToChecksum
-  # abab <- archive; if (!identical(basename2(abab), abab)) browser() # done
   filesToChecksum <- if (isTRUE(is.na(archive)) || (is.null(archive))) {
     downloadFileResult$downloaded
   } else {
@@ -633,9 +632,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   } else {
     NULL
   }
-  #} else {
-  #  guessedFile <- NULL
-  #}
   normPath(guessedFile)
 }
 
@@ -709,7 +705,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     } else {
       allOK <- .similarFilesInCheckSums(targetFile, checkSums)
       if (!allOK) {
-        # abab <- targetFile; if (!identical(basename2(abab), abab)) browser()
         filePatternToKeep <- gsub(basename2(targetFile),
                                   pattern = fileExt(basename2(targetFile)), replacement = "")
         filesToGet <- grep(allFiles, pattern = filePatternToKeep, value = TRUE)
@@ -750,8 +745,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           FALSE
         }
         opFiles <- dir(op, recursive = recursively, full.names = TRUE)
-        # abab <- opFiles; if (!identical(basename2(abab), abab)) browser()
-
         neededFilesRel <- makeRelative(neededFiles, destinationPath)
         if (any(neededFilesRel %in% basename2(opFiles))) {
 
@@ -791,11 +784,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           filesInHandIP <- checkSumsIPOnlyNeeded$expectedFile
           filesInHandIPLogical <- neededFilesRel %in% filesInHandIP
           if (any(filesInHandIPLogical)) {
-            if (exists("bbbb")) browser()
             outHLC <- hardLinkOrCopy(from = makeAbsolute(filesInHandIP, dirOPFiles),
                                      to = neededFiles[filesInHandIPLogical], verbose = verbose)
-            # outHLC <- hardLinkOrCopy(file.path(dirNameOPFiles[filesInHandIPLogical], filesInHandIP),
-            #               file.path(destinationPath, filesInHandIP))
             checkSums <- rbindlist(list(checkSumsIPOnlyNeeded, checkSums))
             checkSums <- unique(checkSums, by = "expectedFile")
           }
@@ -1109,7 +1099,6 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
 #' @keywords internal
 .fixNoFileExtension <- function(downloadFileResult, targetFile, archive,
                                 destinationPath, verbose = getOption("reproducible.verbose", 1)) {
-  # abab <- downloadFileResult$downloaded; if (!identical(basename2(abab), abab)) browser()
 
   needFinalCopy <- TRUE
   if (!is.null(downloadFileResult$downloaded) &&
@@ -1325,17 +1314,9 @@ getTeamDrive <- function(dots) {
 getTargetFilePath <- function(targetFile, archive, fileGuess, verbose,
                               destinationPath, alsoExtract, checkSumFilePath) {
   if (is.null(targetFile)) {
-    # fileGuess <- .guessAtFile(url = url, archive = archive, targetFile = targetFile,
-    #                           destinationPath = destinationPath, verbose = verbose,
-    #                           team_drive = teamDrive)
-    # if (is.null(archive))
-    #   archive <- .isArchive(fileGuess)
-    # if (isTRUE(!is.na(archive)))
-    #   archive <- moveAttributes(fileGuess, archive)
     if ((is.null(archive) || is.na(archive)) && !is.null(fileGuess)) {
       messagePrepInputs("targetFile was not supplied; guessed and will try ", fileGuess,
                         ". If this is incorrect, please supply targetFile", verbose = verbose)
-      # abab <- fileGuess; if (!identical(basename2(abab), abab)) browser()
       targetFile <- makeRelative(fileGuess, destinationPath)
       targetFilePath <- makeAbsolute(targetFile, destinationPath)
     } else {
@@ -1346,18 +1327,6 @@ getTargetFilePath <- function(targetFile, archive, fileGuess, verbose,
       stop("targetFile should be only 1 file")
 
     targetFilePath <- normPath(makeAbsolute(targetFile, destinationPath))
-    # if (is.null(alsoExtract)) {
-    #   if (file.exists(checkSumFilePath)) {
-    #     if (file.size(checkSumFilePath) > 0) {
-    #       # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with
-    #       # same base name, without extension
-    #       checksumsTmp <- as.data.table(read.table(checkSumFilePath))
-    #       alsoExtract <- grep(paste0(filePathSansExt(targetFile),"\\."), checksumsTmp$file,
-    #                           value = TRUE)
-    #       rm(checksumsTmp) # clean up
-    #     }
-    #   }
-    # }
   }
   targetFilePath
 }
@@ -1399,7 +1368,6 @@ setupArchive <- function(archive, destinationPath) {
   if (!is.null(archive)) {
     if (!is.na(archive)) {
       tmpArchive <- archive
-      # abab <- archive; if (!identical(basename2(abab), abab)) browser()
       archive <- makeAbsolute(archive, destinationPath)
       # archive <- file.path(destinationPath, basename2(archive))
       # filesToCheck <- unique(c(filesToCheck, archive))
