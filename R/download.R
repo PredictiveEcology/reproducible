@@ -33,6 +33,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit(unlink(.tempPath, recursive = TRUE), add = TRUE)
   }
+  if (missing(targetFile))
+    targetFile <- NULL
 
   if (!is.null(url) || !is.null(dlFun)) {
     missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile)
