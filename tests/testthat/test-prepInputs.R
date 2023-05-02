@@ -1455,17 +1455,18 @@ test_that("options inputPaths", {
   # Use inputPaths -- should do a link to tmpCache (the destinationPath)
   options("reproducible.inputPaths" = tmpdir)
   options("reproducible.inputPathsRecursive" = FALSE)
+  dlFun1 <- if (useGADM) getDataFn else NULL
   noisyOutput <- capture.output(
     mess1 <- capture_messages(
       test1 <- prepInputs(url = if (!useGADM) url2 else f$url,
                           targetFile = if (useGADM) theFile else f$targetFile,
-                          dlFun = if (useGADM) getDataFn else NULL,
+                          dlFun = dlFun1,
                           name = if (useGADM) "GADM" else NULL,
                           country = if (useGADM) "LUX" else NULL,
                           level = if (useGADM) 0 else NULL,
                           path = if (useGADM) tmpdir else NULL,
                           destinationPath = tmpCache,
-                          getDataFn = getDataFn)
+                          getDataFn = dlFun1)
     )
   )
   expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ": ", tmpCache), mess1)) == 1)
