@@ -128,6 +128,7 @@ test_that("unrar is working as expected", {
 test_that("test miscellaneous fns (part 2)", {
   testInitOut <- testInit("terra", tmpFileExt = c(".tif", ".grd"),
                           needGoogleDriveAuth = TRUE)
+  options('reproducible.cloudFolderID' = NULL)
   on.exit({
     testOnExit(testInitOut)
     try(googledrive::drive_rm(googledrive::as_id(cloudFolderID)), silent = TRUE)

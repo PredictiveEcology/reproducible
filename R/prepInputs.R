@@ -360,111 +360,11 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ##################################################################
   # Load object to R
   ##################################################################
-  # If it is simple call, then we can extract stuff from the function call; otherwise all bets off
-  theFun <- out$fun
-  suppressWarnings({
-    naFun <- all(is.na(theFun))
-  })
-
-  funChar <- if (is.character(out$funChar)) out$funChar else NULL
-
-  out <- modifyList(out, list(...))
-
-  argsFromPrepInputsFamily <- unique(c(.namesPostProcessFormals(), formalArgs(prepInputs), formalArgs(preProcess),
-                                "checkSums", "dots", "object"))
-  args <- NULL
-  # keep the ones for theFun
-  if (naFun %in% FALSE && !is.call(theFun)) {
-    formsForTheFun <- names(formals3(theFun))
-    argsFromPrepInputsFamily <- setdiff(argsFromPrepInputsFamily, names(formals3(theFun)))
-    argsPassingToTheFun <- out[!names(out) %in% argsFromPrepInputsFamily]
-    args <- argsPassingToTheFun[names(argsPassingToTheFun) %in% formsForTheFun]
+  if (!is.null(out$targetFilePath)) {
+    messagePrepInputs("targetFile located at ", out$targetFilePath, verbose = verbose)
   }
-
-  otherFiles <- out$checkSums[result == "OK"]
-  .cacheExtra <- NULL
-  if (NROW(otherFiles)) {
-    .cacheExtra <- .robustDigest(sort(otherFiles$checksum.x))
-  }
-
-  if (!(naFun || is.null(theFun))) {
-    x <- if (is.null(out$object)) {
-
-      messagePrepInputs("Loading object into R", verbose = verbose)
-      needRaster <- any(grepl("raster$|stack$|brick$", funCaptured))
-      if (needRaster)
-        .requireNamespace("raster", stopOnFALSE = TRUE)
-      if (needRaster | identical(theFun, terra::rast)) {
-        ## Don't cache the reading of a raster
-        ## -- normal reading of raster on disk is fast b/c only reads metadata
-        do.call(theFun, append(list(asPath(out$targetFilePath)), args))
-      } else {
-        if (identical(theFun, base::load)) {
-          if (is.null(args$envir)) {
-            messagePrepInputs("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
-                    "if you would like it loaded to a specific environment", verbose = verbose)
-            tmpEnv <- new.env(parent = emptyenv())
-            returnAsList <- TRUE
-          } else {
-            tmpEnv <- args$envir
-            args$envir <- NULL
-            returnAsList <- FALSE
-          }
-          args2 <- append(list(file = out$targetFilePath, envir = tmpEnv), args)
-          objs <- do.call(theFun, args2)
-          if (returnAsList)
-            as.list(tmpEnv, all.names = TRUE)
-        } else {
-          useCache2 <- useCache
-          if (fileExt(out$targetFilePath) %in% c("qs", "rds") &&
-              !isTRUE(getOption("reproducible.useMemoise"))) {
-            useCache2 <- FALSE
-            messagePrepInputs("targetFile is already a binary; skipping Cache while loading")
-          }
-
-          withCallingHandlers(
-            if (is.call(theFun)) { # an actual call, not just captured function name
-              # put `targetFilePath` in the first position -- allows quoted call to use first arg
-              out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
-                                   out[-which(names(out) == "targetFilePath")]),
-                            args)
-              out[["targetFile"]] <- out[["targetFilePath"]] # handle both
-              obj <- Cache(eval(theFun, envir = out), useCache = useCache2, .cacheExtra = .cacheExtra,
-                           .functionName = funChar)
-            } else {
-              args2 <- append(list(asPath(out$targetFilePath)), args)
-              obj <- Cache(do.call, theFun, args2, useCache = useCache2, .cacheExtra = .cacheExtra,
-                           .functionName = funChar)
-            }, message = function(m) {
-              m$message <- grep("No cachePath supplied|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
-              if (length(m$message)) {
-                mm <- gsub("(.*)\n$", "\\1", m$message)
-                messagePrepInputs(mm)
-              }
-              tryInvokeRestart("muffleMessage")
-            })
-          obj
-        }
-      }
-    } else {
-      if (is.null(fun) || is.na(fun)) {
-        out$object
-      } else {
-        # x <- out$object
-        env1 <- new.env()
-        list2env(list(...), envir = env1)
-        eval(theFun, envir = env1)
-      }
-    }
-  } else {
-    x <- if (is.null(fun) || is.na(fun) || !is.null(out$object)) {
-      out$object
-    } else {
-      messagePrepInputs("No loading of object into R; fun = ", theFun, verbose = verbose)
-      out
-    }
-  }
-
+  x <- process(out, funCaptured = funCaptured,
+               useCache = useCache, verbose = verbose, ...)
 
   ##################################################################
   # postProcess
@@ -531,17 +431,18 @@ extractFromArchive <- function(archive,
     }
   }
   if (!is.null(archive) && !is.null(neededFiles))
-    neededFiles <- setdiff(basename(neededFiles), basename(archive))
+    neededFiles <- setdiff(neededFiles, archive)
+    # neededFiles <- setdiff(basename2(neededFiles), basename2(archive))
   if (length(neededFiles) == 0) neededFiles <- NULL
   result <- if (!is.null(neededFiles)) {
-    checkSums[checkSums$expectedFile %in% basename(neededFiles), ]$result
+    checkSums[checkSums$expectedFile %in% basename2(neededFiles), ]$result
   } else {
     "NotOK"
   }
   extractedObjs <- list(filesExtracted = character())
   # needs to pass checkSums & have all neededFiles files
   hasAllFiles <- if (NROW(checkSums)) {
-    all(neededFiles %in% checkSums$expectedFile)
+    all(basename2(neededFiles) %in% checkSums$expectedFile) # need basename2 for comparison with checkSums
   } else {
     FALSE
   }
@@ -555,13 +456,15 @@ extractFromArchive <- function(archive,
       funWArgs <- .whichExtractFn(archive[1], args)
       filesInArchive <- .listFilesInArchive(archive)
       if (is.null(neededFiles)) {
-        neededFiles <- basename(filesInArchive)
-        result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
+        neededFiles <- filesInArchive
+        result <- checkSums[checkSums$expectedFile %in% basename2(neededFiles), ]$result
       }
 
+      neededFiles <- checkRelative(neededFiles, destinationPath, filesInArchive)
+      neededFiles <- makeAbsolute(neededFiles, destinationPath)
       # need to re-Checksums because
       checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
-                                    newFilesToCheck = file.path(destinationPath, basename(neededFiles)),
+                                    newFilesToCheck = neededFiles,
                                     checkSums = checkSums,
                                     checkSumFilePath = checkSumFilePath)
 
@@ -572,16 +475,17 @@ extractFromArchive <- function(archive,
       }
 
       # recheck, now that we have the whole file liast
-      if (!(all(isOK)) ||
-          NROW(result) == 0) {
+      if (!(all(isOK)) || NROW(result) == 0) {
         # don't extract if we already have all files and they are fine
 
         # use binary addition -- 1 is new file, 2 is append
         if (needChecksums == 0) needChecksums <- 2
+        filesInArchiveAbs <- makeAbsolute(filesInArchive, destinationPath)
         if (length(archive) > 1) {
           filesExtracted <- c(filesExtracted,
                               .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
-                                            files = basename(archive[2]), .tempPath = .tempPath))
+                                                    absolutePrefix = destinationPath,
+                                            files = basename2(archive[2]), .tempPath = .tempPath))
           # recursion, removing one archive
           extractedObjs <- extractFromArchive(
             archive[-1],
@@ -596,35 +500,42 @@ extractFromArchive <- function(archive,
             verbose = verbose,
             .tempPath = .tempPath
           )
-        } else if (any(neededFiles %in% basename(filesInArchive)) || is.null(neededFiles)) {
-          possibleFolders <- filesInArchive[fileExt(filesInArchive) == ""]
-          if (length(possibleFolders) != 0) {
+        } else if (any(neededFiles %in% filesInArchiveAbs) || is.null(neededFiles)) {
+          possibleFolders <- dir.exists(filesInArchive)
+          if (sum(possibleFolders)) {
             filesInArchive <- setdiff(filesInArchive, possibleFolders)
           }
-          extractingTheseFiles <- paste(basename(filesInArchive[basename(filesInArchive) %in%
-                                                                  neededFiles]), collapse = ", ")
-          if (!nzchar(extractingTheseFiles))
-            extractingTheseFiles <- paste0("all files: ", paste(basename(filesInArchive),
-                                                                collapse = ", "))
-          messagePrepInputs("From:", basename(archive[1]), "  \nExtracting\n ",
-                  paste(collapse = "\n ", extractingTheseFiles), verbose = verbose)
+          neededFilesRel <- makeRelative(neededFiles[!isOK], destinationPath)
+          filesToExtractNow <- intersect(filesInArchive, neededFilesRel)
+          extractingTheseFiles <- paste(filesToExtractNow, collapse = "\n")
+          # extractingTheseFiles <- paste(basename2(filesInArchive[basename2(filesInArchive) %in%
+          #                                                         neededFiles]), collapse = ", ")
+          # if (!any(nzchar(filesToExtractNow)))
+          #   extractingTheseFiles <- paste0("all files: ",
+          #                                  paste(filesInArchive, collapse = "\n"))
+          messagePrepInputs("From:\n", archive[1], "  \nExtracting\n",
+                  extractingTheseFiles, verbose = verbose)
           filesExtracted <- c(filesExtracted,
-                              .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
-                                                    files = filesInArchive[basename(filesInArchive) %in%
-                                                                             neededFiles],
+                              .callArchiveExtractFn(funWArgs$fun,
+                                                    funWArgs$args,
+                                                    absolutePrefix = destinationPath,
+                                                    files = filesToExtractNow,
                                                     .tempPath = .tempPath))
         } else {
           # don't have a 2nd archive, and don't have our neededFiles file
           #isArchive <- grepl(fileExt(filesInArchive), pattern = "(zip|tar|rar)", ignore.case = TRUE)
-          isArchive <- grepl(fileExt(filesInArchive), pattern = paste0("(",paste(knownArchiveExtensions, collapse = "|"), ")"), ignore.case = TRUE)
+          isArchive <- grepl(fileExt(filesInArchive),
+                             pattern = paste0("(",paste(knownArchiveExtensions, collapse = "|"), ")"), ignore.case = TRUE)
 
           if (any(isArchive)) {
-            arch <- .basename(filesInArchive[isArchive])
+            arch <- makeRelative(filesInArchive[isArchive], destinationPath)
             filesExtracted <- c(filesExtracted,
                                 .callArchiveExtractFn(funWArgs$fun, funWArgs$args, files = arch,
+                                                      absolutePrefix = destinationPath,
                                                       .tempPath = .tempPath))
+            filesExtracted <- unique(filesExtracted) # maybe unnecessary
 
-            prevExtract <- lapply(file.path(destinationPath, arch), function(ap)
+            prevExtract <- lapply(makeAbsolute(arch, destinationPath), function(ap)
               extractFromArchive(archive = ap, destinationPath = destinationPath,
                                  neededFiles = neededFiles,
                                  extractedArchives = extractedArchives,
@@ -642,16 +553,18 @@ extractFromArchive <- function(archive,
       } else {
         messagePrepInputs("  Skipping extractFromArchive: all files already present", verbose = verbose)
         filesExtracted <- checkSums[checkSums$expectedFile %in%
-                                      basename(filesInArchive), ]$expectedFile
+                                      basename2(filesInArchive), ]$expectedFile
+        filesExtracted <- makeAbsolute(filesInArchive, destinationPath)
       }
     }
   } else {
     if (!is.null(archive)) { # if archive is null, it means there was no archive passed
-      messagePrepInputs("  Skipping extractFromArchive: ", paste(neededFiles, collapse = ", "), " already present", verbose = verbose)
+      messagePrepInputs("  Skipping extractFromArchive: ", paste(neededFiles, collapse = "\n"), " already present", verbose = verbose)
     }
-    filesExtracted <- setdiff(neededFiles, if (!is.null(archive)) basename(archive))
+    filesExtracted <- setdiff(neededFiles, if (!is.null(archive)) basename2(archive))
   }
   list(extractedArchives = c(extractedArchives, archive),
+       neededFiles = neededFiles, # these may have been corrected for user supplying incorrect basename path
        filesExtracted = unique(c(filesExtracted, extractedObjs$filesExtracted)),
        needChecksums = needChecksums,
        checkSums = checkSums)
@@ -671,11 +584,8 @@ extractFromArchive <- function(archive,
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  filesExtracted, fun = NULL, verbose = getOption("reproducible.verbose", 1)) {
-  # if (!is.null(fun) && !is.character(fun)) {
-  #   stop("fun must be a character string, not the function")
-  # }
-  possibleFiles <- unique(.basename(c(targetFilePath, filesExtracted)))
-  whichPossFile <- possibleFiles %in% basename2(targetFilePath)
+  possibleFiles <- unique(c(targetFilePath, filesExtracted))
+  whichPossFile <- possibleFiles %in% targetFilePath
   if (isTRUE(any(whichPossFile)))
     possibleFiles <- possibleFiles[whichPossFile]
   isShapefile <- FALSE
@@ -713,7 +623,7 @@ extractFromArchive <- function(archive,
     }
     if (length(fun) == 0) stop("Can't guess at which function to use to read in the object; please supply 'fun'")
   }
-  if (is.null(targetFilePath)) {
+  if (is.null(targetFilePath) || length(targetFilePath) == 0) {
     secondPartOfMess <- if (any(isShapefile)) {
       c(" Trying ",fun," on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
         " If that is not correct, please specify a different targetFile",
@@ -747,8 +657,6 @@ extractFromArchive <- function(archive,
               ". Picking the last one. If not correct, specify a targetFile.", verbose = verbose)
       targetFilePath <- targetFilePath[length(targetFilePath)]
     }
-    targetFile <- targetFilePath
-    if (!is.null(targetFile)) targetFilePath <- file.path(destinationPath, targetFile)
   }
 
   list(targetFilePath = targetFilePath, fun = fun)
@@ -765,7 +673,7 @@ extractFromArchive <- function(archive,
              paste(knownArchiveExtensions, collapse = ", "))
       if (ext == "zip") {
         fun <- unzip
-        args <- c(args, list(junkpaths = TRUE))
+        args <- c(args, list(junkpaths = FALSE))
       } else if (ext %in% c("tar", "tar.gz", "gz")) {
         fun <- untar
       } else if (ext == "rar") {
@@ -782,8 +690,11 @@ extractFromArchive <- function(archive,
 #' @keywords internal
 #' @importFrom utils capture.output
 .callArchiveExtractFn <- function(fun, args, files, overwrite = TRUE,
+                                  absolutePrefix = getOption("reproducible.destinationPath", "."),
                                   verbose = getOption("reproducible.verbose", 1), .tempPath) {
   argList <- list(files = files)
+  argList$files <- makeRelative(argList$files, absolutePrefix)
+
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit({unlink(.tempPath, recursive = TRUE)},
@@ -793,6 +704,11 @@ extractFromArchive <- function(archive,
   if (is.character(fun))
     if (!fun %in% knownSystemArchiveExtensions)
       fun <- eval(fun)
+
+  origExdir <- args$exdir
+  if (!is.null(args$exdir)) {
+    args$exdir <- .tempPath
+  }
 
   if (is.character(fun)) {
     messagePrepInputs(paste0("The archive appears to be not a .zip. Trying a system call to ", fun), verbose = verbose)
@@ -820,21 +736,21 @@ extractFromArchive <- function(archive,
     extractedFiles <- list.files(path = .tempPath, recursive = TRUE, include.dirs = TRUE)
     internalFolders <- extractedFiles[fileExt(extractedFiles) == ""]
     extractedFiles <- setdiff(x = extractedFiles, y = internalFolders)
-    if (length(extractedFiles) == 0) {
-      stop("preProcess could not extract the files from the archive ", basename(args[[1]]),".",
-           "Please try to extract it manually to the destinationPath")
-    } else {
-      invisible(lapply(
-        X = extractedFiles,
-        FUN = function(fileToMove) {
-          invisible(.file.move(from = file.path(.tempPath, fileToMove),
-                              to = file.path(args$exdir, basename(fileToMove)),
-                              overwrite = overwrite))
-        }
-      ))
-      # unlink(file.path(args$exdir, "extractedFiles"), recursive = TRUE)
-      extractedFiles <- basename(extractedFiles)
-    }
+    # if (length(extractedFiles) == 0) {
+    #   stop("preProcess could not extract the files from the archive ", basename2(args[[1]]),".",
+    #        "Please try to extract it manually to the destinationPath")
+    # } else {
+    #   invisible(lapply(
+    #     X = extractedFiles,
+    #     FUN = function(fileToMove) {
+    #       invisible(.file.move(from = file.path(.tempPath, fileToMove),
+    #                           to = file.path(args$exdir, basename2(fileToMove)),
+    #                           overwrite = overwrite))
+    #     }
+    #   ))
+    #   # unlink(file.path(args$exdir, "extractedFiles"), recursive = TRUE)
+    #   extractedFiles <- basename2(extractedFiles)
+    # }
   } else {
     # Try the direct, then indirect
     isUnzip <- if (identical(unzip, fun)) TRUE else ("overwrite" %in% names(formals(fun)))
@@ -853,12 +769,13 @@ extractFromArchive <- function(archive,
       ids <- which(fattrs[["Name"]] %in% argList$files)
       tooBig <- any(fattrs[ids, ]["Length"][[1]] >= 4294967295) ## files >= 4GB are truncated; see ?unzip
     }
+
     if (!tooBig) {
       mess <- capture.output({
         extractedFiles <- do.call(fun, c(args, argList))
       }, type = "message")
       worked <- if (isUnzip) {
-        all(normPath(file.path(args$exdir, basename(argList[[1]]))) %in% normPath(extractedFiles))
+        all(normPath(file.path(args$exdir, argList[[1]])) %in% normPath(extractedFiles))
       } else {
         isTRUE(extractedFiles == 0)
       }
@@ -890,7 +807,7 @@ extractFromArchive <- function(archive,
           pathToFile <-  normPath(file.path(args$exdir, args[[1]]))
         } else {
           warning(mess)
-          stop("prepInputs cannot find the file ", basename(args[[1]]), ".",
+          stop("prepInputs cannot find the file ", basename2(args[[1]]), ".",
                " The file might have been moved during unzipping or is corrupted.")
         }
       }
@@ -934,30 +851,38 @@ extractFromArchive <- function(archive,
         stop("There was no way to unzip all files; try manually. The file is located at: \n",
              pathToFile)
       }
-      extractedFiles <- list.files(path = .tempPath,
-                                   # list of full paths of all extracted files!
-                                   recursive = TRUE,
-                                   include.dirs = TRUE)
-      from <- file.path(.tempPath, extractedFiles)
-      on.exit({
-        if (any(file.exists(from)))
-          suppressWarnings(try(unlink(from), silent = TRUE))
-      }, add = TRUE)
-      to <- file.path(args$exdir, extractedFiles)
-
-      suppressWarnings({
-        out <- linkOrCopy(from, to, symlink = FALSE)
-      })
-
-      if (!isTRUE(all(file.exists(to)))) {
-        stop(paste("Could not move extractedfiles from", .tempPath, "to", args$exdir))
-      }
-      extractedFiles <- to
-      unlink(.tempPath, recursive = TRUE)
     }
     if (!isUnzip) {
       extractedFiles <- files
     }
+  }
+
+  extractedFiles <- list.files(path = .tempPath,
+                               # list of full paths of all extracted files!
+                               recursive = TRUE,
+                               include.dirs = TRUE)
+  from <- file.path(.tempPath, extractedFiles)
+  on.exit({
+    if (any(file.exists(from)))
+      suppressWarnings(try(unlink(from), silent = TRUE))
+  }, add = TRUE)
+
+  args$exdir <- origExdir
+  to <- file.path(args$exdir, extractedFiles)
+
+  suppressWarnings({
+    out <- hardLinkOrCopy(from, to, verbose = 0)
+  })
+
+  if (!isTRUE(all(file.exists(to)))) {
+    stop(paste("Could not move extractedfiles from", .tempPath, "to", args$exdir))
+  }
+  extractedFiles <- to
+  unlink(.tempPath, recursive = TRUE)
+
+  if (length(extractedFiles) == 0) {
+    stop("preProcess could not extract the files from the archive ", args[[1]],".",
+         "Please try to extract it manually to the destinationPath")
   }
   return(extractedFiles)
 }
@@ -965,10 +890,11 @@ extractFromArchive <- function(archive,
 #' @keywords internal
 .checkSums <- function(filesToCheck, fileinfo, chksumsFilePath, quick,
                        verbose = getOption("reproducible.verbose", 1)) {
+  browser()
   if (missing(chksumsFilePath)) {
     chksumsFilePath <- file.path(dirname(filesToCheck), "CHECKSUMS.txt")
   }
-  moduleName <- basename(dirname(dirname(chksumsFilePath)))
+  moduleName <- basename2(dirname(dirname(chksumsFilePath)))
   modulePath <- dirname(dirname(dirname(chksumsFilePath)))
   checkSums <- Checksums(files = filesToCheck,
                          module = moduleName,
@@ -1018,7 +944,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       append <- FALSE
     } else {
       setDT(cs)
-      nonCurrentFiles <- cs[!file %in% filesToChecksum]
+      nonCurrentFiles <- cs[!file %in% basename2(filesToChecksum)]
       setDF(cs)
 
     }
@@ -1030,9 +956,13 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           "  you can specify targetFile (and optionally alsoExtract) so it knows\n",
           "  what to look for.", verbose = verbose)
   csf <- if (append) tempfile(fileext = ".TXT") else checkSumFilePath
+  areAbs <- isAbsolutePath(filesToChecksum)
+  if (any(!areAbs)) {
+    filesToChecksum[!areAbs] <- file.path(destinationPath, filesToChecksum[!areAbs])
+  }
   capture.output(type = "message", {
     currentFiles <- Checksums(path = destinationPath, write = TRUE, #write = !append || NROW(nonCurrentFiles) == 0,
-                              files = file.path(destinationPath, filesToChecksum),
+                              files = filesToChecksum,
                               checksumFile = csf,
                               verbose = verbose)
   })
@@ -1175,7 +1105,8 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     checkSumsDT <- data.table(checkSums)
     if (NCOL(checkSumsDT) == 0)
       checkSumsDT <- Copy(.emptyChecksumsResult)
-    filesDT <- data.table(files = .basename(files))
+    dirs <- basename2(unique(dirname(files)))
+    filesDT <- data.table(files = basename2(unique(c(files, dirs))))
     isOKDT <- checkSumsDT[filesDT, on = c(expectedFile = "files")]
     isOKDT2 <- checkSumsDT[filesDT, on = c(actualFile = "files")]
     # fill in any OKs from "actualFile" intot he isOKDT
@@ -1329,3 +1260,116 @@ nullOr <- function(clses, vals, env) {
 }
 
 is.nulls <- function(x) lapply(x, is.null)
+
+
+
+
+process <- function(out, funCaptured,
+                    useCache = getOption("reproducible.useCache"),
+                    verbose = getOption("reproducible.verbose"),
+                    ...) {
+  theFun <- out$fun
+  suppressWarnings({
+    naFun <- all(is.na(theFun))
+  })
+
+  funChar <- if (is.character(out$funChar)) out$funChar else NULL
+
+  out <- modifyList(out, list(...))
+
+  argsFromPrepInputsFamily <- unique(c(.namesPostProcessFormals(), formalArgs(prepInputs), formalArgs(preProcess),
+                                       "checkSums", "dots", "object"))
+  args <- NULL
+  # keep the ones for theFun
+  if (naFun %in% FALSE && !is.call(theFun)) {
+    formsForTheFun <- names(formals3(theFun))
+    argsFromPrepInputsFamily <- setdiff(argsFromPrepInputsFamily, names(formals3(theFun)))
+    argsPassingToTheFun <- out[!names(out) %in% argsFromPrepInputsFamily]
+    args <- argsPassingToTheFun[names(argsPassingToTheFun) %in% formsForTheFun]
+  }
+
+  otherFiles <- out$checkSums[result == "OK"]
+  .cacheExtra <- NULL
+  if (NROW(otherFiles)) {
+    .cacheExtra <- .robustDigest(sort(otherFiles$checksum.x))
+  }
+
+  if (!(naFun || is.null(theFun))) {
+    x <- if (is.null(out$object)) {
+
+      messagePrepInputs("Loading object into R", verbose = verbose)
+      needRaster <- any(grepl("raster$|stack$|brick$", funCaptured))
+      if (needRaster)
+        .requireNamespace("raster", stopOnFALSE = TRUE)
+      if (needRaster | identical(theFun, terra::rast)) {
+        ## Don't cache the reading of a raster
+        ## -- normal reading of raster on disk is fast b/c only reads metadata
+        do.call(theFun, append(list(asPath(out$targetFilePath)), args))
+      } else {
+        if (identical(theFun, base::load)) {
+          if (is.null(args$envir)) {
+            messagePrepInputs("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
+                              "if you would like it loaded to a specific environment", verbose = verbose)
+            tmpEnv <- new.env(parent = emptyenv())
+            returnAsList <- TRUE
+          } else {
+            tmpEnv <- args$envir
+            args$envir <- NULL
+            returnAsList <- FALSE
+          }
+          args2 <- append(list(file = out$targetFilePath, envir = tmpEnv), args)
+          objs <- do.call(theFun, args2)
+          if (returnAsList)
+            as.list(tmpEnv, all.names = TRUE)
+        } else {
+          useCache2 <- useCache
+          if (fileExt(out$targetFilePath) %in% c("qs", "rds") &&
+              !isTRUE(getOption("reproducible.useMemoise"))) {
+            useCache2 <- FALSE
+            messagePrepInputs("targetFile is already a binary; skipping Cache while loading")
+          }
+
+          withCallingHandlers(
+            if (is.call(theFun)) { # an actual call, not just captured function name
+              # put `targetFilePath` in the first position -- allows quoted call to use first arg
+              out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
+                                   out[-which(names(out) == "targetFilePath")]),
+                            args)
+              out[["targetFile"]] <- out[["targetFilePath"]] # handle both
+              obj <- Cache(eval(theFun, envir = out), useCache = useCache2, .cacheExtra = .cacheExtra,
+                           .functionName = funChar)
+            } else {
+              args2 <- append(list(asPath(out$targetFilePath)), args)
+              obj <- Cache(do.call, theFun, args2, useCache = useCache2, .cacheExtra = .cacheExtra,
+                           .functionName = funChar)
+            }, message = function(m) {
+              m$message <- grep("No cachePath supplied|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
+              if (length(m$message)) {
+                mm <- gsub("(.*)\n$", "\\1", m$message)
+                messagePrepInputs(mm)
+              }
+              tryInvokeRestart("muffleMessage")
+            })
+          obj
+        }
+      }
+    } else {
+      #if (is.null(fun) || is.na(fun)) {
+      x <- out$object
+      #} else {
+      #  # x <- out$object
+      #  env1 <- new.env()
+      #  list2env(list(...), envir = env1)
+      #  eval(theFun, envir = env1)
+      #}
+    }
+  } else {
+    x <- if ((is.null(theFun) || is.na(theFun)) && !is.null(out$object)) {
+      out$object
+    } else {
+      messagePrepInputs("No loading of object into R; fun = ", theFun, verbose = verbose)
+      out
+    }
+  }
+  x
+}

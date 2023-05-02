@@ -146,9 +146,6 @@ testOnExit <- function(testInitOut) {
       try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab2))
   }
 
-  # lapply(testInitOut$libs, function(lib) {
-  #   try(detach(paste0("package:", lib), character.only = TRUE), silent = TRUE)}
-  # )
 }
 
 runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpdir, test) {
@@ -174,7 +171,7 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
 }
 
 expectedMessageRaw <- c("Running preP", "Preparing:", "File downloaded",
-                        "From:Shapefile", "Checking local", "Finished checking",
+                        "From:.*Shapefile", "Checking local", "Finished checking",
                         "Downloading", "Skipping download", "Skipping extractFrom",
                         "targetFile was not.*ry",
                         "Writing checksums.*you can specify targetFile",
@@ -195,12 +192,6 @@ targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
 
 
 ## TODO: switch to `geodata` package (raster::getData() is deprecated) (#256)
-getDataFn <- function(...) {
-  suppressWarningsSpecific({
-    geodata::gadm(...)
-  }, falseWarnings = "getData will be removed in a future version of raster")
-}
-
 testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
                               type = c("Raster", "Stack", "Brick")) {
   .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")

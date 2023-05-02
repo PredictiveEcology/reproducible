@@ -606,6 +606,11 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
       "rda"
   }
   filename <- paste(cacheId, csExtension, sep = ".")
+  if (length(filename) > 1) {
+    filename <- nextNumericName(filename)
+    for (i in seq(filename[-1]) + 1)
+      filename[i] <- basename2(nextNumericName(filename[i - 1]))
+  }
   file.path(CacheStorageDir(cachePath), filename)
 }
 
@@ -811,7 +816,7 @@ loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL) {
     relPath <- gsub(normPath(origGetWd), "", normPath(origDirname))
     newName <- file.path(getwd(), relPath, origFilename)
     whFiles <- newName[match(basename(whichFiles), origFilename)]
-    linkOrCopy(file, newName, verbose = 0)
+    hardLinkOrCopy(file, newName, verbose = 0)
     obj <- eval(parse(text = loadFun))(whFiles)
   }
 }
@@ -822,7 +827,7 @@ saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
 
   if (any(attr(obj, "tags") == "saveRawFile:TRUE")) {
     # newFN <- paste0(tools::file_path_sans_ext(fts), ".", tools::file_ext(obj))
-    linkOrCopy(obj, fts, verbose = -2)
+    hardLinkOrCopy(obj, fts, verbose = -2)
     fs <- sum(file.size(fts))
 
   } else {

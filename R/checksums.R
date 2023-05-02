@@ -95,21 +95,17 @@ setMethod(
     dots <- dots[names(dots) %in% formalArgs(digest::digest)]
     checkPath(path, create = write)
 
-    # If it is a SpaDES module, then CHECKSUM.txt must be in the data folder
-    # Eliot -- removed this Oct 5
-    # checksumFile <- file.path(path, basename(checksumFile))
-
     if (!file.exists(checksumFile)) {
       writeChecksumsTable(.emptyChecksumsFileContent, checksumFile, dotsWriteTable)
     }
 
     if (is.null(files)) {
       files <- list.files(path, full.names = TRUE)
-      files <- grep(files, pattern = basename(checksumFile), value = TRUE, invert = TRUE)
+      files <- grep(files, pattern = basename2(checksumFile), value = TRUE, invert = TRUE)
     } else {
       isAbs <- isAbsolutePath(files)
-      if (!all(isAbs))
-        files <- file.path(path, basename(files))
+      if (any(!isAbs))
+        files[!isAbs] <- file.path(path, files[!isAbs])
     }
 
     txt <- if (file.size(checksumFile) == 0) {
@@ -144,16 +140,16 @@ setMethod(
 
     messagePrepInputs("Checking local files...", sep = "", verbose = verbose)
     filesToCheck <-  if (length(txt$file) & length(files)) {
-      files[basename(files) %in% txt$file]
+      files[basename2(files) %in% txt$file]
     } else {
       files
     }
     filesToCheck <- filesToCheck[file.exists(filesToCheck)] # remove non existing files
-    filesToCheck <- filesToCheck[!dir.exists(filesToCheck)] # remove directories
+    # filesToCheck <- filesToCheck[!dir.exists(filesToCheck)] # remove directories # need to keep directories b/c e.g., gdb files need directories
 
     if (!is.null(txt$algorithm)) {
       if (!write) {
-        dots$algo <- unique(txt[txt$file %in% basename(filesToCheck),][["algorithm"]])
+        dots$algo <- unique(txt[txt$file %in% basename2(filesToCheck),][["algorithm"]])
         dots$algo <- dots$algo[!is.na(dots$algo)][1]
         # dots$algo <- na.omit(dots$algo)[1]
         if (is.na(dots$algo)) dots$algo <- defaultWriteHashAlgo
@@ -177,21 +173,28 @@ setMethod(
                               "    CHECKSUMS.txt file does not have filesizes", sep = "", verbose = verbose)
     }
     checksums <- rep(list(rep("", length(filesToCheck))), 2)
+    dirs <- dir.exists(filesToCheck)
+    filesToCheckWODirs <- filesToCheck[!dirs]
     if (quickCheck | write) {
-      checksums[[2]] <- do.call(.digest,
-                                args = append(list(file = filesToCheck, quickCheck = TRUE),
+      checksums[[2]][!dirs] <- do.call(.digest,
+                                args = append(list(file = filesToCheckWODirs, quickCheck = TRUE),
                                               dots))
     }
 
     if (!quickCheck | write) {
-      checksums[[1]] <- do.call(.digest,
-                                args = append(list(file = filesToCheck, quickCheck = FALSE),
+      checksums[[1]][!dirs] <- do.call(.digest,
+                                args = append(list(file = filesToCheckWODirs, quickCheck = FALSE),
                                               dots))
     }
+    if (any(dirs)) {
+      checksums[[1]][dirs] <- "dir"
+      checksums[[2]][dirs] <- 0
+    }
+
     messagePrepInputs("Finished checking local files.", sep = "", verbose = verbose)
 
     out <- if (length(filesToCheck)) {
-      data.table(file = basename(filesToCheck), checksum = checksums[[1]],
+      data.table(file = basename2(filesToCheck), checksum = checksums[[1]],
                  filesize = checksums[[2]], algorithm = dots$algo, stringsAsFactors = FALSE)
     } else {
       data.table(file = character(0), checksum = character(0), filesize = character(0),

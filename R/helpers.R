@@ -642,3 +642,9 @@ set.randomseed <- function(set.seed = TRUE) {
     set.seed(newSeed)
   return(invisible(newSeed))
 }
+
+# This used to be in helper-allEqual.R --> one of the tests couldn't find it
+getDataFn <- function(...) {
+  suppressWarningsSpecific({     geodata::gadm(...)   },
+                           falseWarnings = "getData will be removed in a future version of raster")
+}
