@@ -587,7 +587,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 #' @keywords internal
 #' @importFrom utils getFromNamespace
-.extractFunction <- function(fun) {
+.extractFunction <- function(fun, envir = parent.frame()) {
   if (!is.null(fun)) {
     if (is.call(fun)) {
       fun
@@ -601,7 +601,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             fun <- fun2[2]
             fun <- getFromNamespace(fun, pkg)
           } else {
-            fun <- get(fun)
+            fun <- get(fun, envir)
           }
         }
       }
