@@ -225,7 +225,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   if (purge > 1)  {
-    checkSums <- .purge(checkSums = checkSums, purge = purge)
+    checkSums <- .purge(checkSums = checkSums, purge = purge, targetFile = targetFile,
+                        archive = archive, url = url, alsoExtract = alsoExtract)
     needChecksums <- 2
   }
 

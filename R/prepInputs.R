@@ -959,10 +959,10 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   areAbs <- isAbsolutePath(filesToChecksum)
   if (any(!areAbs)) {
     filesToChecksum[!areAbs] <- file.path(destinationPath, filesToChecksum[!areAbs])
-  }
-  capture.output(type = "message", {
-    currentFiles <- Checksums(path = destinationPath, write = TRUE, #write = !append || NROW(nonCurrentFiles) == 0,
-                              files = filesToChecksum,
+    }
+    capture.output(type = "message", {
+      currentFiles <- Checksums(path = destinationPath, write = TRUE, #write = !append || NROW(nonCurrentFiles) == 0,
+                                files = filesToChecksum,
                               checksumFile = csf,
                               verbose = verbose)
   })
