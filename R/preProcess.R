@@ -727,7 +727,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @keywords internal
 .checkLocalSources <- function(neededFiles, checkSumFilePath, checkSums, otherPaths, needChecksums,
                                destinationPath, verbose = getOption("reproducible.verbose", 1)) {
-  #foundRecursively <- character()
   foundInInputPaths <- character()
   successfulCheckSumFilePath <- character()
   successfulDir <- character()
