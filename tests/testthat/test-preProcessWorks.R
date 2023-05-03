@@ -482,6 +482,7 @@ test_that("lightweight tests for preProcess code coverage", {
   la <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir)
   csf <- dir(pattern = "CHECKSUMS", path = tmpdir, full.names = TRUE)
   a <- file.info(csf)
+  Sys.sleep(0.1)
   la2 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir)
   b <- file.info(csf)
   expect_true(as.numeric(b$mtime) * 1000 == as.numeric(a$mtime) * 1000)
@@ -490,7 +491,18 @@ test_that("lightweight tests for preProcess code coverage", {
   # purge will delete CHECKSUMS 7 -- written, read
   la3 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir, purge = 7)
   d <- file.info(csf)
-  expect_true(as.numeric(d$ctime) * 1000 == as.numeric(a$ctime) * 1000)
+  if (isWindows()) # linux doesn't do ctime
+    expect_true(as.numeric(d$ctime) * 1000 == as.numeric(a$ctime) * 1000)
   expect_false(as.numeric(d$mtime) * 1000 == as.numeric(a$mtime) * 1000)
   expect_false(as.numeric(d$atime) * 1000 == as.numeric(a$atime) * 1000)
+
+  # purge will delete CHECKSUMS 1 -- deleted, written, read
+  Sys.sleep(0.1)
+  la4 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir, purge = 1)
+  e <- file.info(csf)
+  # if (isWindows()) # windows doesn't release a file's ctime even when removed
+  #   expect_false(as.numeric(e$ctime) * 1000 == as.numeric(a$ctime) * 1000)
+  expect_false(as.numeric(e$mtime) * 1000 == as.numeric(a$mtime) * 1000)
+  expect_false(as.numeric(e$atime) * 1000 == as.numeric(a$atime) * 1000)
+
 })

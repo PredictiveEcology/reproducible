@@ -103,13 +103,13 @@ if (getRversion() >= "3.1.0") {
 #'
 #'   \describe{
 #'     \item{`0`}{keep file}
-#'     \item{`1`}{delete file}
-#'     \item{`2`}{delete entry for `targetFile`}
-#'     \item{`4`}{delete entry for `alsoExtract`}
-#'     \item{`3`}{delete entry for `archive`}
-#'     \item{`5`}{delete entry for `targetFile` & `alsoExtract`}
-#'     \item{`6`}{delete entry for `targetFile`, `alsoExtract` & `archive`}
-#'     \item{`7`}{delete entry that is failing (i.e., for the file downloaded by the `url`)}
+#'     \item{`1`}{delete file in `destinationPath`, all records of downloads need to be rebuilt}
+#'     \item{`2`}{delete entry with same `targetFile`}
+#'     \item{`4`}{delete entry with same `alsoExtract`}
+#'     \item{`3`}{delete entry with same `archive`}
+#'     \item{`5`}{delete entry with same `targetFile` & `alsoExtract`}
+#'     \item{`6`}{delete entry with same `targetFile`, `alsoExtract` & `archive`}
+#'     \item{`7`}{delete entry that same `targetFile`, `alsoExtract` & `archive` & `url`}
 #'   }
 #' will only remove entries in the `CHECKSUMS.txt` that are associated with
 #'   `targetFile`, `alsoExtract` or `archive` When `prepInputs` is called,
