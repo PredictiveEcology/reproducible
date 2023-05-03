@@ -1,6 +1,6 @@
 library(data.table)
 origDTthreads <- getDTthreads()
-if (isInteractive) # this is for covr::package_coverage
+if (isInteractive()) # this is for covr::package_coverage
   Sys.setenv(NOT_CRAN="true")
 opts <- options(# reproducible.rasterRead = "raster::raster",
                 reproducible.runLargeFileTests = TRUE) # Set to TRUE to run the 2 long tests -- 20 minutes
