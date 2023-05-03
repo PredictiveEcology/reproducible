@@ -906,17 +906,15 @@ test_that("preProcess doesn't work", {
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # # # # # Comment
-  ###### alsoExtract -- will fail b/c no information         #####
+  ###### alsoExtract -- previously failed b/c no information; now ok-- .guessAtTargetAndFun #####
   # # # # # Comment
   file.remove(grep(dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))],
                    pattern = "CHECKSUMS.txt", value = TRUE))
-  expect_error(
-    mess <- capture_messages(
-      warns <- capture_warnings(
-        test <- prepInputs(
-          alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
-          destinationPath = tmpdir
-        )
+  mess <- capture_messages(
+    warns <- capture_warnings(
+      test <- prepInputs(
+        alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
+        destinationPath = tmpdir
       )
     )
   )
