@@ -1,6 +1,7 @@
 library(data.table)
 origDTthreads <- getDTthreads()
-opts <- options(reproducible.rasterRead = "raster::raster",
+# Sys.setenv(NOT_CRAN="true")
+opts <- options(# reproducible.rasterRead = "raster::raster",
                 reproducible.runLargeFileTests = TRUE) # Set to TRUE to run the 2 long tests -- 20 minutes
 setDTthreads(2)
 withr::defer({
@@ -8,6 +9,7 @@ withr::defer({
     print(paste0("getOption('reproducible.rasterRead') = ", getOption("reproducible.rasterRead")))
     print(paste0("getOption('reproducible.runLargeFileTests') = ", getOption('reproducible.runLargeFileTests')))
   }
+  # Sys.setenv("NOT_CRAN"="")
   options(opts)
   setDTthreads(origDTthreads)
 }, teardown_env())

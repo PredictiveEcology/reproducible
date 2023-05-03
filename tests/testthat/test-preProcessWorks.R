@@ -466,3 +466,31 @@ test_that("Test of using future and progress indicator for lrg files on Google D
   }
 })
 
+
+test_that("lightweight tests for preProcess code coverage", {
+  skip_on_cran()
+  out <- testInit()
+  on.exit(testOnExit(out), add = TRUE)
+  expect_true(is.data.frame(preProcessParams()))
+  expect_true(is.data.frame(preProcessParams(1)))
+  expect_true(is.data.frame(preProcessParams(2)))
+  expect_true(is.data.frame(preProcessParams(3)))
+  expect_true(is.data.frame(preProcessParams(4)))
+
+  # test purge
+  localFileLuxSm <- system.file("ex/luxSmall.shp", package = "reproducible")
+  la <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir)
+  csf <- dir(pattern = "CHECKSUMS", path = tmpdir, full.names = TRUE)
+  a <- file.info(csf)
+  la2 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir)
+  b <- file.info(csf)
+  expect_true(as.numeric(b$mtime) * 1000 == as.numeric(a$mtime) * 1000)
+  expect_false(as.numeric(b$atime) * 1000 == as.numeric(a$atime) * 1000)
+
+  # purge will delete CHECKSUMS 7 -- written, read
+  la3 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir, purge = 7)
+  d <- file.info(csf)
+  expect_true(as.numeric(d$ctime) * 1000 == as.numeric(a$ctime) * 1000)
+  expect_false(as.numeric(d$mtime) * 1000 == as.numeric(a$mtime) * 1000)
+  expect_false(as.numeric(d$atime) * 1000 == as.numeric(a$atime) * 1000)
+})
