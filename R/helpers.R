@@ -94,7 +94,8 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
 #' @return
 #' A character string using the `.robustDigest` of the `studyArea`. This is only intended
 #' for use with spatial objects.
-#'
+#' @examples
+#' studyAreaName("Ontario")
 setGeneric("studyAreaName", function(studyArea, ...) {
   standardGeneric("studyAreaName")
 })
@@ -647,4 +648,10 @@ set.randomseed <- function(set.seed = TRUE) {
 getDataFn <- function(...) {
   suppressWarningsSpecific({     geodata::gadm(...)   },
                            falseWarnings = "getData will be removed in a future version of raster")
+}
+
+milliseconds <- function(time = Sys.time()) {
+  tt <- as.numeric(time)
+  rnd <- round(tt, -5)
+  (tt-rnd) * 1000
 }

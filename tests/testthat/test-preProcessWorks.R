@@ -466,3 +466,59 @@ test_that("Test of using future and progress indicator for lrg files on Google D
   }
 })
 
+
+test_that("lightweight tests for preProcess code coverage", {
+  skip_on_cran()
+  out <- testInit("sf")
+  on.exit(testOnExit(out), add = TRUE)
+  expect_true(is.data.frame(preProcessParams()))
+  expect_true(is.data.frame(preProcessParams(1)))
+  expect_true(is.data.frame(preProcessParams(2)))
+  expect_true(is.data.frame(preProcessParams(3)))
+  expect_true(is.data.frame(preProcessParams(4)))
+
+  # test purge
+  localFileLuxSm <- system.file("ex/luxSmall.shp", package = "reproducible")
+  capture.output(
+    la <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir)
+  )
+  csf <- dir(pattern = "CHECKSUMS", path = tmpdir, full.names = TRUE)
+  a <- file.info(csf)
+  Sys.sleep(0.1)
+  capture.output(
+    la2 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir)
+  )
+  b <- file.info(csf)
+  expect_true(milliseconds(b$mtime) == milliseconds(a$mtime))
+  if (isWindows() && isInteractive()) # apparently atime is not write on *nix-alikes
+    expect_false(milliseconds(b$atime) == milliseconds(a$atime))
+
+  # purge will delete CHECKSUMS 7 -- written, read
+  capture.output(
+    la3 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir, purge = 7)
+  )
+  d <- file.info(csf)
+  if (isWindows()) # linux doesn't do ctime
+    expect_true(milliseconds(d$ctime) == milliseconds(a$ctime))
+  expect_false(milliseconds(d$mtime) == milliseconds(a$mtime))
+  expect_false(milliseconds(d$atime) == milliseconds(a$atime))
+
+  # purge will delete CHECKSUMS 1 -- deleted, written, read
+  Sys.sleep(0.1)
+  capture.output(
+    la4 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir, purge = 1)
+  )
+  e <- file.info(csf)
+  # if (isWindows()) # windows doesn't release a file's ctime even when removed
+  #   expect_false(milliseconds(e$ctime) == milliseconds(a$ctime))
+  expect_false(milliseconds(e$mtime) == milliseconds(a$mtime))
+  expect_false(milliseconds(e$atime) == milliseconds(a$atime))
+
+  expect_null(.decodeMagicNumber("sdfddsffdfs.tetes"))
+  expect_true(is.character(.decodeMagicNumber("Shapefile")))
+  expect_true(is.character(.decodeMagicNumber("RAR")))
+  expect_true(is.character(.decodeMagicNumber("tar")))
+  expect_true(is.character(.decodeMagicNumber("TIFF")))
+  expect_true(is.character(.decodeMagicNumber("Zip")))
+
+})

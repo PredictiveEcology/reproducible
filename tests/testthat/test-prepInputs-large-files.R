@@ -2,7 +2,7 @@ test_that("prepInputs correctly unzips large files", {
   skip_on_cran()
   skip_on_ci()
   skip_if_not(isInteractive(), "tests extracting large files should be run manually devtools::test()")
-
+  skip_if_not(getOption("reproducible.runLargeFileTests"))
   ## based on #145. extracted file is ~30 GB so this takes a long time to test!
   testInitOut <- testInit("terra")
   # tmpdir <- "/mnt/d/temp" # need a drive that is large enough
@@ -31,6 +31,7 @@ test_that("Issue 181 geodatabase file", {
   skip_on_cran()
   skip_on_ci()
   skip_if_not(isInteractive(), "test #2: extracting large files should be run manually devtools::test()")
+  skip_if_not(getOption("reproducible.runLargeFileTests"))
 
   ## based on #145. extracted file is ~30 GB so this takes a long time to test!
   testInitOut <- testInit(c("terra", "googledrive"), needGoogleDriveAuth = TRUE)
@@ -52,7 +53,7 @@ test_that("Issue 181 geodatabase file", {
 test_that("Issue 242 masking fail", {
   skip_on_cran()
   skip_on_ci()
-  skip_if_not(isInteractive(), "test #3: extracting large files should be run manually with devtools::test()")
+  # skip_if_not(isInteractive(), "test #3: extracting large files should be run manually with devtools::test()")
   testInitOut <- testInit(c("terra", "googledrive"), needGoogleDriveAuth = FALSE)
   studyArea <- vect(structure(c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,

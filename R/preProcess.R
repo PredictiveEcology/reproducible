@@ -571,7 +571,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       "4" = checkSums[!(checkSums$expectedFile %in% basename2(alsoExtract)), ],
       "5" = checkSums[!(checkSums$expectedFile %in% basename2(unique(c(targetFile, alsoExtract)))), ], #nolint
       "6" = checkSums[!(checkSums$expectedFile %in% basename2(unique(c(targetFile, alsoExtract, archive)))), ], #nolint
-      "7" = checkSums[!(checkSums$expectedFile %in% basename2(url)), ] #nolint
+      "7" = checkSums[!(checkSums$expectedFile %in% basename2(unique(c(targetFile, alsoExtract, archive, url)))), ] #nolint
     ), error = function(x) checkSums)
   checkSums
 }

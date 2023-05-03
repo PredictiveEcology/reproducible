@@ -81,7 +81,8 @@ Suggests:
     sf,
     sp (>= 1.4-2),
     terra (>= 1.5-17),
-    testthat
+    testthat,
+    withr
 Encoding: UTF-8
 Language: en-CA
 License: GPL-3

@@ -1325,7 +1325,7 @@ test_that("lightweight tests for code coverage", {
 })
 
 test_that("lightweight tests 2 for code coverage", {
-  testthat::skip_on_cran()
+  skip_on_cran()
 
   testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                "reproducible.inputPaths" = NULL),
