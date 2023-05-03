@@ -247,30 +247,7 @@ projectInputs.default <- function(x, targetCRS, ...) {
 
 
 
-#' Hierarchically get crs from `Raster*`, `Spatial*`
-#'
-#' This is the function that follows the table of order of
-#' preference for determining CRS. See [postProcess()]
-#' @inheritParams projectInputs
-#' @keywords internal
-#' @param useSAcrs Logical. If `FALSE`, the default, then the desired projection
-#'                 will be taken from `rasterToMatch` or none at all.
-#'                 If `TRUE`, it will be taken from `studyArea`. See table
-#'                 in details below.
-#'
-#' @rdname postProcessHelpers
-.getTargetCRS <- function(useSAcrs, studyArea, rasterToMatch, targetCRS = NULL) {
-  if (is.null(targetCRS)) {
-    targetCRS <- if (useSAcrs) {
-      .crs(studyArea)
-    } else if (!is.null(rasterToMatch)) {
-      .crs(rasterToMatch)
-    } else {
-      NULL # don't reproject a Raster if only has studyArea -- too lossy
-    }
-  }
-  targetCRS
-}
+
 
 #' Mask module inputs
 #'
@@ -491,7 +468,8 @@ writeOutputs.default <- function(x, ..., # filename2,
 #' functions help identify what smallest `datatype` can be used.
 #'
 #' @param ras  The `RasterLayer` or `RasterStack` for which data type will be assessed.
-#' @param type Character. `"writeRaster"` (default) or `"GDAL"` to return the recommended
+#' @param type Character. `"writeRaster"` (default) or `"GDAL"` (defunct)
+#'             to return the recommended
 #'             data type for writing from the raster packages, respectively, or
 #'             `"projectRaster"` to return recommended resampling type.
 #'
@@ -568,42 +546,7 @@ assessDataType.default <- function(ras, type = "writeRaster") {
   datatype
 }
 
-postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
-                                  useCache = getOption("reproducible.useCache", FALSE),
-                                  filename1,
-                                  filename2, useSAcrs, overwrite, targetCRS = NULL,
-                                  useGDAL = FALSE,
-                                  cores = getOption("reproducible.GDALcores", 2),
-                                  verbose = getOption("reproducible.verbose", 1),
-                                  ...) {
 
-  out <- postProcessTo(x, ...)
-  return(out)
-  }
-
-useETM <- function(extentToMatch, extentCRS, verbose) {
-  passingExtents <- sum(!is.null(extentToMatch), !is.null(extentCRS))
-  if (passingExtents == 1) {
-    messagePrepInputs(paste("When passing extentToMatch, you must also pass extentCRS;",
-                            "using rasterToMatch or studyArea instead"),
-                      verbose = verbose)
-  } else if (passingExtents == 2) {
-    return(TRUE)
-  }
-  return(FALSE)
-}
-
-bufferWarningSuppress <- function(# warn,
-  objectName,
-  x1, bufferFn, verbose = getOption("reproducible.verbose", 1)) {
-  if (is(x1, "try-error")) {
-    messagePrepInputs("There are errors with ", objectName,
-                      ". Couldn't fix them with ", bufferFn, "(..., width = 0)", verbose = verbose)
-  } else {
-    messagePrepInputs("  Some or all of the errors fixed.", verbose = verbose, verboseLevel = 1)
-  }
-  x1
-}
 
 
 setMinMaxIfNeeded <- function(ras) {
@@ -709,14 +652,6 @@ MinValsFlts <- MinVals[grep("FLT", names(MinVals), value = TRUE)]
 MaxValsFlts <- MaxVals[grep("FLT", names(MinVals), value = TRUE)]
 projNotWKT2warn <- "Using PROJ not WKT2"
 
-isLongLat <- function(targCRS, srcCRS = targCRS) {
-  if (grepl("longlat", targCRS)) !grepl("longlat", srcCRS) else FALSE
-}
-
-.crs <- function(x, ...) {
-  a <- suppressWarningsSpecific(falseWarnings = "CRS object has comment",
-                           raster::crs(x, ...))
-}
 
 progressBarCode <- function(..., doProgress = TRUE, message,
                             colour = getOption("reproducible.messageColourCache"),

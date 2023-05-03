@@ -40,30 +40,6 @@ bigRastersTmpFolder <- function() checkPath(tempdir2(sub = "bigRasters"), create
 bigRastersTmpFile <- function() file.path(bigRastersTmpFolder(), "bigRasInput.tif")
 
 
-# attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", FALSE),
-#                         verbose = getOption("reproducible.verbose", 1)) {
-#   attemptGDAL <- FALSE
-#   if (is(x, "Raster")) {
-#     crsIsNA <- is.na(.crs(x))
-#     cpim <- canProcessInMemory(x, 3)
-#     isTRUEuseGDAL <- isTRUE(useGDAL)
-#     forceGDAL <- identical(useGDAL, "force")
-#     shouldUseGDAL <- (!cpim && isTRUEuseGDAL || forceGDAL)
-#     attemptGDAL <- if (shouldUseGDAL && !crsIsNA) {
-#       TRUE
-#     } else {
-#       if (crsIsNA && shouldUseGDAL)
-#         messagePrepInputs("      Can't use GDAL because crs is NA", verbose = verbose)
-#       if (cpim && isTRUEuseGDAL)
-#         messagePrepInputs("      useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
-#                           "useGDAL = 'force' to override", verbose = verbose)
-#
-#       FALSE
-#     }
-#   }
-#   attemptGDAL
-# }
-
 
 checkColors <- function(x) {
   origColors <- .getColors(x)
