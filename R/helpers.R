@@ -649,3 +649,9 @@ getDataFn <- function(...) {
   suppressWarningsSpecific({     geodata::gadm(...)   },
                            falseWarnings = "getData will be removed in a future version of raster")
 }
+
+milliseconds <- function(time = Sys.time()) {
+  tt <- as.numeric(time)
+  rnd <- round(tt, -5)
+  (tt-rnd) * 1000
+}

@@ -483,26 +483,34 @@ test_that("lightweight tests for preProcess code coverage", {
   csf <- dir(pattern = "CHECKSUMS", path = tmpdir, full.names = TRUE)
   a <- file.info(csf)
   Sys.sleep(0.1)
-  la2 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir)
+  la2 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir, quiet = TRUE)
   b <- file.info(csf)
-  expect_true(as.numeric(b$mtime) * 1000 == as.numeric(a$mtime) * 1000)
-  expect_false(as.numeric(b$atime) * 1000 == as.numeric(a$atime) * 1000)
+  expect_true(milliseconds(b$mtime) == milliseconds(a$mtime))
+  if (isWindows()) # apparently atime is not write on *nix-alikes
+    expect_false(milliseconds(b$atime) == milliseconds(a$atime))
 
   # purge will delete CHECKSUMS 7 -- written, read
   la3 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir, purge = 7)
   d <- file.info(csf)
   if (isWindows()) # linux doesn't do ctime
-    expect_true(as.numeric(d$ctime) * 1000 == as.numeric(a$ctime) * 1000)
-  expect_false(as.numeric(d$mtime) * 1000 == as.numeric(a$mtime) * 1000)
-  expect_false(as.numeric(d$atime) * 1000 == as.numeric(a$atime) * 1000)
+    expect_true(milliseconds(d$ctime) == milliseconds(a$ctime))
+  expect_false(milliseconds(d$mtime) == milliseconds(a$mtime))
+  expect_false(milliseconds(d$atime) == milliseconds(a$atime))
 
   # purge will delete CHECKSUMS 1 -- deleted, written, read
   Sys.sleep(0.1)
   la4 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir, purge = 1)
   e <- file.info(csf)
   # if (isWindows()) # windows doesn't release a file's ctime even when removed
-  #   expect_false(as.numeric(e$ctime) * 1000 == as.numeric(a$ctime) * 1000)
-  expect_false(as.numeric(e$mtime) * 1000 == as.numeric(a$mtime) * 1000)
-  expect_false(as.numeric(e$atime) * 1000 == as.numeric(a$atime) * 1000)
+  #   expect_false(milliseconds(e$ctime) == milliseconds(a$ctime))
+  expect_false(milliseconds(e$mtime) == milliseconds(a$mtime))
+  expect_false(milliseconds(e$atime) == milliseconds(a$atime))
+
+  expect_null(.decodeMagicNumber("sdfddsffdfs.tetes"))
+  expect_true(is.character(.decodeMagicNumber("Shapefile")))
+  expect_true(is.character(.decodeMagicNumber("RAR")))
+  expect_true(is.character(.decodeMagicNumber("tar")))
+  expect_true(is.character(.decodeMagicNumber("TIFF")))
+  expect_true(is.character(.decodeMagicNumber("Zip")))
 
 })
