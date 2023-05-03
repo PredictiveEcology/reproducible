@@ -26,3 +26,6 @@ Digest a spatial object to get a unique character string (hash) of the study are
 Use \code{.suffix()} to append the hash to a filename,
 e.g., when using \code{filename2} in \code{prepInputs}.
 }
+\examples{
+studyAreaName("Ontario")
+}

@@ -221,13 +221,13 @@ In options for control of purging the \code{CHECKSUMS.txt} file are:
 
 \describe{
 \item{\code{0}}{keep file}
-\item{\code{1}}{delete file}
-\item{\code{2}}{delete entry for \code{targetFile}}
-\item{\code{4}}{delete entry for \code{alsoExtract}}
-\item{\code{3}}{delete entry for \code{archive}}
-\item{\code{5}}{delete entry for \code{targetFile} & \code{alsoExtract}}
-\item{\code{6}}{delete entry for \code{targetFile}, \code{alsoExtract} & \code{archive}}
-\item{\code{7}}{delete entry that is failing (i.e., for the file downloaded by the \code{url})}
+\item{\code{1}}{delete file in \code{destinationPath}, all records of downloads need to be rebuilt}
+\item{\code{2}}{delete entry with same \code{targetFile}}
+\item{\code{4}}{delete entry with same \code{alsoExtract}}
+\item{\code{3}}{delete entry with same \code{archive}}
+\item{\code{5}}{delete entry with same \code{targetFile} & \code{alsoExtract}}
+\item{\code{6}}{delete entry with same \code{targetFile}, \code{alsoExtract} & \code{archive}}
+\item{\code{7}}{delete entry that same \code{targetFile}, \code{alsoExtract} & \code{archive} & \code{url}}
 }
 will only remove entries in the \code{CHECKSUMS.txt} that are associated with
 \code{targetFile}, \code{alsoExtract} or \code{archive} When \code{prepInputs} is called,

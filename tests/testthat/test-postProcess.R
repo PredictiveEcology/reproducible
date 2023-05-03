@@ -208,7 +208,7 @@ test_that("writeOutputs with non-matching filename2", {
 
 test_that("cropInputs crops too closely when input projections are different", {
   skip_on_cran()
-  skip_on_ci() ## TODO: why is this failing on GHA but not locally??? (2022-11-04)
+  # skip_on_ci() ## TODO: why is this failing on GHA but not locally??? (2022-11-04)
 
   testInitOut <- testInit("terra", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
@@ -224,11 +224,6 @@ test_that("cropInputs crops too closely when input projections are different", {
                xmax = 3680227.67498574,
                ymin = -365833.605586135,
                ymax = 3454166.39441387))
-  # ext <- new("Extent",
-  #            xmin = -3229772.32501426,
-  #            xmax = 3680227.67498574,
-  #            ymin = -365833.605586135,
-  #            ymax = 3454166.39441387)
   x <- terra::rast(ext2,
               crs = paste("+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0",
                           "+a=6370997 +b=6370997 +units=m +no_defs"),
