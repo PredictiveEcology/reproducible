@@ -39,7 +39,8 @@ minmaxFn <- function(x, which = "max") {
 
   } else {
     .requireNamespace("terra", stopOnFALSE = TRUE)
-    fn <- ifelse(identical(which, "max"), tail, head)
+    fn <- ifelse(identical(which, "max"), "tail", "head")
+    fn <- getFromNamespace(fn, ns = "utils")
     out <- fn(terra::minmax(x), 1)[1, ]
 
   }
