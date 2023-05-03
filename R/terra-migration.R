@@ -30,6 +30,7 @@ maxFn <- function(x) {
   minmaxFn(x, "max")
 }
 
+#' @importFrom utils head tail
 minmaxFn <- function(x, which = "max") {
   out <- NULL
   if (is(x, "Raster")) {
