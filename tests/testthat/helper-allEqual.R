@@ -43,33 +43,33 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   # Set a new seed each time
   set.randomseed()
 
-  # if (isTRUE(needGoogleDriveAuth)) {
-  #   skip_if_not_installed("googledrive")
-  #   if (interactive()) {
-  #     if (!googledrive::drive_has_token()) {
-  #       getAuth <- FALSE
-  #       if (is.null(getOption("gargle_oauth_email"))) {
-  #         possLocalCache <- "c:/Eliot/.secret"
-  #         cache <- if (file.exists(possLocalCache))
-  #           possLocalCache else TRUE
-  #         switch(Sys.info()["user"],
-  #                emcintir = {options(gargle_oauth_email = "eliotmcintire@gmail.com",
-  #                                    gargle_oauth_cache = cache)},
-  #                NULL)
-  #       }
-  #       if (is.null(getOption("gargle_oauth_email"))) {
-  #         if (.isRstudioServer()) {
-  #           .requireNamespace("httr", stopOnFALSE = TRUE)
-  #           options(httr_oob_default = TRUE)
-  #         }
-  #       }
-  #       getAuth <- TRUE
-  #       if (isTRUE(getAuth))
-  #         googledrive::drive_auth()
-  #     }
-  #   }
-  #   skip_if_no_token()
-  # }
+  if (isTRUE(needGoogleDriveAuth)) {
+    skip_if_not_installed("googledrive")
+    if (interactive()) {
+      if (!googledrive::drive_has_token()) {
+        getAuth <- FALSE
+        if (is.null(getOption("gargle_oauth_email"))) {
+          possLocalCache <- "c:/Eliot/.secret"
+          cache <- if (file.exists(possLocalCache))
+            possLocalCache else TRUE
+          switch(Sys.info()["user"],
+                 emcintir = {options(gargle_oauth_email = "eliotmcintire@gmail.com",
+                                     gargle_oauth_cache = cache)},
+                 NULL)
+        }
+        if (is.null(getOption("gargle_oauth_email"))) {
+          if (.isRstudioServer()) {
+            .requireNamespace("httr", stopOnFALSE = TRUE)
+            options(httr_oob_default = TRUE)
+          }
+        }
+        getAuth <- TRUE
+        if (isTRUE(getAuth))
+          googledrive::drive_auth()
+      }
+    }
+    skip_if_no_token()
+  }
 
   origDir <- setwd(tmpdir)
 
