@@ -9,11 +9,10 @@ withr::defer({
   if (isInteractive()) {
     print(paste0("getOption('reproducible.rasterRead') = ", getOption("reproducible.rasterRead")))
     print(paste0("getOption('reproducible.runLargeFileTests') = ", getOption('reproducible.runLargeFileTests')))
+    Sys.setenv(NOT_CRAN="")
   }
   options(opts)
   setDTthreads(origDTthreads)
-  if (isInteractive) # this is for covr::package_coverage
-    Sys.setenv(NOT_CRAN="")
 
 }, teardown_env())
 if (isInteractive()) {
