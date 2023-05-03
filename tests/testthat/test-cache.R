@@ -986,8 +986,7 @@ test_that("test rm large non-file-backed rasters", {
 
 test_that("test cc", {
   skip_on_cran()
-
-  skip_on_ci()
+  # skip_on_ci()
 
   testInitOut <- testInit(ask = FALSE)
   on.exit({
@@ -1688,3 +1687,15 @@ test_that("test useDBI TRUE <--> FALSE", {
   lapply(d, function(aa) expect_false(attr(aa, ".Cache")$newCache))
 })
 
+
+test_that("lightweight tests for preProcess code coverage", {
+  skip_on_cran()
+  out <- testInit(opts = list(reproducible.cachePath = quote(tmpdir)))
+  on.exit(testOnExit(out), add = TRUE)
+  expect_error(Cache(), "requires")
+  expect_message(Cache(compareRasterFileLength = TRUE, rnorm(1)), regexp = "compareRasterFileLength")
+  expect_message(Cache(sideEffect = TRUE, rnorm(1)), regexp = "sideEffect")
+  expect_error(Cache(cachePath = tmpCache, conn = list(tmpCache, tmpdir), rnorm(1)),
+               "different lengths")
+
+})

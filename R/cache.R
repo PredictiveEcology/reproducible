@@ -386,9 +386,9 @@ Cache <-
     # Capture everything -- so not evaluated
     FUNcaptured <- substitute(FUN)
     dotsCaptured <- as.list(substitute(list(...))[-1])
+    if (missing(FUNcaptured)) stop("Cache requires the FUN argument")
     FUNbackup <- as.call(append(list(FUNcaptured), dotsCaptured))
 
-    if (missing(FUN)) stop("Cache requires the FUN argument")
 
     # returns "modifiedDots", "originalDots", "FUN", "funName", which will
     #  have modifications under many circumstances, e.g., do.call, specific methods etc.
@@ -405,9 +405,6 @@ Cache <-
     isSquiggly <- FALSE
     if (length(FUNcaptured) > 1) isSquiggly <- identical(as.name("{"), FUNcaptured[[1]])
 
-    # isCapturedFUN <- length(dotsCaptured) == 0 && !is.function(fnDetails$FUN) # a function call with no args should not be "capturedFun"
-    if (!is.null(fnDetails$userTags))
-      userTags <- c(userTags, paste0("functionInner:", fnDetails$userTags))
     FUN <- fnDetails$FUN
 
     modifiedDots <- fnDetails$modifiedDots
@@ -468,16 +465,6 @@ Cache <-
 
       if (sideEffect != FALSE) messageCache("sideEffect is deprecated; being ignored",
                                             verbose = verbose, verboseLevel = 0)
-
-      # List file prior to cache
-      # if (sideEffect != FALSE) {
-      #   priorRepo <- list.files(sideEffect, full.names = TRUE)
-      # }
-
-      # remove things in the Cache call that are not relevant to Caching
-      if (!is.null(modifiedDots$progress))
-        if (!is.na(modifiedDots$progress))
-          modifiedDots$progress <- NULL
 
       # Do the digesting
       if (!is.null(omitArgs)) {

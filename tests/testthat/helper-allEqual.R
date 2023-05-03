@@ -14,6 +14,10 @@ skip_if_no_token <- function() {
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
 testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
                      opts = NULL, needGoogleDriveAuth = FALSE) {
+  tmpdir <- tempdir2(sprintf("%s_%03d", rndstr(1, 6), .pkgEnv$testCacheCounter))
+  tmpCache <- checkPath(file.path(tmpdir, "testCache"), create = TRUE)
+  .pkgEnv$testCacheCounter <- .pkgEnv$testCacheCounter + 1L
+
   optsAsk <- if (!ask)
     options("reproducible.ask" = ask)
   else
@@ -38,10 +42,6 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
 
   # Set a new seed each time
   set.randomseed()
-
-  tmpdir <- tempdir2(sprintf("%s_%03d", rndstr(1, 6), .pkgEnv$testCacheCounter))
-  tmpCache <- checkPath(file.path(tmpdir, "testCache"), create = TRUE)
-  .pkgEnv$testCacheCounter <- .pkgEnv$testCacheCounter + 1L
 
   if (isTRUE(needGoogleDriveAuth)) {
     skip_if_not_installed("googledrive")
@@ -91,6 +91,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
       }
       opts <- append(opts, optsGoogle)
     }
+    opts <- lapply(opts, function(o) if (is.name(o)) eval(o, envir = environment()) else o)
     opts <- options(opts)
   }
 
