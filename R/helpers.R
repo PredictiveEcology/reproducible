@@ -94,7 +94,8 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
 #' @return
 #' A character string using the `.robustDigest` of the `studyArea`. This is only intended
 #' for use with spatial objects.
-#'
+#' @examples
+#' studyAreaName("Ontario")
 setGeneric("studyAreaName", function(studyArea, ...) {
   standardGeneric("studyAreaName")
 })
