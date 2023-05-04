@@ -181,6 +181,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     archive <- updateArchiveWithGuess(archive, targetFileGuess)
   }
 
+  if (is.logical(alsoExtract))
+    alsoExtract = c("none", "all")[alsoExtract + 1]
   targetFilePath <- getTargetFilePath(targetFile, archive, targetFileGuess, verbose,
                                 destinationPath, alsoExtract, checkSumFilePath)
   targetFile <- makeRelative(targetFilePath, destinationPath)
@@ -253,6 +255,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     list2env(outFromSimilar, environment()) # neededFiles, checkSums
   }
   neededFiles <- makeAbsolute(neededFiles, destinationPath)
+  neededFiles <- grep("none$", neededFiles, value = TRUE, invert = TRUE)
+  # alsoExtract <- grep("none$", alsoExtract, value = TRUE, invert = TRUE)
 
   filesToChecksum <- if (is.null(archive) || isTRUE(is.na(archive))) {
     NULL
@@ -261,8 +265,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   filesToChecksum <- unique(c(filesToChecksum, neededFiles))
-  isOK <- .compareChecksumsAndFiles(checkSums, filesToChecksum)
+  isOK <- .compareChecksumsAndFiles(checkSums, filesToChecksum, destinationPath) # also checks dirs, so adds lines
   if (isTRUE(!all(isOK))) {
+    browser()
     results <- .tryExtractFromArchive(archive = if (isTRUE(is.na(archive))) NULL else archive,
                                       neededFiles = neededFiles,
                                       alsoExtract = alsoExtract, destinationPath = destinationPath,
@@ -374,7 +379,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   on.exit({
     if (needChecksums > 0) {
       appendChecksumsTable(checkSumFilePath = checkSumFilePath,
-                           filesToChecksum = basename2(filesToChecksum),
+                           filesToChecksum = filesToChecksum,
                            destinationPath = destinationPath,
                            append = (needChecksums == 2))
     }
@@ -383,7 +388,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Stage 1 - Extract from archive
   filesToChecksum <- unique(c(filesToChecksum, neededFiles))
-  isOK <- .compareChecksumsAndFiles(checkSums, filesToChecksum)
+  isOK <- .compareChecksumsAndFiles(checkSums, filesToChecksum, destinationPath)
   if (isTRUE(!all(isOK))) {
     filesExtracted <- .tryExtractFromArchive(archive = archive,
                                              neededFiles = neededFiles,
@@ -457,7 +462,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         # needChecksums 1 --> write a new checksums.txt file
         # needChecksums 2 --> append to checksums.txt
         appendChecksumsTable(checkSumFilePath = checkSumFilePath,
-                             filesToChecksum = basename2(filesToChecksum),
+                             filesToChecksum = filesToChecksum,
                              destinationPath = destinationPath,
                              append = (needChecksums == 2))
       }
@@ -541,7 +546,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
          "Possibly, it does not exist in the specified archive, ",
          "or the file doesn't exist in destinationPath")
 
-  archiveInChecksums <- checkSums$actualFile %in% basename2(archive) # basename2 is needed in checksums
+  archiveInChecksums <- checkSums$actualFile %in% makeRelative(archive, destinationPath) # basename2 is needed in checksums
   if (any(archiveInChecksums))
     checkSums[which(archiveInChecksums), result := "ArchiveOK"]
 
@@ -561,17 +566,19 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @inheritParams downloadFile
 #' @keywords internal
 #' @rdname purge
-.purge <- function(checkSums, purge, targetFile, archive, alsoExtract, url) {
+.purge <- function(checkSums, purge, targetFile, archive, alsoExtract, url, destinationPath) {
   purgeChar <- as.character(purge)
   checkSums <- tryCatch(
     switch(
       purgeChar,
-      "2" = checkSums[!(checkSums$expectedFile %in% basename2(targetFile)), ],
-      "3" = checkSums[!(checkSums$expectedFile %in% basename2(archive)), ],
-      "4" = checkSums[!(checkSums$expectedFile %in% basename2(alsoExtract)), ],
-      "5" = checkSums[!(checkSums$expectedFile %in% basename2(unique(c(targetFile, alsoExtract)))), ], #nolint
-      "6" = checkSums[!(checkSums$expectedFile %in% basename2(unique(c(targetFile, alsoExtract, archive)))), ], #nolint
-      "7" = checkSums[!(checkSums$expectedFile %in% basename2(unique(c(targetFile, alsoExtract, archive, url)))), ] #nolint
+      "2" = checkSums[!(checkSums$expectedFile %in% makeRelative(targetFile, destinationPath)), ],
+      "3" = checkSums[!(checkSums$expectedFile %in% makeRelative(archive, destinationPath)), ],
+      "4" = checkSums[!(checkSums$expectedFile %in% makeRelative(alsoExtract, destinationPath)), ],
+      "5" = checkSums[!(checkSums$expectedFile %in% makeRelative(unique(c(targetFile, alsoExtract)), destinationPath)), ], #nolint
+      "6" = checkSums[!(checkSums$expectedFile %in%
+                          makeRelative(unique(c(targetFile, alsoExtract, archive)), destinationPath)), ], #nolint
+      "7" = checkSums[!(checkSums$expectedFile %in%
+                          makeRelative(unique(c(targetFile, alsoExtract, archive, url)), destinationPath)), ] #nolint
     ), error = function(x) checkSums)
   checkSums
 }
@@ -680,6 +687,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                              destinationPath, checkSums, checkSumFilePath,
                              url, verbose = getOption("reproducible.verbose", 1)) {
   lookForSimilar <- if (is.null(alsoExtract) || length(alsoExtract) == 0) {
+    messagePrepInputs("alsoExtract is unspecified; assuming that all files must be extracted")
     "all"
   } else {
     if ("similar" %in% basename2(alsoExtract)) {
@@ -759,7 +767,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             checkSumFilePathTry <- file.path(dirOPFiles, "CHECKSUMS.txt")
             checkSumsInputPath <- suppressMessages(
               Checksums(path = dirOPFiles, write = FALSE,
-                        files = basename2(neededFilesRel),
+                        files = neededFilesRel,
                         checksumFile = checkSumFilePathTry,
                         verbose = verbose)
             )
@@ -973,6 +981,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
     on.exit({unlink(.tempPath, recursive = TRUE)},
             add = TRUE)
   }
+  alsoExtract <- grep("none$", alsoExtract, value = TRUE, invert = TRUE) # remove "none" from neededFiles; for extracting
   neededFiles <- c(neededFiles, if (!is.null(alsoExtract)) alsoExtract)
   neededFiles <- setdiff(neededFiles, "similar") # remove "similar" from neededFiles; for extracting
   neededFiles <- unique(makeAbsolute(neededFiles, destinationPath)) # unique is b/c neededFiles was absolute and alsoExtract was rel
