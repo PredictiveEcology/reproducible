@@ -507,14 +507,15 @@ extractFromArchive <- function(archive,
           }
           neededFilesRel <- makeRelative(neededFiles[!isOK], destinationPath)
           filesToExtractNow <- intersect(filesInArchive, neededFilesRel)
-          extractingTheseFiles <- paste(filesToExtractNow, collapse = "\n")
+          dt <- data.table(files = filesToExtractNow)
+          # extractingTheseFiles <- paste(filesToExtractNow, collapse = "\n")
           # extractingTheseFiles <- paste(basename2(filesInArchive[basename2(filesInArchive) %in%
           #                                                         neededFiles]), collapse = ", ")
           # if (!any(nzchar(filesToExtractNow)))
           #   extractingTheseFiles <- paste0("all files: ",
           #                                  paste(filesInArchive, collapse = "\n"))
-          messagePrepInputs("From:\n", archive[1], "  \nExtracting\n",
-                  extractingTheseFiles, verbose = verbose)
+          messagePrepInputs("From:\n", archive[1], "  \nExtracting\n", verbose = verbose)
+          messageDF(dt, verbose = verbose, colour = getOption("reproducible.messageColourPrepInputs"))
           filesExtracted <- c(filesExtracted,
                               .callArchiveExtractFn(funWArgs$fun,
                                                     funWArgs$args,
