@@ -1,9 +1,3 @@
-#' @keywords internal
-.pkgSnapshot <- function(instPkgs, instVers, packageVersionFile = "._packageVersionsAuto.txt") {
-  inst <- data.frame(instPkgs, instVers = unlist(instVers), stringsAsFactors = FALSE)
-  write.table(inst, file = packageVersionFile, row.names = FALSE)
-  inst
-}
 
 ################################################################################
 #' Convert numeric to character with padding

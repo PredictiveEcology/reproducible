@@ -736,21 +736,7 @@ extractFromArchive <- function(archive,
     extractedFiles <- list.files(path = .tempPath, recursive = TRUE, include.dirs = TRUE)
     internalFolders <- extractedFiles[fileExt(extractedFiles) == ""]
     extractedFiles <- setdiff(x = extractedFiles, y = internalFolders)
-    # if (length(extractedFiles) == 0) {
-    #   stop("preProcess could not extract the files from the archive ", basename2(args[[1]]),".",
-    #        "Please try to extract it manually to the destinationPath")
-    # } else {
-    #   invisible(lapply(
-    #     X = extractedFiles,
-    #     FUN = function(fileToMove) {
-    #       invisible(.file.move(from = file.path(.tempPath, fileToMove),
-    #                           to = file.path(args$exdir, basename2(fileToMove)),
-    #                           overwrite = overwrite))
-    #     }
-    #   ))
-    #   # unlink(file.path(args$exdir, "extractedFiles"), recursive = TRUE)
-    #   extractedFiles <- basename2(extractedFiles)
-    # }
+
   } else {
     # Try the direct, then indirect
     isUnzip <- if (identical(unzip, fun)) TRUE else ("overwrite" %in% names(formals(fun)))
@@ -888,24 +874,6 @@ extractFromArchive <- function(archive,
 }
 
 #' @keywords internal
-.checkSums <- function(filesToCheck, fileinfo, chksumsFilePath, quick,
-                       verbose = getOption("reproducible.verbose", 1)) {
-  browser()
-  if (missing(chksumsFilePath)) {
-    chksumsFilePath <- file.path(dirname(filesToCheck), "CHECKSUMS.txt")
-  }
-  moduleName <- basename2(dirname(dirname(chksumsFilePath)))
-  modulePath <- dirname(dirname(dirname(chksumsFilePath)))
-  checkSums <- Checksums(files = filesToCheck,
-                         module = moduleName,
-                         path = modulePath,
-                         checksumFile = asPath(chksumsFilePath),
-                         write = FALSE,
-                         quickCheck = quick,
-                         verbose = verbose
-  )
-  list(moduleName = moduleName, modulePath = modulePath, checkSums = checkSums)
-}
 
 .isArchive <- function(filename) {
   if (!is.null(filename)) {
@@ -921,13 +889,6 @@ extractFromArchive <- function(archive,
     }
   }
   return(filename)
-}
-
-#' @keywords internal
-.groupedMessage <- function(mess, omitPattern, verbose = getOption("reproducible.verbose", 1)) {
-  mess <- grep(mess, pattern = omitPattern,
-               invert = TRUE, value = TRUE)
-  if (length(mess)) messagePrepInputs(paste(mess, collapse = "\n    "), verbose = verbose)
 }
 
 #' @keywords internal
@@ -995,32 +956,6 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   return(currentFiles)
 }
 
-#' Check a neededFile for commonly needed auxiliary files
-#'
-#' Currently, this is only used for shapefiles.
-#'
-#' @param neededFiles A character string of file name(s) that will be checked. Specifically
-#'        if the file extension is `.shp` it will output the names of files with
-#'        these extensions also:
-#'        c("shx", "dbf", "prj", "sbx", "sbn") files also.
-#' @keywords internal
-#' @rdname checkForAuxiliaryFiles
-.checkForAuxiliaryFiles <- function(neededFiles) {
-  if ("shp" %in% fileExt(neededFiles)) { # if user wants .shp file, needs other anciliary files
-    # but not all
-    shpfileBase <- gsub(".shp$", "", neededFiles[fileExt(neededFiles) %in% "shp"])
-    reqdShpFiles <- paste0(shpfileBase, ".", c("shx", "dbf", "prj", "sbx", "sbn"))
-    if (length(neededFiles) > 0) {
-      if (identical(FALSE, (all(reqdShpFiles %in% neededFiles)))) {
-        optionalShpFiles <- paste0(shpfileBase, ".", c("cpg", "shp.xml"))
-        otherShpfiles <- c(reqdShpFiles, optionalShpFiles)
-        neededFiles <- unique(c(neededFiles, otherShpfiles))
-      }
-    }
-
-  }
-  neededFiles
-}
 
 #' List files in either a `.zip` or or `.tar` file
 #'

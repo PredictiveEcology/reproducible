@@ -270,48 +270,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 }
 
 
-.digestRasterLayer2 <- function(object, length, algo, quick) {
-  # metadata -- only a few items of the long list because one thing (I don't recall)
-  #  doesn't cache consistently
-  sn <- slotNames(object@data)
-  sn <- sn[!(sn %in% c(#"min", "max", "haveminmax", "names", "isfactor",
-    "dropped", "nlayers", "fromdisk", "inmemory"
-    #"offset", "gain"
-  ))]
-  dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
-  dig <- .robustDigest(append(list(dim(object), raster::res(object), terra::crs(object),
-                                   raster::extent(object)), dataSlotsToDigest), length = length, quick = quick,
-                       algo = algo) # don't include object@data -- these are volatile
-
-  # Legend
-  sn <- slotNames(object@legend)
-  legendSlotsToDigest <- lapply(sn, function(s) slot(object@legend, s))
-  dig2 <- .robustDigest(legendSlotsToDigest, length = length, quick = quick,
-                        algo = algo) # don't include object@data -- these are volatile
-  dig <- c(dig, dig2)
-
-  sn <- slotNames(object@file)
-  sn <- sn[!(sn %in% c("name"))]
-  fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
-  digFile <- .robustDigest(fileSlotsToDigest, length = length, quick = quick,
-                           algo = algo) # don't include object@file -- these are volatile
-  dig <- c(dig, digFile)
-  if (nzchar(object@file@name)) {
-    # if the Raster is on disk, has the first length characters;
-    filename <- if (isTRUE(endsWith(basename(object@file@name), suffix = ".grd"))) {
-      sub(object@file@name, pattern = ".grd$", replacement = ".gri")
-    } else {
-      object@file@name
-    }
-    # there is no good reason to use depth = 0, 1, or 2 or more -- but I think 2 is *more* reliable
-    dig2 <- .robustDigest(asPath(filename, 2), length = length, quick = quick, algo = algo)
-    dig <- c(dig, unname(dig2))
-  }
-
-  dig <- .robustDigest(unlist(dig), length = length, quick = quick, algo = algo)
-  dig
-}
-
 
 ################################################################################
 #' @details

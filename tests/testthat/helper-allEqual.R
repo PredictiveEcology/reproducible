@@ -43,7 +43,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   # Set a new seed each time
   set.randomseed()
 
-  if (isTRUE(needGoogleDriveAuth)) {
+  skip_gauth <- identical(Sys.getenv("SKIP_GAUTH"), "true") # only set in setup.R for covr
+  if (isTRUE(needGoogleDriveAuth) && !skip_gauth) {
     skip_if_not_installed("googledrive")
     if (interactive()) {
       if (!googledrive::drive_has_token()) {

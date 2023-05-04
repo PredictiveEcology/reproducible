@@ -302,26 +302,6 @@ downloadFile <- function(archive, targetFile, neededFiles,
        downloaded = downloadResults$destFile, checkSums = checkSums, object = downloadResults$out)
 }
 
-.getSourceURL <- function(pattern, x) {
-  srcURL <- "sourceURL"
-  grepIndex <- grep(srcURL, x = x)
-  if (length(grepIndex) == 1) {
-    .getSourceURL(pattern, x[[grepIndex]])
-  } else if (length(grepIndex) > 1 | length(grepIndex) == 0) {
-    browser()
-    y <- grep(pattern = basename(pattern), x)
-    if (length(y) == 1) {
-      urls <- if (length(grepIndex) > 1)
-        eval(x[[y]])$sourceURL
-      else
-        eval(x)$sourceURL
-    } else {
-      stop("There is no sourceURL for an object named ", basename(pattern))
-    }
-  } else {
-    stop("There is no sourceURL in module metadata")
-  }
-}
 
 #' Download file from Google Drive
 #'

@@ -12,7 +12,8 @@ assessDataType(ras, type = "writeRaster")
 \arguments{
 \item{ras}{The \code{RasterLayer} or \code{RasterStack} for which data type will be assessed.}
 
-\item{type}{Character. \code{"writeRaster"} (default) or \code{"GDAL"} to return the recommended
+\item{type}{Character. \code{"writeRaster"} (default) or \code{"GDAL"} (defunct)
+to return the recommended
 data type for writing from the raster packages, respectively, or
 \code{"projectRaster"} to return recommended resampling type.}
 }
