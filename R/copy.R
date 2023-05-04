@@ -1,4 +1,4 @@
-#' Move a file to a new location
+#' Move a file to a new location -- Defunct -- use `hardLinkOrCopy`
 #'
 #' This will first try to `file.rename`, and if that fails, then it will
 #' `file.copy` then `file.remove`.
@@ -8,18 +8,9 @@
 #' @return Logical indicating whether operation succeeded.
 #'
 .file.move <- function(from, to, overwrite = FALSE) {
-  stopifnot(file.exists(from))
-  res <- suppressWarnings(file.rename(from = from, to = to))
-
-  if (!isTRUE(all(res))) {
-    res2 <- file.copy(from = from, to = to, overwrite = overwrite)
-    if (isTRUE(all(res2))) {
-      file.remove(from)
-    }
-    return(res2)
-  } else {
-    return(res)
-  }
+  .Deprecated("hardLinkeOrCopy")
+  hardLinkOrCopy(from, to, overwrite)
+  file.remove(from)
 }
 
 #' Recursive copying of nested environments, and other "hard to copy" objects

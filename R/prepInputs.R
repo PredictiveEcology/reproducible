@@ -736,21 +736,7 @@ extractFromArchive <- function(archive,
     extractedFiles <- list.files(path = .tempPath, recursive = TRUE, include.dirs = TRUE)
     internalFolders <- extractedFiles[fileExt(extractedFiles) == ""]
     extractedFiles <- setdiff(x = extractedFiles, y = internalFolders)
-    # if (length(extractedFiles) == 0) {
-    #   stop("preProcess could not extract the files from the archive ", basename2(args[[1]]),".",
-    #        "Please try to extract it manually to the destinationPath")
-    # } else {
-    #   invisible(lapply(
-    #     X = extractedFiles,
-    #     FUN = function(fileToMove) {
-    #       invisible(.file.move(from = file.path(.tempPath, fileToMove),
-    #                           to = file.path(args$exdir, basename2(fileToMove)),
-    #                           overwrite = overwrite))
-    #     }
-    #   ))
-    #   # unlink(file.path(args$exdir, "extractedFiles"), recursive = TRUE)
-    #   extractedFiles <- basename2(extractedFiles)
-    # }
+
   } else {
     # Try the direct, then indirect
     isUnzip <- if (identical(unzip, fun)) TRUE else ("overwrite" %in% names(formals(fun)))
