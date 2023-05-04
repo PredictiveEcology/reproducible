@@ -37,7 +37,7 @@ test_that("test parallel collisions", {
 
   keepLog <- FALSE
   if (isWindows() && Sys.info()["user"] == "emcintir") {
-    tmpdir <- 'c:/Eliot/tmpCache/'
+    # tmpdir <- 'c:/Eliot/tmpCache/'
     keepLog <- TRUE
   }
 
