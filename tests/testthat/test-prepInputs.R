@@ -230,8 +230,8 @@ test_that("interactive prepInputs", {
                            overwrite = TRUE
                          )
                        })
-  expect_true(inherits(outsideModule[[1]], "SpatRaster"))
-  expect_true(inherits(outsideModule[[2]], "SpatRaster"))
+  expect_true(inherits(outsideModule[[1]], rasterType()))
+  expect_true(inherits(outsideModule[[2]], rasterType()))
   # expect_true(inherits(terra::crs(outsideModule[[2]]), "CRS"))
   # expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
@@ -256,8 +256,8 @@ test_that("interactive prepInputs", {
                            overwrite = TRUE
                          )
                        })
-  expect_true(inherits(outsideModule[[1]], "SpatRaster"))
-  expect_true(inherits(outsideModule[[2]], "SpatRaster"))
+  expect_true(inherits(outsideModule[[1]], rasterType()))
+  expect_true(inherits(outsideModule[[2]], rasterType()))
   # expect_true(inherits(crs(outsideModule[[2]]), "CRS"))
   # expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
   expect_true(!is.na(crs(outsideModule[[1]])))
@@ -283,8 +283,8 @@ test_that("interactive prepInputs", {
                            overwrite = TRUE
                          )
                        })
-  expect_true(inherits(outsideModule[[1]], "SpatRaster"))
-  expect_true(inherits(outsideModule[[2]], "SpatRaster"))
+  expect_true(inherits(outsideModule[[1]], rasterType()))
+  expect_true(inherits(outsideModule[[2]], rasterType()))
   expect_false(identical(terra::crs(outsideModule[[1]]), "")) # now with subfolders & all files, has crs
   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
 

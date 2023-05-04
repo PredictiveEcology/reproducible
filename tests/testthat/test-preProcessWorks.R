@@ -432,7 +432,7 @@ test_that("masking with larger extent obj", {
   skip_on_cran()
   skip_on_ci()
 
-  testInitOut <- testInit("raster", needGoogleDriveAuth = TRUE)
+  testInitOut <- testInit("terra", needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -440,12 +440,16 @@ test_that("masking with larger extent obj", {
   sam <- sample(terra::ncell(smallRT), size = terra::ncell(smallRT)/2)
   smallRT[] <- NA
   smallRT[sam] <- 1L
-  a <- terra::ext(smallRT)
+  if (is(smallRT, "Raster")) {
+    a <- raster::extent(smallRT)
+  } else {
+    a <- terra::ext(smallRT)
+  }
   a <- terra::extend(a, -3e5) # make it small
-  test <- terra::rast(a, res = 250, vals = 2)
+  test <- rasterRead(a, res = 250, vals = 2)
   terra::crs(test) <- terra::crs(smallRT)
   b <- postProcess(x = test, rasterToMatch = smallRT, maskWithRTM = TRUE)
-  expect_true(is(b, "SpatRaster"))
+  expect_true(is(b, rasterType()))
 })
 
 test_that("Test of using future and progress indicator for lrg files on Google Drive", {
