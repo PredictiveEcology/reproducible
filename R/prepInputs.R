@@ -514,7 +514,7 @@ extractFromArchive <- function(archive,
           # if (!any(nzchar(filesToExtractNow)))
           #   extractingTheseFiles <- paste0("all files: ",
           #                                  paste(filesInArchive, collapse = "\n"))
-          messagePrepInputs("From:\n", archive[1], "  \nExtracting\n", verbose = verbose)
+          messagePrepInputs("From:\n", archive[1], "  \nExtracting", verbose = verbose)
           messageDF(dt, verbose = verbose, colour = getOption("reproducible.messageColourPrepInputs"))
           filesExtracted <- c(filesExtracted,
                               .callArchiveExtractFn(funWArgs$fun,
