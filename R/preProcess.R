@@ -675,15 +675,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     }
     anySimilarInCS <- vapply(filePathSansExt(file), function(fi) {
       res <- checkSums[grepl(paste0(fi,"\\."), checkSums$expectedFile),]$result
+      res <- na.omit(res)
       if (length(res) == 0) res <- "NotOK"
-      res
-    }, FUN.VALUE = character(1))
+      isTRUE(all(compareNA("OK", res)))
+    }, FUN.VALUE = logical(1))
 
-    if (length(anySimilarInCS)) {
-      isTRUE(all(compareNA("OK", anySimilarInCS)))
-    } else {
-      FALSE
-    }
+    all(anySimilarInCS)
   } else {
     FALSE
   }
