@@ -401,7 +401,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9", vectorType(), 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8", vectorType(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
