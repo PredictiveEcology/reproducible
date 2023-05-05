@@ -454,7 +454,7 @@ extractFromArchive <- function(archive,
              ". Please pass an archive name to a path that exists")
       args <- list(archive[1], exdir = destinationPath[1])
       funWArgs <- .whichExtractFn(archive[1], args)
-      filesInArchive <- .listFilesInArchive(archive)
+      filesInArchive <- normPath(.listFilesInArchive(archive))
       if (is.null(neededFiles)) {
         neededFiles <- filesInArchive
         result <- checkSums[checkSums$expectedFile %in% makeRelative(neededFiles, destinationPath), ]$result

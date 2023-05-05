@@ -203,7 +203,7 @@ test_that("prepInputs works with nested rar file inside internal rar folder", {
   skip_on_ci() ## TODO: skip for now b/c need additional unrar tools
   skip_on_os("mac") ## TODO: deal with unrar for macOS #266
 
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

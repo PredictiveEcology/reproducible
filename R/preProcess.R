@@ -245,7 +245,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     neededFiles <- checkRelative(neededFiles, destinationPath, filesInsideArchive)
 
     if (isTRUE(length(filesInsideArchive) > 0)) {
-      checkSums <- .checkSumsUpdate(destinationPath, file.path(destinationPath, filesInsideArchive),
+      checkSums <- .checkSumsUpdate(destinationPath, makeAbsolute(filesInsideArchive, destinationPath),
                                     checkSums = checkSums)
     }
     neededFiles <- unique(c(neededFiles, filesInsideArchive))
@@ -435,8 +435,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
   # if it was a nested file
   if (any(fileExt(neededFiles) %in% c("zip", "tar", "rar")) && !isTRUE(is.na(archive))) {
-    nestedArchives <- basename2(neededFiles[fileExt(neededFiles) %in% c("zip", "tar", "rar")])
-    nestedArchives <- normPath(file.path(destinationPath, nestedArchives[1]))
+    nestedArchives <- neededFiles[fileExt(neededFiles) %in% c("zip", "tar", "rar")]
+    nestedArchives <- makeAbsolute(nestedArchives[1], destinationPath)
     messagePrepInputs("There are still archives in the extracted files.",
             " preProcess will try to extract the files from ", basename2(nestedArchives), ".",
             " If this is incorrect, please supply archive.", verbose = verbose)
