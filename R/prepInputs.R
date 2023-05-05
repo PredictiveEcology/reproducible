@@ -514,7 +514,7 @@ extractFromArchive <- function(archive,
           # if (!any(nzchar(filesToExtractNow)))
           #   extractingTheseFiles <- paste0("all files: ",
           #                                  paste(filesInArchive, collapse = "\n"))
-          messagePrepInputs("From:\n", archive[1], "  \nExtracting", verbose = verbose)
+          messagePrepInputs("From:\n", archive[1], "  \n", "Extracting", verbose = verbose)
           messageDF(dt, verbose = verbose, colour = getOption("reproducible.messageColourPrepInputs"))
           filesExtracted <- c(filesExtracted,
                               .callArchiveExtractFn(funWArgs$fun,
@@ -560,7 +560,8 @@ extractFromArchive <- function(archive,
     }
   } else {
     if (!is.null(archive)) { # if archive is null, it means there was no archive passed
-      messagePrepInputs("  Skipping extractFromArchive: ", paste(neededFiles, collapse = "\n"), " already present", verbose = verbose)
+      messagePrepInputs("  Skipping extractFromArchive: all needed ",
+                        "files now present", verbose = verbose)
     }
     filesExtracted <- setdiff(neededFiles, if (!is.null(archive)) makeRelative(archive, destinationPath))
   }

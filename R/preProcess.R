@@ -214,7 +214,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   # This will populate a NULL archive if archive is local or
-  archiveOut <- dealWithArchive(archive, url, targetFile, checkSums, destinationPath, teamDrive, verbose)
+  archiveOut <- dealWithArchive(archive, url, targetFile, checkSums, alsoExtract,
+                                destinationPath, teamDrive, verbose)
   list2env(archiveOut, envir = environment()) # checkSums, archive, fileGuess
 
   # NOW -- archive will exist if it didn't before
@@ -267,7 +268,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   filesToChecksum <- unique(c(filesToChecksum, neededFiles))
   isOK <- .compareChecksumsAndFiles(checkSums, filesToChecksum, destinationPath) # also checks dirs, so adds lines
   if (isTRUE(!all(isOK))) {
-    browser()
     results <- .tryExtractFromArchive(archive = if (isTRUE(is.na(archive))) NULL else archive,
                                       neededFiles = neededFiles,
                                       alsoExtract = alsoExtract, destinationPath = destinationPath,
@@ -668,10 +668,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 }
 
 #' @keywords internal
-.similarFilesInCheckSums <- function(file, checkSums) {
+.similarFilesInCheckSums <- function(file, checkSums, alsoExtract) {
   if (NROW(checkSums)) {
-    anySimilarInCS <- checkSums[grepl(paste0(filePathSansExt(file),"\\."),
-                                      checkSums$expectedFile),]$result
+    if (!missing(alsoExtract)) {
+      file <- unique(c(file, alsoExtract))
+    }
+    anySimilarInCS <- vapply(filePathSansExt(file), function(fi) {
+      res <- checkSums[grepl(paste0(fi,"\\."), checkSums$expectedFile),]$result
+      if (length(res) == 0) res <- "NotOK"
+      res
+    }, FUN.VALUE = character(1))
+
     if (length(anySimilarInCS)) {
       isTRUE(all(compareNA("OK", anySimilarInCS)))
     } else {
@@ -708,7 +715,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       messagePrepInputs("Extracting all files from archive", verbose = verbose)
       neededFiles <- allFiles
     } else {
-      allOK <- .similarFilesInCheckSums(targetFile, checkSums)
+      allOK <- .similarFilesInCheckSums(targetFile, checkSums, alsoExtract)
       if (!allOK) {
         filePatternToKeep <- gsub(basename2(targetFile),
                                   pattern = fileExt(basename2(targetFile)), replacement = "")
@@ -1262,6 +1269,9 @@ makeRelative <- function(files, absoluteBase) {
 #'   have sub-folder structure.
 checkRelative <- function(files, absolutePrefix, knownRelativeFiles) {
   neededFilesRel <- makeRelative(files, absolutePrefix)
+  areAbs <- isAbsolutePath(knownRelativeFiles)
+  if (any(areAbs))
+    knownRelativeFiles[areAbs] <- makeRelative(knownRelativeFiles, absolutePrefix)
   relativeNamesCorrect <- neededFilesRel %in% knownRelativeFiles
 
   if (!is.null(knownRelativeFiles)) {
@@ -1413,11 +1423,11 @@ runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbos
 }
 
 
-dealWithArchive <- function(archive, url, targetFile, checkSums, destinationPath, teamDrive, verbose) {
+dealWithArchive <- function(archive, url, targetFile, checkSums, alsoExtract, destinationPath, teamDrive, verbose) {
   fileGuess <- NULL
   if (is.null(archive)) {
     if (!is.null(url)) {
-      allOK <- .similarFilesInCheckSums(targetFile, checkSums)
+      allOK <- .similarFilesInCheckSums(targetFile, checkSums, alsoExtract)
 
       if (!allOK) { # skip identification of archive if we have all files with same basename as targetFile
         # BUT if we don't have all files with identical root name (basename sans ext), then assess for
