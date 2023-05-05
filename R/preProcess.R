@@ -345,7 +345,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Post downloadFile -- put objects into this environment
   if (!is.null(downloadFileResult$targetFilePath))
-    targetFilePath <- file.path(normPath(destinationPath), downloadFileResult$neededFiles)
+    targetFilePath <- makeAbsolute(downloadFileResult$neededFiles, destinationPath)
   checkSums <- downloadFileResult$checkSums
   needChecksums <- downloadFileResult$needChecksums
   neededFiles <- downloadFileResult$neededFiles
@@ -1137,7 +1137,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
         messagePrepInputs(
           "Downloaded file has no extension: neither archive nor targetFile are provided. \n",
           "prepInputs will try accessing the file type.", verbose = verbose)
-        fileExt <- .guessFileExtension(file = file.path(normPath(downloadFileResult$downloaded)))
+        fileExt <- .guessFileExtension(file = normPath(downloadFileResult$downloaded))
         if (is.null(fileExt)) {
           messagePrepInputs("The file was not recognized by prepInputs. ",
                   "Will assume the file is an archive and add '.zip' extension. ",
@@ -1149,7 +1149,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
         needFinalCopy <- FALSE
         downloadFileResult$neededFiles <- makeAbsolute(.listFilesInArchive(newFileWithExtension), destinationPath)
         downloadFileResult$archive <- newFileWithExtension
-        downloadFileResult$targetFilePath <- file.path(downloadFileResult$neededFiles)
+        downloadFileResult$targetFilePath <- normPath(downloadFileResult$neededFiles)
       }
     }
     if (isTRUE(needFinalCopy))
