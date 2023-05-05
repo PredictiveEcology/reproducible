@@ -1268,13 +1268,13 @@ makeRelative <- function(files, absoluteBase) {
 #' @param knownRelativeFiles A character vector of relative filenames, that could
 #'   have sub-folder structure.
 checkRelative <- function(files, absolutePrefix, knownRelativeFiles) {
-  neededFilesRel <- makeRelative(files, absolutePrefix)
-  areAbs <- isAbsolutePath(knownRelativeFiles)
-  if (any(areAbs))
-    knownRelativeFiles[areAbs] <- makeRelative(knownRelativeFiles, absolutePrefix)
-  relativeNamesCorrect <- neededFilesRel %in% knownRelativeFiles
-
   if (!is.null(knownRelativeFiles)) {
+    neededFilesRel <- makeRelative(files, absolutePrefix)
+    areAbs <- isAbsolutePath(knownRelativeFiles)
+    if (any(areAbs))
+      knownRelativeFiles[areAbs] <- makeRelative(knownRelativeFiles, absolutePrefix)
+    relativeNamesCorrect <- neededFilesRel %in% knownRelativeFiles
+
     if (!all(relativeNamesCorrect)) {# means user has asked for incorrect relative path
 
       #  must include directory names
