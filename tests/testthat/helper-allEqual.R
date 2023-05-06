@@ -162,12 +162,19 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
 
   isOK <- hasMessageNum == prod
   if (!isOK) {
-    expe <- as.numeric(strsplit(prod, split = "_")[[1]])
-    getting <- as.numeric(strsplit(hasMessageNum, split = "_")[[1]])
+    if (interactive()) {
+      expe <- as.numeric(strsplit(prod, split = "_")[[1]])
+      getting <- as.numeric(strsplit(hasMessageNum, split = "_")[[1]])
 
-    expectedMessVec <- strsplit(expectedMess, split = "\\|")[[1]]
-    messagePrepInputs("expecting, but didn't get ", paste(collapse = ", ", expectedMessVec[setdiff(expe, getting)]))
-    messagePrepInputs("got, but didn't expect ", paste(collapse = ", ", expectedMessVec[setdiff(getting, expe)]))
+      expectedMessVec <- strsplit(expectedMess, split = "\\|")[[1]]
+      expecting <- paste(collapse = ", ", expectedMessVec[setdiff(expe, getting)])
+      if (length(expecting))
+        cat("\nexpecting, but didn't get: ", expecting)
+      got <-  paste(collapse = ", ", expectedMessVec[setdiff(getting, expe)])
+      if (length(got))
+        cat("\ngot, but didn't expect ", got, "\n")
+
+    }
   }
   expect_true(isOK) #
 }

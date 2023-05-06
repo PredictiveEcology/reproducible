@@ -435,14 +435,14 @@ extractFromArchive <- function(archive,
     # neededFiles <- setdiff(basename2(neededFiles), basename2(archive))
   if (length(neededFiles) == 0) neededFiles <- NULL
   result <- if (!is.null(neededFiles)) {
-    checkSums[checkSums$expectedFile %in% basename2(neededFiles), ]$result
+    checkSums[checkSums$expectedFile %in% makeRelative(neededFiles, destinationPath), ]$result
   } else {
     "NotOK"
   }
   extractedObjs <- list(filesExtracted = character())
   # needs to pass checkSums & have all neededFiles files
   hasAllFiles <- if (NROW(checkSums)) {
-    all(basename2(neededFiles) %in% checkSums$expectedFile) # need basename2 for comparison with checkSums
+    all(makeRelative(neededFiles, destinationPath) %in% checkSums$expectedFile) # need basename2 for comparison with checkSums
   } else {
     FALSE
   }
@@ -454,10 +454,12 @@ extractFromArchive <- function(archive,
              ". Please pass an archive name to a path that exists")
       args <- list(archive[1], exdir = destinationPath[1])
       funWArgs <- .whichExtractFn(archive[1], args)
-      filesInArchive <- .listFilesInArchive(archive)
+
+      # need to deal with \\ vs. / and also needs to stay relative
+      filesInArchive <- makeRelative(.listFilesInArchive(archive), destinationPath)
       if (is.null(neededFiles)) {
         neededFiles <- filesInArchive
-        result <- checkSums[checkSums$expectedFile %in% basename2(neededFiles), ]$result
+        result <- checkSums[checkSums$expectedFile %in% makeRelative(neededFiles, destinationPath), ]$result
       }
 
       neededFiles <- checkRelative(neededFiles, destinationPath, filesInArchive)
@@ -469,7 +471,7 @@ extractFromArchive <- function(archive,
                                     checkSumFilePath = checkSumFilePath)
 
       isOK <- if (!is.null(checkSums)) {
-        .compareChecksumsAndFiles(checkSums, neededFiles)
+        .compareChecksumsAndFiles(checkSums, neededFiles, destinationPath)
       } else {
         FALSE
       }
@@ -514,7 +516,7 @@ extractFromArchive <- function(archive,
           # if (!any(nzchar(filesToExtractNow)))
           #   extractingTheseFiles <- paste0("all files: ",
           #                                  paste(filesInArchive, collapse = "\n"))
-          messagePrepInputs("From:\n", archive[1], "  \nExtracting", verbose = verbose)
+          messagePrepInputs("From:\n", archive[1], "  \n", "Extracting", verbose = verbose)
           messageDF(dt, verbose = verbose, colour = getOption("reproducible.messageColourPrepInputs"))
           filesExtracted <- c(filesExtracted,
                               .callArchiveExtractFn(funWArgs$fun,
@@ -554,15 +556,16 @@ extractFromArchive <- function(archive,
       } else {
         messagePrepInputs("  Skipping extractFromArchive: all files already present", verbose = verbose)
         filesExtracted <- checkSums[checkSums$expectedFile %in%
-                                      basename2(filesInArchive), ]$expectedFile
+                                      makeRelative(filesInArchive, destinationPath), ]$expectedFile
         filesExtracted <- makeAbsolute(filesInArchive, destinationPath)
       }
     }
   } else {
     if (!is.null(archive)) { # if archive is null, it means there was no archive passed
-      messagePrepInputs("  Skipping extractFromArchive: ", paste(neededFiles, collapse = "\n"), " already present", verbose = verbose)
+      messagePrepInputs("  Skipping extractFromArchive: all needed ",
+                        "files now present", verbose = verbose)
     }
-    filesExtracted <- setdiff(neededFiles, if (!is.null(archive)) basename2(archive))
+    filesExtracted <- setdiff(neededFiles, if (!is.null(archive)) makeRelative(archive, destinationPath))
   }
   list(extractedArchives = c(extractedArchives, archive),
        neededFiles = neededFiles, # these may have been corrected for user supplying incorrect basename path
@@ -723,7 +726,7 @@ extractFromArchive <- function(archive,
 
       # This spits out a message on non-Windows about arguments that are ignored
       suppressMessages({
-        output <- system(paste0(prependPath, " e -aoa -o\"", .tempPath, "\" \"", args[[1]], "\""),
+        output <- system(paste0(prependPath, " x -aoa -o\"", .tempPath, "\" \"", args[[1]], "\""),
                          wait = TRUE,
                          ignore.stdout = FALSE,
                          ignore.stderr = FALSE,
@@ -734,9 +737,9 @@ extractFromArchive <- function(archive,
       system(paste0("unrar x ", args[[1]], " ", .tempPath), wait = TRUE, ignore.stdout = TRUE)
     }
     # list of full paths of all extracted files!
-    extractedFiles <- list.files(path = .tempPath, recursive = TRUE, include.dirs = TRUE)
-    internalFolders <- extractedFiles[fileExt(extractedFiles) == ""]
-    extractedFiles <- setdiff(x = extractedFiles, y = internalFolders)
+    # extractedFiles <- list.files(path = .tempPath, recursive = TRUE, include.dirs = TRUE)
+    # internalFolders <- extractedFiles[fileExt(extractedFiles) == ""]
+    # extractedFiles <- setdiff(x = extractedFiles, y = internalFolders)
 
   } else {
     # Try the direct, then indirect
@@ -848,7 +851,7 @@ extractFromArchive <- function(archive,
                                # list of full paths of all extracted files!
                                recursive = TRUE,
                                include.dirs = TRUE)
-  from <- file.path(.tempPath, extractedFiles)
+  from <- makeAbsolute(extractedFiles, .tempPath)
   on.exit({
     if (any(file.exists(from)))
       suppressWarnings(try(unlink(from), silent = TRUE))
@@ -906,7 +909,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       append <- FALSE
     } else {
       setDT(cs)
-      nonCurrentFiles <- cs[!file %in% basename2(filesToChecksum)]
+      nonCurrentFiles <- cs[!file %in% makeRelative(filesToChecksum, destinationPath)]
       setDF(cs)
 
     }
@@ -1035,19 +1038,21 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   return(filesInArchive)
 }
 
-.compareChecksumsAndFiles <- function(checkSums, files) {
+.compareChecksumsAndFiles <- function(checkSums, files, destinationPath) {
   isOK <- NULL
   if (!is.null(files)) {
     checkSumsDT <- data.table(checkSums)
     if (NCOL(checkSumsDT) == 0)
       checkSumsDT <- Copy(.emptyChecksumsResult)
-    dirs <- basename2(unique(dirname(files)))
-    filesDT <- data.table(files = basename2(unique(c(files, dirs))))
+    dirs <- makeRelative(dirname(files), destinationPath) # basename2(unique(dirname(files)))
+    dirs <- dirs[nzchar(dirs)]
+    filesDT <- data.table(files = unique(makeRelative(c(files, dirs), destinationPath)))
     isOKDT <- checkSumsDT[filesDT, on = c(expectedFile = "files")]
-    isOKDT2 <- checkSumsDT[filesDT, on = c(actualFile = "files")]
+    isOKDT2 <- checkSumsDT[filesDT, on = c(actualFile = "files"), nomatch = NA]
     # fill in any OKs from "actualFile" intot he isOKDT
     isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
     isOK <- compareNA(isOKDT$result, "OK")
+    names(isOK) <- makeRelative(files, destinationPath)
   }
   isOK
 }

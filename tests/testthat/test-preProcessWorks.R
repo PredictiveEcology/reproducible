@@ -526,3 +526,27 @@ test_that("lightweight tests for preProcess code coverage", {
   expect_true(is.character(.decodeMagicNumber("Zip")))
 
 })
+
+test_that("large test for nested file structures in zips", {
+  skip_on_cran()
+  skip_on_ci()
+  out <- testInit("sf")
+  on.exit(testOnExit(out), add = TRUE)
+  climateDataURL <- "https://drive.google.com/file/d/1we9GqEVAORWLbHi3it66VnCcvLu85QIk"
+
+  ## extracts flat files, overwriting and keeping only the last subdir's files
+  files <- list(paste0("Alberta/Year_",2015:2019,"M/Eref01.asc"),
+                paste0("Alberta/Year_",1991:2019,"M/Eref01.asc"),
+                c(paste0("Alberta/Year_",1991:2019,"M/CMD01.asc"),
+                  paste0("Alberta/Year_",1991:2019,"M/Eref01.asc")))
+  lapply(files, function(fis) {
+    res1 <- preProcess(url = climateDataURL, destinationPath = tmpdir,
+                       targetFile = "Alberta/Year_2020M/CMD01.asc",
+                       alsoExtract = fis
+    )
+    testLength <- length(fis) + 2
+    expect_equal(NROW(res1$checkSums[checksum.x != "dir"]), testLength)
+  })
+
+
+})

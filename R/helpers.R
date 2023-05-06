@@ -649,3 +649,9 @@ milliseconds <- function(time = Sys.time()) {
   rnd <- round(tt, -5)
   (tt-rnd) * 1000
 }
+
+cat2file <- function(..., file) {
+  if (missing(file))
+    file = "~/log.txt"
+  cat(..., file = file)
+}

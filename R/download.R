@@ -37,7 +37,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
     targetFile <- NULL
 
   if (!is.null(url) || !is.null(dlFun)) {
-    missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile)
+    missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile, destinationPath)
 
     if (missingNeededFiles) { # needed may be missing, but maybe can skip download b/c archive exists
       if (!is.null(archive)) {
@@ -68,7 +68,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
             }
 
             # Check again, post extract ... If FALSE now, then it got it from local, already existing archive
-            missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile)
+            missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile, destinationPath)
             if (!missingNeededFiles) {
               archive <- archive[localArchivesExist]
             }
@@ -604,8 +604,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
   downloadResults
 }
 
-missingFiles <- function(files, checkSums, targetFile) {
-  filesBasename <- basename2(files)
+missingFiles <- function(files, checkSums, targetFile, destinationPath) {
+  filesBasename <- makeRelative(files, destinationPath)
   if (is.null(files)) {
     result <- unique(checkSums$result)
   } else {
