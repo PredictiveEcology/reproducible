@@ -116,10 +116,7 @@ setMethod(
                  header = TRUE,
                  stringsAsFactors = FALSE)
     }
-    #if (dim(txt)[1] == 0) { # if there are no rows
     txt <- as.data.table(lapply(txt, as.character))
-    # txt <- dplyr::mutate_all(txt, as.character)
-    #}
     if (is.null(txt$filesize)) txt$filesize <- rep("", NROW(txt))
     txtRead <- txt # keep a copy even if writing
     if (!(!write && file.info(checksumFile)$size > 0)) {

@@ -454,7 +454,10 @@ extractFromArchive <- function(archive,
              ". Please pass an archive name to a path that exists")
       args <- list(archive[1], exdir = destinationPath[1])
       funWArgs <- .whichExtractFn(archive[1], args)
-      filesInArchive <- normPath(.listFilesInArchive(archive))
+
+      # need to deal with \\ vs. / and also needs to stay relative
+      filesInArchive <- makeRelative(normPath(.listFilesInArchive(archive)),
+                                     destinationPath)
       if (is.null(neededFiles)) {
         neededFiles <- filesInArchive
         result <- checkSums[checkSums$expectedFile %in% makeRelative(neededFiles, destinationPath), ]$result
@@ -735,9 +738,9 @@ extractFromArchive <- function(archive,
       system(paste0("unrar x ", args[[1]], " ", .tempPath), wait = TRUE, ignore.stdout = TRUE)
     }
     # list of full paths of all extracted files!
-    extractedFiles <- list.files(path = .tempPath, recursive = TRUE, include.dirs = TRUE)
-    internalFolders <- extractedFiles[fileExt(extractedFiles) == ""]
-    extractedFiles <- setdiff(x = extractedFiles, y = internalFolders)
+    # extractedFiles <- list.files(path = .tempPath, recursive = TRUE, include.dirs = TRUE)
+    # internalFolders <- extractedFiles[fileExt(extractedFiles) == ""]
+    # extractedFiles <- setdiff(x = extractedFiles, y = internalFolders)
 
   } else {
     # Try the direct, then indirect
@@ -849,7 +852,7 @@ extractFromArchive <- function(archive,
                                # list of full paths of all extracted files!
                                recursive = TRUE,
                                include.dirs = TRUE)
-  from <- file.path(.tempPath, extractedFiles)
+  from <- makeAbsolute(extractedFiles, .tempPath)
   on.exit({
     if (any(file.exists(from)))
       suppressWarnings(try(unlink(from), silent = TRUE))
@@ -1044,12 +1047,13 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       checkSumsDT <- Copy(.emptyChecksumsResult)
     dirs <- makeRelative(dirname(files), destinationPath) # basename2(unique(dirname(files)))
     dirs <- dirs[nzchar(dirs)]
-    filesDT <- data.table(files = makeRelative(unique(c(files, dirs)), destinationPath))
+    filesDT <- data.table(files = unique(makeRelative(c(files, dirs), destinationPath)))
     isOKDT <- checkSumsDT[filesDT, on = c(expectedFile = "files")]
     isOKDT2 <- checkSumsDT[filesDT, on = c(actualFile = "files"), nomatch = NA]
     # fill in any OKs from "actualFile" intot he isOKDT
     isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
     isOK <- compareNA(isOKDT$result, "OK")
+    names(isOK) <- makeRelative(files, destinationPath)
   }
   isOK
 }
