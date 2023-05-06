@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -118,41 +118,7 @@ not provided.</p></dd>
 
 
 <dt>...</dt>
-<dd><p>Additional arguments passed to methods. For <code>spatialClasses</code>,
-these are: <code><a href="cropInputs.html">cropInputs()</a></code>, <code><a href="fixErrors.html">fixErrors()</a></code>,
-<code><a href="projectInputs.html">projectInputs()</a></code>, <code><a href="maskInputs.html">maskInputs()</a></code>,
-<code>determineFilename()</code>, and <code><a href="writeOutputs.html">writeOutputs()</a></code>.
-Each of these may also pass <code>...</code> into other functions, like
-<code><a href="https://rdrr.io/pkg/terra/man/writeRaster.html" class="external-link">raster::writeRaster()</a></code>, or <code><a href="https://r-spatial.github.io/sf/reference/st_write.html" class="external-link">sf::st_write</a></code>.
-This might include potentially important arguments like <code>datatype</code>,
-<code>format</code>. Also passed to <code>projectRaster</code>,
-with likely important arguments such as <code>method = "bilinear"</code>.
-See details.</p>
-<div class="section">
-<h3 id="-passed-to-">... passed to:<a class="anchor" aria-label="anchor" href="#-passed-to-"></a></h3>
-
-<dl><dt><code>cropInputs</code>:</dt>
-<dd><p><code><a href="https://rdrr.io/pkg/terra/man/crop.html" class="external-link">raster::crop()</a></code></p></dd>
-
-<dt><code>projectInputs</code></dt>
-<dd><p><code><a href="https://rdrr.io/pkg/raster/man/projectRaster.html" class="external-link">raster::projectRaster()</a></code></p></dd>
-
-<dt><code>maskInputs</code></dt>
-<dd><p><code><a href="fastMask.html">fastMask()</a></code> or <code><a href="https://rdrr.io/r/base/sets.html" class="external-link">raster::intersect()</a></code></p></dd>
-
-<dt><code>fixErrors</code></dt>
-<dd><p><code><a href="https://rdrr.io/pkg/terra/man/buffer.html" class="external-link">raster::buffer()</a></code></p></dd>
-
-<dt><code>writeOutputs</code></dt>
-<dd><p><code><a href="https://rdrr.io/pkg/terra/man/writeRaster.html" class="external-link">raster::writeRaster()</a></code> or <code><a href="https://rdrr.io/pkg/raster/man/shapefile.html" class="external-link">raster::shapefile()</a></code></p></dd>
-
-<dt><code>determineFilename</code></dt>
-<dd></dd>
-
-
-</dl><ul><li><p>Can be overridden with <code>useSAcrs</code>
-** Will mask with <code>NA</code>s from <code>rasterToMatch</code> if <code>maskWithRTM</code></p></li>
-</ul></div></dd>
+<dd><p>Passed into <code><a href="postProcessTo.html">writeTo()</a></code></p></dd>
 
 </dl></div>
     <div id="details">

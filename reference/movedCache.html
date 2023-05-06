@@ -26,7 +26,7 @@ this function after a manual copy of a cache folder. See examples for one way to
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -78,8 +78,9 @@ this function after a manual copy of a cache folder. See examples for one way to
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">movedCache</span><span class="op">(</span></span>
 <span>  <span class="va">new</span>,</span>
 <span>  <span class="va">old</span>,</span>
-<span>  drv <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  conn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.conn"</span>, <span class="cn">NULL</span><span class="op">)</span></span>
+<span>  drv <span class="op">=</span> <span class="fu">getDrv</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  conn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.conn"</span>, <span class="cn">NULL</span><span class="op">)</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -97,14 +98,20 @@ the old DB Table Name</p></dd>
 
 
 <dt>drv</dt>
-<dd><p>an object that inherits from DBIDriver,
-or an existing DBIConnection
-object (in order to clone an existing connection).</p></dd>
+<dd><p>if using a database backend, drv must be an object that
+inherits from DBIDriver e.g., <code><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">RSQLite::SQLite()</a></code></p></dd>
 
 
 <dt>conn</dt>
-<dd><p>A DBIConnection object, as returned by
-<code><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect()</a></code>.</p></dd>
+<dd><p>an optional DBIConnection object, as returned by dbConnect().</p></dd>
+
+
+<dt>verbose</dt>
+<dd><p>Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></dd>
 
 </dl></div>
     <div id="value">
@@ -134,8 +141,8 @@ name mismatch.</p>
 <span class="r-in"><span><span class="co"># Copy all files from tmpCache to tmpdir</span></span></span>
 <span class="r-in"><span><span class="va">froms</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/normalizePath.html" class="external-link">normalizePath</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">dir</a></span><span class="op">(</span><span class="va">tmpCacheDir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, full.names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                       mustWork <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmpdirPath</span>, <span class="st">"rasters"</span><span class="op">)</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmpdirPath</span>, <span class="st">"cacheOutputs"</span><span class="op">)</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmpdirPath</span>, <span class="st">"rasters"</span><span class="op">)</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmpdirPath</span>, <span class="st">"cacheOutputs"</span><span class="op">)</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.copy</a></span><span class="op">(</span>from <span class="op">=</span> <span class="va">froms</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>          to <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="va">tmpCache</span>, <span class="va">tmpdir</span>, <span class="va">froms</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE TRUE</span>

@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -75,6 +75,10 @@
         </td>
         <td><p>The exact digest function that <code>Cache</code> uses</p></td>
       </tr><tr><td>
+          <p><code><a href="CacheGeo.html">CacheGeo()</a></code> </p>
+        </td>
+        <td><p>Cache-like function for spatial domains</p></td>
+      </tr><tr><td>
           <p><code><a href="CacheHelpers.html">createCache()</a></code> <code><a href="CacheHelpers.html">loadFromCache()</a></code> <code><a href="CacheHelpers.html">rmFromCache()</a></code> <code><a href="CacheHelpers.html">CacheDBFile()</a></code> <code><a href="CacheHelpers.html">CacheStorageDir()</a></code> <code><a href="CacheHelpers.html">CacheStoredFile()</a></code> <code><a href="CacheHelpers.html">CacheDBTableName()</a></code> <code><a href="CacheHelpers.html">CacheIsACache()</a></code> </p>
         </td>
         <td><p>Functions to create and work with a cache</p></td>
@@ -87,10 +91,6 @@
         </td>
         <td><p>Recursive copying of nested environments, and other "hard to copy" objects</p></td>
       </tr><tr><td>
-          <p><code><a href="Deprcated.html">cloudCache()</a></code> </p>
-        </td>
-        <td><p>Deprecated</p></td>
-      </tr><tr><td>
           <p><code><a href="Filenames.html">Filenames()</a></code> </p>
         </td>
         <td><p>Return the filename(s) from a <code>Raster*</code> object</p></td>
@@ -99,7 +99,7 @@
         </td>
         <td><p>Coerce a character string to a class "Path"</p></td>
       </tr><tr><td>
-          <p><code><a href="assessDataType.html">assessDataType()</a></code> <code><a href="assessDataType.html">assessDataTypeGDAL()</a></code> </p>
+          <p><code><a href="assessDataType.html">assessDataType()</a></code> </p>
         </td>
         <td><p>Assess the appropriate raster layer data type</p></td>
       </tr><tr><td>
@@ -115,33 +115,13 @@
         </td>
         <td><p>Check directory path</p></td>
       </tr><tr><td>
-          <p><code><a href="checkoutVersion.html">checkoutVersion()</a></code> </p>
+          <p><code><a href="checkRelative.html">checkRelative()</a></code> </p>
         </td>
-        <td><p>Clone, fetch, and checkout from GitHub.com repositories</p></td>
-      </tr><tr><td>
-          <p><code><a href="clearStubArtifacts.html">clearStubArtifacts()</a></code> </p>
-        </td>
-        <td><p>Clear erroneous archivist artifacts</p></td>
-      </tr><tr><td>
-          <p><code><a href="cloudCheckOld.html">cloudCheckOld()</a></code> </p>
-        </td>
-        <td><p>Basic tool for using cloud-based caching</p></td>
+        <td><p>An alternative to <code>basename</code> and <code>dirname</code> when there are sub-folders</p></td>
       </tr><tr><td>
           <p><code><a href="cloudDownload.html">cloudDownload()</a></code> </p>
         </td>
         <td><p>Download from cloud, if necessary</p></td>
-      </tr><tr><td>
-          <p><code><a href="cloudSyncCacheOld.html">cloudSyncCacheOld()</a></code> </p>
-        </td>
-        <td><p>Sync cloud with local Cache</p></td>
-      </tr><tr><td>
-          <p><code><a href="cloudUpload.html">cloudUpload()</a></code> </p>
-        </td>
-        <td><p>Upload to cloud, if necessary</p></td>
-      </tr><tr><td>
-          <p><code><a href="cloudWriteOld.html">cloudWriteOld()</a></code> </p>
-        </td>
-        <td><p>Basic tool for using cloud-based caching</p></td>
       </tr><tr><td>
           <p><code><a href="compareNA.html">compareNA()</a></code> </p>
         </td>
@@ -155,9 +135,9 @@
         </td>
         <td><p>Copy a file using <code>robocopy</code> on Windows and <code>rsync</code> on Linux/macOS</p></td>
       </tr><tr><td>
-          <p><code><a href="cropInputs.html">cropInputs()</a></code> </p>
+          <p><code><a href="dealWithClass.html">.dealWithClass()</a></code> <code><a href="dealWithClass.html">.dealWithClassOnRecovery()</a></code> </p>
         </td>
-        <td><p>Crop a <code>Spatial*</code> or <code>Raster*</code> object</p></td>
+        <td><p>Deal with class for saving to and loading from Cache or Disk</p></td>
       </tr><tr><td>
           <p><code><a href="debugCache.html">.debugCache()</a></code> </p>
         </td>
@@ -169,7 +149,7 @@
       </tr><tr><td>
           <p><code><a href="dot-file.move.html">.file.move()</a></code> </p>
         </td>
-        <td><p>Move a file to a new location</p></td>
+        <td><p>Move a file to a new location -- Defunct -- use <code>hardLinkOrCopy</code></p></td>
       </tr><tr><td>
           <p><code><a href="dot-removeCacheAtts.html">.removeCacheAtts()</a></code> </p>
         </td>
@@ -189,9 +169,9 @@
       </tr><tr><td>
           <p><code><a href="fastMask.html">fastMask()</a></code> </p>
         </td>
-        <td><p>Faster operations on rasters (DEPRECATED as <code><a href="https://rdrr.io/pkg/terra/man/mask.html" class="external-link">terra::mask</a></code> is fast)</p></td>
+        <td><p>Faster operations on rasters (DEPRECATED because <code><a href="https://rdrr.io/pkg/terra/man/mask.html" class="external-link">terra::mask</a></code> is fast)</p></td>
       </tr><tr><td>
-          <p><code><a href="fixErrorsTerra.html">fixErrorsTerra()</a></code> </p>
+          <p><code><a href="fixErrorsIn.html">fixErrorsIn()</a></code> </p>
         </td>
         <td><p>Fix common errors in GIS layers, using <code>terra</code></p></td>
       </tr><tr><td>
@@ -199,17 +179,13 @@
         </td>
         <td><p>Hardlink, symlink, or copy a file</p></td>
       </tr><tr><td>
-          <p><code><a href="maskInputs.html">maskInputs()</a></code> </p>
-        </td>
-        <td><p>Mask module inputs</p></td>
-      </tr><tr><td>
           <p><code><a href="mergeCache.html">mergeCache()</a></code> </p>
         </td>
         <td><p>Merge two cache repositories together</p></td>
       </tr><tr><td>
-          <p><code><a href="messageDF.html">messageDF()</a></code> </p>
+          <p><code><a href="messageColoured.html">messageDF()</a></code> <code><a href="messageColoured.html">messageQuestion()</a></code> <code><a href="messageColoured.html">messageColoured()</a></code> </p>
         </td>
-        <td><p>Use message to print a clean square data structure</p></td>
+        <td><p>Use <code>message</code> with a consistent use of <code>verbose</code></p></td>
       </tr><tr><td>
           <p><code><a href="movedCache.html">movedCache()</a></code> </p>
         </td>
@@ -227,15 +203,11 @@
         </td>
         <td><p>Convert numeric to character with padding</p></td>
       </tr><tr><td>
-          <p><code><a href="pipe.html">`%C%`</a></code> <code><a href="pipe.html">`%&lt;%`</a></code> </p>
-        </td>
-        <td><p>A cache-aware pipe (currently not working)</p></td>
-      </tr><tr><td>
           <p><code><a href="postProcess.html">postProcess()</a></code> </p>
         </td>
         <td><p>Generic function to post process objects</p></td>
       </tr><tr><td>
-          <p><code><a href="postProcessTerra.html">postProcessTerra()</a></code> <code><a href="postProcessTerra.html">maskTo()</a></code> <code><a href="postProcessTerra.html">projectTo()</a></code> <code><a href="postProcessTerra.html">cropTo()</a></code> <code><a href="postProcessTerra.html">writeTo()</a></code> </p>
+          <p><code><a href="postProcessTo.html">postProcessTo()</a></code> <code><a href="postProcessTo.html">postProcessTerra()</a></code> <code><a href="postProcessTo.html">maskTo()</a></code> <code><a href="postProcessTo.html">projectTo()</a></code> <code><a href="postProcessTo.html">cropTo()</a></code> <code><a href="postProcessTo.html">writeTo()</a></code> </p>
         </td>
         <td><p>Transform a GIS dataset so it has the properties (extent, projection, mask) of another</p></td>
       </tr><tr><td>
@@ -255,9 +227,9 @@
         </td>
         <td><p>Copy the file-backing of a file-backed Raster* object</p></td>
       </tr><tr><td>
-          <p><code><a href="projectInputs.html">projectInputs()</a></code> </p>
+          <p><code><a href="rasterRead.html">rasterRead()</a></code> </p>
         </td>
-        <td><p>Project <code>Raster*</code> or <code>Spatial*</code> or <code>sf</code> objects</p></td>
+        <td><p>A helper to <code>getOption("reproducible.rasterRead")</code></p></td>
       </tr><tr><td>
           <p><code><a href="reproducible-package.html">reproducible</a></code> <code><a href="reproducible-package.html">reproducible-package</a></code> </p>
         </td>
@@ -279,13 +251,13 @@
         </td>
         <td><p>Search up the full scope for functions</p></td>
       </tr><tr><td>
+          <p><code><a href="set.randomseed.html">set.randomseed()</a></code> </p>
+        </td>
+        <td><p>Set seed with a random value using Sys.time()</p></td>
+      </tr><tr><td>
           <p><code><a href="setSubAttrInList.html">.setSubAttrInList()</a></code> </p>
         </td>
         <td><p>Set subattributes within a list by reference</p></td>
-      </tr><tr><td>
-          <p><code><a href="spatialClasses-class.html">spatialClasses-class</a></code> <code><a href="spatialClasses-class.html">spatialClasses</a></code> </p>
-        </td>
-        <td><p>The <code>spatialClasses</code> class</p></td>
       </tr><tr><td>
           <p><code><a href="studyAreaName.html">studyAreaName()</a></code> </p>
         </td>
@@ -299,6 +271,10 @@
         </td>
         <td><p>Make a temporary file in a temporary (sub-)directory</p></td>
       </tr><tr><td>
+          <p><code><a href="terra-migration.html">minFn()</a></code> <code><a href="terra-migration.html">maxFn()</a></code> <code><a href="terra-migration.html">dataType2()</a></code> <code><a href="terra-migration.html">nlayers2()</a></code> <code><a href="terra-migration.html">values2()</a></code> </p>
+        </td>
+        <td><p>Get min or maximum value of a (Spat)Raster</p></td>
+      </tr><tr><td>
           <p><code><a href="unrarPath.html">.unrarPath</a></code> </p>
         </td>
         <td><p>The known path for unrar or 7z</p></td>
@@ -310,10 +286,6 @@
           <p><code><a href="writeFuture.html">writeFuture()</a></code> </p>
         </td>
         <td><p>Write to cache repository, using <code><a href="https://future.futureverse.org/reference/future.html" class="external-link">future::future</a></code></p></td>
-      </tr><tr><td>
-          <p><code><a href="writeOutputs.html">writeOutputs()</a></code> </p>
-        </td>
-        <td><p>Write module inputs on disk</p></td>
       </tr></tbody></table></div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

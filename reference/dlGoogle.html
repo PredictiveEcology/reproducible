@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -74,12 +74,14 @@
 <span>  archive <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  targetFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">checkSums</span>,</span>
-<span>  <span class="va">skipDownloadMsg</span>,</span>
+<span>  <span class="va">messSkipDownload</span>,</span>
 <span>  <span class="va">destinationPath</span>,</span>
+<span>  type <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">overwrite</span>,</span>
 <span>  <span class="va">needChecksums</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>  team_drive <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  team_drive <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -101,10 +103,11 @@ is expecting an archive directly.</p></dd>
 
 
 <dt>targetFile</dt>
-<dd><p>Character string giving the path to the eventual file
+<dd><p>Character string giving the filename (without relative or
+absolute path) to the eventual file
 (raster, shapefile, csv, etc.) after downloading and extracting from a zip
 or tar archive. This is the file <em>before</em> it is passed to
-<code>postProcess</code>. Currently, the internal checksumming does not checksum
+<code>postProcess</code>. The internal checksumming does not checksum
 the file after it is <code>postProcess</code>ed (e.g., cropped/reprojected/masked).
 Using <code>Cache</code> around <code>prepInputs</code> will do a sufficient job in these cases.
 See table in <code><a href="preProcess.html">preProcess()</a></code>.</p></dd>
@@ -131,6 +134,10 @@ even if they pass the checksums or the files are all there.</p></dd>
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></dd>
+
+
+<dt>...</dt>
+<dd><p>Not used here. Only used to allow other arguments to other fns to not fail.</p></dd>
 
 </dl></div>
     <div id="author">

@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -63,6 +63,92 @@
       <small>Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="2.0.0" id="version-200">Version 2.0.0<a class="anchor" aria-label="anchor" href="#version-200"></a></h2>
+<div class="section level3">
+<h3 id="enhancements-2-0-0">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-2-0-0"></a></h3>
+<ul><li>new optional backend for <code>Cache</code> via <code>options(reproducible.useDBI = FALSE)</code> is single data files with the same <code>basename</code> as the cached object, i.e., with the same <code>cacheId</code> in the file name. This is a replacement for <code>RSQLite</code> and will likely become the default in the next release. This approach makes cloud caching easier as all metadata are available in small binary files for each cached object. This is simpler, faster and creates far fewer package dependencies (now 11 recursive; before 27 recursive). If a user has DBI and RSQLite installed, then the backend will default to use these currently, i.e., the previous behaviour. The user can change the backend without loss of Cache data.</li>
+<li>moved <code>raster</code> and <code>sp</code> to <code>Suggests</code>; no more internal functions use these. User can still work with <code>Raster</code> and <code>sp</code> class objects as before.</li>
+<li>
+<code>preProcess</code> can now handle google docs files, if <code>type = ...</code> is passed.</li>
+<li>
+<code>postProcess</code> now uses <code>terra</code> and <code>sf</code> internally (with <a href="https://github.com/PredictiveEcology/reproducible/issues/253" class="external-link">#253</a>) throughout the family of <code>postProcess</code> functions. The previous <code>*Input</code> and <code>*Output</code> functions now redirect to the new <code>*To*</code> functions. These are faster, more stable, and cover vastly more cases than the previous <code>*Inputs</code> family. The old backends no longer work as before.</li>
+<li>minor functions to assist with transition from <code>raster</code> to <code>terra</code>: <code>maxFn</code>, <code>minFn</code>, <code>rasterRead</code>
+</li>
+<li>
+<code>.dealWithClass</code> and <code>.dealWithClassOnRecovery</code> are now exported generics, with several methods here, notably, list, environment, default</li>
+<li>other miscellaneous changes to deal with <code>raster</code> to <code>terra</code> transition (e.g. <code>studyAreaName</code> can deal with <code>SpatVector</code>)</li>
+<li>
+<code>prepInputs</code> now deals with archives that have sub-folder structure are now dealt with correctly in all examples and tests esp. #181.</li>
+<li>
+<code>prepInputs</code> can now deal with <code>.gdb</code> files. Though, it is limited to <code>sf</code> out of the box, so e.g., Raster layers inside <code>gdb</code> files are not supported (yet?). User can pass <code>fun = NA</code> to not try to load it, but at least have the <code>.gdb</code> file locally on disk.</li>
+<li>
+<code>hardLinkOrCopy</code> now uses <code>linkOrCopy(symlink = FALSE)</code>; more cases dealt with especially nested directory structures that do not exist in the <code>to</code>.</li>
+<li>many GitHub issues closed after transition to using <code>terra</code> and <code>sf</code>.</li>
+<li>
+<code>preProcess</code> had multiple changes. The following now work: archives with subfolders, archives with subfolders with identical basenames (different dirnames), gdb files, other files where <code>targetFile</code> is a directory.</li>
+<li>~40 issues were closed with current release.</li>
+<li>code coverage now approaching 85%</li>
+<li>substantial changes to <code>preProcess</code> for minor efficiency gains, edge cases, code cleaning</li>
+<li>new function <code>CacheGeo</code> that weaves together <code>prepInputs</code> and <code>Cache</code> to create a geo-spatial caching. See help and examples.</li>
+<li>
+<code>maskTo</code> now allows <code>touches</code> arg for <code><a href="https://rdrr.io/pkg/terra/man/mask.html" class="external-link">terra::mask</a></code>
+</li>
+<li>
+<code>Spatial</code> class is also “fixed” in <code>fixErrorsIn</code>
+</li>
+<li>
+<code>prepInputs</code> and <code>preProcess</code> now capture <code>dlFun</code>, so user can pass unquoted <code>dlFun</code>
+</li>
+<li>
+<code>Copy</code> method for <code>SpatRaster</code>, with and without file-backing</li>
+<li>
+<code>Cache(..., useCloud = TRUE)</code> reworked so appears to be more robust than previously.</li>
+<li>
+<code>maskTo</code> now works even if <code>to</code> is larger than <code>from</code>
+</li>
+<li>
+<code>netCDF</code> works with <code>prepInputs</code>; thanks to user nbsmokee with PR <a href="https://github.com/PredictiveEcology/reproducible/issues/300" class="external-link">#300</a>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="dependency-changes-2-0-0">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-2-0-0"></a></h3>
+<ul><li>no spatial packages are automatically installed any more; to work with <code>prepInputs</code> and family, the user will have to install <code>terra</code> and <code>sf</code> at a minimum.</li>
+<li>
+<code>terra</code>, <code>sf</code> are in <code>Suggests</code>
+</li>
+<li>removed entirely: <code>fasterize</code>, <code>fpCompare</code>, <code>magrittr</code>
+</li>
+<li>moved to <code>Suggests</code>: <code>raster</code>, <code>sp</code>, <code>rlang</code>
+</li>
+<li>A normal (minimal) install of <code>reproducible</code> no longer installs <code>DBI</code>, nor does it use <code>RSQLite</code>. All cache repositories database files will be in binary individual files in the <code>cacheOutputs</code> file. If a user has <code>DBI</code> and a <code>SQLite</code> engine, then the previous behaviour will be used.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="defunct-2-0-0">Defunct<a class="anchor" aria-label="anchor" href="#defunct-2-0-0"></a></h3>
+<ul><li>
+<code>reproducible.useNewDigestAlgorithm</code> is not longer an option as the old algorithms do not work reliably.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="defunct-and-removed-2-0-0">Defunct and removed<a class="anchor" aria-label="anchor" href="#defunct-and-removed-2-0-0"></a></h3>
+<ul><li>removed <code>assessDataTypeGDAL()</code>, <code>clearStubArtifacts()</code>,</li>
+<li>removed non-exported <code>digestRasterLayer2()</code>; <code>evalArgsOnly()</code>; <code>.getSourceURL()</code>; <code>.getTargetCRS()</code>; <code>.checkSums()</code>, <code>.groupedMessage()</code>; <code>.checkForAuxililaryFiles()</code>
+</li>
+<li>
+<code>option("reproducible.polygonShortcut")</code> removed</li>
+</ul></div>
+<div class="section level3">
+<h3 id="non-exported-function-changes-2-0-0">Non exported function changes<a class="anchor" aria-label="anchor" href="#non-exported-function-changes-2-0-0"></a></h3>
+<ul><li>
+<code>.basename</code> renamed to <code>basename2</code>
+</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bugfixes-2-0-0">Bugfixes<a class="anchor" aria-label="anchor" href="#bugfixes-2-0-0"></a></h3>
+<ul><li>
+<code>Cache</code> was incorrectly dealing with <code>environment</code> and <code>environment-like</code> objects. Since some objects, e.g., <code>Spat*</code> objects in <code>terra</code>, must be wrapped prior to saving, environments must be scanned for these classes of objects prior to saving. This previously only occurred for <code>list</code> objects;</li>
+<li>When working with revdep <code>SpaDES.core</code>, there were some cases where the <code>Cache</code> was failing as it could not find the module name;</li>
+<li>during transition from <code>postProcess</code> (using <code>raster</code> and <code>sp</code>) to <code>postProcessTo</code>, some cases are falling through the cracks; these have being addressed.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="1.2.16" id="version-1216">Version 1.2.16<small>2022-12-22</small><a class="anchor" aria-label="anchor" href="#version-1216"></a></h2>
 <div class="section level3">
@@ -112,7 +198,7 @@
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-1-2-11">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-2-11"></a></h3>
-<ul><li>fix tests for <code>postProcessTerra</code> to deal with changes in GDAL/PROJ/GEOS (<a href="https://github.com/PredictiveEcology/reproducible/issues/253" class="external-link">#253</a>; <a href="https://github.com/rsbivand" class="external-link">@rsbivand</a>)</li>
+<ul><li>fix tests for <code>postProcessTo</code> to deal with changes in GDAL/PROJ/GEOS (<a href="https://github.com/PredictiveEcology/reproducible/issues/253" class="external-link">#253</a>; <a href="https://github.com/rsbivand" class="external-link">@rsbivand</a>)</li>
 <li>fixed issue with masking</li>
 </ul></div>
 </div>
@@ -136,7 +222,7 @@
 <li>changes to the internals and outputs of <code>objSize</code>; now is primarily a wrapper around <code><a href="https://lobstr.r-lib.org/reference/obj_size.html" class="external-link">lobstr::obj_size</a></code>, but has an option to get more detail for lists and environments.</li>
 <li>
 <code>.robustDigest</code> now deals explicitly with numerics, which digest differently on different OSs. Namely, they get rounded prior to digesting. Through trial and error, it was found that setting <code>options("reproducible.digestDigits" = 7)</code> was sufficient for all known cases. Rounding to deeper than 7 decimal places was insufficient. There are also new methods for <code>language</code>, <code>integer</code>, <code>data.frame</code> (which does each column one at a time to address the numeric issue)</li>
-<li>New version of <code>postProcess</code> called <code>postProcessTerra</code>. This will eventually replace <code>postProcess</code> as it is much faster in all cases and simpler code base thanks to the fantastic work of Robert Hijmans (<code>terra</code>) and all the upstream work that <code>terra</code> relies on</li>
+<li>New version of <code>postProcess</code> called <code>postProcessTo</code>. This will eventually replace <code>postProcess</code> as it is much faster in all cases and simpler code base thanks to the fantastic work of Robert Hijmans (<code>terra</code>) and all the upstream work that <code>terra</code> relies on</li>
 <li>Minor message updates, especially for “adding to memoised copy…”. The three dots made it seem like it was taking a long time. When in reality, it is instantaneous and is the last thing that happens in the <code>Cache</code> call. If there is a delay after this message, then it is the code following the <code>Cache</code> call that is (silently) slow.</li>
 <li>
 <code>retry</code> can now return a named list for the <code>exprBetween</code>, which allows for more than one object to be modified between retries.</li>
@@ -150,7 +236,7 @@
 <li>
 <code>clearCache</code> and <code>cc</code> did not correctly remove file-backed raster files (when not clearing whole CacheRepo); this may have resulted in a proliferation of files, each a filename with an underscore and a new higher number. This fix should eliminate this problem.</li>
 <li>deal with development versions of GDAL in <code>getGDALVersion()</code> (<a href="https://github.com/PredictiveEcology/reproducible/issues/239" class="external-link">#239</a>)</li>
-<li>fix issue with <code><a href="../reference/maskInputs.html">maskInputs()</a></code> when not passing <code>rasterToMatch</code>.</li>
+<li>fix issue with <code><a href="../reference/deprecated.html">maskInputs()</a></code> when not passing <code>rasterToMatch</code>.</li>
 <li>fix issue with <code>isna.SpatialFix</code> when using <code>postProcess.quosure</code>
 </li>
 </ul></div>
@@ -219,7 +305,7 @@
 <ul><li>
 <code>Copy</code> generic no longer has <code>fileBackedDir</code> argument. It is now passed through with the <code>...</code>. This was creating a bug with some cases where <code>fileBackedDir</code> was not being correctly executed.</li>
 <li>
-<code><a href="../reference/fixErrors.html">fixErrors()</a></code> now better handles <code>sf</code> polygons with mixed geometries that include points.</li>
+<code><a href="../reference/deprecated.html">fixErrors()</a></code> now better handles <code>sf</code> polygons with mixed geometries that include points.</li>
 <li>inadvertent deleting of file-backed rasters in multi-filed stacks during <code>Cache</code>
 </li>
 <li>

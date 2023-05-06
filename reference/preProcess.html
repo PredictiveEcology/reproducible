@@ -26,7 +26,7 @@ This is the first stage of three used in prepInputs."><!-- mathjax --><script sr
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -103,10 +103,11 @@ If <code>NULL</code> (default), all parameter combinations are returned.</p></dd
 
 
 <dt>targetFile</dt>
-<dd><p>Character string giving the path to the eventual file
+<dd><p>Character string giving the filename (without relative or
+absolute path) to the eventual file
 (raster, shapefile, csv, etc.) after downloading and extracting from a zip
 or tar archive. This is the file <em>before</em> it is passed to
-<code>postProcess</code>. Currently, the internal checksumming does not checksum
+<code>postProcess</code>. The internal checksumming does not checksum
 the file after it is <code>postProcess</code>ed (e.g., cropped/reprojected/masked).
 Using <code>Cache</code> around <code>prepInputs</code> will do a sufficient job in these cases.
 See table in <code>preProcess()</code>.</p></dd>
@@ -154,9 +155,14 @@ search for the file before attempting to download. Default for that option is
 
 
 <dt>fun</dt>
-<dd><p>Function, character string, or quoted call with which to load the
-<code>targetFile</code> or an object created by <code>dlFun</code>
-into an <code>R</code> object. See details and examples below.</p></dd>
+<dd><p>Optional. If specified, this will attempt to load whatever
+file was downloaded during <code>preProcess</code> via <code>dlFun</code>. This can be either a
+function (e.g., sf::st_read), character string (e.g., "base::load"),
+NA (for no loading, useful if <code>dlFun</code> already loaded the file) or
+if extra arguments are required
+in the function call, it must be a quoted call naming
+<code>targetFile</code> (e.g., <code>quote(sf::st_read(targetFile, quiet = TRUE))</code>)
+as the file path to the file to load. See details and examples below.</p></dd>
 
 
 <dt>dlFun</dt>
@@ -197,11 +203,11 @@ Will be cleared on.exit from this function.</p></dd>
 
 
 <dt>...</dt>
-<dd><p>Additional arguments passed to <code>fun</code> (i.e,. user supplied),
+<dd><p>Additional arguments passed to
 <code><a href="postProcess.html">postProcess()</a></code> and <code><a href="Cache.html">Cache()</a></code>.
 Since <code>...</code> is passed to <code><a href="postProcess.html">postProcess()</a></code>, these will
 <code>...</code> will also be passed into the inner
-functions, e.g., <code><a href="cropInputs.html">cropInputs()</a></code>. Possibly useful other arguments include
+functions, e.g., <code><a href="deprecated.html">cropInputs()</a></code>. Possibly useful other arguments include
 <code>dlFun</code> which is passed to <code>preProcess</code>. See details and examples.</p></dd>
 
 </dl></div>

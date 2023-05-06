@@ -24,7 +24,7 @@ Cache, for example to determine whether there is a cached copy."><!-- mathjax --
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -76,6 +76,7 @@ Cache, for example to determine whether there is a cached copy."><!-- mathjax --
 <span>  <span class="va">...</span>,</span>
 <span>  algo <span class="op">=</span> <span class="st">"xxhash64"</span>,</span>
 <span>  calledFrom <span class="op">=</span> <span class="st">"CacheDigest"</span>,</span>
+<span>  .functionName <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  quick <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -101,6 +102,12 @@ Cache, for example to determine whether there is a cached copy."><!-- mathjax --
 <dd><p>a Character string, length 1, with the function to
 compare with. Default is "Cache". All other values may not produce
 robust CacheDigest results.</p></dd>
+
+
+<dt>.functionName</dt>
+<dd><p>A an arbitrary character string that provides a name that is different
+than the actual function name (e.g., "rnorm") which will be used for messaging. This
+can be useful when the actual function is not helpful for a user, such as <code>do.call</code>.</p></dd>
 
 
 <dt>quick</dt>

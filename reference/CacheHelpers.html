@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -71,7 +71,7 @@
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">createCache</span><span class="op">(</span></span>
 <span>  cachePath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.cachePath"</span><span class="op">)</span>,</span>
-<span>  drv <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  drv <span class="op">=</span> <span class="fu">getDrv</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  conn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.conn"</span>, <span class="cn">NULL</span><span class="op">)</span>,</span>
 <span>  force <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span><span class="op">)</span></span>
@@ -80,22 +80,26 @@
 <span><span class="fu">loadFromCache</span><span class="op">(</span></span>
 <span>  cachePath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.cachePath"</span><span class="op">)</span>,</span>
 <span>  <span class="va">cacheId</span>,</span>
+<span>  fullCacheTableForObj <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.cacheSaveFormat"</span>, <span class="st">"rds"</span><span class="op">)</span>,</span>
-<span>  drv <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  conn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.conn"</span>, <span class="cn">NULL</span><span class="op">)</span></span>
+<span>  .functionName <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  .dotsFromCache <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  drv <span class="op">=</span> <span class="fu">getDrv</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  conn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.conn"</span>, <span class="cn">NULL</span><span class="op">)</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">rmFromCache</span><span class="op">(</span></span>
 <span>  cachePath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.cachePath"</span><span class="op">)</span>,</span>
 <span>  <span class="va">cacheId</span>,</span>
-<span>  drv <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  drv <span class="op">=</span> <span class="fu">getDrv</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  conn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.conn"</span>, <span class="cn">NULL</span><span class="op">)</span>,</span>
 <span>  format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.cacheSaveFormat"</span>, <span class="st">"rds"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">CacheDBFile</span><span class="op">(</span></span>
 <span>  cachePath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.cachePath"</span><span class="op">)</span>,</span>
-<span>  drv <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  drv <span class="op">=</span> <span class="fu">getDrv</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  conn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.conn"</span>, <span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -104,18 +108,19 @@
 <span><span class="fu">CacheStoredFile</span><span class="op">(</span></span>
 <span>  cachePath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.cachePath"</span><span class="op">)</span>,</span>
 <span>  <span class="va">cacheId</span>,</span>
-<span>  format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.cacheSaveFormat"</span>, <span class="st">"rds"</span><span class="op">)</span></span>
+<span>  format <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  obj <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">CacheDBTableName</span><span class="op">(</span></span>
 <span>  cachePath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.cachePath"</span><span class="op">)</span>,</span>
-<span>  drv <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span>  drv <span class="op">=</span> <span class="fu">getDrv</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">CacheIsACache</span><span class="op">(</span></span>
 <span>  cachePath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.cachePath"</span><span class="op">)</span>,</span>
 <span>  create <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  drv <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  drv <span class="op">=</span> <span class="fu">getDrv</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  conn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.conn"</span>, <span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -132,8 +137,7 @@ the database file(s)</p></dd>
 
 
 <dt>conn</dt>
-<dd><p>A DBIConnection object, as returned by
-<code><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect()</a></code>.</p></dd>
+<dd><p>an optional DBIConnection object, as returned by dbConnect().</p></dd>
 
 
 <dt>force</dt>
@@ -153,10 +157,28 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
 <dd><p>The cacheId or otherwise digested hash value, as character string.</p></dd>
 
 
+<dt>fullCacheTableForObj</dt>
+<dd><p>The result of <code>showCache</code>, but subsetted for only
+the <code>cacheId</code> being loaded or selected</p></dd>
+
+
 <dt>format</dt>
 <dd><p>The text string representing the file extension used normally by
 different save formats; currently only <code>"rds"</code> or <code>"qs"</code>. Defaults
 to <code>getOption("reproducible.cacheSaveFormat", "rds")</code></p></dd>
+
+
+<dt>.functionName</dt>
+<dd><p>Optional. Used for messaging when this function is called from <code>Cache</code></p></dd>
+
+
+<dt>.dotsFromCache</dt>
+<dd><p>Optional. Used internally.</p></dd>
+
+
+<dt>obj</dt>
+<dd><p>The optional object that is of interest; it may have an attribute "saveRawFile"
+that would be important.</p></dd>
 
 
 <dt>create</dt>
@@ -177,7 +199,11 @@ is <code>TRUE</code> and there is no Cache database, the function will create on
 <p><code>rmFromCache</code> has no return value; it is called for its side effects.</p>
 
 
-<p><code>CacheDBFile</code> returns the name of the database file for a given Cache.</p>
+<p><code>CacheDBFile</code> returns the name of the database file for a given Cache,
+when <code>useDBI() == FALSE</code>, or <code>NULL</code> if <code>TRUE</code>.
+<code>CacheDBFiles</code> (i.e,. plural) returns the name of all the database files for
+a given Cache when <code>useDBI() == TRUE</code>, or <code>NULL</code> if <code>FALSE</code></p>
+
 
 
 <p><code>CacheStorageDir</code> returns the name of the directory where cached objects are
@@ -204,20 +230,21 @@ the particular <code>drv</code> or <code>conn</code> provided.</p>
 database files.</p>
 <p><code>CacheStoredFile</code> returns the file path to the file with the specified hash value.</p>
 <p><code>CacheStoredFile</code> returns the file path to the file with the specified hash value.</p>
-<p><code>CacheIsACache</code> returns a logical of whether the specified cachePath
+<p><code>CacheIsACache</code> returns a logical of whether the specified <code>cachePath</code>
 is actually a functioning cache.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">newCache</span> <span class="op">&lt;-</span> <span class="fu"><a href="tempdir2.html">tempdir2</a></span><span class="op">(</span><span class="st">"cacheHelperExamples"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">newCache</span> <span class="op">&lt;-</span> <span class="fu"><a href="tempdir2.html">tempdir2</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">createCache</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, cachePath <span class="op">=</span> <span class="va">newCache</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cacheId</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"cacheId:"</span>, <span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">out</span>, <span class="st">"tags"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">loadFromCache</span><span class="op">(</span><span class="va">newCache</span>, cacheId <span class="op">=</span> <span class="va">cacheId</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.269758</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous  call</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1060918</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -230,33 +257,33 @@ is actually a functioning cache.</p>
 <span class="r-in"><span><span class="fu">rmFromCache</span><span class="op">(</span><span class="va">newCache</span>, cacheId <span class="op">=</span> <span class="va">cacheId</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># clean up</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/basename.html" class="external-link">dirname</a></span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">newCache</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">newCache</span> <span class="op">&lt;-</span> <span class="fu"><a href="tempdir2.html">tempdir2</a></span><span class="op">(</span><span class="st">"cacheHelperExamples"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">newCache</span> <span class="op">&lt;-</span> <span class="fu"><a href="tempdir2.html">tempdir2</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Given the drv and conn, creates the minimum infrastructure for a cache</span></span></span>
 <span class="r-in"><span><span class="fu">createCache</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">CacheDBFile</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span> <span class="co"># identifies the database file</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmp56YhgE/reproducible/cacheHelperExamples/cache.db"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpC9DSNl/reproducible/qAXkDDWv/cache.db"</span>
 <span class="r-in"><span><span class="fu">CacheStorageDir</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span> <span class="co"># identifies the directory where cached objects are stored</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmp56YhgE/reproducible/cacheHelperExamples/cacheOutputs"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpC9DSNl/reproducible/qAXkDDWv/cacheOutputs"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, cachePath <span class="op">=</span> <span class="va">newCache</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cacheId</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"cacheId:"</span>, <span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">out</span>, <span class="st">"tags"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">CacheStoredFile</span><span class="op">(</span><span class="va">newCache</span>, cacheId <span class="op">=</span> <span class="va">cacheId</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmp56YhgE/reproducible/cacheHelperExamples/cacheOutputs/422bae4ed2f770cc.rds"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpC9DSNl/reproducible/qAXkDDWv/cacheOutputs/422bae4ed2f770cc.rds"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The name of the table inside the SQL database</span></span></span>
 <span class="r-in"><span><span class="fu">CacheDBTableName</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "reproducible_cacheHelperExamples"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "reproducible_qAXkDDWv"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">CacheIsACache</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span> <span class="co"># returns TRUE</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># clean up</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/basename.html" class="external-link">dirname</a></span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">newCache</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>
   </div>

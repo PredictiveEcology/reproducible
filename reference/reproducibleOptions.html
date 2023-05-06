@@ -25,7 +25,7 @@ See Details below."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/aj
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -153,6 +153,10 @@ Should the <code>reproducible.inputPaths</code> be searched recursively for exis
 <code>file.size(file)</code> instead of the <code>digest::digest(file)</code>.
 Less robust to changes, but faster. <em>NOTE: this will only affect objects on disk</em>.</p></dd>
 
+<dt><code>rasterRead</code></dt>
+<dd><p>Default <code><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster::raster</a></code> for backwards compatibility. Used during <code>prepInputs</code> when reading a
+<code>.tif</code>, <code>.grd</code>, and <code>.asc</code> files. This will eventually become <code><a href="https://rdrr.io/pkg/terra/man/rast.html" class="external-link">terra::rast</a></code>.</p></dd>
+
 <dt><code>shapefileRead</code></dt>
 <dd><p>Default <code>NULL</code>. Used during <code>prepInputs</code> when reading a <code>.shp</code> file.
 If <code>NULL</code>, it will use <code><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">sf::st_read</a></code> if <code>sf</code> package is available; otherwise,
@@ -189,7 +193,7 @@ This, therefore, is most useful if the user is using unique values for <code>use
 <span class="pkg">archivist</span>.</p></dd>
 
 <dt><code>useGDAL</code></dt>
-<dd><p>Default <code>TRUE</code>. Passed to <code>useGDAL</code> in <code>projectInputs.Raster</code>.</p></dd>
+<dd><p>Default <code>TRUE</code>. Passed to <code>useGDAL</code>. Deprecated.</p></dd>
 
 <dt><code>useMemoise</code></dt>
 <dd><p>Default: <code>FALSE</code>. Used in <code><a href="Cache.html">Cache()</a></code>. If <code>TRUE</code>, recovery of cached
@@ -231,7 +235,7 @@ This may help diagnosing some problems that may occur.</p></dd>
 
 <p>The following options are likely not needed by a user.</p><dl><dt><code>cloudChecksumsFilename</code></dt>
 <dd><p>Default: <code>file.path(dirname(.reproducibleTempCacheDir()), "checksums.rds")</code>.
-Used in <code><a href="Deprcated.html">cloudCache()</a></code></p></dd>
+Used as an experimental argument in <code><a href="Cache.html">Cache()</a></code></p></dd>
 
 <dt><code>length</code></dt>
 <dd><p>Default: <code>Inf</code>. Used in <code><a href="Cache.html">Cache()</a></code>, specifically to the internal

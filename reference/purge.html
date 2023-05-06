@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -69,7 +69,15 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">.purge</span><span class="op">(</span><span class="va">checkSums</span>, <span class="va">purge</span>, <span class="va">targetFile</span>, <span class="va">archive</span>, <span class="va">alsoExtract</span>, <span class="va">url</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">.purge</span><span class="op">(</span></span>
+<span>  <span class="va">checkSums</span>,</span>
+<span>  <span class="va">purge</span>,</span>
+<span>  <span class="va">targetFile</span>,</span>
+<span>  <span class="va">archive</span>,</span>
+<span>  <span class="va">alsoExtract</span>,</span>
+<span>  <span class="va">url</span>,</span>
+<span>  <span class="va">destinationPath</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -86,10 +94,11 @@
 
 
 <dt>targetFile</dt>
-<dd><p>Character string giving the path to the eventual file
+<dd><p>Character string giving the filename (without relative or
+absolute path) to the eventual file
 (raster, shapefile, csv, etc.) after downloading and extracting from a zip
 or tar archive. This is the file <em>before</em> it is passed to
-<code>postProcess</code>. Currently, the internal checksumming does not checksum
+<code>postProcess</code>. The internal checksumming does not checksum
 the file after it is <code>postProcess</code>ed (e.g., cropped/reprojected/masked).
 Using <code>Cache</code> around <code>prepInputs</code> will do a sufficient job in these cases.
 See table in <code><a href="preProcess.html">preProcess()</a></code>.</p></dd>
@@ -114,6 +123,16 @@ will be created or appended to. This <code>CHECKSUMS.txt</code> entry will be us
 in subsequent calls to
 <code>prepInputs</code> or <code>preProcess</code>, comparing the file on hand with the ad hoc
 <code>CHECKSUMS.txt</code>. See table in <code><a href="preProcess.html">preProcess()</a></code>.</p></dd>
+
+
+<dt>destinationPath</dt>
+<dd><p>Character string of a directory in which to download
+and save the file that comes from <code>url</code> and is also where the function
+will look for <code>archive</code> or <code>targetFile</code>. NOTE (still experimental):
+To prevent repeated downloads in different locations, the user can also set
+<code>options("reproducible.inputPaths")</code> to one or more local file paths to
+search for the file before attempting to download. Default for that option is
+<code>NULL</code> meaning do not search locally.</p></dd>
 
 </dl></div>
 

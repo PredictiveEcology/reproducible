@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -72,8 +72,8 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">mergeCache</span><span class="op">(</span></span>
 <span>  <span class="va">cacheTo</span>,</span>
 <span>  <span class="va">cacheFrom</span>,</span>
-<span>  drvTo <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  drvFrom <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  drvTo <span class="op">=</span> <span class="fu">getDrv</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  drvFrom <span class="op">=</span> <span class="fu">getDrv</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  connTo <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  connFrom <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span><span class="op">)</span></span>
@@ -83,8 +83,8 @@
 <span><span class="fu">mergeCache</span><span class="op">(</span></span>
 <span>  <span class="va">cacheTo</span>,</span>
 <span>  <span class="va">cacheFrom</span>,</span>
-<span>  drvTo <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  drvFrom <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  drvTo <span class="op">=</span> <span class="fu">getDrv</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  drvFrom <span class="op">=</span> <span class="fu">getDrv</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  connTo <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  connFrom <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span><span class="op">)</span></span>

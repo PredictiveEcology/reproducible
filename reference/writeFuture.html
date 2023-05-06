@@ -24,7 +24,7 @@ This is still experimental.'><!-- mathjax --><script src="https://cdnjs.cloudfla
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -76,7 +76,7 @@ This is still experimental.</p>
 <span>  <span class="va">outputToSave</span>,</span>
 <span>  <span class="va">cachePath</span>,</span>
 <span>  <span class="va">userTags</span>,</span>
-<span>  drv <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  drv <span class="op">=</span> <span class="fu">getDrv</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  conn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.conn"</span>, <span class="cn">NULL</span><span class="op">)</span>,</span>
 <span>  <span class="va">cacheId</span>,</span>
 <span>  linkToCacheId <span class="op">=</span> <span class="cn">NULL</span></span>
@@ -104,14 +104,12 @@ the <code>CacheRepo</code></p></dd>
 
 
 <dt>drv</dt>
-<dd><p>an object that inherits from DBIDriver,
-or an existing DBIConnection
-object (in order to clone an existing connection).</p></dd>
+<dd><p>if using a database backend, drv must be an object that
+inherits from DBIDriver e.g., <code><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">RSQLite::SQLite()</a></code></p></dd>
 
 
 <dt>conn</dt>
-<dd><p>A DBIConnection object, as returned by
-<code><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect()</a></code>.</p></dd>
+<dd><p>an optional DBIConnection object, as returned by dbConnect().</p></dd>
 
 
 <dt>cacheId</dt>

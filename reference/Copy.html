@@ -26,7 +26,7 @@ environments)."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/l
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -78,10 +78,14 @@ environments).</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">Copy</span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for ANY</span></span>
-<span><span class="fu">Copy</span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S4 method for SQLiteConnection</span></span>
-<span><span class="fu">Copy</span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">Copy</span><span class="op">(</span></span>
+<span>  <span class="va">object</span>,</span>
+<span>  <span class="va">filebackedDir</span>,</span>
+<span>  drv <span class="op">=</span> <span class="fu">getDrv</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  conn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.conn"</span>, <span class="cn">NULL</span><span class="op">)</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span><span class="op">)</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for data.table</span></span>
 <span><span class="fu">Copy</span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
@@ -93,16 +97,7 @@ environments).</p>
 <span><span class="fu">Copy</span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for data.frame</span></span>
-<span><span class="fu">Copy</span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S4 method for Raster</span></span>
-<span><span class="fu">Copy</span><span class="op">(</span></span>
-<span>  <span class="va">object</span>,</span>
-<span>  <span class="va">filebackedDir</span>,</span>
-<span>  drv <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.drv"</span>, <span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  conn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.conn"</span>, <span class="cn">NULL</span><span class="op">)</span>,</span>
-<span>  <span class="va">...</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">Copy</span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -126,14 +121,20 @@ file backing them.</p></dd>
 
 
 <dt>drv</dt>
-<dd><p>an object that inherits from DBIDriver,
-or an existing DBIConnection
-object (in order to clone an existing connection).</p></dd>
+<dd><p>if using a database backend, drv must be an object that
+inherits from DBIDriver e.g., <code><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">RSQLite::SQLite()</a></code></p></dd>
 
 
 <dt>conn</dt>
-<dd><p>A DBIConnection object, as returned by
-<code><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect()</a></code>.</p></dd>
+<dd><p>an optional DBIConnection object, as returned by dbConnect().</p></dd>
+
+
+<dt>verbose</dt>
+<dd><p>Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></dd>
 
 </dl></div>
     <div id="value">
