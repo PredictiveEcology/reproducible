@@ -1,4 +1,4 @@
-#' Move a file to a new location
+#' Move a file to a new location -- Defunct -- use `hardLinkOrCopy`
 #'
 #' This will first try to `file.rename`, and if that fails, then it will
 #' `file.copy` then `file.remove`.
@@ -8,18 +8,9 @@
 #' @return Logical indicating whether operation succeeded.
 #'
 .file.move <- function(from, to, overwrite = FALSE) {
-  stopifnot(file.exists(from))
-  res <- suppressWarnings(file.rename(from = from, to = to))
-
-  if (!isTRUE(all(res))) {
-    res2 <- file.copy(from = from, to = to, overwrite = overwrite)
-    if (isTRUE(all(res2))) {
-      file.remove(from)
-    }
-    return(res2)
-  } else {
-    return(res)
-  }
+  .Deprecated("hardLinkeOrCopy")
+  hardLinkOrCopy(from, to, overwrite)
+  file.remove(from)
 }
 
 #' Recursive copying of nested environments, and other "hard to copy" objects
@@ -49,7 +40,6 @@
 #' @author Eliot McIntire
 #' @export
 #' @importFrom data.table copy
-#' @inheritParams Cache
 #' @rdname Copy
 #' @return
 #' The same object as `object`, but with pass-by-reference class elements "deep" copied.
@@ -92,57 +82,61 @@ setGeneric("Copy", function(object, ...) {
 })
 
 #' @rdname Copy
+#' @inheritParams Cache
 setMethod(
   "Copy",
   signature(object = "ANY"),
-  definition = function(object, # filebackedDir,
+  definition = function(object, filebackedDir,
+                        drv = getDrv(getOption("reproducible.drv", NULL)),
+                        conn = getOption("reproducible.conn", NULL),
+                        verbose = getOption("reproducible.verbose"),
                         ...) {
+    out <- object # many methods just do a pass through
     if (any(grepl("DBIConnection", is(object)))) {
       messageCache("Copy will not do a deep copy of a DBI connection object; no copy being made. ",
-              "This may have unexpected consequences...")
-    }
-
-    if (is(object, "proto")) { # don't want to import class for reproducible package; an edge case
-      return(get(class(object)[1])(object))
-    }
-
+              "This may have unexpected consequences...", verbose = verbose)
+    } else if (is(object, "proto")) { # don't want to import class for reproducible package; an edge case
+      out <- get(class(object)[1])(object)
+    } else if (inherits(object, "SQLiteConnection")) {
+      con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+      messageCache("Making a copy of the entire SQLite database: ",object@dbname,
+                   "; this may not be desireable ...", verbose = verbose)
+      out <- RSQLite::sqliteCopyDatabase(object, con)
+    } else if (!identical(is(object)[1], "environment") && is.environment(object)) {
     # keep this environment method here, as it will intercept "proto"
     #   and other environments that it shouldn't
-    if (!identical(is(object)[1], "environment") && is.environment(object)) {
       messageCache("Trying to do a deep copy (Copy) of object of class ", class(object),
-              "which does not appear to be a normal environment. If it can be copied ",
+              ", which does not appear to be a normal environment. If it can be copied ",
               "like a normal environment, ignore this message; otherwise, may need to create ",
-              "a Copy method for this class. See ?Copy")
+              "a Copy method for this class. See ?Copy", verbose = verbose)
 
-    }
-    if (is.environment(object)) {
-      # if (missing(filebackedDir)) {
-      #   filebackedDir <- tempdir2(rndstr(1, 9))
-      # }
-      listVersion <- Copy(as.list(object, all.names = TRUE),
-                          #filebackedDir = filebackedDir,
-                          ...)
+    } else if (is.environment(object)) {
+      listVersion <- Copy(as.list(object, all.names = TRUE), ...)
 
       parentEnv <- parent.env(object)
-      newEnv <- new.env(parent = parentEnv)
-      list2env(listVersion, envir = newEnv)
-      attr(newEnv, "name") <- attr(object, "name")
-      return(newEnv)
+      out <- new.env(parent = parentEnv)
+      list2env(listVersion, envir = out)
+      attr(out, "name") <- attr(object, "name")
 
+    } else if (inherits(object, "Raster")) {
+      if (any(nchar(Filenames(object)) > 0)) {
+        if (missing(filebackedDir)) {
+          filebackedDir <- tempdir2(rndstr(1, 11))
+        }
+        if (!is.null(filebackedDir))
+          out <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn)
+      }
+    } else if (inherits(object, "SpatRaster")) {
+      fns <- Filenames(object, allowMultiple = FALSE)
+      if (any(nzchar(fns))) {
+        newFns <- nextNumericName(fns)
+        copyFile(fns, newFns)
+        out <- terra::rast(newFns)
+      }
     }
-    return(object)
+    return(out)
 })
 
-
-#' @rdname Copy
-setMethod("Copy",
-          signature(object = "SQLiteConnection"),
-          definition = function(object, ...) {
-            con <- dbConnect(RSQLite::SQLite(), ":memory:")
-            messageCache("Making a copy of the entire SQLite database: ",object@dbname,
-                    "; this may not be desireable ...")
-            RSQLite::sqliteCopyDatabase(object, con)
-})
 
 #' @rdname Copy
 setMethod("Copy",
@@ -179,22 +173,3 @@ setMethod("Copy",
             object
 })
 
-#' @rdname Copy
-#' @inheritParams DBI::dbConnect
-setMethod("Copy",
-          signature(object = "Raster"),
-          definition = function(object, filebackedDir,
-                                drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                                conn = getOption("reproducible.conn", NULL), ...) {
-            # raster::fromDisk fails when only some of the RasterLayers in a RasterStack are fromDisk
-            #  --> changing to Filenames
-            # if (fromDisk(object)) {
-            if (any(nchar(Filenames(object)) > 0)) {
-              if (missing(filebackedDir)) {
-                filebackedDir <- tempdir2(rndstr(1, 11))
-              }
-              if (!is.null(filebackedDir))
-                object <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn)
-            }
-            object
-})

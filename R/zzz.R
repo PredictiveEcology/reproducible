@@ -16,11 +16,7 @@
       "Using reproducible version ",
       utils::packageVersion("reproducible"), ".",
       # "\n  'reproducible' has changed the default database backend.", # Not true yet
-      "\n  See ?reproducibleOptions for details.",
-      "\n  During transition to GDAL>3 and PROJ>6, many warnings will be suppressed until",
-      " simple solutions are available; if these GDAL and PROJ changes",
-      " are important to your project you will have to manually update",
-      " proj and crs in spatial objects.")
+      "\n  See ?reproducibleOptions for details.")
   }
 }
 
@@ -35,13 +31,19 @@
 .reproducibleTempCacheDir <- function()  getOption("reproducible.cachePath")
 .reproducibleTempInputDir <- function() file.path(tempdir(), "reproducible", "inputs")
 
-.argsToRemove <- argsToRemove <- unique(c(names(formals(prepInputs)),
+.argsToRemove <- unique(c(names(formals(prepInputs)),
                                           names(formals(cropInputs)),
+                                          names(formals(cropTo)),
+                                          names(formals(maskTo)),
+                                          names(formals(projectTo)),
+                                          names(formals(postProcessTo)),
                                           names(formals(fixErrors)),
-                                          names(formals(raster::writeRaster)),
-                                          names(formals(raster::projectRaster)),
+                                          names(formals(fixErrorsIn)),
+                                          # names(formals(raster::writeRaster)),
+                                          # names(formals(raster::projectRaster)),
                                           names(formals(determineFilename)),
                                           names(formals(writeOutputs)),
+                                          names(formals(writeTo)),
                                           unlist(lapply(methods("postProcess"),
                                                         function(x) names(formals(x))))))
 

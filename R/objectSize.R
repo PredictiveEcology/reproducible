@@ -38,11 +38,14 @@
 #' objSize(prepInputs)     # the function, plus its enclosing environment
 #'
 #' os1 <- utils::object.size(as.environment("package:reproducible"))
-#' os2 <- objSize(as.environment("package:reproducible"))
 #' (os1) # very small -- just the environment container
-#' sum(unlist(os2)) # around 157 MB, with all functions, objects
-#'                  # and imported functions
 #'
+#' # slow next bit
+#' \donttest{
+#' os2 <- objSize(as.environment("package:reproducible"))
+#' sum(unlist(os2)) # possibly 100+ MB, with all functions, objects
+#'                  # and imported functions
+#' }
 #' @details
 #' For functions, a user can include the enclosing environment as described
 #' <https://www.r-bloggers.com/2015/03/using-closures-as-objects-in-r/> and
@@ -60,9 +63,11 @@ objSize <- function(x, quick = FALSE, ...) {
 #' @importFrom lobstr obj_size
 objSize.default <- function(x, quick = FALSE, ...) {
   FNs <- Filenames(x)
-  if (!is.null(FNs)) {
-    FNs <- asPath(FNs)
-    out2 <- objSize(FNs, quick = FALSE)
+  if (!is.null(FNs) && length(FNs)) {
+    if (nzchar(FNs)) {
+      FNs <- asPath(FNs)
+      out2 <- objSize(FNs, quick = FALSE)
+    }
   }
   if (is(x, "SpatRaster") || is(x, "SpatVector")) {
     if (.requireNamespace("terra"))

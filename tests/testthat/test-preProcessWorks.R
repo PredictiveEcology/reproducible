@@ -1,6 +1,6 @@
 test_that("preProcess works for .tar files", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -14,7 +14,7 @@ test_that("preProcess works for .tar files", {
 
 test_that("preProcess works for .zip when provided only url and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -28,7 +28,7 @@ test_that("preProcess works for .zip when provided only url and destinationPath"
 
 test_that("preProcess works with only url", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -42,7 +42,7 @@ test_that("preProcess works with only url", {
 
 test_that("preProcess works when provides only archive", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -62,7 +62,7 @@ test_that("preProcess works when provides only archive", {
 
 test_that("preProcess works when provides archive and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -83,7 +83,7 @@ test_that("preProcess works when provides archive and destinationPath", {
 
 test_that("preProcess works when provides only targetFile", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -100,7 +100,7 @@ test_that("preProcess works when provides only targetFile", {
 
 test_that("preProcess works when provides targetfile and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -118,7 +118,7 @@ test_that("preProcess works when provides targetfile and destinationPath", {
 
 test_that("preProcess works when provides url, archive, targetfile and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -134,7 +134,7 @@ test_that("preProcess works when provides url, archive, targetfile and destinati
 
 test_that("preProcess works when provides url, targetfile and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -149,7 +149,7 @@ test_that("preProcess works when provides url, targetfile and destinationPath", 
 
 test_that("preProcess works when provides url and destinationPath for a .rar file", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -174,7 +174,7 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
 
 test_that("preProcess works when provides url, targetfile and destinationPath for a .rar file", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -203,7 +203,7 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
 
 test_that("preProcess works when provides url, archive and destinationPath for a .rar file", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -229,7 +229,7 @@ test_that("preProcess works when provides url, archive and destinationPath for a
 
 test_that("preProcess works, but gives a warning when supplying cacheTags", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -245,7 +245,7 @@ test_that("preProcess works, but gives a warning when supplying cacheTags", {
 
 test_that("preProcess works, but gives a warning when supplying postProcessedFilename", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -262,7 +262,7 @@ test_that("preProcess works, but gives a warning when supplying postProcessedFil
 
 test_that("preProcess works, but gives a warning when supplying rasterInterpMethod", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -278,7 +278,7 @@ test_that("preProcess works, but gives a warning when supplying rasterInterpMeth
 
 test_that("preProcess works, but gives a warning when supplying rasterDatatype", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -294,7 +294,7 @@ test_that("preProcess works, but gives a warning when supplying rasterDatatype",
 
 test_that("preProcess works, but gives a warning when supplying pkg", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -310,7 +310,7 @@ test_that("preProcess works, but gives a warning when supplying pkg", {
 
 test_that("message when files from archive are already present", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -331,7 +331,7 @@ test_that("message when files from archive are already present", {
 
 test_that("message when file is a shapefile", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -347,7 +347,7 @@ test_that("message when file is a shapefile", {
 
 test_that("message when doesn't know the targetFile extension", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -363,7 +363,7 @@ test_that("message when doesn't know the targetFile extension", {
 
 test_that("When supplying two files without archive, when archive and files have different names", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -381,7 +381,7 @@ test_that("When supplying two files without archive, when archive and files have
 
 test_that("message when archive has two known files (raster and shapefile)", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -400,7 +400,7 @@ test_that("message when archive has two known files (raster and shapefile)", {
 
 test_that("message when extracting a file that is already present", {
   skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
+  testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -428,33 +428,39 @@ test_that("message when extracting a file that is already present", {
   })
 })
 
-test_that("Test to fix issue #101 prepInputs on raster from disk", {
+test_that("masking with larger extent obj", {
   skip_on_cran()
   skip_on_ci()
-  skip_if_not_installed("googledrive")
 
-  testInitOut <- testInit("raster", needGoogle = TRUE)
+  testInitOut <- testInit("terra", needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
   smallRT <- prepInputs(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
-  a <- raster::extent(smallRT)
-  a <- raster::extend(a, -3.5e5) # make it small
-  test <- raster(a, res = 250, vals = 1)
-  crs(test) <- crs(smallRT)
-  a <- postProcess(x = test, rasterToMatch = smallRT, maskWithRTM = TRUE)
-  expect_true(is(a, "RasterLayer"))
+  sam <- sample(terra::ncell(smallRT), size = terra::ncell(smallRT)/2)
+  smallRT[] <- NA
+  smallRT[sam] <- 1L
+  if (is(smallRT, "Raster")) {
+    a <- raster::extent(smallRT)
+  } else {
+    a <- terra::ext(smallRT)
+  }
+  a <- terra::extend(a, -3e5) # make it small
+  test <- rasterRead(a, res = 250, vals = 2)
+  terra::crs(test) <- terra::crs(smallRT)
+  b <- postProcess(x = test, rasterToMatch = smallRT, maskWithRTM = TRUE)
+  expect_true(is(b, rasterType()))
 })
 
 test_that("Test of using future and progress indicator for lrg files on Google Drive", {
   skip_if_not_installed("future")
 
   if (interactive()) {
-    testInitOut <- testInit(c("raster", "future"), needGoogle = TRUE, opts = list("reproducible.futurePlan" = "multiprocess"))
+    testInitOut <- testInit(c("raster", "future"), needGoogleDriveAuth = TRUE,
+                            opts = list("reproducible.futurePlan" = "multiprocess"))
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
-    #future::plan("multiprocess")
     noisyOutput <- capture.output({
       ccc <- testthat::capture_output({
         smallRT <- preProcess(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
@@ -464,3 +470,83 @@ test_that("Test of using future and progress indicator for lrg files on Google D
   }
 })
 
+
+test_that("lightweight tests for preProcess code coverage", {
+  skip_on_cran()
+  out <- testInit("sf")
+  on.exit(testOnExit(out), add = TRUE)
+  expect_true(is.data.frame(preProcessParams()))
+  expect_true(is.data.frame(preProcessParams(1)))
+  expect_true(is.data.frame(preProcessParams(2)))
+  expect_true(is.data.frame(preProcessParams(3)))
+  expect_true(is.data.frame(preProcessParams(4)))
+
+  # test purge
+  localFileLuxSm <- system.file("ex/luxSmall.shp", package = "reproducible")
+  capture.output(
+    la <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir)
+  )
+  csf <- dir(pattern = "CHECKSUMS", path = tmpdir, full.names = TRUE)
+  a <- file.info(csf)
+  Sys.sleep(0.1)
+  capture.output(
+    la2 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir)
+  )
+  b <- file.info(csf)
+  expect_true(milliseconds(b$mtime) == milliseconds(a$mtime))
+  if (isWindows() && isInteractive()) # apparently atime is not write on *nix-alikes
+    expect_false(milliseconds(b$atime) == milliseconds(a$atime))
+
+  # purge will delete CHECKSUMS 7 -- written, read
+  capture.output(
+    la3 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir, purge = 7)
+  )
+  d <- file.info(csf)
+  if (isWindows()) # linux doesn't do ctime
+    expect_true(milliseconds(d$ctime) == milliseconds(a$ctime))
+  expect_false(milliseconds(d$mtime) == milliseconds(a$mtime))
+  expect_false(milliseconds(d$atime) == milliseconds(a$atime))
+
+  # purge will delete CHECKSUMS 1 -- deleted, written, read
+  Sys.sleep(0.1)
+  capture.output(
+    la4 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir, purge = 1)
+  )
+  e <- file.info(csf)
+  # if (isWindows()) # windows doesn't release a file's ctime even when removed
+  #   expect_false(milliseconds(e$ctime) == milliseconds(a$ctime))
+  expect_false(milliseconds(e$mtime) == milliseconds(a$mtime))
+  expect_false(milliseconds(e$atime) == milliseconds(a$atime))
+
+  expect_null(.decodeMagicNumber("sdfddsffdfs.tetes"))
+  expect_true(is.character(.decodeMagicNumber("Shapefile")))
+  expect_true(is.character(.decodeMagicNumber("RAR")))
+  expect_true(is.character(.decodeMagicNumber("tar")))
+  expect_true(is.character(.decodeMagicNumber("TIFF")))
+  expect_true(is.character(.decodeMagicNumber("Zip")))
+
+})
+
+test_that("large test for nested file structures in zips", {
+  skip_on_cran()
+  skip_on_ci()
+  out <- testInit("sf")
+  on.exit(testOnExit(out), add = TRUE)
+  climateDataURL <- "https://drive.google.com/file/d/1we9GqEVAORWLbHi3it66VnCcvLu85QIk"
+
+  ## extracts flat files, overwriting and keeping only the last subdir's files
+  files <- list(paste0("Alberta/Year_",2015:2019,"M/Eref01.asc"),
+                paste0("Alberta/Year_",1991:2019,"M/Eref01.asc"),
+                c(paste0("Alberta/Year_",1991:2019,"M/CMD01.asc"),
+                  paste0("Alberta/Year_",1991:2019,"M/Eref01.asc")))
+  lapply(files, function(fis) {
+    res1 <- preProcess(url = climateDataURL, destinationPath = tmpdir,
+                       targetFile = "Alberta/Year_2020M/CMD01.asc",
+                       alsoExtract = fis
+    )
+    testLength <- length(fis) + 2
+    expect_equal(NROW(res1$checkSums[checksum.x != "dir"]), testLength)
+  })
+
+
+})

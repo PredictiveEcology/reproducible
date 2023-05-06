@@ -59,44 +59,6 @@
 }
 
 
-.CachePipeFn1 <- function(modifiedDots, fnDetails, FUN) {
-  if (!is.call(modifiedDots$._lhs)) {
-    # usually means it is the result of a pipe
-    modifiedDots$._pipeFn <- "constant" # nolint
-  }
-
-  pipeFns <- paste(lapply(modifiedDots$._rhss, function(x) x[[1]]), collapse = ", ") %>%
-    paste(modifiedDots$._pipeFn, ., sep = ", ") %>%
-    gsub(., pattern = ", $", replacement = "") %>%
-    paste0("'", ., "' pipe sequence")
-
-  fnDetails$functionName <- pipeFns
-
-  if (is.function(FUN)) {
-    firstCall <- match.call(FUN, modifiedDots$._lhs)
-    modifiedDots <- append(modifiedDots, lapply(as.list(firstCall[-1]), function(x) {
-      eval(x, envir = modifiedDots$._envir)
-    }))
-  } else {
-    modifiedDots <- append(modifiedDots, as.list(FUN))
-  }
-
-  for (fns in seq_along(modifiedDots$._rhss)) {
-    functionName <- as.character(modifiedDots$._rhss[[fns]][[1]])
-    FUN <- eval(parse(text = functionName)) # nolint
-    if (is.primitive(FUN)) {
-      otherCall <- modifiedDots$._rhss[[fns]]
-    } else {
-      otherCall <- match.call(definition = FUN, modifiedDots$._rhss[[fns]])
-    }
-    modifiedDots[[paste0("functionName", fns)]] <- as.character(modifiedDots$._rhss[[fns]][[1]])
-    modifiedDots[[paste0(".FUN", fns)]] <-
-      eval(parse(text = modifiedDots[[paste0("functionName", fns)]]))
-    modifiedDots <- append(modifiedDots, as.list(otherCall[-1]))
-  }
-  return(list(modifiedDots = modifiedDots, fnDetails = fnDetails))
-}
-
 .CacheFn1 <- function(FUN, scalls) {
   if (!is(FUN, "function")) {
     # scalls <- sys.calls()
@@ -132,173 +94,28 @@
 }
 
 
-# .CacheSideEffectFn1 <- function(output, sideEffect, cachePath, quick, algo, FUN,
-#                                 verbose = getOption("reproducible.verbose", 1), ...) {
-#   messageCache("sideEffect argument is poorly tested. It may not function as desired")
-#   # browser(expr = exists("sideE"))
-#   needDwd <- logical(0)
-#   fromCopy <- character(0)
-#   cachedChcksum <- attributes(output)$chcksumFiles
-#
-#   if (!is.null(cachedChcksum)) {
-#     for (x in cachedChcksum) {
-#       chcksumName <- sub(":.*", "", x)
-#       chcksumPath <- file.path(sideEffect, basename(chcksumName))
-#
-#       if (file.exists(chcksumPath)) {
-#         checkDigest <- TRUE
-#       } else {
-#         checkCopy <- file.path(CacheStorageDir(cachePath), basename(chcksumName))
-#         if (file.exists(checkCopy)) {
-#           chcksumPath <- checkCopy
-#           checkDigest <- TRUE
-#           fromCopy <- c(fromCopy, basename(chcksumName))
-#         } else {
-#           checkDigest <- FALSE
-#           needDwd <- c(needDwd, TRUE)
-#         }
-#       }
-#
-#       if (checkDigest) {
-#         if (quick) {
-#           sizeCurrent <- lapply(chcksumPath, function(z) {
-#             list(basename(z), file.size(z))
-#           })
-#           chcksumFls <- lapply(sizeCurrent, function(z) {
-#             digest::digest(z, algo = algo)
-#           })
-#         } else {
-#           chcksumFls <- lapply(chcksumPath, function(z) {
-#             digest::digest(file = z, algo = algo)
-#           })
-#         }
-#         # Format checksum from current file as cached checksum
-#         currentChcksum <- paste0(chcksumName, ":", chcksumFls)
-#
-#         # List current files with divergent checksum (or checksum missing)
-#         if (!currentChcksum %in% cachedChcksum) {
-#           needDwd <- c(needDwd, TRUE)
-#         } else {
-#           needDwd <- c(needDwd, FALSE)
-#         }
-#       }
-#     }
-#     #}
-#   } else {
-#     messageCache("  There was no record of files in sideEffects", verbose = verbose)
-#   }
-#
-#   if (any(needDwd)) {
-#     do.call(FUN, list(...))
-#   }
-#
-#   if (NROW(fromCopy)) {
-#     repoTo <- CacheStorageDir(cachePath)
-#     lapply(fromCopy, function(x) {
-#       file.copy(from = file.path(repoTo, basename(x)),
-#                 to = file.path(cachePath), recursive = TRUE)
-#     })
-#   }
-# }
 
-# .CacheSideEffectFn2 <- function(sideEffect, cachePath, priorRepo, algo, output,
-#                                 makeCopy, quick) {
-#   # browser(expr = exists("sideE"))
-#   if (isTRUE(sideEffect)) {
-#     postRepo <- list.files(cachePath, full.names = TRUE)
-#   } else {
-#     postRepo <- list.files(sideEffect, full.names = TRUE)
-#   }
-#   dwdFlst <- setdiff(postRepo, priorRepo)
-#   if (length(dwdFlst > 0)) {
-#     if (quick) {
-#       sizecurFlst <- lapply(dwdFlst, function(x) {
-#         list(basename(x), file.size(file.path(x)))
-#       })
-#       cachecurFlst <- lapply(sizecurFlst, function(x) {
-#         digest::digest(x, algo = algo)
-#       })
-#     } else {
-#       cachecurFlst <- lapply(dwdFlst, function(x) {
-#         digest::digest(file = x, algo = algo)
-#       })
-#     }
-#
-#     cacheName <- file.path(basename(sideEffect), basename(dwdFlst), fsep = "/")
-#     setattr(output, "chcksumFiles", paste0(cacheName, ":", cachecurFlst))
-#     #attr(output, "chcksumFiles") <- paste0(cacheName, ":", cachecurFlst)
-#     if (!identical(attr(output, "chcksumFiles"), paste0(cacheName, ":", cachecurFlst)))
-#       stop("There is an unknown error 01")
-#
-#     # browser(expr = exists("sideE"))
-#     if (makeCopy) {
-#       repoTo <- CacheStorageDir(cachePath)
-#       checkPath(repoTo, create = TRUE)
-#       lapply(dwdFlst, function(x) {
-#         file.copy(from = x, to = file.path(repoTo), recursive = TRUE)
-#       })
-#     }
-#   }
-#   return(output)
-# }
-
-.getFromRepo <- function(FUN, isInRepo, notOlderThan, lastOne, cachePath, fnDetails,
+.getFromRepo <- function(FUN, isInRepo, fullCacheTableForObj,
+                         notOlderThan, lastOne, cachePath, fnDetails,
                          modifiedDots, debugCache, verbose, # sideEffect,
-                         quick,
+                         quick, fileFormat = NULL,
                          algo, preDigest, startCacheTime,
-                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                         drv = getDrv(getOption("reproducible.drv", NULL)),
                          conn = getOption("reproducible.conn", NULL), ...) {
-  if (verbose > 3) {
-    startLoadTime <- Sys.time()
-  }
-
   cacheObj <- isInRepo[[.cacheTableHashColName()]][lastOne]
 
   fromMemoise <- NA
-  if (getOption("reproducible.useMemoise")) {
-    fromMemoise <- FALSE
-    if (!is.null(.pkgEnv[[cachePath]]))
-      if (exists(cacheObj, envir = .pkgEnv[[cachePath]]))
-        fromMemoise <- TRUE
-    loadFromMgs <- "Loading from memoised version of repo"
-    output <- .loadFromLocalRepoMem(md5hash = cacheObj, repoDir = cachePath, value = TRUE)
-  } else {
-    loadFromMgs <- "Loading from repo"
-    if (useDBI()) {
-      output <- loadFromCache(cachePath, isInRepo[[.cacheTableHashColName()[lastOne]]],
-                              drv = drv, conn = conn)
-    }
-  }
-
-  if (verbose > 3) {
-    endLoadTime <- Sys.time()
-    verboseDF <- data.frame(
-      functionName = fnDetails$functionName,
-      component = loadFromMgs,
-      elapsedTime = as.numeric(difftime(endLoadTime, startLoadTime, units = "secs")),
-      units = "secs",
-      stringsAsFactors = FALSE
-    )
-
-    if (exists("verboseTiming", envir = .reproEnv)) {
-      .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
-    }
-  }
-
-  # Class-specific message
-  .cacheMessage(output, fnDetails$functionName, fromMemoise = fromMemoise, verbose = verbose)
-
+  output <- loadFromCache(cachePath, isInRepo[[.cacheTableHashColName()[lastOne]]],
+                          fullCacheTableForObj = fullCacheTableForObj,
+                          # format = fileFormat, loadFun = loadFun,
+                          .functionName = fnDetails$functionName, .dotsFromCache = modifiedDots,
+                          drv = drv, conn = conn,
+                          verbose = verbose)
   # This is protected from multiple-write to SQL collisions
   .addTagsRepo(cacheId = isInRepo[[.cacheTableHashColName()]][lastOne],
                cachePath = cachePath, drv = drv, conn = conn)
-
-  # This allows for any class specific things
-  output <-
-    do.call(.prepareOutput, args = append(list(output, cachePath), modifiedDots))
-
   if (length(debugCache)) {
     if (!is.na(pmatch(debugCache, "complete")) | isTRUE(debugCache))
-      #output <- do.call(.debugCache, args = append(list(output, preDigest), modifiedDots$args))
       output <- .debugCache(output, preDigest, ...)
   }
 

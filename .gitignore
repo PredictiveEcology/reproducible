@@ -43,7 +43,6 @@ vignettes/Intro-to-Cache\.R
 *.tdo
 VEG_COMP_LYR_L1_POLY_2015.gdb.zip
 .secret
-
 .Rprofile
-
 .secret/
+config.yml

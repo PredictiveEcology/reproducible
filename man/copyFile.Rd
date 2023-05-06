@@ -61,6 +61,7 @@ tmpDirTo <- file.path(tempdir(), "example_fileCopy_to")
 tmpFile1 <- tempfile("file1", tmpDirFrom, ".csv")
 tmpFile2 <- tempfile("file2", tmpDirFrom, ".csv")
 dir.create(tmpDirFrom, recursive = TRUE, showWarnings = FALSE)
+dir.create(tmpDirTo, recursive = TRUE, showWarnings = FALSE)
 f1 <- normalizePath(tmpFile1, mustWork = FALSE)
 f2 <- normalizePath(tmpFile2, mustWork = FALSE)
 t1 <- normalizePath(file.path(tmpDirTo, basename(tmpFile1)), mustWork = FALSE)
@@ -75,8 +76,6 @@ identical(read.csv(f1), read.csv(f2)) ## FALSE
 identical(read.csv(f1), read.csv(t1)) ## TRUE
 identical(read.csv(f2), read.csv(t2)) ## TRUE
 
-unlink(tmpDirFrom, recursive = TRUE)
-unlink(tmpDirTo, recursive = TRUE)
 
 }
 \author{

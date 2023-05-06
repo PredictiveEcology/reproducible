@@ -1,10 +1,3 @@
-#' @keywords internal
-.pkgSnapshot <- function(instPkgs, instVers, packageVersionFile = "._packageVersionsAuto.txt") {
-  # browser(expr = exists("aaaa"))
-  inst <- data.frame(instPkgs, instVers = unlist(instVers), stringsAsFactors = FALSE)
-  write.table(inst, file = packageVersionFile, row.names = FALSE)
-  inst
-}
 
 ################################################################################
 #' Convert numeric to character with padding
@@ -28,8 +21,8 @@
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @export
-#' @importFrom fpCompare %==%
 #' @rdname paddedFloatToChar
+#' @importFrom fpCompare %==%
 #'
 #' @examples
 #' paddedFloatToChar(1.25)
@@ -39,10 +32,9 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
   xf <- x %% 1
   numDecimals <- nchar(gsub("(.*)(\\.)|([0]*$)","",xf))
   newPadR <- ifelse(xf %==% 0, 0, pmax(numDecimals, padR))
-  xFCEnd <- sprintf(paste0("%0", padL+newPadR+1*(newPadR > 0),".", newPadR, "f"), x)
+  xFCEnd <- sprintf(paste0("%0", padL + newPadR + 1*(newPadR > 0),".", newPadR, "f"), x)
   return(xFCEnd)
 }
-
 
 #' Add a prefix or suffix to the basename part of a file path
 #'
@@ -94,24 +86,24 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
 #'
 #' @export
 #' @return
-#' A character string using the `digest` of the `studyArea`. This is only intended
+#' A character string using the `.robustDigest` of the `studyArea`. This is only intended
 #' for use with spatial objects.
-#'
-#' @importFrom digest digest
+#' @examples
+#' studyAreaName("Ontario")
 setGeneric("studyAreaName", function(studyArea, ...) {
   standardGeneric("studyAreaName")
 })
 
-#' @export
-#' @rdname studyAreaName
-setMethod(
-  "studyAreaName",
-  signature = "SpatialPolygonsDataFrame",
-  definition = function(studyArea, ...) {
-    studyArea <- studyArea[, -c(1:ncol(studyArea))]
-    studyArea <- as(studyArea, "SpatialPolygons")
-    studyAreaName(studyArea, ...)
-})
+# @export
+# @rdname studyAreaName
+# setMethod(
+#   "studyAreaName",
+#   signature = "SpatialPolygonsDataFrame",
+#   definition = function(studyArea, ...) {
+#     studyArea <- studyArea[, -c(1:ncol(studyArea))]
+#     studyArea <- as(studyArea, "SpatialPolygons")
+#     studyAreaName(studyArea, ...)
+# })
 
 #' @export
 #' @rdname studyAreaName
@@ -120,7 +112,7 @@ setMethod(
   signature = "character",
   definition = function(studyArea, ...) {
     sort(studyArea) ## ensure consistent hash for same subset of study area names
-    digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
+    .robustDigest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
 })
 
 #' @export
@@ -129,15 +121,18 @@ setMethod(
   "studyAreaName",
   signature = "ANY",
   definition = function(studyArea, ...) {
-    if (is(studyArea, "sf")) {
-      if (requireNamespace("sf")) {
-        studyArea <- sf::st_geometry(studyArea)
-      }
-    }
-    if (!(is(studyArea, "spatialClasses") || is(studyArea, "sfc")) || is.character(studyArea)) {
+    if (inherits(studyArea, "sf")) {
+      .requireNamespace("sf", stopOnFALSE = TRUE)
+      studyArea <- sf::st_geometry(studyArea)
+    } else if (inherits(studyArea, "SpatialPolygonsDataFrame")) {
+      studyArea <- studyArea[, -c(1:ncol(studyArea))]
+      studyArea <- as(studyArea, "SpatialPolygons")
+      studyAreaName(studyArea, ...)
+    } else if (!(inherits(studyArea, "Spatial") || inherits(studyArea, "sfc") ||
+          inherits(studyArea, "SpatVector") || is.character(studyArea))) {
       stop("studyAreaName expects a spatialClasses object (or character vector)")
     }
-    digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
+    .robustDigest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
 })
 
 #' Identify which formals to a function are not in the current `...`
@@ -171,7 +166,7 @@ setMethod(
   if (!missing(dots)) {
     out <- names(dots)[!(names(dots) %in% formalNames)]
   } else {
-    out <- names(list(...))[!(names(list(...)) %in% formalNames)]
+    out <- ...names()[!(...names() %in% formalNames)]
   }
   out
 }
@@ -326,76 +321,29 @@ isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
 #'   it simply returns `FALSE`
 .requireNamespace <- function(pkg = "methods", minVersion = NULL,
                               stopOnFALSE = FALSE,
-                              messageStart = paste0(pkg, if (!is.null(minVersion))
-                                paste0("(>=", minVersion, ")"), " is required. Try: ")) {
+                              messageStart = NULL) {
   need <- FALSE
-  if (suppressWarnings(!requireNamespace(pkg, quietly = TRUE))) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
     need <- TRUE
   } else {
-    if (isTRUE(packageVersion(pkg) < minVersion))
-      need <- TRUE
+    if (!is.null(minVersion))
+      if (isTRUE(packageVersion(pkg) < minVersion))
+        need <- TRUE
   }
-  if (isTRUE(stopOnFALSE) && isTRUE(need))
-    stop(requireNamespaceMsg(pkg))
+
+  if (need) # separate these so it is faster
+    if (isTRUE(stopOnFALSE))
+      stop(requireNamespaceMsg(pkg, extraMsg = messageStart, minVersion = minVersion))
   !need
 }
 
-#' Use message to print a clean square data structure
-#'
-#' Sends to `message`, but in a structured way so that a data.frame-like can
-#' be cleanly sent to messaging.
-#'
-#' @param df A data.frame, data.table, matrix
-#' @param round An optional numeric to pass to `round`
-#' @param colour Passed to `getFromNamespace(colour, ns = "crayon")`,
-#'   so any colour that `crayon` can use
-#' @param colnames Logical or `NULL`. If `TRUE`, then it will print
-#'   column names even if there aren't any in the `df` (i.e., they will)
-#'   be `V1` etc., `NULL` will print them if they exist, and `FALSE`
-#'   which will omit them.
-#' @param verboseLevel The numeric value for this `message*` call, equal or above
-#'   which `verbose` must be. The higher this is set, the more unlikely the call
-#'   will show a message.
-#' @inheritParams base::message
-#'
-#' @export
-#' @return
-#' Used for side effects. This will produce a message of a structured `data.frame`.
-#'
-#' @importFrom data.table is.data.table as.data.table
-#' @importFrom utils capture.output
-#' @inheritParams Cache
-messageDF <- function(df, round, colour = NULL, colnames = NULL, appendLF = TRUE,
-                      verbose = getOption("reproducible.verbose"), verboseLevel = 1) {
-  origColNames <- if (is.null(colnames) | isTRUE(colnames)) colnames(df) else NULL
 
-  if (is.matrix(df))
-    df <- as.data.frame(df)
-  if (!is.data.table(df)) {
-    df <- as.data.table(df)
-  }
-  df <- Copy(df)
-  skipColNames <- if (is.null(origColNames) & !isTRUE(colnames)) TRUE else FALSE
-  if (!missing(round)) {
-    isNum <- sapply(df, is.numeric)
-    isNum <- colnames(df)[isNum]
-    for (Col in isNum) {
-      set(df, NULL, Col, round(df[[Col]], round))
-    }
-  }
-  outMess <- capture.output(df)
-  if (skipColNames) outMess <- outMess[-1]
-  if (is.null(colour)) colour <- "red"
-  out <- lapply(outMess, function(x) {
-    messageColoured(x, colour = colour, appendLF = appendLF, verbose = verbose,
-                    verboseLevel = verboseLevel)
-  })
-}
-
+# This is directly from tools::file_ext_sans_ext
 filePathSansExt <- function(x) {
   sub("([^.]+)\\.[[:alnum:]]+$", "\\1", x)
 }
 
+# This is directly from tools::file_ext
 fileExt <- function(x) {
   pos <- regexpr("\\.([[:alnum:]]+)$", x)
   ifelse(pos > -1L, substring(x, pos + 1L), "")
@@ -452,25 +400,93 @@ isAbsolutePath <- function(pathnames) {
 isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
 
 
-messagePrepInputs <- function(..., appendLF = TRUE) {
+#' Use `message` with a consistent use of `verbose`
+#'
+#' This family has a consistent use of `verbose` allowing messages to be
+#' turned on or off or verbosity increased or decreased throughout the family of
+#' messaging in `reproducible`. `messageDF` uses `message` to print a clean
+#' square data structure. `messageColoured`
+#' allows specific colours to be used. `messageQuestion` sets a high level for
+#' `verbose` so that the message always gets asked.
+#'
+#' @param df A data.frame, data.table, matrix
+#' @param round An optional numeric to pass to `round`
+#' @param colour Passed to `getFromNamespace(colour, ns = "crayon")`,
+#'   so any colour that `crayon` can use
+#' @param colnames Logical or `NULL`. If `TRUE`, then it will print
+#'   column names even if there aren't any in the `df` (i.e., they will)
+#'   be `V1` etc., `NULL` will print them if they exist, and `FALSE`
+#'   which will omit them.
+#' @param verboseLevel The numeric value for this `message*` call, equal or above
+#'   which `verbose` must be. The higher this is set, the more unlikely the call
+#'   will show a message.
+#' @inheritParams base::message
+#'
+#' @export
+#' @return
+#' Used for side effects. This will produce a message of a structured `data.frame`.
+#'
+#' @importFrom data.table is.data.table as.data.table
+#' @importFrom utils capture.output
+#' @rdname messageColoured
+#' @inheritParams Cache
+messageDF <- function(df, round, colour = NULL, colnames = NULL,
+                      verbose = getOption("reproducible.verbose"), verboseLevel = 1,
+                      appendLF = TRUE) {
+
+  if (isTRUE(verboseLevel <= verbose)) {
+    origColNames <- if (is.null(colnames) | isTRUE(colnames)) colnames(df) else NULL
+
+    if (is.matrix(df))
+      df <- as.data.frame(df)
+    if (!is.data.table(df)) {
+      df <- as.data.table(df)
+    }
+    df <- Copy(df)
+    skipColNames <- if (is.null(origColNames) & !isTRUE(colnames)) TRUE else FALSE
+    if (!missing(round)) {
+      isNum <- sapply(df, is.numeric)
+      isNum <- colnames(df)[isNum]
+      for (Col in isNum) {
+        set(df, NULL, Col, round(df[[Col]], round))
+      }
+    }
+    outMess <- capture.output(df)
+    if (skipColNames) outMess <- outMess[-1]
+    out <- lapply(outMess, function(x) {
+      messageColoured(x, colour = colour, appendLF = appendLF, verbose = verbose,
+                      verboseLevel = verboseLevel)
+    })
+  }
+}
+
+messagePrepInputs <- function(..., appendLF = TRUE,
+                              verbose = getOption("reproducible.verbose"),
+                              verboseLevel = 1) {
   messageColoured(..., colour = getOption("reproducible.messageColourPrepInputs"),
-                  appendLF = appendLF)
+                  verboseLevel = verboseLevel, verbose = verbose, appendLF = appendLF)
 }
 
 messageCache <- function(..., colour = getOption("reproducible.messageColourCache"),
+                         verbose = getOption("reproducible.verbose"), verboseLevel = 1,
                          appendLF = TRUE) {
-  messageColoured(..., colour = colour, appendLF = appendLF)
+  messageColoured(..., colour = colour, appendLF = appendLF,
+                  verboseLevel = verboseLevel, verbose = verbose)
 }
 
+#' @rdname messageColoured
 messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
   # force this message to print
   messageColoured(..., colour = getOption("reproducible.messageColourQuestion"),
-                  verboseLevel = verboseLevel, verbose = 10, appendLF = appendLF)
+                  verbose = 10, verboseLevel = verboseLevel, appendLF = appendLF)
 }
 
-messageColoured <- function(..., colour = NULL, verboseLevel = 1,
+#' @importFrom utils getFromNamespace
+#' @param colour Any colour that can be understood by `crayon`
+#' @rdname messageColoured
+messageColoured <- function(..., colour = NULL,
                             verbose = getOption("reproducible.verbose", 1),
-                            appendLF = TRUE) {
+                            verboseLevel = 1, appendLF = TRUE) {
   if (isTRUE(verboseLevel <= verbose)) {
     needCrayon <- FALSE
     if (!is.null(colour)) {
@@ -480,7 +496,7 @@ messageColoured <- function(..., colour = NULL, verboseLevel = 1,
     if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
       message(getFromNamespace(colour, "crayon")(paste0(...)), appendLF = appendLF)
     } else {
-      if (!isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("crayon")) {
+      if (needCrayon && !isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("crayon")) {
         message("To add colours to messages, install.packages('crayon')", appendLF = appendLF)
         .pkgEnv$.checkedCrayon <- TRUE
       }
@@ -511,18 +527,28 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 
 
 .fileExtsKnown <- function() {
-  shpFile <- getOption("reproducible.shapefileRead")
-  if (is.null(shpFile)) shpFile <- "sf::st_read"
+  shpFile <- getOption("reproducible.shapefileRead", "sf::st_read")
+  griddedFile <- getOption("reproducible.rasterRead", "terra::rast")
+  griddedFileSave <- ""
+  shpFileSave <- ""
+  if (griddedFile %in% "terra::rast")
+    griddedFileSave <- "terra::writeRaster"
+  if (griddedFile %in% "raster::raster")
+    griddedFileSave <- "terra::writeRaster"
+  if (shpFile %in% "sf::st_read")
+    shpFileSave <- "sf::st_write"
+  if (shpFile %in% "terra::vect")
+    shpFileSave <- "terra::writeVector"
 
   df <- data.frame(
     rbind(
-      c("rds", "base::readRDS", "binary"),
-      c("qs", "qs::qread", "qs"),
-      cbind(c("asc", "grd", "tif"), c("raster::raster"), "Raster"),
-      cbind(c("shp", "gdb"), shpFile, "shapefile")
+      c("rds", "base::readRDS", "base::saveRDS", "binary"),
+      c("qs", "qs::qread", "qs::qsave", "qs"),
+      cbind(c("asc", "grd", "tif"), griddedFile, griddedFileSave, rasterType()),
+      cbind(c("shp", "gdb"), shpFile, shpFileSave, vectorType())
     )
   )
-  colnames(df) <- c("extension", "fun", "type")
+  colnames(df) <- c("extension", "fun", "saveFun", "type")
   df
 }
 
@@ -532,3 +558,100 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   length(strsplit(packageDescription("reproducible")$Version, "\\.")[[1]]) > 3
 }
 
+
+
+#' A helper to `getOption("reproducible.rasterRead")`
+#'
+#' A helper to `getOption("reproducible.rasterRead")`
+#' @export
+#' @param ... Passed to the function parsed and evaluated from
+#'   `getOption("reproducible.rasterRead")`
+#'
+#' @return
+#' A function, that will be the evaluated, parsed character
+#' string, e.g., `eval(parse(text = "terra::rast"))`
+rasterRead <- function(...)
+  eval(parse(text = getOption("reproducible.rasterRead")))(...)
+
+
+rasterType <- function(nlayers = 1,
+                       rasterRead = getOption("reproducible.rasterRead", "terra::rast")) {
+  if (is.character(rasterRead)) {
+    rasterRead <- eval(parse(text = rasterRead))
+  }
+  if (identical(rasterRead, terra::rast))
+    "SpatRaster"
+  else
+    if (nlayers == 1) "RasterLayer" else "RasterStack"
+}
+
+
+vectorType <- function(vectorRead = getOption("reproducible.shapefileRead", "sf::st_read")) {
+  needRasterPkg <- FALSE
+  vectorReadSubs <- substitute(vectorRead)
+  if (any(grepl("^shapefile$", vectorReadSubs))) {
+    .requireNamespace("raster", stopOnFALSE = TRUE)
+    needRasterPkg <- TRUE
+  }
+  if (is.character(vectorRead)) {
+    if (endsWith(suffix = "shapefile", vectorRead)) {
+      if (.requireNamespace("raster", stopOnFALSE = TRUE))
+        needRasterPkg <- TRUE
+    }
+    vectorRead <- eval(parse(text = vectorRead))
+  }
+  if (identical(vectorRead, terra::vect)) {
+    "SpatVector"
+  } else if (needRasterPkg) {
+    .requireNamespace("raster", stopOnFALSE = TRUE)
+    "SpatialPolygons"
+  }  else {
+    "sf"
+  }
+}
+
+
+#' Set seed with a random value using Sys.time()
+#'
+#' This will set a random seed.
+#' @export
+#' @param set.seed Logical. If `TRUE`, the default, then the function will call
+#' `set.seed` internally with the new random seed.
+#' @details
+#' This function uses 6 decimal places of `Sys.time()`, i.e., microseconds. Due to
+#' integer limits, it also truncates at 1000 seconds, so there is a possibility that
+#' this will be non-unique after 1000 seconds (at the microsecond level). In
+#' tests, this showed no duplicates after 1e7 draws in a loop, as expected.
+#'
+#' @note
+#' This function does not appear to be as reliable on R <= 4.1.3
+#'
+#' @return
+#' This will return the new seed invisibly. However, this is also called for
+#' its side effects, which is a new seed set using `set.seed`
+set.randomseed <- function(set.seed = TRUE) {
+  digits <- 9
+  newSeed <- as.numeric(Sys.time()) * 10^(digits - 3) # microseconds
+  newSeed <- as.integer(round(newSeed, -digits) - newSeed)
+  if (isTRUE(set.seed))
+    set.seed(newSeed)
+  return(invisible(newSeed))
+}
+
+# This used to be in helper-allEqual.R --> one of the tests couldn't find it
+getDataFn <- function(...) {
+  suppressWarningsSpecific({     geodata::gadm(...)   },
+                           falseWarnings = "getData will be removed in a future version of raster")
+}
+
+milliseconds <- function(time = Sys.time()) {
+  tt <- as.numeric(time)
+  rnd <- round(tt, -5)
+  (tt-rnd) * 1000
+}
+
+cat2file <- function(..., file) {
+  if (missing(file))
+    file = "~/log.txt"
+  cat(..., file = file)
+}

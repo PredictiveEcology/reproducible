@@ -6,5 +6,17 @@ test_that("dlGeneric works", {
     })
     expect_true(file.exists(res$destFile))
     unlink(res$destFile)
+
+
+
+    skip_if_no_token()
+    userDist <- prepInputs(
+      url = "https://docs.google.com/spreadsheets/d/1fOikb83aOuLlFYIn6pjmC7Jydjcy77TH", ##
+      targetFile = "userDist.csv", # <---------------------------------------------------------------- specify targeFile
+      destinationPath = tempdir(),
+      type = "spreadsheet",
+      fun = "data.table::fread"
+    )
+    expect_true(is(userDist, "data.table"))
   }
 })

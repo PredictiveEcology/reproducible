@@ -82,6 +82,10 @@
 #'     `file.size(file)` instead of the `digest::digest(file)`.
 #'     Less robust to changes, but faster. *NOTE: this will only affect objects on disk*.
 #'   }
+#'   \item{`rasterRead`}{
+#'     Default `raster::raster` for backwards compatibility. Used during `prepInputs` when reading a
+#'     `.tif`, `.grd`, and `.asc` files. This will eventually become `terra::rast`.
+#'   }
 #'   \item{`shapefileRead`}{
 #'     Default `NULL`. Used during `prepInputs` when reading a `.shp` file.
 #'     If `NULL`, it will use `sf::st_read` if `sf` package is available; otherwise,
@@ -118,7 +122,7 @@
 #'     \pkg{archivist}.
 #'   }
 #'   \item{`useGDAL`}{
-#'     Default `TRUE`. Passed to `useGDAL` in `projectInputs.Raster`.
+#'     Default `TRUE`. Passed to `useGDAL`. Deprecated.
 #'   }
 #'   \item{`useMemoise`}{
 #'     Default: `FALSE`. Used in [Cache()]. If `TRUE`, recovery of cached
@@ -159,7 +163,7 @@
 #' \describe{
 #'   \item{`cloudChecksumsFilename`}{
 #'     Default: `file.path(dirname(.reproducibleTempCacheDir()), "checksums.rds")`.
-#'     Used in [cloudCache()]
+#'     Used as an experimental argument in [Cache()]
 #'   }
 #'   \item{`length`}{
 #'     Default: `Inf`. Used in [Cache()], specifically to the internal
@@ -181,7 +185,7 @@ reproducibleOptions <- function() {
     reproducible.cacheSpeed = "slow",
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
-    reproducible.drv = RSQLite::SQLite(),
+    reproducible.drv = NULL, # RSQLite::SQLite(),
     reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
     reproducible.inputPaths = NULL,
@@ -192,19 +196,16 @@ reproducibleOptions <- function() {
     reproducible.messageColourQuestion = "green",
     reproducible.nThreads = 1,
     reproducible.overwrite = FALSE,
-    reproducible.polygonShortcut = FALSE,
     reproducible.quick = FALSE,
-    reproducible.shapefileRead = NULL, # TODO: change in next release
+    reproducible.rasterRead = "terra::rast",
+    reproducible.shapefileRead = "sf::st_read",
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
-    reproducible.useDBI = TRUE,
-    reproducible.useGDAL = FALSE, #
+    reproducible.useDBI = useDBI(TRUE, verbose = interactive() - (useDBI() + 1)), # `FALSE` is useMultipleDBFiles now
     reproducible.useMemoise = FALSE, #memoise
-    reproducible.useNewDigestAlgorithm = 2, # TODO: change in next release
-    reproducible.useTerra = FALSE, # Default for now
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1
   )

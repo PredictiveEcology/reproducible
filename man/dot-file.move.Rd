@@ -2,7 +2,7 @@
 % Please edit documentation in R/copy.R
 \name{.file.move}
 \alias{.file.move}
-\title{Move a file to a new location}
+\title{Move a file to a new location -- Defunct -- use \code{hardLinkOrCopy}}
 \usage{
 .file.move(from, to, overwrite = FALSE)
 }

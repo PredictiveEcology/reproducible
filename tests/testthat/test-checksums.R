@@ -37,13 +37,14 @@ test_that("Checksums read and written correctly", {
   txt <- Checksums(dirname(csf), write = TRUE)
   txt <- txt[grepl("R", expectedFile)]
   data.table::setorderv(txt, "expectedFile")
+  txt <- txt[checksum.x != "dir"]
   expect_true(all(colnames(txt) == cnamesR))
   expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
 
    #expect_identical(sort(txt$expectedFile), sort(basename(sampleFiles)))
   #expect_true(all(sort(txt$expectedFile) == sort(basename(sampleFiles))))
-  a <- sort(grep("\\.R$", txt[result == "OK",]$expectedFile, value = TRUE)) # the [result == "OK",] is because some unknown reason on GA
-  b <- sort(basename(sampleFiles))
+  a <- basename2(sort(grep("\\.R$", txt[result == "OK",]$expectedFile, value = TRUE))) # the [result == "OK",] is because some unknown reason on GA
+  b <- sort(basename2(sampleFiles))
   expect_identical(a, b)
   # expect_identical(a[1], b[1])
   # expect_identical(a[2], b[2])
@@ -73,10 +74,11 @@ test_that("Checksums read and written correctly", {
   txt <- Checksums(tmpdir, write = TRUE)
   txt <- Checksums(tmpdir)
   txt <- txt[grepl("R", expectedFile)][result == "OK",]
+  txt <- txt[checksum.x != "dir"]
   expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
   # expect_true(all(sort(txt$expectedFile) == sort(basename(sampleFiles))))
-  a <- sort(grep("\\.R$", txt$expectedFile, value = TRUE))
-  print(txt$expectedFile)
+  a <- basename2(sort(grep("\\.R$", txt$expectedFile, value = TRUE)))
+  # print(txt$expectedFile)
   expect_identical(a, b)
   # expect_identical(a[1], b[1])
   # expect_identical(a[2], b[2])

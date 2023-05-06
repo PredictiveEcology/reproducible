@@ -3,8 +3,6 @@
 \name{Filenames}
 \alias{Filenames}
 \alias{Filenames,ANY-method}
-\alias{Filenames,Raster-method}
-\alias{Filenames,RasterStack-method}
 \alias{Filenames,environment-method}
 \alias{Filenames,list-method}
 \title{Return the filename(s) from a \verb{Raster*} object}
@@ -12,10 +10,6 @@
 Filenames(obj, allowMultiple = TRUE)
 
 \S4method{Filenames}{ANY}(obj, allowMultiple = TRUE)
-
-\S4method{Filenames}{Raster}(obj, allowMultiple = TRUE)
-
-\S4method{Filenames}{RasterStack}(obj, allowMultiple = TRUE)
 
 \S4method{Filenames}{environment}(obj, allowMultiple = TRUE)
 
@@ -35,7 +29,7 @@ This returns \code{NULL} is the object is not file-backed or does not have a met
 to recover the file-backed filename.
 }
 \description{
-This is mostly just a wrapper around \code{filename} from the \pkg{raster} package, except that
+This is mostly just a wrapper around \code{filename} from the \code{raster} package, except that
 instead of returning an empty string for a \code{RasterStack} object, it will return a vector of
 length >1 for \code{RasterStack}.
 }

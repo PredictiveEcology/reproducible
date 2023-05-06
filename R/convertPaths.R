@@ -25,14 +25,6 @@
 #' newPaths <- c("/home/user2/Desktop", "/Users/user2/Desktop")
 #' convertPaths(filenames, oldPaths, newPaths)
 #'
-#' r1 <- raster::raster(system.file("external/test.grd", package = "raster"))
-#' r2 <- raster::raster(system.file("external/rlogo.grd", package = "raster"))
-#' rasters <- list(r1, r2)
-#' oldPaths <- system.file("external", package = "raster")
-#' newPaths <- file.path("~/rasters")
-#' rasters <- convertRasterPaths(rasters, oldPaths, newPaths)
-#' lapply(rasters, raster::filename)
-#'
 convertPaths <- function(x, patterns, replacements) {
   stopifnot(is(x, "character"))
   stopifnot(length(patterns) == length(replacements))
@@ -47,9 +39,10 @@ convertPaths <- function(x, patterns, replacements) {
 
 #' @author Eliot McIntire and Alex Chubaty
 #' @export
-#' @importFrom raster filename raster
 #' @rdname convertPaths
 convertRasterPaths <- function(x, patterns, replacements) {
+  .requireNamespace("raster", stopOnFALSE = TRUE)
+
   if (is.list(x)) {
     x <- lapply(x, convertRasterPaths, patterns, replacements)
   } else if (!is.null(x)) {
@@ -57,18 +50,18 @@ convertRasterPaths <- function(x, patterns, replacements) {
       if (length(x) > 1) {
         x <- lapply(x, convertRasterPaths, patterns, replacements)
       } else {
-        x <- raster(x)
+        x <- raster::raster(x)
       }
     }
 
-    x@file@name <- convertPaths(filename(x), patterns, replacements)
+    x@file@name <- convertPaths(raster::filename(x), patterns, replacements)
   }
   x # handles null case
 }
 
 #' Return the filename(s) from a `Raster*` object
 #'
-#' This is mostly just a wrapper around `filename` from the \pkg{raster} package, except that
+#' This is mostly just a wrapper around `filename` from the `raster` package, except that
 #' instead of returning an empty string for a `RasterStack` object, it will return a vector of
 #' length >1 for `RasterStack`.
 #'
@@ -98,51 +91,48 @@ setMethod(
   "Filenames",
   signature = "ANY",
   definition = function(obj, allowMultiple) {
-    if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
-      if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+
+    if (inherits(obj, "RasterStack")) {
+      fns <- unlist(lapply(seq_along(names(obj)), function(index)
+        Filenames(obj[[index]], allowMultiple = allowMultiple)))
+
+      dups <- duplicated(fns)
+      if (any(dups)) {
+        theNames <- names(fns)
+        fns <- fns[!dups]
+        names(fns) <- theNames[!dups]
+      }
+
+    } else if (inherits(obj, "RasterLayer")) {
+      fns <- raster::filename(obj)
+      if (exists("._Filenames_1")) browser()
+      if (length(fns) == 0)
+        fns <- ""
+      # browser(expr = exists("._Filenames_1"))
+      if (isTRUE(allowMultiple))
+        if (endsWith(fns, suffix = "grd"))
+          fns <- c(fns, gsub("grd$", "gri", fns))
+    } else if (inherits(obj, "SpatRaster")) {
+      if (!requireNamespace("terra", quietly = TRUE))
         stop("Please install terra package")
       fns <- terra::sources(obj)
+      if (isTRUE(allowMultiple)) {
+        anyGrd <- endsWith(fns, suffix = "grd")
+        if (any(anyGrd)) {
+          nonGrd <- if (any(!anyGrd)) fns[!anyGrd] else NULL
+          multiFns <- sort(c(fns[anyGrd], gsub("grd$", "gri", fns[anyGrd])))
+          fnsNew <- c(nonGrd, multiFns)
+          fns <- fnsNew[order(match(filePathSansExt(basename(fnsNew)),
+                                    filePathSansExt(basename(fns))))]
+        }
+      }
+
     } else {
       fns <- NULL
     }
-    fns
+    normPath(fns)
 })
 
-#' @export
-#' @rdname Filenames
-setMethod(
-  "Filenames",
-  signature = "Raster",
-  definition = function(obj, allowMultiple = TRUE) {
-    fn <- filename(obj)
-    if (exists("._Filenames_1")) browser()
-    if (length(fn) == 0)
-      fn <- ""
-    # browser(expr = exists("._Filenames_1"))
-    if (isTRUE(allowMultiple))
-      if (endsWith(fn, suffix = "grd"))
-        fn <- c(fn, gsub("grd$", "gri", fn))
-    normPath(fn)
-})
-
-#' @export
-#' @rdname Filenames
-setMethod(
-  "Filenames",
-  signature = "RasterStack",
-  definition = function(obj, allowMultiple = TRUE) {
-    fn <- unlist(lapply(seq_along(names(obj)), function(index)
-      Filenames(obj[[index]], allowMultiple = allowMultiple)))
-
-    dups <- duplicated(fn)
-    if (any(dups)) {
-      theNames <- names(fn)
-      fn <- fn[!dups]
-      names(fn) <- theNames[!dups]
-    }
-
-    return(fn)
-})
 
 #' @export
 #' @rdname Filenames
@@ -172,3 +162,4 @@ setMethod(
     unlist(lapply(obj, function(o) Filenames(o, allowMultiple = allowMultiple)))
     # Filenames(as.environment(obj), allowMultiple = allowMultiple)
 })
+

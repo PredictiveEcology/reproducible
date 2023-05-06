@@ -4,7 +4,15 @@
 \alias{.purge}
 \title{Purge individual line items from checksums file}
 \usage{
-.purge(checkSums, purge, targetFile, archive, alsoExtract, url)
+.purge(
+  checkSums,
+  purge,
+  targetFile,
+  archive,
+  alsoExtract,
+  url,
+  destinationPath
+)
 }
 \arguments{
 \item{checkSums}{A checksums file, e.g., created by Checksums(..., write = TRUE)}
@@ -14,10 +22,11 @@
 \code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
 \code{CHECKSUMS.txt} file. Other options, see details.}
 
-\item{targetFile}{Character string giving the path to the eventual file
+\item{targetFile}{Character string giving the filename (without relative or
+absolute path) to the eventual file
 (raster, shapefile, csv, etc.) after downloading and extracting from a zip
 or tar archive. This is the file \emph{before} it is passed to
-\code{postProcess}. Currently, the internal checksumming does not checksum
+\code{postProcess}. The internal checksumming does not checksum
 the file after it is \code{postProcess}ed (e.g., cropped/reprojected/masked).
 Using \code{Cache} around \code{prepInputs} will do a sufficient job in these cases.
 See table in \code{\link[=preProcess]{preProcess()}}.}
@@ -38,6 +47,14 @@ will be created or appended to. This \code{CHECKSUMS.txt} entry will be used
 in subsequent calls to
 \code{prepInputs} or \code{preProcess}, comparing the file on hand with the ad hoc
 \code{CHECKSUMS.txt}. See table in \code{\link[=preProcess]{preProcess()}}.}
+
+\item{destinationPath}{Character string of a directory in which to download
+and save the file that comes from \code{url} and is also where the function
+will look for \code{archive} or \code{targetFile}. NOTE (still experimental):
+To prevent repeated downloads in different locations, the user can also set
+\code{options("reproducible.inputPaths")} to one or more local file paths to
+search for the file before attempting to download. Default for that option is
+\code{NULL} meaning do not search locally.}
 }
 \description{
 Purge individual line items from checksums file

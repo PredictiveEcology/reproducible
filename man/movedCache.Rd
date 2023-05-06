@@ -7,8 +7,9 @@
 movedCache(
   new,
   old,
-  drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = getOption("reproducible.conn", NULL)
+  drv = getDrv(getOption("reproducible.drv", NULL)),
+  conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose")
 )
 }
 \arguments{
@@ -19,12 +20,16 @@ the new DB Table Name}
 Either the path of the previous \code{cachePath} where the cache was moved or copied from, or
 the old DB Table Name}
 
-\item{drv}{an object that inherits from \linkS4class{DBIDriver},
-or an existing \linkS4class{DBIConnection}
-object (in order to clone an existing connection).}
+\item{drv}{if using a database backend, drv must be an object that
+inherits from DBIDriver e.g., \code{RSQLite::SQLite()}}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{an optional DBIConnection object, as returned by dbConnect().}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \value{
 \code{movedCache} does not return anything; it is called for its side effects.
@@ -53,8 +58,8 @@ bb <- Cache(rnorm, 1, cachePath = tmpCacheDir)
 # Copy all files from tmpCache to tmpdir
 froms <- normalizePath(dir(tmpCacheDir, recursive = TRUE, full.names = TRUE),
                        mustWork = FALSE)
-dir.create(file.path(tmpdirPath, "rasters"), recursive = TRUE)
-dir.create(file.path(tmpdirPath, "cacheOutputs"), recursive = TRUE)
+dir.create(file.path(tmpdirPath, "rasters"), recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path(tmpdirPath, "cacheOutputs"), recursive = TRUE, showWarnings = FALSE)
 file.copy(from = froms, overwrite = TRUE,
           to = gsub(tmpCache, tmpdir, froms))
 

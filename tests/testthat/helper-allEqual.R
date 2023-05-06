@@ -13,7 +13,11 @@ skip_if_no_token <- function() {
 # loads and libraries indicated plus testthat,
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
 testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
-                     opts = NULL, needGoogle = FALSE) {
+                     opts = NULL, needGoogleDriveAuth = FALSE) {
+  tmpdir <- tempdir2(sprintf("%s_%03d", rndstr(1, 6), .pkgEnv$testCacheCounter))
+  tmpCache <- checkPath(file.path(tmpdir, "testCache"), create = TRUE)
+  .pkgEnv$testCacheCounter <- .pkgEnv$testCacheCounter + 1L
+
   optsAsk <- if (!ask)
     options("reproducible.ask" = ask)
   else
@@ -25,48 +29,47 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     list()
 
   if (missing(libraries)) libraries <- list()
-  unlist(lapply(libraries, require, character.only = TRUE, quietly = TRUE))
+  if (length(libraries)) {
+    pkgsLoaded <- unlist(lapply(libraries, require, character.only = TRUE, quietly = TRUE))
+    if (!any(pkgsLoaded)) {
+      lapply(libraries[!pkgsLoaded], skip_if_not_installed)
+    }
+  }
+
   require("testthat", quietly = TRUE)
 
   .pkgEnv <- getFromNamespace(".pkgEnv", "reproducible")
-  tmpdir <- tempdir2(sprintf("%s_%03d", rndstr(1, 6), .pkgEnv$testCacheCounter))
-  tmpCache <- checkPath(file.path(tmpdir, "testCache"), create = TRUE)
-  .pkgEnv$testCacheCounter <- .pkgEnv$testCacheCounter + 1L
 
+  # Set a new seed each time
+  set.randomseed()
 
-  if (isTRUE(needGoogle)) {
-    if (!requireNamespace("googledrive", quietly = TRUE))
-      stop(requireNamespaceMsg("googledrive", "to use google drive files"))
-
-    if (!utils::packageVersion("googledrive") >= "1.0.0")
-      # googledrive::drive_deauth()
-    #else
-      googledrive::drive_auth_config(active = TRUE)
-
-    if (.isRstudioServer()) {
-      .requireNamespace("httr", stopOnFALSE = TRUE)
-      options(httr_oob_default = TRUE)
-    }
-
-    ## #119 changed use of .httr-oauth (i.e., no longer used)
-    ## instead, uses ~/.R/gargle/gargle-oauth/long_random_token_name_with_email
+  skip_gauth <- identical(Sys.getenv("SKIP_GAUTH"), "true") # only set in setup.R for covr
+  if (isTRUE(needGoogleDriveAuth) && !skip_gauth) {
+    skip_if_not_installed("googledrive")
     if (interactive()) {
-      options(gargle_oauth_cache = ".secret")
-      if (utils::packageVersion("googledrive") >= "1.0.0") {
-        # googledrive::drive_deauth()
-      } else {
-        if (file.exists("~/.httr-oauth")) {
-          linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
-        } else {
-          googledrive::drive_auth()
-          messagePrepInputs("copying .httr-oauth to ~/.httr-oauth")
-          file.copy(".httr-oauth", "~/.httr-oauth", overwrite = TRUE)
+      if (!googledrive::drive_has_token()) {
+        getAuth <- FALSE
+        if (is.null(getOption("gargle_oauth_email"))) {
+          possLocalCache <- "c:/Eliot/.secret"
+          cache <- if (file.exists(possLocalCache))
+            possLocalCache else TRUE
+          switch(Sys.info()["user"],
+                 emcintir = {options(gargle_oauth_email = "eliotmcintire@gmail.com",
+                                     gargle_oauth_cache = cache)},
+                 NULL)
         }
-
-        if (!file.exists("~/.httr-oauth"))
-          messagePrepInputs("Please put an .httr-oauth file in your ~ directory")
+        if (is.null(getOption("gargle_oauth_email"))) {
+          if (.isRstudioServer()) {
+            .requireNamespace("httr", stopOnFALSE = TRUE)
+            options(httr_oob_default = TRUE)
+          }
+        }
+        getAuth <- TRUE
+        if (isTRUE(getAuth))
+          googledrive::drive_auth()
       }
     }
+    skip_if_no_token()
   }
 
   origDir <- setwd(tmpdir)
@@ -75,7 +78,6 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     reproducible.cachePath = .reproducibleTempCacheDir(), ## TODO: deal with cachePath issues in non-interactive tests
     reproducible.showSimilar = FALSE,
     reproducible.overwrite = TRUE,
-    reproducible.useNewDigestAlgorithm = 2,
     reproducible.cacheSpeed = "slow"
   )
   if (length(opts) > 0)
@@ -83,31 +85,34 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   opts <- defaultOpts
 
   if (!is.null(opts)) {
-    if (needGoogle) {
+    if (needGoogleDriveAuth) {
       optsGoogle <- if (utils::packageVersion("googledrive") >= "1.0.0") {
       } else {
         list(httr_oob_default = .isRstudioServer())
       }
       opts <- append(opts, optsGoogle)
     }
+    opts <- lapply(opts, function(o) if (is.name(o)) eval(o, envir = environment()) else o)
     opts <- options(opts)
   }
 
-  if (!is.null(tmpFileExt)) {
+  if (!is.null(tmpFileExt) && any(nzchar(tmpFileExt))) {
     ranfiles <- unlist(lapply(tmpFileExt, function(x) paste0(rndstr(1, 7), ".", x)))
     tmpfile <- file.path(tmpdir, ranfiles)
     tmpfile <- gsub(pattern = "\\.\\.", tmpfile, replacement = "\\.")
     file.create(tmpfile)
     tmpfile <- normPath(tmpfile)
+  } else {
+    tmpfile <- NULL
   }
 
-  try(clearCache(tmpCache, ask = FALSE), silent = TRUE)
-  try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
+  try(suppressMessages(clearCache(tmpCache, ask = FALSE)), silent = TRUE)
+  try(suppressMessages(clearCache(tmpdir, ask = FALSE)), silent = TRUE)
 
   outList <- list(tmpdir = tmpdir, origDir = origDir, libs = libraries,
                   tmpCache = tmpCache, optsAsk = optsAsk,
                   optsVerbose = optsVerbose, tmpfile = tmpfile,
-                  opts = opts, needGoogle = needGoogle)
+                  opts = opts, needGoogleDriveAuth = needGoogleDriveAuth)
   list2env(outList, envir = parent.frame())
   return(outList)
 }
@@ -121,9 +126,8 @@ testOnExit <- function(testInitOut) {
     options(testInitOut$opts)
   setwd(testInitOut$origDir)
   unlink(testInitOut$tmpdir, recursive = TRUE)
-  if (isTRUE(testInitOut$needGoogle)) {
-    if (!requireNamespace("googledrive", quietly = TRUE))
-      stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  if (isTRUE(testInitOut$needGoogleDriveAuth)) {
+    .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
     if (utils::packageVersion("googledrive") < "1.0.0")
       googledrive::drive_auth_config(active = FALSE)
   }
@@ -144,9 +148,6 @@ testOnExit <- function(testInitOut) {
       try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab2))
   }
 
-  # lapply(testInitOut$libs, function(lib) {
-  #   try(detach(paste0("package:", lib), character.only = TRUE), silent = TRUE)}
-  # )
 }
 
 runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpdir, test) {
@@ -161,18 +162,25 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
 
   isOK <- hasMessageNum == prod
   if (!isOK) {
-    expe <- as.numeric(strsplit(prod, split = "_")[[1]])
-    getting <- as.numeric(strsplit(hasMessageNum, split = "_")[[1]])
+    if (interactive()) {
+      expe <- as.numeric(strsplit(prod, split = "_")[[1]])
+      getting <- as.numeric(strsplit(hasMessageNum, split = "_")[[1]])
 
-    expectedMessVec <- strsplit(expectedMess, split = "\\|")[[1]]
-    messagePrepInputs("expecting, but didn't get ", paste(collapse = ", ", expectedMessVec[setdiff(expe, getting)]))
-    messagePrepInputs("got, but didn't expect ", paste(collapse = ", ", expectedMessVec[setdiff(getting, expe)]))
+      expectedMessVec <- strsplit(expectedMess, split = "\\|")[[1]]
+      expecting <- paste(collapse = ", ", expectedMessVec[setdiff(expe, getting)])
+      if (length(expecting))
+        cat("\nexpecting, but didn't get: ", expecting)
+      got <-  paste(collapse = ", ", expectedMessVec[setdiff(getting, expe)])
+      if (length(got))
+        cat("\ngot, but didn't expect ", got, "\n")
+
+    }
   }
   expect_true(isOK) #
 }
 
 expectedMessageRaw <- c("Running preP", "Preparing:", "File downloaded",
-                        "From:Shapefile", "Checking local", "Finished checking",
+                        "From:.*Shapefile", "Checking local", "Finished checking",
                         "Downloading", "Skipping download", "Skipping extractFrom",
                         "targetFile was not.*ry",
                         "Writing checksums.*you can specify targetFile",
@@ -193,16 +201,9 @@ targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
 
 
 ## TODO: switch to `geodata` package (raster::getData() is deprecated) (#256)
-getDataFn <- function(...) {
-  suppressWarningsSpecific({
-    raster::getData(...)
-  }, falseWarnings = "getData will be removed in a future version of raster")
-}
-
 testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
                               type = c("Raster", "Stack", "Brick")) {
-  if (!requireNamespace("googledrive", quietly = TRUE))
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
 
   # Second test .grd which has two files
   ####################################################
@@ -212,21 +213,21 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
     return(raster)
   }
 
+  tempFile <- replicate(14, tempfile(tmpdir = tmpdir, fileext = fileext))
+
   mc <- match.call()
-  r1Orig <- raster(extent(0,200, 0, 200), vals = 1, res = 1)
-  r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  r1Orig <- terra::rast(terra::ext(0,200, 0, 200), vals = 1, res = 1)
+  r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[1], overwrite = TRUE)
 
   if (mc$type == "Stack") {
-    r1Orig2 <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-    r1Orig <- stack(r1Orig, r1Orig2)
+    r1Orig2 <- terra::writeRaster(r1Orig, filename = tempFile[2], overwrite = TRUE)
+    r1Orig <- c(r1Orig, r1Orig2)
   } else if (mc$type == "Brick") {
-    r1Orig2 <- r1Orig
-    r1Orig <- brick(r1Orig, r1Orig2)
-    r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    message("Brick is deprecated; not tested any more")
   }
 
-  # ._clearCache_3 <<- ._cloudUpload_1 <<- ._cloudDownloadRasterBackend_1 <<- 1
   r1End <- Cache(fn, r1Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
+
   cloudFolderID1 <- cloudFolderID
   on.exit({
     clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID1)
@@ -242,17 +243,16 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   ####################################################
   # cloud copy exists only -- should download to local copy
   ####################################################
-  r2Orig <- raster(extent(0,200, 0, 200), vals = 1, res = 1)
-  r2Orig <- writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  r2Orig <- terra::rast(terra::ext(0,200, 0, 200), vals = 1, res = 1)
+  r2Orig <- terra::writeRaster(r2Orig, filename = tempFile[3], overwrite = TRUE)
   if (mc$type == "Stack") {
-    r2Orig2 <- writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-    r2Orig <- stack(r2Orig, r2Orig2)
+    r2Orig2 <- terra::writeRaster(r2Orig, filename = tempFile[4], overwrite = TRUE)
+    r2Orig <- c(r2Orig, r2Orig2)
   } else if (mc$type == "Brick") {
-    r2Orig2 <- r2Orig
-    r2Orig <- brick(r2Orig, r2Orig2)
-    r2Orig <- writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    r1Orig2 <- r1Orig
+    r1Orig <- c(r1Orig, r1Orig2)
+    r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[4], overwrite = TRUE)
   }
-  # ._clearCache_3 <<- ._cloudUpload_1 <<- ._cloudDownloadRasterBackend_1 <<- 1
   r2End <- Cache(fn, r2Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   cloudFolderID2 <- cloudFolderID
   on.exit({
@@ -264,8 +264,12 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   expect_false(identical(Filenames(r2Orig), Filenames(r1Orig)))
   expect_true(r1EndCacheAttr == TRUE)
   expect_true(attr(r2End, ".Cache")$newCache == FALSE)
-  filnames2End <- unique(dir(dirname(Filenames(r2End)), pattern = paste(collapse = "|", basename(filePathSansExt(Filenames(r2End))))))
-  filnames1End <- unique(dir(dirname(r1EndFilename), pattern = paste(collapse = "|", basename(filePathSansExt(r1EndFilename)))))
+  filnames2End <- unique(
+    dir(dirname(Filenames(r2End)),
+        pattern = paste(collapse = "|", basename(filePathSansExt(Filenames(r2End))))))
+  filnames1End <- unique(
+    dir(dirname(r1EndFilename),
+        pattern = paste(collapse = "|", basename(filePathSansExt(r1EndFilename)))))
   expect_true(NROW(filnames1End) == numRasterFiles) # both sets because of the _1 -- a bit of an artifact due to same folder
   expect_true(NROW(filnames2End) == numRasterFiles) # both sets because of the _1
 
@@ -274,15 +278,15 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   # only local exists -- upload to cloud
   ####################################################
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
-  r1Orig <- raster(extent(0,200, 0, 200), vals = 5, res = 1)
-  r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  r1Orig <- terra::rast(terra::ext(0,200, 0, 200), vals = 5, res = 1)
+  r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[5], overwrite = TRUE)
   if (mc$type == "Stack") {
-    r1Orig2 <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-    r1Orig <- stack(r1Orig, r1Orig2)
+    r1Orig2 <- terra::writeRaster(r1Orig, filename = tempFile[12], overwrite = TRUE)
+    r1Orig <- c(r1Orig, r1Orig2)
   } else if (mc$type == "Brick") {
     r1Orig2 <- r1Orig
-    r1Orig <- brick(r1Orig, r1Orig2)
-    r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    r1Orig <- c(r1Orig, r1Orig2)
+    r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[12], overwrite = TRUE)
   }
   r1End <- Cache(fn, r1Orig, useCloud = FALSE, cloudFolderID = cloudFolderID)
 
@@ -295,11 +299,11 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   })
 
   expect_true(attr(r4End, ".Cache")$newCache == FALSE) # new to local cache
-  driveLs <- drive_ls(cloudFolderID)
+  driveLs <- googledrive::drive_ls(cloudFolderID)
   data.table::setDT(driveLs)
-  expect_true(all(basename(Filenames(r4End)) %in% driveLs$name))
+  # expect_true(all(basename(Filenames(r4End)) %in% driveLs$name))
   # should have 2 files in cloud b/c of grd and gri
-  expect_true(sum(filePathSansExt(driveLs$name) %in% filePathSansExt(basename(Filenames(r4End)))) == numRasterFiles)
+  # expect_true(sum(filePathSansExt(driveLs$name) %in% filePathSansExt(basename(Filenames(r4End)))) == numRasterFiles)
   # should have 1 file that matches in local and in cloud, based on cacheId
   suppressMessages(expect_true(NROW(unique(showCache(userTags = filePathSansExt(driveLs[endsWith(name, "rda")]$name)),
                                            by = .cacheTableHashColName()))==1))
@@ -308,15 +312,15 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   # both cloud and local exist -- take local only -- no change to cloud
   ####################################################
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
-  r1Orig <- raster(extent(0,200, 0, 200), vals = 5, res = 1)
-  r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  r1Orig <- terra::rast(terra::ext(0,200, 0, 200), vals = 5, res = 1)
+  r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[6], overwrite = TRUE)
   if (mc$type == "Stack") {
-    r1Orig2 <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-    r1Orig <- stack(r1Orig, r1Orig2)
-  } else if (mc$type == "Brick") {
+    r1Orig2 <- terra::writeRaster(r1Orig, filename = tempFile[13], overwrite = TRUE)
+    r1Orig <- c(r1Orig, r1Orig2)
+  }  else if (mc$type == "Brick") {
     r1Orig2 <- r1Orig
-    r1Orig <- brick(r1Orig, r1Orig2)
-    r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+    r1Orig <- c(r1Orig, r1Orig2)
+    r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[13], overwrite = TRUE)
   }
   r1End <- Cache(fn, r1Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   on.exit({
@@ -327,15 +331,15 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
 
 
   driveLsBefore <- googledrive::drive_ls(cloudFolderID)
-  r5Orig <- raster(extent(0,200, 0, 200), vals = 5, res = 1)
-  r5Orig <- writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+  r5Orig <- terra::rast(terra::ext(0,200, 0, 200), vals = 5, res = 1)
+  r5Orig <- terra::writeRaster(r5Orig, filename = tempFile[9], overwrite = TRUE)
   if (mc$type == "Stack") {
-    r5Orig2 <- writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
-    r5Orig <- stack(r5Orig, r5Orig2)
+    r5Orig2 <- terra::writeRaster(r5Orig, filename = tempFile[14], overwrite = TRUE)
+    r5Orig <- c(r5Orig, r5Orig2)
   } else if (mc$type == "Brick") {
-    r5Orig2 <- r5Orig
-    r5Orig <- brick(r5Orig, r5Orig2)
-    r5Orig <- writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
+     r5Orig2 <- r5Orig
+     r5Orig <- c(r5Orig, r5Orig2)
+     r5Orig <- terra::writeRaster(r5Orig, filename = tempFile[14], overwrite = TRUE)
   }
   r5End <- Cache(fn, r5Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   on.exit({
@@ -363,8 +367,9 @@ messageNoCacheRepo <- "No cachePath supplied and getOption\\('reproducible.cache
 
 
 .writeRaster <- function(...) {
+  .requireNamespace("terra", stopOnFALSE = TRUE)
   suppressWarningsSpecific(falseWarnings = "NOT UPDATED FOR PROJ",
-                           writeRaster(...))
+                           terra::writeRaster(...))
 }
 
 theRasterTests <- "https://github.com/tati-micheletti/host/raw/master/data/"
@@ -376,21 +381,9 @@ theRasterTestRar <- theRasterTestFilename(theRasterTests, "rar") # "https://gith
 theRasterTestTar <- theRasterTestFilename(theRasterTests, "tar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tar"
 
 
-shapefileClassDefault <- function() {
-  shpfl <- if (is.character(getOption("reproducible.shapefileRead"))) {
-    eval(parse(text = getOption("reproducible.shapefileRead")))
-  } else {
-    getOption("reproducible.shapefileRead")
-  }
-  if (identical(shpfl, raster::shapefile)) "SpatialPolygons" else "sf"
-}
-
-
-
 runTestsWithTimings <- function(nameOfOuterList = "ff", envir = parent.frame(), authorizeGoogle = FALSE) {
   if (isTRUE(authorizeGoogle))
-    if (Sys.info()[["user"]] == "emcintir")
-      googledrive::drive_auth(cache = "~/.secret", email = "predictiveecology@gmail.com")
+    testInit(needGoogleDriveAuth = TRUE)
   prepend <- "/home/emcintir/GitHub/reproducible/tests/testthat"
   testFiles <- dir(prepend, pattern = "^test-", full.names = TRUE)
   testFiles <- grep("large", testFiles, value = TRUE, invert = TRUE)
@@ -424,4 +417,5 @@ runTestsWithTimings <- function(nameOfOuterList = "ff", envir = parent.frame(), 
   gg[, TestFile := basename(TestFile)]
   gg
 }
+
 

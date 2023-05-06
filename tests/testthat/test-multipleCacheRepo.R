@@ -39,20 +39,12 @@ test_that("test multiple cachePath", {
 ##########################
 test_that("test multiple cachePath with 1 of them a cloudCache", {
   skip(message = "test cloudCache inside Cache -- Not fully written test")
-  skip_if_not_installed("googledrive")
 
-  if (!requireNamespace("googledrive", quietly = TRUE))
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
-  #if (!interactive())
-  testInitOut <- testInit(libraries = "googledrive")
+  testInitOut <- testInit(libraries = "googledrive", needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  options("reproducible.useNewDigestAlgorithm" = 2) # need new approach for this to work correctly
-  # first time -- looks in cloudFolderID for checksums -- none there, so it makes it
-  #   then it runs the function, caching locally, and uploading to cloud -- copy exists in
-  #   2 places
   newDir <- googledrive::drive_mkdir("testFolder")
   on.exit(googledrive::drive_rm(googledrive::as_id(newDir$id), add = TRUE))
 

@@ -87,6 +87,10 @@ Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}. This will cause \c
 \code{file.size(file)} instead of the \code{digest::digest(file)}.
 Less robust to changes, but faster. \emph{NOTE: this will only affect objects on disk}.
 }
+\item{\code{rasterRead}}{
+Default \code{raster::raster} for backwards compatibility. Used during \code{prepInputs} when reading a
+\code{.tif}, \code{.grd}, and \code{.asc} files. This will eventually become \code{terra::rast}.
+}
 \item{\code{shapefileRead}}{
 Default \code{NULL}. Used during \code{prepInputs} when reading a \code{.shp} file.
 If \code{NULL}, it will use \code{sf::st_read} if \code{sf} package is available; otherwise,
@@ -123,7 +127,7 @@ Default: \code{TRUE}. As of version 0.3, the backend is now \pkg{DBI} instead of
 \pkg{archivist}.
 }
 \item{\code{useGDAL}}{
-Default \code{TRUE}. Passed to \code{useGDAL} in \code{projectInputs.Raster}.
+Default \code{TRUE}. Passed to \code{useGDAL}. Deprecated.
 }
 \item{\code{useMemoise}}{
 Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}. If \code{TRUE}, recovery of cached
@@ -165,7 +169,7 @@ The following options are likely not needed by a user.
 \describe{
 \item{\code{cloudChecksumsFilename}}{
 Default: \code{file.path(dirname(.reproducibleTempCacheDir()), "checksums.rds")}.
-Used in \code{\link[=cloudCache]{cloudCache()}}
+Used as an experimental argument in \code{\link[=Cache]{Cache()}}
 }
 \item{\code{length}}{
 Default: \code{Inf}. Used in \code{\link[=Cache]{Cache()}}, specifically to the internal

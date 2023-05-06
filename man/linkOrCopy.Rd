@@ -8,6 +8,7 @@ linkOrCopy(
   from,
   to,
   symlink = TRUE,
+  overwrite = TRUE,
   verbose = getOption("reproducible.verbose", 1)
 )
 }
@@ -17,6 +18,9 @@ linkOrCopy(
 
 \item{symlink}{Logical indicating whether to use symlink (instead of hardlink).
 Default \code{FALSE}.}
+
+\item{overwrite}{Logical. Should downloading and all the other actions occur
+even if they pass the checksums or the files are all there.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
@@ -38,12 +42,9 @@ If that fails, copy the file.
 Use caution with files-backed objects (e.g., rasters). See examples.
 }
 \examples{
-library(datasets)
-library(magrittr)
-library(raster)
 
-tmpDir <- file.path(tempdir(), "symlink-test") \%>\%
-  normalizePath(winslash = '/', mustWork = FALSE)
+tmpDir <- file.path(tempdir(), "symlink-test")
+tmpDir <- normalizePath(tmpDir, winslash = '/', mustWork = FALSE)
 dir.create(tmpDir)
 
 f0 <- file.path(tmpDir, "file0.csv")
@@ -67,20 +68,22 @@ unlink(f0)
 file.exists(f0) ## FALSE
 file.exists(f2) ## TRUE
 
-## using rasters and other file-backed objects
-f3a <- system.file("external/test.grd", package = "raster")
-f3b <- system.file("external/test.gri", package = "raster")
-r3a <- raster(f3a)
-f4a <- file.path(tmpDir, "raster4.grd")
-f4b <- file.path(tmpDir, "raster4.gri")
-linkOrCopy(f3a, f4a) ## hardlink
-linkOrCopy(f3b, f4b) ## hardlink
-r4a <- raster(f4a)
+if (requireNamespace("terra")) {
+  ## using spatRasters and other file-backed objects
+  f3a <- system.file("ex/test.grd", package = "terra")
+  f3b <- system.file("ex/test.gri", package = "terra")
+  r3a <- terra::rast(f3a)
+  f4a <- file.path(tmpDir, "raster4.grd")
+  f4b <- file.path(tmpDir, "raster4.gri")
+  linkOrCopy(f3a, f4a) ## hardlink
+  linkOrCopy(f3b, f4b) ## hardlink
+  r4a <- terra::rast(f4a)
 
-isTRUE(all.equal(r3a, r4a)) # TRUE
+  isTRUE(all.equal(r3a, r4a)) # TRUE
 
-## cleanup
-unlink(tmpDir, recursive = TRUE)
+  ## cleanup
+  unlink(tmpDir, recursive = TRUE)
+}
 }
 \seealso{
 \code{\link[=file.link]{file.link()}}, \code{\link[=file.symlink]{file.symlink()}}, \code{\link[=file.copy]{file.copy()}}.

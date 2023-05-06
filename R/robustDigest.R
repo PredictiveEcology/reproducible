@@ -58,6 +58,8 @@
 #' a <- 2
 #' tmpfile1 <- tempfile()
 #' tmpfile2 <- tempfile()
+#' tmpfile3 <- tempfile(fileext = ".grd")
+#' tmpfile4 <- tempfile(fileext = ".grd")
 #' save(a, file = tmpfile1)
 #' save(a, file = tmpfile2)
 #'
@@ -77,25 +79,21 @@
 #' .robustDigest(asPath(tmpfile1), quick = FALSE)
 #' .robustDigest(asPath(tmpfile2), quick = FALSE) # same because using file content
 #'
-#' # Rasters are interesting because it is not know a priori if it
-#' #   it has a file name associated with it.
-#' library(raster)
-#' r <- raster(extent(0,10,0,10), vals = 1:100)
+#' # SpatRasters are have pointers
+#' if (requireNamespace("terra")) {
+#'   r <- terra::rast(system.file("ex/elev.tif", package = "terra"))
+#'   r3 <- terra::deepcopy(r)
+#'   r1 <- terra::writeRaster(r, filename = tmpfile3)
 #'
-#' # write to disk
-#' r1 <- writeRaster(r, file = tmpfile1)
-#' r2 <- writeRaster(r, file = tmpfile2)
+#'   digest::digest(r)
+#'   digest::digest(r3) # different but should be same
+#'   .robustDigest(r1)
+#'   .robustDigest(r3) # same... data & metadata are the same
 #'
-#' digest::digest(r1)
-#' digest::digest(r2) # different
-#' digest::digest(r1)
-#' digest::digest(r2) # different
-#' .robustDigest(r1)
-#' .robustDigest(r2) # same... data are the same in the file
-#'
-#' # note, this is not true for comparing memory and file-backed rasters
-#' .robustDigest(r)
-#' .robustDigest(r1) # different
+#'   # note, this is not true for comparing memory and file-backed rasters
+#'   .robustDigest(r)
+#'   .robustDigest(r1) # different
+#' }
 #'
 setGeneric(".robustDigest", function(object, .objects = NULL,
                                      length = getOption("reproducible.length", Inf),
@@ -106,7 +104,6 @@ setGeneric(".robustDigest", function(object, .objects = NULL,
 })
 
 #' @rdname robustDigest
-#' @importFrom rlang eval_tidy
 #' @export
 setMethod(
   ".robustDigest",
@@ -115,46 +112,74 @@ setMethod(
                         classOptions) {
     # browser(expr = exists("._robustDigest_1"))
     if (is(object, "quosure")) {# can't get this class from rlang via importClass rlang quosure
-      object <- eval_tidy(object)
+      if (!requireNamespace("rlang")) stop("Please `install.packages('rlang')`")
+      object <- rlang::eval_tidy(object)
     }
 
-    if (is(object, "cluster")) {# can't get this class from rlang via importClass rlang quosure
-      out <- .doDigest(NULL, algo)
-      return(out)
-    }
+    if (inherits(object, "Spatial")) {
+      object <- .removeCacheAtts(object, passByReference = FALSE)
+      if (is(object, "SpatialPoints")) {
+        forDig <- as.data.frame(object)
+      } else {
+        forDig <- object
+      }
+      # The following Rounding is necessary to make digest equal on linux and windows
+      if (inherits(forDig, "SpatialPolygonsDataFrame")) {
+        bbb <- unlist(lapply(as.data.frame(forDig), is.numeric))
+        if (sum(bbb)) {
+          bbbWh <- which(bbb)
+          for (i in bbbWh) { # changed because may not have correct names, can be NAs, Eliot March 2019
+            #  Error was: Error in round(in[[i]], 4) :
+            # non-numeric argument to mathematical function
+            forDig[[i]] <- round(forDig[[i]], 4)
+          }
+        }
+      }
+    } else if (is(object, "Raster")) {
+      object <- .removeCacheAtts(object)
 
-    if (inherits(object, "SpatRaster")) {
-      if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+      dig <- suppressWarnings(
+        .digestRasterLayer(object, length = length, algo = algo, quick = quick))
+      forDig <- unlist(dig)
+    } else if (is(object, "cluster")) {# can't get this class from parallel via importClass parallel cluster
+      forDig <- NULL
+    } else if (inherits(object, "SpatRaster")) {
+      if (!requireNamespace("terra", quietly = TRUE))
         stop("Please install terra package")
-      if (any(nchar(terra::sources(object)) > 0)) {
-        out <- lapply(terra::sources(object), function(x)
-          digest(file = x, length = length, algo = algo))
-        dig <- .robustDigest(append(
+      terraSrcs <- Filenames(object)
+      if (any(nchar(terraSrcs) > 0)) {
+        out <- lapply(terraSrcs, function(x) {
+          if (grepl("^NETCDF:", x)) {
+            x <- sub("^NETCDF:\"", "", x)
+            x <- sub("\":.*$", "", x)
+          }
+          .robustDigest(object = x, length = length, algo = algo, quick = quick)
+        })
+
+        dig <- .robustDigest(
           list(terra::nrow(object), terra::ncol(object), terra::nlyr(object),
                terra::res(object), terra::crs(object),
-               terra::ext(object)), object@ptr$names, ),
+               as.vector(terra::ext(object)), # There is something weird with this pointer that doesn't cache consistently
+               names(object)),
           length = length, quick = quick,
           algo = algo, classOptions = classOptions) # don't include object@data -- these are volatile
-        out <- .doDigest(list(out, dig), algo = algo)
+        forDig <- list(out, dig)
       } else {
-        out <- .doDigest(terra::wrap(object), algo)
+        forDig <- terra::wrap(object)
       }
-
-      return(out)
-    }
-
-    if (any(inherits(object, "SpatVector"), inherits(object, "SpatRaster"))) {
-      if (!requireNamespace("terra", quietly = TRUE) && getOption("reproducible.useTerra", FALSE))
+    } else if (inherits(object, "SpatVector")) {
+      if (!requireNamespace("terra", quietly = TRUE))
         stop("Please install terra package")
-      out <- .doDigest(terra::wrap(object), algo)
-      return(out)
+      forDig <- wrapSpatVector(object)
+    } else {
+      # passByReference -- while doing pass by reference attribute setting is faster, is
+      #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
+      forDig <- .removeCacheAtts(object)
     }
+    out <- .doDigest(forDig, algo)
+    return(out)
 
-    # passByReference -- while doing pass by reference attribute setting is faster, is
-    #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
-    object1 <- .removeCacheAtts(object)
-    .doDigest(object1, algo)
-})
+  })
 
 #' @rdname robustDigest
 #' @export
@@ -193,7 +218,15 @@ setMethod(
 
     simpleDigest <- TRUE
     if (!quick) {
-      if (any(unlist(lapply(object[1:10], file.exists)))) { # only try first 10 elements
+      # If a character string has nonASCII characters e.g., from french
+      #  "Cordill\xe8re arctique", file.exists fails with "file name conversion problem" error
+      howMany <- min(10, NROW(object))
+      whCheck <- object[1:howMany]
+      asc <- iconv(whCheck, "latin1", "ASCII")
+      if (anyNA(asc))
+        whCheck <- whCheck[!is.na(asc)]
+
+      if (any(unlist(lapply(whCheck, file.exists)))) { # only try first 10 elements
         simpleDigest <- FALSE
       }}
     if (!simpleDigest) {
@@ -237,11 +270,11 @@ setMethod(
           digest::digest(file = x, length = length, algo = algo)
         } else {
           # just do file basename as a character string, if file does not exist
-          .doDigest(.basenames(x, nParentDirs), algo = algo)
+          .doDigest(basenames3(x, nParentDirs), algo = algo)
         }
       })
     } else {
-      .doDigest(.basenames(object, nParentDirs), algo = algo)
+      .doDigest(basenames3(object, nParentDirs), algo = algo)
     }
 })
 
@@ -340,68 +373,8 @@ setMethod(
     .doDigest(object, algo = algo)
   })
 
-#' @rdname robustDigest
-#' @export
-setMethod(
-  ".robustDigest",
-  signature = "Raster",
-  definition = function(object, .objects, length, algo, quick, classOptions) {
-    object <- .removeCacheAtts(object)
 
-    if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
-      if (is(object, "RasterStack")) {
-        # have to do one file at a time with Stack
-        dig <- suppressWarnings(
-          lapply(object@layers, function(yy) {
-            .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
-          })
-        )
-      } else {
-        # Brick and Layers have only one file
-        dig <- suppressWarnings(
-          .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-      }
-    } else {
-      dig <- suppressWarnings(
-        .digestRasterLayer(object, length = length, algo = algo, quick = quick))
-    }
-    dig <- .doDigest(unlist(dig))
-    return(dig)
-})
-
-
-#' @rdname robustDigest
-#' @export
-setMethod(
-  ".robustDigest",
-  signature = "Spatial",
-  definition = function(object, .objects, length, algo, quick, classOptions) {
-    object <- .removeCacheAtts(object, passByReference = FALSE)
-
-  if (is(object, "SpatialPoints")) {
-      aaa <- as.data.frame(object)
-    } else {
-      aaa <- object
-    }
-
-    # The following Rounding is necessary to make digest equal on linux and windows
-    if (inherits(aaa, "SpatialPolygonsDataFrame")) {
-      bbb <- unlist(lapply(as.data.frame(aaa), is.numeric))
-      if (sum(bbb)) {
-        bbbWh <- which(bbb)
-        for (i in bbbWh) { # changed because may not have correct names, can be NAs, Eliot March 2019
-                           #  Error was: Error in round(aaa[[i]], 4) :
-                           # non-numeric argument to mathematical function
-          aaa[[i]] <- round(aaa[[i]], 4)
-        }
-      }
-    }
-
-    #
-    .doDigest(aaa, algo = algo)
-})
-
-.basenames <- function(object, nParentDirs) {
+basenames3 <- function(object, nParentDirs) {
   if (missing(nParentDirs)) {
     nParentDirs <- 0
   }
@@ -442,6 +415,41 @@ setMethod(
   x
 }
 
+
+.CopyCacheAtts <- function(from, to, passByReference = FALSE) {
+
+  onDiskRaster <- FALSE
+  namesFrom <- names(from)
+  if (!is.null(namesFrom)) { # has to have names
+    onDiskRaster <- all(namesFrom %in% c("origRaster", "cacheRaster"))
+    isSpatVector <- all(names(from) %in% c("x", "type", "atts", "crs"))
+
+    if ((is(from, "list") || is(from, "environment")) && onDiskRaster %in% FALSE && isSpatVector %in% FALSE) {
+      if (length(from) && length(to)) {
+        nams <- grep("^\\.mods$|^\\._", namesFrom, value = TRUE, invert = TRUE)
+        for (nam in nams) {
+          lala <- try(.CopyCacheAtts(from[[nam]], to[[nam]], passByReference = passByReference))
+          if (is(lala, 'try-error')) browser()
+          to[[nam]] <- lala
+        }
+      }
+
+      return(to)
+    }
+  }
+
+  for (i in c("tags", ".Cache", "call")) {
+    if (!is.null(attr(from, i)))
+      if (passByReference)  {
+        setattr(to, i, attr(from, i))
+      } else  {
+        attr(to, i) <- attr(from, i)
+      }
+  }
+  to
+
+}
+
 .robustDigestFormatOnly <- function(object, .objects, length, algo, quick,
                                classOptions) {
   object <- .removeCacheAtts(object)
@@ -449,27 +457,24 @@ setMethod(
 }
 
 .doDigest <- function(x, algo, length = Inf, file,
-                      newAlgo = getOption("reproducible.useNewDigestAlgorithm"),
+                      newAlgo = NULL,
                       cacheSpeed = getOption("reproducible.cacheSpeed", "slow")) {
   if (missing(algo)) algo = formals(.robustDigest)$algo
 
   out <- if (!missing(file)) {
     digest::digest(file = x, algo = algo, length = length)
   } else {
-    if (isTRUE(newAlgo > 0)) {
-      if (cacheSpeed == "fast") {
-        cacheSpeed <- 2L
-      } else if (cacheSpeed == "slow") {
-        cacheSpeed <- 1L
-      }
-    } else {
+    if (cacheSpeed == "fast") {
       cacheSpeed <- 2L
+    } else if (cacheSpeed == "slow") {
+      cacheSpeed <- 1L
     }
+    if (!.requireNamespace("fastdigest", stopOnFALSE = FALSE))
+      cacheSpeed <- 1L
+
     out <- if (cacheSpeed == 1) {
       digest(x, algo = algo)
     } else if (cacheSpeed == 2) {
-      if (!requireNamespace("fastdigest", quietly = TRUE))
-        stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
       fastdigest::fastdigest(x)
     } else {
       stop("options('reproducible.cacheSpeed') must be 1, 2, 'slow' or 'fast'")

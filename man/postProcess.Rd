@@ -2,121 +2,31 @@
 % Please edit documentation in R/postProcess.R
 \name{postProcess}
 \alias{postProcess}
-\alias{postProcess.default}
 \alias{postProcess.list}
-\alias{postProcess.spatialClasses}
-\alias{postProcess.sf}
+\alias{postProcess.default}
 \title{Generic function to post process objects}
 \usage{
 postProcess(x, ...)
 
-\method{postProcess}{default}(x, ...)
-
 \method{postProcess}{list}(x, ...)
 
-\method{postProcess}{spatialClasses}(
-  x,
-  filename1 = NULL,
-  filename2 = NULL,
-  studyArea = NULL,
-  rasterToMatch = NULL,
-  overwrite = getOption("reproducible.overwrite", TRUE),
-  useSAcrs = FALSE,
-  useCache = getOption("reproducible.useCache", FALSE),
-  verbose = getOption("reproducible.verbose", 1),
-  ...
-)
-
-\method{postProcess}{sf}(
-  x,
-  filename1 = NULL,
-  filename2 = NULL,
-  studyArea = NULL,
-  rasterToMatch = NULL,
-  overwrite = getOption("reproducible.overwrite", TRUE),
-  useSAcrs = FALSE,
-  useCache = getOption("reproducible.useCache", FALSE),
-  verbose = getOption("reproducible.verbose", 1),
-  ...
-)
+\method{postProcess}{default}(x, ...)
 }
 \arguments{
-\item{x}{An object of postProcessing, e.g., \code{spatialClasses}.
-See individual methods. This can be provided as a
+\item{x}{A GIS object of postProcessing,
+e.g., Spat* or sf*. This can be provided as a
 \code{rlang::quosure} or a normal R object.}
 
 \item{...}{Additional arguments passed to methods. For \code{spatialClasses},
-these are: \code{\link[=cropInputs]{cropInputs()}}, \code{\link[=fixErrors]{fixErrors()}},
-\code{\link[=projectInputs]{projectInputs()}}, \code{\link[=maskInputs]{maskInputs()}},
-\code{\link[=determineFilename]{determineFilename()}}, and \code{\link[=writeOutputs]{writeOutputs()}}.
+these are: \code{\link[=cropTo]{cropTo()}}, \code{\link[=fixErrorsIn]{fixErrorsIn()}},
+\code{\link[=projectTo]{projectTo()}}, \code{\link[=maskTo]{maskTo()}},
+\code{\link[=determineFilename]{determineFilename()}}, and \code{\link[=writeTo]{writeTo()}}.
 Each of these may also pass \code{...} into other functions, like
-\code{\link[raster:writeRaster]{raster::writeRaster()}}, or \code{sf::st_write}.
+\code{\link[=writeTo]{writeTo()}}.
 This might include potentially important arguments like \code{datatype},
-\code{format}. Also passed to \code{projectRaster},
+\code{format}. Also passed to \code{terra::project},
 with likely important arguments such as \code{method = "bilinear"}.
-See details.
-
-\subsection{... passed to:}{
-\describe{
-\item{\code{cropInputs}:}{\code{\link[raster:crop]{raster::crop()}}}
-\item{\code{projectInputs}}{\code{\link[raster:projectRaster]{raster::projectRaster()}}}
-\item{\code{maskInputs}}{\code{\link[=fastMask]{fastMask()}} or \code{\link[raster:intersect]{raster::intersect()}}}
-\item{\code{fixErrors}}{\code{\link[raster:buffer]{raster::buffer()}}}
-\item{\code{writeOutputs}}{\code{\link[raster:writeRaster]{raster::writeRaster()}} or \code{\link[raster:shapefile]{raster::shapefile()}}}
-\item{\code{determineFilename}}{}
-}
-\itemize{
-\item Can be overridden with \code{useSAcrs}
-** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
-}
-}}
-
-\item{filename1}{Character strings giving the file paths of
-the \emph{input} object (\code{filename1}) \code{filename1}
-is only used for messaging (i.e., the object itself is passed
-in as \code{x}) and possibly naming of output (see details
-and \code{filename2}).}
-
-\item{filename2}{\code{filename2} is optional, and is either
-NULL (no writing of outputs to disk), or several options
-for writing the object to disk. If
-\code{TRUE} (the default), it will give it a file name determined by
-\code{.prefix(basename(filename1), prefix)}. If
-a character string, it will use this as its file name. See
-\code{\link[=determineFilename]{determineFilename()}}.}
-
-\item{studyArea}{\verb{SpatialPolygons*} object used for masking and possibly cropping
-if no \code{rasterToMatch} is provided.
-If not in same CRS, then it will be \code{spTransform}ed to
-CRS of \code{x} before masking. Currently, this function will not reproject the
-\code{x}. Optional in \code{postProcess}.}
-
-\item{rasterToMatch}{Template \verb{Raster*} object used for cropping (so extent should be
-the extent of desired outcome) and reprojecting (including changing the
-resolution and projection).
-See details in \code{\link[=postProcess]{postProcess()}}.}
-
-\item{overwrite}{Logical. Should downloading and all the other actions occur
-even if they pass the checksums or the files are all there.}
-
-\item{useSAcrs}{Logical. If \code{FALSE}, the default, then the desired projection
-will be taken from \code{rasterToMatch} or none at all.
-If \code{TRUE}, it will be taken from \code{studyArea}. See table
-in details below.}
-
-\item{useCache}{Passed to \code{Cache} in various places.
-Defaults to \code{getOption("reproducible.useCache", 2L)} in \code{prepInputs}, and
-\code{getOption("reproducible.useCache", FALSE)} if calling any of the inner
-functions manually. For \code{prepInputs}, this mean it will use \code{Cache}
-only up to 2 nested levels, which will generally including \code{postProcess} and
-the first level of \verb{*Input} functions, e.g., \code{cropInputs}, \code{projectInputs},
-\code{maskInputs}, but not \code{fixErrors}.}
-
-\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
-1 showing more messaging, 2 being more messaging, etc.
-Default is 1. Above 3 will output much more information about the internals of
-Caching, which may help diagnose Caching challenges. Can set globally with an
-option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+See details.}
 }
 \value{
 A GIS file (e.g., \code{RasterLayer}, \code{SpatRaster} etc.) that has been
@@ -125,11 +35,11 @@ appropriately cropped, reprojected, masked, depending on the inputs.
 \description{
 \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
 
-The method for \code{spatialClasses} (\verb{Raster*} and \verb{Spatial*}) will
+The method for GIS objects (terra \verb{Spat*} & sf classes) will
 crop, reproject, and mask, in that order.
-This is a wrapper for \code{\link[=cropInputs]{cropInputs()}}, \code{\link[=fixErrors]{fixErrors()}},
-\code{\link[=projectInputs]{projectInputs()}}, \code{\link[=maskInputs]{maskInputs()}} and \code{\link[=writeOutputs]{writeOutputs()}},
-with a decent amount of data manipulation between these calls so that the crs match.
+This is a wrapper for \code{\link[=cropTo]{cropTo()}}, \code{\link[=fixErrorsIn]{fixErrorsIn()}},
+\code{\link[=projectTo]{projectTo()}}, \code{\link[=maskTo]{maskTo()}} and \code{\link[=writeTo]{writeTo()}},
+with a required amount of data manipulation between these calls so that the crs match.
 }
 \section{Post processing sequence}{
 
@@ -138,11 +48,11 @@ If the \code{rasterToMatch} or \code{studyArea} are passed, then
 the following sequence will occur:
 
 \enumerate{
-\item Fix errors \code{\link[=fixErrors]{fixErrors()}}. Currently only errors fixed are for
+\item Fix errors \code{\link[=fixErrorsIn]{fixErrorsIn()}}. Currently only errors fixed are for
 \code{SpatialPolygons} using \code{buffer(..., width = 0)}.
-\item Crop using \code{\link[=cropInputs]{cropInputs()}}
-\item Project using \code{\link[=projectInputs]{projectInputs()}}
-\item Mask using \code{\link[=maskInputs]{maskInputs()}}
+\item Crop using \code{\link[=cropTo]{cropTo()}}
+\item Project using \code{\link[=projectTo]{projectTo()}}
+\item Mask using \code{\link[=maskTo]{maskTo()}}
 \item Determine file name \code{\link[=determineFilename]{determineFilename()}}
 \item Write that file name to disk, optionally \code{\link[=writeOutputs]{writeOutputs()}}
 }
@@ -191,66 +101,62 @@ Depending on which of these were passed, different things will happen to the
 }
 
 \examples{
-# Add a study area to Crop and Mask to
-# Create a "study area"
-library(sp)
-library(raster)
-ow <- setwd(tempdir())
+if (requireNamespace("terra") && requireNamespace("sf")) {
+  library(reproducible)
+  # download a (spatial) file from remote url (which often is an archive) load into R
+  # need 3 files for this example; 1 from remote, 2 local
+  dPath <- file.path(tempdir2())
+  remoteTifUrl <- "https://github.com/rspatial/terra/raw/master/inst/ex/elev.tif"
+  localFileLuxSm <- system.file("ex/luxSmall.shp", package = "reproducible")
+  localFileLux <- system.file("ex/lux.shp", package = "terra")
 
-# make a SpatialPolygon
-coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
-                     .Dim = c(5L, 2L))
-Sr1 <- Polygon(coords1)
-Srs1 <- Polygons(list(Sr1), "s1")
-shpEcozone <- SpatialPolygons(list(Srs1), 1L)
-crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-
-# make a "study area" that is subset of larger dataset
-coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                    .Dim = c(5L, 2L))
-Sr1 <- Polygon(coords)
-Srs1 <- Polygons(list(Sr1), "s1")
-StudyArea <- SpatialPolygons(list(Srs1), 1L)
-crs(StudyArea) <- crs(shpEcozone)
-projString <- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
-StudyArea <- sp::spTransform(StudyArea, CRSobj = projString)
-
-##########
-shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
+  # 1 step for each layer
+  # 1st step -- get study area
+  studyArea <- prepInputs(localFileLuxSm, fun = "terra::vect") # default is sf::st_read
+  # 2nd step: make the input data layer like the studyArea map
+  elevForStudy <- prepInputs(url = remoteTifUrl, to = studyArea, res = 250,
+                             destinationPath = dPath)
 
 
-# Try manually, individual pieces
-shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
-shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
-shpEcozoneClean <- fixErrors(shpEcozone)
-shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
+  # Alternate way, one step at a time. Must know each of these steps, and perform for each layer
+  \donttest{
+    dir.create(dPath, recursive = TRUE, showWarnings = FALSE)
+    file.copy(localFileLuxSm, file.path(dPath, basename(localFileLuxSm)))
+    studyArea2 <- terra::vect(localFileLuxSm)
+    if (!all(terra::is.valid(studyArea2))) studyArea2 <- terra::makeValid(studyArea2)
+    tf <- tempfile(fileext = ".tif")
+    download.file(url = remoteTifUrl, destfile = tf, mode = "wb")
+    Checksums(dPath, write = TRUE, files = tf)
+    elevOrig <- terra::rast(tf)
+    elevForStudy2 <- terra::project(elevOrig, terra::crs(studyArea2), res = 250) |>
+      terra::crop(studyArea2) |>
+      terra::mask(studyArea2)
 
-# With terra
-if (require("terra")) {
-  opts <- options("reproducible.useTerra" = TRUE)
-  vectEcozone <- terra::vect(shpEcozone)
+    isTRUE(all.equal(studyArea, studyArea2)) # Yes!
+  }
 
-  # If input is Spatial object --> return will also be Spatial
-  shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
-  # Try manually, individual pieces -- Note functions are different
-  shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
-  shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
-  shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
+  # sf class
+  studyAreaSmall <- prepInputs(localFileLuxSm)
+  studyAreas <- list()
+  studyAreas[["orig"]] <- prepInputs(localFileLux)
+  studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
+  studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
+  studyAreas[["masked"]] <- suppressWarnings(maskTo(studyAreas[["orig"]], studyAreaSmall))
 
-  # If input is Spat object --> return will also be Spat
-  vectEcozonePostProcessed <- postProcess(vectEcozone, studyArea = StudyArea)
-  # Try manually, individual pieces -- Note functions are different
-  vectEcozoneMasked <- maskInputs(vectEcozone, StudyArea)
-  VectEcozoneReprojected <- projectInputs(vectEcozone, StudyArea)
-  vectEcozoneCropped <- cropInputs(vectEcozone, StudyArea)
+  # SpatVector-- note: doesn't matter what class the "to" object is, only the "from"
+  studyAreas <- list()
+  studyAreas[["orig"]] <- prepInputs(localFileLux, fun = "terra::vect")
+  studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
+  studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
+  studyAreas[["masked"]] <- suppressWarnings(maskTo(studyAreas[["orig"]], studyAreaSmall))
+  if (interactive()) {
+    par(mfrow = c(2,2));
+    out <- lapply(studyAreas, function(x) terra::plot(x))
+  }
 
-  # fixErrorsTerra --> generally not called on its own
-  shpEcozoneClean <- fixErrorsTerra(vectEcozone)
 
-  options(opts)
 }
 
-setwd(ow)
 }
 \seealso{
 \code{prepInputs}

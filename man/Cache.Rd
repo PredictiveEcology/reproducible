@@ -10,6 +10,7 @@ Cache(
   notOlderThan = NULL,
   .objects = NULL,
   .cacheExtra = NULL,
+  .functionName = NULL,
   outputObjects = NULL,
   algo = "xxhash64",
   cacheRepo = NULL,
@@ -29,7 +30,7 @@ Cache(
   useCloud = FALSE,
   cloudFolderID = NULL,
   showSimilar = getOption("reproducible.showSimilar", FALSE),
-  drv = getOption("reproducible.drv"),
+  drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL)
 )
 }
@@ -51,6 +52,10 @@ objects, this will only be applied outermost first.}
 
 \item{.cacheExtra}{A an arbitrary R object that will be included in the \code{CacheDigest},
 but otherwise not passed into the \code{FUN}.}
+
+\item{.functionName}{A an arbitrary character string that provides a name that is different
+than the actual function name (e.g., "rnorm") which will be used for messaging. This
+can be useful when the actual function is not helpful for a user, such as \code{do.call}.}
 
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}
@@ -139,12 +144,10 @@ the next most similar archive, and indicate which argument(s) is/are different.
 If a number larger than \code{1}, then it will report the N most similar archived
 objects.}
 
-\item{drv}{an object that inherits from \linkS4class{DBIDriver},
-or an existing \linkS4class{DBIConnection}
-object (in order to clone an existing connection).}
+\item{drv}{if using a database backend, drv must be an object that
+inherits from DBIDriver e.g., \code{RSQLite::SQLite()}}
 
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
+\item{conn}{an optional DBIConnection object, as returned by dbConnect().}
 }
 \value{
 Returns the value of the
