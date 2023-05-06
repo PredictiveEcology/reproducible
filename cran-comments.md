@@ -32,7 +32,7 @@ See `NEWS.md` for a full list of changes.
 
 ## R CMD check results
 
-There is only a NOTE about the email address, which is correct, and unchanged, for the maintainer.
+No NOTEs, WARNINGs, or ERRORs
 
 ## Downstream dependencies
 

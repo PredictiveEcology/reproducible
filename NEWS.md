@@ -18,7 +18,7 @@ Version 2.0.0
 - `preProcess` had multiple changes. The following now work: archives with subfolders, archives with subfolders with identical basenames (different dirnames), gdb files, other files where `targetFile` is a directory.
 - ~40 issues were closed with current release.
 - code coverage now approaching 85%
-- substantial changes to `preProcess` for minor efficiencies, edge cases, code cleaning
+- substantial changes to `preProcess` for minor efficiency gains, edge cases, code cleaning
 - new function `CacheGeo` that weaves together `prepInputs` and `Cache` to create a geo-spatial caching. See help and examples.
 - `maskTo` now allows `touches` arg for `terra::mask`
 - `Spatial` class is also "fixed" in `fixErrorsIn`
