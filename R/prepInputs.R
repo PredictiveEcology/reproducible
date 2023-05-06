@@ -456,8 +456,7 @@ extractFromArchive <- function(archive,
       funWArgs <- .whichExtractFn(archive[1], args)
 
       # need to deal with \\ vs. / and also needs to stay relative
-      filesInArchive <- makeRelative(normPath(.listFilesInArchive(archive)),
-                                     destinationPath)
+      filesInArchive <- makeRelative(.listFilesInArchive(archive), destinationPath)
       if (is.null(neededFiles)) {
         neededFiles <- filesInArchive
         result <- checkSums[checkSums$expectedFile %in% makeRelative(neededFiles, destinationPath), ]$result
