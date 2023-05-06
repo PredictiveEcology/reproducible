@@ -1,6 +1,6 @@
 ## Release information
 
-This is an update of internals of `postProcess()` and family to deal with a wholesale replacement with `terra` and `sf` instead of `raster` and `sp`. Suggestions on the title of the package and removals of backticks and single quotes in DESCRIPTION paragraph also implemented.
+This is a major update that brings all spatial components of the package to use `terra` and `sf`. `Cache` components are now done with or without a `DBI` backend, allowing reduction in recursive dependencies from 27 to 11 packages. The internals of `postProcess()` and family to deal with a wholesale replacement with `terra` and `sf` instead of `raster` and `sp`. 
 
 See `NEWS.md` for a full list of changes.
 
