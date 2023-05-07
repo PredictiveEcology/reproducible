@@ -64,7 +64,7 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="2.0.2" id="version-202">Version 2.0.2<a class="anchor" aria-label="anchor" href="#version-202"></a></h2>
+<h2 class="page-header" data-toc-text="2.0.2" id="version-202">Version 2.0.2<small>2023-05-07</small><a class="anchor" aria-label="anchor" href="#version-202"></a></h2>
 <div class="section level3">
 <h3 id="enhancements-2-0-2">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-2-0-2"></a></h3>
 <ul><li>new optional backend for <code>Cache</code> via <code>options(reproducible.useDBI = FALSE)</code> is single data files with the same <code>basename</code> as the cached object, i.e., with the same <code>cacheId</code> in the file name. This is a replacement for <code>RSQLite</code> and will likely become the default in the next release. This approach makes cloud caching easier as all metadata are available in small binary files for each cached object. This is simpler, faster and creates far fewer package dependencies (now 11 recursive; before 27 recursive). If a user has DBI and RSQLite installed, then the backend will default to use these currently, i.e., the previous behaviour. The user can change the backend without loss of Cache data.</li>
