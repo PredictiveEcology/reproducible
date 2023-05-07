@@ -1,5 +1,23 @@
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
+Version 2.0.3
+=============
+
+## Enhancements
+
+## Dependency changes
+
+## Defunct 
+
+## Defunct and removed
+
+## Non exported function changes
+
+
+## Bugfixes
+
+
+
 Version 2.0.2
 =============
 
