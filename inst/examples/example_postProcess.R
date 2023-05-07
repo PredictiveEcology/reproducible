@@ -1,5 +1,6 @@
 if (requireNamespace("terra") && requireNamespace("sf")) {
   library(reproducible)
+  od <- setwd(tempdir2())
   # download a (spatial) file from remote url (which often is an archive) load into R
   # need 3 files for this example; 1 from remote, 2 local
   dPath <- file.path(tempdir2())
@@ -51,6 +52,7 @@ if (requireNamespace("terra") && requireNamespace("sf")) {
     out <- lapply(studyAreas, function(x) terra::plot(x))
   }
 
+  setwd(od)
 
 }
 
