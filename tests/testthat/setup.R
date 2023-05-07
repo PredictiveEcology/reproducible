@@ -21,7 +21,7 @@ withr::defer({
   }
   options(opts)
   setDTthreads(origDTthreads)
-  # unlink("CHECKSUMS.txt") # comes from an unknown place
+  try(unlink("CHECKSUMS.txt"), silent = TRUE) # comes from an unknown place
 }, teardown_env())
 if (wantMoreTests) {
   print(paste0("getOption('reproducible.rasterRead') = ", getOption("reproducible.rasterRead")))
