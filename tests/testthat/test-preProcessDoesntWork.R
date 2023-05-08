@@ -164,3 +164,23 @@ test_that("preProcess fails if user provides a directory as a targetFile", {
 #     })
 #   })
 # })
+
+
+
+test_that("preProcess fails if relative destPath not '.'", {
+  # this fails on CRAN version 2.0.2
+  skip_on_cran()
+  skip_on_ci()
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  dPath = basename(tmpdir)
+  out <- try(prepInputs(url = "https://drive.google.com/file/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m",
+                    fun = "data.table::fread",
+                    destinationPath = dPath,
+                    purge = 1,
+                    filename2 = "userGcM3.csv", overwrite = T))
+  expect_s3_class(out, "data.table")
+
+})

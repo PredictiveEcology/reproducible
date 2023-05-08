@@ -13,9 +13,8 @@ Version 2.0.3
 
 ## Non exported function changes
 
-
 ## Bugfixes
-
+- `preProcess` failed when `googledrive` url filename could be found, but `destinationPath` was not `"."`
 
 
 Version 2.0.2
