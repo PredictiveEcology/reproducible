@@ -630,6 +630,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       if (ie) {
         gf <- assessGoogle(url = url, archive = archive, targetFile = targetFile,
                      destinationPath = destinationPath, verbose = verbose, team_drive = NULL)
+        gf <- makeAbsolute(gf, destinationPath)
       }
     }
     gf
