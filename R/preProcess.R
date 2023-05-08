@@ -922,7 +922,8 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
 
       if (any(dirDoesntExist1) || any(dirDoesntExist2)) {
         needCreate <- unique(c(toDirs1[dirDoesntExist1], toDirs2[dirDoesntExist2]))
-        if (any(is.na(needCreate))) browser()
+        if (any(is.na(needCreate)))
+          needCreate <- na.omit(needCreate)
         lapply(needCreate, dir.create, recursive = TRUE)
       }
       isDir <- dir.exists(to)
@@ -961,7 +962,6 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
         messagePrepInputs("Copy of file: ", fromCollapsed, ", was created at: ", toCollapsed, verbose = verbose)
       }
     } else {
-      if (isFALSE(result)) browser()
       messagePrepInputs("File ", fromCollapsed, " does not exist. Not copying.", verbose = verbose)
       result <- FALSE
     }
