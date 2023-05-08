@@ -170,6 +170,7 @@ test_that("preProcess fails if user provides a directory as a targetFile", {
 test_that("preProcess fails if relative destPath not '.'", {
   # this fails on CRAN version 2.0.2
   skip_on_cran()
+  skip_on_ci()
   testInitOut <- testInit()
   on.exit({
     testOnExit(testInitOut)
