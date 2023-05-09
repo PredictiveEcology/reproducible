@@ -35,10 +35,10 @@ jobs:
           - {os: windows-latest, r: '4.1'}
           - {os: ubuntu-20.04,   r: 'devel'}
           - {os: ubuntu-20.04,   r: 'release'}
-          - {os: ubuntu-20.04,   r: 'release', rasterread: 'raster', usedbi: false}
-          - {os: ubuntu-20.04,   r: 'release', rasterread: 'raster', usedbi: true}
-          - {os: ubuntu-20.04,   r: 'release', rasterread: 'terra',  usedbi: false}
-          - {os: ubuntu-20.04,   r: 'release', rasterread: 'terra',  usedbi: true}
+          - {os: ubuntu-20.04,   r: 'release', rasterread: 'raster::raster', usedbi: false}
+          - {os: ubuntu-20.04,   r: 'release', rasterread: 'raster::raster', usedbi: true}
+          - {os: ubuntu-20.04,   r: 'release', rasterread: 'terra::rast',    usedbi: false}
+          - {os: ubuntu-20.04,   r: 'release', rasterread: 'terra::rast',    usedbi: true}
           - {os: ubuntu-20.04,   r: 'oldrel'}
           - {os: ubuntu-20.04,   r: '4.1'}
 
