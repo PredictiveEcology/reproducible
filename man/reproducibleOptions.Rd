@@ -88,8 +88,9 @@ Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}. This will cause \c
 Less robust to changes, but faster. \emph{NOTE: this will only affect objects on disk}.
 }
 \item{\code{rasterRead}}{
-Default \code{raster::raster} for backwards compatibility. Used during \code{prepInputs} when reading a
-\code{.tif}, \code{.grd}, and \code{.asc} files. This will eventually become \code{terra::rast}.
+Used during \code{prepInputs} when reading \code{.tif}, \code{.grd}, and \code{.asc} files.
+Default: \code{terra::rast}. Can be \code{raster::raster} for backwards compatibility.
+Can be set using environment variable \code{R_REPRODUCIBLE_RASTER_READ}.
 }
 \item{\code{shapefileRead}}{
 Default \code{NULL}. Used during \code{prepInputs} when reading a \code{.shp} file.
@@ -123,8 +124,9 @@ This, therefore, is most useful if the user is using unique values for \code{use
 Default \code{FALSE}. Passed to \code{Cache}.
 }
 \item{\code{useDBI}}{
-Default: \code{TRUE}. As of version 0.3, the backend is now \pkg{DBI} instead of
-\pkg{archivist}.
+Default: \code{TRUE} if \pkg{DBI} is available.
+Default value can be overridden by setting environment variable \code{R_REPRODUCIBLE_USE_DBI}.
+As of version 0.3, the backend is now \pkg{DBI} instead of \pkg{archivist}.
 }
 \item{\code{useGDAL}}{
 Default \code{TRUE}. Passed to \code{useGDAL}. Deprecated.
