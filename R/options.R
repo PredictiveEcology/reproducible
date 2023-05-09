@@ -135,10 +135,10 @@
 #'     `clearCache` of any sort will cause all memoising to be 'forgotten' (`memoise::forget`).
 #'   }
 #'   \item{`useNewDigestAlgorithm`}{
-#'     Default: `1`. Option 1 is the version that has existed for sometime. There is now
-#'     and option `2` which is substantially faster. It will, however, create
-#'     Caches that are not compatible with previous ones. Options `1` and `2`
-#'     are not compatible with the earlier `0`.
+#'     Default: `1`. Option 1 is the version that has existed for sometime.
+#'     There is now an option `2` which is substantially faster.
+#'     It will, however, create Caches that are not compatible with previous ones.
+#'     Options `1` and `2` are not compatible with the earlier `0`.
 #'     `1` and `2` will make `Cache` less sensitive to minor but irrelevant changes
 #'     (like changing the order of arguments) and will work successfully across operating systems
 #'     (especially relevant for the new `cloudCache` function.
