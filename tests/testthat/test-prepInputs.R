@@ -1251,7 +1251,7 @@ test_that("lightweight tests for code coverage", {
                    targetFile = "ecozones.shp",
                    archive = "ecozone_shp.zip", needChecksums = TRUE, quick = FALSE,
                    destinationPath = tmpdir, checksumFile = checkSumFilePath)
-    # )
+    )
   )
   ## 2023-05-08: does not error on macOS -- this may be different now with changes to normPath --
   #   if it is error, then leave only the expect_true(isErr)
