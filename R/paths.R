@@ -25,27 +25,56 @@ setMethod(
   signature(path = "character"),
   definition = function(path) {
     if (length(path) > 0) {
-      nas <- is.na(path)
-      if (any(!nas)) {
-        path[!nas] <-
-          normalizePath(path[!nas], winslash = "/", mustWork = FALSE)
-      }
-      if (any(nas)) {
-        path[nas] <- NA_character_
-      }
+      nonEmpty <- nzchar(path)
+      if (any(nonEmpty)) {
+        pathOrig <- path
+        path <- pathOrig[nonEmpty]
 
-      # Eliot changed this Sept 24, 2019 because weird failures with getwd()
-      # in non-interactive testing
-      path <- unlist(path)
-      if (!is.null(path)) {
-        path <- gsub("\\\\", "//", path)
-        path <- gsub("//", "/", path)
-        hasDotStart <- startsWith(path, "./")
-        if (isTRUE(any(hasDotStart))) {
-          path[hasDotStart] <-
-            gsub("^[.]/", paste0(getwd(), "/"), path[hasDotStart])
+        nas <- is.na(path)
+        if (!all(nas)) {
+          if (any(!nas)) {
+            path[!nas] <-
+              normalizePath(path[!nas], winslash = "/", mustWork = FALSE)
+          }
+          if (any(nas)) {
+            path[nas] <- NA_character_
+          }
+
+          # Eliot changed this Sept 24, 2019 because weird failures with getwd()
+          # in non-interactive testing
+          path <- unlist(path)
+          if (!is.null(path)) {
+            nonNApath <- path[!nas]
+            nonNApath <- gsub("\\\\", "//", nonNApath)
+            nonNApath <- gsub("//", "/", nonNApath)
+            hasDotStart <- startsWith(nonNApath, "./")
+            if (isTRUE(any(hasDotStart))) {
+              nonNApath[hasDotStart] <-
+                gsub("^[.]/", paste0(getwd(), "/"), nonNApath[hasDotStart])
+            }
+            nonNApath <- gsub("/$", "", nonNApath) # nolint
+
+
+            # if the files or dirs don't exist, then there is a possibility on *nix-alikes that they will still
+            #    not be absolute -- this is true with R 4.2.3, maybe was not previously
+            if (!isWindows() && !all(nas) && any(hasDotStart %in% FALSE)) {
+              areAbs <- isAbsolutePath(nonNApath[!hasDotStart]) # hasDotStart is already absolute; still this is slow
+              if (any(areAbs %in% FALSE)) {
+                nonNApath[!hasDotStart][areAbs %in% FALSE] <-
+                  normalizePath(file.path(getwd(), nonNApath[!hasDotStart][areAbs %in% FALSE]),
+                                winslash = "/", mustWork = FALSE)
+              }
+            }
+            path[!nas] <- nonNApath
+
+            if (!all(nonEmpty)) {
+              pathOrig[nonEmpty] <- path
+              path <- pathOrig
+            }
+
+          }
+
         }
-        path <- gsub("/$", "", path) # nolint
       }
     }
     return(path)
@@ -128,8 +157,7 @@ setMethod(
     if (isTRUE(all(is.na(path)))) {
       stop("Invalid path: cannot be NA.")
     } else {
-      path <-
-        normPath(path) # this is necessary to cover Windows
+      path <- normPath(path) # this is necessary to cover Windows
       # double slash used on non-Windows
       dirsThatExist <- dir.exists(path)
       if (any(!dirsThatExist)) {
@@ -150,20 +178,12 @@ setMethod(
             })
           } else {
             stop(
-              paste(
-                "Specified path",
-                normPath(path),
-                "does not exist.",
-                "Create it and try again."
-              )
+              "Specified path, ", normPath(path), ", does not exist. Maybe set `create = TRUE?`"
             )
           }
         }
       }
-      if (SysInfo[["sysname"]] == "Darwin") {
-        path <-
-          normPath(path)
-      } # ensure path re-normalized after creation
+      if (SysInfo[["sysname"]] == "Darwin") path <- normPath(path) # ensure path re-normalized after creation
 
       return(path)
     }

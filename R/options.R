@@ -186,7 +186,7 @@ reproducibleOptions <- function() {
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
     reproducible.drv = NULL, # RSQLite::SQLite(),
-    reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
+    reproducible.futurePlan = FALSE, #future::plan("multisession"), #memoise
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
