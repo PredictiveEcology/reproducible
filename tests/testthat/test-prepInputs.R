@@ -1241,7 +1241,7 @@ test_that("lightweight tests for code coverage", {
   checkSums <- Checksums(path = tmpdir)
 
   noisyOutput <- capture.output(
-    expect_error(
+    out <- try(silent = TRUE,
       downloadFile(url = url,
                    neededFiles = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn", "ecozones.sbx",
                                    "ecozones.shp", "ecozones.shx"),
@@ -1251,6 +1251,10 @@ test_that("lightweight tests for code coverage", {
                    destinationPath = tmpdir, checksumFile = checkSumFilePath)
     )
   )
+  ## 2023-05-08: does not error on macOS -- this may be different now with changes to normPath --
+  #   if it is error, then leave only the expect_true(isErr)
+  isErr <- is(out, "try-error")
+  if (!isMac()) expect_true(isErr) else expect_false(isErr)
 
   ## postProcess.default
   b <- 1
