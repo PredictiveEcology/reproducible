@@ -1,5 +1,4 @@
 test_that("Checksums read and written correctly", {
-
   testInitOut <- testInit()
   on.exit({
     testOnExit(testInitOut)
@@ -23,7 +22,6 @@ test_that("Checksums read and written correctly", {
   txt <- txt[grepl("R", expectedFile)]
   data.table::setorderv(txt, "expectedFile")
 
-
   csums <- txt$checksum.x
 
   # 2. read Checksums with empty CHECKSUMS.txt file
@@ -35,11 +33,10 @@ test_that("Checksums read and written correctly", {
   # 3. write Checksums without CHECKSUMS.txt
   expect_true(file.remove(csf))
   txt <- Checksums(dirname(csf), write = TRUE)
-  txt <- txt[grepl("R", expectedFile)]
+  txt <- txt[grepl("[.]R$", basename(expectedFile))]
   data.table::setorderv(txt, "expectedFile")
-  txt <- txt[checksum.x != "dir"]
   expect_true(all(colnames(txt) == cnamesR))
-  expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
+  expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "[.]R$")))
 
    #expect_identical(sort(txt$expectedFile), sort(basename(sampleFiles)))
   #expect_true(all(sort(txt$expectedFile) == sort(basename(sampleFiles))))
@@ -73,9 +70,8 @@ test_that("Checksums read and written correctly", {
   expect_true(all(colnames(txt) == cnamesR))
   txt <- Checksums(tmpdir, write = TRUE)
   txt <- Checksums(tmpdir)
-  txt <- txt[grepl("R", expectedFile)][result == "OK",]
-  txt <- txt[checksum.x != "dir"]
-  expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
+  txt <- txt[grepl("[.]R$", expectedFile)][result == "OK",]
+  expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "[.]R$")))
   # expect_true(all(sort(txt$expectedFile) == sort(basename(sampleFiles))))
   a <- basename2(sort(grep("\\.R$", txt$expectedFile, value = TRUE)))
   # print(txt$expectedFile)
@@ -86,6 +82,4 @@ test_that("Checksums read and written correctly", {
   # expect_identical(a[4], b[4])
   # expect_identical(a[5], b[5])
   # expect_identical(a[6], b[6])
-
-
 })
