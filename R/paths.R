@@ -44,26 +44,28 @@ setMethod(
           # in non-interactive testing
           path <- unlist(path)
           if (!is.null(path)) {
-            path <- gsub("\\\\", "//", path)
-            path <- gsub("//", "/", path)
-            hasDotStart <- startsWith(path, "./")
+            nonNApath <- path[!nas]
+            nonNApath <- gsub("\\\\", "//", nonNApath)
+            nonNApath <- gsub("//", "/", nonNApath)
+            hasDotStart <- startsWith(nonNApath, "./")
             if (isTRUE(any(hasDotStart))) {
-              path[hasDotStart] <-
-                gsub("^[.]/", paste0(getwd(), "/"), path[hasDotStart])
+              nonNApath[hasDotStart] <-
+                gsub("^[.]/", paste0(getwd(), "/"), nonNApath[hasDotStart])
             }
-            path <- gsub("/$", "", path) # nolint
+            nonNApath <- gsub("/$", "", nonNApath) # nolint
 
 
             # if the files or dirs don't exist, then there is a possibility on *nix-alikes that they will still
             #    not be absolute -- this is true with R 4.2.3, maybe was not previously
             if (!isWindows() && !all(nas) && any(hasDotStart %in% FALSE)) {
-              areAbs <- isAbsolutePath(path[!nas][!hasDotStart]) # hasDotStart is already absolute; still this is slow
-              if (any(!areAbs)) {
-                path[!nas][!hasDotStart][!areAbs] <-
-                  normalizePath(file.path(getwd(), path[!nas][!hasDotStart][!areAbs]),
+              areAbs <- isAbsolutePath(nonNApath[!hasDotStart]) # hasDotStart is already absolute; still this is slow
+              if (any(areAbs %in% FALSE)) {
+                nonNApath[!hasDotStart][areAbs %in% FALSE] <-
+                  normalizePath(file.path(getwd(), nonNApath[!hasDotStart][areAbs %in% FALSE]),
                                 winslash = "/", mustWork = FALSE)
               }
             }
+            path[!nas] <- nonNApath
 
             if (!all(nonEmpty)) {
               pathOrig[nonEmpty] <- path

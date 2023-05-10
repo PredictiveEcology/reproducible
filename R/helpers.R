@@ -361,6 +361,37 @@ isDirectory <- function(pathnames) {
   id
 }
 
+isAbsolutePath <- function(pathnames) {
+  # modified slightly from R.utils::isAbsolutePath
+  keep <- is.character(pathnames)
+  if (isFALSE(keep)) stop("pathnames must be character")
+  nPathnames <- length(pathnames)
+  if (nPathnames == 0L)
+    return(logical(0L))
+  done <- logical(nPathnames)
+  nas <- is.na(pathnames)
+  if (all(nas)) return(!nas)
+
+  tildas <- startsWith(pathnames[!nas], "~")
+  if (any(tildas))
+    done[!nas][tildas] <- TRUE
+
+  if (all(tildas))
+    return(done)
+
+  colon <- regexpr("^.:(/|\\\\)", pathnames[!nas][!tildas])
+  hasColon <- colon != -1L
+  if (any(hasColon))
+    done[!nas][!tildas][hasColon] <- TRUE
+  if (all(hasColon))
+    return(done)
+  curPaths <- pathnames[!nas][!tildas][!hasColon]
+  done[!nas][!tildas][!hasColon] <- startsWith(curPaths, "/") | startsWith(curPaths, "\\")
+  names(done) <- pathnames
+  return(done)
+}
+
+
 isFile <- function(pathnames) {
   keep <- is.character(pathnames)
   if (isFALSE(keep)) stop("pathnames must be character")
