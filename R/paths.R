@@ -50,7 +50,7 @@ setMethod(
             hasDotStart <- startsWith(nonNApath, "./")
             if (isTRUE(any(hasDotStart))) {
               nonNApath[hasDotStart] <-
-                gsub("^[.]/", paste0(getwd(), "/"), nonNApath[hasDotStart])
+                gsub("^[.]/", paste0(getwd(), "/"), nonNApath[hasDotStart]) # is absolute b/c getwd()
             }
             nonNApath <- gsub("/$", "", nonNApath) # nolint
 
