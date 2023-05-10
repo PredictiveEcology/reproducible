@@ -26,6 +26,14 @@ test_that("checkPath: normPath consistency", {
   checked <- normPath(paths)
   expect_equal(length(unique(checked)), 1)
 
+
+  # These don't exist ... added May 10, 2023 after discovering that *nix-alikes don't make
+  #   absolute paths with normalizePath when file or dir doesn't exist
+  # Also empty path should return "", not be normalized
+  out <- normPath(c("", "hi", "~/Hi", "/home/emcintir/testing"))
+  expect_identical(sum(isAbsolutePath(out)), 3L)
+
+
   # extra checks for missing/NA/NULL
   expect_equal(normPath(), character())
   expect_true(all(is.na(normPath(list(NA, NA_character_)))))
