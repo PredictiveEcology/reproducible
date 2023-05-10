@@ -4,17 +4,16 @@ Version 2.0.3
 =============
 
 ## Enhancements
-
-## Dependency changes
-
-## Defunct 
-
-## Defunct and removed
-
-## Non exported function changes
+- `reproducible.useFuture` now defaults to `multisession`
+- updated tests to deal with `data.table` development branch. Issue #314
 
 ## Bugfixes
 - `preProcess` failed when `googledrive` url filename could be found, but `destinationPath` was not `"."`
+- `normPath` had different behaviour on *nix-alikes and Windows. Now it is the same.
+
+## Continuous integration
+- Improvements with testing on Github Actions
+
 
 
 Version 2.0.2
