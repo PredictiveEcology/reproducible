@@ -83,8 +83,9 @@
 #'     Less robust to changes, but faster. *NOTE: this will only affect objects on disk*.
 #'   }
 #'   \item{`rasterRead`}{
-#'     Default `raster::raster` for backwards compatibility. Used during `prepInputs` when reading a
-#'     `.tif`, `.grd`, and `.asc` files. This will eventually become `terra::rast`.
+#'     Used during `prepInputs` when reading `.tif`, `.grd`, and `.asc` files.
+#'     Default: `terra::rast`. Can be `raster::raster` for backwards compatibility.
+#'     Can be set using environment variable `R_REPRODUCIBLE_RASTER_READ`.
 #'   }
 #'   \item{`shapefileRead`}{
 #'     Default `NULL`. Used during `prepInputs` when reading a `.shp` file.
@@ -118,8 +119,9 @@
 #'     Default `FALSE`. Passed to `Cache`.
 #'   }
 #'   \item{`useDBI`}{
-#'     Default: `TRUE`. As of version 0.3, the backend is now \pkg{DBI} instead of
-#'     \pkg{archivist}.
+#'     Default: `TRUE` if \pkg{DBI} is available.
+#'     Default value can be overridden by setting environment variable `R_REPRODUCIBLE_USE_DBI`.
+#'     As of version 0.3, the backend is now \pkg{DBI} instead of \pkg{archivist}.
 #'   }
 #'   \item{`useGDAL`}{
 #'     Default `TRUE`. Passed to `useGDAL`. Deprecated.
@@ -197,16 +199,34 @@ reproducibleOptions <- function() {
     reproducible.nThreads = 1,
     reproducible.overwrite = FALSE,
     reproducible.quick = FALSE,
-    reproducible.rasterRead = "terra::rast",
+    reproducible.rasterRead = getEnv("R_REPRODUCIBLE_RASTER_READ",
+                                     default = "terra::rast",
+                                     allowed = c("terra::rast", "raster::raster")),
     reproducible.shapefileRead = "sf::st_read",
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
-    reproducible.useDBI = useDBI(TRUE, verbose = interactive() - (useDBI() + 1)), # `FALSE` is useMultipleDBFiles now
+    reproducible.useDBI = getEnv("R_REPRODUCIBLE_USE_DBI",
+                                 default = useDBI(TRUE, verbose = interactive() - (useDBI() + 1)), # `FALSE` is useMultipleDBFiles now
+                                 allowed = c("true", "false")) |> as.logical(),
     reproducible.useMemoise = FALSE, #memoise
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1
   )
+}
+
+getEnv <- function(envvar, default = NULL, allowed = NULL) {
+  if (nzchar(Sys.getenv(envvar))) {
+    val <- Sys.getenv(envvar)
+
+    if (!val %in% allowed) {
+      val <- default
+    }
+  } else {
+    val <- default
+  }
+
+  return(val)
 }
