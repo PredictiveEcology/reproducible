@@ -1,11 +1,11 @@
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
-Version 2.0.3
+reproducible 2.0.3
 =============
 
 ## Enhancements
-- `reproducible.useFuture` now defaults to `multisession`
-- updated tests to deal with `data.table` development branch. Issue #314
+- `reproducible.useFuture` now defaults to `"multisession"`
+- updated tests to deal with `data.table` development branch (#314)
 
 ## Bugfixes
 - `preProcess` failed when `googledrive` url filename could be found, but `destinationPath` was not `"."`
@@ -15,8 +15,7 @@ Version 2.0.3
 - Improvements with testing on Github Actions
 
 
-
-Version 2.0.2
+reproducible 2.0.2
 =============
 
 ## Enhancements
@@ -69,8 +68,8 @@ Version 2.0.2
 - during transition from `postProcess` (using `raster` and `sp`) to `postProcessTo`, some cases are falling through the cracks; these have being addressed.
 
 
-Version 1.2.16
-==============
+reproducible 1.2.16
+===================
 
 ## Dependency changes
 * none
@@ -96,8 +95,8 @@ Version 1.2.16
 * remove defunct argument `digestPathContent` from `Cache`
 * `options("reproducible.useGDAL")` is now deprecated; the package is moving towards `terra`. 
 
-Version 1.2.11
-==============
+reproducible 1.2.11
+===================
 
 ## Dependency changes
 * none
@@ -109,8 +108,8 @@ Version 1.2.11
 * fix tests for `postProcessTo` to deal with changes in GDAL/PROJ/GEOS (#253; @rsbivand)
 * fixed issue with masking
 
-Version 1.2.10
-==============
+reproducible 1.2.10
+===================
 
 ## Dependency changes
 * Drop support for R 3.6 (#230)
@@ -136,7 +135,7 @@ Version 1.2.10
 * fix issue with `isna.SpatialFix` when using `postProcess.quosure`
 
 
-Version 1.2.8
+reproducible 1.2.8
 =============
 
 ## Dependency changes
@@ -152,7 +151,7 @@ Version 1.2.8
 ## Bug fixes
 * A small, but very impactful bug that created false positive `Cache` returns; i.e., a 2nd time through a Cache would return a cached copy, when some of the arguments were different. It occurred for when the differences were in unnamed arguments only.
 
-Version 1.2.7
+reproducible 1.2.7
 =============
 
 `reproducible` will be slowly changing the defaults for vector GIS datasets from the `sp` package to the `sf` package. 
@@ -185,8 +184,8 @@ There is a large user-visible change that will come (in the next release), which
 * several minor bugfixes
 * `Copy` did not correctly copy `RasterStack`s when some of the `RasterLayer` objects were in memory, some on disk; `raster::fromDisk` returned `FALSE` in those cases, so `Copy` didn't occur on the file-backed layer files. Using `Filenames` instead to determine if there are any files that need copying.
 
-version 1.2.6
-==============
+reproducible 1.2.6
+===================
 
 ## Enhancements
 * Optional (and may be default soon) -- An update to the internal digesting for file-backed Rasters that should be substantially faster, and smaller disk footprint. Set using `options("reproducible.useNewDigestAlgorithm" = 2)`
@@ -197,20 +196,20 @@ version 1.2.6
 * `RasterStack` objects with a single file (thus acting like a `RasterBrick`) are now handled correctly by `Cache` and `prepInputs` families, especially with new `options("reproducible.useNewDigestAlgorithm" = 2)`, though in tests, it worked with default also
 * `RSQLite` now uses a RNG during `dbAppend`; this affected 2 tests (#185).
 
-version 1.2.4
-==============
+reproducible 1.2.4
+===================
 
 ## Bug fix
 * typo in date
 
-version 1.2.3
-==============
+reproducible 1.2.3
+===================
 
 ## Bug fix
 * minor url fix
 
-version 1.2.2
-==============
+reproducible 1.2.2
+===================
 
 ## New features
 * removed several uses of `rgeos`
@@ -222,8 +221,8 @@ version 1.2.2
 ## Bug fixes
 * several minor
 
-version 1.2.1
-==============
+reproducible 1.2.1
+===================
 
 ## New features
 * harmonized message colours that are use adjustable via options: `reproducible.messageColourPrepInputs` for all `prepInputs` functions;  `reproducible.messageColourCache` for all `Cache` functions; and `reproducible.messageColourQuestion` for questions that require user input. Defaults are `cyan`, `blue` and `green` respectively. These are user-visible colour changes.
@@ -236,8 +235,8 @@ version 1.2.1
 * `RasterStack` objects were not correctly saved to disk under some conditions in `postProcess` - fixed
 * several minor
 
-version 1.2.0
-==============
+reproducible 1.2.0
+===================
 
 ## New features
 * `postProcess` now uses a simpler single call to `gdalwarp`, if available, for `RasterLayer` class to accomplish `cropInputs`, `projectInputs`, `maskInputs`, and `writeOutputs` all at once. This should be faster, simpler and, perhaps, more stable. It will only be invoked if the `RasterLayer` is too large to fit into RAM. To force it to be used the user must set `useGDAL = "force"` in `prepInputs` or `postProcess` or globally with `options("reproducible.useGDAL" = "force")`
@@ -261,8 +260,8 @@ version 1.2.0
 * `Filenames` now consistently returns a character vector (#149)
 * improvements to file-backed Raster caching to accommodate a few more edge cases
 
-version 1.1.1
-==============
+reproducible 1.1.1
+===================
 
 ## New features
 * none
@@ -273,8 +272,8 @@ version 1.1.1
 ## bug fixes
 * fix CRAN test failure when `file.link` does not succeed.
 
-version 1.1.0
-==============
+reproducible 1.1.0
+===================
 
 ## New features
 * begin to accommodate changes in GDAL/PROJ and associated updates to other spatial packages.
@@ -308,8 +307,8 @@ version 1.1.0
 * `prepInputs` does a better job of keeping all temporary files in a temporary folder; and cleans up after itself better.
 * `prepInputs` now will not show message that it is loading object into R if `fun = NULL` (#135).
 
-version 1.0.0
-==============
+reproducible 1.0.0
+===================
 
 ## New features
 
@@ -322,7 +321,8 @@ version 1.0.0
 * Much better SQLite database handling for concurrent write attempts.
   Tested with dozens of write attempts per second by 3 cores with abundant locked database occurrences.
 * `postProcess` arg `useGDAL` can now take `"force"` as the default behaviour is to not use GDAL if the problem can fit into RAM and `sf` or `raster` tools will be faster than `GDAL` tools
-* `useCloud` argument in `Cache` and family has slightly modified functionality (see ?Cache new section `useCloud`) and now has more tests including edge cases, such as `useCloud = TRUE, useCache = 'overwrite'`. The cloud version now will also follow the `"overwrite"` command.
+* `useCloud` argument in `Cache` and family has slightly modified functionality (see ?Cache new section `useCloud`) and now has more tests including edge cases, such as `useCloud = TRUE, useCache = 'overwrite'`.
+  The cloud version now will also follow the `"overwrite"` command.
 
 ## Dependency changes
 
@@ -334,8 +334,8 @@ version 1.0.0
 * `postProcess` calls that use GDAL made more robust (including #93).
 * Several minor, edge cases were detected and fixed.
 
-version 0.2.11
-==============
+reproducible 0.2.11
+===================
 
 ## Dependency changes
 
@@ -350,8 +350,8 @@ version 0.2.11
 
 * Several minor, edge cases were detected and fixed.
 
-version 0.2.10
-==============
+reproducible 0.2.10
+========================
 
 ## Dependency changes
 
@@ -367,7 +367,7 @@ version 0.2.10
 * `pkgDep` was becoming unreliable for unknown reasons. It has been reimplemented, much faster, without memoising. The speed gains should be immediately noticeable (6 second to 0.1 second for `pkgDep("reproducible")`)
 * improved `retry` to use exponential backoff when attempting to access online resources (#121)
 
-version 0.2.9
+reproducible 0.2.9
 =============
 
 ## New features
@@ -384,7 +384,7 @@ version 0.2.9
 * fixes for `rcnst` errors on R-devel, tested using `devtools::check(env_vars = list("R_COMPILE_PKGS"=1, "R_JIT_STRATEGY"=4, "R_CHECK_CONSTANTS"=5))`
 * other minor improvements, including fixes for #115
 
-version 0.2.8
+reproducible 0.2.8
 =============
 
 ## New features
@@ -400,7 +400,7 @@ version 0.2.8
 * `cropInputs` was reprojecting extent of y as a time saving approach, but this was incorrect if `studyArea` is a `SpatialPolygon` that is not close to filling the extent. It now reprojects `studyArea` directly which will be slower, but correct. (#93)
 * other minor improvements
 
-version 0.2.7
+reproducible 0.2.7
 =============
 
 ## New features
@@ -414,7 +414,7 @@ version 0.2.7
 * mostly minor
 * `cloudCache` bugfixes for more cases
 
-version 0.2.6
+reproducible 0.2.6
 =============
 
 ## Dependency changes
@@ -442,7 +442,7 @@ version 0.2.6
 * calling `gdalwarp` from `prostProcess` now correctly matches extent (#73, @tati-micheletti)
 * files from url that have unknown extension are now guessed with by `preProcess` (#92, @tati-micheletti)
 
-version 0.2.5
+reproducible 0.2.5
 =============
 
 ## Dependency changes
@@ -490,12 +490,12 @@ version 0.2.5
 * Additional tests for `preProcess()` (#68, @tati-micheletti)
 * Many new unit tests written, which caught several minor bugs
 
-version 0.2.3
+reproducible 0.2.3
 =============
 
 * fix and skip downloading test on CRAN
 
-version 0.2.2
+reproducible 0.2.2
 =============
 
 ## Dependency changes
@@ -533,7 +533,7 @@ version 0.2.2
 
 - most tests now use a standardized approach to attaching libraries, creating objects, paths, enabling easier, error resistant test building
 
-version 0.2.1
+reproducible 0.2.1
 =============
 
 ## New features
@@ -553,7 +553,7 @@ version 0.2.1
 * `makeMemoisable` fixed to handle additional edge cases.
 * other minor bug fixes.
 
-version 0.2.0
+reproducible 0.2.0
 =============
 
 ## New features
@@ -588,7 +588,7 @@ version 0.2.0
 * experimental pipes (`%>%`, `%C%`) and assign `%<%`
 * several performance enhancements
 
-version 0.1.4
+reproducible 0.1.4
 =============
 
 * `mergeCache`: a new function to merge two different Cache repositories
@@ -611,25 +611,25 @@ version 0.1.4
 * Add `RCurl` to Imports
 * change name of `digestRaster` to `.digestRaster`
 
-version 0.1.3
+reproducible 0.1.3
 =============
 
 * fix R CMD check errors on Solaris that were not previously resolved
 
-version 0.1.2
+reproducible 0.1.2
 =============
 
 * fix R CMD check errors on Solaris
 * fix bug in `digestRaster` affecting in-memory rasters
 * move `rgdal` to Suggests
 
-version 0.1.1
+reproducible 0.1.1
 =============
 
 * cleanup examples and *do* run them (per CRAN)
 * add tests to ensure all exported (non-dot) functions have examples
 
-version 0.1.0
+reproducible 0.1.0
 =============
 
 * A new package, which takes all caching utilities out of the `SpaDES` package.
