@@ -259,7 +259,8 @@ test_that("Filenames for environment", {
 })
 
 test_that("test miscellaneous fns", {
-  testInitOut <- testInit()
+  testInitOut <- testInit(opts = list(datatable.print.class=FALSE))
+
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
