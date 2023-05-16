@@ -259,7 +259,8 @@ test_that("Filenames for environment", {
 })
 
 test_that("test miscellaneous fns", {
-  testInitOut <- testInit()
+  testInitOut <- testInit(opts = list(datatable.print.class=FALSE))
+
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -280,34 +281,20 @@ test_that("test miscellaneous fns", {
 
   out <- capture_messages(messageDF(cbind(a = 1.1232), round = 2))
   expect_true(is.character(out))
-  if (packageVersion("data.table") >= "1.14.9") {
-    expect_identical(length(out), 3L) ## TODO: only passes when run line by line interactively
-  expect_true(is.numeric(as.numeric(gsub("\033.*", "", gsub(".*: ", "", out)[3]))))
-  } else {
-    expect_identical(length(out), 2L) ## TODO: only passes when run line by line interactively
-    expect_true(is.numeric(as.numeric(gsub("\033.*", "", gsub(".*: ", "", out)[2]))) )
-  }
+  expect_identical(length(out), 2L) ## TODO: only passes when run line by line interactively
+  expect_true(is.numeric(as.numeric(gsub("\033.*", "", gsub(".*: ", "", out)[2]))))
 
   out <- capture_messages(messageDF(cbind(a = 1.1232), round = 2, colnames = FALSE))
   expect_true(is.character(out))
-  if (packageVersion("data.table") >= "1.14.9") {
-    expect_identical(length(out), 2L) ## TODO: only passes when run line by line interactively
-    expect_true(is.numeric(as.numeric(gsub("\033.*", "", gsub(".*: ", "", out[2])))))
-  } else {
-    expect_identical(length(out), 1L) ## TODO: only passes when run line by line interactively
-    expect_true(is.numeric(as.numeric(gsub("\033.*", "", gsub(".*: ", "", out[1])))))
-  }
+  expect_identical(length(out), 1L) ## TODO: only passes when run line by line interactively
+
+  expect_true(is.numeric(as.numeric(gsub("\033.*", "", gsub(".*: ", "", out)))))
 
 
   out <- capture_messages(messageDF(1.1232, round = 2, colnames = TRUE))
   expect_true(is.character(out))
-  if (packageVersion("data.table") >= "1.14.9") {
-    expect_identical(length(out), 3L) ## TODO: only passes when run line by line interactively
-    expect_true(is.numeric(as.numeric(gsub("\033.*", "", gsub(".*: ", "", out)[3]))))
-  } else {
-    expect_identical(length(out), 2L) ## TODO: only passes when run line by line interactively
-    expect_true(is.numeric(as.numeric(gsub("\033.*", "", gsub(".*: ", "", out)[2]))))
-  }
+  expect_identical(length(out), 2L) ## TODO: only passes when run line by line interactively
+  expect_true(is.numeric(as.numeric(gsub("\033.*", "", gsub(".*: ", "", out)[2]))))
 })
 
 test_that("test set.randomseed", {
