@@ -457,7 +457,7 @@ test_that("Test of using future and progress indicator for lrg files on Google D
 
   if (interactive()) {
     testInitOut <- testInit(c("raster", "future"), needGoogleDriveAuth = TRUE,
-                            opts = list("reproducible.futurePlan" = "multiprocess"))
+                            opts = list("reproducible.futurePlan" = "multisession"))
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)

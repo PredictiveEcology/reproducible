@@ -846,11 +846,11 @@ Cache <-
           .reproEnv$futureEnv <- new.env(parent = emptyenv())
 
         if (isTRUE(getOption("reproducible.futurePlan"))) {
-          messageCache('options("reproducible.futurePlan") is TRUE. Setting it to "multiprocess".\n',
+          messageCache('options("reproducible.futurePlan") is TRUE. Setting it to "multisession".\n',
                        'Please specify a plan by name, e.g.,\n',
-                       '  options("reproducible.futurePlan" = "multiprocess")',
+                       '  options("reproducible.futurePlan" = "multisession")',
                        verbose = verbose)
-          future::plan("multiprocess", workers = 1)
+          future::plan("multisession", workers = 1)
         } else {
           if (!is(future::plan(), getOption("reproducible.futurePlan"))) {
             thePlan <- getOption("reproducible.futurePlan")
