@@ -293,6 +293,11 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
   }
 }
 
+#' @keywords internal
+isCI <- function() {
+  as.logical(Sys.getenv("CI"))
+}
+
 #' Test whether system is Windows
 #'
 #' This is used so that unit tests can override this using `testthat::with_mock`.
