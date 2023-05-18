@@ -300,7 +300,11 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
 isWindows <- function() identical(.Platform$OS.type, "windows")
 
 #' @keywords internal
-isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
+isMac <- function() {
+  Sys.info()[["sysname"]] |>
+    tolower() |>
+    identical("darwin")
+}
 
 #' Provide standard messaging for missing package dependencies
 #'
