@@ -105,7 +105,7 @@ test_that(
   paste("prepInputs in a two files double nested rar file,",
         "with the wanted file in the second layer, not specifying the targetFile"), {
           skip_on_cran()
-          skip_on_os("mac")
+          # skip_on_os("mac")
 
           testInitOut <- testInit("raster")
           on.exit({
@@ -141,7 +141,7 @@ test_that(
     "prepInputs in a two files double nested rar file, with the wanted file in",
     " the second layer, specifying the targetFile"), {
       skip_on_cran()
-      skip_on_os("mac")
+      # skip_on_os("mac")
       testInitOut <- testInit("raster")
       on.exit({
         testOnExit(testInitOut)
@@ -170,7 +170,7 @@ test_that(
 test_that(paste0("prepInputs in a two files double nested rar file, with the wanted file in",
                  "the second layer, not specifying the targetFile, passing the main archive"), {
                    skip_on_cran()
-                   skip_on_os("mac")
+                   # skip_on_os("mac")
                    testInitOut <- testInit("raster")
                    on.exit({
                      testOnExit(testInitOut)
