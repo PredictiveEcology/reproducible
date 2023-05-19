@@ -302,7 +302,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   if (!is.null(reproducible.inputPaths)) {
     # may already have been changed above
-    if (!file.exists(targetFilePath)) { # skip if it already existed locally
+    outCheck <- if(!is.null(targetFilePath)) {
+      !file.exists(targetFilePath)
+    } else TRUE ## if NULL, it doesn't exist and we want to proceed
+    if (outCheck) { # skip if it already existed locally
       if (is.null(destinationPathUser))
         destinationPathUser <- destinationPath
       on.exit({
