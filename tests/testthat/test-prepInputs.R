@@ -1398,7 +1398,7 @@ test_that("lightweight tests 2 for code coverage", {
 test_that("options inputPaths", {
   skip_on_cran()
   if (!requireNamespace("geodata", quietly = TRUE)) skip("Need geodata package")
-
+  if (getRversion() <= "4.1.3") skip("geodata::gadm seems to time out on R <= 4.1.3")
   testInitOut <- testInit(c("terra", "geodata"),
                           opts = list("reproducible.inputPaths" = NULL,
                                       "reproducible.inputPathsRecursive" = FALSE))
