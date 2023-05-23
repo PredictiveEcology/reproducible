@@ -652,8 +652,6 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
   }
 }
 
-
-
 useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose")) {
   canSwitch <- TRUE
   if (!is.null(set)) {
@@ -661,7 +659,6 @@ useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose")) {
       canSwitch <- .requireNamespace("RSQLite", stopOnFALSE = FALSE)
     if (isTRUE(canSwitch))
       options("reproducible.useDBI" = set)
-
   }
   ud <- getOption("reproducible.useDBI", TRUE)
   if (isTRUE(ud)) {

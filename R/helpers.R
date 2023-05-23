@@ -293,6 +293,11 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
   }
 }
 
+#' @keywords internal
+isCI <- function() {
+  as.logical(Sys.getenv("CI"))
+}
+
 #' Test whether system is Windows
 #'
 #' This is used so that unit tests can override this using `testthat::with_mock`.
@@ -300,7 +305,11 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
 isWindows <- function() identical(.Platform$OS.type, "windows")
 
 #' @keywords internal
-isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
+isMac <- function() {
+  Sys.info()[["sysname"]] |>
+    tolower() |>
+    identical("darwin")
+}
 
 #' Provide standard messaging for missing package dependencies
 #'
@@ -360,6 +369,37 @@ isDirectory <- function(pathnames) {
   names(id) <- origPn
   id
 }
+
+isAbsolutePath <- function(pathnames) {
+  # modified slightly from R.utils::isAbsolutePath
+  keep <- is.character(pathnames)
+  if (isFALSE(keep)) stop("pathnames must be character")
+  nPathnames <- length(pathnames)
+  if (nPathnames == 0L)
+    return(logical(0L))
+  done <- logical(nPathnames)
+  nas <- is.na(pathnames)
+  if (all(nas)) return(!nas)
+
+  tildas <- startsWith(pathnames[!nas], "~")
+  if (any(tildas))
+    done[!nas][tildas] <- TRUE
+
+  if (all(tildas))
+    return(done)
+
+  colon <- regexpr("^.:(/|\\\\)", pathnames[!nas][!tildas])
+  hasColon <- colon != -1L
+  if (any(hasColon))
+    done[!nas][!tildas][hasColon] <- TRUE
+  if (all(hasColon))
+    return(done)
+  curPaths <- pathnames[!nas][!tildas][!hasColon]
+  done[!nas][!tildas][!hasColon] <- startsWith(curPaths, "/") | startsWith(curPaths, "\\")
+  names(done) <- pathnames
+  return(done)
+}
+
 
 isFile <- function(pathnames) {
   keep <- is.character(pathnames)

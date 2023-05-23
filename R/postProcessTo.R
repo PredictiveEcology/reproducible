@@ -1021,6 +1021,10 @@ remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.fr
     if (isTRUE(dots$useSAcrs)) {
       ret$projectTo <- dots$studyArea
     }
+
+    if (isFALSE(dots$useSAcrs)) {
+      ret$projectTo <- NULL
+    }
     # ret <- ret[!vapply(ret, is.null, FUN.VALUE = logical(1))]
     list2env(ret, envir)
   }

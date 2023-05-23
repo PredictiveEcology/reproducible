@@ -88,8 +88,9 @@ Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}. This will cause \c
 Less robust to changes, but faster. \emph{NOTE: this will only affect objects on disk}.
 }
 \item{\code{rasterRead}}{
-Default \code{raster::raster} for backwards compatibility. Used during \code{prepInputs} when reading a
-\code{.tif}, \code{.grd}, and \code{.asc} files. This will eventually become \code{terra::rast}.
+Used during \code{prepInputs} when reading \code{.tif}, \code{.grd}, and \code{.asc} files.
+Default: \code{terra::rast}. Can be \code{raster::raster} for backwards compatibility.
+Can be set using environment variable \code{R_REPRODUCIBLE_RASTER_READ}.
 }
 \item{\code{shapefileRead}}{
 Default \code{NULL}. Used during \code{prepInputs} when reading a \code{.shp} file.
@@ -123,8 +124,9 @@ This, therefore, is most useful if the user is using unique values for \code{use
 Default \code{FALSE}. Passed to \code{Cache}.
 }
 \item{\code{useDBI}}{
-Default: \code{TRUE}. As of version 0.3, the backend is now \pkg{DBI} instead of
-\pkg{archivist}.
+Default: \code{TRUE} if \pkg{DBI} is available.
+Default value can be overridden by setting environment variable \code{R_REPRODUCIBLE_USE_DBI}.
+As of version 0.3, the backend is now \pkg{DBI} instead of \pkg{archivist}.
 }
 \item{\code{useGDAL}}{
 Default \code{TRUE}. Passed to \code{useGDAL}. Deprecated.
@@ -140,10 +142,10 @@ entry from disk).
 \code{clearCache} of any sort will cause all memoising to be 'forgotten' (\code{memoise::forget}).
 }
 \item{\code{useNewDigestAlgorithm}}{
-Default: \code{1}. Option 1 is the version that has existed for sometime. There is now
-and option \code{2} which is substantially faster. It will, however, create
-Caches that are not compatible with previous ones. Options \code{1} and \code{2}
-are not compatible with the earlier \code{0}.
+Default: \code{1}. Option 1 is the version that has existed for sometime.
+There is now an option \code{2} which is substantially faster.
+It will, however, create Caches that are not compatible with previous ones.
+Options \code{1} and \code{2} are not compatible with the earlier \code{0}.
 \code{1} and \code{2} will make \code{Cache} less sensitive to minor but irrelevant changes
 (like changing the order of arguments) and will work successfully across operating systems
 (especially relevant for the new \code{cloudCache} function.

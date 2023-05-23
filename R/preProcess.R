@@ -302,7 +302,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   if (!is.null(reproducible.inputPaths)) {
     # may already have been changed above
-    if (!file.exists(targetFilePath)) { # skip if it already existed locally
+    outCheck <- if(!is.null(targetFilePath)) {
+      !file.exists(targetFilePath)
+    } else TRUE ## if NULL, it doesn't exist and we want to proceed
+    if (outCheck) { # skip if it already existed locally
       if (is.null(destinationPathUser))
         destinationPathUser <- destinationPath
       on.exit({
@@ -630,6 +633,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       if (ie) {
         gf <- assessGoogle(url = url, archive = archive, targetFile = targetFile,
                      destinationPath = destinationPath, verbose = verbose, team_drive = NULL)
+        gf <- makeAbsolute(gf, destinationPath)
       }
     }
     gf
@@ -921,7 +925,8 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
 
       if (any(dirDoesntExist1) || any(dirDoesntExist2)) {
         needCreate <- unique(c(toDirs1[dirDoesntExist1], toDirs2[dirDoesntExist2]))
-        if (any(is.na(needCreate))) browser()
+        if (any(is.na(needCreate)))
+          needCreate <- na.omit(needCreate)
         lapply(needCreate, dir.create, recursive = TRUE)
       }
       isDir <- dir.exists(to)
@@ -960,7 +965,6 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
         messagePrepInputs("Copy of file: ", fromCollapsed, ", was created at: ", toCollapsed, verbose = verbose)
       }
     } else {
-      if (isFALSE(result)) browser()
       messagePrepInputs("File ", fromCollapsed, " does not exist. Not copying.", verbose = verbose)
       result <- FALSE
     }

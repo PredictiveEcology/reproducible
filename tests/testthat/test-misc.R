@@ -51,8 +51,6 @@ test_that("test miscellaneous fns (part 1)", {
   a <- .formalsNotInCurrentDots(rnorm, n = 1, b = 2)
   b <- .formalsNotInCurrentDots(rnorm, dots = list(n = 1, b = 2))
   expect_identical(a,b)
-
-
 })
 
 test_that("objSize and objSizeSession", {
@@ -63,8 +61,6 @@ test_that("objSize and objSizeSession", {
   saveRDS(a, b)
   expect_true(is.numeric(objSize(asPath(b))))
   expect_true(is(objSize(asPath(b)), "lobstr_bytes"))
-
-
 })
 
 test_that("setting options works correctly", {
@@ -259,7 +255,8 @@ test_that("Filenames for environment", {
 })
 
 test_that("test miscellaneous fns", {
-  testInitOut <- testInit()
+  testInitOut <- testInit(opts = list(datatable.print.class=FALSE))
+
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
