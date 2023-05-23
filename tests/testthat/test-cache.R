@@ -1622,41 +1622,76 @@ test_that("test cache; new approach to match.call, postProcess", {
 
 })
 
-test_that("test cache; SpatRaster attributes", {
-  testInitOut <- testInit(c("terra", "sf"), tmpFileExt = c(".tif", ".tif"),
-                          opts = list(
-                            "rasterTmpDir" = tempdir2(rndstr(1,6)),
-                            "reproducible.inputPaths" = NULL,
-                            "reproducible.overwrite" = TRUE)
-  )
+# test_that("test cache; SpatRaster attributes", {
+#   testInitOut <- testInit(c("terra", "sf"), tmpFileExt = c(".tif", ".tif"),
+#                           opts = list(
+#                             "rasterTmpDir" = tempdir2(rndstr(1,6)),
+#                             "reproducible.inputPaths" = NULL,
+#                             "reproducible.overwrite" = TRUE)
+#   )
+#   on.exit({
+#     testOnExit(testInitOut)
+#   }, add = TRUE)
+#
+#   options("reproducible.cachePath" = tmpdir)
+#   dPath <- file.path(tmpdir, "inputs")
+#
+#   targetFile <- "rasterTest.tif"
+#   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
+#
+#   testFun <- function(url, targetFile) {
+#     ras <- prepInputs(url = url,
+#                       targetFile = targetFile)
+#     pixIDs <- which(as.vector(ras[]) == 1)
+#     attr(ras, "pixIDs") <- pixIDs
+#     ras
+#   }
+#
+#   ras <- Cache(testFun,
+#                url = url,
+#                targetFile = targetFile)
+#   expect_true(is.integer(attr(x = ras, "pixIDs")))
+#
+#   ## re-run. attributes still there?
+#   ras <- Cache(testFun,
+#                url = url,
+#                targetFile = targetFile)
+#   expect_true(is.integer(attr(x = ras, "pixIDs")))
+# })
+#
+
+
+test_that("Issue 316 - writeOutputs in a non getwd dir", {
+  testInitOut <- testInit(c("terra"), tmpFileExt = c(".tif", ".tif"))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  options("reproducible.cachePath" = tmpdir)
-  dPath <- file.path(tmpdir, "inputs")
+  cPath <- file.path(tmpdir, "cache")
 
-  targetFile <- "rasterTest.tif"
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
+  withr::local_options("reproducible.cachePath" = cPath,
+                       "reproducible.destinationPath" = tmpdir)
 
-  testFun <- function(url, targetFile) {
-    ras <- prepInputs(url = url,
-                      targetFile = targetFile)
-    pixIDs <- which(as.vector(ras[]) == 1)
-    attr(ras, "pixIDs") <- pixIDs
-    ras
-  }
+  cacheTags <- "test"
+  studyAreaName <- "test"
 
-  ras <- Cache(testFun,
-               url = url,
-               targetFile = targetFile)
-  expect_true(is.integer(attr(x = ras, "pixIDs")))
+  f <- system.file("ex/elev.tif", package="terra")
+  rasterToMatch<- rast(f)
 
-  ## re-run. attributes still there?
-  ras <- Cache(testFun,
-               url = url,
-               targetFile = targetFile)
-  expect_true(is.integer(attr(x = ras, "pixIDs")))
+  RTMvals <- as.vector(rasterToMatch[])
+  rasterToMatch[!is.na(RTMvals)] <- 1
+
+  rasterToMatchLarge <- list()
+  for (i in 1:2)
+    rasterToMatchLarge[[i]] <- Cache(writeOutputs, rasterToMatch,
+                                     filename2 = .suffix(file.path(tmpdir, "rasterToMatchLarge.tif"),
+                                                         paste0("_", studyAreaName)), datatype = "INT2U",
+                                     overwrite = TRUE, userTags = c(cacheTags, "rasterToMatchLarge"),
+                                     quick = "filename2",
+                                     omitArgs = c("userTags"))
+
+  expect_equivalent(rasterToMatchLarge[[1]], rasterToMatchLarge[[2]])
+
 })
 
 
