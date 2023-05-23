@@ -10,6 +10,7 @@ reproducible 2.0.3
 ## Bugfixes
 - `preProcess` failed when `googledrive` url filename could be found, but `destinationPath` was not `"."`
 - `normPath` had different behaviour on *nix-alikes and Windows. Now it is the same.
+- Issue #316 -- `SpatRaster` objects if saved to a specific, non relative (to `getwd()`) path would not be recovered correctly. 
 
 ## Continuous integration
 - Improvements with testing on Github Actions
