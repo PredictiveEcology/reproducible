@@ -31,4 +31,4 @@ No NOTEs, WARNINGs, or ERRORs
 
 ## Downstream dependencies
 
-Currently none, but we are working to resubmit our other packages that depend on this one, and they are passing.
+Currently SpaDES.tools, No conflicts were detected.
