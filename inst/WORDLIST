@@ -33,6 +33,7 @@ OSs
 PROJ
 PostgreSQL
 Postgres
+PredictiveEcology
 R6
 RQSLite
 RSQLite
@@ -89,12 +90,14 @@ gdb
 geo
 geospatial
 getData
+github
 google
 googledrive
 gridded
 hardlink
 hardlinks
 http
+https
 impactful
 keepCache
 knownRelativeFiles
@@ -146,6 +149,7 @@ setReplacement
 sim
 simList
 sqlite
+stackoverflow
 subattributes
 subfolders
 symlink
