@@ -147,7 +147,7 @@ utils::globalVariables(c(
 #' \url{https://github.com/PredictiveEcology/SpaDES/wiki/Using-alternate-database-backends-for-Cache}.
 #'
 #'
-#' @section useCache:
+#' @section `useCache`:
 #' Logical or numeric. If `FALSE` or `0`, then the entire Caching
 #' mechanism is bypassed and the
 #' function is evaluated as if it was not being Cached. Default is
@@ -211,8 +211,17 @@ utils::globalVariables(c(
 #'   be `FALSE` or `TRUE`, respectively) so it can be turned on and off with
 #'   this option. NOTE: *This argument will not be passed into inner/nested Cache calls.*)
 #'
+#' @section Object attributes:
+#' Users should be cautioned that object attributes may not be preserved, especially
+#' in the case of objects that are file-backed, such as `Raster` or `SpatRaster` objects.
+#' If a user needs to keep attributes, they may need to manually re-attach them to
+#' the object after recovery. With the example of `SpatRaster` objects, saving
+#' to disk requires `terra::wrap` if it is a memory-backed object. When running
+#' `terra::unwrap` on this object, any attributes that a user had added are lost.
+#'
 #' @section `sideEffect`:
 #' This feature is now deprecated. Do not use as it is ignored.
+#'
 #'
 #'
 #' @note As indicated above, several objects require pre-treatment before
@@ -759,22 +768,8 @@ Cache <-
         output <- "NULL"
       }
 
-      # browser(expr = identical(outputHash, "aa8b14f8ef51eddb"))
-      .setSubAttrInList(output, ".Cache", "newCache", .CacheIsNew)
-      setattr(output, "tags", paste0("cacheId:", outputHash))
-      setattr(output, "call", "")
-      if (!identical(attr(output, ".Cache")$newCache, .CacheIsNew))
-        stop("attributes are not correct 3")
-      if (!identical(attr(output, "call"), ""))
-        stop("attributes are not correct 4")
-      if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash)))
-        stop("attributes are not correct 5")
+      output <- addCacheAttr(output, .CacheIsNew, outputHash, FUN)
 
-      if (isS4(FUN)) {
-        setattr(output, "function", FUN@generic)
-        if (!identical(attr(output, "function"), FUN@generic))
-          stop("There is an unknown error 03")
-      }
       # Can make new methods by class to add tags to outputs
       if (.CacheIsNew) {
         outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
@@ -2116,3 +2111,22 @@ browserCond <- function(expr) {
 
 spatVectorNamesForCache <- c("x", "type", "atts", "crs")
 
+
+addCacheAttr <- function(output, .CacheIsNew, outputHash, FUN) {
+  .setSubAttrInList(output, ".Cache", "newCache", .CacheIsNew)
+  setattr(output, "tags", paste0("cacheId:", outputHash))
+  setattr(output, "call", "")
+  if (!identical(attr(output, ".Cache")$newCache, .CacheIsNew))
+    stop("attributes are not correct 3")
+  if (!identical(attr(output, "call"), ""))
+    stop("attributes are not correct 4")
+  if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash)))
+    stop("attributes are not correct 5")
+
+  if (isS4(FUN)) {
+    setattr(output, "function", FUN@generic)
+    if (!identical(attr(output, "function"), FUN@generic))
+      stop("There is an unknown error 03")
+  }
+  output
+}
