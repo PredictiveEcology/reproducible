@@ -25,7 +25,7 @@ See Details below."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/aj
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.3</span>
       </span>
     </div>
 
@@ -154,8 +154,9 @@ Should the <code>reproducible.inputPaths</code> be searched recursively for exis
 Less robust to changes, but faster. <em>NOTE: this will only affect objects on disk</em>.</p></dd>
 
 <dt><code>rasterRead</code></dt>
-<dd><p>Default <code><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster::raster</a></code> for backwards compatibility. Used during <code>prepInputs</code> when reading a
-<code>.tif</code>, <code>.grd</code>, and <code>.asc</code> files. This will eventually become <code><a href="https://rdrr.io/pkg/terra/man/rast.html" class="external-link">terra::rast</a></code>.</p></dd>
+<dd><p>Used during <code>prepInputs</code> when reading <code>.tif</code>, <code>.grd</code>, and <code>.asc</code> files.
+Default: <code><a href="https://rdrr.io/pkg/terra/man/rast.html" class="external-link">terra::rast</a></code>. Can be <code><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster::raster</a></code> for backwards compatibility.
+Can be set using environment variable <code>R_REPRODUCIBLE_RASTER_READ</code>.</p></dd>
 
 <dt><code>shapefileRead</code></dt>
 <dd><p>Default <code>NULL</code>. Used during <code>prepInputs</code> when reading a <code>.shp</code> file.
@@ -189,8 +190,9 @@ This, therefore, is most useful if the user is using unique values for <code>use
 <dd><p>Default <code>FALSE</code>. Passed to <code>Cache</code>.</p></dd>
 
 <dt><code>useDBI</code></dt>
-<dd><p>Default: <code>TRUE</code>. As of version 0.3, the backend is now <span class="pkg">DBI</span> instead of
-<span class="pkg">archivist</span>.</p></dd>
+<dd><p>Default: <code>TRUE</code> if <span class="pkg">DBI</span> is available.
+Default value can be overridden by setting environment variable <code>R_REPRODUCIBLE_USE_DBI</code>.
+As of version 0.3, the backend is now <span class="pkg">DBI</span> instead of <span class="pkg">archivist</span>.</p></dd>
 
 <dt><code>useGDAL</code></dt>
 <dd><p>Default <code>TRUE</code>. Passed to <code>useGDAL</code>. Deprecated.</p></dd>
@@ -206,10 +208,10 @@ entry from disk).
 <code>clearCache</code> of any sort will cause all memoising to be 'forgotten' (<code><a href="https://memoise.r-lib.org/reference/forget.html" class="external-link">memoise::forget</a></code>).</p></dd>
 
 <dt><code>useNewDigestAlgorithm</code></dt>
-<dd><p>Default: <code>1</code>. Option 1 is the version that has existed for sometime. There is now
-and option <code>2</code> which is substantially faster. It will, however, create
-Caches that are not compatible with previous ones. Options <code>1</code> and <code>2</code>
-are not compatible with the earlier <code>0</code>.
+<dd><p>Default: <code>1</code>. Option 1 is the version that has existed for sometime.
+There is now an option <code>2</code> which is substantially faster.
+It will, however, create Caches that are not compatible with previous ones.
+Options <code>1</code> and <code>2</code> are not compatible with the earlier <code>0</code>.
 <code>1</code> and <code>2</code> will make <code>Cache</code> less sensitive to minor but irrelevant changes
 (like changing the order of arguments) and will work successfully across operating systems
 (especially relevant for the new <code>cloudCache</code> function.</p></dd>

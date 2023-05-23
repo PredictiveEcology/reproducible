@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.3</span>
       </span>
     </div>
 
@@ -64,7 +64,34 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="2.0.2" id="version-202">Version 2.0.2<small>2023-05-07</small><a class="anchor" aria-label="anchor" href="#version-202"></a></h2>
+<h2 class="page-header" data-toc-text="2.0.3" id="reproducible-203">reproducible 2.0.3<a class="anchor" aria-label="anchor" href="#reproducible-203"></a></h2>
+<p>Known issues: <a href="https://github.com/PredictiveEcology/reproducible/issues" class="external-link uri">https://github.com/PredictiveEcology/reproducible/issues</a></p>
+</div>
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="2.0.3" id="reproducible-203-1">reproducible 2.0.3<a class="anchor" aria-label="anchor" href="#reproducible-203-1"></a></h2>
+<div class="section level3">
+<h3 id="enhancements-2-0-3">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-2-0-3"></a></h3>
+<ul><li>
+<code>reproducible.useFuture</code> now defaults to <code>"multisession"</code>
+</li>
+<li>updated tests to deal with <code>data.table</code> development branch (<a href="https://github.com/PredictiveEcology/reproducible/issues/314" class="external-link">#314</a>)</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bugfixes-2-0-3">Bugfixes<a class="anchor" aria-label="anchor" href="#bugfixes-2-0-3"></a></h3>
+<ul><li>
+<code>preProcess</code> failed when <code>googledrive</code> url filename could be found, but <code>destinationPath</code> was not <code>"."</code>
+</li>
+<li>
+<code>normPath</code> had different behaviour on *nix-alikes and Windows. Now it is the same.</li>
+<li>Issue <a href="https://github.com/PredictiveEcology/reproducible/issues/316" class="external-link">#316</a> – <code>SpatRaster</code> objects if saved to a specific, non relative (to <code><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd()</a></code>) path would not be recovered correctly.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="continuous-integration-2-0-3">Continuous integration<a class="anchor" aria-label="anchor" href="#continuous-integration-2-0-3"></a></h3>
+<ul><li>Improvements with testing on GitHub Actions</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="2.0.2" id="reproducible-202">reproducible 2.0.2<small>2023-05-07</small><a class="anchor" aria-label="anchor" href="#reproducible-202"></a></h2>
 <div class="section level3">
 <h3 id="enhancements-2-0-2">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-2-0-2"></a></h3>
 <ul><li>new optional backend for <code>Cache</code> via <code>options(reproducible.useDBI = FALSE)</code> is single data files with the same <code>basename</code> as the cached object, i.e., with the same <code>cacheId</code> in the file name. This is a replacement for <code>RSQLite</code> and will likely become the default in the next release. This approach makes cloud caching easier as all metadata are available in small binary files for each cached object. This is simpler, faster and creates far fewer package dependencies (now 11 recursive; before 27 recursive). If a user has DBI and RSQLite installed, then the backend will default to use these currently, i.e., the previous behaviour. The user can change the backend without loss of Cache data.</li>
@@ -150,7 +177,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.2.16" id="version-1216">Version 1.2.16<small>2022-12-22</small><a class="anchor" aria-label="anchor" href="#version-1216"></a></h2>
+<h2 class="page-header" data-toc-text="1.2.16" id="reproducible-1216">reproducible 1.2.16<small>2022-12-22</small><a class="anchor" aria-label="anchor" href="#reproducible-1216"></a></h2>
 <div class="section level3">
 <h3 id="dependency-changes-1-2-16">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-1-2-16"></a></h3>
 <ul><li>none</li>
@@ -187,7 +214,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.2.11" id="version-1211">Version 1.2.11<small>2022-11-09</small><a class="anchor" aria-label="anchor" href="#version-1211"></a></h2>
+<h2 class="page-header" data-toc-text="1.2.11" id="reproducible-1211">reproducible 1.2.11<small>2022-11-09</small><a class="anchor" aria-label="anchor" href="#reproducible-1211"></a></h2>
 <div class="section level3">
 <h3 id="dependency-changes-1-2-11">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-1-2-11"></a></h3>
 <ul><li>none</li>
@@ -203,7 +230,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.2.10" id="version-1210">Version 1.2.10<small>2022-08-17</small><a class="anchor" aria-label="anchor" href="#version-1210"></a></h2>
+<h2 class="page-header" data-toc-text="1.2.10" id="reproducible-1210">reproducible 1.2.10<small>2022-08-17</small><a class="anchor" aria-label="anchor" href="#reproducible-1210"></a></h2>
 <div class="section level3">
 <h3 id="dependency-changes-1-2-10">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-1-2-10"></a></h3>
 <ul><li>Drop support for R 3.6 (<a href="https://github.com/PredictiveEcology/reproducible/issues/230" class="external-link">#230</a>)</li>
@@ -242,7 +269,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.2.8" id="version-128">Version 1.2.8<small>2021-09-26</small><a class="anchor" aria-label="anchor" href="#version-128"></a></h2>
+<h2 class="page-header" data-toc-text="1.2.8" id="reproducible-128">reproducible 1.2.8<small>2021-09-26</small><a class="anchor" aria-label="anchor" href="#reproducible-128"></a></h2>
 <div class="section level3">
 <h3 id="dependency-changes-1-2-8">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-1-2-8"></a></h3>
 <ul><li>
@@ -267,7 +294,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.2.7" id="version-127">Version 1.2.7<small>2021-05-28</small><a class="anchor" aria-label="anchor" href="#version-127"></a></h2>
+<h2 class="page-header" data-toc-text="1.2.7" id="reproducible-127">reproducible 1.2.7<small>2021-05-28</small><a class="anchor" aria-label="anchor" href="#reproducible-127"></a></h2>
 <p><code>reproducible</code> will be slowly changing the defaults for vector GIS datasets from the <code>sp</code> package to the <code>sf</code> package. There is a large user-visible change that will come (in the next release), which will cause <code>prepInputs</code> to read <code>.shp</code> files with <code><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">sf::st_read</a></code> instead of <code><a href="https://rdrr.io/pkg/raster/man/shapefile.html" class="external-link">raster::shapefile</a></code>, as it is much faster. To change now, set <code>options("reproducible.shapefileRead" = "sf::st_read")</code></p>
 <div class="section level3">
 <h3 id="enhancements-1-2-7">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-1-2-7"></a></h3>
@@ -320,7 +347,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.2.6" id="version-126">version 1.2.6<small>2021-02-17</small><a class="anchor" aria-label="anchor" href="#version-126"></a></h2>
+<h2 class="page-header" data-toc-text="1.2.6" id="reproducible-126">reproducible 1.2.6<small>2021-02-17</small><a class="anchor" aria-label="anchor" href="#reproducible-126"></a></h2>
 <div class="section level3">
 <h3 id="enhancements-1-2-6">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-1-2-6"></a></h3>
 <ul><li>Optional (and may be default soon) – An update to the internal digesting for file-backed Rasters that should be substantially faster, and smaller disk footprint. Set using <code>options("reproducible.useNewDigestAlgorithm" = 2)</code>
@@ -337,21 +364,21 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.2.4" id="version-124">version 1.2.4<small>2020-12-07</small><a class="anchor" aria-label="anchor" href="#version-124"></a></h2>
+<h2 class="page-header" data-toc-text="1.2.4" id="reproducible-124">reproducible 1.2.4<small>2020-12-07</small><a class="anchor" aria-label="anchor" href="#reproducible-124"></a></h2>
 <div class="section level3">
 <h3 id="bug-fix-1-2-4">Bug fix<a class="anchor" aria-label="anchor" href="#bug-fix-1-2-4"></a></h3>
 <ul><li>typo in date</li>
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.2.3" id="version-123">version 1.2.3<a class="anchor" aria-label="anchor" href="#version-123"></a></h2>
+<h2 class="page-header" data-toc-text="1.2.3" id="reproducible-123">reproducible 1.2.3<a class="anchor" aria-label="anchor" href="#reproducible-123"></a></h2>
 <div class="section level3">
 <h3 id="bug-fix-1-2-3">Bug fix<a class="anchor" aria-label="anchor" href="#bug-fix-1-2-3"></a></h3>
 <ul><li>minor url fix</li>
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.2.2" id="version-122">version 1.2.2<a class="anchor" aria-label="anchor" href="#version-122"></a></h2>
+<h2 class="page-header" data-toc-text="1.2.2" id="reproducible-122">reproducible 1.2.2<a class="anchor" aria-label="anchor" href="#reproducible-122"></a></h2>
 <div class="section level3">
 <h3 id="new-features-1-2-2">New features<a class="anchor" aria-label="anchor" href="#new-features-1-2-2"></a></h3>
 <ul><li>removed several uses of <code>rgeos</code>
@@ -366,7 +393,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.2.1" id="version-121">version 1.2.1<small>2020-08-18</small><a class="anchor" aria-label="anchor" href="#version-121"></a></h2>
+<h2 class="page-header" data-toc-text="1.2.1" id="reproducible-121">reproducible 1.2.1<small>2020-08-18</small><a class="anchor" aria-label="anchor" href="#reproducible-121"></a></h2>
 <div class="section level3">
 <h3 id="new-features-1-2-1">New features<a class="anchor" aria-label="anchor" href="#new-features-1-2-1"></a></h3>
 <ul><li>harmonized message colours that are use adjustable via options: <code>reproducible.messageColourPrepInputs</code> for all <code>prepInputs</code> functions; <code>reproducible.messageColourCache</code> for all <code>Cache</code> functions; and <code>reproducible.messageColourQuestion</code> for questions that require user input. Defaults are <code>cyan</code>, <code>blue</code> and <code>green</code> respectively. These are user-visible colour changes.</li>
@@ -385,7 +412,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.2.0" id="version-120">version 1.2.0<small>2020-08-03</small><a class="anchor" aria-label="anchor" href="#version-120"></a></h2>
+<h2 class="page-header" data-toc-text="1.2.0" id="reproducible-120">reproducible 1.2.0<small>2020-08-03</small><a class="anchor" aria-label="anchor" href="#reproducible-120"></a></h2>
 <div class="section level3">
 <h3 id="new-features-1-2-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-2-0"></a></h3>
 <ul><li>
@@ -423,7 +450,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.1.1" id="version-111">version 1.1.1<small>2020-05-20</small><a class="anchor" aria-label="anchor" href="#version-111"></a></h2>
+<h2 class="page-header" data-toc-text="1.1.1" id="reproducible-111">reproducible 1.1.1<small>2020-05-20</small><a class="anchor" aria-label="anchor" href="#reproducible-111"></a></h2>
 <div class="section level3">
 <h3 id="new-features-1-1-1">New features<a class="anchor" aria-label="anchor" href="#new-features-1-1-1"></a></h3>
 <ul><li>none</li>
@@ -438,7 +465,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.1.0" id="version-110">version 1.1.0<small>2020-05-15</small><a class="anchor" aria-label="anchor" href="#version-110"></a></h2>
+<h2 class="page-header" data-toc-text="1.1.0" id="reproducible-110">reproducible 1.1.0<small>2020-05-15</small><a class="anchor" aria-label="anchor" href="#reproducible-110"></a></h2>
 <div class="section level3">
 <h3 id="new-features-1-1-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-1-0"></a></h3>
 <ul><li>begin to accommodate changes in GDAL/PROJ and associated updates to other spatial packages. More updates are expected as other spatial packages (namely <code>raster</code>) are updated.</li>
@@ -479,7 +506,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.0.0" id="version-100">version 1.0.0<small>2020-02-20</small><a class="anchor" aria-label="anchor" href="#version-100"></a></h2>
+<h2 class="page-header" data-toc-text="1.0.0" id="reproducible-100">reproducible 1.0.0<small>2020-02-20</small><a class="anchor" aria-label="anchor" href="#reproducible-100"></a></h2>
 <div class="section level3">
 <h3 id="new-features-1-0-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-0-0"></a></h3>
 <ul><li>This version is not backwards-compatible out of the box. To maintain backwards compatibility, set: <code>options("reproducible.useDBI" = FALSE)</code>
@@ -507,7 +534,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.2.11" id="version-0211">version 0.2.11<small>2019-11-19</small><a class="anchor" aria-label="anchor" href="#version-0211"></a></h2>
+<h2 class="page-header" data-toc-text="0.2.11" id="reproducible-0211">reproducible 0.2.11<small>2019-11-19</small><a class="anchor" aria-label="anchor" href="#reproducible-0211"></a></h2>
 <div class="section level3">
 <h3 id="dependency-changes-0-2-11">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-0-2-11"></a></h3>
 <ul><li>remove <code>dplyr</code> as a direct dependency. It is still an indirect dependency through <code>DiagrammeR</code>
@@ -524,7 +551,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.2.10" id="version-0210">version 0.2.10<small>2019-09-11</small><a class="anchor" aria-label="anchor" href="#version-0210"></a></h2>
+<h2 class="page-header" data-toc-text="0.2.10" id="reproducible-0210">reproducible 0.2.10<small>2019-09-11</small><a class="anchor" aria-label="anchor" href="#reproducible-0210"></a></h2>
 <div class="section level3">
 <h3 id="dependency-changes-0-2-10">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-0-2-10"></a></h3>
 <ul><li>made compatible with <code>googledrive</code> v 1.0.0 (<a href="https://github.com/PredictiveEcology/reproducible/issues/119" class="external-link">#119</a>)</li>
@@ -545,7 +572,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.2.9" id="version-029">version 0.2.9<small>2019-07-09</small><a class="anchor" aria-label="anchor" href="#version-029"></a></h2>
+<h2 class="page-header" data-toc-text="0.2.9" id="reproducible-029">reproducible 0.2.9<small>2019-07-09</small><a class="anchor" aria-label="anchor" href="#reproducible-029"></a></h2>
 <div class="section level3">
 <h3 id="new-features-0-2-9">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-9"></a></h3>
 <ul><li>Cache has 2 new arguments, <code>useCloud</code> and <code>cloudFolderID</code>. This is a new approach to cloud caching. It has been tested with file backed <code>RasterLayer</code>, <code>RasterStack</code> and <code>RasterBrick</code> and all normal R objects. It will not work for any other class of disk-backed files, e.g., <code>ff</code> or <code>bigmatrix</code>, nor is it likely to work for R6 class objects.</li>
@@ -562,7 +589,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.2.8" id="version-028">version 0.2.8<small>2019-03-18</small><a class="anchor" aria-label="anchor" href="#version-028"></a></h2>
+<h2 class="page-header" data-toc-text="0.2.8" id="reproducible-028">reproducible 0.2.8<small>2019-03-18</small><a class="anchor" aria-label="anchor" href="#reproducible-028"></a></h2>
 <div class="section level3">
 <h3 id="new-features-0-2-8">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-8"></a></h3>
 <ul><li>new functions for accessing specific items from the <code>cacheRepo</code>: <code>getArtifact</code>, <code>getCacheId</code>, <code>getUserTags</code>
@@ -582,7 +609,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.2.7" id="version-027">version 0.2.7<small>2019-03-07</small><a class="anchor" aria-label="anchor" href="#version-027"></a></h2>
+<h2 class="page-header" data-toc-text="0.2.7" id="reproducible-027">reproducible 0.2.7<small>2019-03-07</small><a class="anchor" aria-label="anchor" href="#reproducible-027"></a></h2>
 <div class="section level3">
 <h3 id="new-features-0-2-7">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-7"></a></h3>
 <ul><li>
@@ -600,7 +627,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.2.6" id="version-026">version 0.2.6<small>2019-02-01</small><a class="anchor" aria-label="anchor" href="#version-026"></a></h2>
+<h2 class="page-header" data-toc-text="0.2.6" id="reproducible-026">reproducible 0.2.6<small>2019-02-01</small><a class="anchor" aria-label="anchor" href="#reproducible-026"></a></h2>
 <div class="section level3">
 <h3 id="dependency-changes-0-2-6">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-0-2-6"></a></h3>
 <ul><li>remove <code>tibble</code> from Imports as it’s no longer being used</li>
@@ -634,7 +661,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.2.5" id="version-025">version 0.2.5<small>2018-11-16</small><a class="anchor" aria-label="anchor" href="#version-025"></a></h2>
+<h2 class="page-header" data-toc-text="0.2.5" id="reproducible-025">reproducible 0.2.5<small>2018-11-16</small><a class="anchor" aria-label="anchor" href="#reproducible-025"></a></h2>
 <div class="section level3">
 <h3 id="dependency-changes-0-2-5">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-0-2-5"></a></h3>
 <ul><li>Added <code>remotes</code> to Imports and removed <code>devtools</code>
@@ -676,11 +703,11 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.2.3" id="version-023">version 0.2.3<small>2018-08-07</small><a class="anchor" aria-label="anchor" href="#version-023"></a></h2>
+<h2 class="page-header" data-toc-text="0.2.3" id="reproducible-023">reproducible 0.2.3<small>2018-08-07</small><a class="anchor" aria-label="anchor" href="#reproducible-023"></a></h2>
 <ul><li>fix and skip downloading test on CRAN</li>
 </ul></div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.2.2" id="version-022">version 0.2.2<small>2018-08-01</small><a class="anchor" aria-label="anchor" href="#version-022"></a></h2>
+<h2 class="page-header" data-toc-text="0.2.2" id="reproducible-022">reproducible 0.2.2<small>2018-08-01</small><a class="anchor" aria-label="anchor" href="#reproducible-022"></a></h2>
 <div class="section level3">
 <h3 id="dependency-changes-0-2-2">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-0-2-2"></a></h3>
 <ul><li>Add <code>future</code> to Suggests.</li>
@@ -731,7 +758,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.2.1" id="version-021">version 0.2.1<small>2018-07-07</small><a class="anchor" aria-label="anchor" href="#version-021"></a></h2>
+<h2 class="page-header" data-toc-text="0.2.1" id="reproducible-021">reproducible 0.2.1<small>2018-07-07</small><a class="anchor" aria-label="anchor" href="#reproducible-021"></a></h2>
 <div class="section level3">
 <h3 id="new-features-0-2-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-1"></a></h3>
 <ul><li>
@@ -756,7 +783,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.2.0" id="version-020">version 0.2.0<small>2018-06-17</small><a class="anchor" aria-label="anchor" href="#version-020"></a></h2>
+<h2 class="page-header" data-toc-text="0.2.0" id="reproducible-020">reproducible 0.2.0<small>2018-06-17</small><a class="anchor" aria-label="anchor" href="#reproducible-020"></a></h2>
 <div class="section level3">
 <h3 id="new-features-0-2-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-0"></a></h3>
 <ul><li>
@@ -800,7 +827,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.1.4" id="version-014">version 0.1.4<small>2018-01-25</small><a class="anchor" aria-label="anchor" href="#version-014"></a></h2>
+<h2 class="page-header" data-toc-text="0.1.4" id="reproducible-014">reproducible 0.1.4<small>2018-01-25</small><a class="anchor" aria-label="anchor" href="#reproducible-014"></a></h2>
 <ul><li><p><code>mergeCache</code>: a new function to merge two different Cache repositories</p></li>
 <li><p><code><a href="https://memoise.r-lib.org/reference/memoise.html" class="external-link">memoise::memoise</a></code> is now used on <code>loadFromLocalRepo</code>, meaning that the 3rd time <code><a href="../reference/Cache.html">Cache()</a></code> is run on the same arguments (and the 2nd time in a session), the returned Cache will be from a RAM object via memoise. To stop this behaviour and use only disk-based Caching, set <code>options(reproducible.useMemoise = FALSE)</code> .</p></li>
 <li><p>Cache assign – <code>%&lt;%</code> can be used instead of normal assign, equivalent to <code>lhs &lt;- Cache(rhs)</code>.</p></li>
@@ -822,22 +849,22 @@
 <li><p>change name of <code>digestRaster</code> to <code>.digestRaster</code></p></li>
 </ul></div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.1.3" id="version-013">version 0.1.3<small>2017-08-10</small><a class="anchor" aria-label="anchor" href="#version-013"></a></h2>
+<h2 class="page-header" data-toc-text="0.1.3" id="reproducible-013">reproducible 0.1.3<small>2017-08-10</small><a class="anchor" aria-label="anchor" href="#reproducible-013"></a></h2>
 <ul><li>fix R CMD check errors on Solaris that were not previously resolved</li>
 </ul></div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.1.2" id="version-012">version 0.1.2<small>2017-08-09</small><a class="anchor" aria-label="anchor" href="#version-012"></a></h2>
+<h2 class="page-header" data-toc-text="0.1.2" id="reproducible-012">reproducible 0.1.2<small>2017-08-09</small><a class="anchor" aria-label="anchor" href="#reproducible-012"></a></h2>
 <ul><li>fix R CMD check errors on Solaris</li>
 <li>fix bug in <code>digestRaster</code> affecting in-memory rasters</li>
 <li>move <code>rgdal</code> to Suggests</li>
 </ul></div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.1.1" id="version-011">version 0.1.1<small>2017-08-05</small><a class="anchor" aria-label="anchor" href="#version-011"></a></h2>
+<h2 class="page-header" data-toc-text="0.1.1" id="reproducible-011">reproducible 0.1.1<small>2017-08-05</small><a class="anchor" aria-label="anchor" href="#reproducible-011"></a></h2>
 <ul><li>cleanup examples and <em>do</em> run them (per CRAN)</li>
 <li>add tests to ensure all exported (non-dot) functions have examples</li>
 </ul></div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.1.0" id="version-010">version 0.1.0<a class="anchor" aria-label="anchor" href="#version-010"></a></h2>
+<h2 class="page-header" data-toc-text="0.1.0" id="reproducible-010">reproducible 0.1.0<a class="anchor" aria-label="anchor" href="#reproducible-010"></a></h2>
 <ul><li>A new package, which takes all caching utilities out of the <code>SpaDES</code> package.</li>
 </ul></div>
   </div>
