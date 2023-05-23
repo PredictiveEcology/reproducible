@@ -470,8 +470,9 @@ extractFromArchive <- function(archive,
                                     checkSums = checkSums,
                                     checkSumFilePath = checkSumFilePath)
 
+      # isOK will have "directories" so it will be longer than neededFiles
       isOK <- if (!is.null(checkSums)) {
-        .compareChecksumsAndFiles(checkSums, neededFiles, destinationPath)
+        .compareChecksumsAndFilesAddDirs(checkSums, neededFiles, destinationPath)
       } else {
         FALSE
       }
@@ -489,6 +490,7 @@ extractFromArchive <- function(archive,
                                                     absolutePrefix = destinationPath,
                                             files = basename2(archive[2]), .tempPath = .tempPath))
           # recursion, removing one archive
+          browser()
           extractedObjs <- extractFromArchive(
             archive[-1],
             destinationPath = destinationPath,
@@ -507,7 +509,10 @@ extractFromArchive <- function(archive,
           if (sum(possibleFolders)) {
             filesInArchive <- setdiff(filesInArchive, possibleFolders)
           }
-          neededFilesRel <- makeRelative(neededFiles[!isOK], destinationPath)
+          neededFilesRel <- if (!is.null(names(isOK)))
+            names(isOK)[!isOK]
+          else
+            makeRelative(neededFiles[!isOK], destinationPath)
           filesToExtractNow <- intersect(filesInArchive, neededFilesRel)
           dt <- data.table(files = filesToExtractNow)
           # extractingTheseFiles <- paste(filesToExtractNow, collapse = "\n")
@@ -538,6 +543,7 @@ extractFromArchive <- function(archive,
                                                       .tempPath = .tempPath))
             filesExtracted <- unique(filesExtracted) # maybe unnecessary
 
+            browser()
             prevExtract <- lapply(makeAbsolute(arch, destinationPath), function(ap)
               extractFromArchive(archive = ap, destinationPath = destinationPath,
                                  neededFiles = neededFiles,
@@ -1038,7 +1044,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   return(filesInArchive)
 }
 
-.compareChecksumsAndFiles <- function(checkSums, files, destinationPath) {
+.compareChecksumsAndFilesAddDirs <- function(checkSums, files, destinationPath) {
   isOK <- NULL
   if (!is.null(files)) {
     checkSumsDT <- data.table(checkSums)
@@ -1052,7 +1058,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     # fill in any OKs from "actualFile" intot he isOKDT
     isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
     isOK <- compareNA(isOKDT$result, "OK")
-    names(isOK) <- makeRelative(files, destinationPath)
+    names(isOK) <- makeRelative(filesDT$files, destinationPath)
   }
   isOK
 }
