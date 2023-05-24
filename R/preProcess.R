@@ -174,11 +174,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         archive <- as.character(archive)
       }
   targetFileGuess <- NULL
-  if (is.null(targetFile)) {
+  if (is.null(targetFile) || is.null(archive)) {
     targetFileGuess <- .guessAtFile(url = url, archive = archive, targetFile = targetFile,
                                     destinationPath = destinationPath, verbose = verbose,
                                     team_drive = teamDrive)
-    archive <- updateArchiveWithGuess(archive, targetFileGuess)
+    if (is.null(archive))
+      archive <- .isArchive(targetFileGuess)
   }
 
   if (is.logical(alsoExtract))
