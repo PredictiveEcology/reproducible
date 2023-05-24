@@ -1474,8 +1474,9 @@ dealWithArchive <- function(archive, url, targetFile, checkSums, alsoExtract, de
 
 isNULLorNA <- function(x) {
   out <- TRUE
-  if (!is.null(x))
-    if (!is.na(x))
+  if (!is.null(x)) {
+    if (!isTRUE(is.na(x)))
       out <- FALSE
+  }
   out
 }
