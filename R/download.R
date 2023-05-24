@@ -45,7 +45,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
         if (any(localArchivesExist)) {
           filesInLocalArchives <- unique(unlist(lapply(archive, .listFilesInArchive)))
           neededFilesRel <- makeRelative(neededFiles, destinationPath)
-          if (all(neededFilesRel %in% filesInLocalArchives)) { # local archive has all files needed
+          haveAll <- if (isNULLorNA(neededFiles)) FALSE else all(neededFilesRel %in% filesInLocalArchives)
+          if (haveAll) { # local archive has all files needed
             extractedFromArchive <- extractFromArchive(archive = archive[localArchivesExist],
                                                        destinationPath = destinationPath,
                                                        neededFiles = neededFiles, checkSums = checkSums,

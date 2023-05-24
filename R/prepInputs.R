@@ -441,8 +441,9 @@ extractFromArchive <- function(archive,
   }
   extractedObjs <- list(filesExtracted = character())
   # needs to pass checkSums & have all neededFiles files
+  neededFilesRel <- makeRelative(neededFiles, destinationPath)
   hasAllFiles <- if (NROW(checkSums)) {
-    all(makeRelative(neededFiles, destinationPath) %in% checkSums$expectedFile) # need basename2 for comparison with checkSums
+    all(neededFilesRel %in% checkSums$expectedFile) # need basename2 for comparison with checkSums
   } else {
     FALSE
   }
@@ -459,11 +460,14 @@ extractFromArchive <- function(archive,
       filesInArchive <- makeRelative(.listFilesInArchive(archive), destinationPath)
       if (is.null(neededFiles)) {
         neededFiles <- filesInArchive
-        result <- checkSums[checkSums$expectedFile %in% makeRelative(neededFiles, destinationPath), ]$result
       }
 
-      neededFiles <- checkRelative(neededFiles, destinationPath, filesInArchive)
+      neededFiles <- checkRelative(neededFiles, absolutePrefix = destinationPath, filesInArchive)
       neededFiles <- makeAbsolute(neededFiles, destinationPath)
+      result <- if (NROW(checkSums))
+        checkSums[checkSums$expectedFile %in% neededFilesRel, ]$result
+      else
+        logical(0)
       # need to re-Checksums because
       checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
                                     newFilesToCheck = neededFiles,

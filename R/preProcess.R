@@ -317,8 +317,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         neededFilesNew <- makeRelative(neededFiles, destinationPath)
         targetFilePathNew <- makeRelative(targetFilePath, destinationPath)
         destinationPathNew <- reproducible.inputPaths[1]
-        archiveExistInDestDir <- if (!isNULLorNA(archive)) file.exists(archive) else FALSE
-        existInDestDir <- file.exists(neededFiles)
+        archiveExistInDestDir <- if (!isNULLorNA(archive))
+          file.exists(archive) else FALSE
+        existInDestDir <- if (!isNULLorNA(neededFiles))
+          file.exists(neededFiles) else FALSE
         if (any(existInDestDir)) {
           linkOrCopy(neededFiles[existInDestDir],
                      makeAbsolute(neededFilesNew[existInDestDir],
@@ -924,10 +926,10 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       from <- c(from[existsTo][!existsToSame], from[!existsTo])
     }
   }
-  toCollapsed <- paste(to, collapse = ", ")
-  fromCollapsed <- paste(from, collapse = ", ")
+  toCollapsed <- paste(to, collapse = "\n")
+  fromCollapsed <- paste(from, collapse = "\n")
   result <- TRUE
-  if (!all(toCollapsed %in% fromCollapsed)) {
+  if (!all(to %in% from)) {
     if (any(existsLogical)) {
 
       toDirs1 <- unique(dirname(to))
@@ -958,8 +960,9 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       attr(result, "warning") <- NULL
 
       if (isTRUE(all(result))) {
-        messagePrepInputs(hardlinkMessagePrefix, ": ", toCollapsed, ", ",whPointsToMess," "
-                          , fromCollapsed, "; no copy was made.", verbose = verbose)
+        messagePrepInputs(hardlinkMessagePrefix, ":\n", toCollapsed, "\n",
+                          whPointsToMess,"\n"
+                          , fromCollapsed, "\n... no copy/copies made.", verbose = verbose)
       }
 
       if (any(grepl("file already exists", warns))) {
