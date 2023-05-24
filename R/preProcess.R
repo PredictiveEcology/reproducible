@@ -201,7 +201,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   needChecksums <- 0
 
   archive <- setupArchive(archive, destinationPath)
-  filesToCheck <- unique(c(archive, targetFilePath, alsoExtract))
+  filesToCheck <- na.omit(unique(c(archive, targetFilePath, alsoExtract)))
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
   #   want if targetFile, archive, alsoExtract not specified
@@ -990,7 +990,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
             add = TRUE)
   }
   alsoExtract <- grep("none$", alsoExtract, value = TRUE, invert = TRUE) # remove "none" from neededFiles; for extracting
-  neededFiles <- c(neededFiles, if (!is.null(alsoExtract) && !is.na(alsoExtract)) alsoExtract)
+  neededFiles <- c(neededFiles, if (!isNULLorNA(alsoExtract)) alsoExtract)
   neededFiles <- setdiff(neededFiles, "similar") # remove "similar" from neededFiles; for extracting
   neededFiles <- unique(makeAbsolute(neededFiles, destinationPath)) # unique is b/c neededFiles was absolute and alsoExtract was rel
   alsoExtract <- makeAbsolute(alsoExtract, destinationPath)
@@ -1008,8 +1008,8 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
                                              .tempPath = .tempPath)
         neededFiles <- filesExtracted$neededFiles # will have been potentially corrected if user supplied incorrect relative paths
 
-        targetFilePath <- checkRelative(targetFilePath, destinationPath, neededFiles)
-        filesToChecksum <- checkRelative(filesToChecksum, destinationPath, neededFiles)
+        targetFilePath <- checkRelative(targetFilePath, destinationPath, neededFiles, verbose = verbose - 1)
+        filesToChecksum <- checkRelative(filesToChecksum, destinationPath, neededFiles, verbose = verbose - 1)
 
         checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
                                       newFilesToCheck = filesExtracted$filesExtracted,
@@ -1278,7 +1278,8 @@ makeRelative <- function(files, absoluteBase) {
 #'   to `knownRelativeFiles`
 #' @param knownRelativeFiles A character vector of relative filenames, that could
 #'   have sub-folder structure.
-checkRelative <- function(files, absolutePrefix, knownRelativeFiles) {
+checkRelative <- function(files, absolutePrefix, knownRelativeFiles,
+                          verbose = getOption("reproducible.verbose")) {
   if (!is.null(knownRelativeFiles)) {
     neededFilesRel <- makeRelative(files, absolutePrefix)
     areAbs <- isAbsolutePath(knownRelativeFiles)
@@ -1301,7 +1302,8 @@ checkRelative <- function(files, absolutePrefix, knownRelativeFiles) {
         messagePrepInputs("User supplied files don't correctly specify the ",
                           "files in the archive (likely because of sub-folders); \n",
                           "using items in archive with same basenames. Renaming to these: \n",
-                          paste(makeRelative(files[needUpdateRelNames], absoluteBase = absolutePrefix), collapse = "\n")
+                          paste(makeRelative(files[needUpdateRelNames], absoluteBase = absolutePrefix), collapse = "\n"),
+                          verbose = verbose
         )
       }
     }
@@ -1467,4 +1469,13 @@ dealWithArchive <- function(archive, url, targetFile, checkSums, alsoExtract, de
   list(checkSums = checkSums,
        archive = archive,
        fileGuess = fileGuess)
+}
+
+
+isNULLorNA <- function(x) {
+  out <- TRUE
+  if (!is.null(x))
+    if (!is.na(x))
+      out <- FALSE
+  out
 }
