@@ -553,8 +553,8 @@ test_that("large test for nested file structures in zips", {
 
 test_that("more nested file structures in zip; alsoExtract NA", {
   skip_on_cran()
-  tmpdir2 <- withr::local_tempdir()
-  withr::local_dir(tmpdir2)
+  tmpdir <- withr::local_tempdir()
+  withr::local_dir(tmpdir)
   zipName <- "ex.zip"
   system.time({
     ras <- lapply(1:2, function(x) {
