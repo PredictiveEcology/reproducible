@@ -972,6 +972,7 @@ test_that("test rm large non-file-backed rasters", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
+  skip_if_not_installed("qs")
   opts11 <- options("reproducible.cacheSpeed" = "fast",
                     "reproducible.cacheSaveFormat" = "qs")
   on.exit(options(opts11), add = TRUE)
@@ -1549,6 +1550,7 @@ test_that("test cache with new approach to match.call", {
 })
 
 test_that("test cache; new approach to match.call, postProcess", {
+  skip_if_not_installed("DBI") # sf needs DBI
   testInitOut <- testInit(c("terra", "sf"), tmpFileExt = c(".tif", ".tif"),
                           opts = list(
                             "rasterTmpDir" = tempdir2(rndstr(1,6)),

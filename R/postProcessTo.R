@@ -336,7 +336,8 @@ maskTo <- function(from, maskTo, # touches = FALSE,
         if (is.na(maskTo) || isCRSANY(maskTo)) omit <- TRUE
 
       if (!omit) {
-        .requireNamespace("sf", stopOnFALSE = TRUE)
+        if (isSF(from) || isSF(projectTo))
+          .requireNamespace("sf", stopOnFALSE = TRUE)
         if (isSpatial(from)) {
           from <- sf::st_as_sf(from)
         }
@@ -358,7 +359,13 @@ maskTo <- function(from, maskTo, # touches = FALSE,
           }
         }
 
-        if (!sf::st_crs(from) == sf::st_crs(maskTo)) {
+        if (.requireNamespace("sf")) {
+          sameCRS <- sf::st_crs(from) == sf::st_crs(maskTo)
+        } else {
+          sameCRS <- terra::same.crs(from, maskTo)
+        }
+
+        if (!sameCRS) {
           if (isGridded(maskTo)) {
             maskTo <- terra::project(maskTo, from, overwrite = overwrite)
           } else {
@@ -492,7 +499,8 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
         messagePrepInputs("    projection of from is same as projectTo, not projecting",
                           verbose = verbose)
       } else {
-        .requireNamespace("sf", stopOnFALSE = TRUE)
+        if (isSF(from) || isSF(projectTo))
+          .requireNamespace("sf", stopOnFALSE = TRUE)
         messagePrepInputs("    projecting...", appendLF = FALSE,
                           verbose = verbose)
         st <- Sys.time()
@@ -575,13 +583,14 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
 #'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
 #' @export
 #' @rdname postProcessTo
-cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
+cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
                    verbose = getOption("reproducible.verbose"), ...) {
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
   if (!is.null(cropTo)) {
-    .requireNamespace("sf", stopOnFALSE = TRUE)
+    if (isSF(from) || isSF(cropTo))
+      .requireNamespace("sf", stopOnFALSE = TRUE)
     omit <- FALSE
     origFromClass <- is(from)
 
@@ -606,10 +615,18 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
                         verbose = verbose)
       st <- Sys.time()
 
-      ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
-      if (!sf::st_crs(from) == sf::st_crs(ext)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
+      if (.requireNamespace("sf")) {
+        ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
+        sameCRS <- !sf::st_crs(from) == sf::st_crs(ext)
+      } else {
+        ext <- terra::ext(cropTo) # create extent as an object; keeps crs correctly
+        sameCRS <- terra::same.crs(from, cropTo)
+      }
+
+      if (sameCRS) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
         if (isVector(cropTo) && !isSpat(cropTo)) {
           cropToInFromCRS <- sf::st_transform(sf::st_as_sf(cropTo), sf::st_crs(from))
+          ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
         } else {
           terraCRSFrom <- terra::crs(from)
           if (packageVersion("terra") <= "1.5.21") {# an older terra issue; may not be precise version
@@ -618,8 +635,8 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
             }
           }
           cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
+          ext <- terra::ext(cropToInFromCRS) # create extent as an object; keeps crs correctly
         }
-        ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
       }
       if (isVector(from) && !isSF(from))
         ext <- terra::vect(ext)
@@ -635,7 +652,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
           if (!isSpat(ext))
             ext <- terra::vect(ext)
           extTmp <- terra::ext(ext)
-          if (terra::is.lonlat(ext)) {
+          if (isTRUE(suppressWarnings(terra::is.lonlat(ext)))) { # warning is about "crs not defined"
             extTmp2 <- terra::extend(extTmp, 0.1) # hard code 0.1 lat/long, as long as it isn't past the from extent
             extFrom <- terra::ext(from)
             exts <- c(xmin = max(terra::xmin(extTmp2), terra::xmin(extFrom)),
@@ -843,9 +860,11 @@ postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo,
     }
   }
 
-  if (!requireNamespace("terra", quietly = TRUE))
+  if (isSpat(from) || isSpat(to))
+    if (!requireNamespace("terra", quietly = TRUE))
     stop("Need terra and sf: install.packages(c('terra', 'sf'))")
-  if (!requireNamespace("sf", quietly = TRUE)) stop("Need sf: install.packages('sf')")
+  if (isSF(from) || isSF(to))
+    if (!requireNamespace("sf", quietly = TRUE)) stop("Need sf: install.packages('sf')")
 
   if (!(isSpatialAny(from))) stop("from must be a Spat* or sf*")
 

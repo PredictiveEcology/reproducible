@@ -567,7 +567,13 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 
 
 .fileExtsKnown <- function() {
-  shpFile <- getOption("reproducible.shapefileRead", "sf::st_read")
+  if (requireNamespace("sf", quietly = TRUE) && requireNamespace("DBI", quietly = TRUE))
+    shpFile <- getOption("reproducible.shapefileRead", "sf::st_read")
+  else {
+    shpFile <- "terra::vect"
+    if (identical(getOption("reproducible.shapefileRead"), "sf::st_read"))
+      options("reproducible.shapefileRead" = shpFile) # can't use sf::st_read
+  }
   griddedFile <- getOption("reproducible.rasterRead", "terra::rast")
   griddedFileSave <- ""
   shpFileSave <- ""
@@ -577,6 +583,7 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
     griddedFileSave <- "terra::writeRaster"
   if (shpFile %in% "sf::st_read")
     shpFileSave <- "sf::st_write"
+
   if (shpFile %in% "terra::vect")
     shpFileSave <- "terra::writeVector"
 
@@ -584,8 +591,10 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
     rbind(
       c("rds", "base::readRDS", "base::saveRDS", "binary"),
       c("qs", "qs::qread", "qs::qsave", "qs"),
-      cbind(c("asc", "grd", "tif"), griddedFile, griddedFileSave, rasterType()),
-      cbind(c("shp", "gdb"), shpFile, shpFileSave, vectorType())
+      cbind(c("asc", "grd", "tif"), griddedFile, griddedFileSave,
+            rasterType(rasterRead = griddedFile)),
+      cbind(c("shp", "gdb"), shpFile, shpFileSave,
+            vectorType(vectorRead = shpFile))
     )
   )
   colnames(df) <- c("extension", "fun", "saveFun", "type")

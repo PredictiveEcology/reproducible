@@ -257,7 +257,9 @@ test_that("prepInputs works with team drives", {
                        alsoExtract = "similar",
                        shared_drive = TRUE)
     ))
-    if (is.null(err))
-      expect_true(is(wb, "sf"))
+    if (is.null(err)) {
+      if (.requireNamespace("sf"))
+        expect_true(is(wb, "sf"))
+    }
   }
 })
