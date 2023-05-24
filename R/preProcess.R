@@ -451,7 +451,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           filesExtr[foundInInputPaths] <- to
         }
       }
-      targetFilePath <- makeAbsolute(makeRelative(targetFilePath, destinationPath), destinationPathUser)
+      # targetFilePath may be already in destinationPathUser, depending on when it was created
+      if (!identical(to, targetFilePath))
+        targetFilePath <- makeAbsolute(makeRelative(targetFilePath, destinationPath),
+                                       destinationPathUser)
       destinationPath <- destinationPathUser
     }
 
