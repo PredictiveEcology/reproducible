@@ -1278,6 +1278,7 @@ makeRelative <- function(files, absoluteBase) {
 #'   to `knownRelativeFiles`
 #' @param knownRelativeFiles A character vector of relative filenames, that could
 #'   have sub-folder structure.
+#' @inheritParams prepInputs
 checkRelative <- function(files, absolutePrefix, knownRelativeFiles,
                           verbose = getOption("reproducible.verbose")) {
   if (!is.null(knownRelativeFiles)) {
