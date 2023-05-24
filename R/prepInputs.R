@@ -1061,6 +1061,12 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     isOKDT2 <- checkSumsDT[filesDT, on = c(actualFile = "files"), nomatch = NA]
     # fill in any OKs from "actualFile" intot he isOKDT
     isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
+    # check dirs
+    # dirsNeeded <- isOKDT[checksum.x %in% "dir"]$expectedFile
+    dirsHave <- dirname(isOKDT[!checksum.x %in% "dir" & result == "OK"]$expectedFile)
+    if (length(dirsHave))
+      isOKDT[checksum.x %in% "dir" & expectedFile %in% dirsHave, result := "OK"]
+
     isOK <- compareNA(isOKDT$result, "OK")
     names(isOK) <- makeRelative(filesDT$files, destinationPath)
   }
