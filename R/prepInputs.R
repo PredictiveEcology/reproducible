@@ -463,6 +463,7 @@ extractFromArchive <- function(archive,
       }
 
       neededFiles <- checkRelative(neededFiles, absolutePrefix = destinationPath, filesInArchive)
+      neededFilesRel <- makeRelative(neededFiles, destinationPath) # neededFiles may have been changed
       neededFiles <- makeAbsolute(neededFiles, destinationPath)
       result <- if (NROW(checkSums))
         checkSums[checkSums$expectedFile %in% neededFilesRel, ]$result
