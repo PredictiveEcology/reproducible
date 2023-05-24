@@ -490,7 +490,6 @@ extractFromArchive <- function(archive,
                                                     absolutePrefix = destinationPath,
                                             files = basename2(archive[2]), .tempPath = .tempPath))
           # recursion, removing one archive
-          browser()
           extractedObjs <- extractFromArchive(
             archive[-1],
             destinationPath = destinationPath,
