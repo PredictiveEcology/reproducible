@@ -223,6 +223,8 @@ setMethod(
     }
     data.table::setorderv(out, "result", order = -1L, na.last = TRUE)
     out <- out[, .SD[1,], by = "expectedFile"]
+    out <- checksumsDirsOk(out)
+
     results.df <- out[, list(
       "result" = result,
       "expectedFile" = expectedFile,
@@ -295,3 +297,15 @@ setMethod(
           )))# need as.character for empty case # nolint
     }
   })
+
+
+checksumsDirsOk <- function(out) {
+  if (any(grepl("checksum", colnames(out)))) {
+    cscol <- grep("checksum.x|i.checksum", colnames(out), value = TRUE)
+    dirsHave <- unique(dirname(out[!get(cscol) %in% "dir" & result == "OK"]$expectedFile))
+    dirsHave <- grep("\\.", dirsHave, value = TRUE, invert = TRUE)
+    if (length(dirsHave))
+      out[get(cscol) %in% "dir" & expectedFile %in% dirsHave, result := "OK"]
+  }
+  out
+}

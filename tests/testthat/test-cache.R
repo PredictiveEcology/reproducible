@@ -749,7 +749,6 @@ test_that("test mergeCache", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  # aaaa <<- gggg <<- kkkk <<- 1
   a <- Cache(rnorm, 1, cachePath = tmpdir)
   b <- Cache(rnorm, 2, cachePath = tmpCache)
 
@@ -937,8 +936,6 @@ test_that("test useCache = 'overwrite'", {
   }, add = TRUE)
 
   a <- Cache(rnorm, 1, useCache = "overwrite", cachePath = tmpCache)
-  #aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
-  # ffff <<- 1
   mess <- capture_messages({
     b <- Cache(rnorm, 1, useCache = "overwrite", cachePath = tmpCache)
   })
