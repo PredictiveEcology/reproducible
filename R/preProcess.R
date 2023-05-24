@@ -996,8 +996,8 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
   alsoExtract <- makeAbsolute(alsoExtract, destinationPath)
 
   filesExtr <- NULL
-  if (!is.null(archive)) {
-    if (!is.na(archive)) {
+  if (!isNULLorNA(archive)) {
+    #if (!is.na(archive)) {
       if (any(file.exists(archive))) {
 
         filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
@@ -1047,7 +1047,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
                        else
                          filesExtracted$filesExtr))
       }
-    }
+    # }
   }
   if (!is.null(filesExtr)) {
     filesExtr <- unique(filesExtr)
