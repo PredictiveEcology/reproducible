@@ -477,7 +477,7 @@ extractFromArchive <- function(archive,
         FALSE
       }
 
-      # recheck, now that we have the whole file liast
+      # recheck, now that we have the whole file list
       if (!(all(isOK)) || NROW(result) == 0) {
         # don't extract if we already have all files and they are fine
 
@@ -646,9 +646,9 @@ extractFromArchive <- function(archive,
     } else {
       c(" Trying ", fun, ".\n",
         " If that is not correct, please specify a targetFile",
-        " and/or different fun. The current files in the targetFilePath's",
-        " directory are: \n",
-        paste(possibleFiles, collapse = ", "))
+        " and/or different fun. The current files in the destinationPath",
+        " are: \n",
+        paste(possibleFiles, collapse = "\n"))
     }
     messagePrepInputs(c("  targetFile was not specified.", secondPartOfMess), verbose = verbose)
 
@@ -666,8 +666,9 @@ extractFromArchive <- function(archive,
       }
     }
     if (length(targetFilePath) > 1)  {
-      messagePrepInputs("  More than one possible files to load: ", paste(targetFilePath, collapse = ", "),
-              ". Picking the last one. If not correct, specify a targetFile.", verbose = verbose)
+      messagePrepInputs("  More than one possible files to load:\n",
+                        paste(targetFilePath, collapse = "\n"),
+                        "\nPicking the last one. If not correct, specify a targetFile.", verbose = verbose)
       targetFilePath <- targetFilePath[length(targetFilePath)]
     }
   }
