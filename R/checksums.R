@@ -300,8 +300,9 @@ setMethod(
 
 
 checksumsDirsOk <- function(out) {
-  if (any(grepl("checksum", colnames(out)))) {
-    cscol <- grep("checksum.x|i.checksum", colnames(out), value = TRUE)
+  cscols <- "checksum.x|i.checksum"
+  if (any(grepl(cscols, colnames(out)))) {
+    cscol <- grep(cscols, colnames(out), value = TRUE)[1]
     dirsHave <- unique(dirname(out[!get(cscol) %in% "dir" & result == "OK"]$expectedFile))
     dirsHave <- grep("\\.", dirsHave, value = TRUE, invert = TRUE)
     if (length(dirsHave))

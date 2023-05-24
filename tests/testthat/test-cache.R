@@ -958,6 +958,7 @@ test_that("test useCache = 'overwrite'", {
 test_that("test rm large non-file-backed rasters", {
   ## This is a large object test!
   skip_on_cran()
+  skip_if_not_installed("qs")
 
   if (!is.null(getOption("reproducible.conn", NULL)))
     if (!grepl("SQLite", class(getOption("reproducible.conn", NULL))))
