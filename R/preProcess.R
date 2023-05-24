@@ -313,9 +313,27 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }, add = TRUE)
 
       if (!identical(destinationPath, reproducible.inputPaths)) {
-        neededFiles <- makeRelative(neededFiles, destinationPath)
-        targetFilePath <- makeRelative(targetFilePath, destinationPath)
-        destinationPath <- reproducible.inputPaths[1]
+        # CHANGE destinationPath FOR REMAINDER OF THIS FUNCTION
+        neededFilesNew <- makeRelative(neededFiles, destinationPath)
+        targetFilePathNew <- makeRelative(targetFilePath, destinationPath)
+        destinationPathNew <- reproducible.inputPaths[1]
+        archiveExistInDestDir <- if (!isNULLorNA(archive)) file.exists(archive) else FALSE
+        existInDestDir <- file.exists(neededFiles)
+        if (any(existInDestDir)) {
+          linkOrCopy(neededFiles[existInDestDir],
+                     makeAbsolute(neededFilesNew[existInDestDir],
+                                  absoluteBase = destinationPathNew),
+                     verbose = verbose - 1)
+        }
+        if (any(archiveExistInDestDir)) {
+          linkOrCopy(archive[archiveExistInDestDir],
+                     makeAbsolute(makeRelative(archive[archiveExistInDestDir], destinationPath),
+                                           absoluteBase = destinationPathNew), verbose = verbose - 1)
+        }
+        targetPath <- targetFilePathNew
+        destinationPath <- destinationPathNew
+        neededFiles <- neededFilesNew
+
       }
 
       if (isTRUE(any(grepl(archive, pattern = destinationPathUser)))) {

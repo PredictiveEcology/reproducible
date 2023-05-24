@@ -573,6 +573,8 @@ test_that("more nested file structures in zip; alsoExtract NA", {
     zip(zipName, files = c(file.path(basename(dirname(fns1)), basename(fns1)), basename(fns2)))
   })
   zipName2 <- file.path(tmpdir, zipName)
+
+  # don't specify targetFile --> fail because many options
   linkOrCopy(zipName, zipName2)
   a <- prepInputs(archive = zipName, destinationPath = tmpdir)
   knownOtherFiles <- c("cache.db", "CHECKSUMS.txt", "ex.zip", "testCache")
