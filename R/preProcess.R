@@ -256,7 +256,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                        checkSumFilePath = checkSumFilePath, url)
     list2env(outFromSimilar, environment()) # neededFiles, checkSums
   }
-  neededFiles <- makeAbsolute(neededFiles, destinationPath)
+  neededFiles <- unique(makeAbsolute(neededFiles, destinationPath))
   neededFiles <- grep("none$", neededFiles, value = TRUE, invert = TRUE)
   # alsoExtract <- grep("none$", alsoExtract, value = TRUE, invert = TRUE)
 

@@ -265,7 +265,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
       }
 
       downloadResults <- list(needChecksums = needChecksums,
-                              destFile = file.path(destinationPath, basename(fileAlreadyDownloaded)))
+                              destFile = makeAbsolute(fileAlreadyDownloaded, destinationPath))
       if (is.null(targetFile)) {
         messagePrepInputs("   Skipping download because all needed files are listed in ",
                 "CHECKSUMS.txt file and are present.",
