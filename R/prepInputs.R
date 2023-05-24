@@ -509,10 +509,15 @@ extractFromArchive <- function(archive,
           if (sum(possibleFolders)) {
             filesInArchive <- setdiff(filesInArchive, possibleFolders)
           }
-          neededFilesRel <- if (!is.null(names(isOK)))
-            names(isOK)[!isOK]
-          else
-            makeRelative(neededFiles[!isOK], destinationPath)
+          neededFilesRel <- if (is.null(neededFiles)) {
+            NULL
+          } else {
+            if (!is.null(names(isOK))) {
+              names(isOK)[!isOK]
+            } else {
+              makeRelative(neededFiles[!isOK], destinationPath)
+            }
+          }
           filesToExtractNow <- intersect(filesInArchive, neededFilesRel)
           dt <- data.table(files = filesToExtractNow)
           # extractingTheseFiles <- paste(filesToExtractNow, collapse = "\n")
