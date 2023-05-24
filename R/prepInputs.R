@@ -547,7 +547,6 @@ extractFromArchive <- function(archive,
                                                       .tempPath = .tempPath))
             filesExtracted <- unique(filesExtracted) # maybe unnecessary
 
-            browser()
             prevExtract <- lapply(makeAbsolute(arch, destinationPath), function(ap)
               extractFromArchive(archive = ap, destinationPath = destinationPath,
                                  neededFiles = neededFiles,

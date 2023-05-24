@@ -278,7 +278,7 @@ test_that("interactive prepInputs", {
                            targetFile = paste0(x, "_currmean.asc"),
                            archive = paste0(x, "_current.zip"),
                            url = url,
-                           alsoExtract = NA,
+                           alsoExtract = NULL,
                            destinationPath = tmpdir,
                            overwrite = TRUE
                          )
