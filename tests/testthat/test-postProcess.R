@@ -143,9 +143,9 @@ test_that("prepInputs doesn't work (part 3)", {
   ncSmallShifted <- ncSmall + 10000000
   ncSmallShifted <- st_as_sf(ncSmallShifted)
   st_crs(ncSmallShifted) <- st_crs(ncSmall)
-  mess <- capture_error(
+  mess <- capture_messages(
     cropInputs(ncSmall, studyArea = ncSmallShifted))
-  expect_true(grepl("extents", mess))
+  expect_true(any(grepl("overlap", mess)))
 
   # cropInputs.sf
   nc3 <- st_transform(nc1, crs = nonLatLongProj2)
@@ -171,7 +171,10 @@ test_that("prepInputs doesn't work (part 3)", {
   ncSmallShifted <- ncSmall + 10000000
   ncSmallShifted <- st_as_sf(ncSmallShifted)
   st_crs(ncSmallShifted) <- st_crs(ncSmall)
-  expect_error(cropInputs(ncSmall, studyArea = ncSmallShifted))
+  expect_message(regexp = "results in no data",
+    aaa <- cropInputs(ncSmall, studyArea = ncSmallShifted)
+  )
+  expect_s3_class(aaa, "sf")
   # expect_true(NROW(out11) == 0)
 
   # LINEARRING Example
