@@ -1298,11 +1298,11 @@ test_that("lightweight tests for code coverage", {
   expect_true(identical(a, b))
 
   ## projectInputs.Raster
-  a <- projectInputs(ras2, rasterToMatch = ras3, method = "ngb")
+  a <- projectInputs(ras2, rasterToMatch = ras3, method = "near")
   expect_true(inherits(a, "SpatRaster"))
   expect_true(identical(terra::crs(a), terra::crs(ras3)))
 
-  a <- projectInputs(ras2, targetCRS = terra::crs(ras3), rasterToMatch = ras3, method = "ngb")
+  a <- projectInputs(ras2, targetCRS = terra::crs(ras3), rasterToMatch = ras3, method = "near")
   expect_true(inherits(a, "SpatRaster"))
   expect_true(identical(terra::crs(a), terra::crs(ras3)))
 
@@ -1312,7 +1312,7 @@ test_that("lightweight tests for code coverage", {
   }
 
   #Works with no rasterToMatch
-  a <- projectInputs(ras2, targetCRS = crs(ras3), method = "ngb")
+  a <- projectInputs(ras2, targetCRS = crs(ras3), method = "near")
   expect_true(identical(crs(a), crs(ras3)))
 
   # }

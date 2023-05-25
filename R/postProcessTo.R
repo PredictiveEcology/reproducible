@@ -486,8 +486,11 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
       }
 
       projectToOrig <- projectTo # keep for below
-      sameProj <- try(terra::same.crs(projectTo, from))
-      if (is(sameProj, "try-error")) browser()
+      sameProj <- try(terra::same.crs(projectTo, from), silent = TRUE)
+      if (is(sameProj, "try-error")) {
+        .requireNamespace("sf", stopOnFALSE = TRUE)
+        sameCRS <- sf::st_crs(from) == sf::st_crs(maskTo)
+      }
 
       isProjectToVecOrCRS <- isCRSANY(projectTo) || (isVector(projectTo))
       sameRes <- if (isVector(from) || isProjectToVecOrCRS) {
