@@ -486,7 +486,8 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
       }
 
       projectToOrig <- projectTo # keep for below
-      sameProj <- isTRUE(terra::crs(projectTo) == terra::crs(from))
+      sameProj <- try(terra::same.crs(projectTo, from))
+      if (is(sameProj, "try-error")) browser()
 
       isProjectToVecOrCRS <- isCRSANY(projectTo) || (isVector(projectTo))
       sameRes <- if (isVector(from) || isProjectToVecOrCRS) {
@@ -520,7 +521,8 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
             messagePrepInputs("", verbose = verbose)
             messagePrepInputs("         projectTo is a Vector dataset, which does not define all metadata required. ",
                               verbose = verbose)
-            if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
+            if (!terra::is.lonlat(from)) {
+            # if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
               newRes <- terra::res(from)
               messagePrepInputs("         Using resolution of ",paste(newRes, collapse = "x"),"m; ",
                                 verbose = verbose)
@@ -617,13 +619,13 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
 
       if (.requireNamespace("sf")) {
         ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
-        sameCRS <- !sf::st_crs(from) == sf::st_crs(ext)
+        sameCRS <- sf::st_crs(from) == sf::st_crs(ext) # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
       } else {
         ext <- terra::ext(cropTo) # create extent as an object; keeps crs correctly
         sameCRS <- terra::same.crs(from, cropTo)
       }
 
-      if (sameCRS) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
+      if (!sameCRS) {
         if (isVector(cropTo) && !isSpat(cropTo)) {
           cropToInFromCRS <- sf::st_transform(sf::st_as_sf(cropTo), sf::st_crs(from))
           ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
@@ -649,8 +651,10 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
           } else if (isGridded(cropTo)) {
             res <- terra::res(cropTo)
           }
-          if (!isSpat(ext))
+          if (!isSpat(ext)) {
             ext <- terra::vect(ext)
+            terra::crs(ext) <- terra::crs(from)
+          }
           extTmp <- terra::ext(ext)
           if (isTRUE(suppressWarnings(terra::is.lonlat(ext)))) { # warning is about "crs not defined"
             extTmp2 <- terra::extend(extTmp, 0.1) # hard code 0.1 lat/long, as long as it isn't past the from extent
