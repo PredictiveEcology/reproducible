@@ -496,10 +496,10 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
         all(terra::res(projectTo) == terra::res(from))
       }
 
-      if (sameProj && sameRes) {
-        messagePrepInputs("    projection of from is same as projectTo, not projecting",
-                          verbose = verbose)
-      } else {
+      # if (sameProj && sameRes) {
+      #   messagePrepInputs("    projection of from is same as projectTo, not projecting",
+      #                     verbose = verbose)
+      # } else {
         if (isSF(from) || isSF(projectTo))
           .requireNamespace("sf", stopOnFALSE = TRUE)
         messagePrepInputs("    projecting...", appendLF = FALSE,
@@ -573,7 +573,7 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
         messagePrepInputs("done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
                           verbose = verbose)
       }
-    }
+    # }
     from <- revertClass(from, origFromClass = origFromClass)
   }
   from
