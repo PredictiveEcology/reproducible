@@ -47,6 +47,8 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
       tmpFileExt[!dotStart] <- paste0(".", tmpFileExt)
     out$tmpfile <- withr::local_tempfile(fileext = tmpFileExt)
   }
+  withr::local_dir(tmpdir, .local_envir = pf)
+
   out <- append(out, list(tmpdir = tmpdir, tmpCache = tmpCache))
   list2env(out, envir = pf)
   return(out)

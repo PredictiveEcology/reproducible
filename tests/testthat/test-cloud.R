@@ -75,7 +75,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
   warn5 <- capture_warnings({
     mess5 <- capture_messages({
-      a2 <- Cache(rnorm, 3, cachePath = tmpCache, useCloud = TRUE)
+      a2 <- Cache(rnorm, 3, cachePath = tmpdir, useCloud = TRUE)
     })
   })
 
