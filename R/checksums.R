@@ -71,7 +71,7 @@ if (getRversion() >= "3.1.0") {
 #' }
 #'
 setGeneric("Checksums", function(path, write, quickCheck = FALSE,
-                                 checksumFile = file.path(path, "CHECKSUMS.txt"),
+                                 checksumFile = identifyCHECKSUMStxtFile(path),
                                  files = NULL, verbose = getOption("reproducible.verbose", 1),
                                  ...) {
   standardGeneric("Checksums")

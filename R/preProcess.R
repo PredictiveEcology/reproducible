@@ -166,7 +166,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # remove trailing slash -- causes unzip fail if it is there
   destinationPath <- normPath(destinationPath)
-  checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
+  checkSumFilePath <- identifyCHECKSUMStxtFile(destinationPath)
 
   if (!is.null(archive))
     if (any(is.na(archive)))
@@ -538,7 +538,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       # successfulCheckSumFilePath we do not need to update. Determine which one this is, and do
       #   other
       if (identical(checkSumFilePath, successfulCheckSumFilePath)) { # if it was in checkSumFilePath
-        checkSumFilePath <- file.path(successfulDir, "CHECKSUMS.txt")   #   run Checksums in IP
+        checkSumFilePath <- identifyCHECKSUMStxtFile(successfulDir)   #   run Checksums in IP
       }
     }
     checkSums <- appendChecksumsTable(
@@ -548,7 +548,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       append = needChecksums >= 2
     )
     if (!is.null(reproducible.inputPaths) && needChecksums != 3) {
-      checkSumFilePathInputPaths <- file.path(reproducible.inputPaths[[1]], "CHECKSUMS.txt")
+      checkSumFilePathInputPaths <- identifyCHECKSUMStxtFile(reproducible.inputPaths[[1]])
       suppressMessages({
         checkSums <- appendChecksumsTable(
           checkSumFilePath = checkSumFilePathInputPaths,
@@ -674,7 +674,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                              checkSumFilePath = NULL, verbose = getOption("reproducible.verbose", 1)) {
   if (!is.null(newFilesToCheck)) {
     if (is.null(checkSumFilePath) || length(checkSumFilePath) == 0)
-      checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
+      checkSumFilePath <- identifyCHECKSUMStxtFile(destinationPath)
     if (!file.exists(checkSumFilePath)) {
       checkSums
     } else {
@@ -798,7 +798,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           # check CHECKSUMS.txt files, first the one in destinationPath, then ones in inputPaths
           for (dirOPFiles in uniqueDirsOPFiles) {
             #for (i in seq(1 + length(uniqueDirsOPFiles))) {
-            checkSumFilePathTry <- file.path(dirOPFiles, "CHECKSUMS.txt")
+            checkSumFilePathTry <- identifyCHECKSUMStxtFile(dirOPFiles)
             checkSumsInputPath <- suppressMessages(
               Checksums(path = dirOPFiles, write = FALSE,
                         files = neededFilesRel,
@@ -816,7 +816,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                 break
               }
 
-            checkSumFilePathTry <- file.path(dirOPFiles, "CHECKSUMS.txt")
+            checkSumFilePathTry <- identifyCHECKSUMStxtFile(dirOPFiles)
           }
           checkSumsIPOnlyNeeded <- checkSumsInputPath[compareNA(checkSumsInputPath$result, "OK"), ]
           filesInHandIP <- checkSumsIPOnlyNeeded$expectedFile
@@ -1508,4 +1508,8 @@ isNULLorNA <- function(x) {
       out <- FALSE
   }
   out
+}
+
+identifyCHECKSUMStxtFile <- function(path) {
+  file.path(path, "CHECKSUMS.txt")
 }
