@@ -448,6 +448,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         if (length(whFilesExtrInIP)) {
           from <- filesExtr[whFilesExtrInIP]
           to <- makeAbsolute(makeRelative(from, destinationPath), destinationPathUser)
+          if (!isTRUE(all(from %in% to)))
+            messagePrepInputs("...using copy in getOption('reproducible.inputPaths')...")
           outHLC <- hardLinkOrCopy(from, to)
           filesExtr[foundInInputPaths] <- to
         }
@@ -1441,8 +1443,9 @@ runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbos
 
   destinationPathUser <- NULL
   for (dp in unique(c(destinationPath, reproducible.inputPaths))) {
-    checkSumsTmp1 <- try(Checksums(path = dp, write = FALSE, checksumFile = checkSumFilePath,
-                                   files = filesToCheck,
+    csfp <- identifyCHECKSUMStxtFile(dp)
+    checkSumsTmp1 <- try(Checksums(path = dp, write = FALSE, checksumFile = csfp,
+                                   files = makeRelative(filesToCheck, absoluteBase = destinationPath),
                                    verbose = verbose), silent = TRUE)
     checkSums <- NULL
     if (!is(checkSumsTmp1, "try-error")) {
