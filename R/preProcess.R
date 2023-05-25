@@ -455,11 +455,32 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         }
       }
       # targetFilePath may be already in destinationPathUser, depending on when it was created
-      if (!identical(to, targetFilePath))
-        targetFilePath <- makeAbsolute(makeRelative(targetFilePath, destinationPath),
-                                       destinationPathUser)
+      if (!identical(to, targetFilePath)) {
+        targetFilePathTmp <- to[basename(to) %in% basename(targetFilePath)]
+        if (file.exists(targetFilePathTmp))
+          targetFilePath <- targetFilePathTmp
+        else
+          targetFilePath <- makeAbsolute(makeRelative(targetFilePath, destinationPath),
+                                         destinationPathUser)
+      }
       destinationPath <- destinationPathUser
+    } else {
+      foundInLocalPaths <- grepl(normPath(destinationPath), normPath(filesExtr))
+      # Make sure they are all in options("reproducible.inputPaths"), accounting for
+      #   the fact that some may have been in sub-folders -- i.e., don't deal with these
+      if (isTRUE(any(foundInLocalPaths))) {
+        whFilesExtrInLP <- which(file.exists(filesExtr[foundInLocalPaths]))
+        if (length(whFilesExtrInLP)) {
+          from <- filesExtr[whFilesExtrInLP]
+          to <- makeAbsolute(makeRelative(from, destinationPath), reproducible.inputPaths)
+          if (!isTRUE(all(from %in% to)))
+            messagePrepInputs("... copying to getOption('reproducible.inputPaths')...")
+          outHLC <- hardLinkOrCopy(from, to)
+        }
+      }
     }
+
+
 
   }
   # if it was a nested file
