@@ -64,7 +64,7 @@ test_that("prepInputs WORKS passing just targetFile that is NOT an archive", {
 
 test_that("prepInputs WORKS passing archive + targetFile", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

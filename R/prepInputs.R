@@ -441,8 +441,9 @@ extractFromArchive <- function(archive,
   }
   extractedObjs <- list(filesExtracted = character())
   # needs to pass checkSums & have all neededFiles files
+  neededFilesRel <- makeRelative(neededFiles, destinationPath)
   hasAllFiles <- if (NROW(checkSums)) {
-    all(makeRelative(neededFiles, destinationPath) %in% checkSums$expectedFile) # need basename2 for comparison with checkSums
+    all(neededFilesRel %in% checkSums$expectedFile) # need basename2 for comparison with checkSums
   } else {
     FALSE
   }
@@ -459,11 +460,15 @@ extractFromArchive <- function(archive,
       filesInArchive <- makeRelative(.listFilesInArchive(archive), destinationPath)
       if (is.null(neededFiles)) {
         neededFiles <- filesInArchive
-        result <- checkSums[checkSums$expectedFile %in% makeRelative(neededFiles, destinationPath), ]$result
       }
 
-      neededFiles <- checkRelative(neededFiles, destinationPath, filesInArchive)
+      neededFiles <- checkRelative(neededFiles, absolutePrefix = destinationPath, filesInArchive)
+      neededFilesRel <- makeRelative(neededFiles, destinationPath) # neededFiles may have been changed
       neededFiles <- makeAbsolute(neededFiles, destinationPath)
+      result <- if (NROW(checkSums))
+        checkSums[checkSums$expectedFile %in% neededFilesRel, ]$result
+      else
+        logical(0)
       # need to re-Checksums because
       checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
                                     newFilesToCheck = neededFiles,
@@ -477,7 +482,7 @@ extractFromArchive <- function(archive,
         FALSE
       }
 
-      # recheck, now that we have the whole file liast
+      # recheck, now that we have the whole file list
       if (!(all(isOK)) || NROW(result) == 0) {
         # don't extract if we already have all files and they are fine
 
@@ -646,9 +651,9 @@ extractFromArchive <- function(archive,
     } else {
       c(" Trying ", fun, ".\n",
         " If that is not correct, please specify a targetFile",
-        " and/or different fun. The current files in the targetFilePath's",
-        " directory are: \n",
-        paste(possibleFiles, collapse = ", "))
+        " and/or different fun. The current files in the destinationPath",
+        " are: \n",
+        paste(possibleFiles, collapse = "\n"))
     }
     messagePrepInputs(c("  targetFile was not specified.", secondPartOfMess), verbose = verbose)
 
@@ -666,8 +671,9 @@ extractFromArchive <- function(archive,
       }
     }
     if (length(targetFilePath) > 1)  {
-      messagePrepInputs("  More than one possible files to load: ", paste(targetFilePath, collapse = ", "),
-              ". Picking the last one. If not correct, specify a targetFile.", verbose = verbose)
+      messagePrepInputs("  More than one possible files to load:\n",
+                        paste(targetFilePath, collapse = "\n"),
+                        "\nPicking the last one. If not correct, specify a targetFile.", verbose = verbose)
       targetFilePath <- targetFilePath[length(targetFilePath)]
     }
   }
@@ -1058,8 +1064,11 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     filesDT <- data.table(files = unique(makeRelative(c(files, dirs), destinationPath)))
     isOKDT <- checkSumsDT[filesDT, on = c(expectedFile = "files")]
     isOKDT2 <- checkSumsDT[filesDT, on = c(actualFile = "files"), nomatch = NA]
-    # fill in any OKs from "actualFile" intot he isOKDT
+    # fill in any OKs from "actualFile" into the isOKDT
     isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
+    if (!all(compareNA(isOKDT$result, "OK")))
+      isOKDT <- checksumsDirsOk(isOKDT)
+
     isOK <- compareNA(isOKDT$result, "OK")
     names(isOK) <- makeRelative(filesDT$files, destinationPath)
   }

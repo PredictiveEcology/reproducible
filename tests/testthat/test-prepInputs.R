@@ -403,7 +403,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8", vectorType(), 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8_9", vectorType(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -562,7 +562,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8", vectorType(), 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8_9", vectorType(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -697,7 +697,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8", vectorType(), 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8_9", vectorType(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -1483,7 +1483,7 @@ test_that("options inputPaths", {
                           getDataFn = dlFun1)
     )
   )
-  expect_true(sum(grepl(paste0("Hardlinked", ".*: "), mess1)) == 1)
+  expect_true(sum(grepl(paste0("Hardlinked", ".*:"), mess1)) == 1)
 
   # Now two folders - file not in destinationPath, not in 1st inputPaths, but yes 2nd
   #   should hardlink from 2nd IP to destinationPath, make sure CHECKSUMS.txt is correct in both
@@ -1502,7 +1502,7 @@ test_that("options inputPaths", {
                           destinationPath = tmpdir3)
     )
   )
-  expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ": ", tmpdir3), mess1)) == 1)
+  expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ":\n", tmpdir3), mess1)) == 1)
 
 
   # THIS NEXT ONE DOESN"T PASS ON GA on WINDOWS, skip it
@@ -1525,8 +1525,8 @@ test_that("options inputPaths", {
                             destinationPath = tmpdir1)
       )
     )
-    expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ": ", file.path(tmpdir1, theFile)), mess1)) == 1)
-    expect_true(sum(grepl(paste0("",whPointsToMessForGrep," ", file.path(tmpdir3, theFile)), mess1)) == 1)
+    expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ":\n", file.path(tmpdir1, theFile)), mess1)) == 1)
+    expect_true(sum(grepl(paste0("",whPointsToMessForGrep,"\n", file.path(tmpdir3, theFile)), mess1)) == 1)
     expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 2)
 
   }
