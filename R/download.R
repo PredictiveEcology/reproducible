@@ -99,7 +99,6 @@ downloadFile <- function(archive, targetFile, neededFiles,
       failed <- 1
       numTries <- 2
 
-      messagePrepInputs("...downloading...", verbose = verbose)
       while (failed > 0  && failed <= numTries) {
         messOrig <- capture.output(
           type = "message",
@@ -164,6 +163,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
           # This is so that we essentially treat it as a file, not an object, which means
           #   the second time we try this call, we can access the file locally, without needed to download
           if (is(downloadResults$out, "Spatial")) downloadResults$out <- NULL # TODO This appears to be a bug
+          messagePrepInputs(messOrig, verbose = verbose)
           failed <- 0
         }
       }
@@ -451,6 +451,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
   if (!is.null(url) || !is.null(dlFun)) { # if no url, no download
     #if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
       if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE)))  {
+        messagePrepInputs("...downloading...", verbose = verbose)
+
         ## NA means archive already in hand
         out <- NULL
 
