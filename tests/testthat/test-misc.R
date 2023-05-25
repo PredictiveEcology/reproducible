@@ -73,7 +73,7 @@ test_that("setting options works correctly", {
 
   # The keep is during terra-migration
   keep <- setdiff(names(a), c("reproducible.rasterRead", "reproducible.useDBI",
-                              "reproducible.cacheSaveFormat"))
+                              "reproducible.cacheSaveFormat", "reproducible.shapefileRead"))
   a <- a[keep]
 
   a1 <- a[sapply(a, function(x) !is.null(x))]
