@@ -20,7 +20,8 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
     libraries <- c(libraries, "googledrive")
   if (length(libraries)) {
     libraries <- unique(libraries)
-    loadedAlready <- vapply(libraries, isNamespaceLoaded, FUN.VALUE = logical(1))
+    loadedAlready <- vapply(libraries, function(pkg)
+      any(grepl(paste0("package:", pkg), search())), FUN.VALUE = logical(1))
     libraries <- libraries[!loadedAlready]
 
     if (length(libraries)) {

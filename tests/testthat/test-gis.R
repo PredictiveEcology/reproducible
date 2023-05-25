@@ -7,6 +7,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
+    withr::local_dir(tmpdir)
 
     testthat::with_mock(
       "reproducible::isInteractive" = function() {
