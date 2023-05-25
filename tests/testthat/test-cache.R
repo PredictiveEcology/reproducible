@@ -1727,8 +1727,15 @@ test_that("test useDBI TRUE <--> FALSE", {
 
 test_that("lightweight tests for preProcess code coverage", {
   skip_on_cran()
-  out <- testInit(verbose = TRUE, opts = list(reproducible.cachePath = quote(tmpdir)))
-  on.exit(testOnExit(out), add = TRUE)
+  out <- testInit(verbose = TRUE)
+
+  opts <- options(reproducible.cachePath = tmpdir)
+
+  on.exit({
+    testOnExit(out)
+    options(opts)
+  }
+  , add = TRUE)
   expect_error(Cache(), "requires")
   expect_message(Cache(compareRasterFileLength = TRUE, rnorm(1)), regexp = "compareRasterFileLength")
   expect_message(Cache(sideEffect = TRUE, rnorm(1)), regexp = "sideEffect")

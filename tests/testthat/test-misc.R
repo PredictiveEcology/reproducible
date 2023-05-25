@@ -64,7 +64,7 @@ test_that("objSize and objSizeSession", {
 })
 
 test_that("setting options works correctly", {
-  testInitOut <- testInit(verbose = 1)
+  testInitOut <- testInit(verbose = 1, ask = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -72,8 +72,11 @@ test_that("setting options works correctly", {
   a <- reproducibleOptions()
 
   # The keep is during terra-migration
-  keep <- setdiff(names(a), c("reproducible.rasterRead", "reproducible.useDBI",
-                              "reproducible.cacheSaveFormat", "reproducible.shapefileRead"))
+  keep <- setdiff(names(a), c("reproducible.rasterRead",
+                              "reproducible.cachePath",
+                              # "reproducible.useDBI",
+                              # "reproducible.cacheSaveFormat",
+                              "reproducible.shapefileRead"))
   a <- a[keep]
 
   a1 <- a[sapply(a, function(x) !is.null(x))]

@@ -12,23 +12,28 @@ skip_if_no_token <- function() {
 #   optsAsk in this environment,
 # loads and libraries indicated plus testthat,
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
-testInit <- function(libraries = character(), ask, verbose, tmpFileExt = "",
+testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt = "",
                      opts = NULL, needGoogleDriveAuth = FALSE) {
   pf <- parent.frame()
 
   if (isTRUE(needGoogleDriveAuth))
     libraries <- c(libraries, "googledrive")
   if (length(libraries)) {
-    pkgsLoaded <- unlist(lapply(libraries, requireNamespace, quietly = TRUE))
-    if (!all(pkgsLoaded)) {
-      lapply(libraries[!pkgsLoaded], skip_if_not_installed)
+    libraries <- unique(libraries)
+    loadedAlready <- vapply(libraries, isNamespaceLoaded, FUN.VALUE = logical(1))
+    libraries <- libraries[!loadedAlready]
+
+    if (length(libraries)) {
+      pkgsLoaded <- unlist(lapply(libraries, requireNamespace, quietly = TRUE))
+      if (!all(pkgsLoaded)) {
+        lapply(libraries[!pkgsLoaded], skip_if_not_installed)
+      }
+      lapply(libraries, withr::local_package, .local_envir = pf)
     }
-    lapply(libraries, withr::local_package, .local_envir = pf)
   }
 
   out <- list()
-  if (!missing(ask))
-    withr::local_options("reproducible.ask" = ask, .local_envir = pf)
+  withr::local_options("reproducible.ask" = ask, .local_envir = pf)
   if (!missing(verbose))
     withr::local_options("reproducible.verbose" = verbose, .local_envir = pf)
   if (!is.null(opts))

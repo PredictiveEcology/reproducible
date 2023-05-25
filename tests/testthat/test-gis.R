@@ -3,7 +3,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
   skip_on_ci()
 
   if (interactive()) {
-    testInitOut <- testInit(needGoogleDriveAuth = TRUE, "googledrive")
+    testInitOut <- testInit(needGoogleDriveAuth = TRUE)
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)

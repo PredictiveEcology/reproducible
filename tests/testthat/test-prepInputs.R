@@ -168,16 +168,6 @@ test_that("interactive prepInputs", {
                           ),
                           needGoogleDriveAuth = TRUE)
 
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  # skip_if_not(isInteractive())
-  #######################################
-  ### url
-  #tmpdir <- "data/FMA"
-  #checkPath(tmpdir, create = TRUE)
-
   noisyOutput <- capture.output(
     warns <- capture_warnings(
       test <- prepInputs(
@@ -190,11 +180,8 @@ test_that("interactive prepInputs", {
   expect_true(length(files) == 9)
   expect_true(inherits(test, vectorType()))
 
-  #######################################
   ### url, targetFile
   # need authentication for this
-  #tmpdir <- "data/FMA"
-  #checkPath(tmpdir, create = TRUE)
   noisyOutput <- capture.output(
     warns <- capture_warnings(
       test <- prepInputs(
@@ -204,12 +191,12 @@ test_that("interactive prepInputs", {
       )
     )
   )
+
   # There is a meaningless warning for this unit test -- ignore it :
-  # In rgdal::readOGR(dirname(x), fn, stringsAsFactors = stringsAsFactors,  :
-  #                  Z-dimension discarded
   expect_true(inherits(test, vectorType()))
 
   # From Bird/Tati project
+  withr::deferred_clear()
   testOnExit(testInitOut)
   testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                "reproducible.inputPaths" = NULL),
@@ -218,7 +205,6 @@ test_that("interactive prepInputs", {
   urls <- c("https://drive.google.com/open?id=1CmzYNpxwWr82PoRSbHWG8yg2cC3hncfb",
             "https://drive.google.com/open?id=11Hxk0CcwJsoAnUgfrwbJhXBJNM5Xbd9e")
 
-  #######################################
   ### url, targetFile, archive
   outsideModule <- Map(x = birdSpecies, url = urls,
                        MoreArgs = list(tmpdir = tmpdir),
@@ -234,12 +220,8 @@ test_that("interactive prepInputs", {
                        })
   expect_true(inherits(outsideModule[[1]], rasterType()))
   expect_true(inherits(outsideModule[[2]], rasterType()))
-  # expect_true(inherits(terra::crs(outsideModule[[2]]), "CRS"))
-  # expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
 
-  # remove the .prj files -- test "similar"
-  #######################################
   ### url, targetFile, archive, alsoExtract similar
   file.remove(grep(pattern = "asc|zip|CHECK",
                    invert = TRUE, value = TRUE,
@@ -260,8 +242,6 @@ test_that("interactive prepInputs", {
                        })
   expect_true(inherits(outsideModule[[1]], rasterType()))
   expect_true(inherits(outsideModule[[2]], rasterType()))
-  # expect_true(inherits(crs(outsideModule[[2]]), "CRS"))
-  # expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
   expect_true(!is.na(crs(outsideModule[[1]])))
   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
 
@@ -270,7 +250,6 @@ test_that("interactive prepInputs", {
                    invert = TRUE, value = TRUE,
                    dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))]))
 
-  #######################################
   ### url, targetFile, archive, alsoExtract NA
   # because alsoExtract is NA ... no other files are unzipped, so no .prj and so no CRS
   outsideModule <- Map(x = birdSpecies, url = urls,
