@@ -679,8 +679,9 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
             if (grepl("extents do not overlap", fromInt))
               fail <- TRUE
           if (NROW(fromInt) == 0) { # likely don't overlap
-            fromInt <- "It looks like the extents do not overlap; stopping"
-            fail <- TRUE
+            messagePrepInputs("It looks like the cropping results in no data ",
+                             "(do not overlap or no intersection)", verbose = verbose)
+            fail <- FALSE
           }
           if (fail)
             stop(fromInt)
