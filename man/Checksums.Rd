@@ -10,7 +10,7 @@ Checksums(
   path,
   write,
   quickCheck = FALSE,
-  checksumFile = file.path(path, "CHECKSUMS.txt"),
+  checksumFile = identifyCHECKSUMStxtFile(path),
   files = NULL,
   verbose = getOption("reproducible.verbose", 1),
   ...
@@ -20,7 +20,7 @@ Checksums(
   path,
   write,
   quickCheck = FALSE,
-  checksumFile = file.path(path, "CHECKSUMS.txt"),
+  checksumFile = identifyCHECKSUMStxtFile(path),
   files = NULL,
   verbose = getOption("reproducible.verbose", 1),
   ...
@@ -30,7 +30,7 @@ Checksums(
   path,
   write,
   quickCheck = FALSE,
-  checksumFile = file.path(path, "CHECKSUMS.txt"),
+  checksumFile = identifyCHECKSUMStxtFile(path),
   files = NULL,
   verbose = getOption("reproducible.verbose", 1),
   ...
