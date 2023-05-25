@@ -186,17 +186,15 @@ test_that("testing terra", {
     expect_true(terra::same.crs(vsfInUTMviaCRS, rutm))
 
     # from is sf, to is SpatRast --> skip maskTo
-    if (.requireNamespace("sf")) {
-      if (getRversion() >= "4.1" && isWindows()) {
-        vsfInUTMviaSpatRast <-
-          suppressWarningsSpecific(falseWarnings = "attribute variables are assumed",
-                                   postProcessTo(vOrigsf, rutm))
-        expect_true(is(vsfInUTMviaSpatRast, "sf"))
-        expect_true(sf::st_crs(vsfInUTMviaSpatRast) == sf::st_crs(rutm))
-        expect_true(isTRUE(all.equal(round(terra::ext(rutm), 6),
-                                     round(terra::ext(vsfInUTMviaSpatRast), 6))))
+    if (getRversion() >= "4.1" && isWindows()) {
+      vsfInUTMviaSpatRast <-
+        suppressWarningsSpecific(falseWarnings = "attribute variables are assumed",
+                                 postProcessTo(vOrigsf, rutm))
+      expect_true(is(vsfInUTMviaSpatRast, "sf"))
+      expect_true(sf::st_crs(vsfInUTMviaSpatRast) == sf::st_crs(rutm))
+      expect_true(isTRUE(all.equal(round(terra::ext(rutm), 6),
+                                   round(terra::ext(vsfInUTMviaSpatRast), 6))))
 
-      }
     }
 
     # Check for cases where `to` does not overlap with `from`
@@ -210,8 +208,10 @@ test_that("testing terra", {
     terra::crs(ext2) <- terra::crs(vsf)
     ext3 <- sf::st_as_sf(ext2)
     if (.requireNamespace("sf")) {
-      expect_warning(expect_error(postProcessTo(vOrigsf, ext3))) # sf gives warning too
-      expect_error(postProcessTo(terra::vect(vOrigsf), ext2))
+      expect_warning(expect_message(postProcessTo(vOrigsf, ext3))) # sf gives warning too
+      expect_message(postProcessTo(terra::vect(vOrigsf), ext2))
+      #expect_warning(expect_error(postProcessTo(vOrigsf, ext3))) # sf gives warning too
+      #expect_error(postProcessTo(terra::vect(vOrigsf), ext2))
     }
     if (.requireNamespace("sf")) {
       if (.requireNamespace("sp"))
