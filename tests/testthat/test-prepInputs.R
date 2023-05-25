@@ -1428,6 +1428,14 @@ test_that("options inputPaths", {
         test0 <- try(getDataFn(path = tmpdir, country = "LUX"), silent = TRUE)
       )}))
   useGADM <- !is(test0, "try-error")
+  theFile <- if (useGADM) {
+    targetFileLuxRDS
+  } else {
+    "rasterTest.tif"
+  }
+  url2 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
+  tmpdir3 <- file.path(tmpCache, "test")
+
 
   if (useGADM)
     noisyOutput <- capture.output(
@@ -1444,13 +1452,6 @@ test_that("options inputPaths", {
         )
       })
     )
-
-  theFile <- if (useGADM) {
-    targetFileLuxRDS
-  } else {
-    "rasterTest.tif"
-  }
-  url2 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
 
   noisyOutput <- capture.output(
     noisyOutput <- capture.output(type = "message", {
@@ -1489,7 +1490,6 @@ test_that("options inputPaths", {
   #   should hardlink from 2nd IP to destinationPath, make sure CHECKSUMS.txt is correct in both
   options("reproducible.inputPaths" = c(tmpdir, tmpCache))
   file.remove(file.path(tmpdir, theFile))
-  tmpdir3 <- file.path(tmpCache, "test")
   noisyOutput <- capture.output(
     mess1 <- capture_messages(
       test1 <- prepInputs(url = if (!useGADM) url2 else f$url,
@@ -1511,6 +1511,7 @@ test_that("options inputPaths", {
   if (!isTRUE(as.logical(Sys.getenv("CI")))) { #(!testthat:::on_ci()) { # can't use the :::
     options("reproducible.inputPaths" = tmpdir)
     options("reproducible.inputPathsRecursive" = TRUE)
+    file.remove(file.path(tmpdir3, theFile))
     file.remove(file.path(tmpCache, theFile))
     tmpdir1 <- file.path(tmpCache, "test1")
     noisyOutput <- capture.output(
@@ -1526,7 +1527,7 @@ test_that("options inputPaths", {
       )
     )
     expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ":\n", file.path(tmpdir1, theFile)), mess1)) == 1)
-    expect_true(sum(grepl(paste0("",whPointsToMessForGrep,"\n", file.path(tmpdir3, theFile)), mess1)) == 1)
+    expect_true(sum(grepl(paste0("",whPointsToMessForGrep,"\n", file.path(tmpdir, theFile)), mess1)) == 1)
     expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 2)
 
   }
