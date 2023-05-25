@@ -45,6 +45,7 @@ test_that("checkPath: normPath consistency", {
 
 test_that("checkPath: checkPath consistency", {
   testInitOut <- testInit()
+  withr::local_dir(tmpdir)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

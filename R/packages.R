@@ -31,27 +31,28 @@ compareNA <- function(v1, v2) {
 }
 
 
-internetExists <- function() {
-  if (requireNamespace("RCurl", quietly = TRUE)) {
-    out <- RCurl::url.exists("www.google.com")
-  } else {
-    messagePrepInputs(RCurlMess)
-    if (.Platform$OS.type == "windows") {
-      ipmessage <- system("ipconfig", intern = TRUE)
-    } else {
-      ipmessage <- system("ifconfig", intern = TRUE)
-    }
-    validIP <- "((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)[.]){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
-    linesWithIP <- grep(validIP, ipmessage)
-    out <- if (length(linesWithIP)) {
-      any(linesWithIP) && all(!grepl("127.0.0.1", ipmessage[linesWithIP]))
-    } else {
-      FALSE
-    }
-    out
-  }
-  return(out)
-}
+# internetExists <- function() {
+#   if (requireNamespace("RCurl", quietly = TRUE)) {
+#     out <- RCurl::url.exists("www.google.com")
+#   } else {
+#     messagePrepInputs(RCurlMess)
+#     out <- urlExists("https://www.google.com")
+#     # if (.Platform$OS.type == "windows") {
+#     #   ipmessage <- system("ipconfig", intern = TRUE)
+#     # } else {
+#     #   ipmessage <- system("ifconfig", intern = TRUE)
+#     # }
+#     # validIP <- "((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)[.]){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+#     # linesWithIP <- grep(validIP, ipmessage)
+#     # out <- if (length(linesWithIP)) {
+#     #   any(linesWithIP) && all(!grepl("127.0.0.1", ipmessage[linesWithIP]))
+#     # } else {
+#     #   FALSE
+#     # }
+#     # out
+#   }
+#   return(out)
+# }
 
 RCurlMess <- paste0("install.packages('RCurl') may give a more reliable detection ",
 "of internet connection")

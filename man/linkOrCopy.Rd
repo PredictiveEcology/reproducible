@@ -68,7 +68,7 @@ unlink(f0)
 file.exists(f0) ## FALSE
 file.exists(f2) ## TRUE
 
-if (requireNamespace("terra")) {
+if (requireNamespace("terra", quietly = TRUE)) {
   ## using spatRasters and other file-backed objects
   f3a <- system.file("ex/test.grd", package = "terra")
   f3b <- system.file("ex/test.gri", package = "terra")

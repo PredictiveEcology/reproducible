@@ -626,12 +626,17 @@ rasterRead <- function(...)
 rasterType <- function(nlayers = 1,
                        rasterRead = getOption("reproducible.rasterRead", "terra::rast")) {
   if (is.character(rasterRead)) {
-    rasterRead <- eval(parse(text = rasterRead))
+    rasterRead <- if (.requireNamespace("terra") || .requireNamespace("raster"))
+      eval(parse(text = rasterRead))
+    else
+      ""
   }
-  if (identical(rasterRead, terra::rast))
-    "SpatRaster"
-  else
-    if (nlayers == 1) "RasterLayer" else "RasterStack"
+  if (!is.character(rasterRead))
+    rasterRead <- if (identical(rasterRead, terra::rast))
+      "SpatRaster"
+    else
+      if (nlayers == 1) "RasterLayer" else "RasterStack"
+  rasterRead
 }
 
 
@@ -647,16 +652,21 @@ vectorType <- function(vectorRead = getOption("reproducible.shapefileRead", "sf:
       if (.requireNamespace("raster", stopOnFALSE = TRUE))
         needRasterPkg <- TRUE
     }
-    vectorRead <- eval(parse(text = vectorRead))
+    vectorRead <- if (.requireNamespace("terra") || .requireNamespace("sf") || .requireNamespace("sp"))
+      eval(parse(text = vectorRead))
+    else
+      ""
   }
-  if (identical(vectorRead, terra::vect)) {
-    "SpatVector"
-  } else if (needRasterPkg) {
-    .requireNamespace("raster", stopOnFALSE = TRUE)
-    "SpatialPolygons"
-  }  else {
-    "sf"
-  }
+  if (!is.character(vectorRead))
+    vectorRead <- if (identical(vectorRead, terra::vect)) {
+      "SpatVector"
+    } else if (needRasterPkg) {
+      .requireNamespace("raster", stopOnFALSE = TRUE)
+      "SpatialPolygons"
+    }  else {
+      "sf"
+    }
+  vectorRead
 }
 
 

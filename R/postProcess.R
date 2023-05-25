@@ -438,7 +438,7 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #' @rdname deprecated
 #'
 #' @examples
-#' if (requireNamespace("terra")) {
+#' if (requireNamespace("terra", quietly = TRUE)) {
 #'   r <- terra::rast(terra::ext(0,100,0,100), vals = 1:1e2)
 #'
 #'   tf <- tempfile(fileext = ".tif")
@@ -476,7 +476,7 @@ writeOutputs.default <- function(x, ..., # filename2,
 #'
 #' @export
 #' @return A character string indicating the data type of the spatial layer
-#' (e.g., "INT2U"). See [terra::datatype()]
+#' (e.g., "INT2U"). See `terra::datatype()`
 #' @rdname assessDataType
 #'
 #' @example inst/examples/example_assessDataType.R

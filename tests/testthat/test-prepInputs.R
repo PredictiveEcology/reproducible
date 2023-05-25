@@ -84,8 +84,8 @@ test_that("prepInputs doesn't work (part 1)", {
 
   unlink(dirname(ecozoneFilename), recursive = TRUE)
   # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
-  #aaaa <<- 1
-  #on.exit(rm(aaaa, envir = .GlobalEnv))
+  skip_if_not_installed("terra")
+
   noisyOutput <- capture.output(
     warn <- suppressWarningsSpecific(
       falseWarnings = "attribute variables are assumed to be spatially constant", {

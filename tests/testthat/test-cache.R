@@ -2,9 +2,9 @@ test_that("test file-backed raster caching", {
   skip_on_cran()
   testInitOut <- testInit("terra", tmpFileExt = c(".tif", ".grd"),
                           opts = list(reproducible.useMemoise = FALSE))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  # on.exit({
+  #   testOnExit(testInitOut)
+  # }, add = TRUE)
 
   nOT <- Sys.time()
 
@@ -486,6 +486,7 @@ test_that("test environments", {
 
 test_that("test asPath", {
   testInitOut <- testInit("terra", tmpFileExt = "pdf",
+                          verbose = TRUE,
                           opts = list("reproducible.useMemoise" = TRUE,
                                       "reproducible.showSimilar" = FALSE))
   unlink(dir(tmpdir, full.names = TRUE))
@@ -563,7 +564,8 @@ test_that("test quoted FUN in Cache", {
 })
 
 test_that("test Cache argument inheritance to inner functions", {
-  testInitOut <- testInit("terra", opts = list("reproducible.showSimilar" = FALSE,
+  testInitOut <- testInit("terra", verbose = TRUE,
+                          opts = list("reproducible.showSimilar" = FALSE,
                                                 "reproducible.useMemoise" = FALSE))
   on.exit({
     testOnExit(testInitOut)
@@ -706,11 +708,11 @@ test_that("test Cache argument inheritance to inner functions", {
 test_that("test future", {
   skip_on_cran()
   skip_on_ci()
-  skip_if_not_installed("future")
+  # skip_if_not_installed("future")
 
   .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
   if (.onLinux) {
-    testInitOut <- testInit("terra", verbose = TRUE, tmpFileExt = ".rds")
+    testInitOut <- testInit(c("terra", "future"), verbose = TRUE, tmpFileExt = ".rds")
     optsFuture <- options("future.supportsMulticore.unstable" = "quiet")
     on.exit({
       testOnExit(testInitOut)
@@ -744,7 +746,7 @@ test_that("test future", {
 })
 
 test_that("test mergeCache", {
-  testInitOut <- testInit("data.table")
+  testInitOut <- testInit("data.table", verbose = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -930,7 +932,7 @@ test_that("test mergeCache", {
 # })
 
 test_that("test useCache = 'overwrite'", {
-  testInitOut <- testInit()
+  testInitOut <- testInit(verbose = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -945,7 +947,8 @@ test_that("test useCache = 'overwrite'", {
   clearCache(x = tmpCache, ask = FALSE)
 
   testOnExit(testInitOut)
-  testInitOut <- testInit(ask = FALSE, opts = list("reproducible.useCache" = "overwrite"))
+  testInitOut <- testInit(ask = FALSE,verbose = TRUE,
+                          opts = list("reproducible.useCache" = "overwrite"))
 
   a <- Cache(rnorm, 1, cachePath = tmpCache)
   mess <- capture_messages({
@@ -986,7 +989,7 @@ test_that("test cc", {
   skip_on_cran()
   # skip_on_ci()
 
-  testInitOut <- testInit(ask = FALSE)
+  testInitOut <- testInit(ask = FALSE, verbose = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1108,7 +1111,7 @@ test_that("test changing reproducible.cacheSaveFormat midstream", {
 })
 
 test_that("test file link with duplicate Cache", {
-  testInitOut <- testInit(opts = list("reproducible.useMemoise" = FALSE))
+  testInitOut <- testInit(verbose = TRUE, opts = list("reproducible.useMemoise" = FALSE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1220,7 +1223,7 @@ test_that("test .object arg for list in Cache", {
 
 test_that("quick arg in Cache as character", {
   skip_on_cran()
-  testInitOut <- testInit("terra", tmpFileExt = c("rds", "tif"))
+  testInitOut <- testInit("terra", verbose = TRUE, tmpFileExt = c("rds", "tif"))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1520,7 +1523,7 @@ test_that("test cache with new approach to match.call", {
   }
 
   # This tries to do a method that is not actually exported from a package; the generic (sf::st_make_valid) is
-  if (requireNamespace("sf")) {
+  if (.requireNamespace("sf")) {
     clearCache(ask = FALSE)
     b <- list(fun = fun)
     a <- list()
@@ -1676,7 +1679,7 @@ test_that("Issue 316 - writeOutputs in a non getwd dir", {
   studyAreaName <- "test"
 
   f <- system.file("ex/elev.tif", package="terra")
-  rasterToMatch<- rast(f)
+  rasterToMatch<- terra::rast(f)
 
   RTMvals <- as.vector(rasterToMatch[])
   rasterToMatch[!is.na(RTMvals)] <- 1
@@ -1696,7 +1699,7 @@ test_that("Issue 316 - writeOutputs in a non getwd dir", {
 
 
 test_that("test useDBI TRUE <--> FALSE", {
-  testInitOut <- testInit()
+  testInitOut <- testInit(verbose = TRUE)
   on.exit({
     testOnExit(testInitOut)
     useDBI(orig)
@@ -1724,7 +1727,7 @@ test_that("test useDBI TRUE <--> FALSE", {
 
 test_that("lightweight tests for preProcess code coverage", {
   skip_on_cran()
-  out <- testInit(opts = list(reproducible.cachePath = quote(tmpdir)))
+  out <- testInit(verbose = TRUE, opts = list(reproducible.cachePath = quote(tmpdir)))
   on.exit(testOnExit(out), add = TRUE)
   expect_error(Cache(), "requires")
   expect_message(Cache(compareRasterFileLength = TRUE, rnorm(1)), regexp = "compareRasterFileLength")

@@ -153,7 +153,7 @@ Deprecated. Use \code{\link[=projectTo]{projectTo()}}.
 See \code{\link[=writeTo]{writeTo()}}
 }
 \examples{
-if (requireNamespace("terra")) {
+if (requireNamespace("terra", quietly = TRUE)) {
   r <- terra::rast(terra::ext(0,100,0,100), vals = 1:1e2)
 
   tf <- tempfile(fileext = ".tif")

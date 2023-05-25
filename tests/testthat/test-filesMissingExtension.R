@@ -4,6 +4,7 @@ test_that("prepInputs works with NULL archive + file without extension, but orig
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
+  skip_if_not_installed("terra")
   noisyOutput <- capture.output({
     testthat::expect_message({
       ras <- reproducible::prepInputs(url = "https://github.com/tati-micheletti/host/raw/master/data/unknownExtension",
@@ -48,7 +49,7 @@ test_that("prepInputs WORKS if passing archive .zip", {
 
 test_that("prepInputs WORKS passing just targetFile that is NOT an archive", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

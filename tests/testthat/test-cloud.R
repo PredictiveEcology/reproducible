@@ -3,7 +3,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   skip_on_ci()
 
   testInitOut <- testInit(
-    c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
+    c("googledrive", "terra"), tmpFileExt = c(".tif", ".grd"),
     needGoogleDriveAuth = TRUE,
     opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
                 "reproducible.ask" = FALSE)

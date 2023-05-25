@@ -12,8 +12,39 @@ skip_if_no_token <- function() {
 #   optsAsk in this environment,
 # loads and libraries indicated plus testthat,
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
-testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
+testInit <- function(libraries = character(), ask, verbose, tmpFileExt = "",
                      opts = NULL, needGoogleDriveAuth = FALSE) {
+  pf <- parent.frame()
+
+  if (isTRUE(needGoogleDriveAuth))
+    libraries <- c(libraries, "googledrive")
+  if (length(libraries)) {
+    pkgsLoaded <- unlist(lapply(libraries, requireNamespace, quietly = TRUE))
+    if (!all(pkgsLoaded)) {
+      lapply(libraries[!pkgsLoaded], skip_if_not_installed)
+    }
+    lapply(libraries, withr::local_package, .local_envir = pf)
+  }
+
+  out <- list()
+  if (!missing(ask))
+    withr::local_options("reproducible.ask" = ask, .local_envir = pf)
+  if (!missing(verbose))
+    withr::local_options("reproducible.verbose" = verbose, .local_envir = pf)
+  if (!is.null(opts))
+    withr::local_options(opts, .local_envir = pf)
+  tmpdir <- withr::local_tempdir(tmpdir = tempdir2(), .local_envir = pf)
+  tmpCache <- withr::local_tempdir(tmpdir = tmpdir, .local_envir = pf)
+  if (isTRUE(any(nzchar(tmpFileExt)))) {
+    dotStart <- startsWith(tmpFileExt, ".")
+    if (any(!dotStart))
+      tmpFileExt[!dotStart] <- paste0(".", tmpFileExt)
+    out$tmpfile <- withr::local_tempfile(fileext = tmpFileExt)
+  }
+  out <- append(out, list(tmpdir = tmpdir, tmpCache = tmpCache))
+  list2env(out, envir = pf)
+  return(out)
+
   tmpdir <- tempdir2(sprintf("%s_%03d", rndstr(1, 6), .pkgEnv$testCacheCounter))
   tmpCache <- checkPath(file.path(tmpdir, "testCache"), create = TRUE)
   .pkgEnv$testCacheCounter <- .pkgEnv$testCacheCounter + 1L
@@ -30,10 +61,12 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
 
   if (missing(libraries)) libraries <- list()
   if (length(libraries)) {
-    pkgsLoaded <- unlist(lapply(libraries, require, character.only = TRUE, quietly = TRUE))
-    if (!any(pkgsLoaded)) {
+    pkgsLoaded <- unlist(lapply(libraries, requireNamespace, quietly = TRUE))
+    if (!all(pkgsLoaded)) {
       lapply(libraries[!pkgsLoaded], skip_if_not_installed)
     }
+    pf <- parent.frame()
+    lapply(libraries, withr::local_package, .local_envir = pf)
   }
 
   require("testthat", quietly = TRUE)
@@ -42,10 +75,11 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
 
   # Set a new seed each time
   set.randomseed()
+  if (isTRUE(needGoogleDriveAuth))
+    skip_if_not_installed("googledrive")
 
   skip_gauth <- identical(Sys.getenv("SKIP_GAUTH"), "true") # only set in setup.R for covr
   if (isTRUE(needGoogleDriveAuth) && !skip_gauth) {
-    skip_if_not_installed("googledrive")
     if (interactive()) {
       if (!googledrive::drive_has_token()) {
         getAuth <- FALSE
@@ -86,10 +120,10 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
 
   if (!is.null(opts)) {
     if (needGoogleDriveAuth) {
-      optsGoogle <- if (utils::packageVersion("googledrive") >= "1.0.0") {
-      } else {
+      optsGoogle <- # if (utils::packageVersion("googledrive") >= "1.0.0") {
+      # } else {
         list(httr_oob_default = .isRstudioServer())
-      }
+      # }
       opts <- append(opts, optsGoogle)
     }
     opts <- lapply(opts, function(o) if (is.name(o)) eval(o, envir = environment()) else o)
@@ -113,11 +147,13 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
                   tmpCache = tmpCache, optsAsk = optsAsk,
                   optsVerbose = optsVerbose, tmpfile = tmpfile,
                   opts = opts, needGoogleDriveAuth = needGoogleDriveAuth)
-  list2env(outList, envir = parent.frame())
+  list2env(outList, envir = pf)
   return(outList)
 }
 
 testOnExit <- function(testInitOut) {
+  return()
+
   if (length(testInitOut$optsVerbose))
     options("reproducible.verbose" = testInitOut$optsVerbose[[1]])
   if (length(testInitOut$optsAsk))

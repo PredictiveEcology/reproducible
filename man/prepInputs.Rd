@@ -138,7 +138,7 @@ This function is still experimental: use with caution.
 See \code{\link[=preProcess]{preProcess()}} for combinations of arguments.
 
 \enumerate{
-\item Download from the web via either \code{\link[googledrive:drive_download]{googledrive::drive_download()}},
+\item Download from the web via either \code{googledrive::drive_download()},
 \code{\link[utils:download.file]{utils::download.file()}};
 \item Extract from archive using \code{\link[=unzip]{unzip()}} or \code{\link[=untar]{untar()}};
 \item Load into R using \code{terra::rast},
@@ -237,7 +237,8 @@ If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
 
 \examples{
 \donttest{
-  if (requireNamespace("terra") && requireNamespace("sf")) {
+  if (requireNamespace("terra", quietly = TRUE) &&
+      requireNamespace("sf", quietly = TRUE)) {
 
     library(reproducible)
   # Make a dummy study area map -- user would supply this normally
