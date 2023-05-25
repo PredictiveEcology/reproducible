@@ -4,7 +4,12 @@
 \alias{checkRelative}
 \title{An alternative to \code{basename} and \code{dirname} when there are sub-folders}
 \usage{
-checkRelative(files, absolutePrefix, knownRelativeFiles)
+checkRelative(
+  files,
+  absolutePrefix,
+  knownRelativeFiles,
+  verbose = getOption("reproducible.verbose")
+)
 }
 \arguments{
 \item{files}{A character vector of files to check to see if they are the same
@@ -15,6 +20,12 @@ to \code{knownRelativeFiles}}
 
 \item{knownRelativeFiles}{A character vector of relative filenames, that could
 have sub-folder structure.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \description{
 This confirms that the \code{files} which may be absolute actually

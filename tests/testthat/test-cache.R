@@ -749,7 +749,6 @@ test_that("test mergeCache", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  # aaaa <<- gggg <<- kkkk <<- 1
   a <- Cache(rnorm, 1, cachePath = tmpdir)
   b <- Cache(rnorm, 2, cachePath = tmpCache)
 
@@ -937,8 +936,6 @@ test_that("test useCache = 'overwrite'", {
   }, add = TRUE)
 
   a <- Cache(rnorm, 1, useCache = "overwrite", cachePath = tmpCache)
-  #aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
-  # ffff <<- 1
   mess <- capture_messages({
     b <- Cache(rnorm, 1, useCache = "overwrite", cachePath = tmpCache)
   })
@@ -961,6 +958,7 @@ test_that("test useCache = 'overwrite'", {
 test_that("test rm large non-file-backed rasters", {
   ## This is a large object test!
   skip_on_cran()
+  skip_if_not_installed("qs")
 
   if (!is.null(getOption("reproducible.conn", NULL)))
     if (!grepl("SQLite", class(getOption("reproducible.conn", NULL))))
