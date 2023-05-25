@@ -1,15 +1,12 @@
 test_that("checkPath: normPath consistency", {
   # Use the following here instead of above because it fails on Mac without this.
-  tmpdir <- tempdir2("test_normPath")
-  tmpdir <- normalizePath(tmpdir, winslash = "/", mustWork = FALSE)
+  testInit()
+  # tmpdir <- tempdir2("test_normPath")
+  # tmpdir <- normalizePath(tmpdir, winslash = "/", mustWork = FALSE)
 
-  cwd <- getwd()
-  setwd(tmpdir)
-
-  on.exit({
-    setwd(cwd)
-    unlink(tmpdir, recursive = TRUE)
-  }, add = TRUE) # nolint
+  withr::local_dir(tmpdir)
+  # cwd <- getwd()
+  # setwd(tmpdir)
 
   # don't use checkPath here because we are testing normPath!
 
@@ -46,9 +43,9 @@ test_that("checkPath: normPath consistency", {
 test_that("checkPath: checkPath consistency", {
   testInitOut <- testInit()
   withr::local_dir(tmpdir)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  # on.exit({
+  #   testOnExit(testInitOut)
+  # }, add = TRUE)
 
   dir.create("aaa/zzz", recursive = TRUE, showWarnings = FALSE)
   paths <- list("./aaa/zzz",
@@ -63,7 +60,7 @@ test_that("checkPath: checkPath consistency", {
 
   checked <- lapply(paths, checkPath, create = FALSE)
   expect_equal(length(unique(checked)), 1)
-  unlink(tmpdir, recursive = TRUE)
+  # unlink(tmpdir, recursive = TRUE)
 
   # extra checks for missing/NA/NULL
   expect_error(checkPath(), "Invalid path: no path specified.")
