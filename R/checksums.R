@@ -142,6 +142,18 @@ setMethod(
     } else {
       files
     }
+
+    if (length(filesToCheck) != length(files)) {
+      # Could be a case of user passing file path that is not with subdirectories; offer help
+      justByBasename <- basename(txt$file) %in% basename(files)
+      if (sum(justByBasename) == length(files)) {
+        messagePrepInputs("Files found in CHECKSUMS.txt that match by basename; using these.\n",
+                          "  User should specify all files (e.g., targetFile, alsoExtract, archive)\n",
+                          "  with subfolders specified.")
+        filesToCheck <- unique(c(filesToCheck, makeAbsolute(txt$file[justByBasename], path)))
+      }
+    }
+
     filesToCheck <- filesToCheck[file.exists(filesToCheck)] # remove non existing files
     # filesToCheck <- filesToCheck[!dir.exists(filesToCheck)] # remove directories # need to keep directories b/c e.g., gdb files need directories
 
