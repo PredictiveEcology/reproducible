@@ -310,7 +310,7 @@ PostgreSQL that can handle multiple simultaneous read-write situations. See
 \url{https://github.com/PredictiveEcology/SpaDES/wiki/Using-alternate-database-backends-for-Cache}.
 }
 
-\section{useCache}{
+\section{\code{useCache}}{
 
 Logical or numeric. If \code{FALSE} or \code{0}, then the entire Caching
 mechanism is bypassed and the
@@ -375,6 +375,16 @@ cloud folder gets large. If a user wishes to keep "high-level" control, set this
 \code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
 be \code{FALSE} or \code{TRUE}, respectively) so it can be turned on and off with
 this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})
+}
+
+\section{Object attributes}{
+
+Users should be cautioned that object attributes may not be preserved, especially
+in the case of objects that are file-backed, such as \code{Raster} or \code{SpatRaster} objects.
+If a user needs to keep attributes, they may need to manually re-attach them to
+the object after recovery. With the example of \code{SpatRaster} objects, saving
+to disk requires \code{terra::wrap} if it is a memory-backed object. When running
+\code{terra::unwrap} on this object, any attributes that a user had added are lost.
 }
 
 \section{\code{sideEffect}}{

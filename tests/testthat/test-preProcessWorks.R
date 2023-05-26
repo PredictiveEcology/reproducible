@@ -1,6 +1,6 @@
 test_that("preProcess works for .tar files", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit()
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -550,3 +550,98 @@ test_that("large test for nested file structures in zips", {
 
 
 })
+
+test_that("more nested file structures in zip; alsoExtract NA", {
+  skip_on_cran()
+  tmpdir <- withr::local_tempdir()
+  withr::local_dir(tmpdir)
+  zipName <- "ex.zip"
+  system.time({
+    ras <- lapply(1:2, function(x) {
+      td <- tempdir2();
+      terra::rast(terra::ext(0,4,0,4), vals = sample(1:16), res = 1) |>
+        writeRaster(filename = file.path(td, basename(tempfile(fileext = ".tif"))))
+    })
+    setwd(dirname(dirname(Filenames(ras[[1]]))))
+    fns1 <- Filenames(ras)
+    # zip(zipName, files = file.path(basename(dirname(fns)), basename(fns)))
+    ras <- lapply(1:2, function(x) {
+      terra::rast(terra::ext(0,4,0,4), vals = sample(1:16), res = 1) |>
+        writeRaster(filename = file.path(basename(tempfile(fileext = ".tif"))))
+    })
+    fns2 <- Filenames(ras)
+    zip(zipName, files = c(file.path(basename(dirname(fns1)), basename(fns1)), basename(fns2)))
+  })
+  zipName2 <- file.path(tmpdir, zipName)
+
+  # don't specify targetFile --> fail because many options
+  linkOrCopy(zipName, zipName2)
+  a <- prepInputs(archive = zipName, destinationPath = tmpdir)
+  knownOtherFiles <- c("cache.db", "CHECKSUMS.txt", "ex.zip", "testCache")
+  files <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
+  expect_true(all(.listFilesInArchive(zipName2) %in% files))
+  unlink(file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)), recursive = TRUE)
+  files2 <- dir(pattern = ".tif", tmpdir, full.names = TRUE)
+  unlink(files2)
+
+  # alsoExtract = NULL --> the default --> extract all
+  checkPath(dirname(zipName2), create = TRUE)
+  linkOrCopy(zipName, zipName2)
+  a <- prepInputs(archive = zipName,
+                  targetFile = grep("\\.tif", basename(files), value = TRUE)[1],
+                  destinationPath = tmpdir)
+  files <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
+  expect_true(all(.listFilesInArchive(zipName2) %in% files))
+  unlink(file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)), recursive = TRUE)
+  files2 <- dir(pattern = ".tif", tmpdir, full.names = TRUE)
+  unlink(files2)
+
+
+  # alsoExtract = NA --> extract only targetFile -- with wrong filename (missing subdir)
+  checkPath(dirname(zipName2), create = TRUE)
+  linkOrCopy(zipName, zipName2)
+  filesPre <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
+  a <- prepInputs(archive = zipName, alsoExtract = NA,
+                  targetFile = grep("\\.tif", basename(files), value = TRUE)[1],
+                  destinationPath = tmpdir)
+  files <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
+  expect_false(all(.listFilesInArchive(zipName2) %in% files))
+  expect_true(sum(.listFilesInArchive(zipName2) %in% files) == 1)
+  unlink(file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)), recursive = TRUE)
+  files2 <- dir(pattern = ".tif", tmpdir, full.names = TRUE)
+  unlink(files2)
+
+
+
+  # alsoExtract = a filename --> extract targetFile & 1 other -- with correct filename (with subdir)
+  checkPath(dirname(zipName2), create = TRUE)
+  linkOrCopy(zipName, zipName2)
+  possFiles <- .listFilesInArchive(zipName2)
+  filesWithSubDir <- grep("\\/", possFiles, value = TRUE, invert = FALSE)
+  filesPre <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
+  a <- prepInputs(archive = zipName, alsoExtract = filesWithSubDir[2],
+                  targetFile = filesWithSubDir[1],
+                  destinationPath = tmpdir)
+  files <- dir(tmpdir, recursive = TRUE) # no subdir on this file, so non-recursive should do it
+  expect_false(all(.listFilesInArchive(zipName2) %in% files))
+  expect_true(sum(.listFilesInArchive(zipName2) %in% files) == 2) #
+  unlink(file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)), recursive = TRUE)
+  files2 <- dir(pattern = ".tif", tmpdir, full.names = TRUE)
+  unlink(files2)
+
+
+  # alsoExtract = NA --> extract only targetFile -- with correct filename (with subdir)
+  checkPath(dirname(zipName2), create = TRUE)
+  linkOrCopy(zipName, zipName2)
+  possFiles <- .listFilesInArchive(zipName2)
+  filesNoSubDir <- grep("\\/", possFiles, value = TRUE, invert = TRUE)
+  filesPre <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
+  a <- prepInputs(archive = zipName, alsoExtract = NA,
+                  targetFile = filesNoSubDir[1],
+                  destinationPath = tmpdir)
+  files <- dir(tmpdir, recursive = FALSE) # no subdir on this file, so non-recursive should do it
+  expect_false(all(.listFilesInArchive(zipName2) %in% files))
+  expect_true(sum(.listFilesInArchive(zipName2) %in% files) == 1)
+
+})
+

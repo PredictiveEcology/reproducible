@@ -22,8 +22,6 @@ test_that("test devMode", {
   #   never again be defined that way. Here, because of userTags being the same,
   #   it will replace the entry in the Cache, effetively overwriting it, even though
   #   it has a different cacheId
-  # onexit <<- ffff <<- aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
-  # llll <<- 1 #devMode <<- nnnn <<- 1
   ranNumsD <- Cache(centralTendency, funnyData, cachePath = tmpCache, userTags = uniqueUserTags)
   a <- showCache(tmpCache) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b
   expect_true(NROW(unique(a[[.cacheTableHashColName()]])) == 1)

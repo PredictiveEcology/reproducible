@@ -201,8 +201,8 @@ test_that("testing terra", {
   ext2 <- terra::vect(ext1)
   terra::crs(ext2) <- terra::crs(vsf)
   ext3 <- sf::st_as_sf(ext2)
-  expect_warning(expect_error(postProcessTo(vOrigsf, ext3))) # sf gives warning too
-  expect_error(postProcessTo(terra::vect(vOrigsf), ext2))
+  expect_warning(expect_message(postProcessTo(vOrigsf, ext3))) # sf gives warning too
+  expect_message(postProcessTo(terra::vect(vOrigsf), ext2))
   if (.requireNamespace("sp"))
     expect_error(postProcessTo(as(vOrigsf, "Spatial"), as(ext2, "Spatial")))
   if (.requireNamespace("raster"))

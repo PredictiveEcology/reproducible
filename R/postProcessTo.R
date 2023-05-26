@@ -679,8 +679,9 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
             if (grepl("extents do not overlap", fromInt))
               fail <- TRUE
           if (NROW(fromInt) == 0) { # likely don't overlap
-            fromInt <- "It looks like the extents do not overlap; stopping"
-            fail <- TRUE
+            messagePrepInputs("It looks like the cropping results in no data ",
+                             "(do not overlap or no intersection)", verbose = verbose)
+            fail <- FALSE
           }
           if (fail)
             stop(fromInt)
@@ -1020,6 +1021,10 @@ remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.fr
         })
     if (isTRUE(dots$useSAcrs)) {
       ret$projectTo <- dots$studyArea
+    }
+
+    if (isFALSE(dots$useSAcrs)) {
+      ret$projectTo <- NULL
     }
     # ret <- ret[!vapply(ret, is.null, FUN.VALUE = logical(1))]
     list2env(ret, envir)

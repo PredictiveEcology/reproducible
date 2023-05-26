@@ -71,7 +71,7 @@ if (getRversion() >= "3.1.0") {
 #' }
 #'
 setGeneric("Checksums", function(path, write, quickCheck = FALSE,
-                                 checksumFile = file.path(path, "CHECKSUMS.txt"),
+                                 checksumFile = identifyCHECKSUMStxtFile(path),
                                  files = NULL, verbose = getOption("reproducible.verbose", 1),
                                  ...) {
   standardGeneric("Checksums")
@@ -142,6 +142,18 @@ setMethod(
     } else {
       files
     }
+
+    if (length(filesToCheck) != length(files)) {
+      # Could be a case of user passing file path that is not with subdirectories; offer help
+      justByBasename <- basename(txt$file) %in% basename(files)
+      if (sum(justByBasename) == length(files)) {
+        messagePrepInputs("Files found in CHECKSUMS.txt that match by basename; using these.\n",
+                          "  User should specify all files (e.g., targetFile, alsoExtract, archive)\n",
+                          "  with subfolders specified.")
+        filesToCheck <- unique(c(filesToCheck, makeAbsolute(txt$file[justByBasename], path)))
+      }
+    }
+
     filesToCheck <- filesToCheck[file.exists(filesToCheck)] # remove non existing files
     # filesToCheck <- filesToCheck[!dir.exists(filesToCheck)] # remove directories # need to keep directories b/c e.g., gdb files need directories
 
@@ -223,6 +235,8 @@ setMethod(
     }
     data.table::setorderv(out, "result", order = -1L, na.last = TRUE)
     out <- out[, .SD[1,], by = "expectedFile"]
+    out <- checksumsDirsOk(out)
+
     results.df <- out[, list(
       "result" = result,
       "expectedFile" = expectedFile,
@@ -295,3 +309,16 @@ setMethod(
           )))# need as.character for empty case # nolint
     }
   })
+
+
+checksumsDirsOk <- function(out) {
+  cscols <- "checksum.x|i.checksum"
+  if (any(grepl(cscols, colnames(out)))) {
+    cscol <- grep(cscols, colnames(out), value = TRUE)[1]
+    dirsHave <- unique(dirname(out[!get(cscol) %in% "dir" & result == "OK"]$expectedFile))
+    dirsHave <- grep("\\.", dirsHave, value = TRUE, invert = TRUE)
+    if (length(dirsHave))
+      out[get(cscol) %in% "dir" & expectedFile %in% dirsHave, result := "OK"]
+  }
+  out
+}

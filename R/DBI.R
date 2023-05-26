@@ -814,7 +814,11 @@ loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL) {
     origGetWd <- tv[tk == "origGetWd"]
 
     relPath <- gsub(normPath(origGetWd), "", normPath(origDirname))
-    newName <- file.path(getwd(), relPath, origFilename)
+    isAbs <- isAbsolutePath(relPath)
+    if (any(isAbs)) # means that it had a specific path, not just relative
+      newName <- file.path(normPath(origDirname), origFilename)
+    else
+      newName <- file.path(getwd(), relPath, origFilename)
     whFiles <- newName[match(basename(whichFiles), origFilename)]
     hardLinkOrCopy(file, newName, verbose = 0)
     obj <- eval(parse(text = loadFun))(whFiles)
