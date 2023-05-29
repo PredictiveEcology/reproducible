@@ -3,7 +3,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
   skip_on_ci()
 
   if (interactive()) {
-    testInitOut <- testInit(needGoogleDriveAuth = TRUE)
+    testInitOut <- testInit("terra", needGoogleDriveAuth = TRUE)
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
@@ -30,8 +30,6 @@ test_that("testing prepInputs with deauthorized googledrive", {
         prepInputs(
           url = "http://cwfis.cfs.nrcan.gc.ca/downloads/nfdb/fire_pnt/current_version/NFDB_point.zip",
           overwrite = TRUE,
-          #targetFile = "NFDB_point_20181129.shp",
-          #  alsoExtract = "similar",
           fun = quote(sf::st_read(targetFile, quiet = TRUE))
         )
       expect_is(NFDB_PT, "sf")
