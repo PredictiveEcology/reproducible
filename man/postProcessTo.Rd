@@ -93,7 +93,8 @@ If supplied, this will override \code{to} for the projecting step.
 Defaults to \code{NULL}, which means use \code{to}.
 \strong{Attention.} Conflicts may arise with when \code{projectTo} is a Vector/CRS object with a
 distinct CRS from \code{to}. Because \code{to} is used for masking \emph{after} \code{from} is re-projected using
-\code{projectTo}, the extents of \code{to} and \code{from} mayn no longer overlap leading to failure during
+\code{projectTo}, the extents of \code{to} and \code{from} may no longer overlap (as in \emph{align})
+perfectly leading to failure during
 the masking step. We  recommend passing a raster templates to \code{projectTo} whose extent and CRS
 are both compatible with the object used later for masking (either \code{to} or \code{maskTo}).}
 
@@ -155,8 +156,10 @@ This function is also used internally with the deprecated family \code{\link[=po
 \verb{*Inputs}, such as \code{\link[=cropInputs]{cropInputs()}}.
 }
 \details{
-\code{postProcessTo} is a wrapper around \code{cropTo(needBuffer = TRUE)}, \code{projectTo},
-\code{maskTo}, \code{writeTo}. Users can call each of these individually.
+\code{postProcessTo} is a wrapper around (an initial "wide" crop for speed)
+\code{cropTo(needBuffer = TRUE)}, \code{projectTo},
+\code{cropTo} (the actual crop for precision), \code{maskTo}, \code{writeTo}.
+Users can call each of these individually.
 
 \code{postProcessTerra} is the early name of this function that is now \code{postProcessTo}.
 }
@@ -173,7 +176,8 @@ and masking where there are \code{NA} from the \code{to}    \cr
 \code{Gridded} \tab \code{Vector}   \tab the projection, origin, and mask from \code{to}, and
 extent will be a round number of pixels that
 fit within the extent of \code{to}. Resolution will
-be the same as \code{from}                             \cr
+be the same as \code{from}.  See section
+below about \code{projectTo}. \cr
 \code{Vector} \tab \code{Vector}    \tab the projection, origin, extent and mask from \code{to} \cr
 }
 
@@ -181,6 +185,17 @@ If one or more of the \verb{*To} arguments are supplied, these will
 override individual components of \code{to}. If \code{to} is omitted or \code{NULL},
 then only the \verb{*To} arguments that are used will be performed. In all cases,
 setting a \verb{*To} argument to \code{NA} will prevent that step from happening.
+}
+
+\section{\code{projectTo}}{
+
+Since these functions use the gis capabilities of \code{sf} and \code{terra}, they will only
+be able to do things that those functions can do. One key caution, which is
+stated clearly in \code{?terra::project} is that projection of a raster (i.e., gridded)
+object should always be with another gridded object. If the user chooses to
+supply a \code{projectTo} that is a vector object for a \code{from} that is gridded,
+there may be unexpected failures due e.g., to extents not overlapping during
+the \code{maskTo} stage.
 }
 
 \section{Backwards compatibility with \code{postProcess}}{

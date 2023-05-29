@@ -17,8 +17,10 @@
 #' `*Inputs`, such as [cropInputs()].
 #'
 #' @details
-#' `postProcessTo` is a wrapper around `cropTo(needBuffer = TRUE)`, `projectTo`,
-#' `maskTo`, `writeTo`. Users can call each of these individually.
+#' `postProcessTo` is a wrapper around (an initial "wide" crop for speed)
+#' `cropTo(needBuffer = TRUE)`, `projectTo`,
+#' `cropTo` (the actual crop for precision), `maskTo`, `writeTo`.
+#'  Users can call each of these individually.
 #'
 #' `postProcessTerra` is the early name of this function that is now `postProcessTo`.
 #'
@@ -34,7 +36,8 @@
 #'   `Gridded` \tab `Vector`   \tab the projection, origin, and mask from `to`, and
 #'                                  extent will be a round number of pixels that
 #'                                  fit within the extent of `to`. Resolution will
-#'                                  be the same as `from`                             \cr
+#'                                  be the same as `from`.  See section
+#'                                  below about `projectTo`. \cr
 #'   `Vector` \tab `Vector`    \tab the projection, origin, extent and mask from `to` \cr
 #' }
 #'
@@ -44,7 +47,7 @@
 #' then only the `*To` arguments that are used will be performed. In all cases,
 #' setting a `*To` argument to `NA` will prevent that step from happening.
 #'
-#' @section `projectTo`
+#' @section `projectTo`:
 #' Since these functions use the gis capabilities of `sf` and `terra`, they will only
 #' be able to do things that those functions can do. One key caution, which is
 #' stated clearly in `?terra::project` is that projection of a raster (i.e., gridded)
@@ -117,7 +120,8 @@
 #'   Defaults to `NULL`, which means use `to`.
 #'   **Attention.** Conflicts may arise with when `projectTo` is a Vector/CRS object with a
 #'   distinct CRS from `to`. Because `to` is used for masking *after* `from` is re-projected using
-#'   `projectTo`, the extents of `to` and `from` mayn no longer overlap leading to failure during
+#'   `projectTo`, the extents of `to` and `from` may no longer overlap (as in *align*)
+#'   perfectly leading to failure during
 #'   the masking step. We  recommend passing a raster templates to `projectTo` whose extent and CRS
 #'   are both compatible with the object used later for masking (either `to` or `maskTo`).
 #' @param maskTo Optional Gridded or Vector dataset which,
