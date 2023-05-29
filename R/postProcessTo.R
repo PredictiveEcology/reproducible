@@ -44,7 +44,7 @@
 #' then only the `*To` arguments that are used will be performed. In all cases,
 #' setting a `*To` argument to `NA` will prevent that step from happening.
 #'
-#' @section `projectTo`
+#' @section `projectTo`:
 #' Since these functions use the gis capabilities of `sf` and `terra`, they will only
 #' be able to do things that those functions can do. One key caution, which is
 #' stated clearly in `?terra::project` is that projection of a raster (i.e., gridded)

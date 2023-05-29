@@ -177,6 +177,17 @@ then only the \verb{*To} arguments that are used will be performed. In all cases
 setting a \verb{*To} argument to \code{NA} will prevent that step from happening.
 }
 
+\section{\code{projectTo}}{
+
+Since these functions use the gis capabilities of \code{sf} and \code{terra}, they will only
+be able to do things that those functions can do. One key caution, which is
+stated clearly in \code{?terra::project} is that projection of a raster (i.e., gridded)
+object should always be with another gridded object. If the user chooses to
+supply a \code{projectTo} that is a vector object for a \code{from} that is gridded,
+there may be unexpected failures due e.g., to extents not overlapping during
+the \code{maskTo} stage.
+}
+
 \section{Backwards compatibility with \code{postProcess}}{
 
 
