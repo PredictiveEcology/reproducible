@@ -53,16 +53,25 @@
 #'   `to`. If only `studyArea` is supplied, it will be used for `cropTo`
 #'   and `maskTo`; it will only be used for `projectTo` if `useSAcrs = TRUE`.
 #'   If both `rasterToMatch` and `studyArea` are supplied,
-#'   `studyArea` will only be applied to `maskTo` (and optionally `projectTo` if
-#'   `useSAcrs = TRUE`); everything else will be from `rasterToMatch`.
+#'   `studyArea` will only be applied to `maskTo` (unless `maskWithRTM = TRUE`),
+#'    and, optionally, to `projectTo` (if `useSAcrs = TRUE`); everything else
+#'    will be from `rasterToMatch`.
+#'
 #' }
 #'
-#' \subsection{`targetCRS`, `filename2`, `useSAcrs`:}{
+#' \subsection{`targetCRS`, `filename2`, `useSAcrs`, `maskWithRTM`:}{
+#'
 #'   `targetCRS` if supplied will be assigned to `projectTo`. `filename2` will
 #'   be assigned to `writeTo`. If `useSAcrs` is set, then the `studyArea`
-#'   will be assigned to `projectTo`. All of these will override any existing values
-#'   for these arguments.
+#'   will be assigned to `projectTo`. If `maskWithRTM` is used, then the
+#'   `rasterToMath` will be assigned to `maskTo`. All of these will override
+#'   any existing values for these arguments.
+#'
 #' }
+#'
+#'  See also [postProcess()] documentation section on
+#'  *Backwards compatibility with `rasterToMatch` and/or `studyArea`* for further
+#'  detail.
 #'
 #' @section Cropping:
 #' If `cropTo` is not `NA`, `postProcessTo` does cropping twice, both the first and last steps.
@@ -109,10 +118,11 @@
 #' @param overwrite Logical. Used if `writeTo` is not `NULL`; also if `terra` determines
 #'   that the object requires writing to disk during a `crop`, `mask` or `project` call
 #'   e.g., because it is too large.
-#' @param ... Passed to `terra::mask` (for `maskTo`), `terra::project` (for `projectTo`)
-#' or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`. Commonly used might be
-#' `method`, `touches`, and `datatype`. If `filename` is passed, it will be ignored; use
-#' `writeTo = `.
+#' @param ... Arguments passed to `terra::mask` (for `maskTo`), `terra::project` (for `projectTo`)
+#'   or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`, as well `postProcess`'s
+#'   `rasterToMatch` and `studyArea` arguments (see below). Commonly used arguments might be
+#'   `method`, `touches`, and `datatype`. If `filename` is passed, it will be ignored; use
+#'   `writeTo = `.
 #' @inheritParams Cache
 #' @export
 #'
