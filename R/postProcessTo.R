@@ -17,7 +17,7 @@
 #' `*Inputs`, such as [cropInputs()].
 #'
 #' @details
-#' `postProcessTo` is a wrapper around `cropTo(needBuffer = TRUE)`, `projectTo`, `cropTo`,
+#' `postProcessTo` is a wrapper around `cropTo(needBuffer = TRUE)`, `projectTo`,
 #' `maskTo`, `writeTo`. Users can call each of these individually.
 #'
 #' `postProcessTerra` is the early name of this function that is now `postProcessTo`.
