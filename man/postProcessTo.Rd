@@ -166,7 +166,8 @@ and \code{to}:
 masking where there are \code{NA} from the \code{to}\cr
 \code{Gridded}\tab \code{Vector} \tab the projection, origin, and mask from \code{to}, and extent will
 be a round number of pixels that fit within the extent
-of \code{to}. Resolution will be the same as \code{from} \cr
+of \code{to}. Resolution will be the same as \code{from}. See section
+below about \code{projectTo}.\cr
 \code{Vector}\tab \code{Vector} \tab the projection, origin, extent and mask from \code{to}\cr
 }
 
