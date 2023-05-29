@@ -43,11 +43,11 @@ if (getRversion() >= "3.1.0") {
 #'   \enumerate{
 #'     \item Fix errors. Currently only errors fixed are for `SpatialPolygons`
 #'     using `buffer(..., width = 0)`;
-#'     \item Crop using [cropInputs()];
-#'     \item Project using [projectInputs()];
-#'     \item Mask using [maskInputs()];
+#'     \item Crop using [cropTo()];
+#'     \item Project using [projectTo()];
+#'     \item Mask using [maskTo()];
 #'     \item Determine file name [determineFilename()] via `filename2`;
-#'     \item Optionally, write that file name to disk via [writeOutputs()].
+#'     \item Optionally, write that file name to disk via [writeTo()].
 #'    }
 #'
 #'   NOTE: checksumming does not occur during the post-processing stage, as
