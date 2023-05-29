@@ -1,5 +1,6 @@
 test_that("lightweight tests for code coverage", {
   skip_on_cran()
+  skip_if_not_installed("sf")
   testInitOut <- testInit(c("sf", "terra"), opts = list("reproducible.overwrite" = TRUE,
                                                         "reproducible.inputPaths" = NULL),
                           needGoogleDriveAuth = TRUE)

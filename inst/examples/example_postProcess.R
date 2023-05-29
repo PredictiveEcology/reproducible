@@ -1,4 +1,4 @@
-if (requireNamespace("terra") && requireNamespace("sf")) {
+if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly = TRUE)) {
   library(reproducible)
   od <- setwd(tempdir2())
   # download a (spatial) file from remote url (which often is an archive) load into R

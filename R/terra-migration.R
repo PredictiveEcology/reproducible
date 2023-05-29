@@ -15,7 +15,7 @@
 #' @rdname terra-migration
 #'
 #' @examples
-#' if (requireNamespace("terra")) {
+#' if (requireNamespace("terra", quietly = TRUE)) {
 #'   ras <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1:100)
 #'   maxFn(ras)
 #'   minFn(ras)

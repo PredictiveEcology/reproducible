@@ -12,7 +12,7 @@ test_that("test parallel collisions", {
 
   # make cluster -- note this works if cluster is FORK also, but for simplicity, using default
   #   which works on Linux, Mac, Windows
-  N <- min(2L, detectCores())
+  N <- min(2L, parallel::detectCores())
 
   if (useDBI())
     if (!file.exists(CacheDBFile(tmpdir))) {
@@ -34,7 +34,7 @@ test_that("test parallel collisions", {
         cat(m$message, file = fn, append = TRUE))
   }
   cl <- makeCluster(N)
-  on.exit(stopCluster(cl), add = TRUE)
+  on.exit(parallel::stopCluster(cl), add = TRUE)
 
   keepLog <- FALSE
   if (isWindows() && Sys.info()["user"] == "emcintir") {
