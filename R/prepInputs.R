@@ -66,8 +66,9 @@ if (getRversion() >= "3.1.0") {
 #'   trigger several subsequent functions, specifically the sequence,
 #'   *Crop, reproject, mask*, which appears to be a common sequence while
 #'   preparing spatial data from diverse sources.
-#'   See [postProcessTo()]. *Understanding various combinations of `rasterToMatch`
-#'   and/or `studyArea`:* Please see [postProcessTo()].
+#'   See [postProcess()] documentation section on
+#'   *Backwards compatibility with `rasterToMatch` and/or `studyArea` arguments*
+#'   to understand various combinations of `rasterToMatch` and/or `studyArea`.
 #'  }
 #'
 #'
