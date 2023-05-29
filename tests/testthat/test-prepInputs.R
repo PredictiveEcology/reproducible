@@ -84,8 +84,8 @@ test_that("prepInputs doesn't work (part 1)", {
 
   unlink(dirname(ecozoneFilename), recursive = TRUE)
   # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
-  skip_if_not_installed("terra")
-
+  #aaaa <<- 1
+  #on.exit(rm(aaaa, envir = .GlobalEnv))
   noisyOutput <- capture.output(
     warn <- suppressWarningsSpecific(
       falseWarnings = "attribute variables are assumed to be spatially constant", {
@@ -168,6 +168,16 @@ test_that("interactive prepInputs", {
                           ),
                           needGoogleDriveAuth = TRUE)
 
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  # skip_if_not(isInteractive())
+  #######################################
+  ### url
+  #tmpdir <- "data/FMA"
+  #checkPath(tmpdir, create = TRUE)
+
   noisyOutput <- capture.output(
     warns <- capture_warnings(
       test <- prepInputs(
@@ -180,8 +190,11 @@ test_that("interactive prepInputs", {
   expect_true(length(files) == 9)
   expect_true(inherits(test, vectorType()))
 
+  #######################################
   ### url, targetFile
   # need authentication for this
+  #tmpdir <- "data/FMA"
+  #checkPath(tmpdir, create = TRUE)
   noisyOutput <- capture.output(
     warns <- capture_warnings(
       test <- prepInputs(
@@ -191,12 +204,12 @@ test_that("interactive prepInputs", {
       )
     )
   )
-
   # There is a meaningless warning for this unit test -- ignore it :
+  # In rgdal::readOGR(dirname(x), fn, stringsAsFactors = stringsAsFactors,  :
+  #                  Z-dimension discarded
   expect_true(inherits(test, vectorType()))
 
   # From Bird/Tati project
-  withr::deferred_clear()
   testOnExit(testInitOut)
   testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                "reproducible.inputPaths" = NULL),
@@ -205,6 +218,7 @@ test_that("interactive prepInputs", {
   urls <- c("https://drive.google.com/open?id=1CmzYNpxwWr82PoRSbHWG8yg2cC3hncfb",
             "https://drive.google.com/open?id=11Hxk0CcwJsoAnUgfrwbJhXBJNM5Xbd9e")
 
+  #######################################
   ### url, targetFile, archive
   outsideModule <- Map(x = birdSpecies, url = urls,
                        MoreArgs = list(tmpdir = tmpdir),
@@ -220,8 +234,12 @@ test_that("interactive prepInputs", {
                        })
   expect_true(inherits(outsideModule[[1]], rasterType()))
   expect_true(inherits(outsideModule[[2]], rasterType()))
+  # expect_true(inherits(terra::crs(outsideModule[[2]]), "CRS"))
+  # expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
 
+  # remove the .prj files -- test "similar"
+  #######################################
   ### url, targetFile, archive, alsoExtract similar
   file.remove(grep(pattern = "asc|zip|CHECK",
                    invert = TRUE, value = TRUE,
@@ -242,6 +260,8 @@ test_that("interactive prepInputs", {
                        })
   expect_true(inherits(outsideModule[[1]], rasterType()))
   expect_true(inherits(outsideModule[[2]], rasterType()))
+  # expect_true(inherits(crs(outsideModule[[2]]), "CRS"))
+  # expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
   expect_true(!is.na(crs(outsideModule[[1]])))
   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
 
@@ -250,6 +270,7 @@ test_that("interactive prepInputs", {
                    invert = TRUE, value = TRUE,
                    dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))]))
 
+  #######################################
   ### url, targetFile, archive, alsoExtract NA
   # because alsoExtract is NA ... no other files are unzipped, so no .prj and so no CRS
   outsideModule <- Map(x = birdSpecies, url = urls,
@@ -1298,11 +1319,11 @@ test_that("lightweight tests for code coverage", {
   expect_true(identical(a, b))
 
   ## projectInputs.Raster
-  a <- projectInputs(ras2, rasterToMatch = ras3, method = "near")
+  a <- projectInputs(ras2, rasterToMatch = ras3, method = "ngb")
   expect_true(inherits(a, "SpatRaster"))
   expect_true(identical(terra::crs(a), terra::crs(ras3)))
 
-  a <- projectInputs(ras2, targetCRS = terra::crs(ras3), rasterToMatch = ras3, method = "near")
+  a <- projectInputs(ras2, targetCRS = terra::crs(ras3), rasterToMatch = ras3, method = "ngb")
   expect_true(inherits(a, "SpatRaster"))
   expect_true(identical(terra::crs(a), terra::crs(ras3)))
 
@@ -1312,7 +1333,7 @@ test_that("lightweight tests for code coverage", {
   }
 
   #Works with no rasterToMatch
-  a <- projectInputs(ras2, targetCRS = crs(ras3), method = "near")
+  a <- projectInputs(ras2, targetCRS = crs(ras3), method = "ngb")
   expect_true(identical(crs(a), crs(ras3)))
 
   # }
@@ -1407,14 +1428,6 @@ test_that("options inputPaths", {
         test0 <- try(getDataFn(path = tmpdir, country = "LUX"), silent = TRUE)
       )}))
   useGADM <- !is(test0, "try-error")
-  theFile <- if (useGADM) {
-    targetFileLuxRDS
-  } else {
-    "rasterTest.tif"
-  }
-  url2 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
-  tmpdir3 <- file.path(tmpCache, "test")
-
 
   if (useGADM)
     noisyOutput <- capture.output(
@@ -1431,6 +1444,13 @@ test_that("options inputPaths", {
         )
       })
     )
+
+  theFile <- if (useGADM) {
+    targetFileLuxRDS
+  } else {
+    "rasterTest.tif"
+  }
+  url2 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
 
   noisyOutput <- capture.output(
     noisyOutput <- capture.output(type = "message", {
@@ -1469,7 +1489,7 @@ test_that("options inputPaths", {
   #   should hardlink from 2nd IP to destinationPath, make sure CHECKSUMS.txt is correct in both
   options("reproducible.inputPaths" = c(tmpdir, tmpCache))
   file.remove(file.path(tmpdir, theFile))
-  file.remove(file.path(tmpCache, theFile))
+  tmpdir3 <- file.path(tmpCache, "test")
   noisyOutput <- capture.output(
     mess1 <- capture_messages(
       test1 <- prepInputs(url = if (!useGADM) url2 else f$url,
@@ -1491,7 +1511,6 @@ test_that("options inputPaths", {
   if (!isTRUE(as.logical(Sys.getenv("CI")))) { #(!testthat:::on_ci()) { # can't use the :::
     options("reproducible.inputPaths" = tmpdir)
     options("reproducible.inputPathsRecursive" = TRUE)
-    file.remove(file.path(tmpdir3, theFile))
     file.remove(file.path(tmpCache, theFile))
     tmpdir1 <- file.path(tmpCache, "test1")
     noisyOutput <- capture.output(
@@ -1508,7 +1527,7 @@ test_that("options inputPaths", {
     )
     expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ":\n", file.path(tmpdir1, theFile)), mess1)) == 1)
     expect_true(sum(grepl(paste0("",whPointsToMessForGrep,"\n", file.path(tmpdir, theFile)), mess1)) == 1)
-    expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 2)
+    expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 3)
 
   }
   ## Try download to inputPath, intercepting the destination, creating a link
