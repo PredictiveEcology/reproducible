@@ -63,12 +63,15 @@ postProcess.list <- function(x, ...) {
 #'            See details.
 #'
 #'
-#' @section Passing `rasterToMatch` and/or `studyArea`:
+#' @section Backwards compatibility with `rasterToMatch` and/or `studyArea` arguments:
 #'
-#' Depending on which of these were passed, different things will happen to the
-#' `targetFile` located at `filename1`.
+#' For backwards compatibility, `postProcess` will continue to allow passing
+#'  `rasterToMatch` and/or `studyArea` arguments. Depending on which of these
+#'  are passed, different things will happen to the `targetFile` located at `filename1`.
 #'
-#' \subsection{If `targetFile` is a `Raster*` object:}{
+#' See *Use cases* section in [postProcessTo()] for post processing behaviour with
+#'   the new `from` and `to` arguments.
+#'
 #' \subsection{If `targetFile` is a raster (`Raster*`, or `SpatRaster`) object:}{
 #'   \tabular{lccc}{
 #'                  \tab `rasterToMatch`      \tab `studyArea`  \tab  Both               \cr
