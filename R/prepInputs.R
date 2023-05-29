@@ -43,11 +43,11 @@ if (getRversion() >= "3.1.0") {
 #'   \enumerate{
 #'     \item Fix errors. Currently only errors fixed are for `SpatialPolygons`
 #'     using `buffer(..., width = 0)`;
-#'     \item Crop using [cropInputs()];
-#'     \item Project using [projectInputs()];
-#'     \item Mask using [maskInputs()];
+#'     \item Crop using [cropTo()];
+#'     \item Project using [projectTo()];
+#'     \item Mask using [maskTo()];
 #'     \item Determine file name [determineFilename()] via `filename2`;
-#'     \item Optionally, write that file name to disk via [writeOutputs()].
+#'     \item Optionally, write that file name to disk via [writeTo()].
 #'    }
 #'
 #'   NOTE: checksumming does not occur during the post-processing stage, as
@@ -56,7 +56,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #'   NOTE: `sf` objects are still very experimental.
 #'
-#' \subsection{postProcessing of `spat*`, `sf`, `Raster*` and `Spatial*` objects:}{
+#' \subsection{postProcessing of `Spat*`, `sf`, `Raster*` and `Spatial*` objects:}{
 #'
 #'   The following has been DEPRECATED because there are a sufficient number of
 #'   ambiguities that this has been changed in favour of `from` and the `*to` family.
@@ -66,8 +66,9 @@ if (getRversion() >= "3.1.0") {
 #'   trigger several subsequent functions, specifically the sequence,
 #'   *Crop, reproject, mask*, which appears to be a common sequence while
 #'   preparing spatial data from diverse sources.
-#'   See [postProcessTo()]. *Understanding various combinations of `rasterToMatch`
-#'   and/or `studyArea`:* Please see [postProcessTo()].
+#'   See [postProcess()] documentation section on
+#'   *Backwards compatibility with `rasterToMatch` and/or `studyArea` arguments*
+#'   to understand various combinations of `rasterToMatch` and/or `studyArea`.
 #'  }
 #'
 #'

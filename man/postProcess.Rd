@@ -54,49 +54,48 @@ the following sequence will occur:
 \item Project using \code{\link[=projectTo]{projectTo()}}
 \item Mask using \code{\link[=maskTo]{maskTo()}}
 \item Determine file name \code{\link[=determineFilename]{determineFilename()}}
-\item Write that file name to disk, optionally \code{\link[=writeOutputs]{writeOutputs()}}
+\item Write that file name to disk, optionally \code{\link[=writeTo]{writeTo()}}
 }
 
 NOTE: checksumming does not occur during the post-processing stage, as
 there are no file downloads. To achieve fast results, wrap
 \code{prepInputs} with \code{Cache}
-
-NOTE: \code{sf} objects are still very experimental.
 }
 
-\section{Passing \code{rasterToMatch} and/or \code{studyArea}}{
+\section{Backwards compatibility with \code{rasterToMatch} and/or \code{studyArea} arguments}{
 
 
-Depending on which of these were passed, different things will happen to the
-\code{targetFile} located at \code{filename1}.
+For backwards compatibility, \code{postProcess} will continue to allow passing
+\code{rasterToMatch} and/or \code{studyArea} arguments. Depending on which of these
+are passed, different things will happen to the \code{targetFile} located at \code{filename1}.
 
-\subsection{If \code{targetFile} is a \verb{Raster*} object:}{
+See \emph{Use cases} section in \code{\link[=postProcessTo]{postProcessTo()}} for post processing behaviour with
+the new \code{from} and \code{to} arguments.
+
+\subsection{If \code{targetFile} is a raster (\verb{Raster*}, or \code{SpatRaster}) object:}{
 \tabular{lccc}{
-\tab \code{rasterToMatch} \tab \code{studyArea} \tab             Both \cr
-\code{extent}     \tab Yes                  \tab   Yes        \tab \code{rasterToMatch} \cr
-\code{resolution} \tab Yes                  \tab   No         \tab \code{rasterToMatch} \cr
-\code{projection} \tab Yes                  \tab   No*        \tab \code{rasterToMatch}*\cr
-\code{alignment}  \tab Yes                  \tab   No         \tab \code{rasterToMatch} \cr
-\code{mask}       \tab No**                 \tab   Yes        \tab \code{studyArea}**   \cr
+\tab \code{rasterToMatch}      \tab \code{studyArea}  \tab  Both               \cr
+\code{extent}     \tab Yes                  \tab   Yes        \tab \code{rasterToMatch}     \cr
+\code{resolution} \tab Yes                  \tab   No         \tab \code{rasterToMatch}     \cr
+\code{projection} \tab Yes                  \tab   No*        \tab \code{rasterToMatch}*    \cr
+\code{alignment}  \tab Yes                  \tab   No         \tab \code{rasterToMatch}     \cr
+\code{mask}       \tab No**                 \tab   Yes        \tab \code{studyArea}**       \cr
 }
-\itemize{
-\item Can be overridden with \code{useSAcrs}.
-** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}.
-}
+*Can be overridden with \code{useSAcrs}.
+
+**Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}.
 }
 
-\subsection{If \code{targetFile} is a \verb{Spatial*} object:}{
+\subsection{If \code{targetFile} is a vector (\verb{Spatial*}, \code{sf} or \code{SpatVector}) object:}{
 \tabular{lccc}{
-\tab \code{rasterToMatch} \tab \code{studyArea} \tab             Both \cr
-\code{extent}     \tab Yes                  \tab   Yes        \tab \code{rasterToMatch} \cr
-\code{resolution} \tab NA                   \tab   NA         \tab NA                   \cr
-\code{projection} \tab Yes                  \tab   No*        \tab \code{rasterToMatch}*\cr
-\code{alignment}  \tab NA                   \tab   NA         \tab NA                   \cr
-\code{mask}       \tab No                   \tab   Yes        \tab \code{studyArea}     \cr
+\tab \code{rasterToMatch}      \tab \code{studyArea}  \tab Both               \cr
+\code{extent}     \tab Yes                  \tab   Yes        \tab \code{rasterToMatch}    \cr
+\code{resolution} \tab NA                   \tab   NA         \tab NA                 \cr
+\code{projection} \tab Yes                  \tab   No*        \tab \code{rasterToMatch}*   \cr
+\code{alignment}  \tab NA                   \tab   NA         \tab NA                 \cr
+\code{mask}       \tab No                   \tab   Yes        \tab \code{studyArea}        \cr
 }
-\itemize{
-\item Can be overridden with \code{useSAcrs}
-}
+*Can be overridden with \code{useSAcrs}
 }
 }
 

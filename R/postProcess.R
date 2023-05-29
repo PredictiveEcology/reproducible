@@ -41,14 +41,12 @@ postProcess.list <- function(x, ...) {
 #'     \item Project using [projectTo()]
 #'     \item Mask using [maskTo()]
 #'     \item Determine file name [determineFilename()]
-#'     \item Write that file name to disk, optionally [writeOutputs()]
+#'     \item Write that file name to disk, optionally [writeTo()]
 #'   }
 #'
 #'   NOTE: checksumming does not occur during the post-processing stage, as
 #'   there are no file downloads. To achieve fast results, wrap
 #'   `prepInputs` with `Cache`
-#'
-#'   NOTE: `sf` objects are still very experimental.
 #'
 #'
 #' @param ... Additional arguments passed to methods. For `spatialClasses`,
@@ -63,35 +61,41 @@ postProcess.list <- function(x, ...) {
 #'            See details.
 #'
 #'
-#' @section Passing `rasterToMatch` and/or `studyArea`:
+#' @section Backwards compatibility with `rasterToMatch` and/or `studyArea` arguments:
 #'
-#' Depending on which of these were passed, different things will happen to the
-#' `targetFile` located at `filename1`.
+#' For backwards compatibility, `postProcess` will continue to allow passing
+#'  `rasterToMatch` and/or `studyArea` arguments. Depending on which of these
+#'  are passed, different things will happen to the `targetFile` located at `filename1`.
 #'
-#' \subsection{If `targetFile` is a `Raster*` object:}{
+#' See *Use cases* section in [postProcessTo()] for post processing behaviour with
+#'   the new `from` and `to` arguments.
+#'
+#' \subsection{If `targetFile` is a raster (`Raster*`, or `SpatRaster`) object:}{
 #'   \tabular{lccc}{
-#'                       \tab `rasterToMatch` \tab `studyArea` \tab             Both \cr
-#'     `extent`     \tab Yes                  \tab   Yes        \tab `rasterToMatch` \cr
-#'     `resolution` \tab Yes                  \tab   No         \tab `rasterToMatch` \cr
-#'     `projection` \tab Yes                  \tab   No*        \tab `rasterToMatch`*\cr
-#'     `alignment`  \tab Yes                  \tab   No         \tab `rasterToMatch` \cr
-#'     `mask`       \tab No**                 \tab   Yes        \tab `studyArea`**   \cr
+#'                  \tab `rasterToMatch`      \tab `studyArea`  \tab  Both               \cr
+#'     `extent`     \tab Yes                  \tab   Yes        \tab `rasterToMatch`     \cr
+#'     `resolution` \tab Yes                  \tab   No         \tab `rasterToMatch`     \cr
+#'     `projection` \tab Yes                  \tab   No*        \tab `rasterToMatch`*    \cr
+#'     `alignment`  \tab Yes                  \tab   No         \tab `rasterToMatch`     \cr
+#'     `mask`       \tab No**                 \tab   Yes        \tab `studyArea`**       \cr
 #'   }
-#'   * Can be overridden with `useSAcrs`.
-#'   ** Will mask with `NA`s from `rasterToMatch` if `maskWithRTM`.
+#'  *Can be overridden with `useSAcrs`.
+#'
+#'  **Will mask with `NA`s from `rasterToMatch` if `maskWithRTM`.
 #' }
 #'
-#' \subsection{If `targetFile` is a `Spatial*` object:}{
+#' \subsection{If `targetFile` is a vector (`Spatial*`, `sf` or `SpatVector`) object:}{
 #'   \tabular{lccc}{
-#'                       \tab `rasterToMatch` \tab `studyArea` \tab             Both \cr
-#'     `extent`     \tab Yes                  \tab   Yes        \tab `rasterToMatch` \cr
-#'     `resolution` \tab NA                   \tab   NA         \tab NA                   \cr
-#'     `projection` \tab Yes                  \tab   No*        \tab `rasterToMatch`*\cr
-#'     `alignment`  \tab NA                   \tab   NA         \tab NA                   \cr
-#'     `mask`       \tab No                   \tab   Yes        \tab `studyArea`     \cr
+#'                  \tab `rasterToMatch`      \tab `studyArea`  \tab Both               \cr
+#'     `extent`     \tab Yes                  \tab   Yes        \tab `rasterToMatch`    \cr
+#'     `resolution` \tab NA                   \tab   NA         \tab NA                 \cr
+#'     `projection` \tab Yes                  \tab   No*        \tab `rasterToMatch`*   \cr
+#'     `alignment`  \tab NA                   \tab   NA         \tab NA                 \cr
+#'     `mask`       \tab No                   \tab   Yes        \tab `studyArea`        \cr
 #'   }
-#'   * Can be overridden with `useSAcrs`
+#'  *Can be overridden with `useSAcrs`
 #' }
+#'
 #'
 #' @export
 #' @example inst/examples/example_postProcess.R

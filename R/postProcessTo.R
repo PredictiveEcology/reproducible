@@ -17,8 +17,10 @@
 #' `*Inputs`, such as [cropInputs()].
 #'
 #' @details
-#' `postProcessTo` is a wrapper around `cropTo(needBuffer = TRUE)`, `projectTo`, `cropTo`,
-#' `maskTo`, `writeTo`. Users can call each of these individually.
+#' `postProcessTo` is a wrapper around (an initial "wide" crop for speed)
+#' `cropTo(needBuffer = TRUE)`, `projectTo`,
+#' `cropTo` (the actual crop for precision), `maskTo`, `writeTo`.
+#'  Users can call each of these individually.
 #'
 #' `postProcessTerra` is the early name of this function that is now `postProcessTo`.
 #'
@@ -28,14 +30,15 @@
 #' and `to`:
 #'
 #' \tabular{lll}{
-#'   `from`\tab `to`\tab `from` will have:\cr
-#'   `Gridded`\tab `Gridded` \tab the extent, projection, origin, resolution and
-#'                         masking where there are `NA` from the `to`\cr
-#'   `Gridded`\tab `Vector` \tab the projection, origin, and mask from `to`, and extent will
-#'                        be a round number of pixels that fit within the extent
-#'                        of `to`. Resolution will be the same as `from`. See section
-#'                        below about `projectTo`.\cr
-#'   `Vector`\tab `Vector` \tab the projection, origin, extent and mask from `to`\cr
+#'   **`from`**\tab **`to`**   \tab **`from`** will have:                             \cr
+#'   `Gridded` \tab `Gridded`  \tab the extent, projection, origin, resolution
+#'                                  and masking where there are `NA` from the `to`    \cr
+#'   `Gridded` \tab `Vector`   \tab the projection, origin, and mask from `to`, and
+#'                                  extent will be a round number of pixels that
+#'                                  fit within the extent of `to`. Resolution will
+#'                                  be the same as `from`.  See section
+#'                                  below about `projectTo`. \cr
+#'   `Vector` \tab `Vector`    \tab the projection, origin, extent and mask from `to` \cr
 #' }
 #'
 #'
@@ -62,19 +65,28 @@
 #'   `to`. If only `studyArea` is supplied, it will be used for `cropTo`
 #'   and `maskTo`; it will only be used for `projectTo` if `useSAcrs = TRUE`.
 #'   If both `rasterToMatch` and `studyArea` are supplied,
-#'   `studyArea` will only be applied to `maskTo` (and optionally `projectTo` if
-#'   `useSAcrs = TRUE`); everything else will be from `rasterToMatch`.
+#'   `studyArea` will only be applied to `maskTo` (unless `maskWithRTM = TRUE`),
+#'    and, optionally, to `projectTo` (if `useSAcrs = TRUE`); everything else
+#'    will be from `rasterToMatch`.
+#'
 #' }
 #'
-#' \subsection{`targetCRS`, `filename2`, `useSAcrs`:}{
+#' \subsection{`targetCRS`, `filename2`, `useSAcrs`, `maskWithRTM`:}{
+#'
 #'   `targetCRS` if supplied will be assigned to `projectTo`. `filename2` will
 #'   be assigned to `writeTo`. If `useSAcrs` is set, then the `studyArea`
-#'   will be assigned to `projectTo`. All of these will override any existing values
-#'   for these arguments.
+#'   will be assigned to `projectTo`. If `maskWithRTM` is used, then the
+#'   `rasterToMath` will be assigned to `maskTo`. All of these will override
+#'   any existing values for these arguments.
+#'
 #' }
 #'
+#'  See also [postProcess()] documentation section on
+#'  *Backwards compatibility with `rasterToMatch` and/or `studyArea`* for further
+#'  detail.
+#'
 #' @section Cropping:
-#' If `cropTo` is not `NA`, postProcessTo does cropping twice, both the first and last steps.
+#' If `cropTo` is not `NA`, `postProcessTo` does cropping twice, both the first and last steps.
 #' It does it first for speed, as cropping is a very fast algorithm. This will quickly remove
 #' a bunch of pixels that are not necessary. But, to not create bias, this first crop is padded
 #' by  `2 * res(from)[1]`), so that edge cells still have a complete set of neighbours.
@@ -106,6 +118,12 @@
 #'   To omit projecting, set this to `NA`.
 #'   If supplied, this will override `to` for the projecting step.
 #'   Defaults to `NULL`, which means use `to`.
+#'   **Attention.** Conflicts may arise with when `projectTo` is a Vector/CRS object with a
+#'   distinct CRS from `to`. Because `to` is used for masking *after* `from` is re-projected using
+#'   `projectTo`, the extents of `to` and `from` may no longer overlap (as in *align*)
+#'   perfectly leading to failure during
+#'   the masking step. We  recommend passing a raster templates to `projectTo` whose extent and CRS
+#'   are both compatible with the object used later for masking (either `to` or `maskTo`).
 #' @param maskTo Optional Gridded or Vector dataset which,
 #'   if supplied, will supply the extent with which to mask `from`.
 #'   If Gridded, it will mask with the `NA` values on the `maskTo`;
@@ -118,10 +136,11 @@
 #' @param overwrite Logical. Used if `writeTo` is not `NULL`; also if `terra` determines
 #'   that the object requires writing to disk during a `crop`, `mask` or `project` call
 #'   e.g., because it is too large.
-#' @param ... Passed to `terra::mask` (for `maskTo`), `terra::project` (for `projectTo`)
-#' or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`. Commonly used might be
-#' `method`, `touches`, and `datatype`. If `filename` is passed, it will be ignored; use
-#' `writeTo = `.
+#' @param ... Arguments passed to `terra::mask` (for `maskTo`), `terra::project` (for `projectTo`)
+#'   or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`, as well `postProcess`'s
+#'   `rasterToMatch` and `studyArea` arguments (see below). Commonly used arguments might be
+#'   `method`, `touches`, and `datatype`. If `filename` is passed, it will be ignored; use
+#'   `writeTo = `.
 #' @inheritParams Cache
 #' @export
 #'

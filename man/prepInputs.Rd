@@ -158,11 +158,11 @@ is supplied.
 \enumerate{
 \item Fix errors. Currently only errors fixed are for \code{SpatialPolygons}
 using \code{buffer(..., width = 0)};
-\item Crop using \code{\link[=cropInputs]{cropInputs()}};
-\item Project using \code{\link[=projectInputs]{projectInputs()}};
-\item Mask using \code{\link[=maskInputs]{maskInputs()}};
+\item Crop using \code{\link[=cropTo]{cropTo()}};
+\item Project using \code{\link[=projectTo]{projectTo()}};
+\item Mask using \code{\link[=maskTo]{maskTo()}};
 \item Determine file name \code{\link[=determineFilename]{determineFilename()}} via \code{filename2};
-\item Optionally, write that file name to disk via \code{\link[=writeOutputs]{writeOutputs()}}.
+\item Optionally, write that file name to disk via \code{\link[=writeTo]{writeTo()}}.
 }
 
 NOTE: checksumming does not occur during the post-processing stage, as
@@ -171,7 +171,7 @@ there are no file downloads. To achieve fast results, wrap
 
 NOTE: \code{sf} objects are still very experimental.
 
-\subsection{postProcessing of \verb{spat*}, \code{sf}, \verb{Raster*} and \verb{Spatial*} objects:}{
+\subsection{postProcessing of \verb{Spat*}, \code{sf}, \verb{Raster*} and \verb{Spatial*} objects:}{
 
 The following has been DEPRECATED because there are a sufficient number of
 ambiguities that this has been changed in favour of \code{from} and the \verb{*to} family.
@@ -181,8 +181,9 @@ DEPRECATED: If \code{rasterToMatch} or \code{studyArea} are used, then this will
 trigger several subsequent functions, specifically the sequence,
 \emph{Crop, reproject, mask}, which appears to be a common sequence while
 preparing spatial data from diverse sources.
-See \code{\link[=postProcessTo]{postProcessTo()}}. \emph{Understanding various combinations of \code{rasterToMatch}
-and/or \code{studyArea}:} Please see \code{\link[=postProcessTo]{postProcessTo()}}.
+See \code{\link[=postProcess]{postProcess()}} documentation section on
+\emph{Backwards compatibility with \code{rasterToMatch} and/or \code{studyArea} arguments}
+to understand various combinations of \code{rasterToMatch} and/or \code{studyArea}.
 }
 }
 
