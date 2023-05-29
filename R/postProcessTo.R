@@ -33,7 +33,8 @@
 #'                         masking where there are `NA` from the `to`\cr
 #'   `Gridded`\tab `Vector` \tab the projection, origin, and mask from `to`, and extent will
 #'                        be a round number of pixels that fit within the extent
-#'                        of `to`. Resolution will be the same as `from` \cr
+#'                        of `to`. Resolution will be the same as `from`. See section
+#'                        below about `projectTo`.\cr
 #'   `Vector`\tab `Vector` \tab the projection, origin, extent and mask from `to`\cr
 #' }
 #'
@@ -42,6 +43,15 @@
 #' override individual components of `to`. If `to` is omitted or `NULL`,
 #' then only the `*To` arguments that are used will be performed. In all cases,
 #' setting a `*To` argument to `NA` will prevent that step from happening.
+#'
+#' @section `projectTo`
+#' Since these functions use the gis capabilities of `sf` and `terra`, they will only
+#' be able to do things that those functions can do. One key caution, which is
+#' stated clearly in `?terra::project` is that projection of a raster (i.e., gridded)
+#' object should always be with another gridded object. If the user chooses to
+#' supply a `projectTo` that is a vector object for a `from` that is gridded,
+#' there may be unexpected failures due e.g., to extents not overlapping during
+#' the `maskTo` stage.
 #'
 #' @section Backwards compatibility with `postProcess`:
 #'
