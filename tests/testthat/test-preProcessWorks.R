@@ -269,7 +269,8 @@ test_that("preProcess works, but gives a warning when supplying rasterInterpMeth
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     testthat::expect_message({
-      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, rasterInterpMethod = "ngb")
+      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir,
+                                      rasterInterpMethod = "near")
     })
   )
   testthat::expect_is(object = ras, class = "list")
