@@ -68,8 +68,10 @@ test_that("prepInputs doesn't work (part 1)", {
     )
   )
 
-  expect_true(is(shpEcozone2, "sf"))
-  testObj <- if (!is(shpEcozone1, "sf")) as(shpEcozone1, "sf") else shpEcozone1
+  if (.requireNamespace("sf")) {
+    expect_true(is(shpEcozone2, "sf"))
+    testObj <- if (!is(shpEcozone1, "sf")) as(shpEcozone1, "sf") else shpEcozone1
+  }
 
   # As of Jan 2022 -- these objects are very different; character encoding of accents, numbers interpretted as character
   # expect_equivalent(testObj, shpEcozone2) # different attribute newCache
@@ -1233,9 +1235,11 @@ test_that("lightweight tests for code coverage", {
   file.copy(filesForShp, tmpCache)
   # Need these in a test further down -- mostly just need the CRS
   filesForShp2 <- dir(file.path(tmpCache), pattern = "ecozones", full.names = TRUE)
-  noisyOutput <- capture.output(
-    shpFile <- sf::st_read(grep(filesForShp2, pattern = "\\.shp", value = TRUE))
-  )
+  if (.requireNamespace("sf")) {
+    noisyOutput <- capture.output(
+      shpFile <- sf::st_read(grep(filesForShp2, pattern = "\\.shp", value = TRUE))
+    )
+  }
   # Test when wrong archive exists, wrong checkSums
   file.remove(file.path(tmpdir, "ecozone_shp.zip"))
   file.remove(filesForShp)
@@ -1285,11 +1289,13 @@ test_that("lightweight tests for code coverage", {
   a <- cropInputs(ras, extentToMatch = terra::ext(ras2), extentCRS = terra::crs(ras2))
   expect_true(inherits(a, "SpatRaster"))
 
-  ras4 <- terra::rast(terra::ext(6,10,6,10), res = 1, vals = 1:16)
-  sp4 <- sf::st_as_sfc(sf::st_bbox(ras4))
-  sf::st_crs(sp4) <- crsToUse
+  ras4 <- terra::rast(terra::ext(7,11,7,11), res = 1, vals = 1:16)
+  sp4 <- terra::vect(terra::ext(ras4))
+  terra::crs(sp4) <- crsToUse
+  #sp4 <- sf::st_as_sfc(sf::st_bbox(ras4))
+  #sf::st_crs(sp4) <- crsToUse
 
-  grepMessHere <- "invalid extent"
+  grepMessHere <- "extents do not overlap"
   expect_error(cropInputs(ras2, studyArea = sp4), grepMessHere)
 
   ras3 <- terra::rast(terra::ext(0,5,0,5), res = 1, vals = 1:25)
@@ -1322,7 +1328,9 @@ test_that("lightweight tests for code coverage", {
   expect_true(identical(terra::crs(a), terra::crs(ras3)))
 
   #warns if bilinear is passed for reprojecting integer
-  expect_warning(projectInputs(ras2, targetCRS = terra::crs(shpFile), method = "bilinear"))
+  if (.requireNamespace("sf")) {
+    expect_warning(projectInputs(ras2, targetCRS = terra::crs(shpFile), method = "bilinear"))
+  }
 
   #Works with no rasterToMatch
   a <- projectInputs(ras2, targetCRS = crs(ras3), method = "ngb")
@@ -1518,8 +1526,8 @@ test_that("options inputPaths", {
       )
     )
     expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ":\n", file.path(tmpdir1, theFile)), mess1)) == 1)
-    expect_true(sum(grepl(paste0("",whPointsToMessForGrep,"\n", file.path(tmpdir3, theFile)), mess1)) == 1)
-    expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 2)
+    expect_true(sum(grepl(paste0("",whPointsToMessForGrep,"\n", file.path(tmpdir, theFile)), mess1)) == 1)
+    expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 3)
 
   }
   ## Try download to inputPath, intercepting the destination, creating a link

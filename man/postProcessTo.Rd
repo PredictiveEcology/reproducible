@@ -52,7 +52,7 @@ projectTo(
 cropTo(
   from,
   cropTo = NULL,
-  needBuffer = TRUE,
+  needBuffer = FALSE,
   overwrite = FALSE,
   verbose = getOption("reproducible.verbose"),
   ...

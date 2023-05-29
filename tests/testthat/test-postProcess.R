@@ -1,6 +1,7 @@
 test_that("prepInputs doesn't work (part 3)", {
   skip_on_cran() # too long
   skip_if(getRversion() < "4.1" && isWindows()) # old Windows is failing; not going to fix tests for those
+  skip_if_not_installed("sf")
   testInitOut <- testInit(c("terra", "sf"), tmpFileExt = c(".tif", ".tif", ".tif"),
                           opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),

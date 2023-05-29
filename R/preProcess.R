@@ -676,12 +676,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   guessedFile <- if (!is.null(url)) {
     gf <- file.path(destinationPath, basename2(url))
     if (grepl("drive.google.com", url)) {
-      ie <- isTRUE(internetExists())
-      if (ie) {
-        gf <- assessGoogle(url = url, archive = archive, targetFile = targetFile,
-                     destinationPath = destinationPath, verbose = verbose, team_drive = NULL)
-        gf <- makeAbsolute(gf, destinationPath)
-      }
+      # ie <- isTRUE(internetExists())
+      # if (ie) {
+      gf <- assessGoogle(url = url, archive = archive, targetFile = targetFile,
+                         destinationPath = destinationPath, verbose = verbose, team_drive = NULL)
+      gf <- makeAbsolute(gf, destinationPath)
+      # }
     }
     gf
   } else {
@@ -689,6 +689,24 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
   normPath(guessedFile)
 }
+
+# COPIED FROM REQUIRE
+# urlExists <- function(url) {
+#   con <- url(url)
+#   on.exit(try(close(con), silent = TRUE), add = TRUE)
+#   for (i in 1:5) {
+#     a <- try(suppressWarnings(readLines(con, n = 1)), silent = TRUE)
+#     try(close(con), silent = TRUE)
+#     ret <- if (is(a, "try-error")) FALSE else TRUE
+#     if (isTRUE(ret)) {
+#       break
+#     } else {
+#       Sys.sleep(0.1)
+#     }
+#   }
+#   ret
+# }
+
 
 #' @keywords internal
 .checkSumsUpdate <- function(destinationPath, newFilesToCheck, checkSums,
@@ -924,7 +942,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' file.exists(f0) ## FALSE
 #' file.exists(f2) ## TRUE
 #'
-#' if (requireNamespace("terra")) {
+#' if (requireNamespace("terra", quietly = TRUE)) {
 #'   ## using spatRasters and other file-backed objects
 #'   f3a <- system.file("ex/test.grd", package = "terra")
 #'   f3b <- system.file("ex/test.gri", package = "terra")

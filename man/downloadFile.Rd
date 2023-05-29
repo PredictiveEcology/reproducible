@@ -101,7 +101,7 @@ This function is called for its side effects, which will be a downloaded file
 that checksum will be appended to the \code{checksumFile}.
 }
 \description{
-Currently, this only deals with \code{\link[googledrive:drive_download]{googledrive::drive_download()}},
+Currently, this only deals with \code{googledrive::drive_download},
 and \code{\link[utils:download.file]{utils::download.file()}}. In general, this is not intended for use by a
 user.
 }

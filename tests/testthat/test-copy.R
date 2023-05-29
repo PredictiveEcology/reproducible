@@ -1,4 +1,5 @@
 test_that("test Copy", {
+  skip_if_not_installed("terra")
   testInitOut <- testInit(c("terra", "data.table"), tmpFileExt = ".tif")
   on.exit({
     testOnExit(testInitOut)

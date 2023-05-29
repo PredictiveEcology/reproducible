@@ -3,7 +3,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   skip_on_ci()
 
   testInitOut <- testInit(
-    c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
+    c("googledrive", "terra"), tmpFileExt = c(".tif", ".grd"),
     needGoogleDriveAuth = TRUE,
     opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
                 "reproducible.ask" = FALSE)
@@ -75,7 +75,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
   warn5 <- capture_warnings({
     mess5 <- capture_messages({
-      a2 <- Cache(rnorm, 3, cachePath = tmpCache, useCloud = TRUE)
+      a2 <- Cache(rnorm, 3, cachePath = tmpdir, useCloud = TRUE)
     })
   })
 
@@ -94,9 +94,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   })
 
   # expect_false(any(grepl("Folder created", mess6)))
-  expect_false(any(grepl("Uploading", mess6)))
+  expect_true(any(grepl("Uploading", mess6)))
   expect_false(any(grepl("Download", mess6)))
-  expect_true(any(grepl("loaded cached", mess6)))
+  expect_false(any(grepl("loaded cached", mess6)))
   expect_true(isTRUE(all.equal(length(warn6), 0)))
 
   ########
@@ -257,7 +257,9 @@ test_that("prepInputs works with team drives", {
                        alsoExtract = "similar",
                        shared_drive = TRUE)
     ))
-    if (is.null(err))
-      expect_true(is(wb, "sf"))
+    if (is.null(err)) {
+      if (.requireNamespace("sf"))
+        expect_true(is(wb, "sf"))
+    }
   }
 })

@@ -34,7 +34,7 @@ helper allows one function to be used, which calls the correct max or min
 function, depending on whether the object is a \code{Raster} or \code{SpatRaster}.
 }
 \examples{
-if (requireNamespace("terra")) {
+if (requireNamespace("terra", quietly = TRUE)) {
   ras <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1:100)
   maxFn(ras)
   minFn(ras)

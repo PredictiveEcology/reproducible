@@ -80,7 +80,7 @@
 #' .robustDigest(asPath(tmpfile2), quick = FALSE) # same because using file content
 #'
 #' # SpatRasters are have pointers
-#' if (requireNamespace("terra")) {
+#' if (requireNamespace("terra", quietly = TRUE)) {
 #'   r <- terra::rast(system.file("ex/elev.tif", package = "terra"))
 #'   r3 <- terra::deepcopy(r)
 #'   r1 <- terra::writeRaster(r, filename = tmpfile3)

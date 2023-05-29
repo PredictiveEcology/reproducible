@@ -222,7 +222,7 @@ setMethod(
 #' b <- "NULL"
 #' .prepareOutput(b) # converts to NULL
 #'
-#' if (requireNamespace("terra")) {
+#' if (requireNamespace("terra", quietly = TRUE)) {
 #'   r <- terra::rast(terra::ext(0,10,0,10), vals = 1:100)
 #'
 #'   # write to disk manually -- will be in tempdir()

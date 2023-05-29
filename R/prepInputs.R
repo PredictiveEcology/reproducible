@@ -25,7 +25,7 @@ if (getRversion() >= "3.1.0") {
 #' See [preProcess()] for combinations of arguments.
 #'
 #'   \enumerate{
-#'     \item Download from the web via either [googledrive::drive_download()],
+#'     \item Download from the web via either `googledrive::drive_download()`,
 #'     [utils::download.file()];
 #'     \item Extract from archive using [unzip()] or [untar()];
 #'     \item Load into R using `terra::rast`,
@@ -218,7 +218,8 @@ if (getRversion() >= "3.1.0") {
 #'          [postProcess()].
 #' @examples
 #' \donttest{
-#'   if (requireNamespace("terra") && requireNamespace("sf")) {
+#'   if (requireNamespace("terra", quietly = TRUE) &&
+#'       requireNamespace("sf", quietly = TRUE)) {
 #'
 #'     library(reproducible)
 #'   # Make a dummy study area map -- user would supply this normally
@@ -373,7 +374,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   needPostProcess <- ...names() %in% c("studyArea", "rasterToMatch", "targetCRS", "to", "cropTo",
                     "maskTo", "projectTo", "fixErrorsIn", "useSAcrs", "writeTo")
   if (any(needPostProcess)) {
-    .requireNamespace("terra", stopOnFALSE = TRUE)
 
     TopoErrors <- list() # eventually to update a Google ID #TODO
     x <- withCallingHandlers(
@@ -1259,9 +1259,10 @@ process <- function(out, funCaptured,
 
       messagePrepInputs("Loading object into R", verbose = verbose)
       needRaster <- any(grepl("raster$|stack$|brick$", funCaptured))
+      needTerra <- any(grepl("terra|rast$", funCaptured))
       if (needRaster)
         .requireNamespace("raster", stopOnFALSE = TRUE)
-      if (needRaster | identical(theFun, terra::rast)) {
+      if (needRaster | needTerra) {
         ## Don't cache the reading of a raster
         ## -- normal reading of raster on disk is fast b/c only reads metadata
         do.call(theFun, append(list(asPath(out$targetFilePath)), args))
