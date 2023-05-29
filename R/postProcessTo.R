@@ -508,7 +508,7 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
         messagePrepInputs("    projecting...", appendLF = FALSE,
                           verbose = verbose)
         st <- Sys.time()
-        if (isProjectToVecOrCRS) {
+        if (isProjectToVecOrCRS && ( isSF(projectTo) || isSpatial(projectTo) ) ) {
           projectToTmp <- sf::st_as_sfc(sf::st_bbox(from))
           if (isVector(projectTo))
             projectTo <- sf::st_crs(projectTo)

@@ -92,7 +92,7 @@ test_that("testing terra", {
   expect_true(terra::ext(v) <= terra::ext(t9))
 
   # SR, SV
-  t2 <- postProcessTo(elevRas, v)
+    t2 <- postProcessTo(elevRas, v)
 
   # No crop
   t3 <- postProcessTo(elevRas, maskTo = v)
@@ -103,8 +103,8 @@ test_that("testing terra", {
     vOrigsf <- sf::st_as_sf(vOrig)
   }
 
-  t4 <- postProcessTo(elevRas, cropTo = v, maskTo = v)
-  expect_true(terra::ext(t4) == terra::ext(t2))
+    t4 <- postProcessTo(elevRas, cropTo = v, maskTo = v)
+    expect_true(terra::ext(t4) == terra::ext(t2))
 
   t5 <- postProcessTo(elevRas, cropTo = v, maskTo = v, projectTo = v)
   expect_true(identical(t5[],t2[]))
