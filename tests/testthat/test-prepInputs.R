@@ -1469,6 +1469,7 @@ test_that("options inputPaths", {
   #   should hardlink from 2nd IP to destinationPath, make sure CHECKSUMS.txt is correct in both
   options("reproducible.inputPaths" = c(tmpdir, tmpCache))
   file.remove(file.path(tmpdir, theFile))
+  file.remove(file.path(tmpCache, theFile))
   noisyOutput <- capture.output(
     mess1 <- capture_messages(
       test1 <- prepInputs(url = if (!useGADM) url2 else f$url,

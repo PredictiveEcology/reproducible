@@ -1,6 +1,6 @@
 test_that("testing terra", {
   #if (interactive()) {
-  testInitOut <- testInit(needGoogleDriveAuth = FALSE,
+  testInitOut <- testInit("terra", needGoogleDriveAuth = FALSE,
                           opts = list(reproducible.useMemoise = FALSE,
                                       "rgdal_show_exportToProj4_warnings"="none"))
   opts <- options(reproducible.cachePath = tmpCache)
@@ -74,7 +74,7 @@ test_that("testing terra", {
   xVect2 <- terra::deepcopy(xVect)
 
   y <- terra::deepcopy(elevRas)
-  y[y > 200 & y < 300] <- NA
+  y[y > 200 & y < 300] <- NA_integer_
   terra::values(elevRas) <- rep(1L, terra::ncell(y))
   vRast <- terra::rast(v, res = 0.008333333)
 

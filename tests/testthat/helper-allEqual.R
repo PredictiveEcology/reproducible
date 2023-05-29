@@ -14,6 +14,9 @@ skip_if_no_token <- function() {
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
 testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt = "",
                      opts = NULL, needGoogleDriveAuth = FALSE) {
+
+  set.randomseed()
+
   pf <- parent.frame()
 
   if (isTRUE(needGoogleDriveAuth))
@@ -33,25 +36,57 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
     }
   }
 
+
+  skip_gauth <- identical(Sys.getenv("SKIP_GAUTH"), "true") # only set in setup.R for covr
+  if (isTRUE(needGoogleDriveAuth) && !skip_gauth) {
+    if (interactive()) {
+      if (!googledrive::drive_has_token()) {
+        getAuth <- FALSE
+        if (is.null(getOption("gargle_oauth_email"))) {
+          possLocalCache <- "c:/Eliot/.secret"
+          cache <- if (file.exists(possLocalCache))
+            possLocalCache else TRUE
+          switch(Sys.info()["user"],
+                 emcintir = {options(gargle_oauth_email = "eliotmcintire@gmail.com",
+                                     gargle_oauth_cache = cache)},
+                 NULL)
+        }
+        if (is.null(getOption("gargle_oauth_email"))) {
+          if (.isRstudioServer()) {
+            .requireNamespace("httr", stopOnFALSE = TRUE)
+            options(httr_oob_default = TRUE)
+          }
+        }
+        getAuth <- TRUE
+        if (isTRUE(getAuth))
+          googledrive::drive_auth()
+      }
+    }
+    skip_if_no_token()
+  }
+
   out <- list()
   withr::local_options("reproducible.ask" = ask, .local_envir = pf)
   if (!missing(verbose))
     withr::local_options("reproducible.verbose" = verbose, .local_envir = pf)
   if (!is.null(opts))
     withr::local_options(opts, .local_envir = pf)
-  tmpdir <- withr::local_tempdir(tmpdir = tempdir2(), .local_envir = pf)
-  tmpCache <- withr::local_tempdir(tmpdir = tmpdir, .local_envir = pf)
+  tmpdir <- normPath(withr::local_tempdir(tmpdir = tempdir2(), .local_envir = pf))
+  tmpCache <- normPath(withr::local_tempdir(tmpdir = tmpdir, .local_envir = pf))
   if (isTRUE(any(nzchar(tmpFileExt)))) {
     dotStart <- startsWith(tmpFileExt, ".")
     if (any(!dotStart))
       tmpFileExt[!dotStart] <- paste0(".", tmpFileExt)
-    out$tmpfile <- withr::local_tempfile(fileext = tmpFileExt)
+    out$tmpfile <- normPath(withr::local_tempfile(fileext = tmpFileExt))
   }
   withr::local_dir(tmpdir, .local_envir = pf)
 
   out <- append(out, list(tmpdir = tmpdir, tmpCache = tmpCache))
   list2env(out, envir = pf)
   return(out)
+
+
+  ################ BELOW HERE IS OLDER CODE THAT DOES NOT USE withr
 
   tmpdir <- tempdir2(sprintf("%s_%03d", rndstr(1, 6), .pkgEnv$testCacheCounter))
   tmpCache <- checkPath(file.path(tmpdir, "testCache"), create = TRUE)
@@ -82,7 +117,6 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
   .pkgEnv <- getFromNamespace(".pkgEnv", "reproducible")
 
   # Set a new seed each time
-  set.randomseed()
   if (isTRUE(needGoogleDriveAuth))
     skip_if_not_installed("googledrive")
 

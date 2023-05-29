@@ -323,7 +323,7 @@ maskTo <- function(from, maskTo, # touches = FALSE,
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
-  if (!is.null(maskTo)) {
+  if (!is.null(maskTo) && !extntNA(from) && !extntNA(maskTo)) {
     if (!is.naSpatial(maskTo)) {
       omit <- FALSE
       origFromClass <- class(from)
@@ -478,7 +478,7 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
     NULL
   }
 
-  if (!is.null(projectTo)) {
+  if (!is.null(projectTo) && !extntNA(from) && !extntNA(projectTo)) {
     origFromClass <- is(from)
     if (!is.naSpatial(projectTo)) {
       if (isRaster(projectTo)) {
@@ -570,8 +570,17 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
           dotArgs <- intersect(...names(), c(writeRasterArgs, projectArgs))
           if (length(dotArgs))
             dotArgs <- list(...)[dotArgs]
-          ll <- append(list(from, projectTo, overwrite = overwrite), dotArgs)
-          do.call(terra::project, ll)
+          sameGeom <- if (isSpat(from) && isSpat(projectTo) ||
+                          (isRaster(from) || isRaster(projectTo)))
+            terra::compareGeom(from, projectTo, stopOnError = FALSE)
+          else
+            FALSE
+          if (!isTRUE(sameGeom)) {
+            ll <- append(list(from, projectTo, overwrite = overwrite), dotArgs)
+            do.call(terra::project, ll)
+          } else {
+            from
+          }
         }
         messagePrepInputs("done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
                           verbose = verbose)
@@ -593,7 +602,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
-  if (!is.null(cropTo)) {
+  if (!is.null(cropTo) && !extntNA(from) && !extntNA(cropTo)) {
     if (isSF(from) || isSF(cropTo))
       .requireNamespace("sf", stopOnFALSE = TRUE)
     omit <- FALSE
@@ -958,12 +967,17 @@ cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")
                             appendLF = FALSE)
         break
       }
+
       attempt <- attempt + 1
 
 
     }
+    if (extntNA(from2))
+      messagePrepInputs("    resulting extent is NA, probably because objects don't overlap",
+                        verbose = verbose)
     if (!is(from2, "try-error"))
       from <- from2
+
     messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
                                            units = "secs", digits = 3),
                       verbose = verbose)
@@ -1097,3 +1111,17 @@ writeRasterArgs <- c("filename", "overwrite", "ncopies", "steps", "filetype", "p
 projectArgs <- c("x", "y", "method", "mask", "align", "gdal", "res", "origin", "threads", "filename")
 
 maskArgs <- c("x", "inverse", "mask", "updatevalue", "touches", "filename")
+
+extntNA <- function(x) {
+  out <- if (isSF(x))
+    sf::st_bbox(x)
+  else {
+    if (isSpat(x) || isRaster(x)) {
+      terra::ext(x)
+    } else {
+      FALSE
+    }
+  }
+  out <- anyNA(as.numeric(out[]))
+  return(out)
+}
