@@ -56,7 +56,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #'   NOTE: `sf` objects are still very experimental.
 #'
-#' \subsection{postProcessing of `spat*`, `sf`, `Raster*` and `Spatial*` objects:}{
+#' \subsection{postProcessing of `Spat*`, `sf`, `Raster*` and `Spatial*` objects:}{
 #'
 #'   The following has been DEPRECATED because there are a sufficient number of
 #'   ambiguities that this has been changed in favour of `from` and the `*to` family.

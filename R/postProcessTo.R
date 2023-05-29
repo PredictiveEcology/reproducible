@@ -28,13 +28,14 @@
 #' and `to`:
 #'
 #' \tabular{lll}{
-#'   `from`\tab `to`\tab `from` will have:\cr
-#'   `Gridded`\tab `Gridded` \tab the extent, projection, origin, resolution and
-#'                         masking where there are `NA` from the `to`\cr
-#'   `Gridded`\tab `Vector` \tab the projection, origin, and mask from `to`, and extent will
-#'                        be a round number of pixels that fit within the extent
-#'                        of `to`. Resolution will be the same as `from` \cr
-#'   `Vector`\tab `Vector` \tab the projection, origin, extent and mask from `to`\cr
+#'   **`from`**\tab **`to`**   \tab **`from`** will have:                             \cr
+#'   `Gridded` \tab `Gridded`  \tab the extent, projection, origin, resolution
+#'                                  and masking where there are `NA` from the `to`    \cr
+#'   `Gridded` \tab `Vector`   \tab the projection, origin, and mask from `to`, and
+#'                                  extent will be a round number of pixels that
+#'                                  fit within the extent of `to`. Resolution will
+#'                                  be the same as `from`                             \cr
+#'   `Vector` \tab `Vector`    \tab the projection, origin, extent and mask from `to` \cr
 #' }
 #'
 #'
@@ -64,7 +65,7 @@
 #' }
 #'
 #' @section Cropping:
-#' If `cropTo` is not `NA`, postProcessTo does cropping twice, both the first and last steps.
+#' If `cropTo` is not `NA`, `postProcessTo` does cropping twice, both the first and last steps.
 #' It does it first for speed, as cropping is a very fast algorithm. This will quickly remove
 #' a bunch of pixels that are not necessary. But, to not create bias, this first crop is padded
 #' by  `2 * res(from)[1]`), so that edge cells still have a complete set of neighbours.

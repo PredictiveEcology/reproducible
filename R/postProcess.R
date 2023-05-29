@@ -69,29 +69,32 @@ postProcess.list <- function(x, ...) {
 #' `targetFile` located at `filename1`.
 #'
 #' \subsection{If `targetFile` is a `Raster*` object:}{
+#' \subsection{If `targetFile` is a raster (`Raster*`, or `SpatRaster`) object:}{
 #'   \tabular{lccc}{
-#'                       \tab `rasterToMatch` \tab `studyArea` \tab             Both \cr
-#'     `extent`     \tab Yes                  \tab   Yes        \tab `rasterToMatch` \cr
-#'     `resolution` \tab Yes                  \tab   No         \tab `rasterToMatch` \cr
-#'     `projection` \tab Yes                  \tab   No*        \tab `rasterToMatch`*\cr
-#'     `alignment`  \tab Yes                  \tab   No         \tab `rasterToMatch` \cr
-#'     `mask`       \tab No**                 \tab   Yes        \tab `studyArea`**   \cr
+#'                  \tab `rasterToMatch`      \tab `studyArea`  \tab  Both               \cr
+#'     `extent`     \tab Yes                  \tab   Yes        \tab `rasterToMatch`     \cr
+#'     `resolution` \tab Yes                  \tab   No         \tab `rasterToMatch`     \cr
+#'     `projection` \tab Yes                  \tab   No*        \tab `rasterToMatch`*    \cr
+#'     `alignment`  \tab Yes                  \tab   No         \tab `rasterToMatch`     \cr
+#'     `mask`       \tab No**                 \tab   Yes        \tab `studyArea`**       \cr
 #'   }
-#'   * Can be overridden with `useSAcrs`.
-#'   ** Will mask with `NA`s from `rasterToMatch` if `maskWithRTM`.
+#'  *Can be overridden with `useSAcrs`.
+#'
+#'  **Will mask with `NA`s from `rasterToMatch` if `maskWithRTM`.
 #' }
 #'
-#' \subsection{If `targetFile` is a `Spatial*` object:}{
+#' \subsection{If `targetFile` is a vector (`Spatial*`, `sf` or `SpatVector`) object:}{
 #'   \tabular{lccc}{
-#'                       \tab `rasterToMatch` \tab `studyArea` \tab             Both \cr
-#'     `extent`     \tab Yes                  \tab   Yes        \tab `rasterToMatch` \cr
-#'     `resolution` \tab NA                   \tab   NA         \tab NA                   \cr
-#'     `projection` \tab Yes                  \tab   No*        \tab `rasterToMatch`*\cr
-#'     `alignment`  \tab NA                   \tab   NA         \tab NA                   \cr
-#'     `mask`       \tab No                   \tab   Yes        \tab `studyArea`     \cr
+#'                  \tab `rasterToMatch`      \tab `studyArea`  \tab Both               \cr
+#'     `extent`     \tab Yes                  \tab   Yes        \tab `rasterToMatch`    \cr
+#'     `resolution` \tab NA                   \tab   NA         \tab NA                 \cr
+#'     `projection` \tab Yes                  \tab   No*        \tab `rasterToMatch`*   \cr
+#'     `alignment`  \tab NA                   \tab   NA         \tab NA                 \cr
+#'     `mask`       \tab No                   \tab   Yes        \tab `studyArea`        \cr
 #'   }
-#'   * Can be overridden with `useSAcrs`
+#'  *Can be overridden with `useSAcrs`
 #' }
+#'
 #'
 #' @export
 #' @example inst/examples/example_postProcess.R
