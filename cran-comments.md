@@ -1,6 +1,6 @@
 ## Release information
 
-This is a minor update that addresses several issues that were fixed. 
+This is a minor update that addresses several issues that were fixed, including one that was identified by one of our dependencies due to a change on their package (data.table) that was causing a fail in reverse depends testing. 
 
 See `NEWS.md` for a full list of changes.
 
