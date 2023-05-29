@@ -106,6 +106,11 @@
 #'   To omit projecting, set this to `NA`.
 #'   If supplied, this will override `to` for the projecting step.
 #'   Defaults to `NULL`, which means use `to`.
+#'   **Attention.** Conflicts may arise with when `projectTo` is a Vector/CRS object with a
+#'   distinct CRS from `to`. Because `to` is used for masking *after* `from` is re-projected using
+#'   `projectTo`, the extents of `to` and `from` mayn no longer overlap leading to failure during
+#'   the masking step. We  recommend passing a raster templates to `projectTo` whose extent and CRS
+#'   are both compatible with the object used later for masking (either `to` or `maskTo`).
 #' @param maskTo Optional Gridded or Vector dataset which,
 #'   if supplied, will supply the extent with which to mask `from`.
 #'   If Gridded, it will mask with the `NA` values on the `maskTo`;
