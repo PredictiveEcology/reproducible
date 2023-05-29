@@ -1026,6 +1026,11 @@ remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.fr
     if (isFALSE(dots$useSAcrs)) {
       ret$projectTo <- NULL
     }
+
+    if (isTRUE(dots$maskWithRTM)) {
+      ret$maskTo <- dots$rasterToMatch
+    }
+
     # ret <- ret[!vapply(ret, is.null, FUN.VALUE = logical(1))]
     list2env(ret, envir)
   }
