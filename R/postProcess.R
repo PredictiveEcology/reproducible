@@ -48,8 +48,6 @@ postProcess.list <- function(x, ...) {
 #'   there are no file downloads. To achieve fast results, wrap
 #'   `prepInputs` with `Cache`
 #'
-#'   NOTE: `sf` objects are still very experimental.
-#'
 #'
 #' @param ... Additional arguments passed to methods. For `spatialClasses`,
 #'            these are: [cropTo()], [fixErrorsIn()],
