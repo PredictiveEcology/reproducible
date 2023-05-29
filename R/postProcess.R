@@ -41,7 +41,7 @@ postProcess.list <- function(x, ...) {
 #'     \item Project using [projectTo()]
 #'     \item Mask using [maskTo()]
 #'     \item Determine file name [determineFilename()]
-#'     \item Write that file name to disk, optionally [writeOutputs()]
+#'     \item Write that file name to disk, optionally [writeTo()]
 #'   }
 #'
 #'   NOTE: checksumming does not occur during the post-processing stage, as
