@@ -1,7 +1,3 @@
-# reproducible 2.0.3
-
-Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
-
 reproducible 2.0.4
 =============
 
@@ -18,8 +14,6 @@ reproducible 2.0.4
 
 ## Continuous integration
 - Improvements with testing on GitHub Actions
-
-
 
 reproducible 2.0.2
 =============
