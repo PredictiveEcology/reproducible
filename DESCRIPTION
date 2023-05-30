@@ -2,7 +2,7 @@ Package: reproducible
 Type: Package
 Title: Enhance Reproducibility of R Code
 Description: A collection of high-level, machine- and OS-independent tools
-    for making deeply reproducible and reusable content in R.
+    for making reproducible and reusable content in R.
     The two workhorse functions are Cache() and prepInputs(). Cache()
     allows for nested caching, is robust to environments and objects with
     environments (like functions), and has deals with some classes of 

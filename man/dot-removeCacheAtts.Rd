@@ -4,15 +4,10 @@
 \alias{.removeCacheAtts}
 \title{Remove attributes that are highly varying}
 \usage{
-.removeCacheAtts(x, passByReference = FALSE)
+.removeCacheAtts(x)
 }
 \arguments{
 \item{x}{Any arbitrary R object that could have attributes}
-
-\item{passByReference}{Logical. If \code{TRUE}, this uses \code{data.table::setattr}
-to remove several attributes that are unnecessary for digesting, specifically \code{tags},
-\code{.Cache} and \code{call}. Because there may be issues with "modified compiler constants",
-the default is \code{FALSE}.}
 }
 \description{
 Remove attributes that are highly varying
