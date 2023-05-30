@@ -129,31 +129,33 @@ the following sequence will occur:</p>
 <li><p>Project using <code><a href="postProcessTo.html">projectTo()</a></code></p></li>
 <li><p>Mask using <code><a href="postProcessTo.html">maskTo()</a></code></p></li>
 <li><p>Determine file name <code><a href="determineFilename.html">determineFilename()</a></code></p></li>
-<li><p>Write that file name to disk, optionally <code><a href="deprecated.html">writeOutputs()</a></code></p></li>
+<li><p>Write that file name to disk, optionally <code><a href="postProcessTo.html">writeTo()</a></code></p></li>
 </ol><p>NOTE: checksumming does not occur during the post-processing stage, as
 there are no file downloads. To achieve fast results, wrap
 <code>prepInputs</code> with <code>Cache</code></p>
-<p>NOTE: <code>sf</code> objects are still very experimental.</p>
     </div>
-    <div id="passing-rastertomatch-and-or-studyarea">
-    <h2>Passing <code>rasterToMatch</code> and/or <code>studyArea</code></h2>
+    <div id="backwards-compatibility-with-rastertomatch-and-or-studyarea-arguments">
+    <h2>Backwards compatibility with <code>rasterToMatch</code> and/or <code>studyArea</code> arguments</h2>
     
 
 
-<p>Depending on which of these were passed, different things will happen to the
-<code>targetFile</code> located at <code>filename1</code>.</p>
+<p>For backwards compatibility, <code>postProcess</code> will continue to allow passing
+<code>rasterToMatch</code> and/or <code>studyArea</code> arguments. Depending on which of these
+are passed, different things will happen to the <code>targetFile</code> located at <code>filename1</code>.</p>
+<p>See <em>Use cases</em> section in <code><a href="postProcessTo.html">postProcessTo()</a></code> for post processing behaviour with
+the new <code>from</code> and <code>to</code> arguments.</p>
 <div class="section">
-<h3 id="if-targetfile-is-a-raster-object-">If <code>targetFile</code> is a <code>Raster*</code> object:<a class="anchor" aria-label="anchor" href="#if-targetfile-is-a-raster-object-"></a></h3>
+<h3 id="if-targetfile-is-a-raster-raster-or-spatraster-object-">If <code>targetFile</code> is a raster (<code>Raster*</code>, or <code>SpatRaster</code>) object:<a class="anchor" aria-label="anchor" href="#if-targetfile-is-a-raster-raster-or-spatraster-object-"></a></h3>
 
-<table class="table table"><tr><td></td><td><code>rasterToMatch</code></td><td><code>studyArea</code></td><td>Both</td></tr><tr><td><code>extent</code></td><td>Yes</td><td>Yes</td><td><code>rasterToMatch</code></td></tr><tr><td><code>resolution</code></td><td>Yes</td><td>No</td><td><code>rasterToMatch</code></td></tr><tr><td><code>projection</code></td><td>Yes</td><td>No*</td><td><code>rasterToMatch</code>*</td></tr><tr><td><code>alignment</code></td><td>Yes</td><td>No</td><td><code>rasterToMatch</code></td></tr><tr><td><code>mask</code></td><td>No**</td><td>Yes</td><td><code>studyArea</code>**</td></tr></table><ul><li><p>Can be overridden with <code>useSAcrs</code>.
-** Will mask with <code>NA</code>s from <code>rasterToMatch</code> if <code>maskWithRTM</code>.</p></li>
-</ul></div>
+<table class="table table"><tr><td></td><td><code>rasterToMatch</code></td><td><code>studyArea</code></td><td>Both</td></tr><tr><td><code>extent</code></td><td>Yes</td><td>Yes</td><td><code>rasterToMatch</code></td></tr><tr><td><code>resolution</code></td><td>Yes</td><td>No</td><td><code>rasterToMatch</code></td></tr><tr><td><code>projection</code></td><td>Yes</td><td>No*</td><td><code>rasterToMatch</code>*</td></tr><tr><td><code>alignment</code></td><td>Yes</td><td>No</td><td><code>rasterToMatch</code></td></tr><tr><td><code>mask</code></td><td>No**</td><td>Yes</td><td><code>studyArea</code>**</td></tr></table><p>*Can be overridden with <code>useSAcrs</code>.</p>
+<p>**Will mask with <code>NA</code>s from <code>rasterToMatch</code> if <code>maskWithRTM</code>.</p>
+</div>
 
 <div class="section">
-<h3 id="if-targetfile-is-a-spatial-object-">If <code>targetFile</code> is a <code>Spatial*</code> object:<a class="anchor" aria-label="anchor" href="#if-targetfile-is-a-spatial-object-"></a></h3>
+<h3 id="if-targetfile-is-a-vector-spatial-sf-or-spatvector-object-">If <code>targetFile</code> is a vector (<code>Spatial*</code>, <code>sf</code> or <code>SpatVector</code>) object:<a class="anchor" aria-label="anchor" href="#if-targetfile-is-a-vector-spatial-sf-or-spatvector-object-"></a></h3>
 
-<table class="table table"><tr><td></td><td><code>rasterToMatch</code></td><td><code>studyArea</code></td><td>Both</td></tr><tr><td><code>extent</code></td><td>Yes</td><td>Yes</td><td><code>rasterToMatch</code></td></tr><tr><td><code>resolution</code></td><td>NA</td><td>NA</td><td>NA</td></tr><tr><td><code>projection</code></td><td>Yes</td><td>No*</td><td><code>rasterToMatch</code>*</td></tr><tr><td><code>alignment</code></td><td>NA</td><td>NA</td><td>NA</td></tr><tr><td><code>mask</code></td><td>No</td><td>Yes</td><td><code>studyArea</code></td></tr></table><ul><li><p>Can be overridden with <code>useSAcrs</code></p></li>
-</ul></div>
+<table class="table table"><tr><td></td><td><code>rasterToMatch</code></td><td><code>studyArea</code></td><td>Both</td></tr><tr><td><code>extent</code></td><td>Yes</td><td>Yes</td><td><code>rasterToMatch</code></td></tr><tr><td><code>resolution</code></td><td>NA</td><td>NA</td><td>NA</td></tr><tr><td><code>projection</code></td><td>Yes</td><td>No*</td><td><code>rasterToMatch</code>*</td></tr><tr><td><code>alignment</code></td><td>NA</td><td>NA</td><td>NA</td></tr><tr><td><code>mask</code></td><td>No</td><td>Yes</td><td><code>studyArea</code></td></tr></table><p>*Can be overridden with <code>useSAcrs</code></p>
+</div>
 
     </div>
     <div id="see-also">
@@ -163,7 +165,7 @@ there are no file downloads. To achieve fast results, wrap
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"terra"</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"sf"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"terra"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"sf"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://reproducible.predictiveecology.org">reproducible</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">od</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="fu"><a href="tempdir2.html">tempdir2</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="co"># download a (spatial) file from remote url (which often is an archive) load into R</span></span></span>
@@ -228,14 +230,19 @@ there are no file downloads. To achieve fast results, wrap
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /home/runner/work/_temp/Library/reproducible/ex/luxSmall.shp</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running preProcess</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile was not supplied; guessed and will try /tmp/RtmpUEB092/reproducible/j9mb0b84/elev.tif. If this is incorrect, please supply targetFile</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile was not supplied; guessed and will try /tmp/Rtmpc9Rjrp/reproducible/Bo2ISRIr/elev.tif. If this is incorrect, please supply targetFile</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: elev.tif</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...downloading...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Downloading https://github.com/rspatial/terra/raw/master/inst/ex/elev.tif ...</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   |                                                                              |                                                                      |   0%  |                                                                              |===================================================================== |  99%  |                                                                              |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Hardlinked version of file(s) created at: /tmp/RtmpUEB092/reproducible/j9mb0b84/elev.tif, which point(s) to /tmp/RtmpUEB092/reproducible/DOAVsA/elev.tif; no copy was made.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Hardlinked version of file(s) created at:</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/Rtmpc9Rjrp/reproducible/Bo2ISRIr/elev.tif</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">which point(s) to</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/Rtmpc9Rjrp/reproducible/EBdrCC/elev.tif</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">... no copy/copies made.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
@@ -244,10 +251,10 @@ there are no file downloads. To achieve fast results, wrap
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  what to look for.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmpUEB092/reproducible/j9mb0b84/elev.tif</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/Rtmpc9Rjrp/reproducible/Bo2ISRIr/elev.tif</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0666 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0449 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    projecting...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">         projectTo is a Vector dataset, which does not define all metadata required. </span></span>
@@ -255,12 +262,12 @@ there are no file downloads. To achieve fast results, wrap
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">         from `ext(from)` (in the projection from `projectTo`).</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">         If this is not correct, create a template gridded object and pass that to projectTo...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">         </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done in 0.158 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done in 0.16 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0485 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0384 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0268 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  postProcessTo done in 0.345 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0253 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  postProcessTo done in 0.306 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running preProcess</span></span>
@@ -292,11 +299,11 @@ there are no file downloads. To achieve fast results, wrap
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fb78f12d1d237284.rds))</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous sf::st_read call</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done in 0.0272 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done in 0.0382 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0366 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0311 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0733 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0633 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running preProcess</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: /home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
@@ -306,11 +313,11 @@ there are no file downloads. To achieve fast results, wrap
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done in 0.0665 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done in 0.0376 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0195 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0152 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0201 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0174 secs</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

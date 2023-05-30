@@ -140,7 +140,7 @@ This function is also used internally with the deprecated family <code><a href="
 <span><span class="fu">cropTo</span><span class="op">(</span></span>
 <span>  <span class="va">from</span>,</span>
 <span>  cropTo <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  needBuffer <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  needBuffer <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
@@ -187,7 +187,13 @@ The resolution and extent will be taken from <code>res(from)</code> (i.e. <code>
 If a Vector, the extent of the <code>projectTo</code> is not used (unless it is also passed to <code>cropTo</code>.
 To omit projecting, set this to <code>NA</code>.
 If supplied, this will override <code>to</code> for the projecting step.
-Defaults to <code>NULL</code>, which means use <code>to</code>.</p></dd>
+Defaults to <code>NULL</code>, which means use <code>to</code>.
+<strong>Attention.</strong> Conflicts may arise with when <code>projectTo</code> is a Vector/CRS object with a
+distinct CRS from <code>to</code>. Because <code>to</code> is used for masking <em>after</em> <code>from</code> is re-projected using
+<code>projectTo</code>, the extents of <code>to</code> and <code>from</code> may no longer overlap (as in <em>align</em>)
+perfectly leading to failure during
+the masking step. We  recommend passing a raster templates to <code>projectTo</code> whose extent and CRS
+are both compatible with the object used later for masking (either <code>to</code> or <code>maskTo</code>).</p></dd>
 
 
 <dt>maskTo</dt>
@@ -220,8 +226,9 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
 
 
 <dt>...</dt>
-<dd><p>Passed to <code><a href="https://rdrr.io/pkg/terra/man/mask.html" class="external-link">terra::mask</a></code> (for <code>maskTo</code>), <code><a href="https://rdrr.io/pkg/terra/man/project.html" class="external-link">terra::project</a></code> (for <code>projectTo</code>)
-or <code><a href="https://rdrr.io/pkg/terra/man/writeRaster.html" class="external-link">terra::writeRaster</a></code> (for <code>writeTo</code>) and not used for <code>cropTo</code>. Commonly used might be
+<dd><p>Arguments passed to <code><a href="https://rdrr.io/pkg/terra/man/mask.html" class="external-link">terra::mask</a></code> (for <code>maskTo</code>), <code><a href="https://rdrr.io/pkg/terra/man/project.html" class="external-link">terra::project</a></code> (for <code>projectTo</code>)
+or <code><a href="https://rdrr.io/pkg/terra/man/writeRaster.html" class="external-link">terra::writeRaster</a></code> (for <code>writeTo</code>) and not used for <code>cropTo</code>, as well <code>postProcess</code>'s
+<code>rasterToMatch</code> and <code>studyArea</code> arguments (see below). Commonly used arguments might be
 <code>method</code>, <code>touches</code>, and <code>datatype</code>. If <code>filename</code> is passed, it will be ignored; use
 <code>writeTo = </code>.</p></dd>
 
@@ -248,8 +255,10 @@ projected (via <code>projectTo()</code>), masked (via <code>maskTo()</code>), an
     </div>
     <div id="details">
     <h2>Details</h2>
-    <p><code>postProcessTo</code> is a wrapper around <code>cropTo(needBuffer = TRUE)</code>, <code>projectTo</code>, <code>cropTo</code>,
-<code>maskTo</code>, <code>writeTo</code>. Users can call each of these individually.</p>
+    <p><code>postProcessTo</code> is a wrapper around (an initial "wide" crop for speed)
+<code>cropTo(needBuffer = TRUE)</code>, <code>projectTo</code>,
+<code>cropTo</code> (the actual crop for precision), <code>maskTo</code>, <code>writeTo</code>.
+Users can call each of these individually.</p>
 <p><code>postProcessTerra</code> is the early name of this function that is now <code>postProcessTo</code>.</p>
     </div>
     <div id="use-cases">
@@ -259,13 +268,27 @@ projected (via <code>projectTo()</code>), masked (via <code>maskTo()</code>), an
 
 <p>The table below shows what will result from passing different classes to <code>from</code>
 and <code>to</code>:</p>
-<table class="table table"><tr><td><code>from</code></td><td><code>to</code></td><td><code>from</code> will have:</td></tr><tr><td><code>Gridded</code></td><td><code>Gridded</code></td><td>the extent, projection, origin, resolution and
-masking where there are <code>NA</code> from the <code>to</code></td></tr><tr><td><code>Gridded</code></td><td><code>Vector</code></td><td>the projection, origin, and mask from <code>to</code>, and extent will
-be a round number of pixels that fit within the extent
-of <code>to</code>. Resolution will be the same as <code>from</code></td></tr><tr><td><code>Vector</code></td><td><code>Vector</code></td><td>the projection, origin, extent and mask from <code>to</code></td></tr></table><p>If one or more of the <code>*To</code> arguments are supplied, these will
+<table class="table table"><tr><td><strong><code>from</code></strong></td><td><strong><code>to</code></strong></td><td><strong><code>from</code></strong> will have:</td></tr><tr><td><code>Gridded</code></td><td><code>Gridded</code></td><td>the extent, projection, origin, resolution
+and masking where there are <code>NA</code> from the <code>to</code></td></tr><tr><td><code>Gridded</code></td><td><code>Vector</code></td><td>the projection, origin, and mask from <code>to</code>, and
+extent will be a round number of pixels that
+fit within the extent of <code>to</code>. Resolution will
+be the same as <code>from</code>.  See section
+below about <code>projectTo</code>.</td></tr><tr><td><code>Vector</code></td><td><code>Vector</code></td><td>the projection, origin, extent and mask from <code>to</code></td></tr></table><p>If one or more of the <code>*To</code> arguments are supplied, these will
 override individual components of <code>to</code>. If <code>to</code> is omitted or <code>NULL</code>,
 then only the <code>*To</code> arguments that are used will be performed. In all cases,
 setting a <code>*To</code> argument to <code>NA</code> will prevent that step from happening.</p>
+    </div>
+    <div id="projectto">
+    <h2><code>projectTo</code></h2>
+    
+
+<p>Since these functions use the gis capabilities of <code>sf</code> and <code>terra</code>, they will only
+be able to do things that those functions can do. One key caution, which is
+stated clearly in <code><a href="https://rdrr.io/pkg/terra/man/project.html" class="external-link">?terra::project</a></code> is that projection of a raster (i.e., gridded)
+object should always be with another gridded object. If the user chooses to
+supply a <code>projectTo</code> that is a vector object for a <code>from</code> that is gridded,
+there may be unexpected failures due e.g., to extents not overlapping during
+the <code>maskTo</code> stage.</p>
     </div>
     <div id="backwards-compatibility-with-postprocess">
     <h2>Backwards compatibility with <code>postProcess</code></h2>
@@ -281,24 +304,31 @@ of <code>to</code>. If only <code>rasterToMatch</code> is supplied, it will be a
 <code>to</code>. If only <code>studyArea</code> is supplied, it will be used for <code>cropTo</code>
 and <code>maskTo</code>; it will only be used for <code>projectTo</code> if <code>useSAcrs = TRUE</code>.
 If both <code>rasterToMatch</code> and <code>studyArea</code> are supplied,
-<code>studyArea</code> will only be applied to <code>maskTo</code> (and optionally <code>projectTo</code> if
-<code>useSAcrs = TRUE</code>); everything else will be from <code>rasterToMatch</code>.</p>
+<code>studyArea</code> will only be applied to <code>maskTo</code> (unless <code>maskWithRTM = TRUE</code>),
+and, optionally, to <code>projectTo</code> (if <code>useSAcrs = TRUE</code>); everything else
+will be from <code>rasterToMatch</code>.</p>
 </div>
 
 <div class="section">
-<h3 id="targetcrs-filename-usesacrs-"><code>targetCRS</code>, <code>filename2</code>, <code>useSAcrs</code>:<a class="anchor" aria-label="anchor" href="#targetcrs-filename-usesacrs-"></a></h3>
+<h3 id="targetcrs-filename-usesacrs-maskwithrtm-"><code>targetCRS</code>, <code>filename2</code>, <code>useSAcrs</code>, <code>maskWithRTM</code>:<a class="anchor" aria-label="anchor" href="#targetcrs-filename-usesacrs-maskwithrtm-"></a></h3>
+
+
 <p><code>targetCRS</code> if supplied will be assigned to <code>projectTo</code>. <code>filename2</code> will
 be assigned to <code>writeTo</code>. If <code>useSAcrs</code> is set, then the <code>studyArea</code>
-will be assigned to <code>projectTo</code>. All of these will override any existing values
-for these arguments.</p>
+will be assigned to <code>projectTo</code>. If <code>maskWithRTM</code> is used, then the
+<code>rasterToMath</code> will be assigned to <code>maskTo</code>. All of these will override
+any existing values for these arguments.</p>
 </div>
 
+<p>See also <code><a href="postProcess.html">postProcess()</a></code> documentation section on
+<em>Backwards compatibility with <code>rasterToMatch</code> and/or <code>studyArea</code></em> for further
+detail.</p>
     </div>
     <div id="cropping">
     <h2>Cropping</h2>
     
 
-<p>If <code>cropTo</code> is not <code>NA</code>, postProcessTo does cropping twice, both the first and last steps.
+<p>If <code>cropTo</code> is not <code>NA</code>, <code>postProcessTo</code> does cropping twice, both the first and last steps.
 It does it first for speed, as cropping is a very fast algorithm. This will quickly remove
 a bunch of pixels that are not necessary. But, to not create bias, this first crop is padded
 by  <code>2 * res(from)[1]</code>), so that edge cells still have a complete set of neighbours.

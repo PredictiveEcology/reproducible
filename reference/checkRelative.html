@@ -75,7 +75,12 @@ sub-folder structure within the <code>knownRelativePaths</code></p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">checkRelative</span><span class="op">(</span><span class="va">files</span>, <span class="va">absolutePrefix</span>, <span class="va">knownRelativeFiles</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">checkRelative</span><span class="op">(</span></span>
+<span>  <span class="va">files</span>,</span>
+<span>  <span class="va">absolutePrefix</span>,</span>
+<span>  <span class="va">knownRelativeFiles</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -93,6 +98,14 @@ to <code>knownRelativeFiles</code></p></dd>
 <dt>knownRelativeFiles</dt>
 <dd><p>A character vector of relative filenames, that could
 have sub-folder structure.</p></dd>
+
+
+<dt>verbose</dt>
+<dd><p>Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></dd>
 
 </dl></div>
 

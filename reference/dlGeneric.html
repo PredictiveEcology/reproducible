@@ -69,22 +69,13 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">dlGeneric</span><span class="op">(</span></span>
-<span>  <span class="va">url</span>,</span>
-<span>  <span class="va">needChecksums</span>,</span>
-<span>  <span class="va">destinationPath</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">dlGeneric</span><span class="op">(</span><span class="va">url</span>, <span class="va">destinationPath</span>, verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>url</dt>
 <dd><p>The url (link) to the file.</p></dd>
-
-
-<dt>needChecksums</dt>
-<dd><p>Logical indicating whether to generate checksums. ## TODO: add overwrite arg to the function?</p></dd>
 
 
 <dt>destinationPath</dt>
@@ -103,6 +94,10 @@ search for the file before attempting to download. Default for that option is
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></dd>
+
+
+<dt>needChecksums</dt>
+<dd><p>Logical indicating whether to generate checksums. ## TODO: add overwrite arg to the function?</p></dd>
 
 </dl></div>
     <div id="author">
