@@ -354,7 +354,7 @@ utils::globalVariables(c(
 #' @author Eliot McIntire
 #' @export
 #' @importFrom digest digest
-#' @importFrom data.table setDT := setkeyv .N .SD setattr
+#' @importFrom data.table setDT := setkeyv .N .SD
 #' @importFrom utils object.size tail
 #' @importFrom methods formalArgs
 #' @rdname Cache
@@ -773,7 +773,7 @@ Cache <-
       # Can make new methods by class to add tags to outputs
       if (.CacheIsNew) {
         outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
-        output <- .CopyCacheAtts(outputToSave, output, passByReference = TRUE)
+        output <- .CopyCacheAtts(outputToSave, output)
         # .dealWithClass added tags; these should be transfered to output
         #          outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
         #          output <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
@@ -1449,26 +1449,25 @@ getFunctionName2 <- function(mc) {
 
 #' Set subattributes within a list by reference
 #'
-#' This uses `data.table::setattr`, but in the case where there is
-#' only a single element within a list attribute.
+#' Sets only a single element within a list attribute.
 #' @param object An arbitrary object
 #' @param attr The attribute name (that is a list object) to change
 #' @param subAttr The list element name to change
 #' @param value The new value
 #'
-#' @export
-#' @importFrom data.table setattr
 #' @return
 #' This sets or updates the `subAttr` element of a list that is located at
 #' `attr(object, attr)`, with the `value`. This, therefore, updates a sub-element
 #'  of a list attribute and returns that same object with the updated attribute.
 #'
+#' @export
 #' @rdname setSubAttrInList
 .setSubAttrInList <- function(object, attr, subAttr, value) {
   .CacheAttr <- attr(object, attr)
   if (is.null(.CacheAttr)) .CacheAttr <- list()
   .CacheAttr[[subAttr]] <- value
-  setattr(object, attr, .CacheAttr)
+  attr(object, attr) <- .CacheAttr
+  object
 }
 
 #' The exact digest function that `Cache` uses
@@ -1547,7 +1546,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     preDigestQuick <- lapply(objsToDigestQuick, function(x) {
       # remove the "newCache" attribute, which is irrelevant for digest
       if (!is.null(attr(x, ".Cache")$newCache)) {
-        .setSubAttrInList(x, ".Cache", "newCache", NULL)
+        x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
         if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
       }
       .robustDigest(x, algo = algo, quick = TRUE, ...)
@@ -1559,7 +1558,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   preDigest <- lapply(objsToDigest, function(x) {
     # remove the "newCache" attribute, which is irrelevant for digest
     if (!is.null(attr(x, ".Cache")$newCache)) {
-      .setSubAttrInList(x, ".Cache", "newCache", NULL)
+      x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
       if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
     }
     .robustDigest(x, algo = algo, quick = FALSE, ...)
@@ -2113,9 +2112,9 @@ spatVectorNamesForCache <- c("x", "type", "atts", "crs")
 
 
 addCacheAttr <- function(output, .CacheIsNew, outputHash, FUN) {
-  .setSubAttrInList(output, ".Cache", "newCache", .CacheIsNew)
-  setattr(output, "tags", paste0("cacheId:", outputHash))
-  setattr(output, "call", "")
+  output <- .setSubAttrInList(output, ".Cache", "newCache", .CacheIsNew)
+  attr(output, "tags") <- paste0("cacheId:", outputHash)
+  attr(output, "call") <- ""
   if (!identical(attr(output, ".Cache")$newCache, .CacheIsNew))
     stop("attributes are not correct 3")
   if (!identical(attr(output, "call"), ""))
@@ -2124,7 +2123,7 @@ addCacheAttr <- function(output, .CacheIsNew, outputHash, FUN) {
     stop("attributes are not correct 5")
 
   if (isS4(FUN)) {
-    setattr(output, "function", FUN@generic)
+    attr(output, "function") <- FUN@generic
     if (!identical(attr(output, "function"), FUN@generic))
       stop("There is an unknown error 03")
   }

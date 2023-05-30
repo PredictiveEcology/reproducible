@@ -75,7 +75,7 @@ test_that("setting options works correctly", {
   keep <- setdiff(names(a), c("reproducible.rasterRead",
                               "reproducible.cachePath",
                               "reproducible.overwrite", # This is a bug # TODO... something prior to this test is changing it
-                              # "reproducible.useDBI",
+                              "reproducible.useDBI",
                               # "reproducible.cacheSaveFormat",
                               "reproducible.shapefileRead"))
   a <- a[keep]
@@ -91,7 +91,7 @@ test_that("setting options works correctly", {
   b1 <- b[names(a1)]
   b1 <- b1[!names(b1) %in% omit]
   a2 <- a1[!names(a1) %in% omit]
-  expect_identical(b1, a2) ## TODO: reproducible.cachePath failures when non-interactive; see testInit()
+  expect_identical(b1, a2)
 })
 
 test_that("guessAtTargetAndFun works correctly", {

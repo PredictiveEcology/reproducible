@@ -119,7 +119,7 @@
       output <- .debugCache(output, preDigest, ...)
   }
 
-  .setSubAttrInList(output, ".Cache", "newCache", FALSE)
+  output <- .setSubAttrInList(output, ".Cache", "newCache", FALSE)
   #attr(output, ".Cache")$newCache <- FALSE
   if (!identical(attr(output, ".Cache")$newCache, FALSE)) stop("attributes are not correct 2")
 
