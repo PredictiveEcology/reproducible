@@ -1261,7 +1261,7 @@ test_that("lightweight tests for code coverage", {
   )
 
   ## 2023-05-08: does not error on macOS
-  #isErr <- is(out, "try-error")
+  isErr <- is(out, "try-error")
   #if (isMac()) expect_false(isErr) else
   expect_true(isErr)
 
