@@ -1248,7 +1248,6 @@ moveAttributes <- function(source, receiving, attrs = NULL) {
 
       for (i in length(sourceAttributes))
         attr(receiving, names(sourceAttributes)[i]) <- sourceAttributes[[i]]
-        # setattr(receiving, names(sourceAttributes)[i], sourceAttributes[[i]])
     }
   }
   receiving
@@ -1526,7 +1525,6 @@ dealWithArchive <- function(archive, url, targetFile, checkSums, alsoExtract, de
         if (length(sourceAttributes) > 0 && !is.null(archive)) {
           for (i in length(sourceAttributes))
             attr(archive, names(sourceAttributes)[i]) <- sourceAttributes[[i]]
-            # setattr(archive, names(sourceAttributes)[i], sourceAttributes[[i]])
         }
 
         checkSums <- .checkSumsUpdate(destinationPath = destinationPath,

@@ -354,7 +354,7 @@ utils::globalVariables(c(
 #' @author Eliot McIntire
 #' @export
 #' @importFrom digest digest
-#' @importFrom data.table setDT := setkeyv .N .SD setattr
+#' @importFrom data.table setDT := setkeyv .N .SD
 #' @importFrom utils object.size tail
 #' @importFrom methods formalArgs
 #' @rdname Cache
@@ -773,7 +773,7 @@ Cache <-
       # Can make new methods by class to add tags to outputs
       if (.CacheIsNew) {
         outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
-        output <- .CopyCacheAtts(outputToSave, output, passByReference = FALSE)
+        output <- .CopyCacheAtts(outputToSave, output)
         # .dealWithClass added tags; these should be transfered to output
         #          outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
         #          output <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
@@ -1449,15 +1449,13 @@ getFunctionName2 <- function(mc) {
 
 #' Set subattributes within a list by reference
 #'
-#' This uses `data.table::setattr`, but in the case where there is
-#' only a single element within a list attribute.
+#' Sets only a single element within a list attribute.
 #' @param object An arbitrary object
 #' @param attr The attribute name (that is a list object) to change
 #' @param subAttr The list element name to change
 #' @param value The new value
 #'
 #' @export
-#' @importFrom data.table setattr
 #' @return
 #' This sets or updates the `subAttr` element of a list that is located at
 #' `attr(object, attr)`, with the `value`. This, therefore, updates a sub-element
@@ -1470,7 +1468,6 @@ getFunctionName2 <- function(mc) {
   .CacheAttr[[subAttr]] <- value
   attr(object, attr) <- .CacheAttr
   object
-  # setattr(object, attr, .CacheAttr)
 }
 
 #' The exact digest function that `Cache` uses
@@ -2114,15 +2111,10 @@ browserCond <- function(expr) {
 spatVectorNamesForCache <- c("x", "type", "atts", "crs")
 
 
-addCacheAttr <- function(output, .CacheIsNew, outputHash, FUN, passByReference = FALSE) {
+addCacheAttr <- function(output, .CacheIsNew, outputHash, FUN) {
   output <- .setSubAttrInList(output, ".Cache", "newCache", .CacheIsNew)
-  if (passByReference) {
-    setattr(output, "tags", paste0("cacheId:", outputHash))
-    setattr(output, "call", "")
-  } else {
-    attr(output, "tags") <- paste0("cacheId:", outputHash)
-    attr(output, "call") <- ""
-  }
+  attr(output, "tags") <- paste0("cacheId:", outputHash)
+  attr(output, "call") <- ""
   if (!identical(attr(output, ".Cache")$newCache, .CacheIsNew))
     stop("attributes are not correct 3")
   if (!identical(attr(output, "call"), ""))
@@ -2131,11 +2123,7 @@ addCacheAttr <- function(output, .CacheIsNew, outputHash, FUN, passByReference =
     stop("attributes are not correct 5")
 
   if (isS4(FUN)) {
-    if (passByReference) {
-      setattr(output, "function", FUN@generic)
-    } else {
-      attr(output, "function") <- FUN@generic
-    }
+    attr(output, "function") <- FUN@generic
     if (!identical(attr(output, "function"), FUN@generic))
       stop("There is an unknown error 03")
   }

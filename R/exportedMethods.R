@@ -551,10 +551,8 @@ unmakeMemoisable.default <- function(x) {
     }
 
     attr(obj, "tags") <- atts$tags
-    # setattr(obj, "tags", atts$tags)
     obj <- .setSubAttrInList(obj, ".Cache", "newCache", atts$.Cache$newCache)
     attr(obj, "call") <- atts$call
-    # setattr(obj, "call", atts$call)
 
     if (!identical(attr(obj, ".Cache")$newCache, atts$.Cache$newCache))
       stop("attributes are not correct 6")
@@ -565,7 +563,6 @@ unmakeMemoisable.default <- function(x) {
 
     if (!is.null(atts[["function"]])) {
       attr(obj, "function") <- atts[["function"]]
-      # setattr(obj, "function", atts[["function"]])
       if (!identical(attr(obj, "function"), atts[["function"]]))
         stop("There is an unknown error 04")
     }
@@ -574,10 +571,6 @@ unmakeMemoisable.default <- function(x) {
       attr(obj, "tags") <- c(attributes(obj$cacheRaster)$tags,
                              paste0("origRaster:", obj$origRaster),
                              paste0("cacheRaster:", Filenames(obj)))
-      # setattr(obj, "tags",
-      #         c(attributes(obj$cacheRaster)$tags,
-      #           paste0("origRaster:", obj$origRaster),
-      #           paste0("cacheRaster:", Filenames(obj))))
     }
 
   }
@@ -616,7 +609,6 @@ unmakeMemoisable.default <- function(x) {
         obj <- wrapSpatVector(obj)
     }
     attr(obj, ".Cache") <- attrs
-    # setattr(obj, ".Cache", attrs)
 
     messageCache("\b Done!", verboseLevel = 2, verbose = verbose)
   }

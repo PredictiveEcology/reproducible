@@ -117,7 +117,7 @@ setMethod(
     }
 
     if (inherits(object, "Spatial")) {
-      object <- .removeCacheAtts(object, passByReference = FALSE)
+      object <- .removeCacheAtts(object)
       if (is(object, "SpatialPoints")) {
         forDig <- as.data.frame(object)
       } else {
@@ -172,8 +172,6 @@ setMethod(
         stop("Please install terra package")
       forDig <- wrapSpatVector(object)
     } else {
-      # passByReference -- while doing pass by reference attribute setting is faster, is
-      #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
       forDig <- .removeCacheAtts(object)
     }
     out <- .doDigest(forDig, algo)
@@ -394,30 +392,19 @@ basenames3 <- function(object, nParentDirs) {
 
 #' Remove attributes that are highly varying
 #'
-#' @importFrom data.table setattr
 #' @param x Any arbitrary R object that could have attributes
-#' @param passByReference Logical. If `TRUE`, this uses `data.table::setattr`
-#'   to remove several attributes that are unnecessary for digesting, specifically `tags`,
-#'   `.Cache` and `call`. Because there may be issues with "modified compiler constants",
-#'   the default is `FALSE`.
-.removeCacheAtts <- function(x, passByReference = FALSE) {
-  if (passByReference) {
-    setattr(x, "tags", NULL)
-    setattr(x, ".Cache", NULL)
-    setattr(x, "call", NULL)
-  } else {
-    if (!is.null(attr(x, "tags")))
-      attr(x, "tags") <- NULL
-    if (!is.null(attr(x, ".Cache")))
-      attr(x, ".Cache") <- NULL
-    if (!is.null(attr(x, "call")))
-      attr(x, "call") <- NULL
-  }
+.removeCacheAtts <- function(x) {
+  if (!is.null(attr(x, "tags")))
+    attr(x, "tags") <- NULL
+  if (!is.null(attr(x, ".Cache")))
+    attr(x, ".Cache") <- NULL
+  if (!is.null(attr(x, "call")))
+    attr(x, "call") <- NULL
   x
 }
 
 
-.CopyCacheAtts <- function(from, to, passByReference = FALSE) {
+.CopyCacheAtts <- function(from, to) {
 
   onDiskRaster <- FALSE
   namesFrom <- names(from)
@@ -429,7 +416,7 @@ basenames3 <- function(object, nParentDirs) {
       if (length(from) && length(to)) {
         nams <- grep("^\\.mods$|^\\._", namesFrom, value = TRUE, invert = TRUE)
         for (nam in nams) {
-          lala <- try(.CopyCacheAtts(from[[nam]], to[[nam]], passByReference = passByReference))
+          lala <- try(.CopyCacheAtts(from[[nam]], to[[nam]]))
           if (is(lala, 'try-error')) browser()
           to[[nam]] <- lala
         }
@@ -441,11 +428,7 @@ basenames3 <- function(object, nParentDirs) {
 
   for (i in c("tags", ".Cache", "call")) {
     if (!is.null(attr(from, i)))
-      if (passByReference)  {
-        setattr(to, i, attr(from, i))
-      } else  {
-        attr(to, i) <- attr(from, i)
-      }
+      attr(to, i) <- attr(from, i)
   }
   to
 
