@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.4</span>
       </span>
     </div>
 
@@ -69,19 +69,13 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">.removeCacheAtts</span><span class="op">(</span><span class="va">x</span>, passByReference <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">.removeCacheAtts</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>Any arbitrary R object that could have attributes</p></dd>
-
-
-<dt>passByReference</dt>
-<dd><p>Logical. If <code>TRUE</code>, the default, this uses <code><a href="https://Rdatatable.gitlab.io/data.table/reference/setattr.html" class="external-link">data.table::setattr</a></code>
-to remove several attributes that are unnecessary for digesting, specifically <code>tags</code>,
-<code>.Cache</code> and <code>call</code></p></dd>
 
 </dl></div>
 

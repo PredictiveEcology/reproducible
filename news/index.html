@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.4</span>
       </span>
     </div>
 
@@ -68,16 +68,18 @@
 <p>Known issues: <a href="https://github.com/PredictiveEcology/reproducible/issues" class="external-link uri">https://github.com/PredictiveEcology/reproducible/issues</a></p>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="2.0.3" id="reproducible-203-1">reproducible 2.0.3<a class="anchor" aria-label="anchor" href="#reproducible-203-1"></a></h2>
+<h2 class="page-header" data-toc-text="2.0.4" id="reproducible-204">reproducible 2.0.4<a class="anchor" aria-label="anchor" href="#reproducible-204"></a></h2>
 <div class="section level3">
-<h3 id="enhancements-2-0-3">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-2-0-3"></a></h3>
+<h3 id="enhancements-2-0-4">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-2-0-4"></a></h3>
 <ul><li>
 <code>reproducible.useFuture</code> now defaults to <code>"multisession"</code>
 </li>
 <li>updated tests to deal with <code>data.table</code> development branch (<a href="https://github.com/PredictiveEcology/reproducible/issues/314" class="external-link">#314</a>)</li>
+<li>removed all use of <code><a href="https://Rdatatable.gitlab.io/data.table/reference/setattr.html" class="external-link">data.table::setattr</a></code> to deal with “modified compiler constants” issue that was detected during CRAN checks at <a href="https://github.com/kalibera/cran-checks/blob/master/rcnst/results/reproducible/00check.log" class="external-link uri">https://github.com/kalibera/cran-checks/blob/master/rcnst/results/reproducible/00check.log</a>
+</li>
 </ul></div>
 <div class="section level3">
-<h3 id="bugfixes-2-0-3">Bugfixes<a class="anchor" aria-label="anchor" href="#bugfixes-2-0-3"></a></h3>
+<h3 id="bugfixes-2-0-4">Bugfixes<a class="anchor" aria-label="anchor" href="#bugfixes-2-0-4"></a></h3>
 <ul><li>
 <code>preProcess</code> failed when <code>googledrive</code> url filename could be found, but <code>destinationPath</code> was not <code>"."</code>
 </li>
@@ -87,7 +89,7 @@
 <li>Several other Issues that addressed edge cases for <code>prepInputs</code> and family.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="continuous-integration-2-0-3">Continuous integration<a class="anchor" aria-label="anchor" href="#continuous-integration-2-0-3"></a></h3>
+<h3 id="continuous-integration-2-0-4">Continuous integration<a class="anchor" aria-label="anchor" href="#continuous-integration-2-0-4"></a></h3>
 <ul><li>Improvements with testing on GitHub Actions</li>
 </ul></div>
 </div>
