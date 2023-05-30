@@ -2,12 +2,13 @@
 
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
-reproducible 2.0.3
+reproducible 2.0.4
 =============
 
 ## Enhancements
 - `reproducible.useFuture` now defaults to `"multisession"`
 - updated tests to deal with `data.table` development branch (#314)
+- removed all use of `data.table::setattr` to deal with "modified compiler constants" issue that was detected during CRAN checks at https://github.com/kalibera/cran-checks/blob/master/rcnst/results/reproducible/00check.log
 
 ## Bugfixes
 - `preProcess` failed when `googledrive` url filename could be found, but `destinationPath` was not `"."`
@@ -17,6 +18,7 @@ reproducible 2.0.3
 
 ## Continuous integration
 - Improvements with testing on GitHub Actions
+
 
 
 reproducible 2.0.2

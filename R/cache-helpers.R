@@ -341,11 +341,10 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #' @return The same object as `obj`, but with 2 attributes set.
 #'
 #' @author Eliot McIntire
-#' @importFrom data.table setattr
 #' @rdname debugCache
 .debugCache <- function(obj, preDigest, ...) {
-  setattr(obj, "debugCache1", list(...))
-  setattr(obj, "debugCache2", preDigest)
+  attr(obj, "debugCache1") <- list(...)
+  attr(obj, "debugCache2") <- preDigest
   obj
 }
 

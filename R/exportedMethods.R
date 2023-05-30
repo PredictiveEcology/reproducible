@@ -288,8 +288,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, preDigest, origArguments, ...) {
     object
-  })
-
+})
 
 #' @details
 #' `updateFilenameSlots`: this exists because when copying file-backed rasters, the
@@ -322,7 +321,6 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
 #' @export
 #' @keywords internal
 updateFilenameSlots.default <- function(obj, curFilenames, newFilenames, isStack = NULL, ...)  {
-
   if (inherits(obj, "Raster")) {
     if (missing(curFilenames)) {
       curFilenames <- Filenames(obj, allowMultiple = FALSE)
@@ -360,21 +358,16 @@ updateFilenameSlots.default <- function(obj, curFilenames, newFilenames, isStack
           slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
         }
         # }
-
-
       }
     }
   }
   obj
 }
 
-
-
 #' @rdname exportedMethods
 #' @export
 #' @keywords internal
 updateFilenameSlots.list <- function(obj, ...)  {
-
   areRasters <- vapply(obj, is, "RasterLayer", FUN.VALUE = logical(1))
   if (all(areRasters)) {
     .requireNamespace("raster", stopOnFALSE = TRUE)
@@ -390,7 +383,6 @@ updateFilenameSlots.list <- function(obj, ...)  {
     })
   }
   out
-
 }
 
 #' @rdname exportedMethods
@@ -404,9 +396,6 @@ updateFilenameSlots.environment <- function(obj, ...)  {
     updateFilenameSlots(as.list(o), ...)
   })
 }
-
-
-
 
 #' @details
 #' `makeMemoiseable` and `unmakeMemoisable` methods are run during `Cache`. The
@@ -455,7 +444,6 @@ unmakeMemoisable.default <- function(x) {
   x
 }
 
-
 #' Grep system calls
 #'
 #' A faster way of grepping the system call stack than just
@@ -474,7 +462,6 @@ unmakeMemoisable.default <- function(x) {
   scallsFirstElement <- lapply(sysCalls, function(x) x[1])
   grep(scallsFirstElement, pattern = pattern)
 }
-
 
 #' Deal with class for saving to and loading from Cache or Disk
 #'
@@ -502,23 +489,15 @@ unmakeMemoisable.default <- function(x) {
                                conn = getOption("reproducible.conn", NULL),
                                verbose = getOption("reproducible.verbose")) {
 
-#  innerTags <- lapply(obj, function(o) attr(o, "tags"))
-#  innerTags <- unique(unlist(innerTags))
-
   obj <- lapply(obj, .dealWithClass, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
-
-  # setattr(obj, "tags", innerTags)
   obj
-
 }
-
 
 #' @export
 #' @rdname dealWithClass
 .dealWithClass.environment <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                       conn = getOption("reproducible.conn", NULL),
                                       verbose = getOption("reproducible.verbose")) {
-
   obj2 <- as.list(obj, all.names = FALSE)
   out <- .dealWithClass(obj2, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
   obj <- Copy(obj)
@@ -526,16 +505,13 @@ unmakeMemoisable.default <- function(x) {
   if (!is.null(obj2)) obj <- obj2
 
   obj
-
 }
-
 
 #' @export
 #' @rdname dealWithClass
 .dealWithClass.default <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                   conn = getOption("reproducible.conn", NULL),
                                   verbose = getOption("reproducible.verbose")) {
-
   rasters <- is(obj, "Raster")
 
   if (any(rasters)) {
@@ -555,9 +531,9 @@ unmakeMemoisable.default <- function(x) {
       atts$tags <- c(atts$tags, paste("fromDisk", sep = ":", isFromDisk))
     }
 
-    setattr(obj, "tags", atts$tags)
-    .setSubAttrInList(obj, ".Cache", "newCache", atts$.Cache$newCache)
-    setattr(obj, "call", atts$call)
+    attr(obj, "tags") <- atts$tags
+    obj <- .setSubAttrInList(obj, ".Cache", "newCache", atts$.Cache$newCache)
+    attr(obj, "call") <- atts$call
 
     if (!identical(attr(obj, ".Cache")$newCache, atts$.Cache$newCache))
       stop("attributes are not correct 6")
@@ -567,18 +543,16 @@ unmakeMemoisable.default <- function(x) {
       stop("attributes are not correct 8")
 
     if (!is.null(atts[["function"]])) {
-      setattr(obj, "function", atts[["function"]])
+      attr(obj, "function") <- atts[["function"]]
       if (!identical(attr(obj, "function"), atts[["function"]]))
         stop("There is an unknown error 04")
     }
     if (isFromDisk) {
       obj <- list(origRaster = Filenames(objOrig), cacheRaster = obj)
-      setattr(obj, "tags",
-              c(attributes(obj$cacheRaster)$tags,
-                paste0("origRaster:", obj$origRaster),
-                paste0("cacheRaster:", Filenames(obj))))
+      attr(obj, "tags") <- c(attributes(obj$cacheRaster)$tags,
+                             paste0("origRaster:", obj$origRaster),
+                             paste0("cacheRaster:", Filenames(obj)))
     }
-
   }
 
   if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
@@ -614,7 +588,7 @@ unmakeMemoisable.default <- function(x) {
       else
         obj <- wrapSpatVector(obj)
     }
-    setattr(obj, ".Cache", attrs)
+    attr(obj, ".Cache") <- attrs
 
     messageCache("\b Done!", verboseLevel = 2, verbose = verbose)
   }
@@ -667,8 +641,8 @@ unmakeMemoisable.default <- function(x) {
   if (!is.null(output2)) obj <- output2
 
   obj
-
 }
+
 #' @export
 #' @rdname dealWithClass
 .dealWithClassOnRecovery.list <- function(obj, cachePath, cacheId,
@@ -715,10 +689,10 @@ unmakeMemoisable.default <- function(x) {
                                          Filenames(obj, allowMultiple = FALSE),
                                          newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
         obj <- newOutput
-        .setSubAttrInList(obj, ".Cache", "newCache", FALSE)
+        obj <- .setSubAttrInList(obj, ".Cache", "newCache", FALSE)
+        obj
 
       }
-
     }
   # }
 }
