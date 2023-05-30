@@ -1461,7 +1461,6 @@ getFunctionName2 <- function(mc) {
 #'  of a list attribute and returns that same object with the updated attribute.
 #'
 #' @export
-#' @importFrom data.table setattr
 #' @rdname setSubAttrInList
 .setSubAttrInList <- function(object, attr, subAttr, value) {
   .CacheAttr <- attr(object, attr)
