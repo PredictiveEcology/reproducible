@@ -667,7 +667,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     downloadFilename <- archive
   }
   if (exists("fileSize", inherits = FALSE)) {
-    setattr(downloadFilename, name = "fileSize", value = fileSize)
+    attr(downloadFilename, "fileSize") <- fileSize
   }
   return(downloadFilename)
 }

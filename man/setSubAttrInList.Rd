@@ -21,6 +21,5 @@ This sets or updates the \code{subAttr} element of a list that is located at
 of a list attribute and returns that same object with the updated attribute.
 }
 \description{
-This uses \code{data.table::setattr}, but in the case where there is
-only a single element within a list attribute.
+Sets only a single element within a list attribute.
 }
