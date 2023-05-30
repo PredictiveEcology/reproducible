@@ -9,11 +9,11 @@ See `NEWS.md` for a full list of changes.
 ### Previous R versions
 * Ubuntu 20.04                 (GitHub), R 4.2.3
 * Windows                      (GitHub), R 4.2.3
-* Windows                 (win-builder), 4.2.3 (2023-03-15 ucrt)
+* Windows                 (win-builder), R 4.2.3 (2023-03-15 ucrt)
 
 ### Current R versions
 * macOS Monterey 12.6.5        (GitHub), R 4.3.0
-* macOs (m1) Big Sur             (rhub), R 4.3.0
+* macOs (m1) Big Sur    (macOS-builder), R 4.3.0
 * Ubuntu 20.04                 (GitHub), R 4.3.0
 * Ubuntu 20.04                  (local), R 4.3.0
 * Windows                      (GitHub), R 4.3.0
@@ -21,9 +21,9 @@ See `NEWS.md` for a full list of changes.
 * Windows                 (win-builder), R 4.3.0 (2023-04-21 ucrt)
 
 ### Development R version
-* Ubuntu 20.04 LTS             (GitHub), R-devel (2023-05-19 r84451 ucrt)
-* Windows                      (GitHub), R-devel (2023-05-19 r84451 ucrt)
-* Windows                 (win-builder), R-devel (2023-05-19 r84451 ucrt)
+* Ubuntu 20.04 LTS             (GitHub), R-devel (2023-05-27 r84465 ucrt)
+* Windows                      (GitHub), R-devel (2023-05-27 r84465 ucrt)
+* Windows                 (win-builder), R-devel (2023-05-27 r84465 ucrt)
 
 ## R CMD check results
 
