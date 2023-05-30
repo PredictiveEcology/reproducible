@@ -33,7 +33,6 @@ OSs
 PROJ
 PostgreSQL
 Postgres
-PredictiveEcology
 R6
 RQSLite
 RSQLite
@@ -90,14 +89,13 @@ gdb
 geo
 geospatial
 getData
-github
+gis
 google
 googledrive
 gridded
 hardlink
 hardlinks
 http
-https
 impactful
 keepCache
 knownRelativeFiles
@@ -116,7 +114,6 @@ nbsmokee
 objSize
 permalink
 postProcess
-postProcessTo
 postProcessing
 postgresql
 postpend
@@ -149,7 +146,6 @@ setReplacement
 sim
 simList
 sqlite
-stackoverflow
 subattributes
 subfolders
 symlink

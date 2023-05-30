@@ -656,7 +656,8 @@ useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose")) {
   canSwitch <- TRUE
   if (!is.null(set)) {
     if (isTRUE(set))
-      canSwitch <- .requireNamespace("RSQLite", stopOnFALSE = FALSE)
+      canSwitch <- .requireNamespace("RSQLite", stopOnFALSE = FALSE) &&
+        .requireNamespace("DBI", stopOnFALSE = FALSE)
     if (isTRUE(canSwitch))
       options("reproducible.useDBI" = set)
   }
@@ -664,7 +665,8 @@ useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose")) {
   if (isTRUE(ud)) {
     drv <- getOption("reproducible.drv")
     if (is.null(drv)) {
-      canSwitch <- .requireNamespace("RSQLite", stopOnFALSE = FALSE)
+      canSwitch <- .requireNamespace("RSQLite", stopOnFALSE = FALSE) &&
+        .requireNamespace("DBI", stopOnFALSE = FALSE)
       if (isFALSE(canSwitch)) {
         options("reproducible.useDBI" = FALSE)
         ud <- getOption("reproducible.useDBI")
@@ -677,7 +679,7 @@ useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose")) {
                     "installed.", verboseLevel = 1, verbose = verbose)
   }
   if (!is.null(set)) {
-    messSet <- if (isTRUE(set)) {
+    messSet <- if (isTRUE(ud)) {
       "Using DBI backend."
     } else {
       "Using non-DBI backend."

@@ -52,7 +52,7 @@ projectTo(
 cropTo(
   from,
   cropTo = NULL,
-  needBuffer = TRUE,
+  needBuffer = FALSE,
   overwrite = FALSE,
   verbose = getOption("reproducible.verbose"),
   ...
@@ -90,7 +90,13 @@ The resolution and extent will be taken from \code{res(from)} (i.e. \code{ncol(f
 If a Vector, the extent of the \code{projectTo} is not used (unless it is also passed to \code{cropTo}.
 To omit projecting, set this to \code{NA}.
 If supplied, this will override \code{to} for the projecting step.
-Defaults to \code{NULL}, which means use \code{to}.}
+Defaults to \code{NULL}, which means use \code{to}.
+\strong{Attention.} Conflicts may arise with when \code{projectTo} is a Vector/CRS object with a
+distinct CRS from \code{to}. Because \code{to} is used for masking \emph{after} \code{from} is re-projected using
+\code{projectTo}, the extents of \code{to} and \code{from} may no longer overlap (as in \emph{align})
+perfectly leading to failure during
+the masking step. We  recommend passing a raster templates to \code{projectTo} whose extent and CRS
+are both compatible with the object used later for masking (either \code{to} or \code{maskTo}).}
 
 \item{maskTo}{Optional Gridded or Vector dataset which,
 if supplied, will supply the extent with which to mask \code{from}.
@@ -113,8 +119,9 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Passed to \code{terra::mask} (for \code{maskTo}), \code{terra::project} (for \code{projectTo})
-or \code{terra::writeRaster} (for \code{writeTo}) and not used for \code{cropTo}. Commonly used might be
+\item{...}{Arguments passed to \code{terra::mask} (for \code{maskTo}), \code{terra::project} (for \code{projectTo})
+or \code{terra::writeRaster} (for \code{writeTo}) and not used for \code{cropTo}, as well \code{postProcess}'s
+\code{rasterToMatch} and \code{studyArea} arguments (see below). Commonly used arguments might be
 \code{method}, \code{touches}, and \code{datatype}. If \code{filename} is passed, it will be ignored; use
 \verb{writeTo = }.}
 
@@ -149,8 +156,10 @@ This function is also used internally with the deprecated family \code{\link[=po
 \verb{*Inputs}, such as \code{\link[=cropInputs]{cropInputs()}}.
 }
 \details{
-\code{postProcessTo} is a wrapper around \code{cropTo(needBuffer = TRUE)}, \code{projectTo}, \code{cropTo},
-\code{maskTo}, \code{writeTo}. Users can call each of these individually.
+\code{postProcessTo} is a wrapper around (an initial "wide" crop for speed)
+\code{cropTo(needBuffer = TRUE)}, \code{projectTo},
+\code{cropTo} (the actual crop for precision), \code{maskTo}, \code{writeTo}.
+Users can call each of these individually.
 
 \code{postProcessTerra} is the early name of this function that is now \code{postProcessTo}.
 }
@@ -161,19 +170,32 @@ The table below shows what will result from passing different classes to \code{f
 and \code{to}:
 
 \tabular{lll}{
-\code{from}\tab \code{to}\tab \code{from} will have:\cr
-\code{Gridded}\tab \code{Gridded} \tab the extent, projection, origin, resolution and
-masking where there are \code{NA} from the \code{to}\cr
-\code{Gridded}\tab \code{Vector} \tab the projection, origin, and mask from \code{to}, and extent will
-be a round number of pixels that fit within the extent
-of \code{to}. Resolution will be the same as \code{from} \cr
-\code{Vector}\tab \code{Vector} \tab the projection, origin, extent and mask from \code{to}\cr
+\strong{\code{from}}\tab \strong{\code{to}}   \tab \strong{\code{from}} will have:                             \cr
+\code{Gridded} \tab \code{Gridded}  \tab the extent, projection, origin, resolution
+and masking where there are \code{NA} from the \code{to}    \cr
+\code{Gridded} \tab \code{Vector}   \tab the projection, origin, and mask from \code{to}, and
+extent will be a round number of pixels that
+fit within the extent of \code{to}. Resolution will
+be the same as \code{from}.  See section
+below about \code{projectTo}. \cr
+\code{Vector} \tab \code{Vector}    \tab the projection, origin, extent and mask from \code{to} \cr
 }
 
 If one or more of the \verb{*To} arguments are supplied, these will
 override individual components of \code{to}. If \code{to} is omitted or \code{NULL},
 then only the \verb{*To} arguments that are used will be performed. In all cases,
 setting a \verb{*To} argument to \code{NA} will prevent that step from happening.
+}
+
+\section{\code{projectTo}}{
+
+Since these functions use the gis capabilities of \code{sf} and \code{terra}, they will only
+be able to do things that those functions can do. One key caution, which is
+stated clearly in \code{?terra::project} is that projection of a raster (i.e., gridded)
+object should always be with another gridded object. If the user chooses to
+supply a \code{projectTo} that is a vector object for a \code{from} that is gridded,
+there may be unexpected failures due e.g., to extents not overlapping during
+the \code{maskTo} stage.
 }
 
 \section{Backwards compatibility with \code{postProcess}}{
@@ -186,21 +208,30 @@ of \code{to}. If only \code{rasterToMatch} is supplied, it will be assigned to
 \code{to}. If only \code{studyArea} is supplied, it will be used for \code{cropTo}
 and \code{maskTo}; it will only be used for \code{projectTo} if \code{useSAcrs = TRUE}.
 If both \code{rasterToMatch} and \code{studyArea} are supplied,
-\code{studyArea} will only be applied to \code{maskTo} (and optionally \code{projectTo} if
-\code{useSAcrs = TRUE}); everything else will be from \code{rasterToMatch}.
+\code{studyArea} will only be applied to \code{maskTo} (unless \code{maskWithRTM = TRUE}),
+and, optionally, to \code{projectTo} (if \code{useSAcrs = TRUE}); everything else
+will be from \code{rasterToMatch}.
+
 }
 
-\subsection{\code{targetCRS}, \code{filename2}, \code{useSAcrs}:}{
+\subsection{\code{targetCRS}, \code{filename2}, \code{useSAcrs}, \code{maskWithRTM}:}{
+
 \code{targetCRS} if supplied will be assigned to \code{projectTo}. \code{filename2} will
 be assigned to \code{writeTo}. If \code{useSAcrs} is set, then the \code{studyArea}
-will be assigned to \code{projectTo}. All of these will override any existing values
-for these arguments.
+will be assigned to \code{projectTo}. If \code{maskWithRTM} is used, then the
+\code{rasterToMath} will be assigned to \code{maskTo}. All of these will override
+any existing values for these arguments.
+
 }
+
+See also \code{\link[=postProcess]{postProcess()}} documentation section on
+\emph{Backwards compatibility with \code{rasterToMatch} and/or \code{studyArea}} for further
+detail.
 }
 
 \section{Cropping}{
 
-If \code{cropTo} is not \code{NA}, postProcessTo does cropping twice, both the first and last steps.
+If \code{cropTo} is not \code{NA}, \code{postProcessTo} does cropping twice, both the first and last steps.
 It does it first for speed, as cropping is a very fast algorithm. This will quickly remove
 a bunch of pixels that are not necessary. But, to not create bias, this first crop is padded
 by  \code{2 * res(from)[1]}), so that edge cells still have a complete set of neighbours.

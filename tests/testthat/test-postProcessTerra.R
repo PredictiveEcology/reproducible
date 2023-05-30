@@ -1,6 +1,6 @@
 test_that("testing terra", {
   #if (interactive()) {
-  testInitOut <- testInit(needGoogleDriveAuth = FALSE,
+  testInitOut <- testInit("terra", needGoogleDriveAuth = FALSE,
                           opts = list(reproducible.useMemoise = FALSE,
                                       "rgdal_show_exportToProj4_warnings"="none"))
   opts <- options(reproducible.cachePath = tmpCache)
@@ -74,7 +74,7 @@ test_that("testing terra", {
   xVect2 <- terra::deepcopy(xVect)
 
   y <- terra::deepcopy(elevRas)
-  y[y > 200 & y < 300] <- NA
+  y[y > 200 & y < 300] <- NA_integer_
   terra::values(elevRas) <- rep(1L, terra::ncell(y))
   vRast <- terra::rast(v, res = 0.008333333)
 
@@ -92,23 +92,27 @@ test_that("testing terra", {
   expect_true(terra::ext(v) <= terra::ext(t9))
 
   # SR, SV
-  t2 <- postProcessTo(elevRas, v)
+    t2 <- postProcessTo(elevRas, v)
 
   # No crop
   t3 <- postProcessTo(elevRas, maskTo = v)
   expect_true(terra::ext(t3) == terra::ext(elevRas))
 
-  vsf <- sf::st_as_sf(v)
-  vOrigsf <- sf::st_as_sf(vOrig)
+  if (.requireNamespace("sf")) {
+    vsf <- sf::st_as_sf(v)
+    vOrigsf <- sf::st_as_sf(vOrig)
+  }
 
-  t4 <- postProcessTo(elevRas, cropTo = v, maskTo = v)
-  expect_true(terra::ext(t4) == terra::ext(t2))
+    t4 <- postProcessTo(elevRas, cropTo = v, maskTo = v)
+    expect_true(terra::ext(t4) == terra::ext(t2))
 
   t5 <- postProcessTo(elevRas, cropTo = v, maskTo = v, projectTo = v)
   expect_true(identical(t5[],t2[]))
 
-  t5sf <- postProcessTo(elevRas, cropTo = vsf, maskTo = vsf, projectTo = vsf)
-  expect_true(identical(t5sf[],t2[]))
+  if (.requireNamespace("sf")) {
+    t5sf <- postProcessTo(elevRas, cropTo = vsf, maskTo = vsf, projectTo = vsf)
+    expect_true(identical(t5sf[],t2[]))
+  }
 
   t6 <- terra::extract(elevRas, v, mean, na.rm = TRUE)
   expect_true(all(t6$elevation == 1))
@@ -129,7 +133,7 @@ test_that("testing terra", {
   tw_t11 <- terra::wrap(t11)
   vv <- terra::vect(tf1)
   tw_vv <- terra::wrap(vv)
-  expect_true(sf::st_crs(tw_vv@crs) == sf::st_crs(tw_t11@crs))
+  expect_true(terra::same.crs(tw_vv@crs, tw_t11@crs))
 
   ## following #253 with different driver
   ## https://github.com/PredictiveEcology/reproducible/issues/253#issuecomment-1263562631
@@ -167,281 +171,290 @@ test_that("testing terra", {
     vutm <- terra::project(v, utm)
   }
 
-  utm <- sf::st_crs("epsg:23028")#$wkt
-  # vsf <- sf::st_as_sf(v)
-  vsfutm <- sf::st_transform(vsf, utm)
-  vutm <- terra::vect(vsfutm)
-  res100 <- 100
-  rutm <- terra::rast(vutm, res = res100)
-  rutm <- terra::rasterize(vutm, rutm, field = "NAME_2")
+  if (.requireNamespace("sf")) {
+    # utm <- sf::st_crs("epsg:23028")#$wkt
+    utm <- terra::crs("epsg:23028")#$wkt
 
-  vsfInUTMviaCRS <- postProcessTo(vsf, sf::st_crs(rutm))
-  expect_true(is(vsfInUTMviaCRS, "sf"))
-  expect_true(sf::st_crs(vsfInUTMviaCRS) == sf::st_crs(rutm))
+    vsfutm <- sf::st_transform(vsf, utm)
+    vutm <- terra::vect(vsfutm)
+    res100 <- 100
+    rutm <- terra::rast(vutm, res = res100)
+    rutm <- terra::rasterize(vutm, rutm, field = "NAME_2")
 
-  # from is sf, to is SpatRast --> skip maskTo
-  if (getRversion() >= "4.1" && isWindows()) {
-    vsfInUTMviaSpatRast <-
-      suppressWarningsSpecific(falseWarnings = "attribute variables are assumed",
-                               postProcessTo(vOrigsf, rutm))
-    expect_true(is(vsfInUTMviaSpatRast, "sf"))
-    expect_true(sf::st_crs(vsfInUTMviaSpatRast) == sf::st_crs(rutm))
-    expect_true(isTRUE(all.equal(round(terra::ext(rutm), 6),
-                                 round(terra::ext(vsfInUTMviaSpatRast), 6))))
+    vsfInUTMviaCRS <- postProcessTo(vsf, sf::st_crs(rutm))
+    expect_true(is(vsfInUTMviaCRS, "sf"))
+    expect_true(terra::same.crs(vsfInUTMviaCRS, rutm))
 
-  }
+    # from is sf, to is SpatRast --> skip maskTo
+    if (getRversion() >= "4.1" && isWindows()) {
+      vsfInUTMviaSpatRast <-
+        suppressWarningsSpecific(falseWarnings = "attribute variables are assumed",
+                                 postProcessTo(vOrigsf, rutm))
+      expect_true(is(vsfInUTMviaSpatRast, "sf"))
+      expect_true(sf::st_crs(vsfInUTMviaSpatRast) == sf::st_crs(rutm))
+      expect_true(isTRUE(all.equal(round(terra::ext(rutm), 6),
+                                   round(terra::ext(vsfInUTMviaSpatRast), 6))))
 
-  # Check for cases where `to` does not overlap with `from`
-  ext1 <- terra::ext(vsf) + c(-2, 2, -2, 2)
-  ext1SR <- terra::rast(ext1)
-  if (.requireNamespace("raster")) {
-    ext1Ra <- raster::raster(ext1SR)
-    ext1Ex <- raster::extent(ext1Ra)
-  }
-  ext2 <- terra::vect(ext1)
-  terra::crs(ext2) <- terra::crs(vsf)
-  ext3 <- sf::st_as_sf(ext2)
-  expect_warning(expect_error(postProcessTo(vOrigsf, ext3))) # sf gives warning too
-  expect_error(postProcessTo(terra::vect(vOrigsf), ext2))
-  if (.requireNamespace("sp"))
-    expect_error(postProcessTo(as(vOrigsf, "Spatial"), as(ext2, "Spatial")))
-  if (.requireNamespace("raster"))
-    expect_error(postProcessTo(as(vOrigsf, "Spatial"), ext1Ra))
+    }
 
+    # Check for cases where `to` does not overlap with `from`
+    ext1 <- terra::ext(vsf) + c(-2, 2, -2, 2)
+    ext1SR <- terra::rast(ext1)
+    if (.requireNamespace("raster")) {
+      ext1Ra <- raster::raster(ext1SR)
+      ext1Ex <- raster::extent(ext1Ra)
+    }
+    ext2 <- terra::vect(ext1)
+    terra::crs(ext2) <- terra::crs(vsf)
+    ext3 <- sf::st_as_sf(ext2)
+    if (.requireNamespace("sf")) {
+      expect_warning(expect_message(postProcessTo(vOrigsf, ext3))) # sf gives warning too
+      expect_message(postProcessTo(terra::vect(vOrigsf), ext2))
+      #expect_warning(expect_error(postProcessTo(vOrigsf, ext3))) # sf gives warning too
+      #expect_error(postProcessTo(terra::vect(vOrigsf), ext2))
+    }
+    if (.requireNamespace("sf")) {
+      if (.requireNamespace("sp"))
+        expect_error(postProcessTo(as(vOrigsf, "Spatial"), as(ext2, "Spatial")))
+      if (.requireNamespace("raster"))
+        expect_error(postProcessTo(as(vOrigsf, "Spatial"), ext1Ra))
+    }
 
+    # if (Sys.info()["user"] %in% "emcintir") {
+    #   env <- new.env(parent = emptyenv())
+    #   suppressWarnings(
+    #     b <- lapply(ls(), function(xx) if (isSpat(get(xx))) try(assign(xx, envir = env, terra::wrap(get(xx)))))
+    #   )
+    #   save(list = ls(envir = env), envir = env, file = "~/tmp2.rda")
+    #   # load(file = "~/tmp2.rda")
+    #   # env <- environment()
+    #   # b <- lapply(ls(), function(xx) if (is(get(xx, env), "PackedSpatRaster") || is(get(xx, env), "PackedSpatVector")) try(assign(xx, envir = env, terra::unwrap(get(xx)))))
+    # }
 
-  # if (Sys.info()["user"] %in% "emcintir") {
-  #   env <- new.env(parent = emptyenv())
-  #   suppressWarnings(
-  #     b <- lapply(ls(), function(xx) if (isSpat(get(xx))) try(assign(xx, envir = env, terra::wrap(get(xx)))))
-  #   )
-  #   save(list = ls(envir = env), envir = env, file = "~/tmp2.rda")
-  #   # load(file = "~/tmp2.rda")
-  #   # env <- environment()
-  #   # b <- lapply(ls(), function(xx) if (is(get(xx, env), "PackedSpatRaster") || is(get(xx, env), "PackedSpatVector")) try(assign(xx, envir = env, terra::unwrap(get(xx)))))
-  # }
+    t11 <- postProcessTo(elevRas, vutm)
+    expect_true(terra::same.crs(t11, vutm))
 
-  t11 <- postProcessTo(elevRas, vutm)
-  expect_true(sf::st_crs(t11) == sf::st_crs(vutm))
+    # use raster dataset -- take the projectTo resolution, i.e., res100
+    t13 <- postProcessTo(elevRas, rutm)
+    expect_true(identical(terra::res(t13)[1], res100))
+    expect_true(terra::same.crs(t13, vutm))
 
-  # use raster dataset -- take the projectTo resolution, i.e., res100
-  t13 <- postProcessTo(elevRas, rutm)
-  expect_true(identical(terra::res(t13)[1], res100))
-  expect_true(sf::st_crs(t13) == sf::st_crs(vutm))
+    # no projection
+    t12 <- postProcessTo(elevRas, cropTo = vutm, maskTo = vutm)
+    expect_false(terra::same.crs(t12, vutm))
 
-  # no projection
-  t12 <- postProcessTo(elevRas, cropTo = vutm, maskTo = vutm)
-  expect_true(sf::st_crs(t12) != sf::st_crs(vutm))
+    # projection with errors
+    if (getRversion() >= "4.1" && isWindows()) { # bug in older `terra` that is not going to be fixed here
+      utm <- terra::crs("epsg:23028") # This is same as above, but terra way
+      if (getRversion() < "4.3.0") { # this same error crashes the session in R 4.3.0 when it is R-devel
+        vutmErrors <- terra::project(v2, utm)
+        mess <- capture_messages({
+          t13a <- postProcessTo(xVect, vutmErrors)
+        })
+        ## Error : TopologyException: Input geom 1 is invalid:
+        ##  Self-intersection at 6095858.7074040668 6626138.068126983
+        expect_true(sum(grepl("error", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
+        expect_true(sum(grepl("fixed", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
+        expect_true(is(t13a, "SpatVector"))
+      } else {
+        v2 <- terra::makeValid(v2)
+        vutmErrors <- terra::project(v2, utm)
+      }
 
-  # projection with errors
-  if (getRversion() >= "4.1" && isWindows()) { # bug in older `terra` that is not going to be fixed here
-    utm <- terra::crs("epsg:23028") # This is same as above, but terra way
-    if (getRversion() < "4.3.0") { # this same error crashes the session in R 4.3.0 when it is R-devel
-      vutmErrors <- terra::project(v2, utm)
-      mess <- capture_messages({
-        t13a <- postProcessTo(xVect, vutmErrors)
+      # Switch from qs to rds with Cache
+      opts <- options(reproducible.cacheSaveFormat = "qs")
+      t13a <- Cache(postProcessTo(xVect, vutmErrors))
+      opts <- options(reproducible.cacheSaveFormat = "rds")
+      t13a <- Cache(postProcessTo(xVect, vutmErrors))
+      opts <- options(reproducible.cacheSaveFormat = "qs")
+      t13a <- try(Cache(postProcessTo(xVect, vutmErrors)), silent = TRUE)
+      a <- try(ncol(t13a), silent = TRUE)
+      expect_false(is(a, "try-error"))
+    }
+
+    # try NA to *To
+    # Vectors
+    vutmSF <- sf::st_as_sf(vutm)
+    xVect2SF <- sf::st_as_sf(xVect2)
+    t14 <- postProcessTo(xVect2, vutm, projectTo = NA)
+
+    expect_true(terra::same.crs(t14, xVect2))
+    expect_false(terra::same.crs(t14, vutm))
+
+    if (getRversion() >= "4.1" && isWindows()) { # bug in older `terra` that is not going to be fixed here
+      suppressWarningsSpecific(falseWarnings = "attribute variables",
+                               t14SF <- postProcessTo(xVect2SF, vutmSF, projectTo = NA)
+      )
+      expect_true(terra::same.crs(t14SF, xVect2SF))
+      expect_false(terra::same.crs(t14SF, vutmSF))
+    }
+
+    t15 <- postProcessTo(xVect2, vutm, maskTo = NA)
+
+    expect_false(terra::same.crs(t15, xVect2))
+    expect_true(terra::same.crs(t15, vutm))
+
+    if (getRversion() >= "4.1" && isWindows()) { # bug in older `terra` that is not going to be fixed here
+      suppressWarningsSpecific(falseWarnings = "attribute variables",
+                               t15SF <- postProcessTo(xVect2SF, vutmSF, maskTo = NA)
+      )
+      expect_false(terra::same.crs(t15SF, xVect2SF))
+      expect_true(terra::same.crs(t15SF, vutmSF))
+    }
+
+    t18 <- postProcessTo(xVect2, vutm, cropTo = NA)
+    expect_false(terra::same.crs(t18, xVect2))
+    expect_true(terra::same.crs(t18, vutm))
+
+    suppressWarningsSpecific(falseWarnings = "attribute variables",
+                             t18SF <- postProcessTo(xVect2SF, vutmSF, cropTo = NA)
+    )
+    expect_false(terra::same.crs(t18SF, xVect2SF))
+    expect_true(terra::same.crs(t18SF, vutmSF))
+
+    # Rasters
+    t16 <- postProcessTo(elevRas, rutm, cropTo = NA)
+    expect_false(terra::same.crs(t16, elevRas))
+    expect_true(terra::same.crs(t16, rutm))
+    expect_true(terra::ext(t16) >= terra::ext(rutm))
+
+    t17 <- postProcessTo(elevRas, rutm, projectTo = NA)
+    expect_true(terra::same.crs(t17, elevRas))
+    expect_false(terra::same.crs(t17, rutm))
+
+    t19 <- postProcessTo(elevRas, rutm, maskTo = NA)
+    expect_false(terra::same.crs(t19, elevRas))
+    expect_true(terra::same.crs(t19, vutm))
+    expect_true(sum(values2(t19), na.rm = TRUE) > sum(values2(t13), na.rm = TRUE))
+
+    # Raster with Vector
+    t16 <- postProcessTo(elevRas, vutm, cropTo = NA)
+    expect_false(terra::same.crs(t16, elevRas))
+    expect_true(terra::same.crs(t16, vutm))
+
+    t16SF <- postProcessTo(elevRas, vutmSF, cropTo = NA)
+    expect_false(terra::same.crs(t16SF, elevRas))
+    expect_true(terra::same.crs(t16SF, vutmSF))
+
+    t17 <- postProcessTo(elevRas, vutm, projectTo = NA)
+    expect_true(terra::same.crs(t17, elevRas))
+    expect_false(terra::same.crs(t17, vutm))
+
+    t17SF <- postProcessTo(elevRas, vutmSF, projectTo = NA)
+    expect_true(terra::same.crs(t17SF, elevRas))
+    expect_false(terra::same.crs(t17SF, vutmSF))
+
+    t19 <- postProcessTo(elevRas, vutm, maskTo = NA)
+    expect_false(terra::same.crs(t19, elevRas))
+    expect_true(terra::same.crs(t19, vutm))
+    # expect_true(sum(values2(t19), na.rm = TRUE) > sum(values2(t13), na.rm = TRUE))
+
+    t19SF <- postProcessTo(elevRas, vutmSF, maskTo = NA)
+    expect_false(terra::same.crs(t19SF, elevRas))
+    expect_true(terra::same.crs(t19SF, vutmSF))
+    # expect_true(sum(values2(t19SF), na.rm = TRUE) > sum(values2(t13), na.rm = TRUE))
+
+    t21 <- postProcessTo(elevRas, projectTo = vutm)
+    t21SF <- postProcessTo(elevRas, projectTo = vutmSF)
+    t20 <- postProcessTo(elevRas, projectTo = terra::crs(vutm))
+    expect_true(all.equal(t20, t21))
+    expect_true(all.equal(t20, t21SF))
+    # This is now (Apr 24, 2023) because passing all to terra::project --> which keep square pixels
+    expect_false(identical(terra::size(elevRas), terra::size(t20)))
+
+    t20res250 <- postProcessTo(elevRas, projectTo = terra::crs(vutm), res = 250)
+    expect_true(all(terra::res(t20res250) == 250))
+
+    ## same projection change resolution only (will likely affect extent)
+    y2 <- terra::rast(crs = terra::crs(y), res = 0.008333333*2, extent = terra::ext(y))
+    y2 <- terra::setValues(y2, rep(1, terra::ncell(y2)))
+
+    t22 <- postProcessTo(elevRas, to = y2, overwrite = TRUE) # not sure why need this; R devel on Winbuilder Nov 26, 2022
+    expect_true(terra::same.crs(t22, elevRas))
+    expect_true(terra::ext(t22) == terra::ext(y2))   ## "identical" may say FALSE (decimal plates?)
+    expect_true(identical(terra::res(t22), terra::res(y2)))
+    expect_false(identical(terra::res(t22), terra::res(elevRas)))
+
+    vutmSF <- sf::st_as_sf(vutm)
+    xVectSF <- sf::st_as_sf(xVect)
+    ## It is a real warning about geometry stuff, but not relevant here
+    err <- capture_error( # there is an error in R 4.0 Windows
+      warn <- capture_warnings({
+        t22 <- postProcessTo(xVectSF, vutmSF)
       })
-      ## Error : TopologyException: Input geom 1 is invalid:
-      ##  Self-intersection at 6095858.7074040668 6626138.068126983
-      expect_true(sum(grepl("error", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
-      expect_true(sum(grepl("fixed", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
-      expect_true(is(t13a, "SpatVector"))
-    } else {
-      v2 <- terra::makeValid(v2)
-      vutmErrors <- terra::project(v2, utm)
+    )
+    #  }
+
+    if (.requireNamespace("raster")) {
+      ras1 <- raster::raster(tf5)
+      ras2 <- raster::raster(tf6)
+      ras1[] <- ras1[]
+      ras2[] <- ras2[]
+      r3 <- list(ras1, ras2) # this is for
+      r3[[1]][] <- r3[[1]][]; r3[[2]][] <- r3[[2]][] # bring to RAM
+
+      # Raster & SpatVect
+      ras1Small <- cropTo(ras1, t18)
+      ras1SmallMasked <- maskTo(ras1, t18)
+      # The warning is about some datum
+      suppressWarnings(ras1SmallAll <- postProcessTo(ras1, t18))
+      expect_true(is(ras1Small, "Raster"))
+      expect_true(is(ras1SmallMasked, "Raster"))
+      expect_true(is(ras1SmallAll, "Raster"))
+
+      # Check that extents are similar
+      expect_true(terra::ext(ras1SmallAll) < terra::extend(terra::ext(t18), terra::res(ras1SmallAll) * 2))
+
+      # SpatRaster & Raster
+      t20CroppedByRas <- cropTo(t20, ras1SmallAll)
+      t20MaskedByRas <- maskTo(t20, ras1SmallAll)
+      t20ProjectedByRas <- projectTo(t20, ras1SmallAll)
+      t20AllByRas <- postProcessTo(t20, ras1SmallAll) # only does terra::rast 1x
+      expect_true(is(t20AllByRas, "SpatRaster"))
+      expect_true(is(t20CroppedByRas, "SpatRaster"))
+      expect_true(is(t20MaskedByRas, "SpatRaster"))
+      expect_true(is(t20ProjectedByRas, "SpatRaster"))
+      expect_equal(terra::res(t20ProjectedByRas), terra::res(ras1SmallAll))
+      expect_equal(terra::res(t20AllByRas), terra::res(ras1SmallAll))
+      expect_equal(terra::ext(t20AllByRas), terra::ext(ras1SmallAll))
+      expect_equal(terra::ext(t20ProjectedByRas), terra::ext(ras1SmallAll))
+      expect_true(
+        sum(!is.na(values2(ras1SmallAll))) <
+          sum(!is.na(values2(t20ProjectedByRas)))
+      )
+      expect_true(
+        sum(!is.na(values2(ras1SmallAll))) ==
+          sum(!is.na(values2(t20AllByRas)))
+      )
+
+      # The below was slightly off because RasterLayer was not exactly same as t20 proj
+      spatRas1SmallAll <- projectTo(terra::rast(ras1SmallAll), t20)
+      expect_true( #  these are off b/c of projection probably
+        abs(sum(!is.na(values2(spatRas1SmallAll))) -
+              sum(!is.na(values2(t20MaskedByRas)))) <= 0
+      )
+
+      if (interactive()) {
+        terra::plot(ras1SmallAll)
+        terra::plot(t18, add = TRUE)
+        terra::plot(t20AllByRas)
+        terra::plot(t20CroppedByRas)
+        terra::plot(t20MaskedByRas)
+        terra::plot(t20ProjectedByRas)
+      }
+
+      w <- terra::vect("POLYGON ((0 -5, 10 0, 10 -10, 0 -5))")
+      w1 <- terra::vect("POLYGON ((0 -5, 10 0, 10 -10, 4 -2, 0 -5))")
+      w1a <- terra::vect("POLYGON ((20 15, 30 20, 30 10, 24 18, 20 15))")
+      w2 <- rbind(w, w1, w, w1a, w)
+      w3 <- fixErrorsIn(w2)
+      expect_true(!all(terra::is.valid(w2)))
+      expect_true(all(terra::is.valid(w3)))
+
+
     }
-
-    # Switch from qs to rds with Cache
-    opts <- options(reproducible.cacheSaveFormat = "qs")
-    t13a <- Cache(postProcessTo(xVect, vutmErrors))
-    opts <- options(reproducible.cacheSaveFormat = "rds")
-    t13a <- Cache(postProcessTo(xVect, vutmErrors))
-    opts <- options(reproducible.cacheSaveFormat = "qs")
-    t13a <- try(Cache(postProcessTo(xVect, vutmErrors)), silent = TRUE)
-    a <- try(ncol(t13a), silent = TRUE)
-    expect_false(is(a, "try-error"))
   }
 
-  # try NA to *To
-  # Vectors
-  vutmSF <- sf::st_as_sf(vutm)
-  xVect2SF <- sf::st_as_sf(xVect2)
-  t14 <- postProcessTo(xVect2, vutm, projectTo = NA)
-  expect_true(sf::st_crs(t14) == sf::st_crs(xVect2))
-  expect_true(sf::st_crs(t14) != sf::st_crs(vutm))
 
-  if (getRversion() >= "4.1" && isWindows()) { # bug in older `terra` that is not going to be fixed here
-    suppressWarningsSpecific(falseWarnings = "attribute variables",
-                             t14SF <- postProcessTo(xVect2SF, vutmSF, projectTo = NA)
-    )
-    expect_true(sf::st_crs(t14SF) == sf::st_crs(xVect2SF))
-    expect_true(sf::st_crs(t14SF) != sf::st_crs(vutmSF))
-  }
-
-  t15 <- postProcessTo(xVect2, vutm, maskTo = NA)
-  expect_true(sf::st_crs(t15) != sf::st_crs(xVect2))
-  expect_true(sf::st_crs(t15) == sf::st_crs(vutm))
-
-  if (getRversion() >= "4.1" && isWindows()) { # bug in older `terra` that is not going to be fixed here
-    suppressWarningsSpecific(falseWarnings = "attribute variables",
-                             t15SF <- postProcessTo(xVect2SF, vutmSF, maskTo = NA)
-    )
-    expect_true(sf::st_crs(t15SF) != sf::st_crs(xVect2SF))
-    expect_true(sf::st_crs(t15SF) == sf::st_crs(vutmSF))
-  }
-
-  t18 <- postProcessTo(xVect2, vutm, cropTo = NA)
-  expect_true(sf::st_crs(t18) != sf::st_crs(xVect2))
-  expect_true(sf::st_crs(t18) == sf::st_crs(vutm))
-
-  suppressWarningsSpecific(falseWarnings = "attribute variables",
-                           t18SF <- postProcessTo(xVect2SF, vutmSF, cropTo = NA)
-  )
-  expect_true(sf::st_crs(t18SF) != sf::st_crs(xVect2SF))
-  expect_true(sf::st_crs(t18SF) == sf::st_crs(vutmSF))
-
-  # Rasters
-  t16 <- postProcessTo(elevRas, rutm, cropTo = NA)
-  expect_true(sf::st_crs(t16) != sf::st_crs(elevRas))
-  expect_true(sf::st_crs(t16) == sf::st_crs(rutm))
-  expect_true(terra::ext(t16) >= terra::ext(rutm))
-
-  t17 <- postProcessTo(elevRas, rutm, projectTo = NA)
-  expect_true(sf::st_crs(t17) == sf::st_crs(elevRas))
-  expect_true(sf::st_crs(t17) != sf::st_crs(rutm))
-
-  t19 <- postProcessTo(elevRas, rutm, maskTo = NA)
-  expect_true(sf::st_crs(t19) != sf::st_crs(elevRas))
-  expect_true(sf::st_crs(t19) == sf::st_crs(vutm))
-  expect_true(sum(values2(t19), na.rm = TRUE) > sum(values2(t13), na.rm = TRUE))
-
-  # Raster with Vector
-  t16 <- postProcessTo(elevRas, vutm, cropTo = NA)
-  expect_true(sf::st_crs(t16) != sf::st_crs(elevRas))
-  expect_true(sf::st_crs(t16) == sf::st_crs(vutm))
-
-  t16SF <- postProcessTo(elevRas, vutmSF, cropTo = NA)
-  expect_true(sf::st_crs(t16SF) != sf::st_crs(elevRas))
-  expect_true(sf::st_crs(t16SF) == sf::st_crs(vutmSF))
-
-  t17 <- postProcessTo(elevRas, vutm, projectTo = NA)
-  expect_true(sf::st_crs(t17) == sf::st_crs(elevRas))
-  expect_true(sf::st_crs(t17) != sf::st_crs(vutm))
-
-  t17SF <- postProcessTo(elevRas, vutmSF, projectTo = NA)
-  expect_true(sf::st_crs(t17SF) == sf::st_crs(elevRas))
-  expect_true(sf::st_crs(t17SF) != sf::st_crs(vutmSF))
-
-  t19 <- postProcessTo(elevRas, vutm, maskTo = NA)
-  expect_true(sf::st_crs(t19) != sf::st_crs(elevRas))
-  expect_true(sf::st_crs(t19) == sf::st_crs(vutm))
-  # expect_true(sum(values2(t19), na.rm = TRUE) > sum(values2(t13), na.rm = TRUE))
-
-  t19SF <- postProcessTo(elevRas, vutmSF, maskTo = NA)
-  expect_true(sf::st_crs(t19SF) != sf::st_crs(elevRas))
-  expect_true(sf::st_crs(t19SF) == sf::st_crs(vutmSF))
-  # expect_true(sum(values2(t19SF), na.rm = TRUE) > sum(values2(t13), na.rm = TRUE))
-
-  t21 <- postProcessTo(elevRas, projectTo = vutm)
-  t21SF <- postProcessTo(elevRas, projectTo = vutmSF)
-  t20 <- postProcessTo(elevRas, projectTo = sf::st_crs(vutm))
-  expect_true(all.equal(t20, t21))
-  expect_true(all.equal(t20, t21SF))
-  # This is now (Apr 24, 2023) because passing all to terra::project --> which keep square pixels
-  expect_false(identical(terra::size(elevRas), terra::size(t20)))
-
-  t20res250 <- postProcessTo(elevRas, projectTo = sf::st_crs(vutm), res = 250)
-  expect_true(all(terra::res(t20res250) == 250))
-
-  ## same projection change resolution only (will likely affect extent)
-  y2 <- terra::rast(crs = terra::crs(y), res = 0.008333333*2, extent = terra::ext(y))
-  y2 <- terra::setValues(y2, rep(1, terra::ncell(y2)))
-
-  t22 <- postProcessTo(elevRas, to = y2, overwrite = TRUE) # not sure why need this; R devel on Winbuilder Nov 26, 2022
-  expect_true(sf::st_crs(t22) == sf::st_crs(elevRas))
-  expect_true(terra::ext(t22) == terra::ext(y2))   ## "identical" may say FALSE (decimal plates?)
-  expect_true(identical(terra::res(t22), terra::res(y2)))
-  expect_false(identical(terra::res(t22), terra::res(elevRas)))
-
-  vutmSF <- sf::st_as_sf(vutm)
-  xVectSF <- sf::st_as_sf(xVect)
-  ## It is a real warning about geometry stuff, but not relevant here
-  err <- capture_error( # there is an error in R 4.0 Windows
-    warn <- capture_warnings({
-      t22 <- postProcessTo(xVectSF, vutmSF)
-    })
-  )
-  #  }
-
-
-
-  if (.requireNamespace("raster")) {
-    ras1 <- raster::raster(tf5)
-    ras2 <- raster::raster(tf6)
-    ras1[] <- ras1[]
-    ras2[] <- ras2[]
-    r3 <- list(ras1, ras2) # this is for
-    r3[[1]][] <- r3[[1]][]; r3[[2]][] <- r3[[2]][] # bring to RAM
-
-    # Raster & SpatVect
-    ras1Small <- cropTo(ras1, t18)
-    ras1SmallMasked <- maskTo(ras1, t18)
-    # The warning is about some datum
-    suppressWarnings(ras1SmallAll <- postProcessTo(ras1, t18))
-    expect_true(is(ras1Small, "Raster"))
-    expect_true(is(ras1SmallMasked, "Raster"))
-    expect_true(is(ras1SmallAll, "Raster"))
-
-    # Check that extents are similar
-    expect_true(terra::ext(ras1SmallAll) < terra::extend(terra::ext(t18), terra::res(ras1SmallAll) * 2))
-
-    # SpatRaster & Raster
-    t20CroppedByRas <- cropTo(t20, ras1SmallAll)
-    t20MaskedByRas <- maskTo(t20, ras1SmallAll)
-    t20ProjectedByRas <- projectTo(t20, ras1SmallAll)
-    t20AllByRas <- postProcessTo(t20, ras1SmallAll) # only does terra::rast 1x
-    expect_true(is(t20AllByRas, "SpatRaster"))
-    expect_true(is(t20CroppedByRas, "SpatRaster"))
-    expect_true(is(t20MaskedByRas, "SpatRaster"))
-    expect_true(is(t20ProjectedByRas, "SpatRaster"))
-    expect_equal(terra::res(t20ProjectedByRas), terra::res(ras1SmallAll))
-    expect_equal(terra::res(t20AllByRas), terra::res(ras1SmallAll))
-    expect_equal(terra::ext(t20AllByRas), terra::ext(ras1SmallAll))
-    expect_equal(terra::ext(t20ProjectedByRas), terra::ext(ras1SmallAll))
-    expect_true(
-      sum(!is.na(values2(ras1SmallAll))) <
-        sum(!is.na(values2(t20ProjectedByRas)))
-    )
-    expect_true(
-      sum(!is.na(values2(ras1SmallAll))) ==
-        sum(!is.na(values2(t20AllByRas)))
-    )
-
-    # The below was slightly off because RasterLayer was not exactly same as t20 proj
-    spatRas1SmallAll <- projectTo(terra::rast(ras1SmallAll), t20)
-    expect_true( #  these are off b/c of projection probably
-      abs(sum(!is.na(values2(spatRas1SmallAll))) -
-        sum(!is.na(values2(t20MaskedByRas)))) <= 0
-    )
-
-    if (interactive()) {
-      terra::plot(ras1SmallAll)
-      terra::plot(t18, add = TRUE)
-      terra::plot(t20AllByRas)
-      terra::plot(t20CroppedByRas)
-      terra::plot(t20MaskedByRas)
-      terra::plot(t20ProjectedByRas)
-    }
-
-    w <- terra::vect("POLYGON ((0 -5, 10 0, 10 -10, 0 -5))")
-    w1 <- terra::vect("POLYGON ((0 -5, 10 0, 10 -10, 4 -2, 0 -5))")
-    w1a <- terra::vect("POLYGON ((20 15, 30 20, 30 10, 24 18, 20 15))")
-    w2 <- rbind(w, w1, w, w1a, w)
-    w3 <- fixErrorsIn(w2)
-    expect_true(!all(terra::is.valid(w2)))
-    expect_true(all(terra::is.valid(w3)))
-
-
-  }
 
 })

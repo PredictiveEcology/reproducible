@@ -55,6 +55,7 @@
 #'
 #' \donttest{
 #'
+#' if (requireNamespace("sf", quietly = TRUE)) {
 #' dPath <- checkPath(file.path(tempdir2()), create = TRUE)
 #' localFileLux <- system.file("ex/lux.shp", package = "terra")
 #'
@@ -101,7 +102,7 @@
 #'       #, cloudFolderID = "cachedObjects" # to upload/download from cloud
 #'       )
 #' }
-#'
+#' }
 CacheGeo <- function(targetFile = NULL, url = NULL, domain,
                      FUN,
                      destinationPath = getOption("reproducible.destinationPath", "."),

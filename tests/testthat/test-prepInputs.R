@@ -68,8 +68,10 @@ test_that("prepInputs doesn't work (part 1)", {
     )
   )
 
-  expect_true(is(shpEcozone2, "sf"))
-  testObj <- if (!is(shpEcozone1, "sf")) as(shpEcozone1, "sf") else shpEcozone1
+  if (.requireNamespace("sf")) {
+    expect_true(is(shpEcozone2, "sf"))
+    testObj <- if (!is(shpEcozone1, "sf")) as(shpEcozone1, "sf") else shpEcozone1
+  }
 
   # As of Jan 2022 -- these objects are very different; character encoding of accents, numbers interpretted as character
   # expect_equivalent(testObj, shpEcozone2) # different attribute newCache
@@ -278,7 +280,7 @@ test_that("interactive prepInputs", {
                            targetFile = paste0(x, "_currmean.asc"),
                            archive = paste0(x, "_current.zip"),
                            url = url,
-                           alsoExtract = NA,
+                           alsoExtract = NULL,
                            destinationPath = tmpdir,
                            overwrite = TRUE
                          )
@@ -401,7 +403,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8", vectorType(), 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8_9", vectorType(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -560,7 +562,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8", vectorType(), 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8_9", vectorType(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -695,7 +697,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8", vectorType(), 5, mess, expectedMess = expectedMessage,
+  runTest("1_2_5_6_8_9", vectorType(), 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -1233,9 +1235,11 @@ test_that("lightweight tests for code coverage", {
   file.copy(filesForShp, tmpCache)
   # Need these in a test further down -- mostly just need the CRS
   filesForShp2 <- dir(file.path(tmpCache), pattern = "ecozones", full.names = TRUE)
-  noisyOutput <- capture.output(
-    shpFile <- sf::st_read(grep(filesForShp2, pattern = "\\.shp", value = TRUE))
-  )
+  if (.requireNamespace("sf")) {
+    noisyOutput <- capture.output(
+      shpFile <- sf::st_read(grep(filesForShp2, pattern = "\\.shp", value = TRUE))
+    )
+  }
   # Test when wrong archive exists, wrong checkSums
   file.remove(file.path(tmpdir, "ecozone_shp.zip"))
   file.remove(filesForShp)
@@ -1258,7 +1262,8 @@ test_that("lightweight tests for code coverage", {
 
   ## 2023-05-08: does not error on macOS
   isErr <- is(out, "try-error")
-  if (isMac()) expect_false(isErr) else expect_true(isErr)
+  #if (isMac()) expect_false(isErr) else
+  expect_true(isErr)
 
   ## postProcess.default
   b <- 1
@@ -1285,11 +1290,13 @@ test_that("lightweight tests for code coverage", {
   a <- cropInputs(ras, extentToMatch = terra::ext(ras2), extentCRS = terra::crs(ras2))
   expect_true(inherits(a, "SpatRaster"))
 
-  ras4 <- terra::rast(terra::ext(6,10,6,10), res = 1, vals = 1:16)
-  sp4 <- sf::st_as_sfc(sf::st_bbox(ras4))
-  sf::st_crs(sp4) <- crsToUse
+  ras4 <- terra::rast(terra::ext(7,11,7,11), res = 1, vals = 1:16)
+  sp4 <- terra::vect(terra::ext(ras4))
+  terra::crs(sp4) <- crsToUse
+  #sp4 <- sf::st_as_sfc(sf::st_bbox(ras4))
+  #sf::st_crs(sp4) <- crsToUse
 
-  grepMessHere <- "invalid extent"
+  grepMessHere <- "extents do not overlap"
   expect_error(cropInputs(ras2, studyArea = sp4), grepMessHere)
 
   ras3 <- terra::rast(terra::ext(0,5,0,5), res = 1, vals = 1:25)
@@ -1313,19 +1320,21 @@ test_that("lightweight tests for code coverage", {
   expect_true(identical(a, b))
 
   ## projectInputs.Raster
-  a <- projectInputs(ras2, rasterToMatch = ras3, method = "ngb")
+  a <- projectInputs(ras2, rasterToMatch = ras3, method = "near")
   expect_true(inherits(a, "SpatRaster"))
   expect_true(identical(terra::crs(a), terra::crs(ras3)))
 
-  a <- projectInputs(ras2, targetCRS = terra::crs(ras3), rasterToMatch = ras3, method = "ngb")
+  a <- projectInputs(ras2, targetCRS = terra::crs(ras3), rasterToMatch = ras3, method = "near")
   expect_true(inherits(a, "SpatRaster"))
   expect_true(identical(terra::crs(a), terra::crs(ras3)))
 
   #warns if bilinear is passed for reprojecting integer
-  expect_warning(projectInputs(ras2, targetCRS = terra::crs(shpFile), method = "bilinear"))
+  if (.requireNamespace("sf")) {
+    expect_warning(projectInputs(ras2, targetCRS = terra::crs(shpFile), method = "bilinear"))
+  }
 
   #Works with no rasterToMatch
-  a <- projectInputs(ras2, targetCRS = crs(ras3), method = "ngb")
+  a <- projectInputs(ras2, targetCRS = crs(ras3), method = "near")
   expect_true(identical(crs(a), crs(ras3)))
 
   # }
@@ -1475,7 +1484,7 @@ test_that("options inputPaths", {
                           getDataFn = dlFun1)
     )
   )
-  expect_true(sum(grepl(paste0("Hardlinked", ".*: "), mess1)) == 1)
+  expect_true(sum(grepl(paste0("Hardlinked", ".*:"), mess1)) == 1)
 
   # Now two folders - file not in destinationPath, not in 1st inputPaths, but yes 2nd
   #   should hardlink from 2nd IP to destinationPath, make sure CHECKSUMS.txt is correct in both
@@ -1494,7 +1503,7 @@ test_that("options inputPaths", {
                           destinationPath = tmpdir3)
     )
   )
-  expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ": ", tmpdir3), mess1)) == 1)
+  expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ":\n", tmpdir3), mess1)) == 1)
 
 
   # THIS NEXT ONE DOESN"T PASS ON GA on WINDOWS, skip it
@@ -1517,9 +1526,9 @@ test_that("options inputPaths", {
                             destinationPath = tmpdir1)
       )
     )
-    expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ": ", file.path(tmpdir1, theFile)), mess1)) == 1)
-    expect_true(sum(grepl(paste0("",whPointsToMessForGrep," ", file.path(tmpdir3, theFile)), mess1)) == 1)
-    expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 2)
+    expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ":\n", file.path(tmpdir1, theFile)), mess1)) == 1)
+    expect_true(sum(grepl(paste0("",whPointsToMessForGrep,"\n", file.path(tmpdir, theFile)), mess1)) == 1)
+    expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 3)
 
   }
   ## Try download to inputPath, intercepting the destination, creating a link

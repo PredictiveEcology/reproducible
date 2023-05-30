@@ -1,6 +1,6 @@
 ## Release information
 
-This is a minor update that addresses several issues that were fixed. 
+This is a minor update that addresses several issues that were fixed, including one that was identified by one of our dependencies due to a change on their package (data.table) that was causing a fail in reverse depends testing. 
 
 See `NEWS.md` for a full list of changes.
 
@@ -18,7 +18,7 @@ See `NEWS.md` for a full list of changes.
 * Ubuntu 20.04                  (local), R 4.3.0
 * Windows                      (GitHub), R 4.3.0
 * Windows                       (local), R 4.3.0
-* Windows                 (win-builder), 4.3.0 (2023-04-21 ucrt)
+* Windows                 (win-builder), R 4.3.0 (2023-04-21 ucrt)
 
 ### Development R version
 * Ubuntu 20.04 LTS             (GitHub), R-devel (2023-05-19 r84451 ucrt)
@@ -31,4 +31,4 @@ No NOTEs, WARNINGs, or ERRORs
 
 ## Downstream dependencies
 
-Currently SpaDES.tools, No conflicts were detected.
+Currently `SpaDES.tools`, No conflicts were detected.

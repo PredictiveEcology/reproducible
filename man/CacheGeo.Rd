@@ -106,6 +106,7 @@ the existing "same extent" entry in the \code{sf} object.
 
 \donttest{
 
+if (requireNamespace("sf", quietly = TRUE)) {
 dPath <- checkPath(file.path(tempdir2()), create = TRUE)
 localFileLux <- system.file("ex/lux.shp", package = "terra")
 
@@ -152,5 +153,5 @@ for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE))
       #, cloudFolderID = "cachedObjects" # to upload/download from cloud
       )
 }
-
+}
 }

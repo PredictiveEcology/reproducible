@@ -17,8 +17,10 @@
 #' `*Inputs`, such as [cropInputs()].
 #'
 #' @details
-#' `postProcessTo` is a wrapper around `cropTo(needBuffer = TRUE)`, `projectTo`, `cropTo`,
-#' `maskTo`, `writeTo`. Users can call each of these individually.
+#' `postProcessTo` is a wrapper around (an initial "wide" crop for speed)
+#' `cropTo(needBuffer = TRUE)`, `projectTo`,
+#' `cropTo` (the actual crop for precision), `maskTo`, `writeTo`.
+#'  Users can call each of these individually.
 #'
 #' `postProcessTerra` is the early name of this function that is now `postProcessTo`.
 #'
@@ -28,13 +30,15 @@
 #' and `to`:
 #'
 #' \tabular{lll}{
-#'   `from`\tab `to`\tab `from` will have:\cr
-#'   `Gridded`\tab `Gridded` \tab the extent, projection, origin, resolution and
-#'                         masking where there are `NA` from the `to`\cr
-#'   `Gridded`\tab `Vector` \tab the projection, origin, and mask from `to`, and extent will
-#'                        be a round number of pixels that fit within the extent
-#'                        of `to`. Resolution will be the same as `from` \cr
-#'   `Vector`\tab `Vector` \tab the projection, origin, extent and mask from `to`\cr
+#'   **`from`**\tab **`to`**   \tab **`from`** will have:                             \cr
+#'   `Gridded` \tab `Gridded`  \tab the extent, projection, origin, resolution
+#'                                  and masking where there are `NA` from the `to`    \cr
+#'   `Gridded` \tab `Vector`   \tab the projection, origin, and mask from `to`, and
+#'                                  extent will be a round number of pixels that
+#'                                  fit within the extent of `to`. Resolution will
+#'                                  be the same as `from`.  See section
+#'                                  below about `projectTo`. \cr
+#'   `Vector` \tab `Vector`    \tab the projection, origin, extent and mask from `to` \cr
 #' }
 #'
 #'
@@ -42,6 +46,15 @@
 #' override individual components of `to`. If `to` is omitted or `NULL`,
 #' then only the `*To` arguments that are used will be performed. In all cases,
 #' setting a `*To` argument to `NA` will prevent that step from happening.
+#'
+#' @section `projectTo`:
+#' Since these functions use the gis capabilities of `sf` and `terra`, they will only
+#' be able to do things that those functions can do. One key caution, which is
+#' stated clearly in `?terra::project` is that projection of a raster (i.e., gridded)
+#' object should always be with another gridded object. If the user chooses to
+#' supply a `projectTo` that is a vector object for a `from` that is gridded,
+#' there may be unexpected failures due e.g., to extents not overlapping during
+#' the `maskTo` stage.
 #'
 #' @section Backwards compatibility with `postProcess`:
 #'
@@ -52,19 +65,28 @@
 #'   `to`. If only `studyArea` is supplied, it will be used for `cropTo`
 #'   and `maskTo`; it will only be used for `projectTo` if `useSAcrs = TRUE`.
 #'   If both `rasterToMatch` and `studyArea` are supplied,
-#'   `studyArea` will only be applied to `maskTo` (and optionally `projectTo` if
-#'   `useSAcrs = TRUE`); everything else will be from `rasterToMatch`.
+#'   `studyArea` will only be applied to `maskTo` (unless `maskWithRTM = TRUE`),
+#'    and, optionally, to `projectTo` (if `useSAcrs = TRUE`); everything else
+#'    will be from `rasterToMatch`.
+#'
 #' }
 #'
-#' \subsection{`targetCRS`, `filename2`, `useSAcrs`:}{
+#' \subsection{`targetCRS`, `filename2`, `useSAcrs`, `maskWithRTM`:}{
+#'
 #'   `targetCRS` if supplied will be assigned to `projectTo`. `filename2` will
 #'   be assigned to `writeTo`. If `useSAcrs` is set, then the `studyArea`
-#'   will be assigned to `projectTo`. All of these will override any existing values
-#'   for these arguments.
+#'   will be assigned to `projectTo`. If `maskWithRTM` is used, then the
+#'   `rasterToMath` will be assigned to `maskTo`. All of these will override
+#'   any existing values for these arguments.
+#'
 #' }
 #'
+#'  See also [postProcess()] documentation section on
+#'  *Backwards compatibility with `rasterToMatch` and/or `studyArea`* for further
+#'  detail.
+#'
 #' @section Cropping:
-#' If `cropTo` is not `NA`, postProcessTo does cropping twice, both the first and last steps.
+#' If `cropTo` is not `NA`, `postProcessTo` does cropping twice, both the first and last steps.
 #' It does it first for speed, as cropping is a very fast algorithm. This will quickly remove
 #' a bunch of pixels that are not necessary. But, to not create bias, this first crop is padded
 #' by  `2 * res(from)[1]`), so that edge cells still have a complete set of neighbours.
@@ -96,6 +118,12 @@
 #'   To omit projecting, set this to `NA`.
 #'   If supplied, this will override `to` for the projecting step.
 #'   Defaults to `NULL`, which means use `to`.
+#'   **Attention.** Conflicts may arise with when `projectTo` is a Vector/CRS object with a
+#'   distinct CRS from `to`. Because `to` is used for masking *after* `from` is re-projected using
+#'   `projectTo`, the extents of `to` and `from` may no longer overlap (as in *align*)
+#'   perfectly leading to failure during
+#'   the masking step. We  recommend passing a raster templates to `projectTo` whose extent and CRS
+#'   are both compatible with the object used later for masking (either `to` or `maskTo`).
 #' @param maskTo Optional Gridded or Vector dataset which,
 #'   if supplied, will supply the extent with which to mask `from`.
 #'   If Gridded, it will mask with the `NA` values on the `maskTo`;
@@ -108,10 +136,11 @@
 #' @param overwrite Logical. Used if `writeTo` is not `NULL`; also if `terra` determines
 #'   that the object requires writing to disk during a `crop`, `mask` or `project` call
 #'   e.g., because it is too large.
-#' @param ... Passed to `terra::mask` (for `maskTo`), `terra::project` (for `projectTo`)
-#' or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`. Commonly used might be
-#' `method`, `touches`, and `datatype`. If `filename` is passed, it will be ignored; use
-#' `writeTo = `.
+#' @param ... Arguments passed to `terra::mask` (for `maskTo`), `terra::project` (for `projectTo`)
+#'   or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`, as well `postProcess`'s
+#'   `rasterToMatch` and `studyArea` arguments (see below). Commonly used arguments might be
+#'   `method`, `touches`, and `datatype`. If `filename` is passed, it will be ignored; use
+#'   `writeTo = `.
 #' @inheritParams Cache
 #' @export
 #'
@@ -323,7 +352,7 @@ maskTo <- function(from, maskTo, # touches = FALSE,
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
-  if (!is.null(maskTo)) {
+  if (!is.null(maskTo) && !extntNA(from) && !extntNA(maskTo)) {
     if (!is.naSpatial(maskTo)) {
       omit <- FALSE
       origFromClass <- class(from)
@@ -336,7 +365,8 @@ maskTo <- function(from, maskTo, # touches = FALSE,
         if (is.na(maskTo) || isCRSANY(maskTo)) omit <- TRUE
 
       if (!omit) {
-        .requireNamespace("sf", stopOnFALSE = TRUE)
+        if (isSF(from) || isSF(projectTo))
+          .requireNamespace("sf", stopOnFALSE = TRUE)
         if (isSpatial(from)) {
           from <- sf::st_as_sf(from)
         }
@@ -358,7 +388,13 @@ maskTo <- function(from, maskTo, # touches = FALSE,
           }
         }
 
-        if (!sf::st_crs(from) == sf::st_crs(maskTo)) {
+        if (.requireNamespace("sf")) {
+          sameCRS <- sf::st_crs(from) == sf::st_crs(maskTo)
+        } else {
+          sameCRS <- terra::same.crs(from, maskTo)
+        }
+
+        if (!sameCRS) {
           if (isGridded(maskTo)) {
             maskTo <- terra::project(maskTo, from, overwrite = overwrite)
           } else {
@@ -471,7 +507,7 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
     NULL
   }
 
-  if (!is.null(projectTo)) {
+  if (!is.null(projectTo) && !extntNA(from) && !extntNA(projectTo)) {
     origFromClass <- is(from)
     if (!is.naSpatial(projectTo)) {
       if (isRaster(projectTo)) {
@@ -479,7 +515,11 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
       }
 
       projectToOrig <- projectTo # keep for below
-      sameProj <- isTRUE(terra::crs(projectTo) == terra::crs(from))
+      sameProj <- try(terra::same.crs(projectTo, from), silent = TRUE)
+      if (is(sameProj, "try-error")) {
+        .requireNamespace("sf", stopOnFALSE = TRUE)
+        sameCRS <- sf::st_crs(from) == sf::st_crs(maskTo)
+      }
 
       isProjectToVecOrCRS <- isCRSANY(projectTo) || (isVector(projectTo))
       sameRes <- if (isVector(from) || isProjectToVecOrCRS) {
@@ -488,15 +528,16 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
         all(terra::res(projectTo) == terra::res(from))
       }
 
-      if (sameProj && sameRes) {
-        messagePrepInputs("    projection of from is same as projectTo, not projecting",
-                          verbose = verbose)
-      } else {
-        .requireNamespace("sf", stopOnFALSE = TRUE)
+      # if (sameProj && sameRes) {
+      #   messagePrepInputs("    projection of from is same as projectTo, not projecting",
+      #                     verbose = verbose)
+      # } else {
+        if (isSF(from) || isSF(projectTo))
+          .requireNamespace("sf", stopOnFALSE = TRUE)
         messagePrepInputs("    projecting...", appendLF = FALSE,
                           verbose = verbose)
         st <- Sys.time()
-        if (isProjectToVecOrCRS) {
+        if (isProjectToVecOrCRS && ( isSF(projectTo) || isSpatial(projectTo) ) ) {
           projectToTmp <- sf::st_as_sfc(sf::st_bbox(from))
           if (isVector(projectTo))
             projectTo <- sf::st_crs(projectTo)
@@ -512,7 +553,8 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
             messagePrepInputs("", verbose = verbose)
             messagePrepInputs("         projectTo is a Vector dataset, which does not define all metadata required. ",
                               verbose = verbose)
-            if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
+            if (!terra::is.lonlat(from)) {
+            # if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
               newRes <- terra::res(from)
               messagePrepInputs("         Using resolution of ",paste(newRes, collapse = "x"),"m; ",
                                 verbose = verbose)
@@ -557,13 +599,22 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
           dotArgs <- intersect(...names(), c(writeRasterArgs, projectArgs))
           if (length(dotArgs))
             dotArgs <- list(...)[dotArgs]
-          ll <- append(list(from, projectTo, overwrite = overwrite), dotArgs)
-          do.call(terra::project, ll)
+          sameGeom <- if (isSpat(from) && isSpat(projectTo) ||
+                          (isRaster(from) || isRaster(projectTo)))
+            terra::compareGeom(from, projectTo, stopOnError = FALSE)
+          else
+            FALSE
+          if (!isTRUE(sameGeom)) {
+            ll <- append(list(from, projectTo, overwrite = overwrite), dotArgs)
+            do.call(terra::project, ll)
+          } else {
+            from
+          }
         }
         messagePrepInputs("done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
                           verbose = verbose)
       }
-    }
+    # }
     from <- revertClass(from, origFromClass = origFromClass)
   }
   from
@@ -575,13 +626,14 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
 #'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
 #' @export
 #' @rdname postProcessTo
-cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
+cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
                    verbose = getOption("reproducible.verbose"), ...) {
 
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
-  if (!is.null(cropTo)) {
-    .requireNamespace("sf", stopOnFALSE = TRUE)
+  if (!is.null(cropTo) && !extntNA(from) && !extntNA(cropTo)) {
+    if (isSF(from) || isSF(cropTo))
+      .requireNamespace("sf", stopOnFALSE = TRUE)
     omit <- FALSE
     origFromClass <- is(from)
 
@@ -606,10 +658,18 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
                         verbose = verbose)
       st <- Sys.time()
 
-      ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
-      if (!sf::st_crs(from) == sf::st_crs(ext)) { # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
+      if (.requireNamespace("sf")) {
+        ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
+        sameCRS <- sf::st_crs(from) == sf::st_crs(ext) # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
+      } else {
+        ext <- terra::ext(cropTo) # create extent as an object; keeps crs correctly
+        sameCRS <- terra::same.crs(from, cropTo)
+      }
+
+      if (!sameCRS) {
         if (isVector(cropTo) && !isSpat(cropTo)) {
           cropToInFromCRS <- sf::st_transform(sf::st_as_sf(cropTo), sf::st_crs(from))
+          ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
         } else {
           terraCRSFrom <- terra::crs(from)
           if (packageVersion("terra") <= "1.5.21") {# an older terra issue; may not be precise version
@@ -618,8 +678,8 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
             }
           }
           cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
+          ext <- terra::ext(cropToInFromCRS) # create extent as an object; keeps crs correctly
         }
-        ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
       }
       if (isVector(from) && !isSF(from))
         ext <- terra::vect(ext)
@@ -632,10 +692,12 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
           } else if (isGridded(cropTo)) {
             res <- terra::res(cropTo)
           }
-          if (!isSpat(ext))
+          if (!isSpat(ext)) {
             ext <- terra::vect(ext)
+            terra::crs(ext) <- terra::crs(from)
+          }
           extTmp <- terra::ext(ext)
-          if (terra::is.lonlat(ext)) {
+          if (isTRUE(suppressWarnings(terra::is.lonlat(ext)))) { # warning is about "crs not defined"
             extTmp2 <- terra::extend(extTmp, 0.1) # hard code 0.1 lat/long, as long as it isn't past the from extent
             extFrom <- terra::ext(from)
             exts <- c(xmin = max(terra::xmin(extTmp2), terra::xmin(extFrom)),
@@ -679,8 +741,9 @@ cropTo <- function(from, cropTo = NULL, needBuffer = TRUE, overwrite = FALSE,
             if (grepl("extents do not overlap", fromInt))
               fail <- TRUE
           if (NROW(fromInt) == 0) { # likely don't overlap
-            fromInt <- "It looks like the extents do not overlap; stopping"
-            fail <- TRUE
+            messagePrepInputs("It looks like the cropping results in no data ",
+                             "(do not overlap or no intersection)", verbose = verbose)
+            fail <- FALSE
           }
           if (fail)
             stop(fromInt)
@@ -843,9 +906,11 @@ postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo,
     }
   }
 
-  if (!requireNamespace("terra", quietly = TRUE))
+  if (isSpat(from) || isSpat(to))
+    if (!requireNamespace("terra", quietly = TRUE))
     stop("Need terra and sf: install.packages(c('terra', 'sf'))")
-  if (!requireNamespace("sf", quietly = TRUE)) stop("Need sf: install.packages('sf')")
+  if (isSF(from) || isSF(to))
+    if (!requireNamespace("sf", quietly = TRUE)) stop("Need sf: install.packages('sf')")
 
   if (!(isSpatialAny(from))) stop("from must be a Spat* or sf*")
 
@@ -931,12 +996,17 @@ cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")
                             appendLF = FALSE)
         break
       }
+
       attempt <- attempt + 1
 
 
     }
+    if (extntNA(from2))
+      messagePrepInputs("    resulting extent is NA, probably because objects don't overlap",
+                        verbose = verbose)
     if (!is(from2, "try-error"))
       from <- from2
+
     messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
                                            units = "secs", digits = 3),
                       verbose = verbose)
@@ -1025,6 +1095,11 @@ remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.fr
     if (isFALSE(dots$useSAcrs)) {
       ret$projectTo <- NULL
     }
+
+    if (isTRUE(dots$maskWithRTM)) {
+      ret$maskTo <- dots$rasterToMatch
+    }
+
     # ret <- ret[!vapply(ret, is.null, FUN.VALUE = logical(1))]
     list2env(ret, envir)
   }
@@ -1070,3 +1145,17 @@ writeRasterArgs <- c("filename", "overwrite", "ncopies", "steps", "filetype", "p
 projectArgs <- c("x", "y", "method", "mask", "align", "gdal", "res", "origin", "threads", "filename")
 
 maskArgs <- c("x", "inverse", "mask", "updatevalue", "touches", "filename")
+
+extntNA <- function(x) {
+  out <- if (isSF(x))
+    sf::st_bbox(x)
+  else {
+    if (isSpat(x) || isRaster(x)) {
+      terra::ext(x)
+    } else {
+      FALSE
+    }
+  }
+  out <- anyNA(as.numeric(out[]))
+  return(out)
+}

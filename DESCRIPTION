@@ -19,7 +19,7 @@ SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.ra
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2023-05-23
+Date: 2023-05-29
 Version: 2.0.3
 Authors@R: 
     c(person(given = "Eliot J B",
@@ -80,7 +80,7 @@ Suggests:
     RSQLite,
     sf,
     sp (>= 1.4-2),
-    terra (>= 1.5-17),
+    terra (>= 1.7-20),
     testthat,
     withr
 Encoding: UTF-8

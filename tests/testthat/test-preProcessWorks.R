@@ -1,6 +1,6 @@
 test_that("preProcess works for .tar files", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -14,7 +14,7 @@ test_that("preProcess works for .tar files", {
 
 test_that("preProcess works for .zip when provided only url and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -28,7 +28,7 @@ test_that("preProcess works for .zip when provided only url and destinationPath"
 
 test_that("preProcess works with only url", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -42,7 +42,7 @@ test_that("preProcess works with only url", {
 
 test_that("preProcess works when provides only archive", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -62,7 +62,7 @@ test_that("preProcess works when provides only archive", {
 
 test_that("preProcess works when provides archive and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -83,7 +83,7 @@ test_that("preProcess works when provides archive and destinationPath", {
 
 test_that("preProcess works when provides only targetFile", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -100,7 +100,7 @@ test_that("preProcess works when provides only targetFile", {
 
 test_that("preProcess works when provides targetfile and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -118,7 +118,7 @@ test_that("preProcess works when provides targetfile and destinationPath", {
 
 test_that("preProcess works when provides url, archive, targetfile and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -134,7 +134,7 @@ test_that("preProcess works when provides url, archive, targetfile and destinati
 
 test_that("preProcess works when provides url, targetfile and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -149,7 +149,7 @@ test_that("preProcess works when provides url, targetfile and destinationPath", 
 
 test_that("preProcess works when provides url and destinationPath for a .rar file", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -174,7 +174,7 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
 
 test_that("preProcess works when provides url, targetfile and destinationPath for a .rar file", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -203,7 +203,7 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
 
 test_that("preProcess works when provides url, archive and destinationPath for a .rar file", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -229,7 +229,7 @@ test_that("preProcess works when provides url, archive and destinationPath for a
 
 test_that("preProcess works, but gives a warning when supplying cacheTags", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -245,7 +245,7 @@ test_that("preProcess works, but gives a warning when supplying cacheTags", {
 
 test_that("preProcess works, but gives a warning when supplying postProcessedFilename", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -262,14 +262,15 @@ test_that("preProcess works, but gives a warning when supplying postProcessedFil
 
 test_that("preProcess works, but gives a warning when supplying rasterInterpMethod", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     testthat::expect_message({
-      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, rasterInterpMethod = "ngb")
+      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir,
+                                      rasterInterpMethod = "near")
     })
   )
   testthat::expect_is(object = ras, class = "list")
@@ -278,7 +279,7 @@ test_that("preProcess works, but gives a warning when supplying rasterInterpMeth
 
 test_that("preProcess works, but gives a warning when supplying rasterDatatype", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -294,7 +295,7 @@ test_that("preProcess works, but gives a warning when supplying rasterDatatype",
 
 test_that("preProcess works, but gives a warning when supplying pkg", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -310,7 +311,7 @@ test_that("preProcess works, but gives a warning when supplying pkg", {
 
 test_that("message when files from archive are already present", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -331,7 +332,7 @@ test_that("message when files from archive are already present", {
 
 test_that("message when file is a shapefile", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -347,7 +348,7 @@ test_that("message when file is a shapefile", {
 
 test_that("message when doesn't know the targetFile extension", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -363,7 +364,7 @@ test_that("message when doesn't know the targetFile extension", {
 
 test_that("When supplying two files without archive, when archive and files have different names", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -381,7 +382,7 @@ test_that("When supplying two files without archive, when archive and files have
 
 test_that("message when archive has two known files (raster and shapefile)", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -400,7 +401,7 @@ test_that("message when archive has two known files (raster and shapefile)", {
 
 test_that("message when extracting a file that is already present", {
   skip_on_cran()
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -454,9 +455,10 @@ test_that("masking with larger extent obj", {
 
 test_that("Test of using future and progress indicator for lrg files on Google Drive", {
   skip_if_not_installed("future")
+  skip_if_not_installed("googledrive")
 
   if (interactive()) {
-    testInitOut <- testInit(c("raster", "future"), needGoogleDriveAuth = TRUE,
+    testInitOut <- testInit(c("terra", "future"), needGoogleDriveAuth = TRUE,
                             opts = list("reproducible.futurePlan" = "multisession"))
     on.exit({
       testOnExit(testInitOut)
@@ -550,3 +552,102 @@ test_that("large test for nested file structures in zips", {
 
 
 })
+
+test_that("more nested file structures in zip; alsoExtract NA", {
+  skip_on_cran()
+  testInitOut <- testInit("terra")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  tmpdir <- withr::local_tempdir()
+  withr::local_dir(tmpdir)
+  zipName <- "ex.zip"
+  system.time({
+    ras <- lapply(1:2, function(x) {
+      td <- tempdir2();
+      terra::rast(terra::ext(0,4,0,4), vals = sample(1:16), res = 1) |>
+        terra::writeRaster(filename = file.path(td, basename(tempfile(fileext = ".tif"))))
+    })
+    setwd(dirname(dirname(Filenames(ras[[1]]))))
+    fns1 <- Filenames(ras)
+    # zip(zipName, files = file.path(basename(dirname(fns)), basename(fns)))
+    ras <- lapply(1:2, function(x) {
+      terra::rast(terra::ext(0,4,0,4), vals = sample(1:16), res = 1) |>
+        terra::writeRaster(filename = file.path(basename(tempfile(fileext = ".tif"))))
+    })
+    fns2 <- Filenames(ras)
+    zip(zipName, files = c(file.path(basename(dirname(fns1)), basename(fns1)), basename(fns2)))
+  })
+  zipName2 <- file.path(tmpdir, zipName)
+
+  # don't specify targetFile --> fail because many options
+  linkOrCopy(zipName, zipName2)
+  a <- prepInputs(archive = zipName, destinationPath = tmpdir)
+  knownOtherFiles <- c("cache.db", "CHECKSUMS.txt", "ex.zip", "testCache")
+  files <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
+  expect_true(all(.listFilesInArchive(zipName2) %in% files))
+  unlink(file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)), recursive = TRUE)
+  files2 <- dir(pattern = ".tif", tmpdir, full.names = TRUE)
+  unlink(files2)
+
+  # alsoExtract = NULL --> the default --> extract all
+  checkPath(dirname(zipName2), create = TRUE)
+  linkOrCopy(zipName, zipName2)
+  a <- prepInputs(archive = zipName,
+                  targetFile = grep("\\.tif", basename(files), value = TRUE)[1],
+                  destinationPath = tmpdir)
+  files <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
+  expect_true(all(.listFilesInArchive(zipName2) %in% files))
+  unlink(file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)), recursive = TRUE)
+  files2 <- dir(pattern = ".tif", tmpdir, full.names = TRUE)
+  unlink(files2)
+
+
+  # alsoExtract = NA --> extract only targetFile -- with wrong filename (missing subdir)
+  checkPath(dirname(zipName2), create = TRUE)
+  linkOrCopy(zipName, zipName2)
+  filesPre <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
+  a <- prepInputs(archive = zipName, alsoExtract = NA,
+                  targetFile = grep("\\.tif", basename(files), value = TRUE)[1],
+                  destinationPath = tmpdir)
+  files <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
+  expect_false(all(.listFilesInArchive(zipName2) %in% files))
+  expect_true(sum(.listFilesInArchive(zipName2) %in% files) == 1)
+  unlink(file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)), recursive = TRUE)
+  files2 <- dir(pattern = ".tif", tmpdir, full.names = TRUE)
+  unlink(files2)
+
+
+
+  # alsoExtract = a filename --> extract targetFile & 1 other -- with correct filename (with subdir)
+  checkPath(dirname(zipName2), create = TRUE)
+  linkOrCopy(zipName, zipName2)
+  possFiles <- .listFilesInArchive(zipName2)
+  filesWithSubDir <- grep("\\/", possFiles, value = TRUE, invert = FALSE)
+  filesPre <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
+  a <- prepInputs(archive = zipName, alsoExtract = filesWithSubDir[2],
+                  targetFile = filesWithSubDir[1],
+                  destinationPath = tmpdir)
+  files <- dir(tmpdir, recursive = TRUE) # no subdir on this file, so non-recursive should do it
+  expect_false(all(.listFilesInArchive(zipName2) %in% files))
+  expect_true(sum(.listFilesInArchive(zipName2) %in% files) == 2) #
+  unlink(file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)), recursive = TRUE)
+  files2 <- dir(pattern = ".tif", tmpdir, full.names = TRUE)
+  unlink(files2)
+
+
+  # alsoExtract = NA --> extract only targetFile -- with correct filename (with subdir)
+  checkPath(dirname(zipName2), create = TRUE)
+  linkOrCopy(zipName, zipName2)
+  possFiles <- .listFilesInArchive(zipName2)
+  filesNoSubDir <- grep("\\/", possFiles, value = TRUE, invert = TRUE)
+  filesPre <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
+  a <- prepInputs(archive = zipName, alsoExtract = NA,
+                  targetFile = filesNoSubDir[1],
+                  destinationPath = tmpdir)
+  files <- dir(tmpdir, recursive = FALSE) # no subdir on this file, so non-recursive should do it
+  expect_false(all(.listFilesInArchive(zipName2) %in% files))
+  expect_true(sum(.listFilesInArchive(zipName2) %in% files) == 1)
+
+})
+

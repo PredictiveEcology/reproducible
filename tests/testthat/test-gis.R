@@ -3,10 +3,11 @@ test_that("testing prepInputs with deauthorized googledrive", {
   skip_on_ci()
 
   if (interactive()) {
-    testInitOut <- testInit(needGoogleDriveAuth = TRUE, "googledrive")
+    testInitOut <- testInit("terra", needGoogleDriveAuth = TRUE)
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
+    withr::local_dir(tmpdir)
 
     testthat::with_mock(
       "reproducible::isInteractive" = function() {
@@ -24,25 +25,26 @@ test_that("testing prepInputs with deauthorized googledrive", {
       })
     expect_true(is(BCR6_VT, vectorType()))
 
-    NFDB_PT <- #Cache(
-      prepInputs(
-        url = "http://cwfis.cfs.nrcan.gc.ca/downloads/nfdb/fire_pnt/current_version/NFDB_point.zip",
-        overwrite = TRUE,
-        #targetFile = "NFDB_point_20181129.shp",
-        #  alsoExtract = "similar",
-        fun = quote(sf::st_read(targetFile, quiet = TRUE))
-      )
-    expect_is(NFDB_PT, "sf")
-    expect_true(all(c("zip", "sbx", "shp", "xml", "shx", "sbn") %in%
-                      fileExt(dir(pattern = "NFDB_point"))))
+    if (.requireNamespace("sf", stopOnFALSE = FALSE)) {
+      NFDB_PT <- #Cache(
+        prepInputs(
+          url = "http://cwfis.cfs.nrcan.gc.ca/downloads/nfdb/fire_pnt/current_version/NFDB_point.zip",
+          overwrite = TRUE,
+          fun = quote(sf::st_read(targetFile, quiet = TRUE))
+        )
+      expect_is(NFDB_PT, "sf")
+      expect_true(all(c("zip", "sbx", "shp", "xml", "shx", "sbn") %in%
+                        fileExt(dir(pattern = "NFDB_point"))))
 
-    noisyOutput <- capture.output({
-      warn <- capture_warnings({
-        NFDB_PT_BCR6 <- Cache(postProcess, NFDB_PT, studyArea = BCR6_VT)
+      noisyOutput <- capture.output({
+        warn <- capture_warnings({
+          NFDB_PT_BCR6 <- Cache(postProcess, NFDB_PT, studyArea = BCR6_VT)
+        })
       })
-    })
-    if (!all(grepl("attribute variables are assumed to be spatially constant", warn)))
-      warnings(warn)
+      if (!all(grepl("attribute variables are assumed to be spatially constant", warn)))
+        warnings(warn)
+    }
+
   }
 })
 

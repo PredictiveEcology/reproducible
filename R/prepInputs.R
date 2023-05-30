@@ -25,7 +25,7 @@ if (getRversion() >= "3.1.0") {
 #' See [preProcess()] for combinations of arguments.
 #'
 #'   \enumerate{
-#'     \item Download from the web via either [googledrive::drive_download()],
+#'     \item Download from the web via either `googledrive::drive_download()`,
 #'     [utils::download.file()];
 #'     \item Extract from archive using [unzip()] or [untar()];
 #'     \item Load into R using `terra::rast`,
@@ -43,11 +43,11 @@ if (getRversion() >= "3.1.0") {
 #'   \enumerate{
 #'     \item Fix errors. Currently only errors fixed are for `SpatialPolygons`
 #'     using `buffer(..., width = 0)`;
-#'     \item Crop using [cropInputs()];
-#'     \item Project using [projectInputs()];
-#'     \item Mask using [maskInputs()];
+#'     \item Crop using [cropTo()];
+#'     \item Project using [projectTo()];
+#'     \item Mask using [maskTo()];
 #'     \item Determine file name [determineFilename()] via `filename2`;
-#'     \item Optionally, write that file name to disk via [writeOutputs()].
+#'     \item Optionally, write that file name to disk via [writeTo()].
 #'    }
 #'
 #'   NOTE: checksumming does not occur during the post-processing stage, as
@@ -56,7 +56,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #'   NOTE: `sf` objects are still very experimental.
 #'
-#' \subsection{postProcessing of `spat*`, `sf`, `Raster*` and `Spatial*` objects:}{
+#' \subsection{postProcessing of `Spat*`, `sf`, `Raster*` and `Spatial*` objects:}{
 #'
 #'   The following has been DEPRECATED because there are a sufficient number of
 #'   ambiguities that this has been changed in favour of `from` and the `*to` family.
@@ -66,8 +66,9 @@ if (getRversion() >= "3.1.0") {
 #'   trigger several subsequent functions, specifically the sequence,
 #'   *Crop, reproject, mask*, which appears to be a common sequence while
 #'   preparing spatial data from diverse sources.
-#'   See [postProcessTo()]. *Understanding various combinations of `rasterToMatch`
-#'   and/or `studyArea`:* Please see [postProcessTo()].
+#'   See [postProcess()] documentation section on
+#'   *Backwards compatibility with `rasterToMatch` and/or `studyArea` arguments*
+#'   to understand various combinations of `rasterToMatch` and/or `studyArea`.
 #'  }
 #'
 #'
@@ -217,7 +218,8 @@ if (getRversion() >= "3.1.0") {
 #'          [postProcess()].
 #' @examples
 #' \donttest{
-#'   if (requireNamespace("terra") && requireNamespace("sf")) {
+#'   if (requireNamespace("terra", quietly = TRUE) &&
+#'       requireNamespace("sf", quietly = TRUE)) {
 #'
 #'     library(reproducible)
 #'   # Make a dummy study area map -- user would supply this normally
@@ -372,7 +374,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   needPostProcess <- ...names() %in% c("studyArea", "rasterToMatch", "targetCRS", "to", "cropTo",
                     "maskTo", "projectTo", "fixErrorsIn", "useSAcrs", "writeTo")
   if (any(needPostProcess)) {
-    .requireNamespace("terra", stopOnFALSE = TRUE)
 
     TopoErrors <- list() # eventually to update a Google ID #TODO
     x <- withCallingHandlers(
@@ -441,8 +442,9 @@ extractFromArchive <- function(archive,
   }
   extractedObjs <- list(filesExtracted = character())
   # needs to pass checkSums & have all neededFiles files
+  neededFilesRel <- makeRelative(neededFiles, destinationPath)
   hasAllFiles <- if (NROW(checkSums)) {
-    all(makeRelative(neededFiles, destinationPath) %in% checkSums$expectedFile) # need basename2 for comparison with checkSums
+    all(neededFilesRel %in% checkSums$expectedFile) # need basename2 for comparison with checkSums
   } else {
     FALSE
   }
@@ -459,24 +461,29 @@ extractFromArchive <- function(archive,
       filesInArchive <- makeRelative(.listFilesInArchive(archive), destinationPath)
       if (is.null(neededFiles)) {
         neededFiles <- filesInArchive
-        result <- checkSums[checkSums$expectedFile %in% makeRelative(neededFiles, destinationPath), ]$result
       }
 
-      neededFiles <- checkRelative(neededFiles, destinationPath, filesInArchive)
+      neededFiles <- checkRelative(neededFiles, absolutePrefix = destinationPath, filesInArchive)
+      neededFilesRel <- makeRelative(neededFiles, destinationPath) # neededFiles may have been changed
       neededFiles <- makeAbsolute(neededFiles, destinationPath)
+      result <- if (NROW(checkSums))
+        checkSums[checkSums$expectedFile %in% neededFilesRel, ]$result
+      else
+        logical(0)
       # need to re-Checksums because
       checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
                                     newFilesToCheck = neededFiles,
                                     checkSums = checkSums,
                                     checkSumFilePath = checkSumFilePath)
 
+      # isOK will have "directories" so it will be longer than neededFiles
       isOK <- if (!is.null(checkSums)) {
-        .compareChecksumsAndFiles(checkSums, neededFiles, destinationPath)
+        .compareChecksumsAndFilesAddDirs(checkSums, neededFiles, destinationPath)
       } else {
         FALSE
       }
 
-      # recheck, now that we have the whole file liast
+      # recheck, now that we have the whole file list
       if (!(all(isOK)) || NROW(result) == 0) {
         # don't extract if we already have all files and they are fine
 
@@ -507,7 +514,15 @@ extractFromArchive <- function(archive,
           if (sum(possibleFolders)) {
             filesInArchive <- setdiff(filesInArchive, possibleFolders)
           }
-          neededFilesRel <- makeRelative(neededFiles[!isOK], destinationPath)
+          neededFilesRel <- if (is.null(neededFiles)) {
+            NULL
+          } else {
+            if (!is.null(names(isOK))) {
+              names(isOK)[!isOK]
+            } else {
+              makeRelative(neededFiles[!isOK], destinationPath)
+            }
+          }
           filesToExtractNow <- intersect(filesInArchive, neededFilesRel)
           dt <- data.table(files = filesToExtractNow)
           # extractingTheseFiles <- paste(filesToExtractNow, collapse = "\n")
@@ -637,9 +652,9 @@ extractFromArchive <- function(archive,
     } else {
       c(" Trying ", fun, ".\n",
         " If that is not correct, please specify a targetFile",
-        " and/or different fun. The current files in the targetFilePath's",
-        " directory are: \n",
-        paste(possibleFiles, collapse = ", "))
+        " and/or different fun. The current files in the destinationPath",
+        " are: \n",
+        paste(possibleFiles, collapse = "\n"))
     }
     messagePrepInputs(c("  targetFile was not specified.", secondPartOfMess), verbose = verbose)
 
@@ -657,8 +672,9 @@ extractFromArchive <- function(archive,
       }
     }
     if (length(targetFilePath) > 1)  {
-      messagePrepInputs("  More than one possible files to load: ", paste(targetFilePath, collapse = ", "),
-              ". Picking the last one. If not correct, specify a targetFile.", verbose = verbose)
+      messagePrepInputs("  More than one possible files to load:\n",
+                        paste(targetFilePath, collapse = "\n"),
+                        "\nPicking the last one. If not correct, specify a targetFile.", verbose = verbose)
       targetFilePath <- targetFilePath[length(targetFilePath)]
     }
   }
@@ -1038,7 +1054,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   return(filesInArchive)
 }
 
-.compareChecksumsAndFiles <- function(checkSums, files, destinationPath) {
+.compareChecksumsAndFilesAddDirs <- function(checkSums, files, destinationPath) {
   isOK <- NULL
   if (!is.null(files)) {
     checkSumsDT <- data.table(checkSums)
@@ -1049,10 +1065,13 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     filesDT <- data.table(files = unique(makeRelative(c(files, dirs), destinationPath)))
     isOKDT <- checkSumsDT[filesDT, on = c(expectedFile = "files")]
     isOKDT2 <- checkSumsDT[filesDT, on = c(actualFile = "files"), nomatch = NA]
-    # fill in any OKs from "actualFile" intot he isOKDT
+    # fill in any OKs from "actualFile" into the isOKDT
     isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
+    if (!all(compareNA(isOKDT$result, "OK")))
+      isOKDT <- checksumsDirsOk(isOKDT)
+
     isOK <- compareNA(isOKDT$result, "OK")
-    names(isOK) <- makeRelative(files, destinationPath)
+    names(isOK) <- makeRelative(filesDT$files, destinationPath)
   }
   isOK
 }
@@ -1240,9 +1259,10 @@ process <- function(out, funCaptured,
 
       messagePrepInputs("Loading object into R", verbose = verbose)
       needRaster <- any(grepl("raster$|stack$|brick$", funCaptured))
+      needTerra <- any(grepl("terra|rast$", funCaptured))
       if (needRaster)
         .requireNamespace("raster", stopOnFALSE = TRUE)
-      if (needRaster | identical(theFun, terra::rast)) {
+      if (needRaster | needTerra) {
         ## Don't cache the reading of a raster
         ## -- normal reading of raster on disk is fast b/c only reads metadata
         do.call(theFun, append(list(asPath(out$targetFilePath)), args))

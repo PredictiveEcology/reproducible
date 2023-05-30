@@ -567,7 +567,13 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 
 
 .fileExtsKnown <- function() {
-  shpFile <- getOption("reproducible.shapefileRead", "sf::st_read")
+  if (requireNamespace("sf", quietly = TRUE) && requireNamespace("DBI", quietly = TRUE))
+    shpFile <- getOption("reproducible.shapefileRead", "sf::st_read")
+  else {
+    shpFile <- "terra::vect"
+    if (identical(getOption("reproducible.shapefileRead"), "sf::st_read"))
+      options("reproducible.shapefileRead" = shpFile) # can't use sf::st_read
+  }
   griddedFile <- getOption("reproducible.rasterRead", "terra::rast")
   griddedFileSave <- ""
   shpFileSave <- ""
@@ -577,6 +583,7 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
     griddedFileSave <- "terra::writeRaster"
   if (shpFile %in% "sf::st_read")
     shpFileSave <- "sf::st_write"
+
   if (shpFile %in% "terra::vect")
     shpFileSave <- "terra::writeVector"
 
@@ -584,8 +591,10 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
     rbind(
       c("rds", "base::readRDS", "base::saveRDS", "binary"),
       c("qs", "qs::qread", "qs::qsave", "qs"),
-      cbind(c("asc", "grd", "tif"), griddedFile, griddedFileSave, rasterType()),
-      cbind(c("shp", "gdb"), shpFile, shpFileSave, vectorType())
+      cbind(c("asc", "grd", "tif"), griddedFile, griddedFileSave,
+            rasterType(rasterRead = griddedFile)),
+      cbind(c("shp", "gdb"), shpFile, shpFileSave,
+            vectorType(vectorRead = shpFile))
     )
   )
   colnames(df) <- c("extension", "fun", "saveFun", "type")
@@ -617,12 +626,17 @@ rasterRead <- function(...)
 rasterType <- function(nlayers = 1,
                        rasterRead = getOption("reproducible.rasterRead", "terra::rast")) {
   if (is.character(rasterRead)) {
-    rasterRead <- eval(parse(text = rasterRead))
+    rasterRead <- if (.requireNamespace("terra") || .requireNamespace("raster"))
+      eval(parse(text = rasterRead))
+    else
+      ""
   }
-  if (identical(rasterRead, terra::rast))
-    "SpatRaster"
-  else
-    if (nlayers == 1) "RasterLayer" else "RasterStack"
+  if (!is.character(rasterRead))
+    rasterRead <- if (identical(rasterRead, terra::rast))
+      "SpatRaster"
+    else
+      if (nlayers == 1) "RasterLayer" else "RasterStack"
+  rasterRead
 }
 
 
@@ -638,16 +652,21 @@ vectorType <- function(vectorRead = getOption("reproducible.shapefileRead", "sf:
       if (.requireNamespace("raster", stopOnFALSE = TRUE))
         needRasterPkg <- TRUE
     }
-    vectorRead <- eval(parse(text = vectorRead))
+    vectorRead <- if (.requireNamespace("terra") || .requireNamespace("sf") || .requireNamespace("sp"))
+      eval(parse(text = vectorRead))
+    else
+      ""
   }
-  if (identical(vectorRead, terra::vect)) {
-    "SpatVector"
-  } else if (needRasterPkg) {
-    .requireNamespace("raster", stopOnFALSE = TRUE)
-    "SpatialPolygons"
-  }  else {
-    "sf"
-  }
+  if (!is.character(vectorRead))
+    vectorRead <- if (identical(vectorRead, terra::vect)) {
+      "SpatVector"
+    } else if (needRasterPkg) {
+      .requireNamespace("raster", stopOnFALSE = TRUE)
+      "SpatialPolygons"
+    }  else {
+      "sf"
+    }
+  vectorRead
 }
 
 

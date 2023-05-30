@@ -18,7 +18,7 @@ withr::defer({
     Sys.setenv(SKIP_GAUTH = "")
   }
   options(opts)
-  setDTthreads(origDTthreads)
+  data.table::setDTthreads(origDTthreads)
   try(unlink("CHECKSUMS.txt"), silent = TRUE) # comes from an unknown place
 }, teardown_env())
 if (wantMoreTests) {

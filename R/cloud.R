@@ -34,20 +34,30 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
       }
       cloudFolderID <- cloudFolderFromCacheRepo(cachePath)
     }
+
+    # This is an imperfect test for a google drive ID ... because of this, we try 2x,
+    #   first with best guess, then if wrong, try the other branch of "if (isID)"
     isID <- isTRUE(32 <= nchar(cloudFolderID) && nchar(cloudFolderID) <= 33)
-    driveLs <- if (isID) {
-      if (packageVersion("googledrive") < "2.0.0") {
-        suppressMessages(googledrive::drive_get(googledrive::as_id(cloudFolderID), team_drive = team_drive))
-      } else {
-        suppressMessages(googledrive::drive_get(googledrive::as_id(cloudFolderID), shared_drive = team_drive))
-      }
+    if (packageVersion("googledrive") < "2.0.0") {
+      args <- list(temp_drive = team_drive)
     } else {
-      if (packageVersion("googledrive") < "2.0.0") {
-        suppressMessages(googledrive::drive_get(cloudFolderID, team_drive = team_drive))
-      } else {
-        suppressMessages(googledrive::drive_get(cloudFolderID, shared_drive = team_drive))
-      }
+      args <- list(shared_drive = team_drive)
     }
+    for (attempt in 1:2) {
+      cfidTmp <- if (isID) googledrive::as_id(cloudFolderID) else cloudFolderID
+      driveLs <- tryCatch(suppressMessages(do.call(googledrive::drive_get, append(list(cfidTmp), args))),
+                          error = function(e) {
+                            if (!is.null(e$parent))
+                              if (grepl("File not found", as.character(e$parent)) && attempt == 2)
+                                stop(e)
+                          },
+                          silent = TRUE)
+      if (is(driveLs, "dribble"))
+        break
+      else
+        isID <- !isID
+    }
+    # if (attempt == 2 && !is(driveLs, "dribble")) browser()
 
     if (NROW(driveLs) == 0) {
       if (isTRUE(create)) {
