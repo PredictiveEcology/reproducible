@@ -773,7 +773,7 @@ Cache <-
       # Can make new methods by class to add tags to outputs
       if (.CacheIsNew) {
         outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
-        output <- .CopyCacheAtts(outputToSave, output, passByReference = TRUE)
+        output <- .CopyCacheAtts(outputToSave, output, passByReference = FALSE)
         # .dealWithClass added tags; these should be transfered to output
         #          outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
         #          output <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
@@ -1468,7 +1468,9 @@ getFunctionName2 <- function(mc) {
   .CacheAttr <- attr(object, attr)
   if (is.null(.CacheAttr)) .CacheAttr <- list()
   .CacheAttr[[subAttr]] <- value
-  setattr(object, attr, .CacheAttr)
+  attr(object, attr) <- .CacheAttr
+  object
+  # setattr(object, attr, .CacheAttr)
 }
 
 #' The exact digest function that `Cache` uses
@@ -1547,7 +1549,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     preDigestQuick <- lapply(objsToDigestQuick, function(x) {
       # remove the "newCache" attribute, which is irrelevant for digest
       if (!is.null(attr(x, ".Cache")$newCache)) {
-        .setSubAttrInList(x, ".Cache", "newCache", NULL)
+        x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
         if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
       }
       .robustDigest(x, algo = algo, quick = TRUE, ...)
@@ -1559,7 +1561,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   preDigest <- lapply(objsToDigest, function(x) {
     # remove the "newCache" attribute, which is irrelevant for digest
     if (!is.null(attr(x, ".Cache")$newCache)) {
-      .setSubAttrInList(x, ".Cache", "newCache", NULL)
+      x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
       if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
     }
     .robustDigest(x, algo = algo, quick = FALSE, ...)
@@ -2112,10 +2114,15 @@ browserCond <- function(expr) {
 spatVectorNamesForCache <- c("x", "type", "atts", "crs")
 
 
-addCacheAttr <- function(output, .CacheIsNew, outputHash, FUN) {
-  .setSubAttrInList(output, ".Cache", "newCache", .CacheIsNew)
-  setattr(output, "tags", paste0("cacheId:", outputHash))
-  setattr(output, "call", "")
+addCacheAttr <- function(output, .CacheIsNew, outputHash, FUN, passByReference = FALSE) {
+  output <- .setSubAttrInList(output, ".Cache", "newCache", .CacheIsNew)
+  if (passByReference) {
+    setattr(output, "tags", paste0("cacheId:", outputHash))
+    setattr(output, "call", "")
+  } else {
+    attr(output, "tags") <- paste0("cacheId:", outputHash)
+    attr(output, "call") <- ""
+  }
   if (!identical(attr(output, ".Cache")$newCache, .CacheIsNew))
     stop("attributes are not correct 3")
   if (!identical(attr(output, "call"), ""))
@@ -2124,7 +2131,11 @@ addCacheAttr <- function(output, .CacheIsNew, outputHash, FUN) {
     stop("attributes are not correct 5")
 
   if (isS4(FUN)) {
-    setattr(output, "function", FUN@generic)
+    if (passByReference) {
+      setattr(output, "function", FUN@generic)
+    } else {
+      attr(output, "function") <- FUN@generic
+    }
     if (!identical(attr(output, "function"), FUN@generic))
       stop("There is an unknown error 03")
   }

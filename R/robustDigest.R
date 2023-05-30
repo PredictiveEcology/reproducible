@@ -396,9 +396,10 @@ basenames3 <- function(object, nParentDirs) {
 #'
 #' @importFrom data.table setattr
 #' @param x Any arbitrary R object that could have attributes
-#' @param passByReference Logical. If `TRUE`, the default, this uses `data.table::setattr`
+#' @param passByReference Logical. If `TRUE`, this uses `data.table::setattr`
 #'   to remove several attributes that are unnecessary for digesting, specifically `tags`,
-#'   `.Cache` and `call`
+#'   `.Cache` and `call`. Because there may be issues with "modified compiler constants",
+#'   the default is `FALSE`.
 .removeCacheAtts <- function(x, passByReference = FALSE) {
   if (passByReference) {
     setattr(x, "tags", NULL)
