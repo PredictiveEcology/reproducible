@@ -1455,12 +1455,13 @@ getFunctionName2 <- function(mc) {
 #' @param subAttr The list element name to change
 #' @param value The new value
 #'
-#' @export
 #' @return
 #' This sets or updates the `subAttr` element of a list that is located at
 #' `attr(object, attr)`, with the `value`. This, therefore, updates a sub-element
 #'  of a list attribute and returns that same object with the updated attribute.
 #'
+#' @export
+#' @importFrom data.table setattr
 #' @rdname setSubAttrInList
 .setSubAttrInList <- function(object, attr, subAttr, value) {
   .CacheAttr <- attr(object, attr)
