@@ -1,5 +1,15 @@
-reproducible 2.0.4
-=============
+# reproducible (development version)
+
+## Enhancements
+- none
+
+## Bugfixes
+- none
+
+## Dependency changes
+- none
+
+# reproducible 2.0.4
 
 ## Enhancements
 - `reproducible.useFuture` now defaults to `"multisession"`
