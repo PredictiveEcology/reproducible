@@ -12,7 +12,6 @@ CMD
 CRS
 CacheDigest
 CacheRepo
-Checksum
 Checksumming
 Checksums
 Codecov
@@ -20,7 +19,6 @@ DBIConnection
 DBIDriver
 GDAL
 GEOS
-GitHub
 GoogleDrive
 Gridded
 HTTP2
@@ -31,7 +29,6 @@ Marchal
 ORCID
 OSs
 PROJ
-PostgreSQL
 Postgres
 R6
 RQSLite
@@ -41,7 +38,6 @@ Rasters
 Reproducibility
 Rstudio
 S4
-SQLite
 SpaDES
 SpatRaster
 SpatStat
@@ -60,7 +56,6 @@ bugfix
 bugfixes
 cacheId
 cachePath
-checksum
 checksummed
 checksumming
 checksums
@@ -83,14 +78,12 @@ fastdigest
 filebacked
 filepath
 fns
-foundational
 gdalwarp
 gdb
 geo
 geospatial
 getData
 gis
-google
 googledrive
 gridded
 hardlink
@@ -125,7 +118,6 @@ rasters
 rcnst
 refered
 reimplemented
-repeatability
 repo
 reprex
 reproducibility
@@ -143,7 +135,6 @@ rsync
 saveRDS
 saveRawFile
 setReplacement
-sim
 simList
 sqlite
 subattributes
@@ -155,5 +146,3 @@ unevaluated
 unrar
 unrarPath
 useCache
-workflow
-workflows
