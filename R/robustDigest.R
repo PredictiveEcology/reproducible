@@ -403,9 +403,7 @@ basenames3 <- function(object, nParentDirs) {
   x
 }
 
-
 .CopyCacheAtts <- function(from, to) {
-
   onDiskRaster <- FALSE
   namesFrom <- names(from)
   if (!is.null(namesFrom)) { # has to have names
@@ -416,9 +414,7 @@ basenames3 <- function(object, nParentDirs) {
       if (length(from) && length(to)) {
         nams <- grep("^\\.mods$|^\\._", namesFrom, value = TRUE, invert = TRUE)
         for (nam in nams) {
-          lala <- try(.CopyCacheAtts(from[[nam]], to[[nam]]))
-          if (is(lala, 'try-error')) browser()
-          to[[nam]] <- lala
+          to[[nam]] <- try(.CopyCacheAtts(from[[nam]], to[[nam]]))
         }
       }
 
