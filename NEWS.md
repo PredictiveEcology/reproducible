@@ -14,23 +14,21 @@
 ## Enhancements
 - `reproducible.useFuture` now defaults to `"multisession"`
 - updated tests to deal with `data.table` development branch (#314)
-- removed all use of `data.table::setattr` to deal with "modified compiler constants" issue that was detected during CRAN checks at https://github.com/kalibera/cran-checks/blob/master/rcnst/results/reproducible/00check.log
+- removed all use of `data.table::setattr` to deal with "modified compiler constants" issue that was detected during CRAN checks at <https://github.com/kalibera/cran-checks/blob/master/rcnst/results/reproducible/00check.log>
+- Improvements with testing using GitHub Actions
 
 ## Bugfixes
 - `preProcess` failed when `googledrive` url filename could be found, but `destinationPath` was not `"."`
 - `normPath` had different behaviour on *nix-alikes and Windows. Now it is the same.
-- Issue #316 -- `SpatRaster` objects if saved to a specific, non relative (to `getwd()`) path would not be recovered correctly. 
+- `SpatRaster` objects if saved to a specific, non relative (to `getwd()`) path would not be recovered correctly (#316)
 - Several other Issues that addressed edge cases for `prepInputs` and family.
-
-## Continuous integration
-- Improvements with testing on GitHub Actions
 
 # reproducible 2.0.2
 
 ## Enhancements
-- new optional backend for `Cache` via `options(reproducible.useDBI = FALSE)` is single data files with the same `basename` as the cached object, i.e., with the same `cacheId` in the file name. This is a replacement for `RSQLite` and will likely become the default in the next release. This approach makes cloud caching easier as all metadata are available in small binary files for each cached object. This is simpler, faster and creates far fewer package dependencies (now 11 recursive; before 27 recursive). If a user has DBI and RSQLite installed, then the backend will default to use these currently, i.e., the previous behaviour. The user can change the backend without loss of Cache data. 
+- new optional backend for `Cache` via `options(reproducible.useDBI = FALSE)` is single data files with the same `basename` as the cached object, i.e., with the same `cacheId` in the file name. This is a replacement for `RSQLite` and will likely become the default in the next release. This approach makes cloud caching easier as all metadata are available in small binary files for each cached object. This is simpler, faster and creates far fewer package dependencies (now 11 recursive; before 27 recursive). If a user has `DBI` and `RSQLite` installed, then the backend will default to use these currently, i.e., the previous behaviour. The user can change the backend without loss of Cache data. 
 - moved `raster` and `sp` to `Suggests`; no more internal functions use these. User can still work with `Raster` and `sp` class objects as before.
-- `preProcess` can now handle google docs files, if `type = ...` is passed.
+- `preProcess` can now handle Google docs files, if `type = ...` is passed.
 - `postProcess` now uses `terra` and `sf` internally (with #253) throughout the family of `postProcess` functions. The previous `*Input` and `*Output` functions now redirect to the new `*To*` functions. These are faster, more stable, and cover vastly more cases than the previous `*Inputs` family. The old backends no longer work as before.
 - minor functions to assist with transition from `raster` to `terra`: `maxFn`, `minFn`, `rasterRead`
 - `.dealWithClass` and `.dealWithClassOnRecovery` are now exported generics, with several methods here, notably, list, environment, default
