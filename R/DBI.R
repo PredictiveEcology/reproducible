@@ -823,6 +823,7 @@ loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL) {
     hardLinkOrCopy(file, newName, verbose = 0)
     obj <- eval(parse(text = loadFun))(whFiles)
   }
+  obj
 }
 
 saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {

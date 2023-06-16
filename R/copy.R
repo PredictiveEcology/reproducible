@@ -111,7 +111,8 @@ setMethod(
               "a Copy method for this class. See ?Copy", verbose = verbose)
 
     } else if (is.environment(object)) {
-      listVersion <- Copy(as.list(object, all.names = TRUE), ...)
+      listVersion <- Copy(as.list(object, all.names = TRUE), filebackedDir = filebackedDir,
+                          drv = drv, conn = conn, verbose = verbose, ...)
 
       parentEnv <- parent.env(object)
       out <- new.env(parent = parentEnv)
@@ -129,9 +130,31 @@ setMethod(
     } else if (inherits(object, "SpatRaster")) {
       fns <- Filenames(object, allowMultiple = FALSE)
       if (any(nzchar(fns))) {
-        newFns <- nextNumericName(fns)
-        copyFile(fns, newFns)
-        out <- terra::rast(newFns)
+        fnsAll <- Filenames(object, allowMultiple = TRUE)
+        needNewFn <- FALSE
+        if (!missing(filebackedDir))
+          if (!is.null(filebackedDir))
+            needNewFn <- TRUE
+        if (needNewFn) {
+          if (!isAbsolutePath(filebackedDir)) {
+            # relative
+            filebackedDir <- file.path(getwd(), filebackedDir)
+          }
+          areAbs <- isAbsolutePath(fnsAll)
+          fnsAllBase <- fnsAll
+          if (any(areAbs)) {
+            fnsAllBase[areAbs] <- reproducible::basename2(fnsAll[areAbs])
+          }
+          newFns <- file.path(filebackedDir, fnsAllBase)
+        } else {
+          newFns <- nextNumericName(fnsAll)
+        }
+        copyFile(fnsAll, newFns)
+        newFnsSingles <- newFns[sapply(fns, function(sn) which(startsWith(basename(newFns), tools::file_path_sans_ext(basename(sn))) &
+                                                          endsWith(basename(newFns), tools::file_ext(sn))))]
+        # newFnsSingles <- newFns[match(tools::file_path_sans_ext(basename(fns)), basename(newFns))]
+        out <- terra::rast(newFnsSingles)
+
       }
     }
     return(out)
