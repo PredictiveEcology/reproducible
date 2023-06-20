@@ -552,6 +552,53 @@ withoutFinalNumeric <- function(string) {
 }
 
 
+#' `wrap` method for `SpatExtent`
+#'
+#' This adds a method of `terra::wrap` to `SpatExtent` class.
+#'
+#' @return A list of xmin, xmax, ymin, ymax that can be saved or otherwise copied.
+#' @name wrap
+#' @rdname wrap
+#' @examples
+#' library(terra)
+#' ex <- ext(c(0, 2, 0, 3))
+#' exWrapped <- wrap(ex)
+#' ex1 <- unwrap(exWrapped)
+#'
+#'
+#' @importFrom terra wrap
+if (!isGeneric("wrap"))
+  setGeneric("wrap", function(x, ...)
+    standardGeneric("wrap"))
+
+#' @export
+#' @rdname wrap
+#' @importFrom terra xmin xmax ymin ymax
+setMethod("wrap", signature = "SpatExtent",
+          function(x, ...) {
+  ll <- list(xmin = terra::xmin(x), xmax = terra::xmax(x),
+       ymin = terra::ymin(x), ymax = terra::ymax(x))
+  attr(ll, "class") <- "PackedSpatExtent"
+  ll
+})
+
+#' @rdname wrap
+#' @name unwrap
+if (!isGeneric("unwrap"))
+  setGeneric("unwrap", function(x, ...)
+    standardGeneric("unwrap"))
+
+setClass("PackedSpatExtent")
+
+#' @export
+#' @rdname wrap
+#' @name unwrap
+#' @return A SpatExtent object
+#' @importFrom terra unwrap
+setMethod("unwrap", signature = "PackedSpatExtent",
+          function(x, ...) {
+            terra::ext(unlist(x))
+          })
 
 wrapSpatVector <- function(obj) {
   geom1 <- terra::geom(obj)

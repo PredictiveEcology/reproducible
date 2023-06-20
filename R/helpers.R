@@ -714,3 +714,5 @@ cat2file <- function(..., file) {
     file = "~/log.txt"
   cat(..., file = file)
 }
+
+layerNamesDelimiter <- "_%%_"

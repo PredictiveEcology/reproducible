@@ -129,8 +129,11 @@ setMethod(
       }
     } else if (inherits(object, "SpatRaster")) {
       fns <- Filenames(object, allowMultiple = FALSE)
-      if (any(nzchar(fns))) {
+      nz <- nzchar(fns)
+      if (any(nz)) {
+        fns <- fns[nz]
         fnsAll <- Filenames(object, allowMultiple = TRUE)
+        hadNumeric <- grepl("_[:0-9:]+$", tools::file_path_sans_ext(fnsAll))
         needNewFn <- FALSE
         if (!missing(filebackedDir))
           if (!is.null(filebackedDir))
@@ -147,14 +150,27 @@ setMethod(
           }
           newFns <- file.path(filebackedDir, fnsAllBase)
         } else {
-          newFns <- nextNumericName(fnsAll)
+          newFns <- sapply(fnsAll, nextNumericName)
         }
+        hasNumeric <- hasNumeric <- grepl("_[:0-9:]+$", tools::file_path_sans_ext(newFns))
         copyFile(fnsAll, newFns)
-        newFnsSingles <- newFns[sapply(fns, function(sn) which(startsWith(basename(newFns), tools::file_path_sans_ext(basename(sn))) &
-                                                          endsWith(basename(newFns), tools::file_ext(sn))))]
+        # Copy may have given "nextNumericName"
+        fnsBase <- tools::file_path_sans_ext(basename(fns))
+        if (any(hadNumeric)) fnsBase <- gsub("_[:0-9:]+$", "", fnsBase)
+
+        newFnsSingles <- newFns[unlist(Map(sn = fnsBase,
+                                           fns1 = fns, function(sn, fns1) which(startsWith(basename(newFns), sn) &
+                                                          endsWith(basename(newFns), tools::file_ext(fns1)))))]
         # newFnsSingles <- newFns[match(tools::file_path_sans_ext(basename(fns)), basename(newFns))]
         out <- terra::rast(newFnsSingles)
+        names(out) <- names(object[[nz]])
 
+        # If there are layers that were in RAM; need to add them back, in correct order
+        if (any(!nz)) {
+          memoryLayers <- names(object)[!nz]
+          out[[memoryLayers]] <- object[[memoryLayers]]
+          out <- out[[match(names(object), names(out))]]
+        }
       }
     }
     return(out)
