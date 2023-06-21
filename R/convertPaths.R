@@ -112,10 +112,13 @@ setMethod(
       if (isTRUE(allowMultiple))
         if (endsWith(fns, suffix = "grd"))
           fns <- c(fns, gsub("grd$", "gri", fns))
-    } else if (inherits(obj, "SpatRaster")) {
+    } else if (inherits(obj, c("SpatRaster", "PackedSpatRaster"))) {
       if (!requireNamespace("terra", quietly = TRUE))
         stop("Please install terra package")
-      fns <- terra::sources(obj)
+      fns <- if (inherits(obj, "PackedSpatRaster"))
+        obj@attributes$sources$source
+      else
+        terra::sources(obj)
       if (isTRUE(allowMultiple)) {
         anyGrd <- endsWith(fns, suffix = "grd")
         if (any(anyGrd)) {

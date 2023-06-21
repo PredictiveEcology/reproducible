@@ -564,26 +564,29 @@ unmakeMemoisable.default <- function(x) {
 
     # next is for terra objects --> terra::wrap is ridiculously slow for SpatVector objects; use
     #   custom version in reproducible where here
+    proxy <- FALSE
     useWrap <- TRUE
     if (inherits(obj, "SpatRaster")) {
       if (all(nzchar(Filenames(obj)))) {
-        useWrap <- FALSE
+        useWrap <- TRUE
+        proxy <- TRUE
+
         cls <- class(obj)
         layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
-        obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
-        obj <- asPath(Filenames(obj))
-        attr(obj, "tags") <- c(attr(obj, "tags"),
-                               paste0("origFilename:", basename2(obj)),
-                               paste0("origDirname:", dirname(obj)),
-                               paste0("origGetWd:", getwd()),
-                               paste0("fromDisk:", TRUE),
-                               paste0("class:", cls),
-                               paste0("fileFormat:", tools::file_ext(obj)),
-                               paste0("saveRawFile:", TRUE),
-                               paste0("loadFun:", "terra::rast"),
-                               paste0("layerNames:", layerNams),
-                               paste0("whichFiles:", obj2)
-                               )
+        Fns <- asPath(Filenames(obj, allowMultiple = FALSE))
+        FnsAll <- asPath(Filenames(obj))
+        tags <- c(attr(obj, "tags"),
+                  paste0("origFilename:", basename2(Fns)),
+                  paste0("origDirname:", dirname(Fns)),
+                  paste0("origGetWd:", getwd()),
+                  paste0("fromDisk:", TRUE),
+                  paste0("class:", cls),
+                  # paste0("fileFormat:", tools::file_ext(Fns)),
+                  paste0("saveRawFile:", TRUE),
+                  paste0("loadFun:", "terra::rast"),
+                  paste0("layerNames:", layerNams),
+                  paste0("whichFiles:", FnsAll)
+        )
       }
     } else if (is(obj, "SpatVector") && !missing(cachePath)) {
       useWrap <- FALSE
@@ -591,9 +594,11 @@ unmakeMemoisable.default <- function(x) {
     }
 
     if (useWrap)
-      obj <- wrap(obj)
+      obj <- wrap(obj, proxy = proxy)
 
     attr(obj, ".Cache") <- attrs
+    if (exists("tags", inherits = FALSE))
+      attr(obj, "tags") <- tags
 
     messageCache("\b Done!", verboseLevel = 2, verbose = verbose)
   }

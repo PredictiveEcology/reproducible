@@ -832,7 +832,7 @@ saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
 
   if (any(attr(obj, "tags") == "saveRawFile:TRUE")) {
     # newFN <- paste0(tools::file_path_sans_ext(fts), ".", tools::file_ext(obj))
-    hardLinkOrCopy(obj, fts, verbose = -2)
+    hardLinkOrCopy(Filenames(obj, allowMultiple = TRUE), fts, verbose = -2)
     fs <- sum(file.size(fts))
 
   } else {
