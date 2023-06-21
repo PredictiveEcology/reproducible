@@ -163,7 +163,11 @@ setMethod(
                                                           endsWith(basename(newFns), tools::file_ext(fns1)))))]
         # newFnsSingles <- newFns[match(tools::file_path_sans_ext(basename(fns)), basename(newFns))]
         out <- terra::rast(newFnsSingles)
-        names(out) <- names(object[[nz]])
+        if (length(nz) == 1) # one file for all layers
+          names(out) <- names(object)
+        else
+          names(out) <- names(object[[nz]])
+
 
         # If there are layers that were in RAM; need to add them back, in correct order
         if (any(!nz)) {

@@ -622,13 +622,7 @@ unmakeMemoisable.default <- function(x) {
   if (is.character(obj)) {
     tags <- attr(obj, "tags")
     if (any(grepl("origFilename", tags))) {
-      out <- strsplit(tags,':')
-      tags2 <- lapply(out, function(x) x[[1]])
-      tags1 <- as.data.table(do.call(rbind, tags2))
-      vals <- vapply(seq(NROW(tags1)), function(i)
-        gsub(paste0(tags1[[1]][i], ":"), "", tags[i]), FUN.VALUE = character(1))
-      set(tags1, NULL, "tagValue", vals)
-      setnames(tags1, "V1", "tagKey")
+      tags1 <- parseTags(tags)
       obj <- loadFile(tags1$tagValue[tags1$tagKey %in% "whichFiles"], fullCacheTableForObj = tags1)
       names(obj) <- strsplit(tags1$tagValue[tags1$tagKey == "layerNames"],
                              split = layerNamesDelimiter)[[1]]
@@ -717,3 +711,14 @@ unmakeMemoisable.default <- function(x) {
   # }
 }
 
+
+parseTags <- function(tags) {
+  out <- strsplit(tags,':')
+  tags2 <- lapply(out, function(x) x[[1]])
+  tags1 <- as.data.table(do.call(rbind, tags2))
+  vals <- vapply(seq(NROW(tags1)), function(i)
+    gsub(paste0(tags1[[1]][i], ":"), "", tags[i]), FUN.VALUE = character(1))
+  set(tags1, NULL, "tagValue", vals)
+  setnames(tags1, "V1", "tagKey")
+  tags1
+}

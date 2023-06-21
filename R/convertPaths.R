@@ -164,3 +164,19 @@ setMethod(
     # Filenames(as.environment(obj), allowMultiple = allowMultiple)
 })
 
+#' @export
+#' @rdname Filenames
+setMethod(
+  "Filenames",
+  signature = "Path",
+  definition = function(obj, allowMultiple = TRUE) {
+    tags <- attr(obj, "tags")
+    if (!is.null(tags)) {
+      tags1 <- parseTags(tags)
+      out <- tags1$tagValue[tags1$tagKey == "whichFiles"]
+    } else {
+      out <- NULL
+    }
+    ## convert a list to an environment -- this is to align it with a simList and environment
+  })
+
