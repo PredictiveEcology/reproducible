@@ -820,7 +820,7 @@ loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL) {
     else
       newName <- file.path(getwd(), relPath, origFilename)
     whFiles <- newName[match(basename(whichFiles), origFilename)]
-    hardLinkOrCopy(file, newName, verbose = 0)
+    hardLinkOrCopy(file, whFiles, verbose = 0)
     obj <- eval(parse(text = loadFun))(whFiles)
   }
   obj
