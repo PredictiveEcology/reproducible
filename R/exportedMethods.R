@@ -623,7 +623,8 @@ unmakeMemoisable.default <- function(x) {
     tags <- attr(obj, "tags")
     if (any(grepl("origFilename", tags))) {
       tags1 <- parseTags(tags)
-      obj <- loadFile(tags1$tagValue[tags1$tagKey %in% "whichFiles"], fullCacheTableForObj = tags1)
+      obj <- loadFile(tags1$tagValue[tags1$tagKey %in% "whichFiles"],
+                      fullCacheTableForObj = tags1)
       names(obj) <- strsplit(tags1$tagValue[tags1$tagKey == "layerNames"],
                              split = layerNamesDelimiter)[[1]]
     }
