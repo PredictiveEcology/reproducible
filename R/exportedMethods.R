@@ -574,8 +574,10 @@ unmakeMemoisable.default <- function(x) {
         obj <- asPath(Filenames(obj))
         attr(obj, "tags") <- c(attr(obj, "tags"),
                                paste0("origFilename:", basename2(obj)),
+                               paste0("origRelName:", makeRelative(obj, cachePath)),
                                paste0("origDirname:", dirname(obj)),
                                paste0("origGetWd:", getwd()),
+                               paste0("origCachePath:", cachePath),
                                paste0("fromDisk:", TRUE),
                                paste0("class:", cls),
                                paste0("fileFormat:", tools::file_ext(obj)),
@@ -624,7 +626,7 @@ unmakeMemoisable.default <- function(x) {
     if (any(grepl("origFilename", tags))) {
       tags1 <- parseTags(tags)
       obj <- loadFile(tags1$tagValue[tags1$tagKey %in% "whichFiles"],
-                      fullCacheTableForObj = tags1)
+                      fullCacheTableForObj = tags1, cachePath = cachePath)
       names(obj) <- strsplit(tags1$tagValue[tags1$tagKey == "layerNames"],
                              split = layerNamesDelimiter)[[1]]
     }

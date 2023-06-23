@@ -153,7 +153,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
   filenamesInCache <- file.path(CacheStorageDir(), basename2(objFiles))
   hardLinkOrCopy(objFiles, to = filenamesInCache)
 
-  dt <- loadFile(dtFile, format = fileExt(dtFile))
+  dt <- loadFile(dtFile, format = fileExt(dtFile), cachePath = cachePath)
 
   if (useDBI()) # with useDBI = FALSE, the dbFile is already there.
     Map(tv = dt$tagValue, tk = dt$tagKey, function(tv, tk)

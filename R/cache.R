@@ -1998,7 +1998,7 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
         }
 
         isInRepo <- if (!is.null(dtFile))
-          loadFile(dtFile) else NULL
+          loadFile(dtFile, cachePath = repo) else NULL
       } else {
         isInRepo <- data.table::copy(.emptyCacheTable)
       }
