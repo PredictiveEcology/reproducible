@@ -509,7 +509,6 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dealWithClass
-#' @importFrom terra wrap
 .dealWithClass.default <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                   conn = getOption("reproducible.conn", NULL),
                                   verbose = getOption("reproducible.verbose")) {
@@ -593,7 +592,7 @@ unmakeMemoisable.default <- function(x) {
     }
 
     if (useWrap)
-      obj <- wrap(obj)
+      obj <- wrap(obj) # let method dispatch work
 
     attr(obj, ".Cache") <- attrs
 

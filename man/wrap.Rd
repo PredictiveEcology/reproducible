@@ -19,10 +19,11 @@ A SpatExtent object
 This adds a method of \code{terra::wrap} to \code{SpatExtent} class.
 }
 \examples{
-library(terra)
-ex <- ext(c(0, 2, 0, 3))
+if (requireNamespace("terra")) {
+ex <- terra::ext(c(0, 2, 0, 3))
 exWrapped <- wrap(ex)
 ex1 <- unwrap(exWrapped)
+}
 
 
 }

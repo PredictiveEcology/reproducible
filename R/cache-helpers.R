@@ -560,20 +560,21 @@ withoutFinalNumeric <- function(string) {
 #' @name wrap
 #' @rdname wrap
 #' @examples
-#' library(terra)
-#' ex <- ext(c(0, 2, 0, 3))
+#' if (requireNamespace("terra")) {
+#' ex <- terra::ext(c(0, 2, 0, 3))
 #' exWrapped <- wrap(ex)
 #' ex1 <- unwrap(exWrapped)
+#' }
 #'
 #'
-#' @importFrom terra wrap
-if (!isGeneric("wrap"))
+if (!isGeneric("wrap", .GlobalEnv))
   setGeneric("wrap", function(x, ...)
     standardGeneric("wrap"))
 
+setClass("SpatExtent")
+
 #' @export
 #' @rdname wrap
-#' @importFrom terra xmin xmax ymin ymax
 setMethod("wrap", signature = "SpatExtent",
           function(x, ...) {
   ll <- list(xmin = terra::xmin(x), xmax = terra::xmax(x),
@@ -582,22 +583,23 @@ setMethod("wrap", signature = "SpatExtent",
   ll
 })
 
-#' @rdname wrap
-#' @name unwrap
-if (!isGeneric("unwrap"))
-  setGeneric("unwrap", function(x, ...)
-    standardGeneric("unwrap"))
 
 setClass("PackedSpatExtent")
 
 #' @export
 #' @rdname wrap
 #' @name unwrap
+if (!isGeneric("unwrap", .GlobalEnv))
+  setGeneric("unwrap", function(x, ...)
+    standardGeneric("unwrap"))
+
+#' @rdname wrap
+#' @name unwrap
 #' @return A SpatExtent object
-#' @importFrom terra unwrap
 setMethod("unwrap", signature = "PackedSpatExtent",
           function(x, ...) {
-            terra::ext(unlist(x))
+            if (!requireNamespace("terra")) stop("Please install.packages('terra')")
+              terra::ext(unlist(x))
           })
 
 wrapSpatVector <- function(obj) {
