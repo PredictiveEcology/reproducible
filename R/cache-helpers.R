@@ -552,11 +552,13 @@ withoutFinalNumeric <- function(string) {
 }
 
 
-#' `wrap` method for `SpatExtent`
+#' `wrap` and `unwrap` methods for `*SpatExtent`
 #'
-#' This adds a method of `terra::wrap` to `SpatExtent` class.
+#' This adds a method of `terra::wrap` to `SpatExtent` and `terra::unwrap` to
+#' `PackedSpatExtent` classes.
 #'
-#' @return A list of xmin, xmax, ymin, ymax that can be saved or otherwise copied.
+#' @return `wrap` returns a list of xmin, xmax, ymin, ymax that can be saved
+#'   or otherwise copied.
 #' @name wrap
 #' @rdname wrap
 #' @examples
@@ -567,16 +569,22 @@ withoutFinalNumeric <- function(string) {
 #' }
 #'
 #'
-if (!isGeneric("wrap", .GlobalEnv))
-  setGeneric("wrap", function(x, ...)
-    standardGeneric("wrap"))
+if (requireNamespace("terra")) {
+  setGeneric("wrap", terra::wrap)
+} else {
+  if (!isGeneric("wrap", .GlobalEnv))
+    setGeneric("wrap", function(x, ...)
+      standardGeneric("wrap"))
+}
 
 setClass("SpatExtent")
 
 #' @export
 #' @rdname wrap
+#' @aliases wrap,SpatExtent-method
 setMethod("wrap", signature = "SpatExtent",
           function(x, ...) {
+            browser()
   ll <- list(xmin = terra::xmin(x), xmax = terra::xmax(x),
        ymin = terra::ymin(x), ymax = terra::ymax(x))
   attr(ll, "class") <- "PackedSpatExtent"
@@ -589,13 +597,18 @@ setClass("PackedSpatExtent")
 #' @export
 #' @rdname wrap
 #' @name unwrap
-if (!isGeneric("unwrap", .GlobalEnv))
+if (requireNamespace("terra")) {
+  setGeneric("unwrap", terra::unwrap)
+} else {
+  if (!isGeneric("unwrap", .GlobalEnv))
   setGeneric("unwrap", function(x, ...)
     standardGeneric("unwrap"))
+}
 
 #' @rdname wrap
 #' @name unwrap
-#' @return A SpatExtent object
+#' @return `unwrap` returns a a `SpatExtent` object.
+#' @aliases unwrap,PackedSpatExtent-method
 setMethod("unwrap", signature = "PackedSpatExtent",
           function(x, ...) {
             if (!requireNamespace("terra")) stop("Please install.packages('terra')")

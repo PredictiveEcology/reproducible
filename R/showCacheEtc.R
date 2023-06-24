@@ -379,7 +379,7 @@ setMethod(
       objsDT <- rbindlist(lapply(
         dir(CacheStorageDir(x), pattern = CacheDBFileSingleExt(),
             full.names = TRUE)
-        , loadFile, cachePath = cachePath))
+        , loadFile, cachePath = x))
       if (NROW(objsDT) == 0)
         return(invisible(.emptyCacheTable))
 
