@@ -577,14 +577,14 @@ if (requireNamespace("terra")) {
       standardGeneric("wrap"))
 }
 
-setClass("SpatExtent")
+if (!requireNamespace("terra"))
+  setClass("SpatExtent")
 
 #' @export
 #' @rdname wrap
 #' @aliases wrap,SpatExtent-method
 setMethod("wrap", signature = "SpatExtent",
           function(x, ...) {
-            browser()
   ll <- list(xmin = terra::xmin(x), xmax = terra::xmax(x),
        ymin = terra::ymin(x), ymax = terra::ymax(x))
   attr(ll, "class") <- "PackedSpatExtent"
