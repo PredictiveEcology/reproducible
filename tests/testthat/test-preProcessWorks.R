@@ -1,6 +1,6 @@
 test_that("preProcess works for .tar files", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -14,7 +14,7 @@ test_that("preProcess works for .tar files", {
 
 test_that("preProcess works for .zip when provided only url and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -28,7 +28,7 @@ test_that("preProcess works for .zip when provided only url and destinationPath"
 
 test_that("preProcess works with only url", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -42,7 +42,7 @@ test_that("preProcess works with only url", {
 
 test_that("preProcess works when provides only archive", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -62,7 +62,7 @@ test_that("preProcess works when provides only archive", {
 
 test_that("preProcess works when provides archive and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -83,7 +83,7 @@ test_that("preProcess works when provides archive and destinationPath", {
 
 test_that("preProcess works when provides only targetFile", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -100,7 +100,7 @@ test_that("preProcess works when provides only targetFile", {
 
 test_that("preProcess works when provides targetfile and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -118,7 +118,7 @@ test_that("preProcess works when provides targetfile and destinationPath", {
 
 test_that("preProcess works when provides url, archive, targetfile and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -134,7 +134,7 @@ test_that("preProcess works when provides url, archive, targetfile and destinati
 
 test_that("preProcess works when provides url, targetfile and destinationPath", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -149,7 +149,7 @@ test_that("preProcess works when provides url, targetfile and destinationPath", 
 
 test_that("preProcess works when provides url and destinationPath for a .rar file", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -174,7 +174,7 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
 
 test_that("preProcess works when provides url, targetfile and destinationPath for a .rar file", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -203,7 +203,7 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
 
 test_that("preProcess works when provides url, archive and destinationPath for a .rar file", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -229,7 +229,7 @@ test_that("preProcess works when provides url, archive and destinationPath for a
 
 test_that("preProcess works, but gives a warning when supplying cacheTags", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -245,7 +245,7 @@ test_that("preProcess works, but gives a warning when supplying cacheTags", {
 
 test_that("preProcess works, but gives a warning when supplying postProcessedFilename", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -262,7 +262,7 @@ test_that("preProcess works, but gives a warning when supplying postProcessedFil
 
 test_that("preProcess works, but gives a warning when supplying rasterInterpMethod", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -279,7 +279,7 @@ test_that("preProcess works, but gives a warning when supplying rasterInterpMeth
 
 test_that("preProcess works, but gives a warning when supplying rasterDatatype", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -295,7 +295,7 @@ test_that("preProcess works, but gives a warning when supplying rasterDatatype",
 
 test_that("preProcess works, but gives a warning when supplying pkg", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -311,7 +311,7 @@ test_that("preProcess works, but gives a warning when supplying pkg", {
 
 test_that("message when files from archive are already present", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -332,7 +332,7 @@ test_that("message when files from archive are already present", {
 
 test_that("message when file is a shapefile", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -348,7 +348,7 @@ test_that("message when file is a shapefile", {
 
 test_that("message when doesn't know the targetFile extension", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -364,7 +364,7 @@ test_that("message when doesn't know the targetFile extension", {
 
 test_that("When supplying two files without archive, when archive and files have different names", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -382,7 +382,7 @@ test_that("When supplying two files without archive, when archive and files have
 
 test_that("message when archive has two known files (raster and shapefile)", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -401,7 +401,7 @@ test_that("message when archive has two known files (raster and shapefile)", {
 
 test_that("message when extracting a file that is already present", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -433,7 +433,7 @@ test_that("masking with larger extent obj", {
   skip_on_cran()
   skip_on_ci()
 
-  testInitOut <- testInit("terra", needGoogleDriveAuth = TRUE)
+  testInit("terra", needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -458,7 +458,7 @@ test_that("Test of using future and progress indicator for lrg files on Google D
   skip_if_not_installed("googledrive")
 
   if (interactive()) {
-    testInitOut <- testInit(c("terra", "future"), needGoogleDriveAuth = TRUE,
+    testInit(c("terra", "future"), needGoogleDriveAuth = TRUE,
                             opts = list("reproducible.futurePlan" = "multisession"))
     on.exit({
       testOnExit(testInitOut)
@@ -475,8 +475,7 @@ test_that("Test of using future and progress indicator for lrg files on Google D
 
 test_that("lightweight tests for preProcess code coverage", {
   skip_on_cran()
-  out <- testInit("sf")
-  on.exit(testOnExit(out), add = TRUE)
+  testInit("sf")
   expect_true(is.data.frame(preProcessParams()))
   expect_true(is.data.frame(preProcessParams(1)))
   expect_true(is.data.frame(preProcessParams(2)))
@@ -532,8 +531,7 @@ test_that("lightweight tests for preProcess code coverage", {
 test_that("large test for nested file structures in zips", {
   skip_on_cran()
   skip_on_ci()
-  out <- testInit("sf")
-  on.exit(testOnExit(out), add = TRUE)
+  testInit("sf")
   climateDataURL <- "https://drive.google.com/file/d/1we9GqEVAORWLbHi3it66VnCcvLu85QIk"
 
   ## extracts flat files, overwriting and keeping only the last subdir's files
@@ -555,10 +553,7 @@ test_that("large test for nested file structures in zips", {
 
 test_that("more nested file structures in zip; alsoExtract NA", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra")
   tmpdir <- withr::local_tempdir()
   withr::local_dir(tmpdir)
   zipName <- "ex.zip"

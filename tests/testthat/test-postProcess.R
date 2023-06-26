@@ -2,7 +2,7 @@ test_that("prepInputs doesn't work (part 3)", {
   skip_on_cran() # too long
   skip_if(getRversion() < "4.1" && isWindows()) # old Windows is failing; not going to fix tests for those
   skip_if_not_installed("sf")
-  testInitOut <- testInit(c("terra", "sf"), tmpFileExt = c(".tif", ".tif", ".tif"),
+  testInit(c("terra", "sf"), tmpFileExt = c(".tif", ".tif", ".tif"),
                           opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.inputPaths" = NULL,
@@ -10,9 +10,6 @@ test_that("prepInputs doesn't work (part 3)", {
     "rgdal_show_exportToProj4_warnings"="none") # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
 
   )
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
 
   options("reproducible.cachePath" = tmpdir)
 
@@ -189,10 +186,7 @@ test_that("prepInputs doesn't work (part 3)", {
 })
 
 test_that("writeOutputs with non-matching filename2", {
-  testInitOut <- testInit(c("terra"), tmpFileExt = c(".grd", ".tif"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(c("terra"), tmpFileExt = c(".grd", ".tif"))
 
   r <- terra::rast(terra::ext(0,10,0,10), vals = rnorm(100))
   r <- terra::writeRaster(r, file = tmpfile[1], overwrite = TRUE)
@@ -214,15 +208,12 @@ test_that("cropInputs crops too closely when input projections are different", {
   skip_on_cran()
   # skip_on_ci() ## TODO: why is this failing on GHA but not locally??? (2022-11-04)
 
-  testInitOut <- testInit("terra", opts = list(
+  testInit("terra", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL,
     "rgdal_show_exportToProj4_warnings"="none" # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
   ), needGoogleDriveAuth = TRUE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
 
   ext2 <- terra::ext(c(xmin = -3229772.32501426,
                xmax = 3680227.67498574,
@@ -251,14 +242,11 @@ test_that("cropInputs crops too closely when input projections are different", {
 test_that("maskInputs errors when x is Lat-Long", {
   skip_on_cran()
   skip_on_ci()
-  testInitOut <- testInit("sf", opts = list(
+  testInit("sf", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
   ), needGoogleDriveAuth = TRUE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
 
   i <- 0
   roads <- list()
@@ -311,10 +299,7 @@ test_that("maskInputs errors when x is Lat-Long", {
 test_that("prepInputs doesn't work (part 3)", {
   skip("The Google Drive url is dead")
   if (interactive()) {
-    testInitOut <- testInit(needGoogleDriveAuth = TRUE)
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
+    testInit(needGoogleDriveAuth = TRUE)
 
     # Tati's reprex
     # tmpdir <- "/mnt/d/temp/Cache"

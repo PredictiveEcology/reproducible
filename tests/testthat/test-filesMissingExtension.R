@@ -1,9 +1,6 @@
 test_that("prepInputs works with NULL archive + file without extension, but originally a .zip", {
   skip_on_cran()
-  testInitOut <- testInit()
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit()
   skip_if_not_installed("terra")
   noisyOutput <- capture.output({
     testthat::expect_message({
@@ -17,10 +14,7 @@ test_that("prepInputs works with NULL archive + file without extension, but orig
 
 test_that("prepInputs WORKS if the file is not originally a .zip, but archive is provided (only extension matters)", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra")
   noisyOutput <- capture.output(
     testthat::expect_message({
       ras <- reproducible::prepInputs(url = "https://github.com/tati-micheletti/host/raw/master/data/unknownTAR",
@@ -33,10 +27,7 @@ test_that("prepInputs WORKS if the file is not originally a .zip, but archive is
 
 test_that("prepInputs WORKS if passing archive .zip", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra")
   noisyOutput <- capture.output(
     testthat::expect_message({
       ras <- reproducible::prepInputs(url = "https://github.com/tati-micheletti/host/raw/master/data/unknownExtension",
@@ -49,10 +40,7 @@ test_that("prepInputs WORKS if passing archive .zip", {
 
 test_that("prepInputs WORKS passing just targetFile that is NOT an archive", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra")
   noisyOutput <- capture.output({
     testthat::expect_message({
       ras <- reproducible::prepInputs(url = "https://github.com/tati-micheletti/host/raw/master/data/unknownTIF",
@@ -65,10 +53,7 @@ test_that("prepInputs WORKS passing just targetFile that is NOT an archive", {
 
 test_that("prepInputs WORKS passing archive + targetFile", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra")
   noisyOutput <- capture.output({
     testthat::expect_message({
       ras <- reproducible::prepInputs(url = "https://github.com/tati-micheletti/host/raw/master/data/unknownExtension",

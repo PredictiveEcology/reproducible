@@ -3,10 +3,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
   skip_on_ci()
 
   if (interactive()) {
-    testInitOut <- testInit("terra", needGoogleDriveAuth = TRUE)
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
+    testInit("terra", needGoogleDriveAuth = TRUE)
     withr::local_dir(tmpdir)
 
     testthat::with_mock(
@@ -50,10 +47,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
 
 test_that("testing rebuildColors", {
   # ONLY RELEVANT FOR RASTER
-  testInitOut <- testInit(needGoogleDriveAuth = FALSE, "raster")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(needGoogleDriveAuth = FALSE, "raster")
 
   x <- raster::raster(extent(0, 10, 0, 10), vals = runif(100, 0, 197))
   origColors <- list(origColors = character(0), origMinValue = 0, origMaxValue = 197.100006103516)

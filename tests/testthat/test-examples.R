@@ -1,8 +1,5 @@
 test_that("all exported functions have examples", {
-  testInitOut <- testInit()
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit()
   fns <- ls("package:reproducible")
   omit <- which(fns == "cache") ## cache is deprecated, so omit it
 

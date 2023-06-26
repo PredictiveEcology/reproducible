@@ -1,8 +1,5 @@
 test_that("Checksums read and written correctly", {
-  testInitOut <- testInit()
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit()
   sampleDir <- system.file("examples", package = "reproducible")
   sampleFiles <- list.files(sampleDir, pattern = "[.R]", full.names = TRUE)
   on.exit(unlink(dirname(tmpdir), recursive = TRUE), add = TRUE)

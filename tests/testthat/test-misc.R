@@ -1,9 +1,6 @@
 test_that("test miscellaneous fns (part 1)", {
   # ONLY RELEVANT FOR RASTERS
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("raster", tmpFileExt = c(".tif", ".grd"))
 
   expect_is(searchFullEx(), "list")
   expect_true(length(searchFullEx()) > length(search()))
@@ -64,10 +61,7 @@ test_that("objSize and objSizeSession", {
 })
 
 test_that("setting options works correctly", {
-  testInitOut <- testInit(verbose = 1, ask = TRUE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(verbose = 1, ask = TRUE)
 
   a <- reproducibleOptions()
 
@@ -95,10 +89,7 @@ test_that("setting options works correctly", {
 })
 
 test_that("guessAtTargetAndFun works correctly", {
-  testInitOut <- testInit()
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit()
 
   # expect_error(.guessAtTargetAndFun(fun = rnorm), "fun must be a")
   expect_message(.guessAtTargetAndFun(targetFilePath = NULL, filesExtracted = "", fun = "load"),
@@ -110,10 +101,7 @@ test_that("guessAtTargetAndFun works correctly", {
 })
 
 test_that("unrar is working as expected", {
-  testInitOut <- testInit("terra", tmpFileExt = c(".tif", ".grd"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", tmpFileExt = c(".tif", ".grd"))
 
   rarPath <- file.path(tmpdir, "tmp.rar")
   out <- try(utils::zip(zipfile = rarPath, files = tmpfile)) # this should only be relevant if system can unrar
@@ -127,11 +115,10 @@ test_that("unrar is working as expected", {
 })
 
 test_that("test miscellaneous fns (part 2)", {
-  testInitOut <- testInit("terra", tmpFileExt = c(".tif", ".grd"),
-                          needGoogleDriveAuth = TRUE)
-  options('reproducible.cloudFolderID' = NULL)
+  testInit("terra", tmpFileExt = c(".tif", ".grd"),
+                          needGoogleDriveAuth = TRUE,
+                          opts = list('reproducible.cloudFolderID' = NULL))
   on.exit({
-    testOnExit(testInitOut)
     try(googledrive::drive_rm(googledrive::as_id(cloudFolderID)), silent = TRUE)
     try(googledrive::drive_rm(googledrive::as_id(tmpCloudFolderID)), silent = TRUE)
   }, add = TRUE)
@@ -199,13 +186,8 @@ test_that("test miscellaneous fns (part 2)", {
 })
 
 test_that("Filenames for environment", {
-  testInitOut <- testInit(c("terra"), tmpFileExt = c(".tif", ".grd", ".tif", ".tif", ".grd"),
+  testInit(c("terra"), tmpFileExt = c(".tif", ".grd", ".tif", ".tif", ".grd"),
                           opts = list("reproducible.ask" = FALSE))
-  on.exit({
-    testOnExit(testInitOut)
-    # options(opts)
-    rm(s)
-  }, add = TRUE)
 
   s <- new.env(parent = emptyenv())
   s$r <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1, res = 1)
@@ -260,11 +242,7 @@ test_that("Filenames for environment", {
 })
 
 test_that("test miscellaneous fns", {
-  testInitOut <- testInit(opts = list(datatable.print.class=FALSE))
-
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(opts = list(datatable.print.class=FALSE))
 
   x1 <- append(as.list(c(0, 1, -1, 10^(-(1:10)))), as.list(c(0L, 1L)))
   a <- lapply(x1, roundTo6Dec)
@@ -299,11 +277,8 @@ test_that("test miscellaneous fns", {
 })
 
 test_that("test set.randomseed", {
-  testInitOut <- testInit()
   skip_if(getRversion() < "4.2") # Can't figure out why this doesn't wok
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit()
 
   N <- 1e4
   a <- integer(N)

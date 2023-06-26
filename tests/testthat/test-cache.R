@@ -1,10 +1,7 @@
 test_that("test file-backed raster caching", {
   skip_on_cran()
-  testInitOut <- testInit("terra", tmpFileExt = c(".tif", ".grd"),
+  testInit("terra", tmpFileExt = c(".tif", ".grd"),
                           opts = list(reproducible.useMemoise = FALSE))
-  # on.exit({
-  #   testOnExit(testInitOut)
-  # }, add = TRUE)
 
   nOT <- Sys.time()
 
@@ -24,7 +21,7 @@ test_that("test file-backed raster caching", {
   # https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions
   # https://github.com/r-lib/testthat/issues/734 to direct it to reproducible::isInteractive
   #   solves the error about not being in the testthat package
-  val1 <- .cacheNumDefaultTags() + 1 + 8 # adding a userTag here... the +8 is the SpatRaster extras
+  val1 <- .cacheNumDefaultTags() + 1 + 11 # adding a userTag here... the +8 is the SpatRaster extras
   ik <- .ignoreTagKeys()
   # with_mock(
   #   "reproducible::isInteractive" = function() TRUE,
@@ -229,10 +226,7 @@ test_that("test file-backed raster caching", {
 })
 
 test_that("test memory backed raster robustDigest", {
-  testInitOut <- testInit("terra", tmpFileExt = c(".tif",".tif"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", tmpFileExt = c(".tif",".tif"))
   set.seed(123)
   r1 <- terra::rast(terra::ext(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
   r2 <- terra::rast(terra::ext(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
@@ -298,12 +292,9 @@ test_that("test memory backed raster robustDigest", {
 })
 
 test_that("test 'quick' argument", {
-  testInitOut <- testInit("terra", tmpFileExt = c(".tif", ".tif", ".tif"),
+  testInit("terra", tmpFileExt = c(".tif", ".tif", ".tif"),
                           opts = list("reproducible.useMemoise" = TRUE,
                                       "reproducible.showSimilar" = FALSE))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
 
   ### Make raster using Cache
   set.seed(123)
@@ -360,10 +351,7 @@ test_that("test 'quick' argument", {
 })
 
 test_that("test date-based cache removal", {
-  testInitOut <- testInit("terra", tmpFileExt = ".pdf")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", tmpFileExt = ".pdf")
 
   a <- Cache(runif, 1, cachePath = tmpdir)
   a1 <- showCache(tmpdir)
@@ -377,10 +365,7 @@ test_that("test date-based cache removal", {
 })
 
 test_that("test keepCache", {
-  testInitOut <- testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra")
   Cache(rnorm, 10, cachePath = tmpdir)
   Cache(runif, 10, cachePath = tmpdir)
   Cache(round, runif(4), cachePath = tmpdir)
@@ -421,10 +406,7 @@ test_that("test keepCache", {
 })
 
 test_that("test environments", {
-  testInitOut <- testInit("terra", tmpFileExt = ".pdf")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", tmpFileExt = ".pdf")
 
   # make several unique environments
   a <- new.env(parent = emptyenv())
@@ -485,14 +467,11 @@ test_that("test environments", {
 })
 
 test_that("test asPath", {
-  testInitOut <- testInit("terra", tmpFileExt = "pdf",
+  testInit("terra", tmpFileExt = "pdf",
                           verbose = TRUE,
                           opts = list("reproducible.useMemoise" = TRUE,
                                       "reproducible.showSimilar" = FALSE))
   unlink(dir(tmpdir, full.names = TRUE))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
 
   obj <- sample(1e5,10)
   # First -- has no filename.RData
@@ -537,10 +516,7 @@ test_that("test asPath", {
 })
 
 test_that("test wrong ways of calling Cache", {
-  testInitOut <- try(testInit(tmpFileExt = ".pdf"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  try(testInit(tmpFileExt = ".pdf"))
 
   # expect_error(Cache(sample(1), cachePath = tmpdir), "Can't understand")
   # expect_error(Cache(a <- sample(1), cachePath = tmpdir), "Can't understand")
@@ -548,10 +524,7 @@ test_that("test wrong ways of calling Cache", {
 })
 
 test_that("test quoted FUN in Cache", {
-  testInitOut <- testInit()
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit()
 
   A <- Cache(rnorm, 10, 16, cachePath = tmpdir) # nolint
 
@@ -564,12 +537,9 @@ test_that("test quoted FUN in Cache", {
 })
 
 test_that("test Cache argument inheritance to inner functions", {
-  testInitOut <- testInit("terra", verbose = TRUE,
+  testInit("terra", verbose = TRUE,
                           opts = list("reproducible.showSimilar" = FALSE,
                                                 "reproducible.useMemoise" = FALSE))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
   tmpDirFiles <- dir(tempdir())
   on.exit({
     newOnes <- setdiff(tmpDirFiles, dir(tempdir()))
@@ -712,17 +682,10 @@ test_that("test future", {
 
   .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
   if (.onLinux) {
-    testInitOut <- testInit(c("terra", "future"), verbose = TRUE, tmpFileExt = ".rds")
-    optsFuture <- options("future.supportsMulticore.unstable" = "quiet")
-    on.exit({
-      testOnExit(testInitOut)
-      options(optsFuture)
-    }, add = TRUE)
+    testInit(c("terra", "future"), verbose = TRUE, tmpFileExt = ".rds",
+                            opts = list("future.supportsMulticore.unstable" = "quiet",
+                                        "reproducible.futurePlan" = "multicore"))
 
-    options("reproducible.futurePlan" = "multicore")
-    on.exit({
-      options("reproducible.futurePlan" = FALSE)
-    }, add = TRUE)
     # There is now a warning with future package
     a <- list()
     (aa <- system.time({for (i in c(1:3)) a[[i]] <- Cache(cachePath = tmpCache, rnorm, 1e6 + i)}))
@@ -746,10 +709,7 @@ test_that("test future", {
 })
 
 test_that("test mergeCache", {
-  testInitOut <- testInit("data.table", verbose = TRUE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("data.table", verbose = TRUE)
 
   a <- Cache(rnorm, 1, cachePath = tmpdir)
   b <- Cache(rnorm, 2, cachePath = tmpCache)
@@ -782,7 +742,7 @@ test_that("test mergeCache", {
 })
 
 # test_that("test cache-helpers", {
-#   testInitOut <- testInit("terra")
+#   testInit("terra")
 #   out <- createCache(tmpCache)
 #   on.exit({
 #     testOnExit(testInitOut)
@@ -860,7 +820,7 @@ test_that("test mergeCache", {
 # })
 
 # test_that("test cache-helpers", {
-#   testInitOut <- testInit("terra", tmpFileExt = c(rep(".grd", 3), rep(".tif", 3)))
+#   testInit("terra", tmpFileExt = c(rep(".grd", 3), rep(".tif", 3)))
 #   # out <- reproducible::createCache(tmpCache)
 #   on.exit({
 #     testOnExit(testInitOut)
@@ -932,10 +892,7 @@ test_that("test mergeCache", {
 # })
 
 test_that("test useCache = 'overwrite'", {
-  testInitOut <- testInit(verbose = TRUE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(verbose = TRUE)
 
   a <- Cache(rnorm, 1, useCache = "overwrite", cachePath = tmpCache)
   mess <- capture_messages({
@@ -946,8 +903,8 @@ test_that("test useCache = 'overwrite'", {
 
   clearCache(x = tmpCache, ask = FALSE)
 
-  testOnExit(testInitOut)
-  testInitOut <- testInit(ask = FALSE,verbose = TRUE,
+  withr::deferred_clear()
+  testInit(ask = FALSE,verbose = TRUE,
                           opts = list("reproducible.useCache" = "overwrite"))
 
   a <- Cache(rnorm, 1, cachePath = tmpCache)
@@ -967,16 +924,8 @@ test_that("test rm large non-file-backed rasters", {
     if (!grepl("SQLite", class(getOption("reproducible.conn", NULL))))
       skip("This is not for non-SQLite")
 
-  testInitOut <- testInit(ask = FALSE)
-
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  skip_if_not_installed("qs")
-  opts11 <- options("reproducible.cacheSpeed" = "fast",
-                    "reproducible.cacheSaveFormat" = "qs")
-  on.exit(options(opts11), add = TRUE)
+  testInit("qs", opts = list("reproducible.cacheSpeed" = "fast",
+                                      "reproducible.cacheSaveFormat" = "qs"))
 
   ext <- terra::ext(0, 10000, 0, 10000)
   r <- Cache(terra::rast, ext, res = 1, vals = 1,
@@ -989,10 +938,7 @@ test_that("test cc", {
   skip_on_cran()
   # skip_on_ci()
 
-  testInitOut <- testInit(ask = FALSE, verbose = TRUE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(verbose = TRUE)
 
   Cache(rnorm, 1, cachePath = tmpCache)
   Sys.sleep(1) # 0.2
@@ -1024,9 +970,8 @@ test_that("test cc", {
 
 test_that("test pre-creating conn", {
   if (!useDBI()) skip("Only relevant for DBI backend")
-  testInitOut <- testInit(ask = FALSE, tmpFileExt = c(".tif", ".tif"))
+  testInit(ask = FALSE, tmpFileExt = c(".tif", ".tif"))
   on.exit({
-    testOnExit(testInitOut)
     DBI::dbDisconnect(conn)
 
   }, add = TRUE)
@@ -1045,10 +990,7 @@ test_that("test pre-creating conn", {
 })
 
 test_that("test .defaultUserTags", {
-  testInitOut <- testInit()
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit()
 
   b <- Cache(rnorm, 1, cachePath = tmpCache)
   sc <- showCache(tmpCache)
@@ -1061,10 +1003,7 @@ test_that("test .defaultUserTags", {
 
 test_that("test failed Cache recovery -- message to delete cacheId", {
   if (!useDBI()) skip("Not relevant for multipleDBfiles")
-  testInitOut <- testInit(opts = list("reproducible.useMemoise" = FALSE))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(opts = list("reproducible.useMemoise" = FALSE))
 
   b <- Cache(rnorm, 1, cachePath = tmpdir)
   sc <- showCache(tmpdir)
@@ -1083,12 +1022,9 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
 
 test_that("test changing reproducible.cacheSaveFormat midstream", {
   if (!.requireNamespace("qs")) skip("Need qs; skipping test")
-  testInitOut <- testInit(opts = list("reproducible.useMemoise" = FALSE))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(opts = list("reproducible.useMemoise" = FALSE,
+                                      "reproducible.cacheSaveFormat" = "rds"))
 
-  opts <- options("reproducible.cacheSaveFormat" = "rds")
   b <- Cache(rnorm, 1, cachePath = tmpdir)
   sc <- showCache(tmpdir)
   ci <- unique(sc[[.cacheTableHashColName()]])
@@ -1111,10 +1047,7 @@ test_that("test changing reproducible.cacheSaveFormat midstream", {
 })
 
 test_that("test file link with duplicate Cache", {
-  testInitOut <- testInit(verbose = TRUE, opts = list("reproducible.useMemoise" = FALSE))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(verbose = TRUE, opts = list("reproducible.useMemoise" = FALSE))
 
   sam <- function(...) {
     sample(...)
@@ -1189,11 +1122,10 @@ test_that("test file link with duplicate Cache", {
 })
 
 test_that("test .object arg for list in Cache", {
-  testInitOut <- testInit()
+  testInit()
   opts <- options(reproducible.cachePath = tmpdir)
   on.exit({
     options(opts)
-    testOnExit(testInitOut)
   }, add = TRUE)
   l <- list(a = 1, b = 2, f = 3)
   out1 <- Cache(unlist, l, .objects = "a")
@@ -1223,10 +1155,7 @@ test_that("test .object arg for list in Cache", {
 
 test_that("quick arg in Cache as character", {
   skip_on_cran()
-  testInitOut <- testInit("terra", verbose = TRUE, tmpFileExt = c("rds", "tif"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", verbose = TRUE, tmpFileExt = c("rds", "tif"))
 
   tf <- tmpfile[[1]]
   tf2 <- tmpfile[[2]]
@@ -1274,10 +1203,7 @@ test_that("quick arg in Cache as character", {
 })
 
 test_that("List of Rasters", {
-  testInitOut <- testInit("terra", tmpFileExt = c("tif", "tif"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", tmpFileExt = c("tif", "tif"))
 
   listOfRas <- lapply(1:2, function(x) {
     vals <- sample(1:100)
@@ -1304,10 +1230,7 @@ test_that("List of Rasters", {
 })
 
 test_that("Cache the dots; .cacheExtra", {
-  testInitOut <- testInit()
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit()
 
   fn1 <- function(a, b, ...) {
     out <- fn2(...)
@@ -1351,10 +1274,7 @@ test_that("Cache the dots; .cacheExtra", {
 })
 
 test_that("change to new capturing of FUN & base pipe", {
-  testInitOut <- testInit(opts = list(reproducible.verbose = 5))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(opts = list(reproducible.verbose = 5))
   skip_if(getRversion() < "4.2.0")
 
   Nrand2 <- Nrand <- 1e6
@@ -1449,13 +1369,10 @@ test_that("change to new capturing of FUN & base pipe", {
 })
 
 test_that("test cache with new approach to match.call", {
-  testInitOut <- testInit()
-  opts <- options(reproducible.cachePath = tmpdir,
-                  "reproducible.verbose" = -2)
+  testInit(opts = list("reproducible.verbose" = -2))
+  opts <- options(reproducible.cachePath = tmpdir)
   on.exit({
     options(opts)
-    testOnExit(testInitOut)
-    # rm(bbb, envir = .GlobalEnv)
   }, add = TRUE)
 
   b <- list(fun = rnorm)
@@ -1552,17 +1469,17 @@ test_that("test cache with new approach to match.call", {
 
 test_that("test cache; new approach to match.call, postProcess", {
   skip_if_not_installed("DBI") # sf needs DBI
-  testInitOut <- testInit(c("terra", "sf"), tmpFileExt = c(".tif", ".tif"),
+  testInit(c("terra", "sf"), tmpFileExt = c(".tif", ".tif"),
                           opts = list(
                             "rasterTmpDir" = tempdir2(rndstr(1,6)),
                             "reproducible.inputPaths" = NULL,
                             "reproducible.overwrite" = TRUE)
   )
   on.exit({
-    testOnExit(testInitOut)
+    options(opts)
   }, add = TRUE)
 
-  options("reproducible.cachePath" = tmpdir)
+  opts <- options("reproducible.cachePath" = tmpdir)
 
   # Add a study area to Crop and Mask to
   # Create a "study area"
@@ -1626,7 +1543,7 @@ test_that("test cache; new approach to match.call, postProcess", {
 })
 
 # test_that("test cache; SpatRaster attributes", {
-#   testInitOut <- testInit(c("terra", "sf"), tmpFileExt = c(".tif", ".tif"),
+#   testInit(c("terra", "sf"), tmpFileExt = c(".tif", ".tif"),
 #                           opts = list(
 #                             "rasterTmpDir" = tempdir2(rndstr(1,6)),
 #                             "reproducible.inputPaths" = NULL,
@@ -1665,10 +1582,7 @@ test_that("test cache; new approach to match.call, postProcess", {
 
 
 test_that("Issue 316 - writeOutputs in a non getwd dir", {
-  testInitOut <- testInit(c("terra"), tmpFileExt = c(".tif", ".tif"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(c("terra"), tmpFileExt = c(".tif", ".tif"))
 
   cPath <- file.path(tmpdir, "cache")
 
@@ -1699,9 +1613,8 @@ test_that("Issue 316 - writeOutputs in a non getwd dir", {
 
 
 test_that("test useDBI TRUE <--> FALSE", {
-  testInitOut <- testInit(verbose = TRUE)
+  testInit(verbose = TRUE)
   on.exit({
-    testOnExit(testInitOut)
     useDBI(orig)
   }, add = TRUE)
   options(reproducible.cachePath = tmpdir)
@@ -1732,7 +1645,6 @@ test_that("lightweight tests for preProcess code coverage", {
   opts <- options(reproducible.cachePath = tmpdir)
 
   on.exit({
-    testOnExit(out)
     options(opts)
   }
   , add = TRUE)

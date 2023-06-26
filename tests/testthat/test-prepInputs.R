@@ -2,7 +2,7 @@ test_that("prepInputs doesn't work (part 1)", {
   skip_on_cran()
   skip_on_ci()
 
-  testInitOut <- testInit("terra", opts = list(
+  testInit("terra", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.inputPaths" = NULL,
     "reproducible.overwrite" = TRUE,
@@ -160,7 +160,7 @@ test_that("prepInputs doesn't work (part 1)", {
 test_that("interactive prepInputs", {
   skip_on_cran()
   skip_on_ci()
-  testInitOut <- testInit("terra",
+  testInit("terra",
                           opts = list(
                             "rasterTmpDir" = tempdir2(rndstr(1,6)),
                             "reproducible.overwrite" = TRUE,
@@ -211,7 +211,7 @@ test_that("interactive prepInputs", {
 
   # From Bird/Tati project
   testOnExit(testInitOut)
-  testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
+  testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                "reproducible.inputPaths" = NULL),
                           needGoogleDriveAuth = TRUE)
   birdSpecies <- c("BBWA", "YRWA")
@@ -295,7 +295,7 @@ test_that("interactive prepInputs", {
 test_that("preProcess doesn't work", {
   skip_on_cran()
   skip_on_ci()
-  testInitOut <- testInit("terra", opts = list(
+  testInit("terra", opts = list(
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
   ),
@@ -1006,7 +1006,7 @@ test_that("prepInputs when fun = NA", {
   skip_on_cran()
   skip_if_not(getRversion() > "3.3.0")
 
-  testInitOut <- testInit(c("sf", "terra"), opts = list(
+  testInit(c("sf", "terra"), opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.overwrite" = TRUE,
     reproducible.interactiveOnDownloadFail = FALSE,
@@ -1064,7 +1064,7 @@ test_that("prepInputs when fun = NA", {
 })
 
 test_that("load rdata in prepInputs", {
-  testInitOut <- testInit("terra", tmpFileExt = "rda",
+  testInit("terra", tmpFileExt = "rda",
                           opts = list(
                             "reproducible.overwrite" = TRUE,
                             "reproducible.inputPaths" = NULL
@@ -1085,7 +1085,7 @@ test_that("load rdata in prepInputs", {
 })
 
 test_that("assessDataType doesn't work", {
-  testInitOut <- testInit("terra", opts = list(
+  testInit("terra", opts = list(
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
   ), needGoogleDriveAuth = TRUE)
@@ -1193,7 +1193,7 @@ test_that("assessDataType doesn't work", {
 
 test_that("lightweight tests for code coverage", {
   skip_on_cran()
-  testInitOut <- testInit(c("sf", "terra"), opts = list("reproducible.overwrite" = TRUE,
+  testInit(c("sf", "terra"), opts = list("reproducible.overwrite" = TRUE,
                                                         "reproducible.inputPaths" = NULL),
                           needGoogleDriveAuth = TRUE)
   on.exit({
@@ -1344,7 +1344,7 @@ test_that("lightweight tests for code coverage", {
 test_that("lightweight tests 2 for code coverage", {
   skip_on_cran()
 
-  testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
+  testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                "reproducible.inputPaths" = NULL),
                           needGoogleDriveAuth = TRUE)
   on.exit({
@@ -1408,7 +1408,7 @@ test_that("options inputPaths", {
   skip_on_cran()
   if (!requireNamespace("geodata", quietly = TRUE)) skip("Need geodata package")
   if (getRversion() <= "4.1.3") skip("geodata::gadm seems to time out on R <= 4.1.3")
-  testInitOut <- testInit(c("terra", "geodata"),
+  testInit(c("terra", "geodata"),
                           opts = list("reproducible.inputPaths" = NULL,
                                       "reproducible.inputPathsRecursive" = FALSE))
 
@@ -1533,7 +1533,7 @@ test_that("options inputPaths", {
   }
   ## Try download to inputPath, intercepting the destination, creating a link
   testOnExit(testInitOut)
-  testInitOut <- testInit("terra",
+  testInit("terra",
                           opts = list("reproducible.inputPaths" = NULL,
                                       "reproducible.inputPathsRecursive" = FALSE))
   options("reproducible.inputPaths" = tmpdir)
@@ -1628,7 +1628,7 @@ test_that("options inputPaths", {
 test_that("writeOutputs saves factor rasters with .grd class to preserve levels", {
   skip_on_cran()
 
-  testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
+  testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                "reproducible.inputPaths" = NULL),
                           needGoogleDriveAuth = TRUE)
   on.exit({
@@ -1651,7 +1651,7 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
 test_that("rasters aren't properly resampled", {
   skip_on_cran()
 
-  testInitOut <- testInit("terra", opts = list("reproducible.overwrite" = TRUE,
+  testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                "reproducible.inputPaths" = NULL),
                           needGoogleDriveAuth = TRUE)
   on.exit({

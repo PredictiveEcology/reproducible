@@ -1,8 +1,5 @@
 test_that("test devMode", {
-  testInitOut <- testInit(opts = list("reproducible.useCache" = "devMode"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(opts = list("reproducible.useCache" = "devMode"))
 
   clearCache(tmpCache, ask = FALSE)
   theTags <- "hiTest"

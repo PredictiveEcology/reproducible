@@ -1,9 +1,6 @@
 ##########################
 test_that("test multiple cachePath", {
-  testInitOut <- testInit()
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit()
 
   opt <- options("reproducible.cachePath" = c(tmpdir, tmpCache))
 
@@ -40,10 +37,7 @@ test_that("test multiple cachePath", {
 test_that("test multiple cachePath with 1 of them a cloudCache", {
   skip(message = "test cloudCache inside Cache -- Not fully written test")
 
-  testInitOut <- testInit(libraries = "googledrive", needGoogleDriveAuth = TRUE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(libraries = "googledrive", needGoogleDriveAuth = TRUE)
 
   newDir <- googledrive::drive_mkdir("testFolder")
   on.exit(googledrive::drive_rm(googledrive::as_id(newDir$id), add = TRUE))

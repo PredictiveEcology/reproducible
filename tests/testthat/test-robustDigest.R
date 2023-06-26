@@ -1,8 +1,5 @@
 test_that("test data.table caching", {
-  testInitOut <- testInit("data.table")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("data.table")
 
   # make sure that .robustDigest does not include the cache-added attributes
   c1 <- Cache(rnorm, 11, cachePath = tmpCache)

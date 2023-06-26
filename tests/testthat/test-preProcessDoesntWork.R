@@ -1,6 +1,6 @@
 test_that("preProcess fails if user provides non-existing file", {
   skip_on_cran()
-  testInitOut <- testInit("terra", opts = list(reproducible.inputPaths = NULL))
+  testInit("terra", opts = list(reproducible.inputPaths = NULL))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -100,7 +100,7 @@ test_that("preProcess fails if user provides non-existing file", {
 
 test_that("preProcess fails if user provides a non .zip/.tar as archive", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -117,7 +117,7 @@ test_that("preProcess fails if user provides a non .zip/.tar as archive", {
 
 test_that("preProcess fails if user provides non-existing file", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -134,7 +134,7 @@ test_that("preProcess fails if user provides non-existing file", {
 
 test_that("preProcess fails if user provides a directory as a targetFile", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -152,7 +152,7 @@ test_that("preProcess fails if user provides a directory as a targetFile", {
 ## 2022-11-03 this no longer fails on Ubuntu 20.04
 # test_that("preProcess fails if the .rar file is defective", {
 #   skip_on_cran()
-#   testInitOut <- testInit("raster")
+#   testInit("raster")
 #   on.exit({
 #     testOnExit(testInitOut)
 #   }, add = TRUE)
@@ -171,7 +171,7 @@ test_that("preProcess fails if relative destPath not '.'", {
   # this fails on CRAN version 2.0.2
   skip_on_cran()
   skip_on_ci()
-  testInitOut <- testInit("googledrive")
+  testInit("googledrive")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
