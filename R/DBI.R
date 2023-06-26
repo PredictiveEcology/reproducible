@@ -204,6 +204,9 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     startLoadTime <- Sys.time()
   }
 
+  if (length(cacheId) > 1)
+    cacheId <- unique(cacheId)
+
   isMemoised <- NA
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     if (is.null(.pkgEnv[[cachePath]]))
