@@ -4,19 +4,22 @@
 \alias{wrap}
 \alias{wrap,SpatExtent-method}
 \alias{unwrap}
-\title{\code{wrap} method for \code{SpatExtent}}
+\alias{unwrap,PackedSpatExtent-method}
+\title{\code{wrap} and \code{unwrap} methods for \verb{*SpatExtent}}
 \usage{
 \S4method{wrap}{SpatExtent}(x, ...)
 
 \S4method{unwrap}{PackedSpatExtent}(x, ...)
 }
 \value{
-A list of xmin, xmax, ymin, ymax that can be saved or otherwise copied.
+\code{wrap} returns a list of xmin, xmax, ymin, ymax that can be saved
+or otherwise copied.
 
-A SpatExtent object
+\code{unwrap} returns a a \code{SpatExtent} object.
 }
 \description{
-This adds a method of \code{terra::wrap} to \code{SpatExtent} class.
+This adds a method of \code{terra::wrap} to \code{SpatExtent} and \code{terra::unwrap} to
+\code{PackedSpatExtent} classes.
 }
 \examples{
 if (requireNamespace("terra")) {
