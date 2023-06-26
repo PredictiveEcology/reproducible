@@ -610,8 +610,8 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
       "rda"
   }
   filename <- paste(cacheId, csExtension, sep = ".")
-  if (length(filename) > 1) {
-    filename <- nextNumericName(filename)
+  if (length(cacheId) > 1) {
+    filename <- vapply(filename, nextNumericName, FUN.VALUE = character(1))
     for (i in seq(filename[-1]) + 1)
       filename[i] <- basename2(nextNumericName(filename[i - 1]))
   }
@@ -813,7 +813,7 @@ loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL,
       obj <- readRDS(file = file)
     }
   } else {
-    whichFiles <- tv[tk == "whichFiles"]
+    whichFiles <- tv[tk == "whichFiles"] # these are "which ones to load" which may be fewer than "all needed"
     origFilename <- tv[tk == "origFilename"]
     origRelName <- tv[tk == "origRelName"]
     origDirname <- tv[tk == "origDirname"]
@@ -825,7 +825,8 @@ loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL,
     else
       newName <- file.path(cachePath, origRelName)
     whFiles <- newName[match(basename(whichFiles), origFilename)]
-    hardLinkOrCopy(file, whFiles, verbose = 0)
+    needLink <- newName[match(basename(origRelName), origFilename)]
+    hardLinkOrCopy(file, needLink, verbose = 0)
     obj <- eval(parse(text = loadFun))(whFiles)
   }
   obj

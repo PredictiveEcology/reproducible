@@ -103,7 +103,6 @@ test_that("test file-backed raster caching", {
   expect_true(file.exists(Filenames(bb)))
   expect_silent(bb[] <- bb[])
 
-  ###############
   clearCache(tmpCache)
   clearCache(tmpdir)
   cc <- Cache(randomPolyToDisk, tmpfile[2], cachePath = tmpCache, userTags = "something2",
@@ -117,9 +116,10 @@ test_that("test file-backed raster caching", {
   fn2 <- function(stk) {
     stk
   }
+  aaaa <<- 1
   out <- Cache(fn2, bbS, cachePath = tmpCache, userTags = "something2")
   froms <- normPath(dir(tmpCache, recursive = TRUE, full.names = TRUE))
-  checkPath(file.path(tmpdir, "rasters"), create = TRUE)
+  # checkPath(file.path(tmpdir, "rasters"), create = TRUE)
   checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
   file.copy(from = froms, overwrite = TRUE,
             to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
