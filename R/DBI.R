@@ -826,6 +826,9 @@ loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL,
       newName <- file.path(cachePath, origRelName)
     whFiles <- newName[match(basename(whichFiles), origFilename)]
     needLink <- newName[match(basename(origRelName), origFilename)]
+    possOldFiles <- file.path(origDirname, origFilename)
+    if (length(possOldFiles) != length(file))
+      file <- possOldFiles
     hardLinkOrCopy(file, needLink, verbose = 0)
     obj <- eval(parse(text = loadFun))(whFiles)
   }
