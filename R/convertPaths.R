@@ -108,24 +108,26 @@ setMethod(
       if (exists("._Filenames_1")) browser()
       if (length(fns) == 0)
         fns <- ""
-      # browser(expr = exists("._Filenames_1"))
-      if (isTRUE(allowMultiple))
-        if (endsWith(fns, suffix = "grd"))
-          fns <- c(fns, gsub("grd$", "gri", fns))
+
+      fns <- allowMultipleFNs(allowMultiple, fns)
+      # if (isTRUE(allowMultiple))
+      #   if (endsWith(fns, suffix = "grd"))
+      #     fns <- c(fns, gsub("grd$", "gri", fns))
     } else if (inherits(obj, "SpatRaster")) {
       if (!requireNamespace("terra", quietly = TRUE))
         stop("Please install terra package")
       fns <- terra::sources(obj)
-      if (isTRUE(allowMultiple)) {
-        anyGrd <- endsWith(fns, suffix = "grd")
-        if (any(anyGrd)) {
-          nonGrd <- if (any(!anyGrd)) fns[!anyGrd] else NULL
-          multiFns <- sort(c(fns[anyGrd], gsub("grd$", "gri", fns[anyGrd])))
-          fnsNew <- c(nonGrd, multiFns)
-          fns <- fnsNew[order(match(filePathSansExt(basename(fnsNew)),
-                                    filePathSansExt(basename(fns))))]
-        }
-      }
+      fns <- allowMultipleFNs(allowMultiple, fns)
+      # if (isTRUE(allowMultiple)) {
+      #   anyGrd <- endsWith(fns, suffix = "grd")
+      #   if (any(anyGrd)) {
+      #     nonGrd <- if (any(!anyGrd)) fns[!anyGrd] else NULL
+      #     multiFns <- sort(c(fns[anyGrd], gsub("grd$", "gri", fns[anyGrd])))
+      #     fnsNew <- c(nonGrd, multiFns)
+      #     fns <- fnsNew[order(match(filePathSansExt(basename(fnsNew)),
+      #                               filePathSansExt(basename(fns))))]
+      #   }
+      # }
 
     } else {
       fns <- NULL
@@ -170,13 +172,33 @@ setMethod(
   "Filenames",
   signature = "Path",
   definition = function(obj, allowMultiple = TRUE) {
-    tags <- attr(obj, "tags")
-    if (!is.null(tags)) {
-      tags1 <- parseTags(tags)
-      out <- tags1$tagValue[tags1$tagKey == "whichFiles"]
-    } else {
-      out <- NULL
-    }
-    ## convert a list to an environment -- this is to align it with a simList and environment
+    obj <- allowMultipleFNs(allowMultiple, obj)
+    # tags <- attr(obj, "tags")
+    # if (!is.null(tags)) {
+    #   tags1 <- parseTags(tags)
+    #   if (allowMultiple)
+    #   out <- tags1$tagValue[tags1$tagKey == "whichFiles"]
+    # } else {
+    #   out <- obj
+    # }
+    obj
   })
 
+
+allowMultipleFNs <- function(allowMultiple, fns) {
+  if (isTRUE(allowMultiple)) {
+    anyGrd <- endsWith(fns, suffix = "grd")
+    if (any(anyGrd)) {
+      nonGrd <- if (any(!anyGrd)) fns[!anyGrd] else NULL
+      multiFns <- sort(c(fns[anyGrd], gsub("grd$", "gri", fns[anyGrd])))
+      fnsNew <- c(nonGrd, multiFns)
+      if (length(unique(fnsNew)) != length(fns)) # if this isn't true, b/c already had the multiples
+        fns <- fnsNew[order(match(filePathSansExt(basename(fnsNew)),
+                                  filePathSansExt(basename(fns))))]
+    }
+
+  } else {
+    fns <- grep("\\.gri$", fns, value = TRUE, invert = TRUE)
+  }
+  fns
+}
