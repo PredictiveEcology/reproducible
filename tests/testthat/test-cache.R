@@ -918,14 +918,12 @@ test_that("test useCache = 'overwrite'", {
 test_that("test rm large non-file-backed rasters", {
   ## This is a large object test!
   skip_on_cran()
-  skip_if_not_installed("qs")
-
   if (!is.null(getOption("reproducible.conn", NULL)))
     if (!grepl("SQLite", class(getOption("reproducible.conn", NULL))))
       skip("This is not for non-SQLite")
 
   testInit("qs", opts = list("reproducible.cacheSpeed" = "fast",
-                                      "reproducible.cacheSaveFormat" = "qs"))
+                             "reproducible.cacheSaveFormat" = "qs"))
 
   ext <- terra::ext(0, 10000, 0, 10000)
   r <- Cache(terra::rast, ext, res = 1, vals = 1,

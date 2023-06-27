@@ -29,7 +29,7 @@ This adds a method of \code{terra::wrap} to \code{SpatExtent} and \code{terra::u
 \examples{
 if (requireNamespace("terra")) {
 ex <- terra::ext(c(0, 2, 0, 3))
-exWrapped <- wrap(ex)
-ex1 <- unwrap(exWrapped)
+exWrapped <- terra::wrap(ex)
+ex1 <- terra::unwrap(exWrapped)
 }
 }

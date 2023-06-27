@@ -555,12 +555,14 @@ withoutFinalNumeric <- function(string) {
 if (requireNamespace("terra")) {
   setGeneric("wrap", terra::wrap)
 } else {
-  # if (!isGeneric("wrap", .GlobalEnv))
-  setGeneric("wrap", function(x, ...)
-    standardGeneric("wrap"))
+  if (!isGeneric("wrap", .GlobalEnv))
+    setGeneric("wrap", function(x, ...)
+      standardGeneric("wrap"))
 }
 
-setClass("SpatExtent")
+if (!requireNamespace("terra")) {
+  setClass("SpatExtent")
+}
 
 
 #' `wrap` and `unwrap` methods for `*SpatExtent`
@@ -577,11 +579,11 @@ setClass("SpatExtent")
 #' @examples
 #' if (requireNamespace("terra")) {
 #' ex <- terra::ext(c(0, 2, 0, 3))
-#' exWrapped <- wrap(ex)
-#' ex1 <- unwrap(exWrapped)
+#' exWrapped <- terra::wrap(ex)
+#' ex1 <- terra::unwrap(exWrapped)
 #' }
-#' @export
 #' @rdname wrap
+#' @export
 #' @aliases wrap,SpatExtent-method
 setMethod("wrap", signature = "SpatExtent",
           function(x, ...) {
@@ -595,19 +597,18 @@ setMethod("wrap", signature = "SpatExtent",
 
 setClass("PackedSpatExtent")
 
-#' @export
-#' @rdname wrap
-#' @name unwrap
-# if (requireNamespace("terra")) {
-#   setGeneric("unwrap", terra::unwrap)
-# } else {
-if (!isGeneric("unwrap", .GlobalEnv))
-  setGeneric("unwrap", function(x, ...)
-    standardGeneric("unwrap"))
-# }
+if (requireNamespace("terra")) {
+  setGeneric("unwrap", terra::unwrap)
+} else {
+  if (!isGeneric("unwrap", .GlobalEnv))
+    setGeneric("unwrap", function(x, ...)
+      standardGeneric("unwrap"))
+}
+
 
 #' @rdname wrap
 #' @name unwrap
+#' @export
 #' @return `unwrap` returns a a `SpatExtent` object.
 #' @aliases unwrap,PackedSpatExtent-method
 setMethod("unwrap", signature = "PackedSpatExtent",

@@ -59,6 +59,7 @@ Imports:
     lobstr,
     methods,
     stats,
+    terra (>= 1.7-20),
     utils
 Suggests:
     covr,
@@ -80,7 +81,6 @@ Suggests:
     RSQLite,
     sf,
     sp (>= 1.4-2),
-    terra (>= 1.7-20),
     testthat,
     withr
 Encoding: UTF-8
