@@ -188,13 +188,13 @@ setMethod(
 allowMultipleFNs <- function(allowMultiple, fns) {
   if (isTRUE(allowMultiple)) {
     anyGrd <- endsWith(fns, suffix = "grd")
-    if (any(anyGrd)) {
+    anyGri <- endsWith(fns, suffix = "gri")
+    if (any(anyGrd) && !any(anyGri)) {
       nonGrd <- if (any(!anyGrd)) fns[!anyGrd] else NULL
       multiFns <- sort(c(fns[anyGrd], gsub("grd$", "gri", fns[anyGrd])))
       fnsNew <- c(nonGrd, multiFns)
-      if (length(unique(fnsNew)) != length(fns)) # if this isn't true, b/c already had the multiples
-        fns <- fnsNew[order(match(filePathSansExt(basename(fnsNew)),
-                                  filePathSansExt(basename(fns))))]
+      fns <- fnsNew[order(match(filePathSansExt(basename(fnsNew)),
+                                filePathSansExt(basename(fns))))]
     }
 
   } else {

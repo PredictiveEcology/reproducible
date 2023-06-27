@@ -230,7 +230,7 @@ test_that("Filenames for environment", {
 
   # Test duplicated filenames in same Stack
   b <- c(terra::rast(rlogoFiles[1]), terra::rast(rlogoFiles[1]))
-  expect_true(identical(sort(normPath(c(rlogoFiles))), unique(sort(Filenames(b)))))
+  expect_true(identical(sort(normPath(c(rlogoFiles))), unique(sort(Filenames(b, allowMultiple = TRUE)))))
 
   rlogoFiles <- system.file("ex/test.grd", package = "terra")
   rlogoDir <- dirname(rlogoFiles)
