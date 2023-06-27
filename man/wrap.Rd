@@ -11,6 +11,11 @@
 
 \S4method{unwrap}{PackedSpatExtent}(x, ...)
 }
+\arguments{
+\item{x}{Any object for which there is a \code{wrap} or \code{unwrap} method.}
+
+\item{...}{Not used.}
+}
 \value{
 \code{wrap} returns a list of xmin, xmax, ymin, ymax that can be saved
 or otherwise copied.
@@ -27,6 +32,4 @@ ex <- terra::ext(c(0, 2, 0, 3))
 exWrapped <- wrap(ex)
 ex1 <- unwrap(exWrapped)
 }
-
-
 }
