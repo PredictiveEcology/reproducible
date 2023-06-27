@@ -370,6 +370,16 @@ isDirectory <- function(pathnames) {
   id
 }
 
+findAbsolutePartOfPaths <- function(paths) {
+  pathsSplt <- lapply(paths, strsplit, split = "\\\\|/")
+  pathsSplt <- mapply(pths = pathsSplt, MoreArgs = list(firstPth = pathsSplt$modulePath),
+                      function(pths, firstPth) {
+                        intersect(pths[[1]], firstPth[[1]])
+                      })
+  pathsSplt <- unique(pathsSplt)
+  absPathOrig <- paste(pathsSplt[which.min(lengths(pathsSplt))][[1]], collapse = "/")
+}
+
 isAbsolutePath <- function(pathnames) {
   # modified slightly from R.utils::isAbsolutePath
   keep <- is.character(pathnames)
