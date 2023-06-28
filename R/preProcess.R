@@ -1322,12 +1322,22 @@ makeAbsolute <- function(files, absoluteBase) {
 }
 
 makeRelative <- function(files, absoluteBase) {
+  isList <- is(files, "list")
+  filesOrig <- files
+  if (isList) {
+    nams <- names(files)
+    files <- unlist(files)
+  }
   if (length(files)) {
     areAbs <- isAbsolutePath(files)
     if (any(areAbs)) {
       absoluteBase <- normPath(absoluteBase) # can be "." which means 'any character' in a grep
       files[areAbs] <- gsub(paste0(absoluteBase, "/*"), "", files[areAbs])
     }
+  }
+  if (isList) {
+    if (length(nams) == length(files))
+      names(files) <- nams
   }
   files
 }
