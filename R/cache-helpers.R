@@ -593,8 +593,6 @@ setMethod("wrap", signature = "SpatExtent",
   ll
 })
 
-# if (!requireNamespace("terra"))
-
 setClass("PackedSpatExtent")
 
 if (requireNamespace("terra")) {

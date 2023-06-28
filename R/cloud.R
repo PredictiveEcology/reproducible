@@ -179,6 +179,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
 cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID,
                                  outputToSave, rasters,
                                  verbose = getOption("reproducible.verbose")) {
+  browser()
   .requireNamespace("googledrive", stopOnFALSE = TRUE,
                     messageStart = "to use google drive files")
   #browser(expr = exists("._cloudUploadFromCache_1"))
@@ -188,16 +189,16 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
     if (useDBI()) {
       dt <- showCache(userTags = outputHash)
       td <- tempdir()
-      useDBI(FALSE)
-      on.exit(useDBI(TRUE))
+      useDBI(FALSE, verbose = FALSE)
+      on.exit(useDBI(TRUE, verbose = FALSE))
       cacheDB <- CacheDBFileSingle(cachePath = td, outputHash) # put it in a temp location b/c don't want persistent
       on.exit(unlink(cacheDB), add = TRUE)
       if (!dir.exists(dirname(cacheDB))) {
         checkPath(dirname(cacheDB), create = TRUE)
         on.exit(unlink(dirname(cacheDB)), add = TRUE)
       }
-      suppress <- saveFileInCacheFolder(obj = dt, fts = cacheDB, cacheId = outputHash, cachePath = cachePath)
-      useDBI(TRUE)
+      suppress <- saveFilesInCacheFolder(obj = dt, fts = cacheDB, cacheId = outputHash, cachePath = cachePath)
+      useDBI(TRUE, verbose = FALSE)
     } else {
       cacheDB <- CacheDBFileSingle(cachePath, outputHash)
     }
@@ -228,6 +229,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
 }
 
 cloudUploadRasterBackends <- function(obj, cloudFolderID) {
+  browser()
   .requireNamespace("googledrive", stopOnFALSE = TRUE,
                     messageStart = "to use google drive files")
 

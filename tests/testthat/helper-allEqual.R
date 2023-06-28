@@ -48,7 +48,7 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
             cache <- if (file.exists(possLocalCache))
               possLocalCache else TRUE
             switch(Sys.info()["user"],
-                   emcintir = {options(gargle_oauth_email = "eliotmcintire@gmail.com",
+                   emcintir = {options(gargle_oauth_email = "predictiveecology@gmail.com",
                                        gargle_oauth_cache = cache)},
                    NULL)
           }
@@ -333,6 +333,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
     r1Orig <- c(r1Orig, r1Orig2)
     r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[4], overwrite = TRUE)
   }
+  browser()
   r2End <- Cache(fn, r2Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   cloudFolderID2 <- cloudFolderID
   on.exit({
