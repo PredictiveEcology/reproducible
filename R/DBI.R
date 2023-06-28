@@ -136,7 +136,6 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
       DBI::dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
   }
 
-  browser()
   if (is.null(linkToCacheId)) {
     fs <- saveFilesInCacheFolder(cachePath = cachePath, obj, fts, cacheId = cacheId)
   }
@@ -804,7 +803,6 @@ loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL,
   if (is.null(format))
     format <- fileExt(file)
 
-  browser()
   # tv <- fullCacheTableForObj$tagValue
   # tk <- fullCacheTableForObj$tagKey
   # loadFun <- tv[tk == "loadFun"]

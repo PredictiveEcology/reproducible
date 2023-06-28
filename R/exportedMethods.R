@@ -607,7 +607,6 @@ unmakeMemoisable.default <- function(x) {
                                     drv = getDrv(getOption("reproducible.drv", NULL)),
                                     conn = getOption("reproducible.conn", NULL)) {
 
-  browser()
   if (any(inherits(obj, "PackedSpatVector"))) {
     if (!requireNamespace("terra", quietly = TRUE))
       stop("Please install terra package")
@@ -621,8 +620,7 @@ unmakeMemoisable.default <- function(x) {
   if (any(inherits(obj, "data.table"))) {
     obj <- data.table::copy(obj)
   }
-  if (is.character(obj)) {
-    browser()
+  if (is(obj, "Path")) {
     obj <- unwrapSpatRaster(obj, cachePath)
   }
 
