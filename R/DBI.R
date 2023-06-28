@@ -221,7 +221,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   # fileFormat <- extractFromCache(fullCacheTableForObj, "fileFormat", ifNot = format)
 
   if (!isTRUE(isMemoised)) {
-    f <- CacheStoredFile(cachePath, cacheId)#, fileFormat)
+    f <- CacheStoredFile(cachePath, cacheId, format)
     f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
 
     # First test if it is correct format
@@ -586,17 +586,6 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
                             format = NULL, obj = NULL) {
 
   if (is.null(format)) format <- getOption("reproducible.cacheSaveFormat", "rds")
-  fns <- basename(Filenames(obj, allowMultiple = TRUE))
-  # if (!is.null(obj)) {
-  #   theAttr <- attr(obj, "tags")
-  #   if (!is.null(theAttr)) {
-  #     if (any(theAttr == "saveRawFile:TRUE")) {
-  #       theGrep <- "fileFormat:"
-  #       format <- vapply(strsplit(split = ":", grep(theGrep, theAttr, value = TRUE)),
-  #                        function(fn) fn[2], FUN.VALUE = character(1))
-  #     }
-  #   }
-  # }
   if (any(format %in% "check")) {
     format <- formatCheck(cachePath, cacheId, format)
   }
@@ -617,6 +606,8 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
     for (i in seq(filename[-1]) + 1)
       filename[i] <- basename2(nextNumericName(filename[i - 1]))
   }
+
+  fns <- basename(Filenames(obj, allowMultiple = TRUE))
   file.path(CacheStorageDir(cachePath), c(filename, fns))
 }
 
@@ -843,9 +834,9 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
 
   fsOther <- numeric()
   if (length(fts) > 1) {
-    # newFN <- paste0(tools::file_path_sans_ext(fts), ".", tools::file_ext(obj))
     ftsOther <- fts[-1]
-    hardLinkOrCopy(obj, ftsOther, verbose = -2)
+    fns <- Filenames(obj, allowMultiple = TRUE)
+    hardLinkOrCopy(fns, ftsOther, verbose = -2)
     fsOther <- sum(file.size(ftsOther))
     fts <- fts[1]
   }
