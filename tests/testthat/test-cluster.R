@@ -5,10 +5,7 @@ test_that("test parallel collisions", {
 
   startTime <- Sys.time()
 
-  testInitOut <- testInit("parallel", tmpFileExt = c(".tif", ".grd", ".txt"))
-  on.exit({
-    try(testOnExit(testInitOut), silent = TRUE)
-  }, add = TRUE)
+  testInit("parallel", tmpFileExt = c(".tif", ".grd", ".txt"))
 
   # make cluster -- note this works if cluster is FORK also, but for simplicity, using default
   #   which works on Linux, Mac, Windows

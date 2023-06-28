@@ -1,10 +1,10 @@
 # reproducible (development version)
 
 ## Enhancements
-- none
+- Added `.robustDigest` & `wrap` for `SpatExtent`
 
 ## Bugfixes
-- none
+- `Copy` did not copy both files in a multi-file `SpatRaster` ...e.g., `.grd` format
 
 ## Dependency changes
 - none

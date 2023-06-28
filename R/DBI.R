@@ -204,6 +204,9 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     startLoadTime <- Sys.time()
   }
 
+  if (length(cacheId) > 1)
+    cacheId <- unique(cacheId)
+
   isMemoised <- NA
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     if (is.null(.pkgEnv[[cachePath]]))
@@ -245,7 +248,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
       }
     }
     # Need exclusive lock
-    obj <- loadFile(f, format = fileFormat, fullCacheTableForObj = fullCacheTableForObj)
+    obj <- loadFile(f, format = fileFormat, fullCacheTableForObj = fullCacheTableForObj,
+                    cachePath = cachePath)
     obj <- .dealWithClassOnRecovery(obj, cachePath = cachePath,
                                     cacheId = cacheId,
                                     drv = drv, conn = conn)
@@ -606,8 +610,8 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
       "rda"
   }
   filename <- paste(cacheId, csExtension, sep = ".")
-  if (length(filename) > 1) {
-    filename <- nextNumericName(filename)
+  if (length(cacheId) > 1) {
+    filename <- vapply(filename, nextNumericName, FUN.VALUE = character(1))
     for (i in seq(filename[-1]) + 1)
       filename[i] <- basename2(nextNumericName(filename[i - 1]))
   }
@@ -792,7 +796,8 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
   return(invisible())
 }
 
-loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL) {
+loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL,
+                     cachePath = getOption("reproducible.cachePath")) {
   if (is.null(format))
     format <- fileExt(file)
 
@@ -808,21 +813,26 @@ loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL) {
       obj <- readRDS(file = file)
     }
   } else {
-    whichFiles <- tv[tk == "whichFiles"]
+    whichFiles <- tv[tk == "whichFiles"] # these are "which ones to load" which may be fewer than "all needed"
     origFilename <- tv[tk == "origFilename"]
+    origRelName <- tv[tk == "origRelName"]
     origDirname <- tv[tk == "origDirname"]
     origGetWd <- tv[tk == "origGetWd"]
 
-    relPath <- gsub(normPath(origGetWd), "", normPath(origDirname))
-    isAbs <- isAbsolutePath(relPath)
+    isAbs <- isAbsolutePath(origRelName)
     if (any(isAbs)) # means that it had a specific path, not just relative
       newName <- file.path(normPath(origDirname), origFilename)
     else
-      newName <- file.path(getwd(), relPath, origFilename)
+      newName <- file.path(cachePath, origRelName)
     whFiles <- newName[match(basename(whichFiles), origFilename)]
-    hardLinkOrCopy(file, newName, verbose = 0)
+    needLink <- newName[match(basename(origRelName), origFilename)]
+    possOldFiles <- file.path(origDirname, origFilename)
+    if (length(possOldFiles) != length(file))
+      file <- possOldFiles
+    hardLinkOrCopy(file, needLink, verbose = 0)
     obj <- eval(parse(text = loadFun))(whFiles)
   }
+  obj
 }
 
 saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {

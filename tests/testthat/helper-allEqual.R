@@ -32,7 +32,7 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
       if (!all(pkgsLoaded)) {
         lapply(libraries[!pkgsLoaded], skip_if_not_installed)
       }
-      lapply(libraries, withr::local_package, .local_envir = pf)
+      suppressWarnings(lapply(libraries, withr::local_package, .local_envir = pf))
     }
   }
 

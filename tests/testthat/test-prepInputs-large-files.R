@@ -4,14 +4,13 @@ test_that("prepInputs correctly unzips large files", {
   skip_if_not(isInteractive(), "tests extracting large files should be run manually devtools::test()")
   skip_if_not(getOption("reproducible.runLargeFileTests"))
   ## based on #145. extracted file is ~30 GB so this takes a long time to test!
-  testInitOut <- testInit("terra")
+  testInit("terra")
   # tmpdir <- "/mnt/d/temp" # need a drive that is large enough
   # if (!"emcintir" %in% Sys.info()["user"] || (!dir.exists(tmpdir)))
   #   skip("This requires a lot of drive space")
   targFile <- "CA_harvest_year_1985_2015.tif"
   on.exit({
     unlink(file.path(tmpdir, targFile), recursive = TRUE)
-    testOnExit(testInitOut)
   }, add = TRUE)
 
   url <- "https://opendata.nfis.org/downloads/forest_change/CA_forest_harvest_mask_year_1985_2015.zip"
@@ -34,7 +33,7 @@ test_that("Issue 181 geodatabase file", {
   skip_if_not(getOption("reproducible.runLargeFileTests"))
 
   ## based on #145. extracted file is ~30 GB so this takes a long time to test!
-  testInitOut <- testInit(c("terra", "googledrive"), needGoogleDriveAuth = TRUE)
+  testInit(c("terra", "googledrive"), needGoogleDriveAuth = TRUE)
   rstLCC <- Cache(prepInputs,
                   targetFile = "EOSD_Mosaic.gdb",
                   archive = "EOSD_2000_2007_combined.zip",
@@ -55,7 +54,7 @@ test_that("Issue 242 masking fail", {
   skip_on_ci()
   testInit("terra")
   # skip_if_not(isInteractive(), "test #3: extracting large files should be run manually with devtools::test()")
-  testInitOut <- testInit(c("terra", "googledrive"), needGoogleDriveAuth = FALSE)
+  testInit(c("terra", "googledrive"), needGoogleDriveAuth = FALSE)
   studyArea <- vect(structure(c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,

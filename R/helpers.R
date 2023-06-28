@@ -370,6 +370,7 @@ isDirectory <- function(pathnames) {
   id
 }
 
+
 isAbsolutePath <- function(pathnames) {
   # modified slightly from R.utils::isAbsolutePath
   keep <- is.character(pathnames)
@@ -714,3 +715,5 @@ cat2file <- function(..., file) {
     file = "~/log.txt"
   cat(..., file = file)
 }
+
+layerNamesDelimiter <- "_%%_"

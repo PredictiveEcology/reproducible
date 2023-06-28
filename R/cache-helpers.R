@@ -552,6 +552,70 @@ withoutFinalNumeric <- function(string) {
 }
 
 
+if (requireNamespace("terra")) {
+  setGeneric("wrap", terra::wrap)
+} else {
+  if (!isGeneric("wrap", .GlobalEnv))
+    setGeneric("wrap", function(x, ...)
+      standardGeneric("wrap"))
+}
+
+if (!requireNamespace("terra")) {
+  setClass("SpatExtent")
+}
+
+
+#' `wrap` and `unwrap` methods for `*SpatExtent`
+#'
+#' This adds a method of `terra::wrap` to `SpatExtent` and `terra::unwrap` to
+#' `PackedSpatExtent` classes.
+#'
+#' @param x Any object for which there is a `wrap` or `unwrap` method.
+#' @param ... Not used.
+#'
+#' @return `wrap` returns a list of xmin, xmax, ymin, ymax that can be saved
+#'   or otherwise copied.
+#' @name wrap
+#' @examples
+#' if (requireNamespace("terra")) {
+#' ex <- terra::ext(c(0, 2, 0, 3))
+#' exWrapped <- terra::wrap(ex)
+#' ex1 <- terra::unwrap(exWrapped)
+#' }
+#' @rdname wrap
+#' @export
+#' @aliases wrap,SpatExtent-method
+setMethod("wrap", signature = "SpatExtent",
+          function(x, ...) {
+  ll <- list(xmin = terra::xmin(x), xmax = terra::xmax(x),
+       ymin = terra::ymin(x), ymax = terra::ymax(x))
+  attr(ll, "class") <- "PackedSpatExtent"
+  ll
+})
+
+# if (!requireNamespace("terra"))
+
+setClass("PackedSpatExtent")
+
+if (requireNamespace("terra")) {
+  setGeneric("unwrap", terra::unwrap)
+} else {
+  if (!isGeneric("unwrap", .GlobalEnv))
+    setGeneric("unwrap", function(x, ...)
+      standardGeneric("unwrap"))
+}
+
+
+#' @rdname wrap
+#' @name unwrap
+#' @export
+#' @return `unwrap` returns a a `SpatExtent` object.
+#' @aliases unwrap,PackedSpatExtent-method
+setMethod("unwrap", signature = "PackedSpatExtent",
+          function(x, ...) {
+            if (!requireNamespace("terra")) stop("Please install.packages('terra')")
+              terra::ext(unlist(x))
+          })
 
 wrapSpatVector <- function(obj) {
   geom1 <- terra::geom(obj)

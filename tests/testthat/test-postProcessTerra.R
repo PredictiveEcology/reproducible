@@ -1,11 +1,10 @@
 test_that("testing terra", {
   #if (interactive()) {
-  testInitOut <- testInit("terra", needGoogleDriveAuth = FALSE,
+  testInit("terra", needGoogleDriveAuth = FALSE,
                           opts = list(reproducible.useMemoise = FALSE,
                                       "rgdal_show_exportToProj4_warnings"="none"))
   opts <- options(reproducible.cachePath = tmpCache)
   on.exit({
-    testOnExit(testInitOut)
     options(opts)
   }, add = TRUE)
 
