@@ -143,7 +143,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     if (is.null(.pkgEnv[[cachePath]]))
       .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
-    obj <- .dealWithClassOnRecovery(obj) # This takes time, but whether it happens now or later, same
+    obj <- .unwrap(obj) # This takes time, but whether it happens now or later, same
     obj2 <- makeMemoisable(obj)
     assign(cacheId, obj2, envir = .pkgEnv[[cachePath]])
   }
@@ -240,7 +240,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                              cacheId = cacheId,
                              format = fileExt(sameCacheID),
                              verbose = verbose)
-        obj <- .dealWithClass(obj, cachePath = cachePath, drv = drv, conn = conn)
+        obj <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
         fs <- saveToCache(obj = obj, cachePath = cachePath, drv = drv, conn = conn,
                           cacheId = cacheId)
         rmFromCache(cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
@@ -252,7 +252,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     obj <- loadFile(f, # format = fileFormat,
                     fullCacheTableForObj = fullCacheTableForObj,
                     cachePath = cachePath)
-    obj <- .dealWithClassOnRecovery(obj, cachePath = cachePath,
+    obj <- .unwrap(obj, cachePath = cachePath,
                                     cacheId = cacheId,
                                     drv = drv, conn = conn)
   }

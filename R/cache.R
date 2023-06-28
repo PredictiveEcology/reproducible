@@ -772,9 +772,9 @@ Cache <-
 
       # Can make new methods by class to add tags to outputs
       if (.CacheIsNew) {
-        outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
+        outputToSave <- .wrap(output, cachePath, drv = drv, conn = conn, verbose = verbose)
         output <- .CopyCacheAtts(outputToSave, output)
-        # .dealWithClass added tags; these should be transfered to output
+        # .wrap added tags; these should be transfered to output
         #          outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
         #          output <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
       }
@@ -2071,7 +2071,7 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
   if (useCloud) {
     # Here, upload local copy to cloud folder
     isInCloud <- grepl(outputHash, gdriveLs$name)
-    outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
+    outputToSave <- .wrap(output, cachePath, drv = drv, conn = conn, verbose = verbose)
     cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cachePath, cloudFolderID, ## TODO: saved not found
                                      outputToSave, verbose = verbose))
     .updateTagsRepo(outputHash, cachePath, "inCloud", "TRUE", drv = drv, conn = conn)

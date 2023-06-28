@@ -477,29 +477,29 @@ unmakeMemoisable.default <- function(x) {
 #'
 #' @export
 #'
-.dealWithClass <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL),
                           verbose = getOption("reproducible.verbose")) {
-  UseMethod(".dealWithClass")
+  UseMethod(".wrap")
 }
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClass.list <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap.list <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                conn = getOption("reproducible.conn", NULL),
                                verbose = getOption("reproducible.verbose")) {
 
-  obj <- lapply(obj, .dealWithClass, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
+  obj <- lapply(obj, .wrap, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
   obj
 }
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClass.environment <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap.environment <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                       conn = getOption("reproducible.conn", NULL),
                                       verbose = getOption("reproducible.verbose")) {
   obj2 <- as.list(obj, all.names = FALSE)
-  out <- .dealWithClass(obj2, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
+  out <- .wrap(obj2, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
   obj <- Copy(obj)
   obj2 <- list2envAttempts(out, obj)
   if (!is.null(obj2)) obj <- obj2
@@ -509,7 +509,7 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClass.default <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap.default <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                   conn = getOption("reproducible.conn", NULL),
                                   verbose = getOption("reproducible.verbose")) {
   rasters <- is(obj, "Raster")
@@ -603,7 +603,7 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClassOnRecovery.default <- function(obj, cachePath, cacheId,
+.unwrap.default <- function(obj, cachePath, cacheId,
                                     drv = getDrv(getOption("reproducible.drv", NULL)),
                                     conn = getOption("reproducible.conn", NULL)) {
 
@@ -674,22 +674,22 @@ unwrapSpatRaster <- function(obj, cachePath) {
 #' @export
 #' @param cacheId Used strictly for messaging. This should be the cacheId of the object being recovered.
 #' @rdname dealWithClass
-.dealWithClassOnRecovery <- function(obj, cachePath, cacheId,
+.unwrap <- function(obj, cachePath, cacheId,
                                     drv = getDrv(getOption("reproducible.drv", NULL)),
                                     conn = getOption("reproducible.conn", NULL)) {
-  UseMethod(".dealWithClassOnRecovery")
+  UseMethod(".unwrap")
 }
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClassOnRecovery.environment <- function(obj, cachePath, cacheId,
+.unwrap.environment <- function(obj, cachePath, cacheId,
                                          drv = getDrv(getOption("reproducible.drv", NULL)),
                                          conn = getOption("reproducible.conn", NULL)) {
 
   # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
   objList <- as.list(obj) # don't overwrite everything, just the ones in the list part
 
-  outList <- .dealWithClassOnRecovery(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
+  outList <- .unwrap(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
   output2 <- list2envAttempts(outList, obj) # don't return it if the list2env retured nothing (a normal environment situation; not simList)
   if (!is.null(output2)) obj <- output2
 
@@ -698,7 +698,7 @@ unwrapSpatRaster <- function(obj, cachePath) {
 
 #' @export
 #' @rdname dealWithClass
-.dealWithClassOnRecovery.list <- function(obj, cachePath, cacheId,
+.unwrap.list <- function(obj, cachePath, cacheId,
                                          drv = getDrv(getOption("reproducible.drv", NULL)),
                                          conn = getOption("reproducible.conn", NULL)) {
   anyNames <- names(obj)
@@ -711,7 +711,7 @@ unwrapSpatRaster <- function(obj, cachePath) {
       obj <- unwrapRaster(obj, cachePath, cacheId)
     } else {
       obj <- lapply(obj, function(out)
-        .dealWithClassOnRecovery(out, cachePath, cacheId, drv, conn))
+        .unwrap(out, cachePath, cacheId, drv, conn))
     }
   }
 }

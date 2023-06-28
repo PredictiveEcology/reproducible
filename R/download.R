@@ -525,7 +525,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           #   where the function actually downloaded the file, we save it as an RDS file
           if (needSave) {
             if (!file.exists(destFile)) {
-              out2 <- .dealWithClass(out)
+              out2 <- .wrap(out)
               saveRDS(out2, file = destFile)
             }
 

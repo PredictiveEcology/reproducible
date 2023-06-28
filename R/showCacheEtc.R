@@ -568,7 +568,7 @@ setMethod(
         ## Save it
         userTags <- cacheFromList[artifact, on = .cacheTableHashColName()][
           !tagKey %in% c("format", "name", "date", "cacheId"), list(tagKey, tagValue)]
-        outputToSave <- .dealWithClass(outputToSave, cachePath = cacheTo, drv = drvTo, conn = connTo)
+        outputToSave <- .wrap(outputToSave, cachePath = cacheTo, drv = drvTo, conn = connTo)
         output <- saveToCache(cacheTo, userTags = userTags, obj = outputToSave, cacheId = artifact,
                               drv = drvTo, conn = connTo) # nolint
         messageCache(artifact, " copied", verbose = verbose)
