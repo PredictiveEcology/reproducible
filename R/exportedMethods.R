@@ -655,10 +655,12 @@ unwrapSpatRaster <- function(obj, cachePath) {
                                          format = fileExt(obj))
       hardLinkOrCopy(filenameInCache, obj, verbose = 0)
       obj <- eval(parse(text = extractFromCache(tags, "loadFun")))(whFiles)
-      possNames <- strsplit(tags$tagValue[tags$tagKey == "layerNames"],
-                            split = layerNamesDelimiter)[[1]]
-      if (!identical(possNames, names(obj)))
-        browser()
+      possNames <- strsplit(extractFromCache(tags, "layerNames"), split = layerNamesDelimiter)[[1]]
+      # if (!identical(possNames, names(obj)))
+      #   browser()
+
+      # names can be wrong e.g., with "nextNumericName" ... habitatQuality_1 instead of habitatQuality.
+      #  Should use the one without the `nextNumericName`
       names(obj) <- possNames
 
     }

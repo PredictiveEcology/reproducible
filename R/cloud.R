@@ -149,7 +149,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
       if (all(!fromDisk)) break
       newFileName <- extractFromCache(dt, elem = "origFilename")
       isInCloud <- seq(newFileName)
-      gdriveLs <- googledrive::drive_ls(path = as_id(cloudFolderID),
+      gdriveLs <- googledrive::drive_ls(path = googledrive::as_id(cloudFolderID),
                                         pattern = paste(collapse = "|", newFileName))
 
     }
