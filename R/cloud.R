@@ -131,29 +131,45 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
 
   messageCache("Downloading cloud copy of ", newFileName,", with cacheId: ", outputHash,
                verbose = verbose)
-  localNewFilename <- file.path(tempdir2(), basename2(newFileName))
   isInCloud <- grepl(outputHash, gdriveLs$name)
-                    # gsub(gdriveLs$name,
-                    # pattern = paste0("\\.", fileExt(CacheStoredFile(cachePath, outputHash))),
-                    # replacement = "") %in% outputHash
 
-  outs <- lapply(seq_along(isInCloud), function(ind) {
-    retry(quote(googledrive::drive_download(file = googledrive::as_id(gdriveLs$id[ind]),
-                                            path = localNewFilename[ind], # take first if there are duplicates
-                                            overwrite = TRUE)))
-  })
+  outs <- list()
+  for (i in 1:2) {
+    localNewFilename <- file.path(tempdir2(), basename2(newFileName))
+    outs <- append(outs, lapply(seq_along(isInCloud), function(ind) {
+      retry(quote(googledrive::drive_download(file = googledrive::as_id(gdriveLs$id[ind]),
+                                              path = localNewFilename[ind], # take first if there are duplicates
+                                              overwrite = TRUE)))
+    }))
+    if (i %in% 1) {
 
+      dtFile <- outs[[1]]$local_path # grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE)
+      dt <- loadFile(dtFile, format = fileExt(dtFile), cachePath = cachePath)
+      fromDisk <- extractFromCache(dt, elem = "fromDisk")
+      if (!fromDisk) break
+      newFileName <- extractFromCache(dt, elem = "origFilename")
+      isInCloud <- seq(newFileName)
+      gdriveLs <- googledrive::drive_ls(path = as_id(cloudFolderID),
+                                        pattern = paste(collapse = "|", newFileName))
+
+    }
+  }
+
+  browser()
   outs <- rbindlist(outs)
-  dtFile <- grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE)
+
+
+
   if (!useDBI()) {
     dtFileInCache <- CacheDBFileSingle(cachePath, cacheId = outputHash)
     hardLinkOrCopy(dtFile, dtFileInCache)
   }
   objFiles <- grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE, invert = TRUE)
+  # objFiles <- grep(paste0(".", formatCheck(cachePath, outputHash)), objFiles, value = TRUE)
   filenamesInCache <- file.path(CacheStorageDir(), basename2(objFiles))
   hardLinkOrCopy(objFiles, to = filenamesInCache)
 
-  dt <- loadFile(dtFile, format = fileExt(dtFile), cachePath = cachePath)
+
 
   if (useDBI()) # with useDBI = FALSE, the dbFile is already there.
     Map(tv = dt$tagValue, tk = dt$tagKey, function(tv, tk)
@@ -179,7 +195,6 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
 cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID,
                                  outputToSave, rasters,
                                  verbose = getOption("reproducible.verbose")) {
-  browser()
   .requireNamespace("googledrive", stopOnFALSE = TRUE,
                     messageStart = "to use google drive files")
   #browser(expr = exists("._cloudUploadFromCache_1"))
@@ -229,7 +244,6 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
 }
 
 cloudUploadRasterBackends <- function(obj, cloudFolderID) {
-  browser()
   .requireNamespace("googledrive", stopOnFALSE = TRUE,
                     messageStart = "to use google drive files")
 
@@ -249,9 +263,9 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
 cloudDownloadRasterBackend <- function(output, cachePath, cloudFolderID,
                                        drv = getDrv(getOption("reproducible.drv", NULL)),
                                        conn = getOption("reproducible.conn", NULL)) {
-  .requireNamespace("googledrive", stopOnFALSE = TRUE,
-                    messageStart = "to use google drive files")
+  .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
 
+  browser()
   if (is(output, "Raster")) {
     rasterFilename <- Filenames(output)
     if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0) {
