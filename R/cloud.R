@@ -145,8 +145,8 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
 
       dtFile <- outs[[1]]$local_path # grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE)
       dt <- loadFile(dtFile, format = fileExt(dtFile), cachePath = cachePath)
-      fromDisk <- extractFromCache(dt, elem = "fromDisk")
-      if (!fromDisk) break
+      fromDisk <- extractFromCache(dt, elem = "fromDisk") %in% "TRUE"
+      if (all(!fromDisk)) break
       newFileName <- extractFromCache(dt, elem = "origFilename")
       isInCloud <- seq(newFileName)
       gdriveLs <- googledrive::drive_ls(path = as_id(cloudFolderID),
@@ -154,11 +154,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
 
     }
   }
-
-  browser()
   outs <- rbindlist(outs)
-
-
 
   if (!useDBI()) {
     dtFileInCache <- CacheDBFileSingle(cachePath, cacheId = outputHash)

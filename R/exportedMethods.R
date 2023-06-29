@@ -638,7 +638,7 @@ wrapSpatRaster <- function(obj, cachePath) {
 
 unwrapSpatRaster <- function(obj, cachePath) {
   fns <- Filenames(obj)
-  if (isTRUE(nchar(fns) > 0)) {
+  if (isTRUE(any(nchar(fns) > 0))) {
     tags <- attr(obj, "tags")
     if (!is.null(tags)) {
       tags <- parseTags(tags)

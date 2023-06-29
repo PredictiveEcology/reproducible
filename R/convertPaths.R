@@ -158,13 +158,14 @@ setMethod(
   signature = "data.table",
   definition = function(obj, allowMultiple = TRUE) {
     isCacheDB <- all(c(.cacheTableHashColName(), .cacheTableTagColName()) %in% colnames(obj))
+    fromDsk <- ""
     if (isCacheDB) {
-      fromDsk <- extractFromCache(obj, elem = "fromDisk") %in% 'TRUE'
-      if (any(fromDsk)) {
+      isFromDsk <- extractFromCache(obj, elem = "fromDisk") %in% 'TRUE'
+      if (any(isFromDsk)) {
         fromDsk <- extractFromCache(obj, elem = "origFilename")
       }
     }
-
+    fromDsk
   })
 
 #' @export

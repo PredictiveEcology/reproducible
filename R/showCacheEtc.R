@@ -135,7 +135,8 @@ setMethod(
       objsDT <- do.call(showCache, args = args, quote = TRUE)
       if (isTRUE(useCloud) && NROW(objsDT) > 0 || identical(useCloud, "force")) {
         cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
-        rmFromCloudFolder(cloudFolderID, x, cacheIds, verbose = verbose)
+        fns <- Filenames(objsDT)
+        rmFromCloudFolder(cloudFolderID, x, cacheIds, otherFiles = fns, verbose = verbose)
       }
 
     }
@@ -691,17 +692,19 @@ useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose")) {
 }
 
 #' @inheritParams Cache
-rmFromCloudFolder <- function(cloudFolderID, x, cacheIds,
+rmFromCloudFolder <- function(cloudFolderID, x, cacheIds, otherFiles,
                               verbose = getOption("reproducible.verbose")) {
   if (is.null(cloudFolderID)) {
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cachePath = x)
   }
 
-  gdriveLs <- driveLs(cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
-    isInCloud <- any(vapply(cacheIds, function(ci) any(startsWith(prefix = ci, gdriveLs$name)),
-                        FUN.VALUE = logical(1)))
-    if (isInCloud)
-      toDelete <- gdriveLs
+  grepToSrch <- c(cacheIds, otherFiles)
+  gdriveLs <- driveLs(cloudFolderID, pattern = paste(grepToSrch, collapse = "|"))
+  isInCloud <- lapply(grepToSrch, function(ci) startsWith(prefix = ci, gdriveLs$name))
+  isInCloud <- apply(Reduce(rbind, isInCloud), 2, any)
+
+  if (any(isInCloud))
+    toDelete <- gdriveLs[isInCloud,]
   if (any(isInCloud)) {
     retry(quote(googledrive::drive_rm(toDelete)))
   }

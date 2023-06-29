@@ -333,15 +333,16 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
     r1Orig <- c(r1Orig, r1Orig2)
     r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[4], overwrite = TRUE)
   }
+
+  # TODO for SpatRaster -- this returns the Path not SpatRaster
   r2End <- Cache(fn, r2Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
-  browser()
   cloudFolderID2 <- cloudFolderID
   on.exit({
     clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID2)
   })
 
   expect_true(identical(unname(r1EndData), unname(r2End[])))
-  expect_true(identical(r1EndFilename, Filenames(r2End))) # this now has correct: only 1 downloaded copy exists
+  expect_true(all.equal(r1EndFilename, as.character(Filenames(r2End)))) # this now has correct: only 1 downloaded copy exists
   expect_false(identical(Filenames(r2Orig), Filenames(r1Orig)))
   expect_true(r1EndCacheAttr == TRUE)
   expect_true(attr(r2End, ".Cache")$newCache == FALSE)
@@ -428,7 +429,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   })
   expect_true(attr(r5End, ".Cache")$newCache == FALSE) # new to local cache
   driveLsAfter <- googledrive::drive_ls(cloudFolderID)
-  expect_true(identical(driveLsAfter, driveLsBefore))
+  expect_true(all.equal(driveLsAfter[, 1:2], driveLsBefore[, 1:2])) # There are differences deep in the drive_resources
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
   driveLsEnd <- googledrive::drive_ls(cloudFolderID)
   expect_true(NROW(driveLsEnd) == 0)
