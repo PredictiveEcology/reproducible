@@ -741,6 +741,7 @@ test_that("test mergeCache", {
   expect_true(identical(showCache(d), showCache(d1)))
 })
 
+# DELETE THIS ONE; IT IS NOT RELEVANT ANY MORE AND IT IS BROKEN
 # test_that("test cache-helpers", {
 #   testInit("terra")
 #   out <- createCache(tmpCache)
