@@ -772,9 +772,9 @@ Cache <-
 
       # Can make new methods by class to add tags to outputs
       if (.CacheIsNew) {
-        outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
+        outputToSave <- .wrap(output, cachePath, drv = drv, conn = conn, verbose = verbose)
         output <- .CopyCacheAtts(outputToSave, output)
-        # .dealWithClass added tags; these should be transfered to output
+        # .wrap added tags; these should be transfered to output
         #          outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
         #          output <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
       }
@@ -813,11 +813,13 @@ Cache <-
         }
       }
 
+      fns <- Filenames(outputToSave)
       userTags <- c(userTags,
                     paste0("class:", class(outputToSave)[1]),
                     paste0("object.size:", format(as.numeric(objSize))),
                     paste0("accessed:", Sys.time()),
                     paste0("inCloud:", isTRUE(useCloud)),
+                    paste0("fromDisk:", isTRUE(any(nchar(fns) > 0))),
                     paste0("resultHash:", resultHash),
                     paste0("elapsedTimeDigest:", format(elapsedTimeCacheDigest, units = "secs")),
                     paste0("elapsedTimeFirstRun:", format(elapsedTimeFUN, units = "secs")),
@@ -1928,7 +1930,7 @@ devModeFn1 <- function(localTags, userTags, userTagsOrig, scalls, preDigestUnlis
 cloudFolderFromCacheRepo <- function(cachePath)
   paste0(basename2(dirname(cachePath)), "_", basename2(cachePath))
 
-.defaultUserTags <- c("function", "class", "object.size", "accessed", "inCloud",
+.defaultUserTags <- c("function", "class", "object.size", "accessed", "inCloud", "fromDisk",
                       "otherFunctions", "preDigest", "file.size", "cacheId",
                       "elapsedTimeDigest", "elapsedTimeFirstRun", "resultHash", "elapsedTimeLoad")
 
@@ -2070,11 +2072,13 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
                   drv = drv, conn = conn)
   if (useCloud) {
     # Here, upload local copy to cloud folder
-    isInCloud <- grepl(outputHash, gdriveLs$name)
-    outputToSave <- .dealWithClass(output, cachePath, drv = drv, conn = conn, verbose = verbose)
-    cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cachePath, cloudFolderID, ## TODO: saved not found
-                                     outputToSave, verbose = verbose))
+    isInCloud <- any(grepl(outputHash, gdriveLs$name))
+    if (isInCloud %in% FALSE) {
+      outputToSave <- .wrap(output, cachePath, drv = drv, conn = conn, verbose = verbose)
+      cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cachePath, cloudFolderID, ## TODO: saved not found
+                                       outputToSave, verbose = verbose))
     .updateTagsRepo(outputHash, cachePath, "inCloud", "TRUE", drv = drv, conn = conn)
+    }
   }
 
   return(output)

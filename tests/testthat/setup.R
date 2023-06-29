@@ -3,7 +3,7 @@ origDTthreads <- getDTthreads()
 wantMoreTests <- isInteractive() || Sys.info()["user"] %in% "emcintir"
 if (wantMoreTests) {# this is for covr::package_coverage
   Sys.setenv(NOT_CRAN = "true")
-  Sys.setenv(SKIP_GAUTH = "true")
+  # Sys.setenv(SKIP_GAUTH = "true")
 }
 opts <- options(
   reproducible.runLargeFileTests = FALSE # Set to TRUE to run the 2 long tests -- 20 minutes

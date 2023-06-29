@@ -5,6 +5,7 @@
 \alias{Filenames,ANY-method}
 \alias{Filenames,environment-method}
 \alias{Filenames,list-method}
+\alias{Filenames,data.table-method}
 \alias{Filenames,Path-method}
 \title{Return the filename(s) from a \verb{Raster*} object}
 \usage{
@@ -15,6 +16,8 @@ Filenames(obj, allowMultiple = TRUE)
 \S4method{Filenames}{environment}(obj, allowMultiple = TRUE)
 
 \S4method{Filenames}{list}(obj, allowMultiple = TRUE)
+
+\S4method{Filenames}{data.table}(obj, allowMultiple = TRUE)
 
 \S4method{Filenames}{Path}(obj, allowMultiple = TRUE)
 }
