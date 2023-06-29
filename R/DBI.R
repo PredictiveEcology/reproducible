@@ -474,22 +474,11 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 }
 
 .cacheTableHashColName <- function() {
-  #if (useDBI()) {
     "cacheId"
-  #} else {
-  #  "artifact"
-  #}
 }
 
 .cacheTableTagColName <- function(option = NULL) {
-  out <- "tagValue"
-  # if (useDBI()) {
-  # } else {
-  #   if (isTRUE(option == "tag")) {
-  #     out <- "tag"
-  #   }
-  # }
-  out
+  "tagValue"
 }
 
 #' A collection of low level tools for Cache
@@ -607,7 +596,7 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
       filename[i] <- basename2(nextNumericName(filename[i - 1]))
   }
 
-  fns <- basename(Filenames(obj, allowMultiple = TRUE))
+  fns <- basename2(Filenames(obj, allowMultiple = TRUE))
   file.path(CacheStorageDir(cachePath), c(filename, fns))
 }
 
@@ -794,37 +783,13 @@ loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL,
   if (is.null(format))
     format <- fileExt(file)
 
-  # tv <- fullCacheTableForObj$tagValue
-  # tk <- fullCacheTableForObj$tagKey
-  # loadFun <- tv[tk == "loadFun"]
+  if (format %in% "qs") {
+    .requireNamespace("qs", stopOnFALSE = TRUE)
+    obj <- qs::qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
+  } else {
+    obj <- readRDS(file = file)
+  }
 
-  # if (length(loadFun) == 0) {
-    if (format %in% "qs") {
-      .requireNamespace("qs", stopOnFALSE = TRUE)
-      obj <- qs::qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
-    } else {
-      obj <- readRDS(file = file)
-    }
-  # } else {
-  #   whichFiles <- tv[tk == "whichFiles"] # these are "which ones to load" which may be fewer than "all needed"
-  #   origFilename <- tv[tk == "origFilename"]
-  #   origRelName <- tv[tk == "origRelName"]
-  #   origDirname <- tv[tk == "origDirname"]
-  #   origGetWd <- tv[tk == "origGetWd"]
-  #
-  #   isAbs <- isAbsolutePath(origRelName)
-  #   if (any(isAbs)) # means that it had a specific path, not just relative
-  #     newName <- file.path(normPath(origDirname), origFilename)
-  #   else
-  #     newName <- file.path(cachePath, origRelName)
-  #   whFiles <- newName[match(basename(whichFiles), origFilename)]
-  #   needLink <- newName[match(basename(origRelName), origFilename)]
-  #   possOldFiles <- file.path(origDirname, origFilename)
-  #   if (length(possOldFiles) != length(file))
-  #     file <- possOldFiles
-  #   hardLinkOrCopy(file, needLink, verbose = 0)
-  #   obj <- eval(parse(text = loadFun))(whFiles)
-  # }
   obj
 }
 

@@ -490,6 +490,10 @@ unmakeMemoisable.default <- function(x) {
                                verbose = getOption("reproducible.verbose")) {
 
   obj <- lapply(obj, .wrap, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
+  hasTagAttr <- lapply(obj, function(x) attr(x, "tags"))
+  tagAttr <- unlist(hasTagAttr <- lapply(obj, function(x) attr(x, "tags")))
+  if (!is.null(tagAttr))
+    attr(obj, "tags") <- tagAttr
   obj
 }
 
@@ -567,24 +571,7 @@ unmakeMemoisable.default <- function(x) {
     if (inherits(obj, "SpatRaster")) {
       if (all(nzchar(Filenames(obj)))) {
         useWrap <- FALSE
-        cls <- class(obj)
-        layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
-        obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
-        obj <- asPath(Filenames(obj))
-        attr(obj, "tags") <- c(attr(obj, "tags"),
-                               paste0("origFilename:", basename2(obj)),
-                               paste0("origRelName:", makeRelative(obj, cachePath)),
-                               paste0("origDirname:", dirname(obj)),
-                               paste0("origGetWd:", getwd()),
-                               paste0("origCachePath:", cachePath),
-                               paste0("fromDisk:", TRUE),
-                               paste0("class:", cls),
-                               paste0("fileFormat:", tools::file_ext(obj)),
-                               paste0("saveRawFile:", TRUE),
-                               paste0("loadFun:", "terra::rast"),
-                               paste0("layerNames:", layerNams),
-                               paste0("whichFiles:", obj2)
-                               )
+        obj <- wrapSpatRaster(obj, cachePath)
       }
     } else if (is(obj, "SpatVector") && !missing(cachePath)) {
       useWrap <- FALSE
@@ -627,35 +614,47 @@ unmakeMemoisable.default <- function(x) {
   obj
 }
 
+wrapSpatRaster <- function(obj, cachePath) {
+  cls <- class(obj)
+  layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
+  obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
+  obj <- asPath(Filenames(obj))
+  attr(obj, "tags") <- c(attr(obj, "tags"),
+                         paste0("origFilename:", basename2(obj)),
+                         paste0("origRelName:", makeRelative(obj, cachePath)),
+                         paste0("origDirname:", dirname(obj)),
+                         paste0("origGetWd:", getwd()),
+                         paste0("origCachePath:", cachePath),
+                         paste0("fromDisk:", TRUE),
+                         paste0("class:", cls),
+                         paste0("fileFormat:", tools::file_ext(obj)),
+                         paste0("saveRawFile:", TRUE),
+                         paste0("loadFun:", "terra::rast"),
+                         paste0("layerNames:", layerNams),
+                         paste0("whichFiles:", obj2)
+  )
+  obj
+}
+
 unwrapSpatRaster <- function(obj, cachePath) {
   fns <- Filenames(obj)
   if (isTRUE(nchar(fns) > 0)) {
     tags <- attr(obj, "tags")
     if (!is.null(tags)) {
       tags <- parseTags(tags)
-      tv <- tags$tagValue
-      tk <- tags$tagKey
-      whichFiles <- tv[tk == "whichFiles"] # these are "which ones to load" which may be fewer than "all needed"
-      origFilename <- tv[tk == "origFilename"]
-      origRelName <- tv[tk == "origRelName"]
-      origDirname <- tv[tk == "origDirname"]
-      loadFun <- tv[tk == "loadFun"]
-
+      origFilename <- extractFromCache(tags, "origFilename")# tv[tk == "origFilename"]
+      origRelName <- extractFromCache(tags, "origRelName")
       isAbs <- isAbsolutePath(origRelName)
       if (any(isAbs)) # means that it had a specific path, not just relative
-        newName <- file.path(normPath(origDirname), origFilename)
+        newName <- file.path(normPath(extractFromCache(tags, "origDirname")), origFilename)
       else
         newName <- file.path(cachePath, origRelName)
-      whFiles <- newName[match(basename(whichFiles), origFilename)]
-      # needLink <- newName[match(basename(origRelName), origFilename)]
-      # possOldFiles <- file.path(origDirname, origFilename)
-      # if (length(possOldFiles) != length(file))
-      #   file <- possOldFiles
+      whFiles <- newName[match(basename(extractFromCache(tags, "whichFiles")), origFilename)]
       filenameInCache <- CacheStoredFile(cachePath,
                                          cacheId = tools::file_path_sans_ext(basename(obj)),
                                          format = fileExt(obj))
       hardLinkOrCopy(filenameInCache, obj, verbose = 0)
-      obj <- eval(parse(text = loadFun))(whFiles)
+      obj <- eval(parse(text = extractFromCache(tags, "loadFun")))(whFiles)
       possNames <- strsplit(tags$tagValue[tags$tagKey == "layerNames"],
                             split = layerNamesDelimiter)[[1]]
       if (!identical(possNames, names(obj)))
