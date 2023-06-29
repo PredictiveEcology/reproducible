@@ -113,7 +113,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     suppressWarnings({
       out <- try(file.link(from = ftL, to = fts), silent = TRUE)
     })
-    if (is(out, "try-error") | !out)
+    if (is(out, "try-error") | !all((out %in% TRUE)))
       linkToCacheId <- NULL
     else {
       messageCache("  (A file with identical properties already exists in the Cache: ",basename(ftL),"; ",

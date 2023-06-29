@@ -2072,8 +2072,8 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
                   drv = drv, conn = conn)
   if (useCloud) {
     # Here, upload local copy to cloud folder
-    isInCloud <- grepl(outputHash, gdriveLs$name)
-    if (any(!isInCloud)) {
+    isInCloud <- any(grepl(outputHash, gdriveLs$name))
+    if (isInCloud %in% FALSE) {
       outputToSave <- .wrap(output, cachePath, drv = drv, conn = conn, verbose = verbose)
       cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cachePath, cloudFolderID, ## TODO: saved not found
                                        outputToSave, verbose = verbose))

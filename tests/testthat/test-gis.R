@@ -6,21 +6,26 @@ test_that("testing prepInputs with deauthorized googledrive", {
     testInit("terra", needGoogleDriveAuth = TRUE)
     withr::local_dir(tmpdir)
 
-    testthat::with_mock(
-      "reproducible::isInteractive" = function() {
-        FALSE
-      }, {
-        noisyOutput <- capture.output({
-          warn <- capture_warnings({
-            BCR6_VT <- prepInputs(alsoExtract = "similar",
-              url = "https://drive.google.com/open?id=1sEiXKnAOCi-f1BF7b4kTg-6zFlGr0YOH",
-              targetFile = "BCR6.shp",
-              overwrite = TRUE
-            )
+    # if (Sys.info()["user"] == "emcintir") {
+    #   googledrive::drive_deauth()
+    #   googledrive::drive_auth("eliotmcintire@gmail.com", cache = "C:/Eliot/.secret")
+    #   on.exit(googledrive::drive_deauth())
+      testthat::with_mock(
+        "reproducible::isInteractive" = function() {
+          FALSE
+        }, {
+          noisyOutput <- capture.output({
+            warn <- capture_warnings({
+              BCR6_VT <- prepInputs(alsoExtract = "similar",
+                                    url = "https://drive.google.com/open?id=1sEiXKnAOCi-f1BF7b4kTg-6zFlGr0YOH",
+                                    targetFile = "BCR6.shp",
+                                    overwrite = TRUE
+              )
+            })
           })
         })
-      })
-    expect_true(is(BCR6_VT, vectorType()))
+      expect_true(is(BCR6_VT, vectorType()))
+    # }
 
     if (.requireNamespace("sf", stopOnFALSE = FALSE)) {
       NFDB_PT <- #Cache(

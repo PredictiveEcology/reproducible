@@ -698,10 +698,16 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds, otherFiles,
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cachePath = x)
   }
 
+  whEmpty <- !nzchar(otherFiles)
+  if (any(whEmpty)) {
+    otherFiles <- otherFiles[!whEmpty]
+  }
   grepToSrch <- c(cacheIds, otherFiles)
   gdriveLs <- driveLs(cloudFolderID, pattern = paste(grepToSrch, collapse = "|"))
   isInCloud <- lapply(grepToSrch, function(ci) startsWith(prefix = ci, gdriveLs$name))
-  isInCloud <- apply(Reduce(rbind, isInCloud), 2, any)
+  isInCloud <- Reduce(rbind, isInCloud)
+  if (!is.null(dim(isInCloud)))
+    isInCloud <- apply(isInCloud, 2, any)
 
   if (any(isInCloud))
     toDelete <- gdriveLs[isInCloud,]

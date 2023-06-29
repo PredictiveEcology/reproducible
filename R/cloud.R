@@ -261,7 +261,6 @@ cloudDownloadRasterBackend <- function(output, cachePath, cloudFolderID,
                                        conn = getOption("reproducible.conn", NULL)) {
   .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
 
-  browser()
   if (is(output, "Raster")) {
     rasterFilename <- Filenames(output)
     if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0) {

@@ -7,7 +7,9 @@ test_that("test miscellaneous fns (part 1)", {
   expect_true(length(searchFullEx()) == (3 + length(search())))
 
   expect_true(all(unlist(lapply(searchFull(simplify = FALSE), is.environment))))
-  expect_true(all(is.character(unlist(lapply(searchFull(simplify = FALSE), attributes)))))
+  test <- lapply(searchFull(simplify = FALSE), attributes)
+  test <- grep("withr_handler", value = TRUE, test, invert = TRUE)
+  expect_true(all(is.character(unlist(test))))
 
   # NO LONGER RELIABLE TEST BECAUSE OF NEW REMOVAL OF PACKAGES fEB 24 2021
   # expect_true(sum(unlist(d1)) < sum(unlist(d)))
