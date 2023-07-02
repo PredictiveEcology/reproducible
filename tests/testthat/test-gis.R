@@ -3,27 +3,29 @@ test_that("testing prepInputs with deauthorized googledrive", {
   skip_on_ci()
 
   if (interactive()) {
-    testInitOut <- testInit("terra", needGoogleDriveAuth = TRUE)
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
+    testInit("terra", needGoogleDriveAuth = TRUE)
     withr::local_dir(tmpdir)
 
-    testthat::with_mock(
-      "reproducible::isInteractive" = function() {
-        FALSE
-      }, {
-        noisyOutput <- capture.output({
-          warn <- capture_warnings({
-            BCR6_VT <- prepInputs(alsoExtract = "similar",
-              url = "https://drive.google.com/open?id=1sEiXKnAOCi-f1BF7b4kTg-6zFlGr0YOH",
-              targetFile = "BCR6.shp",
-              overwrite = TRUE
-            )
+    # if (Sys.info()["user"] == "emcintir") {
+    #   googledrive::drive_deauth()
+    #   googledrive::drive_auth("eliotmcintire@gmail.com", cache = "C:/Eliot/.secret")
+    #   on.exit(googledrive::drive_deauth())
+      testthat::with_mock(
+        "reproducible::isInteractive" = function() {
+          FALSE
+        }, {
+          noisyOutput <- capture.output({
+            warn <- capture_warnings({
+              BCR6_VT <- prepInputs(alsoExtract = "similar",
+                                    url = "https://drive.google.com/open?id=1sEiXKnAOCi-f1BF7b4kTg-6zFlGr0YOH",
+                                    targetFile = "BCR6.shp",
+                                    overwrite = TRUE
+              )
+            })
           })
         })
-      })
-    expect_true(is(BCR6_VT, vectorType()))
+      expect_true(is(BCR6_VT, vectorType()))
+    # }
 
     if (.requireNamespace("sf", stopOnFALSE = FALSE)) {
       NFDB_PT <- #Cache(
@@ -50,10 +52,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
 
 test_that("testing rebuildColors", {
   # ONLY RELEVANT FOR RASTER
-  testInitOut <- testInit(needGoogleDriveAuth = FALSE, "raster")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(needGoogleDriveAuth = FALSE, "raster")
 
   x <- raster::raster(extent(0, 10, 0, 10), vals = runif(100, 0, 197))
   origColors <- list(origColors = character(0), origMinValue = 0, origMaxValue = 197.100006103516)

@@ -111,7 +111,8 @@ setMethod(
               "a Copy method for this class. See ?Copy", verbose = verbose)
 
     } else if (is.environment(object)) {
-      listVersion <- Copy(as.list(object, all.names = TRUE), ...)
+      listVersion <- Copy(as.list(object, all.names = TRUE), filebackedDir = filebackedDir,
+                          drv = drv, conn = conn, verbose = verbose, ...)
 
       parentEnv <- parent.env(object)
       out <- new.env(parent = parentEnv)
@@ -128,10 +129,52 @@ setMethod(
       }
     } else if (inherits(object, "SpatRaster")) {
       fns <- Filenames(object, allowMultiple = FALSE)
-      if (any(nzchar(fns))) {
-        newFns <- nextNumericName(fns)
-        copyFile(fns, newFns)
-        out <- terra::rast(newFns)
+      nz <- nzchar(fns)
+      if (any(nz)) {
+        fns <- fns[nz]
+        fnsAll <- Filenames(object, allowMultiple = TRUE)
+        hadNumeric <- grepl("_[:0-9:]+$", tools::file_path_sans_ext(fnsAll))
+        needNewFn <- FALSE
+        if (!missing(filebackedDir))
+          if (!is.null(filebackedDir))
+            needNewFn <- TRUE
+        if (needNewFn) {
+          if (!isAbsolutePath(filebackedDir)) {
+            # relative
+            filebackedDir <- file.path(getwd(), filebackedDir)
+          }
+          areAbs <- isAbsolutePath(fnsAll)
+          fnsAllBase <- fnsAll
+          if (any(areAbs)) {
+            fnsAllBase[areAbs] <- reproducible::basename2(fnsAll[areAbs])
+          }
+          newFns <- file.path(filebackedDir, fnsAllBase)
+        } else {
+          newFns <- sapply(fnsAll, nextNumericName)
+        }
+        hasNumeric <- hasNumeric <- grepl("_[:0-9:]+$", tools::file_path_sans_ext(newFns))
+        copyFile(fnsAll, newFns)
+        # Copy may have given "nextNumericName"
+        fnsBase <- tools::file_path_sans_ext(basename(fns))
+        if (any(hadNumeric)) fnsBase <- gsub("_[:0-9:]+$", "", fnsBase)
+
+        newFnsSingles <- newFns[unlist(Map(sn = fnsBase,
+                                           fns1 = fns, function(sn, fns1) which(startsWith(basename(newFns), sn) &
+                                                          endsWith(basename(newFns), tools::file_ext(fns1)))))]
+        # newFnsSingles <- newFns[match(tools::file_path_sans_ext(basename(fns)), basename(newFns))]
+        out <- terra::rast(newFnsSingles)
+        if (length(nz) == 1) # one file for all layers
+          names(out) <- names(object)
+        else
+          names(out) <- names(object[[nz]])
+
+
+        # If there are layers that were in RAM; need to add them back, in correct order
+        if (any(!nz)) {
+          memoryLayers <- names(object)[!nz]
+          out[[memoryLayers]] <- object[[memoryLayers]]
+          out <- out[[match(names(object), names(out))]]
+        }
       }
     }
     return(out)

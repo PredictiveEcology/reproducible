@@ -1,6 +1,6 @@
 test_that("preProcess fails if user provides non-existing file", {
   skip_on_cran()
-  testInitOut <- testInit("terra", opts = list(reproducible.inputPaths = NULL))
+  testInit("terra", opts = list(reproducible.inputPaths = NULL), verbose = 2)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -8,17 +8,15 @@ test_that("preProcess fails if user provides non-existing file", {
     `isInteractive` = function() {FALSE},
     {
       errMsg <- testthat::capture_error(
-            co <- capture.output(
-  #      co <- capture.output(type = "message",
-          #la <- capture_message(
-              reproducible::preProcess(
-                url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
-                destinationPath = tmpdir
-              )
-            )
+        co <- capture.output(
+          co <- capture.output(type = "message",
+                               reproducible::preProcess(
+                                 url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+                                 destinationPath = tmpdir
+                               )
           )
-  #      )
-  #    )
+        )
+      )
     }, .env = "reproducible"
   )
   expect_true(grepl("manual download", errMsg))
@@ -26,13 +24,13 @@ test_that("preProcess fails if user provides non-existing file", {
 
   optsOrig <- options(reproducible.interactiveOnDownloadFail = FALSE)
   co <- capture.output(
-  #   co <- capture.output(type = "message", {
-      errMsg <- testthat::capture_error({
-        reproducible::preProcess(
-          url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
-          destinationPath = tmpdir
-        )
-      })
+    #   co <- capture.output(type = "message", {
+    errMsg <- testthat::capture_error({
+      reproducible::preProcess(
+        url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+        destinationPath = tmpdir
+      )
+    })
     # })
   )
   expect_true(grepl("manual download", errMsg))
@@ -72,21 +70,21 @@ test_that("preProcess fails if user provides non-existing file", {
       zipFilenameWithDotZip <- dir(tmpdir, pattern = "\\.zip", full.names = TRUE)
       file.rename(from = zipFilenameWithDotZip, to = zipFilename)
       "y"
-      },
+    },
     {
       co <- capture.output(
-  #      co <- capture.output(type = "message", {
-          mess <- testthat::capture_messages(
-            errMsg <- testthat::capture_error(
-              reproducible::preProcess(
-                url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
-                destinationPath = tmpdir
-              )
+        #      co <- capture.output(type = "message", {
+        mess <- testthat::capture_messages(
+          errMsg <- testthat::capture_error(
+            reproducible::preProcess(
+              url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+              destinationPath = tmpdir
             )
-   #       })
+          )
+          #       })
+        )
       )
-    )
-  }, .env = "reproducible")
+    }, .env = "reproducible")
   expect_true(sum(grepl("manual download", mess)) == 1)
   expect_true(sum(grepl("To prevent", mess)) == 1)
   if (isWindows()) # windows can't tell a zip file is a zip file, but Unix-alikes can
@@ -100,7 +98,7 @@ test_that("preProcess fails if user provides non-existing file", {
 
 test_that("preProcess fails if user provides a non .zip/.tar as archive", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -117,7 +115,7 @@ test_that("preProcess fails if user provides a non .zip/.tar as archive", {
 
 test_that("preProcess fails if user provides non-existing file", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -134,7 +132,7 @@ test_that("preProcess fails if user provides non-existing file", {
 
 test_that("preProcess fails if user provides a directory as a targetFile", {
   skip_on_cran()
-  testInitOut <- testInit("terra")
+  testInit("terra")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -152,7 +150,7 @@ test_that("preProcess fails if user provides a directory as a targetFile", {
 ## 2022-11-03 this no longer fails on Ubuntu 20.04
 # test_that("preProcess fails if the .rar file is defective", {
 #   skip_on_cran()
-#   testInitOut <- testInit("raster")
+#   testInit("raster")
 #   on.exit({
 #     testOnExit(testInitOut)
 #   }, add = TRUE)
@@ -171,7 +169,7 @@ test_that("preProcess fails if relative destPath not '.'", {
   # this fails on CRAN version 2.0.2
   skip_on_cran()
   skip_on_ci()
-  testInitOut <- testInit("googledrive")
+  testInit("googledrive", needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

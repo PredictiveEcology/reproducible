@@ -1,6 +1,6 @@
 ## Release information
 
-This is a minor update that addresses several issues that were fixed, including one that was identified by one of our dependencies due to a change on their package (data.table) that was causing a fail in reverse depends testing. This also addresses an issue identified as "Fatal error: compiler constants were modified" which appears to occur due to use of a pass-by-reference function `data.table::setattr` that sets attributes. These have all been changed to use `base::attr`. After this change, the modified compiler constants error disappeared.
+This is a minor update that accommodates some reverse depends packages that will be shortly submitted to CRAN, as well as several minor enhancements as outlined in the News.
 
 See `NEWS.md` for a full list of changes.
 
@@ -12,18 +12,18 @@ See `NEWS.md` for a full list of changes.
 * Windows                 (win-builder), R 4.2.3 (2023-03-15 ucrt)
 
 ### Current R versions
-* macOS Monterey 12.6.5        (GitHub), R 4.3.0
-* macOs (m1) Big Sur    (macOS-builder), R 4.3.0
-* Ubuntu 20.04                 (GitHub), R 4.3.0
-* Ubuntu 20.04                  (local), R 4.3.0
-* Windows                      (GitHub), R 4.3.0
-* Windows                       (local), R 4.3.0
-* Windows                 (win-builder), R 4.3.0 (2023-04-21 ucrt)
+* macOS Monterey 12.6.5        (GitHub), R 4.3.1
+* macOs (m1) Big Sur    (macOS-builder), R 4.3.1
+* Ubuntu 20.04                 (GitHub), R 4.3.1
+* Ubuntu 20.04                  (local), R 4.3.1
+* Windows                      (GitHub), R 4.3.1
+* Windows                       (local), R 4.3.1
+* Windows                 (win-builder), R 4.3.1 (2023-04-21 ucrt)
 
 ### Development R version
-* Ubuntu 20.04 LTS             (GitHub), R-devel (2023-05-27 r84465 ucrt)
-* Windows                      (GitHub), R-devel (2023-05-27 r84465 ucrt)
-* Windows                 (win-builder), R-devel (2023-05-27 r84465 ucrt)
+* Ubuntu 20.04 LTS             (GitHub), R-devel (2023-07-01 r84626 ucrt)
+* Windows                      (GitHub), R-devel (2023-07-01 r84626 ucrt)
+* Windows                 (win-builder), R-devel (2023-07-01 r84626 ucrt)
 
 ## R CMD check results
 

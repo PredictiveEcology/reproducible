@@ -64,7 +64,7 @@ objSize <- function(x, quick = FALSE, ...) {
 objSize.default <- function(x, quick = FALSE, ...) {
   FNs <- Filenames(x)
   if (!is.null(FNs) && length(FNs)) {
-    if (nzchar(FNs)) {
+    if (any(nzchar(FNs))) {
       FNs <- asPath(FNs)
       out2 <- objSize(FNs, quick = FALSE)
     }

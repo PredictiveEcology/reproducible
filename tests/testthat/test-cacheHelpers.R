@@ -1,8 +1,5 @@
 test_that("test miscellaneous unit tests cache-helpers", {
-  testInitOut <- testInit(libraries = c("sf"), opts = list(reproducible.useMemoise = TRUE))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(libraries = c("sf"), opts = list(reproducible.useMemoise = TRUE))
 
   a <- 1
   mess <- capture_message(.cacheMessage(a, "test", TRUE))
@@ -231,10 +228,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
 })
 
 test_that("test warnings from cached functions", {
-  testInitOut <- testInit(libraries = c("sf"), opts = list(reproducible.useMemoise = FALSE))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(libraries = c("sf"), opts = list(reproducible.useMemoise = FALSE))
   warn1 <- capture_warnings(b <- Cache(rbinom, 4, 5, prob = 6, cachePath = tmpCache))
 
   fun <- function(n, size, prob) {
@@ -250,10 +244,7 @@ test_that("test warnings from cached functions", {
 
 test_that("test cache-helpers with stacks", {
   # THIS TEST CAN BE DELETED AFTER RASTER IS DEFUNCT
-  testInitOut <- testInit("raster")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("raster")
 
   tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   tmpfile2 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
@@ -295,10 +286,7 @@ test_that("test cache-helpers with stacks", {
 })
 
 test_that("test miscellaneous unit tests cache-helpers", {
-  testInitOut <- testInit("googledrive")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("googledrive")
   a <- Cache(rnorm, 1, cachePath = tmpCache)
   mess <- capture_messages(clearCache(cachePath = tmpCache))
   expect_true(any(grepl("x not specified, but cachePath is", mess)))

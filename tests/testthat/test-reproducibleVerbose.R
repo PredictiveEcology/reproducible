@@ -1,9 +1,6 @@
 ##########################
 test_that("test reproducible.verbose", {
-  testInitOut <- testInit(verbose = 4, tmpFileExt = ".rds")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(verbose = 4, tmpFileExt = ".rds")
 
   warn <- capture_warnings(Cache(rnorm, 1, cachePath = tmpdir))
   expect_is(.reproEnv$cacheTimings, "data.frame") ##

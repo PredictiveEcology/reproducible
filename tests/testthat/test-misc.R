@@ -1,16 +1,15 @@
 test_that("test miscellaneous fns (part 1)", {
   # ONLY RELEVANT FOR RASTERS
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("raster", tmpFileExt = c(".tif", ".grd"))
 
   expect_is(searchFullEx(), "list")
   expect_true(length(searchFullEx()) > length(search()))
   expect_true(length(searchFullEx()) == (3 + length(search())))
 
   expect_true(all(unlist(lapply(searchFull(simplify = FALSE), is.environment))))
-  expect_true(all(is.character(unlist(lapply(searchFull(simplify = FALSE), attributes)))))
+  test <- lapply(searchFull(simplify = FALSE), attributes)
+  test <- grep("withr_handler", value = TRUE, test, invert = TRUE)
+  expect_true(all(is.character(unlist(test))))
 
   # NO LONGER RELIABLE TEST BECAUSE OF NEW REMOVAL OF PACKAGES fEB 24 2021
   # expect_true(sum(unlist(d1)) < sum(unlist(d)))
@@ -64,10 +63,7 @@ test_that("objSize and objSizeSession", {
 })
 
 test_that("setting options works correctly", {
-  testInitOut <- testInit(verbose = 1, ask = TRUE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(verbose = 1, ask = TRUE)
 
   a <- reproducibleOptions()
 
@@ -86,19 +82,16 @@ test_that("setting options works correctly", {
   bbb <- match(names(b), names(a1))
   # expect_true(identical(sort(names(a1)), sort(names(a1[na.omit(bbb)]))))
   expect_true(identical(sort(names(a1)), sort(names(a1[bbb[!is.na(bbb)]]))))
-  omit <- c(names(testInitOut$opts), names(testInitOut$optsAsk),
-            "reproducible.inputPath", "reproducible.tempPath")
+  #omit <- c(names(testInitOut$opts), names(testInitOut$optsAsk),
+  #          "reproducible.inputPath", "reproducible.tempPath")
   b1 <- b[names(a1)]
-  b1 <- b1[!names(b1) %in% omit]
-  a2 <- a1[!names(a1) %in% omit]
+  # b1 <- b1[!names(b1) %in% omit]
+  a2 <- a1# [!names(a1) %in% omit]
   expect_identical(b1, a2)
 })
 
 test_that("guessAtTargetAndFun works correctly", {
-  testInitOut <- testInit()
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit()
 
   # expect_error(.guessAtTargetAndFun(fun = rnorm), "fun must be a")
   expect_message(.guessAtTargetAndFun(targetFilePath = NULL, filesExtracted = "", fun = "load"),
@@ -110,10 +103,7 @@ test_that("guessAtTargetAndFun works correctly", {
 })
 
 test_that("unrar is working as expected", {
-  testInitOut <- testInit("terra", tmpFileExt = c(".tif", ".grd"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", tmpFileExt = c(".tif", ".grd"))
 
   rarPath <- file.path(tmpdir, "tmp.rar")
   out <- try(utils::zip(zipfile = rarPath, files = tmpfile)) # this should only be relevant if system can unrar
@@ -127,11 +117,10 @@ test_that("unrar is working as expected", {
 })
 
 test_that("test miscellaneous fns (part 2)", {
-  testInitOut <- testInit("terra", tmpFileExt = c(".tif", ".grd"),
-                          needGoogleDriveAuth = TRUE)
-  options('reproducible.cloudFolderID' = NULL)
+  testInit("terra", tmpFileExt = c(".tif", ".grd"),
+                          needGoogleDriveAuth = TRUE,
+                          opts = list('reproducible.cloudFolderID' = NULL))
   on.exit({
-    testOnExit(testInitOut)
     try(googledrive::drive_rm(googledrive::as_id(cloudFolderID)), silent = TRUE)
     try(googledrive::drive_rm(googledrive::as_id(tmpCloudFolderID)), silent = TRUE)
   }, add = TRUE)
@@ -199,13 +188,8 @@ test_that("test miscellaneous fns (part 2)", {
 })
 
 test_that("Filenames for environment", {
-  testInitOut <- testInit(c("terra"), tmpFileExt = c(".tif", ".grd", ".tif", ".tif", ".grd"),
+  testInit(c("terra"), tmpFileExt = c(".tif", ".grd", ".tif", ".tif", ".grd"),
                           opts = list("reproducible.ask" = FALSE))
-  on.exit({
-    testOnExit(testInitOut)
-    # options(opts)
-    rm(s)
-  }, add = TRUE)
 
   s <- new.env(parent = emptyenv())
   s$r <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1, res = 1)
@@ -248,7 +232,7 @@ test_that("Filenames for environment", {
 
   # Test duplicated filenames in same Stack
   b <- c(terra::rast(rlogoFiles[1]), terra::rast(rlogoFiles[1]))
-  expect_true(identical(sort(normPath(c(rlogoFiles))), unique(sort(Filenames(b)))))
+  expect_true(identical(sort(normPath(c(rlogoFiles))), unique(sort(Filenames(b, allowMultiple = TRUE)))))
 
   rlogoFiles <- system.file("ex/test.grd", package = "terra")
   rlogoDir <- dirname(rlogoFiles)
@@ -260,11 +244,7 @@ test_that("Filenames for environment", {
 })
 
 test_that("test miscellaneous fns", {
-  testInitOut <- testInit(opts = list(datatable.print.class=FALSE))
-
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(opts = list(datatable.print.class=FALSE))
 
   x1 <- append(as.list(c(0, 1, -1, 10^(-(1:10)))), as.list(c(0L, 1L)))
   a <- lapply(x1, roundTo6Dec)
@@ -299,11 +279,8 @@ test_that("test miscellaneous fns", {
 })
 
 test_that("test set.randomseed", {
-  testInitOut <- testInit()
   skip_if(getRversion() < "4.2") # Can't figure out why this doesn't wok
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit()
 
   N <- 1e4
   a <- integer(N)

@@ -34,7 +34,7 @@ but this will not persist across sessions. If this is a character string, it wil
 treat this as a folder name to create or use on GoogleDrive.}
 
 \item{drv}{if using a database backend, drv must be an object that
-inherits from DBIDriver e.g., \code{RSQLite::SQLite()}}
+inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}
 
 \item{conn}{an optional DBIConnection object, as returned by dbConnect().}
 

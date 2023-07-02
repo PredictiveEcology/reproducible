@@ -1,9 +1,6 @@
 test_that("test Copy", {
   skip_if_not_installed("terra")
-  testInitOut <- testInit(c("terra", "data.table"), tmpFileExt = ".tif")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit(c("terra", "data.table"), tmpFileExt = ".tif")
 
   ras <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1)
   ras <- suppressWarningsSpecific(falseWarnings = proj6Warn,

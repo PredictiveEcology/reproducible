@@ -108,28 +108,16 @@ setMethod(
       if (exists("._Filenames_1")) browser()
       if (length(fns) == 0)
         fns <- ""
-      # browser(expr = exists("._Filenames_1"))
-      if (isTRUE(allowMultiple))
-        if (endsWith(fns, suffix = "grd"))
-          fns <- c(fns, gsub("grd$", "gri", fns))
+      fns <- allowMultipleFNs(allowMultiple, fns)
     } else if (inherits(obj, "SpatRaster")) {
       if (!requireNamespace("terra", quietly = TRUE))
         stop("Please install terra package")
       fns <- terra::sources(obj)
-      if (isTRUE(allowMultiple)) {
-        anyGrd <- endsWith(fns, suffix = "grd")
-        if (any(anyGrd)) {
-          nonGrd <- if (any(!anyGrd)) fns[!anyGrd] else NULL
-          multiFns <- sort(c(fns[anyGrd], gsub("grd$", "gri", fns[anyGrd])))
-          fnsNew <- c(nonGrd, multiFns)
-          fns <- fnsNew[order(match(filePathSansExt(basename(fnsNew)),
-                                    filePathSansExt(basename(fns))))]
-        }
-      }
-
+      fns <- allowMultipleFNs(allowMultiple, fns)
     } else {
       fns <- NULL
     }
+    # DON"T BE TEMPTED TO RM NZ i.e., MEMORY LAYERS -- NEED TO KNOW THAT THERE WERE SOME
     normPath(fns)
 })
 
@@ -162,4 +150,58 @@ setMethod(
     unlist(lapply(obj, function(o) Filenames(o, allowMultiple = allowMultiple)))
     # Filenames(as.environment(obj), allowMultiple = allowMultiple)
 })
+
+#' @export
+#' @rdname Filenames
+setMethod(
+  "Filenames",
+  signature = "data.table",
+  definition = function(obj, allowMultiple = TRUE) {
+    isCacheDB <- all(c(.cacheTableHashColName(), .cacheTableTagColName()) %in% colnames(obj))
+    fromDsk <- ""
+    if (isCacheDB) {
+      isFromDsk <- extractFromCache(obj, elem = "fromDisk") %in% 'TRUE'
+      if (any(isFromDsk)) {
+        fromDsk <- extractFromCache(obj, elem = "origFilename")
+      }
+    }
+    fromDsk
+  })
+
+#' @export
+#' @rdname Filenames
+setMethod(
+  "Filenames",
+  signature = "Path",
+  definition = function(obj, allowMultiple = TRUE) {
+    obj <- allowMultipleFNs(allowMultiple, obj)
+    # tags <- attr(obj, "tags")
+    # if (!is.null(tags)) {
+    #   tags1 <- parseTags(tags)
+    #   if (allowMultiple)
+    #   out <- tags1$tagValue[tags1$tagKey == "whichFiles"]
+    # } else {
+    #   out <- obj
+    # }
+    obj
+  })
+
+
+allowMultipleFNs <- function(allowMultiple, fns) {
+  if (isTRUE(allowMultiple)) {
+    anyGrd <- endsWith(fns, suffix = "grd")
+    anyGri <- endsWith(fns, suffix = "gri")
+    if (any(anyGrd) && !any(anyGri)) {
+      nonGrd <- if (any(!anyGrd)) fns[!anyGrd] else NULL
+      multiFns <- sort(c(fns[anyGrd], gsub("grd$", "gri", fns[anyGrd])))
+      fnsNew <- c(nonGrd, multiFns)
+      fns <- fnsNew[order(match(filePathSansExt(basename(fnsNew)),
+                                filePathSansExt(basename(fns))))]
+    }
+
+  } else {
+    fns <- grep("\\.gri$", fns, value = TRUE, invert = TRUE)
+  }
+  fns
+}
 

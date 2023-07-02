@@ -63,7 +63,7 @@ return. This is only relevant for list, environment (or similar) objects}
 \item{algo}{The algorithms to be used; currently available choices are
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
     \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64},
-    \code{murmur32}, \code{spookyhash} and \code{blake3}.}
+    \code{murmur32}, \code{spookyhash}, \code{blake3}, and \code{crc32c}.}
 
 \item{cacheRepo}{Same as \code{cachePath}, but kept for backwards compatibility.}
 
@@ -145,7 +145,7 @@ If a number larger than \code{1}, then it will report the N most similar archive
 objects.}
 
 \item{drv}{if using a database backend, drv must be an object that
-inherits from DBIDriver e.g., \code{RSQLite::SQLite()}}
+inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}
 
 \item{conn}{an optional DBIConnection object, as returned by dbConnect().}
 }

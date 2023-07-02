@@ -1,13 +1,8 @@
 test_that("lightweight tests for code coverage", {
   skip_on_cran()
-  skip_if_not_installed("sf")
-  testInitOut <- testInit(c("sf", "terra"), opts = list("reproducible.overwrite" = TRUE,
+  testInit(c("sf", "terra"), opts = list("reproducible.overwrite" = TRUE,
                                                         "reproducible.inputPaths" = NULL),
                           needGoogleDriveAuth = TRUE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
   dPath <- checkPath(file.path(tempdir2()), create = TRUE)
   localFileLux <- system.file("ex/lux.shp", package = "terra")
 

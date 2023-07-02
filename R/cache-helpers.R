@@ -553,6 +553,8 @@ withoutFinalNumeric <- function(string) {
 
 
 
+setClass("PackedSpatExtent")
+
 wrapSpatVector <- function(obj) {
   geom1 <- terra::geom(obj)
   geom1 <- list(cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),

@@ -471,35 +471,39 @@ unmakeMemoisable.default <- function(x) {
 #'
 #' @param obj Any arbitrary R object.
 #' @inheritParams Cache
-#' @rdname dealWithClass
+#' @rdname dotWrap
 #' @return
 #' Returns an object that can be saved to disk e.g., via `saveRDS`.
 #'
 #' @export
 #'
-.dealWithClass <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL),
                           verbose = getOption("reproducible.verbose")) {
-  UseMethod(".dealWithClass")
+  UseMethod(".wrap")
 }
 
 #' @export
-#' @rdname dealWithClass
-.dealWithClass.list <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+#' @rdname dotWrap
+.wrap.list <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                conn = getOption("reproducible.conn", NULL),
                                verbose = getOption("reproducible.verbose")) {
 
-  obj <- lapply(obj, .dealWithClass, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
+  obj <- lapply(obj, .wrap, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
+  hasTagAttr <- lapply(obj, function(x) attr(x, "tags"))
+  tagAttr <- unlist(hasTagAttr <- lapply(obj, function(x) attr(x, "tags")))
+  if (!is.null(tagAttr))
+    attr(obj, "tags") <- tagAttr
   obj
 }
 
 #' @export
-#' @rdname dealWithClass
-.dealWithClass.environment <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+#' @rdname dotWrap
+.wrap.environment <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                       conn = getOption("reproducible.conn", NULL),
                                       verbose = getOption("reproducible.verbose")) {
   obj2 <- as.list(obj, all.names = FALSE)
-  out <- .dealWithClass(obj2, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
+  out <- .wrap(obj2, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
   obj <- Copy(obj)
   obj2 <- list2envAttempts(out, obj)
   if (!is.null(obj2)) obj <- obj2
@@ -508,8 +512,17 @@ unmakeMemoisable.default <- function(x) {
 }
 
 #' @export
-#' @rdname dealWithClass
-.dealWithClass.default <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+#' @rdname dotWrap
+#' @examples
+#' # For SpatExtent
+#' if (requireNamespace("terra")) {
+#' ex <- terra::ext(c(0, 2, 0, 3))
+#' exWrapped <- .wrap(ex)
+#' ex1 <- .unwrap(exWrapped)
+#' }
+
+#'
+.wrap.default <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                   conn = getOption("reproducible.conn", NULL),
                                   verbose = getOption("reproducible.verbose")) {
   rasters <- is(obj, "Raster")
@@ -555,7 +568,7 @@ unmakeMemoisable.default <- function(x) {
     }
   }
 
-  if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRaster"))) {
+  if (any(inherits(obj, c("SpatVector", "SpatRaster", "SpatExtent")))) {
     if (!requireNamespace("terra", quietly = TRUE))
       stop("Please install terra package")
     messageCache("...wrapping terra object for saving...", verboseLevel = 2, verbose = verbose)
@@ -563,31 +576,25 @@ unmakeMemoisable.default <- function(x) {
 
     # next is for terra objects --> terra::wrap is ridiculously slow for SpatVector objects; use
     #   custom version in reproducible where here
+    useWrap <- TRUE
     if (inherits(obj, "SpatRaster")) {
       if (all(nzchar(Filenames(obj)))) {
-        cls <- class(obj)
-        obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
-        obj <- asPath(Filenames(obj))
-        attr(obj, "tags") <- c(attr(obj, "tags"),
-                               paste0("origFilename:", basename2(obj)),
-                               paste0("origDirname:", dirname(obj)),
-                               paste0("origGetWd:", getwd()),
-                               paste0("fromDisk:", TRUE),
-                               paste0("class:", cls),
-                               paste0("fileFormat:", tools::file_ext(obj)),
-                               paste0("saveRawFile:", TRUE),
-                               paste0("loadFun:", "terra::rast"),
-                               paste0("whichFiles:", obj2)
-                               )
-      } else {
-        obj <- terra::wrap(obj)
+        useWrap <- FALSE
+        obj <- wrapSpatRaster(obj, cachePath)
       }
-    } else {
-      if (missing(cachePath)) # not in Cache call
-        obj <- terra::wrap(obj)
-      else
-        obj <- wrapSpatVector(obj)
+    } else if (is(obj, "SpatVector") && !missing(cachePath)) {
+      useWrap <- FALSE
+      obj <- wrapSpatVector(obj)
+    } else if (is(obj, "SpatExtent")) {
+        obj <- list(xmin = terra::xmin(obj), xmax = terra::xmax(obj),
+                   ymin = terra::ymin(obj), ymax = terra::ymax(obj))
+        attr(obj, "class") <- "PackedSpatExtent"
+        useWrap <- FALSE
     }
+
+    if (useWrap)
+      obj <- terra::wrap(obj) # let method dispatch work
+
     attr(obj, ".Cache") <- attrs
 
     messageCache("\b Done!", verboseLevel = 2, verbose = verbose)
@@ -596,47 +603,104 @@ unmakeMemoisable.default <- function(x) {
 }
 
 #' @export
-#' @rdname dealWithClass
-.dealWithClassOnRecovery.default <- function(obj, cachePath, cacheId,
+#' @rdname dotWrap
+.unwrap.default <- function(obj, cachePath, cacheId,
                                     drv = getDrv(getOption("reproducible.drv", NULL)),
                                     conn = getOption("reproducible.conn", NULL)) {
 
-  if (any(inherits(obj, "PackedSpatVector"))) {
-    if (!requireNamespace("terra", quietly = TRUE))
-      stop("Please install terra package")
-    obj <- terra::vect(obj)
-  }
-  if (any(inherits(obj, "PackedSpatRaster"))) {
-    if (!requireNamespace("terra", quietly = TRUE))
-      stop("Please install terra package")
-    obj <- terra::rast(obj)
-  }
-  if (any(inherits(obj, "data.table"))) {
+  if (any(inherits(obj, c("PackedSpatVector", "PackedSpatRaster", "PackedSpatExtent")))) {
+    if (!requireNamespace("terra")) stop("Please install.packages('terra')")
+    if (any(inherits(obj, "PackedSpatVector"))) {
+      obj <- terra::vect(obj)
+    } else if (any(inherits(obj, "PackedSpatRaster"))) {
+      obj <- terra::rast(obj)
+    } else if (any(inherits(obj, "PackedSpatExtent"))) {
+      obj <- terra::ext(unlist(obj))
+    }
+  } else if (any(inherits(obj, "data.table"))) {
     obj <- data.table::copy(obj)
+  } else if (is(obj, "Path")) {
+    obj <- unwrapSpatRaster(obj, cachePath)
   }
 
   obj
 }
 
+wrapSpatRaster <- function(obj, cachePath) {
+  cls <- class(obj)
+  layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
+  obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
+  obj <- asPath(Filenames(obj))
+  attr(obj, "tags") <- c(attr(obj, "tags"),
+                         paste0("origFilename:", basename2(obj)),
+                         paste0("origRelName:", makeRelative(obj, cachePath)),
+                         paste0("origDirname:", dirname(obj)),
+                         paste0("origGetWd:", getwd()),
+                         paste0("origCachePath:", cachePath),
+                         paste0("fromDisk:", TRUE),
+                         paste0("class:", cls),
+                         paste0("fileFormat:", tools::file_ext(obj)),
+                         paste0("saveRawFile:", TRUE),
+                         paste0("loadFun:", "terra::rast"),
+                         paste0("layerNames:", layerNams),
+                         paste0("whichFiles:", obj2)
+  )
+  obj
+}
+
+unwrapSpatRaster <- function(obj, cachePath) {
+  fns <- Filenames(obj)
+  if (isTRUE(any(nchar(fns) > 0))) {
+    tags <- attr(obj, "tags")
+    if (!is.null(tags)) {
+      tags <- parseTags(tags)
+      origFilename <- extractFromCache(tags, "origFilename")# tv[tk == "origFilename"]
+      origRelName <- extractFromCache(tags, "origRelName")
+      isAbs <- isAbsolutePath(origRelName)
+      if (any(isAbs)) # means that it had a specific path, not just relative
+        newName <- file.path(normPath(extractFromCache(tags, "origDirname")), origFilename)
+      else
+        newName <- file.path(cachePath, origRelName)
+      whFiles <- newName[match(basename(extractFromCache(tags, "whichFiles")), origFilename)]
+      filenameInCache <- CacheStoredFile(cachePath,
+                                         cacheId = tools::file_path_sans_ext(basename(obj)),
+                                         format = fileExt(obj))
+      hardLinkOrCopy(filenameInCache, obj, verbose = 0)
+      obj <- eval(parse(text = extractFromCache(tags, "loadFun")))(whFiles)
+      possNames <- strsplit(extractFromCache(tags, "layerNames"), split = layerNamesDelimiter)[[1]]
+      # if (!identical(possNames, names(obj)))
+      #   browser()
+
+      # names can be wrong e.g., with "nextNumericName" ... habitatQuality_1 instead of habitatQuality.
+      #  Should use the one without the `nextNumericName`
+      names(obj) <- possNames
+
+    }
+  }
+  obj
+}
+
+
+
 #' @export
 #' @param cacheId Used strictly for messaging. This should be the cacheId of the object being recovered.
-#' @rdname dealWithClass
-.dealWithClassOnRecovery <- function(obj, cachePath, cacheId,
+#' @rdname dotWrap
+.unwrap <- function(obj, cachePath, cacheId,
                                     drv = getDrv(getOption("reproducible.drv", NULL)),
                                     conn = getOption("reproducible.conn", NULL)) {
-  UseMethod(".dealWithClassOnRecovery")
+  UseMethod(".unwrap")
 }
 
 #' @export
-#' @rdname dealWithClass
-.dealWithClassOnRecovery.environment <- function(obj, cachePath, cacheId,
+#' @rdname dotWrap
+.unwrap.environment <- function(obj, cachePath, cacheId,
                                          drv = getDrv(getOption("reproducible.drv", NULL)),
                                          conn = getOption("reproducible.conn", NULL)) {
 
   # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
   objList <- as.list(obj) # don't overwrite everything, just the ones in the list part
 
-  outList <- .dealWithClassOnRecovery(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
+  outList <- .unwrap(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
   output2 <- list2envAttempts(outList, obj) # don't return it if the list2env retured nothing (a normal environment situation; not simList)
   if (!is.null(output2)) obj <- output2
 
@@ -644,55 +708,64 @@ unmakeMemoisable.default <- function(x) {
 }
 
 #' @export
-#' @rdname dealWithClass
-.dealWithClassOnRecovery.list <- function(obj, cachePath, cacheId,
+#' @rdname dotWrap
+.unwrap.list <- function(obj, cachePath, cacheId,
                                          drv = getDrv(getOption("reproducible.drv", NULL)),
                                          conn = getOption("reproducible.conn", NULL)) {
-#   if (isOutputList || isOutputEnv) {
-    anyNames <- names(obj)
-    isSpatVector <- if (is.null(anyNames)) FALSE else all(names(obj) %in% spatVectorNamesForCache)
-    if (isTRUE(isSpatVector)) {
-      obj <- unwrapSpatVector(obj)
+  anyNames <- names(obj)
+  isSpatVector <- if (is.null(anyNames)) FALSE else all(names(obj) %in% spatVectorNamesForCache)
+  if (isTRUE(isSpatVector)) {
+    obj <- unwrapSpatVector(obj)
+  } else {
+    isRaster <- isTRUE("cacheRaster" %in% names(obj))
+    if (isRaster) {
+      obj <- unwrapRaster(obj, cachePath, cacheId)
     } else {
-      if (!"cacheRaster" %in% names(obj)) { # recursive up until a list has cacheRaster name
-
-        outList <- obj
-        outList <- lapply(outList, function(out) .dealWithClassOnRecovery(out, cachePath, cacheId,
-                                                                         drv, conn))
-
-          obj <- outList
-      } else {
-        origFilenames <- if (is(obj, "Raster")) {
-          Filenames(obj) # This is legacy piece which allows backwards compatible
-        } else {
-          obj$origRaster
-        }
-
-        filesExist <- file.exists(origFilenames)
-        cacheFilenames <- Filenames(obj)
-        filesExistInCache <- file.exists(cacheFilenames)
-        if (any(!filesExistInCache)) {
-          fileTails <- gsub("^.+(rasters.+)$", "\\1", cacheFilenames)
-          correctFilenames <- file.path(cachePath, fileTails)
-          filesExistInCache <- file.exists(correctFilenames)
-          if (all(filesExistInCache)) {
-            cacheFilenames <- correctFilenames
-          } else {
-            stop("File-backed raster files in the cache are corrupt for cacheId: ", cacheId)
-          }
-
-        }
-        out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
-                              origFilenames[filesExistInCache], overwrite = TRUE)
-
-        newOutput <- updateFilenameSlots(obj$cacheRaster,
-                                         Filenames(obj, allowMultiple = FALSE),
-                                         newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
-        obj <- newOutput
-        obj <- .setSubAttrInList(obj, ".Cache", "newCache", FALSE)
-        obj
-
-      }
+      obj <- lapply(obj, function(out)
+        .unwrap(out, cachePath, cacheId, drv, conn))
     }
-  # }
+  }
+}
+
+
+unwrapRaster <- function(obj, cachePath, cacheId) {
+  origFilenames <- if (is(obj, "Raster")) {
+    Filenames(obj) # This is legacy piece which allows backwards compatible
+  } else {
+    obj$origRaster
+  }
+
+  filesExist <- file.exists(origFilenames)
+  cacheFilenames <- Filenames(obj)
+  filesExistInCache <- file.exists(cacheFilenames)
+  if (any(!filesExistInCache)) {
+    fileTails <- gsub("^.+(rasters.+)$", "\\1", cacheFilenames)
+    correctFilenames <- file.path(cachePath, fileTails)
+    filesExistInCache <- file.exists(correctFilenames)
+    if (all(filesExistInCache)) {
+      cacheFilenames <- correctFilenames
+    } else {
+      stop("File-backed raster files in the cache are corrupt for cacheId: ", cacheId)
+    }
+
+  }
+  out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
+                        origFilenames[filesExistInCache], overwrite = TRUE)
+
+  newOutput <- updateFilenameSlots(obj$cacheRaster,
+                                   Filenames(obj, allowMultiple = FALSE),
+                                   newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
+  obj <- newOutput
+  obj <- .setSubAttrInList(obj, ".Cache", "newCache", FALSE)
+  obj
+}
+parseTags <- function(tags) {
+  out <- strsplit(tags,':')
+  tags2 <- lapply(out, function(x) x[[1]])
+  tags1 <- as.data.table(do.call(rbind, tags2))
+  vals <- vapply(seq(NROW(tags1)), function(i)
+    gsub(paste0(tags1[[1]][i], ":"), "", tags[i]), FUN.VALUE = character(1))
+  set(tags1, NULL, "tagValue", vals)
+  setnames(tags1, "V1", "tagKey")
+  tags1
 }
