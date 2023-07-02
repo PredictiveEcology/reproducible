@@ -1,6 +1,6 @@
 ## Release information
 
-This is a minor update that addresses several issues that were fixed, including one that was identified by one of our dependencies due to a change on their package (data.table) that was causing a fail in reverse depends testing. This also addresses an issue identified as "Fatal error: compiler constants were modified" which appears to occur due to use of a pass-by-reference function `data.table::setattr` that sets attributes. These have all been changed to use `base::attr`. After this change, the modified compiler constants error disappeared.
+This is a minor update that accommodates some reverse dependes packages that will be shortly submitted to CRAN, as well as several minor enhancements as outlined in the News.
 
 See `NEWS.md` for a full list of changes.
 

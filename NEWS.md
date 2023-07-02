@@ -1,13 +1,19 @@
-# reproducible (development version)
+# reproducible 2.0.5
 
 ## Enhancements
-- Added `.robustDigest` & `wrap` for `SpatExtent`
+* Updates of `Copy` & new `.wrap`, `.unwrap` generics and methods to *wrap* classes that don't save well to disk as is. This uses the name similar to `terra::wrap`, but with slight differences internally to allow for `SpatRaster` objects who are file-backed and must have their files moved when they are unwrapped.
+* `loadFiles` updated for more cases
+* convert to using `withr` throughout testing for cleaning up
+* more methods for `Filename` added, including for `Path` class
+* `Cache(..., useCloud = TRUE)` had many cases that were not working; known cases are now working. Also, now file from file-backed cases are now placed inside the `cacheOutputs` folder rather than inside a separate folder (used to be "rasters")
+
 
 ## Bugfixes
-- `Copy` did not copy both files in a multi-file `SpatRaster` ...e.g., `.grd` format
+* several small for edge cases
+
 
 ## Dependency changes
-- none
+* none
 
 # reproducible 2.0.4
 
