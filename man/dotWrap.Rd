@@ -102,3 +102,12 @@ This generic and some methods will do whatever is required to prepare an object 
 saving to disk (or RAM) via e.g., \code{saveRDS}. Some objects (e.g., \code{terra}'s \verb{Spat*})
 cannot be saved without first wrapping them. Also, file-backed objects are similar.
 }
+\examples{
+# For SpatExtent
+if (requireNamespace("terra")) {
+ex <- terra::ext(c(0, 2, 0, 3))
+exWrapped <- .wrap(ex)
+ex1 <- .unwrap(exWrapped)
+}
+
+}
