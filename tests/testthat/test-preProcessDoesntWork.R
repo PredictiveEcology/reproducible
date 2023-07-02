@@ -9,16 +9,16 @@ test_that("preProcess fails if user provides non-existing file", {
     {
       errMsg <- testthat::capture_error(
             co <- capture.output(
-  #      co <- capture.output(type = "message",
-          #la <- capture_message(
+        co <- capture.output(type = "message",
+          la <- capture_message(
               reproducible::preProcess(
                 url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
                 destinationPath = tmpdir
               )
             )
           )
-  #      )
-  #    )
+        )
+      )
     }, .env = "reproducible"
   )
   expect_true(grepl("manual download", errMsg))
