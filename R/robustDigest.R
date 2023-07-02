@@ -172,7 +172,7 @@ setMethod(
         stop("Please install terra package")
       forDig <- wrapSpatVector(object)
     } else if (inherits(object, "SpatExtent")) {
-      forDig <- getMethod("wrap", "SpatExtent")(object)
+      forDig <- .wrap(object)
     } else {
       forDig <- .removeCacheAtts(object)
     }

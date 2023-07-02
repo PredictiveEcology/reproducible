@@ -21,7 +21,7 @@ CacheDigest(
 \item{algo}{The algorithms to be used; currently available choices are
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
     \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64},
-    \code{murmur32}, \code{spookyhash}, \code{blake3}, and \code{crc32c}.}
+    \code{murmur32}, \code{spookyhash} and \code{blake3}.}
 
 \item{calledFrom}{a Character string, length 1, with the function to
 compare with. Default is "Cache". All other values may not produce

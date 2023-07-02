@@ -471,7 +471,7 @@ unmakeMemoisable.default <- function(x) {
 #'
 #' @param obj Any arbitrary R object.
 #' @inheritParams Cache
-#' @rdname dealWithClass
+#' @rdname dotWrap
 #' @return
 #' Returns an object that can be saved to disk e.g., via `saveRDS`.
 #'
@@ -484,7 +484,7 @@ unmakeMemoisable.default <- function(x) {
 }
 
 #' @export
-#' @rdname dealWithClass
+#' @rdname dotWrap
 .wrap.list <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                conn = getOption("reproducible.conn", NULL),
                                verbose = getOption("reproducible.verbose")) {
@@ -498,7 +498,7 @@ unmakeMemoisable.default <- function(x) {
 }
 
 #' @export
-#' @rdname dealWithClass
+#' @rdname dotWrap
 .wrap.environment <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                       conn = getOption("reproducible.conn", NULL),
                                       verbose = getOption("reproducible.verbose")) {
@@ -512,7 +512,16 @@ unmakeMemoisable.default <- function(x) {
 }
 
 #' @export
-#' @rdname dealWithClass
+#' @rdname dotWrap
+#' @examples
+#' # For SpatExtent
+#' if (requireNamespace("terra")) {
+#' ex <- terra::ext(c(0, 2, 0, 3))
+#' exWrapped <- .wrap(ex)
+#' ex1 <- .unwrap(exWrapped)
+#' }
+
+#'
 .wrap.default <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                                   conn = getOption("reproducible.conn", NULL),
                                   verbose = getOption("reproducible.verbose")) {
@@ -576,10 +585,15 @@ unmakeMemoisable.default <- function(x) {
     } else if (is(obj, "SpatVector") && !missing(cachePath)) {
       useWrap <- FALSE
       obj <- wrapSpatVector(obj)
+    } else if (is(obj, "SpatExtent")) {
+        obj <- list(xmin = terra::xmin(obj), xmax = terra::xmax(obj),
+                   ymin = terra::ymin(obj), ymax = terra::ymax(obj))
+        attr(obj, "class") <- "PackedSpatExtent"
+        useWrap <- FALSE
     }
 
     if (useWrap)
-      obj <- wrap(obj) # let method dispatch work
+      obj <- terra::wrap(obj) # let method dispatch work
 
     attr(obj, ".Cache") <- attrs
 
@@ -589,25 +603,23 @@ unmakeMemoisable.default <- function(x) {
 }
 
 #' @export
-#' @rdname dealWithClass
+#' @rdname dotWrap
 .unwrap.default <- function(obj, cachePath, cacheId,
                                     drv = getDrv(getOption("reproducible.drv", NULL)),
                                     conn = getOption("reproducible.conn", NULL)) {
 
-  if (any(inherits(obj, "PackedSpatVector"))) {
-    if (!requireNamespace("terra", quietly = TRUE))
-      stop("Please install terra package")
-    obj <- terra::vect(obj)
-  }
-  if (any(inherits(obj, "PackedSpatRaster"))) {
-    if (!requireNamespace("terra", quietly = TRUE))
-      stop("Please install terra package")
-    obj <- terra::rast(obj)
-  }
-  if (any(inherits(obj, "data.table"))) {
+  if (any(inherits(obj, c("PackedSpatVector", "PackedSpatRaster", "PackedSpatExtent")))) {
+    if (!requireNamespace("terra")) stop("Please install.packages('terra')")
+    if (any(inherits(obj, "PackedSpatVector"))) {
+      obj <- terra::vect(obj)
+    } else if (any(inherits(obj, "PackedSpatRaster"))) {
+      obj <- terra::rast(obj)
+    } else if (any(inherits(obj, "PackedSpatExtent"))) {
+      obj <- terra::ext(unlist(obj))
+    }
+  } else if (any(inherits(obj, "data.table"))) {
     obj <- data.table::copy(obj)
-  }
-  if (is(obj, "Path")) {
+  } else if (is(obj, "Path")) {
     obj <- unwrapSpatRaster(obj, cachePath)
   }
 
@@ -672,7 +684,7 @@ unwrapSpatRaster <- function(obj, cachePath) {
 
 #' @export
 #' @param cacheId Used strictly for messaging. This should be the cacheId of the object being recovered.
-#' @rdname dealWithClass
+#' @rdname dotWrap
 .unwrap <- function(obj, cachePath, cacheId,
                                     drv = getDrv(getOption("reproducible.drv", NULL)),
                                     conn = getOption("reproducible.conn", NULL)) {
@@ -680,7 +692,7 @@ unwrapSpatRaster <- function(obj, cachePath) {
 }
 
 #' @export
-#' @rdname dealWithClass
+#' @rdname dotWrap
 .unwrap.environment <- function(obj, cachePath, cacheId,
                                          drv = getDrv(getOption("reproducible.drv", NULL)),
                                          conn = getOption("reproducible.conn", NULL)) {
@@ -696,7 +708,7 @@ unwrapSpatRaster <- function(obj, cachePath) {
 }
 
 #' @export
-#' @rdname dealWithClass
+#' @rdname dotWrap
 .unwrap.list <- function(obj, cachePath, cacheId,
                                          drv = getDrv(getOption("reproducible.drv", NULL)),
                                          conn = getOption("reproducible.conn", NULL)) {
