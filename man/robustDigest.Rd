@@ -70,7 +70,7 @@ Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.}
 \item{algo}{The algorithms to be used; currently available choices are
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
     \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64},
-    \code{murmur32}, \code{spookyhash} and \code{blake3}.}
+    \code{murmur32}, \code{spookyhash}, \code{blake3}, and \code{crc32c}.}
 
 \item{quick}{Logical or character. If \code{TRUE},
 no disk-based information will be assessed, i.e., only
