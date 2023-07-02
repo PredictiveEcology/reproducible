@@ -337,7 +337,7 @@ utils::globalVariables(c(
 #'        objects.
 #'
 #' @param drv if using a database backend, drv must be an object that
-#'   inherits from DBIDriver e.g., `RSQLite::SQLite()`
+#'   inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite
 #' @param conn an optional DBIConnection object, as returned by dbConnect().
 #' @inheritParams digest::digest
 #'

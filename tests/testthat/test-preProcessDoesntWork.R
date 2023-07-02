@@ -171,7 +171,7 @@ test_that("preProcess fails if relative destPath not '.'", {
   # this fails on CRAN version 2.0.2
   skip_on_cran()
   skip_on_ci()
-  testInit("googledrive")
+  testInit("googledrive", needGoogleDriveAuth = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

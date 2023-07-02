@@ -117,12 +117,12 @@ test_that("testing terra", {
   expect_true(all(t6$elevation == 1))
   expect_true(NROW(t6) == 2)
 
-  ################
+  #
 
   t10 <- postProcessTo(xVect, v)
   expect_true(terra::ext(t10) < terra::ext(xVect))
 
-  ################
+  #
   ## following #253
   # https://github.com/PredictiveEcology/reproducible/issues/253#issuecomment-1263562631
   tf1 <- tempfile(fileext = ".shp")

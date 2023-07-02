@@ -20,7 +20,7 @@ saveToCache(
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{drv}{if using a database backend, drv must be an object that
-inherits from DBIDriver e.g., \code{RSQLite::SQLite()}}
+inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}
 
 \item{conn}{an optional DBIConnection object, as returned by dbConnect().}
 

@@ -145,7 +145,7 @@ If a number larger than \code{1}, then it will report the N most similar archive
 objects.}
 
 \item{drv}{if using a database backend, drv must be an object that
-inherits from DBIDriver e.g., \code{RSQLite::SQLite()}}
+inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}
 
 \item{conn}{an optional DBIConnection object, as returned by dbConnect().}
 }
