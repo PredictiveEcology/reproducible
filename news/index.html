@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.5</span>
       </span>
     </div>
 
@@ -64,6 +64,27 @@
     </div>
 
     <div class="section level2">
+<h2 class="page-header" data-toc-text="2.0.5" id="reproducible-205">reproducible 2.0.5<a class="anchor" aria-label="anchor" href="#reproducible-205"></a></h2>
+<div class="section level3">
+<h3 id="enhancements-2-0-5">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-2-0-5"></a></h3>
+<ul><li>Updates of <code>Copy</code> &amp; new <code>.wrap</code>, <code>.unwrap</code> generics and methods to <em>wrap</em> classes that don’t save well to disk as is. This uses the name similar to <code><a href="https://rdrr.io/pkg/terra/man/wrap.html" class="external-link">terra::wrap</a></code>, but with slight differences internally to allow for <code>SpatRaster</code> objects who are file-backed and must have their files moved when they are unwrapped.</li>
+<li>
+<code>loadFiles</code> updated for more cases</li>
+<li>convert to using <code>withr</code> throughout testing for cleaning up</li>
+<li>more methods for <code>Filename</code> added, including for <code>Path</code> class</li>
+<li>
+<code>Cache(..., useCloud = TRUE)</code> had many cases that were not working; known cases are now working. Also, now file from file-backed cases are now placed inside the <code>cacheOutputs</code> folder rather than inside a separate folder (used to be “rasters”)</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bugfixes-2-0-5">Bugfixes<a class="anchor" aria-label="anchor" href="#bugfixes-2-0-5"></a></h3>
+<ul><li>several small for edge cases</li>
+</ul></div>
+<div class="section level3">
+<h3 id="dependency-changes-2-0-5">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-2-0-5"></a></h3>
+<ul><li>none</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="page-header" data-toc-text="2.0.4" id="reproducible-204">reproducible 2.0.4<small>2023-05-31</small><a class="anchor" aria-label="anchor" href="#reproducible-204"></a></h2>
 <div class="section level3">
 <h3 id="enhancements-2-0-4">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-2-0-4"></a></h3>
@@ -73,6 +94,7 @@
 <li>updated tests to deal with <code>data.table</code> development branch (<a href="https://github.com/PredictiveEcology/reproducible/issues/314" class="external-link">#314</a>)</li>
 <li>removed all use of <code><a href="https://Rdatatable.gitlab.io/data.table/reference/setattr.html" class="external-link">data.table::setattr</a></code> to deal with “modified compiler constants” issue that was detected during CRAN checks at <a href="https://github.com/kalibera/cran-checks/blob/master/rcnst/results/reproducible/00check.log" class="external-link uri">https://github.com/kalibera/cran-checks/blob/master/rcnst/results/reproducible/00check.log</a>
 </li>
+<li>Improvements with testing using GitHub Actions</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bugfixes-2-0-4">Bugfixes<a class="anchor" aria-label="anchor" href="#bugfixes-2-0-4"></a></h3>
@@ -81,22 +103,19 @@
 </li>
 <li>
 <code>normPath</code> had different behaviour on *nix-alikes and Windows. Now it is the same.</li>
-<li>Issue <a href="https://github.com/PredictiveEcology/reproducible/issues/316" class="external-link">#316</a> – <code>SpatRaster</code> objects if saved to a specific, non relative (to <code><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd()</a></code>) path would not be recovered correctly.</li>
+<li>
+<code>SpatRaster</code> objects if saved to a specific, non relative (to <code><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd()</a></code>) path would not be recovered correctly (<a href="https://github.com/PredictiveEcology/reproducible/issues/316" class="external-link">#316</a>)</li>
 <li>Several other Issues that addressed edge cases for <code>prepInputs</code> and family.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="continuous-integration-2-0-4">Continuous integration<a class="anchor" aria-label="anchor" href="#continuous-integration-2-0-4"></a></h3>
-<ul><li>Improvements with testing on GitHub Actions</li>
 </ul></div>
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="2.0.2" id="reproducible-202">reproducible 2.0.2<small>2023-05-07</small><a class="anchor" aria-label="anchor" href="#reproducible-202"></a></h2>
 <div class="section level3">
 <h3 id="enhancements-2-0-2">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-2-0-2"></a></h3>
-<ul><li>new optional backend for <code>Cache</code> via <code>options(reproducible.useDBI = FALSE)</code> is single data files with the same <code>basename</code> as the cached object, i.e., with the same <code>cacheId</code> in the file name. This is a replacement for <code>RSQLite</code> and will likely become the default in the next release. This approach makes cloud caching easier as all metadata are available in small binary files for each cached object. This is simpler, faster and creates far fewer package dependencies (now 11 recursive; before 27 recursive). If a user has DBI and RSQLite installed, then the backend will default to use these currently, i.e., the previous behaviour. The user can change the backend without loss of Cache data.</li>
+<ul><li>new optional backend for <code>Cache</code> via <code>options(reproducible.useDBI = FALSE)</code> is single data files with the same <code>basename</code> as the cached object, i.e., with the same <code>cacheId</code> in the file name. This is a replacement for <code>RSQLite</code> and will likely become the default in the next release. This approach makes cloud caching easier as all metadata are available in small binary files for each cached object. This is simpler, faster and creates far fewer package dependencies (now 11 recursive; before 27 recursive). If a user has <code>DBI</code> and <code>RSQLite</code> installed, then the backend will default to use these currently, i.e., the previous behaviour. The user can change the backend without loss of Cache data.</li>
 <li>moved <code>raster</code> and <code>sp</code> to <code>Suggests</code>; no more internal functions use these. User can still work with <code>Raster</code> and <code>sp</code> class objects as before.</li>
 <li>
-<code>preProcess</code> can now handle google docs files, if <code>type = ...</code> is passed.</li>
+<code>preProcess</code> can now handle Google docs files, if <code>type = ...</code> is passed.</li>
 <li>
 <code>postProcess</code> now uses <code>terra</code> and <code>sf</code> internally (with <a href="https://github.com/PredictiveEcology/reproducible/issues/253" class="external-link">#253</a>) throughout the family of <code>postProcess</code> functions. The previous <code>*Input</code> and <code>*Output</code> functions now redirect to the new <code>*To*</code> functions. These are faster, more stable, and cover vastly more cases than the previous <code>*Inputs</code> family. The old backends no longer work as before.</li>
 <li>minor functions to assist with transition from <code>raster</code> to <code>terra</code>: <code>maxFn</code>, <code>minFn</code>, <code>rasterRead</code>

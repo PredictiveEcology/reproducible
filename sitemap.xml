@@ -79,9 +79,6 @@
     <loc>https://reproducible.predictiveecology.org/reference/copyFile.html</loc>
   </url>
   <url>
-    <loc>https://reproducible.predictiveecology.org/reference/dealWithClass.html</loc>
-  </url>
-  <url>
     <loc>https://reproducible.predictiveecology.org/reference/debugCache.html</loc>
   </url>
   <url>
@@ -110,6 +107,9 @@
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/dot-requireNamespace.html</loc>
+  </url>
+  <url>
+    <loc>https://reproducible.predictiveecology.org/reference/dotWrap.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/downloadFile.html</loc>
