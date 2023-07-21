@@ -132,6 +132,40 @@ test_that("preProcess works when provides url, archive, targetfile and destinati
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
 
+test_that("preProcess works when provides url, archive, and destinationPath", {
+  skip_on_cran()
+  testInit("terra")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(url = url,
+                                    archive = theRasterTestFilename(suff = "zip"),
+                                    destinationPath = tmpdir)
+  )
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+})
+
+test_that("preProcess works when provides url, archive, and destinationPath and reproducible.inputPaths", {
+  skip_on_cran()
+  testInit("terra")
+  opts <- options("reproducible.inputPaths" = tmpdir)
+  on.exit({
+    testOnExit(testInitOut)
+    options(opts)
+  }, add = TRUE)
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(url = url,
+                                    archive = theRasterTestFilename(suff = "zip"),
+                                    destinationPath = tmpCache)
+  )
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+})
+
 test_that("preProcess works when provides url, targetfile and destinationPath", {
   skip_on_cran()
   testInit("terra")
