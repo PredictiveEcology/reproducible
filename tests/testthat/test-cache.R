@@ -368,7 +368,12 @@ test_that("test keepCache", {
   testInit("terra")
   Cache(rnorm, 10, cachePath = tmpdir)
   Cache(runif, 10, cachePath = tmpdir)
-  Cache(round, runif(4), cachePath = tmpdir)
+
+  # this next was round --> but match.call on primitive is not positional
+  # --> an exception see ?match.call which says "normally positional"
+  # This fails because round dispatches .Primitive("round") which internally in the C
+  # code now matches non-positionally e.g., round.POSIXt has 'units'
+  Cache(sample, runif(4), cachePath = tmpdir)
   expect_true(NROW(showCache(tmpdir)[!tagKey %in% .ignoreTagKeys()]) ==
                 .cacheNumDefaultTags() * 3)
   expect_true(NROW(showCache(tmpdir, c("rnorm", "runif"))[!tagKey %in% .ignoreTagKeys()]) ==
