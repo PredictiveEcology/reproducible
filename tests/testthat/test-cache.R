@@ -368,7 +368,13 @@ test_that("test keepCache", {
   testInit("terra")
   Cache(rnorm, 10, cachePath = tmpdir)
   Cache(runif, 10, cachePath = tmpdir)
+
+  # this next is round which is a primitive *with* methods -->
+  # --> an exception see ?match.call which says "normally positional"
+  # This failed previously because round dispatches .Primitive("round") which internally in the C
+  # code now (R > 4.3.1) matches non-positionally e.g., round.POSIXt has 'units'
   Cache(round, runif(4), cachePath = tmpdir)
+
   expect_true(NROW(showCache(tmpdir)[!tagKey %in% .ignoreTagKeys()]) ==
                 .cacheNumDefaultTags() * 3)
   expect_true(NROW(showCache(tmpdir, c("rnorm", "runif"))[!tagKey %in% .ignoreTagKeys()]) ==
@@ -403,6 +409,11 @@ test_that("test keepCache", {
 
   # shows spades, runif and rnorm objects
   expect_true(length(unique(showCache(tmpdir)[[.cacheTableHashColName()]])) == 2)
+
+  # This is from changes to round by luke tierney
+  aa <- Sys.time()
+  Cache(round, aa, units = "mins", cachePath = tmpdir)
+
 })
 
 test_that("test environments", {
@@ -681,7 +692,7 @@ test_that("test future", {
   # skip_if_not_installed("future")
 
   .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
-  if (.onLinux) {
+  # if (.onLinux) {
     testInit(c("terra", "future"), verbose = TRUE, tmpFileExt = ".rds",
                             opts = list("future.supportsMulticore.unstable" = "quiet",
                                         "reproducible.futurePlan" = "multicore"))
@@ -705,7 +716,7 @@ test_that("test future", {
     for (i in 1:3) {
       expect_true(identical(attr(d[[i]], ".Cache")$newCache, FALSE))
     }
-  }
+  # }
 })
 
 test_that("test mergeCache", {
@@ -1358,6 +1369,15 @@ test_that("change to new capturing of FUN & base pipe", {
   err <- capture_error(out2 <- eval(parse(text = f1)))
   expect_true(is(err, "simpleError"))
 
+  # Test for new `round` in R > 4.3.1 with ... i.e., a primitive with method dispatch
+  f1 <- paste("
+      {runif(1e6, 1, 1.1) |>
+        mean() |>
+        round()} |> # _ Only works with R >= 4.2.0
+        Cache(cachePath = tmpCache)
+    ")
+  expect_no_error(mess2 <- capture_messages(
+    out2 <- eval(parse(text = f1))))
 })
 
 test_that("test cache with new approach to match.call", {
@@ -1539,11 +1559,8 @@ test_that("test cache; SpatRaster attributes", {
                           opts = list(
                             "rasterTmpDir" = tempdir2(rndstr(1,6)),
                             "reproducible.inputPaths" = NULL,
-                            "reproducible.overwrite" = TRUE)
+                            "reproducible.overwrite" = TRUE), needInternet = TRUE
   )
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
 
   options("reproducible.cachePath" = tmpdir)
   dPath <- file.path(tmpdir, "inputs")

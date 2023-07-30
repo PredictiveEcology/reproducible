@@ -107,6 +107,9 @@ if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly 
   # need 3 files for this example; 1 from remote, 2 local
   dPath <- file.path(tempdir2())
   remoteTifUrl <- "https://github.com/rspatial/terra/raw/master/inst/ex/elev.tif"
+
+  # Test only relevant if connected to internet
+
   localFileLuxSm <- system.file("ex/luxSmall.shp", package = "reproducible")
   localFileLux <- system.file("ex/lux.shp", package = "terra")
 
@@ -114,46 +117,49 @@ if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly 
   # 1st step -- get study area
   studyArea <- prepInputs(localFileLuxSm, fun = "terra::vect") # default is sf::st_read
   # 2nd step: make the input data layer like the studyArea map
-  elevForStudy <- prepInputs(url = remoteTifUrl, to = studyArea, res = 250,
-                             destinationPath = dPath)
+  if (requireNamespace("RCurl", quietly = TRUE))
+    if (RCurl::url.exists(remoteTifUrl)) {
+      elevForStudy <- prepInputs(url = remoteTifUrl, to = studyArea, res = 250,
+                                 destinationPath = dPath)
 
 
-  # Alternate way, one step at a time. Must know each of these steps, and perform for each layer
-  \donttest{
-    dir.create(dPath, recursive = TRUE, showWarnings = FALSE)
-    file.copy(localFileLuxSm, file.path(dPath, basename(localFileLuxSm)))
-    studyArea2 <- terra::vect(localFileLuxSm)
-    if (!all(terra::is.valid(studyArea2))) studyArea2 <- terra::makeValid(studyArea2)
-    tf <- tempfile(fileext = ".tif")
-    download.file(url = remoteTifUrl, destfile = tf, mode = "wb")
-    Checksums(dPath, write = TRUE, files = tf)
-    elevOrig <- terra::rast(tf)
-    elevForStudy2 <- terra::project(elevOrig, terra::crs(studyArea2), res = 250) |>
-      terra::crop(studyArea2) |>
-      terra::mask(studyArea2)
+      # Alternate way, one step at a time. Must know each of these steps, and perform for each layer
+      \donttest{
+        dir.create(dPath, recursive = TRUE, showWarnings = FALSE)
+        file.copy(localFileLuxSm, file.path(dPath, basename(localFileLuxSm)))
+        studyArea2 <- terra::vect(localFileLuxSm)
+        if (!all(terra::is.valid(studyArea2))) studyArea2 <- terra::makeValid(studyArea2)
+        tf <- tempfile(fileext = ".tif")
+        download.file(url = remoteTifUrl, destfile = tf, mode = "wb")
+        Checksums(dPath, write = TRUE, files = tf)
+        elevOrig <- terra::rast(tf)
+        elevForStudy2 <- terra::project(elevOrig, terra::crs(studyArea2), res = 250) |>
+          terra::crop(studyArea2) |>
+          terra::mask(studyArea2)
 
-    isTRUE(all.equal(studyArea, studyArea2)) # Yes!
-  }
+        isTRUE(all.equal(studyArea, studyArea2)) # Yes!
+      }
 
-  # sf class
-  studyAreaSmall <- prepInputs(localFileLuxSm)
-  studyAreas <- list()
-  studyAreas[["orig"]] <- prepInputs(localFileLux)
-  studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
-  studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
-  studyAreas[["masked"]] <- suppressWarnings(maskTo(studyAreas[["orig"]], studyAreaSmall))
+      # sf class
+      studyAreaSmall <- prepInputs(localFileLuxSm)
+      studyAreas <- list()
+      studyAreas[["orig"]] <- prepInputs(localFileLux)
+      studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
+      studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
+      studyAreas[["masked"]] <- suppressWarnings(maskTo(studyAreas[["orig"]], studyAreaSmall))
 
-  # SpatVector-- note: doesn't matter what class the "to" object is, only the "from"
-  studyAreas <- list()
-  studyAreas[["orig"]] <- prepInputs(localFileLux, fun = "terra::vect")
-  studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
-  studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
-  studyAreas[["masked"]] <- suppressWarnings(maskTo(studyAreas[["orig"]], studyAreaSmall))
-  if (interactive()) {
-    par(mfrow = c(2,2));
-    out <- lapply(studyAreas, function(x) terra::plot(x))
-  }
+      # SpatVector-- note: doesn't matter what class the "to" object is, only the "from"
+      studyAreas <- list()
+      studyAreas[["orig"]] <- prepInputs(localFileLux, fun = "terra::vect")
+      studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
+      studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
+      studyAreas[["masked"]] <- suppressWarnings(maskTo(studyAreas[["orig"]], studyAreaSmall))
+      if (interactive()) {
+        par(mfrow = c(2,2));
+        out <- lapply(studyAreas, function(x) terra::plot(x))
+      }
 
+    }
   setwd(od)
 
 }

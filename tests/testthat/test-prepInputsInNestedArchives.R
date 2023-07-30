@@ -1,9 +1,6 @@
 test_that("prepInputs in a simple one double nested zip file, passing only destinationPath and url", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
 
   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterNested.zip"
   noisyOutput <- capture.output({
@@ -14,10 +11,7 @@ test_that("prepInputs in a simple one double nested zip file, passing only desti
 
 test_that("prepInputs in a simple one double nested zip file, passing targetFile", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
 
   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterNested.zip"
   noisyOutput <- capture.output({
@@ -30,10 +24,7 @@ test_that("prepInputs in a simple one double nested zip file, passing targetFile
 
 test_that("prepInputs in a two files double nested zip file, passing only destinationPath and url", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
 
   url <- "https://github.com/tati-micheletti/host/raw/master/data/multiFilesOutter.zip"
   noisyOutput <- capture.output({
@@ -44,10 +35,7 @@ test_that("prepInputs in a two files double nested zip file, passing only destin
 
 test_that("prepInputs in a two files double nested zip file, passing targetFile", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
 
   url <- "https://github.com/tati-micheletti/host/raw/master/data/multiFilesOutter.zip"
   noisyOutput <- capture.output({
@@ -64,10 +52,7 @@ test_that(
     "the second layer, and a shapefile in the first, not specifying the targetFile"
   ), {
     skip_on_cran()
-    testInit("terra")
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
+    testInit("terra", needInternet = TRUE)
 
     # Gets the first file it finds, the shapefile; warns the user about it
     url <- "https://github.com/tati-micheletti/host/raw/master/data/multiFilesMultiLevels.zip"
@@ -86,10 +71,7 @@ test_that(
   paste0("prepInputs in a two files double nested zip file, with the wanted file in",
          "the second layer, and a shapefile in the first, specifying the targetFile"), {
            skip_on_cran()
-           testInit("terra")
-           on.exit({
-             testOnExit(testInitOut)
-           }, add = TRUE)
+           testInit("terra", needInternet = TRUE)
 
            url <- "https://github.com/tati-micheletti/host/raw/master/data/multiFilesMultiLevels.zip"
            noisyOutput <- capture.output({
@@ -107,10 +89,7 @@ test_that(
           skip_on_cran()
           skip_if(isMac() && isCI())
 
-          testInit("terra")
-          on.exit({
-            testOnExit(testInitOut)
-          }, add = TRUE)
+          testInit("terra", needInternet = TRUE)
 
           extractSystemCallPath <- .archiveExtractBinary()
 
@@ -143,10 +122,7 @@ test_that(
       skip_on_cran()
       skip_if(isMac() && isCI())
 
-      testInit("terra")
-      on.exit({
-        testOnExit(testInitOut)
-      }, add = TRUE)
+      testInit("terra", needInternet = TRUE)
 
       extractSystemCallPath <- .archiveExtractBinary()
       url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
@@ -172,10 +148,7 @@ test_that(paste0("prepInputs in a two files double nested rar file, with the wan
                  "the second layer, not specifying the targetFile, passing the main archive"), {
                    skip_on_cran()
                    skip_if(isMac() && isCI())
-                   testInit("terra")
-                   on.exit({
-                     testOnExit(testInitOut)
-                   }, add = TRUE)
+                   testInit("terra", needInternet = TRUE)
 
                    extractSystemCallPath <- .archiveExtractBinary()
                    url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
@@ -204,10 +177,7 @@ test_that("prepInputs works with nested rar file inside internal rar folder", {
   skip_on_ci() ## TODO: skip for now b/c need additional unrar tools
   skip_on_os("mac") ## TODO: deal with unrar for macOS #266
 
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
 
   extractSystemCallPath <- .archiveExtractBinary()
   url <- "https://github.com/tati-micheletti/host/raw/master/data/testRasterNested.rar"
