@@ -6,11 +6,8 @@ test_that("prepInputs doesn't work (part 1)", {
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.inputPaths" = NULL,
     "reproducible.overwrite" = TRUE,
-    reproducible.showSimilar = TRUE)
+    reproducible.showSimilar = TRUE), needInternet = TRUE
   )
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
 
   options("reproducible.cachePath" = tmpdir)
 
@@ -1410,11 +1407,8 @@ test_that("options inputPaths", {
   if (getRversion() <= "4.1.3") skip("geodata::gadm seems to time out on R <= 4.1.3")
   testInit(c("terra", "geodata"),
                           opts = list("reproducible.inputPaths" = NULL,
-                                      "reproducible.inputPathsRecursive" = FALSE))
-
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+                                      "reproducible.inputPathsRecursive" = FALSE),
+           needInternet = TRUE)
 
   f <- formals3(prepInputs)
   getDataFn <- getDataFn # not exported from reproducible; can access here, not in the dlFun

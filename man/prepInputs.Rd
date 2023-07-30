@@ -266,6 +266,7 @@ If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
 ##########################################
 # Remote file using `url`
 ##########################################
+if (internetExists()) {
   data.table::setDTthreads(2)
   origDir <- getwd()
   # download a zip file from internet, unzip all files, load as shapefile, Cache the call
@@ -323,6 +324,7 @@ If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
     unlink(dPath)
  }
  }
+}
 }
 
 ## Using quoted dlFun and fun -- this is not intended to be run but used as a template

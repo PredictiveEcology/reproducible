@@ -1,6 +1,6 @@
 test_that("preProcess works for .tar files", {
   skip_on_cran()
-  testInit("terra")
+  testInit("terra", needInternet = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -14,10 +14,7 @@ test_that("preProcess works for .tar files", {
 
 test_that("preProcess works for .zip when provided only url and destinationPath", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
@@ -28,10 +25,7 @@ test_that("preProcess works for .zip when provided only url and destinationPath"
 
 test_that("preProcess works with only url", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(url = url)
@@ -42,10 +36,7 @@ test_that("preProcess works with only url", {
 
 test_that("preProcess works when provides only archive", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
@@ -62,10 +53,7 @@ test_that("preProcess works when provides only archive", {
 
 test_that("preProcess works when provides archive and destinationPath", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
@@ -83,10 +71,7 @@ test_that("preProcess works when provides archive and destinationPath", {
 
 test_that("preProcess works when provides only targetFile", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
@@ -100,10 +85,7 @@ test_that("preProcess works when provides only targetFile", {
 
 test_that("preProcess works when provides targetfile and destinationPath", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
@@ -118,10 +100,7 @@ test_that("preProcess works when provides targetfile and destinationPath", {
 
 test_that("preProcess works when provides url, archive, targetfile and destinationPath", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(url = url, targetFile = theRasterTestFilename(suff = "tif"),
@@ -134,10 +113,7 @@ test_that("preProcess works when provides url, archive, targetfile and destinati
 
 test_that("preProcess works when provides url, archive, and destinationPath", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(url = url,
@@ -150,10 +126,9 @@ test_that("preProcess works when provides url, archive, and destinationPath", {
 
 test_that("preProcess works when provides url, archive, and destinationPath and reproducible.inputPaths", {
   skip_on_cran()
-  testInit("terra")
+  testInit("terra", needInternet = TRUE)
   opts <- options("reproducible.inputPaths" = tmpdir)
   on.exit({
-    testOnExit(testInitOut)
     options(opts)
   }, add = TRUE)
   url <- theRasterTestZip
@@ -168,10 +143,7 @@ test_that("preProcess works when provides url, archive, and destinationPath and 
 
 test_that("preProcess works when provides url, targetfile and destinationPath", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(url = url, targetFile = theRasterTestFilename(suff = "tif"),
@@ -183,10 +155,7 @@ test_that("preProcess works when provides url, targetfile and destinationPath", 
 
 test_that("preProcess works when provides url and destinationPath for a .rar file", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- theRasterTestRar
 
@@ -208,10 +177,7 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
 
 test_that("preProcess works when provides url, targetfile and destinationPath for a .rar file", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- theRasterTestRar
 
@@ -237,10 +203,7 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
 
 test_that("preProcess works when provides url, archive and destinationPath for a .rar file", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- theRasterTestRar
   rasterTestRarFilename <- theRasterTestFilename(suff = "rar")
@@ -263,10 +226,7 @@ test_that("preProcess works when provides url, archive and destinationPath for a
 
 test_that("preProcess works, but gives a warning when supplying cacheTags", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     testthat::expect_message({
@@ -279,10 +239,7 @@ test_that("preProcess works, but gives a warning when supplying cacheTags", {
 
 test_that("preProcess works, but gives a warning when supplying postProcessedFilename", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     testthat::expect_message({
@@ -296,10 +253,7 @@ test_that("preProcess works, but gives a warning when supplying postProcessedFil
 
 test_that("preProcess works, but gives a warning when supplying rasterInterpMethod", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     testthat::expect_message({
@@ -313,10 +267,7 @@ test_that("preProcess works, but gives a warning when supplying rasterInterpMeth
 
 test_that("preProcess works, but gives a warning when supplying rasterDatatype", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     testthat::expect_message({
@@ -329,10 +280,7 @@ test_that("preProcess works, but gives a warning when supplying rasterDatatype",
 
 test_that("preProcess works, but gives a warning when supplying pkg", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     testthat::expect_message({
@@ -345,10 +293,7 @@ test_that("preProcess works, but gives a warning when supplying pkg", {
 
 test_that("message when files from archive are already present", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
   noisyOutput <- capture.output(
     ccc <- testthat::capture_output(
@@ -366,10 +311,7 @@ test_that("message when files from archive are already present", {
 
 test_that("message when file is a shapefile", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/shapefileTest.zip"
   noisyOutput <- capture.output(
     ccc <- testthat::capture_output(
@@ -382,10 +324,7 @@ test_that("message when file is a shapefile", {
 
 test_that("message when doesn't know the targetFile extension", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/unknownTargetFile.zip"
   noisyOutput <- capture.output(
     ccc <- testthat::capture_output(
@@ -398,10 +337,7 @@ test_that("message when doesn't know the targetFile extension", {
 
 test_that("When supplying two files without archive, when archive and files have different names", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/twoKnownFiles.zip"
   noisyOutput <- capture.output(
     ccc <- testthat::capture_output(
@@ -416,10 +352,7 @@ test_that("When supplying two files without archive, when archive and files have
 
 test_that("message when archive has two known files (raster and shapefile)", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/knownFiles.zip"
   noisyOutput <- capture.output(
     ccc <- testthat::capture_output(
@@ -435,10 +368,7 @@ test_that("message when archive has two known files (raster and shapefile)", {
 
 test_that("message when extracting a file that is already present", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   url1 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
   noisyOutput <- capture.output({
     ccc <- testthat::capture_output({
@@ -467,10 +397,7 @@ test_that("masking with larger extent obj", {
   skip_on_cran()
   skip_on_ci()
 
-  testInit("terra", needGoogleDriveAuth = TRUE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needGoogleDriveAuth = TRUE, needInternet = TRUE)
   smallRT <- prepInputs(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
   sam <- sample(terra::ncell(smallRT), size = terra::ncell(smallRT)/2)
   smallRT[] <- NA
@@ -492,11 +419,8 @@ test_that("Test of using future and progress indicator for lrg files on Google D
   skip_if_not_installed("googledrive")
 
   if (interactive()) {
-    testInit(c("terra", "future"), needGoogleDriveAuth = TRUE,
+    testInit(c("terra", "future"), needGoogleDriveAuth = TRUE, needInternet = TRUE,
                             opts = list("reproducible.futurePlan" = "multisession"))
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
     noisyOutput <- capture.output({
       ccc <- testthat::capture_output({
         smallRT <- preProcess(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
@@ -565,7 +489,7 @@ test_that("lightweight tests for preProcess code coverage", {
 test_that("large test for nested file structures in zips", {
   skip_on_cran()
   skip_on_ci()
-  testInit(c("sf", "googledrive"))
+  testInit(c("sf", "googledrive"), needInternet = TRUE)
   climateDataURL <- "https://drive.google.com/file/d/1we9GqEVAORWLbHi3it66VnCcvLu85QIk"
 
   ## extracts flat files, overwriting and keeping only the last subdir's files

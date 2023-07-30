@@ -12,15 +12,37 @@ skip_if_no_token <- function() {
 #   optsAsk in this environment,
 # loads and libraries indicated plus testthat,
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
+# if `needInternet = TRUE`, it will only re-try every 30 seconds
 testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt = "",
-                     opts = NULL, needGoogleDriveAuth = FALSE) {
+                     opts = NULL, needGoogleDriveAuth = FALSE, needInternet = FALSE) {
 
   set.randomseed()
 
   pf <- parent.frame()
 
-  if (isTRUE(needGoogleDriveAuth))
+
+  if (isTRUE(needGoogleDriveAuth)) {
     libraries <- c(libraries, "googledrive")
+    needInternet <- TRUE
+  }
+
+  if (isTRUE(needInternet)) {
+    if (!is.null(.pkgEnv$.internetExists)) {
+      if (difftime(Sys.time(), .pkgEnv$.internetExistsLastCheck) > 30) {
+        .pkgEnv$.internetExists <- NULL
+        .pkgEnv$.internetExistsLastCheck <- NULL
+      }
+      }
+    if (is.null(.pkgEnv$.internetExists)) {
+      .pkgEnv$.internetExists <- internetExists()
+      .pkgEnv$.internetExistsLastCheck <- Sys.time()
+    }
+    intExists <- .pkgEnv$.internetExists
+    if (!intExists) skip("Need internet")
+
+  }
+
+
   if (length(libraries)) {
     libraries <- unique(libraries)
     loadedAlready <- vapply(libraries, function(pkg)
@@ -48,8 +70,8 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
             cache <- if (file.exists(possLocalCache))
               possLocalCache else TRUE
             switch(Sys.info()["user"],
-                   emcintir = {options(gargle_oauth_email = "predictiveecology@gmail.com",
-                                       gargle_oauth_cache = cache)},
+                   emcintir = {options(gargle_oauth_email = "predictiveecology@gmail.com")},#,
+                                       #gargle_oauth_cache = cache)},
                    NULL)
           }
           if (is.null(getOption("gargle_oauth_email"))) {

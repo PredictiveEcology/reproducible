@@ -692,7 +692,7 @@ test_that("test future", {
   # skip_if_not_installed("future")
 
   .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
-  if (.onLinux) {
+  # if (.onLinux) {
     testInit(c("terra", "future"), verbose = TRUE, tmpFileExt = ".rds",
                             opts = list("future.supportsMulticore.unstable" = "quiet",
                                         "reproducible.futurePlan" = "multicore"))
@@ -716,7 +716,7 @@ test_that("test future", {
     for (i in 1:3) {
       expect_true(identical(attr(d[[i]], ".Cache")$newCache, FALSE))
     }
-  }
+  # }
 })
 
 test_that("test mergeCache", {
@@ -1559,11 +1559,8 @@ test_that("test cache; SpatRaster attributes", {
                           opts = list(
                             "rasterTmpDir" = tempdir2(rndstr(1,6)),
                             "reproducible.inputPaths" = NULL,
-                            "reproducible.overwrite" = TRUE)
+                            "reproducible.overwrite" = TRUE), needInternet = TRUE
   )
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
 
   options("reproducible.cachePath" = tmpdir)
   dPath <- file.path(tmpdir, "inputs")
