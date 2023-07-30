@@ -369,11 +369,12 @@ test_that("test keepCache", {
   Cache(rnorm, 10, cachePath = tmpdir)
   Cache(runif, 10, cachePath = tmpdir)
 
-  # this next was round --> but match.call on primitive is not positional
+  # this next is round which is a primitive *with* methods -->
   # --> an exception see ?match.call which says "normally positional"
-  # This fails because round dispatches .Primitive("round") which internally in the C
-  # code now matches non-positionally e.g., round.POSIXt has 'units'
-  Cache(sample, runif(4), cachePath = tmpdir)
+  # This failed previously because round dispatches .Primitive("round") which internally in the C
+  # code now (R > 4.3.1) matches non-positionally e.g., round.POSIXt has 'units'
+  Cache(round, runif(4), cachePath = tmpdir)
+
   expect_true(NROW(showCache(tmpdir)[!tagKey %in% .ignoreTagKeys()]) ==
                 .cacheNumDefaultTags() * 3)
   expect_true(NROW(showCache(tmpdir, c("rnorm", "runif"))[!tagKey %in% .ignoreTagKeys()]) ==
@@ -408,6 +409,11 @@ test_that("test keepCache", {
 
   # shows spades, runif and rnorm objects
   expect_true(length(unique(showCache(tmpdir)[[.cacheTableHashColName()]])) == 2)
+
+  # This is from changes to round by luke tierney
+  aa <- Sys.time()
+  Cache(round, aa, units = "mins", cachePath = tmpdir)
+
 })
 
 test_that("test environments", {
@@ -1363,6 +1369,15 @@ test_that("change to new capturing of FUN & base pipe", {
   err <- capture_error(out2 <- eval(parse(text = f1)))
   expect_true(is(err, "simpleError"))
 
+  # Test for new `round` in R > 4.3.1 with ... i.e., a primitive with method dispatch
+  f1 <- paste("
+      {runif(1e6, 1, 1.1) |>
+        mean() |>
+        round()} |> # _ Only works with R >= 4.2.0
+        Cache(cachePath = tmpCache)
+    ")
+  expect_no_error(mess2 <- capture_messages(
+    out2 <- eval(parse(text = f1))))
 })
 
 test_that("test cache with new approach to match.call", {

@@ -1096,7 +1096,7 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
 }
 
 
-matchCall <- function(FUNcaptured, envir = parent.frame()) {
+matchCall <- function(FUNcaptured, envir = parent.frame(), fnName) {
   if (length(FUNcaptured) > 1) {
     FUN <- FUNcaptured[[1]]
     args <- as.list(FUNcaptured[-1])
@@ -1107,8 +1107,25 @@ matchCall <- function(FUNcaptured, envir = parent.frame()) {
         mc <- list(FUN)
       } else {
         if (is.primitive(FUN)) {
-          args2 <- forms
+          # Must test for "non-normal non-positional matching", like round and round.POSIXt, ... see ?match.call
+          #  can't tell a priori that a primitive doesn't have methods, so must test first.
+          #  These will always be in base, so can just get0 directly, which is WAY faster than any other way
+          nonPrimMeth <- NULL
+          if (!is.null(fnName)) {
+            cls <- is(args[[1]])
+            # use for loop, so can break out if a method is found quickly
+            for (classHere in cls) {
+              nonPrimMeth <- get0(paste0(fnName, ".", classHere))
+              if (!is.null(nonPrimMeth)) break
+            }
+          }
+          if (length(nonPrimMeth)) {
+            args2 <- formals(nonPrimMeth)
+          } else {
+            args2 <- forms
+          }
           args2[seq(args)] <- args
+          args2 <- args2[seq_along(args)] # chop off any trailing args
           mc <- append(list(FUN), args2)
         } else {
           # args <- as.list(args[-1]) # remove the list that is inside the substitute; move to outside
@@ -1352,11 +1369,13 @@ getFunctionName2 <- function(mc) {
       stop("Cache can only handle curly braces if all internal code uses base pipe |>; see examples")
     FUNcaptured <- FUNcaptured[[1]]
     FUNcapturedNamesEvaled <- recursiveEvalNamesOnly(FUNcaptured, envir = callingEnv) # deals with e.g., stats::rnorm, b$fun, b[[fun]]
-    mc1 <- matchCall(FUNcaptured, envir = callingEnv)
-    FUNcapturedNamesEvaled <- matchCall(FUNcapturedNamesEvaled, envir = callingEnv)
+    mc1 <- matchCall(FUNcaptured, envir = callingEnv, fnName = fnNameInit)
     if (is.null(fnNameInit))
       fnNameInit <- getFunctionName2(mc1[[1]])
+    FUNcapturedNamesEvaled <- matchCall(FUNcapturedNamesEvaled, envir = callingEnv, fnName = fnNameInit)
   } else {
+    if (is.null(fnNameInit))
+      fnNameInit <- getFunctionName2(FUNcapturedOrig)
     if (length(FUNcaptured) > 1) {
       # The next line works for any object that is NOT in a ..., because the
       #   object never shows up in the environment; it is passed through
@@ -1387,12 +1406,10 @@ getFunctionName2 <- function(mc) {
         FUNcapturedArgs <- FUNcapturedArgs[[1]]
 
       FUNcapturedNamesEvaled <- as.call(append(list(FUNcaptured[[1]]), FUNcapturedArgs))
-      FUNcapturedNamesEvaled <- matchCall(FUNcapturedNamesEvaled, callingEnv)
+      FUNcapturedNamesEvaled <- matchCall(FUNcapturedNamesEvaled, callingEnv, fnName = fnNameInit)
     } else { # this is a function called with no arguments
       FUNcapturedNamesEvaled <- FUNcaptured
     }
-    if (is.null(fnNameInit))
-      fnNameInit <- getFunctionName2(FUNcapturedOrig)
   }
 
 
