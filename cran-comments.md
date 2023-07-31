@@ -1,6 +1,6 @@
 ## Release information
 
-This is a minor update that accommodates some reverse depends packages that will be shortly submitted to CRAN, as well as several minor enhancements as outlined in the News.
+This is a minor update that accommodates changes in R-devel that are causing a failure in testing of this package. Several other minor enhancements and bugfixes are alson included as outlined in the News.
 
 See `NEWS.md` for a full list of changes.
 
@@ -31,4 +31,4 @@ No NOTEs, WARNINGs, or ERRORs
 
 ## Downstream dependencies
 
-Currently `SpaDES.tools`, No conflicts were detected.
+Currently `SpaDES.tools` and `SpaDES.core`. No conflicts were detected.
