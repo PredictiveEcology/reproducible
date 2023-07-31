@@ -31,6 +31,7 @@ Marchal
 ORCID
 OSs
 PROJ
+PRs
 PostgreSQL
 Postgres
 R6
@@ -48,6 +49,7 @@ SpatStat
 SpatVect
 Stochasticity
 Sys
+Tierney
 Ver
 absolutePrefix
 algorithmically
@@ -96,6 +98,7 @@ gridded
 hardlink
 hardlinks
 http
+https
 impactful
 keepCache
 knownRelativeFiles
