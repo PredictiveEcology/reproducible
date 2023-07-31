@@ -2,11 +2,19 @@
 % Please edit documentation in R/helpers.R
 \name{internetExists}
 \alias{internetExists}
-\title{Checks for internet, using https://cloud.r-project.org}
+\alias{urlExists}
+\title{Checks for existed of a url or the internet using https://cloud.r-project.org}
 \usage{
 internetExists()
+
+urlExists(url)
+}
+\arguments{
+\item{url}{A url of the form https://... to test for existence.}
 }
 \value{
+Logical, \code{TRUE} if internet site exists, \code{FALSE} otherwise
+
 Logical, \code{TRUE} if internet site exists, \code{FALSE} otherwise
 }
 \description{
