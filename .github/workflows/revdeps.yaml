@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main, master, development]
   schedule:
-    - cron: '13 6 * * * '
+    - cron: '23 23 * * 0 '
 
 name: revdeps-check
 
