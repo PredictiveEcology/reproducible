@@ -67,7 +67,7 @@ objSize(foo) # all the elements in the environment
 utils::object.size(foo) # different - only measuring the environment as an object
 
 utils::object.size(prepInputs) # only the function, without its enclosing environment
-objSize(prepInputs)     # the function, plus its enclosing environment
+objSize(prepInputs) # the function, plus its enclosing environment
 
 os1 <- utils::object.size(as.environment("package:reproducible"))
 (os1) # very small -- just the environment container
@@ -76,6 +76,6 @@ os1 <- utils::object.size(as.environment("package:reproducible"))
 \donttest{
 os2 <- objSize(as.environment("package:reproducible"))
 sum(unlist(os2)) # possibly 100+ MB, with all functions, objects
-                 # and imported functions
+# and imported functions
 }
 }

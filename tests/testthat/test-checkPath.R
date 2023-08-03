@@ -10,15 +10,17 @@ test_that("checkPath: normPath consistency", {
 
   # don't use checkPath here because we are testing normPath!
 
-  paths <- list("./aaa/zzz",
-                "./aaa/zzz/",
-                ".//aaa//zzz",
-                ".//aaa//zzz/",
-                ".\\aaa\\zzz",
-                ".\\aaa\\zzz\\",
-                paste0(tmpdir, "/aaa/zzz"), # nolint
-                paste0(tmpdir, "/aaa/zzz/"), # nolint
-                file.path(tmpdir, "aaa", "zzz"))
+  paths <- list(
+    "./aaa/zzz",
+    "./aaa/zzz/",
+    ".//aaa//zzz",
+    ".//aaa//zzz/",
+    ".\\aaa\\zzz",
+    ".\\aaa\\zzz\\",
+    paste0(tmpdir, "/aaa/zzz"), # nolint
+    paste0(tmpdir, "/aaa/zzz/"), # nolint
+    file.path(tmpdir, "aaa", "zzz")
+  )
 
   checked <- normPath(paths)
   expect_equal(length(unique(checked)), 1)
@@ -48,15 +50,17 @@ test_that("checkPath: checkPath consistency", {
   # }, add = TRUE)
 
   dir.create("aaa/zzz", recursive = TRUE, showWarnings = FALSE)
-  paths <- list("./aaa/zzz",
-                "./aaa/zzz/",
-                ".//aaa//zzz",
-                ".//aaa//zzz/",
-                ".\\aaa\\zzz",
-                ".\\aaa\\zzz\\",
-                paste0(tmpdir, "/aaa/zzz"), # nolint
-                paste0(tmpdir, "/aaa/zzz/"), # nolint
-                file.path(tmpdir, "aaa", "zzz"))
+  paths <- list(
+    "./aaa/zzz",
+    "./aaa/zzz/",
+    ".//aaa//zzz",
+    ".//aaa//zzz/",
+    ".\\aaa\\zzz",
+    ".\\aaa\\zzz\\",
+    paste0(tmpdir, "/aaa/zzz"), # nolint
+    paste0(tmpdir, "/aaa/zzz/"), # nolint
+    file.path(tmpdir, "aaa", "zzz")
+  )
 
   checked <- lapply(paths, checkPath, create = FALSE)
   expect_equal(length(unique(checked)), 1)
@@ -75,6 +79,4 @@ test_that("checkPath: checkPath consistency", {
   opts <- options("reproducible.verbose" = 1)
   on.exit(options(opts), add = TRUE)
   expect_message(a <- checkPath(f1), "is an existing file")
-
 })
-

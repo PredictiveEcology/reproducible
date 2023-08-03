@@ -1,12 +1,19 @@
 test_that("testing terra", {
-  #if (interactive()) {
-  testInit("terra", needGoogleDriveAuth = FALSE,
-                          opts = list(reproducible.useMemoise = FALSE,
-                                      "rgdal_show_exportToProj4_warnings"="none"))
+  # if (interactive()) {
+  testInit("terra",
+    needGoogleDriveAuth = FALSE,
+    opts = list(
+      reproducible.useMemoise = FALSE,
+      "rgdal_show_exportToProj4_warnings" = "none"
+    )
+  )
   opts <- options(reproducible.cachePath = tmpCache)
-  on.exit({
-    options(opts)
-  }, add = TRUE)
+  on.exit(
+    {
+      options(opts)
+    },
+    add = TRUE
+  )
 
   skip_if_not_installed("terra")
   f <- system.file("ex/elev.tif", package = "terra")
@@ -64,7 +71,7 @@ test_that("testing terra", {
 
   f <- system.file("ex/lux.shp", package = "terra")
   vOrig <- terra::vect(f)
-  v <- vOrig[1:2,]
+  v <- vOrig[1:2, ]
   rf <- system.file("ex/elev.tif", package = "terra")
   xOrig <- terra::rast(rf)
   elevRas <- terra::deepcopy(xOrig)
@@ -91,7 +98,7 @@ test_that("testing terra", {
   expect_true(terra::ext(v) <= terra::ext(t9))
 
   # SR, SV
-    t2 <- postProcessTo(elevRas, v)
+  t2 <- postProcessTo(elevRas, v)
 
   # No crop
   t3 <- postProcessTo(elevRas, maskTo = v)
@@ -102,15 +109,15 @@ test_that("testing terra", {
     vOrigsf <- sf::st_as_sf(vOrig)
   }
 
-    t4 <- postProcessTo(elevRas, cropTo = v, maskTo = v)
-    expect_true(terra::ext(t4) == terra::ext(t2))
+  t4 <- postProcessTo(elevRas, cropTo = v, maskTo = v)
+  expect_true(terra::ext(t4) == terra::ext(t2))
 
   t5 <- postProcessTo(elevRas, cropTo = v, maskTo = v, projectTo = v)
-  expect_true(identical(t5[],t2[]))
+  expect_true(identical(t5[], t2[]))
 
   if (.requireNamespace("sf")) {
     t5sf <- postProcessTo(elevRas, cropTo = vsf, maskTo = vsf, projectTo = vsf)
-    expect_true(identical(t5sf[],t2[]))
+    expect_true(identical(t5sf[], t2[]))
   }
 
   t6 <- terra::extract(elevRas, v, mean, na.rm = TRUE)
@@ -165,14 +172,14 @@ test_that("testing terra", {
 
   # Projection --> BAD BUG HERE ... CAN"T REPRODUCE ALWAYS --> use sf for testing Dec 9, 2022
   if (FALSE) {
-    utm <- terra::crs("epsg:23028")#sf::st_crs("epsg:23028")$wkt
+    utm <- terra::crs("epsg:23028") # sf::st_crs("epsg:23028")$wkt
     # albers <- sf::st_crs("epsg:5070")$wkt
     vutm <- terra::project(v, utm)
   }
 
   if (.requireNamespace("sf")) {
     # utm <- sf::st_crs("epsg:23028")#$wkt
-    utm <- terra::crs("epsg:23028")#$wkt
+    utm <- terra::crs("epsg:23028") # $wkt
 
     vsfutm <- sf::st_transform(vsf, utm)
     vutm <- terra::vect(vsfutm)
@@ -187,13 +194,16 @@ test_that("testing terra", {
     # from is sf, to is SpatRast --> skip maskTo
     if (getRversion() >= "4.1" && isWindows()) {
       vsfInUTMviaSpatRast <-
-        suppressWarningsSpecific(falseWarnings = "attribute variables are assumed",
-                                 postProcessTo(vOrigsf, rutm))
+        suppressWarningsSpecific(
+          falseWarnings = "attribute variables are assumed",
+          postProcessTo(vOrigsf, rutm)
+        )
       expect_true(is(vsfInUTMviaSpatRast, "sf"))
       expect_true(sf::st_crs(vsfInUTMviaSpatRast) == sf::st_crs(rutm))
-      expect_true(isTRUE(all.equal(round(terra::ext(rutm), 6),
-                                   round(terra::ext(vsfInUTMviaSpatRast), 6))))
-
+      expect_true(isTRUE(all.equal(
+        round(terra::ext(rutm), 6),
+        round(terra::ext(vsfInUTMviaSpatRast), 6)
+      )))
     }
 
     # Check for cases where `to` does not overlap with `from`
@@ -209,14 +219,16 @@ test_that("testing terra", {
     if (.requireNamespace("sf")) {
       expect_warning(expect_message(postProcessTo(vOrigsf, ext3))) # sf gives warning too
       expect_message(postProcessTo(terra::vect(vOrigsf), ext2))
-      #expect_warning(expect_error(postProcessTo(vOrigsf, ext3))) # sf gives warning too
-      #expect_error(postProcessTo(terra::vect(vOrigsf), ext2))
+      # expect_warning(expect_error(postProcessTo(vOrigsf, ext3))) # sf gives warning too
+      # expect_error(postProcessTo(terra::vect(vOrigsf), ext2))
     }
     if (.requireNamespace("sf")) {
-      if (.requireNamespace("sp"))
+      if (.requireNamespace("sp")) {
         expect_error(postProcessTo(as(vOrigsf, "Spatial"), as(ext2, "Spatial")))
-      if (.requireNamespace("raster"))
+      }
+      if (.requireNamespace("raster")) {
         expect_error(postProcessTo(as(vOrigsf, "Spatial"), ext1Ra))
+      }
     }
 
     # if (Sys.info()["user"] %in% "emcintir") {
@@ -281,8 +293,9 @@ test_that("testing terra", {
     expect_false(terra::same.crs(t14, vutm))
 
     if (getRversion() >= "4.1" && isWindows()) { # bug in older `terra` that is not going to be fixed here
-      suppressWarningsSpecific(falseWarnings = "attribute variables",
-                               t14SF <- postProcessTo(xVect2SF, vutmSF, projectTo = NA)
+      suppressWarningsSpecific(
+        falseWarnings = "attribute variables",
+        t14SF <- postProcessTo(xVect2SF, vutmSF, projectTo = NA)
       )
       expect_true(terra::same.crs(t14SF, xVect2SF))
       expect_false(terra::same.crs(t14SF, vutmSF))
@@ -294,8 +307,9 @@ test_that("testing terra", {
     expect_true(terra::same.crs(t15, vutm))
 
     if (getRversion() >= "4.1" && isWindows()) { # bug in older `terra` that is not going to be fixed here
-      suppressWarningsSpecific(falseWarnings = "attribute variables",
-                               t15SF <- postProcessTo(xVect2SF, vutmSF, maskTo = NA)
+      suppressWarningsSpecific(
+        falseWarnings = "attribute variables",
+        t15SF <- postProcessTo(xVect2SF, vutmSF, maskTo = NA)
       )
       expect_false(terra::same.crs(t15SF, xVect2SF))
       expect_true(terra::same.crs(t15SF, vutmSF))
@@ -305,8 +319,9 @@ test_that("testing terra", {
     expect_false(terra::same.crs(t18, xVect2))
     expect_true(terra::same.crs(t18, vutm))
 
-    suppressWarningsSpecific(falseWarnings = "attribute variables",
-                             t18SF <- postProcessTo(xVect2SF, vutmSF, cropTo = NA)
+    suppressWarningsSpecific(
+      falseWarnings = "attribute variables",
+      t18SF <- postProcessTo(xVect2SF, vutmSF, cropTo = NA)
     )
     expect_false(terra::same.crs(t18SF, xVect2SF))
     expect_true(terra::same.crs(t18SF, vutmSF))
@@ -365,12 +380,12 @@ test_that("testing terra", {
     expect_true(all(terra::res(t20res250) == 250))
 
     ## same projection change resolution only (will likely affect extent)
-    y2 <- terra::rast(crs = terra::crs(y), res = 0.008333333*2, extent = terra::ext(y))
+    y2 <- terra::rast(crs = terra::crs(y), res = 0.008333333 * 2, extent = terra::ext(y))
     y2 <- terra::setValues(y2, rep(1, terra::ncell(y2)))
 
     t22 <- postProcessTo(elevRas, to = y2, overwrite = TRUE) # not sure why need this; R devel on Winbuilder Nov 26, 2022
     expect_true(terra::same.crs(t22, elevRas))
-    expect_true(terra::ext(t22) == terra::ext(y2))   ## "identical" may say FALSE (decimal plates?)
+    expect_true(terra::ext(t22) == terra::ext(y2)) ## "identical" may say FALSE (decimal plates?)
     expect_true(identical(terra::res(t22), terra::res(y2)))
     expect_false(identical(terra::res(t22), terra::res(elevRas)))
 
@@ -390,7 +405,8 @@ test_that("testing terra", {
       ras1[] <- ras1[]
       ras2[] <- ras2[]
       r3 <- list(ras1, ras2) # this is for
-      r3[[1]][] <- r3[[1]][]; r3[[2]][] <- r3[[2]][] # bring to RAM
+      r3[[1]][] <- r3[[1]][]
+      r3[[2]][] <- r3[[2]][] # bring to RAM
 
       # Raster & SpatVect
       ras1Small <- cropTo(ras1, t18)
@@ -430,7 +446,7 @@ test_that("testing terra", {
       spatRas1SmallAll <- projectTo(terra::rast(ras1SmallAll), t20)
       expect_true( #  these are off b/c of projection probably
         abs(sum(!is.na(values2(spatRas1SmallAll))) -
-              sum(!is.na(values2(t20MaskedByRas)))) <= 0
+          sum(!is.na(values2(t20MaskedByRas)))) <= 0
       )
 
       if (interactive()) {
@@ -449,11 +465,6 @@ test_that("testing terra", {
       w3 <- fixErrorsIn(w2)
       expect_true(!all(terra::is.valid(w2)))
       expect_true(all(terra::is.valid(w3)))
-
-
     }
   }
-
-
-
 })

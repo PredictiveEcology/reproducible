@@ -57,11 +57,14 @@ bb <- Cache(rnorm, 1, cachePath = tmpCacheDir)
 
 # Copy all files from tmpCache to tmpdir
 froms <- normalizePath(dir(tmpCacheDir, recursive = TRUE, full.names = TRUE),
-                       mustWork = FALSE)
+  mustWork = FALSE
+)
 dir.create(file.path(tmpdirPath, "rasters"), recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(tmpdirPath, "cacheOutputs"), recursive = TRUE, showWarnings = FALSE)
-file.copy(from = froms, overwrite = TRUE,
-          to = gsub(tmpCache, tmpdir, froms))
+file.copy(
+  from = froms, overwrite = TRUE,
+  to = gsub(tmpCache, tmpdir, froms)
+)
 
 # Can use 'movedCache' to update the database table, though will generally
 #   happen automatically, with message indicating so

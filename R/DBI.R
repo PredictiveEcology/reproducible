@@ -37,7 +37,8 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
   alreadyExists <- CacheIsACache(cachePath, drv = drv, conn = conn, create = TRUE)
   if (alreadyExists && force == FALSE) {
     messageCache("Cache already exists at ", cachePath, " and force = FALSE. Not creating new cache.",
-                 verbose = verbose)
+      verbose = verbose
+    )
     return(invisible(cachePath))
   }
 
@@ -56,15 +57,22 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
   dt <- .emptyCacheTable
 
   # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
-  a <- retry(retries = 250, exponentialDecayBase = 1.01,
-             quote(DBI::dbListTables(conn)))
+  a <- retry(
+    retries = 250, exponentialDecayBase = 1.01,
+    quote(DBI::dbListTables(conn))
+  )
 
-  if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
-    #retry(retries = 5, exponentialDecayBase = 1.5, quote(
-    try(DBI::dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
-                          field.types = c(cacheId = "text", tagKey = "text",
-                                          tagValue = "text", createdDate = "text")), silent = TRUE)
-  #)
+  if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a)) {
+    # retry(retries = 5, exponentialDecayBase = 1.5, quote(
+    try(DBI::dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt,
+      overwrite = FALSE,
+      field.types = c(
+        cacheId = "text", tagKey = "text",
+        tagValue = "text", createdDate = "text"
+      )
+    ), silent = TRUE)
+  }
+  # )
 }
 
 #' Save an object to Cache
@@ -87,14 +95,15 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                         conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId,
                         linkToCacheId = NULL,
                         verbose = getOption("reproducible.verbose")) {
-  if (useDBI())
+  if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
       on.exit(DBI::dbDisconnect(conn))
     }
+  }
 
-  if (missing(userTags)) userTags = "otherFunctions"
-  if (length(userTags) == 0) userTags = "otherFunctions"
+  if (missing(userTags)) userTags <- "otherFunctions"
+  if (length(userTags) == 0) userTags <- "otherFunctions"
   if (NCOL(userTags) > 1) {
     tagKey <- userTags$tagKey
     tagValue <- userTags$tagValue
@@ -113,35 +122,39 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     suppressWarnings({
       out <- try(file.link(from = ftL, to = fts), silent = TRUE)
     })
-    if (is(out, "try-error") | !all((out %in% TRUE)))
+    if (is(out, "try-error") || !all((out %in% TRUE))) {
       linkToCacheId <- NULL
-    else {
-      messageCache("  (A file with identical properties already exists in the Cache: ",basename(ftL),"; ",
-              "The newly added (",basename(fts),") is a file.link to that file)",
-              verbose = verbose)
+    } else {
+      messageCache("  (A file with identical properties already exists in the Cache: ", basename(ftL), "; ",
+        "The newly added (", basename(fts), ") is a file.link to that file)",
+        verbose = verbose
+      )
     }
     fs <- file.size(fts)
   }
 
   # Save to db file first, then storage file
-  dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
-                   "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
+  dt <- data.table(
+    "cacheId" = cacheId, "tagKey" = tagKey,
+    "tagValue" = tagValue, "createdDate" = as.character(Sys.time())
+  )
   if (!useDBI()) {
     dtFile <- saveDBFileSingle(dt = dt, cachePath, cacheId)
     # dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
     # saveFilesInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
-
   } else {
     a <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-      DBI::dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
+      DBI::dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)
+    ))
   }
 
   if (is.null(linkToCacheId)) {
     fs <- saveFilesInCacheFolder(cachePath = cachePath, obj, fts, cacheId = cacheId)
   }
   if (isTRUE(getOption("reproducible.useMemoise"))) {
-    if (is.null(.pkgEnv[[cachePath]]))
+    if (is.null(.pkgEnv[[cachePath]])) {
       .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
+    }
     obj <- .unwrap(obj, cachePath, cacheId, drv, conn) # This takes time, but whether it happens now or later, same
     obj2 <- makeMemoisable(obj)
     assign(cacheId, obj2, envir = .pkgEnv[[cachePath]])
@@ -162,18 +175,19 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   #  So effectively, it is like 6x buffer to try to avoid false positives.
   whichOS <- which(tagKey == "object.size")
   if (length(whichOS)) {
-    fsBig <- (as.numeric(tagValue[whichOS]) * 4 ) < fs
+    fsBig <- (as.numeric(tagValue[whichOS]) * 4) < fs
     if (isTRUE(fsBig)) {
       # browser(expr = exists("._saveToCache_3"))
       messageCache("Object with cacheId ", cacheId, " appears to have a much larger size ",
-              "on disk than in memory. ",
-              "This usually means that the object has captured an environment with ",
-              "many objects due to how a function or a formula is defined. ",
-              "Usually, a solution involves using quote and eval around the formulas ",
-              "and defining functions in a package or otherwise clean space, ",
-              "i.e., not inside another function.\n",
-              "See http://adv-r.had.co.nz/memory.html#gc and 'capturing environments'.",
-              verbose = verbose)
+        "on disk than in memory. ",
+        "This usually means that the object has captured an environment with ",
+        "many objects due to how a function or a formula is defined. ",
+        "Usually, a solution involves using quote and eval around the formulas ",
+        "and defining functions in a package or otherwise clean space, ",
+        "i.e., not inside another function.\n",
+        "See http://adv-r.had.co.nz/memory.html#gc and 'capturing environments'.",
+        verbose = verbose
+      )
     }
   }
 
@@ -204,13 +218,15 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     startLoadTime <- Sys.time()
   }
 
-  if (length(cacheId) > 1)
+  if (length(cacheId) > 1) {
     cacheId <- unique(cacheId)
+  }
 
   isMemoised <- NA
   if (isTRUE(getOption("reproducible.useMemoise"))) {
-    if (is.null(.pkgEnv[[cachePath]]))
+    if (is.null(.pkgEnv[[cachePath]])) {
       .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
+    }
     isMemoised <- exists(cacheId, envir = .pkgEnv[[cachePath]])
     if (isTRUE(isMemoised)) {
       obj <- get(cacheId, envir = .pkgEnv[[cachePath]])
@@ -233,27 +249,37 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
       if (length(sameCacheID)) {
         messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
-                     fileExt(f), ")",
-                     verbose = verbose)
-        obj <- loadFromCache(cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
-                             cacheId = cacheId,
-                             format = fileExt(sameCacheID),
-                             verbose = verbose)
+          fileExt(f), ")",
+          verbose = verbose
+        )
+        obj <- loadFromCache(
+          cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
+          cacheId = cacheId,
+          format = fileExt(sameCacheID),
+          verbose = verbose
+        )
         obj <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
-        fs <- saveToCache(obj = obj, cachePath = cachePath, drv = drv, conn = conn,
-                          cacheId = cacheId)
-        rmFromCache(cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
-                    format = fileExt(sameCacheID))
+        fs <- saveToCache(
+          obj = obj, cachePath = cachePath, drv = drv, conn = conn,
+          cacheId = cacheId
+        )
+        rmFromCache(
+          cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+          format = fileExt(sameCacheID)
+        )
         return(fs)
       }
     }
     # Need exclusive lock
     obj <- loadFile(f, # format = fileFormat,
-                    fullCacheTableForObj = fullCacheTableForObj,
-                    cachePath = cachePath)
-    obj <- .unwrap(obj, cachePath = cachePath,
-                                    cacheId = cacheId,
-                                    drv = drv, conn = conn)
+      fullCacheTableForObj = fullCacheTableForObj,
+      cachePath = cachePath
+    )
+    obj <- .unwrap(obj,
+      cachePath = cachePath,
+      cacheId = cacheId,
+      drv = drv, conn = conn
+    )
   }
 
   # Class-specific message
@@ -285,15 +311,16 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
 
   obj
-
 }
 
 
 extractFromCache <- function(sc, elem, ifNot = NULL) {
-
   rowNum <- sc[["tagKey"]] == elem
-  elemExtracted = if (any(rowNum))
-    sc[["tagValue"]][rowNum] else ifNot
+  elemExtracted <- if (any(rowNum)) {
+    sc[["tagValue"]][rowNum]
+  } else {
+    ifNot
+  }
   elemExtracted
 }
 
@@ -322,10 +349,11 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
       "DELETE FROM {DBI::SQL(glue::double_quote(dbTabName))} WHERE \"cacheId\" IN ({cacheId*})",
       dbTabName = CacheDBTableName(cachePath, drv),
       cacheId = cacheId,
-      .con = conn)
+      .con = conn
+    )
     res <- DBI::dbSendQuery(conn, query)
 
-    if (FALSE)   { # this is the "unsafe" version
+    if (FALSE) { # this is the "unsafe" version
       query <- paste0("DELETE FROM \"", CacheDBTableName(cachePath, drv), "\" WHERE \"cacheId\" = $1")
       res <- DBI::dbSendStatement(conn, query)
       DBI::dbBind(res, list(cacheId))
@@ -345,8 +373,10 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
                          verbose = getOption("reproducible.verbose")) {
   args <- list(drv = drv)
   if (is(drv, "SQLiteDriver")) {
-    args <- append(args, list(dbname = CacheDBFile(cachePath, drv = drv, conn = conn),
-                              synchronous = NULL))
+    args <- append(args, list(
+      dbname = CacheDBFile(cachePath, drv = drv, conn = conn),
+      synchronous = NULL
+    ))
   }
   conn <- try(do.call(DBI::dbConnect, args), silent = TRUE)
   if (is(conn, "try-error")) {
@@ -356,8 +386,10 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
   conn
 }
 
-.emptyCacheTable <- data.table::data.table(cacheId = character(), tagKey = character(),
-                               tagValue = character(), createdDate = character())
+.emptyCacheTable <- data.table::data.table(
+  cacheId = character(), tagKey = character(),
+  tagValue = character(), createdDate = character()
+)
 
 .addTagsRepo <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
                          tagKey = character(), tagValue = character(),
@@ -367,8 +399,9 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
   if (length(cacheId) > 0) {
     if (length(cacheId) > 1) stop(".addTagsRepo can only handle appending 1 tag at a time")
     curTime <- as.character(Sys.time())
-    if (length(tagKey) < length(cacheId))
+    if (length(tagKey) < length(cacheId)) {
       tagKey <- "accessed"
+    }
     if (length(tagValue) < length(cacheId)) {
       tagValue <- curTime
     }
@@ -388,17 +421,22 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
       rs <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
         DBI::dbSendStatement(
           conn,
-          paste0("insert into \"", CacheDBTableName(cachePath, drv), "\"",
-                 " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
-                 "('", cacheId,
-                 "', '", tagKey, "', '", tagValue, "', '", curTime, "')"))
+          paste0(
+            "insert into \"", CacheDBTableName(cachePath, drv), "\"",
+            " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
+            "('", cacheId,
+            "', '", tagKey, "', '", tagValue, "', '", curTime, "')"
+          )
+        )
       ))
 
       DBI::dbClearResult(rs)
     } else {
-      dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
-                      "tagValue" = tagValue,
-                      "createdDate" = as.character(Sys.time()))
+      dt <- data.table(
+        "cacheId" = cacheId, "tagKey" = tagKey,
+        "tagValue" = tagValue,
+        "createdDate" = as.character(Sys.time())
+      )
       dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
       dt2 <- loadFile(dtFile)
       dt <- rbindlist(list(dt2, dt))
@@ -431,13 +469,16 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
       #                 "createdDate" = as.character(Sys.time()))
       #
       # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
-      rs <- #retry(retries = 250, exponentialDecayBase = 1.01, quote(
+      rs <- # retry(retries = 250, exponentialDecayBase = 1.01, quote(
         DBI::dbSendStatement(
           conn,
-          paste0("update \"", CacheDBTableName(cachePath, drv), "\"",
-                 " set \"tagValue\" = '",tagValue,"' where ",
-                 " \"cacheId\" = '",cacheId, "'", " AND \"tagKey\" = '",tagKey, "'"))
-      #))
+          paste0(
+            "update \"", CacheDBTableName(cachePath, drv), "\"",
+            " set \"tagValue\" = '", tagValue, "' where ",
+            " \"cacheId\" = '", cacheId, "'", " AND \"tagKey\" = '", tagKey, "'"
+          )
+        )
+      # ))
       affectedAnyRows <- DBI::dbGetRowsAffected(rs) > 0
       DBI::dbClearResult(rs)
       if (!affectedAnyRows) {
@@ -446,9 +487,11 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
         }
       }
     } else {
-      dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
-                      "tagValue" = tagValue,
-                      "createdDate" = as.character(Sys.time()))
+      dt <- data.table(
+        "cacheId" = cacheId, "tagKey" = tagKey,
+        "tagValue" = tagValue,
+        "createdDate" = as.character(Sys.time())
+      )
       dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
       dt2 <- loadFile(dtFile)
       tk <- tagKey
@@ -460,13 +503,11 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
       }
       saveFilesInCacheFolder(dt2, dtFile, cachePath = cachePath, cacheId = cacheId)
     }
-
   }
-
 }
 .cacheNumDefaultTags <- function() {
   # if (useDBI())
-    7 # else 12
+  7 # else 12
 }
 
 .ignoreTagKeys <- function() {
@@ -474,7 +515,7 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 }
 
 .cacheTableHashColName <- function() {
-    "cacheId"
+  "cacheId"
 }
 
 .cacheTableTagColName <- function(option = NULL) {
@@ -521,7 +562,6 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL)) {
-
   type <- gsub("Driver", "", class(drv))
 
   if (useDBI()) {
@@ -531,11 +571,11 @@ CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
     #   }
 
     if (grepl(type, "SQLite")) {
-      #if (useDBI()) {
+      # if (useDBI()) {
       file.path(cachePath, "cache.db")
-      #} else {
+      # } else {
       #  file.path(cachePath, "backpack.db")
-      #}
+      # }
     } else {
       file.path(cachePath, "cache.txt")
     }
@@ -550,10 +590,10 @@ CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
 #' `CacheStorageDir` returns the name of the directory where cached objects are
 #' stored.
 CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
-  #if (useDBI()) {
-    file.path(cachePath, "cacheOutputs")
-  #} # else {
-    # file.path(cachePath, "gallery")
+  # if (useDBI()) {
+  file.path(cachePath, "cacheOutputs")
+  # } # else {
+  # file.path(cachePath, "gallery")
   # }
 }
 
@@ -573,7 +613,6 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 #' This can be loaded to memory with e.g., `loadFile`.
 CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cacheId,
                             format = NULL, obj = NULL) {
-
   if (is.null(format)) format <- getOption("reproducible.cacheSaveFormat", "rds")
   if (any(format %in% "check")) {
     format <- formatCheck(cachePath, cacheId, format)
@@ -584,16 +623,18 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
   } else if (isTRUE(any("rds" %in% csf))) {
     "rds"
   } else {
-    if (is.character(format))
+    if (is.character(format)) {
       format
-    else
+    } else {
       "rda"
+    }
   }
   filename <- paste(cacheId, csExtension, sep = ".")
   if (length(cacheId) > 1) {
     filename <- vapply(filename, nextNumericName, FUN.VALUE = character(1))
-    for (i in seq(filename[-1]) + 1)
+    for (i in seq(filename[-1]) + 1) {
       filename[i] <- basename2(nextNumericName(filename[i - 1]))
+    }
   }
 
   fns <- basename2(Filenames(obj, allowMultiple = TRUE))
@@ -623,7 +664,9 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
     newPath <- "dt"
   }
   # SQLite can't handle numbers as initial character of a table name
-  if (grepl("^[[:digit:]]", newPath)) {newPath <- paste0("_", newPath)}
+  if (grepl("^[[:digit:]]", newPath)) {
+    newPath <- paste0("_", newPath)
+  }
   return(newPath)
 }
 
@@ -650,7 +693,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   }
 
   ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
-               list.files(cachePath))
+    list.files(cachePath))
 
   # Need to check even if ret is TRUE because we may be in the process of changing
   convertDBbackendIfIncorrect(cachePath, drv, conn)
@@ -658,20 +701,24 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   needCreate <- FALSE
   if (useDBI()) {
     if (ret) {
-      tablesInDB <- retry(retries = 250, exponentialDecayBase = 1.01,
-                          quote(DBI::dbListTables(conn)))
+      tablesInDB <- retry(
+        retries = 250, exponentialDecayBase = 1.01,
+        quote(DBI::dbListTables(conn))
+      )
       tableShouldBe <- CacheDBTableName(cachePath)
       if (length(tablesInDB) == 1) {
         if (!any(tablesInDB %in% tableShouldBe) && grepl(type, "SQLite")) {
-          warning(paste0("The table in the Cache repo does not match the cachePath. ",
-                         "If this is because of a moved repository (i.e., files ",
-                         "copied), then it is being updated automatically. ",
-                         "If not, cache is in an error state. ",
-                         "You may need to delete the Cache"))
-          movedCache(cachePath, #old = tablesInDB,
-                     drv = drv, conn = conn)
+          warning(paste0(
+            "The table in the Cache repo does not match the cachePath. ",
+            "If this is because of a moved repository (i.e., files ",
+            "copied), then it is being updated automatically. ",
+            "If not, cache is in an error state. ",
+            "You may need to delete the Cache"
+          ))
+          movedCache(cachePath, # old = tablesInDB,
+            drv = drv, conn = conn
+          )
         }
-
       }
       ret <- ret && any(grepl(tableShouldBe, tablesInDB))
     }
@@ -686,8 +733,9 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
       needCreate <- TRUE
     }
   }
-  if (isTRUE(needCreate))
+  if (isTRUE(needCreate)) {
     file.create(CacheDBFile(cachePath, drv = drv, conn = conn))
+  }
 
   return(ret)
 }
@@ -725,11 +773,14 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
 #'
 #' # Copy all files from tmpCache to tmpdir
 #' froms <- normalizePath(dir(tmpCacheDir, recursive = TRUE, full.names = TRUE),
-#'                        mustWork = FALSE)
+#'   mustWork = FALSE
+#' )
 #' dir.create(file.path(tmpdirPath, "rasters"), recursive = TRUE, showWarnings = FALSE)
 #' dir.create(file.path(tmpdirPath, "cacheOutputs"), recursive = TRUE, showWarnings = FALSE)
-#' file.copy(from = froms, overwrite = TRUE,
-#'           to = gsub(tmpCache, tmpdir, froms))
+#' file.copy(
+#'   from = froms, overwrite = TRUE,
+#'   to = gsub(tmpCache, tmpdir, froms)
+#' )
 #'
 #' # Can use 'movedCache' to update the database table, though will generally
 #' #   happen automatically, with message indicating so
@@ -749,11 +800,13 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
     if (missing(old)) {
       if (length(tables) == 1) {
         messageCache("Assuming old database table is ", tables,
-                     verbose = verbose)
+          verbose = verbose
+        )
       } else {
         dbname <- try(conn@dbname, silent = TRUE)
-        if (is(dbname, "try-error"))
+        if (is(dbname, "try-error")) {
           dbname <- "conn"
+        }
         stop("old not provided and there are more than one database table in ", )
       }
       old <- tables
@@ -768,9 +821,10 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
     newTable <- CacheDBTableName(new, drv = drv)
 
     qry <- glue::glue_sql("ALTER TABLE {`old`} RENAME TO {`new`}",
-                          old = oldTable,
-                          new = newTable,
-                          .con = conn)
+      old = oldTable,
+      new = newTable,
+      .con = conn
+    )
     res <- retry(retries = 15, exponentialDecayBase = 1.01, quote(DBI::dbSendQuery(conn, qry)))
     # dbFetch(res)
     out <- DBI::dbClearResult(res)
@@ -780,8 +834,9 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
 
 loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL,
                      cachePath = getOption("reproducible.cachePath")) {
-  if (is.null(format))
+  if (is.null(format)) {
     format <- fileExt(file)
+  }
 
   if (format %in% "qs") {
     .requireNamespace("qs", stopOnFALSE = TRUE)
@@ -794,8 +849,9 @@ loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL,
 }
 
 saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
-  if (missing(fts))
+  if (missing(fts)) {
     fts <- CacheStoredFile(cachePath, cacheId = cacheId, obj = obj)
+  }
 
   fsOther <- numeric()
   if (length(fts) > 1) {
@@ -808,8 +864,10 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
   if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
     .requireNamespace("qs", stopOnFALSE = TRUE)
     for (attempt in 1:2) {
-      fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
-                      preset = getOption("reproducible.qsavePreset", "high"))
+      fs <- qs::qsave(obj,
+        file = fts, nthreads = getOption("reproducible.nThreads", 1),
+        preset = getOption("reproducible.qsavePreset", "high")
+      )
       fs1 <- file.size(fts)
       if (!identical(fs, fs1)) {
         if (attempt == 1) {
@@ -836,25 +894,30 @@ CacheDBFileSingle <- function(cachePath, cacheId,
   fullSuff <- CacheDBFileSingleExt(format = format)
   if (any(format %in% "check")) {
     format <- formatCheck(cachePath, cacheId, format)
-    if (!is.null(format))
+    if (!is.null(format)) {
       fullSuff <- CacheDBFileSingleExt(format)
+    }
   }
   out <- file.path(CacheStorageDir(cachePath), paste0(cacheId, fullSuff))
   out
-
 }
 
-CacheDBFileSingleExt <- function(format = getOption("reproducible.cacheSaveFormat"))
+CacheDBFileSingleExt <- function(format = getOption("reproducible.cacheSaveFormat")) {
   paste0(suffixMultipleDBFiles(), format)
+}
 
-suffixMultipleDBFiles <- function()
+suffixMultipleDBFiles <- function() {
   ".dbFile."
+}
 
 suffixLockFile <- function() ".lock"
 
-onlyStorageFiles <- function(files)
+onlyStorageFiles <- function(files) {
   grep(gsub("\\.", "\\\\.", paste0(suffixMultipleDBFiles(), "|", suffixLockFile())),
-       files, invert = TRUE, value = TRUE)
+    files,
+    invert = TRUE, value = TRUE
+  )
+}
 
 formatCheck <- function(cachePath, cacheId, format) {
   altFile <- dir(dirname(CacheStoredFile(cachePath, cacheId)), pattern = cacheId)
@@ -868,11 +931,12 @@ formatCheck <- function(cachePath, cacheId, format) {
 }
 
 
-getDrv <- function(drv  = NULL) {
+getDrv <- function(drv = NULL) {
   if (useDBI()) {
     if (is.null(drv)) {
-      if (!requireNamespace("RSQLite", quietly = TRUE))
+      if (!requireNamespace("RSQLite", quietly = TRUE)) {
         stop("Need RSQLite package when using DBI; install.packages('RSQLite')")
+      }
       drv <- RSQLite::SQLite()
     }
   } else {
@@ -899,37 +963,39 @@ convertDBbackendIfIncorrect <- function(cachePath, drv, conn,
       sc <- showCache(cachePath, drv = drv, conn = conn, verbose = -2)
       if (NROW(sc)) {
         messageCache("This cache repository previously was using a ",
-                     messConvert()[[as.character(useDBI())]],".\n",
-                     "User has requested to change this using ",
-                     "e.g., `useDBI(",useDBI(),")`. Converting now ...",
-                     verbose = verbose, verboseLevel = 1)
+          messConvert()[[as.character(useDBI())]], ".\n",
+          "User has requested to change this using ",
+          "e.g., `useDBI(", useDBI(), ")`. Converting now ...",
+          verbose = verbose, verboseLevel = 1
+        )
         if (isTRUE(origDBI)) { # using DBI --> convert all data to a DBI database
           suppressMessages(useDBI(origDBI))
           .createCache(cachePath, drv = drv, conn = conn)
-          Map(tv = sc$tagValue, tk = sc$tagKey, oh = sc$cacheId, function(tv, tk, oh)
-            .addTagsRepo(cacheId = oh, cachePath = cachePath,
-                         tagKey = tk, tagValue = tv, drv = drv, conn = conn)
-          )
+          Map(tv = sc$tagValue, tk = sc$tagKey, oh = sc$cacheId, function(tv, tk, oh) {
+            .addTagsRepo(
+              cacheId = oh, cachePath = cachePath,
+              tagKey = tk, tagValue = tv, drv = drv, conn = conn
+            )
+          })
           unlink(CacheDBFiles(cachePath))
         } else { # using multifile DB --> convert all data to multi-file backend
           singles <- split(sc, by = "cacheId")
-          Map(dt = singles, ci = names(singles), function(dt, ci)
+          Map(dt = singles, ci = names(singles), function(dt, ci) {
             saveDBFileSingle(dt, cachePath = cachePath, cacheId = ci)
-          )
+          })
         }
         messageCache("... Done!", verbose = verbose, verboseLevel = 1)
       }
       unlink(DBFileWrong)
     }
-
   }
-
 }
 
 messConvert <- function() {
-  list(`TRUE` = c("multi-file backend"),
-       `FALSE` = c("DBI backend"))
-
+  list(
+    `TRUE` = c("multi-file backend"),
+    `FALSE` = c("DBI backend")
+  )
 }
 
 CacheDBFiles <- function(cachePath = getOption("reproducible.cachePath")) {

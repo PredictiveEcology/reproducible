@@ -19,20 +19,26 @@
   lengths <- unlist(lapply(preDigestUnlist, function(x) length(unlist(x))))
   hashDetails <- data.frame(
     objectNames = rep(names(preDigestUnlist), lengths),
-    #objSize = rep(hashObjectSize, lengths),
+    # objSize = rep(hashObjectSize, lengths),
     hashElements = names(unlist(preDigestUnlist)),
     hash = unname(unlist(preDigestUnlist)),
     stringsAsFactors = FALSE
   )
-  preDigestUnlistNames <- unlist(lapply(strsplit(names(unlist(preDigestUnlist)), split = "\\."), #nolint
-                                        function(x) paste0(tail(x, 2), collapse = ".")))
-  hashObjectSizeNames <- unlist(lapply(strsplit(names(hashObjectSize), split = "\\$"),
-                                       function(x) paste0(tail(x, 2), collapse = ".")))
+  preDigestUnlistNames <- unlist(lapply(
+    strsplit(names(unlist(preDigestUnlist)), split = "\\."), # nolint
+    function(x) paste0(tail(x, 2), collapse = ".")
+  ))
+  hashObjectSizeNames <- unlist(lapply(
+    strsplit(names(hashObjectSize), split = "\\$"),
+    function(x) paste0(tail(x, 2), collapse = ".")
+  ))
   # hashObjectSizeNames <- unlist(lapply(strsplit(hashObjectSizeNames, split = "\\.y"),
   #                                      function(x) paste0(tail(x, 2), collapse = ".")))
   hashObjectSizeNames <- gsub("\\.y", replacement = "", hashObjectSizeNames)
-  hashObjectSizeNames <- unlist(lapply(strsplit(hashObjectSizeNames, split = "\\."),
-                                       function(x) paste0(tail(x, 2), collapse = ".")))
+  hashObjectSizeNames <- unlist(lapply(
+    strsplit(hashObjectSizeNames, split = "\\."),
+    function(x) paste0(tail(x, 2), collapse = ".")
+  ))
   hashDetails$objSize <- NA
   hashDetails$objSize[preDigestUnlistNames %in% hashObjectSizeNames] <-
     hashObjectSize[hashObjectSizeNames %in% preDigestUnlistNames]
@@ -41,13 +47,17 @@
     .reproEnv$hashDetails <- rbind(.reproEnv$hashDetails, hashDetails)
   } else {
     .reproEnv$hashDetails <- hashDetails
-    on.exit({
-      assign("hashDetailsAll", .reproEnv$hashDetails, envir = .reproEnv)
-      messageDF(.reproEnv$hashDetails, colour = "blue", verbose = verbose, verboseLevel = verboseLevel)
-      messageCache("The hashing details are available from .reproEnv$hashDetails",
-                   verbose = verbose, verboseLevel = verboseLevel)
-      rm("hashDetails", envir = .reproEnv)
-    }, add = TRUE)
+    on.exit(
+      {
+        assign("hashDetailsAll", .reproEnv$hashDetails, envir = .reproEnv)
+        messageDF(.reproEnv$hashDetails, colour = "blue", verbose = verbose, verboseLevel = verboseLevel)
+        messageCache("The hashing details are available from .reproEnv$hashDetails",
+          verbose = verbose, verboseLevel = verboseLevel
+        )
+        rm("hashDetails", envir = .reproEnv)
+      },
+      add = TRUE
+    )
   }
 
   if (exists("verboseTiming", envir = .reproEnv)) {
@@ -74,17 +84,19 @@
       }
       if (masker) {
         stop("It looks like the pipe (%>%) from package:reproducible is masked by ", srch[sr],
-             ". Please make sure library(reproducible) is after library(",
-             gsub(srch[sr], pattern = "package:", replacement = ""), ")",
-             call. = FALSE)
+          ". Please make sure library(reproducible) is after library(",
+          gsub(srch[sr], pattern = "package:", replacement = ""), ")",
+          call. = FALSE
+        )
       } else {
         stop("Is the %>% from reproducible masked?")
       }
-
     } else {
-      stop("Can't understand the function provided to Cache.\n",
-           "Did you write it in the form: ",
-           "Cache(function, functionArguments)?")
+      stop(
+        "Can't understand the function provided to Cache.\n",
+        "Did you write it in the form: ",
+        "Cache(function, functionArguments)?"
+      )
     }
   } else {
     scalls <- NULL
@@ -92,8 +104,6 @@
 
   scalls
 }
-
-
 
 .getFromRepo <- function(FUN, isInRepo, fullCacheTableForObj,
                          notOlderThan, lastOne, cachePath, fnDetails,
@@ -106,21 +116,25 @@
 
   fromMemoise <- NA
   output <- loadFromCache(cachePath, isInRepo[[.cacheTableHashColName()[lastOne]]],
-                          fullCacheTableForObj = fullCacheTableForObj,
-                          # format = fileFormat, loadFun = loadFun,
-                          .functionName = fnDetails$functionName, .dotsFromCache = modifiedDots,
-                          drv = drv, conn = conn,
-                          verbose = verbose)
+    fullCacheTableForObj = fullCacheTableForObj,
+    # format = fileFormat, loadFun = loadFun,
+    .functionName = fnDetails$functionName, .dotsFromCache = modifiedDots,
+    drv = drv, conn = conn,
+    verbose = verbose
+  )
   # This is protected from multiple-write to SQL collisions
-  .addTagsRepo(cacheId = isInRepo[[.cacheTableHashColName()]][lastOne],
-               cachePath = cachePath, drv = drv, conn = conn)
+  .addTagsRepo(
+    cacheId = isInRepo[[.cacheTableHashColName()]][lastOne],
+    cachePath = cachePath, drv = drv, conn = conn
+  )
   if (length(debugCache)) {
-    if (!is.na(pmatch(debugCache, "complete")) | isTRUE(debugCache))
+    if (!is.na(pmatch(debugCache, "complete")) || isTRUE(debugCache)) {
       output <- .debugCache(output, preDigest, ...)
+    }
   }
 
   output <- .setSubAttrInList(output, ".Cache", "newCache", FALSE)
-  #attr(output, ".Cache")$newCache <- FALSE
+  # attr(output, ".Cache")$newCache <- FALSE
   if (!identical(attr(output, ".Cache")$newCache, FALSE)) stop("attributes are not correct 2")
 
   if (verbose > 3) {
@@ -130,7 +144,8 @@
       component = "Whole Cache call",
       elapsedTime = as.numeric(difftime(endCacheTime, startCacheTime, units = "secs")),
       units = "secs",
-      stringsAsFactors = FALSE)
+      stringsAsFactors = FALSE
+    )
 
     if (exists("verboseTiming", envir = .reproEnv)) {
       .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
@@ -139,8 +154,9 @@
 
   # If it was a NULL, the cachePath stored it as "NULL" ... return it as NULL
   if (is.character(output)) {
-    if (identical(as.character(output), "NULL"))
+    if (identical(as.character(output), "NULL")) {
       output <- NULL
+    }
   }
 
   return(output)

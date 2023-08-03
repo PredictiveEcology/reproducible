@@ -25,7 +25,7 @@ utils::globalVariables(c(
 #' compareNA(a, b)
 #'
 compareNA <- function(v1, v2) {
-  same <- (v1 == v2)  |  (is.na(v1) & is.na(v2))
+  same <- (v1 == v2) | (is.na(v1) & is.na(v2))
   same[is.na(same)] <- FALSE
   return(same)
 }
@@ -54,12 +54,12 @@ compareNA <- function(v1, v2) {
 #   return(out)
 # }
 
-RCurlMess <- paste0("install.packages('RCurl') may give a more reliable detection ",
-"of internet connection")
+RCurlMess <- paste0(
+  "install.packages('RCurl') may give a more reliable detection ",
+  "of internet connection"
+)
 
 
 .readline <- function(prompt) {
   readline(prompt)
 }
-
-

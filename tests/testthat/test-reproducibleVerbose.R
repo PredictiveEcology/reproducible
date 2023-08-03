@@ -4,8 +4,8 @@ test_that("test reproducible.verbose", {
 
   warn <- capture_warnings(Cache(rnorm, 1, cachePath = tmpdir))
   expect_is(.reproEnv$cacheTimings, "data.frame") ##
-  expect_true(NROW(.reproEnv$cacheTimings) == 4)  ##
-  expect_true(NCOL(.reproEnv$cacheTimings) == 4)  ##
+  expect_true(NROW(.reproEnv$cacheTimings) == 4) ##
+  expect_true(NCOL(.reproEnv$cacheTimings) == 4) ##
 
   # Test Path class objects
   a <- sample(1e4)
@@ -18,5 +18,5 @@ test_that("test reproducible.verbose", {
   out2Details <- .reproEnv$hashDetailsAll
 
   # should be vastly larger when actual file, rather than just filename
-  expect_true( (20*out1Details$objSize[1]) < out2Details$objSize[1]) ##
+  expect_true((20 * out1Details$objSize[1]) < out2Details$objSize[1]) ##
 })

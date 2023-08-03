@@ -109,7 +109,6 @@ postProcess.default <- function(x, ...) {
     x <- rlang::eval_tidy(x)
   }
   return(postProcessTo(from = x, ...))
-
 }
 
 
@@ -277,7 +276,7 @@ maskInputs <- function(x, studyArea, ...) {
 
 #' @export
 maskInputs.default <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = NULL,
-                              verbose = getOption("reproducible.verbose", 1), ...) {
+                               verbose = getOption("reproducible.verbose", 1), ...) {
   maskTo(x, ...)
 }
 
@@ -357,17 +356,19 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
   if (!is.null(filename2)) {
     dots <- list(...)
 
-    if (!is.null(dots$inputFilePath))  {
+    if (!is.null(dots$inputFilePath)) {
       stop("inputFilePath is being deprecated; use filename1")
     }
 
-    if (!is.null(dots$postProcessedFilename))  {
+    if (!is.null(dots$postProcessedFilename)) {
       stop("postProcessedFilename is being deprecated; use filename2")
     }
 
-    if (!is.null(dots$targetFilePath))  {
-      stop("targetFilePath is being deprecated from determineFilename:\n",
-           "  use filename2 and filename1.")
+    if (!is.null(dots$targetFilePath)) {
+      stop(
+        "targetFilePath is being deprecated from determineFilename:\n",
+        "  use filename2 and filename1."
+      )
     }
 
     if (!(is.logical(filename2) || is.character(filename2) || is.null(filename2))) {
@@ -375,7 +376,7 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
     }
 
     filename2 <- if (!identical(filename2, FALSE)) { # allow TRUE or path
-      if (isTRUE(filename2) ) {
+      if (isTRUE(filename2)) {
         # 1. Take destinationPath, if it exists
         # 2. Take dirname of filename1, if it exists and is absolute path
         # 3. Take getwd()
@@ -385,7 +386,8 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
             if (isAbsolutePath(filename1)) {
               theDir <- dirname(filename1)
               messagePrepInputs("filename2 is NULL; using dirname(filename1) as destinationPath",
-                                verbose = verbose)
+                verbose = verbose
+              )
             }
           }
         }
@@ -411,8 +413,10 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
     }
     if (exists("tmpfile", inherits = FALSE)) {
       messagePrepInputs("Saving output to ", filename2, ".",
-                        "Specify filename1 or filename2 for more control, ",
-                        "or set filename2 to NULL to prevent saving to disk", verbose = verbose)
+        "Specify filename1 or filename2 for more control, ",
+        "or set filename2 to NULL to prevent saving to disk",
+        verbose = verbose
+      )
     }
   }
   filename2
@@ -443,15 +447,14 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #'
 #' @examples
 #' if (requireNamespace("terra", quietly = TRUE)) {
-#'   r <- terra::rast(terra::ext(0,100,0,100), vals = 1:1e2)
+#'   r <- terra::rast(terra::ext(0, 100, 0, 100), vals = 1:1e2)
 #'
 #'   tf <- tempfile(fileext = ".tif")
 #'   writeOutputs(r, tf)
 #' }
 writeOutputs <- function(x, ..., # filename2,
                          overwrite = getOption("reproducible.overwrite", NULL),
-                         verbose = getOption("reproducible.verbose", 1)
-                         ) {
+                         verbose = getOption("reproducible.verbose", 1)) {
   UseMethod("writeOutputs")
 }
 
@@ -459,9 +462,7 @@ writeOutputs <- function(x, ..., # filename2,
 #' @export
 writeOutputs.default <- function(x, ..., # filename2,
                                  overwrite = getOption("reproducible.overwrite", FALSE),
-                                 verbose = getOption("reproducible.verbose", 1)
-                                 ) {
-
+                                 verbose = getOption("reproducible.verbose", 1)) {
   writeTo(x, ..., overwrite = overwrite, verbose = verbose)
 }
 
@@ -484,7 +485,7 @@ writeOutputs.default <- function(x, ..., # filename2,
 #' @rdname assessDataType
 #'
 #' @example inst/examples/example_assessDataType.R
-assessDataType <- function(ras, type = 'writeRaster') {
+assessDataType <- function(ras, type = "writeRaster") {
   UseMethod("assessDataType")
 }
 
@@ -494,9 +495,10 @@ assessDataType.default <- function(ras, type = "writeRaster") {
   ## using ras@data@... is faster, but won't work for @values in large rasters
 
   if (inherits(ras, "RasterStack")) {
-    xs <- lapply(names(ras), FUN = function(x){
+    xs <- lapply(names(ras), FUN = function(x) {
       y <- assessDataType(ras = ras[[x]], type)
-      return(y)})
+      return(y)
+    })
 
     return(unlist(xs))
   }
@@ -504,9 +506,10 @@ assessDataType.default <- function(ras, type = "writeRaster") {
   N <- 1e5
 
   if (nlayers2(ras) > 1) { # for RasterStack, RasterBrick, SpatRaster of nlyr > 1
-    xs <- lapply(seq(names(ras)), FUN = function(x){ # can't use names(ras) directly because can't have same name 2x in lapply, but can in SpatRaster
+    xs <- lapply(seq(names(ras)), FUN = function(x) { # can't use names(ras) directly because can't have same name 2x in lapply, but can in SpatRaster
       y <- assessDataType(ras = ras[[x]], type)
-      return(y)})
+      return(y)
+    })
 
     return(unlist(xs))
   }
@@ -523,22 +526,22 @@ assessDataType.default <- function(ras, type = "writeRaster") {
   }
 
   if (is.null(datatype)) {
-
     if (terra::ncell(ras) > N) {
       rasVals <- tryCatch(suppressWarnings(terra::spatSample(x = ras, size = N)),
-                          error = function(x) rep(NA_integer_, N))
+        error = function(x) rep(NA_integer_, N)
+      )
     } else {
       rasVals <- values2(ras)
     }
     minVal <- minFn(ras) # min(ras@data@min)
     maxVal <- maxFn(ras) # max(ras@data@max)
     signVal <- minVal < 0
-    doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
+    doubVal <- any(floor(rasVals) != rasVals, na.rm = TRUE) ## faster than any(x %% 1 != 0)
     datatype <- if (doubVal) {
       names(MinValsFlts)[min(which(minVal >= MinValsFlts & maxVal <= MaxValsFlts))]
     } else {
       ## only check for binary if there are no decimals and no signs
-      logi <- all(!is.na(.bincode(rasVals[!is.na(rasVals)], c(-1,1))))  ## range needs to include 0
+      logi <- all(!is.na(.bincode(rasVals[!is.na(rasVals)], c(-1, 1)))) ## range needs to include 0
       if (logi) {
         "LOG1S"
       } else {
@@ -546,7 +549,7 @@ assessDataType.default <- function(ras, type = "writeRaster") {
       }
     }
   }
-  #convert datatype if needed
+  # convert datatype if needed
   datatype <- switchDataTypes(datatype, type = type)
   datatype
 }
@@ -561,13 +564,13 @@ setMinMaxIfNeeded <- function(ras) {
   if (isTRUE(any(is.na(maxValCurrent)))) {
     needSetMinMax <- TRUE
   } else {
-
     # if the colors are set and are the same length of the integer sequence between min and max, don't override
     if (length(.getColors(ras)[[1]])) {
-      if (!is.na(suppressWarnings(maxFn(ras))) && !is.na(suppressWarnings(minFn(ras))))
+      if (!is.na(suppressWarnings(maxFn(ras))) && !is.na(suppressWarnings(minFn(ras)))) {
         if (length(.getColors(ras)[[1]]) == (maxFn(ras) - minFn(ras) + 1)) {
           return(ras)
         }
+      }
     }
     possibleShortCut <- maxValCurrent %in% c(unlist(MaxVals), unlist(MaxVals) + 1)
     if (isTRUE(all(possibleShortCut))) {
@@ -577,7 +580,7 @@ setMinMaxIfNeeded <- function(ras) {
   if (isTRUE(needSetMinMax)) {
     .requireNamespace("terra", stopOnFALSE = TRUE)
     large <- if (nlayers2(ras) > 25 || terra::ncell(ras) > 1e7) TRUE else FALSE
-    if (large) message("  Large ",class(ras), " detected; setting minimum and maximum may take time")
+    if (large) message("  Large ", class(ras), " detected; setting minimum and maximum may take time")
     suppressWarnings(ras <- terra::setMinMax(ras))
     if (large) message("  ... Done")
   }
@@ -589,7 +592,7 @@ roundTo6Dec <- function(x) {
   # check if integer
   if (all(x %% 1 != 0)) {
     # First test whether they are remotely close to each other
-    rounded <- round(x,6)
+    rounded <- round(x, 6)
     if (!identical(x, rounded)) {
       x <- rounded
     }
@@ -600,17 +603,19 @@ roundTo6Dec <- function(x) {
 #' @importFrom utils capture.output
 suppressWarningsSpecific <- function(code, falseWarnings, verbose = getOption("reproducible.verbose", 1)) {
   warns <- list()
-  suppressWarnings(withCallingHandlers({
-    yy <- eval(code)
-  },
-  warning = function(xx) {
-    trueWarnings <- grep(falseWarnings, xx$message, invert = TRUE, value = TRUE)
-    if (length(trueWarnings)) {
-      warns <<- paste(trueWarnings, collapse = "\n  ")
-    }
-  },
-  error = function(xx) stop(xx$message),
-  message = function(xx) xx))
+  suppressWarnings(withCallingHandlers(
+    {
+      yy <- eval(code)
+    },
+    warning = function(xx) {
+      trueWarnings <- grep(falseWarnings, xx$message, invert = TRUE, value = TRUE)
+      if (length(trueWarnings)) {
+        warns <<- paste(trueWarnings, collapse = "\n  ")
+      }
+    },
+    error = function(xx) stop(xx$message),
+    message = function(xx) xx
+  ))
   if (length(warns)) {
     lapply(warns, warning)
   }
@@ -620,24 +625,30 @@ suppressWarningsSpecific <- function(code, falseWarnings, verbose = getOption("r
 
 #' @importFrom utils capture.output
 captureWarningsToAttr <- function(code, verbose = getOption("reproducible.verbose", 1)) {
-  warn <- capture.output(type = "message",
-                         suppressWarnings(withCallingHandlers({
-                           yy <- eval(code)
-                         }, warning = function(xx) {
-                           messagePrepInputs(paste0("warn::", xx$messagePrepInputs), verbose = verbose)
-                         })))
+  warn <- capture.output(
+    type = "message",
+    suppressWarnings(withCallingHandlers(
+      {
+        yy <- eval(code)
+      },
+      warning = function(xx) {
+        messagePrepInputs(paste0("warn::", xx$messagePrepInputs), verbose = verbose)
+      }
+    ))
+  )
   trueWarnings <- grepl("warn::.*", warn)
-  if (length(warn[!trueWarnings]))
+  if (length(warn[!trueWarnings])) {
     messagePrepInputs(paste(warn[!trueWarnings], collapse = "\n  "))
+  }
   warn <- gsub("warn::", "", warn[trueWarnings])
   attr(yy, "warning") <- paste(warn, collapse = "\n")
   return(yy)
 }
 
 dtp <- list()
-dtp[["INT1"]] <- 255/2
-dtp[["INT2"]] <- 65534/2
-dtp[["INT4"]] <- 4294967296/2
+dtp[["INT1"]] <- 255 / 2
+dtp[["INT2"]] <- 65534 / 2
+dtp[["INT4"]] <- 4294967296 / 2
 dtp[["FLT4"]] <- 3.4e+38
 dtp[["FLT8"]] <- Inf
 dtps <- c("INT1U", "INT1S", "INT2U", "INT2S", "INT4U", "INT4S", "FLT4S", "FLT8S")
@@ -646,7 +657,7 @@ datatypeVals <- lapply(dtps, function(namdtp) {
   d <- dtp[grep(substr(namdtp, 1, 4), names(dtp), value = TRUE)]
   div <- substr(namdtp, 5, 5)
   mult <- ifelse(div == "U", 2, 1)
-  Max <- trunc(unlist(d)*mult)
+  Max <- trunc(unlist(d) * mult)
   sign1 <- ifelse(div == "U", 0, -1)
   Min <- Max * sign1
   list(Min = Min, Max = Max)
@@ -671,28 +682,27 @@ progressBarCode <- function(..., doProgress = TRUE, message,
 
 switchDataTypes <- function(datatype, type) {
   datatype <- switch(type,
-                     GDAL = {
-                       switch(datatype,
-                              LOG1S = "Byte",
-                              INT1S = "Int16",
-                              INT2S = "Int16",
-                              INT4S = "Int32",
-                              INT1U = "Byte",
-                              INT2U = "UInt16",
-                              INT4U = "UInt32",
-                              datatype <- "Float32" #there is no GDAL FLT8S
-                       )
-                     },
-                     projectRaster = {
-                       switch(datatype,
-                              Float32 = "bilinear",
-                              Float64 = "bilinear",
-                              datatype <- "ngb"
-                       )
-                     },
-                     writeRaster = datatype,
-                     stop("incorrect argument: type must be one of writeRaster, projectRaster, or GDAL")
+    GDAL = {
+      switch(datatype,
+        LOG1S = "Byte",
+        INT1S = "Int16",
+        INT2S = "Int16",
+        INT4S = "Int32",
+        INT1U = "Byte",
+        INT2U = "UInt16",
+        INT4U = "UInt32",
+        datatype <- "Float32" # there is no GDAL FLT8S
+      )
+    },
+    projectRaster = {
+      switch(datatype,
+        Float32 = "bilinear",
+        Float64 = "bilinear",
+        datatype <- "ngb"
+      )
+    },
+    writeRaster = datatype,
+    stop("incorrect argument: type must be one of writeRaster, projectRaster, or GDAL")
   )
   return(datatype)
 }
-

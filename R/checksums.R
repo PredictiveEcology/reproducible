@@ -1,7 +1,9 @@
 if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c("actualFile", "algorithm", "checksum", "checksum.x", "checksum.y",
-                           "filesize", "filesize.x", "filesize.y",
-                           "i.algorithm", "i.checksum", "i.filesize", "result"))
+  utils::globalVariables(c(
+    "actualFile", "algorithm", "checksum", "checksum.x", "checksum.y",
+    "filesize", "filesize.x", "filesize.y",
+    "i.algorithm", "i.checksum", "i.filesize", "result"
+  ))
 }
 
 ################################################################################
@@ -84,10 +86,11 @@ setGeneric("Checksums", function(path, write, quickCheck = FALSE,
 #' @rdname Checksums
 setMethod(
   "Checksums",
-  signature = c(path = "character", quickCheck = "ANY",
-                write = "logical", files = "ANY"),
+  signature = c(
+    path = "character", quickCheck = "ANY",
+    write = "logical", files = "ANY"
+  ),
   definition = function(path, write, quickCheck, checksumFile, files, verbose = getOption("reproducible.verbose", 1), ...) {
-
     defaultHashAlgo <- "xxhash64"
     defaultWriteHashAlgo <- "xxhash64"
     dots <- list(...)
@@ -101,27 +104,33 @@ setMethod(
 
     if (is.null(files)) {
       files <- list.files(path, full.names = TRUE)
-      files <- grep(files, pattern = makeRelative(checksumFile, path),
-                    value = TRUE, invert = TRUE)
+      files <- grep(files,
+        pattern = makeRelative(checksumFile, path),
+        value = TRUE, invert = TRUE
+      )
     } else {
       isAbs <- isAbsolutePath(files)
-      if (any(!isAbs))
+      if (any(!isAbs)) {
         files[!isAbs] <- makeAbsolute(files[!isAbs], path)
+      }
     }
 
     txt <- if (file.size(checksumFile) == 0) {
       .emptyChecksumsFileContent
     } else {
       read.table(checksumFile,
-                 header = TRUE,
-                 stringsAsFactors = FALSE)
+        header = TRUE,
+        stringsAsFactors = FALSE
+      )
     }
     txt <- as.data.table(lapply(txt, as.character))
     if (is.null(txt$filesize)) txt$filesize <- rep("", NROW(txt))
     txtRead <- txt # keep a copy even if writing
     if (!(!write && file.info(checksumFile)$size > 0)) {
-      txt <- data.frame(file = character(0), checksum = character(0),
-                        filesize = character(0), stringsAsFactors = FALSE)
+      txt <- data.frame(
+        file = character(0), checksum = character(0),
+        filesize = character(0), stringsAsFactors = FALSE
+      )
     }
 
     if (is.null(dots$algo)) {
@@ -137,7 +146,7 @@ setMethod(
     }
 
     messagePrepInputs("Checking local files...", sep = "", verbose = verbose)
-    filesToCheck <-  if (length(txt$file) & length(files)) {
+    filesToCheck <- if (length(txt$file) & length(files)) {
       files[makeRelative(files, path) %in% txt$file]
     } else {
       files
@@ -147,9 +156,11 @@ setMethod(
       # Could be a case of user passing file path that is not with subdirectories; offer help
       justByBasename <- basename(txt$file) %in% basename(files)
       if (sum(justByBasename) == length(files)) {
-        messagePrepInputs("Files found in CHECKSUMS.txt that match by basename; using these.\n",
-                          "  User should specify all files (e.g., targetFile, alsoExtract, archive)\n",
-                          "  with subfolders specified.")
+        messagePrepInputs(
+          "Files found in CHECKSUMS.txt that match by basename; using these.\n",
+          "  User should specify all files (e.g., targetFile, alsoExtract, archive)\n",
+          "  with subfolders specified."
+        )
         filesToCheck <- unique(c(filesToCheck, makeAbsolute(txt$file[justByBasename], path)))
       }
     }
@@ -159,7 +170,7 @@ setMethod(
 
     if (!is.null(txt$algorithm)) {
       if (!write) {
-        dots$algo <- unique(txt[txt$file %in% makeRelative(filesToCheck, path),][["algorithm"]])
+        dots$algo <- unique(txt[txt$file %in% makeRelative(filesToCheck, path), ][["algorithm"]])
         dots$algo <- dots$algo[!is.na(dots$algo)][1]
         # dots$algo <- na.omit(dots$algo)[1]
         if (is.na(dots$algo)) dots$algo <- defaultWriteHashAlgo
@@ -180,21 +191,29 @@ setMethod(
     if (is.null(txt$filesize)) {
       quickCheck <- FALSE
       messagePrepInputs("  Not possible to use quickCheck;\n ",
-                              "    CHECKSUMS.txt file does not have filesizes", sep = "", verbose = verbose)
+        "    CHECKSUMS.txt file does not have filesizes",
+        sep = "", verbose = verbose
+      )
     }
     checksums <- rep(list(rep("", length(filesToCheck))), 2)
     dirs <- dir.exists(filesToCheck)
     filesToCheckWODirs <- filesToCheck[!dirs]
     if (quickCheck | write) {
       checksums[[2]][!dirs] <- do.call(.digest,
-                                args = append(list(file = filesToCheckWODirs, quickCheck = TRUE),
-                                              dots))
+        args = append(
+          list(file = filesToCheckWODirs, quickCheck = TRUE),
+          dots
+        )
+      )
     }
 
     if (!quickCheck | write) {
       checksums[[1]][!dirs] <- do.call(.digest,
-                                args = append(list(file = filesToCheckWODirs, quickCheck = FALSE),
-                                              dots))
+        args = append(
+          list(file = filesToCheckWODirs, quickCheck = FALSE),
+          dots
+        )
+      )
     }
     if (any(dirs)) {
       checksums[[1]][dirs] <- "dir"
@@ -205,11 +224,15 @@ setMethod(
 
     filesToCheckRel <- makeRelative(filesToCheck, path)
     out <- if (length(filesToCheck)) {
-      data.table(file = filesToCheckRel, checksum = checksums[[1]],
-                 filesize = checksums[[2]], algorithm = dots$algo, stringsAsFactors = FALSE)
+      data.table(
+        file = filesToCheckRel, checksum = checksums[[1]],
+        filesize = checksums[[2]], algorithm = dots$algo, stringsAsFactors = FALSE
+      )
     } else {
-      data.table(file = character(0), checksum = character(0), filesize = character(0),
-                 algorithm = character(0), stringsAsFactors = FALSE)
+      data.table(
+        file = character(0), checksum = character(0), filesize = character(0),
+        algorithm = character(0), stringsAsFactors = FALSE
+      )
     }
 
     out1 <- data.table::copy(out)
@@ -217,7 +240,7 @@ setMethod(
       writeChecksumsTable(out1, checksumFile, dotsWriteTable)
       txt <- txtRead
       txt <- txt[out, on = colnames(out)]
-      #txt1Old <- dplyr::right_join(txt1Old, out)
+      # txt1Old <- dplyr::right_join(txt1Old, out)
     }
     txt1 <- data.table::copy(txt)
 
@@ -234,7 +257,7 @@ setMethod(
       out[, result := ifelse(checksum != i.checksum, "FAIL", "OK")]
     }
     data.table::setorderv(out, "result", order = -1L, na.last = TRUE)
-    out <- out[, .SD[1,], by = "expectedFile"]
+    out <- out[, .SD[1, ], by = "expectedFile"]
     out <- checksumsDirsOk(out)
 
     results.df <- out[, list(
@@ -250,27 +273,38 @@ setMethod(
     )]
 
     return(invisible(results.df))
-  })
+  }
+)
 
 #' @rdname Checksums
 setMethod(
   "Checksums",
-  signature = c(path = "character", quickCheck = "ANY",
-                write = "missing", files = "ANY"),
+  signature = c(
+    path = "character", quickCheck = "ANY",
+    write = "missing", files = "ANY"
+  ),
   definition = function(path, quickCheck, checksumFile, files, verbose, ...) {
-    Checksums(path, write = FALSE, quickCheck = quickCheck, checksumFile = checksumFile,
-              files = files, verbose = verbose, ...)
-})
+    Checksums(path,
+      write = FALSE, quickCheck = quickCheck, checksumFile = checksumFile,
+      files = files, verbose = verbose, ...
+    )
+  }
+)
 
 #' @keywords internal
 writeChecksumsTable <- function(out, checksumFile, dots) {
   out <- out[.orderDotsUnderscoreFirst(out$file), ] ## sort by filename alphabetically
 
   do.call(write.table,
-          args = append(list(x = out, file = checksumFile, eol = "\n",
-                             col.names = !isTRUE(dots$append),
-                             row.names = FALSE),
-                        dots))
+    args = append(
+      list(
+        x = out, file = checksumFile, eol = "\n",
+        col.names = !isTRUE(dots$append),
+        row.names = FALSE
+      ),
+      dots
+    )
+  )
 }
 
 #' Calculate the hashes of multiple files
@@ -302,13 +336,15 @@ setMethod(
       as.character(
         unname(
           unlist(
-
             lapply(file, function(f) {
               digest::digest(object = f, file = TRUE, algo = algo, ...)
             })
-          )))# need as.character for empty case # nolint
+          )
+        )
+      ) # need as.character for empty case # nolint
     }
-  })
+  }
+)
 
 
 checksumsDirsOk <- function(out) {
@@ -317,8 +353,9 @@ checksumsDirsOk <- function(out) {
     cscol <- grep(cscols, colnames(out), value = TRUE)[1]
     dirsHave <- unique(dirname(out[!get(cscol) %in% "dir" & result == "OK"]$expectedFile))
     dirsHave <- grep("\\.", dirsHave, value = TRUE, invert = TRUE)
-    if (length(dirsHave))
+    if (length(dirsHave)) {
       out[get(cscol) %in% "dir" & expectedFile %in% dirsHave, result := "OK"]
+    }
   }
   out
 }

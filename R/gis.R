@@ -12,25 +12,28 @@
 #'           number of cores in the system, while an integer or rounded
 #'           float will be passed as the exact number of cores to be used.
 #' @param skipDeprecastedMsg Logical. If `TRUE`, then the message about this function
-#'   being deprecated will be suppressed.
+#'           being deprecated will be suppressed.
+#'
 #' @param useGDAL Deprecated. Logical or `"force"`. This is defunct; internals now can use
-#'     `terra` if `options("reproducible.useTerra" = TRUE)`, which is not (yet)
-#'     the default.
+#'     `terra` if `options("reproducible.useTerra" = TRUE)`, which is not (yet) the default.
 #'
 #' @param ... Currently unused.
 #'
-#' @return A `Raster*` object, masked (i.e., smaller extent and/or
-#'         several pixels converted to NA)
+#' @inheritParams Cache
+#'
+#' @inheritParams projectInputs
+#'
+#' @return A `Raster*` object, masked (i.e., smaller extent and/or several pixels converted to NA)
 #'
 #' @author Eliot McIntire
 #' @export
-#' @inheritParams Cache
-#' @inheritParams projectInputs
 #'
 fastMask <- function(x, y, cores = NULL, useGDAL = FALSE,
-                     verbose = getOption("reproducible.verbose", 1), ..., skipDeprecastedMsg = FALSE) {
-  if (!skipDeprecastedMsg)
+                     verbose = getOption("reproducible.verbose", 1), ...,
+                     skipDeprecastedMsg = FALSE) {
+  if (!skipDeprecastedMsg) {
     .Deprecated("mask", "terra", "fastMask is deprecated; using maskTo and terra")
+  }
   touches <- list(...)$touches
   maskTo(from = x, maskTo = y, touches = isTRUE(touches))
 }
@@ -38,8 +41,6 @@ fastMask <- function(x, y, cores = NULL, useGDAL = FALSE,
 bigRastersTmpFolder <- function() checkPath(tempdir2(sub = "bigRasters"), create = TRUE)
 
 bigRastersTmpFile <- function() file.path(bigRastersTmpFolder(), "bigRasInput.tif")
-
-
 
 checkColors <- function(x) {
   origColors <- .getColors(x)
@@ -50,8 +51,8 @@ checkColors <- function(x) {
 
 rebuildColors <- function(x, origColors) {
   if (isTRUE(all(origColors$origMinValue != minFn(x)) || all(origColors$origMaxValue != maxFn(x)) ||
-             !identical(.getColors(x)[[1]], origColors$origColors))) {
-    colorSequences <- unlist(lapply(seq(length(origColors$origMinValue)), function(ind) {
+    !identical(.getColors(x)[[1]], origColors$origColors))) {
+    colorSequences <- unlist(lapply(seq_along(origColors$origMinValue), function(ind) {
       origColors$origMinValue[ind]:origColors$origMaxValue[ind]
     }))
     if (isTRUE(length(origColors$origColors) == length(colorSequences))) {
@@ -63,7 +64,6 @@ rebuildColors <- function(x, origColors) {
   }
   x
 }
-
 
 .getColors <- function(object) {
   if (is(object, "SpatRaster")) {
@@ -77,4 +77,3 @@ rebuildColors <- function(x, origColors) {
   }
   return(cols)
 }
-

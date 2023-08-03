@@ -111,7 +111,7 @@ setMethod(
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     # browser(expr = exists("._robustDigest_1"))
-    if (is(object, "quosure")) {# can't get this class from rlang via importClass rlang quosure
+    if (is(object, "quosure")) { # can't get this class from rlang via importClass rlang quosure
       if (!requireNamespace("rlang")) stop("Please `install.packages('rlang')`")
       object <- rlang::eval_tidy(object)
     }
@@ -139,13 +139,15 @@ setMethod(
       object <- .removeCacheAtts(object)
 
       dig <- suppressWarnings(
-        .digestRasterLayer(object, length = length, algo = algo, quick = quick))
+        .digestRasterLayer(object, length = length, algo = algo, quick = quick)
+      )
       forDig <- unlist(dig)
-    } else if (is(object, "cluster")) {# can't get this class from parallel via importClass parallel cluster
+    } else if (is(object, "cluster")) { # can't get this class from parallel via importClass parallel cluster
       forDig <- NULL
     } else if (inherits(object, "SpatRaster")) {
-      if (!requireNamespace("terra", quietly = TRUE))
+      if (!requireNamespace("terra", quietly = TRUE)) {
         stop("Please install terra package")
+      }
       terraSrcs <- Filenames(object)
       if (any(nchar(terraSrcs) > 0)) {
         out <- lapply(terraSrcs, function(x) {
@@ -157,19 +159,23 @@ setMethod(
         })
 
         dig <- .robustDigest(
-          list(terra::nrow(object), terra::ncol(object), terra::nlyr(object),
-               terra::res(object), terra::crs(object),
-               as.vector(terra::ext(object)), # There is something weird with this pointer that doesn't cache consistently
-               names(object)),
+          list(
+            terra::nrow(object), terra::ncol(object), terra::nlyr(object),
+            terra::res(object), terra::crs(object),
+            as.vector(terra::ext(object)), # There is something weird with this pointer that doesn't cache consistently
+            names(object)
+          ),
           length = length, quick = quick,
-          algo = algo, classOptions = classOptions) # don't include object@data -- these are volatile
+          algo = algo, classOptions = classOptions
+        ) # don't include object@data -- these are volatile
         forDig <- list(out, dig)
       } else {
         forDig <- terra::wrap(object)
       }
     } else if (inherits(object, "SpatVector")) {
-      if (!requireNamespace("terra", quietly = TRUE))
+      if (!requireNamespace("terra", quietly = TRUE)) {
         stop("Please install terra package")
+      }
       forDig <- wrapSpatVector(object)
     } else if (inherits(object, "SpatExtent")) {
       forDig <- .wrap(object)
@@ -178,8 +184,8 @@ setMethod(
     }
     out <- .doDigest(forDig, algo)
     return(out)
-
-  })
+  }
+)
 
 #' @rdname robustDigest
 #' @export
@@ -188,7 +194,8 @@ setMethod(
   signature = "function",
   definition = function(object, .objects, length, algo, quick, classOptions) {
     .robustDigestFormatOnly(object, algo = algo)
-})
+  }
+)
 
 #' @rdname robustDigest
 #' @export
@@ -197,7 +204,8 @@ setMethod(
   signature = "expression",
   definition = function(object, .objects, length, algo, quick, classOptions) {
     .robustDigestFormatOnly(object, algo = algo)
-})
+  }
+)
 
 #' @rdname robustDigest
 #' @export
@@ -206,7 +214,8 @@ setMethod(
   signature = "language",
   definition = function(object, .objects, length, algo, quick, classOptions) {
     .robustDigestFormatOnly(object, algo = algo)
-  })
+  }
+)
 
 #' @rdname robustDigest
 #' @export
@@ -223,12 +232,14 @@ setMethod(
       howMany <- min(10, NROW(object))
       whCheck <- object[1:howMany]
       asc <- iconv(whCheck, "latin1", "ASCII")
-      if (anyNA(asc))
+      if (anyNA(asc)) {
         whCheck <- whCheck[!is.na(asc)]
+      }
 
       if (any(unlist(lapply(whCheck, file.exists)))) { # only try first 10 elements
         simpleDigest <- FALSE
-      }}
+      }
+    }
     if (!simpleDigest) {
       # browser(expr = exists("hhhh"))
       unlist(lapply(object, function(x) {
@@ -241,13 +252,14 @@ setMethod(
           .doDigest(x, algo)
         }
       }))
-      #} else {
-      #.doDigest(object, algo = algo)
-      #}
+      # } else {
+      # .doDigest(object, algo = algo)
+      # }
     } else {
       .doDigest(object, algo = algo)
     }
-  })
+  }
+)
 
 #' @rdname robustDigest
 #' @export
@@ -276,7 +288,8 @@ setMethod(
     } else {
       .doDigest(basenames3(object, nParentDirs), algo = algo)
     }
-})
+  }
+)
 
 #' @rdname robustDigest
 #' @export
@@ -296,16 +309,20 @@ setMethod(
     if (!any(unlist(doneAlready))) {
       asList <- as.list(object, all.names = TRUE)
       da <- which(unlist(doneAlready))
-      if (length(da))
+      if (length(da)) {
         asList <- asList[-da]
-      rd <- .robustDigest(asList, .objects = .objects,
-                          length = length,
-                          algo = algo, quick = quick, classOptions = classOptions)
+      }
+      rd <- .robustDigest(asList,
+        .objects = .objects,
+        length = length,
+        algo = algo, quick = quick, classOptions = classOptions
+      )
     } else {
       rd <- NULL
     }
     return(rd)
-  })
+  }
+)
 
 #' @rdname robustDigest
 #' @export
@@ -317,11 +334,14 @@ setMethod(
     # browser(expr = exists("._robustDigest_2"))
     if (!is.null(.objects)) object <- object[.objects]
     lapply(.sortDotsUnderscoreFirst(object), function(x) {
-      .robustDigest(object = x, .objects = .objects,
-                    length = length,
-                    algo = algo, quick = quick, classOptions = classOptions)
+      .robustDigest(
+        object = x, .objects = .objects,
+        length = length,
+        algo = algo, quick = quick, classOptions = classOptions
+      )
     })
-  })
+  }
+)
 
 #' @rdname robustDigest
 #' @export
@@ -333,7 +353,8 @@ setMethod(
     object <- .removeCacheAtts(object)
     dig <- lapply(object, .robustDigest, algo = algo, quick = quick, classOptions = classOptions)
     .robustDigest(unlist(dig), quick = TRUE, algo = algo, classOptions = classOptions)
-})
+  }
+)
 
 
 #' @rdname robustDigest
@@ -346,7 +367,8 @@ setMethod(
     object <- .removeCacheAtts(object)
     # From ad hoc tests, 6 was the highest I could go to maintain consistent between Linux and Windows
     .doDigest(round(object, getOption("reproducible.digestDigits", 7)), algo = algo)
-  })
+  }
+)
 
 #' @rdname robustDigest
 #' @export
@@ -359,7 +381,8 @@ setMethod(
     dim(object) <- NULL
     .robustDigest(object, classOptions = classOptions)
     # From ad hoc tests, 6 was the highest I could go to maintain consistent between Linux and Windows
-  })
+  }
+)
 
 #' @rdname robustDigest
 #' @export
@@ -371,7 +394,8 @@ setMethod(
     object <- .removeCacheAtts(object)
     # From ad hoc tests, 7 was the highest I could go to maintain consistent between Linux and Windows
     .doDigest(object, algo = algo)
-  })
+  }
+)
 
 
 basenames3 <- function(object, nParentDirs) {
@@ -396,12 +420,15 @@ basenames3 <- function(object, nParentDirs) {
 #'
 #' @param x Any arbitrary R object that could have attributes
 .removeCacheAtts <- function(x) {
-  if (!is.null(attr(x, "tags")))
+  if (!is.null(attr(x, "tags"))) {
     attr(x, "tags") <- NULL
-  if (!is.null(attr(x, ".Cache")))
+  }
+  if (!is.null(attr(x, ".Cache"))) {
     attr(x, ".Cache") <- NULL
-  if (!is.null(attr(x, "call")))
+  }
+  if (!is.null(attr(x, "call"))) {
     attr(x, "call") <- NULL
+  }
   x
 }
 
@@ -425,15 +452,15 @@ basenames3 <- function(object, nParentDirs) {
   }
 
   for (i in c("tags", ".Cache", "call")) {
-    if (!is.null(attr(from, i)))
+    if (!is.null(attr(from, i))) {
       attr(to, i) <- attr(from, i)
+    }
   }
   to
-
 }
 
 .robustDigestFormatOnly <- function(object, .objects, length, algo, quick,
-                               classOptions) {
+                                    classOptions) {
   object <- .removeCacheAtts(object)
   .doDigest(format(object), algo = algo)
 }
@@ -441,7 +468,7 @@ basenames3 <- function(object, nParentDirs) {
 .doDigest <- function(x, algo, length = Inf, file,
                       newAlgo = NULL,
                       cacheSpeed = getOption("reproducible.cacheSpeed", "slow")) {
-  if (missing(algo)) algo = formals(.robustDigest)$algo
+  if (missing(algo)) algo <- formals(.robustDigest)$algo
 
   out <- if (!missing(file)) {
     digest::digest(file = x, algo = algo, length = length)
@@ -451,8 +478,9 @@ basenames3 <- function(object, nParentDirs) {
     } else if (cacheSpeed == "slow") {
       cacheSpeed <- 1L
     }
-    if (!.requireNamespace("fastdigest", stopOnFALSE = FALSE))
+    if (!.requireNamespace("fastdigest", stopOnFALSE = FALSE)) {
       cacheSpeed <- 1L
+    }
 
     out <- if (cacheSpeed == 1) {
       digest(x, algo = algo)

@@ -18,7 +18,7 @@ if (getRversion() >= "3.1.0") {
 #' @return
 #' Returns the character string of the cloud folder ID created or reported
 #' @export
-checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cloudFolderID', NULL),
+checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
                                       cachePath = NULL,
                                       create = FALSE,
                                       overwrite = FALSE,
@@ -46,16 +46,20 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
     for (attempt in 1:2) {
       cfidTmp <- if (isID) googledrive::as_id(cloudFolderID) else cloudFolderID
       driveLs <- tryCatch(suppressMessages(do.call(googledrive::drive_get, append(list(cfidTmp), args))),
-                          error = function(e) {
-                            if (!is.null(e$parent))
-                              if (grepl("File not found", as.character(e$parent)) && attempt == 2)
-                                stop(e)
-                          },
-                          silent = TRUE)
-      if (is(driveLs, "dribble"))
+        error = function(e) {
+          if (!is.null(e$parent)) {
+            if (grepl("File not found", as.character(e$parent)) && attempt == 2) {
+              stop(e)
+            }
+          }
+        },
+        silent = TRUE
+      )
+      if (is(driveLs, "dribble")) {
         break
-      else
+      } else {
         isID <- !isID
+      }
     }
     # if (attempt == 2 && !is(driveLs, "dribble")) browser()
 
@@ -75,10 +79,11 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
     }
     if (isNullCFI) {
       messageCache("Setting 'reproducible.cloudFolderID' option to be cloudFolder: ",
-                   ifelse(!is.null(names(cloudFolderID)), cloudFolderID$name, cloudFolderID),
-                   verbose = verbose)
+        ifelse(!is.null(names(cloudFolderID)), cloudFolderID$name, cloudFolderID),
+        verbose = verbose
+      )
     }
-    options('reproducible.cloudFolderID' = cloudFolderID)
+    options("reproducible.cloudFolderID" = cloudFolderID)
   }
   return(cloudFolderID)
 }
@@ -86,25 +91,33 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
 driveLs <- function(cloudFolderID = NULL, pattern = NULL,
                     verbose = getOption("reproducible.verbose", 1),
                     team_drive = NULL) {
-  .requireNamespace("googledrive", stopOnFALSE = TRUE,
-                    messageStart = "to use google drive files")
+  .requireNamespace("googledrive",
+    stopOnFALSE = TRUE,
+    messageStart = "to use google drive files"
+  )
 
   if (!is(cloudFolderID, "tbl")) {
-    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = FALSE,
-                                               team_drive = team_drive) # only deals with NULL case
+    cloudFolderID <- checkAndMakeCloudFolderID(
+      cloudFolderID = cloudFolderID, create = FALSE,
+      team_drive = team_drive
+    ) # only deals with NULL case
   }
 
   messageCache("Retrieving file list in cloud folder", verbose = verbose)
   gdriveLs <- retry(quote({
-    googledrive::drive_ls(path = cloudFolderID, ## TODO: team drives needs a dribble
-                          pattern = paste0(collapse = "|", c(pattern)))
+    googledrive::drive_ls(
+      path = cloudFolderID, ## TODO: team drives needs a dribble
+      pattern = paste0(collapse = "|", c(pattern))
+    )
   }))
   if (is(gdriveLs, "try-error")) {
     fnf <- grepl("File not found", gdriveLs)
     if (!fnf) {
       gdriveLs <- retry(quote({
-        googledrive::drive_ls(path = googledrive::as_id(cloudFolderID), ## TODO: team drives needs a dribble
-                              pattern = paste0(cloudFolderID, "|",pattern))
+        googledrive::drive_ls(
+          path = googledrive::as_id(cloudFolderID), ## TODO: team drives needs a dribble
+          pattern = paste0(cloudFolderID, "|", pattern)
+        )
       }))
     } else {
       stop("cloudFolderID not found on Gdrive\n", gdriveLs)
@@ -126,32 +139,37 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
                           drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL),
                           verbose = getOption("reproducible.verbose")) {
-  .requireNamespace("googledrive", stopOnFALSE = TRUE,
-                    messageStart = "to use google drive files")
+  .requireNamespace("googledrive",
+    stopOnFALSE = TRUE,
+    messageStart = "to use google drive files"
+  )
 
-  messageCache("Downloading cloud copy of ", newFileName,", with cacheId: ", outputHash,
-               verbose = verbose)
+  messageCache("Downloading cloud copy of ", newFileName, ", with cacheId: ", outputHash,
+    verbose = verbose
+  )
   isInCloud <- grepl(outputHash, gdriveLs$name)
 
   outs <- list()
   for (i in 1:2) {
     localNewFilename <- file.path(tempdir2(), basename2(newFileName))
     outs <- append(outs, lapply(seq_along(isInCloud), function(ind) {
-      retry(quote(googledrive::drive_download(file = googledrive::as_id(gdriveLs$id[ind]),
-                                              path = localNewFilename[ind], # take first if there are duplicates
-                                              overwrite = TRUE)))
+      retry(quote(googledrive::drive_download(
+        file = googledrive::as_id(gdriveLs$id[ind]),
+        path = localNewFilename[ind], # take first if there are duplicates
+        overwrite = TRUE
+      )))
     }))
     if (i %in% 1) {
-
       dtFile <- outs[[1]]$local_path # grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE)
       dt <- loadFile(dtFile, format = fileExt(dtFile), cachePath = cachePath)
       fromDisk <- extractFromCache(dt, elem = "fromDisk") %in% "TRUE"
       if (all(!fromDisk)) break
       newFileName <- extractFromCache(dt, elem = "origFilename")
       isInCloud <- seq(newFileName)
-      gdriveLs <- googledrive::drive_ls(path = googledrive::as_id(cloudFolderID),
-                                        pattern = paste(collapse = "|", newFileName))
-
+      gdriveLs <- googledrive::drive_ls(
+        path = googledrive::as_id(cloudFolderID),
+        pattern = paste(collapse = "|", newFileName)
+      )
     }
   }
   outs <- rbindlist(outs)
@@ -167,12 +185,15 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
 
 
 
-  if (useDBI()) # with useDBI = FALSE, the dbFile is already there.
-    Map(tv = dt$tagValue, tk = dt$tagKey, function(tv, tk)
+  if (useDBI()) { # with useDBI = FALSE, the dbFile is already there.
+    Map(tv = dt$tagValue, tk = dt$tagKey, function(tv, tk) {
       .addTagsRepo(outputHash, cachePath, tagKey = tk, tagValue = tv, drv = drv, conn = conn)
-    )
-  inReposPoss <- searchInRepos(cachePaths = cachePath, drv = drv,
-                            outputHash = outputHash, conn = conn)
+    })
+  }
+  inReposPoss <- searchInRepos(
+    cachePaths = cachePath, drv = drv,
+    outputHash = outputHash, conn = conn
+  )
   inReposPoss
 }
 
@@ -191,9 +212,11 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
 cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID,
                                  outputToSave, rasters,
                                  verbose = getOption("reproducible.verbose")) {
-  .requireNamespace("googledrive", stopOnFALSE = TRUE,
-                    messageStart = "to use google drive files")
-  #browser(expr = exists("._cloudUploadFromCache_1"))
+  .requireNamespace("googledrive",
+    stopOnFALSE = TRUE,
+    messageStart = "to use google drive files"
+  )
+  # browser(expr = exists("._cloudUploadFromCache_1"))
 
   if (!any(isInCloud)) {
     cacheIdFileName <- CacheStoredFile(cachePath, outputHash, "check")
@@ -217,18 +240,24 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
       newFileName <- basename2(cacheIdFileName)
 
       cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
-      messageCache("Uploading new cached object ", newFileName,", with cacheId: ",
-                   outputHash," to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id,
-                   verbose = verbose)
+      messageCache("Uploading new cached object ", newFileName, ", with cacheId: ",
+        outputHash, " to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id,
+        verbose = verbose
+      )
       du <- Map(med = cacheIdFileName, nam = newFileName, function(med, nam) {
         try(retry(quote(
-          googledrive::drive_upload(media = med, path = googledrive::as_id(cloudFolderID),
-                                    name = nam, overwrite = FALSE))))
+          googledrive::drive_upload(
+            media = med, path = googledrive::as_id(cloudFolderID),
+            name = nam, overwrite = FALSE
+          )
+        )))
       })
 
-      du2 <- try(retry(quote(googledrive::drive_upload(media = cacheDB,
-                                                       path = googledrive::as_id(cloudFolderID), name = basename2(cacheDB),
-                                                       overwrite = FALSE))))
+      du2 <- try(retry(quote(googledrive::drive_upload(
+        media = cacheDB,
+        path = googledrive::as_id(cloudFolderID), name = basename2(cacheDB),
+        overwrite = FALSE
+      ))))
       if (is(du, "try-error")) {
         return(du)
       }
@@ -240,17 +269,21 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
 }
 
 cloudUploadRasterBackends <- function(obj, cloudFolderID) {
-  .requireNamespace("googledrive", stopOnFALSE = TRUE,
-                    messageStart = "to use google drive files")
+  .requireNamespace("googledrive",
+    stopOnFALSE = TRUE,
+    messageStart = "to use google drive files"
+  )
 
-  #browser(expr = exists("._cloudUploadRasterBackends_1"))
+  # browser(expr = exists("._cloudUploadRasterBackends_1"))
   rasterFilename <- Filenames(obj)
   out <- NULL
   if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0) {
     allRelevantFiles <- unique(rasterFilename)
     out <- lapply(allRelevantFiles, function(file) {
-      try(retry(quote(googledrive::drive_upload(media = file,  path = cloudFolderID,
-                                                name = basename(file), overwrite = FALSE))))
+      try(retry(quote(googledrive::drive_upload(
+        media = file, path = cloudFolderID,
+        name = basename(file), overwrite = FALSE
+      ))))
     })
   }
   return(invisible(out))
@@ -269,19 +302,22 @@ cloudDownloadRasterBackend <- function(output, cachePath, cloudFolderID,
       checkPath(cacheRepoRasterDir, create = TRUE)
       simpleFilenames <- unique(filePathSansExt(basename2(unlist(rasterFilename))))
       retry(quote({
-        gdriveLs2 <- googledrive::drive_ls(path = as_id(cloudFolderID),
-                                           pattern = paste(collapse = "|", simpleFilenames))
+        gdriveLs2 <- googledrive::drive_ls(
+          path = as_id(cloudFolderID),
+          pattern = paste(collapse = "|", simpleFilenames)
+        )
       }))
 
       if (all(simpleFilenames %in% filePathSansExt(gdriveLs2$name))) {
         filenameMismatches <- unlist(lapply(seq_len(NROW(gdriveLs2)), function(idRowNum) {
           localNewFilename <- file.path(cacheRepoRasterDir, basename2(gdriveLs2$name[idRowNum]))
           filenameMismatch <- identical(localNewFilename, rasterFilename)
-          retry(quote(googledrive::drive_download(file = gdriveLs2[idRowNum,],
-                                                  path = localNewFilename, # take first if there are duplicates
-                                                  overwrite = TRUE)))
+          retry(quote(googledrive::drive_download(
+            file = gdriveLs2[idRowNum, ],
+            path = localNewFilename, # take first if there are duplicates
+            overwrite = TRUE
+          )))
           return(filenameMismatch)
-
         }))
         if (any(filenameMismatches)) {
           fnM <- seq_along(filenameMismatches)
@@ -294,8 +330,10 @@ cloudDownloadRasterBackend <- function(output, cachePath, cloudFolderID,
           }
         }
       } else {
-        warning("Raster backed files are not available in googledrive; \n",
-                "will proceed with rerunning code because cloud copy is incomplete")
+        warning(
+          "Raster backed files are not available in googledrive; \n",
+          "will proceed with rerunning code because cloud copy is incomplete"
+        )
         output <- NULL
       }
     }
@@ -309,8 +347,10 @@ isOrHasRaster <- function(obj) {
     if (rlang::inherits_only(obj, "environment")) {
       lapply(mget(ls(obj), envir = obj), function(x) isOrHasRaster(x))
     } else {
-      tryCatch(lapply(mget(ls(obj), envir = obj@.xData),
-                             function(x) isOrHasRaster(x)), error = function(x) FALSE)
+      tryCatch(lapply(
+        mget(ls(obj), envir = obj@.xData),
+        function(x) isOrHasRaster(x)
+      ), error = function(x) FALSE)
     }
   } else if (is.list(obj)) {
     lapply(obj, function(x) isOrHasRaster(x))
