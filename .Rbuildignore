@@ -1,16 +1,17 @@
-^CRAN-RELEASE$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 .*\.toc$
 ^\.lintr$
 ^\.github$
 ^\.httr-oauth$
+^\.secret$
 ^_pkgdown\.yml$
 ^cheatsheets$
 ^codecov\.yml$
 ^CONTRIBUTING\.md$
 ^cran-comments\.md$
 ^CRAN-RELEASE$
+^CRAN-SUBMISSION$
 ^docs$
 ^LICENSE$
 ^revdep$
@@ -18,5 +19,4 @@
 ^tests/testthat/\.httr-oauth$
 ^vignettes/.*_cache$
 ^vignettes/.*\.log$
-^\.secret$
-^CRAN-SUBMISSION$
+
