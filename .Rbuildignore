@@ -7,6 +7,7 @@
 ^\.secret$
 ^_pkgdown\.yml$
 ^cheatsheets$
+^CITATION\.cff$
 ^codecov\.yml$
 ^CONTRIBUTING\.md$
 ^cran-comments\.md$
@@ -19,4 +20,3 @@
 ^tests/testthat/\.httr-oauth$
 ^vignettes/.*_cache$
 ^vignettes/.*\.log$
-
