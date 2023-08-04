@@ -58,6 +58,3 @@ jobs:
           git add CITATION.cff
           git commit -m 'Update CITATION.cff' || echo "No changes to commit"
           git push origin || echo "No changes to commit"
-
-
-
