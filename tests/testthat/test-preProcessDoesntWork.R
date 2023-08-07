@@ -98,10 +98,7 @@ test_that("preProcess fails if user provides non-existing file", {
 
 test_that("preProcess fails if user provides a non .zip/.tar as archive", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   co <- capture.output({
     co <- capture.output(type = "message", {
       pre <- reproducible::preProcess(url = theRasterTestZip, destinationPath = tmpdir)
@@ -115,10 +112,7 @@ test_that("preProcess fails if user provides a non .zip/.tar as archive", {
 
 test_that("preProcess fails if user provides non-existing file", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   co <- capture.output({
     co <- capture.output(type = "message", {
       pre <- reproducible::preProcess(url = theRasterTestZip, destinationPath = tmpdir)
@@ -132,10 +126,7 @@ test_that("preProcess fails if user provides non-existing file", {
 
 test_that("preProcess fails if user provides a directory as a targetFile", {
   skip_on_cran()
-  testInit("terra")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+  testInit("terra", needInternet = TRUE)
   co <- capture.output({
     co <- capture.output(type = "message", {
       pre <- reproducible::preProcess(url = theRasterTestZip, destinationPath = tmpdir)

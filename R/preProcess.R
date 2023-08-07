@@ -2,7 +2,6 @@ utils::globalVariables(c(
   "reproducible.inputPaths", "successfulCheckSumFilePath", "successfulDir"
 ))
 
-
 #' @param n Number of non-null arguments passed to `preProcess`.
 #' E.g., passing `n = 1` returns combinations with only a single non-NULL parameter.
 #' If `NULL` (default), all parameter combinations are returned.
@@ -455,13 +454,15 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         }
       }
       # targetFilePath may be already in destinationPathUser, depending on when it was created
-      if (!identical(to, targetFilePath)) {
-        targetFilePathTmp <- to[basename(to) %in% basename(targetFilePath)]
-        if (file.exists(targetFilePathTmp))
-          targetFilePath <- targetFilePathTmp
-        else
-          targetFilePath <- makeAbsolute(makeRelative(targetFilePath, destinationPath),
-                                         destinationPathUser)
+      if (!is.null(targetFilePath)) {
+        if (!identical(to, targetFilePath)) {
+          targetFilePathTmp <- to[basename(to) %in% basename(targetFilePath)]
+          if (file.exists(targetFilePathTmp))
+            targetFilePath <- targetFilePathTmp
+          else
+            targetFilePath <- makeAbsolute(makeRelative(targetFilePath, destinationPath),
+                                           destinationPathUser)
+        }
       }
       destinationPath <- destinationPathUser
     } else {
@@ -479,9 +480,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         }
       }
     }
-
-
-
   }
   # if it was a nested file
   if (any(fileExt(neededFiles) %in% c("zip", "tar", "rar")) && !isTRUE(is.na(archive))) {

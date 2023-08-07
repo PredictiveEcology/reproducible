@@ -1,8 +1,7 @@
-if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c("expectedFile", "objName", "V1",
-                           "method", "rasterToMatch", "studyArea", "targetCRS",
-                           "to", "useSAcrs", "datatype", "touches", "needBuffer"))
-}
+utils::globalVariables(c(
+  "datatype", "expectedFile", "method", "needBuffer", "objName",
+  "rasterToMatch", "studyArea", "targetCRS", "to", "touches", "useSAcrs", "V1"
+))
 
 #' Download and optionally post-process files
 #'
@@ -246,6 +245,7 @@ if (getRversion() >= "3.1.0") {
 #' ##########################################
 #' # Remote file using `url`
 #' ##########################################
+#' if (internetExists()) {
 #'   data.table::setDTthreads(2)
 #'   origDir <- getwd()
 #'   # download a zip file from internet, unzip all files, load as shapefile, Cache the call
@@ -303,6 +303,7 @@ if (getRversion() >= "3.1.0") {
 #'     unlink(dPath)
 #'  }
 #'  }
+#' }
 #' }
 #'
 #' ## Using quoted dlFun and fun -- this is not intended to be run but used as a template

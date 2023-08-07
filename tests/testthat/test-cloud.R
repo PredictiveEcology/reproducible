@@ -76,13 +76,8 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     })
   })
 
-  # on.exit({
-  #   retry(quote(googledrive::drive_rm(googledrive::as_id(cloudFolderID))))
-  # }, add = TRUE)
-  # expect_true(any(grepl("Created Drive file", mess5)))
   expect_true(any(grepl("Uploading", mess5)))
   expect_false(any(grepl("Download", mess5)))
-  # expect_true(any(grepl("No cloudFolderID", warn5)))
 
   warn6 <- capture_warnings({
     mess6 <- capture_messages({

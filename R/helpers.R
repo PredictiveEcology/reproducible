@@ -717,3 +717,30 @@ cat2file <- function(..., file) {
 }
 
 layerNamesDelimiter <- "_%%_"
+
+
+
+#' Checks for existed of a url or the internet using https://cloud.r-project.org
+#'
+#' A lightweight function that may be less reliable than more purpose built solutions
+#' such as checking a specific web page using `RCurl::url.exists`. However, this is
+#' slightly faster and is sufficient for many uses.
+#' @rdname internetExists
+#' @name internetExists
+#' @export
+#' @return Logical, `TRUE` if internet site exists, `FALSE` otherwise
+internetExists <- function() {
+  urlExists("https://cloud.r-project.org")
+}
+
+#' @rdname internetExists
+#' @export
+#' @name urlExists
+#' @param url A url of the form https://... to test for existence.
+#' @return Logical, `TRUE` if internet site exists, `FALSE` otherwise
+urlExists <- function(url) {
+  con <- url(url)
+  on.exit(try(close(con), silent = TRUE), add = TRUE)
+  a <- try(suppressWarnings(readLines(con, n = 1)), silent = TRUE)
+  !is(a, "try-error")
+}

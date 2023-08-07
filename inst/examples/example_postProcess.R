@@ -5,15 +5,18 @@ if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly 
   # need 3 files for this example; 1 from remote, 2 local
   dPath <- file.path(tempdir2())
   remoteTifUrl <- "https://github.com/rspatial/terra/raw/master/inst/ex/elev.tif"
+
   localFileLuxSm <- system.file("ex/luxSmall.shp", package = "reproducible")
   localFileLux <- system.file("ex/lux.shp", package = "terra")
 
   # 1 step for each layer
   # 1st step -- get study area
   studyArea <- prepInputs(localFileLuxSm, fun = "terra::vect") # default is sf::st_read
+
   # 2nd step: make the input data layer like the studyArea map
-  elevForStudy <- prepInputs(url = remoteTifUrl, to = studyArea, res = 250,
-                             destinationPath = dPath)
+  # Test only relevant if connected to internet -- so using try just in case
+  elevForStudy <- try(prepInputs(url = remoteTifUrl, to = studyArea, res = 250,
+                             destinationPath = dPath))
 
 
   # Alternate way, one step at a time. Must know each of these steps, and perform for each layer
