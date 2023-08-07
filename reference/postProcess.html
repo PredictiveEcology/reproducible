@@ -28,7 +28,7 @@ with a required amount of data manipulation between these calls so that the crs 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.6</span>
       </span>
     </div>
 
@@ -172,15 +172,18 @@ the new <code>from</code> and <code>to</code> arguments.</p>
 <span class="r-in"><span>  <span class="co"># need 3 files for this example; 1 from remote, 2 local</span></span></span>
 <span class="r-in"><span>  <span class="va">dPath</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="tempdir2.html">tempdir2</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">remoteTifUrl</span> <span class="op">&lt;-</span> <span class="st">"https://github.com/rspatial/terra/raw/master/inst/ex/elev.tif"</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="va">localFileLuxSm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"ex/luxSmall.shp"</span>, package <span class="op">=</span> <span class="st">"reproducible"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">localFileLux</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"ex/lux.shp"</span>, package <span class="op">=</span> <span class="st">"terra"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># 1 step for each layer</span></span></span>
 <span class="r-in"><span>  <span class="co"># 1st step -- get study area</span></span></span>
 <span class="r-in"><span>  <span class="va">studyArea</span> <span class="op">&lt;-</span> <span class="fu"><a href="prepInputs.html">prepInputs</a></span><span class="op">(</span><span class="va">localFileLuxSm</span>, fun <span class="op">=</span> <span class="st">"terra::vect"</span><span class="op">)</span> <span class="co"># default is sf::st_read</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># 2nd step: make the input data layer like the studyArea map</span></span></span>
-<span class="r-in"><span>  <span class="va">elevForStudy</span> <span class="op">&lt;-</span> <span class="fu"><a href="prepInputs.html">prepInputs</a></span><span class="op">(</span>url <span class="op">=</span> <span class="va">remoteTifUrl</span>, to <span class="op">=</span> <span class="va">studyArea</span>, res <span class="op">=</span> <span class="fl">250</span>,</span></span>
-<span class="r-in"><span>                             destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="co"># Test only relevant if connected to internet -- so using try just in case</span></span></span>
+<span class="r-in"><span>  <span class="va">elevForStudy</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu"><a href="prepInputs.html">prepInputs</a></span><span class="op">(</span>url <span class="op">=</span> <span class="va">remoteTifUrl</span>, to <span class="op">=</span> <span class="va">studyArea</span>, res <span class="op">=</span> <span class="fl">250</span>,</span></span>
+<span class="r-in"><span>                             destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Alternate way, one step at a time. Must know each of these steps, and perform for each layer</span></span></span>
@@ -230,17 +233,17 @@ the new <code>from</code> and <code>to</code> arguments.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /home/runner/work/_temp/Library/reproducible/ex/luxSmall.shp</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running preProcess</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile was not supplied; guessed and will try /tmp/RtmploJGLf/reproducible/2vdJeJws/elev.tif. If this is incorrect, please supply targetFile</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile was not supplied; guessed and will try /tmp/RtmpzJhIBS/reproducible/PLhMVvfo/elev.tif. If this is incorrect, please supply targetFile</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: elev.tif</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...downloading...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Downloading https://github.com/rspatial/terra/raw/master/inst/ex/elev.tif ...</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   |                                                                              |                                                                      |   0%  |                                                                              |===================================================================== |  99%  |                                                                              |======================================================================| 100%</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Hardlinked version of file(s) created at:</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/RtmploJGLf/reproducible/2vdJeJws/elev.tif</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/RtmpzJhIBS/reproducible/PLhMVvfo/elev.tif</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">which point(s) to</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/RtmploJGLf/reproducible/klMcDS/elev.tif</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/RtmpzJhIBS/reproducible/6kmD2m/elev.tif</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">... no copy/copies made.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
@@ -251,10 +254,10 @@ the new <code>from</code> and <code>to</code> arguments.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  what to look for.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmploJGLf/reproducible/2vdJeJws/elev.tif</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmpzJhIBS/reproducible/PLhMVvfo/elev.tif</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0448 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0587 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    projecting...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">         projectTo is a Vector dataset, which does not define all metadata required. </span></span>
@@ -262,12 +265,12 @@ the new <code>from</code> and <code>to</code> arguments.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">         from `ext(from)` (in the projection from `projectTo`).</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">         If this is not correct, create a template gridded object and pass that to projectTo...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">         </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done in 0.176 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done in 0.201 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0388 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0546 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0248 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  postProcessTo done in 0.321 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0331 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  postProcessTo done in 0.396 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running preProcess</span></span>
@@ -299,11 +302,11 @@ the new <code>from</code> and <code>to</code> arguments.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fb78f12d1d237284.rds))</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous sf::st_read call</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done in 0.0234 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done in 0.0304 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0298 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0382 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0636 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0781 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running preProcess</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: /home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
@@ -313,11 +316,11 @@ the new <code>from</code> and <code>to</code> arguments.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done in 0.0378 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done in 0.0751 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0156 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0206 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0169 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0221 secs</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
