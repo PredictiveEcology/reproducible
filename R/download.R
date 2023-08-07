@@ -401,7 +401,6 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' Download file from generic source url
 #'
 #' @param url  The url (link) to the file.
-#' @param needChecksums Logical indicating whether to generate checksums. ## TODO: add overwrite arg to the function?
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal
@@ -441,6 +440,8 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 }
 
 #' @inheritParams prepInputs
+#' @param needChecksums Logical indicating whether to generate checksums. ## TODO: add overwrite arg to the function?
+#'
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, messSkipDownload,
                            destinationPath, overwrite, needChecksums, .tempPath,
