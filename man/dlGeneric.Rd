@@ -22,8 +22,6 @@ search for the file before attempting to download. Default for that option is
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
-
-\item{needChecksums}{Logical indicating whether to generate checksums. ## TODO: add overwrite arg to the function?}
 }
 \description{
 Download file from generic source url

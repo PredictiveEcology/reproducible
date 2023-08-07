@@ -1,6 +1,6 @@
 ## Release information
 
-This is a minor update that accommodates changes in R-devel that are causing a failure in testing of this package. Several other minor enhancements and bugfixes are alson included as outlined in the News.
+This is a minor update that accommodates changes in R-devel that are causing a failure in testing of this package. Several other minor enhancements and bugfixes are also included as outlined in the News, including small documentation updates.
 
 See `NEWS.md` for a full list of changes.
 

@@ -1,10 +1,11 @@
-# reproducible 2.0.6
+# reproducible 2.0.7
 
 ## Enhancements
 * Address change in `round` with `R > 4.3.1`; now a primitive, that does method dispatch. Failure was identified with unit tests, by Luke Tierney who was making the change in `base::round`.
 
 ## Bug fixes
 * several identified and fixed (PRs by Ceres Barros, notably, PRs #341, #342, #343). These fix missing argument in a `.unwrap` call, and missing check in `preProcess`, when `targetFilePath` was `NULL`.
+* minor documentation updates
 
 # reproducible 2.0.5
 
