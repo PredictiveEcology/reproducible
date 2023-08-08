@@ -1,6 +1,6 @@
 ## Release information
 
-This is a minor update that accommodates changes in R-devel that are causing a failure in testing of this package. Several other minor enhancements and bugfixes are alson included as outlined in the News.
+This is a minor update that accommodates changes in R-devel that are causing a failure in testing of this package. Several other minor enhancements and bugfixes are also included as outlined in the News, including small documentation updates.
 
 See `NEWS.md` for a full list of changes.
 
@@ -21,9 +21,9 @@ See `NEWS.md` for a full list of changes.
 * Windows                 (win-builder), R 4.3.1 (2023-04-21 ucrt)
 
 ### Development R version
-* Ubuntu 20.04 LTS             (GitHub), R-devel (2023-07-01 r84626 ucrt)
-* Windows                      (GitHub), R-devel (2023-07-01 r84626 ucrt)
-* Windows                 (win-builder), R-devel (2023-07-01 r84626 ucrt)
+* Ubuntu 20.04 LTS             (GitHub), R-devel (2023-08-05 r84874 ucrt)
+* Windows                      (GitHub), R-devel (2023-08-05 r84874 ucrt)
+* Windows                 (win-builder), R-devel (2023-08-05 r84874 ucrt)
 
 ## R CMD check results
 

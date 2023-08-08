@@ -1,17 +1,18 @@
 # Platform
 
-|field    |value                        |
-|:--------|:----------------------------|
-|version  |R version 4.3.1 (2023-06-16) |
-|os       |Ubuntu 20.04.6 LTS           |
-|system   |x86_64, linux-gnu            |
-|ui       |X11                          |
-|language |en_CA:en                     |
-|collate  |en_CA.UTF-8                  |
-|ctype    |en_CA.UTF-8                  |
-|tz       |America/Edmonton             |
-|date     |2023-08-03                   |
-|pandoc   |2.5 @ /usr/bin/pandoc        |
+|field    |value                                  |
+|:--------|:--------------------------------------|
+|version  |R version 4.3.0 (2023-04-21)           |
+|os       |Ubuntu 22.04.2 LTS                     |
+|system   |x86_64, linux-gnu                      |
+|ui       |RStudio                                |
+|language |(EN)                                   |
+|collate  |C.UTF-8                                |
+|ctype    |C.UTF-8                                |
+|tz       |America/Vancouver                      |
+|date     |2023-08-07                             |
+|rstudio  |2023.03.0+386 Cherry Blossom (desktop) |
+|pandoc   |NA                                     |
 
 # Dependencies
 
