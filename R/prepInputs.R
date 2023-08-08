@@ -1,10 +1,7 @@
-if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c(
-    "expectedFile", "objName", "V1",
-    "method", "rasterToMatch", "studyArea", "targetCRS",
-    "to", "useSAcrs", "datatype", "touches", "needBuffer"
-  ))
-}
+utils::globalVariables(c(
+  "datatype", "expectedFile", "method", "needBuffer", "objName",
+  "rasterToMatch", "studyArea", "targetCRS", "to", "touches", "useSAcrs", "V1"
+))
 
 #' Download and optionally post-process files
 #'

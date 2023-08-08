@@ -146,6 +146,7 @@ postProcess.default <- function(x, ...) {
 #' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 #' appropriately cropped.
 #' @rdname deprecated
+#' @name deprecated
 cropInputs <- function(x, studyArea, rasterToMatch, verbose = getOption("reproducible.verbose", 1), ...) {
   UseMethod("cropInputs")
 }
@@ -222,11 +223,6 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
 #'                      [projectTo()], thus will changing the
 #'                      resolution and projection of `x`.
 #'                      See details in [postProcessTo()].
-#'
-#' @param cores An `integer*` or `'AUTO'`. This will be used if `gdalwarp` is
-#'              triggered. `'AUTO'*` will calculate 90% of the total
-#'              number of cores in the system, while an integer or rounded
-#'              float will be passed as the exact number of cores to be used.
 #'
 #' @return A file of the same type as starting, but with projection (and possibly
 #' other characteristics, including resolution, origin, extent if changed).
@@ -429,8 +425,6 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
 #' @param x  The object save to disk i.e., write outputs
 #'
 #' @param overwrite Logical. Should file being written overwrite an existing file if it exists.
-#'
-#' @param filename2 File name passed to [writeTo()].
 #'
 #' @param ... Passed into [writeTo()]
 #'

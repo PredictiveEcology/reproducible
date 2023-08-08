@@ -1,6 +1,6 @@
-if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c("cacheId", "checksumsFilename", "checksumsID", "id"))
-}
+utils::globalVariables(c(
+  "cacheId", "checksumsFilename", "checksumsID", "id"
+))
 
 #' Check for presence of `checkFolderID` (for `Cache(useCloud)`)
 #'
