@@ -756,9 +756,6 @@ test_that("test mergeCache", {
 # test_that("test cache-helpers", {
 #   testInit("terra")
 #   out <- createCache(tmpCache)
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
 #
 #   tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".grd")
 #   tmpfile2 <- tempfile(tmpdir = tmpdir, fileext = ".grd")
@@ -834,9 +831,6 @@ test_that("test mergeCache", {
 test_that("test cache-helpers", {
   testInit(c("raster"), tmpFileExt = c(rep(".grd", 3), rep(".tif", 3)))
   # out <- reproducible::createCache(tmpCache)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
 
   r1 <- raster::raster(raster::extent(0,3,0,3), vals = 1)
   r2 <- raster::raster(raster::extent(0,3,0,3), vals = 2)
