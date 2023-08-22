@@ -11,13 +11,23 @@ output:
     toc: yes
 vignette: >
   %\VignetteIndexEntry{Introduction to Cache}
-  %\VignetteDepends{terra, data.table}
+  %\VignetteDepends{data.table}
   %\VignetteKeyword{Cache}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
   chunk_output_type: console
 ---
+
+
+```{r setup, include = FALSE}
+SuggestedPkgsNeeded <- c("terra")
+hasSuggests <- all(sapply(SuggestedPkgsNeeded, require, character.only = TRUE, quietly = TRUE))
+useSuggests <- !(tolower(Sys.getenv("_R_CHECK_DEPENDS_ONLY_")) == "true")
+
+knitr::opts_chunk$set(eval = hasSuggests && useSuggests)
+```
+
 
 # Reproducible workflow
 
@@ -55,37 +65,35 @@ This is particularly useful for expensive operations.
 ```{r function-level, echo=TRUE}
 library(reproducible)
 library(data.table)
-if (requireNamespace("terra")) {
-  
-  tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
-  dir.create(tmpDir, recursive = TRUE)
-  
-  ras <- terra::rast(terra::ext(0, 300, 0, 300), vals = 1:9e4, res = 1)
-  terra::crs(ras) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +datum=WGS84"
-  
-  newCRS <- "+init=epsg:4326" # A longlat crs
-  
-  # No Cache
-  system.time(suppressWarnings(map1 <- terra::project(ras, newCRS))) # Warnings due to new PROJ
-  
-  # Try with memoise for this example -- for many simple cases, memoising will not be faster
-  opts <- options("reproducible.useMemoise" = TRUE)
-  # With Cache -- a little slower the first time because saving to disk
-  system.time({
-    suppressWarnings({
-      map1 <- Cache(terra::project, ras, newCRS, cachePath = tmpDir, notOlderThan = Sys.time())
-    })
+
+tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
+dir.create(tmpDir, recursive = TRUE)
+
+ras <- terra::rast(terra::ext(0, 300, 0, 300), vals = 1:9e4, res = 1)
+terra::crs(ras) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +datum=WGS84"
+
+newCRS <- "+init=epsg:4326" # A longlat crs
+
+# No Cache
+system.time(suppressWarnings(map1 <- terra::project(ras, newCRS))) # Warnings due to new PROJ
+
+# Try with memoise for this example -- for many simple cases, memoising will not be faster
+opts <- options("reproducible.useMemoise" = TRUE)
+# With Cache -- a little slower the first time because saving to disk
+system.time({
+  suppressWarnings({
+    map1 <- Cache(terra::project, ras, newCRS, cachePath = tmpDir, notOlderThan = Sys.time())
   })
-  
-  # faster the second time; improvement depends on size of object and time to run function
-  system.time({
-    map2 <- Cache(terra::project, ras, newCRS, cachePath = tmpDir)
-  })
-  
-  options(opts)
-  
-  all.equal(map1, map2, check.attributes = FALSE) # TRUE
-}
+})
+
+# faster the second time; improvement depends on size of object and time to run function
+system.time({
+  map2 <- Cache(terra::project, ras, newCRS, cachePath = tmpDir)
+})
+
+options(opts)
+
+all.equal(map1, map2, check.attributes = FALSE) # TRUE
 ```
 
 ## Caching examples

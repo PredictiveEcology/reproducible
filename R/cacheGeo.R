@@ -55,7 +55,8 @@
 #'
 #' \donttest{
 #'
-#' if (requireNamespace("sf", quietly = TRUE)) {
+#' if (requireNamespace("sf", quietly = TRUE) &&
+#'     requireNamespace("terra", quietly = TRUE)) {
 #' dPath <- checkPath(file.path(tempdir2()), create = TRUE)
 #' localFileLux <- system.file("ex/lux.shp", package = "terra")
 #'

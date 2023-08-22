@@ -927,7 +927,7 @@ test_that("test rm large non-file-backed rasters", {
     if (!grepl("SQLite", class(getOption("reproducible.conn", NULL))))
       skip("This is not for non-SQLite")
 
-  testInit("qs", opts = list("reproducible.cacheSpeed" = "fast",
+  testInit(c("qs", "terra"), opts = list("reproducible.cacheSpeed" = "fast",
                              "reproducible.cacheSaveFormat" = "qs"))
 
   ext <- terra::ext(0, 10000, 0, 10000)
@@ -973,7 +973,7 @@ test_that("test cc", {
 
 test_that("test pre-creating conn", {
   if (!useDBI()) skip("Only relevant for DBI backend")
-  testInit(ask = FALSE, tmpFileExt = c(".tif", ".tif"))
+  testInit("terra", ask = FALSE, tmpFileExt = c(".tif", ".tif"))
   on.exit({
     DBI::dbDisconnect(conn)
 

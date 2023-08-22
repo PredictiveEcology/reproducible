@@ -1,3 +1,11 @@
+# reproducible 2.0.8
+
+## Enhancements
+
+## Bug fixes
+* only use character strings when comparing `getRVersion() <= XXX` 
+
+
 # reproducible 2.0.7
 
 ## Enhancements

@@ -39,17 +39,17 @@ usingPipe2 <-
       eval() |>
       rnorm()} |>
     Cache()'
-if (getRversion() >= 4.1) {
+if (getRversion() >= "4.1") {
   a[[9]] <- eval(parse(text = usingPipe1)) # recovers cached copy
 }
-if (getRversion() >= 4.2) { # uses the _ placeholder; only available in R >= 4.2
+if (getRversion() >= "4.2") { # uses the _ placeholder; only available in R >= 4.2
   a[[18]] <- eval(parse(text = usingPipe2)) # recovers cached copy
 }
 
 length(unique(a)) == 1 #  all same
 
 ### Pipe -- have to use { } or else only final function is Cached
-if (getRversion() >= 4.1) {
+if (getRversion() >= "4.1") {
   b1a <- 'sample(1e5, 1) |> rnorm() |> Cache()'
   b1b <- 'sample(1e5, 1) |> rnorm() |> Cache()'
   b2a <- '{sample(1e5, 1) |> rnorm()} |> Cache()'

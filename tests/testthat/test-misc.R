@@ -91,7 +91,7 @@ test_that("setting options works correctly", {
 })
 
 test_that("guessAtTargetAndFun works correctly", {
-  testInit()
+  testInit("terra")
 
   # expect_error(.guessAtTargetAndFun(fun = rnorm), "fun must be a")
   expect_message(.guessAtTargetAndFun(targetFilePath = NULL, filesExtracted = "", fun = "load"),
