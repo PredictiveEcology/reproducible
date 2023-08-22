@@ -1298,23 +1298,29 @@ test_that("assessDataType doesn't work", {
   ras <- terra::rast(ncol = 10, nrow = 10)
   ras[] <- c(Inf, 1, rep(c(0, 1), 49))
   expect_true(assessDataType(ras) == "FLT8S")
+
 })
+
+
+test_that("assessDataType for categorical rasters", {
+  testInit(c("terra", "raster"))
+
+  r <- terra::rast(terra::ext(c(0,2,0,2)), vals = 1:4, res = 1)
+  levels(r) <- data.frame(ID = 1:4, Lett = LETTERS[1:4])
+  expect_identical(assessDataType(r), "INT1U")
+
+  r <- raster::raster(raster::extent(c(0,2,0,2)), vals = 1:4, res = 1)
+  levels(r) <- data.frame(ID = 1:4, Lett = LETTERS[1:4])
+  expect_identical(assessDataType(r), "INT1U")
+
+})
+
 
 test_that("lightweight tests for code coverage", {
   skip_on_cran()
-  testInit(c("sf", "terra"),
-    opts = list(
-      "reproducible.overwrite" = TRUE,
-      "reproducible.inputPaths" = NULL
-    ),
-    needGoogleDriveAuth = TRUE
-  )
-  on.exit(
-    {
-      testOnExit(testInitOut)
-    },
-    add = TRUE
-  )
+  testInit(c("sf", "terra"), opts = list("reproducible.overwrite" = TRUE,
+                                                        "reproducible.inputPaths" = NULL),
+                          needGoogleDriveAuth = TRUE)
 
   url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
 

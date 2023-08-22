@@ -521,9 +521,11 @@ assessDataType.default <- function(ras, type = "writeRaster") {
 
   if (is.null(datatype)) {
     if (terra::ncell(ras) > N) {
-      rasVals <- tryCatch(suppressWarnings(terra::spatSample(x = ras, size = N)),
+      rasVals <- tryCatch(suppressWarnings(sampRand(x = ras, size = N)),
         error = function(x) rep(NA_integer_, N)
       )
+      if (is.factor(rasVals))
+        rasVals <- as.integer(rasVals)
     } else {
       rasVals <- values2(ras)
     }
@@ -699,4 +701,16 @@ switchDataTypes <- function(datatype, type) {
     stop("incorrect argument: type must be one of writeRaster, projectRaster, or GDAL")
   )
   return(datatype)
+}
+
+
+sampRand <- function(x, size, method, ...) {
+  if (isRaster(r)) {
+    .requireNamespace("raster")
+    raster::sampleRandom(x, size = size, ...)
+  } else {
+    .requireNamespace("terra")
+    out <- terra::spatSample(x, size = size, ...)
+    out <- out[, 1] # it is returned as a df
+  }
 }
