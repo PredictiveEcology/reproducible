@@ -105,9 +105,10 @@ the existing "same extent" entry in the \code{sf} object.
 \examples{
 \donttest{
 
-if (requireNamespace("sf", quietly = TRUE)) {
-  dPath <- checkPath(file.path(tempdir2()), create = TRUE)
-  localFileLux <- system.file("ex/lux.shp", package = "terra")
+if (requireNamespace("sf", quietly = TRUE) &&
+    requireNamespace("terra", quietly = TRUE)) {
+dPath <- checkPath(file.path(tempdir2()), create = TRUE)
+localFileLux <- system.file("ex/lux.shp", package = "terra")
 
   # 1 step for each layer
   # 1st step -- get study area

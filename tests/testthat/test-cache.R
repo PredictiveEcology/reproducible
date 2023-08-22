@@ -1036,10 +1036,8 @@ test_that("test rm large non-file-backed rasters", {
     }
   }
 
-  testInit("qs", opts = list(
-    "reproducible.cacheSpeed" = "fast",
-    "reproducible.cacheSaveFormat" = "qs"
-  ))
+  testInit(c("qs", "terra"), opts = list("reproducible.cacheSpeed" = "fast",
+                             "reproducible.cacheSaveFormat" = "qs"))
 
   ext <- terra::ext(0, 10000, 0, 10000)
   r <- Cache(terra::rast, ext,
@@ -1086,13 +1084,9 @@ test_that("test cc", {
 
 test_that("test pre-creating conn", {
   if (!useDBI()) skip("Only relevant for DBI backend")
-  testInit(ask = FALSE, tmpFileExt = c(".tif", ".tif"))
-  on.exit(
-    {
-      DBI::dbDisconnect(conn)
-    },
-    add = TRUE
-  )
+  testInit("terra", ask = FALSE, tmpFileExt = c(".tif", ".tif"))
+  on.exit({
+    DBI::dbDisconnect(conn)
 
   conn <- dbConnectAll(cachePath = tmpdir, conn = NULL)
   ra <- terra::rast(terra::ext(0, 10, 0, 10), vals = sample(1:100))
