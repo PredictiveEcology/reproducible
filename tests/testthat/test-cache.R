@@ -1078,6 +1078,7 @@ test_that("test pre-creating conn", {
   testInit("terra", ask = FALSE, tmpFileExt = c(".tif", ".tif"))
   on.exit({
     DBI::dbDisconnect(conn)
+  })
 
   conn <- dbConnectAll(cachePath = tmpdir, conn = NULL)
   ra <- terra::rast(terra::ext(0, 10, 0, 10), vals = sample(1:100))
