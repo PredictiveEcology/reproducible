@@ -180,13 +180,6 @@ test_that("interactive prepInputs", {
     needGoogleDriveAuth = TRUE
   )
 
-  on.exit(
-    {
-      testOnExit(testInitOut)
-    },
-    add = TRUE
-  )
-
   # skip_if_not(isInteractive())
   #######################################
   ### url
@@ -225,14 +218,9 @@ test_that("interactive prepInputs", {
   expect_true(inherits(test, vectorType()))
 
   # From Bird/Tati project
-  testOnExit(testInitOut)
-  testInit("terra",
-    opts = list(
-      "reproducible.overwrite" = TRUE,
-      "reproducible.inputPaths" = NULL
-    ),
-    needGoogleDriveAuth = TRUE
-  )
+  testInit("terra", opts = list("reproducible.overwrite" = TRUE,
+                                               "reproducible.inputPaths" = NULL),
+                          needGoogleDriveAuth = TRUE)
   birdSpecies <- c("BBWA", "YRWA")
   urls <- c(
     "https://drive.google.com/open?id=1CmzYNpxwWr82PoRSbHWG8yg2cC3hncfb",
@@ -325,19 +313,11 @@ test_that("interactive prepInputs", {
 test_that("preProcess doesn't work", {
   skip_on_cran()
   skip_on_ci()
-  testInit("terra",
-    opts = list(
-      "reproducible.overwrite" = TRUE,
-      "reproducible.inputPaths" = NULL
-    ),
-    needGoogleDriveAuth = TRUE
-  )
-  on.exit(
-    {
-      testOnExit(testInitOut)
-    },
-    add = TRUE
-  )
+  testInit("terra", opts = list(
+    "reproducible.overwrite" = TRUE,
+    "reproducible.inputPaths" = NULL
+  ),
+  needGoogleDriveAuth = TRUE)
 
   skip_if_not(isInteractive())
   cls <- rasterType()
@@ -1149,12 +1129,6 @@ test_that("prepInputs when fun = NA", {
     reproducible.interactiveOnDownloadFail = FALSE,
     "reproducible.inputPaths" = NULL
   ), needGoogleDriveAuth = TRUE)
-  on.exit(
-    {
-      testOnExit(testInitOut)
-    },
-    add = TRUE
-  )
 
   coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5), .Dim = c(5L, 2L))
   StudyArea <- terra::vect(coords, "polygons")
@@ -1205,19 +1179,11 @@ test_that("prepInputs when fun = NA", {
 })
 
 test_that("load rdata in prepInputs", {
-  testInit("terra",
-    tmpFileExt = "rda",
-    opts = list(
-      "reproducible.overwrite" = TRUE,
-      "reproducible.inputPaths" = NULL
-    ), needGoogleDriveAuth = TRUE
-  )
-  on.exit(
-    {
-      testOnExit(testInitOut)
-    },
-    add = TRUE
-  )
+  testInit("terra", tmpFileExt = "rda",
+                          opts = list(
+                            "reproducible.overwrite" = TRUE,
+                            "reproducible.inputPaths" = NULL
+                          ), needGoogleDriveAuth = TRUE)
   a <- 1
   b <- 2
   save(a, b, file = tmpfile)
@@ -1235,12 +1201,6 @@ test_that("assessDataType doesn't work", {
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
   ), needGoogleDriveAuth = TRUE)
-  on.exit(
-    {
-      testOnExit(testInitOut)
-    },
-    add = TRUE
-  )
 
   ## LOG1S
   ras <- terra::rast(ncol = 10, nrow = 10)
@@ -1509,19 +1469,9 @@ test_that("lightweight tests for code coverage", {
 test_that("lightweight tests 2 for code coverage", {
   skip_on_cran()
 
-  testInit("terra",
-    opts = list(
-      "reproducible.overwrite" = TRUE,
-      "reproducible.inputPaths" = NULL
-    ),
-    needGoogleDriveAuth = TRUE
-  )
-  on.exit(
-    {
-      testOnExit(testInitOut)
-    },
-    add = TRUE
-  )
+  testInit("terra", opts = list("reproducible.overwrite" = TRUE,
+                                               "reproducible.inputPaths" = NULL),
+                          needGoogleDriveAuth = TRUE)
 
   theZipFile <- tempfile(tmpdir = tmpdir, fileext = ".zip")
   theZipFile2 <- tempfile(tmpdir = tmpdir, fileext = ".zip")
@@ -1727,7 +1677,6 @@ test_that("options inputPaths", {
     expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 3)
   }
   ## Try download to inputPath, intercepting the destination, creating a link
-  testOnExit(testInitOut)
   testInit("terra",
     opts = list(
       "reproducible.inputPaths" = NULL,
@@ -1834,19 +1783,9 @@ test_that("options inputPaths", {
 test_that("writeOutputs saves factor rasters with .grd class to preserve levels", {
   skip_on_cran()
 
-  testInit("terra",
-    opts = list(
-      "reproducible.overwrite" = TRUE,
-      "reproducible.inputPaths" = NULL
-    ),
-    needGoogleDriveAuth = TRUE
-  )
-  on.exit(
-    {
-      testOnExit(testInitOut)
-    },
-    add = TRUE
-  )
+  testInit("terra", opts = list("reproducible.overwrite" = TRUE,
+                                               "reproducible.inputPaths" = NULL),
+                          needGoogleDriveAuth = TRUE)
   a <- terra::rast(terra::ext(0, 2, 0, 2), res = 1, vals = c(1, 1, 2, 2))
   levels(a) <- data.frame(ID = 1:2, Factor = c("This", "That"))
   tifTmp <- tempfile(tmpdir = tmpdir, fileext = ".tif")
@@ -1864,22 +1803,11 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
 test_that("rasters aren't properly resampled", {
   skip_on_cran()
 
-  testInit("terra",
-    opts = list(
-      "reproducible.overwrite" = TRUE,
-      "reproducible.inputPaths" = NULL
-    ),
-    needGoogleDriveAuth = TRUE
-  )
-  on.exit(
-    {
-      testOnExit(testInitOut)
-    },
-    add = TRUE
-  )
-
-  a <- terra::rast(terra::ext(0, 20, 0, 20), res = 2, vals = as.integer(1:100 * 4))
-  b <- terra::rast(terra::ext(0, 30, 0, 30), res = c(3, 3), vals = 1L:100L)
+  testInit("terra", opts = list("reproducible.overwrite" = TRUE,
+                                               "reproducible.inputPaths" = NULL),
+                          needGoogleDriveAuth = TRUE)
+  a <- terra::rast(terra::ext(0, 20, 0, 20), res = 2, vals = as.integer(1:100*4))
+  b <- terra::rast(terra::ext(0, 30, 0, 30), res = c(3,3), vals = 1L:100L)
   crs(a) <- crsToUse
   crs(b) <- crsToUse
 

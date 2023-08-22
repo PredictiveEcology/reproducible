@@ -1,12 +1,6 @@
 test_that("preProcess works for .tar files", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  on.exit(
-    {
-      testOnExit(testInitOut)
-    },
-    add = TRUE
-  )
   url <- theRasterTestTar
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
