@@ -1,5 +1,3 @@
-
-
 #' @exportClass Path
 #' @rdname Path-class
 setClass("Path", slots = c(.Data = "character"), contains = "character", prototype = NA_character_)
@@ -44,9 +42,9 @@ setClass("Path", slots = c(.Data = "character"), contains = "character", prototy
 #'
 #' @examples
 #' tmpf <- tempfile(fileext = ".csv")
-#' file.exists(tmpf)    ## FALSE
+#' file.exists(tmpf) ## FALSE
 #' tmpfPath <- asPath(tmpf)
-#' is(tmpf, "Path")     ## FALSE
+#' is(tmpf, "Path") ## FALSE
 #' is(tmpfPath, "Path") ## TRUE
 #'
 asPath <- function(obj, nParentDirs = 0) {
@@ -56,7 +54,7 @@ asPath <- function(obj, nParentDirs = 0) {
 #' @export
 #' @importFrom methods is
 #' @rdname Path-class
-asPath.character <- function(obj, nParentDirs = 0) {  # nolint
+asPath.character <- function(obj, nParentDirs = 0) { # nolint
   class(obj) <- unique(c("Path", class(obj)))
   attr(obj, "nParentDirs") <- nParentDirs
   return(obj)
@@ -64,7 +62,7 @@ asPath.character <- function(obj, nParentDirs = 0) {  # nolint
 
 #' @export
 #' @rdname Path-class
-asPath.null <- function(obj, nParentDirs = 0) {  # nolint
+asPath.null <- function(obj, nParentDirs = 0) { # nolint
   return(NULL)
 }
 
@@ -132,10 +130,9 @@ setAs(from = "character", to = "Path", function(from) {
 #' identical(read.csv(f1), read.csv(t1)) ## TRUE
 #' identical(read.csv(f2), read.csv(t2)) ## TRUE
 #'
-#'
 copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                            overwrite = TRUE, delDestination = FALSE,
-                           #copyRasterFile = TRUE, clearRepo = TRUE,
+                           # copyRasterFile = TRUE, clearRepo = TRUE,
                            create = TRUE, silent = FALSE) {
   if (any(length(from) != 1, length(to) != 1)) stop("from and to must each be length 1")
   useFileCopy <- identical(dirname(from), dirname(to))
@@ -149,16 +146,20 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
       if (!isTRUE(unique(dir.exists(to)))) toDir <- dirname(to) # extract just the directory part
       robocopyBin <- tryCatch(Sys.which("robocopy"), warning = function(w) NA_character_)
 
-      robocopy <-  if (silent) {
-        paste0(robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO /NDL /NFL /NJH /NJS \"",  # nolint
-               normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\" \"",
-               normalizePath(toDir, mustWork = FALSE, winslash = "\\"),  "\" ",
-               basename(from))
+      robocopy <- if (silent) {
+        paste0(
+          robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO /NDL /NFL /NJH /NJS \"", # nolint
+          normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\" \"",
+          normalizePath(toDir, mustWork = FALSE, winslash = "\\"), "\" ",
+          basename(from)
+        )
       } else {
-        paste0(robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO \"", # nolint
-               normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\" \"",
-               normalizePath(toDir, mustWork = FALSE, winslash = "\\"), "\" ",
-               basename(from))
+        paste0(
+          robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO \"", # nolint
+          normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\" \"",
+          normalizePath(toDir, mustWork = FALSE, winslash = "\\"), "\" ",
+          basename(from)
+        )
       }
 
       useFileCopy <- if (useRobocopy && !is.na(robocopyBin)) {
@@ -174,7 +175,7 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
       if (any(!nzchar(useFileCopy))) {
         useFileCopy <- TRUE
       }
-    } else if ( (.onLinux) ) { # nolint
+    } else if ((.onLinux)) { # nolint
       if (!identical(basename(from), basename(to))) {
         # rsync can't handle file renaming on copy
         useFileCopy <- TRUE
@@ -187,14 +188,15 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
         toDir <- gsub("\ ", "\\ ", toDir, fixed = TRUE)
         if (!dir.exists(toDir)) dir.create(toDir, recursive = TRUE, showWarnings = FALSE)
         from <- normalizePath(from, mustWork = TRUE)
-        rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
-                        "'", from, "' ", toDir, "/")
+        rsync <- paste0(
+          rsyncBin, " ", opts, " --delete "[delDestination],
+          "'", from, "' ", toDir, "/"
+        )
 
         # THe warnings here are being caught; and use file.copy
         useFileCopy <- capture.output(system(rsync, intern = FALSE, ignore.stderr = TRUE, ignore.stdout = TRUE))
         filesCopied <- file.exists(file.path(toDir, basename(from)))
         useFileCopy <- any(!filesCopied)
-
       }
     } else {
       useFileCopy <- TRUE
@@ -225,30 +227,39 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   }
   dig <- lapply(objList, function(object) {
     sn <- slotNames(object@data)
-    sn <- sn[!(sn %in% c(#"min", "max", "haveminmax", "names", "isfactor",
+    sn <- sn[!(sn %in% c( # "min", "max", "haveminmax", "names", "isfactor",
       "dropped", "nlayers", "fromdisk", "inmemory"
-      #"offset", "gain"
+      # "offset", "gain"
     ))]
     dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
     names(dataSlotsToDigest) <- sn
     theData <- .robustDigest(object@data@values)
     dataSlotsToDigest$values <- NULL
-      dig <- .robustDigest(append(list(dim(object), raster::res(object), terra::crs(object),
-                                       raster::extent(object), theData), dataSlotsToDigest), length = length, quick = quick,
-                           algo = algo) # don't include object@data -- these are volatile
+    dig <- .robustDigest(
+      append(list(
+        dim(object), raster::res(object), terra::crs(object),
+        raster::extent(object), theData
+      ), dataSlotsToDigest),
+      length = length, quick = quick,
+      algo = algo
+    ) # don't include object@data -- these are volatile
 
     # Legend
     sn <- slotNames(object@legend)
     legendSlotsToDigest <- lapply(sn, function(s) slot(object@legend, s))
-    dig2 <- .robustDigest(legendSlotsToDigest, length = length, quick = quick,
-                          algo = algo) # don't include object@data -- these are volatile
+    dig2 <- .robustDigest(legendSlotsToDigest,
+      length = length, quick = quick,
+      algo = algo
+    ) # don't include object@data -- these are volatile
     dig <- c(dig, dig2)
 
     sn <- slotNames(object@file)
     sn <- sn[!(sn %in% c("name"))]
     fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
-    digFile <- .robustDigest(fileSlotsToDigest, length = length, quick = quick,
-                             algo = algo) # don't include object@file -- these are volatile
+    digFile <- .robustDigest(fileSlotsToDigest,
+      length = length, quick = quick,
+      algo = algo
+    ) # don't include object@file -- these are volatile
 
     dig <- c(dig, digFile)
   })
@@ -359,7 +370,8 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   patt <- paste(.defaultOtherFunctionsOmit, collapse = ")|(")
   otherFns <- .grepSysCalls(
     scalls,
-    pattern = patt)
+    pattern = patt
+  )
   if (length(otherFns)) {
     otherFns <- unlist(lapply(scalls[-otherFns], function(x) {
       tryCatch(as.character(x[[1]]), error = function(y) "")
@@ -402,9 +414,10 @@ nextNumericName <- function(string) {
   alreadyHasNumeric <- grepl(allSimilarFilesInDirSansExt, pattern = finalNumericPattern)
   if (isTRUE(any(alreadyHasNumeric))) {
     splits <- strsplit(allSimilarFilesInDirSansExt[alreadyHasNumeric], split = "_")
-    highestNumber <- max(unlist(lapply(splits, function(split) as.numeric(tail(split,1)))),
-                         na.rm = TRUE)
-    preNumeric <- unique(unlist(lapply(splits, function(spl) paste(spl[-length(spl)], collapse = "_")))) #nolint
+    highestNumber <- max(unlist(lapply(splits, function(split) as.numeric(tail(split, 1)))),
+      na.rm = TRUE
+    )
+    preNumeric <- unique(unlist(lapply(splits, function(spl) paste(spl[-length(spl)], collapse = "_")))) # nolint
     ## keep rndstr in here (below), so that both streams keep same rnd number state
     out <- file.path(dirname(saveFilenameSansExt), paste0(preNumeric, "_", highestNumber + 1))
   } else {
@@ -424,8 +437,9 @@ list2envAttempts <- function(x, envir) {
   output <- NULL
   if (is(attempt, "try-error")) {
     attempt <- try(list2env(x, envir@.xData), silent = TRUE)
-    if (is(attempt, "try-error"))
+    if (is(attempt, "try-error")) {
       output <- as.environment(x)
+    }
   }
   output
 }
@@ -437,7 +451,7 @@ list2envAttempts <- function(x, envir) {
 .addingToMemoisedMsg <- "(and added a memoised copy)"
 
 .loadedCacheMsg <- function(root, functionName) {
-  paste0("     ", root," ", functionName, " call")
+  paste0("     ", root, " ", functionName, " call")
 }
 
 
@@ -495,7 +509,8 @@ list2envAttempts <- function(x, envir) {
         trySaveFilename <- if (length(splittedFilenames) == 1) {
           normalizePath(
             file.path(repoDir, splittedFilenames[[1]][[length(splittedFilenames[[1]])]]),
-            winslash = "/", mustWork = FALSE)
+            winslash = "/", mustWork = FALSE
+          )
         } else {
           splittedFilenames2 <- lapply(splittedFilenames, function(x) {
             ifelse(length(x), x[length(x)], "")
@@ -504,13 +519,15 @@ list2envAttempts <- function(x, envir) {
         }
       }
       if (any(!file.exists(trySaveFilename))) {
-        stop("The following file-backed rasters are supposed to be on disk ",
-             "but appear to have been deleted:\n",
-             paste("    ", badFileNames, collapse = "\n"),
-             ". The most likely reason is that two functions had the same output ",
-             "and one of them was removed with clearCache(...). ",
-             "The best solution to this is never have two functions create the same ",
-             "file-backed raster.")
+        stop(
+          "The following file-backed rasters are supposed to be on disk ",
+          "but appear to have been deleted:\n",
+          paste("    ", badFileNames, collapse = "\n"),
+          ". The most likely reason is that two functions had the same output ",
+          "and one of them was removed with clearCache(...). ",
+          "The best solution to this is never have two functions create the same ",
+          "file-backed raster."
+        )
       } else {
         obj <- updateFilenameSlots(obj, curFilenames = fnsOnly, trySaveFilename)
         fnsAll <- fns <- Filenames(obj)
@@ -536,9 +553,8 @@ list2envAttempts <- function(x, envir) {
     FBAll <- nchar(fnsAll) > 0
     out <- hardLinkOrCopy(from = fnsAll[FBAll], to = saveFilename[FBAll])
     saveFilenamesToUpdateSlot <- saveFilename[basename(saveFilenamePreNumeric) %in%
-                                                basename(fnsShort)]
+      basename(fnsShort)]
     obj <- updateFilenameSlots(obj, fnsShort, saveFilenamesToUpdateSlot)
-
   }
   obj
 }
@@ -557,8 +573,10 @@ setClass("PackedSpatExtent")
 
 wrapSpatVector <- function(obj) {
   geom1 <- terra::geom(obj)
-  geom1 <- list(cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),
-                cols34 = matrix(as.integer(geom1[, c(3, 4)]), ncol = 2))
+  geom1 <- list(
+    cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),
+    cols34 = matrix(as.integer(geom1[, c(3, 4)]), ncol = 2)
+  )
   geomtype1 <- terra::geomtype(obj)
   dat1 <- terra::values(obj)
   crs1 <- terra::crs(obj)

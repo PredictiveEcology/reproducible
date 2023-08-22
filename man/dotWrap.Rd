@@ -105,9 +105,9 @@ cannot be saved without first wrapping them. Also, file-backed objects are simil
 \examples{
 # For SpatExtent
 if (requireNamespace("terra")) {
-ex <- terra::ext(c(0, 2, 0, 3))
-exWrapped <- .wrap(ex)
-ex1 <- .unwrap(exWrapped)
+  ex <- terra::ext(c(0, 2, 0, 3))
+  exWrapped <- .wrap(ex)
+  ex1 <- .unwrap(exWrapped)
 }
 
 }

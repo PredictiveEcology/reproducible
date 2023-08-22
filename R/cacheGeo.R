@@ -52,7 +52,6 @@
 #'
 #' @export
 #' @examples
-#'
 #' \donttest{
 #'
 #' if (requireNamespace("sf", quietly = TRUE) &&
@@ -60,48 +59,49 @@
 #' dPath <- checkPath(file.path(tempdir2()), create = TRUE)
 #' localFileLux <- system.file("ex/lux.shp", package = "terra")
 #'
-#' # 1 step for each layer
-#' # 1st step -- get study area
-#' full <- prepInputs(localFileLux, dest = dPath) # default is sf::st_read
-#' zoneA <- full[3:6,]
-#' zoneB <- full[8,] # not in A
-#' zoneC <- full[3,] # yes in A
-#' zoneD <- full[7:8,] # not in A, B or C
-#' zoneE <- full[3:5,] # yes in A
-#' # 2nd step: re-write to disk as read/write is lossy; want all "from disk" for this ex.
-#' writeTo(zoneA, writeTo = "zoneA.shp", destinationPath = dPath)
-#' writeTo(zoneB, writeTo = "zoneB.shp", destinationPath = dPath)
-#' writeTo(zoneC, writeTo = "zoneC.shp", destinationPath = dPath)
-#' writeTo(zoneD, writeTo = "zoneD.shp", destinationPath = dPath)
-#' writeTo(zoneE, writeTo = "zoneE.shp", destinationPath = dPath)
-#' # Must re-read to get identical columns
-#' zoneA <- sf::st_read(file.path(dPath, "zoneA.shp"))
-#' zoneB <- sf::st_read(file.path(dPath, "zoneB.shp"))
-#' zoneC <- sf::st_read(file.path(dPath, "zoneC.shp"))
-#' zoneD <- sf::st_read(file.path(dPath, "zoneD.shp"))
-#' zoneE <- sf::st_read(file.path(dPath, "zoneE.shp"))
+#'   # 1 step for each layer
+#'   # 1st step -- get study area
+#'   full <- prepInputs(localFileLux, dest = dPath) # default is sf::st_read
+#'   zoneA <- full[3:6, ]
+#'   zoneB <- full[8, ] # not in A
+#'   zoneC <- full[3, ] # yes in A
+#'   zoneD <- full[7:8, ] # not in A, B or C
+#'   zoneE <- full[3:5, ] # yes in A
+#'   # 2nd step: re-write to disk as read/write is lossy; want all "from disk" for this ex.
+#'   writeTo(zoneA, writeTo = "zoneA.shp", destinationPath = dPath)
+#'   writeTo(zoneB, writeTo = "zoneB.shp", destinationPath = dPath)
+#'   writeTo(zoneC, writeTo = "zoneC.shp", destinationPath = dPath)
+#'   writeTo(zoneD, writeTo = "zoneD.shp", destinationPath = dPath)
+#'   writeTo(zoneE, writeTo = "zoneE.shp", destinationPath = dPath)
+#'   # Must re-read to get identical columns
+#'   zoneA <- sf::st_read(file.path(dPath, "zoneA.shp"))
+#'   zoneB <- sf::st_read(file.path(dPath, "zoneB.shp"))
+#'   zoneC <- sf::st_read(file.path(dPath, "zoneC.shp"))
+#'   zoneD <- sf::st_read(file.path(dPath, "zoneD.shp"))
+#'   zoneE <- sf::st_read(file.path(dPath, "zoneE.shp"))
 #'
-#' # The function that is to be run. This example returns a data.frame because
-#' #    saving `sf` class objects with list-like columns does not work with
-#' #    many st_driver()
-#' fun <- function(domain, newField) {
-#'   domain |>
-#'     as.data.frame() |>
-#'     cbind(params = I(lapply(seq_len(NROW(domain)), function(x) newField)))
-#' }
+#'   # The function that is to be run. This example returns a data.frame because
+#'   #    saving `sf` class objects with list-like columns does not work with
+#'   #    many st_driver()
+#'   fun <- function(domain, newField) {
+#'     domain |>
+#'       as.data.frame() |>
+#'       cbind(params = I(lapply(seq_len(NROW(domain)), function(x) newField)))
+#'   }
 #'
-#' # Run sequence -- A, B will add new entries in targetFile, C will not,
-#' #                 D will, E will not
-#' for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE))
-#'   out <- CacheGeo(
+#'   # Run sequence -- A, B will add new entries in targetFile, C will not,
+#'   #                 D will, E will not
+#'   for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE)) {
+#'     out <- CacheGeo(
 #'       targetFile = "fireSenseParams.rds",
 #'       domain = z,
 #'       FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
 #'       fun = fun, # pass whatever is needed into the function
 #'       destinationPath = dPath,
 #'       action = "update"
-#'       #, cloudFolderID = "cachedObjects" # to upload/download from cloud
-#'       )
+#'       # , cloudFolderID = "cachedObjects" # to upload/download from cloud
+#'     )
+#'   }
 #' }
 #' }
 CacheGeo <- function(targetFile = NULL, url = NULL, domain,
@@ -114,12 +114,15 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
                      action = c("nothing", "update", "replace", "append"),
                      ...) {
   objExisted <- TRUE
-  if (is.null(targetFile) && is.null(url))
+  if (is.null(targetFile) && is.null(url)) {
     objExisted <- FALSE
-  if (!isAbsolutePath(targetFile))
+  }
+  if (!isAbsolutePath(targetFile)) {
     targetFile <- file.path(destinationPath, targetFile)
-  if (!file.exists(targetFile) && is.null(url))
+  }
+  if (!file.exists(targetFile) && is.null(url)) {
     objExisted <- FALSE
+  }
   domainExisted <- objExisted
 
   if (!is.null(url) || isTRUE(useCloud) || !is.null(cloudFolderID)) {
@@ -128,41 +131,48 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
     if (is.null(url)) {
       if (!(nchar(cloudFolderID) == 33 || grepl("https://drive", cloudFolderID))) {
         googledrive::with_drive_quiet(folderExists <- googledrive::drive_get(cloudFolderID))
-        if (NROW(folderExists))
+        if (NROW(folderExists)) {
           cloudFolderID <- googledrive::as_id(folderExists$id)
+        }
       } else {
         cloudFolderID <- googledrive::as_id(cloudFolderID)
         folderExists <- googledrive::drive_get(cloudFolderID)
       }
       folderExists <- NROW(folderExists) > 0
 
-      if (!folderExists)
+      if (!folderExists) {
         cloudFolderID <- googledrive::drive_mkdir(cloudFolderID)
+      }
       objsInGD <- googledrive::drive_ls(cloudFolderID)
-      objID <- objsInGD[objsInGD$name %in% basename2(targetFile),]
-      if (NROW(objID))
+      objID <- objsInGD[objsInGD$name %in% basename2(targetFile), ]
+      if (NROW(objID)) {
         url <- objID$drive_resource[[1]]$webViewLink
+      }
     } else {
       objID <- googledrive::drive_get(id = url)
     }
-    if (NROW(objID))
+    if (NROW(objID)) {
       objExisted <- TRUE
+    }
     if (is.null(targetFile)) {
       targetFile <- file.path(destinationPath, objID$name)
     }
     if (file.exists(targetFile) && NROW(objID)) {
       md5Checksum <- digest::digest(file = targetFile)
       alreadyOnRemote <- identical(objID$drive_resource[[1]]$md5Checksum, md5Checksum)
-      if (isTRUE(alreadyOnRemote))
-        url <- NULL # browser()
+      if (isTRUE(alreadyOnRemote)) {
+        url <- NULL
+      } # browser()
     }
   }
 
   if (isTRUE(objExisted)) {
-    existingObj <- prepInputs(targetFile = targetFile, url = url,
-                              destinationPath = destinationPath, # domain = domain,
-                              useCache = useCache, purge = purge,
-                              overwrite = overwrite)
+    existingObj <- prepInputs(
+      targetFile = targetFile, url = url,
+      destinationPath = destinationPath, # domain = domain,
+      useCache = useCache, purge = purge,
+      overwrite = overwrite
+    )
     existingObjSF <- if (is(existingObj, "sf")) existingObj else sf::st_as_sf(existingObj)
     if (!missing(domain)) {
       wh <- sf::st_within(domain, existingObjSF, sparse = FALSE)
@@ -170,7 +180,7 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
       domainExisted <- all(wh1)
       if (domainExisted) {
         message("Spatial domain is contained within the url; returning the object")
-        existingObj <- existingObj[wh,]
+        existingObj <- existingObj[wh, ]
       }
     } else {
       domainExisted <- TRUE
@@ -188,16 +198,18 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
     if (isTRUE(objExisted)) {
       if (any(grepl("^a|^u", action[1], ignore.case = TRUE))) {
         existingObj <- rbind(existingObj, newObj)
-        if (any(duplicated(existingObj)))
+        if (any(duplicated(existingObj))) {
           existingObj <- unique(existingObj)
+        }
       }
     }
     if (isFALSE(objExisted)) {
       existingObj <- newObj
     }
     if (!any(grepl("^n", action[1], ignore.case = TRUE))) {
-      if (!isAbsolutePath(targetFile))
+      if (!isAbsolutePath(targetFile)) {
         browser()
+      }
       writeTo(existingObj, writeTo = targetFile, overwrite = TRUE)
     }
   }
@@ -208,8 +220,10 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
       alreadyOnRemote <- identical(objID$drive_resource[[1]]$md5Checksum, md5Checksum)
     }
     if (!alreadyOnRemote) {
-      out <- googledrive::drive_put(media = targetFile,
-                                    path = googledrive::as_id(cloudFolderID))
+      out <- googledrive::drive_put(
+        media = targetFile,
+        path = googledrive::as_id(cloudFolderID)
+      )
     } else {
       message("skipping googledrive upload; md5sum is same")
     }
@@ -217,4 +231,3 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
 
   existingObj
 }
-

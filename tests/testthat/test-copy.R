@@ -3,8 +3,10 @@ test_that("test Copy", {
   testInit(c("terra", "data.table"), tmpFileExt = ".tif")
 
   ras <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1)
-  ras <- suppressWarningsSpecific(falseWarnings = proj6Warn,
-                                  writeRaster(ras, filename = tmpfile, overwrite = TRUE))
+  ras <- suppressWarningsSpecific(
+    falseWarnings = proj6Warn,
+    writeRaster(ras, filename = tmpfile, overwrite = TRUE)
+  )
   # This will make hardlink
   ras2 <- suppressWarningsSpecific(Copy(ras, tmpdir), "NOT UPDATED FOR PROJ >= 6")
 
@@ -13,15 +15,16 @@ test_that("test Copy", {
 
   dt <- data.table(a = 1:2, b = rev(LETTERS[1:2]))
   tmpdir <- normPath(tempdir2("ras2"))
-  checkPath(tmpdir, create = TRUE); on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+  checkPath(tmpdir, create = TRUE)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
   li <- list(dt = dt, ras = ras, ras2 = ras2)
   li2 <- Copy(li, tmpdir)
 
   # same content
   expect_true(all(unlist(lapply(seq_along(li), function(i) {
     if (is(li[[i]], "SpatRaster")) {
-       all.equal(values2(li[[i]]), values2(li2[[i]]))
-     } else {
+      all.equal(values2(li[[i]]), values2(li2[[i]]))
+    } else {
       all.equal(li[[i]], li2[[i]])
     }
   }))))
@@ -92,8 +95,10 @@ test_that("test Copy", {
   # This is an aside on testing whether the hard link can be messed with by overwrite
   fn <- Filenames(ras)
   ras3 <- terra::rast(terra::ext(0, 10, 0, 10), vals = 2)
-  ras3 <- suppressWarningsSpecific(writeRaster(ras3, filename = tmpfile, overwrite = TRUE),
-                                   "NOT UPDATED FOR PROJ >= 6")# overwrite the original
+  ras3 <- suppressWarningsSpecific(
+    writeRaster(ras3, filename = tmpfile, overwrite = TRUE),
+    "NOT UPDATED FOR PROJ >= 6"
+  ) # overwrite the original
   # The hardlink is not affected by "overwrite = TRUE" -- it is not by filename, but by file location
   expect_true(all(ras2[] == 1))
 })

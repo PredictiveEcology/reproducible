@@ -152,7 +152,6 @@ onlyRecentlyAccessed <- showCache(tmpDir, userTags = max(wholeCache[tagKey == "a
 toRemove <- unique(wholeCache[!onlyRecentlyAccessed, on = "cacheId"], by = "cacheId")$cacheId
 clearCache(tmpDir, toRemove, ask = FALSE) # remove ones not recently accessed
 showCache(tmpDir) # still has more recently accessed
-
 ```
 
 #### Example 3: using keepCache
@@ -184,7 +183,6 @@ ranNumsB <- Cache(rnorm, 5, cachePath = tmpDir, userTags = "objectName:b")
 keepCache(tmpDir, after = startTime, ask = FALSE) # keep only those newer than startTime
 
 clearCache(tmpDir, ask = FALSE)
-
 ```
 
 #### Example 4: searching for multiple objects in the cache
@@ -213,9 +211,11 @@ clearCache(tmpDir, ask = FALSE)
 #### Example 5: using caching to speed up rerunning expensive computations
 
 ```{r expensive-computations}
-ras <- terra::rast(terra::ext(0, 5, 0, 5), res = 1,
-              vals = sample(1:5, replace = TRUE, size = 25),
-              crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
+ras <- terra::rast(terra::ext(0, 5, 0, 5),
+  res = 1,
+  vals = sample(1:5, replace = TRUE, size = 25),
+  crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
+)
 
 rasCRS <- terra::crs(ras)
 # A slow operation, like GIS operation
@@ -287,7 +287,6 @@ outer <- function(n) {
 }
 aa <- Cache(outer, n = 2, cachePath = tmpdir1, userTags = outerTag)
 showCache(tmpdir1) # rnorm function has outerTag and innerTag, inner and outer only have outerTag
-
 ```
 
 ### cacheId
@@ -304,7 +303,6 @@ Cache(rnorm, 1, cachePath = tmpdir1)
 Cache(rnorm, 1, cachePath = tmpdir1, cacheId = "422bae4ed2f770cc") # same value
 # override even with different inputs:
 Cache(rnorm, 2, cachePath = tmpdir1, cacheId = "422bae4ed2f770cc")
-
 ```
 
 ## Working with the Cache manually

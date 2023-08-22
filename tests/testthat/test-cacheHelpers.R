@@ -14,7 +14,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   # studyAreaName with sf and sfc
   if (require("sf")) {
-    pol <- st_sfc(st_polygon(list(cbind(c(0,3,3,0,0),c(0,0,3,3,0)))))
+    pol <- st_sfc(st_polygon(list(cbind(c(0, 3, 3, 0, 0), c(0, 0, 3, 3, 0)))))
     h <- st_sf(r = 5, pol)
     expect_true(is(studyAreaName(pol), "character"))
     expect_true(is(studyAreaName(h), "character"))
@@ -34,7 +34,8 @@ test_that("test miscellaneous unit tests cache-helpers", {
   # StudyArea <- SpatialPolygons(list(Srs1), 1L)
 
   coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                      .Dim = c(5L, 2L))
+    .Dim = c(5L, 2L)
+  )
   StudyArea <- terra::vect(coords, "polygons")
   terra::crs(StudyArea) <- crsToUse
 
@@ -53,9 +54,12 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(any(grepl(messageNoCacheRepo, mess)))
 
   opt11 <- options("reproducible.cachePath" = NULL)
-  on.exit({
-    options(opt11)
-  }, add = TRUE)
+  on.exit(
+    {
+      options(opt11)
+    },
+    add = TRUE
+  )
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl("No cachePath supplied. Using", mess)))
 
@@ -70,7 +74,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   bMess <- capture_messages({
     b <- Cache(rnorm, 1, useCache = FALSE, cachePath = tmpCache)
   })
-  expect_false(identical(a,b))
+  expect_false(identical(a, b))
   expect_true(grepl("skipping Cache", aMess))
   expect_true(grepl("skipping Cache", bMess))
 
@@ -89,7 +93,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   dMess <- capture_messages({
     a <- Cache(rnorm, 1, cachePath = tmpCache)
   })
-  #expect_true(identical(aMess, bMess[1]))
+  # expect_true(identical(aMess, bMess[1]))
   expect_false(any(grepl("memoise", bMess)))
   expect_true(any(grepl("memoise", dMess)))
 
@@ -98,7 +102,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   aMess <- capture_messages({
     a <- Cache(rnorm, n = 1, mean = 1, cachePath = tmpCache)
   })
-  #lapply(letters[11], function(l) assign(paste(rep(l, 4), collapse = ""), 1, envir = .GlobalEnv))
+  # lapply(letters[11], function(l) assign(paste(rep(l, 4), collapse = ""), 1, envir = .GlobalEnv))
   bMess <- capture_messages({
     b <- Cache(rnorm, n = 2, mean = 1, sd = 3, showSimilar = TRUE, cachePath = tmpCache)
   })
@@ -122,14 +126,14 @@ test_that("test miscellaneous unit tests cache-helpers", {
   # There are 2 ways this may come out -- similarity to 1 of 2 alternatives above
   expect1 <- any(grepl("different n, sd", dMess))
   expect2 <- any(grepl("different n", dMess)) && any(grepl("new argument.*sd", dMess))
-  expect_true(expect1 ||  (expect2))
+  expect_true(expect1 || (expect2))
   dMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", dMess, value = TRUE))
   bMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", bMess, value = TRUE))
-    if (expect1) {
-      expect_false(identical(dMessCacheId, bMessCacheId))
-    } else {
-      expect_true(identical(dMessCacheId, bMessCacheId))
-    }
+  if (expect1) {
+    expect_false(identical(dMessCacheId, bMessCacheId))
+  } else {
+    expect_true(identical(dMessCacheId, bMessCacheId))
+  }
 
 
   rcompletelynew <- rmultinom
@@ -184,8 +188,10 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(any(grepl("loaded", lMess))) # should only find rmultinom
   expect_true(any(grepl("loaded", mMess))) # should only find rmultinom
   nMess <- grep("^.+next closest cacheId\\(s\\) (.+) of .+$", nMess, value = TRUE)
-  expect_true(grepl(x = attr(b1, "tags"),
-    gsub("^.+next closest cacheId\\(s\\) (.+) of .+$", "\\1", nMess))) # should only find kMess
+  expect_true(grepl(
+    x = attr(b1, "tags"),
+    gsub("^.+next closest cacheId\\(s\\) (.+) of .+$", "\\1", nMess)
+  )) # should only find kMess
 
 
   ## debugCache -- "complete"
@@ -207,12 +213,16 @@ test_that("test miscellaneous unit tests cache-helpers", {
   ## writeFuture
   comp <- # if (useDBI())
     .robustDigest("sdf") # else
-    # "dda1fbb70d256e6b3b696ef0176c63de"
+  # "dda1fbb70d256e6b3b696ef0176c63de"
   drvHere <- if (useDBI() && .requireNamespace("RSQLite")) RSQLite::SQLite() else NULL
 
-  expect_true(identical(comp,
-                        writeFuture(1, "sdf", cachePath = tmpCache, userTags = "",
-                                    drv = drvHere)))
+  expect_true(identical(
+    comp,
+    writeFuture(1, "sdf",
+      cachePath = tmpCache, userTags = "",
+      drv = drvHere
+    )
+  ))
   expect_error(writeFuture(1, "sdf", cachePath = "sdfd", userTags = ""))
 
   if (interactive()) {
@@ -239,7 +249,6 @@ test_that("test warnings from cached functions", {
   expect_true(grepl(warnCompare, warn1)) # includes the call because .call = FALSE, and call added manually in Cache
   expect_true(grepl("NAs produced", warn2))
   expect_false(grepl(warnCompare, warn2)) # this is false because the warning message doesn't include the call with normal warn
-
 })
 
 test_that("test cache-helpers with stacks", {
@@ -273,8 +282,9 @@ test_that("test cache-helpers with stacks", {
 
   ## removing entry from Cache
   fls <- grep(basename(tmpfile),
-              list.files(tmpCache, recursive = TRUE, full.names = TRUE),
-              value = TRUE)
+    list.files(tmpCache, recursive = TRUE, full.names = TRUE),
+    value = TRUE
+  )
   file.remove(fls)
   expect_false(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
   b <- .prepareFileBackedRaster(s, tmpCache)
@@ -282,7 +292,12 @@ test_that("test cache-helpers with stacks", {
 
   # Test deleted raster backed file
   file.remove(tmpfile2)
-  expect_error({b <- .prepareFileBackedRaster(s, tmpCache)}, "The following file-backed rasters")
+  expect_error(
+    {
+      b <- .prepareFileBackedRaster(s, tmpCache)
+    },
+    "The following file-backed rasters"
+  )
 })
 
 test_that("test miscellaneous unit tests cache-helpers", {

@@ -2,13 +2,14 @@ test_that("prepInputs doesn't work (part 3)", {
   skip_on_cran() # too long
   skip_if(getRversion() < "4.1" && isWindows()) # old Windows is failing; not going to fix tests for those
   skip_if_not_installed("sf")
-  testInit(c("terra", "sf"), tmpFileExt = c(".tif", ".tif", ".tif"),
-                          opts = list(
-    "rasterTmpDir" = tempdir2(rndstr(1,6)),
-    "reproducible.inputPaths" = NULL,
-    "reproducible.overwrite" = TRUE,
-    "rgdal_show_exportToProj4_warnings"="none") # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
-
+  testInit(c("terra", "sf"),
+    tmpFileExt = c(".tif", ".tif", ".tif"),
+    opts = list(
+      "rasterTmpDir" = tempdir2(rndstr(1, 6)),
+      "reproducible.inputPaths" = NULL,
+      "reproducible.overwrite" = TRUE,
+      "rgdal_show_exportToProj4_warnings" = "none"
+    ) # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
   )
 
   options("reproducible.cachePath" = tmpdir)
@@ -17,9 +18,11 @@ test_that("prepInputs doesn't work (part 3)", {
   # Create a "study area"
 
   coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                      .Dim = c(5L, 2L))
+    .Dim = c(5L, 2L)
+  )
   coords2 <- structure(c(-115.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                       .Dim = c(5L, 2L))
+    .Dim = c(5L, 2L)
+  )
 
   StudyArea <- terra::vect(coords, "polygons")
   terra::crs(StudyArea) <- crsToUse
@@ -40,9 +43,11 @@ test_that("prepInputs doesn't work (part 3)", {
   # StudyArea2 <- SpatialPolygons(list(Srs1), 1L)
   # crs(StudyArea2) <- crsToUse
 
-  nonLatLongProj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
-                          "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
-  nc <- sf::st_as_sf(StudyArea)#system.file("shape/nc.shp", package="sf"))
+  nonLatLongProj <- paste(
+    "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
+    "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"
+  )
+  nc <- sf::st_as_sf(StudyArea) # system.file("shape/nc.shp", package="sf"))
   nc1 <- sf::st_transform(nc, nonLatLongProj)
   ncSmall <- sf::st_as_sf(StudyArea2)
   ncSmall <- sf::st_transform(ncSmall, nonLatLongProj)
@@ -83,23 +88,29 @@ test_that("prepInputs doesn't work (part 3)", {
   # Test datatype setting
   dt1 <- "INT2U"
   s <- writeRaster(s, filename = tmpfile[2], overwrite = TRUE)
-  s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
-                    datatype = dt1)
+  s1 <- postProcess(s,
+    studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
+    datatype = dt1
+  )
   expect_identical(terra::datatype(s1), rep(dt1, terra::nlyr(s)))
 
   # Test datatype setting
   dt1 <- c("INT2U", "INT4U")
   s <- writeRaster(s, filename = tmpfile[1], overwrite = TRUE)
   warns <- capture_error({
-    s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE,
-                      datatype = dt1)
+    s1 <- postProcess(s,
+      studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE,
+      datatype = dt1
+    )
   })
   expect_true(any(grepl("Expecting a single", warns)))
 
   dt1 <- "INT4U"
   b <- writeRaster(b, filename = tmpfile[2], overwrite = TRUE)
-  b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
-                    datatype = dt1)
+  b1 <- postProcess(b,
+    studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
+    datatype = dt1
+  )
   expect_identical(terra::datatype(b1), rep(dt1, terra::nlyr(b1)))
 
   # now raster with sf
@@ -122,15 +133,23 @@ test_that("prepInputs doesn't work (part 3)", {
 
   # cropInputs
   expect_true(identical(1, cropInputs(1)))
-  nonLatLongProj2 <- paste("+proj=lcc +lat_1=51 +lat_2=77 +lat_0=0 +lon_0=-95",
-                           "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
-  nc3 <- suppressWarningsSpecific({
-    sf::st_transform(nc1, CRSobj = nonLatLongProj2)
-  }, falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition|PROJ support is provided by the sf and terra packages among others")
+  nonLatLongProj2 <- paste(
+    "+proj=lcc +lat_1=51 +lat_2=77 +lat_0=0 +lon_0=-95",
+    "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"
+  )
+  nc3 <- suppressWarningsSpecific(
+    {
+      sf::st_transform(nc1, CRSobj = nonLatLongProj2)
+    },
+    falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition|PROJ support is provided by the sf and terra packages among others"
+  )
   nc4 <- cropInputs(nc3, studyArea = ncSmall)
-  ncSmall2 <- suppressWarningsSpecific({
-    sf::st_transform(ncSmall, CRSobj = nonLatLongProj2)
-  }, falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition|PROJ support is provided by the sf and terra packages among others")
+  ncSmall2 <- suppressWarningsSpecific(
+    {
+      sf::st_transform(ncSmall, CRSobj = nonLatLongProj2)
+    },
+    falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition|PROJ support is provided by the sf and terra packages among others"
+  )
   expect_true(isTRUE(all.equal(terra::ext(nc4), terra::ext(ncSmall2))))
 
   mess <- capture_error({
@@ -142,7 +161,8 @@ test_that("prepInputs doesn't work (part 3)", {
   ncSmallShifted <- st_as_sf(ncSmallShifted)
   st_crs(ncSmallShifted) <- st_crs(ncSmall)
   mess <- capture_messages(
-    cropInputs(ncSmall, studyArea = ncSmallShifted))
+    cropInputs(ncSmall, studyArea = ncSmallShifted)
+  )
   expect_true(any(grepl("overlap", mess)))
 
   # cropInputs.sf
@@ -169,26 +189,26 @@ test_that("prepInputs doesn't work (part 3)", {
   ncSmallShifted <- ncSmall + 10000000
   ncSmallShifted <- st_as_sf(ncSmallShifted)
   st_crs(ncSmallShifted) <- st_crs(ncSmall)
-  expect_message(regexp = "results in no data",
+  expect_message(
+    regexp = "results in no data",
     aaa <- cropInputs(ncSmall, studyArea = ncSmallShifted)
   )
   expect_s3_class(aaa, "sf")
   # expect_true(NROW(out11) == 0)
 
   # LINEARRING Example
-  p6 = terra::vect("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
+  p6 <- terra::vect("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
   p6a <- fixErrorsIn(p6)
   expect_true(terra::is.valid(p6a))
   expect_false(terra::is.valid(p6))
   # projectInputs pass through
   expect_error(projectInputs(x = 1), "argument .+ is missing")
-
 })
 
 test_that("writeOutputs with non-matching filename2", {
   testInit(c("terra"), tmpFileExt = c(".grd", ".tif"))
 
-  r <- terra::rast(terra::ext(0,10,0,10), vals = rnorm(100))
+  r <- terra::rast(terra::ext(0, 10, 0, 10), vals = rnorm(100))
   r <- terra::writeRaster(r, file = tmpfile[1], overwrite = TRUE)
   r[] <- r[]
   warn <- capture_warnings({
@@ -209,31 +229,40 @@ test_that("cropInputs crops too closely when input projections are different", {
   # skip_on_ci() ## TODO: why is this failing on GHA but not locally??? (2022-11-04)
 
   testInit("terra", opts = list(
-    "rasterTmpDir" = tempdir2(rndstr(1,6)),
+    "rasterTmpDir" = tempdir2(rndstr(1, 6)),
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL,
-    "rgdal_show_exportToProj4_warnings"="none" # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
+    "rgdal_show_exportToProj4_warnings" = "none" # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
   ), needGoogleDriveAuth = TRUE)
 
-  ext2 <- terra::ext(c(xmin = -3229772.32501426,
-               xmax = 3680227.67498574,
-               ymin = -365833.605586135,
-               ymax = 3454166.39441387))
+  ext2 <- terra::ext(c(
+    xmin = -3229772.32501426,
+    xmax = 3680227.67498574,
+    ymin = -365833.605586135,
+    ymax = 3454166.39441387
+  ))
   x <- terra::rast(ext2,
-              crs = paste("+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0",
-                          "+a=6370997 +b=6370997 +units=m +no_defs"),
-              res = c(10000, 10000))
+    crs = paste(
+      "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0",
+      "+a=6370997 +b=6370997 +units=m +no_defs"
+    ),
+    res = c(10000, 10000)
+  )
   x <- terra::setValues(x, 1)
 
   RTMext <- terra::ext(c(
-                xmin = -1613500.00000023,
-                xmax = -882500.000000228,
-                ymin = 7904500,
-                ymax = 9236000))
+    xmin = -1613500.00000023,
+    xmax = -882500.000000228,
+    ymin = 7904500,
+    ymax = 9236000
+  ))
   RTM <- terra::rast(RTMext,
-                crs = paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0",
-                            "+ellps=GRS80 +units=m +no_defs"),
-                res = c(250, 250))
+    crs = paste(
+      "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0",
+      "+ellps=GRS80 +units=m +no_defs"
+    ),
+    res = c(250, 250)
+  )
   RTM <- setValues(RTM, 2)
   out <- postProcess(x = x, rasterToMatch = RTM, filename2 = NULL)
   expect_true(nrow(out[is.na(out[]) & is.na(RTM[])]) == 0)
@@ -243,7 +272,7 @@ test_that("maskInputs errors when x is Lat-Long", {
   skip_on_cran()
   skip_on_ci()
   testInit("sf", opts = list(
-    "rasterTmpDir" = tempdir2(rndstr(1,6)),
+    "rasterTmpDir" = tempdir2(rndstr(1, 6)),
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
   ), needGoogleDriveAuth = TRUE)
@@ -252,36 +281,45 @@ test_that("maskInputs errors when x is Lat-Long", {
   roads <- list()
   clearCache()
 
-  smallSA <- terra::ext(c(-117.580383168455, -117.43120279669,
-                          61.0576330401172, 61.0937107807574))
+  smallSA <- terra::ext(c(
+    -117.580383168455, -117.43120279669,
+    61.0576330401172, 61.0937107807574
+  ))
 
   x <- terra::rast(smallSA,
-                   crs = "+proj=longlat +ellps=GRS80 +no_defs",
-                   res = c(0.001, 0.001))
+    crs = "+proj=longlat +ellps=GRS80 +no_defs",
+    res = c(0.001, 0.001)
+  )
   suppressWarnings(smallSA <- terra::vect(terra::ext(x), "polygons"))
   terra::crs(smallSA) <- terra::crs(x)
 
   noisyOutput <- capture.output(
-    suppressWarningsSpecific(falseWarnings = "attribute variables|st_buffer does not correctly buffer longitude",
-                             roads1 <- prepInputs(targetFile = "miniRoad.shp",
-                                                      alsoExtract = "similar",
-                                                      url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
-                                                      studyArea = smallSA,
-                                                      useCache = FALSE,
-                                                      fun = "sf::st_read",
-                                                      destinationPath = tmpdir,
-                                                      filename2 = "miniRoad.shp"))
+    suppressWarningsSpecific(
+      falseWarnings = "attribute variables|st_buffer does not correctly buffer longitude",
+      roads1 <- prepInputs(
+        targetFile = "miniRoad.shp",
+        alsoExtract = "similar",
+        url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
+        studyArea = smallSA,
+        useCache = FALSE,
+        fun = "sf::st_read",
+        destinationPath = tmpdir,
+        filename2 = "miniRoad.shp"
+      )
+    )
   )
   # clearCache()
   noisyOutput <- capture.output(
-    roads2 <- prepInputs(targetFile = "miniRoad.shp",
-                                 alsoExtract = "similar",
-                                 url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
-                                 # studyArea = smallSA,
-                                 useCache = FALSE,
-                                 fun = "sf::st_read",
-                                 destinationPath = tmpdir,
-                                 filename2 = "miniRoads")
+    roads2 <- prepInputs(
+      targetFile = "miniRoad.shp",
+      alsoExtract = "similar",
+      url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
+      # studyArea = smallSA,
+      useCache = FALSE,
+      fun = "sf::st_read",
+      destinationPath = tmpdir,
+      filename2 = "miniRoads"
+    )
   )
   attr(roads1, "tags") <- NULL
 
@@ -304,17 +342,22 @@ test_that("prepInputs doesn't work (part 3)", {
     # Tati's reprex
     # tmpdir <- "/mnt/d/temp/Cache"
     wd <- checkPath(file.path(tmpdir, "reprex"), create = TRUE)
-    ranges <- prepInputs(url = "https://drive.google.com/file/d/1AfGfRjaDsdq3JqcsidGRo3N66OUjRJnn",
-                         destinationPath = wd,
-                         fun = "terra::vect")
-    LCC05 <- prepInputs(url = "https://drive.google.com/file/d/1g9jr0VrQxqxGjZ4ckF6ZkSMP-zuYzHQC",
-                        targetFile = "LCC2005_V1_4a.tif",
-                        studyArea = ranges,
-                        fun = "terra::rast",
-                        destinationPath = wd)
+    ranges <- prepInputs(
+      url = "https://drive.google.com/file/d/1AfGfRjaDsdq3JqcsidGRo3N66OUjRJnn",
+      destinationPath = wd,
+      fun = "terra::vect"
+    )
+    LCC05 <- prepInputs(
+      url = "https://drive.google.com/file/d/1g9jr0VrQxqxGjZ4ckF6ZkSMP-zuYzHQC",
+      targetFile = "LCC2005_V1_4a.tif",
+      studyArea = ranges,
+      fun = "terra::rast",
+      destinationPath = wd
+    )
     sumNonNAs <- sum(!is.na(!LCC05[]))
 
     # These are suitably vague that they will capture the mask if it gets it right
     expect_true(sumNonNAs < 38000000)
     expect_true(sumNonNAs > 37000000)
-  }})
+  }
+})

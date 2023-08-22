@@ -42,4 +42,3 @@
 #'
 #' @import methods
 "_PACKAGE"
-

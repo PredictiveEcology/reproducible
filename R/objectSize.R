@@ -35,7 +35,7 @@
 #' utils::object.size(foo) # different - only measuring the environment as an object
 #'
 #' utils::object.size(prepInputs) # only the function, without its enclosing environment
-#' objSize(prepInputs)     # the function, plus its enclosing environment
+#' objSize(prepInputs) # the function, plus its enclosing environment
 #'
 #' os1 <- utils::object.size(as.environment("package:reproducible"))
 #' (os1) # very small -- just the environment container
@@ -44,7 +44,7 @@
 #' \donttest{
 #' os2 <- objSize(as.environment("package:reproducible"))
 #' sum(unlist(os2)) # possibly 100+ MB, with all functions, objects
-#'                  # and imported functions
+#' # and imported functions
 #' }
 #' @details
 #' For functions, a user can include the enclosing environment as described
@@ -70,12 +70,14 @@ objSize.default <- function(x, quick = FALSE, ...) {
     }
   }
   if (is(x, "SpatRaster") || is(x, "SpatVector")) {
-    if (.requireNamespace("terra"))
-      if (is(x, "SpatVector")) # too slow for large SpatVectors
-        x <- list(terra::geom(x), terra::values(x)) # approximate
-    else
-      x <- list(terra::wrap(x))
-
+    if (.requireNamespace("terra")) {
+      if (is(x, "SpatVector")) { # too slow for large SpatVectors
+        x <- list(terra::geom(x), terra::values(x))
+      } # approximate
+      else {
+        x <- list(terra::wrap(x))
+      }
+    }
   }
   out <- obj_size(x)
   if (exists("out2", inherits = FALSE)) {
@@ -83,8 +85,9 @@ objSize.default <- function(x, quick = FALSE, ...) {
     class(out) <- "lobstr_bytes"
   }
 
-  if (!quick)
+  if (!quick) {
     attr(out, "objSize") <- list(obj = out)
+  }
   out
 }
 
@@ -92,7 +95,7 @@ objSize.default <- function(x, quick = FALSE, ...) {
 #' @importFrom lobstr obj_size
 objSize.list <- function(x, quick = FALSE, ...) {
   os <- obj_size(x) # need to get overall object size; not just elements;
-                    # but this doesn't work for e.g., terra
+  # but this doesn't work for e.g., terra
   if (!quick) {
     out <- lapply(x, objSize, quick = quick)
     attr(os, "objSize") <- out
@@ -147,4 +150,3 @@ objSize.environment <- function(x, quick = FALSE, ...) {
 objSizeSession <- function(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = list()) {
   .Defunct("Please use lobstr::obj_size instead")
 }
-
