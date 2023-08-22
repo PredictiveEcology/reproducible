@@ -1,9 +1,6 @@
 test_that("preProcess fails if user provides non-existing file", {
   skip_on_cran()
   testInit("terra", opts = list(reproducible.inputPaths = NULL), verbose = 2)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
   testthat::with_mock(
     `isInteractive` = function() {FALSE},
     {
@@ -142,9 +139,6 @@ test_that("preProcess fails if user provides a directory as a targetFile", {
 # test_that("preProcess fails if the .rar file is defective", {
 #   skip_on_cran()
 #   testInit("raster")
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
 #   co <- capture.output({
 #     co <- capture.output(type = "message", {
 #       testthat::expect_error({
@@ -161,9 +155,6 @@ test_that("preProcess fails if relative destPath not '.'", {
   skip_on_cran()
   skip_on_ci()
   testInit("googledrive", needGoogleDriveAuth = TRUE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
   dPath <- basename(tmpdir)
   out <- try(prepInputs(url = "https://drive.google.com/file/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m",
                         fun = "data.table::fread",

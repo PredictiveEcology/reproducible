@@ -43,9 +43,6 @@ test_that("checkPath: normPath consistency", {
 test_that("checkPath: checkPath consistency", {
   testInit()
   withr::local_dir(tmpdir)
-  # on.exit({
-  #   testOnExit(testInitOut)
-  # }, add = TRUE)
 
   dir.create("aaa/zzz", recursive = TRUE, showWarnings = FALSE)
   paths <- list("./aaa/zzz",
