@@ -11,7 +11,7 @@ output:
     toc: yes
 vignette: >
   %\VignetteIndexEntry{Introduction to Cache}
-  %\VignetteDepends{terra, data.table}
+  %\VignetteDepends{data.table}
   %\VignetteKeyword{Cache}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
