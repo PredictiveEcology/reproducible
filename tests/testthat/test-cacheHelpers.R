@@ -1,5 +1,5 @@
 test_that("test miscellaneous unit tests cache-helpers", {
-  testInit(libraries = c("sf"), opts = list(reproducible.useMemoise = TRUE))
+  testInit(libraries = c("sf", "terra"), opts = list(reproducible.useMemoise = TRUE))
 
   a <- 1
   mess <- capture_message(.cacheMessage(a, "test", TRUE))
@@ -21,7 +21,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   }
 
   # studyAreaName with SpatVector
-  if (require("terra")) {
+  if (requireNamespace("terra", quietly = TRUE)) {
     v <- terra::vect(system.file("ex/lux.shp", package="terra"))
     expect_true(is(studyAreaName(v), "character"))
   }
