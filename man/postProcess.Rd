@@ -120,7 +120,6 @@ if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly 
   elevForStudy <- try(prepInputs(url = remoteTifUrl, to = studyArea, res = 250,
                              destinationPath = dPath))
 
-
   # Alternate way, one step at a time. Must know each of these steps, and perform for each layer
   \donttest{
     dir.create(dPath, recursive = TRUE, showWarnings = FALSE)
@@ -158,9 +157,7 @@ if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly 
   }
 
   setwd(od)
-
 }
-
 }
 \seealso{
 \code{prepInputs}

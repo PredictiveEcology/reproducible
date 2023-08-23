@@ -1,19 +1,23 @@
 test_that("lightweight tests for code coverage", {
   skip_on_cran()
-  testInit(c("sf", "terra"), opts = list("reproducible.overwrite" = TRUE,
-                                                        "reproducible.inputPaths" = NULL),
-                          needGoogleDriveAuth = TRUE)
+  testInit(c("sf", "terra"),
+    opts = list(
+      "reproducible.overwrite" = TRUE,
+      "reproducible.inputPaths" = NULL
+    ),
+    needGoogleDriveAuth = TRUE
+  )
   dPath <- checkPath(file.path(tempdir2()), create = TRUE)
   localFileLux <- system.file("ex/lux.shp", package = "terra")
 
   # 1 step for each layer
   # 1st step -- get study area
   full <- prepInputs(localFileLux, dest = dPath) # default is sf::st_read
-  zoneA <- full[3:6,]
-  zoneB <- full[8,] # not in A
-  zoneC <- full[3,] # yes in A
-  zoneD <- full[7:8,] # not in A, B or C
-  zoneE <- full[3:5,] # yes in A
+  zoneA <- full[3:6, ]
+  zoneB <- full[8, ] # not in A
+  zoneC <- full[3, ] # yes in A
+  zoneD <- full[7:8, ] # not in A, B or C
+  zoneE <- full[3:5, ] # yes in A
   # 2nd step: re-write to disk as read/write is lossy; want all "from disk" for this ex.
   co <- capture.output({
     writeTo(zoneA, writeTo = "zoneA.shp", destinationPath = dPath)
@@ -41,10 +45,12 @@ test_that("lightweight tests for code coverage", {
   # Run sequence -- A, B will add new entries in targetFile, C will not,
   #                 D will, E will not
   for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE)) {
-    if (identical(z, zoneA) || identical(z, zoneB) || identical(z, zoneD))
+    if (identical(z, zoneA) || identical(z, zoneB) || identical(z, zoneD)) {
       mess <- "Domain is not contained within the targetFile"
-    if (identical(z, zoneC) || identical(z, zoneE))
+    }
+    if (identical(z, zoneC) || identical(z, zoneE)) {
       mess <- "Spatial domain is contained within the url"
+    }
     expect_message(out <- CacheGeo(
       targetFile = "fireSenseParams.rds",
       domain = z,
@@ -54,5 +60,4 @@ test_that("lightweight tests for code coverage", {
       action = "update"
     ), mess)
   }
-
 })

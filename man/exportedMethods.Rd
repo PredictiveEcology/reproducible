@@ -253,7 +253,7 @@ b <- "NULL"
 .prepareOutput(b) # converts to NULL
 
 if (requireNamespace("terra", quietly = TRUE)) {
-  r <- terra::rast(terra::ext(0,10,0,10), vals = 1:100)
+  r <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1:100)
 
   # write to disk manually -- will be in tempdir()
   r <- terra::writeRaster(r, file = tempfile(fileext = ".tif"))

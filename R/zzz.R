@@ -15,7 +15,8 @@
       "Using reproducible version ",
       utils::packageVersion("reproducible"), ".",
       # "\n  'reproducible' has changed the default database backend.", # Not true yet
-      "\n  See ?reproducibleOptions for details.")
+      "\n  See ?reproducibleOptions for details."
+    )
   }
 }
 
@@ -26,25 +27,29 @@
   options(o)
 }
 
-.reproducibleTempPath <- function() getOption("reproducible.tempPath")#file.path(tempdir(), "reproducible")
-.reproducibleTempCacheDir <- function()  getOption("reproducible.cachePath")
+.reproducibleTempPath <- function() getOption("reproducible.tempPath") # file.path(tempdir(), "reproducible")
+.reproducibleTempCacheDir <- function() getOption("reproducible.cachePath")
 .reproducibleTempInputDir <- function() file.path(tempdir(), "reproducible", "inputs")
 
-.argsToRemove <- unique(c(names(formals(prepInputs)),
-                                          names(formals(cropInputs)),
-                                          names(formals(cropTo)),
-                                          names(formals(maskTo)),
-                                          names(formals(projectTo)),
-                                          names(formals(postProcessTo)),
-                                          names(formals(fixErrors)),
-                                          names(formals(fixErrorsIn)),
-                                          # names(formals(raster::writeRaster)),
-                                          # names(formals(raster::projectRaster)),
-                                          names(formals(determineFilename)),
-                                          names(formals(writeOutputs)),
-                                          names(formals(writeTo)),
-                                          unlist(lapply(methods("postProcess"),
-                                                        function(x) names(formals(x))))))
+.argsToRemove <- unique(c(
+  names(formals(prepInputs)),
+  names(formals(cropInputs)),
+  names(formals(cropTo)),
+  names(formals(maskTo)),
+  names(formals(projectTo)),
+  names(formals(postProcessTo)),
+  names(formals(fixErrors)),
+  names(formals(fixErrorsIn)),
+  # names(formals(raster::writeRaster)),
+  # names(formals(raster::projectRaster)),
+  names(formals(determineFilename)),
+  names(formals(writeOutputs)),
+  names(formals(writeTo)),
+  unlist(lapply(
+    methods("postProcess"),
+    function(x) names(formals(x))
+  ))
+))
 
 #' The `reproducible` package environment
 #'

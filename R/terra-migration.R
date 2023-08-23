@@ -37,16 +37,15 @@ minmaxFn <- function(x, which = "max") {
     .requireNamespace("raster", stopOnFALSE = TRUE)
     fn <- get(paste0(which, "Value"), envir = asNamespace("raster"))
     out <- fn(x)
-
   } else {
     .requireNamespace("terra", stopOnFALSE = TRUE)
     fn <- ifelse(identical(which, "max"), "tail", "head")
     fn <- getFromNamespace(fn, ns = "utils")
     out <- fn(terra::minmax(x), 1)[1, ]
-
   }
-  if (is.null(out))
+  if (is.null(out)) {
     stop("To use maxFn or minFn, you need either terra or raster package installed")
+  }
 
   out
 }
@@ -55,31 +54,34 @@ minmaxFn <- function(x, which = "max") {
 #' @param ... Passed to the functions in `raster` or `terra`, as needed.
 #' @rdname terra-migration
 dataType2 <- function(x, ...) {
-  if (is(x, "Raster"))
+  if (is(x, "Raster")) {
     raster::dataType(x)
-  else
+  } else {
     terra::datatype(x, ...)
+  }
 }
 
 #' @export
 #' @rdname terra-migration
 nlayers2 <- function(x) {
-  if (is(x, "Raster"))
+  if (is(x, "Raster")) {
     raster::nlayers(x)
-  else
+  } else {
     terra::nlyr(x)
+  }
 }
 
 
 #' @export
 #' @rdname terra-migration
 values2 <- function(x, ...) {
-  if (is(x, "Raster"))
+  if (is(x, "Raster")) {
     raster::values(x, ...)
-  else {
-    if (is(x, "SpatRaster"))
+  } else {
+    if (is(x, "SpatRaster")) {
       terra::values(x, ..., mat = nlayers2(x) > 1)
-    else
+    } else {
       terra::values(x, ...)
+    }
   }
 }

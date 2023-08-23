@@ -3,19 +3,19 @@
 \name{internetExists}
 \alias{internetExists}
 \alias{urlExists}
-\title{Checks for existed of a url or the internet using https://cloud.r-project.org}
+\title{Checks for existed of a url or the internet using \url{https://cloud.r-project.org}}
 \usage{
 internetExists()
 
 urlExists(url)
 }
 \arguments{
-\item{url}{A url of the form https://... to test for existence.}
+\item{url}{A url of the form \verb{https://...} to test for existence.}
 }
 \value{
 Logical, \code{TRUE} if internet site exists, \code{FALSE} otherwise
 
-Logical, \code{TRUE} if internet site exists, \code{FALSE} otherwise
+Logical, \code{TRUE} if internet site exists, \code{FALSE} otherwise.
 }
 \description{
 A lightweight function that may be less reliable than more purpose built solutions

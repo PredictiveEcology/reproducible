@@ -54,9 +54,9 @@ the location, NOT the character string representation.
 }
 \examples{
 tmpf <- tempfile(fileext = ".csv")
-file.exists(tmpf)    ## FALSE
+file.exists(tmpf) ## FALSE
 tmpfPath <- asPath(tmpf)
-is(tmpf, "Path")     ## FALSE
+is(tmpf, "Path") ## FALSE
 is(tmpfPath, "Path") ## TRUE
 
 }

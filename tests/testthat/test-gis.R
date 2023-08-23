@@ -10,25 +10,28 @@ test_that("testing prepInputs with deauthorized googledrive", {
     #   googledrive::drive_deauth()
     #   googledrive::drive_auth("eliotmcintire@gmail.com", cache = "C:/Eliot/.secret")
     #   on.exit(googledrive::drive_deauth())
-      testthat::with_mock(
-        "reproducible::isInteractive" = function() {
-          FALSE
-        }, {
-          noisyOutput <- capture.output({
-            warn <- capture_warnings({
-              BCR6_VT <- prepInputs(alsoExtract = "similar",
-                                    url = "https://drive.google.com/open?id=1sEiXKnAOCi-f1BF7b4kTg-6zFlGr0YOH",
-                                    targetFile = "BCR6.shp",
-                                    overwrite = TRUE
-              )
-            })
+    testthat::with_mock(
+      "reproducible::isInteractive" = function() {
+        FALSE
+      },
+      {
+        noisyOutput <- capture.output({
+          warn <- capture_warnings({
+            BCR6_VT <- prepInputs(
+              alsoExtract = "similar",
+              url = "https://drive.google.com/open?id=1sEiXKnAOCi-f1BF7b4kTg-6zFlGr0YOH",
+              targetFile = "BCR6.shp",
+              overwrite = TRUE
+            )
           })
         })
-      expect_true(is(BCR6_VT, vectorType()))
+      }
+    )
+    expect_true(is(BCR6_VT, vectorType()))
     # }
 
     if (.requireNamespace("sf", stopOnFALSE = FALSE)) {
-      NFDB_PT <- #Cache(
+      NFDB_PT <- # Cache(
         prepInputs(
           url = "http://cwfis.cfs.nrcan.gc.ca/downloads/nfdb/fire_pnt/current_version/NFDB_point.zip",
           overwrite = TRUE,
@@ -36,17 +39,17 @@ test_that("testing prepInputs with deauthorized googledrive", {
         )
       expect_is(NFDB_PT, "sf")
       expect_true(all(c("zip", "sbx", "shp", "xml", "shx", "sbn") %in%
-                        fileExt(dir(pattern = "NFDB_point"))))
+        fileExt(dir(pattern = "NFDB_point"))))
 
       noisyOutput <- capture.output({
         warn <- capture_warnings({
           NFDB_PT_BCR6 <- Cache(postProcess, NFDB_PT, studyArea = BCR6_VT)
         })
       })
-      if (!all(grepl("attribute variables are assumed to be spatially constant", warn)))
+      if (!all(grepl("attribute variables are assumed to be spatially constant", warn))) {
         warnings(warn)
+      }
     }
-
   }
 })
 

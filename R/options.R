@@ -188,7 +188,7 @@ reproducibleOptions <- function() {
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
     reproducible.drv = NULL, # RSQLite::SQLite(),
-    reproducible.futurePlan = FALSE, #future::plan("multisession"), #memoise
+    reproducible.futurePlan = FALSE, # future::plan("multisession"), #memoise
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
@@ -200,8 +200,9 @@ reproducibleOptions <- function() {
     reproducible.overwrite = FALSE,
     reproducible.quick = FALSE,
     reproducible.rasterRead = getEnv("R_REPRODUCIBLE_RASTER_READ",
-                                     default = "terra::rast",
-                                     allowed = c("terra::rast", "raster::raster")),
+      default = "terra::rast",
+      allowed = c("terra::rast", "raster::raster")
+    ),
     reproducible.shapefileRead = "sf::st_read",
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
@@ -209,9 +210,10 @@ reproducibleOptions <- function() {
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
     reproducible.useDBI = getEnv("R_REPRODUCIBLE_USE_DBI",
-                                 default = useDBI(TRUE, verbose = interactive() - (useDBI() + 1)), # `FALSE` is useMultipleDBFiles now
-                                 allowed = c("true", "false")) |> as.logical(),
-    reproducible.useMemoise = FALSE, #memoise
+      default = useDBI(TRUE, verbose = interactive() - (useDBI() + 1)), # `FALSE` is useMultipleDBFiles now
+      allowed = c("true", "false")
+    ) |> as.logical(),
+    reproducible.useMemoise = FALSE, # memoise
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1
   )
