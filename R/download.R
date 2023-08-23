@@ -490,7 +490,11 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 #' Download a remote file
 #'
 #' @inheritParams prepInputs
+#' @inheritParams preProcess
 #' @param needChecksums Logical indicating whether to generate checksums. ## TODO: add overwrite arg to the function?
+#' @param messSkipDownload The character string text to pass to messaging if download skipped
+#' @param checkSums TODO
+#' @param fileToDownload TODO
 #'
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, messSkipDownload,
