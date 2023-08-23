@@ -705,7 +705,7 @@ switchDataTypes <- function(datatype, type) {
 
 
 sampRand <- function(x, size, method, ...) {
-  if (isRaster(r)) {
+  if (isRaster(x)) {
     .requireNamespace("raster")
     raster::sampleRandom(x, size = size, ...)
   } else {

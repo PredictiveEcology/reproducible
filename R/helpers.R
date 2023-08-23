@@ -785,7 +785,7 @@ layerNamesDelimiter <- "_%%_"
 #' @name internetExists
 #' @rdname internetExists
 internetExists <- function() {
-  urlExists("https://cloud.r-project.org")
+  urlExists("https://CRAN.R-project.org")
 }
 
 #' @rdname internetExists
