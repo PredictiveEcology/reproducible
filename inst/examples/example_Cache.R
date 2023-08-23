@@ -30,7 +30,7 @@ a[[17]] <- Cache(rnorm(1, sd = get("ee", inherits = FALSE)$qq), mean = 0)
 # with base pipe -- this is put in quotes ('') because R version 4.0 can't understand this
 #  if you are using R >= 4.1 or R >= 4.2 if using the _ placeholder,
 #  then you can just use pipe normally
-usingPipe1 <- 'b$fun(1) |> Cache()'  # base pipe
+usingPipe1 <- "b$fun(1) |> Cache()"  # base pipe
 
 # For long pipe, need to wrap sequence in { }, or else only last step is cached
 usingPipe2 <-
@@ -39,17 +39,17 @@ usingPipe2 <-
       eval() |>
       rnorm()} |>
     Cache()'
-if (getRversion() >= 4.1) {
+if (getRversion() >= "4.1") {
   a[[9]] <- eval(parse(text = usingPipe1)) # recovers cached copy
 }
-if (getRversion() >= 4.2) { # uses the _ placeholder; only available in R >= 4.2
+if (getRversion() >= "4.2") { # uses the _ placeholder; only available in R >= 4.2
   a[[18]] <- eval(parse(text = usingPipe2)) # recovers cached copy
 }
 
 length(unique(a)) == 1 #  all same
 
 ### Pipe -- have to use { } or else only final function is Cached
-if (getRversion() >= 4.1) {
+if (getRversion() >= "4.1") {
   b1a <- 'sample(1e5, 1) |> rnorm() |> Cache()'
   b1b <- 'sample(1e5, 1) |> rnorm() |> Cache()'
   b2a <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
@@ -92,8 +92,9 @@ Cache(rnorm(4), showSimilar = TRUE) # shows that the argument `n` is different
 ###############################################
 opt <- options("reproducible.useCache" = "devMode")
 clearCache(tmpDir, ask = FALSE)
-centralTendency <- function(x)
+centralTendency <- function(x) {
   mean(x)
+}
 funnyData <- c(1, 1, 1, 1, 10)
 uniqueUserTags <- c("thisIsUnique", "reallyUnique")
 ranNumsB <- Cache(centralTendency, funnyData, cachePath = tmpDir,
@@ -101,8 +102,9 @@ ranNumsB <- Cache(centralTendency, funnyData, cachePath = tmpDir,
 showCache(tmpDir) # 1 unique cacheId -- cacheId is 71cd24ec3b0d0cac
 
 # During development, we often redefine function internals
-centralTendency <- function(x)
+centralTendency <- function(x) {
   median(x)
+}
 # When we rerun, we don't want to keep the "old" cache because the function will
 #   never again be defined that way. Here, because of userTags being the same,
 #   it will replace the entry in the Cache, effetively overwriting it, even though

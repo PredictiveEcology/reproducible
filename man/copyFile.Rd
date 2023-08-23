@@ -76,7 +76,6 @@ identical(read.csv(f1), read.csv(f2)) ## FALSE
 identical(read.csv(f1), read.csv(t1)) ## TRUE
 identical(read.csv(f2), read.csv(t2)) ## TRUE
 
-
 }
 \author{
 Eliot McIntire and Alex Chubaty

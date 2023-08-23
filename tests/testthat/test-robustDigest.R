@@ -11,7 +11,7 @@ test_that("test data.table caching", {
 
   # This was wrong on with .robustDigest with no data.frame method -- this fails previous version
   a <- list(data.table(a = LETTERS, b = letters, c = letters, d = letters, e = letters))
-  b <- list(data.table(a = rep(LETTERS,2), b = rep(letters, 2), c = rep(letters, 2), d = rep(letters, 2), e = rep(letters, 2)))
+  b <- list(data.table(a = rep(LETTERS, 2), b = rep(letters, 2), c = rep(letters, 2), d = rep(letters, 2), e = rep(letters, 2)))
   aC <- CacheDigest(a)
   bC <- CacheDigest(b)
   expect_false(identical(aC, bC))

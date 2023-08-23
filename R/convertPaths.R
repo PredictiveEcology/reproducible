@@ -91,10 +91,10 @@ setMethod(
   "Filenames",
   signature = "ANY",
   definition = function(obj, allowMultiple) {
-
     if (inherits(obj, "RasterStack")) {
-      fns <- unlist(lapply(seq_along(names(obj)), function(index)
-        Filenames(obj[[index]], allowMultiple = allowMultiple)))
+      fns <- unlist(lapply(seq_along(names(obj)), function(index) {
+        Filenames(obj[[index]], allowMultiple = allowMultiple)
+      }))
 
       dups <- duplicated(fns)
       if (any(dups)) {
@@ -102,16 +102,17 @@ setMethod(
         fns <- fns[!dups]
         names(fns) <- theNames[!dups]
       }
-
     } else if (inherits(obj, "RasterLayer")) {
       fns <- raster::filename(obj)
       if (exists("._Filenames_1")) browser()
-      if (length(fns) == 0)
+      if (length(fns) == 0) {
         fns <- ""
+      }
       fns <- allowMultipleFNs(allowMultiple, fns)
     } else if (inherits(obj, "SpatRaster")) {
-      if (!requireNamespace("terra", quietly = TRUE))
+      if (!requireNamespace("terra", quietly = TRUE)) {
         stop("Please install terra package")
+      }
       fns <- terra::sources(obj)
       fns <- allowMultipleFNs(allowMultiple, fns)
     } else {
@@ -119,7 +120,8 @@ setMethod(
     }
     # DON"T BE TEMPTED TO RM NZ i.e., MEMORY LAYERS -- NEED TO KNOW THAT THERE WERE SOME
     normPath(fns)
-})
+  }
+)
 
 
 #' @export
@@ -135,7 +137,8 @@ setMethod(
       rasterFilename <- rasterFilename[!unlist(rasterFilenameDups)]
     }
     return(rasterFilename)
-})
+  }
+)
 
 #' @export
 #' @rdname Filenames
@@ -149,7 +152,8 @@ setMethod(
     }
     unlist(lapply(obj, function(o) Filenames(o, allowMultiple = allowMultiple)))
     # Filenames(as.environment(obj), allowMultiple = allowMultiple)
-})
+  }
+)
 
 #' @export
 #' @rdname Filenames
@@ -160,13 +164,14 @@ setMethod(
     isCacheDB <- all(c(.cacheTableHashColName(), .cacheTableTagColName()) %in% colnames(obj))
     fromDsk <- ""
     if (isCacheDB) {
-      isFromDsk <- extractFromCache(obj, elem = "fromDisk") %in% 'TRUE'
+      isFromDsk <- extractFromCache(obj, elem = "fromDisk") %in% "TRUE"
       if (any(isFromDsk)) {
         fromDsk <- extractFromCache(obj, elem = "origFilename")
       }
     }
     fromDsk
-  })
+  }
+)
 
 #' @export
 #' @rdname Filenames
@@ -184,7 +189,8 @@ setMethod(
     #   out <- obj
     # }
     obj
-  })
+  }
+)
 
 
 allowMultipleFNs <- function(allowMultiple, fns) {
@@ -195,13 +201,13 @@ allowMultipleFNs <- function(allowMultiple, fns) {
       nonGrd <- if (any(!anyGrd)) fns[!anyGrd] else NULL
       multiFns <- sort(c(fns[anyGrd], gsub("grd$", "gri", fns[anyGrd])))
       fnsNew <- c(nonGrd, multiFns)
-      fns <- fnsNew[order(match(filePathSansExt(basename(fnsNew)),
-                                filePathSansExt(basename(fns))))]
+      fns <- fnsNew[order(match(
+        filePathSansExt(basename(fnsNew)),
+        filePathSansExt(basename(fns))
+      ))]
     }
-
   } else {
     fns <- grep("\\.gri$", fns, value = TRUE, invert = TRUE)
   }
   fns
 }
-

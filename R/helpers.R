@@ -1,4 +1,3 @@
-
 ################################################################################
 #' Convert numeric to character with padding
 #'
@@ -30,9 +29,9 @@
 #' paddedFloatToChar(1.25, padL = 3, padR = 1) # no rounding, so keeps 2 right of decimal
 paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "0") {
   xf <- x %% 1
-  numDecimals <- nchar(gsub("(.*)(\\.)|([0]*$)","",xf))
+  numDecimals <- nchar(gsub("(.*)(\\.)|([0]*$)", "", xf))
   newPadR <- ifelse(xf %==% 0, 0, pmax(numDecimals, padR))
-  xFCEnd <- sprintf(paste0("%0", padL + newPadR + 1*(newPadR > 0),".", newPadR, "f"), x)
+  xFCEnd <- sprintf(paste0("%0", padL + newPadR + 1 * (newPadR > 0), ".", newPadR, "f"), x)
   return(xFCEnd)
 }
 
@@ -56,11 +55,11 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
 #' @examples
 #' # file's full path is specified (i.e., dirname is known)
 #' myFile <- file.path("~/data", "file.tif")
-#' .prefix(myFile, "small_")    ## "/home/username/data/small_file.tif"
+#' .prefix(myFile, "small_") ## "/home/username/data/small_file.tif"
 #' .suffix(myFile, "_cropped") ## "/home/username/data/myFile_cropped.shp"
 #'
 #' # file's full path is not specified
-#' .prefix("myFile.shp", "small")    ## "./small_myFile.shp"
+#' .prefix("myFile.shp", "small") ## "./small_myFile.shp"
 #' .suffix("myFile.shp", "_cropped") ## "./myFile_cropped.shp"
 #'
 .prefix <- function(f, prefix = "") {
@@ -71,8 +70,10 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
 #' @name suffix
 #' @rdname prefix
 .suffix <- function(f, suffix = "") {
-  file.path(dirname(f), paste0(filePathSansExt(basename(f)), suffix,
-                               ".", fileExt(f)))
+  file.path(dirname(f), paste0(
+    filePathSansExt(basename(f)), suffix,
+    ".", fileExt(f)
+  ))
 }
 
 #' Get a unique name for a given study area
@@ -113,7 +114,8 @@ setMethod(
   definition = function(studyArea, ...) {
     sort(studyArea) ## ensure consistent hash for same subset of study area names
     .robustDigest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
-})
+  }
+)
 
 #' @export
 #' @rdname studyAreaName
@@ -125,15 +127,16 @@ setMethod(
       .requireNamespace("sf", stopOnFALSE = TRUE)
       studyArea <- sf::st_geometry(studyArea)
     } else if (inherits(studyArea, "SpatialPolygonsDataFrame")) {
-      studyArea <- studyArea[, -c(1:ncol(studyArea))]
+      studyArea <- studyArea[, -c(seq_len(ncol(studyArea)))]
       studyArea <- as(studyArea, "SpatialPolygons")
       studyAreaName(studyArea, ...)
     } else if (!(inherits(studyArea, "Spatial") || inherits(studyArea, "sfc") ||
-          inherits(studyArea, "SpatVector") || is.character(studyArea))) {
+      inherits(studyArea, "SpatVector") || is.character(studyArea))) {
       stop("studyAreaName expects a spatialClasses object (or character vector)")
     }
     .robustDigest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
-})
+  }
+)
 
 #' Identify which formals to a function are not in the current `...`
 #'
@@ -155,13 +158,14 @@ setMethod(
     fun <- get(fun, mode = "function", envir = parent.frame())
   }
 
-  if (missing(formalNames))
+  if (missing(formalNames)) {
     if (isS4(fun)) {
       forms <- methodFormals(fun, signature = signature, envir = parent.frame())
       formalNames <- names(forms)
     } else {
       formalNames <- names(formals(fun))
     }
+  }
 
   if (!missing(dots)) {
     out <- names(dots)[!(names(dots) %in% formalNames)]
@@ -174,8 +178,10 @@ setMethod(
 #' @keywords internal
 rndstr <- function(n = 1, len = 8) {
   unlist(lapply(character(n), function(x) {
-    x <- paste0(sample(c(0:9, letters, LETTERS), size = len,
-                       replace = TRUE), collapse = "")
+    x <- paste0(sample(c(0:9, letters, LETTERS),
+      size = len,
+      replace = TRUE
+    ), collapse = "")
   }))
 }
 
@@ -238,8 +244,9 @@ basename2 <- function(x) {
 retry <- function(expr, envir = parent.frame(), retries = 5,
                   exponentialDecayBase = 1.3, silent = TRUE,
                   exprBetween = NULL, messageFn = message) {
-  if (exponentialDecayBase < 1)
+  if (exponentialDecayBase < 1) {
     stop("exponentialDecayBase must be equal to or greater than 1")
+  }
   for (i in seq_len(retries)) {
     if (!(is.call(expr) || is.name(expr))) warning("expr is not a quoted expression")
     result <- try(expr = eval(expr, envir = envir), silent = silent)
@@ -272,16 +279,16 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
         }
 
         lapply(objName, function(objNam) assign(objNam, result1[[objNam]], envir = envir))
-
       }
-      backoff <- sample(1:1000/1000, size = 1) * (exponentialDecayBase^i - 1)
+      backoff <- sample(1:1000 / 1000, size = 1) * (exponentialDecayBase^i - 1)
       if (backoff > 3) {
         messageFn("Waiting for ", round(backoff, 1), " seconds to retry; the attempt is failing")
       }
       Sys.sleep(backoff)
     } else {
-      if (exists("result1", inherits = FALSE))
+      if (exists("result1", inherits = FALSE)) {
         messageFn("    ...fixed!")
+      }
       break
     }
   }
@@ -335,14 +342,18 @@ isMac <- function() {
   if (!requireNamespace(pkg, quietly = TRUE)) {
     need <- TRUE
   } else {
-    if (!is.null(minVersion))
-      if (isTRUE(packageVersion(pkg) < minVersion))
+    if (!is.null(minVersion)) {
+      if (isTRUE(packageVersion(pkg) < minVersion)) {
         need <- TRUE
+      }
+    }
   }
 
-  if (need) # separate these so it is faster
-    if (isTRUE(stopOnFALSE))
+  if (need) { # separate these so it is faster
+    if (isTRUE(stopOnFALSE)) {
       stop(requireNamespaceMsg(pkg, extraMsg = messageStart, minVersion = minVersion))
+    }
+  }
   !need
 }
 
@@ -360,7 +371,9 @@ fileExt <- function(x) {
 
 isDirectory <- function(pathnames) {
   keep <- is.character(pathnames)
-  if (length(pathnames) == 0) return(logical())
+  if (length(pathnames) == 0) {
+    return(logical())
+  }
   if (isFALSE(keep)) stop("pathnames must be character")
   origPn <- pathnames
   pathnames <- normPath(pathnames[keep])
@@ -376,25 +389,32 @@ isAbsolutePath <- function(pathnames) {
   keep <- is.character(pathnames)
   if (isFALSE(keep)) stop("pathnames must be character")
   nPathnames <- length(pathnames)
-  if (nPathnames == 0L)
+  if (nPathnames == 0L) {
     return(logical(0L))
+  }
   done <- logical(nPathnames)
   nas <- is.na(pathnames)
-  if (all(nas)) return(!nas)
+  if (all(nas)) {
+    return(!nas)
+  }
 
   tildas <- startsWith(pathnames[!nas], "~")
-  if (any(tildas))
+  if (any(tildas)) {
     done[!nas][tildas] <- TRUE
+  }
 
-  if (all(tildas))
+  if (all(tildas)) {
     return(done)
+  }
 
   colon <- regexpr("^.:(/|\\\\)", pathnames[!nas][!tildas])
   hasColon <- colon != -1L
-  if (any(hasColon))
+  if (any(hasColon)) {
     done[!nas][!tildas][hasColon] <- TRUE
-  if (all(hasColon))
+  }
+  if (all(hasColon)) {
     return(done)
+  }
   curPaths <- pathnames[!nas][!tildas][!hasColon]
   done[!nas][!tildas][!hasColon] <- startsWith(curPaths, "/") | startsWith(curPaths, "\\")
   names(done) <- pathnames
@@ -419,21 +439,26 @@ isAbsolutePath <- function(pathnames) {
   if (isFALSE(keep)) stop("pathnames must be character")
   origPn <- pathnames
   nPathnames <- length(pathnames)
-  if (nPathnames == 0L)
+  if (nPathnames == 0L) {
     return(logical(0L))
+  }
   if (nPathnames > 1L) {
     res <- sapply(pathnames, FUN = isAbsolutePath)
     return(res)
   }
-  if (is.na(pathnames))
+  if (is.na(pathnames)) {
     return(FALSE)
-  if (regexpr("^~", pathnames) != -1L)
+  }
+  if (regexpr("^~", pathnames) != -1L) {
     return(TRUE)
-  if (regexpr("^.:(/|\\\\)", pathnames) != -1L)
+  }
+  if (regexpr("^.:(/|\\\\)", pathnames) != -1L) {
     return(TRUE)
+  }
   components <- strsplit(pathnames, split = "[/\\]")[[1L]]
-  if (length(components) == 0L)
+  if (length(components) == 0L) {
     return(FALSE)
+  }
   (components[1L] == "")
 }
 
@@ -474,17 +499,17 @@ isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
 messageDF <- function(df, round, colour = NULL, colnames = NULL,
                       verbose = getOption("reproducible.verbose"), verboseLevel = 1,
                       appendLF = TRUE) {
-
   if (isTRUE(verboseLevel <= verbose)) {
-    origColNames <- if (is.null(colnames) | isTRUE(colnames)) colnames(df) else NULL
+    origColNames <- if (is.null(colnames) || isTRUE(colnames)) colnames(df) else NULL
 
-    if (is.matrix(df))
+    if (is.matrix(df)) {
       df <- as.data.frame(df)
+    }
     if (!is.data.table(df)) {
       df <- as.data.table(df)
     }
     df <- Copy(df)
-    skipColNames <- if (is.null(origColNames) & !isTRUE(colnames)) TRUE else FALSE
+    skipColNames <- if (is.null(origColNames) && !isTRUE(colnames)) TRUE else FALSE
     if (!missing(round)) {
       isNum <- sapply(df, is.numeric)
       isNum <- colnames(df)[isNum]
@@ -495,8 +520,10 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL,
     outMess <- capture.output(df)
     if (skipColNames) outMess <- outMess[-1]
     out <- lapply(outMess, function(x) {
-      messageColoured(x, colour = colour, appendLF = appendLF, verbose = verbose,
-                      verboseLevel = verboseLevel)
+      messageColoured(x,
+        colour = colour, appendLF = appendLF, verbose = verbose,
+        verboseLevel = verboseLevel
+      )
     })
   }
 }
@@ -504,22 +531,28 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL,
 messagePrepInputs <- function(..., appendLF = TRUE,
                               verbose = getOption("reproducible.verbose"),
                               verboseLevel = 1) {
-  messageColoured(..., colour = getOption("reproducible.messageColourPrepInputs"),
-                  verboseLevel = verboseLevel, verbose = verbose, appendLF = appendLF)
+  messageColoured(...,
+    colour = getOption("reproducible.messageColourPrepInputs"),
+    verboseLevel = verboseLevel, verbose = verbose, appendLF = appendLF
+  )
 }
 
 messageCache <- function(..., colour = getOption("reproducible.messageColourCache"),
                          verbose = getOption("reproducible.verbose"), verboseLevel = 1,
                          appendLF = TRUE) {
-  messageColoured(..., colour = colour, appendLF = appendLF,
-                  verboseLevel = verboseLevel, verbose = verbose)
+  messageColoured(...,
+    colour = colour, appendLF = appendLF,
+    verboseLevel = verboseLevel, verbose = verbose
+  )
 }
 
 #' @rdname messageColoured
 messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
   # force this message to print
-  messageColoured(..., colour = getOption("reproducible.messageColourQuestion"),
-                  verbose = 10, verboseLevel = verboseLevel, appendLF = appendLF)
+  messageColoured(...,
+    colour = getOption("reproducible.messageColourQuestion"),
+    verbose = 10, verboseLevel = verboseLevel, appendLF = appendLF
+  )
 }
 
 #' @importFrom utils getFromNamespace
@@ -531,8 +564,9 @@ messageColoured <- function(..., colour = NULL,
   if (isTRUE(verboseLevel <= verbose)) {
     needCrayon <- FALSE
     if (!is.null(colour)) {
-      if (is.character(colour))
+      if (is.character(colour)) {
         needCrayon <- TRUE
+      }
     }
     if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
       message(getFromNamespace(colour, "crayon")(paste0(...)), appendLF = appendLF)
@@ -544,23 +578,24 @@ messageColoured <- function(..., colour = NULL,
       message(paste0(...), appendLF = appendLF)
     }
   }
-
 }
 
 
 
 methodFormals <- function(fun, signature = character(), envir = parent.frame()) {
-  if (is.character(fun))
+  if (is.character(fun)) {
     fun <- get(fun, mode = "function", envir = envir)
+  }
 
   fdef <- getGeneric(fun)
   method <- selectMethod(fdef, signature)
   genFormals <- base::formals(fdef)
   b <- body(method)
-  if(is(b, "{") && is(b[[2]], "<-") && identical(b[[2]][[2]], as.name(".local"))) {
+  if (is(b, "{") && is(b[[2]], "<-") && identical(b[[2]][[2]], as.name(".local"))) {
     local <- eval(b[[2]][[3]])
-    if(is.function(local))
+    if (is.function(local)) {
       return(formals(local))
+    }
     warning("Expected a .local assignment to be a function. Corrupted method?")
   }
   genFormals
@@ -568,34 +603,43 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 
 
 .fileExtsKnown <- function() {
-  if (requireNamespace("sf", quietly = TRUE) && requireNamespace("DBI", quietly = TRUE))
+  if (requireNamespace("sf", quietly = TRUE) && requireNamespace("DBI", quietly = TRUE)) {
     shpFile <- getOption("reproducible.shapefileRead", "sf::st_read")
-  else {
+  } else {
     shpFile <- "terra::vect"
-    if (identical(getOption("reproducible.shapefileRead"), "sf::st_read"))
-      options("reproducible.shapefileRead" = shpFile) # can't use sf::st_read
+    if (identical(getOption("reproducible.shapefileRead"), "sf::st_read")) {
+      options("reproducible.shapefileRead" = shpFile)
+    } # can't use sf::st_read
   }
   griddedFile <- getOption("reproducible.rasterRead", "terra::rast")
   griddedFileSave <- ""
   shpFileSave <- ""
-  if (griddedFile %in% "terra::rast")
+  if (griddedFile %in% "terra::rast") {
     griddedFileSave <- "terra::writeRaster"
-  if (griddedFile %in% "raster::raster")
+  }
+  if (griddedFile %in% "raster::raster") {
     griddedFileSave <- "terra::writeRaster"
-  if (shpFile %in% "sf::st_read")
+  }
+  if (shpFile %in% "sf::st_read") {
     shpFileSave <- "sf::st_write"
+  }
 
-  if (shpFile %in% "terra::vect")
+  if (shpFile %in% "terra::vect") {
     shpFileSave <- "terra::writeVector"
+  }
 
   df <- data.frame(
     rbind(
       c("rds", "base::readRDS", "base::saveRDS", "binary"),
       c("qs", "qs::qread", "qs::qsave", "qs"),
-      cbind(c("asc", "grd", "tif"), griddedFile, griddedFileSave,
-            rasterType(rasterRead = griddedFile)),
-      cbind(c("shp", "gdb"), shpFile, shpFileSave,
-            vectorType(vectorRead = shpFile))
+      cbind(
+        c("asc", "grd", "tif"), griddedFile, griddedFileSave,
+        rasterType(rasterRead = griddedFile)
+      ),
+      cbind(
+        c("shp", "gdb"), shpFile, shpFileSave,
+        vectorType(vectorRead = shpFile)
+      )
     )
   )
   colnames(df) <- c("extension", "fun", "saveFun", "type")
@@ -620,23 +664,25 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 #' @return
 #' A function, that will be the evaluated, parsed character
 #' string, e.g., `eval(parse(text = "terra::rast"))`
-rasterRead <- function(...)
+rasterRead <- function(...) {
   eval(parse(text = getOption("reproducible.rasterRead")))(...)
+}
 
 
 rasterType <- function(nlayers = 1,
                        rasterRead = getOption("reproducible.rasterRead", "terra::rast")) {
   if (is.character(rasterRead)) {
-    rasterRead <- if (.requireNamespace("terra") || .requireNamespace("raster"))
+    rasterRead <- if (.requireNamespace("terra") || .requireNamespace("raster")) {
       eval(parse(text = rasterRead))
-    else
+    } else {
       ""
+    }
   }
-  if (!is.character(rasterRead))
-    rasterRead <- if (identical(rasterRead, terra::rast))
+  if (!is.character(rasterRead)) {
+    rasterRead <- if (identical(rasterRead, terra::rast)) {
       "SpatRaster"
-    else
-      if (nlayers == 1) "RasterLayer" else "RasterStack"
+    } else if (nlayers == 1) "RasterLayer" else "RasterStack"
+  }
   rasterRead
 }
 
@@ -650,23 +696,26 @@ vectorType <- function(vectorRead = getOption("reproducible.shapefileRead", "sf:
   }
   if (is.character(vectorRead)) {
     if (endsWith(suffix = "shapefile", vectorRead)) {
-      if (.requireNamespace("raster", stopOnFALSE = TRUE))
+      if (.requireNamespace("raster", stopOnFALSE = TRUE)) {
         needRasterPkg <- TRUE
+      }
     }
-    vectorRead <- if (.requireNamespace("terra") || .requireNamespace("sf") || .requireNamespace("sp"))
+    vectorRead <- if (.requireNamespace("terra") || .requireNamespace("sf") || .requireNamespace("sp")) {
       eval(parse(text = vectorRead))
-    else
+    } else {
       ""
+    }
   }
-  if (!is.character(vectorRead))
+  if (!is.character(vectorRead)) {
     vectorRead <- if (identical(vectorRead, terra::vect)) {
       "SpatVector"
     } else if (needRasterPkg) {
       .requireNamespace("raster", stopOnFALSE = TRUE)
       "SpatialPolygons"
-    }  else {
+    } else {
       "sf"
     }
+  }
   vectorRead
 }
 
@@ -693,51 +742,57 @@ set.randomseed <- function(set.seed = TRUE) {
   digits <- 9
   newSeed <- as.numeric(Sys.time()) * 10^(digits - 3) # microseconds
   newSeed <- as.integer(round(newSeed, -digits) - newSeed)
-  if (isTRUE(set.seed))
+  if (isTRUE(set.seed)) {
     set.seed(newSeed)
+  }
   return(invisible(newSeed))
 }
 
 # This used to be in helper-allEqual.R --> one of the tests couldn't find it
 getDataFn <- function(...) {
-  suppressWarningsSpecific({     geodata::gadm(...)   },
-                           falseWarnings = "getData will be removed in a future version of raster")
+  suppressWarningsSpecific(
+    {
+      geodata::gadm(...)
+    },
+    falseWarnings = "getData will be removed in a future version of raster"
+  )
 }
 
 milliseconds <- function(time = Sys.time()) {
   tt <- as.numeric(time)
   rnd <- round(tt, -5)
-  (tt-rnd) * 1000
+  (tt - rnd) * 1000
 }
 
 cat2file <- function(..., file) {
-  if (missing(file))
-    file = "~/log.txt"
+  if (missing(file)) {
+    file <- "~/log.txt"
+  }
   cat(..., file = file)
 }
 
 layerNamesDelimiter <- "_%%_"
 
-
-
-#' Checks for existed of a url or the internet using https://cloud.r-project.org
+#' Checks for existed of a url or the internet using <https://CRAN.R-project.org>
 #'
 #' A lightweight function that may be less reliable than more purpose built solutions
 #' such as checking a specific web page using `RCurl::url.exists`. However, this is
 #' slightly faster and is sufficient for many uses.
-#' @rdname internetExists
-#' @name internetExists
-#' @export
+#'
 #' @return Logical, `TRUE` if internet site exists, `FALSE` otherwise
+#'
+#' @export
+#' @name internetExists
+#' @rdname internetExists
 internetExists <- function() {
-  urlExists("https://cloud.r-project.org")
+  urlExists("https://CRAN.R-project.org")
 }
 
 #' @rdname internetExists
 #' @export
 #' @name urlExists
-#' @param url A url of the form https://... to test for existence.
-#' @return Logical, `TRUE` if internet site exists, `FALSE` otherwise
+#' @param url A url of the form `https://...` to test for existence.
+#' @return Logical, `TRUE` if internet site exists, `FALSE` otherwise.
 urlExists <- function(url) {
   con <- url(url)
   on.exit(try(close(con), silent = TRUE), add = TRUE)

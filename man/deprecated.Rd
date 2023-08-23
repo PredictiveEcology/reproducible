@@ -148,7 +148,7 @@ See \code{\link[=writeTo]{writeTo()}}
 }
 \examples{
 if (requireNamespace("terra", quietly = TRUE)) {
-  r <- terra::rast(terra::ext(0,100,0,100), vals = 1:1e2)
+  r <- terra::rast(terra::ext(0, 100, 0, 100), vals = 1:1e2)
 
   tf <- tempfile(fileext = ".tif")
   writeOutputs(r, tf)

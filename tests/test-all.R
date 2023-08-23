@@ -13,7 +13,7 @@ if (nzchar(Sys.getenv("NOT_CRAN")) && as.logical(Sys.getenv("NOT_CRAN"))) {
   test_check("reproducible")
 
   Sys.setenv(R_REPRODUCIBLE_RASTER_READ = "terra::rast") ## default
-  Sys.setenv(R_REPRODUCIBLE_USE_DBI = "false")           ## default
+  Sys.setenv(R_REPRODUCIBLE_USE_DBI = "false") ## default
   test_check("reproducible")
 
   Sys.setenv(R_REPRODUCIBLE_RASTER_READ = "terra::rast")

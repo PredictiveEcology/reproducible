@@ -94,38 +94,45 @@ setMethod(
     out <- object # many methods just do a pass through
     if (any(grepl("DBIConnection", is(object)))) {
       messageCache("Copy will not do a deep copy of a DBI connection object; no copy being made. ",
-              "This may have unexpected consequences...", verbose = verbose)
+        "This may have unexpected consequences...",
+        verbose = verbose
+      )
     } else if (is(object, "proto")) { # don't want to import class for reproducible package; an edge case
       out <- get(class(object)[1])(object)
     } else if (inherits(object, "SQLiteConnection")) {
       con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-      messageCache("Making a copy of the entire SQLite database: ",object@dbname,
-                   "; this may not be desireable ...", verbose = verbose)
+      messageCache("Making a copy of the entire SQLite database: ", object@dbname,
+        "; this may not be desireable ...",
+        verbose = verbose
+      )
       out <- RSQLite::sqliteCopyDatabase(object, con)
     } else if (!identical(is(object)[1], "environment") && is.environment(object)) {
-    # keep this environment method here, as it will intercept "proto"
-    #   and other environments that it shouldn't
+      # keep this environment method here, as it will intercept "proto"
+      #   and other environments that it shouldn't
       messageCache("Trying to do a deep copy (Copy) of object of class ", class(object),
-              ", which does not appear to be a normal environment. If it can be copied ",
-              "like a normal environment, ignore this message; otherwise, may need to create ",
-              "a Copy method for this class. See ?Copy", verbose = verbose)
-
+        ", which does not appear to be a normal environment. If it can be copied ",
+        "like a normal environment, ignore this message; otherwise, may need to create ",
+        "a Copy method for this class. See ?Copy",
+        verbose = verbose
+      )
     } else if (is.environment(object)) {
-      listVersion <- Copy(as.list(object, all.names = TRUE), filebackedDir = filebackedDir,
-                          drv = drv, conn = conn, verbose = verbose, ...)
+      listVersion <- Copy(as.list(object, all.names = TRUE),
+        filebackedDir = filebackedDir,
+        drv = drv, conn = conn, verbose = verbose, ...
+      )
 
       parentEnv <- parent.env(object)
       out <- new.env(parent = parentEnv)
       list2env(listVersion, envir = out)
       attr(out, "name") <- attr(object, "name")
-
     } else if (inherits(object, "Raster")) {
       if (any(nchar(Filenames(object)) > 0)) {
         if (missing(filebackedDir)) {
           filebackedDir <- tempdir2(rndstr(1, 11))
         }
-        if (!is.null(filebackedDir))
+        if (!is.null(filebackedDir)) {
           out <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn)
+        }
       }
     } else if (inherits(object, "SpatRaster")) {
       fns <- Filenames(object, allowMultiple = FALSE)
@@ -135,9 +142,11 @@ setMethod(
         fnsAll <- Filenames(object, allowMultiple = TRUE)
         hadNumeric <- grepl("_[:0-9:]+$", tools::file_path_sans_ext(fnsAll))
         needNewFn <- FALSE
-        if (!missing(filebackedDir))
-          if (!is.null(filebackedDir))
+        if (!missing(filebackedDir)) {
+          if (!is.null(filebackedDir)) {
             needNewFn <- TRUE
+          }
+        }
         if (needNewFn) {
           if (!isAbsolutePath(filebackedDir)) {
             # relative
@@ -158,15 +167,20 @@ setMethod(
         fnsBase <- tools::file_path_sans_ext(basename(fns))
         if (any(hadNumeric)) fnsBase <- gsub("_[:0-9:]+$", "", fnsBase)
 
-        newFnsSingles <- newFns[unlist(Map(sn = fnsBase,
-                                           fns1 = fns, function(sn, fns1) which(startsWith(basename(newFns), sn) &
-                                                          endsWith(basename(newFns), tools::file_ext(fns1)))))]
+        newFnsSingles <- newFns[Map(
+          sn = fnsBase,
+          fns1 = fns, function(sn, fns1) {
+            which(startsWith(basename(newFns), sn) &
+              endsWith(basename(newFns), tools::file_ext(fns1)))
+          }
+        ) |> unlist()]
         # newFnsSingles <- newFns[match(tools::file_path_sans_ext(basename(fns)), basename(newFns))]
         out <- terra::rast(newFnsSingles)
-        if (length(nz) == 1) # one file for all layers
+        if (length(nz) == 1) { # one file for all layers
           names(out) <- names(object)
-        else
+        } else {
           names(out) <- names(object[[nz]])
+        }
 
 
         # If there are layers that were in RAM; need to add them back, in correct order
@@ -178,41 +192,46 @@ setMethod(
       }
     }
     return(out)
-})
-
-
-#' @rdname Copy
-setMethod("Copy",
-          signature(object = "data.table"),
-          definition = function(object, ...) {
-            data.table::copy(object)
-})
+  }
+)
 
 #' @rdname Copy
 setMethod("Copy",
-          signature(object = "list"),
-          definition = function(object,  ...) {
-            lapply(object, function(x) {
-              Copy(x, ...)
-            })
-})
+  signature(object = "data.table"),
+  definition = function(object, ...) {
+    data.table::copy(object)
+  }
+)
 
 #' @rdname Copy
 setMethod("Copy",
-          signature(object = "refClass"),
-          definition = function(object,  ...) {
-            if (exists("copy", envir = object)) {
-              object$copy()
-            } else {
-              stop("There is no method to copy this refClass object; ",
-                   "see developers of reproducible package")
-            }
-})
+  signature(object = "list"),
+  definition = function(object, ...) {
+    lapply(object, function(x) {
+      Copy(x, ...)
+    })
+  }
+)
 
 #' @rdname Copy
 setMethod("Copy",
-          signature(object = "data.frame"),
-          definition = function(object,  ...) {
-            object
-})
+  signature(object = "refClass"),
+  definition = function(object, ...) {
+    if (exists("copy", envir = object)) {
+      object$copy()
+    } else {
+      stop(
+        "There is no method to copy this refClass object; ",
+        "see developers of reproducible package"
+      )
+    }
+  }
+)
 
+#' @rdname Copy
+setMethod("Copy",
+  signature(object = "data.frame"),
+  definition = function(object, ...) {
+    object
+  }
+)

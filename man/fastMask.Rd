@@ -26,8 +26,7 @@ number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.}
 
 \item{useGDAL}{Deprecated. Logical or \code{"force"}. This is defunct; internals now can use
-\code{terra} if \code{options("reproducible.useTerra" = TRUE)}, which is not (yet)
-the default.}
+\code{terra} if \code{options("reproducible.useTerra" = TRUE)}, which is not (yet) the default.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
@@ -41,8 +40,7 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 being deprecated will be suppressed.}
 }
 \value{
-A \verb{Raster*} object, masked (i.e., smaller extent and/or
-several pixels converted to NA)
+A \verb{Raster*} object, masked (i.e., smaller extent and/or several pixels converted to NA)
 }
 \description{
 Deprecated. Use \code{\link[=maskTo]{maskTo()}}.

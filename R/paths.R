@@ -62,7 +62,8 @@ setMethod(
               if (any(areAbs %in% FALSE)) {
                 nonNApath[!hasDotStart][areAbs %in% FALSE] <-
                   normalizePath(file.path(getwd(), nonNApath[!hasDotStart][areAbs %in% FALSE]),
-                                winslash = "/", mustWork = FALSE)
+                    winslash = "/", mustWork = FALSE
+                  )
               }
             }
             path[!nas] <- nonNApath
@@ -71,9 +72,7 @@ setMethod(
               pathOrig[nonEmpty] <- path
               path <- pathOrig
             }
-
           }
-
         }
       }
     }
@@ -172,8 +171,8 @@ setMethod(
           if (create == TRUE) {
             lapply(path[!dirsThatExist[!isExistingFile]], function(pth) {
               dir.create(file.path(pth),
-                         recursive = TRUE,
-                         showWarnings = FALSE
+                recursive = TRUE,
+                showWarnings = FALSE
               )
             })
           } else {
@@ -267,4 +266,3 @@ tempfile2 <- function(sub = "",
 }
 
 SysInfo <- Sys.info() # do this on load; nothing can change, so repeated calls are a waste
-

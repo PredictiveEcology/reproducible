@@ -1,3 +1,12 @@
+# reproducible 2.0.8
+
+## Enhancements
+* minor formatting changes
+
+## Bug fixes
+* only use character strings when comparing `getRVersion() <= "XXX"` 
+* fixes for `assessDataType` for categorical (factor) `Raster` and `SpatRaster`
+
 # reproducible 2.0.7
 
 ## Enhancements
