@@ -773,7 +773,7 @@ cat2file <- function(..., file) {
 
 layerNamesDelimiter <- "_%%_"
 
-#' Checks for existed of a url or the internet using <https://cloud.r-project.org>
+#' Checks for existed of a url or the internet using <https://CRAN.R-project.org>
 #'
 #' A lightweight function that may be less reliable than more purpose built solutions
 #' such as checking a specific web page using `RCurl::url.exists`. However, this is
