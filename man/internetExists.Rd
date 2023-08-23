@@ -3,7 +3,7 @@
 \name{internetExists}
 \alias{internetExists}
 \alias{urlExists}
-\title{Checks for existed of a url or the internet using \url{https://cloud.r-project.org}}
+\title{Checks for existed of a url or the internet using \url{https://CRAN.R-project.org}}
 \usage{
 internetExists()
 
