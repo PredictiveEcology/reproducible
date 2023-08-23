@@ -28,7 +28,7 @@ See writeTo()"><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/li
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8</span>
       </span>
     </div>
 
@@ -251,19 +251,19 @@ object will have a file-backing.</p>
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"terra"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">100</span>,<span class="fl">0</span>,<span class="fl">100</span><span class="op">)</span>, vals <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">1e2</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">100</span>, <span class="fl">0</span>, <span class="fl">100</span><span class="op">)</span>, vals <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">1e2</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="va">tf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".tif"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu">writeOutputs</span><span class="op">(</span><span class="va">r</span>, <span class="va">tf</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    writing...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0126 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00789 secs</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class       : SpatRaster </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> dimensions  : 10, 10, 1  (nrow, ncol, nlyr)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> resolution  : 10, 10  (x, y)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> extent      : 0, 100, 0, 100  (xmin, xmax, ymin, ymax)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> coord. ref. :  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> source      : file234b392dd16.tif </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> source      : file7a69700c9beb.tif </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> name        : lyr.1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> min value   :     1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> max value   :   100 </span>

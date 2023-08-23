@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8</span>
       </span>
     </div>
 
@@ -193,55 +193,56 @@ the existing "same extent" entry in the <code>sf</code> object.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"sf"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"sf"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"terra"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="va">dPath</span> <span class="op">&lt;-</span> <span class="fu"><a href="checkPath.html">checkPath</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="tempdir2.html">tempdir2</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>, create <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">localFileLux</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"ex/lux.shp"</span>, package <span class="op">=</span> <span class="st">"terra"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># 1 step for each layer</span></span></span>
-<span class="r-in"><span><span class="co"># 1st step -- get study area</span></span></span>
-<span class="r-in"><span><span class="va">full</span> <span class="op">&lt;-</span> <span class="fu"><a href="prepInputs.html">prepInputs</a></span><span class="op">(</span><span class="va">localFileLux</span>, dest <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span> <span class="co"># default is sf::st_read</span></span></span>
-<span class="r-in"><span><span class="va">zoneA</span> <span class="op">&lt;-</span> <span class="va">full</span><span class="op">[</span><span class="fl">3</span><span class="op">:</span><span class="fl">6</span>,<span class="op">]</span></span></span>
-<span class="r-in"><span><span class="va">zoneB</span> <span class="op">&lt;-</span> <span class="va">full</span><span class="op">[</span><span class="fl">8</span>,<span class="op">]</span> <span class="co"># not in A</span></span></span>
-<span class="r-in"><span><span class="va">zoneC</span> <span class="op">&lt;-</span> <span class="va">full</span><span class="op">[</span><span class="fl">3</span>,<span class="op">]</span> <span class="co"># yes in A</span></span></span>
-<span class="r-in"><span><span class="va">zoneD</span> <span class="op">&lt;-</span> <span class="va">full</span><span class="op">[</span><span class="fl">7</span><span class="op">:</span><span class="fl">8</span>,<span class="op">]</span> <span class="co"># not in A, B or C</span></span></span>
-<span class="r-in"><span><span class="va">zoneE</span> <span class="op">&lt;-</span> <span class="va">full</span><span class="op">[</span><span class="fl">3</span><span class="op">:</span><span class="fl">5</span>,<span class="op">]</span> <span class="co"># yes in A</span></span></span>
-<span class="r-in"><span><span class="co"># 2nd step: re-write to disk as read/write is lossy; want all "from disk" for this ex.</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="postProcessTo.html">writeTo</a></span><span class="op">(</span><span class="va">zoneA</span>, writeTo <span class="op">=</span> <span class="st">"zoneA.shp"</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="postProcessTo.html">writeTo</a></span><span class="op">(</span><span class="va">zoneB</span>, writeTo <span class="op">=</span> <span class="st">"zoneB.shp"</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="postProcessTo.html">writeTo</a></span><span class="op">(</span><span class="va">zoneC</span>, writeTo <span class="op">=</span> <span class="st">"zoneC.shp"</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="postProcessTo.html">writeTo</a></span><span class="op">(</span><span class="va">zoneD</span>, writeTo <span class="op">=</span> <span class="st">"zoneD.shp"</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="postProcessTo.html">writeTo</a></span><span class="op">(</span><span class="va">zoneE</span>, writeTo <span class="op">=</span> <span class="st">"zoneE.shp"</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># Must re-read to get identical columns</span></span></span>
-<span class="r-in"><span><span class="va">zoneA</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">st_read</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"zoneA.shp"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">zoneB</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">st_read</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"zoneB.shp"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">zoneC</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">st_read</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"zoneC.shp"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">zoneD</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">st_read</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"zoneD.shp"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">zoneE</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">st_read</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"zoneE.shp"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="co"># 1 step for each layer</span></span></span>
+<span class="r-in"><span>  <span class="co"># 1st step -- get study area</span></span></span>
+<span class="r-in"><span>  <span class="va">full</span> <span class="op">&lt;-</span> <span class="fu"><a href="prepInputs.html">prepInputs</a></span><span class="op">(</span><span class="va">localFileLux</span>, dest <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span> <span class="co"># default is sf::st_read</span></span></span>
+<span class="r-in"><span>  <span class="va">zoneA</span> <span class="op">&lt;-</span> <span class="va">full</span><span class="op">[</span><span class="fl">3</span><span class="op">:</span><span class="fl">6</span>, <span class="op">]</span></span></span>
+<span class="r-in"><span>  <span class="va">zoneB</span> <span class="op">&lt;-</span> <span class="va">full</span><span class="op">[</span><span class="fl">8</span>, <span class="op">]</span> <span class="co"># not in A</span></span></span>
+<span class="r-in"><span>  <span class="va">zoneC</span> <span class="op">&lt;-</span> <span class="va">full</span><span class="op">[</span><span class="fl">3</span>, <span class="op">]</span> <span class="co"># yes in A</span></span></span>
+<span class="r-in"><span>  <span class="va">zoneD</span> <span class="op">&lt;-</span> <span class="va">full</span><span class="op">[</span><span class="fl">7</span><span class="op">:</span><span class="fl">8</span>, <span class="op">]</span> <span class="co"># not in A, B or C</span></span></span>
+<span class="r-in"><span>  <span class="va">zoneE</span> <span class="op">&lt;-</span> <span class="va">full</span><span class="op">[</span><span class="fl">3</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span> <span class="co"># yes in A</span></span></span>
+<span class="r-in"><span>  <span class="co"># 2nd step: re-write to disk as read/write is lossy; want all "from disk" for this ex.</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="postProcessTo.html">writeTo</a></span><span class="op">(</span><span class="va">zoneA</span>, writeTo <span class="op">=</span> <span class="st">"zoneA.shp"</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="postProcessTo.html">writeTo</a></span><span class="op">(</span><span class="va">zoneB</span>, writeTo <span class="op">=</span> <span class="st">"zoneB.shp"</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="postProcessTo.html">writeTo</a></span><span class="op">(</span><span class="va">zoneC</span>, writeTo <span class="op">=</span> <span class="st">"zoneC.shp"</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="postProcessTo.html">writeTo</a></span><span class="op">(</span><span class="va">zoneD</span>, writeTo <span class="op">=</span> <span class="st">"zoneD.shp"</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="postProcessTo.html">writeTo</a></span><span class="op">(</span><span class="va">zoneE</span>, writeTo <span class="op">=</span> <span class="st">"zoneE.shp"</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="co"># Must re-read to get identical columns</span></span></span>
+<span class="r-in"><span>  <span class="va">zoneA</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">st_read</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"zoneA.shp"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">zoneB</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">st_read</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"zoneB.shp"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">zoneC</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">st_read</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"zoneC.shp"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">zoneD</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">st_read</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"zoneD.shp"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">zoneE</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">st_read</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dPath</span>, <span class="st">"zoneE.shp"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># The function that is to be run. This example returns a data.frame because</span></span></span>
-<span class="r-in"><span><span class="co">#    saving `sf` class objects with list-like columns does not work with</span></span></span>
-<span class="r-in"><span><span class="co">#    many st_driver()</span></span></span>
-<span class="r-in"><span><span class="va">fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">domain</span>, <span class="va">newField</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">domain</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">NROW</a></span><span class="op">(</span><span class="va">domain</span><span class="op">)</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="va">newField</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span>  <span class="co"># The function that is to be run. This example returns a data.frame because</span></span></span>
+<span class="r-in"><span>  <span class="co">#    saving `sf` class objects with list-like columns does not work with</span></span></span>
+<span class="r-in"><span>  <span class="co">#    many st_driver()</span></span></span>
+<span class="r-in"><span>  <span class="va">fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">domain</span>, <span class="va">newField</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="va">domain</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>      <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>      <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">NROW</a></span><span class="op">(</span><span class="va">domain</span><span class="op">)</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="va">newField</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">}</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Run sequence -- A, B will add new entries in targetFile, C will not,</span></span></span>
-<span class="r-in"><span><span class="co">#                 D will, E will not</span></span></span>
-<span class="r-in"><span><span class="kw">for</span> <span class="op">(</span><span class="va">z</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">zoneA</span>, <span class="va">zoneB</span>, <span class="va">zoneC</span>, <span class="va">zoneD</span>, <span class="va">zoneE</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">CacheGeo</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="co"># Run sequence -- A, B will add new entries in targetFile, C will not,</span></span></span>
+<span class="r-in"><span>  <span class="co">#                 D will, E will not</span></span></span>
+<span class="r-in"><span>  <span class="kw">for</span> <span class="op">(</span><span class="va">z</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">zoneA</span>, <span class="va">zoneB</span>, <span class="va">zoneC</span>, <span class="va">zoneD</span>, <span class="va">zoneE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">CacheGeo</span><span class="op">(</span></span></span>
 <span class="r-in"><span>      targetFile <span class="op">=</span> <span class="st">"fireSenseParams.rds"</span>,</span></span>
 <span class="r-in"><span>      domain <span class="op">=</span> <span class="va">z</span>,</span></span>
 <span class="r-in"><span>      FUN <span class="op">=</span> <span class="fu">fun</span><span class="op">(</span><span class="va">domain</span>, newField <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">1</span>, b <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, c <span class="op">=</span> <span class="st">"D"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>      fun <span class="op">=</span> <span class="va">fun</span>, <span class="co"># pass whatever is needed into the function</span></span></span>
 <span class="r-in"><span>      destinationPath <span class="op">=</span> <span class="va">dPath</span>,</span></span>
 <span class="r-in"><span>      action <span class="op">=</span> <span class="st">"update"</span></span></span>
-<span class="r-in"><span>      <span class="co">#, cloudFolderID = "cachedObjects" # to upload/download from cloud</span></span></span>
-<span class="r-in"><span>      <span class="op">)</span></span></span>
+<span class="r-in"><span>      <span class="co"># , cloudFolderID = "cachedObjects" # to upload/download from cloud</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">}</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running preProcess</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: /home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
@@ -260,59 +261,59 @@ the existing "same extent" entry in the <code>sf</code> object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geodetic CRS:  WGS 84</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    writing...</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing layer `zoneA' to data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpJIaYEA/reproducible/4OXtgLLo/zoneA.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpdvLm2l/reproducible/mMV9fmo7/zoneA.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing 4 features with 6 fields and geometry type Polygon.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.0058 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00598 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    writing...</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing layer `zoneB' to data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpJIaYEA/reproducible/4OXtgLLo/zoneB.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpdvLm2l/reproducible/mMV9fmo7/zoneB.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing 1 features with 6 fields and geometry type Polygon.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00358 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00405 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    writing...</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing layer `zoneC' to data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpJIaYEA/reproducible/4OXtgLLo/zoneC.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpdvLm2l/reproducible/mMV9fmo7/zoneC.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing 1 features with 6 fields and geometry type Polygon.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00337 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00406 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    writing...</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing layer `zoneD' to data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpJIaYEA/reproducible/4OXtgLLo/zoneD.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpdvLm2l/reproducible/mMV9fmo7/zoneD.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing 2 features with 6 fields and geometry type Polygon.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00339 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00395 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    writing...</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing layer `zoneE' to data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpJIaYEA/reproducible/4OXtgLLo/zoneE.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpdvLm2l/reproducible/mMV9fmo7/zoneE.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing 3 features with 6 fields and geometry type Polygon.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00342 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00426 secs</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reading layer `zoneA' from data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpJIaYEA/reproducible/4OXtgLLo/zoneA.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpdvLm2l/reproducible/mMV9fmo7/zoneA.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 4 features and 6 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: POLYGON</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: 5.74414 ymin: 49.69933 xmax: 6.528252 ymax: 50.03632</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geodetic CRS:  WGS 84</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reading layer `zoneB' from data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpJIaYEA/reproducible/4OXtgLLo/zoneB.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpdvLm2l/reproducible/mMV9fmo7/zoneB.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 1 feature and 6 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: POLYGON</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: 6.169137 ymin: 49.58699 xmax: 6.516485 ymax: 49.75016</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geodetic CRS:  WGS 84</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reading layer `zoneC' from data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpJIaYEA/reproducible/4OXtgLLo/zoneC.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpdvLm2l/reproducible/mMV9fmo7/zoneC.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 1 feature and 6 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: POLYGON</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: 5.746118 ymin: 49.69933 xmax: 6.029145 ymax: 49.89461</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geodetic CRS:  WGS 84</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reading layer `zoneD' from data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpJIaYEA/reproducible/4OXtgLLo/zoneD.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpdvLm2l/reproducible/mMV9fmo7/zoneD.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 2 features and 6 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: POLYGON</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: 6.169137 ymin: 49.46498 xmax: 6.516485 ymax: 49.75016</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geodetic CRS:  WGS 84</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reading layer `zoneE' from data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpJIaYEA/reproducible/4OXtgLLo/zoneE.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpdvLm2l/reproducible/mMV9fmo7/zoneE.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 3 features and 6 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: POLYGON</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
@@ -327,7 +328,7 @@ the existing "same extent" entry in the <code>sf</code> object.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmpJIaYEA/reproducible/4OXtgLLo/fireSenseParams.rds</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmpdvLm2l/reproducible/mMV9fmo7/fireSenseParams.rds</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile is already a binary; skipping Cache while loading</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Domain is not contained within the targetFile; running FUN</span>
@@ -339,7 +340,7 @@ the existing "same extent" entry in the <code>sf</code> object.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmpJIaYEA/reproducible/4OXtgLLo/fireSenseParams.rds</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmpdvLm2l/reproducible/mMV9fmo7/fireSenseParams.rds</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile is already a binary; skipping Cache while loading</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Spatial domain is contained within the url; returning the object</span>
@@ -349,7 +350,7 @@ the existing "same extent" entry in the <code>sf</code> object.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmpJIaYEA/reproducible/4OXtgLLo/fireSenseParams.rds</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmpdvLm2l/reproducible/mMV9fmo7/fireSenseParams.rds</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile is already a binary; skipping Cache while loading</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Domain is not contained within the targetFile; running FUN</span>
@@ -361,7 +362,7 @@ the existing "same extent" entry in the <code>sf</code> object.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmpJIaYEA/reproducible/4OXtgLLo/fireSenseParams.rds</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmpdvLm2l/reproducible/mMV9fmo7/fireSenseParams.rds</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile is already a binary; skipping Cache while loading</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Spatial domain is contained within the url; returning the object</span>

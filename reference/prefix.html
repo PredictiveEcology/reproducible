@@ -25,7 +25,7 @@ it is assumed to be in the current working directory."><!-- mathjax --><script s
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8</span>
       </span>
     </div>
 
@@ -108,13 +108,13 @@ on the <code>basename</code> of the <code>f</code>, before the file extension.</
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># file's full path is specified (i.e., dirname is known)</span></span></span>
 <span class="r-in"><span><span class="va">myFile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"~/data"</span>, <span class="st">"file.tif"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">.prefix</span><span class="op">(</span><span class="va">myFile</span>, <span class="st">"small_"</span><span class="op">)</span>    <span class="co">## "/home/username/data/small_file.tif"</span></span></span>
+<span class="r-in"><span><span class="fu">.prefix</span><span class="op">(</span><span class="va">myFile</span>, <span class="st">"small_"</span><span class="op">)</span> <span class="co">## "/home/username/data/small_file.tif"</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/home/runner/data/small_file.tif"</span>
 <span class="r-in"><span><span class="fu">.suffix</span><span class="op">(</span><span class="va">myFile</span>, <span class="st">"_cropped"</span><span class="op">)</span> <span class="co">## "/home/username/data/myFile_cropped.shp"</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/home/runner/data/file_cropped.tif"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># file's full path is not specified</span></span></span>
-<span class="r-in"><span><span class="fu">.prefix</span><span class="op">(</span><span class="st">"myFile.shp"</span>, <span class="st">"small"</span><span class="op">)</span>    <span class="co">## "./small_myFile.shp"</span></span></span>
+<span class="r-in"><span><span class="fu">.prefix</span><span class="op">(</span><span class="st">"myFile.shp"</span>, <span class="st">"small"</span><span class="op">)</span> <span class="co">## "./small_myFile.shp"</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "./smallmyFile.shp"</span>
 <span class="r-in"><span><span class="fu">.suffix</span><span class="op">(</span><span class="st">"myFile.shp"</span>, <span class="st">"_cropped"</span><span class="op">)</span> <span class="co">## "./myFile_cropped.shp"</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "./myFile_cropped.shp"</span>

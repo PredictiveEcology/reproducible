@@ -31,7 +31,7 @@ work correctly."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8</span>
       </span>
     </div>
 
@@ -160,7 +160,7 @@ Default is <code>getOption("reproducible.length")</code>, which is set to <code>
 <dd><p>The algorithms to be used; currently available choices are
     <code>md5</code>, which is also the default, <code>sha1</code>, <code>crc32</code>,
     <code>sha256</code>, <code>sha512</code>, <code>xxhash32</code>, <code>xxhash64</code>,
-    <code>murmur32</code>, <code>spookyhash</code> and <code>blake3</code>.</p></dd>
+    <code>murmur32</code>, <code>spookyhash</code>, <code>blake3</code>, and <code>crc32c</code>.</p></dd>
 
 
 <dt>quick</dt>
@@ -236,9 +236,9 @@ using <code>asPath(thePath)</code></p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># treats as character string, so 2 filenames are different</span></span></span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "b4b6dc5999aa2ccdfffb47fb4932cd60"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "5d58f4626f4663ab57eb4afbdc2a96e4"</span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">tmpfile2</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "a2b2e62beea55ca3b0f778ae828c0f4b"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "3318dbf94c0f580af1ffc83b9dff6793"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># tests to see whether character string is representing a file</span></span></span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span></span></span>
@@ -249,9 +249,9 @@ using <code>asPath(thePath)</code></p>
 <span class="r-in"><span><span class="co"># if you tell it that it is a path, then you can decide if you want it to be</span></span></span>
 <span class="r-in"><span><span class="co">#  treated as a character string or as a file path</span></span></span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span>, quick <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "26282c71f81c0004"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "8a608cabacf748a1"</span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">tmpfile2</span><span class="op">)</span>, quick <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># different because using file info</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "eef9d423c6350b8d"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "ef37bb632244fa1b"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span>, quick <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
