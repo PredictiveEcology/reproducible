@@ -4,7 +4,7 @@ library("revdepcheck")
 options(
   repos = c(
     PE = "https://predictiveecology.r-universe.dev",
-    CRAN = "https://CRAN.R-project.org"
+    CRAN = "https://cloud.r-project.org"
   )
 )
 
