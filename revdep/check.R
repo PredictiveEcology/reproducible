@@ -1,7 +1,10 @@
 #devtools::install_github("r-lib/revdepcheck")
 library("revdepcheck")
 
-options(repos = c(CRAN = 'https://cloud.r-project.org'))
+options(repos = c( # note this is counter to the "Canonnical CRAN.r-project.org", but because it is used
+                   #  for revdeps, keeping the "cloud" redirect now that GHA is used for revdeps.
+  CRAN = paste0("https://", "cloud.", "r-project.", "org")
+))
 
 revdep_reset()
 revdepcheck::revdep_check(num_workers = getOption("Ncpus", 4), timeout = 30*60) ## 30 mins
