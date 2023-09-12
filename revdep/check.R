@@ -1,8 +1,9 @@
 #devtools::install_github("r-lib/revdepcheck")
 library("revdepcheck")
 
-options(repos = c( # note this is counter to the "Canonnical CRAN.r-project.org", but because it is used
-                   #  for revdeps, keeping the "cloud" redirect now that GHA is used for revdeps.
+options(repos = c(
+  ## note this is counter to the "Cannnical CRAN.r-project.org", but because it is used
+  ##  for revdeps, keeping the "cloud" redirect now that GHA is used for revdeps.
   CRAN = paste0("https://", "cloud.", "r-project.", "org")
 ))
 
