@@ -1,4 +1,9 @@
-# reproducible 2.0.8
+# reproducible 2.0.9
+
+## Enhancements
+
+## Bug fixes
+* Filenames for some classes returned ""; now returns NULL so character vectors are only pointers to files
 
 ## Enhancements
 * minor formatting changes

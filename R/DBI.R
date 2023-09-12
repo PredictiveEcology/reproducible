@@ -638,6 +638,7 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
   }
 
   fns <- basename2(Filenames(obj, allowMultiple = TRUE))
+  fns <- fns[nzchar(fns)]
   file.path(CacheStorageDir(cachePath), c(filename, fns))
 }
 

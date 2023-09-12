@@ -105,8 +105,8 @@ setMethod(
     } else if (inherits(obj, "RasterLayer")) {
       fns <- raster::filename(obj)
       if (exists("._Filenames_1")) browser()
-      if (length(fns) == 0) {
-        fns <- ""
+      if (length(fns) == 0 || all(nchar(fns) == 0)) {
+        fns <- NULL
       }
       fns <- allowMultipleFNs(allowMultiple, fns)
     } else if (inherits(obj, "SpatRaster")) {
@@ -162,7 +162,7 @@ setMethod(
   signature = "data.table",
   definition = function(obj, allowMultiple = TRUE) {
     isCacheDB <- all(c(.cacheTableHashColName(), .cacheTableTagColName()) %in% colnames(obj))
-    fromDsk <- ""
+    fromDsk <- NULL
     if (isCacheDB) {
       isFromDsk <- extractFromCache(obj, elem = "fromDisk") %in% "TRUE"
       if (any(isFromDsk)) {
@@ -194,20 +194,23 @@ setMethod(
 
 
 allowMultipleFNs <- function(allowMultiple, fns) {
-  if (isTRUE(allowMultiple)) {
-    anyGrd <- endsWith(fns, suffix = "grd")
-    anyGri <- endsWith(fns, suffix = "gri")
-    if (any(anyGrd) && !any(anyGri)) {
-      nonGrd <- if (any(!anyGrd)) fns[!anyGrd] else NULL
-      multiFns <- sort(c(fns[anyGrd], gsub("grd$", "gri", fns[anyGrd])))
-      fnsNew <- c(nonGrd, multiFns)
-      fns <- fnsNew[order(match(
-        filePathSansExt(basename(fnsNew)),
-        filePathSansExt(basename(fns))
-      ))]
+  if (!is.null(fns)) {
+    if (isTRUE(allowMultiple)) {
+      anyGrd <- endsWith(fns, suffix = "grd")
+      anyGri <- endsWith(fns, suffix = "gri")
+      if (any(anyGrd) && !any(anyGri)) {
+        nonGrd <- if (any(!anyGrd)) fns[!anyGrd] else NULL
+        multiFns <- sort(c(fns[anyGrd], gsub("grd$", "gri", fns[anyGrd])))
+        fnsNew <- c(nonGrd, multiFns)
+        fns <- fnsNew[order(match(
+          filePathSansExt(basename(fnsNew)),
+          filePathSansExt(basename(fns))
+        ))]
+      }
+    } else {
+      fns <- grep("\\.gri$", fns, value = TRUE, invert = TRUE)
     }
-  } else {
-    fns <- grep("\\.gri$", fns, value = TRUE, invert = TRUE)
   }
   fns
+
 }
