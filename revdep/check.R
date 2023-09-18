@@ -10,7 +10,7 @@ options(repos = c(
 ))
 
 revdep_reset()
-revdepcheck::revdep_check(num_workers = getOption("Ncpus", 4), timeout = 30*60) ## 30 mins
+revdepcheck::revdep_check(num_workers = getOption("Ncpus", 4), timeout = 40*60) ## 40 mins
 revdep_report_cran() ## update cran-comments with this output
 
 ### email maintainers of revdep packages (need to edit: `revdep/email.yml`)
