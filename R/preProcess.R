@@ -503,10 +503,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       quick = quick, verbose = verbose,
       .tempPath = .tempPath
     )
+    # this changes targetFilePath to have folder if the extraction included a folder
     list2env(filesExtracted, environment()) # neededFiles, checkSums, filesExtr, targetFilePath, filesToChecksum, needChecksums
   } else {
     if (!is.null(.isArchive(archive))) {
       messagePrepInputs("  Skipping extractFromArchive attempt: no files missing", verbose = verbose)
+    }
+    if (!makeAbsolute(targetFilePath, destinationPath) %in%
+        makeAbsolute(neededFiles, destinationPath)) {
+      if (!basename2(targetFilePath) %in% makeRelative(neededFiles, destinationPath)) {
+        targetFilePath <- grep(basename2(targetFilePath), neededFiles, value = TRUE)
+      }
     }
 
     filesExtr <- c(filesToChecksum, neededFiles)
