@@ -657,3 +657,29 @@ test_that("more nested file structures in zip; alsoExtract NA", {
   expect_false(all(.listFilesInArchive(zipName2) %in% files))
   expect_true(sum(.listFilesInArchive(zipName2) %in% files) == 1)
 })
+
+
+test_that("PR#358 if dwnld already exists, was missing nested paths", {
+  skip_on_cran()
+  testInit("terra", needInternet = TRUE)
+  url <- "https://drive.google.com/file/d/1S-4itShMXtwzGxjKPgsznpdTD2ydE9qn/"
+  noisyOutput <- capture.output(
+    ras <- preProcess(targetFile = "all_gp_site_info.csv",
+               url = url,
+               destinationPath = getOption("reproducible.destinationPath", file.path(tmpdir, "dPath")),
+               overwrite = TRUE,
+               fun = "data.table::fread",
+               useCache = FALSE)  )
+  testthat::expect_true(file.exists(ras$targetFilePath))
+  noisyOutput <- capture.output(
+    ras <- preProcess(targetFile = "all_gp_site_info.csv",
+               url = url,
+               destinationPath = getOption("reproducible.destinationPath", file.path(tmpdir, "dPath")),
+               overwrite = TRUE,
+               fun = "data.table::fread",
+               useCache = FALSE)  )
+  testthat::expect_true(file.exists(ras$targetFilePath))
+
+})
+
+
