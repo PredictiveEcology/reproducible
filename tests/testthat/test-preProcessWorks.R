@@ -661,7 +661,7 @@ test_that("more nested file structures in zip; alsoExtract NA", {
 
 test_that("PR#358 if dwnld already exists, was missing nested paths", {
   skip_on_cran()
-  testInit("terra", needInternet = TRUE)
+  testInit("terra", needInternet = TRUE, needGoogleDriveAuth = TRUE)
   url <- "https://drive.google.com/file/d/1S-4itShMXtwzGxjKPgsznpdTD2ydE9qn/"
   noisyOutput <- capture.output(
     ras <- preProcess(targetFile = "all_gp_site_info.csv",
