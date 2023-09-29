@@ -1,10 +1,12 @@
 # reproducible 2.0.9
 
 ## Enhancements
+* new function `isUpdated()` to determine whether a cached object has been updated 
 
 ## Bug fixes
 * Filenames for some classes returned ""; now returns NULL so character vectors are only pointers to files
-* `preProcess` may not have correctly found a file that was extracted from an Archives with nested folder structure. This is corrected in PR#. 
+
+# reproducible 2.0.8
 
 ## Enhancements
 * minor formatting changes
