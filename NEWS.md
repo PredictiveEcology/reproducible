@@ -10,6 +10,7 @@
 
 ## Enhancements
 * minor formatting changes
+* sometimes a cache entry gets corrupted. Previously, a message was supplied on how to fix; now this is just tried directly instead of just suggesting a user do it.
 
 ## Bug fixes
 * only use character strings when comparing `getRVersion() <= "XXX"` 

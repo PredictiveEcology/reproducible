@@ -768,23 +768,24 @@ Cache <-
             cloudFolderID = cloudFolderID,
             lastEntry = lastEntry, lastOne = lastOne, ...
           )
-          return(out)
+          if (!is(out, "try-error"))
+            return(out)
         }
-      } else {
-        # find similar
-        if (!is.null(showSimilar)) { # TODO: Needs testing
-          if (!isFALSE(showSimilar)) {
-            if (!exists("localTags", inherits = FALSE)) { #
-              localTags <- showCache(cachePath, drv = drv, verbose = FALSE)
-            } # This is noisy
-            .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
-              userTags, userTagsOrig,
-              functionName = fnDetails$functionName,
-              useCache = useCache, verbose = verbose
-            )
-          }
+      } # else {
+      # find similar
+      if (!is.null(showSimilar)) { # TODO: Needs testing
+        if (!isFALSE(showSimilar)) {
+          if (!exists("localTags", inherits = FALSE)) { #
+            localTags <- showCache(cachePath, drv = drv, verbose = FALSE)
+          } # This is noisy
+          .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
+                       userTags, userTagsOrig,
+                       functionName = fnDetails$functionName,
+                       useCache = useCache, verbose = verbose
+          )
         }
       }
+      # }
 
       startRunTime <- verboseTime(verbose, verboseLevel = 3)
 
@@ -2266,11 +2267,13 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
       isInRepo[[.cacheTableHashColName()]]
     # else
     #   gsub("cacheId:", "", isInRepo[[.cacheTableTagColName()]])
-    stop(
-      output, "\nError in trying to recover cacheID: ", cID,
-      "\nYou will likely need to remove that item from Cache, e.g., ",
-      "\nclearCache('", cachePath, "', userTags = '", cID, "')"
+    clearCache(cachePath, userTags = cID)
+    message(
+      output, "\nError in trying to recover cacheID; it is likely corrupt.",
+      "\n  removing it with... clearCache('", cachePath, "', userTags = '", cID, "')",
+      "\n  and proceeding to recalculate"
     )
+    return(output)
   }
 
   .updateTagsRepo(outputHash, cachePath, "elapsedTimeLoad",
