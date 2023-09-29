@@ -573,3 +573,17 @@ unwrapSpatVector <- function(obj) {
   obj$x <- cbind(obj$x$cols125[, 1:2, drop = FALSE], obj$x$cols34[, 1:2, drop = FALSE], obj$x$cols125[, 3, drop = FALSE])
   do.call(terra::vect, obj)
 }
+
+#' Has a cached object has been updated?
+#'
+#' @param x cached object
+#'
+#' @return logical
+#'
+#' @export
+isUpdated <- function(x) {
+  cond1 <- isTRUE(attr(x, ".Cache")[["newCache"]])
+  cond2 <- length(attr(x, ".Cache")[["changed"]]) > 0
+
+  cond1 || cond2
+}
