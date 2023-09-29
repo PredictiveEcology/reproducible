@@ -546,7 +546,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       if (!is.null(targetFilePath)) {
         if (!identical(to, targetFilePath)) {
           targetFilePathTmp <- to[basename(to) %in% basename(targetFilePath)]
-          if (file.exists(targetFilePathTmp)) {
+          if (any(file.exists(targetFilePathTmp))) {
             targetFilePath <- targetFilePathTmp
           } else {
             targetFilePath <- makeAbsolute(
