@@ -280,9 +280,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   dig
 }
 
-
-
-################################################################################
 #' @details
 #' `.sortDotsUnderscoreFirst`: This exists so Windows, Linux, and Mac machines can have
 #' the same order after a sort. It will put dots and underscores first
@@ -339,7 +336,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   out
 }
 
-################################################################################
 #' Attach debug info to return for Cache
 #'
 #' Internal use only. Attaches an attribute to the output, usable for
@@ -427,11 +423,6 @@ nextNumericName <- function(string) {
   paste0(out, ".", theExt)
 }
 
-
-
-
-
-
 list2envAttempts <- function(x, envir) {
   attempt <- try(list2env(x, envir), silent = TRUE)
   output <- NULL
@@ -453,10 +444,6 @@ list2envAttempts <- function(x, envir) {
 .loadedCacheMsg <- function(root, functionName) {
   paste0("     ", root, " ", functionName, " call")
 }
-
-
-
-
 
 #' Copy the file-backing of a file-backed Raster* object
 #'
@@ -559,15 +546,12 @@ list2envAttempts <- function(x, envir) {
   obj
 }
 
-
 withoutFinalNumeric <- function(string) {
   ext <- fileExt(string)
   string1 <- filePathSansExt(string)
   woNumeric <- gsub("^(.+)\\_[[:digit:]]+$", "\\1", string1)
   paste0(woNumeric, ".", ext)
 }
-
-
 
 setClass("PackedSpatExtent")
 
