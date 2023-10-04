@@ -357,7 +357,6 @@ isMac <- function() {
   !need
 }
 
-
 # This is directly from tools::file_ext_sans_ext
 filePathSansExt <- function(x) {
   sub("([^.]+)\\.[[:alnum:]]+$", "\\1", x)
@@ -382,7 +381,6 @@ isDirectory <- function(pathnames) {
   names(id) <- origPn
   id
 }
-
 
 isAbsolutePath <- function(pathnames) {
   # modified slightly from R.utils::isAbsolutePath
@@ -420,7 +418,6 @@ isAbsolutePath <- function(pathnames) {
   names(done) <- pathnames
   return(done)
 }
-
 
 isFile <- function(pathnames) {
   keep <- is.character(pathnames)
@@ -580,8 +577,6 @@ messageColoured <- function(..., colour = NULL,
   }
 }
 
-
-
 methodFormals <- function(fun, signature = character(), envir = parent.frame()) {
   if (is.character(fun)) {
     fun <- get(fun, mode = "function", envir = envir)
@@ -600,7 +595,6 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   }
   genFormals
 }
-
 
 .fileExtsKnown <- function() {
   if (requireNamespace("sf", quietly = TRUE) && requireNamespace("DBI", quietly = TRUE)) {
@@ -646,13 +640,10 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   df
 }
 
-
 #' @importFrom utils packageDescription
 .isDevelVersion <- function() {
   length(strsplit(packageDescription("reproducible")$Version, "\\.")[[1]]) > 3
 }
-
-
 
 #' A helper to `getOption("reproducible.rasterRead")`
 #'
@@ -667,7 +658,6 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 rasterRead <- function(...) {
   eval(parse(text = getOption("reproducible.rasterRead")))(...)
 }
-
 
 rasterType <- function(nlayers = 1,
                        rasterRead = getOption("reproducible.rasterRead", "terra::rast")) {
@@ -685,7 +675,6 @@ rasterType <- function(nlayers = 1,
   }
   rasterRead
 }
-
 
 vectorType <- function(vectorRead = getOption("reproducible.shapefileRead", "sf::st_read")) {
   needRasterPkg <- FALSE
@@ -718,7 +707,6 @@ vectorType <- function(vectorRead = getOption("reproducible.shapefileRead", "sf:
   }
   vectorRead
 }
-
 
 #' Set seed with a random value using Sys.time()
 #'
