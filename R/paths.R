@@ -252,22 +252,18 @@ isAbsolutePath <- function(pathnames) {
   fs::is_absolute_path(pathnames)
 }
 
-#' @importFrom fs path_abs path_expand path_norm
+#' @importFrom fs path_abs
 makeAbsolute <- function(files, absoluteBase) {
   nas <- is.na(files)
   if (!all(nas)) {
     if (length(files[!nas])) {
-      areAbs <- character(sum(!nas))
       areAbs <- isAbsolutePath(files[!nas])
       if (any(!areAbs)) {
-        files[!nas][!areAbs] <- file.path(absoluteBase, files[!nas][!areAbs])
+        files[!nas][!areAbs] <- fs::path_abs(files[!nas][!areAbs], absoluteBase)
       }
     }
     normPath(files)
   }
-  # fs::path_abs(files, absoluteBase) |>
-  #   fs::path_norm() |>
-  #   fs::path_expand()
 }
 
 #' Relative paths
