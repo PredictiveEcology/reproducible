@@ -272,11 +272,13 @@ makeAbsolute <- function(files, absoluteBase) {
 
 #' Relative paths
 #'
-#' `getRelative()` searches `path` "from the right" (instead of "from the left")
+#' Extracting relative file paths.
+#'
+#' - `getRelative()` searches `path` "from the right" (instead of "from the left")
 #' and tries to reconstruct it relative to directory specified by `relativeToPath`.
 #' This is useful when dealing with symlinked paths.
 #'
-#' `makeRelative()` checks to see if `files` and `normPath(absoluteBase)` share a common path
+#' - `makeRelative()` checks to see if `files` and `normPath(absoluteBase)` share a common path
 #' (i.e., "from the left"), otherwise it returns `files`.
 #'
 #' @param path character vector or list specifying file paths

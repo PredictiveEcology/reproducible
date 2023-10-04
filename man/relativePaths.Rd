@@ -19,13 +19,16 @@ makeRelative(files, absoluteBase)
 \item{absoluteBase}{base directory (as absolute path) to prepend to \code{files}}
 }
 \description{
-\code{getRelative()} searches \code{path} "from the right" (instead of "from the left")
-and tries to reconstruct it relative to directory specified by \code{relativeToPath}.
-This is useful when dealing with symlinked paths.
+Extracting relative file paths.
 }
 \details{
-\code{makeRelative()} checks to see if \code{files} and \code{normPath(absoluteBase)} share a common path
+\itemize{
+\item \code{getRelative()} searches \code{path} "from the right" (instead of "from the left")
+and tries to reconstruct it relative to directory specified by \code{relativeToPath}.
+This is useful when dealing with symlinked paths.
+\item \code{makeRelative()} checks to see if \code{files} and \code{normPath(absoluteBase)} share a common path
 (i.e., "from the left"), otherwise it returns \code{files}.
+}
 }
 \examples{
 \dontshow{if (!identical(.Platform$OS.type, "windows")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
