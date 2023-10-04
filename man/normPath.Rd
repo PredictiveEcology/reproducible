@@ -7,7 +7,8 @@
 \alias{normPath,NULL-method}
 \alias{normPath,missing-method}
 \alias{normPath,logical-method}
-\title{Normalize filepath}
+\alias{normPathRel}
+\title{Normalize file paths}
 \usage{
 normPath(path)
 
@@ -20,6 +21,8 @@ normPath(path)
 \S4method{normPath}{missing}()
 
 \S4method{normPath}{logical}(path)
+
+normPathRel(path)
 }
 \arguments{
 \item{path}{A character vector of filepaths.}
@@ -28,12 +31,24 @@ normPath(path)
 Character vector of cleaned up filepaths.
 }
 \description{
-Checks the specified filepath for formatting consistencies:
+Checks the specified path for formatting consistencies:
 \enumerate{
 \item use slash instead of backslash;
 \item do tilde etc. expansion;
 \item remove trailing slash.
 }
+}
+\details{
+Additionally, \code{normPath()} attempts to create a absolute paths,
+whereas \code{normPathRel()} maintains relative paths.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{d> getwd()
+[1] "/home/achubaty/Documents/GitHub/PredictiveEcology/reproducible"
+d> normPathRel("potato/chips")
+[1] "potato/chips"
+d> normPath("potato/chips")
+[1] "/home/achubaty/Documents/GitHub/PredictiveEcology/reproducible/potato/chips"
+}\if{html}{\out{</div>}}
 }
 \examples{
 ## normalize file paths

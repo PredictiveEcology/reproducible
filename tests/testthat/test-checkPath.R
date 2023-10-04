@@ -1,4 +1,4 @@
-test_that("checkPath: normPath consistency", {
+test_that("checkPath: normPath and normPathRel consistency", {
   # Use the following here instead of above because it fails on Mac without this.
   testInit()
   # tmpdir <- tempdir2("test_normPath")
@@ -25,6 +25,8 @@ test_that("checkPath: normPath consistency", {
   checked <- normPath(paths)
   expect_equal(length(unique(checked)), 1)
 
+  checkedRel <- normPathRel(paths)
+  expect_equal(length(unique(checkedRel)), 2)
 
   # These don't exist ... added May 10, 2023 after discovering that *nix-alikes don't make
   #   absolute paths with normalizePath when file or dir doesn't exist
@@ -36,10 +38,18 @@ test_that("checkPath: normPath consistency", {
   out <- isAbsolutePath(pathsToCheck)
   expect_identical(c(FALSE, FALSE, TRUE, TRUE, FALSE, TRUE), unname(out))
 
+  outRel <- normPathRel(pathsToCheck)
+  expect_identical(isAbsolutePath(outRel), isAbsolutePath(pathsToCheck))
+
   # extra checks for missing/NA/NULL
-  expect_equal(normPath(), character())
+  expect_equal(normPath(), character(0))
+  expect_equal(normPathRel(), character(0))
+
   expect_true(all(is.na(normPath(list(NA, NA_character_)))))
-  expect_equal(normPath(NULL), character())
+  expect_true(all(is.na(normPathRel(list(NA, NA_character_)))))
+
+  expect_equal(normPath(NULL), character(0))
+  expect_equal(normPathRel(NULL), character(0))
 })
 
 test_that("checkPath: checkPath consistency", {
@@ -68,12 +78,12 @@ test_that("checkPath: checkPath consistency", {
   expect_error(checkPath(NULL), "Invalid path: cannot be NULL.")
   expect_error(checkPath(NA_character_), "Invalid path: cannot be NA.")
 
-  # Case where it is an existing fle
+  # Case where it is an existing file
   f1 <- tempfile()
   expect_true(file.create(f1)) ## TRUE
   expect_true(file.exists(f1)) ## TRUE
 
   opts <- options("reproducible.verbose" = 1)
   on.exit(options(opts), add = TRUE)
-  expect_message(a <- checkPath(f1), "is an existing file")
+  expect_message(checkPath(f1), "is an existing file")
 })

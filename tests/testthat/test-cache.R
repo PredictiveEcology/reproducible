@@ -1739,8 +1739,6 @@ test_that("test cache; SpatRaster attributes", {
   expect_true(is.integer(attr(x = ras, "pixIDs")))
 })
 
-
-
 test_that("Issue 316 - writeOutputs in a non getwd dir", {
   testInit(c("terra"), tmpFileExt = c(".tif", ".tif"))
 
@@ -1775,7 +1773,6 @@ test_that("Issue 316 - writeOutputs in a non getwd dir", {
 
   expect_equivalent(rasterToMatchLarge[[1]], rasterToMatchLarge[[2]])
 })
-
 
 test_that("test useDBI TRUE <--> FALSE", {
   testInit(verbose = TRUE)

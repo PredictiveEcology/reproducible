@@ -1504,89 +1504,6 @@ hardLinkOrCopy <- function(from, to, overwrite = FALSE, verbose = TRUE) {
   linkOrCopy(from, to, symlink = FALSE, verbose = verbose)
 }
 
-makeAbsolute <- function(files, absoluteBase) {
-  nas <- is.na(files)
-  if (!all(nas)) {
-    if (length(files[!nas])) {
-      areAbs <- character(sum(!nas))
-      areAbs <- isAbsolutePath(files[!nas])
-      if (any(!areAbs)) {
-        files[!nas][!areAbs] <- file.path(absoluteBase, files[!nas][!areAbs])
-      }
-    }
-    normPath(files)
-  }
-}
-
-makeRelative <- function(files, absoluteBase) {
-  isList <- is(files, "list")
-  filesOrig <- files
-  if (isList) {
-    nams <- names(files)
-    files <- unlist(files)
-  }
-  if (length(files)) {
-    areAbs <- isAbsolutePath(files)
-    if (any(areAbs)) {
-      absoluteBase <- normPath(absoluteBase) # can be "." which means 'any character' in a grep
-      files[areAbs] <- gsub(paste0(absoluteBase, "/*"), "", files[areAbs])
-    }
-  }
-  if (isList) {
-    if (length(nams) == length(files)) {
-      names(files) <- nams
-    }
-  }
-  files
-}
-
-#' An alternative to `basename` and `dirname` when there are sub-folders
-#'
-#' This confirms that the `files` which may be absolute actually
-#'   exist when compared makeRelative(knownRelativeFiles, absolutePrefix).
-#'   This is different than just using `basename` because it will include any
-#'   sub-folder structure within the `knownRelativePaths`
-#' @param files A character vector of files to check to see if they are the same
-#'   as `knownRelativeFiles`, once the `absolutePrefix` is removed
-#' @param absolutePrefix A directory to "remove" from `files` to compare
-#'   to `knownRelativeFiles`
-#' @param knownRelativeFiles A character vector of relative filenames, that could
-#'   have sub-folder structure.
-#' @inheritParams prepInputs
-checkRelative <- function(files, absolutePrefix, knownRelativeFiles,
-                          verbose = getOption("reproducible.verbose")) {
-  if (!is.null(knownRelativeFiles)) {
-    neededFilesRel <- makeRelative(files, absolutePrefix)
-    areAbs <- isAbsolutePath(knownRelativeFiles)
-    if (any(areAbs)) {
-      knownRelativeFiles[areAbs] <- makeRelative(knownRelativeFiles, absolutePrefix)
-    }
-    relativeNamesCorrect <- neededFilesRel %in% knownRelativeFiles
-
-    if (!all(relativeNamesCorrect)) { # means user has asked for incorrect relative path
-
-      #  must include directory names
-      knownRelativeFiles <- unique(c(knownRelativeFiles, dirname(knownRelativeFiles)))
-      knownRelativeFilesBase <- basename2(knownRelativeFiles)
-      basenamesCorrect <- basename2(neededFilesRel) %in% knownRelativeFilesBase
-      needUpdateRelNames <- basenamesCorrect & !relativeNamesCorrect # filename is correct, but not nesting structure
-      if (any(needUpdateRelNames)) { # means basenames
-        # needUpdateFromArchive <- !knownRelativeFilesBase %in% basename2(neededFilesRel)
-        needUpdateFromArchive <- match(basename2(neededFilesRel)[needUpdateRelNames], knownRelativeFilesBase)
-        files[needUpdateRelNames] <- makeAbsolute(knownRelativeFiles[needUpdateFromArchive], absolutePrefix)
-        files <- unique(files)
-        messagePrepInputs("User supplied files don't correctly specify the ",
-          "files in the archive (likely because of sub-folders); \n",
-          "using items in archive with same basenames. Renaming to these: \n",
-          paste(makeRelative(files[needUpdateRelNames], absoluteBase = absolutePrefix), collapse = "\n"),
-          verbose = verbose
-        )
-      }
-    }
-  }
-  files
-}
-
 escapeRegexChars <- function(str, repl = c("(", ")")) {
   for (r in repl) {
     str <- gsub(paste0("\\", r, ""), paste0("\\\\", r), str)
@@ -1613,7 +1530,6 @@ getTeamDrive <- function(dots) {
   }
 }
 
-
 getTargetFilePath <- function(targetFile, archive, fileGuess, verbose,
                               destinationPath, alsoExtract, checkSumFilePath) {
   if (is.null(targetFile)) {
@@ -1636,7 +1552,6 @@ getTargetFilePath <- function(targetFile, archive, fileGuess, verbose,
   }
   targetFilePath
 }
-
 
 guessAlsoExtract <- function(targetFile, alsoExtract, checkSumFilePath) {
   if (is.null(alsoExtract)) {
@@ -1771,7 +1686,6 @@ dealWithArchive <- function(archive, url, targetFile, checkSums, alsoExtract, de
     fileGuess = fileGuess
   )
 }
-
 
 isNULLorNA <- function(x) {
   out <- TRUE
