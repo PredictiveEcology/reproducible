@@ -1284,7 +1284,6 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
   )
 }
 
-
 #' @keywords internal
 .decodeMagicNumber <- function(magicNumberString) {
   fileExt <- if (any(grepl(pattern = "Zip", x = magicNumberString))) {
@@ -1421,7 +1420,6 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
   downloadFileResult
 }
 
-
 moveAttributes <- function(source, receiving, attrs = NULL) {
   if (!is.null(receiving)) {
     sourceAttributes <- attributes(source)
@@ -1516,7 +1514,6 @@ hardlinkMessagePrefixForGrep <- escapeRegexChars(hardlinkMessagePrefix)
 
 whPointsToMess <- "which point(s) to"
 whPointsToMessForGrep <- escapeRegexChars(whPointsToMess)
-
 
 getTeamDrive <- function(dots) {
   if (requireNamespace("googledrive", quietly = TRUE)) {
@@ -1645,7 +1642,6 @@ runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbos
     checkSums = checkSums
   )
 }
-
 
 dealWithArchive <- function(archive, url, targetFile, checkSums, alsoExtract, destinationPath, teamDrive, verbose) {
   fileGuess <- NULL
