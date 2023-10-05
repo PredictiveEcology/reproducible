@@ -1,7 +1,9 @@
 # reproducible 2.0.9
 
 ## Enhancements
-* new function `isUpdated()` to determine whether a cached object has been updated 
+* new function `isUpdated()` to determine whether a cached object has been updated;
+* `makeRelative()` is now exported for use downstream (e.g., `SpaDES.core`);
+* new functions `getRelative()` and `normPathRel()` for improved symlink handling (#362);
 
 ## Bug fixes
 * Filenames for some classes returned ""; now returns NULL so character vectors are only pointers to files
