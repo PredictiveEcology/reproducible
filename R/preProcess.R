@@ -1212,10 +1212,13 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
     # if (!is.na(archive)) {
     if (any(file.exists(archive))) {
       filesExtracted <- extractFromArchive(
-        archive = archive, destinationPath = destinationPath,
+        archive = archive,
+        destinationPath = destinationPath,
         neededFiles = neededFiles,
-        checkSums = checkSums, needChecksums = needChecksums,
-        checkSumFilePath = checkSumFilePath, quick = quick,
+        checkSums = checkSums,
+        needChecksums = needChecksums,
+        checkSumFilePath = checkSumFilePath,
+        quick = quick,
         verbose = verbose,
         .tempPath = .tempPath
       )
