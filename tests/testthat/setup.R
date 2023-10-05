@@ -6,7 +6,10 @@ if (wantMoreTests) { # this is for covr::package_coverage
   # Sys.setenv(SKIP_GAUTH = "true")
 }
 opts <- options(
-  reproducible.runLargeFileTests = FALSE # Set to TRUE to run the 2 long tests -- 20 minutes
+  reproducible.runLargeFileTests = FALSE, # Set to TRUE to run the 2 long tests -- 20 minutes
+  warnPartialMatchArgs = TRUE,
+  warnPartialMatchAttr = TRUE,
+  warnPartialMatchDollar = TRUE
 )
 setDTthreads(2)
 withr::defer(

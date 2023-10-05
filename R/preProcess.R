@@ -618,16 +618,15 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       },
       add = TRUE
     )
-    extractedFiles <-
-      .tryExtractFromArchive(
-        archive = nestedArchives, neededFiles = neededFiles,
-        alsoExtract = alsoExtract, destinationPath = destinationPath,
-        checkSums = checkSums, needChecksums = needChecksums,
-        checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
-        targetFilePath = targetFilePath, quick = quick,
-        verbose = verbose, .tempPath = .tempPath
-      )
-    filesExtr <- c(filesExtr, extractedFiles$filesExtr)
+    extractedFiles <- .tryExtractFromArchive(
+      archive = nestedArchives, neededFiles = neededFiles,
+      alsoExtract = alsoExtract, destinationPath = destinationPath,
+      checkSums = checkSums, needChecksums = needChecksums,
+      checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
+      targetFilePath = targetFilePath, quick = quick,
+      verbose = verbose, .tempPath = .tempPath
+    )
+    filesExtr <- c(filesExtr, extractedFiles$filesExtracted)
   }
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
     filesExtracted = filesExtr,
@@ -1235,8 +1234,8 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
 
       # filesToChecksum may be wrong because of relative path without subfolder
       filesToChecksum <- unique(c(
-        filesToChecksum, targetFilePath, # alsoExtract, # alsoExtract will be in filesExtracted$filesExtr
-        filesExtracted$filesExtr
+        filesToChecksum, targetFilePath, # alsoExtract, # alsoExtract will be in filesExtracted$filesExtracted
+        filesExtracted$filesExtracted
       ))
 
       needChecksums <- filesExtracted$needChecksums
@@ -1265,12 +1264,11 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       ## targetFilePath might still be NULL, need destinationPath too
       filesExtr <- unique(c(
         filesToChecksum,
-        if (is.null(filesExtracted$filesExtr) ||
-          length(filesExtracted$filesExtr) == 0) {
+        if (is.null(filesExtracted$filesExtracted) ||
+          length(filesExtracted$filesExtracted) == 0) {
           character()
-        } # downloadFileResult$downloaded
-        else {
-          filesExtracted$filesExtr
+        } else {
+          filesExtracted$filesExtracted
         }
       ))
     }
