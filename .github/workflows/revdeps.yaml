@@ -1,0 +1,50 @@
+## Workflow derived from https://github.com/r-lib/actions/tree/v2/examples and
+##   https://github.com/yihui/crandalf/blob/main/.github/workflows/rev-check.yaml
+##
+## Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on:
+  pull_request:
+    branches: [main, master, development]
+  schedule:
+    - cron: '23 23 * * 0 '
+
+name: revdeps-check
+
+jobs:
+  revdeps-check:
+    if: "!contains(github.event.commits[0].message, '[skip-ci]')"
+    runs-on: ${{ matrix.config.os }}
+
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: macOS-latest,   r: 'release'}
+          - {os: windows-latest, r: 'release'}
+          - {os: ubuntu-latest,  r: 'release'}
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      OMP_THREAD_LIMIT: 2
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: PredictiveEcology/actions/install-spatial-deps@v0.1
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          extra-repositories: https://predictiveecology.r-universe.dev
+          Ncpus: 2
+          r-version: ${{ matrix.config.r }}
+          use-public-rspm: false
+
+      - uses: PredictiveEcology/actions/revdeps-check@v0.1
+        with:
+          quiet: false
+          timeout: 1800

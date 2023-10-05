@@ -3,9 +3,9 @@ library("revdepcheck")
 
 options(repos = c(
   PE = "https://predictiveecology.r-universe.dev",
-
-  ## note this is counter to the "Cannnical CRAN.r-project.org", but because it is used
-  ##  for revdeps, keeping the "cloud" redirect now that GHA is used for revdeps.
+  
+  ## note this is counter to the "Canonical CRAN.r-project.org" for CRAN packages,
+  ## but revdep/ directory is .Rbuildignored and this is used for revdep checks only.
   CRAN = paste0("https://", "cloud.", "r-project.", "org")
 ))
 
