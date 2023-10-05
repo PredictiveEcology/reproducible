@@ -2267,7 +2267,7 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
       isInRepo[[.cacheTableHashColName()]]
     # else
     #   gsub("cacheId:", "", isInRepo[[.cacheTableTagColName()]])
-    clearCache(cachePath, userTags = cID)
+    clearCache(cachePath, userTags = cID, ask = FALSE)
     message(
       output, "\nError in trying to recover cacheID; it is likely corrupt.",
       "\n  removing it with... clearCache('", cachePath, "', userTags = '", cID, "')",
