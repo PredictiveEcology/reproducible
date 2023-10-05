@@ -26,7 +26,13 @@ test_that("checkPath: normPath and normPathRel consistency", {
   expect_equal(length(unique(checked)), 1)
 
   checkedRel <- normPathRel(paths)
-  expect_equal(length(unique(checkedRel)), 2)
+  if (identical(.Platform$OS.type, "windows")) {
+    ## Windows create absolute paths
+    expect_equal(length(unique(checkedRel)), 1)
+  } else {
+    ## non-existent paths kept relative on other platforms
+    expect_equal(length(unique(checkedRel)), 2)
+  }
 
   # These don't exist ... added May 10, 2023 after discovering that *nix-alikes don't make
   #   absolute paths with normalizePath when file or dir doesn't exist
