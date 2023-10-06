@@ -682,4 +682,32 @@ test_that("PR#358 if dwnld already exists, was missing nested paths", {
 
 })
 
+test_that(" if dwnlod already exists and alsoExtract = TRUE with nested paths", {
+  skip_on_cran()
+  testInit("terra", needInternet = TRUE, needGoogleDriveAuth = TRUE)
+  url <- "https://sis.agr.gc.ca/cansis/nsdb/ecostrat/district/ecodistrict_shp.zip"
+  noisyOutput <- capture.output(
+    eco <- prepInputs(
+      targetFile = "ecodistricts.shp",
+      archive = asPath("ecodistrict_shp.zip"),
+      url = url,
+      alsoExtract = "similar",
+      destinationPath = getOption("reproducible.destinationPath", file.path(tmpdir, "dPath")),
+      writeTo = NULL,
+      fun = "terra::vect")  )
+
+  noisyOutput <- capture.output(
+    eco <- prepInputs(
+      targetFile = "ecodistricts.shp",
+      archive = asPath("ecodistrict_shp.zip"),
+      url = url,
+      alsoExtract = "similar",
+      destinationPath = getOption("reproducible.destinationPath", file.path(tmpdir, "dPath")),
+      writeTo = NULL,
+      fun = "terra::vect")  )
+  #
+  testthat::expect_no_error(noisyOutput)
+
+})
+
 
