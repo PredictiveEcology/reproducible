@@ -925,7 +925,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         rerunChecksums <- FALSE
       }
     }
-    neededFiles <- makeAbsolute(neededFiles, destinationPath)
+    neededFiles <- unique(makeAbsolute(neededFiles, destinationPath)) #avoids dup. in nested folders
     if (!is.null(neededFiles) && rerunChecksums) {
       checkSums <- .checkSumsUpdate(
         destinationPath = destinationPath, newFilesToCheck = neededFiles,
