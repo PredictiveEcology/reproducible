@@ -839,6 +839,8 @@ Cache <-
       # Can make new methods by class to add tags to outputs
       if (.CacheIsNew) {
         outputToSave <- .wrap(output, cachePath, drv = drv, conn = conn, verbose = verbose)
+        if ((isTRUE(is.character(outputToSave))() && isTRUE(!is.character(output)))
+          outputToSave <- asPath(outputToSave)
         output <- .CopyCacheAtts(outputToSave, output)
         # .wrap added tags; these should be transfered to output
         #          outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
