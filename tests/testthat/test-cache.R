@@ -1823,3 +1823,23 @@ test_that("lightweight tests for preProcess code coverage", {
     "different lengths"
   )
 })
+
+
+
+test_that("terra files were creating file.link", {
+  testInit("terra",
+           tmpFileExt = c(".tif", ".tif"),
+           opts = list(reproducible.useMemoise = FALSE)
+  )
+  rasts <- lapply(1:2, function(x)
+    ras1 <- terra::rast(nrows = 1e3, ncols = 1e3, vals = sample(1e6),
+                        resolution = 1, xmin = 0, xmax = 1000, ymin = 0, ymax = 1000)
+  )
+  func <- function(ras, fn) {
+    ras <- Cache(writeRaster(ras, filename = fn), quick = c("fn"))
+    ras
+  }
+  mess <- capture_messages(Map(f = func, fn = tmpfile, ras = rasts))
+  expect_false(any(grepl("file.link", mess)))
+
+})
