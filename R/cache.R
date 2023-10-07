@@ -839,7 +839,7 @@ Cache <-
       # Can make new methods by class to add tags to outputs
       if (.CacheIsNew) {
         outputToSave <- .wrap(output, cachePath, drv = drv, conn = conn, verbose = verbose)
-        if ((isTRUE(is.character(outputToSave))() && isTRUE(!is.character(output)))
+        if (isTRUE(is.character(outputToSave)) && isTRUE(!is.character(output)))
           outputToSave <- asPath(outputToSave)
         output <- .CopyCacheAtts(outputToSave, output)
         # .wrap added tags; these should be transfered to output
@@ -1684,7 +1684,12 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     quickObjs <- if (isTRUE(quick)) {
       rep(TRUE, length(objsToDigest))
     } else {
-      names(objsToDigest) %in% quick
+      if (is.null(names(objsToDigest))) {
+         rep(FALSE, length(objsToDigest))
+      } else {
+        names(objsToDigest) %in% quick
+      }
+
     }
     objsToDigestQuick <- objsToDigest[quickObjs]
     objsToDigest <- objsToDigest[!quickObjs]
