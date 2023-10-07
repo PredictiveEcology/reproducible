@@ -7,6 +7,7 @@
 
 ## Bug fixes
 * Filenames for some classes returned ""; now returns NULL so character vectors are only pointers to files
+* Cache on a terra object that writes file to disk, when `quick` argument is specified was failing, always creating the same object; fixed with #PR368
 
 # reproducible 2.0.8
 
