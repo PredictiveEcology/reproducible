@@ -818,7 +818,7 @@ Cache <-
       #   a previous version
       if (NROW(isInRepo) > 0) {
         # flush it if notOlderThan is violated
-        if (notOlderThan >= lastEntry) {
+        if (isTRUE(notOlderThan >= lastEntry)) {
           suppressMessages(clearCache(
             userTags = isInRepo[[.cacheTableHashColName()]][lastOne],
             x = cachePath,

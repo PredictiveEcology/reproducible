@@ -122,6 +122,7 @@ setMethod(
       )
     }
     txt <- as.data.table(lapply(txt, as.character))
+    set(txt, NULL, "file", makeRelative(txt$file, path))
     if (is.null(txt$filesize)) txt$filesize <- rep("", NROW(txt))
     txtRead <- txt # keep a copy even if writing
     if (!(!write && file.info(checksumFile)$size > 0)) {
