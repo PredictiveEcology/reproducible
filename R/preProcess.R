@@ -242,8 +242,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
   #   want if targetFile, archive, alsoExtract not specified
+  # This will switch destinationPath to be same as reproducible.inputPaths
+  #   This means that we need to modify some of the paths that were already absolute to destinationPath
   inputPaths <- runChecksums(destinationPath, checkSumFilePath, filesToCheck, verbose)
   list2env(inputPaths, environment()) # reproducible.inputPaths, destinationPathUser, destinationPath, checkSums
+  if (!is.null(inputPaths$destinationPathUser)) { # i.e., it changed
+    targetFilePath <- makeRelative(targetFilePath, inputPaths$destinationPathUser)
+    targetFilePath <- makeAbsolute(targetFilePath, destinationPath)
+    filesToCheck <- makeRelative(filesToCheck, inputPaths$destinationPathUser)
+    filesToCheck <- makeAbsolute(filesToCheck, destinationPath)
+  }
+
 
   if (is(checkSums, "try-error")) {
     needChecksums <- 1
@@ -1621,7 +1630,7 @@ runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbos
     if (!is(checkSumsTmp1, "try-error")) {
       checkSums <- checkSumsTmp1
       if (!all(is.na(checkSums$result))) { # found something
-        if (identical(dp, reproducible.inputPaths)) {
+        if (isTRUE(any(dp %in% reproducible.inputPaths))) {
           destinationPathUser <- destinationPath
           destinationPath <- dp
           on.exit(
