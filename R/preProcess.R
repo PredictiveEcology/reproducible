@@ -925,7 +925,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           pattern = fileExt(basename2(targetFile)), replacement = ""
         )
         filesToGet <- grep(allFiles, pattern = filePatternToKeep, value = TRUE)
-        neededFiles <- unique(c(neededFiles, filesToGet))
+        neededFiles <- c(neededFiles, filesToGet)
       }
     }
     rerunChecksums <- TRUE
@@ -934,7 +934,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         rerunChecksums <- FALSE
       }
     }
-    neededFiles <- makeAbsolute(neededFiles, destinationPath)
+    neededFiles <- unique(makeAbsolute(neededFiles, destinationPath))
     if (!is.null(neededFiles) && rerunChecksums) {
       checkSums <- .checkSumsUpdate(
         destinationPath = destinationPath, newFilesToCheck = neededFiles,
