@@ -928,11 +928,11 @@ test_that("test cache-helpers", {
   r2 <- writeRaster(r1, filename = tmpfile[2], overwrite = TRUE)
   r3 <- writeRaster(r1, filename = tmpfile[3], overwrite = TRUE)
   r2tif <- suppressWarningsSpecific(
-    falseWarning = proj6Warn,
+    falseWarnings = proj6Warn,
     writeRaster(r1, filename = tmpfile[5], overwrite = TRUE)
   )
   r3tif <- suppressWarningsSpecific(
-    falseWarning = proj6Warn,
+    falseWarnings = proj6Warn,
     writeRaster(r1, filename = tmpfile[6], overwrite = TRUE)
   )
 
