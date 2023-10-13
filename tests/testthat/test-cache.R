@@ -850,12 +850,12 @@ test_that("test mergeCache", {
 #   tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".grd")
 #   tmpfile2 <- tempfile(tmpdir = tmpdir, fileext = ".grd")
 #   tmpfile3 <- tempfile(tmpdir = tmpdir, fileext = ".grd")
-#   r <- terra::rast(terra::ext(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
+#   r <- terra::rast(terra::ext(0, 5, 0, 5), resolution = 1, vals = rep(1:2, length.out = 25))
 #   # levels(r) <- data.frame(ID = 1:2, Val = 3:4)
 #   # b <- .prepareFileBackedRaster(r, tmpCache)
 #   # is(b, "RasterLayer")
 #
-#   r1 <- terra::rast(terra::ext(0,5,0,5), res = 1, vals = rep(1:2, length.out = 25))
+#   r1 <- terra::rast(terra::ext(0, 5, 0, 5), resolution = 1, vals = rep(1:2, length.out = 25))
 #   # s <- c(r, r1)
 #   # b <- .prepareFileBackedRaster(s, tmpCache)
 #
@@ -1030,7 +1030,7 @@ test_that("test rm large non-file-backed rasters", {
 
   ext <- terra::ext(0, 10000, 0, 10000)
   r <- Cache(terra::rast, ext,
-    res = 1, vals = 1,
+    resolution = 1, vals = 1,
     cachePath = tmpdir, userTags = "first"
   )
   st1 <- system.time(clearCache(tmpdir, userTags = "first", ask = FALSE))
