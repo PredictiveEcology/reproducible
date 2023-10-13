@@ -284,12 +284,12 @@ test_that("test memory backed raster robustDigest", {
 
   expect_identical(dig, dig1)
 
-  b <- .writeRaster(b, file = tmpfile[1], overwrite = TRUE)
+  b <- .writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
   dig <- .robustDigest(b)
 
   r <- terra::rast(matrix(1:10, 2, 5))
   b <- c(r, r)
-  bb1 <- .writeRaster(b, file = tmpfile[1], overwrite = TRUE)
+  bb1 <- .writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
   dig1 <- .robustDigest(bb1)
 
   expect_identical(dig, dig1)
@@ -306,15 +306,15 @@ test_that("test memory backed raster robustDigest", {
 
   expect_identical(dig, dig1)
 
-  r4 <- .writeRaster(r, file = tmpfile[1], overwrite = TRUE)
-  r5 <- .writeRaster(r, file = tmpfile[2], overwrite = TRUE)
+  r4 <- .writeRaster(r, filename = tmpfile[1], overwrite = TRUE)
+  r5 <- .writeRaster(r, filename = tmpfile[2], overwrite = TRUE)
   b <- c(r4, r5)
   dig <- .robustDigest(b)
 
-  r2 <- .writeRaster(r1, file = tmpfile[1], overwrite = TRUE)
-  r3 <- .writeRaster(r1, file = tmpfile[2], overwrite = TRUE)
+  r2 <- .writeRaster(r1, filename = tmpfile[1], overwrite = TRUE)
+  r3 <- .writeRaster(r1, filename = tmpfile[2], overwrite = TRUE)
   b1 <- c(r2, r3)
-  # b1 <- .writeRaster(b1, file = tmpfile[1], overwrite = TRUE)
+  # b1 <- .writeRaster(b1, filename = tmpfile[1], overwrite = TRUE)
   dig1 <- .robustDigest(b1)
 
   expect_identical(dig, dig1)
