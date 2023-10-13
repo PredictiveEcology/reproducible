@@ -284,12 +284,12 @@ test_that("test memory backed raster robustDigest", {
 
   expect_identical(dig, dig1)
 
-  b <- .writeRaster(b, file = tmpfile[1], overwrite = TRUE)
+  b <- .writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
   dig <- .robustDigest(b)
 
   r <- terra::rast(matrix(1:10, 2, 5))
   b <- c(r, r)
-  bb1 <- .writeRaster(b, file = tmpfile[1], overwrite = TRUE)
+  bb1 <- .writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
   dig1 <- .robustDigest(bb1)
 
   expect_identical(dig, dig1)
@@ -306,15 +306,15 @@ test_that("test memory backed raster robustDigest", {
 
   expect_identical(dig, dig1)
 
-  r4 <- .writeRaster(r, file = tmpfile[1], overwrite = TRUE)
-  r5 <- .writeRaster(r, file = tmpfile[2], overwrite = TRUE)
+  r4 <- .writeRaster(r, filename = tmpfile[1], overwrite = TRUE)
+  r5 <- .writeRaster(r, filename = tmpfile[2], overwrite = TRUE)
   b <- c(r4, r5)
   dig <- .robustDigest(b)
 
-  r2 <- .writeRaster(r1, file = tmpfile[1], overwrite = TRUE)
-  r3 <- .writeRaster(r1, file = tmpfile[2], overwrite = TRUE)
+  r2 <- .writeRaster(r1, filename = tmpfile[1], overwrite = TRUE)
+  r3 <- .writeRaster(r1, filename = tmpfile[2], overwrite = TRUE)
   b1 <- c(r2, r3)
-  # b1 <- .writeRaster(b1, file = tmpfile[1], overwrite = TRUE)
+  # b1 <- .writeRaster(b1, filename = tmpfile[1], overwrite = TRUE)
   dig1 <- .robustDigest(b1)
 
   expect_identical(dig, dig1)
@@ -850,12 +850,12 @@ test_that("test mergeCache", {
 #   tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".grd")
 #   tmpfile2 <- tempfile(tmpdir = tmpdir, fileext = ".grd")
 #   tmpfile3 <- tempfile(tmpdir = tmpdir, fileext = ".grd")
-#   r <- terra::rast(terra::ext(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
+#   r <- terra::rast(terra::ext(0, 5, 0, 5), resolution = 1, vals = rep(1:2, length.out = 25))
 #   # levels(r) <- data.frame(ID = 1:2, Val = 3:4)
 #   # b <- .prepareFileBackedRaster(r, tmpCache)
 #   # is(b, "RasterLayer")
 #
-#   r1 <- terra::rast(terra::ext(0,5,0,5), res = 1, vals = rep(1:2, length.out = 25))
+#   r1 <- terra::rast(terra::ext(0, 5, 0, 5), resolution = 1, vals = rep(1:2, length.out = 25))
 #   # s <- c(r, r1)
 #   # b <- .prepareFileBackedRaster(s, tmpCache)
 #
@@ -928,11 +928,11 @@ test_that("test cache-helpers", {
   r2 <- writeRaster(r1, filename = tmpfile[2], overwrite = TRUE)
   r3 <- writeRaster(r1, filename = tmpfile[3], overwrite = TRUE)
   r2tif <- suppressWarningsSpecific(
-    falseWarning = proj6Warn,
+    falseWarnings = proj6Warn,
     writeRaster(r1, filename = tmpfile[5], overwrite = TRUE)
   )
   r3tif <- suppressWarningsSpecific(
-    falseWarning = proj6Warn,
+    falseWarnings = proj6Warn,
     writeRaster(r1, filename = tmpfile[6], overwrite = TRUE)
   )
 
@@ -942,8 +942,6 @@ test_that("test cache-helpers", {
   s1 <- raster::stack(r1, r1)
   s2tif <- raster::stack(r1, r2tif)
   s3tif <- raster::stack(r3tif, r2tif)
-
-
 
   i <- 1
   for (rr in list(r1, r2, r3, r2tif, r3tif, s1, s2, s3, s2tif, s3tif)) {
@@ -1032,7 +1030,7 @@ test_that("test rm large non-file-backed rasters", {
 
   ext <- terra::ext(0, 10000, 0, 10000)
   r <- Cache(terra::rast, ext,
-    res = 1, vals = 1,
+    resolution = 1, vals = 1,
     cachePath = tmpdir, userTags = "first"
   )
   st1 <- system.time(clearCache(tmpdir, userTags = "first", ask = FALSE))
