@@ -943,8 +943,6 @@ test_that("test cache-helpers", {
   s2tif <- raster::stack(r1, r2tif)
   s3tif <- raster::stack(r3tif, r2tif)
 
-
-
   i <- 1
   for (rr in list(r1, r2, r3, r2tif, r3tif, s1, s2, s3, s2tif, s3tif)) {
     message(i)
