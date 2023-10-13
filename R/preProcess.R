@@ -1234,8 +1234,8 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
 
       # filesToChecksum may be wrong because of relative path without subfolder
       filesToChecksum <- unique(c(
-        filesToChecksum, targetFilePath, # alsoExtract, # alsoExtract will be in filesExtracted$filesExtr
-        filesExtracted$filesExtr
+        filesToChecksum, targetFilePath, # alsoExtract, # alsoExtract will be in filesExtracted$filesExtracted
+        filesExtracted$filesExtracted
       ))
 
       needChecksums <- filesExtracted$needChecksums
