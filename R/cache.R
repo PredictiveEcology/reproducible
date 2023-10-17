@@ -953,7 +953,7 @@ Cache <-
           .reproEnv$alreadyMsgFuture <- TRUE
         }
       } else {
-        otsObjSize <- gsub(grep("object.size", userTags, value = TRUE),
+        otsObjSize <- gsub(grep("object\\.size:", userTags, value = TRUE),
           pattern = "object.size:", replacement = ""
         )
         otsObjSize <- as.numeric(otsObjSize)
