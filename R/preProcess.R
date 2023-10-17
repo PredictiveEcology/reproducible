@@ -635,7 +635,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       targetFilePath = targetFilePath, quick = quick,
       verbose = verbose, .tempPath = .tempPath
     )
-    filesExtr <- c(filesExtr, extractedFiles$filesExtracted)
+    filesExtr <- c(filesExtr, extractedFiles$filesExtr)
   }
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
     filesExtracted = filesExtr,
