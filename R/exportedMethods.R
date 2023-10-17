@@ -189,7 +189,8 @@ setMethod(
         tmpDir <- .reproducibleTempCacheDir()
         # Test whether the user has accepted the default. If yes, then give message.
         #  If no, then user is aware and doesn't need a message
-        if (any(identical(normPath(tmpDir), normPath(getOption("reproducible.cachePath"))))) {
+        if (any(grepl(normPath(tmpDir), normPath(getOption("reproducible.cachePath")))) ||
+            any(grepl(normPath(tempdir()), normPath(getOption("reproducible.cachePath"))))) {
           messageCache("No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;\n",
             "  this will not persist across R sessions.",
             verbose = verbose
