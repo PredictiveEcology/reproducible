@@ -650,7 +650,6 @@ extractFromArchive <- function(archive,
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  filesExtracted, fun = NULL, verbose = getOption("reproducible.verbose", 1)) {
-  browser()
   possibleFiles <- unique(c(targetFilePath, filesExtracted))
   whichPossFile <- possibleFiles %in% targetFilePath
   if (isTRUE(any(whichPossFile))) {

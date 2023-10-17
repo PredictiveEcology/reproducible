@@ -627,7 +627,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       },
       add = TRUE
     )
-    browser()
     extractedFiles <- .tryExtractFromArchive(
       archive = nestedArchives, neededFiles = neededFiles,
       alsoExtract = alsoExtract, destinationPath = destinationPath,
@@ -638,7 +637,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     )
     filesExtr <- c(filesExtr, extractedFiles$filesExtracted)
   }
-  browser()
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
     filesExtracted = filesExtr,
     fun, verbose = verbose
@@ -1202,7 +1200,6 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
                                    targetFilePath,
                                    quick, verbose = getOption("reproducible.verbose", 1),
                                    .tempPath) {
-  browser()
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit(
