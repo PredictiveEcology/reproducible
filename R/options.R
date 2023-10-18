@@ -209,10 +209,11 @@ reproducibleOptions <- function() {
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
-    reproducible.useDBI = getEnv("R_REPRODUCIBLE_USE_DBI",
-      default = useDBI(TRUE, verbose = interactive() - (useDBI() + 1)), # `FALSE` is useMultipleDBFiles now
+    reproducible.useDBI = {getEnv("R_REPRODUCIBLE_USE_DBI",
+      default = useDBI(getOption("reproducible.useDBI", NULL),  # a user may have set it before this runs; keep setting
+                       verbose = interactive() - (useDBI() + 1)), # `FALSE` is useMultipleDBFiles now
       allowed = c("true", "false")
-    ) |> as.logical(),
+    ) |> as.logical()},
     reproducible.useMemoise = FALSE, # memoise
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1

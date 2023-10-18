@@ -958,7 +958,7 @@ convertDBbackendIfIncorrect <- function(cachePath, drv, conn,
   newDBI <- suppressMessages(useDBI(!origDBI)) # switch to the other
   if (!identical(newDBI, origDBI)) { # if they are same, then DBI is not installed; not point proceeding
     on.exit(suppressMessages(useDBI(origDBI)))
-    drv <- getDrv(drv)
+    drv <- getDrv(drv) # This will return the DBI driver, if it is installed, regardless of drv
     DBFileWrong <- CacheDBFile(cachePath, drv, conn)
     if (file.exists(DBFileWrong)) {
       sc <- showCache(cachePath, drv = drv, conn = conn, verbose = -2)
