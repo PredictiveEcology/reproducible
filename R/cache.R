@@ -388,7 +388,7 @@ Cache <-
       }
     }
 
-    userTagsOrig <- userTags # keep to distinguish actual user supplied userTags
+    userTagsOrig <- stats::na.omit(userTags) # keep to distinguish actual user supplied userTags
 
     CacheMatchedCall <- match.call(Cache)
     # Capture everything -- so not evaluated

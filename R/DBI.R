@@ -315,7 +315,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
 
 extractFromCache <- function(sc, elem, ifNot = NULL) {
-  rowNum <- sc[["tagKey"]] == elem
+  rowNum <- sc[["tagKey"]] %in% elem
   elemExtracted <- if (any(rowNum)) {
     sc[["tagValue"]][rowNum]
   } else {

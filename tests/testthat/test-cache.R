@@ -1841,3 +1841,8 @@ test_that("terra files were creating file.link", {
   expect_false(any(grepl("file.link", mess)))
 
 })
+
+test_that("pass NA to userTags", {
+  testInit(verbose = FALSE)
+  expect_no_error(a <- Cache(rnorm(1), userTags = c("NA", "hi")))
+})
