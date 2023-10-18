@@ -273,7 +273,11 @@ maskInputs <- function(x, studyArea, ...) {
 #' @export
 maskInputs.default <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = NULL,
                                verbose = getOption("reproducible.verbose", 1), ...) {
-  maskTo(x, ...)
+  if (!is.null(maskWithRTM) && !is.null(rasterToMatch))
+    maskTo <- rasterToMatch
+  else
+    maskTo <- studyArea
+  maskTo(x, maskTo = maskTo, verbose = verbose, ...)
 }
 
 
