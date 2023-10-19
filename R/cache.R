@@ -2253,15 +2253,22 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
 
   preLoadTime <- Sys.time()
   output <- try(.getFromRepo(FUN,
-    isInRepo = isInRepo, fullCacheTableForObj = fullCacheTableForObj,
+    isInRepo = isInRepo,
+    fullCacheTableForObj = fullCacheTableForObj,
     notOlderThan = notOlderThan,
-    lastOne = lastOne, cachePath = cachePath,
+    lastOne = lastOne,
+    cachePath = cachePath,
     fnDetails = fnDetails,
-    modifiedDots = modifiedDots, debugCache = debugCache,
-    verbose = verbose, # sideEffect = sideEffect,
-    quick = quick, algo = algo,
-    preDigest = preDigest, startCacheTime = startCacheTime,
-    drv = drv, conn = conn,
+    modifiedDots = modifiedDots,
+    debugCache = debugCache,
+    verbose = verbose,
+    # sideEffect = sideEffect,
+    quick = quick,
+    algo = algo,
+    preDigest = preDigest,
+    startCacheTime = startCacheTime,
+    drv = drv,
+    conn = conn,
     ...
   ), silent = TRUE)
   postLoadTime <- Sys.time()
