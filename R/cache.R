@@ -2034,14 +2034,14 @@ determineNestedTags <- function(envir, mc, userTags) {
     prevValsInitial <- prevVals
   }
 
-  if (any(objOverride)) {
-    # get from .reproEnv
-    lsDotReproEnv <- ls(.reproEnv)
-    prevVals <- .namesCacheFormals[objOverride] %in% lsDotReproEnv
-    if (any(prevVals)) {
-      list2env(mget(.namesCacheFormals[objOverride][prevVals], .reproEnv), envir = envir)
-    }
-  }
+  # if (any(objOverride)) {
+  #   # get from .reproEnv
+  #   lsDotReproEnv <- ls(.reproEnv)
+  #   prevVals <- .namesCacheFormals[objOverride] %in% lsDotReproEnv
+  #   if (any(prevVals)) {
+  #     list2env(mget(.namesCacheFormals[objOverride][prevVals], .reproEnv), envir = envir)
+  #   }
+  # }
 
   return(list(
     oldUserTags = oldUserTags, namesUserCacheArgs = namesUserCacheArgs,
