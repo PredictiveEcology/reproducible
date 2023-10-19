@@ -142,8 +142,8 @@ normPathRel <- function(path) {
   ## empty paths should not be normalized b/c returns the current directory
   path[nzchar(path)] <- path[nzchar(path)] |>
     fs::path_norm() |>
-    fs::path_expand() |>
-    normalizePath(winslash = "/", mustWork = FALSE)
+    fs::path_expand() # |>
+    # normalizePath(winslash = "/", mustWork = FALSE)
 
   path
 }
