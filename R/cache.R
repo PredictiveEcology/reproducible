@@ -406,7 +406,6 @@ Cache <-
       FUN = FUN, callingFun = "Cache", ..., .functionName = .functionName,
       FUNcaptured = FUNcaptured, CacheMatchedCall = CacheMatchedCall
     )
-
     # next line is (1 && 1) && 1 -- if it has :: or $ or [] e.g., fun$b, it MUST be length 3 for it to not be "captured function"
     isCapturedFUN <- isFALSE(isDollarSqBrPkgColon(FUNcaptured) &&
       length(FUNcaptured) == 3) &&
@@ -1833,8 +1832,8 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     }
     messageCache(paste0("    the next closest cacheId(s) ", paste(cacheIdOfSimilar, collapse = ", "), " ",
       fnTxt, userTagsMess,
-      sep = "\n"
-    ), verbose = verbose)
+      collapse = "\n"
+    ), appendLF = FALSE, verbose = verbose)
 
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
       differed <- TRUE
