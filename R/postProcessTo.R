@@ -616,15 +616,32 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
         if (isSpatial) {
           from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
         }
-        isSF <- isSF(from)
-        if (isSF) {
-          if (isGridded(projectTo)) {
-            projectTo <- sf::st_crs(projectTo)
+        withCallingHandlers({
+          attempt <- 1
+          while (attempt <= 2) {
+            isSF <- isSF(from)
+            if (isSF) {
+              if (isGridded(projectTo)) {
+                projectTo <- sf::st_crs(projectTo)
+              }
+              from13 <- sf::st_transform(from, projectTo)
+            } else {
+              from13 <- terra::project(from, projectTo)
+            }
+            attempt <- attempt + 2
           }
-          from <- sf::st_transform(from, projectTo)
-        } else {
-          from <- terra::project(from, projectTo)
-        }
+        }, warning = function(w) {
+          if (any(grepl(warningCertificateGrep, w$message))) {
+            if (!isSF) {
+              w$message <- paste(w$message, "\n ... attempting to use `sf` instead")
+              warning(w)
+              from <<- sf::st_as_sf(from)
+              attempt <<- 0
+            }
+            invokeRestart("muffleWarning")
+          }
+        })
+        from <- from13
 
         if (isSpatial) from <- as(from, "Spatial")
         from
@@ -708,19 +725,39 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
       }
 
       if (!sameCRS) {
-        if (isVector(cropTo) && !isSpat(cropTo)) {
-          cropToInFromCRS <- sf::st_transform(sf::st_as_sf(cropTo), sf::st_crs(from))
-          ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
-        } else {
-          terraCRSFrom <- terra::crs(from)
-          if (packageVersion("terra") <= "1.5.21") { # an older terra issue; may not be precise version
-            if (length(slotNames(terraCRSFrom)) > 0) {
-              terraCRSFrom <- terraCRSFrom@projargs
+        withCallingHandlers({
+          attempt <- 1
+          while (attempt <= 2) {
+            isSF <- isSF(cropTo)
+
+            if (isVector(cropTo) && !isSpat(cropTo)) {
+              cropToInFromCRS <- sf::st_transform(sf::st_as_sf(cropTo), sf::st_crs(from))
+              ext <- sf::st_as_sfc(sf::st_bbox(cropToInFromCRS)) # create extent as an object; keeps crs correctly
+            } else {
+              terraCRSFrom <- terra::crs(from)
+              if (packageVersion("terra") <= "1.5.21") { # an older terra issue; may not be precise version
+                if (length(slotNames(terraCRSFrom)) > 0) {
+                  terraCRSFrom <- terraCRSFrom@projargs
+                }
+              }
+              cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
+              ext <- terra::ext(cropToInFromCRS) # create extent as an object; keeps crs correctly
             }
+            attempt <- attempt + 2
           }
-          cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
-          ext <- terra::ext(cropToInFromCRS) # create extent as an object; keeps crs correctly
-        }
+
+        }, warning = function(w) {
+          if (any(grepl(warningCertificateGrep, w$message))) {
+            if (!isSF) {
+              w$message <- paste(w$message, "\n ... attempting to use `sf` instead")
+              warning(w)
+              cropTo <<- sf::st_as_sf(cropTo)
+              attempt <<- 0
+            }
+            invokeRestart("muffleWarning")
+          }
+        })
+
       }
       if (isVector(from) && !isSF(from)) {
         ext <- terra::vect(ext)
@@ -1100,24 +1137,31 @@ shldBeChar <- "should be a character value"
 
 revertClass <- function(from, isStack = FALSE, isBrick = FALSE, isRasterLayer = FALSE,
                         isSF = FALSE, isSpatial = FALSE, origFromClass = NULL) {
-  if (!isSpat2(origFromClass)) {
-    if (!is.null(origFromClass)) {
-      # overrides all others!
-      isStack <- any(origFromClass == "RasterStack")
-      isBrick <- any(origFromClass == "RasterBrick")
-      isRasterLayer <- any(origFromClass == "RasterLayer")
-      isSF <- any(origFromClass == "sf")
-      isSpatial <- any(startsWith(origFromClass, "Spatial"))
-    }
-    if (isStack && !is(from, "RasterStack")) from <- raster::stack(from) # coming out of writeRaster, becomes brick
-    if (isBrick && !is(from, "RasterBrick")) from <- raster::brick(from) # coming out of writeRaster, becomes brick
-    if (isRasterLayer && !is(from, "RasterLayer")) from <- raster::raster(from) # coming out of writeRaster, becomes brick
-    if (isSF || isSpatial) {
+  # if (!isSpat2(origFromClass)) {
+  if (!is.null(origFromClass)) {
+    # overrides all others!
+    isStack <- any(origFromClass == "RasterStack")
+    isBrick <- any(origFromClass == "RasterBrick")
+    isRasterLayer <- any(origFromClass == "RasterLayer")
+    isSF <- any(origFromClass == "sf")
+    isSpatial <- any(startsWith(origFromClass, "Spatial"))
+    isSV <- any(origFromClass == "SpatVector")
+
+    if (isSV && !is(from, "SpatVector")) {
+      from <- terra::vect(from)
+    } else if (isStack && !is(from, "RasterStack")) {
+      from <- raster::stack(from) # coming out of writeRaster, becomes brick
+    } else if (isBrick && !is(from, "RasterBrick")) {
+      from <- raster::brick(from) # coming out of writeRaster, becomes brick
+    } else if (isRasterLayer && !is(from, "RasterLayer")) {
+      from <- raster::raster(from) # coming out of writeRaster, becomes brick
+    } else if (isSF || isSpatial) {
       .requireNamespace("sf", stopOnFALSE = TRUE)
       from <- sf::st_as_sf(from)
       if (isSpatial) {
         from <- sf::as_Spatial(from)
       }
+
     }
   }
   from
@@ -1248,3 +1292,5 @@ extntNA <- function(x) {
   out <- anyNA(as.numeric(out[]))
   return(out)
 }
+
+warningCertificateGrep <- "CertGetCertificateChain trust error CERT_TRUST_IS_PARTIAL_CHAIN"
