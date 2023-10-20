@@ -152,12 +152,12 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     fs <- saveFilesInCacheFolder(cachePath = cachePath, obj, fts, cacheId = cacheId)
   }
   if (isTRUE(getOption("reproducible.useMemoise"))) {
-    if (is.null(.pkgEnv[[cachePath]])) {
-      .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
-    }
+    # if (is.null(.pkgEnv[[cachePath]])) {
+    #   .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
+    # }
     obj <- .unwrap(obj, cachePath, cacheId, drv, conn) # This takes time, but whether it happens now or later, same
     obj2 <- makeMemoisable(obj)
-    assign(cacheId, obj2, envir = .pkgEnv[[cachePath]])
+    assign(cacheId, obj2, envir = memoiseEnv(cachePath))
   }
 
   fsChar <- as.character(fs)
@@ -224,12 +224,12 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   isMemoised <- NA
   if (isTRUE(getOption("reproducible.useMemoise"))) {
-    if (is.null(.pkgEnv[[cachePath]])) {
-      .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
-    }
-    isMemoised <- exists(cacheId, envir = .pkgEnv[[cachePath]])
+    # if (is.null(.pkgEnv[[cachePath]])) {
+    #   .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
+    # }
+    isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
     if (isTRUE(isMemoised)) {
-      obj <- get(cacheId, envir = .pkgEnv[[cachePath]])
+      obj <- get(cacheId, envir = memoiseEnv(cachePath))
       obj <- unmakeMemoisable(obj)
     }
   }
@@ -291,7 +291,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
     obj2 <- makeMemoisable(obj)
-    assign(cacheId, obj2, envir = .pkgEnv[[cachePath]])
+    assign(cacheId, obj2, envir = memoiseEnv(cachePath))
   }
 
   if (verbose > 3) {
@@ -1003,4 +1003,19 @@ CacheDBFiles <- function(cachePath = getOption("reproducible.cachePath")) {
   ext <- CacheDBFileSingleExt()
   dtFiles <- dir(CacheStorageDir(cachePath), pattern = ext, full.names = TRUE)
   dtFiles
+}
+
+memoiseEnv <- function(cachePath) {
+  memPersist <- isTRUE(getOption("reproducible.memoisePersist", NULL))
+  if (memPersist) {
+    if (!exists(".reproducibleMemoise", envir = .GlobalEnv))
+      assign(".reproducibleMemoise", new.env(parent = emptyenv()), envir = .GlobalEnv)
+    memEnv <- get(".reproducibleMemoise", envir = .GlobalEnv, inherits = FALSE)
+  } else {
+    if (is.null(.pkgEnv[[cachePath]])) {
+      .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
+    }
+    memEnv <- .pkgEnv[[cachePath]]
+  }
+  memEnv
 }

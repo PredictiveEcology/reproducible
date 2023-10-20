@@ -674,12 +674,19 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         checkSumFilePath <- identifyCHECKSUMStxtFile(successfulDir) #   run Checksums in IP
       }
     }
-    checkSums <- appendChecksumsTable(
-      checkSumFilePath = checkSumFilePath,
-      filesToChecksum = unique(filesToChecksum),
-      destinationPath = destinationPath,
-      append = needChecksums >= 2
-    )
+    csps <- destinationPath
+    if (!is.null(reproducible.inputPaths)) {
+      csps <- c(csps, reproducible.inputPaths)
+    }
+    for (csp in csps) {
+      checkSumFilePath <- identifyCHECKSUMStxtFile(csp)
+      checkSums <- appendChecksumsTable(
+        checkSumFilePath = checkSumFilePath,
+        filesToChecksum = basename2(unique(filesToChecksum)),
+        destinationPath = csp,
+        append = needChecksums >= 2
+      )
+    }
     if (!is.null(reproducible.inputPaths) && needChecksums != 3) {
       checkSumFilePathInputPaths <- identifyCHECKSUMStxtFile(reproducible.inputPaths[[1]])
       suppressMessages({
@@ -1620,28 +1627,32 @@ runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbos
   }
 
   destinationPathUser <- NULL
-  for (dp in unique(c(destinationPath, reproducible.inputPaths))) {
-    csfp <- identifyCHECKSUMStxtFile(dp)
-    checkSumsTmp1 <- try(Checksums(
-      path = dp, write = FALSE, checksumFile = csfp,
-      files = makeRelative(filesToCheck, absoluteBase = destinationPath),
-      verbose = verbose
-    ), silent = TRUE)
-    checkSums <- NULL
-    if (!is(checkSumsTmp1, "try-error")) {
-      checkSums <- checkSumsTmp1
-      if (!all(is.na(checkSums$result))) { # found something
-        if (isTRUE(any(dp %in% reproducible.inputPaths))) {
-          destinationPathUser <- destinationPath
-          destinationPath <- dp
-          on.exit(
-            {
-              destinationPath <- destinationPathUser
-            },
-            add = TRUE
-          )
+  possDirs <- unique(c(destinationPath, reproducible.inputPaths))
+  csfps <- vapply(possDirs, function(dp) identifyCHECKSUMStxtFile(dp), character(1))
+  for (dp in possDirs) {
+    for (csfp in csfps) { # there can be a mismatch between checksums and file location
+      # csfp <- identifyCHECKSUMStxtFile(dp)
+      checkSumsTmp1 <- try(Checksums(
+        path = dp, write = FALSE, checksumFile = csfp,
+        files = makeRelative(filesToCheck, absoluteBase = destinationPath),
+        verbose = verbose - 1
+      ), silent = TRUE)
+      checkSums <- NULL
+      if (!is(checkSumsTmp1, "try-error")) {
+        checkSums <- checkSumsTmp1
+        if (!all(is.na(checkSums$result))) { # found something
+          if (isTRUE(any(dp %in% reproducible.inputPaths))) {
+            destinationPathUser <- destinationPath
+            destinationPath <- dp
+            on.exit(
+              {
+                destinationPath <- destinationPathUser
+              },
+              add = TRUE
+            )
+          }
+          break
         }
-        break
       }
     }
   }

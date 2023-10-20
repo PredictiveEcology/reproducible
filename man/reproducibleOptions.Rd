@@ -75,6 +75,12 @@ duplicated files.
 Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
 Should the \code{reproducible.inputPaths} be searched recursively for existence of a file?
 }
+\item{\code{memoisePersist}}{
+Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}.
+Should the memoised copy of the Cache objects persist even if \code{reproducible} reloads
+e.g., via \code{devtools::load_all}? This is mostly useful for developers of
+\code{reproducible}.
+}
 \item{\code{nThreads}}{
 Default: \code{1}. The number of threads to use for reading/writing cache files.
 }
