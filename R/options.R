@@ -70,6 +70,13 @@
 #'     Default: `FALSE`. Used in [prepInputs()] and [preProcess()].
 #'     Should the `reproducible.inputPaths` be searched recursively for existence of a file?
 #'   }
+#'   \item{`memoisePersist`}{
+#'     Default: `FALSE`. Used in [Cache()].
+#'     Should the memoised copy of the Cache objects persist even if `reproducible` reloads
+#'     e.g., via `devtools::load_all`? This is mostly useful for developers of
+#'     `reproducible`. If `TRUE`, a object named `paste0(".reproducibleMemoise_", cachePath)`
+#'     will be placed in the `.GlobalEnv`, i.e., one for each `cachePath`.
+#'   }
 #'   \item{`nThreads`}{
 #'     Default: `1`. The number of threads to use for reading/writing cache files.
 #'   }
@@ -193,6 +200,7 @@ reproducibleOptions <- function() {
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
     reproducible.length = Inf,
+    reproducible.memoisePersist = FALSE,
     reproducible.messageColourPrepInputs = "cyan",
     reproducible.messageColourCache = "blue",
     reproducible.messageColourQuestion = "green",
