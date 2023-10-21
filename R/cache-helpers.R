@@ -573,7 +573,7 @@ wrapSpatVector <- function(obj) {
 }
 
 unwrapSpatVector <- function(obj) {
-  obj <- unwrap(obj)
+  obj <- terra::unwrap(obj)
   if (FALSE) {
     obj$x <- cbind(obj$x$cols125[, 1:2, drop = FALSE], obj$x$cols34[, 1:2, drop = FALSE], obj$x$cols125[, 3, drop = FALSE])
     do.call(terra::vect, obj)
