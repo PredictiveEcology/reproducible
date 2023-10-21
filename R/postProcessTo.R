@@ -410,18 +410,37 @@ maskTo <- function(from, maskTo, # touches = FALSE,
         }
 
         if (!sameCRS) {
-          if (isGridded(maskTo)) {
-            maskTo <- terra::project(maskTo, from, overwrite = overwrite)
-          } else {
-            if (isSF(maskTo)) {
-              maskTo <- sf::st_transform(maskTo, sf::st_crs(from))
-            } else {
-              if (isSpatial(maskTo)) {
-                maskTo <- terra::vect(maskTo)
+          withCallingHandlers({
+            isSF <- isSF(maskTo)
+            maskTo2 <- maskTo
+            attempt <- 1
+            while (attempt <= 2) {
+              if (isGridded(maskTo2)) {
+                maskTo3 <- terra::project(maskTo2, from, overwrite = overwrite)
+              } else {
+                if (isSF(maskTo2)) {
+                  maskTo3 <- sf::st_transform(maskTo2, sf::st_crs(from))
+                } else {
+                  if (isSpatial(maskTo2)) {
+                    maskTo2 <- terra::vect(maskTo2)
+                  }
+                  maskTo3 <- terra::project(maskTo2, from)
+                }
               }
-              maskTo <- terra::project(maskTo, from)
+              attempt <- attempt + 2
             }
-          }
+          }, warning = function(w) {
+            if (any(grepl(warningCertificateGrep, w$message))) {
+              if (!isSF) {
+                maskTo2 <<- convertToSFwMessage(w, maskTo2)
+                attempt <<- 0
+              }
+              invokeRestart("muffleWarning")
+            }
+          })
+          if (attempt == 4)
+            message("... converting to sf object worked to deal with ", warningCertificateGrep)
+          maskTo <- maskTo3
         }
         messagePrepInputs("    masking...", appendLF = FALSE, verbose = verbose)
         st <- Sys.time()
@@ -633,15 +652,16 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
         }, warning = function(w) {
           if (any(grepl(warningCertificateGrep, w$message))) {
             if (!isSF) {
-              w$message <- paste(w$message, "\n ... attempting to use `sf` instead")
-              warning(w)
-              from <<- sf::st_as_sf(from)
+              from <<- convertToSFwMessage(w, from)
               attempt <<- 0
             }
             invokeRestart("muffleWarning")
           }
         })
         from <- from13
+        if (attempt == 4)
+          message("... converting to sf object worked to deal with ", warningCertificateGrep)
+
 
         if (isSpatial) from <- as(from, "Spatial")
         from
@@ -749,14 +769,14 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
         }, warning = function(w) {
           if (any(grepl(warningCertificateGrep, w$message))) {
             if (!isSF) {
-              w$message <- paste(w$message, "\n ... attempting to use `sf` instead")
-              warning(w)
-              cropTo <<- sf::st_as_sf(cropTo)
+              cropTo <<- convertToSFwMessage(w, cropTo)
               attempt <<- 0
             }
             invokeRestart("muffleWarning")
           }
         })
+        if (attempt == 4)
+          message("... converting to sf object worked to deal with ", warningCertificateGrep)
 
       }
       if (isVector(from) && !isSF(from)) {
@@ -1210,7 +1230,7 @@ remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.fr
         if (length(elem)) {
           mes <- paste(newHere, collapse = ", ")
           messagePrepInputs(elem, " is supplied (deprecated); assigning it to ", mes,
-            verbose = verbose
+            verbose = verbose - 1
           )
           lapply(newHere, function(nh) ret[nh] <<- list(dots[[elem]]))
         }
@@ -1294,3 +1314,10 @@ extntNA <- function(x) {
 }
 
 warningCertificateGrep <- "CertGetCertificateChain trust error CERT_TRUST_IS_PARTIAL_CHAIN"
+
+convertToSFwMessage <- function(w, obj) {
+  w$message <- paste(w$message, "\n ... attempting to use `sf` instead")
+  message(w$message)
+  obj <- sf::st_as_sf(obj)
+  obj
+}
