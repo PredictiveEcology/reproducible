@@ -140,12 +140,19 @@ downloadFile <- function(archive, targetFile, neededFiles,
             failed <- numTries + 2
           }
           if (failed >= numTries) {
+            isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
+                         !grepl("\\.[^\\.]+$", url)) # doesn't have an extension
+            if (isGID){
+              urlMessage <- paste0("https://drive.google.com/file/d/", url)
+            } else {
+              urlMessage <- url
+            }
             messCommon <- paste0(
               "Download of ", url, " failed. This may be a permissions issue. ",
               "Please check the url and permissions are correct.\n",
               "If the url is correct, it is possible that manually downloading it will work. ",
               "To try this, with your browser, go to\n",
-              url, ",\n ... then download it manually, give it this name: '", fileToDownload,
+              urlMessage, ",\n ... then download it manually, give it this name: '", fileToDownload,
               "', and place file here: ", destinationPath
             )
             if (isInteractive() && getOption("reproducible.interactiveOnDownloadFail", TRUE)) {
@@ -377,7 +384,6 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
     if (!is.null(fs)) {
       class(fs) <- "object_size"
     }
-
     isLargeFile <- ifelse(is.null(fs), FALSE, fs > 1e6)
     if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&
       !isFALSE(getOption("reproducible.futurePlan"))) {
@@ -513,7 +519,6 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
   }
 
   dots <- list(...)
-
   if (!is.null(url) || !is.null(dlFun)) { # if no url, no download
     # if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
     if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE))) {
@@ -594,7 +599,9 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
       }
 
       if (is.null(out)) {
-        if (grepl("d.+.google.com", url)) {
+        isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
+                     !grepl("\\.[^\\.]+$", url)) # doesn't have an extension --> GDrive ID's as url
+        if (any(isGID, grepl("d.+.google.com", url))) {
           if (!requireNamespace("googledrive", quietly = TRUE)) {
             stop(requireNamespaceMsg("googledrive", "to use google drive files"))
           }
@@ -699,7 +706,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     opts <- options(httr_oob_default = TRUE)
     on.exit(options(opts))
   }
-
+  
   if (is.null(archive) || is.na(archive)) {
     if (packageVersion("googledrive") < "2.0.0") {
       fileAttr <- retry(retries = 1, quote(googledrive::drive_get(googledrive::as_id(url),
