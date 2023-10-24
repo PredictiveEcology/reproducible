@@ -1771,7 +1771,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
 
   userTagsMess <- if (!is.null(userTagsOrig)) {
     paste0(
-      "with user supplied tags: '",
+      " with user supplied tags: '",
       paste(userTagsOrig, collapse = ", "), "' "
     )
   }
@@ -2241,7 +2241,7 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
     ], 1))
   class(objSize) <- "object_size"
   bigFile <- isTRUE(objSize > 1e6)
-  fileFormat <- extractFromCache(fullCacheTableForObj, elem = "fileFormat")
+  fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
   messageCache("  ...(Object to retrieve (",
     basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]], format = fileFormat)),
     ")",
