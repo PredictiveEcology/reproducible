@@ -378,8 +378,10 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    dim(object) <- NULL
-    .robustDigest(object, classOptions = classOptions)
+    dims <- dim(object)
+    dim(object) <- NULL # need to get the separate numeric or integer, i.e., there is rounding
+    out <- .robustDigest(list(dims, object), classOptions = classOptions, algo = algo)
+    .doDigest(out, algo = algo)
     # From ad hoc tests, 6 was the highest I could go to maintain consistent between Linux and Windows
   }
 )
