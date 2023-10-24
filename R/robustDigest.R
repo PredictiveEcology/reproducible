@@ -485,6 +485,11 @@ basenames3 <- function(object, nParentDirs) {
     }
 
     out <- if (cacheSpeed == 1) {
+      if (length(x) == 1) {
+        if (is.atomic(x))
+          if (isTRUE(is.na(x)))
+            x <- NA # make all NAs (NA_real_, NA, NA_character_ equal
+      }
       digest(x, algo = algo)
     } else if (cacheSpeed == 2) {
       fastdigest::fastdigest(x)
