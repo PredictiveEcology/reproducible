@@ -80,6 +80,12 @@
 #'   \item{`nThreads`}{
 #'     Default: `1`. The number of threads to use for reading/writing cache files.
 #'   }
+#'   \item{`objSize`}{
+#'     Default: `TRUE`. Logical. If `TRUE`, then object sizes will be included in
+#'     the cache database. Simplying calculating object size of large objects can
+#'     be time consuming, so setting this to `FALSE` will make caching up to 10%
+#'     faster, depending on the objects.
+#'   }
 #'   \item{`overwrite`}{
 #'     Default: `FALSE`. Used in [prepInputs()], [preProcess()],
 #'     [downloadFile()], and [postProcess()].
@@ -205,6 +211,7 @@ reproducibleOptions <- function() {
     reproducible.messageColourCache = "blue",
     reproducible.messageColourQuestion = "green",
     reproducible.nThreads = 1,
+    reproducible.objSize = TRUE,
     reproducible.overwrite = FALSE,
     reproducible.quick = FALSE,
     reproducible.rasterRead = getEnv("R_REPRODUCIBLE_RASTER_READ",
