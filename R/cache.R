@@ -1467,6 +1467,9 @@ getFunctionName2 <- function(mc) {
 
   isSquiggly <- FALSE
   if (!is.function(FUNcaptured[[1]])) { # e.g., just the name, such as rnorm --> convert to the actual function code
+    if (is(FUNcaptured[[1]], "(")) {
+      fnNameInit <- "headless"
+    }
     FUNcaptured[[1]] <- eval(FUNcaptured[[1]], envir = callingEnv)
   }
 
