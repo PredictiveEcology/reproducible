@@ -175,7 +175,8 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   #  So effectively, it is like 6x buffer to try to avoid false positives.
   whichOS <- which(tagKey == "object.size")
   if (length(whichOS)) {
-    fsBig <- (as.numeric(tagValue[whichOS]) * 4) < fs
+    objSize <- if (identical(tagValue[whichOS], "NA")) NA else as.numeric(tagValue[whichOS])
+    fsBig <- (objSize * 4) < fs
     if (isTRUE(fsBig)) {
       # browser(expr = exists("._saveToCache_3"))
       messageCache("Object with cacheId ", cacheId, " appears to have a much larger size ",

@@ -187,7 +187,8 @@ setMethod(
     }
 
     if (isInteractive()) {
-      objSizes <- as.numeric(objsDT[tagKey == "object.size"][[.cacheTableTagColName()]])
+      objSz <- objsDT[tagKey == "object.size"][[.cacheTableTagColName()]]
+      objSizes <- if ("NA" %in% objSz) NA else as.numeric(objSz)
       cacheSize <- sum(objSizes) / 4
     }
 
@@ -215,7 +216,7 @@ setMethod(
         # }
       }
 
-      if (isInteractive()) {
+      if (isInteractive() && isTRUE(!is.na(cacheSize))) {
         class(cacheSize) <- "object_size"
         formattedCacheSize <- format(cacheSize, "auto")
         if (isTRUE(ask)) {
@@ -632,6 +633,11 @@ setMethod(
     a <- cacheTable
   }
   cn <- if (any(colnames(a) %in% "tag")) "tag" else "tagKey"
+
+  nas <- a[[.cacheTableTagColName()]] %in% "NA" & a[[cn]] == "object.size"
+  if (any(nas))
+    a <- a[!nas]
+
   b <- a[a[[cn]] == "object.size", ]
   if (any(colnames(a) %in% "tag")) {
     fsTotal <- sum(as.numeric(unlist(lapply(strsplit(b[[cn]], split = ":"), function(x) x[[2]])))) / 4

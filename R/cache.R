@@ -865,10 +865,11 @@ Cache <-
       # This is for write conflicts to the SQLite database
       #   (i.e., keep trying until it is written)
 
-      objSize <- sum(objSize(outputToSave))
+      objSize <- if (getOption("reproducible.objSize", TRUE)) sum(objSize(outputToSave)) else NA
+
       resultHash <- ""
       linkToCacheId <- NULL
-      if (objSize > 1e6) {
+      if (isTRUE(objSize > 1e6)) {
         resultHash <- CacheDigest(outputToSave,
           .objects = .objects,
           length = length, algo = algo, quick = quick,
@@ -957,9 +958,9 @@ Cache <-
         otsObjSize <- gsub(grep("object\\.size:", userTags, value = TRUE),
           pattern = "object.size:", replacement = ""
         )
-        otsObjSize <- as.numeric(otsObjSize)
+        otsObjSize <- if (identical(otsObjSize, "NA")) NA else as.numeric(otsObjSize)
         class(otsObjSize) <- "object_size"
-        isBig <- otsObjSize > 1e7
+        isBig <- isTRUE(otsObjSize > 1e7)
 
         outputToSave <- progressBarCode(
           saveToCache(
@@ -1771,7 +1772,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
 
   userTagsMess <- if (!is.null(userTagsOrig)) {
     paste0(
-      "with user supplied tags: '",
+      " with user supplied tags: '",
       paste(userTagsOrig, collapse = ", "), "' "
     )
   }
@@ -2241,7 +2242,7 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
     ], 1))
   class(objSize) <- "object_size"
   bigFile <- isTRUE(objSize > 1e6)
-  fileFormat <- extractFromCache(fullCacheTableForObj, elem = "fileFormat")
+  fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
   messageCache("  ...(Object to retrieve (",
     basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]], format = fileFormat)),
     ")",
