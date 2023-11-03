@@ -1029,11 +1029,6 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   } else {
     messStart <- "Writing "
   }
-  messagePrepInputs(messStart, "checksums to CHECKSUMS.txt. If you see this messagePrepInputs repeatedly,\n",
-    "  you can specify targetFile (and optionally alsoExtract) so it knows\n",
-    "  what to look for.",
-    verbose = verbose
-  )
   csf <- if (append) tempfile(fileext = ".TXT") else checkSumFilePath
   areAbs <- isAbsolutePath(filesToChecksum)
   if (any(!areAbs)) {
@@ -1048,6 +1043,11 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     )
   })
   if (append) { # a checksums file already existed, need to keep some of it
+
+    messagePrepInputs(messStart, "checksums to CHECKSUMS.txt. If you see this messagePrepInputs repeatedly, ", verbose = verbose)
+    messagePrepInputs("  you can specify targetFile (and optionally alsoExtract) so it knows", verbose = verbose)
+    messagePrepInputs("  what to look for.", verbose = verbose)
+
     currentFilesToRbind <- data.table::as.data.table(currentFiles)
     keepCols <- c("expectedFile", "checksum.x", "algorithm.x", "filesize.x")
     currentFilesToRbind <- currentFilesToRbind[, keepCols, with = FALSE]
