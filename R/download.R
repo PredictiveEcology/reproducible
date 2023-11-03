@@ -11,7 +11,7 @@
 #' @param ... Passed to `dlFun`. Still experimental. Can be e.g., `type` for google docs.
 #' @param checksumFile A character string indicating the absolute path to the `CHECKSUMS.txt`
 #'                     file.
-#'
+#' @inheritParams loadFromCache
 #' @inheritParams Cache
 #' @author Eliot McIntire
 #' @return
@@ -501,6 +501,7 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 #' @param messSkipDownload The character string text to pass to messaging if download skipped
 #' @param checkSums TODO
 #' @param fileToDownload TODO
+#' @inheritParams loadFromCache
 #'
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, messSkipDownload,
@@ -706,7 +707,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     opts <- options(httr_oob_default = TRUE)
     on.exit(options(opts))
   }
-  
+
   if (is.null(archive) || is.na(archive)) {
     if (packageVersion("googledrive") < "2.0.0") {
       fileAttr <- retry(retries = 1, quote(googledrive::drive_get(googledrive::as_id(url),

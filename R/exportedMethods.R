@@ -485,6 +485,7 @@ unmakeMemoisable.default <- function(x) {
 #'
 #' @param obj Any arbitrary R object.
 #' @inheritParams Cache
+#' @inheritParams loadFromCache
 #' @rdname dotWrap
 #' @return
 #' Returns an object that can be saved to disk e.g., via `saveRDS`.
@@ -673,13 +674,13 @@ wrapSpatRaster <- function(obj, cachePath) {
   # 2) have layer names renamed
   whLayers <- seq_along(names(obj))
   if (!identical(nlyrsInFile, length(names(obj)))) {
-    rr <- rast(fns);
+    rr <- terra::rast(fns);
     objDigs <- unlist(lapply(layerNams, function(ln) .robustDigest(obj[[ln]][])))
     digs <- character()
     whLayers <- integer()
 
     # don't need to go through all layers if the current file has only some; run through from start
-    for (ln in seq_len(nlyr(rr))) {
+    for (ln in seq_len(terra::nlyr(rr))) {
       digs[ln] <- .robustDigest(rr[[ln]][])
       if (digs[ln] %in% objDigs)
         whLayers <- c(ln, whLayers)

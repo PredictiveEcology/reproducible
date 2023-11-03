@@ -77,6 +77,8 @@ in subsequent calls to
 \code{1} write a new one,
 \code{2} append new information to existing one.}
 
+\item{preDigest}{The list of \code{preDigest} that comes from \code{CacheDigest} of an object}
+
 \item{overwrite}{Logical. Should downloading and all the other actions occur
 even if they pass the checksums or the files are all there.}
 

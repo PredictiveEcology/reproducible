@@ -202,6 +202,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 #'   the `cacheId` being loaded or selected
 #' @param .dotsFromCache Optional. Used internally.
 #' @param .functionName Optional. Used for messaging when this function is called from `Cache`
+#' @param preDigest The list of `preDigest` that comes from `CacheDigest` of an object
 #' @details
 #' `loadFromCache` is a function to get a single object from the cache, given its `cacheId`.
 #' @return

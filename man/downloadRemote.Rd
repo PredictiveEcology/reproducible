@@ -73,6 +73,8 @@ even if they pass the checksums or the files are all there.}
 \item{.tempPath}{Optional temporary path for internal file intermediate steps.
 Will be cleared on.exit from this function.}
 
+\item{preDigest}{The list of \code{preDigest} that comes from \code{CacheDigest} of an object}
+
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of

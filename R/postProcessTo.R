@@ -1399,11 +1399,11 @@ isGeomType <- function(geom, type) {
   if (isVector(geom)) {
     out <- if (isSpat(geom)) {
       if (type == "points")
-        is.points(geom)
+        terra::is.points(geom)
       else if (type == "polygons")
-        is.polygons(geom)
+        terra::is.polygons(geom)
       else if (type == "lines")
-        is.lines(geom)
+        terra::is.lines(geom)
     } else {
       if (type == "points")
         is(sf::st_geometry(geom), "sfc_POINT")
@@ -1463,9 +1463,9 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
     options = c(
       "-t_srs", tf4,
       "-r", method,
-      "-te", c(xmin(toRas), ymin(toRas),
-               xmin(toRas) + (ncol(toRas) ) * res(toRas)[1],
-               ymin(toRas) + (nrow(toRas) ) * res(toRas)[2]),
+      "-te", c(terra::xmin(toRas), terra::ymin(toRas),
+               terra::xmin(toRas) + (terra::ncol(toRas) ) * terra::res(toRas)[1],
+               terra::ymin(toRas) + (terra::nrow(toRas) ) * terra::res(toRas)[2]),
       "-te_srs", tf4,
       "-dstnodata", "NA",
       "-overwrite"
@@ -1511,11 +1511,11 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
     destination = filenameDest,
     options = c(
       "-r", "near",
-      "-te", c(xmin(toRas), ymin(toRas),
-               xmin(toRas) + (ncol(toRas) ) * res(toRas)[1],
-               ymin(toRas) + (nrow(toRas) ) * res(toRas)[2]),
+      "-te", c(terra::xmin(toRas), terra::ymin(toRas),
+               terra::xmin(toRas) + (terra::ncol(toRas) ) * terra::res(toRas)[1],
+               terra::ymin(toRas) + (terra::nrow(toRas) ) * terra::res(toRas)[2]),
       "-te_srs", tf4, # 3347, 3348, 3978, 3979
-      "-tr", res(toRas),
+      "-tr", terra::res(toRas),
       "-dstnodata", "NA",
       "-tap",
       "-overwrite"
