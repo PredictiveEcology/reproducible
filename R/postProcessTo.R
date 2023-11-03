@@ -770,8 +770,10 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
       }
 
       if (!sameCRS) {
+
         withCallingHandlers({
           attempt <- 1
+          doneWarningAlready <- 0
           while (attempt <= 2) {
             isSF <- isSF(cropTo)
 
@@ -792,10 +794,11 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
           }
 
         }, warning = function(w) {
-          if (any(grepl(warningCertificateGrep, w$message))) {
+          if (any(grepl(warningCertificateGrep, w$message)) && doneWarningAlready == 0) {
             if (!isSF) {
               cropTo <<- convertToSFwMessage(w, cropTo)
               attempt <<- 0
+              doneWarningAlready <<- 1
             }
             invokeRestart("muffleWarning")
           }
