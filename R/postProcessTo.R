@@ -1343,6 +1343,71 @@ convertToSFwMessage <- function(w, obj) {
   obj
 }
 
+
+# extManyPoints <- function(ras, res) {
+#   if (missing(res)) {
+#     if (isRaster(ras))
+#       res <- res(ras)
+#     else
+#       res <- c(250, 250)
+#   }
+#
+#   xmn <- xmin(ras)
+#   xmx <- xmax(ras)
+#   ymn <- ymin(ras)
+#   ymx <- ymax(ras)
+#   xs <- seq(xmn, xmx, by = res[1])
+#   ys <- seq(ymn, ymx, by = res[2])
+#   rbind(cbind(xs, ymn),
+#         cbind(xmx, ys),
+#         cbind(rev(xs), ymx),
+#         cbind(xmn, rev(ys)),
+#         cbind(xmn, ymn)
+#   )
+# }
+
+# isPoints <- function(geom) {
+#   isGeomType(geom, "points")
+# }
+#
+isPolygons <- function(geom) {
+  isGeomType(geom, "polygons")
+}
+
+# isLines <- function(geom) {
+#   isGeomType(geom, "lines")
+# }
+
+isGeomType <- function(geom, type) {
+  out <- FALSE
+  if (isVector(geom)) {
+    out <- if (isSpat(geom)) {
+      if (type == "points")
+        is.points(geom)
+      else if (type == "polygons")
+        is.polygons(geom)
+      else if (type == "lines")
+        is.lines(geom)
+    } else {
+      if (type == "points")
+        is(sf::st_geometry(geom), "sfc_POINT")
+      else if (type == "polygons")
+        is(sf::st_geometry(geom), "sfc_POLYGON")
+      else if (type == "lines")
+        is(sf::st_geometry(geom), "sfc_LINE")
+      else {
+        warning("geom is not simple point, polygon or line geometry; returning class")
+        is(sf::st_geometry(geom))
+      }
+    }
+  }
+  return(out)
+}
+
+
+
+
+
 gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("reproducible.verbose"), ...) {
 
   messagePrepInputs("     running gdalProject ...", appendLF = FALSE, verbose = verbose)
