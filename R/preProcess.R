@@ -1572,7 +1572,19 @@ getTargetFilePath <- function(targetFile, archive, fileGuess, verbose,
       targetFile <- makeRelative(fileGuess, destinationPath)
       targetFilePath <- makeAbsolute(targetFile, destinationPath)
     } else {
-      targetFilePath <- NULL
+
+      # Case when archive is passed, and fileGuess exists
+      # if ((!is.null(archive) || !is.na(archive)) && !is.null(fileGuess)) {
+      #   messagePrepInputs("archieve was supplied, but targetFile not; guessed and will try ", fileGuess,
+      #                     ". If this is incorrect, please supply targetFile",
+      #                     verbose = verbose
+      #   )
+      #   targetFile <- makeRelative(fileGuess, destinationPath)
+      #   targetFilePath <- makeAbsolute(targetFile, destinationPath)
+      # } else {
+        targetFilePath <- NULL
+      # }
+
     }
   } else {
     if (length(targetFile) > 1) {
