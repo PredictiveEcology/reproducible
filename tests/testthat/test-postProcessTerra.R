@@ -82,7 +82,7 @@ test_that("testing terra", {
   y <- terra::deepcopy(elevRas)
   y[y > 200 & y < 300] <- NA_integer_
   terra::values(elevRas) <- rep(1L, terra::ncell(y))
-  vRast <- terra::rast(v, res = 0.008333333)
+  vRast <- terra::rast(v, resolution = 0.008333333)
 
   # SR, SR
   t1 <- postProcessTo(elevRas, y)
@@ -184,7 +184,7 @@ test_that("testing terra", {
     vsfutm <- sf::st_transform(vsf, utm)
     vutm <- terra::vect(vsfutm)
     res100 <- 100
-    rutm <- terra::rast(vutm, res = res100)
+    rutm <- terra::rast(vutm, resolution = res100)
     rutm <- terra::rasterize(vutm, rutm, field = "NAME_2")
 
     vsfInUTMviaCRS <- postProcessTo(vsf, sf::st_crs(rutm))
@@ -218,7 +218,8 @@ test_that("testing terra", {
     ext3 <- sf::st_as_sf(ext2)
     if (.requireNamespace("sf")) {
       expect_warning(expect_message(postProcessTo(vOrigsf, ext3))) # sf gives warning too
-      expect_message(postProcessTo(terra::vect(vOrigsf), ext2))
+      expect_warning(expect_message(postProcessTo(terra::vect(vOrigsf), ext2)),
+                     "no intersection")
       # expect_warning(expect_error(postProcessTo(vOrigsf, ext3))) # sf gives warning too
       # expect_error(postProcessTo(terra::vect(vOrigsf), ext2))
     }
@@ -380,7 +381,7 @@ test_that("testing terra", {
     expect_true(all(terra::res(t20res250) == 250))
 
     ## same projection change resolution only (will likely affect extent)
-    y2 <- terra::rast(crs = terra::crs(y), res = 0.008333333 * 2, extent = terra::ext(y))
+    y2 <- terra::rast(crs = terra::crs(y), resolution = 0.008333333 * 2, extent = terra::ext(y))
     y2 <- terra::setValues(y2, rep(1, terra::ncell(y2)))
 
     t22 <- postProcessTo(elevRas, to = y2, overwrite = TRUE) # not sure why need this; R devel on Winbuilder Nov 26, 2022

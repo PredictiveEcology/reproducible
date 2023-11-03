@@ -501,7 +501,8 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
       if (add && alreadyThere == 0) {
         dt2 <- rbindlist(list(dt2, dt))
       } else {
-        dt2[tagKey == tk & cacheId == cacheId, tagValue := dt$tagValue]
+        set(dt2, which(dt2$tagKey == tk & dt2$cacheId == cacheId), "tagValue", dt$tagValue)
+        # dt2[tagKey == tk & cacheId == cacheId, tagValue := dt$tagValue]
       }
       saveFilesInCacheFolder(dt2, dtFile, cachePath = cachePath, cacheId = cacheId)
     }

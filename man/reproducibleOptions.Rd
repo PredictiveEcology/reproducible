@@ -60,6 +60,15 @@ Default is to not use these, as they are experimental.
 They may, however, be very effective in speeding up some things, specifically,
 uploading cached elements via \code{googledrive} in \code{cloudCache}.
 }
+\item{\code{gdalwarp}}{
+Default: \code{FALSE}. Experimental. During \code{postProcessTo} the standard approach
+is to use \code{terra} functions directly, with several strategic uses of \code{sf}. However,
+in the special case when \code{from} is a \code{SpatRaster} or \code{Raster}, \code{maskTo} is a
+\code{SpatVector} or \code{SFC_POLYGON} and \code{projectTo} is a \code{SpatRaster} or \code{Raster}, setting
+this option to \code{TRUE} will use \code{sf::gdal_utils("warp")}. In many test cases,
+this is much faster than the \code{terra} sequence. The resulting \code{SpatRaster} is
+not identical, but it is very similar.
+}
 \item{\code{inputPaths}}{
 Default: \code{NULL}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
 If set to a path, this will cause these functions to save their downloaded and preprocessed
@@ -84,6 +93,12 @@ will be placed in the \code{.GlobalEnv}, i.e., one for each \code{cachePath}.
 }
 \item{\code{nThreads}}{
 Default: \code{1}. The number of threads to use for reading/writing cache files.
+}
+\item{\code{objSize}}{
+Default: \code{TRUE}. Logical. If \code{TRUE}, then object sizes will be included in
+the cache database. Simplying calculating object size of large objects can
+be time consuming, so setting this to \code{FALSE} will make caching up to 10\%
+faster, depending on the objects.
 }
 \item{\code{overwrite}}{
 Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}}, \code{\link[=preProcess]{preProcess()}},

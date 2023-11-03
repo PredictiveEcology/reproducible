@@ -14,6 +14,7 @@
 .wrap(
   obj,
   cachePath,
+  preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")
@@ -22,6 +23,7 @@
 \method{.wrap}{list}(
   obj,
   cachePath,
+  preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")
@@ -30,6 +32,7 @@
 \method{.wrap}{environment}(
   obj,
   cachePath,
+  preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")
@@ -38,6 +41,7 @@
 \method{.wrap}{default}(
   obj,
   cachePath,
+  preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")

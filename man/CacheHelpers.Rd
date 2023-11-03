@@ -22,6 +22,7 @@ createCache(
 loadFromCache(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
+  preDigest,
   fullCacheTableForObj = NULL,
   format = getOption("reproducible.cacheSaveFormat", "rds"),
   .functionName = NULL,

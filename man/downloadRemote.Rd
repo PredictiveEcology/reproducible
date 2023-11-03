@@ -16,6 +16,7 @@ downloadRemote(
   overwrite,
   needChecksums,
   .tempPath,
+  preDigest,
   verbose = getOption("reproducible.verbose", 1),
   ...
 )
