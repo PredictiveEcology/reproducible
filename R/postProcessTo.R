@@ -242,15 +242,15 @@ postProcessTo <- function(from, to,
       from <- cropTo(from, cropTo, needBuffer = TRUE, ..., overwrite = overwrite) # crop first for speed
     from <- projectTo(from, projectTo, ..., overwrite = overwrite) # need to project with edges intact
     from <- maskTo(from, maskTo, ..., overwrite = overwrite)
-  from <- cropTo(from, cropTo, needBuffer = FALSE, ..., overwrite = overwrite) # need to recrop to trim excess pixels in new projection
+    from <- cropTo(from, cropTo, needBuffer = FALSE, ..., overwrite = overwrite) # need to recrop to trim excess pixels in new projection
 
-  # Put this message near the end so doesn't get lost
-  if (is.naSpatial(cropTo) && isVector(maskTo)) {
-    messagePrepInputs("    ** cropTo is NA, but maskTo is a Vector dataset; ",
-      verbose = verbose
-    )
-    messagePrepInputs("      this has the effect of cropping anyway",
-      verbose = verbose
+    # Put this message near the end so doesn't get lost
+    if (is.naSpatial(cropTo) && isVector(maskTo)) {
+      messagePrepInputs("    ** cropTo is NA, but maskTo is a Vector dataset; ",
+                        verbose = verbose
+      )
+      messagePrepInputs("      this has the effect of cropping anyway",
+                        verbose = verbose
     )
   }
 
@@ -259,8 +259,8 @@ postProcessTo <- function(from, to,
   # WRITE STEP
   from <- writeTo(
     from, writeTo, overwrite, isStack, isBrick, isRaster, isSpatRaster,
-    ...
-  )
+      ...
+    )
 
   }
 
@@ -788,7 +788,15 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
                   terraCRSFrom <- terraCRSFrom@projargs
                 }
               }
-              cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
+              if (isVector(cropTo) && isGridded(from)) {
+                if (isSpat(cropTo))
+                  cropTo <- sf::st_as_sf(cropTo)
+                a <- sf::st_convex_hull(cropTo)
+                cropToInFromCRS <- terra::project(terra::vect(a), terraCRSFrom)
+              } else {
+                # cropToVec <- terra::as.polygons(terra::ext(cropTo), crs = terra::crs(cropTo))
+                cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
+              }
               ext <- terra::ext(cropToInFromCRS) # create extent as an object; keeps crs correctly
             }
             attempt <- attempt + 2
