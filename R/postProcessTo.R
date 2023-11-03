@@ -684,6 +684,7 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
           }
         })
         from <- from13
+        from <- fixErrorsIn(from) # sometimes `project` makes invalid
         if (attempt == 4)
           message("... converting to sf object worked to deal with ", warningCertificateGrep)
 
