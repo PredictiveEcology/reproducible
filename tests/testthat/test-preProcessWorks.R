@@ -455,6 +455,15 @@ test_that("masking with larger extent obj", {
   expect_true(is(b, rasterType()))
 })
 
+test_that("just google id not url", {
+  skip_on_cran()
+  skip_on_ci()
+
+  testInit("terra", needGoogleDriveAuth = TRUE, needInternet = TRUE)
+  smallObj <- prepInputs(url = "1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb")
+  expect_is(smallObj, "sf")
+})
+
 test_that("Test of using future and progress indicator for lrg files on Google Drive", {
   skip_if_not_installed("future")
   skip_if_not_installed("googledrive")
