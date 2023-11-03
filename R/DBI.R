@@ -616,6 +616,7 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cacheId,
                             format = NULL, obj = NULL) {
   if (is.null(format)) format <- getOption("reproducible.cacheSaveFormat", "rds")
+  if (missing(cacheId)) cacheId <- NULL
   if (any(format %in% "check")) {
     format <- formatCheck(cachePath, cacheId, format)
   }
@@ -631,7 +632,7 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
       "rda"
     }
   }
-  filename <- paste(cacheId, csExtension, sep = ".")
+  filename <- if (is.null(cacheId)) NULL else paste(cacheId, csExtension, sep = ".")
   if (length(cacheId) > 1) {
     filename <- vapply(filename, nextNumericName, FUN.VALUE = character(1))
     for (i in seq(filename[-1]) + 1) {
