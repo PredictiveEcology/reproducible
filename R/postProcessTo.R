@@ -232,12 +232,16 @@ postProcessTo <- function(from, to,
   } else {
     if (couldDoGDAL)
       message("Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm")
-  #############################################################
-  # crop project mask sequence ################################
-  #############################################################
-  from <- cropTo(from, cropTo, needBuffer = TRUE, ..., overwrite = overwrite) # crop first for speed
-  from <- projectTo(from, projectTo, ..., overwrite = overwrite) # need to project with edges intact
-  from <- maskTo(from, maskTo, ..., overwrite = overwrite)
+    #############################################################
+    # crop project mask sequence ################################
+    #############################################################
+    # Basically, when both layers are vector, it appears to sometimes be lossy to do first
+    #   cropTo --> i.e., projecting cropTo to from's crs, then crop, then proceed was making
+    #   errors and slivers
+    if (!(isPolygons(from) && isPolygons(projectTo) && identical(cropTo, projectTo)))
+      from <- cropTo(from, cropTo, needBuffer = TRUE, ..., overwrite = overwrite) # crop first for speed
+    from <- projectTo(from, projectTo, ..., overwrite = overwrite) # need to project with edges intact
+    from <- maskTo(from, maskTo, ..., overwrite = overwrite)
   from <- cropTo(from, cropTo, needBuffer = FALSE, ..., overwrite = overwrite) # need to recrop to trim excess pixels in new projection
 
   # Put this message near the end so doesn't get lost
