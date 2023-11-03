@@ -215,6 +215,23 @@ postProcessTo <- function(from, to,
     }
   }
 
+  couldDoGDAL <- isGridded(from) && isVector(maskTo) && isGridded(projectTo)
+
+  if (isTRUE(getOption("reproducible.gdalwarp", FALSE)) && couldDoGDAL) {
+    #############################################################
+    # project resample mask sequence ################################
+    #############################################################
+    messagePrepInputs("  using sf::gdal_utils('warp') because options(\"reproducible.gdalwarp\" = TRUE) ...", appendLF = FALSE, verbose = verbose)
+    st <- Sys.time()
+
+    from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
+    from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose)
+    from <- gdalMask(fromRas = from, maskToVect = maskTo, writeTo = writeTo, verbose = verbose, ...)
+    # from <- setMinMax(from)
+
+  } else {
+    if (couldDoGDAL)
+      message("Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm")
   #############################################################
   # crop project mask sequence ################################
   #############################################################
@@ -241,10 +258,14 @@ postProcessTo <- function(from, to,
     ...
   )
 
+  }
+
+
   # REVERT TO ORIGINAL INPUT CLASS
-  from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial)
+  from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial,
+                      origFromClass = origFromClass)
   messagePrepInputs("  postProcessTo done in ", format(difftime(Sys.time(), startTime),
-    units = "secs", digits = 3
+                                                       units = "secs", digits = 3
   ),
   verbose = verbose
   )
@@ -1321,3 +1342,153 @@ convertToSFwMessage <- function(w, obj) {
   obj <- sf::st_as_sf(obj)
   obj
 }
+
+gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("reproducible.verbose"), ...) {
+
+  messagePrepInputs("     running gdalProject ...", appendLF = FALSE, verbose = verbose)
+  st <- Sys.time()
+
+  hasMethod <- which(...names() %in% "method")
+  method <- if (length(hasMethod)) {
+    method <- assessDataTypeOuter(fromRas, ...elt(hasMethod))
+  } else {
+    NULL
+  }
+  if (is.null(method))
+    method <- "near"
+
+  fns <- unique(Filenames(fromRas))
+  if (length(fns) ==1 && isTRUE(nzchar(fns))) {
+    fnSource <- fns
+  } else {
+    fnSource <- tempfile(fileext = ".tif")
+    writeRaster(fromRas, filename = fnSource)
+    on.exit(unlink(fnSource))
+  }
+
+  if (missing(filenameDest))
+    filenameDest <- tempfile(fileext = ".tif")
+
+  tf4 <- tempfile(fileext = ".prj")
+  on.exit(unlink(tf4), add = TRUE)
+  cat(sf::st_crs(toRas)$wkt, file = tf4)
+  system.time(gdal_utils(
+    util = "warp",
+    source = fnSource,
+    destination = filenameDest,
+    options = c(
+      "-t_srs", tf4,
+      "-r", method,
+      "-te", c(xmin(toRas), ymin(toRas),
+               xmin(toRas) + (ncol(toRas) ) * res(toRas)[1],
+               ymin(toRas) + (nrow(toRas) ) * res(toRas)[2]),
+      "-te_srs", tf4,
+      "-dstnodata", "NA",
+      "-overwrite"
+    ))
+  )
+
+  out <- terra::rast(filenameDest)
+  messagePrepInputs("     ...done in ",
+                    format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                    verbose = verbose)
+
+  out
+}
+
+
+
+gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("reproducible.verbose")) {
+
+  messagePrepInputs("     running gdalResample ...", appendLF = FALSE, verbose = verbose)
+  st <- Sys.time()
+
+  fns <- unique(Filenames(fromRas))
+  if (length(fns) ==1 && isTRUE(nzchar(fns))) {
+    fnSource <- fns
+  } else {
+    fnSource <- tempfile(fileext = ".tif")
+    writeRaster(fromRas, filename = fnSource)
+    on.exit(unlink(fnSource))
+  }
+
+  if (missing(filenameDest))
+    filenameDest <- tempfile(fileext = ".tif")
+
+  tf4 <- tempfile(fileext = ".prj")
+  cat(sf::st_crs(toRas)$wkt, file = tf4)
+
+
+  system.time(gdal_utils(
+    util = "warp",
+    source = fnSource,
+    destination = filenameDest,
+    options = c(
+      "-r", "near",
+      "-te", c(xmin(toRas), ymin(toRas),
+               xmin(toRas) + (ncol(toRas) ) * res(toRas)[1],
+               ymin(toRas) + (nrow(toRas) ) * res(toRas)[2]),
+      "-te_srs", tf4, # 3347, 3348, 3978, 3979
+      "-tr", res(toRas),
+      "-dstnodata", "NA",
+      "-tap",
+      "-overwrite"
+    ))
+  )
+  out <- terra::rast(filenameDest)
+  messagePrepInputs("     ...done in ",
+                    format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                    verbose = verbose)
+  out
+}
+
+
+gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("reproducible.verbose"), ...) {
+
+  messagePrepInputs("     running gdalMask ...", appendLF = FALSE, verbose = verbose)
+  st <- Sys.time()
+
+  fns <- unique(Filenames(fromRas))
+
+  if (length(fns) ==1 && isTRUE(nzchar(fns))) {
+    fnSource <- fns
+  } else {
+    fnSource <- tempfile(fileext = ".tif")
+    writeRaster(fromRas, filename = fnSource)
+    on.exit(unlink(fnSource))
+  }
+
+  tf3 <- tempfile(fileext = ".shp")
+  shp <- terra::project(maskToVect, terra::crs(fromRas))
+  writeVector(shp, file = tf3)
+
+  dPath <- which(...names() %in% "destinationPath")
+  destinationPath <- if (length(dPath)) {
+    destinationPath <- ...elt(dPath)
+  } else {
+    getOption("reproducible.destinationPath", ".")
+  }
+
+  if (is.null(writeTo))
+    writeTo <- tempfile(fileext = ".tif")
+
+  writeTo <- determineFilename(writeTo, destinationPath = destinationPath, verbose = verbose)
+
+  system.time(gdal_utils(
+    util = "warp",
+    source = fnSource,
+    destination = writeTo,
+    options = c(
+      "-cutline", tf3,
+      "-dstnodata", "NA",
+      "-overwrite"
+    ))
+  )
+
+  out <- terra::rast(writeTo)
+  messagePrepInputs("     ...done in ",
+                    format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                    verbose = verbose)
+  out
+}
+
