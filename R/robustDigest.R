@@ -490,7 +490,7 @@ basenames3 <- function(object, nParentDirs) {
           if (isTRUE(is.na(x)))
             x <- NA # make all NAs (NA_real_, NA, NA_character_ equal
       }
-      digest(x, algo = algo)
+      digest::digest(x, algo = algo)
     } else if (cacheSpeed == 2) {
       fastdigest::fastdigest(x)
     } else {
