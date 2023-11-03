@@ -340,6 +340,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         destinationPath = destinationPath,
         append = results$needChecksums >= 2
       )
+      needChecksums <- 0
     }
   }
 
@@ -687,6 +688,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         destinationPath = csp,
         append = needChecksums >= 2
       )
+      needChecksums <- 0
     }
     if (!is.null(reproducible.inputPaths) && needChecksums != 3) {
       checkSumFilePathInputPaths <- identifyCHECKSUMStxtFile(reproducible.inputPaths[[1]])
@@ -697,6 +699,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           destinationPath = destinationPath,
           append = needChecksums == 2
         )
+        needChecksums <- 0
       })
     }
     on.exit(

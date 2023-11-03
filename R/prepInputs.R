@@ -1021,7 +1021,8 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       append <- FALSE
     } else {
       setDT(cs)
-      nonCurrentFiles <- cs[!file %in% makeRelative(filesToChecksum, destinationPath)]
+      nonCurrentFiles <- cs[!makeRelative(file, destinationPath) %in%
+                              makeRelative(filesToChecksum, destinationPath)]
       setDF(cs)
     }
     messStart <- "Appending "
