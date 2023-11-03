@@ -971,7 +971,8 @@ Cache <-
           ),
           doProgress = isBig,
           message = c(
-            "Saving ", "large "[isBig], "object (cacheId: ", outputHash, ") to Cache", ": "[isBig],
+            "Saving ", "large "[isBig], "object (fn: ", fnDetails$functionName,
+            ", cacheId: ", outputHash, ") to Cache", ": "[isBig],
             format(otsObjSize, units = "auto")[isBig]
           ),
           verboseLevel = 2 - isBig, verbose = verbose,
@@ -1871,9 +1872,8 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     if (!identical("devMode", useCache)) {
       messageCache("There is no similar item in the cachePath ",
         if (!is.null(functionName)) paste0("of '", functionName, "' "),
-        userTagsMess,
-        verbose = verbose
-      )
+        verbose = verbose)
+      messageCache("  ", userTagsMess, verbose = verbose)
     }
   }
 }
@@ -2247,7 +2247,7 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
   class(objSize) <- "object_size"
   bigFile <- isTRUE(objSize > 1e6)
   fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
-  messageCache("  ...(Object to retrieve (",
+  messageCache("  ...(Object to retrieve (fn: ", fnDetails$functionName, ", ",
     basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]], format = fileFormat)),
     ")",
     if (bigFile) " is large: ",

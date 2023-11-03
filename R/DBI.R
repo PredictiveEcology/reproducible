@@ -125,8 +125,8 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     if (is(out, "try-error") || !all((out %in% TRUE))) {
       linkToCacheId <- NULL
     } else {
-      messageCache("  (A file with identical properties already exists in the Cache: ", basename(ftL), "; ",
-        "The newly added (", basename(fts), ") is a file.link to that file)",
+      messageCache("  (A file with identical properties already exists in the Cache: ", basename(ftL), "; ")
+      messageCache("    The newly added (", basename(fts), ") is a file.link to that file)",
         verbose = verbose
       )
     }
