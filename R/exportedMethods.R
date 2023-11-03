@@ -663,9 +663,34 @@ unmakeMemoisable.default <- function(x) {
 
 wrapSpatRaster <- function(obj, cachePath) {
   cls <- class(obj)
+  fns <- Filenames(obj)
   layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
   obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
-  obj <- asPath(Filenames(obj))
+  nlyrsInFile <- as.integer(terra::nlyr(terra::rast(fns)))
+
+  # A file-backed rast can 1) not be using all the layers in the file and
+  # 2) have layer names renamed
+  whLayers <- seq_along(names(obj))
+  if (!identical(nlyrsInFile, length(names(obj)))) {
+    rr <- rast(fns);
+    objDigs <- unlist(lapply(layerNams, function(ln) .robustDigest(obj[[ln]][])))
+    digs <- character()
+    whLayers <- integer()
+
+    # don't need to go through all layers if the current file has only some; run through from start
+    for (ln in seq_len(nlyr(rr))) {
+      digs[ln] <- .robustDigest(rr[[ln]][])
+      if (digs[ln] %in% objDigs)
+        whLayers <- c(ln, whLayers)
+      if (all(digs %in% objDigs))
+        break
+    }
+    # inFileDigs <- unlist(lapply(seq_len(nlyr(rr)), function(ln) )
+    # whLayers <- which(unlist(inFileDigs) %in% unlist(objDigs))
+  }
+  if (is.character(obj))
+    if (any(grepl("MDC_historical_NT", basename2(obj)))) browser()
+  obj <- asPath(fns)
   attr(obj, "tags") <- c(
     attr(obj, "tags"),
     paste0("origFilename:", basename2(obj)),
@@ -678,6 +703,7 @@ wrapSpatRaster <- function(obj, cachePath) {
     paste0("fileFormat:", tools::file_ext(obj)),
     paste0("saveRawFile:", TRUE),
     paste0("loadFun:", "terra::rast"),
+    paste0("whLayers:", whLayers),
     paste0("layerNames:", layerNams),
     paste0("whichFiles:", obj2)
   )
@@ -699,15 +725,28 @@ unwrapSpatRaster <- function(obj, cachePath) {
         newName <- file.path(cachePath, origRelName)
       }
       whFiles <- newName[match(basename(extractFromCache(tags, "whichFiles")), origFilename)]
+      # filenameInCache <- Map(ff = whFiles, form = fileExt(obj), function(ff, form) {
+      #   CacheStoredFile(cachePath,
+      #                   cacheId = tools::file_path_sans_ext(basename(ff)),
+      #                   format = form
+      #   )
+      # })
+
       filenameInCache <- CacheStoredFile(cachePath,
-        cacheId = tools::file_path_sans_ext(basename(obj)),
-        format = fileExt(obj)
+                                         # cacheId = tools::file_path_sans_ext(basename(obj)),
+                                         obj = obj
       )
-      hardLinkOrCopy(filenameInCache, obj, verbose = 0)
+
+      hardLinkOrCopy(unlist(filenameInCache), obj, verbose = 0)
       obj <- eval(parse(text = extractFromCache(tags, "loadFun")))(whFiles)
       possNames <- strsplit(extractFromCache(tags, "layerNames"), split = layerNamesDelimiter)[[1]]
-      # if (!identical(possNames, names(obj)))
-      #   browser()
+      namsObjs <- names(obj)
+      if (!identical(possNames, namsObjs)) {
+        whLayers <- as.integer(extractFromCache(tags, "whLayers"))
+        if (length(whLayers) != length(namsObjs)) {
+          obj <- obj[[whLayers]]
+        }
+      }
 
       # names can be wrong e.g., with "nextNumericName" ... habitatQuality_1 instead of habitatQuality.
       #  Should use the one without the `nextNumericName`
