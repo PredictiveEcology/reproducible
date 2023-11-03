@@ -491,7 +491,7 @@ unmakeMemoisable.default <- function(x) {
 #'
 #' @export
 #'
-.wrap <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap <- function(obj, cachePath, preDigest,  drv = getDrv(getOption("reproducible.drv", NULL)),
                   conn = getOption("reproducible.conn", NULL),
                   verbose = getOption("reproducible.verbose")) {
   UseMethod(".wrap")
@@ -499,25 +499,35 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dotWrap
-.wrap.list <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap.list <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                        conn = getOption("reproducible.conn", NULL),
                        verbose = getOption("reproducible.verbose")) {
-  obj <- lapply(obj, .wrap, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
+  attrsOrig <- attributes(obj)
+  obj <- lapply(obj, .wrap, preDigest = preDigest, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
   hasTagAttr <- lapply(obj, function(x) attr(x, "tags"))
-  tagAttr <- unlist(hasTagAttr <- lapply(obj, function(x) attr(x, "tags")))
-  if (!is.null(tagAttr)) {
-    attr(obj, "tags") <- tagAttr
+  tagAttr <- list(unlist(hasTagAttr))
+  if (length(tagAttr)) {
+    if (is.null(attrsOrig[["tags"]])) {
+      newList <- tagAttr
+    } else {
+      newList <- try(modifyList(attrsOrig["tags"], tagAttr))
+    }
+    attrsOrig["tags"] <- newList
+  }
+  if (!is.null(attrsOrig)) {
+    for (tt in c(".Cache", "tags", "call"))
+      attr(obj, tt) <- attrsOrig[[tt]]
   }
   obj
 }
 
 #' @export
 #' @rdname dotWrap
-.wrap.environment <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap.environment <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                               conn = getOption("reproducible.conn", NULL),
                               verbose = getOption("reproducible.verbose")) {
   obj2 <- as.list(obj, all.names = FALSE)
-  out <- .wrap(obj2, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
+  out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv, conn = conn, verbose = verbose)
   obj <- Copy(obj)
   obj2 <- list2envAttempts(out, obj)
   if (!is.null(obj2)) obj <- obj2
@@ -536,7 +546,7 @@ unmakeMemoisable.default <- function(x) {
 #' }
 
 #'
-.wrap.default <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap.default <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL),
                           verbose = getOption("reproducible.verbose")) {
   rasters <- is(obj, "Raster")

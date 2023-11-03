@@ -24,7 +24,7 @@
 downloadFile <- function(archive, targetFile, neededFiles,
                          destinationPath = getOption("reproducible.destinationPath", "."), quick,
                          checksumFile, dlFun = NULL,
-                         checkSums, url, needChecksums,
+                         checkSums, url, needChecksums, preDigest,
                          overwrite = getOption("reproducible.overwrite", TRUE),
                          verbose = getOption("reproducible.verbose", 1),
                          purge = FALSE, .tempPath, ...) {
@@ -111,7 +111,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
               targetFile = targetFile, fileToDownload = fileToDownload,
               messSkipDownload = messSkipDownload, checkSums = checkSums,
               dlFun = dlFun, destinationPath = destinationPath,
-              overwrite = overwrite, needChecksums = needChecksums,
+              overwrite = overwrite, needChecksums = needChecksums, preDigest = preDigest,
               verbose = verbose, .tempPath = .tempPath, ...
             )
           )
@@ -504,7 +504,7 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 #'
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, messSkipDownload,
-                           destinationPath, overwrite, needChecksums, .tempPath,
+                           destinationPath, overwrite, needChecksums, .tempPath, preDigest,
                            verbose = getOption("reproducible.verbose", 1), ...) {
   noTargetFile <- is.null(targetFile) || length(targetFile) == 0
   # browser(expr = exists("._downloadRemote_1"))
@@ -591,7 +591,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         #   where the function actually downloaded the file, we save it as an RDS file
         if (needSave) {
           if (!file.exists(destFile)) {
-            out2 <- .wrap(out)
+            out2 <- .wrap(out, preDigest = preDigest)
             saveRDS(out2, file = destFile)
           }
         }

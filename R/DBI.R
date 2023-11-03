@@ -208,7 +208,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 #' `loadFromCache` returns the object from the cache that has the particular `cacheId`.
 #'
 loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
-                          cacheId,
+                          cacheId, preDigest,
                           fullCacheTableForObj = NULL,
                           format = getOption("reproducible.cacheSaveFormat", "rds"),
                           .functionName = NULL, .dotsFromCache = NULL,
@@ -257,6 +257,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
           cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
           cacheId = cacheId,
           format = fileExt(sameCacheID),
+          preDigest = preDigest,
           verbose = verbose
         )
         obj <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
