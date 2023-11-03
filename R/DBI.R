@@ -1009,13 +1009,13 @@ CacheDBFiles <- function(cachePath = getOption("reproducible.cachePath")) {
   dtFiles
 }
 
-memoiseEnv <- function(cachePath) {
+memoiseEnv <- function(cachePath, envir = .GlobalEnv) {
   memPersist <- isTRUE(getOption("reproducible.memoisePersist", NULL))
   if (memPersist) {
     obj <- paste0(".reproducibleMemoise_", cachePath)
-    if (!exists(obj, envir = .GlobalEnv))
-      assign(obj, new.env(parent = emptyenv()), envir = .GlobalEnv)
-    memEnv <- get(obj, envir = .GlobalEnv, inherits = FALSE)
+    if (!exists(obj, envir = envir))
+      assign(obj, new.env(parent = emptyenv()), envir = envir)
+    memEnv <- get(obj, envir = envir, inherits = FALSE)
   } else {
     if (is.null(.pkgEnv[[cachePath]])) {
       .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())

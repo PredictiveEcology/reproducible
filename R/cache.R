@@ -2259,6 +2259,7 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
   preLoadTime <- Sys.time()
   output <- try(.getFromRepo(FUN,
     isInRepo = isInRepo,
+    # fileFormat = NULL,
     fullCacheTableForObj = fullCacheTableForObj,
     notOlderThan = notOlderThan,
     lastOne = lastOne,

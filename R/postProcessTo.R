@@ -1426,6 +1426,9 @@ isGeomType <- function(geom, type) {
 
 gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("reproducible.verbose"), ...) {
 
+  if (!requireNamespace("sf") && !requireNamespace("terra"))
+    stop("Can't use gdalProject without sf and terra")
+
   messagePrepInputs("     running gdalProject ...", appendLF = FALSE, verbose = verbose)
   st <- Sys.time()
 
@@ -1443,7 +1446,7 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
     fnSource <- fns
   } else {
     fnSource <- tempfile(fileext = ".tif")
-    writeRaster(fromRas, filename = fnSource)
+    terra::writeRaster(fromRas, filename = fnSource)
     on.exit(unlink(fnSource))
   }
 
@@ -1453,7 +1456,7 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
   tf4 <- tempfile(fileext = ".prj")
   on.exit(unlink(tf4), add = TRUE)
   cat(sf::st_crs(toRas)$wkt, file = tf4)
-  system.time(gdal_utils(
+  sf::gdal_utils(
     util = "warp",
     source = fnSource,
     destination = filenameDest,
@@ -1467,7 +1470,6 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
       "-dstnodata", "NA",
       "-overwrite"
     ))
-  )
 
   out <- terra::rast(filenameDest)
   messagePrepInputs("     ...done in ",
@@ -1481,6 +1483,9 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
 
 gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("reproducible.verbose")) {
 
+  if (!requireNamespace("sf") && !requireNamespace("terra"))
+    stop("Can't use gdalResample without sf and terra")
+
   messagePrepInputs("     running gdalResample ...", appendLF = FALSE, verbose = verbose)
   st <- Sys.time()
 
@@ -1489,7 +1494,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
     fnSource <- fns
   } else {
     fnSource <- tempfile(fileext = ".tif")
-    writeRaster(fromRas, filename = fnSource)
+    terra::writeRaster(fromRas, filename = fnSource)
     on.exit(unlink(fnSource))
   }
 
@@ -1500,7 +1505,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
   cat(sf::st_crs(toRas)$wkt, file = tf4)
 
 
-  system.time(gdal_utils(
+  system.time(sf::gdal_utils(
     util = "warp",
     source = fnSource,
     destination = filenameDest,
@@ -1526,6 +1531,9 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
 
 gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("reproducible.verbose"), ...) {
 
+  if (!requireNamespace("sf") && !requireNamespace("terra"))
+    stop("Can't use gdalMask without sf and terra")
+
   messagePrepInputs("     running gdalMask ...", appendLF = FALSE, verbose = verbose)
   st <- Sys.time()
 
@@ -1535,13 +1543,13 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
     fnSource <- fns
   } else {
     fnSource <- tempfile(fileext = ".tif")
-    writeRaster(fromRas, filename = fnSource)
+    terra::writeRaster(fromRas, filename = fnSource)
     on.exit(unlink(fnSource))
   }
 
   tf3 <- tempfile(fileext = ".shp")
   shp <- terra::project(maskToVect, terra::crs(fromRas))
-  writeVector(shp, file = tf3)
+  terra::writeVector(shp, file = tf3)
 
   dPath <- which(...names() %in% "destinationPath")
   destinationPath <- if (length(dPath)) {
@@ -1555,7 +1563,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
 
   writeTo <- determineFilename(writeTo, destinationPath = destinationPath, verbose = verbose)
 
-  system.time(gdal_utils(
+  system.time(sf::gdal_utils(
     util = "warp",
     source = fnSource,
     destination = writeTo,

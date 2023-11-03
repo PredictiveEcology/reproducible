@@ -663,7 +663,8 @@ unmakeMemoisable.default <- function(x) {
 
 wrapSpatRaster <- function(obj, cachePath) {
   cls <- class(obj)
-  fns <- Filenames(obj)
+  fns <- Filenames(obj, allowMultiple = FALSE)
+  fnsMulti <- Filenames(obj, allowMultiple = TRUE)
   layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
   obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
   nlyrsInFile <- as.integer(terra::nlyr(terra::rast(fns)))
@@ -690,7 +691,7 @@ wrapSpatRaster <- function(obj, cachePath) {
   }
   if (is.character(obj))
     if (any(grepl("MDC_historical_NT", basename2(obj)))) browser()
-  obj <- asPath(fns)
+  obj <- asPath(fnsMulti)
   attr(obj, "tags") <- c(
     attr(obj, "tags"),
     paste0("origFilename:", basename2(obj)),

@@ -108,7 +108,7 @@
 .getFromRepo <- function(FUN, isInRepo, fullCacheTableForObj,
                          notOlderThan, lastOne, cachePath, fnDetails,
                          modifiedDots, debugCache, verbose, # sideEffect,
-                         quick, fileFormat = NULL,
+                         quick, # fileFormat = NULL,
                          algo, preDigest, startCacheTime,
                          drv = getDrv(getOption("reproducible.drv", NULL)),
                          conn = getOption("reproducible.conn", NULL), ...) {
