@@ -180,6 +180,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
   dlFunCaptured <- substitute(dlFun)
   prepInputsAssertions(environment())
+  verboseCFS <- verbose
   isAlreadyQuoted <- any(grepl("quote", dlFunCaptured))
   if (isAlreadyQuoted) {
     dlFunCaptured <- eval(dlFunCaptured)
@@ -304,8 +305,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   } else {
     outFromSimilar <- .checkForSimilar(neededFiles, alsoExtract, archive, targetFile,
       destinationPath = destinationPath, checkSums,
-      checkSumFilePath = checkSumFilePath, url
+      checkSumFilePath = checkSumFilePath, url, verbose = verboseCFS
     )
+    verboseCFS <- verbose - 1
     list2env(outFromSimilar, environment()) # neededFiles, checkSums
   }
   neededFiles <- unique(makeAbsolute(neededFiles, destinationPath))
@@ -469,8 +471,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     archive = archive, targetFile = targetFile,
     destinationPath = destinationPath, checkSums = checkSums,
     checkSumFilePath = checkSumFilePath,
-    url = url
+    url = url, verbose = verboseCFS
   )
+  verboseCFS <- verbose - 1
+
   list2env(outFromSimilar, environment()) # neededFiles, checkSums
 
   # don't include targetFile in neededFiles -- extractFromArchive deals with it separately
@@ -547,7 +551,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           from <- filesExtr[whFilesExtrInIP]
           to <- makeAbsolute(makeRelative(from, destinationPath), destinationPathUser)
           if (!isTRUE(all(from %in% to))) {
-            messagePrepInputs("...using copy in getOption('reproducible.inputPaths')...")
+            messagePrepInputs("...using copy in getOption('reproducible.inputPaths')...",
+                              verbose = verbose)
           }
           outHLC <- hardLinkOrCopy(from, to)
           filesExtr[foundInInputPaths] <- to
@@ -578,7 +583,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           from <- filesExtr[whFilesExtrInLP]
           to <- makeAbsolute(makeRelative(from, destinationPath), reproducible.inputPaths)
           if (!isTRUE(all(from %in% to))) {
-            messagePrepInputs("... copying to getOption('reproducible.inputPaths')...")
+            messagePrepInputs("... copying to getOption('reproducible.inputPaths')...",
+                              verbose = verbose)
           }
           outHLC <- hardLinkOrCopy(from, to)
         }
@@ -603,7 +609,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       destinationPath = destinationPath,
       checkSums = checkSums,
       checkSumFilePath = checkSumFilePath,
-      targetFile = targetFile
+      targetFile = targetFile, verbose = verboseCFS
     )
     neededFiles <- outFromSimilar$neededFiles
     checkSums <- outFromSimilar$checkSums
@@ -910,7 +916,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                              url, verbose = getOption("reproducible.verbose", 1)) {
   lookForSimilar <- FALSE
   if (is.null(alsoExtract) || length(alsoExtract) == 0) {
-    messagePrepInputs("alsoExtract is unspecified; assuming that all files must be extracted")
+    messagePrepInputs("alsoExtract is unspecified; assuming that all files must be extracted",
+                      verbose = verbose)
     lookForSimilar <- "all"
   } else {
     if (!all(is.na(alsoExtract))) {
