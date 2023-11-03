@@ -15,6 +15,7 @@ downloadFile(
   checkSums,
   url,
   needChecksums,
+  preDigest,
   overwrite = getOption("reproducible.overwrite", TRUE),
   verbose = getOption("reproducible.verbose", 1),
   purge = FALSE,
