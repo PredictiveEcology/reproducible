@@ -218,7 +218,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
   # browser(expr = exists("._cloudUploadFromCache_1"))
 
   if (!any(isInCloud)) {
-    cacheIdFileName <- CacheStoredFile(cachePath, outputHash, "check")
+    cacheIdFileName <- CacheStoredFile(cachePath, outputHash, "check", obj = outputToSave)
     if (useDBI()) {
       dt <- showCache(userTags = outputHash)
       td <- tempdir()
