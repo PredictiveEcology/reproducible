@@ -690,8 +690,6 @@ wrapSpatRaster <- function(obj, cachePath) {
     # inFileDigs <- unlist(lapply(seq_len(nlyr(rr)), function(ln) )
     # whLayers <- which(unlist(inFileDigs) %in% unlist(objDigs))
   }
-  if (is.character(obj))
-    if (any(grepl("MDC_historical_NT", basename2(obj)))) browser()
   obj <- asPath(fnsMulti)
   attr(obj, "tags") <- c(
     attr(obj, "tags"),
@@ -739,6 +737,9 @@ unwrapSpatRaster <- function(obj, cachePath) {
                                          obj = obj
       )
 
+      feObjs <- file.exists(obj)
+      if (any(feObjs))
+        unlink(obj[feObjs])
       hardLinkOrCopy(unlist(filenameInCache), obj, verbose = 0)
       obj <- eval(parse(text = extractFromCache(tags, "loadFun")))(whFiles)
       possNames <- strsplit(extractFromCache(tags, "layerNames"), split = layerNamesDelimiter)[[1]]
