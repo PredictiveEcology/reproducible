@@ -170,20 +170,19 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
         path = googledrive::as_id(cloudFolderID),
         pattern = paste(collapse = "|", newFileName)
       )
+      newFileName <- newFileName[match(newFileName, gdriveLs$name)]
     }
   }
   outs <- rbindlist(outs)
 
   if (!useDBI()) {
     dtFileInCache <- CacheDBFileSingle(cachePath, cacheId = outputHash)
-    hardLinkOrCopy(dtFile, dtFileInCache)
+    suppressMessages(hardLinkOrCopy(dtFile, dtFileInCache))
   }
   objFiles <- grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE, invert = TRUE)
   # objFiles <- grep(paste0(".", formatCheck(cachePath, outputHash)), objFiles, value = TRUE)
   filenamesInCache <- file.path(CacheStorageDir(), basename2(objFiles))
   hardLinkOrCopy(objFiles, to = filenamesInCache)
-
-
 
   if (useDBI()) { # with useDBI = FALSE, the dbFile is already there.
     Map(tv = dt$tagValue, tk = dt$tagKey, function(tv, tk) {
