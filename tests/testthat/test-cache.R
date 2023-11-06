@@ -1,8 +1,8 @@
 test_that("test file-backed raster caching", {
   skip_on_cran()
   testInit("terra",
-    tmpFileExt = c(".tif", ".grd"),
-    opts = list(reproducible.useMemoise = FALSE)
+           tmpFileExt = c(".tif", ".grd"),
+           opts = list(reproducible.useMemoise = FALSE)
   )
 
   nOT <- Sys.time()
@@ -25,7 +25,7 @@ test_that("test file-backed raster caching", {
   # https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions
   # https://github.com/r-lib/testthat/issues/734 to direct it to reproducible::isInteractive
   #   solves the error about not being in the testthat package
-  val1 <- .cacheNumDefaultTags() + 1 + 11 # adding a userTag here... the +8 is the SpatRaster extras
+  val1 <- .cacheNumDefaultTags() + 1 + 12 # adding a userTag here... the +8 is the SpatRaster extras
   ik <- .ignoreTagKeys()
   # with_mock(
   #   "reproducible::isInteractive" = function() TRUE,
@@ -72,8 +72,8 @@ test_that("test file-backed raster caching", {
 
   clearCache(x = tmpCache)
   bb <- Cache(randomPolyToDisk, tmpfile[1],
-    cachePath = tmpCache, userTags = "something2",
-    quick = TRUE
+              cachePath = tmpCache, userTags = "something2",
+              quick = TRUE
   )
   # bb <- Cache(randomPolyToDisk, tmpfile[1], cachePath = tmpdir, userTags = "something2")
   # clearCache(x = tmpdir)
@@ -98,8 +98,8 @@ test_that("test file-backed raster caching", {
 
   warn <- capture_warnings({
     bb <- Cache(randomPolyToDisk, tmpfile[1],
-      cachePath = tmpdir, userTags = "something2",
-      quick = TRUE
+                cachePath = tmpdir, userTags = "something2",
+                quick = TRUE
     )
   })
 
@@ -114,8 +114,8 @@ test_that("test file-backed raster caching", {
 
   # ._Cache_6 <<- 1
   bb <- Cache(randomPolyToDisk, tmpfile[1],
-    cachePath = tmpdir, userTags = "something2",
-    quick = TRUE
+              cachePath = tmpdir, userTags = "something2",
+              quick = TRUE
   )
   expect_false(attr(bb, ".Cache")$newCache)
   expect_true(file.exists(Filenames(bb)))
@@ -124,12 +124,12 @@ test_that("test file-backed raster caching", {
   clearCache(tmpCache)
   clearCache(tmpdir)
   cc <- Cache(randomPolyToDisk, tmpfile[2],
-    cachePath = tmpCache, userTags = "something2",
-    quick = TRUE
+              cachePath = tmpCache, userTags = "something2",
+              quick = TRUE
   )
   bb <- Cache(randomPolyToDisk, tmpfile[1],
-    cachePath = tmpCache, userTags = "something2",
-    quick = TRUE
+              cachePath = tmpCache, userTags = "something2",
+              quick = TRUE
   )
   try(movedCache(tmpdir, tmpCache), silent = TRUE)
 
@@ -322,11 +322,11 @@ test_that("test memory backed raster robustDigest", {
 
 test_that("test 'quick' argument", {
   testInit("terra",
-    tmpFileExt = c(".tif", ".tif", ".tif"),
-    opts = list(
-      "reproducible.useMemoise" = TRUE,
-      "reproducible.showSimilar" = FALSE
-    )
+           tmpFileExt = c(".tif", ".tif", ".tif"),
+           opts = list(
+             "reproducible.useMemoise" = TRUE,
+             "reproducible.showSimilar" = FALSE
+           )
   )
 
   ### Make raster using Cache
@@ -417,9 +417,9 @@ test_that("test keepCache", {
   Cache(round, runif(4), cachePath = tmpdir)
 
   expect_true(NROW(showCache(tmpdir)[!tagKey %in% .ignoreTagKeys()]) ==
-    .cacheNumDefaultTags() * 3)
+                .cacheNumDefaultTags() * 3)
   expect_true(NROW(showCache(tmpdir, c("rnorm", "runif"))[!tagKey %in% .ignoreTagKeys()]) ==
-    0) # and search
+                0) # and search
   expect_true(NROW(keepCache(tmpdir, "rnorm", ask = FALSE)[!tagKey %in% .ignoreTagKeys()]) == .cacheNumDefaultTags())
 
   # do it twice to make sure it can deal with repeats
@@ -521,12 +521,12 @@ test_that("test environments", {
 
 test_that("test asPath", {
   testInit("terra",
-    tmpFileExt = "pdf",
-    verbose = TRUE,
-    opts = list(
-      "reproducible.useMemoise" = TRUE,
-      "reproducible.showSimilar" = FALSE
-    )
+           tmpFileExt = "pdf",
+           verbose = TRUE,
+           opts = list(
+             "reproducible.useMemoise" = TRUE,
+             "reproducible.showSimilar" = FALSE
+           )
   )
   unlink(dir(tmpdir, full.names = TRUE))
 
@@ -549,16 +549,16 @@ test_that("test asPath", {
   unlink("filename.RData")
   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
   a1 <- capture_messages(Cache(saveRDS, obj,
-    file = asPath("filename.RData"),
-    quick = TRUE, cachePath = tmpdir
+                               file = asPath("filename.RData"),
+                               quick = TRUE, cachePath = tmpdir
   ))
   a2 <- capture_messages(Cache(saveRDS, obj,
-    file = asPath("filename.RData"),
-    quick = TRUE, cachePath = tmpdir
+                               file = asPath("filename.RData"),
+                               quick = TRUE, cachePath = tmpdir
   ))
   a3 <- capture_messages(Cache(saveRDS, obj,
-    file = asPath("filename.RData"),
-    quick = TRUE, cachePath = tmpdir
+                               file = asPath("filename.RData"),
+                               quick = TRUE, cachePath = tmpdir
   ))
   expect_true(length(a1) == 0)
   expect_true(sum(grepl(paste(
@@ -570,16 +570,16 @@ test_that("test asPath", {
   unlink("filename.RData")
   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
   a1 <- capture_messages(Cache(saveRDS, obj,
-    file = as("filename.RData", "Path"),
-    quick = TRUE, cachePath = tmpdir
+                               file = as("filename.RData", "Path"),
+                               quick = TRUE, cachePath = tmpdir
   ))
   a2 <- capture_messages(Cache(saveRDS, obj,
-    file = as("filename.RData", "Path"),
-    quick = TRUE, cachePath = tmpdir
+                               file = as("filename.RData", "Path"),
+                               quick = TRUE, cachePath = tmpdir
   ))
   a3 <- capture_messages(Cache(saveRDS, obj,
-    file = as("filename.RData", "Path"),
-    quick = TRUE, cachePath = tmpdir
+                               file = as("filename.RData", "Path"),
+                               quick = TRUE, cachePath = tmpdir
   ))
   expect_true(length(a1) == 0)
   expect_true(sum(grepl(paste(
@@ -612,12 +612,14 @@ test_that("test quoted FUN in Cache", {
 
 test_that("test Cache argument inheritance to inner functions", {
   testInit("terra",
-    verbose = TRUE,
-    opts = list(
-      "reproducible.showSimilar" = FALSE,
-      "reproducible.useMemoise" = FALSE
-    )
+           verbose = TRUE,
+           opts = list(
+             "reproducible.showSimilar" = FALSE,
+             "reproducible.useMemoise" = FALSE
+           )
   )
+  opts <- options(reproducible.cachePath = tmpdir)
+  on.exit(options(opts), add = TRUE)
   tmpDirFiles <- dir(tempdir())
   on.exit(
     {
@@ -627,14 +629,15 @@ test_that("test Cache argument inheritance to inner functions", {
     add = TRUE
   )
 
-  outer <- function(n) {
-    Cache(rnorm, n)
+  outer <- function(n, not = NULL) {
+    Cache(rnorm, n, notOlderThan = not)
   }
 
-  expect_silent(Cache(outer, n = 2, cachePath = tmpdir))
+  mess <- capture_messages(Cache(outer, n = 2))
+  expect_true(all(grepl(messageNoCacheRepo, mess)))
   clearCache(ask = FALSE, x = tmpdir)
 
-  options(reproducible.cachePath = tmpCache)
+  # options(reproducible.cachePath = tmpCache)
   out <- capture_messages(Cache(outer, n = 2))
   expect_true(all(unlist(lapply(
     c(messageNoCacheRepo, messageNoCacheRepo),
@@ -642,11 +645,12 @@ test_that("test Cache argument inheritance to inner functions", {
   ))))
 
   # does Sys.time() propagate to outer ones
-  out <- capture_messages(Cache(outer, n = 2, notOlderThan = Sys.time() + 1))
+  out <- capture_messages(Cache(outer(n = 2, not = Sys.time() + 1), notOlderThan = Sys.time() + 1))
   expect_true(all(grepl(messageNoCacheRepo, out)))
 
   # does Sys.time() propagate to outer ones -- no message about cachePath being tempdir()
-  expect_silent(Cache(outer, n = 2, notOlderThan = Sys.time(), cachePath = tmpdir))
+  mess <- capture_messages(Cache(outer(n = 2, not = Sys.time()), notOlderThan = Sys.time(), cachePath = tmpdir))
+  expect_true(all(grepl(messageNoCacheRepo, mess)))
 
   # does cachePath propagate to outer ones -- no message about cachePath being tempdir()
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
@@ -659,10 +663,10 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n)
   }
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-  expect_true(length(out) == 2)
+  expect_true(length(out) == 3)
   msgGrep <- paste(paste(.loadedCacheResultMsg, "rnorm call"),
-    "There is no similar item in the cachePath",
-    sep = "|"
+                   "There is no similar item in the cachePath",
+                   sep = "|"
   )
   expect_true(sum(grepl(msgGrep, out)) == 1)
 
@@ -672,8 +676,7 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n, notOlderThan = Sys.time() + 1)
   }
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-  expect_true(length(out) == 0)
-  # expect_true(all(grepl("There is no similar item in the cachePath", out)))
+  expect_true(all(grepl(messageNoCacheRepo, out)))
 
   # change the outer function, so no cache on that, & have notOlderThan on rnorm,
   #    so no Cache on that
@@ -682,7 +685,8 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n, notOlderThan = Sys.time() + 1)
   }
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-  expect_true(length(out) == 0)
+  expect_true(all(grepl(messageNoCacheRepo, out)))
+
   # expect_true(all(grepl("There is no similar item in the cachePath", out)))
   # Second time will get a cache on outer
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
@@ -705,10 +709,12 @@ test_that("test Cache argument inheritance to inner functions", {
 
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir, notOlderThan = Sys.time()))
   msgGrep <- paste(paste(.loadedCacheResultMsg, "inner call"),
-    "There is no similar item in the cachePath",
-    sep = "|"
+                   "There is no similar item in the cachePath",
+                   sep = "|"
   )
-  expect_true(sum(grepl(msgGrep, out)) == 1)
+  expect_true(sum(grepl(messageNoCacheRepo, out)) == 1)
+
+  # expect_true(sum(grepl(msgGrep, out)) == 1)
 
   outer <- function(n) {
     Cache(inner, 0.1, notOlderThan = Sys.time())
@@ -720,8 +726,8 @@ test_that("test Cache argument inheritance to inner functions", {
 
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir, notOlderThan = Sys.time()))
   msgGrep <- paste(paste(.loadedCacheResultMsg, "rnorm call"),
-    "There is no similar item in the cachePath",
-    sep = "|"
+                   "There is no similar item in the cachePath",
+                   sep = "|"
   )
   expect_true(sum(grepl(msgGrep, out)) == 1)
 
@@ -768,11 +774,11 @@ test_that("test future", {
   .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
   # if (.onLinux) {
   testInit(c("terra", "future"),
-    verbose = TRUE, tmpFileExt = ".rds",
-    opts = list(
-      "future.supportsMulticore.unstable" = "quiet",
-      "reproducible.futurePlan" = "multicore"
-    )
+           verbose = TRUE, tmpFileExt = ".rds",
+           opts = list(
+             "future.supportsMulticore.unstable" = "quiet",
+             "reproducible.futurePlan" = "multicore"
+           )
   )
 
   # There is now a warning with future package
@@ -842,81 +848,6 @@ test_that("test mergeCache", {
   expect_true(identical(showCache(d), showCache(d1)))
 })
 
-# DELETE THIS ONE; IT IS NOT RELEVANT ANY MORE AND IT IS BROKEN
-# test_that("test cache-helpers", {
-#   testInit("terra")
-#   out <- createCache(tmpCache)
-#
-#   tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".grd")
-#   tmpfile2 <- tempfile(tmpdir = tmpdir, fileext = ".grd")
-#   tmpfile3 <- tempfile(tmpdir = tmpdir, fileext = ".grd")
-#   r <- terra::rast(terra::ext(0, 5, 0, 5), resolution = 1, vals = rep(1:2, length.out = 25))
-#   # levels(r) <- data.frame(ID = 1:2, Val = 3:4)
-#   # b <- .prepareFileBackedRaster(r, tmpCache)
-#   # is(b, "RasterLayer")
-#
-#   r1 <- terra::rast(terra::ext(0, 5, 0, 5), resolution = 1, vals = rep(1:2, length.out = 25))
-#   # s <- c(r, r1)
-#   # b <- .prepareFileBackedRaster(s, tmpCache)
-#
-#   r <- .writeRaster(r, filename = tmpfile, overwrite = TRUE)
-#   r1 <- .writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
-#   s <- c(r, r1)
-#
-#   # Test deleted raster backed file
-#   # file.remove(tmpfile2)
-#   # expect_error(b <- .prepareFileBackedRaster(s, tmpCache), "The following file-backed rasters")
-#   # expect_error(b <- .prepareFileBackedRaster(r1, tmpCache), "The following file-backed rasters")
-#
-#   # Test wrong folder names
-#   tmpfile <- file.path(tmpCache, basename(tempfile(tmpdir = tmpdir, fileext = ".grd")))
-#   r <- .writeRaster(r, filename = tmpfile, overwrite = TRUE)
-#   # r@file@name <- gsub(pattern = dirname(tmpfile),
-#   #                     normalizePath(tmpfile, winslash = "/", mustWork = FALSE),
-#   #                     replacement = dirname(dirname(tmpfile)))
-#   # # show it is not there, so it is the wrong name
-#   # expect_false(all(file.exists(Filenames(r))))
-#   # fix it, by giving correct tmpCache path
-#   # b <- .prepareFileBackedRaster(r, tmpCache)
-#   # expect_true(all(file.exists(Filenames(b))))
-#   # Check that it makes a new name if already in Cache
-#   # checkPath(file.path(tmpCache, "rasters"), create = TRUE)
-#   # r1 <- .writeRaster(r1, filename = file.path(tmpCache, "rasters", basename(tmpfile2)), overwrite = TRUE)
-#   # b <- .prepareFileBackedRaster(r1, tmpCache)
-#   expect_true(identical(normalizePath(Filenames(b), winslash = "/", mustWork = FALSE),
-#                         normalizePath(file.path(dirname(Filenames(r1)),
-#                                                 nextNumericName(basename(Filenames(r1)))),
-#                                       winslash = "/", mustWork = FALSE)))
-#
-#   r <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
-#   r1 <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
-#   tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".grd")
-#   r <- .writeRaster(r, filename = tmpfile, overwrite = TRUE)
-#   r1 <- .writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
-#   s <- addLayer(r, r1)
-#   b1 <- .prepareFileBackedRaster(s, repoDir = tmpCache)
-#   expect_true(is(b1, "RasterStack"))
-#   expect_true(identical(Filenames(b1), ""))
-#   expect_true(identical(normalizePath(Filenames(b1$layer.1), winslash = "/", mustWork = FALSE),
-#                         normalizePath(file.path(tmpCache, "rasters", basename(Filenames(r))), winslash = "/", mustWork = FALSE)))
-#
-#   # Give them single file -- 2 layer stack; like a raster::brick, but a stack
-#   r[] <- r[]
-#   r1[] <- r1[]
-#   b <- raster::stack(r, r1)
-#
-#   b <- .writeRaster(b, filename = tmpfile, overwrite = TRUE)
-#   b <- raster::stack(b)
-#   expect_true(nlayers2(b) == 2)
-#   expect_true(identical(normPath(b$layer.1@file@name),
-#                         normPath(b$layer.2@file@name)))
-#
-#   b1 <- .prepareFileBackedRaster(b, tmpCache)
-#   expect_true(nlayers2(b1) == 2)
-#   b1a <- raster::stack(Filenames(b1)[1])
-#   expect_true(nlayers2(b1a) == 2)
-#
-# })
 
 test_that("test cache-helpers", {
   testInit(c("raster"), tmpFileExt = c(rep(".grd", 3), rep(".tif", 3)))
@@ -1026,12 +957,12 @@ test_that("test rm large non-file-backed rasters", {
   }
 
   testInit(c("qs", "terra"), opts = list("reproducible.cacheSpeed" = "fast",
-                             "reproducible.cacheSaveFormat" = "qs"))
+                                         "reproducible.cacheSaveFormat" = "qs"))
 
   ext <- terra::ext(0, 10000, 0, 10000)
   r <- Cache(terra::rast, ext,
-    resolution = 1, vals = 1,
-    cachePath = tmpdir, userTags = "first"
+             resolution = 1, vals = 1,
+             cachePath = tmpdir, userTags = "first"
   )
   st1 <- system.time(clearCache(tmpdir, userTags = "first", ask = FALSE))
   expect_true(st1["user.self"] < 0.75) # This was > 2 seconds in old way
@@ -1083,8 +1014,8 @@ test_that("test pre-creating conn", {
   rb <- terra::rast(terra::ext(0, 10, 0, 10), vals = sample(1:100))
   r1 <- Cache(.writeRaster, ra, filename = tmpfile[1], overwrite = TRUE, cachePath = tmpCache)
   r2 <- Cache(.writeRaster, rb,
-    filename = tmpfile[2], overwrite = TRUE, cachePath = tmpdir,
-    conn = conn
+              filename = tmpfile[2], overwrite = TRUE, cachePath = tmpdir,
+              conn = conn
   )
   expect_true(file.exists(Filenames(r1)))
   expect_true(file.exists(Filenames(r2)))
@@ -1112,13 +1043,19 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
   ci <- unique(sc[[.cacheTableHashColName()]])
   unlink(CacheStoredFile(tmpdir, ci))
 
-  warn <- capture_warnings({
-    err <- capture_error({
-      b <- Cache(rnorm, 1, cachePath = tmpdir)
+
+  rm(b)
+  mess <- capture_messages(
+    warn <- capture_warnings({
+      err <- capture_error({
+        d <- Cache(rnorm, 1, cachePath = tmpdir)
+      })
     })
-  })
-  expect_true(grepl(paste0("(trying to recover).*(", ci, ")"), err))
+  )
+  expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), mess)) == 1)
+  expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), err)) == 0)
   expect_true(grepl(paste0("[cannot|failed to] open"), paste(warn, err)))
+  expect_true(is.numeric(d))
 })
 
 test_that("test changing reproducible.cacheSaveFormat midstream", {
@@ -1184,7 +1121,7 @@ test_that("test file link with duplicate Cache", {
     g <- Cache(sam1, N, cachePath = tmpCache)
   })
 
-  expect_true(grepl("A file with identical", mess3))
+  expect_true(sum(grepl("A file with identical", mess3)) == 1)
 
   set.seed(123)
   mess1 <- capture_messages({
@@ -1311,8 +1248,8 @@ test_that("quick arg in Cache as character", {
 
     # new copy
     messes[[i]] <- capture_messages(Cache(saveRDS, ranRas,
-      file = tf, cachePath = tmpCache,
-      quick = quicks[[i]]
+                                          file = tf, cachePath = tmpCache,
+                                          quick = quicks[[i]]
     ))
   }
 
@@ -1408,7 +1345,7 @@ test_that("change to new capturing of FUN & base pipe", {
 
   mess1 <- capture_messages(
     out1 <- Cache(do.call(rnorm, list(1, 2, sd = round(mean(runif(Nrand2, 1, 1.1))))),
-      cachePath = tmpCache
+                  cachePath = tmpCache
     )
   )
 
@@ -1618,12 +1555,12 @@ test_that("test cache with new approach to match.call", {
 test_that("test cache; new approach to match.call, postProcess", {
   skip_if_not_installed("DBI") # sf needs DBI
   testInit(c("terra", "sf"),
-    tmpFileExt = c(".tif", ".tif"),
-    opts = list(
-      "rasterTmpDir" = tempdir2(rndstr(1, 6)),
-      "reproducible.inputPaths" = NULL,
-      "reproducible.overwrite" = TRUE
-    )
+           tmpFileExt = c(".tif", ".tif"),
+           opts = list(
+             "rasterTmpDir" = tempdir2(rndstr(1, 6)),
+             "reproducible.inputPaths" = NULL,
+             "reproducible.overwrite" = TRUE
+           )
   )
   on.exit(
     {
@@ -1637,10 +1574,10 @@ test_that("test cache; new approach to match.call, postProcess", {
   # Add a study area to Crop and Mask to
   # Create a "study area"
   coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-    .Dim = c(5L, 2L)
+                      .Dim = c(5L, 2L)
   )
   coords2 <- structure(c(-115.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-    .Dim = c(5L, 2L)
+                       .Dim = c(5L, 2L)
   )
 
   StudyArea <- terra::vect(coords, "polygons")
@@ -1699,12 +1636,12 @@ test_that("test cache; new approach to match.call, postProcess", {
 
 test_that("test cache; SpatRaster attributes", {
   testInit(c("terra", "sf"),
-    tmpFileExt = c(".tif", ".tif"),
-    opts = list(
-      "rasterTmpDir" = tempdir2(rndstr(1, 6)),
-      "reproducible.inputPaths" = NULL,
-      "reproducible.overwrite" = TRUE
-    ), needInternet = TRUE
+           tmpFileExt = c(".tif", ".tif"),
+           opts = list(
+             "rasterTmpDir" = tempdir2(rndstr(1, 6)),
+             "reproducible.inputPaths" = NULL,
+             "reproducible.overwrite" = TRUE
+           ), needInternet = TRUE
   )
 
   options("reproducible.cachePath" = tmpdir)
@@ -1724,15 +1661,15 @@ test_that("test cache; SpatRaster attributes", {
   }
 
   ras <- Cache(testFun,
-    url = url,
-    targetFile = targetFile
+               url = url,
+               targetFile = targetFile
   )
   expect_true(is.integer(attr(x = ras, "pixIDs")))
 
   ## re-run. attributes still there?
   ras <- Cache(testFun,
-    url = url,
-    targetFile = targetFile
+               url = url,
+               targetFile = targetFile
   )
   expect_true(is.integer(attr(x = ras, "pixIDs")))
 })
@@ -1759,13 +1696,13 @@ test_that("Issue 316 - writeOutputs in a non getwd dir", {
   rasterToMatchLarge <- list()
   for (i in 1:2) {
     rasterToMatchLarge[[i]] <- Cache(writeOutputs, rasterToMatch,
-      filename2 = .suffix(
-        file.path(tmpdir, "rasterToMatchLarge.tif"),
-        paste0("_", studyAreaName)
-      ), datatype = "INT2U",
-      overwrite = TRUE, userTags = c(cacheTags, "rasterToMatchLarge"),
-      quick = "filename2",
-      omitArgs = c("userTags")
+                                     filename2 = .suffix(
+                                       file.path(tmpdir, "rasterToMatchLarge.tif"),
+                                       paste0("_", studyAreaName)
+                                     ), datatype = "INT2U",
+                                     overwrite = TRUE, userTags = c(cacheTags, "rasterToMatchLarge"),
+                                     quick = "filename2",
+                                     omitArgs = c("userTags")
     )
   }
 
@@ -1820,4 +1757,55 @@ test_that("lightweight tests for preProcess code coverage", {
     Cache(cachePath = tmpCache, conn = list(tmpCache, tmpdir), rnorm(1)),
     "different lengths"
   )
+})
+
+
+
+test_that("terra files were creating file.link", {
+  testInit("terra",
+           tmpFileExt = c(".tif", ".tif"),
+           opts = list(reproducible.useMemoise = FALSE)
+  )
+  rasts <- lapply(1:2, function(x)
+    ras1 <- terra::rast(nrows = 1e3, ncols = 1e3, vals = sample(1e6),
+                        resolution = 1, xmin = 0, xmax = 1000, ymin = 0, ymax = 1000)
+  )
+  func <- function(ras, fn) {
+    ras <- Cache(writeRaster(ras, filename = fn), quick = c("fn"))
+    ras
+  }
+  mess <- capture_messages(Map(f = func, fn = tmpfile, ras = rasts))
+  expect_false(any(grepl("file.link", mess)))
+
+})
+
+test_that("pass NA to userTags", {
+  testInit(verbose = FALSE)
+  expect_no_error(a <- Cache(rnorm(1), userTags = c("NA", "hi")))
+})
+
+test_that("multifile cache saving", {
+  skip_on_cran()
+  testInit("terra",
+           tmpFileExt = c(".tif", ".tif"),
+           opts = list(reproducible.useMemoise = FALSE)
+  )
+
+  nOT <- Sys.time()
+
+  randomPolyToDisk2 <- function(tmpfiles) {
+    r <- terra::rast(ext(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+    r2 <- terra::rast(ext(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+    .writeRaster(r, tmpfiles[1], overwrite = TRUE)
+    .writeRaster(r, tmpfiles[2], overwrite = TRUE)
+    r <- c(terra::rast(tmpfiles[1]), terra::rast(tmpfiles[2]))
+    r
+  }
+  a <- Cache(randomPolyToDisk2(tmpfile), quick = "tmpfiles")
+  b <- Cache(randomPolyToDisk2(tmpfile), quick = "tmpfiles")
+  expect_false(attr(b, ".Cache")$newCache)
+  expect_true(attr(a, ".Cache")$newCache)
+  expect_true(all(basename(Filenames(a)) %in% dir(CacheStorageDir())))
+  expect_false(all(Filenames(a) %in% dir(CacheStorageDir(), full.names = TRUE)))
+
 })

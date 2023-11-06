@@ -170,20 +170,19 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
         path = googledrive::as_id(cloudFolderID),
         pattern = paste(collapse = "|", newFileName)
       )
+      newFileName <- newFileName[match(newFileName, gdriveLs$name)]
     }
   }
   outs <- rbindlist(outs)
 
   if (!useDBI()) {
     dtFileInCache <- CacheDBFileSingle(cachePath, cacheId = outputHash)
-    hardLinkOrCopy(dtFile, dtFileInCache)
+    suppressMessages(hardLinkOrCopy(dtFile, dtFileInCache))
   }
   objFiles <- grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE, invert = TRUE)
   # objFiles <- grep(paste0(".", formatCheck(cachePath, outputHash)), objFiles, value = TRUE)
   filenamesInCache <- file.path(CacheStorageDir(), basename2(objFiles))
   hardLinkOrCopy(objFiles, to = filenamesInCache)
-
-
 
   if (useDBI()) { # with useDBI = FALSE, the dbFile is already there.
     Map(tv = dt$tagValue, tk = dt$tagKey, function(tv, tk) {
@@ -219,12 +218,12 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
   # browser(expr = exists("._cloudUploadFromCache_1"))
 
   if (!any(isInCloud)) {
-    cacheIdFileName <- CacheStoredFile(cachePath, outputHash, "check")
+    cacheIdFileName <- CacheStoredFile(cachePath, outputHash, "check", obj = outputToSave)
     if (useDBI()) {
       dt <- showCache(userTags = outputHash)
       td <- tempdir()
-      useDBI(FALSE, verbose = FALSE)
-      on.exit(useDBI(TRUE, verbose = FALSE))
+      useDBI(FALSE, verbose = -1)
+      on.exit(useDBI(TRUE, verbose = -1))
       cacheDB <- CacheDBFileSingle(cachePath = td, outputHash) # put it in a temp location b/c don't want persistent
       on.exit(unlink(cacheDB), add = TRUE)
       if (!dir.exists(dirname(cacheDB))) {
@@ -232,7 +231,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
         on.exit(unlink(dirname(cacheDB)), add = TRUE)
       }
       suppress <- saveFilesInCacheFolder(obj = dt, fts = cacheDB, cacheId = outputHash, cachePath = cachePath)
-      useDBI(TRUE, verbose = FALSE)
+      useDBI(TRUE, verbose = -1)
     } else {
       cacheDB <- CacheDBFileSingle(cachePath, outputHash)
     }
@@ -240,9 +239,11 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
       newFileName <- basename2(cacheIdFileName)
 
       cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
-      messageCache("Uploading new cached object ", newFileName, ", with cacheId: ",
-        outputHash, " to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id,
-        verbose = verbose
+
+      messageCache("Uploading new cached object -- file(s):\n", paste(newFileName, collapse = "\n"),
+                   "\n ... with cacheId: ",
+                   outputHash, " to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id,
+                   verbose = verbose
       )
       du <- Map(med = cacheIdFileName, nam = newFileName, function(med, nam) {
         try(retry(quote(
@@ -265,7 +266,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
       stop("File(s) to upload are not available")
     }
   }
-  cloudUploadRasterBackends(obj = outputToSave, cloudFolderID)
+  # cloudUploadRasterBackends(obj = outputToSave, cloudFolderID)
 }
 
 cloudUploadRasterBackends <- function(obj, cloudFolderID) {

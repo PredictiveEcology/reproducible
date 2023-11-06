@@ -132,7 +132,6 @@ setAs(from = "character", to = "Path", function(from) {
 #'
 copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                            overwrite = TRUE, delDestination = FALSE,
-                           # copyRasterFile = TRUE, clearRepo = TRUE,
                            create = TRUE, silent = FALSE) {
   if (any(length(from) != 1, length(to) != 1)) stop("from and to must each be length 1")
   useFileCopy <- identical(dirname(from), dirname(to))
@@ -355,8 +354,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   obj
 }
 
-# loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
-
 #' @keywords internal
 .getOtherFnNamesAndTags <- function(scalls) {
   if (is.null(scalls)) {
@@ -556,22 +553,29 @@ withoutFinalNumeric <- function(string) {
 setClass("PackedSpatExtent")
 
 wrapSpatVector <- function(obj) {
-  geom1 <- terra::geom(obj)
-  geom1 <- list(
-    cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),
-    cols34 = matrix(as.integer(geom1[, c(3, 4)]), ncol = 2)
-  )
-  geomtype1 <- terra::geomtype(obj)
-  dat1 <- terra::values(obj)
-  crs1 <- terra::crs(obj)
-  obj <- list(geom1, geomtype1, dat1, crs1)
-  names(obj) <- spatVectorNamesForCache
+  obj <- terra::wrap(obj)
+  if (FALSE) {
+    geom1 <- terra::geom(obj)
+    geom1 <- list(
+      cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),
+      cols34 = matrix(as.integer(geom1[, c(3, 4)]), ncol = 2)
+    )
+    geomtype1 <- terra::geomtype(obj)
+    dat1 <- terra::values(obj)
+    crs1 <- terra::crs(obj)
+    obj <- list(geom1, geomtype1, dat1, crs1)
+    names(obj) <- spatVectorNamesForCache
+  }
   obj
 }
 
 unwrapSpatVector <- function(obj) {
-  obj$x <- cbind(obj$x$cols125[, 1:2, drop = FALSE], obj$x$cols34[, 1:2, drop = FALSE], obj$x$cols125[, 3, drop = FALSE])
-  do.call(terra::vect, obj)
+  obj <- terra::unwrap(obj)
+  if (FALSE) {
+    obj$x <- cbind(obj$x$cols125[, 1:2, drop = FALSE], obj$x$cols34[, 1:2, drop = FALSE], obj$x$cols125[, 3, drop = FALSE])
+    do.call(terra::vect, obj)
+  }
+  obj
 }
 
 #' Has a cached object has been updated?

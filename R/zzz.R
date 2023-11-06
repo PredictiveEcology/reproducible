@@ -28,7 +28,7 @@
 }
 
 .reproducibleTempPath <- function() getOption("reproducible.tempPath") # file.path(tempdir(), "reproducible")
-.reproducibleTempCacheDir <- function() getOption("reproducible.cachePath")
+.reproducibleTempCacheDir <- function() file.path(getOption("reproducible.tempPath"), "cache")
 .reproducibleTempInputDir <- function() file.path(tempdir(), "reproducible", "inputs")
 
 .argsToRemove <- unique(c(

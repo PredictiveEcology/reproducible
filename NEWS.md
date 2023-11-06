@@ -4,9 +4,23 @@
 * new function `isUpdated()` to determine whether a cached object has been updated;
 * `makeRelative()` is now exported for use downstream (e.g., `SpaDES.core`);
 * new functions `getRelative()` and `normPathRel()` for improved symlink handling (#362);
+* messaging is improved for `Cache` with the function named instead of just `cacheId`
+* messaging for `prepInputs`: minor changes
+* more edge cases for `Checksums` dealt with, so fewer unneeded downloads
+* `wrapSpatRaster` (`wrap` for file-backed `spatRaster` objects) fixes for more edge cases
+* `postProcessTo` can now use `sf::gdal_utils` for the case of `from` is a gridded object and `to` is a polygon vector. This appears to be between 2x and 10x faster in tests.
+* `postProcessTo` does a pre-crop (with buffer) to make the `projectTo` faster. When both `from` and `to` are vector objects, this pre-crop appears to create slivers in some cases. This step is now skipped for these cases.
+* `Cache` can now deal with unnamed functions, e.g., `Cache((function(x) x)())`
+* `terra` would fail if internet was unavailable, even when internet is not necessary, due to needing to retrieve projection information. Many cases where this happens will now divert to use `sf`.
+* `Cache` can now skip calculating `objSize`, which can take a non-trivial amount of time for large, complicated objects; see `reproducibleOptions()`
 
 ## Bug fixes
 * Filenames for some classes returned ""; now returns NULL so character vectors are only pointers to files
+* Cache on a terra object that writes file to disk, when `quick` argument is specified was failing, always creating the same object; fixed with #PR368
+* `useDBI` was incorrectly used if a user had set the option prior to package loading. Now works as expected.
+* several other minor
+* `preProcess` deals better with more cases of nested paths in archives.
+* more edge cases corrected for `inputPaths`
 
 # reproducible 2.0.8
 

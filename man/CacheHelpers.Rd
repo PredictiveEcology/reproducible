@@ -22,6 +22,7 @@ createCache(
 loadFromCache(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
+  preDigest,
   fullCacheTableForObj = NULL,
   format = getOption("reproducible.cacheSaveFormat", "rds"),
   .functionName = NULL,
@@ -84,6 +85,8 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{cacheId}{The cacheId or otherwise digested hash value, as character string.}
+
+\item{preDigest}{The list of \code{preDigest} that comes from \code{CacheDigest} of an object}
 
 \item{fullCacheTableForObj}{The result of \code{showCache}, but subsetted for only
 the \code{cacheId} being loaded or selected}

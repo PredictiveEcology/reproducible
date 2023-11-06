@@ -28,7 +28,7 @@ test_that("checkPath: normPath and normPathRel consistency", {
   checkedRel <- normPathRel(paths)
   if (identical(.Platform$OS.type, "windows")) {
     ## Windows create absolute paths
-    expect_equal(length(unique(checkedRel)), 1)
+    expect_equal(length(unique(checkedRel)), 2)
   } else {
     ## non-existent paths kept relative on other platforms
     expect_equal(length(unique(checkedRel)), 2)

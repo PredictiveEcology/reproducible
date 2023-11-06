@@ -14,6 +14,7 @@
 .wrap(
   obj,
   cachePath,
+  preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")
@@ -22,6 +23,7 @@
 \method{.wrap}{list}(
   obj,
   cachePath,
+  preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")
@@ -30,6 +32,7 @@
 \method{.wrap}{environment}(
   obj,
   cachePath,
+  preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")
@@ -38,6 +41,7 @@
 \method{.wrap}{default}(
   obj,
   cachePath,
+  preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")
@@ -80,6 +84,8 @@
 
 \item{cachePath}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
+
+\item{preDigest}{The list of \code{preDigest} that comes from \code{CacheDigest} of an object}
 
 \item{drv}{if using a database backend, drv must be an object that
 inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}

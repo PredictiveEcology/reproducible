@@ -1679,7 +1679,7 @@ test_that("options inputPaths", {
       )
     )
     expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ":\n", file.path(tmpdir1, theFile)), mess1)) == 1)
-    expect_true(sum(grepl(paste0("", whPointsToMessForGrep, "\n", file.path(tmpdir, theFile)), mess1)) == 1)
+    expect_true(sum(grepl(paste0("", whPointsToMessForGrep, "\n", file.path(tmpdir1, theFile)), mess1)) == 1)
     expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 3)
   }
   ## Try download to inputPath, intercepting the destination, creating a link
