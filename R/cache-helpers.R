@@ -132,7 +132,6 @@ setAs(from = "character", to = "Path", function(from) {
 #'
 copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                            overwrite = TRUE, delDestination = FALSE,
-                           # copyRasterFile = TRUE, clearRepo = TRUE,
                            create = TRUE, silent = FALSE) {
   if (any(length(from) != 1, length(to) != 1)) stop("from and to must each be length 1")
   useFileCopy <- identical(dirname(from), dirname(to))
@@ -354,8 +353,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   attr(obj, "debugCache2") <- preDigest
   obj
 }
-
-# loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
 
 #' @keywords internal
 .getOtherFnNamesAndTags <- function(scalls) {

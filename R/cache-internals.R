@@ -19,7 +19,6 @@
   lengths <- unlist(lapply(preDigestUnlist, function(x) length(unlist(x))))
   hashDetails <- data.frame(
     objectNames = rep(names(preDigestUnlist), lengths),
-    # objSize = rep(hashObjectSize, lengths),
     hashElements = names(unlist(preDigestUnlist)),
     hash = unname(unlist(preDigestUnlist)),
     stringsAsFactors = FALSE
@@ -32,8 +31,6 @@
     strsplit(names(hashObjectSize), split = "\\$"),
     function(x) paste0(tail(x, 2), collapse = ".")
   ))
-  # hashObjectSizeNames <- unlist(lapply(strsplit(hashObjectSizeNames, split = "\\.y"),
-  #                                      function(x) paste0(tail(x, 2), collapse = ".")))
   hashObjectSizeNames <- gsub("\\.y", replacement = "", hashObjectSizeNames)
   hashObjectSizeNames <- unlist(lapply(
     strsplit(hashObjectSizeNames, split = "\\."),

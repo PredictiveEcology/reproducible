@@ -687,8 +687,6 @@ wrapSpatRaster <- function(obj, cachePath) {
       if (all(digs %in% objDigs))
         break
     }
-    # inFileDigs <- unlist(lapply(seq_len(nlyr(rr)), function(ln) )
-    # whLayers <- which(unlist(inFileDigs) %in% unlist(objDigs))
   }
   obj <- asPath(fnsMulti)
   attr(obj, "tags") <- c(
@@ -725,12 +723,6 @@ unwrapSpatRaster <- function(obj, cachePath) {
         newName <- file.path(cachePath, origRelName)
       }
       whFiles <- newName[match(basename(extractFromCache(tags, "whichFiles")), origFilename)]
-      # filenameInCache <- Map(ff = whFiles, form = fileExt(obj), function(ff, form) {
-      #   CacheStoredFile(cachePath,
-      #                   cacheId = tools::file_path_sans_ext(basename(ff)),
-      #                   format = form
-      #   )
-      # })
 
       filenameInCache <- CacheStoredFile(cachePath,
                                          # cacheId = tools::file_path_sans_ext(basename(obj)),

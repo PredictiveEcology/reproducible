@@ -571,7 +571,6 @@ Cache <-
             conns[[cachePath]] <- dbConnectAll(drv, cachePath = cachePath)
             RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA busy_timeout=5000;"))
             RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA journal_mode=WAL;"))
-            # on.exit({dbDisconnect(conns[[cachePath]])}, add = TRUE)
           }
         }
 
@@ -583,19 +582,17 @@ Cache <-
           ret <- createCache(cachePath,
             drv = drv, conn = conns[[cachePath]],
             force = isIntactRepo
-          ) # [cacheRepoInd])
+          )
         }
 
         # Need exclusive lock
         if (!useDBI()) {
           dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = outputHash)
           lockFile <- file.path(CacheStorageDir(cachePath = cachePath), paste0(outputHash, suffixLockFile()))
-          # lockFile <- paste0(gsub(paste0("(^.+", outputHash, ").+"), "\\1", dtFile), suffixLockFile())
           locked <- filelock::lock(lockFile)
           on.exit(
             {
               filelock::unlock(locked)
-              # if (!isTRUE(lockFileExisted))
               if (file.exists(lockFile)) {
                 unlink(lockFile)
               }
@@ -603,7 +600,6 @@ Cache <-
             add = TRUE
           )
         }
-
 
         # Check if it is in repository
         inReposPoss <- searchInRepos(cachePath,
@@ -684,7 +680,6 @@ Cache <-
       #   userTags and in devMode
       needFindByTags <- identical("devMode", useCache) && NROW(isInRepo) == 0
       if (needFindByTags) {
-        # browser(expr = exists("._Cache_5"))
         # It will not have the "localTags" object because of "direct db access" added Jan 20 2020
         if (!exists("localTags", inherits = FALSE)) { #
           localTags <- showCache(cachePath, drv = drv, verbose = FALSE)
@@ -791,7 +786,6 @@ Cache <-
       .CacheIsNew <- TRUE
 
       # check that it didn't come from cloud or failed to find complete cloud (i.e., output is NULL)
-      # browser(expr = exists("._Cache_10"))
       elapsedTimeFUN <- NA
       if (!exists("output", inherits = FALSE) || is.null(output)) {
         # Run the FUN
@@ -930,7 +924,6 @@ Cache <-
           }
         }
         .reproEnv$futureEnv[[paste0("future_", rndstr(1, 10))]] <-
-          # saved <-
           future::futureCall(
             FUN = writeFuture,
             args = list(written, outputToSave, cachePath, userTags, drv, conn,
@@ -1014,7 +1007,6 @@ Cache <-
 
 #' @keywords internal
 .namesPostProcessFormals <- function() {
-  # setdiff(unique(unlist(lapply(methods(postProcess), formalArgs))), "...")
   c(
     "x", "filename1", "filename2", "studyArea", "rasterToMatch",
     "overwrite", "useSAcrs", "useCache", "verbose"
@@ -1073,7 +1065,6 @@ writeFuture <- function(written, outputToSave, cachePath, userTags,
                         conn = getOption("reproducible.conn", NULL),
                         cacheId, linkToCacheId = NULL) {
   counter <- 0
-  # browser(expr = exists("._writeFuture_1"))
   if (!CacheIsACache(cachePath = cachePath, drv = drv, conn = conn)) {
     stop("That cachePath does not exist")
   }
@@ -1157,9 +1148,6 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
               evd
             }
           } else {
-            # envir2 <- whereInStack(xxxx, envir)
-            # ret <- try(eval(xxxx, envir2), silent = TRUE)
-            # if (is(ret, "try-error"))
             ret <- xxxx
             ret
           }
@@ -1227,7 +1215,6 @@ matchCall <- function(FUNcaptured, envir = parent.frame(), fnName) {
           args2 <- args2[seq_along(args)] # chop off any trailing args
           mc <- append(list(FUN), args2)
         } else {
-          # args <- as.list(args[-1]) # remove the list that is inside the substitute; move to outside
           mc <- match.call(FUN, FUNcaptured)
         }
       }

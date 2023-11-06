@@ -114,8 +114,6 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   fts <- CacheStoredFile(cachePath, cacheId, obj = obj)
 
-  # browser(expr = exists("._saveToCache_2"))
-
   # TRY link first, if there is a linkToCacheId, but some cases will fail; not sure what these cases are
   if (!is.null(linkToCacheId)) {
     ftL <- CacheStoredFile(cachePath, linkToCacheId)
@@ -140,8 +138,6 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   )
   if (!useDBI()) {
     dtFile <- saveDBFileSingle(dt = dt, cachePath, cacheId)
-    # dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
-    # saveFilesInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
   } else {
     a <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
       DBI::dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)
@@ -152,9 +148,6 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     fs <- saveFilesInCacheFolder(cachePath = cachePath, obj, fts, cacheId = cacheId)
   }
   if (isTRUE(getOption("reproducible.useMemoise"))) {
-    # if (is.null(.pkgEnv[[cachePath]])) {
-    #   .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
-    # }
     obj <- .unwrap(obj, cachePath, cacheId, drv, conn) # This takes time, but whether it happens now or later, same
     obj2 <- makeMemoisable(obj)
     assign(cacheId, obj2, envir = memoiseEnv(cachePath))
@@ -178,7 +171,6 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     objSize <- if (identical(tagValue[whichOS], "NA")) NA else as.numeric(tagValue[whichOS])
     fsBig <- (objSize * 4) < fs
     if (isTRUE(fsBig)) {
-      # browser(expr = exists("._saveToCache_3"))
       messageCache("Object with cacheId ", cacheId, " appears to have a much larger size ",
         "on disk than in memory. ",
         "This usually means that the object has captured an environment with ",
@@ -226,17 +218,12 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   isMemoised <- NA
   if (isTRUE(getOption("reproducible.useMemoise"))) {
-    # if (is.null(.pkgEnv[[cachePath]])) {
-    #   .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
-    # }
     isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
     if (isTRUE(isMemoised)) {
       obj <- get(cacheId, envir = memoiseEnv(cachePath))
       obj <- unmakeMemoisable(obj)
     }
   }
-
-  # fileFormat <- extractFromCache(fullCacheTableForObj, "fileFormat", ifNot = format)
 
   if (!isTRUE(isMemoised)) {
     f <- CacheStoredFile(cachePath, cacheId, format)
@@ -398,7 +385,6 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
                          tagKey = character(), tagValue = character(),
                          drv = getDrv(getOption("reproducible.drv", NULL)),
                          conn = getOption("reproducible.conn", NULL)) {
-  # browser(expr = exists("._addTagsRepo_1"))
   if (length(cacheId) > 0) {
     if (length(cacheId) > 1) stop(".addTagsRepo can only handle appending 1 tag at a time")
     curTime <- as.character(Sys.time())
@@ -510,7 +496,6 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
   }
 }
 .cacheNumDefaultTags <- function() {
-  # if (useDBI())
   7 # else 12
 }
 
@@ -575,11 +560,7 @@ CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
     #   }
 
     if (grepl(type, "SQLite")) {
-      # if (useDBI()) {
       file.path(cachePath, "cache.db")
-      # } else {
-      #  file.path(cachePath, "backpack.db")
-      # }
     } else {
       file.path(cachePath, "cache.txt")
     }
@@ -594,11 +575,7 @@ CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
 #' `CacheStorageDir` returns the name of the directory where cached objects are
 #' stored.
 CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
-  # if (useDBI()) {
   file.path(cachePath, "cacheOutputs")
-  # } # else {
-  # file.path(cachePath, "gallery")
-  # }
 }
 
 #' @details
