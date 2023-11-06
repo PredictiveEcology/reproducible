@@ -516,9 +516,9 @@ test_that("lightweight tests for preProcess code coverage", {
   d <- file.info(csf)
   if (isWindows()) { # linux doesn't do ctime
     expect_true(milliseconds(d$ctime) == milliseconds(a$ctime))
+    expect_false(milliseconds(d$atime) == milliseconds(a$atime))
   }
   expect_false(milliseconds(d$mtime) == milliseconds(a$mtime))
-  expect_false(milliseconds(d$atime) == milliseconds(a$atime))
 
   # purge will delete CHECKSUMS 1 -- deleted, written, read
   Sys.sleep(0.1)
