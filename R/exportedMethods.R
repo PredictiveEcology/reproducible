@@ -79,8 +79,8 @@ setMethod(
     } else if (!is.na(fromMemoise)) {
       whMessage <- .loadedCacheResultMsg
       messageCache(.loadedCacheMsg(whMessage, functionName), " ",
-        .addingToMemoisedMsg,
-        sep = "", verbose = verbose
+                   .addingToMemoisedMsg,
+                   sep = "", verbose = verbose
       )
     } else {
       whMessage <- .loadedCacheResultMsg
@@ -192,8 +192,8 @@ setMethod(
         if (any(grepl(normPath(tmpDir), normPath(getOption("reproducible.cachePath")))) ||
             any(grepl(normPath(tempdir()), normPath(getOption("reproducible.cachePath"))))) {
           messageCache("No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;\n",
-            "  this will not persist across R sessions.",
-            verbose = verbose
+                       "  this will not persist across R sessions.",
+                       verbose = verbose
           )
         }
         getOption("reproducible.cachePath", tmpDir)
@@ -560,8 +560,8 @@ unmakeMemoisable.default <- function(x) {
     objOrig <- obj
     atts <- attributes(obj)
     obj <- .prepareFileBackedRaster(obj,
-      repoDir = cachePath,
-      overwrite = FALSE, drv = drv, conn = conn
+                                    repoDir = cachePath,
+                                    overwrite = FALSE, drv = drv, conn = conn
     )
     isFromDisk <- raster::fromDisk(obj)
 
@@ -849,13 +849,13 @@ unwrapRaster <- function(obj, cachePath, cacheId) {
     }
   }
   out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
-    origFilenames[filesExistInCache],
-    overwrite = TRUE
+                        origFilenames[filesExistInCache],
+                        overwrite = TRUE
   )
 
   newOutput <- updateFilenameSlots(obj$cacheRaster,
-    Filenames(obj, allowMultiple = FALSE),
-    newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE)
+                                   Filenames(obj, allowMultiple = FALSE),
+                                   newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE)
   )
   obj <- newOutput
   obj <- .setSubAttrInList(obj, ".Cache", "newCache", FALSE)
@@ -914,13 +914,18 @@ relativeToWhat <- function(file, cachePath, ...) {
 }
 
 absoluteBase <- function(relToWhere, cachePath, ...) {
-  if (identical(relToWhere, "cachePath")) {
+  if (identical(relToWhere, "cachePath") && !is.null(cachePath)) {
     ab <- cachePath
   } else if(identical(relToWhere, "getwd")) {
     ab <- getwd()
   } else {
-    browser()
-    ab <- list(...)[[]]
+    possRelPaths <- modifyListPaths(cachePath, ...)
+    ab <- possRelPaths[[relToWhere]]
+  }
+
+  ab
+}
+
 modifyListPaths <- function(cachePath, ...) {
   possRelPaths <- list()
   if (!missing(cachePath))
