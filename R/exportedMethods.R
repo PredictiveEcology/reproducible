@@ -484,6 +484,7 @@ unmakeMemoisable.default <- function(x) {
 #' cannot be saved without first wrapping them. Also, file-backed objects are similar.
 #'
 #' @param obj Any arbitrary R object.
+#' @param ... Arguments passed to methods; default does not use anything in `...`.
 #' @inheritParams Cache
 #' @inheritParams loadFromCache
 #' @rdname dotWrap
@@ -494,7 +495,7 @@ unmakeMemoisable.default <- function(x) {
 #'
 .wrap <- function(obj, cachePath, preDigest,  drv = getDrv(getOption("reproducible.drv", NULL)),
                   conn = getOption("reproducible.conn", NULL),
-                  verbose = getOption("reproducible.verbose")) {
+                  verbose = getOption("reproducible.verbose"), ...) {
   UseMethod(".wrap")
 }
 
@@ -502,9 +503,10 @@ unmakeMemoisable.default <- function(x) {
 #' @rdname dotWrap
 .wrap.list <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                        conn = getOption("reproducible.conn", NULL),
-                       verbose = getOption("reproducible.verbose")) {
+                       verbose = getOption("reproducible.verbose"), ...) {
   attrsOrig <- attributes(obj)
-  obj <- lapply(obj, .wrap, preDigest = preDigest, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
+  obj <- lapply(obj, .wrap, preDigest = preDigest, cachePath = cachePath, drv = drv,
+                conn = conn, verbose = verbose, ...)
   hasTagAttr <- lapply(obj, function(x) attr(x, "tags"))
   tagAttr <- list(unlist(hasTagAttr))
   if (length(tagAttr)) {
@@ -526,9 +528,10 @@ unmakeMemoisable.default <- function(x) {
 #' @rdname dotWrap
 .wrap.environment <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                               conn = getOption("reproducible.conn", NULL),
-                              verbose = getOption("reproducible.verbose")) {
+                              verbose = getOption("reproducible.verbose"), ...) {
   obj2 <- as.list(obj, all.names = FALSE)
-  out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv, conn = conn, verbose = verbose)
+  out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
+               conn = conn, verbose = verbose, ...)
   obj <- Copy(obj)
   obj2 <- list2envAttempts(out, obj)
   if (!is.null(obj2)) obj <- obj2
@@ -549,7 +552,7 @@ unmakeMemoisable.default <- function(x) {
 #'
 .wrap.default <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL),
-                          verbose = getOption("reproducible.verbose")) {
+                          verbose = getOption("reproducible.verbose"), ...) {
   rasters <- is(obj, "Raster")
 
   if (any(rasters)) {
@@ -614,7 +617,7 @@ unmakeMemoisable.default <- function(x) {
     if (inherits(obj, "SpatRaster")) {
       if (all(nzchar(Filenames(obj)))) {
         useWrap <- FALSE
-        obj <- wrapSpatRaster(obj, cachePath)
+        obj <- wrapSpatRaster(obj, cachePath, ...)
       }
     } else if (is(obj, "SpatVector") && !missing(cachePath)) {
       useWrap <- FALSE
@@ -643,7 +646,7 @@ unmakeMemoisable.default <- function(x) {
 #' @rdname dotWrap
 .unwrap.default <- function(obj, cachePath, cacheId,
                             drv = getDrv(getOption("reproducible.drv", NULL)),
-                            conn = getOption("reproducible.conn", NULL)) {
+                            conn = getOption("reproducible.conn", NULL), ...) {
   if (any(inherits(obj, c("PackedSpatVector", "PackedSpatRaster", "PackedSpatExtent")))) {
     if (!requireNamespace("terra")) stop("Please install.packages('terra')")
     if (any(inherits(obj, "PackedSpatVector"))) {
@@ -656,19 +659,19 @@ unmakeMemoisable.default <- function(x) {
   } else if (any(inherits(obj, "data.table"))) {
     obj <- data.table::copy(obj)
   } else if (is(obj, "Path")) {
-    obj <- unwrapSpatRaster(obj, cachePath)
+    obj <- unwrapSpatRaster(obj, cachePath, ...)
   }
 
   obj
 }
 
-wrapSpatRaster <- function(obj, cachePath) {
+wrapSpatRaster <- function(obj, cachePath, ...) {
   cls <- class(obj)
   fns <- Filenames(obj, allowMultiple = FALSE)
   fnsMulti <- Filenames(obj, allowMultiple = TRUE)
-  layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
   obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
   nlyrsInFile <- as.integer(terra::nlyr(terra::rast(fns)))
+  layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
 
   # A file-backed rast can 1) not be using all the layers in the file and
   # 2) have layer names renamed
@@ -758,7 +761,7 @@ unwrapSpatRaster <- function(obj, cachePath) {
 #' @rdname dotWrap
 .unwrap <- function(obj, cachePath, cacheId,
                     drv = getDrv(getOption("reproducible.drv", NULL)),
-                    conn = getOption("reproducible.conn", NULL)) {
+                    conn = getOption("reproducible.conn", NULL), ...) {
   UseMethod(".unwrap")
 }
 
@@ -766,11 +769,11 @@ unwrapSpatRaster <- function(obj, cachePath) {
 #' @rdname dotWrap
 .unwrap.environment <- function(obj, cachePath, cacheId,
                                 drv = getDrv(getOption("reproducible.drv", NULL)),
-                                conn = getOption("reproducible.conn", NULL)) {
+                                conn = getOption("reproducible.conn", NULL), ...) {
   # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
   objList <- as.list(obj) # don't overwrite everything, just the ones in the list part
 
-  outList <- .unwrap(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
+  outList <- .unwrap(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn, ...)
   output2 <- list2envAttempts(outList, obj) # don't return it if the list2env retured nothing (a normal environment situation; not simList)
   if (!is.null(output2)) obj <- output2
 
@@ -781,7 +784,7 @@ unwrapSpatRaster <- function(obj, cachePath) {
 #' @rdname dotWrap
 .unwrap.list <- function(obj, cachePath, cacheId,
                          drv = getDrv(getOption("reproducible.drv", NULL)),
-                         conn = getOption("reproducible.conn", NULL)) {
+                         conn = getOption("reproducible.conn", NULL), ...) {
   anyNames <- names(obj)
   isSpatVector <- if (is.null(anyNames)) FALSE else all(names(obj) %in% spatVectorNamesForCache)
   if (isTRUE(isSpatVector)) {
@@ -792,7 +795,7 @@ unwrapSpatRaster <- function(obj, cachePath) {
       obj <- unwrapRaster(obj, cachePath, cacheId)
     } else {
       obj <- lapply(obj, function(out) {
-        .unwrap(out, cachePath, cacheId, drv, conn)
+        .unwrap(out, cachePath, cacheId, drv, conn, ...)
       })
     }
   }
