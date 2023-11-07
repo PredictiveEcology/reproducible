@@ -842,3 +842,62 @@ parseTags <- function(tags) {
   setnames(tags1, "V1", "tagKey")
   tags1
 }
+
+relativeToWhat <- function(file, cachePath, ...) {
+  possRelPaths <- list()
+  if (!missing(cachePath))
+    possRelPaths$cachePath <- cachePath
+  possRelPaths <- append(possRelPaths, list(getwd = getwd()))
+  dots <- list(...)
+  if (length(dots)) {
+    if (is(dots[[1]], "list")) {
+      if (is.null(names(dots[[1]])))
+        stop("wrapSpatRaster and unwrapSpatRaster require named list passed to dots")
+      possRelPaths <- modifyList2(dots[[1]], possRelPaths)
+    }
+  }
+
+  foundAbs <- FALSE
+  browser()
+  dirnameFile <- dirname(file)
+  for (nams in names(possRelPaths)) {
+    pc <- fs::path_common(c(dirname(file), possRelPaths[nams]))
+    out <- dirname(makeRelative(file, possRelPaths[nams]))
+    if (!all(isAbsolutePath(out))) {
+      if (all(length(out) == 0))
+        break
+      out <- list(out)
+      names(out) <- nams
+      foundAbs <- TRUE
+    }
+  }
+  if (isFALSE(foundAbs)) {
+    for (nams in names(possRelPaths)) {
+      poss <- fs::path_common(c(file, possRelPaths[nams]))
+      if (!identical(poss, possRelPaths[nams])) {
+        rel <- makeRelative(possRelPaths[nams], poss)
+        relWithDots <- rep("..", length(strsplit(rel, "/|\\\\")[[1]]))
+        poss <- paste(relWithDots, collapse = "/")
+        out <- poss
+        out <- list(out)
+        names(out) <- nams
+        foundAbs <- TRUE
+        break
+      }
+    }
+  }
+
+  out
+}
+
+absoluteBase <- function(relToWhere, cachePath, ...) {
+  if (identical(relToWhere, "cachePath")) {
+    ab <- cachePath
+  } else if(identical(relToWhere, "getwd")) {
+    ab <- getwd()
+  } else {
+    browser()
+    ab <- list(...)[[]]
+  }
+
+}
