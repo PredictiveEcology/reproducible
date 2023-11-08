@@ -926,6 +926,7 @@ absoluteBase <- function(relToWhere, cachePath, ...) {
   ab
 }
 
+#' @importFrom utils modifyList
 modifyListPaths <- function(cachePath, ...) {
   possRelPaths <- list()
   if (!missing(cachePath))
@@ -935,7 +936,7 @@ modifyListPaths <- function(cachePath, ...) {
     if (is(dots[[1]], "list")) {
       if (is.null(names(dots[[1]])))
         stop("wrapSpatRaster and unwrapSpatRaster require named list passed to dots")
-      possRelPaths <- modifyList2(dots[[1]], possRelPaths)
+      possRelPaths <- modifyList(dots[[1]], possRelPaths)
     }
   }
   possRelPaths <- append(possRelPaths, list(getwd = getwd()))
