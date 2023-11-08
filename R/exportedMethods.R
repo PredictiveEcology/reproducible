@@ -729,13 +729,14 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
   if (isTRUE(any(nchar(fns) > 0))) {
     tags <- attr(obj, "tags")
     if (!is.null(tags)) {
-      tags <- parseTags(tags)
-      origRelName <- extractFromCache(tags, tagOrigRelName)
-      origFilename <- extractFromCache(tags, tagOrigFilename) # tv[tk == tagOrigFilename]
-      relToWhere <- extractFromCache(tags, "relToWhere")
-      # possPaths <- modifyListPaths(cachePath, ...)
-      absBase <- absoluteBase(relToWhere, cachePath, ...)
-      newName <- file.path(absBase, origRelName)
+      newFiles <- remapFilenames(tags, cachePath, ...)
+      # tags <- parseTags(tags)
+      # origRelName <- extractFromCache(tags, tagOrigRelName)
+      # origFilename <- extractFromCache(tags, tagOrigFilename) # tv[tk == tagOrigFilename]
+      # relToWhere <- extractFromCache(tags, "relToWhere")
+      # # possPaths <- modifyListPaths(cachePath, ...)
+      # absBase <- absoluteBase(relToWhere, cachePath, ...)
+      # newName <- file.path(absBase, origRelName)
 
       # if (FALSE) {
       #   isAbs <- isAbsolutePath(origRelName)
@@ -748,7 +749,7 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
 
       # if (!identical(newName, newName2)) browser()
 
-      whFiles <- newName[match(basename(extractFromCache(tags, tagFilesToLoad)), origFilename)]
+      # whFiles <- newFiles$newName[match(basename(extractFromCache(tags, tagFilesToLoad)), origFilename)]
 
       if (!is.null(cachePath)) {
         filenameInCache <- CacheStoredFile(cachePath,
@@ -758,12 +759,12 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
         feObjs <- file.exists(obj)
         if (any(feObjs))
           unlink(obj[feObjs])
-        hardLinkOrCopy(unlist(filenameInCache), newName, verbose = 0)
+        hardLinkOrCopy(unlist(filenameInCache), newFiles$newName, verbose = 0)
       } else {
-        hardLinkOrCopy(unlist(fns), newName, verbose = 0)
+        hardLinkOrCopy(unlist(fns), newFiles$newName, verbose = 0)
       }
 
-      obj <- eval(parse(text = extractFromCache(tags, "loadFun")))(whFiles)
+      obj <- eval(parse(text = extractFromCache(tags, "loadFun")))(newFiles$whFiles)
       possNames <- strsplit(extractFromCache(tags, "layerNames"), split = layerNamesDelimiter)[[1]]
       namsObjs <- names(obj)
       if (!identical(possNames, namsObjs)) {
@@ -959,4 +960,16 @@ tagsSpatRaster <- function(obj = NULL, relToWhere = NULL, relName = NULL, cls = 
     paste0("layerNames:", layerNams),
     paste0(tagFilesToLoad, ":", basename2(obj2))
   )
+}
+
+remapFilenames <- function(tags, cachePath, ...) {
+  tags <- parseTags(tags)
+  origRelName <- extractFromCache(tags, tagOrigRelName)
+  origFilename <- extractFromCache(tags, tagOrigFilename) # tv[tk == tagOrigFilename]
+  relToWhere <- extractFromCache(tags, "relToWhere")
+  # possPaths <- modifyListPaths(cachePath, ...)
+  absBase <- absoluteBase(relToWhere, cachePath, ...)
+  newName <- file.path(absBase, origRelName)
+  whFiles <- newName[match(basename(extractFromCache(tags, tagFilesToLoad)), origFilename)]
+  list(newName = newName, whFiles = whFiles)
 }
