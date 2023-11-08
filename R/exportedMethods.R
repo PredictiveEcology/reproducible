@@ -764,11 +764,11 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
         hardLinkOrCopy(unlist(fns), newFiles$newName, verbose = 0)
       }
 
-      obj <- eval(parse(text = extractFromCache(tags, "loadFun")))(newFiles$whFiles)
-      possNames <- strsplit(extractFromCache(tags, "layerNames"), split = layerNamesDelimiter)[[1]]
+      obj <- eval(parse(text = extractFromCache(newFiles$tagsParsed, "loadFun")))(newFiles$whFiles)
+      possNames <- strsplit(extractFromCache(newFiles$tagsParsed, "layerNames"), split = layerNamesDelimiter)[[1]]
       namsObjs <- names(obj)
       if (!identical(possNames, namsObjs)) {
-        whLayers <- as.integer(extractFromCache(tags, "whLayers"))
+        whLayers <- as.integer(extractFromCache(newFiles$tagsParsed, "whLayers"))
         if (length(whLayers) != length(namsObjs)) {
           obj <- obj[[whLayers]]
         }
@@ -971,5 +971,5 @@ remapFilenames <- function(tags, cachePath, ...) {
   absBase <- absoluteBase(relToWhere, cachePath, ...)
   newName <- file.path(absBase, origRelName)
   whFiles <- newName[match(basename(extractFromCache(tags, tagFilesToLoad)), origFilename)]
-  list(newName = newName, whFiles = whFiles)
+  list(newName = newName, whFiles = whFiles, tagsParsed = tags)
 }
