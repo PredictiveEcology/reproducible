@@ -31,7 +31,7 @@ test_that("prepInputs doesn't work (part 1)", {
   )
   expect_true(any(grepl(mess, pattern = "ecozone_shp.zip")))
   expect_true(any(grepl(mess, pattern = "Appending")))
-  expect_true(any(grepl(mess, pattern = "Finished")))
+  # expect_true(any(grepl(mess, pattern = "Finished")))
   expect_true(is(shpEcozone, vectorType()))
 
   # Robust to partial file deletions:
@@ -335,7 +335,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_7_10_13", cls, 1, mess,
+  runTest("1_2_5_7_10_13", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -346,7 +346,8 @@ test_that("preProcess doesn't work", {
       test <- prepInputs(url = urlTif1, destinationPath = tmpdir)
     )
   )
-  runTest("1_2_5_6_8_10", cls, 1, mess,
+
+  runTest("1_2_5_8_10", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -361,7 +362,7 @@ test_that("preProcess doesn't work", {
     )
   )
 
-  runTest("1_2_4_5_6_7_10_12_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_10_12_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", # the file name is actually Shapefile1...
     tmpdir = tmpdir, test = test
@@ -375,7 +376,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9_10_12", vectorType(), 5, mess,
+  runTest("1_2_5_8_9_10_12", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -391,7 +392,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_7_13", cls, 1, mess,
+  runTest("1_2_5_7_13", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -402,7 +403,7 @@ test_that("preProcess doesn't work", {
       test <- prepInputs(url = urlTif1, targetFile = basename(urlTif1), destinationPath = tmpdir)
     )
   )
-  runTest("1_2_5_6_8", cls, 1, mess,
+  runTest("1_2_5_8", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -419,7 +420,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -435,7 +436,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9", vectorType(), 5, mess,
+  runTest("1_2_5_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -451,7 +452,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_7_10_13", cls, 1, mess,
+  runTest("1_2_5_7_10_13", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -466,7 +467,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_10", cls, 1, mess,
+  runTest("1_2_5_8_10", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -484,7 +485,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_10_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_10_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -501,7 +502,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9_10", vectorType(), 5, mess,
+  runTest("1_2_5_8_9_10", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -523,7 +524,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_10_12_13", vectorType(), 9, mess,
+  runTest("1_2_4_5_7_10_12_13", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -538,7 +539,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9_10_12", vectorType(), 9, mess,
+  runTest("1_2_5_8_9_10_12", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -560,7 +561,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -578,7 +579,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9", vectorType(), 5, mess,
+  runTest("1_2_5_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -598,7 +599,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -614,7 +615,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9", vectorType(), 5, mess,
+  runTest("1_2_5_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -631,7 +632,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -647,7 +648,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_7_13", cls, 1, mess,
+  runTest("1_2_5_7_13", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -667,7 +668,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_10_12_13", vectorType(), 9, mess,
+  runTest("1_2_4_5_7_10_12_13", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -683,7 +684,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9_10_12", vectorType(), 9, mess,
+  runTest("1_2_5_8_9_10_12", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -718,7 +719,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -732,7 +733,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9", vectorType(), 5, mess,
+  runTest("1_2_5_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -749,7 +750,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -765,7 +766,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9", vectorType(), 5, mess,
+  runTest("1_2_5_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -786,7 +787,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -803,7 +804,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9", vectorType(), 5, mess,
+  runTest("1_2_5_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -822,7 +823,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_9_10_12_13", vectorType(), 9, mess,
+  runTest("1_2_4_5_9_10_12_13", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -836,7 +837,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_9_10_12", vectorType(), 9, mess,
+  runTest("1_2_5_9_10_12", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -858,7 +859,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_9_13", vectorType(), 9, mess,
+  runTest("1_2_4_5_9_13", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -873,7 +874,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_9", vectorType(), 9, mess,
+  runTest("1_2_5_9", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -896,7 +897,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_9_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_9_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -912,7 +913,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_9", vectorType(), 5, mess,
+  runTest("1_2_5_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -933,7 +934,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_9_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_9_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -949,7 +950,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_9", vectorType(), 5, mess,
+  runTest("1_2_5_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -963,7 +964,7 @@ test_that("preProcess doesn't work", {
       test <- prepInputs(targetFile = "Shapefile1.shp", destinationPath = tmpdir)
     )
   )
-  runTest("1_2_5_6", vectorType(), 5, mess,
+  runTest("1_2_5", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -972,7 +973,7 @@ test_that("preProcess doesn't work", {
       test <- prepInputs(targetFile = "Shapefile1.shp", destinationPath = tmpdir)
     )
   )
-  runTest("1_2_5_6", vectorType(), 5, mess,
+  runTest("1_2_5", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -992,7 +993,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6", vectorType(), 5, mess,
+  runTest("1_2_5", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1005,7 +1006,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6", vectorType(), 5, mess,
+  runTest("1_2_5", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1045,7 +1046,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_9_10_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_9_10_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1060,7 +1061,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_9_10", vectorType(), 5, mess,
+  runTest("1_2_5_9_10", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1097,7 +1098,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_9_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_9_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1113,7 +1114,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_9", vectorType(), 5, mess,
+  runTest("1_2_5_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )

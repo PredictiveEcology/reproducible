@@ -194,7 +194,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
           # This is so that we essentially treat it as a file, not an object, which means
           #   the second time we try this call, we can access the file locally, without needed to download
           if (is(downloadResults$out, "Spatial")) downloadResults$out <- NULL # TODO This appears to be a bug
-          messagePrepInputs(messOrig, verbose = verbose)
+          # messagePrepInputs(messOrig, verbose = verbose)
           failed <- 0
         }
       }
@@ -214,7 +214,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
                 path = destinationPath,
                 quickCheck = quick,
                 write = FALSE,
-                verbose = verbose
+                verbose = verbose - 1
               )
             isOK <- checkSums[checkSums$expectedFile %in% basename(fileToDownload) |
               checkSums$actualFile %in% basename(fileToDownload), ]$result

@@ -1664,7 +1664,7 @@ runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbos
       checkSumsTmp1 <- try(Checksums(
         path = dp, write = FALSE, checksumFile = csfp,
         files = makeRelative(filesToCheck, absoluteBase = destinationPath),
-        verbose = verbose - 1
+        verbose = verbose # - 1
       ), silent = TRUE)
       checkSums <- NULL
       if (!is(checkSumsTmp1, "try-error")) {

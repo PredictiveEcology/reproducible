@@ -144,6 +144,7 @@ setMethod(
       }
     }
 
+    stStart <- Sys.time()
     messagePrepInputs("Checking local files...", sep = "", verbose = verbose)
     filesToCheck <- if (length(txt$file) & length(files)) {
       files[makeRelative(files, path) %in% txt$file]
@@ -219,7 +220,8 @@ setMethod(
       checksums[[2]][dirs] <- 0
     }
 
-    messagePrepInputs("Finished checking local files.", sep = "", verbose = verbose)
+    verboseTmp <- difftime(Sys.time(), stStart) > 8
+      messagePrepInputs("Finished checking local files.", sep = "", verbose = verbose - 1 + verboseTmp)
 
     filesToCheckRel <- makeRelative(filesToCheck, path)
     out <- if (length(filesToCheck)) {
