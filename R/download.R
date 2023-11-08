@@ -103,19 +103,20 @@ downloadFile <- function(archive, targetFile, neededFiles,
       numTries <- 2
 
       while (failed > 0 && failed <= numTries) {
-        messOrig <- capture.output(
-          type = "message",
-          downloadResults <- try(
-            downloadRemote(
-              url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
-              targetFile = targetFile, fileToDownload = fileToDownload,
-              messSkipDownload = messSkipDownload, checkSums = checkSums,
-              dlFun = dlFun, destinationPath = destinationPath,
-              overwrite = overwrite, needChecksums = needChecksums, preDigest = preDigest,
-              verbose = verbose, .tempPath = .tempPath, ...
+        messOrig <- character()
+        withCallingHandlers(
+            downloadResults <- try(
+              downloadRemote(
+                url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
+                targetFile = targetFile, fileToDownload = fileToDownload,
+                messSkipDownload = messSkipDownload, checkSums = checkSums,
+                dlFun = dlFun, destinationPath = destinationPath,
+                overwrite = overwrite, needChecksums = needChecksums, preDigest = preDigest,
+                verbose = verbose, .tempPath = .tempPath, ...
             )
-          )
-        )
+          ), message = function(m) {
+            messOrig <<- c(messOrig, m$message)
+          })
 
         if (is(downloadResults, "try-error")) {
           if (isTRUE(grepl("already exists", downloadResults))) {
@@ -322,7 +323,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
     } else {
       if (!file.exists(archive)) {
         if (length(.isArchive(downloadResults$destFile))) {
-          hardLinkOrCopy(downloadResults$destFile, archive)
+          hardLinkOrCopy(downloadResults$destFile, archive, verbose = verbose)
         }
       }
       archive
@@ -654,7 +655,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         # Try hard link first -- the only type that R deeply recognizes
         # if that fails, fall back to copying the file.
         # NOTE: never use symlink because the original will be deleted.
-        result <- hardLinkOrCopy(downloadResults$destFile, desiredPath)
+        result <- hardLinkOrCopy(downloadResults$destFile, desiredPath, verbose = verbose)
 
         # result <- suppressWarningsSpecific(
         #   file.link(downloadResults$destFile, desiredPath),
