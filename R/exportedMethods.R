@@ -921,7 +921,12 @@ absoluteBase <- function(relToWhere, cachePath, ...) {
     ab <- getwd()
   } else {
     possRelPaths <- modifyListPaths(cachePath, ...)
-    ab <- possRelPaths[[relToWhere]]
+    if (relToWhere %in% names(possRelPaths)) {
+      ab <- try(possRelPaths[[relToWhere]])
+    } else {
+      ab <- try(possRelPaths[[1]])
+    }
+    if (is(ab, "try-error")) browser()
   }
 
   ab
@@ -967,9 +972,23 @@ remapFilenames <- function(tags, cachePath, ...) {
   origRelName <- extractFromCache(tags, tagOrigRelName)
   origFilename <- extractFromCache(tags, tagOrigFilename) # tv[tk == tagOrigFilename]
   relToWhere <- extractFromCache(tags, "relToWhere")
-  # possPaths <- modifyListPaths(cachePath, ...)
-  absBase <- absoluteBase(relToWhere, cachePath, ...)
+  possRelPaths <- modifyListPaths(cachePath, ...)
+  if (relToWhere %in% names(possRelPaths)) {
+    absBase <- absoluteBase(relToWhere, cachePath, ...)
+  } else {
+    absBase <- possRelPaths[[1]]
+    isOutside <- grepl(grepStartsTwoDots, origRelName)
+    if (any(isOutside)) {
+      # means the relative path is "outside" of something ... strip all ".." if relToWhere doesn't exist
+      while(any(grepl(grepStartsTwoDots, origRelName))) {
+        origRelName <- gsub(paste0(grepStartsTwoDots, "|(\\\\|/)"), "", origRelName)
+      }
+    }
+  }
+
   newName <- file.path(absBase, origRelName)
   whFiles <- newName[match(basename(extractFromCache(tags, tagFilesToLoad)), origFilename)]
   list(newName = newName, whFiles = whFiles, tagsParsed = tags)
 }
+
+grepStartsTwoDots <- "^\\.\\."
