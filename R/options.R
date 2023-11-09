@@ -55,6 +55,15 @@
 #'     They may, however, be very effective in speeding up some things, specifically,
 #'     uploading cached elements via `googledrive` in `cloudCache`.
 #'   }
+#'   \item{`gdalwarp`}{
+#'     Default: `FALSE`. Experimental. During `postProcessTo` the standard approach
+#'     is to use `terra` functions directly, with several strategic uses of `sf`. However,
+#'     in the special case when `from` is a `SpatRaster` or `Raster`, `maskTo` is a
+#'     `SpatVector` or `SFC_POLYGON` and `projectTo` is a `SpatRaster` or `Raster`, setting
+#'     this option to `TRUE` will use `sf::gdal_utils("warp")`. In many test cases,
+#'     this is much faster than the `terra` sequence. The resulting `SpatRaster` is
+#'     not identical, but it is very similar.
+#'   }
 #'   \item{`inputPaths`}{
 #'     Default: `NULL`. Used in [prepInputs()] and [preProcess()].
 #'     If set to a path, this will cause these functions to save their downloaded and preprocessed
@@ -70,8 +79,21 @@
 #'     Default: `FALSE`. Used in [prepInputs()] and [preProcess()].
 #'     Should the `reproducible.inputPaths` be searched recursively for existence of a file?
 #'   }
+#'   \item{`memoisePersist`}{
+#'     Default: `FALSE`. Used in [Cache()].
+#'     Should the memoised copy of the Cache objects persist even if `reproducible` reloads
+#'     e.g., via `devtools::load_all`? This is mostly useful for developers of
+#'     `reproducible`. If `TRUE`, a object named `paste0(".reproducibleMemoise_", cachePath)`
+#'     will be placed in the `.GlobalEnv`, i.e., one for each `cachePath`.
+#'   }
 #'   \item{`nThreads`}{
 #'     Default: `1`. The number of threads to use for reading/writing cache files.
+#'   }
+#'   \item{`objSize`}{
+#'     Default: `TRUE`. Logical. If `TRUE`, then object sizes will be included in
+#'     the cache database. Simplying calculating object size of large objects can
+#'     be time consuming, so setting this to `FALSE` will make caching up to 10%
+#'     faster, depending on the objects.
 #'   }
 #'   \item{`overwrite`}{
 #'     Default: `FALSE`. Used in [prepInputs()], [preProcess()],
@@ -189,14 +211,17 @@ reproducibleOptions <- function() {
     reproducible.destinationPath = NULL,
     reproducible.drv = NULL, # RSQLite::SQLite(),
     reproducible.futurePlan = FALSE, # future::plan("multisession"), #memoise
+    reproducible.gdalwarp = FALSE,
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
     reproducible.length = Inf,
+    reproducible.memoisePersist = FALSE,
     reproducible.messageColourPrepInputs = "cyan",
     reproducible.messageColourCache = "blue",
     reproducible.messageColourQuestion = "green",
     reproducible.nThreads = 1,
+    reproducible.objSize = TRUE,
     reproducible.overwrite = FALSE,
     reproducible.quick = FALSE,
     reproducible.rasterRead = getEnv("R_REPRODUCIBLE_RASTER_READ",
@@ -209,10 +234,11 @@ reproducibleOptions <- function() {
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
-    reproducible.useDBI = getEnv("R_REPRODUCIBLE_USE_DBI",
-      default = useDBI(TRUE, verbose = interactive() - (useDBI() + 1)), # `FALSE` is useMultipleDBFiles now
+    reproducible.useDBI = {getEnv("R_REPRODUCIBLE_USE_DBI",
+      default = useDBI(getOption("reproducible.useDBI", NULL),  # a user may have set it before this runs; keep setting
+                       verbose = interactive() - (useDBI() + 1)), # `FALSE` is useMultipleDBFiles now
       allowed = c("true", "false")
-    ) |> as.logical(),
+    ) |> as.logical()},
     reproducible.useMemoise = FALSE, # memoise
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1

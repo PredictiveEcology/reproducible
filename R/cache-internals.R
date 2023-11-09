@@ -13,13 +13,12 @@
   )
 
   hashObjectSize <- unlist(lapply(modifiedDots, function(x) {
-    objSize <- unname(attr(objSize(x), "objSize"))
+    if (getOption("reproducible.objSize", TRUE)) unname(attr(objSize(x), "objSize")) else NA
   }))
 
   lengths <- unlist(lapply(preDigestUnlist, function(x) length(unlist(x))))
   hashDetails <- data.frame(
     objectNames = rep(names(preDigestUnlist), lengths),
-    # objSize = rep(hashObjectSize, lengths),
     hashElements = names(unlist(preDigestUnlist)),
     hash = unname(unlist(preDigestUnlist)),
     stringsAsFactors = FALSE
@@ -32,8 +31,6 @@
     strsplit(names(hashObjectSize), split = "\\$"),
     function(x) paste0(tail(x, 2), collapse = ".")
   ))
-  # hashObjectSizeNames <- unlist(lapply(strsplit(hashObjectSizeNames, split = "\\.y"),
-  #                                      function(x) paste0(tail(x, 2), collapse = ".")))
   hashObjectSizeNames <- gsub("\\.y", replacement = "", hashObjectSizeNames)
   hashObjectSizeNames <- unlist(lapply(
     strsplit(hashObjectSizeNames, split = "\\."),
@@ -108,7 +105,7 @@
 .getFromRepo <- function(FUN, isInRepo, fullCacheTableForObj,
                          notOlderThan, lastOne, cachePath, fnDetails,
                          modifiedDots, debugCache, verbose, # sideEffect,
-                         quick, fileFormat = NULL,
+                         quick, # fileFormat = NULL,
                          algo, preDigest, startCacheTime,
                          drv = getDrv(getOption("reproducible.drv", NULL)),
                          conn = getOption("reproducible.conn", NULL), ...) {
@@ -118,7 +115,7 @@
   output <- loadFromCache(cachePath, isInRepo[[.cacheTableHashColName()[lastOne]]],
     fullCacheTableForObj = fullCacheTableForObj,
     # format = fileFormat, loadFun = loadFun,
-    .functionName = fnDetails$functionName, .dotsFromCache = modifiedDots,
+    .functionName = fnDetails$functionName, preDigest = preDigest, .dotsFromCache = modifiedDots,
     drv = drv, conn = conn,
     verbose = verbose
   )

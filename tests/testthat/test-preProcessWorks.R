@@ -455,6 +455,15 @@ test_that("masking with larger extent obj", {
   expect_true(is(b, rasterType()))
 })
 
+test_that("just google id not url", {
+  skip_on_cran()
+  skip_on_ci()
+
+  testInit("terra", needGoogleDriveAuth = TRUE, needInternet = TRUE)
+  smallObj <- prepInputs(url = "1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb")
+  expect_is(smallObj, "sf")
+})
+
 test_that("Test of using future and progress indicator for lrg files on Google Drive", {
   skip_if_not_installed("future")
   skip_if_not_installed("googledrive")
@@ -507,9 +516,9 @@ test_that("lightweight tests for preProcess code coverage", {
   d <- file.info(csf)
   if (isWindows()) { # linux doesn't do ctime
     expect_true(milliseconds(d$ctime) == milliseconds(a$ctime))
+    expect_false(milliseconds(d$atime) == milliseconds(a$atime))
   }
   expect_false(milliseconds(d$mtime) == milliseconds(a$mtime))
-  expect_false(milliseconds(d$atime) == milliseconds(a$atime))
 
   # purge will delete CHECKSUMS 1 -- deleted, written, read
   Sys.sleep(0.1)
@@ -657,3 +666,29 @@ test_that("more nested file structures in zip; alsoExtract NA", {
   expect_false(all(.listFilesInArchive(zipName2) %in% files))
   expect_true(sum(.listFilesInArchive(zipName2) %in% files) == 1)
 })
+
+
+test_that("PR#358 if dwnld already exists, was missing nested paths", {
+  skip_on_cran()
+  testInit("terra", needInternet = TRUE, needGoogleDriveAuth = TRUE)
+  url <- "https://drive.google.com/file/d/1S-4itShMXtwzGxjKPgsznpdTD2ydE9qn/"
+  noisyOutput <- capture.output(
+    ras <- preProcess(targetFile = "all_gp_site_info.csv",
+               url = url,
+               destinationPath = getOption("reproducible.destinationPath", file.path(tmpdir, "dPath")),
+               overwrite = TRUE,
+               fun = "data.table::fread",
+               useCache = FALSE)  )
+  testthat::expect_true(file.exists(ras$targetFilePath))
+  noisyOutput <- capture.output(
+    ras <- preProcess(targetFile = "all_gp_site_info.csv",
+               url = url,
+               destinationPath = getOption("reproducible.destinationPath", file.path(tmpdir, "dPath")),
+               overwrite = TRUE,
+               fun = "data.table::fread",
+               useCache = FALSE)  )
+  testthat::expect_true(file.exists(ras$targetFilePath))
+
+})
+
+

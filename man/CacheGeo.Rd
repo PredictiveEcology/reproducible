@@ -112,7 +112,7 @@ localFileLux <- system.file("ex/lux.shp", package = "terra")
 
   # 1 step for each layer
   # 1st step -- get study area
-  full <- prepInputs(localFileLux, dest = dPath) # default is sf::st_read
+  full <- prepInputs(localFileLux, destinationPath = dPath) # default is sf::st_read
   zoneA <- full[3:6, ]
   zoneB <- full[8, ] # not in A
   zoneC <- full[3, ] # yes in A

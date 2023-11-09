@@ -11,7 +11,7 @@
 #' @param ... Passed to `dlFun`. Still experimental. Can be e.g., `type` for google docs.
 #' @param checksumFile A character string indicating the absolute path to the `CHECKSUMS.txt`
 #'                     file.
-#'
+#' @inheritParams loadFromCache
 #' @inheritParams Cache
 #' @author Eliot McIntire
 #' @return
@@ -24,7 +24,7 @@
 downloadFile <- function(archive, targetFile, neededFiles,
                          destinationPath = getOption("reproducible.destinationPath", "."), quick,
                          checksumFile, dlFun = NULL,
-                         checkSums, url, needChecksums,
+                         checkSums, url, needChecksums, preDigest,
                          overwrite = getOption("reproducible.overwrite", TRUE),
                          verbose = getOption("reproducible.verbose", 1),
                          purge = FALSE, .tempPath, ...) {
@@ -103,19 +103,20 @@ downloadFile <- function(archive, targetFile, neededFiles,
       numTries <- 2
 
       while (failed > 0 && failed <= numTries) {
-        messOrig <- capture.output(
-          type = "message",
-          downloadResults <- try(
-            downloadRemote(
-              url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
-              targetFile = targetFile, fileToDownload = fileToDownload,
-              messSkipDownload = messSkipDownload, checkSums = checkSums,
-              dlFun = dlFun, destinationPath = destinationPath,
-              overwrite = overwrite, needChecksums = needChecksums,
-              verbose = verbose, .tempPath = .tempPath, ...
+        messOrig <- character()
+        withCallingHandlers(
+            downloadResults <- try(
+              downloadRemote(
+                url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
+                targetFile = targetFile, fileToDownload = fileToDownload,
+                messSkipDownload = messSkipDownload, checkSums = checkSums,
+                dlFun = dlFun, destinationPath = destinationPath,
+                overwrite = overwrite, needChecksums = needChecksums, preDigest = preDigest,
+                verbose = verbose, .tempPath = .tempPath, ...
             )
-          )
-        )
+          ), message = function(m) {
+            messOrig <<- c(messOrig, m$message)
+          })
 
         if (is(downloadResults, "try-error")) {
           if (isTRUE(grepl("already exists", downloadResults))) {
@@ -140,12 +141,19 @@ downloadFile <- function(archive, targetFile, neededFiles,
             failed <- numTries + 2
           }
           if (failed >= numTries) {
+            isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
+                         !grepl("\\.[^\\.]+$", url)) # doesn't have an extension
+            if (isGID){
+              urlMessage <- paste0("https://drive.google.com/file/d/", url)
+            } else {
+              urlMessage <- url
+            }
             messCommon <- paste0(
               "Download of ", url, " failed. This may be a permissions issue. ",
               "Please check the url and permissions are correct.\n",
               "If the url is correct, it is possible that manually downloading it will work. ",
               "To try this, with your browser, go to\n",
-              url, ",\n ... then download it manually, give it this name: '", fileToDownload,
+              urlMessage, ",\n ... then download it manually, give it this name: '", fileToDownload,
               "', and place file here: ", destinationPath
             )
             if (isInteractive() && getOption("reproducible.interactiveOnDownloadFail", TRUE)) {
@@ -186,7 +194,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
           # This is so that we essentially treat it as a file, not an object, which means
           #   the second time we try this call, we can access the file locally, without needed to download
           if (is(downloadResults$out, "Spatial")) downloadResults$out <- NULL # TODO This appears to be a bug
-          messagePrepInputs(messOrig, verbose = verbose)
+          # messagePrepInputs(messOrig, verbose = verbose)
           failed <- 0
         }
       }
@@ -206,7 +214,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
                 path = destinationPath,
                 quickCheck = quick,
                 write = FALSE,
-                verbose = verbose
+                verbose = verbose - 1
               )
             isOK <- checkSums[checkSums$expectedFile %in% basename(fileToDownload) |
               checkSums$actualFile %in% basename(fileToDownload), ]$result
@@ -315,7 +323,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
     } else {
       if (!file.exists(archive)) {
         if (length(.isArchive(downloadResults$destFile))) {
-          hardLinkOrCopy(downloadResults$destFile, archive)
+          hardLinkOrCopy(downloadResults$destFile, archive, verbose = verbose)
         }
       }
       archive
@@ -377,7 +385,6 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
     if (!is.null(fs)) {
       class(fs) <- "object_size"
     }
-
     isLargeFile <- ifelse(is.null(fs), FALSE, fs > 1e6)
     if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&
       !isFALSE(getOption("reproducible.futurePlan"))) {
@@ -495,10 +502,11 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 #' @param messSkipDownload The character string text to pass to messaging if download skipped
 #' @param checkSums TODO
 #' @param fileToDownload TODO
+#' @inheritParams loadFromCache
 #'
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, messSkipDownload,
-                           destinationPath, overwrite, needChecksums, .tempPath,
+                           destinationPath, overwrite, needChecksums, .tempPath, preDigest,
                            verbose = getOption("reproducible.verbose", 1), ...) {
   noTargetFile <- is.null(targetFile) || length(targetFile) == 0
   # browser(expr = exists("._downloadRemote_1"))
@@ -513,7 +521,6 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
   }
 
   dots <- list(...)
-
   if (!is.null(url) || !is.null(dlFun)) { # if no url, no download
     # if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
     if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE))) {
@@ -586,7 +593,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         #   where the function actually downloaded the file, we save it as an RDS file
         if (needSave) {
           if (!file.exists(destFile)) {
-            out2 <- .wrap(out)
+            out2 <- .wrap(out, preDigest = preDigest)
             saveRDS(out2, file = destFile)
           }
         }
@@ -594,7 +601,9 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
       }
 
       if (is.null(out)) {
-        if (grepl("d.+.google.com", url)) {
+        isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
+                     !grepl("\\.[^\\.]+$", url)) # doesn't have an extension --> GDrive ID's as url
+        if (any(isGID, grepl("d.+.google.com", url))) {
           if (!requireNamespace("googledrive", quietly = TRUE)) {
             stop(requireNamespaceMsg("googledrive", "to use google drive files"))
           }
@@ -646,7 +655,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         # Try hard link first -- the only type that R deeply recognizes
         # if that fails, fall back to copying the file.
         # NOTE: never use symlink because the original will be deleted.
-        result <- hardLinkOrCopy(downloadResults$destFile, desiredPath)
+        result <- hardLinkOrCopy(downloadResults$destFile, desiredPath, verbose = verbose)
 
         # result <- suppressWarningsSpecific(
         #   file.link(downloadResults$destFile, desiredPath),

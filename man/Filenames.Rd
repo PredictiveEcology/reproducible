@@ -9,17 +9,17 @@
 \alias{Filenames,Path-method}
 \title{Return the filename(s) from a \verb{Raster*} object}
 \usage{
-Filenames(obj, allowMultiple = TRUE)
+Filenames(obj, allowMultiple = TRUE, returnList = FALSE)
 
-\S4method{Filenames}{ANY}(obj, allowMultiple = TRUE)
+\S4method{Filenames}{ANY}(obj, allowMultiple = TRUE, returnList = FALSE)
 
-\S4method{Filenames}{environment}(obj, allowMultiple = TRUE)
+\S4method{Filenames}{environment}(obj, allowMultiple = TRUE, returnList = FALSE)
 
-\S4method{Filenames}{list}(obj, allowMultiple = TRUE)
+\S4method{Filenames}{list}(obj, allowMultiple = TRUE, returnList = FALSE)
 
-\S4method{Filenames}{data.table}(obj, allowMultiple = TRUE)
+\S4method{Filenames}{data.table}(obj, allowMultiple = TRUE, returnList = FALSE)
 
-\S4method{Filenames}{Path}(obj, allowMultiple = TRUE)
+\S4method{Filenames}{Path}(obj, allowMultiple = TRUE, returnList = FALSE)
 }
 \arguments{
 \item{obj}{A \verb{Raster*} object (i.e., \code{RasterLayer}, \code{RasterStack}, \code{RasterBrick})}
@@ -28,6 +28,13 @@ Filenames(obj, allowMultiple = TRUE)
 filenames will be returned, i.e., in cases such as \code{.grd} where multiple files
 are required. If \code{FALSE}, then only the first file will be returned,
 e.g., \code{filename.grd}, in the case of default Raster format in R.}
+
+\item{returnList}{Default \code{FALSE}. If \code{FALSE}, then return format will be a
+character vector. When \code{TRUE}, list or environment objects will return a list
+of character strings or vectors. When returned as a character vector, then
+the names of objects with >1 filename associated with them will be given a numeric
+suffix, which means the name in the returned vector does not match the object in
+the list or environment. When returned as a list, their names are preserved.}
 }
 \value{
 A character vector of filenames that are part of the objects passed to \code{obj}.

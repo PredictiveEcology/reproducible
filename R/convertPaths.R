@@ -70,6 +70,12 @@ convertRasterPaths <- function(x, patterns, replacements) {
 #'   filenames will be returned, i.e., in cases such as `.grd` where multiple files
 #'   are required. If `FALSE`, then only the first file will be returned,
 #'   e.g., `filename.grd`, in the case of default Raster format in R.
+#' @param returnList Default `FALSE`. If `FALSE`, then return format will be a
+#' character vector. When `TRUE`, list or environment objects will return a list
+#' of character strings or vectors. When returned as a character vector, then
+#' the names of objects with >1 filename associated with them will be given a numeric
+#' suffix, which means the name in the returned vector does not match the object in
+#' the list or environment. When returned as a list, their names are preserved.
 #'
 #' @author Eliot McIntire
 #' @details
@@ -81,7 +87,7 @@ convertRasterPaths <- function(x, patterns, replacements) {
 #' to recover the file-backed filename.
 #' @export
 #' @rdname Filenames
-setGeneric("Filenames", function(obj, allowMultiple = TRUE) {
+setGeneric("Filenames", function(obj, allowMultiple = TRUE, returnList = FALSE) {
   standardGeneric("Filenames")
 })
 
@@ -90,10 +96,10 @@ setGeneric("Filenames", function(obj, allowMultiple = TRUE) {
 setMethod(
   "Filenames",
   signature = "ANY",
-  definition = function(obj, allowMultiple) {
+  definition = function(obj, allowMultiple, returnList = FALSE) {
     if (inherits(obj, "RasterStack")) {
       fns <- unlist(lapply(seq_along(names(obj)), function(index) {
-        Filenames(obj[[index]], allowMultiple = allowMultiple)
+        Filenames(obj[[index]], allowMultiple = allowMultiple, returnList = returnList)
       }))
 
       dups <- duplicated(fns)
@@ -105,8 +111,8 @@ setMethod(
     } else if (inherits(obj, "RasterLayer")) {
       fns <- raster::filename(obj)
       if (exists("._Filenames_1")) browser()
-      if (length(fns) == 0) {
-        fns <- ""
+      if (length(fns) == 0 || all(nchar(fns) == 0)) {
+        fns <- NULL
       }
       fns <- allowMultipleFNs(allowMultiple, fns)
     } else if (inherits(obj, "SpatRaster")) {
@@ -129,8 +135,9 @@ setMethod(
 setMethod(
   "Filenames",
   signature = "environment",
-  definition = function(obj, allowMultiple = TRUE) {
-    rasterFilename <- Filenames(as.list(obj), allowMultiple = allowMultiple)
+  definition = function(obj, allowMultiple = TRUE, returnList = FALSE) {
+    rasterFilename <- Filenames(as.list(obj), allowMultiple = allowMultiple,
+                                returnList = returnList)
     rasterFilenameDups <- lapply(rasterFilename, duplicated)
 
     if (any(unlist(rasterFilenameDups))) {
@@ -145,12 +152,16 @@ setMethod(
 setMethod(
   "Filenames",
   signature = "list",
-  definition = function(obj, allowMultiple = TRUE) {
+  definition = function(obj, allowMultiple = TRUE, returnList = FALSE) {
     ## convert a list to an environment -- this is to align it with a simList and environment
     if (is.null(names(obj))) {
       names(obj) <- as.character(seq(obj))
     }
-    unlist(lapply(obj, function(o) Filenames(o, allowMultiple = allowMultiple)))
+    ll <- lapply(obj, function(o) Filenames(o, allowMultiple = allowMultiple,
+                                            returnList = returnList))
+    if (!isTRUE(returnList))
+      ll <- unlist(ll)
+    return(ll)
     # Filenames(as.environment(obj), allowMultiple = allowMultiple)
   }
 )
@@ -160,9 +171,9 @@ setMethod(
 setMethod(
   "Filenames",
   signature = "data.table",
-  definition = function(obj, allowMultiple = TRUE) {
+  definition = function(obj, allowMultiple = TRUE, returnList = FALSE) {
     isCacheDB <- all(c(.cacheTableHashColName(), .cacheTableTagColName()) %in% colnames(obj))
-    fromDsk <- ""
+    fromDsk <- NULL
     if (isCacheDB) {
       isFromDsk <- extractFromCache(obj, elem = "fromDisk") %in% "TRUE"
       if (any(isFromDsk)) {
@@ -178,7 +189,7 @@ setMethod(
 setMethod(
   "Filenames",
   signature = "Path",
-  definition = function(obj, allowMultiple = TRUE) {
+  definition = function(obj, allowMultiple = TRUE, returnList = FALSE) {
     obj <- allowMultipleFNs(allowMultiple, obj)
     # tags <- attr(obj, "tags")
     # if (!is.null(tags)) {
@@ -194,20 +205,23 @@ setMethod(
 
 
 allowMultipleFNs <- function(allowMultiple, fns) {
-  if (isTRUE(allowMultiple)) {
-    anyGrd <- endsWith(fns, suffix = "grd")
-    anyGri <- endsWith(fns, suffix = "gri")
-    if (any(anyGrd) && !any(anyGri)) {
-      nonGrd <- if (any(!anyGrd)) fns[!anyGrd] else NULL
-      multiFns <- sort(c(fns[anyGrd], gsub("grd$", "gri", fns[anyGrd])))
-      fnsNew <- c(nonGrd, multiFns)
-      fns <- fnsNew[order(match(
-        filePathSansExt(basename(fnsNew)),
-        filePathSansExt(basename(fns))
-      ))]
+  if (!is.null(fns)) {
+    if (isTRUE(allowMultiple)) {
+      anyGrd <- endsWith(fns, suffix = "grd")
+      anyGri <- endsWith(fns, suffix = "gri")
+      if (any(anyGrd) && !any(anyGri)) {
+        nonGrd <- if (any(!anyGrd)) fns[!anyGrd] else NULL
+        multiFns <- sort(c(fns[anyGrd], gsub("grd$", "gri", fns[anyGrd])))
+        fnsNew <- c(nonGrd, multiFns)
+        fns <- fnsNew[order(match(
+          filePathSansExt(basename(fnsNew)),
+          filePathSansExt(basename(fns))
+        ))]
+      }
+    } else {
+      fns <- grep("\\.gri$", fns, value = TRUE, invert = TRUE)
     }
-  } else {
-    fns <- grep("\\.gri$", fns, value = TRUE, invert = TRUE)
   }
   fns
+
 }

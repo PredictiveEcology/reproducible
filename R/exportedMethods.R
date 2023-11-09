@@ -79,8 +79,8 @@ setMethod(
     } else if (!is.na(fromMemoise)) {
       whMessage <- .loadedCacheResultMsg
       messageCache(.loadedCacheMsg(whMessage, functionName), " ",
-        .addingToMemoisedMsg,
-        sep = "", verbose = verbose
+                   .addingToMemoisedMsg,
+                   sep = "", verbose = verbose
       )
     } else {
       whMessage <- .loadedCacheResultMsg
@@ -189,10 +189,11 @@ setMethod(
         tmpDir <- .reproducibleTempCacheDir()
         # Test whether the user has accepted the default. If yes, then give message.
         #  If no, then user is aware and doesn't need a message
-        if (any(identical(normPath(tmpDir), normPath(getOption("reproducible.cachePath"))))) {
+        if (any(grepl(normPath(tmpDir), normPath(getOption("reproducible.cachePath")))) ||
+            any(grepl(normPath(tempdir()), normPath(getOption("reproducible.cachePath"))))) {
           messageCache("No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;\n",
-            "  this will not persist across R sessions.",
-            verbose = verbose
+                       "  this will not persist across R sessions.",
+                       verbose = verbose
           )
         }
         getOption("reproducible.cachePath", tmpDir)
@@ -483,40 +484,54 @@ unmakeMemoisable.default <- function(x) {
 #' cannot be saved without first wrapping them. Also, file-backed objects are similar.
 #'
 #' @param obj Any arbitrary R object.
+#' @param ... Arguments passed to methods; default does not use anything in `...`.
 #' @inheritParams Cache
+#' @inheritParams loadFromCache
 #' @rdname dotWrap
 #' @return
 #' Returns an object that can be saved to disk e.g., via `saveRDS`.
 #'
 #' @export
 #'
-.wrap <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap <- function(obj, cachePath, preDigest,  drv = getDrv(getOption("reproducible.drv", NULL)),
                   conn = getOption("reproducible.conn", NULL),
-                  verbose = getOption("reproducible.verbose")) {
+                  verbose = getOption("reproducible.verbose"), ...) {
   UseMethod(".wrap")
 }
 
 #' @export
 #' @rdname dotWrap
-.wrap.list <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap.list <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                        conn = getOption("reproducible.conn", NULL),
-                       verbose = getOption("reproducible.verbose")) {
-  obj <- lapply(obj, .wrap, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
+                       verbose = getOption("reproducible.verbose"), ...) {
+  attrsOrig <- attributes(obj)
+  obj <- lapply(obj, .wrap, preDigest = preDigest, cachePath = cachePath, drv = drv,
+                conn = conn, verbose = verbose, ...)
   hasTagAttr <- lapply(obj, function(x) attr(x, "tags"))
-  tagAttr <- unlist(hasTagAttr <- lapply(obj, function(x) attr(x, "tags")))
-  if (!is.null(tagAttr)) {
-    attr(obj, "tags") <- tagAttr
+  tagAttr <- list(unlist(hasTagAttr))
+  if (length(tagAttr)) {
+    if (is.null(attrsOrig[["tags"]])) {
+      newList <- tagAttr
+    } else {
+      newList <- try(modifyList(attrsOrig["tags"], tagAttr))
+    }
+    attrsOrig["tags"] <- newList
+  }
+  if (!is.null(attrsOrig)) {
+    for (tt in c(".Cache", "tags", "call"))
+      attr(obj, tt) <- attrsOrig[[tt]]
   }
   obj
 }
 
 #' @export
 #' @rdname dotWrap
-.wrap.environment <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap.environment <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                               conn = getOption("reproducible.conn", NULL),
-                              verbose = getOption("reproducible.verbose")) {
+                              verbose = getOption("reproducible.verbose"), ...) {
   obj2 <- as.list(obj, all.names = FALSE)
-  out <- .wrap(obj2, cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)
+  out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
+               conn = conn, verbose = verbose, ...)
   obj <- Copy(obj)
   obj2 <- list2envAttempts(out, obj)
   if (!is.null(obj2)) obj <- obj2
@@ -535,9 +550,9 @@ unmakeMemoisable.default <- function(x) {
 #' }
 
 #'
-.wrap.default <- function(obj, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap.default <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL),
-                          verbose = getOption("reproducible.verbose")) {
+                          verbose = getOption("reproducible.verbose"), ...) {
   rasters <- is(obj, "Raster")
 
   if (any(rasters)) {
@@ -545,8 +560,8 @@ unmakeMemoisable.default <- function(x) {
     objOrig <- obj
     atts <- attributes(obj)
     obj <- .prepareFileBackedRaster(obj,
-      repoDir = cachePath,
-      overwrite = FALSE, drv = drv, conn = conn
+                                    repoDir = cachePath,
+                                    overwrite = FALSE, drv = drv, conn = conn
     )
     isFromDisk <- raster::fromDisk(obj)
 
@@ -602,7 +617,7 @@ unmakeMemoisable.default <- function(x) {
     if (inherits(obj, "SpatRaster")) {
       if (all(nzchar(Filenames(obj)))) {
         useWrap <- FALSE
-        obj <- wrapSpatRaster(obj, cachePath)
+        obj <- wrapSpatRaster(obj, cachePath, ...)
       }
     } else if (is(obj, "SpatVector") && !missing(cachePath)) {
       useWrap <- FALSE
@@ -631,7 +646,7 @@ unmakeMemoisable.default <- function(x) {
 #' @rdname dotWrap
 .unwrap.default <- function(obj, cachePath, cacheId,
                             drv = getDrv(getOption("reproducible.drv", NULL)),
-                            conn = getOption("reproducible.conn", NULL)) {
+                            conn = getOption("reproducible.conn", NULL), ...) {
   if (any(inherits(obj, c("PackedSpatVector", "PackedSpatRaster", "PackedSpatExtent")))) {
     if (!requireNamespace("terra")) stop("Please install.packages('terra')")
     if (any(inherits(obj, "PackedSpatVector"))) {
@@ -644,59 +659,120 @@ unmakeMemoisable.default <- function(x) {
   } else if (any(inherits(obj, "data.table"))) {
     obj <- data.table::copy(obj)
   } else if (is(obj, "Path")) {
-    obj <- unwrapSpatRaster(obj, cachePath)
+    obj <- unwrapSpatRaster(obj, cachePath, ...)
   }
 
   obj
 }
 
-wrapSpatRaster <- function(obj, cachePath) {
+wrapSpatRaster <- function(obj, cachePath, ...) {
   cls <- class(obj)
-  layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
+  fns <- Filenames(obj, allowMultiple = FALSE)
+  fnsMulti <- Filenames(obj, allowMultiple = TRUE)
   obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
-  obj <- asPath(Filenames(obj))
-  attr(obj, "tags") <- c(
-    attr(obj, "tags"),
-    paste0("origFilename:", basename2(obj)),
-    paste0("origRelName:", makeRelative(obj, cachePath)),
-    paste0("origDirname:", dirname(obj)),
-    paste0("origGetWd:", getwd()),
-    paste0("origCachePath:", cachePath),
-    paste0("fromDisk:", TRUE),
-    paste0("class:", cls),
-    paste0("fileFormat:", tools::file_ext(obj)),
-    paste0("saveRawFile:", TRUE),
-    paste0("loadFun:", "terra::rast"),
-    paste0("layerNames:", layerNams),
-    paste0("whichFiles:", obj2)
-  )
+  nlyrsInFile <- as.integer(terra::nlyr(terra::rast(fns)))
+  layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
+
+  # A file-backed rast can 1) not be using all the layers in the file and
+  # 2) have layer names renamed
+  whLayers <- seq_along(names(obj))
+  if (!identical(nlyrsInFile, length(names(obj)))) {
+    rr <- terra::rast(fns);
+    objDigs <- unlist(lapply(layerNams, function(ln) .robustDigest(obj[[ln]][])))
+    digs <- character()
+    whLayers <- integer()
+
+    # don't need to go through all layers if the current file has only some; run through from start
+    for (ln in seq_len(terra::nlyr(rr))) {
+      digs[ln] <- .robustDigest(rr[[ln]][])
+      if (digs[ln] %in% objDigs)
+        whLayers <- c(ln, whLayers)
+      if (all(digs %in% objDigs))
+        break
+    }
+  }
+  obj <- asPath(fnsMulti)
+
+  relToWhere <- relativeToWhat(obj, cachePath, ...)
+  absBase <- absoluteBase(names(relToWhere), cachePath, ...)
+  relPath <- unname(unlist(relToWhere))
+  relName <- file.path(relPath, basename2(obj))
+
+  tags <- tagsSpatRaster(obj, relToWhere, relName, cls, whLayers, layerNams, obj2)
+  attr(obj, "tags") <- tags
+
+  # c(
+  #   attr(obj, "tags"),
+  #   paste0(tagRelToWhere, ":", names(relToWhere)),
+  #   paste0(tagOrigFilename, ":", basename2(obj)),
+  #   paste0(tagOrigRelName, ":", relName),
+  #   # paste0("origDirname:", dirname(obj)),
+  #   paste0("fromDisk:", TRUE),
+  #   paste0("class:", cls),
+  #   paste0("fileFormat:", tools::file_ext(obj)),
+  #   paste0("saveRawFile:", TRUE),
+  #   paste0("loadFun:", "terra::rast"),
+  #   paste0("whLayers:", whLayers),
+  #   paste0("layerNames:", layerNams),
+  #   paste0(tagFilesToLoad, ":", basename2(obj2))
+  # )
   obj
 }
 
-unwrapSpatRaster <- function(obj, cachePath) {
+tagFilesToLoad = "filesToLoad"
+tagRelToWhere = "relToWhere"
+tagOrigFilename <- "origFilename"
+tagOrigRelName <- "origRelName"
+
+unwrapSpatRaster <- function(obj, cachePath, ...) {
   fns <- Filenames(obj)
   if (isTRUE(any(nchar(fns) > 0))) {
     tags <- attr(obj, "tags")
     if (!is.null(tags)) {
-      tags <- parseTags(tags)
-      origFilename <- extractFromCache(tags, "origFilename") # tv[tk == "origFilename"]
-      origRelName <- extractFromCache(tags, "origRelName")
-      isAbs <- isAbsolutePath(origRelName)
-      if (any(isAbs)) { # means that it had a specific path, not just relative
-        newName <- file.path(normPath(extractFromCache(tags, "origDirname")), origFilename)
+      newFiles <- remapFilenames(tags, cachePath, ...)
+      # tags <- parseTags(tags)
+      # origRelName <- extractFromCache(tags, tagOrigRelName)
+      # origFilename <- extractFromCache(tags, tagOrigFilename) # tv[tk == tagOrigFilename]
+      # relToWhere <- extractFromCache(tags, "relToWhere")
+      # # possPaths <- modifyListPaths(cachePath, ...)
+      # absBase <- absoluteBase(relToWhere, cachePath, ...)
+      # newName <- file.path(absBase, origRelName)
+
+      # if (FALSE) {
+      #   isAbs <- isAbsolutePath(origRelName)
+      #   if (any(isAbs) || is.null(cachePath)) { # means that it had a specific path, not just relative
+      #     newName2 <- file.path(normPath(extractFromCache(tags, "origDirname")), origFilename)
+      #   } else {
+      #     newName2 <- file.path(cachePath, origRelName)
+      #   }
+      # }
+
+      # if (!identical(newName, newName2)) browser()
+
+      # whFiles <- newFiles$newName[match(basename(extractFromCache(tags, tagFilesToLoad)), origFilename)]
+
+      if (!is.null(cachePath)) {
+        filenameInCache <- CacheStoredFile(cachePath,
+                                           # cacheId = tools::file_path_sans_ext(basename(obj)),
+                                           obj = obj
+        )
+        feObjs <- file.exists(obj)
+        if (any(feObjs))
+          unlink(obj[feObjs])
+        hardLinkOrCopy(unlist(filenameInCache), newFiles$newName, verbose = 0)
       } else {
-        newName <- file.path(cachePath, origRelName)
+        hardLinkOrCopy(unlist(fns), newFiles$newName, verbose = 0)
       }
-      whFiles <- newName[match(basename(extractFromCache(tags, "whichFiles")), origFilename)]
-      filenameInCache <- CacheStoredFile(cachePath,
-        cacheId = tools::file_path_sans_ext(basename(obj)),
-        format = fileExt(obj)
-      )
-      hardLinkOrCopy(filenameInCache, obj, verbose = 0)
-      obj <- eval(parse(text = extractFromCache(tags, "loadFun")))(whFiles)
-      possNames <- strsplit(extractFromCache(tags, "layerNames"), split = layerNamesDelimiter)[[1]]
-      # if (!identical(possNames, names(obj)))
-      #   browser()
+
+      obj <- eval(parse(text = extractFromCache(newFiles$tagsParsed, "loadFun")))(newFiles$whFiles)
+      possNames <- strsplit(extractFromCache(newFiles$tagsParsed, "layerNames"), split = layerNamesDelimiter)[[1]]
+      namsObjs <- names(obj)
+      if (!identical(possNames, namsObjs)) {
+        whLayers <- as.integer(extractFromCache(newFiles$tagsParsed, "whLayers"))
+        if (length(whLayers) != length(namsObjs)) {
+          obj <- obj[[whLayers]]
+        }
+      }
 
       # names can be wrong e.g., with "nextNumericName" ... habitatQuality_1 instead of habitatQuality.
       #  Should use the one without the `nextNumericName`
@@ -713,7 +789,7 @@ unwrapSpatRaster <- function(obj, cachePath) {
 #' @rdname dotWrap
 .unwrap <- function(obj, cachePath, cacheId,
                     drv = getDrv(getOption("reproducible.drv", NULL)),
-                    conn = getOption("reproducible.conn", NULL)) {
+                    conn = getOption("reproducible.conn", NULL), ...) {
   UseMethod(".unwrap")
 }
 
@@ -721,11 +797,11 @@ unwrapSpatRaster <- function(obj, cachePath) {
 #' @rdname dotWrap
 .unwrap.environment <- function(obj, cachePath, cacheId,
                                 drv = getDrv(getOption("reproducible.drv", NULL)),
-                                conn = getOption("reproducible.conn", NULL)) {
+                                conn = getOption("reproducible.conn", NULL), ...) {
   # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
   objList <- as.list(obj) # don't overwrite everything, just the ones in the list part
 
-  outList <- .unwrap(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
+  outList <- .unwrap(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn, ...)
   output2 <- list2envAttempts(outList, obj) # don't return it if the list2env retured nothing (a normal environment situation; not simList)
   if (!is.null(output2)) obj <- output2
 
@@ -736,7 +812,7 @@ unwrapSpatRaster <- function(obj, cachePath) {
 #' @rdname dotWrap
 .unwrap.list <- function(obj, cachePath, cacheId,
                          drv = getDrv(getOption("reproducible.drv", NULL)),
-                         conn = getOption("reproducible.conn", NULL)) {
+                         conn = getOption("reproducible.conn", NULL), ...) {
   anyNames <- names(obj)
   isSpatVector <- if (is.null(anyNames)) FALSE else all(names(obj) %in% spatVectorNamesForCache)
   if (isTRUE(isSpatVector)) {
@@ -747,7 +823,7 @@ unwrapSpatRaster <- function(obj, cachePath) {
       obj <- unwrapRaster(obj, cachePath, cacheId)
     } else {
       obj <- lapply(obj, function(out) {
-        .unwrap(out, cachePath, cacheId, drv, conn)
+        .unwrap(out, cachePath, cacheId, drv, conn, ...)
       })
     }
   }
@@ -774,13 +850,13 @@ unwrapRaster <- function(obj, cachePath, cacheId) {
     }
   }
   out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
-    origFilenames[filesExistInCache],
-    overwrite = TRUE
+                        origFilenames[filesExistInCache],
+                        overwrite = TRUE
   )
 
   newOutput <- updateFilenameSlots(obj$cacheRaster,
-    Filenames(obj, allowMultiple = FALSE),
-    newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE)
+                                   Filenames(obj, allowMultiple = FALSE),
+                                   newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE)
   )
   obj <- newOutput
   obj <- .setSubAttrInList(obj, ".Cache", "newCache", FALSE)
@@ -797,3 +873,122 @@ parseTags <- function(tags) {
   setnames(tags1, "V1", "tagKey")
   tags1
 }
+
+relativeToWhat <- function(file, cachePath, ...) {
+  possRelPaths <- modifyListPaths(cachePath, ...)
+
+  foundAbs <- FALSE
+  dirnameFile <- dirname(file)
+  whSame <- rep(FALSE, length(file))
+  pc <- rep("", length(file))
+  for (nams in names(possRelPaths)) {
+    pc[!whSame] <- mapply(fn = file[!whSame], function(fn)
+      fs::path_common(c(dirname(fn), possRelPaths[[nams]]))
+    )
+
+    out <- as.character(fs::path_rel(pc, possRelPaths[[nams]]))
+    whSame <- pc == dirnameFile
+    if (all(whSame)) {
+      out <- list(out)
+      names(out) <- nams
+      foundAbs <- TRUE
+      break
+    }
+  }
+  if (isFALSE(foundAbs)) {
+    for (nams in names(possRelPaths)) {
+      poss <- fs::path_common(c(file, possRelPaths[nams]))
+      if (!identical(poss, possRelPaths[nams])) {
+        rel <- makeRelative(possRelPaths[nams], poss)
+        relWithDots <- rep("..", length(strsplit(rel, "/|\\\\")[[1]]))
+        poss <- paste(relWithDots, collapse = "/")
+        out <- poss
+        out <- list(out)
+        names(out) <- nams
+        foundAbs <- TRUE
+        break
+      }
+    }
+  }
+
+  out
+}
+
+absoluteBase <- function(relToWhere, cachePath, ...) {
+  if (identical(relToWhere, "cachePath") && !is.null(cachePath)) {
+    ab <- cachePath
+  } else if(identical(relToWhere, "getwd")) {
+    ab <- getwd()
+  } else {
+    possRelPaths <- modifyListPaths(cachePath, ...)
+    if (relToWhere %in% names(possRelPaths)) {
+      ab <- try(possRelPaths[[relToWhere]])
+    } else {
+      ab <- try(possRelPaths[[1]])
+    }
+    if (is(ab, "try-error")) browser()
+  }
+
+  ab
+}
+
+#' @importFrom utils modifyList
+modifyListPaths <- function(cachePath, ...) {
+  possRelPaths <- list()
+  if (!missing(cachePath))
+    possRelPaths$cachePath <- cachePath
+  dots <- list(...)
+  if (length(dots)) {
+    if (is(dots[[1]], "list")) {
+      if (is.null(names(dots[[1]])))
+        stop("wrapSpatRaster and unwrapSpatRaster require named list passed to dots")
+      possRelPaths <- modifyList(dots[[1]], possRelPaths)
+    }
+  }
+  possRelPaths <- append(possRelPaths, list(getwd = getwd()))
+}
+
+tagsSpatRaster <- function(obj = NULL, relToWhere = NULL, relName = NULL, cls = NULL,
+                           whLayers = NULL, layerNams = NULL, obj2 = NULL) {
+  fe <- if (is.null(obj)) NULL else tools::file_ext(obj)
+  c(
+    attr(obj, "tags"),
+    paste0(tagRelToWhere, ":", names(relToWhere)),
+    paste0(tagOrigFilename, ":", basename2(obj)),
+    paste0(tagOrigRelName, ":", relName),
+    paste0("fromDisk:", TRUE),
+    paste0("class:", cls),
+    paste0("fileFormat:", fe),
+    paste0("saveRawFile:", TRUE),
+    paste0("loadFun:", "terra::rast"),
+    paste0("whLayers:", whLayers),
+    paste0("layerNames:", layerNams),
+    paste0(tagFilesToLoad, ":", basename2(obj2))
+  )
+}
+
+remapFilenames <- function(tags, cachePath, ...) {
+  tags <- parseTags(tags)
+  origRelName <- extractFromCache(tags, tagOrigRelName)
+  origFilename <- extractFromCache(tags, tagOrigFilename) # tv[tk == tagOrigFilename]
+  relToWhere <- extractFromCache(tags, "relToWhere")
+  possRelPaths <- modifyListPaths(cachePath, ...)
+  if (relToWhere %in% names(possRelPaths)) {
+    absBase <- absoluteBase(relToWhere, cachePath, ...)
+  } else {
+    absBase <- possRelPaths[[1]]
+    isOutside <- grepl(grepStartsTwoDots, origRelName)
+    if (any(isOutside)) {
+      # means the relative path is "outside" of something ... strip all ".." if relToWhere doesn't exist
+      while(any(grepl(grepStartsTwoDots, origRelName))) {
+        origRelName <- gsub(paste0(grepStartsTwoDots, "|(\\\\|/)"), "", origRelName)
+      }
+    }
+  }
+
+  newName <- file.path(absBase, origRelName)
+  whFiles <- newName[match(basename(extractFromCache(tags, tagFilesToLoad)), origFilename)]
+  list(newName = newName, whFiles = whFiles, tagsParsed = tags)
+}
+
+grepStartsTwoDots <- "^\\.\\."

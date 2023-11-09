@@ -15,6 +15,7 @@ downloadFile(
   checkSums,
   url,
   needChecksums,
+  preDigest,
   overwrite = getOption("reproducible.overwrite", TRUE),
   verbose = getOption("reproducible.verbose", 1),
   purge = FALSE,
@@ -75,6 +76,8 @@ in subsequent calls to
 \item{needChecksums}{A numeric, with \code{0} indicating do not write a new checksums,
 \code{1} write a new one,
 \code{2} append new information to existing one.}
+
+\item{preDigest}{The list of \code{preDigest} that comes from \code{CacheDigest} of an object}
 
 \item{overwrite}{Logical. Should downloading and all the other actions occur
 even if they pass the checksums or the files are all there.}

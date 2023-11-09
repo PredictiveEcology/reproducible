@@ -31,7 +31,7 @@ test_that("prepInputs doesn't work (part 1)", {
   )
   expect_true(any(grepl(mess, pattern = "ecozone_shp.zip")))
   expect_true(any(grepl(mess, pattern = "Appending")))
-  expect_true(any(grepl(mess, pattern = "Finished")))
+  # expect_true(any(grepl(mess, pattern = "Finished")))
   expect_true(is(shpEcozone, vectorType()))
 
   # Robust to partial file deletions:
@@ -335,7 +335,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_7_10_13", cls, 1, mess,
+  runTest("1_2_5_7_10_13", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -346,7 +346,8 @@ test_that("preProcess doesn't work", {
       test <- prepInputs(url = urlTif1, destinationPath = tmpdir)
     )
   )
-  runTest("1_2_5_6_8_10", cls, 1, mess,
+
+  runTest("1_2_5_8_10", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -361,7 +362,7 @@ test_that("preProcess doesn't work", {
     )
   )
 
-  runTest("1_2_4_5_6_7_10_12_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_10_12_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", # the file name is actually Shapefile1...
     tmpdir = tmpdir, test = test
@@ -375,7 +376,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9_10_12", vectorType(), 5, mess,
+  runTest("1_2_5_8_9_10_12", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -391,7 +392,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_7_13", cls, 1, mess,
+  runTest("1_2_5_7_13", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -402,7 +403,7 @@ test_that("preProcess doesn't work", {
       test <- prepInputs(url = urlTif1, targetFile = basename(urlTif1), destinationPath = tmpdir)
     )
   )
-  runTest("1_2_5_6_8", cls, 1, mess,
+  runTest("1_2_5_8", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -419,7 +420,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -435,7 +436,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9", vectorType(), 5, mess,
+  runTest("1_2_5_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -451,7 +452,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_7_10_13", cls, 1, mess,
+  runTest("1_2_5_7_10_13", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -466,7 +467,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_10", cls, 1, mess,
+  runTest("1_2_5_8_10", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -484,7 +485,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_10_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_10_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -501,7 +502,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9_10", vectorType(), 5, mess,
+  runTest("1_2_5_8_9_10", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -523,7 +524,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_10_12_13", vectorType(), 9, mess,
+  runTest("1_2_4_5_7_10_12_13", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -538,7 +539,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9_10_12", vectorType(), 9, mess,
+  runTest("1_2_5_8_9_10_12", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -560,7 +561,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -578,7 +579,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9", vectorType(), 5, mess,
+  runTest("1_2_5_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -598,7 +599,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -614,7 +615,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9", vectorType(), 5, mess,
+  runTest("1_2_5_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -631,7 +632,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -647,7 +648,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_7_13", cls, 1, mess,
+  runTest("1_2_5_7_13", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -667,7 +668,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_10_12_13", vectorType(), 9, mess,
+  runTest("1_2_4_5_7_10_12_13", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -683,7 +684,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9_10_12", vectorType(), 9, mess,
+  runTest("1_2_5_8_9_10_12", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -718,7 +719,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -732,7 +733,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9", vectorType(), 5, mess,
+  runTest("1_2_5_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -749,7 +750,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -765,7 +766,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9", vectorType(), 5, mess,
+  runTest("1_2_5_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -786,7 +787,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -803,7 +804,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_8_9", vectorType(), 5, mess,
+  runTest("1_2_5_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -822,7 +823,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_9_10_12_13", vectorType(), 9, mess,
+  runTest("1_2_4_5_9_10_12_13", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -836,7 +837,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_9_10_12", vectorType(), 9, mess,
+  runTest("1_2_5_9_10_12", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -858,7 +859,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_9_13", vectorType(), 9, mess,
+  runTest("1_2_4_5_9_13", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -873,7 +874,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_9", vectorType(), 9, mess,
+  runTest("1_2_5_9", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -896,7 +897,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_9_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_9_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -912,7 +913,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_9", vectorType(), 5, mess,
+  runTest("1_2_5_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -933,7 +934,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_9_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_9_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -949,7 +950,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_9", vectorType(), 5, mess,
+  runTest("1_2_5_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -963,7 +964,7 @@ test_that("preProcess doesn't work", {
       test <- prepInputs(targetFile = "Shapefile1.shp", destinationPath = tmpdir)
     )
   )
-  runTest("1_2_5_6", vectorType(), 5, mess,
+  runTest("1_2_5", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -972,7 +973,7 @@ test_that("preProcess doesn't work", {
       test <- prepInputs(targetFile = "Shapefile1.shp", destinationPath = tmpdir)
     )
   )
-  runTest("1_2_5_6", vectorType(), 5, mess,
+  runTest("1_2_5", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -992,7 +993,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6", vectorType(), 5, mess,
+  runTest("1_2_5", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1005,7 +1006,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6", vectorType(), 5, mess,
+  runTest("1_2_5", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1045,7 +1046,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_9_10_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_9_10_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1060,7 +1061,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_9_10", vectorType(), 5, mess,
+  runTest("1_2_5_9_10", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1097,7 +1098,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_4_5_6_9_13", vectorType(), 5, mess,
+  runTest("1_2_4_5_9_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1113,7 +1114,7 @@ test_that("preProcess doesn't work", {
       )
     )
   )
-  runTest("1_2_5_6_9", vectorType(), 5, mess,
+  runTest("1_2_5_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1203,11 +1204,11 @@ test_that("assessDataType doesn't work", {
   ), needGoogleDriveAuth = TRUE)
 
   ## LOG1S
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- c(0, NaN, rep(c(0, 1), 49))
   expect_true(assessDataType(ras) == "LOG1S")
 
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- rep(c(0, 1), 50)
   expect_true(assessDataType(ras) == "LOG1S")
 
@@ -1225,7 +1226,7 @@ test_that("assessDataType doesn't work", {
   expect_true(assessDataType(ras) == "INT1S")
 
   ## INT1U
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- 1:100
   expect_true(assessDataType(ras) == "INT1U")
 
@@ -1233,12 +1234,12 @@ test_that("assessDataType doesn't work", {
   expect_true(assessDataType(ras) == "INT1U")
 
   ## INT2U
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- round(runif(100, min = 64000, max = 65000))
   expect_true(assessDataType(ras) == "INT2U")
 
   ## INT2S
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- round(runif(100, min = -32767, max = 32767))
   expect_true(assessDataType(ras) == "INT2S")
 
@@ -1246,7 +1247,7 @@ test_that("assessDataType doesn't work", {
   expect_true(assessDataType(ras) == "INT2S")
 
   ## INT4U
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- round(runif(100, min = 0, max = 500000000))
   expect_true(assessDataType(ras) == "INT4U")
 
@@ -1254,7 +1255,7 @@ test_that("assessDataType doesn't work", {
   expect_true(assessDataType(ras) == "INT4U")
 
   ## INT4S
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- round(runif(100, min = -200000000, max = 200000000))
   expect_true(assessDataType(ras) == "INT4S")
 
@@ -1262,40 +1263,40 @@ test_that("assessDataType doesn't work", {
   expect_true(assessDataType(ras) == "INT4S")
 
   ## FLT4S
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- runif(100, min = -10, max = 87)
   expect_true(assessDataType(ras) == "FLT4S")
 
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- round(runif(100, min = -3.4e+26, max = 3.4e+28))
   expect_true(assessDataType(ras) == "FLT4S")
 
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- round(runif(100, min = 3.4e+26, max = 3.4e+28))
   expect_true(assessDataType(ras) == "FLT4S")
 
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- round(runif(100, min = -3.4e+26, max = -1))
   expect_true(assessDataType(ras) == "FLT4S")
 
   ## FLT8S
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- round(runif(100, min = -1.7e+30, max = 1.7e+308))
   expect_true(assessDataType(ras) == "FLT8S")
 
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- round(runif(100, min = 1.7e+30, max = 1.7e+308))
   expect_true(assessDataType(ras) == "FLT8S")
 
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- round(runif(100, min = -1.7e+308, max = -1))
   expect_true(assessDataType(ras) == "FLT8S")
 
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- c(-Inf, 1, rep(c(0, 1), 49))
   expect_true(assessDataType(ras) == "FLT8S")
 
-  ras <- terra::rast(ncol = 10, nrow = 10)
+  ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- c(Inf, 1, rep(c(0, 1), 49))
   expect_true(assessDataType(ras) == "FLT8S")
 
@@ -1305,11 +1306,11 @@ test_that("assessDataType doesn't work", {
 test_that("assessDataType for categorical rasters", {
   testInit(c("terra", "raster"))
 
-  r <- terra::rast(terra::ext(c(0,2,0,2)), vals = 1:4, res = 1)
+  r <- terra::rast(terra::ext(c(0,2,0,2)), vals = 1:4, resolution = 1)
   levels(r) <- data.frame(ID = 1:4, Lett = LETTERS[1:4])
   expect_identical(assessDataType(r), "INT1U")
 
-  r <- raster::raster(raster::extent(c(0,2,0,2)), vals = 1:4, res = 1)
+  r <- raster::raster(raster::extent(c(0,2,0,2)), vals = 1:4, resolution = 1)
   levels(r) <- data.frame(ID = 1:4, Lett = LETTERS[1:4])
   expect_identical(assessDataType(r), "INT1U")
 
@@ -1404,7 +1405,7 @@ test_that("lightweight tests for code coverage", {
   b <- list(1, 1)
   expect_error(a <- postProcess(b), "from must be a")
 
-  ras <- terra::rast(terra::ext(0, 10, 0, 10), res = 1, vals = 1:100)
+  ras <- terra::rast(terra::ext(0, 10, 0, 10), resolution = 1, vals = 1:100)
   terra::crs(ras) <- crsToUse
 
   expect_error(postProcess(ras, studyArea = 1), .msgGrep$anySpatialClass)
@@ -1416,12 +1417,12 @@ test_that("lightweight tests for code coverage", {
   a <- cropInputs(b)
   expect_true(identical(a, b))
 
-  ras2 <- terra::rast(terra::ext(0, 5, 0, 5), res = 1, vals = 1:25)
+  ras2 <- terra::rast(terra::ext(0, 5, 0, 5), resolution = 1, vals = 1:25)
   terra::crs(ras2) <- crsToUse
   a <- cropInputs(ras, extentToMatch = terra::ext(ras2), extentCRS = terra::crs(ras2))
   expect_true(inherits(a, "SpatRaster"))
 
-  ras4 <- terra::rast(terra::ext(7, 11, 7, 11), res = 1, vals = 1:16)
+  ras4 <- terra::rast(terra::ext(7, 11, 7, 11), resolution = 1, vals = 1:16)
   sp4 <- terra::vect(terra::ext(ras4))
   terra::crs(sp4) <- crsToUse
   # sp4 <- sf::st_as_sfc(sf::st_bbox(ras4))
@@ -1430,7 +1431,7 @@ test_that("lightweight tests for code coverage", {
   grepMessHere <- "extents do not overlap"
   expect_error(cropInputs(ras2, studyArea = sp4), grepMessHere)
 
-  ras3 <- terra::rast(terra::ext(0, 5, 0, 5), res = 1, vals = 1:25)
+  ras3 <- terra::rast(terra::ext(0, 5, 0, 5), resolution = 1, vals = 1:25)
   terra::crs(ras3) <- crsToUse
 
   ################################################
@@ -1679,7 +1680,7 @@ test_that("options inputPaths", {
       )
     )
     expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ":\n", file.path(tmpdir1, theFile)), mess1)) == 1)
-    expect_true(sum(grepl(paste0("", whPointsToMessForGrep, "\n", file.path(tmpdir, theFile)), mess1)) == 1)
+    expect_true(sum(grepl(paste0("", whPointsToMessForGrep, "\n", file.path(tmpdir1, theFile)), mess1)) == 1)
     expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 3)
   }
   ## Try download to inputPath, intercepting the destination, creating a link
@@ -1792,7 +1793,7 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
   testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                "reproducible.inputPaths" = NULL),
                           needGoogleDriveAuth = TRUE)
-  a <- terra::rast(terra::ext(0, 2, 0, 2), res = 1, vals = c(1, 1, 2, 2))
+  a <- terra::rast(terra::ext(0, 2, 0, 2), resolution = 1, vals = c(1, 1, 2, 2))
   levels(a) <- data.frame(ID = 1:2, Factor = c("This", "That"))
   tifTmp <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   file.create(tifTmp)
@@ -1812,8 +1813,8 @@ test_that("rasters aren't properly resampled", {
   testInit("terra", opts = list("reproducible.overwrite" = TRUE,
                                                "reproducible.inputPaths" = NULL),
                           needGoogleDriveAuth = TRUE)
-  a <- terra::rast(terra::ext(0, 20, 0, 20), res = 2, vals = as.integer(1:100*4))
-  b <- terra::rast(terra::ext(0, 30, 0, 30), res = c(3,3), vals = 1L:100L)
+  a <- terra::rast(terra::ext(0, 20, 0, 20), resolution = 2, vals = as.integer(1:100*4))
+  b <- terra::rast(terra::ext(0, 30, 0, 30), resolution = c(3,3), vals = 1L:100L)
   crs(a) <- crsToUse
   crs(b) <- crsToUse
 
@@ -1839,7 +1840,7 @@ test_that("rasters aren't properly resampled", {
   if (getRversion() >= "4.1" || !isWindows()) {
     expect_true(dataType2(out2) %in% c("INT2S")) # because of "bilinear", it can become negative
 
-    rrr1 <- terra::rast(terra::ext(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
+    rrr1 <- terra::rast(terra::ext(0, 20, 0, 20), resolution = 1, vals = runif(400, 0, 1))
     terra::crs(rrr1) <- crsToUse
     tiftemp3 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
     tiftemp4 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
@@ -1870,15 +1871,16 @@ test_that("rasters aren't properly resampled", {
 
     if (.requireNamespace("raster")) {
       rasterStackFn <- "raster::stack"
-      out4 <- prepInputs(
-        targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
-        destinationPath = dirname(tiftemp3),
-        fun = rasterStackFn,
-        filename2 = c(
-          tempfile(tmpdir = tmpdir, fileext = ".grd"),
-          tempfile(tmpdir = tmpdir, fileext = ".grd")
-        )
-      )
+      suppressWarningsSpecific(falseWarnings = "partial argument match",
+                               out4 <- prepInputs(
+                                 targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
+                                 destinationPath = dirname(tiftemp3),
+                                 fun = rasterStackFn,
+                                 filename2 = c(
+                                   tempfile(tmpdir = tmpdir, fileext = ".grd"),
+                                   tempfile(tmpdir = tmpdir, fileext = ".grd")
+                                 )
+                               ))
       expect_true(is(out4, rasterType(nlayers = nlayers2(out4), rasterRead = rasterStackFn)))
       expect_true(identical(length(Filenames(out4, allowMultiple = TRUE)), 4L))
 
@@ -1892,7 +1894,8 @@ test_that("rasters aren't properly resampled", {
 
       rasStack <- writeRaster(rasStack, filename = tiftemp5)
       rm(rasStack)
-      out5 <- prepInputs(
+      suppressWarningsSpecific(falseWarnings = "partial argument match",
+                               out5 <- prepInputs(
         targetFile = tiftemp5, rasterToMatch = terra::rast(tiftemp2),
         destinationPath = dirname(tiftemp3),
         fun = rasterStackFn,
@@ -1901,12 +1904,13 @@ test_that("rasters aren't properly resampled", {
           tempfile(tmpdir = tmpdir, fileext = ".grd"),
           tempfile(tmpdir = tmpdir, fileext = ".tif")
         )
-      )
+      ))
       expect_true(is(out5, "RasterStack"))
       expect_true(identical(length(Filenames(out5, allowMultiple = TRUE)), 5L))
 
 
-      out4 <- prepInputs(
+      suppressWarningsSpecific(falseWarnings = "partial argument match",
+                               out4 <- prepInputs(
         targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
         destinationPath = dirname(tiftemp3),
         fun = rasterStackFn,
@@ -1914,7 +1918,7 @@ test_that("rasters aren't properly resampled", {
           tempfile(tmpdir = tmpdir, fileext = ".grd"),
           tempfile(tmpdir = tmpdir, fileext = ".grd")
         )
-      )
+      ))
       expect_true(is(out4, rasterType(nlayers2(out4), rasterStackFn)))
       expect_true(identical(length(Filenames(out4)), 4L))
     }

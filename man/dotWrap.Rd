@@ -14,33 +14,41 @@
 .wrap(
   obj,
   cachePath,
+  preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  verbose = getOption("reproducible.verbose")
+  verbose = getOption("reproducible.verbose"),
+  ...
 )
 
 \method{.wrap}{list}(
   obj,
   cachePath,
+  preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  verbose = getOption("reproducible.verbose")
+  verbose = getOption("reproducible.verbose"),
+  ...
 )
 
 \method{.wrap}{environment}(
   obj,
   cachePath,
+  preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  verbose = getOption("reproducible.verbose")
+  verbose = getOption("reproducible.verbose"),
+  ...
 )
 
 \method{.wrap}{default}(
   obj,
   cachePath,
+  preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  verbose = getOption("reproducible.verbose")
+  verbose = getOption("reproducible.verbose"),
+  ...
 )
 
 \method{.unwrap}{default}(
@@ -48,7 +56,8 @@
   cachePath,
   cacheId,
   drv = getDrv(getOption("reproducible.drv", NULL)),
-  conn = getOption("reproducible.conn", NULL)
+  conn = getOption("reproducible.conn", NULL),
+  ...
 )
 
 .unwrap(
@@ -56,7 +65,8 @@
   cachePath,
   cacheId,
   drv = getDrv(getOption("reproducible.drv", NULL)),
-  conn = getOption("reproducible.conn", NULL)
+  conn = getOption("reproducible.conn", NULL),
+  ...
 )
 
 \method{.unwrap}{environment}(
@@ -64,7 +74,8 @@
   cachePath,
   cacheId,
   drv = getDrv(getOption("reproducible.drv", NULL)),
-  conn = getOption("reproducible.conn", NULL)
+  conn = getOption("reproducible.conn", NULL),
+  ...
 )
 
 \method{.unwrap}{list}(
@@ -72,7 +83,8 @@
   cachePath,
   cacheId,
   drv = getDrv(getOption("reproducible.drv", NULL)),
-  conn = getOption("reproducible.conn", NULL)
+  conn = getOption("reproducible.conn", NULL),
+  ...
 )
 }
 \arguments{
@@ -80,6 +92,8 @@
 
 \item{cachePath}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
+
+\item{preDigest}{The list of \code{preDigest} that comes from \code{CacheDigest} of an object}
 
 \item{drv}{if using a database backend, drv must be an object that
 inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}
@@ -91,6 +105,8 @@ inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{...}{Arguments passed to methods; default does not use anything in \code{...}.}
 
 \item{cacheId}{Used strictly for messaging. This should be the cacheId of the object being recovered.}
 }

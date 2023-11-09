@@ -132,7 +132,6 @@ setAs(from = "character", to = "Path", function(from) {
 #'
 copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                            overwrite = TRUE, delDestination = FALSE,
-                           # copyRasterFile = TRUE, clearRepo = TRUE,
                            create = TRUE, silent = FALSE) {
   if (any(length(from) != 1, length(to) != 1)) stop("from and to must each be length 1")
   useFileCopy <- identical(dirname(from), dirname(to))
@@ -280,9 +279,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   dig
 }
 
-
-
-################################################################################
 #' @details
 #' `.sortDotsUnderscoreFirst`: This exists so Windows, Linux, and Mac machines can have
 #' the same order after a sort. It will put dots and underscores first
@@ -339,7 +335,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   out
 }
 
-################################################################################
 #' Attach debug info to return for Cache
 #'
 #' Internal use only. Attaches an attribute to the output, usable for
@@ -358,8 +353,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   attr(obj, "debugCache2") <- preDigest
   obj
 }
-
-# loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
 
 #' @keywords internal
 .getOtherFnNamesAndTags <- function(scalls) {
@@ -427,11 +420,6 @@ nextNumericName <- function(string) {
   paste0(out, ".", theExt)
 }
 
-
-
-
-
-
 list2envAttempts <- function(x, envir) {
   attempt <- try(list2env(x, envir), silent = TRUE)
   output <- NULL
@@ -453,10 +441,6 @@ list2envAttempts <- function(x, envir) {
 .loadedCacheMsg <- function(root, functionName) {
   paste0("     ", root, " ", functionName, " call")
 }
-
-
-
-
 
 #' Copy the file-backing of a file-backed Raster* object
 #'
@@ -559,7 +543,6 @@ list2envAttempts <- function(x, envir) {
   obj
 }
 
-
 withoutFinalNumeric <- function(string) {
   ext <- fileExt(string)
   string1 <- filePathSansExt(string)
@@ -567,25 +550,44 @@ withoutFinalNumeric <- function(string) {
   paste0(woNumeric, ".", ext)
 }
 
-
-
 setClass("PackedSpatExtent")
 
 wrapSpatVector <- function(obj) {
-  geom1 <- terra::geom(obj)
-  geom1 <- list(
-    cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),
-    cols34 = matrix(as.integer(geom1[, c(3, 4)]), ncol = 2)
-  )
-  geomtype1 <- terra::geomtype(obj)
-  dat1 <- terra::values(obj)
-  crs1 <- terra::crs(obj)
-  obj <- list(geom1, geomtype1, dat1, crs1)
-  names(obj) <- spatVectorNamesForCache
+  obj <- terra::wrap(obj)
+  if (FALSE) {
+    geom1 <- terra::geom(obj)
+    geom1 <- list(
+      cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),
+      cols34 = matrix(as.integer(geom1[, c(3, 4)]), ncol = 2)
+    )
+    geomtype1 <- terra::geomtype(obj)
+    dat1 <- terra::values(obj)
+    crs1 <- terra::crs(obj)
+    obj <- list(geom1, geomtype1, dat1, crs1)
+    names(obj) <- spatVectorNamesForCache
+  }
   obj
 }
 
 unwrapSpatVector <- function(obj) {
-  obj$x <- cbind(obj$x$cols125[, 1:2, drop = FALSE], obj$x$cols34[, 1:2, drop = FALSE], obj$x$cols125[, 3, drop = FALSE])
-  do.call(terra::vect, obj)
+  obj <- terra::unwrap(obj)
+  if (FALSE) {
+    obj$x <- cbind(obj$x$cols125[, 1:2, drop = FALSE], obj$x$cols34[, 1:2, drop = FALSE], obj$x$cols125[, 3, drop = FALSE])
+    do.call(terra::vect, obj)
+  }
+  obj
+}
+
+#' Has a cached object has been updated?
+#'
+#' @param x cached object
+#'
+#' @return logical
+#'
+#' @export
+isUpdated <- function(x) {
+  cond1 <- isTRUE(attr(x, ".Cache")[["newCache"]])
+  cond2 <- length(attr(x, ".Cache")[["changed"]]) > 0
+
+  cond1 || cond2
 }

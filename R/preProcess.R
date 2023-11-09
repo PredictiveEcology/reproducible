@@ -180,6 +180,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
   dlFunCaptured <- substitute(dlFun)
   prepInputsAssertions(environment())
+  verboseCFS <- verbose
   isAlreadyQuoted <- any(grepl("quote", dlFunCaptured))
   if (isAlreadyQuoted) {
     dlFunCaptured <- eval(dlFunCaptured)
@@ -242,8 +243,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
   #   want if targetFile, archive, alsoExtract not specified
+  # This will switch destinationPath to be same as reproducible.inputPaths
+  #   This means that we need to modify some of the paths that were already absolute to destinationPath
   inputPaths <- runChecksums(destinationPath, checkSumFilePath, filesToCheck, verbose)
   list2env(inputPaths, environment()) # reproducible.inputPaths, destinationPathUser, destinationPath, checkSums
+  if (!is.null(inputPaths$destinationPathUser)) { # i.e., it changed
+    targetFilePath <- makeRelative(targetFilePath, inputPaths$destinationPathUser)
+    targetFilePath <- makeAbsolute(targetFilePath, destinationPath)
+    filesToCheck <- makeRelative(filesToCheck, inputPaths$destinationPathUser)
+    filesToCheck <- makeAbsolute(filesToCheck, destinationPath)
+  }
+
 
   if (is(checkSums, "try-error")) {
     needChecksums <- 1
@@ -294,8 +304,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   } else {
     outFromSimilar <- .checkForSimilar(neededFiles, alsoExtract, archive, targetFile,
       destinationPath = destinationPath, checkSums,
-      checkSumFilePath = checkSumFilePath, url
+      checkSumFilePath = checkSumFilePath, url, verbose = verboseCFS
     )
+    verboseCFS <- verbose - 1
     list2env(outFromSimilar, environment()) # neededFiles, checkSums
   }
   neededFiles <- unique(makeAbsolute(neededFiles, destinationPath))
@@ -330,6 +341,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         destinationPath = destinationPath,
         append = results$needChecksums >= 2
       )
+      needChecksums <- 0
     }
   }
 
@@ -458,8 +470,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     archive = archive, targetFile = targetFile,
     destinationPath = destinationPath, checkSums = checkSums,
     checkSumFilePath = checkSumFilePath,
-    url = url
+    url = url, verbose = verboseCFS
   )
+  verboseCFS <- verbose - 1
+
   list2env(outFromSimilar, environment()) # neededFiles, checkSums
 
   # don't include targetFile in neededFiles -- extractFromArchive deals with it separately
@@ -503,11 +517,19 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       quick = quick, verbose = verbose,
       .tempPath = .tempPath
     )
+    # this changes targetFilePath to have folder if the extraction included a folder
     list2env(filesExtracted, environment()) # neededFiles, checkSums, filesExtr, targetFilePath, filesToChecksum, needChecksums
   } else {
     if (!is.null(.isArchive(archive))) {
       messagePrepInputs("  Skipping extractFromArchive attempt: no files missing", verbose = verbose)
     }
+    if (!is.null(targetFilePath))
+      if (!makeAbsolute(targetFilePath, destinationPath) %in%
+          makeAbsolute(neededFiles, destinationPath)) {
+        if (!basename2(targetFilePath) %in% makeRelative(neededFiles, destinationPath)) {
+          targetFilePath <- grep(basename2(targetFilePath), neededFiles, value = TRUE)
+        }
+      }
 
     filesExtr <- c(filesToChecksum, neededFiles)
     filesExtr <- setdiff(filesExtr, .isArchive(filesExtr))
@@ -528,7 +550,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           from <- filesExtr[whFilesExtrInIP]
           to <- makeAbsolute(makeRelative(from, destinationPath), destinationPathUser)
           if (!isTRUE(all(from %in% to))) {
-            messagePrepInputs("...using copy in getOption('reproducible.inputPaths')...")
+            messagePrepInputs("...using copy in getOption('reproducible.inputPaths')...",
+                              verbose = verbose)
           }
           outHLC <- hardLinkOrCopy(from, to)
           filesExtr[foundInInputPaths] <- to
@@ -538,7 +561,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       if (!is.null(targetFilePath)) {
         if (!identical(to, targetFilePath)) {
           targetFilePathTmp <- to[basename(to) %in% basename(targetFilePath)]
-          if (file.exists(targetFilePathTmp)) {
+          if (any(file.exists(targetFilePathTmp))) {
             targetFilePath <- targetFilePathTmp
           } else {
             targetFilePath <- makeAbsolute(
@@ -559,7 +582,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           from <- filesExtr[whFilesExtrInLP]
           to <- makeAbsolute(makeRelative(from, destinationPath), reproducible.inputPaths)
           if (!isTRUE(all(from %in% to))) {
-            messagePrepInputs("... copying to getOption('reproducible.inputPaths')...")
+            messagePrepInputs("... copying to getOption('reproducible.inputPaths')...",
+                              verbose = verbose)
           }
           outHLC <- hardLinkOrCopy(from, to)
         }
@@ -584,7 +608,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       destinationPath = destinationPath,
       checkSums = checkSums,
       checkSumFilePath = checkSumFilePath,
-      targetFile = targetFile
+      targetFile = targetFile, verbose = verboseCFS
     )
     neededFiles <- outFromSimilar$neededFiles
     checkSums <- outFromSimilar$checkSums
@@ -610,15 +634,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       },
       add = TRUE
     )
-    extractedFiles <-
-      .tryExtractFromArchive(
-        archive = nestedArchives, neededFiles = neededFiles,
-        alsoExtract = alsoExtract, destinationPath = destinationPath,
-        checkSums = checkSums, needChecksums = needChecksums,
-        checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
-        targetFilePath = targetFilePath, quick = quick,
-        verbose = verbose, .tempPath = .tempPath
-      )
+    extractedFiles <- .tryExtractFromArchive(
+      archive = nestedArchives, neededFiles = neededFiles,
+      alsoExtract = alsoExtract, destinationPath = destinationPath,
+      checkSums = checkSums, needChecksums = needChecksums,
+      checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
+      targetFilePath = targetFilePath, quick = quick,
+      verbose = verbose, .tempPath = .tempPath
+    )
     filesExtr <- c(filesExtr, extractedFiles$filesExtr)
   }
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
@@ -658,12 +681,20 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         checkSumFilePath <- identifyCHECKSUMStxtFile(successfulDir) #   run Checksums in IP
       }
     }
-    checkSums <- appendChecksumsTable(
-      checkSumFilePath = checkSumFilePath,
-      filesToChecksum = unique(filesToChecksum),
-      destinationPath = destinationPath,
-      append = needChecksums >= 2
-    )
+    csps <- destinationPath
+    if (!is.null(reproducible.inputPaths)) {
+      csps <- c(csps, reproducible.inputPaths)
+    }
+    for (csp in csps) {
+      checkSumFilePath <- identifyCHECKSUMStxtFile(csp)
+      checkSums <- appendChecksumsTable(
+        checkSumFilePath = checkSumFilePath,
+        filesToChecksum = basename2(unique(filesToChecksum)),
+        destinationPath = csp,
+        append = needChecksums >= 2
+      )
+      needChecksums <- 0
+    }
     if (!is.null(reproducible.inputPaths) && needChecksums != 3) {
       checkSumFilePathInputPaths <- identifyCHECKSUMStxtFile(reproducible.inputPaths[[1]])
       suppressMessages({
@@ -673,6 +704,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           destinationPath = destinationPath,
           append = needChecksums == 2
         )
+        needChecksums <- 0
       })
     }
     on.exit(
@@ -786,7 +818,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # if (is.null(targetFile)) {
   guessedFile <- if (!is.null(url)) {
     gf <- file.path(destinationPath, basename2(url))
-    if (grepl("drive.google.com", url)) {
+
+    # Test for just Google ID supplied
+    isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
+                 !grepl("\\.[^\\.]+$", url)) # doesn't have an extension
+    if (any(grepl("drive.google.com", url), isGID)) {
+      if (isGID) message("url seems to be a Google Drive ID")
+
+    # if (grepl("drive.google.com", url)) {
       # ie <- isTRUE(internetExists())
       # if (ie) {
       gf <- assessGoogle(
@@ -879,7 +918,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                              url, verbose = getOption("reproducible.verbose", 1)) {
   lookForSimilar <- FALSE
   if (is.null(alsoExtract) || length(alsoExtract) == 0) {
-    messagePrepInputs("alsoExtract is unspecified; assuming that all files must be extracted")
+    messagePrepInputs("alsoExtract is unspecified; assuming that all files must be extracted",
+                      verbose = verbose)
     lookForSimilar <- "all"
   } else {
     if (!all(is.na(alsoExtract))) {
@@ -908,7 +948,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           pattern = fileExt(basename2(targetFile)), replacement = ""
         )
         filesToGet <- grep(allFiles, pattern = filePatternToKeep, value = TRUE)
-        neededFiles <- unique(c(neededFiles, filesToGet))
+        neededFiles <- c(neededFiles, filesToGet)
       }
     }
     rerunChecksums <- TRUE
@@ -917,7 +957,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         rerunChecksums <- FALSE
       }
     }
-    neededFiles <- makeAbsolute(neededFiles, destinationPath)
+    neededFiles <- unique(makeAbsolute(neededFiles, destinationPath))
     if (!is.null(neededFiles) && rerunChecksums) {
       checkSums <- .checkSumsUpdate(
         destinationPath = destinationPath, newFilesToCheck = neededFiles,
@@ -1204,10 +1244,13 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
     # if (!is.na(archive)) {
     if (any(file.exists(archive))) {
       filesExtracted <- extractFromArchive(
-        archive = archive, destinationPath = destinationPath,
+        archive = archive,
+        destinationPath = destinationPath,
         neededFiles = neededFiles,
-        checkSums = checkSums, needChecksums = needChecksums,
-        checkSumFilePath = checkSumFilePath, quick = quick,
+        checkSums = checkSums,
+        needChecksums = needChecksums,
+        checkSumFilePath = checkSumFilePath,
+        quick = quick,
         verbose = verbose,
         .tempPath = .tempPath
       )
@@ -1224,8 +1267,8 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
 
       # filesToChecksum may be wrong because of relative path without subfolder
       filesToChecksum <- unique(c(
-        filesToChecksum, targetFilePath, # alsoExtract, # alsoExtract will be in filesExtracted$filesExtr
-        filesExtracted$filesExtr
+        filesToChecksum, targetFilePath, # alsoExtract, # alsoExtract will be in filesExtracted$filesExtracted
+        filesExtracted$filesExtracted
       ))
 
       needChecksums <- filesExtracted$needChecksums
@@ -1254,12 +1297,11 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       ## targetFilePath might still be NULL, need destinationPath too
       filesExtr <- unique(c(
         filesToChecksum,
-        if (is.null(filesExtracted$filesExtr) ||
-          length(filesExtracted$filesExtr) == 0) {
+        if (is.null(filesExtracted$filesExtracted) ||
+          length(filesExtracted$filesExtracted) == 0) {
           character()
-        } # downloadFileResult$downloaded
-        else {
-          filesExtracted$filesExtr
+        } else {
+          filesExtracted$filesExtracted
         }
       ))
     }
@@ -1275,7 +1317,6 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
     neededFiles = neededFiles, checkSums = checkSums
   )
 }
-
 
 #' @keywords internal
 .decodeMagicNumber <- function(magicNumberString) {
@@ -1413,7 +1454,6 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
   downloadFileResult
 }
 
-
 moveAttributes <- function(source, receiving, attrs = NULL) {
   if (!is.null(receiving)) {
     sourceAttributes <- attributes(source)
@@ -1496,89 +1536,6 @@ hardLinkOrCopy <- function(from, to, overwrite = FALSE, verbose = TRUE) {
   linkOrCopy(from, to, symlink = FALSE, verbose = verbose)
 }
 
-makeAbsolute <- function(files, absoluteBase) {
-  nas <- is.na(files)
-  if (!all(nas)) {
-    if (length(files[!nas])) {
-      areAbs <- character(sum(!nas))
-      areAbs <- isAbsolutePath(files[!nas])
-      if (any(!areAbs)) {
-        files[!nas][!areAbs] <- file.path(absoluteBase, files[!nas][!areAbs])
-      }
-    }
-    normPath(files)
-  }
-}
-
-makeRelative <- function(files, absoluteBase) {
-  isList <- is(files, "list")
-  filesOrig <- files
-  if (isList) {
-    nams <- names(files)
-    files <- unlist(files)
-  }
-  if (length(files)) {
-    areAbs <- isAbsolutePath(files)
-    if (any(areAbs)) {
-      absoluteBase <- normPath(absoluteBase) # can be "." which means 'any character' in a grep
-      files[areAbs] <- gsub(paste0(absoluteBase, "/*"), "", files[areAbs])
-    }
-  }
-  if (isList) {
-    if (length(nams) == length(files)) {
-      names(files) <- nams
-    }
-  }
-  files
-}
-
-#' An alternative to `basename` and `dirname` when there are sub-folders
-#'
-#' This confirms that the `files` which may be absolute actually
-#'   exist when compared makeRelative(knownRelativeFiles, absolutePrefix).
-#'   This is different than just using `basename` because it will include any
-#'   sub-folder structure within the `knownRelativePaths`
-#' @param files A character vector of files to check to see if they are the same
-#'   as `knownRelativeFiles`, once the `absolutePrefix` is removed
-#' @param absolutePrefix A directory to "remove" from `files` to compare
-#'   to `knownRelativeFiles`
-#' @param knownRelativeFiles A character vector of relative filenames, that could
-#'   have sub-folder structure.
-#' @inheritParams prepInputs
-checkRelative <- function(files, absolutePrefix, knownRelativeFiles,
-                          verbose = getOption("reproducible.verbose")) {
-  if (!is.null(knownRelativeFiles)) {
-    neededFilesRel <- makeRelative(files, absolutePrefix)
-    areAbs <- isAbsolutePath(knownRelativeFiles)
-    if (any(areAbs)) {
-      knownRelativeFiles[areAbs] <- makeRelative(knownRelativeFiles, absolutePrefix)
-    }
-    relativeNamesCorrect <- neededFilesRel %in% knownRelativeFiles
-
-    if (!all(relativeNamesCorrect)) { # means user has asked for incorrect relative path
-
-      #  must include directory names
-      knownRelativeFiles <- unique(c(knownRelativeFiles, dirname(knownRelativeFiles)))
-      knownRelativeFilesBase <- basename2(knownRelativeFiles)
-      basenamesCorrect <- basename2(neededFilesRel) %in% knownRelativeFilesBase
-      needUpdateRelNames <- basenamesCorrect & !relativeNamesCorrect # filename is correct, but not nesting structure
-      if (any(needUpdateRelNames)) { # means basenames
-        # needUpdateFromArchive <- !knownRelativeFilesBase %in% basename2(neededFilesRel)
-        needUpdateFromArchive <- match(basename2(neededFilesRel)[needUpdateRelNames], knownRelativeFilesBase)
-        files[needUpdateRelNames] <- makeAbsolute(knownRelativeFiles[needUpdateFromArchive], absolutePrefix)
-        files <- unique(files)
-        messagePrepInputs("User supplied files don't correctly specify the ",
-          "files in the archive (likely because of sub-folders); \n",
-          "using items in archive with same basenames. Renaming to these: \n",
-          paste(makeRelative(files[needUpdateRelNames], absoluteBase = absolutePrefix), collapse = "\n"),
-          verbose = verbose
-        )
-      }
-    }
-  }
-  files
-}
-
 escapeRegexChars <- function(str, repl = c("(", ")")) {
   for (r in repl) {
     str <- gsub(paste0("\\", r, ""), paste0("\\\\", r), str)
@@ -1592,7 +1549,6 @@ hardlinkMessagePrefixForGrep <- escapeRegexChars(hardlinkMessagePrefix)
 whPointsToMess <- "which point(s) to"
 whPointsToMessForGrep <- escapeRegexChars(whPointsToMess)
 
-
 getTeamDrive <- function(dots) {
   if (requireNamespace("googledrive", quietly = TRUE)) {
     teamDrive <- if (packageVersion("googledrive") < "2.0.0") {
@@ -1605,7 +1561,6 @@ getTeamDrive <- function(dots) {
   }
 }
 
-
 getTargetFilePath <- function(targetFile, archive, fileGuess, verbose,
                               destinationPath, alsoExtract, checkSumFilePath) {
   if (is.null(targetFile)) {
@@ -1617,7 +1572,19 @@ getTargetFilePath <- function(targetFile, archive, fileGuess, verbose,
       targetFile <- makeRelative(fileGuess, destinationPath)
       targetFilePath <- makeAbsolute(targetFile, destinationPath)
     } else {
-      targetFilePath <- NULL
+
+      # Case when archive is passed, and fileGuess exists
+      # if ((!is.null(archive) || !is.na(archive)) && !is.null(fileGuess)) {
+      #   messagePrepInputs("archieve was supplied, but targetFile not; guessed and will try ", fileGuess,
+      #                     ". If this is incorrect, please supply targetFile",
+      #                     verbose = verbose
+      #   )
+      #   targetFile <- makeRelative(fileGuess, destinationPath)
+      #   targetFilePath <- makeAbsolute(targetFile, destinationPath)
+      # } else {
+        targetFilePath <- NULL
+      # }
+
     }
   } else {
     if (length(targetFile) > 1) {
@@ -1628,7 +1595,6 @@ getTargetFilePath <- function(targetFile, archive, fileGuess, verbose,
   }
   targetFilePath
 }
-
 
 guessAlsoExtract <- function(targetFile, alsoExtract, checkSumFilePath) {
   if (is.null(alsoExtract)) {
@@ -1690,28 +1656,32 @@ runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbos
   }
 
   destinationPathUser <- NULL
-  for (dp in unique(c(destinationPath, reproducible.inputPaths))) {
-    csfp <- identifyCHECKSUMStxtFile(dp)
-    checkSumsTmp1 <- try(Checksums(
-      path = dp, write = FALSE, checksumFile = csfp,
-      files = makeRelative(filesToCheck, absoluteBase = destinationPath),
-      verbose = verbose
-    ), silent = TRUE)
-    checkSums <- NULL
-    if (!is(checkSumsTmp1, "try-error")) {
-      checkSums <- checkSumsTmp1
-      if (!all(is.na(checkSums$result))) { # found something
-        if (identical(dp, reproducible.inputPaths)) {
-          destinationPathUser <- destinationPath
-          destinationPath <- dp
-          on.exit(
-            {
-              destinationPath <- destinationPathUser
-            },
-            add = TRUE
-          )
+  possDirs <- unique(c(destinationPath, reproducible.inputPaths))
+  csfps <- vapply(possDirs, function(dp) identifyCHECKSUMStxtFile(dp), character(1))
+  for (dp in possDirs) {
+    for (csfp in csfps) { # there can be a mismatch between checksums and file location
+      # csfp <- identifyCHECKSUMStxtFile(dp)
+      checkSumsTmp1 <- try(Checksums(
+        path = dp, write = FALSE, checksumFile = csfp,
+        files = makeRelative(filesToCheck, absoluteBase = destinationPath),
+        verbose = verbose # - 1
+      ), silent = TRUE)
+      checkSums <- NULL
+      if (!is(checkSumsTmp1, "try-error")) {
+        checkSums <- checkSumsTmp1
+        if (!all(is.na(checkSums$result))) { # found something
+          if (isTRUE(any(dp %in% reproducible.inputPaths))) {
+            destinationPathUser <- destinationPath
+            destinationPath <- dp
+            on.exit(
+              {
+                destinationPath <- destinationPathUser
+              },
+              add = TRUE
+            )
+          }
+          break
         }
-        break
       }
     }
   }
@@ -1722,7 +1692,6 @@ runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbos
     checkSums = checkSums
   )
 }
-
 
 dealWithArchive <- function(archive, url, targetFile, checkSums, alsoExtract, destinationPath, teamDrive, verbose) {
   fileGuess <- NULL
@@ -1763,7 +1732,6 @@ dealWithArchive <- function(archive, url, targetFile, checkSums, alsoExtract, de
     fileGuess = fileGuess
   )
 }
-
 
 isNULLorNA <- function(x) {
   out <- TRUE
