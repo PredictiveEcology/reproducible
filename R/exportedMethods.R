@@ -729,7 +729,22 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
   if (isTRUE(any(nchar(fns) > 0))) {
     tags <- attr(obj, "tags")
     if (!is.null(tags)) {
-      newFiles <- remapFilenames(tags, cachePath, ...)
+      if (!is.null(cachePath)) {
+        filenameInCache <- CacheStoredFile(cachePath,
+                                           # cacheId = tools::file_path_sans_ext(basename(obj)),
+                                           obj = obj
+        )
+        feObjs <- file.exists(obj)
+        if (any(feObjs))
+          unlink(obj[feObjs])
+        # fnToLoad <- fns
+        newFiles <- remapFilenames(fns, tags, cachePath, ...)
+        fromFiles <- unlist(filenameInCache)
+      } else {
+        newFiles <- remapFilenames(tags = tags, cachePath = cachePath, ...)
+        fromFiles <- unlist(fns) # fnToLoad <- newFiles$newName
+      }
+      hardLinkOrCopy(fromFiles, newFiles$newName, verbose = 0)
       # tags <- parseTags(tags)
       # origRelName <- extractFromCache(tags, tagOrigRelName)
       # origFilename <- extractFromCache(tags, tagOrigFilename) # tv[tk == tagOrigFilename]
@@ -751,18 +766,20 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
 
       # whFiles <- newFiles$newName[match(basename(extractFromCache(tags, tagFilesToLoad)), origFilename)]
 
-      if (!is.null(cachePath)) {
-        filenameInCache <- CacheStoredFile(cachePath,
-                                           # cacheId = tools::file_path_sans_ext(basename(obj)),
-                                           obj = obj
-        )
-        feObjs <- file.exists(obj)
-        if (any(feObjs))
-          unlink(obj[feObjs])
-        hardLinkOrCopy(unlist(filenameInCache), newFiles$newName, verbose = 0)
-      } else {
-        hardLinkOrCopy(unlist(fns), newFiles$newName, verbose = 0)
-      }
+      # if (!is.null(cachePath)) {
+      #   filenameInCache <- CacheStoredFile(cachePath,
+      #                                      # cacheId = tools::file_path_sans_ext(basename(obj)),
+      #                                      obj = obj
+      #   )
+      #   feObjs <- file.exists(obj)
+      #   if (any(feObjs))
+      #     unlink(obj[feObjs])
+      #   fnToLoad <- fns
+      #   hardLinkOrCopy(unlist(filenameInCache), fns, verbose = 0)
+      # } else {
+      #   fnToLoad <- newFiles$newName
+      #   hardLinkOrCopy(unlist(fns), newFiles$newName, verbose = 0)
+      # }
 
       obj <- eval(parse(text = extractFromCache(newFiles$tagsParsed, "loadFun")))(newFiles$whFiles)
       possNames <- strsplit(extractFromCache(newFiles$tagsParsed, "layerNames"), split = layerNamesDelimiter)[[1]]
@@ -967,26 +984,30 @@ tagsSpatRaster <- function(obj = NULL, relToWhere = NULL, relName = NULL, cls = 
   )
 }
 
-remapFilenames <- function(tags, cachePath, ...) {
+remapFilenames <- function(obj, tags, cachePath, ...) {
   tags <- parseTags(tags)
-  origRelName <- extractFromCache(tags, tagOrigRelName)
   origFilename <- extractFromCache(tags, tagOrigFilename) # tv[tk == tagOrigFilename]
-  relToWhere <- extractFromCache(tags, "relToWhere")
-  possRelPaths <- modifyListPaths(cachePath, ...)
-  if (relToWhere %in% names(possRelPaths)) {
-    absBase <- absoluteBase(relToWhere, cachePath, ...)
-  } else {
-    absBase <- possRelPaths[[1]]
-    isOutside <- grepl(grepStartsTwoDots, origRelName)
-    if (any(isOutside)) {
-      # means the relative path is "outside" of something ... strip all ".." if relToWhere doesn't exist
-      while(any(grepl(grepStartsTwoDots, origRelName))) {
-        origRelName <- gsub(paste0(grepStartsTwoDots, "|(\\\\|/)"), "", origRelName)
+  if (missing(obj)) {
+    origRelName <- extractFromCache(tags, tagOrigRelName)
+    relToWhere <- extractFromCache(tags, "relToWhere")
+    possRelPaths <- modifyListPaths(cachePath, ...)
+    if (relToWhere %in% names(possRelPaths)) {
+      absBase <- absoluteBase(relToWhere, cachePath, ...)
+    } else {
+      absBase <- possRelPaths[[1]]
+      isOutside <- grepl(grepStartsTwoDots, origRelName)
+      if (any(isOutside)) {
+        # means the relative path is "outside" of something ... strip all ".." if relToWhere doesn't exist
+        while(any(grepl(grepStartsTwoDots, origRelName))) {
+          origRelName <- gsub(paste0(grepStartsTwoDots, "|(\\\\|/)"), "", origRelName)
+        }
       }
     }
+    newName <- file.path(absBase, origRelName)
+  } else {
+    newName <- obj
   }
 
-  newName <- file.path(absBase, origRelName)
   whFiles <- newName[match(basename(extractFromCache(tags, tagFilesToLoad)), origFilename)]
   list(newName = newName, whFiles = whFiles, tagsParsed = tags)
 }
