@@ -1,6 +1,6 @@
 ## Release information
 
-This is a minor update that accommodates changes in R-devel related to specifying R version as a numeric. All code now uses a character string. Several other minor enhancements and bugfixes are also included as outlined in the News, including small documentation updates.
+This is a package update that accommodates needs to downstream dependencies. Several other enhancements and bugfixes are also included as outlined in the News, including small documentation updates.
 
 See `NEWS.md` for a full list of changes.
 
@@ -29,6 +29,9 @@ See `NEWS.md` for a full list of changes.
 
 No NOTEs, WARNINGs, or ERRORs
 
-## Downstream dependencies
+## revdepcheck results
 
-Currently `SpaDES.tools` and `SpaDES.core`. No conflicts were detected.
+We checked 16 reverse dependencies (0 from CRAN + 16 from Bioconductor), comparing R CMD check results across CRAN and dev versions of this package.
+
+ * We saw 0 new problems
+ * We failed to check 0 packages

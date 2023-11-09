@@ -10,7 +10,7 @@
 * `wrapSpatRaster` (`wrap` for file-backed `spatRaster` objects) fixes for more edge cases
 * `postProcessTo` can now use `sf::gdal_utils` for the case of `from` is a gridded object and `to` is a polygon vector. This appears to be between 2x and 10x faster in tests.
 * `postProcessTo` does a pre-crop (with buffer) to make the `projectTo` faster. When both `from` and `to` are vector objects, this pre-crop appears to create slivers in some cases. This step is now skipped for these cases.
-* `Cache` can now deal with unnamed functions, e.g., `Cache((function(x) x)())`
+* `Cache` can now deal with unnamed functions, e.g., `Cache((function(x) x)(1))`. It will be refered to as "headless".
 * `terra` would fail if internet was unavailable, even when internet is not necessary, due to needing to retrieve projection information. Many cases where this happens will now divert to use `sf`.
 * `Cache` can now skip calculating `objSize`, which can take a non-trivial amount of time for large, complicated objects; see `reproducibleOptions()`
 
@@ -63,7 +63,7 @@
 ## Enhancements
 - `reproducible.useFuture` now defaults to `"multisession"`
 - updated tests to deal with `data.table` development branch (#314)
-- removed all use of `data.table::setattr` to deal with "modified compiler constants" issue that was detected during CRAN checks at <https://github.com/kalibera/cran-checks/blob/master/rcnst/results/reproducible/00check.log>
+- removed all use of `data.table::setattr` to deal with "modified compiler constants" issue that was detected during CRAN checks
 - Improvements with testing using GitHub Actions
 
 ## Bugfixes
