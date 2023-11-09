@@ -26,7 +26,7 @@ this function after a manual copy of a cache folder. See examples for one way to
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8.9021</span>
       </span>
     </div>
 
@@ -154,7 +154,7 @@ name mismatch.</p>
 <span class="r-in"><span><span class="co">#   happen automatically, with message indicating so</span></span></span>
 <span class="r-in"><span><span class="fu">movedCache</span><span class="op">(</span>new <span class="op">=</span> <span class="va">tmpdirPath</span>, old <span class="op">=</span> <span class="va">tmpCacheDir</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bb</span> <span class="op">&lt;-</span> <span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">1</span>, cachePath <span class="op">=</span> <span class="va">tmpdirPath</span><span class="op">)</span> <span class="co"># should recover the previous call</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (422bae4ed2f770cc.rds))</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: rnorm, 422bae4ed2f770cc.rds))</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

@@ -25,7 +25,7 @@ See Details below."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/aj
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8.9021</span>
       </span>
     </div>
 
@@ -126,6 +126,15 @@ Default is to not use these, as they are experimental.
 They may, however, be very effective in speeding up some things, specifically,
 uploading cached elements via <code>googledrive</code> in <code>cloudCache</code>.</p></dd>
 
+<dt><code>gdalwarp</code></dt>
+<dd><p>Default: <code>FALSE</code>. Experimental. During <code>postProcessTo</code> the standard approach
+is to use <code>terra</code> functions directly, with several strategic uses of <code>sf</code>. However,
+in the special case when <code>from</code> is a <code>SpatRaster</code> or <code>Raster</code>, <code>maskTo</code> is a
+<code>SpatVector</code> or <code>SFC_POLYGON</code> and <code>projectTo</code> is a <code>SpatRaster</code> or <code>Raster</code>, setting
+this option to <code>TRUE</code> will use <code>sf::gdal_utils("warp")</code>. In many test cases,
+this is much faster than the <code>terra</code> sequence. The resulting <code>SpatRaster</code> is
+not identical, but it is very similar.</p></dd>
+
 <dt><code>inputPaths</code></dt>
 <dd><p>Default: <code>NULL</code>. Used in <code><a href="prepInputs.html">prepInputs()</a></code> and <code><a href="preProcess.html">preProcess()</a></code>.
 If set to a path, this will cause these functions to save their downloaded and preprocessed
@@ -141,8 +150,21 @@ duplicated files.</p></dd>
 <dd><p>Default: <code>FALSE</code>. Used in <code><a href="prepInputs.html">prepInputs()</a></code> and <code><a href="preProcess.html">preProcess()</a></code>.
 Should the <code>reproducible.inputPaths</code> be searched recursively for existence of a file?</p></dd>
 
+<dt><code>memoisePersist</code></dt>
+<dd><p>Default: <code>FALSE</code>. Used in <code><a href="Cache.html">Cache()</a></code>.
+Should the memoised copy of the Cache objects persist even if <code>reproducible</code> reloads
+e.g., via <code>devtools::load_all</code>? This is mostly useful for developers of
+<code>reproducible</code>. If <code>TRUE</code>, a object named <code>paste0(".reproducibleMemoise_", cachePath)</code>
+will be placed in the <code>.GlobalEnv</code>, i.e., one for each <code>cachePath</code>.</p></dd>
+
 <dt><code>nThreads</code></dt>
 <dd><p>Default: <code>1</code>. The number of threads to use for reading/writing cache files.</p></dd>
+
+<dt><code>objSize</code></dt>
+<dd><p>Default: <code>TRUE</code>. Logical. If <code>TRUE</code>, then object sizes will be included in
+the cache database. Simplying calculating object size of large objects can
+be time consuming, so setting this to <code>FALSE</code> will make caching up to 10%
+faster, depending on the objects.</p></dd>
 
 <dt><code>overwrite</code></dt>
 <dd><p>Default: <code>FALSE</code>. Used in <code><a href="prepInputs.html">prepInputs()</a></code>, <code><a href="preProcess.html">preProcess()</a></code>,

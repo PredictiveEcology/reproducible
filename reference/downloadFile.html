@@ -25,7 +25,7 @@ user."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathj
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8.9021</span>
       </span>
     </div>
 
@@ -84,6 +84,7 @@ user.</p>
 <span>  <span class="va">checkSums</span>,</span>
 <span>  <span class="va">url</span>,</span>
 <span>  <span class="va">needChecksums</span>,</span>
+<span>  <span class="va">preDigest</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.overwrite"</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  purge <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -165,6 +166,10 @@ in subsequent calls to
 <dd><p>A numeric, with <code>0</code> indicating do not write a new checksums,
 <code>1</code> write a new one,
 <code>2</code> append new information to existing one.</p></dd>
+
+
+<dt>preDigest</dt>
+<dd><p>The list of <code>preDigest</code> that comes from <code>CacheDigest</code> of an object</p></dd>
 
 
 <dt>overwrite</dt>

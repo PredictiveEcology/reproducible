@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8.9021</span>
       </span>
     </div>
 
@@ -64,10 +64,50 @@
     </div>
 
     <div class="section level2">
+<h2 class="page-header" data-toc-text="2.0.9" id="reproducible-209">reproducible 2.0.9<a class="anchor" aria-label="anchor" href="#reproducible-209"></a></h2>
+<div class="section level3">
+<h3 id="enhancements-2-0-9">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-2-0-9"></a></h3>
+<ul><li>new function <code><a href="../reference/isUpdated.html">isUpdated()</a></code> to determine whether a cached object has been updated;</li>
+<li>
+<code><a href="../reference/relativePaths.html">makeRelative()</a></code> is now exported for use downstream (e.g., <code>SpaDES.core</code>);</li>
+<li>new functions <code><a href="../reference/relativePaths.html">getRelative()</a></code> and <code><a href="../reference/normPath.html">normPathRel()</a></code> for improved symlink handling (<a href="https://github.com/PredictiveEcology/reproducible/issues/362" class="external-link">#362</a>);</li>
+<li>messaging is improved for <code>Cache</code> with the function named instead of just <code>cacheId</code>
+</li>
+<li>messaging for <code>prepInputs</code>: minor changes</li>
+<li>more edge cases for <code>Checksums</code> dealt with, so fewer unneeded downloads</li>
+<li>
+<code>wrapSpatRaster</code> (<code>wrap</code> for file-backed <code>spatRaster</code> objects) fixes for more edge cases</li>
+<li>
+<code>postProcessTo</code> can now use <code><a href="https://r-spatial.github.io/sf/reference/gdal_utils.html" class="external-link">sf::gdal_utils</a></code> for the case of <code>from</code> is a gridded object and <code>to</code> is a polygon vector. This appears to be between 2x and 10x faster in tests.</li>
+<li>
+<code>postProcessTo</code> does a pre-crop (with buffer) to make the <code>projectTo</code> faster. When both <code>from</code> and <code>to</code> are vector objects, this pre-crop appears to create slivers in some cases. This step is now skipped for these cases.</li>
+<li>
+<code>Cache</code> can now deal with unnamed functions, e.g., <code>Cache((function(x) x)(1))</code>. It will be refered to as “headless”.</li>
+<li>
+<code>terra</code> would fail if internet was unavailable, even when internet is not necessary, due to needing to retrieve projection information. Many cases where this happens will now divert to use <code>sf</code>.</li>
+<li>
+<code>Cache</code> can now skip calculating <code>objSize</code>, which can take a non-trivial amount of time for large, complicated objects; see <code><a href="../reference/reproducibleOptions.html">reproducibleOptions()</a></code>
+</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-2-0-9">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-2-0-9"></a></h3>
+<ul><li>Filenames for some classes returned ““; now returns NULL so character vectors are only pointers to files</li>
+<li>Cache on a terra object that writes file to disk, when <code>quick</code> argument is specified was failing, always creating the same object; fixed with #PR368</li>
+<li>
+<code>useDBI</code> was incorrectly used if a user had set the option prior to package loading. Now works as expected.</li>
+<li>several other minor</li>
+<li>
+<code>preProcess</code> deals better with more cases of nested paths in archives.</li>
+<li>more edge cases corrected for <code>inputPaths</code>
+</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="page-header" data-toc-text="2.0.8" id="reproducible-208">reproducible 2.0.8<small>2023-08-23</small><a class="anchor" aria-label="anchor" href="#reproducible-208"></a></h2>
 <div class="section level3">
 <h3 id="enhancements-2-0-8">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-2-0-8"></a></h3>
 <ul><li>minor formatting changes</li>
+<li>sometimes a cache entry gets corrupted. Previously, a message was supplied on how to fix; now this is just tried directly instead of just suggesting a user do it.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-2-0-8">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-2-0-8"></a></h3>
@@ -118,8 +158,7 @@
 <code>reproducible.useFuture</code> now defaults to <code>"multisession"</code>
 </li>
 <li>updated tests to deal with <code>data.table</code> development branch (<a href="https://github.com/PredictiveEcology/reproducible/issues/314" class="external-link">#314</a>)</li>
-<li>removed all use of <code><a href="https://Rdatatable.gitlab.io/data.table/reference/setattr.html" class="external-link">data.table::setattr</a></code> to deal with “modified compiler constants” issue that was detected during CRAN checks at <a href="https://github.com/kalibera/cran-checks/blob/master/rcnst/results/reproducible/00check.log" class="external-link uri">https://github.com/kalibera/cran-checks/blob/master/rcnst/results/reproducible/00check.log</a>
-</li>
+<li>removed all use of <code><a href="https://Rdatatable.gitlab.io/data.table/reference/setattr.html" class="external-link">data.table::setattr</a></code> to deal with “modified compiler constants” issue that was detected during CRAN checks</li>
 <li>Improvements with testing using GitHub Actions</li>
 </ul></div>
 <div class="section level3">

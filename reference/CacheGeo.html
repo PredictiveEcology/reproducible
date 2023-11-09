@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8.9021</span>
       </span>
     </div>
 
@@ -202,7 +202,7 @@ the existing "same extent" entry in the <code>sf</code> object.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># 1 step for each layer</span></span></span>
 <span class="r-in"><span>  <span class="co"># 1st step -- get study area</span></span></span>
-<span class="r-in"><span>  <span class="va">full</span> <span class="op">&lt;-</span> <span class="fu"><a href="prepInputs.html">prepInputs</a></span><span class="op">(</span><span class="va">localFileLux</span>, dest <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span> <span class="co"># default is sf::st_read</span></span></span>
+<span class="r-in"><span>  <span class="va">full</span> <span class="op">&lt;-</span> <span class="fu"><a href="prepInputs.html">prepInputs</a></span><span class="op">(</span><span class="va">localFileLux</span>, destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span> <span class="co"># default is sf::st_read</span></span></span>
 <span class="r-in"><span>  <span class="va">zoneA</span> <span class="op">&lt;-</span> <span class="va">full</span><span class="op">[</span><span class="fl">3</span><span class="op">:</span><span class="fl">6</span>, <span class="op">]</span></span></span>
 <span class="r-in"><span>  <span class="va">zoneB</span> <span class="op">&lt;-</span> <span class="va">full</span><span class="op">[</span><span class="fl">8</span>, <span class="op">]</span> <span class="co"># not in A</span></span></span>
 <span class="r-in"><span>  <span class="va">zoneC</span> <span class="op">&lt;-</span> <span class="va">full</span><span class="op">[</span><span class="fl">3</span>, <span class="op">]</span> <span class="co"># yes in A</span></span></span>
@@ -247,7 +247,6 @@ the existing "same extent" entry in the <code>sf</code> object.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running preProcess</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: /home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Using sf::st_read on shapefile because sf package is available; to force old behaviour with 'raster::shapefile' use fun = 'raster::shapefile' or options('reproducible.shapefileRead' = 'raster::shapefile')</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
@@ -261,59 +260,59 @@ the existing "same extent" entry in the <code>sf</code> object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geodetic CRS:  WGS 84</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    writing...</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing layer `zoneA' to data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpUa4z79/reproducible/dzey52o1/zoneA.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/Rtmp1mxndZ/reproducible/Z2hpdZ1E/zoneA.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing 4 features with 6 fields and geometry type Polygon.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00581 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00439 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    writing...</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing layer `zoneB' to data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpUa4z79/reproducible/dzey52o1/zoneB.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/Rtmp1mxndZ/reproducible/Z2hpdZ1E/zoneB.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing 1 features with 6 fields and geometry type Polygon.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00359 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00278 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    writing...</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing layer `zoneC' to data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpUa4z79/reproducible/dzey52o1/zoneC.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/Rtmp1mxndZ/reproducible/Z2hpdZ1E/zoneC.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing 1 features with 6 fields and geometry type Polygon.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00341 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00254 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    writing...</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing layer `zoneD' to data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpUa4z79/reproducible/dzey52o1/zoneD.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/Rtmp1mxndZ/reproducible/Z2hpdZ1E/zoneD.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing 2 features with 6 fields and geometry type Polygon.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00336 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00252 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    writing...</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing layer `zoneE' to data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpUa4z79/reproducible/dzey52o1/zoneE.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/Rtmp1mxndZ/reproducible/Z2hpdZ1E/zoneE.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Writing 3 features with 6 fields and geometry type Polygon.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00342 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...done in 0.00258 secs</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reading layer `zoneA' from data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpUa4z79/reproducible/dzey52o1/zoneA.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/Rtmp1mxndZ/reproducible/Z2hpdZ1E/zoneA.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 4 features and 6 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: POLYGON</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: 5.74414 ymin: 49.69933 xmax: 6.528252 ymax: 50.03632</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geodetic CRS:  WGS 84</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reading layer `zoneB' from data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpUa4z79/reproducible/dzey52o1/zoneB.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/Rtmp1mxndZ/reproducible/Z2hpdZ1E/zoneB.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 1 feature and 6 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: POLYGON</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: 6.169137 ymin: 49.58699 xmax: 6.516485 ymax: 49.75016</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geodetic CRS:  WGS 84</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reading layer `zoneC' from data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpUa4z79/reproducible/dzey52o1/zoneC.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/Rtmp1mxndZ/reproducible/Z2hpdZ1E/zoneC.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 1 feature and 6 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: POLYGON</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: 5.746118 ymin: 49.69933 xmax: 6.029145 ymax: 49.89461</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geodetic CRS:  WGS 84</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reading layer `zoneD' from data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpUa4z79/reproducible/dzey52o1/zoneD.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/Rtmp1mxndZ/reproducible/Z2hpdZ1E/zoneD.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 2 features and 6 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: POLYGON</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: 6.169137 ymin: 49.46498 xmax: 6.516485 ymax: 49.75016</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geodetic CRS:  WGS 84</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reading layer `zoneE' from data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpUa4z79/reproducible/dzey52o1/zoneE.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/Rtmp1mxndZ/reproducible/Z2hpdZ1E/zoneE.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 3 features and 6 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: POLYGON</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
@@ -325,10 +324,8 @@ the existing "same extent" entry in the <code>sf</code> object.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running preProcess</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: fireSenseParams.rds</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmpUa4z79/reproducible/dzey52o1/fireSenseParams.rds</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/Rtmp1mxndZ/reproducible/Z2hpdZ1E/fireSenseParams.rds</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile is already a binary; skipping Cache while loading</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Domain is not contained within the targetFile; running FUN</span>
@@ -337,20 +334,16 @@ the existing "same extent" entry in the <code>sf</code> object.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running preProcess</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: fireSenseParams.rds</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmpUa4z79/reproducible/dzey52o1/fireSenseParams.rds</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/Rtmp1mxndZ/reproducible/Z2hpdZ1E/fireSenseParams.rds</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile is already a binary; skipping Cache while loading</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Spatial domain is contained within the url; returning the object</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running preProcess</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: fireSenseParams.rds</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmpUa4z79/reproducible/dzey52o1/fireSenseParams.rds</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/Rtmp1mxndZ/reproducible/Z2hpdZ1E/fireSenseParams.rds</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile is already a binary; skipping Cache while loading</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Domain is not contained within the targetFile; running FUN</span>
@@ -359,10 +352,8 @@ the existing "same extent" entry in the <code>sf</code> object.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running preProcess</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: fireSenseParams.rds</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Checking local files...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Finished checking local files.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/RtmpUa4z79/reproducible/dzey52o1/fireSenseParams.rds</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at /tmp/Rtmp1mxndZ/reproducible/Z2hpdZ1E/fireSenseParams.rds</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile is already a binary; skipping Cache while loading</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Spatial domain is contained within the url; returning the object</span>

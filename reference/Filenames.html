@@ -25,7 +25,7 @@ length &amp;gt;1 for RasterStack."><!-- mathjax --><script src="https://cdnjs.cl
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8.9021</span>
       </span>
     </div>
 
@@ -73,22 +73,22 @@ length &gt;1 for <code>RasterStack</code>.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">Filenames</span><span class="op">(</span><span class="va">obj</span>, allowMultiple <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">Filenames</span><span class="op">(</span><span class="va">obj</span>, allowMultiple <span class="op">=</span> <span class="cn">TRUE</span>, returnList <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for ANY</span></span>
-<span><span class="fu">Filenames</span><span class="op">(</span><span class="va">obj</span>, allowMultiple <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu">Filenames</span><span class="op">(</span><span class="va">obj</span>, allowMultiple <span class="op">=</span> <span class="cn">TRUE</span>, returnList <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for environment</span></span>
-<span><span class="fu">Filenames</span><span class="op">(</span><span class="va">obj</span>, allowMultiple <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu">Filenames</span><span class="op">(</span><span class="va">obj</span>, allowMultiple <span class="op">=</span> <span class="cn">TRUE</span>, returnList <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for list</span></span>
-<span><span class="fu">Filenames</span><span class="op">(</span><span class="va">obj</span>, allowMultiple <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu">Filenames</span><span class="op">(</span><span class="va">obj</span>, allowMultiple <span class="op">=</span> <span class="cn">TRUE</span>, returnList <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for data.table</span></span>
-<span><span class="fu">Filenames</span><span class="op">(</span><span class="va">obj</span>, allowMultiple <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu">Filenames</span><span class="op">(</span><span class="va">obj</span>, allowMultiple <span class="op">=</span> <span class="cn">TRUE</span>, returnList <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for Path</span></span>
-<span><span class="fu">Filenames</span><span class="op">(</span><span class="va">obj</span>, allowMultiple <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">Filenames</span><span class="op">(</span><span class="va">obj</span>, allowMultiple <span class="op">=</span> <span class="cn">TRUE</span>, returnList <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -102,6 +102,15 @@ length &gt;1 for <code>RasterStack</code>.</p>
 filenames will be returned, i.e., in cases such as <code>.grd</code> where multiple files
 are required. If <code>FALSE</code>, then only the first file will be returned,
 e.g., <code>filename.grd</code>, in the case of default Raster format in R.</p></dd>
+
+
+<dt>returnList</dt>
+<dd><p>Default <code>FALSE</code>. If <code>FALSE</code>, then return format will be a
+character vector. When <code>TRUE</code>, list or environment objects will return a list
+of character strings or vectors. When returned as a character vector, then
+the names of objects with &gt;1 filename associated with them will be given a numeric
+suffix, which means the name in the returned vector does not match the object in
+the list or environment. When returned as a list, their names are preserved.</p></dd>
 
 </dl></div>
     <div id="value">

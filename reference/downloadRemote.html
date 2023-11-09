@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8.9021</span>
       </span>
     </div>
 
@@ -81,6 +81,7 @@
 <span>  <span class="va">overwrite</span>,</span>
 <span>  <span class="va">needChecksums</span>,</span>
 <span>  <span class="va">.tempPath</span>,</span>
+<span>  <span class="va">preDigest</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -159,6 +160,10 @@ even if they pass the checksums or the files are all there.</p></dd>
 <dt>.tempPath</dt>
 <dd><p>Optional temporary path for internal file intermediate steps.
 Will be cleared on.exit from this function.</p></dd>
+
+
+<dt>preDigest</dt>
+<dd><p>The list of <code>preDigest</code> that comes from <code>CacheDigest</code> of an object</p></dd>
 
 
 <dt>verbose</dt>
