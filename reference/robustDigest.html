@@ -31,7 +31,7 @@ work correctly."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.8.9021</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.9</span>
       </span>
     </div>
 
@@ -236,9 +236,9 @@ using <code>asPath(thePath)</code></p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># treats as character string, so 2 filenames are different</span></span></span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "085326d3615982f7ccbcb563d25fc642"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "8e00875ee03bd08fe1f3e91ebf3da24a"</span>
 <span class="r-in"><span><span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest</a></span><span class="op">(</span><span class="va">tmpfile2</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "c2a96dd98ee65aff3c43d3f487f8c667"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0b6ace921ae6ff633b878e3648f7480c"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># tests to see whether character string is representing a file</span></span></span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span></span></span>
@@ -249,9 +249,9 @@ using <code>asPath(thePath)</code></p>
 <span class="r-in"><span><span class="co"># if you tell it that it is a path, then you can decide if you want it to be</span></span></span>
 <span class="r-in"><span><span class="co">#  treated as a character string or as a file path</span></span></span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span>, quick <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "647dfdf17a0ad101"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "d3a91431c6bbdd88"</span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">tmpfile2</span><span class="op">)</span>, quick <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># different because using file info</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "ecb8c653ebf64555"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "623f5b4d460b6661"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">.robustDigest</span><span class="op">(</span><span class="fu"><a href="Path-class.html">asPath</a></span><span class="op">(</span><span class="va">tmpfile1</span><span class="op">)</span>, quick <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
