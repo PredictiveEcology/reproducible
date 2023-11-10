@@ -2071,7 +2071,7 @@ devModeFn1 <- function(localTags, userTags, userTagsOrig, scalls, preDigestUnlis
       paste0(
         "(",
         # paste("accessed", "cacheId", "class", "date", "format", "function", "inCloud",
-        #      "name", "object.size", "otherFunctions", "preDigest", "file.size",
+        #      "name", "object.size", otherFunctions, "preDigest", "file.size",
         #      sep = "|"),
         paste(.defaultUserTags, collapse = "|"),
         ")"
@@ -2118,7 +2118,7 @@ cloudFolderFromCacheRepo <- function(cachePath) {
 
 .defaultUserTags <- c(
   "function", "class", "object.size", "accessed", "inCloud", "fromDisk",
-  "otherFunctions", "preDigest", "file.size", "cacheId",
+  otherFunctions, "preDigest", "file.size", "cacheId",
   "elapsedTimeDigest", "elapsedTimeFirstRun", "resultHash", "elapsedTimeLoad"
 )
 

@@ -252,6 +252,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     targetFilePath <- makeAbsolute(targetFilePath, destinationPath)
     filesToCheck <- makeRelative(filesToCheck, inputPaths$destinationPathUser)
     filesToCheck <- makeAbsolute(filesToCheck, destinationPath)
+    if (!is.null(archive)) {
+      archive <- makeRelative(archive, inputPaths$destinationPathUser)
+      archive <- makeAbsolute(archive, destinationPath)
+    }
+
   }
 
 
