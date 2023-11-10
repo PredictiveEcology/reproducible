@@ -12,7 +12,9 @@ test_that("symlinks work with cache, input, output paths", {
 
   currentDir <- tmpdir
 
-  linkedDir <- file.path(dirname(tempdir()), "reproducible_test_symlinks") |>
+  linkedDir <- ifelse(dir.exists("/mnt/scratch"), file.path("/mnt/scratch", Sys.info()[["user"]]),
+                      dirname(tempdir())) |>
+    file.path("reproducible_test_symlinks") |>
     checkPath(create = TRUE)
   linkedCacheDir <- file.path(linkedDir, "cache") |>
     checkPath(create = TRUE)
@@ -71,8 +73,7 @@ test_that("symlinks work with cache, input, output paths", {
 
   ## check files exist in the correct places
   ### no files at top level
-  expect_false(file.exists(file.path(linkedDir, "CAN_LC_2010_CAL.tif")))
-  expect_false(file.exists(file.path(linkedDir, "LCC_ON_FMU.tif")))
+  expect_true(all(list.files(linkedDir) %in% c("cache", "inputs", "outputs")))
 
   ### cache files in 'cache/'
   expect_true(length(list.files(linkedCacheDir)) > 0)
