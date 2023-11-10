@@ -694,7 +694,10 @@ wrapSpatRaster <- function(obj, cachePath, ...) {
   obj <- asPath(fnsMulti)
 
   relToWhere <- relativeToWhat(obj, cachePath, ...)
-  absBase <- absoluteBase(names(relToWhere), cachePath, ...)
+  # if ("" %in% names(relToWhere)) {
+  #   # absBase <- browser()
+  # }
+  # absBase <- absoluteBase(names(relToWhere), cachePath, ...)
   relPath <- unname(unlist(relToWhere))
   relName <- file.path(relPath, basename2(obj))
 
@@ -914,16 +917,22 @@ relativeToWhat <- function(file, cachePath, ...) {
   }
   if (isFALSE(foundAbs)) {
     for (nams in names(possRelPaths)) {
-      poss <- fs::path_common(c(file, possRelPaths[nams]))
-      if (!identical(poss, possRelPaths[nams])) {
-        rel <- makeRelative(possRelPaths[nams], poss)
-        relWithDots <- rep("..", length(strsplit(rel, "/|\\\\")[[1]]))
-        poss <- paste(relWithDots, collapse = "/")
-        out <- poss
-        out <- list(out)
-        names(out) <- nams
-        foundAbs <- TRUE
-        break
+      out <- dirname(file)
+      names(out) <- ""
+      if (FALSE) { # this is for rebuilding relative against
+      # poss <- fs::path_common(c(file, possRelPaths[nams]))
+      # if (!identical(poss, possRelPaths[nams])) {
+      #   fileRel <- makeRelative(file, poss)
+      #   rel <- makeRelative(possRelPaths[nams], poss)
+      #   relWithDots <- rep("..", length(strsplit(rel, "/|\\\\")[[1]]))
+      #   poss <- file.path(paste(relWithDots, collapse = "/"), dirname(fileRel))
+      #   out <- poss
+      #   out <- list(out)
+      #   names(out) <- nams
+      #   foundAbs <- TRUE
+      #   break
+      # }
+      # names(out) <- nams
       }
     }
   }
