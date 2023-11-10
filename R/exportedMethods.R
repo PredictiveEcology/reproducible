@@ -782,8 +782,6 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
   obj
 }
 
-
-
 #' @export
 #' @param cacheId Used strictly for messaging. This should be the cacheId of the object being recovered.
 #' @rdname dotWrap
@@ -862,6 +860,7 @@ unwrapRaster <- function(obj, cachePath, cacheId) {
   obj <- .setSubAttrInList(obj, ".Cache", "newCache", FALSE)
   obj
 }
+
 parseTags <- function(tags) {
   out <- strsplit(tags, ":")
   tags2 <- lapply(out, function(x) x[[1]])
@@ -917,7 +916,7 @@ relativeToWhat <- function(file, cachePath, ...) {
 absoluteBase <- function(relToWhere, cachePath, ...) {
   if (identical(relToWhere, "cachePath") && !is.null(cachePath)) {
     ab <- cachePath
-  } else if(identical(relToWhere, "getwd")) {
+  } else if (identical(relToWhere, "getwd")) {
     ab <- getwd()
   } else {
     possRelPaths <- modifyListPaths(cachePath, ...)
@@ -980,7 +979,7 @@ remapFilenames <- function(tags, cachePath, ...) {
     isOutside <- grepl(grepStartsTwoDots, origRelName)
     if (any(isOutside)) {
       # means the relative path is "outside" of something ... strip all ".." if relToWhere doesn't exist
-      while(any(grepl(grepStartsTwoDots, origRelName))) {
+      while (any(grepl(grepStartsTwoDots, origRelName))) {
         origRelName <- gsub(paste0(grepStartsTwoDots, "|(\\\\|/)"), "", origRelName)
       }
     }
