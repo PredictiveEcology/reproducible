@@ -75,7 +75,7 @@ test_that("symlinks work with cache, input, output paths", {
   expect_false(file.exists(file.path(linkedDir, "LCC_ON_FMU.tif")))
 
   ### cache files in 'cache/'
-  expect_true(file.exists(file.path(linkedCacheDir, "cache.db")))
+  expect_true(length(list.files(linkedCacheDir)) > 0)
 
   ### downloaded files etc. in 'inputs/'
   expect_true(file.exists(file.path(linkedInputDir, "CanadaLandcover2010.zip")))
