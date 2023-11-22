@@ -218,9 +218,13 @@ test_that("interactive prepInputs", {
   expect_true(inherits(test, vectorType()))
 
   # From Bird/Tati project
-  testInit("terra", opts = list("reproducible.overwrite" = TRUE,
-                                               "reproducible.inputPaths" = NULL),
-                          needGoogleDriveAuth = TRUE)
+  testInit("terra",
+    opts = list(
+      "reproducible.overwrite" = TRUE,
+      "reproducible.inputPaths" = NULL
+    ),
+    needGoogleDriveAuth = TRUE
+  )
   birdSpecies <- c("BBWA", "YRWA")
   urls <- c(
     "https://drive.google.com/open?id=1CmzYNpxwWr82PoRSbHWG8yg2cC3hncfb",
@@ -313,11 +317,13 @@ test_that("interactive prepInputs", {
 test_that("preProcess doesn't work", {
   skip_on_cran()
   skip_on_ci()
-  testInit("terra", opts = list(
-    "reproducible.overwrite" = TRUE,
-    "reproducible.inputPaths" = NULL
-  ),
-  needGoogleDriveAuth = TRUE)
+  testInit("terra",
+    opts = list(
+      "reproducible.overwrite" = TRUE,
+      "reproducible.inputPaths" = NULL
+    ),
+    needGoogleDriveAuth = TRUE
+  )
 
   skip_if_not(isInteractive())
   cls <- rasterType()
@@ -1180,11 +1186,13 @@ test_that("prepInputs when fun = NA", {
 })
 
 test_that("load rdata in prepInputs", {
-  testInit("terra", tmpFileExt = "rda",
-                          opts = list(
-                            "reproducible.overwrite" = TRUE,
-                            "reproducible.inputPaths" = NULL
-                          ), needGoogleDriveAuth = TRUE)
+  testInit("terra",
+    tmpFileExt = "rda",
+    opts = list(
+      "reproducible.overwrite" = TRUE,
+      "reproducible.inputPaths" = NULL
+    ), needGoogleDriveAuth = TRUE
+  )
   a <- 1
   b <- 2
   save(a, b, file = tmpfile)
@@ -1299,29 +1307,31 @@ test_that("assessDataType doesn't work", {
   ras <- terra::rast(ncols = 10, nrows = 10)
   ras[] <- c(Inf, 1, rep(c(0, 1), 49))
   expect_true(assessDataType(ras) == "FLT8S")
-
 })
 
 
 test_that("assessDataType for categorical rasters", {
   testInit(c("terra", "raster"))
 
-  r <- terra::rast(terra::ext(c(0,2,0,2)), vals = 1:4, resolution = 1)
+  r <- terra::rast(terra::ext(c(0, 2, 0, 2)), vals = 1:4, resolution = 1)
   levels(r) <- data.frame(ID = 1:4, Lett = LETTERS[1:4])
   expect_identical(assessDataType(r), "INT1U")
 
-  r <- raster::raster(raster::extent(c(0,2,0,2)), vals = 1:4, resolution = 1)
+  r <- raster::raster(raster::extent(c(0, 2, 0, 2)), vals = 1:4, resolution = 1)
   levels(r) <- data.frame(ID = 1:4, Lett = LETTERS[1:4])
   expect_identical(assessDataType(r), "INT1U")
-
 })
 
 
 test_that("lightweight tests for code coverage", {
   skip_on_cran()
-  testInit(c("sf", "terra"), opts = list("reproducible.overwrite" = TRUE,
-                                                        "reproducible.inputPaths" = NULL),
-                          needGoogleDriveAuth = TRUE)
+  testInit(c("sf", "terra"),
+    opts = list(
+      "reproducible.overwrite" = TRUE,
+      "reproducible.inputPaths" = NULL
+    ),
+    needGoogleDriveAuth = TRUE
+  )
 
   url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
 
@@ -1476,9 +1486,13 @@ test_that("lightweight tests for code coverage", {
 test_that("lightweight tests 2 for code coverage", {
   skip_on_cran()
 
-  testInit("terra", opts = list("reproducible.overwrite" = TRUE,
-                                               "reproducible.inputPaths" = NULL),
-                          needGoogleDriveAuth = TRUE)
+  testInit("terra",
+    opts = list(
+      "reproducible.overwrite" = TRUE,
+      "reproducible.inputPaths" = NULL
+    ),
+    needGoogleDriveAuth = TRUE
+  )
 
   theZipFile <- tempfile(tmpdir = tmpdir, fileext = ".zip")
   theZipFile2 <- tempfile(tmpdir = tmpdir, fileext = ".zip")
@@ -1563,19 +1577,19 @@ test_that("options inputPaths", {
   options("reproducible.inputPaths" = NULL)
   options("reproducible.inputPathsRecursive" = FALSE)
 
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     noisyOutput <- capture.output(type = "message", {
-      mess1 <- capture_messages(
+      mess1 <- capture_messages({
         test0 <- try(getDataFn(path = tmpdir, country = "LUX"), silent = TRUE)
-      )
+      })
     })
-  )
+  })
   useGADM <- !is(test0, "try-error")
 
   if (useGADM) {
-    noisyOutput <- capture.output(
+    noisyOutput <- capture.output({
       noisyOutput <- capture.output(type = "message", {
-        mess1 <- capture_messages(
+        mess1 <- capture_messages({
           test1 <- try(prepInputs(
             destinationPath = tmpdir,
             # url = if (!useGADM) url2 else f$url,
@@ -1586,9 +1600,9 @@ test_that("options inputPaths", {
             level = 0,
             path = tmpdir
           ))
-        )
+        })
       })
-    )
+    })
   }
 
   theFile <- if (useGADM) {
@@ -1598,9 +1612,9 @@ test_that("options inputPaths", {
   }
   url2 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
 
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     noisyOutput <- capture.output(type = "message", {
-      mess1 <- capture_messages(
+      mess1 <- capture_messages({
         test1 <- try(prepInputs(
           destinationPath = tmpdir,
           url = if (!useGADM) url2 else f$url,
@@ -1611,15 +1625,15 @@ test_that("options inputPaths", {
           level = if (useGADM) 0 else NULL,
           path = if (useGADM) tmpdir else NULL
         ))
-      )
+      })
     })
-  )
+  })
   # Use inputPaths -- should do a link to tmpCache (the destinationPath)
   options("reproducible.inputPaths" = tmpdir)
   options("reproducible.inputPathsRecursive" = FALSE)
   dlFun1 <- if (useGADM) getDataFn else NULL
-  noisyOutput <- capture.output(
-    mess1 <- capture_messages(
+  noisyOutput <- capture.output({
+    mess1 <- capture_messages({
       test1 <- prepInputs(
         url = if (!useGADM) url2 else f$url,
         targetFile = if (useGADM) theFile else f$targetFile,
@@ -1631,8 +1645,8 @@ test_that("options inputPaths", {
         destinationPath = tmpCache,
         getDataFn = dlFun1
       )
-    )
-  )
+    })
+  })
   expect_true(sum(grepl(paste0("Hardlinked", ".*:"), mess1)) == 1)
 
   # Now two folders - file not in destinationPath, not in 1st inputPaths, but yes 2nd
@@ -1640,8 +1654,8 @@ test_that("options inputPaths", {
   options("reproducible.inputPaths" = c(tmpdir, tmpCache))
   file.remove(file.path(tmpdir, theFile))
   tmpdir3 <- file.path(tmpCache, "test")
-  noisyOutput <- capture.output(
-    mess1 <- capture_messages(
+  noisyOutput <- capture.output({
+    mess1 <- capture_messages({
       test1 <- prepInputs(
         url = if (!useGADM) url2 else f$url,
         targetFile = if (useGADM) theFile else f$targetFile,
@@ -1652,10 +1666,9 @@ test_that("options inputPaths", {
         path = if (useGADM) tmpdir else NULL,
         destinationPath = tmpdir3
       )
-    )
-  )
+    })
+  })
   expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ":\n", tmpdir3), mess1)) == 1)
-
 
   # THIS NEXT ONE DOESN"T PASS ON GA on WINDOWS, skip it
   #  should copy from 2nd directory (tmpCache) because it is removed in the lower
@@ -1665,8 +1678,8 @@ test_that("options inputPaths", {
     options("reproducible.inputPathsRecursive" = TRUE)
     file.remove(file.path(tmpCache, theFile))
     tmpdir1 <- file.path(tmpCache, "test1")
-    noisyOutput <- capture.output(
-      mess1 <- capture_messages(
+    noisyOutput <- capture.output({
+      mess1 <- capture_messages({
         test1 <- prepInputs(
           url = if (!useGADM) url2 else f$url,
           targetFile = if (useGADM) theFile else f$targetFile,
@@ -1677,8 +1690,8 @@ test_that("options inputPaths", {
           path = if (useGADM) tmpdir else NULL,
           destinationPath = tmpdir1
         )
-      )
-    )
+      })
+    })
     expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ":\n", file.path(tmpdir1, theFile)), mess1)) == 1)
     expect_true(sum(grepl(paste0("", whPointsToMessForGrep, "\n", file.path(tmpdir1, theFile)), mess1)) == 1)
     expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 3)
@@ -1692,9 +1705,9 @@ test_that("options inputPaths", {
   )
   options("reproducible.inputPaths" = tmpdir)
   tmpdir2 <- file.path(tmpdir, rndstr(1, 5))
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     noisyOutput <- capture.output(type = "message", {
-      mess1 <- capture_messages(
+      mess1 <- capture_messages({
         test1 <- prepInputs(
           url = if (!useGADM) url2 else f$url,
           targetFile = if (useGADM) theFile else f$targetFile,
@@ -1705,9 +1718,9 @@ test_that("options inputPaths", {
           path = if (useGADM) tmpdir else NULL,
           destinationPath = tmpdir2
         )
-      )
+      })
     })
-  )
+  })
 
   # Must remove the link that happens during downloading to a .tempPath
   test10 <- grep(hardlinkMessagePrefixForGrep, mess1, value = TRUE)
@@ -1719,8 +1732,8 @@ test_that("options inputPaths", {
   expect_false(file.exists(file.path(tmpdir2, theFile))) # FALSE -- confirm previous line
   expect_true(file.exists(file.path(tmpdir, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
   tmpdir2 <- file.path(tmpdir, rndstr(1, 5))
-  noisyOutput <- capture.output(
-    mess1 <- capture_messages(
+  noisyOutput <- capture.output({
+    mess1 <- capture_messages({
       test1 <- prepInputs(
         url = if (!useGADM) url2 else f$url,
         targetFile = if (useGADM) theFile else f$targetFile,
@@ -1731,8 +1744,8 @@ test_that("options inputPaths", {
         path = if (useGADM) tmpdir else NULL,
         destinationPath = tmpdir2
       )
-    )
-  )
+    })
+  })
   expect_true(sum(grepl(hardlinkMessagePrefixForGrep, mess1)) == 1) # used a linked version
   expect_true(sum(grepl(paste0("Hardlinked.*", basename(tmpdir2)), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
 
@@ -1740,8 +1753,8 @@ test_that("options inputPaths", {
   unlink(file.path(tmpdir, theFile))
   expect_false(file.exists(file.path(tmpdir, theFile))) # FALSE -- confirm previous line
   expect_true(file.exists(file.path(tmpdir2, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
-  noisyOutput <- capture.output(
-    mess1 <- capture_messages(
+  noisyOutput <- capture.output({
+    mess1 <- capture_messages({
       test1 <- prepInputs(
         url = if (!useGADM) url2 else f$url,
         targetFile = if (useGADM) theFile else f$targetFile,
@@ -1752,8 +1765,8 @@ test_that("options inputPaths", {
         path = if (useGADM) tmpdir else NULL,
         destinationPath = tmpdir2
       )
-    )
-  )
+    })
+  })
   # expect_true(sum(grepl(hardlinkMessagePrefixForGrep, mess1)) == 1) # used a linked version
   # expect_true(sum(grepl(paste0("Hardlinked.*",basename(tmpdir2)), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
 
@@ -1763,9 +1776,9 @@ test_that("options inputPaths", {
   expect_false(file.exists(file.path(tmpdir, theFile))) # FALSE -- confirm previous line
   expect_false(file.exists(file.path(tmpdir2, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
   options("reproducible.inputPaths" = tmpdir)
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     noisyOutput <- capture.output(type = "message", {
-      mess1 <- capture_messages(
+      mess1 <- capture_messages({
         test1 <- prepInputs(
           url = if (!useGADM) url2 else f$url,
           targetFile = if (useGADM) theFile else f$targetFile,
@@ -1776,9 +1789,9 @@ test_that("options inputPaths", {
           path = if (useGADM) tmpdir else NULL,
           destinationPath = tmpdir
         )
-      )
+      })
     })
-  )
+  })
   objType <- if (useGADM) vectorType() else rasterType()
   expect_true(is(test1, objType) || is(test1, "SpatVector"))
   test11 <- grep(hardlinkMessagePrefixForGrep, mess1, value = TRUE)
@@ -1790,9 +1803,13 @@ test_that("options inputPaths", {
 test_that("writeOutputs saves factor rasters with .grd class to preserve levels", {
   skip_on_cran()
 
-  testInit("terra", opts = list("reproducible.overwrite" = TRUE,
-                                               "reproducible.inputPaths" = NULL),
-                          needGoogleDriveAuth = TRUE)
+  testInit("terra",
+    opts = list(
+      "reproducible.overwrite" = TRUE,
+      "reproducible.inputPaths" = NULL
+    ),
+    needGoogleDriveAuth = TRUE
+  )
   a <- terra::rast(terra::ext(0, 2, 0, 2), resolution = 1, vals = c(1, 1, 2, 2))
   levels(a) <- data.frame(ID = 1:2, Factor = c("This", "That"))
   tifTmp <- tempfile(tmpdir = tmpdir, fileext = ".tif")
@@ -1810,11 +1827,15 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
 test_that("rasters aren't properly resampled", {
   skip_on_cran()
 
-  testInit("terra", opts = list("reproducible.overwrite" = TRUE,
-                                               "reproducible.inputPaths" = NULL),
-                          needGoogleDriveAuth = TRUE)
-  a <- terra::rast(terra::ext(0, 20, 0, 20), resolution = 2, vals = as.integer(1:100*4))
-  b <- terra::rast(terra::ext(0, 30, 0, 30), resolution = c(3,3), vals = 1L:100L)
+  testInit("terra",
+    opts = list(
+      "reproducible.overwrite" = TRUE,
+      "reproducible.inputPaths" = NULL
+    ),
+    needGoogleDriveAuth = TRUE
+  )
+  a <- terra::rast(terra::ext(0, 20, 0, 20), resolution = 2, vals = as.integer(1:100 * 4))
+  b <- terra::rast(terra::ext(0, 30, 0, 30), resolution = c(3, 3), vals = 1L:100L)
   crs(a) <- crsToUse
   crs(b) <- crsToUse
 
@@ -1828,14 +1849,14 @@ test_that("rasters aren't properly resampled", {
 
 
   # Test bilinear --> but keeps integer if it is integer
-  suppressWarnings(
+  suppressWarnings({
     out2 <- prepInputs(
       targetFile = tiftemp1, rasterToMatch = terra::rast(tiftemp2),
       destinationPath = dirname(tiftemp1), method = "bilinear",
       datatype = "INT2S",
       filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif")
     )
-  ) # about "raster layer has integer values"
+  }) # about "raster layer has integer values"
 
   if (getRversion() >= "4.1" || !isWindows()) {
     expect_true(dataType2(out2) %in% c("INT2S")) # because of "bilinear", it can become negative
@@ -1871,19 +1892,20 @@ test_that("rasters aren't properly resampled", {
 
     if (.requireNamespace("raster")) {
       rasterStackFn <- "raster::stack"
-      suppressWarningsSpecific(falseWarnings = "partial argument match",
-                               out4 <- prepInputs(
-                                 targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
-                                 destinationPath = dirname(tiftemp3),
-                                 fun = rasterStackFn,
-                                 filename2 = c(
-                                   tempfile(tmpdir = tmpdir, fileext = ".grd"),
-                                   tempfile(tmpdir = tmpdir, fileext = ".grd")
-                                 )
-                               ))
+      suppressWarningsSpecific(
+        falseWarnings = "partial argument match",
+        out4 <- prepInputs(
+          targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
+          destinationPath = dirname(tiftemp3),
+          fun = rasterStackFn,
+          filename2 = c(
+            tempfile(tmpdir = tmpdir, fileext = ".grd"),
+            tempfile(tmpdir = tmpdir, fileext = ".grd")
+          )
+        )
+      )
       expect_true(is(out4, rasterType(nlayers = nlayers2(out4), rasterRead = rasterStackFn)))
       expect_true(identical(length(Filenames(out4, allowMultiple = TRUE)), 4L))
-
 
       # Test for raster::stack with 3 layers, different types of writeRaster file ext
       rasStack <- c(terra::rast(tiftemp3), terra::rast(tiftemp3), terra::rast(tiftemp3))
@@ -1894,31 +1916,35 @@ test_that("rasters aren't properly resampled", {
 
       rasStack <- writeRaster(rasStack, filename = tiftemp5)
       rm(rasStack)
-      suppressWarningsSpecific(falseWarnings = "partial argument match",
-                               out5 <- prepInputs(
-        targetFile = tiftemp5, rasterToMatch = terra::rast(tiftemp2),
-        destinationPath = dirname(tiftemp3),
-        fun = rasterStackFn,
-        filename2 = c(
-          tempfile(tmpdir = tmpdir, fileext = ".grd"),
-          tempfile(tmpdir = tmpdir, fileext = ".grd"),
-          tempfile(tmpdir = tmpdir, fileext = ".tif")
+      suppressWarningsSpecific(
+        falseWarnings = "partial argument match",
+        out5 <- prepInputs(
+          targetFile = tiftemp5, rasterToMatch = terra::rast(tiftemp2),
+          destinationPath = dirname(tiftemp3),
+          fun = rasterStackFn,
+          filename2 = c(
+            tempfile(tmpdir = tmpdir, fileext = ".grd"),
+            tempfile(tmpdir = tmpdir, fileext = ".grd"),
+            tempfile(tmpdir = tmpdir, fileext = ".tif")
+          )
         )
-      ))
+      )
       expect_true(is(out5, "RasterStack"))
       expect_true(identical(length(Filenames(out5, allowMultiple = TRUE)), 5L))
 
 
-      suppressWarningsSpecific(falseWarnings = "partial argument match",
-                               out4 <- prepInputs(
-        targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
-        destinationPath = dirname(tiftemp3),
-        fun = rasterStackFn,
-        filename2 = c(
-          tempfile(tmpdir = tmpdir, fileext = ".grd"),
-          tempfile(tmpdir = tmpdir, fileext = ".grd")
+      suppressWarningsSpecific(
+        falseWarnings = "partial argument match",
+        out4 <- prepInputs(
+          targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
+          destinationPath = dirname(tiftemp3),
+          fun = rasterStackFn,
+          filename2 = c(
+            tempfile(tmpdir = tmpdir, fileext = ".grd"),
+            tempfile(tmpdir = tmpdir, fileext = ".grd")
+          )
         )
-      ))
+      )
       expect_true(is(out4, rasterType(nlayers2(out4), rasterStackFn)))
       expect_true(identical(length(Filenames(out4)), 4L))
     }

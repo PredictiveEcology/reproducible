@@ -1,3 +1,8 @@
+# reproducible 2.0.10
+
+## Bug fixes
+* critical bugfixes for file-backed SpatRaster objects
+
 # reproducible 2.0.9
 
 ## Enhancements
