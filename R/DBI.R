@@ -102,8 +102,8 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     }
   }
 
-  if (missing(userTags)) userTags <- "otherFunctions"
-  if (length(userTags) == 0) userTags <- "otherFunctions"
+  if (missing(userTags)) userTags <- otherFunctions
+  if (length(userTags) == 0) userTags <- otherFunctions
   if (NCOL(userTags) > 1) {
     tagKey <- userTags$tagKey
     tagValue <- userTags$tagValue
@@ -500,7 +500,7 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 }
 
 .ignoreTagKeys <- function() {
-  c("preDigest", "otherFunctions", "accessed", "elapsedTimeLoad", "fromDisk", "origRaster", "cacheRaster")
+  c("preDigest", otherFunctions, "accessed", "elapsedTimeLoad", "fromDisk", "origRaster", "cacheRaster")
 }
 
 .cacheTableHashColName <- function() {
@@ -1002,3 +1002,6 @@ memoiseEnv <- function(cachePath, envir = .GlobalEnv) {
   }
   memEnv
 }
+
+
+otherFunctions <- "otherFunctions"
