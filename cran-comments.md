@@ -1,6 +1,6 @@
 ## Release information
 
-This is a package update that accommodates needs to downstream dependencies. Several other enhancements and bugfixes are also included as outlined in the News, including small documentation updates.
+This is minor package update that addresses a critical bugfix for a certain class of objects. 
 
 See `NEWS.md` for a full list of changes.
 
@@ -12,26 +12,26 @@ See `NEWS.md` for a full list of changes.
 * Windows                 (win-builder), R 4.2.3 (2023-03-15 ucrt)
 
 ### Current R versions
-* macOS Monterey 12.6.5        (GitHub), R 4.3.1
-* macOs (m1) Big Sur    (macOS-builder), R 4.3.1
-* Ubuntu 20.04                 (GitHub), R 4.3.1
-* Ubuntu 20.04                  (local), R 4.3.1
-* Windows                      (GitHub), R 4.3.1
-* Windows                       (local), R 4.3.1
-* Windows                 (win-builder), R 4.3.1 (2023-04-21 ucrt)
+* macOS Monterey 12.6.5                  (GitHub), R 4.3.2
+* aarch64-apple-darwin20 (64-bit) (macOS-builder), R 4.3.0 Patched (2023-05-18 r84451)
+* Ubuntu 20.04                           (GitHub), R 4.3.2
+* Ubuntu 20.04                            (local), R 4.3.2
+* Windows                                (GitHub), R 4.3.2
+* Windows                                 (local), R 4.3.2
+* Windows                           (win-builder), R 4.3.2 (2023-10-31 ucrt)
 
 ### Development R version
-* Ubuntu 20.04 LTS             (GitHub), R-devel (2023-08-21 r84998 ucrt)
-* Windows                      (GitHub), R-devel (2023-08-21 r84998 ucrt)
-* Windows                 (win-builder), R-devel (2023-08-21 r84998 ucrt)
+* Ubuntu 20.04 LTS             (GitHub), R Under development (unstable) (2023-11-11 r85510)
+* Windows                      (GitHub), R Under development (unstable) (2023-11-13 r85520 ucrt)
+* Windows                 (win-builder), R Under development (unstable) (2023-11-20 r85569 ucrt)
 
 ## R CMD check results
 
-No NOTEs, WARNINGs, or ERRORs
+One NOTE about author.
 
 ## revdepcheck results
 
-We checked 16 reverse dependencies (0 from CRAN + 16 from Bioconductor), comparing R CMD check results across CRAN and dev versions of this package.
+We checked 2 reverse dependencies from CRAN, comparing R CMD check results across CRAN and dev versions of this package.
 
  * We saw 0 new problems
  * We failed to check 0 packages
