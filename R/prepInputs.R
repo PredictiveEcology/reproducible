@@ -650,96 +650,97 @@ extractFromArchive <- function(archive,
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  filesExtracted, fun = NULL, verbose = getOption("reproducible.verbose", 1)) {
-  possibleFiles <- unique(c(targetFilePath, filesExtracted))
-  whichPossFile <- possibleFiles %in% targetFilePath
-  if (isTRUE(any(whichPossFile))) {
-    possibleFiles <- possibleFiles[whichPossFile]
-  }
-  isShapefile <- FALSE
-  isRaster <- FALSE
-  isRDS <- FALSE
-  fileExt <- fileExt(possibleFiles)
-  feKnown <- .fileExtsKnown() # An object in helpers.R
-  funPoss <- lapply(fileExt, function(fe) feKnown[startsWith(prefix = feKnown[[1]], fe), ])
-  funPoss <- do.call(rbind, funPoss)
-  if (length(funPoss)) {
-    isShapefile <- fileExt %in% funPoss[funPoss[, "type"] == vectorType(), "extension"]
-    isRaster <- fileExt %in% funPoss[funPoss[, "type"] == rasterType(), "extension"]
-    isRDS <- fileExt %in% funPoss[funPoss[, "extension"] == "rds", "extension"]
-    if (any(isShapefile)) {
-      if (is.null(fun)) {
-        if (requireNamespace("sf", quietly = TRUE)) {
-          if (!isTRUE(grepl("st_read", fun))) {
-            messagePrepInputs(
-              "Using sf::st_read on shapefile because sf package is available; to force old ",
-              "behaviour with 'raster::shapefile' use fun = 'raster::shapefile' or ",
-              "options('reproducible.shapefileRead' = 'raster::shapefile')"
-            )
+  if (all(!is.na(targetFilePath))) {
+    possibleFiles <- unique(c(targetFilePath, filesExtracted))
+    whichPossFile <- possibleFiles %in% targetFilePath
+    if (isTRUE(any(whichPossFile))) {
+      possibleFiles <- possibleFiles[whichPossFile]
+    }
+    isShapefile <- FALSE
+    isRaster <- FALSE
+    isRDS <- FALSE
+    fileExt <- fileExt(possibleFiles)
+    feKnown <- .fileExtsKnown() # An object in helpers.R
+    funPoss <- lapply(fileExt, function(fe) feKnown[startsWith(prefix = feKnown[[1]], fe), ])
+    funPoss <- do.call(rbind, funPoss)
+    if (length(funPoss)) {
+      isShapefile <- fileExt %in% funPoss[funPoss[, "type"] == vectorType(), "extension"]
+      isRaster <- fileExt %in% funPoss[funPoss[, "type"] == rasterType(), "extension"]
+      isRDS <- fileExt %in% funPoss[funPoss[, "extension"] == "rds", "extension"]
+      if (any(isShapefile)) {
+        if (is.null(fun)) {
+          if (requireNamespace("sf", quietly = TRUE)) {
+            if (!isTRUE(grepl("st_read", fun))) {
+              messagePrepInputs(
+                "Using sf::st_read on shapefile because sf package is available; to force old ",
+                "behaviour with 'raster::shapefile' use fun = 'raster::shapefile' or ",
+                "options('reproducible.shapefileRead' = 'raster::shapefile')"
+              )
+            }
           }
         }
       }
     }
-  }
-  if (is.null(fun)) {
-    fun <- unique(funPoss[, "fun"])
-    if (length(fun) > 1) {
-      if (sum(isRaster) > 0 && sum(isShapefile) > 0) {
-        isRaster[isRaster] <- FALSE
-        funPoss <- funPoss[funPoss$type == vectorType(), ]
-        fun <- unique(funPoss[, "fun"])
-        message("The archive has both a shapefile and a raster; selecting the shapefile. If this is incorrect, specify targetFile")
+    if (is.null(fun)) {
+      fun <- unique(funPoss[, "fun"])
+      if (length(fun) > 1) {
+        if (sum(isRaster) > 0 && sum(isShapefile) > 0) {
+          isRaster[isRaster] <- FALSE
+          funPoss <- funPoss[funPoss$type == vectorType(), ]
+          fun <- unique(funPoss[, "fun"])
+          message("The archive has both a shapefile and a raster; selecting the shapefile. If this is incorrect, specify targetFile")
+        } else {
+          stop(
+            "more than one file; can't guess at function to load with; ",
+            "please supply 'fun' or 'targetFile' argument to reduce ambiguity"
+          )
+        }
+      }
+      if (length(fun) == 0) stop("Can't guess at which function to use to read in the object; please supply 'fun'")
+    }
+    if (is.null(targetFilePath) || length(targetFilePath) == 0) {
+      secondPartOfMess <- if (any(isShapefile)) {
+        c(
+          " Trying ", fun, " on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
+          " If that is not correct, please specify a different targetFile",
+          " and/or fun."
+        )
+      } else if (is.null(fun)) {
+        c(" Also, file extension does not unambiguously specify how it should be loaded. Please specify fun.")
       } else {
-        stop(
-          "more than one file; can't guess at function to load with; ",
-          "please supply 'fun' or 'targetFile' argument to reduce ambiguity"
+        c(
+          " Trying ", fun, ".\n",
+          " If that is not correct, please specify a targetFile",
+          " and/or different fun. The current files in the destinationPath",
+          " are: \n",
+          paste(possibleFiles, collapse = "\n")
         )
       }
-    }
-    if (length(fun) == 0) stop("Can't guess at which function to use to read in the object; please supply 'fun'")
-  }
-  if (is.null(targetFilePath) || length(targetFilePath) == 0) {
-    secondPartOfMess <- if (any(isShapefile)) {
-      c(
-        " Trying ", fun, " on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
-        " If that is not correct, please specify a different targetFile",
-        " and/or fun."
-      )
-    } else if (is.null(fun)) {
-      c(" Also, file extension does not unambiguously specify how it should be loaded. Please specify fun.")
-    } else {
-      c(
-        " Trying ", fun, ".\n",
-        " If that is not correct, please specify a targetFile",
-        " and/or different fun. The current files in the destinationPath",
-        " are: \n",
-        paste(possibleFiles, collapse = "\n")
-      )
-    }
-    messagePrepInputs(c("  targetFile was not specified.", secondPartOfMess), verbose = verbose)
+      messagePrepInputs(c("  targetFile was not specified.", secondPartOfMess), verbose = verbose)
 
-    targetFilePath <- if (is.null(fun)) {
-      NULL
-    } else if (length(possibleFiles[isShapefile]) > 0) {
-      possibleFiles[isShapefile]
-    } else {
-      if (any(isRaster)) {
-        possibleFiles[isRaster]
-      } else if (any(isRDS)) {
-        possibleFiles[isRDS]
+      targetFilePath <- if (is.null(fun)) {
+        NULL
+      } else if (length(possibleFiles[isShapefile]) > 0) {
+        possibleFiles[isShapefile]
       } else {
-        messagePrepInputs("  Don't know which file to load. Please specify targetFile.", verbose = verbose)
+        if (any(isRaster)) {
+          possibleFiles[isRaster]
+        } else if (any(isRDS)) {
+          possibleFiles[isRDS]
+        } else {
+          messagePrepInputs("  Don't know which file to load. Please specify targetFile.", verbose = verbose)
+        }
+      }
+      if (length(targetFilePath) > 1) {
+        messagePrepInputs("  More than one possible files to load:\n",
+                          paste(targetFilePath, collapse = "\n"),
+                          "\nPicking the last one. If not correct, specify a targetFile.",
+                          verbose = verbose
+        )
+        targetFilePath <- targetFilePath[length(targetFilePath)]
       }
     }
-    if (length(targetFilePath) > 1) {
-      messagePrepInputs("  More than one possible files to load:\n",
-        paste(targetFilePath, collapse = "\n"),
-        "\nPicking the last one. If not correct, specify a targetFile.",
-        verbose = verbose
-      )
-      targetFilePath <- targetFilePath[length(targetFilePath)]
-    }
   }
-
   list(targetFilePath = targetFilePath, fun = fun)
 }
 

@@ -234,7 +234,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checkPath(destinationPath, create = TRUE)
   }
 
-  messagePrepInputs("Preparing: ", targetFile, verbose = verbose)
+  if (isTRUE(!is.na(targetFile)))
+    messagePrepInputs("Preparing: ", targetFile, verbose = verbose)
 
   needChecksums <- 0
 
@@ -371,7 +372,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     } else {
       TRUE
     } ## if NULL, it doesn't exist and we want to proceed
-    if (outCheck) { # skip if it already existed locally
+    if (isTRUE(outCheck)) { # skip if it already existed locally
       if (is.null(destinationPathUser)) {
         destinationPathUser <- destinationPath
       }
@@ -529,8 +530,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       messagePrepInputs("  Skipping extractFromArchive attempt: no files missing", verbose = verbose)
     }
     if (!is.null(targetFilePath))
-      if (!makeAbsolute(targetFilePath, destinationPath) %in%
-          makeAbsolute(neededFiles, destinationPath)) {
+      if (any(!makeAbsolute(targetFilePath, destinationPath) %in%
+          makeAbsolute(neededFiles, destinationPath))) {
         if (!basename2(targetFilePath) %in% makeRelative(neededFiles, destinationPath)) {
           targetFilePath <- grep(basename2(targetFilePath), neededFiles, value = TRUE)
         }
@@ -725,6 +726,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   failStop <- FALSE
   if (is.null(targetFilePath)) {
     failStop <- TRUE
+  } else if (isTRUE(is.na(targetFilePath))) { # this must come before next; but no need to change failStop
+    # failStop <- FALSE
   } else if (!isTRUE(file.exists(targetFilePath))) {
     failStop <- TRUE
   }
