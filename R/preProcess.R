@@ -939,9 +939,24 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   if (isTRUE(lookForSimilar) || ("all" %in% lookForSimilar && !is.null(archive))) {
     allFiles <- .listFilesInArchive(archive)
-    neededFiles <- checkRelative(neededFiles, destinationPath, allFiles)
-    if (is.null(targetFile)) {
-      messagePrepInputs("No targetFile supplied. ",
+    archiveFilesInCS <- allFiles %in% checkSums$expectedFile
+    rerunChecksums <- TRUE
+    if (any(archiveFilesInCS)) {
+      if (all(archiveFilesInCS)) {
+        isOK <- checkSums[expectedFile %in% allFiles]$result %in% "OK"
+        if (all(isOK)) {
+          rerunChecksums <- FALSE
+        } else { # some not OK, but present
+          allFiles <- allFiles[!isOK]
+        }
+      } else { # some files in the archive are not yet in checkSums -- rerunChecksums on these
+        allFiles <- allFiles[!archiveFilesInCS]
+      }
+    }
+    if (rerunChecksums) {
+      neededFiles <- checkRelative(neededFiles, destinationPath, allFiles)
+      if (is.null(targetFile)) {
+        messagePrepInputs("No targetFile supplied. ",
         "Extracting all files from archive",
         verbose = verbose
       )
@@ -956,22 +971,23 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           pattern = fileExt(basename2(targetFile)), replacement = ""
         )
         filesToGet <- grep(allFiles, pattern = filePatternToKeep, value = TRUE)
-        neededFiles <- c(neededFiles, filesToGet)
+          neededFiles <- c(neededFiles, filesToGet)
+        }
       }
-    }
-    rerunChecksums <- TRUE
-    if (exists("filesToGet", inherits = FALSE)) {
-      if (length(filesToGet) == 0) {
-        rerunChecksums <- FALSE
+      if (exists("filesToGet", inherits = FALSE)) {
+        if (length(filesToGet) == 0) {
+          rerunChecksums <- FALSE
+        }
       }
-    }
-    neededFiles <- unique(makeAbsolute(neededFiles, destinationPath))
-    if (!is.null(neededFiles) && rerunChecksums) {
-      checkSums <- .checkSumsUpdate(
-        destinationPath = destinationPath, newFilesToCheck = neededFiles,
-        checkSums = checkSums,
-        checkSumFilePath = checkSumFilePath, verbose = verbose
-      )
+      neededFiles <- unique(makeAbsolute(neededFiles, destinationPath))
+
+      if (!is.null(neededFiles) && rerunChecksums) {
+        checkSums <- .checkSumsUpdate(
+          destinationPath = destinationPath, newFilesToCheck = neededFiles,
+          checkSums = checkSums,
+          checkSumFilePath = checkSumFilePath, verbose = verbose
+        )
+      }
     }
   }
   list(neededFiles = neededFiles, checkSums = checkSums)
@@ -1666,6 +1682,7 @@ runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbos
   destinationPathUser <- NULL
   possDirs <- unique(c(destinationPath, reproducible.inputPaths))
   csfps <- vapply(possDirs, function(dp) identifyCHECKSUMStxtFile(dp), character(1))
+  allDone <- FALSE
   for (dp in possDirs) {
     for (csfp in csfps) { # there can be a mismatch between checksums and file location
       # csfp <- identifyCHECKSUMStxtFile(dp)
@@ -1688,10 +1705,13 @@ runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbos
               add = TRUE
             )
           }
+          allDone <- TRUE
           break
         }
       }
     }
+    if (isTRUE(allDone))
+      break
   }
   list(
     reproducible.inputPaths = reproducible.inputPaths,
