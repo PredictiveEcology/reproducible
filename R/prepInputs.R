@@ -911,15 +911,24 @@ extractFromArchive <- function(archive,
         if (diff(startAndEnd) > 1) {
           lstFiles <- lstFiles[(startAndEnd[1] + 1):(startAndEnd[2] - 1)]
         }
+        needListFiles <- FALSE
         if (length(files)) {
-          filesAreInArch <- unlist(lapply(files, function(x) any(grepl(x, lstFiles))))
-          if (all(filesAreInArch)) {
-            arg22 <- paste("e", pathToFile, paste(files, collapse = " "))
+          filesAreInArch <- filenamesFromArchiveLst(lstFiles)
+          if (all(files %in% filesAreInArch)) {
+            if (all(filesAreInArch %in% files))
+              needListFiles <- FALSE
+            else
+              needListFiles <- TRUE
           } else {
-            stop(paste(files, collapse = ", "), " not in ", basename2(pathToFile))
+            stop("Some files are not in the archive (", pathToFile, "). Specifically:\n",
+                 paste(files[!files %in% filesAreInArch], collapse = "\n"))
           }
-        } else {
-          arg22 <- paste0(" e ", pathToFile)
+        }
+
+        # filesAreInArch <- unlist(lapply(files, function(x) any(grepl(x, lstFiles))))
+        arg22 <- paste0(" x ", pathToFile)
+        if (needListFiles) {
+          arg22 <- paste(arg22, paste(files, collapse = " "))
         }
         system2(sZip,
           args = arg22,
@@ -1151,18 +1160,26 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         if (isTRUE(any(grepl("(Can not open the file as archive)|(Errors: 1)", filesOutput)))) {
           stop("archive appears defective")
         }
-        filesInBetween <- grep(pattern = "----", filesOutput)
-        filesLines <- filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
-        filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line) {
-          fullString <- unlist(strsplit(filesLines[[line]], split = " "))
-          return(fullString[length(fullString)])
-        }))
+        # filesInBetween <- grep(pattern = "----", filesOutput)
+        # filesLines <- filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
+        filesInArchive <- filenamesFromArchiveLst(filesOutput)
+        # filenamesFromArchiveLst <- function(filesLines) {
+        #   filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line) {
+        #     first5trimmed <- unlist(strsplit(filesLines[[line]], split = " +"))[-(1:5)]
+        #     if (length(first5trimmed) > 1)
+        #       first5trimmed <- paste(first5trimmed, collapse = " ")
+        #     # first5trimmed <- unlist(strsplit(filesLines[[line]], split = "  "))
+        #     return(first5trimmed)
+        #   }))
+        # }
         if (length(filesInArchive) == 0) {
           stop("preProcess could not find any files in the archive ", archive)
         }
       }
     }
   }
+  if (isTRUE(any(grepl("\\\\", filesInArchive))))
+    filesInArchive <- gsub("\\\\", "/", filesInArchive)
   return(filesInArchive)
 }
 
@@ -1473,4 +1490,38 @@ process <- function(out, funCaptured,
     }
   }
   x
+}
+
+removeDirs <- function(paths) {
+  out <- strsplit(paths, "\\\\|/")
+  lens <- lengths(out)
+  la <- unlist(lapply(unique(lens), function(len) {
+    table(sapply(out[lens >= len], function(xx) paste(xx[seq(len)], collapse = "/")))
+  }))
+  dirs <- names(la[la > 1])
+  paths <- paths[!paths %in% dirs]
+
+}
+
+
+filenamesFromArchiveLst <- function(filesOutput) {
+  filesInBetween <- grep(pattern = "----", filesOutput)
+  filesLines <- if (length(filesInBetween) == 0)
+    filesOutput
+  else
+    filesLines <- filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
+
+  filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line) {
+    first5trimmed <- unlist(strsplit(filesLines[[line]], split = " +"))[-(1:5)]
+    if (length(first5trimmed) > 1)
+      first5trimmed <- paste(first5trimmed, collapse = " ")
+    # first5trimmed <- unlist(strsplit(filesLines[[line]], split = "  "))
+    return(first5trimmed)
+  }))
+  if (isTRUE(any(grepl("\\\\", filesInArchive))))
+    filesInArchive <- gsub("\\\\", "/", filesInArchive)
+
+  filesInArchive <- removeDirs(filesInArchive)
+
+  filesInArchive
 }
