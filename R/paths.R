@@ -46,7 +46,7 @@ setMethod(
         if (!all(nas)) {
           if (any(!nas)) {
             path[!nas] <-
-              normalizePath(path[!nas], winslash = "/", mustWork = FALSE)
+              fs::path_abs(path[!nas]) # way faster than normalizePath for
           }
           if (any(nas)) {
             path[nas] <- NA_character_
@@ -256,14 +256,20 @@ isAbsolutePath <- function(pathnames) {
 makeAbsolute <- function(files, absoluteBase) {
   nas <- is.na(files)
   if (!all(nas)) {
+    needNormPath <- rep(TRUE, length(files))
     if (length(files[!nas])) {
       areAbs <- isAbsolutePath(files[!nas])
       if (any(!areAbs)) {
         files[!nas][!areAbs] <- fs::path_abs(files[!nas][!areAbs], absoluteBase)
+        needNormPath[!nas][!areAbs] <- FALSE
       }
     }
-    normPath(files)
+    if (any(needNormPath))
+      files[needNormPath] <- normPath(files[needNormPath])
+  } else {
+    files
   }
+  files
 }
 
 #' Relative paths
