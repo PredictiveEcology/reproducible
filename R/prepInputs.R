@@ -839,7 +839,7 @@ extractFromArchive <- function(archive,
     opt <- options("warn")$warn
     on.exit(options(warn = opt), add = TRUE)
     options(warn = 1)
-    tooBig <- file.size(args[[1]]) > 2e9
+    tooBig <- file.size(args[[1]]) > 5e9
     worked <- FALSE
     if (isUnzip && !tooBig) {
       fattrs <- unzip(args[[1]], list = TRUE)
