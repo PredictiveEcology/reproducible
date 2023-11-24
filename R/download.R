@@ -267,6 +267,18 @@ downloadFile <- function(archive, targetFile, neededFiles,
                     normPath(fileToDownload),
                     "')\n",
                     "      then rerun this current function call.\n",
+                    if (!is.null(getOption("reproducible.inputPaths"))) {
+                      obj <- dir(getOption("reproducible.inputPaths"), full.names = TRUE, pattern = basename(fileToDownload))
+                      if (length(obj)) {
+                        paste0(" 2b) The copy of the file in getOption('reproducible.inputPaths')",
+                               " may have been changed or corrupted -- run:\n",
+                               "      file.remove(c('",
+                               paste(normPath(obj), collapse = "', '"),
+                               "'))\n",
+                               "      then rerun this current function call.\n")
+                      }
+
+                    },
                     " 3) The download is correct, and the Checksums should be rewritten for this file:\n",
                     "      --> rerun this current function call, specifying 'purge = 7' possibly\n",
                     "      ",
