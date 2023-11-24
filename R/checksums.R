@@ -152,7 +152,7 @@ setMethod(
       files
     }
 
-    if (length(filesToCheck) != length(files)) {
+    if (length(filesToCheck) != length(files[!endsWith(files, "similar")])) {
       # Could be a case of user passing file path that is not with subdirectories; offer help
       justByBasename <- basename(txt$file) %in% basename(files)
       if (sum(justByBasename) == length(files)) {
