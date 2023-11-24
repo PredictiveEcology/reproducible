@@ -399,12 +399,20 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           FALSE
         }
         if (any(existInDestDir)) {
-          linkOrCopy(neededFiles[existInDestDir],
-            makeAbsolute(neededFilesNew[existInDestDir],
-              absoluteBase = destinationPathNew
-            ),
-            verbose = verbose - 1
+
+          from <- neededFiles[existInDestDir]
+          to <- makeAbsolute(neededFilesNew[existInDestDir],
+                             absoluteBase = destinationPathNew
           )
+          fifrom <- file.info(from)
+          fito <- file.info(to)
+          whNotSame <- fifrom$ctime != fito$ctime
+          needCopy <- !whNotSame %in% FALSE
+          if (any(needCopy)) {
+            linkOrCopy(from[needCopy], to[needCopy],
+                       verbose = verbose - 1
+            )
+          }
         }
         if (any(archiveExistInDestDir)) {
           linkOrCopy(archive[archiveExistInDestDir],
@@ -957,20 +965,20 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       neededFiles <- checkRelative(neededFiles, destinationPath, allFiles)
       if (is.null(targetFile)) {
         messagePrepInputs("No targetFile supplied. ",
-        "Extracting all files from archive",
-        verbose = verbose
-      )
-      neededFiles <- allFiles
-    } else if ("all" %in% lookForSimilar) {
-      messagePrepInputs("Extracting all files from archive", verbose = verbose)
-      neededFiles <- allFiles
-    } else {
-      allOK <- .similarFilesInCheckSums(targetFile, checkSums, alsoExtract)
-      if (!allOK) {
-        filePatternToKeep <- gsub(basename2(targetFile),
-          pattern = fileExt(basename2(targetFile)), replacement = ""
+                          "Extracting all files from archive",
+                          verbose = verbose
         )
-        filesToGet <- grep(allFiles, pattern = filePatternToKeep, value = TRUE)
+        neededFiles <- allFiles
+      } else if ("all" %in% lookForSimilar) {
+        messagePrepInputs("Extracting all files from archive", verbose = verbose)
+        neededFiles <- allFiles
+      } else {
+        allOK <- .similarFilesInCheckSums(targetFile, checkSums, alsoExtract)
+        if (!allOK) {
+          filePatternToKeep <- gsub(basename2(targetFile),
+                                    pattern = fileExt(basename2(targetFile)), replacement = ""
+          )
+          filesToGet <- grep(allFiles, pattern = filePatternToKeep, value = TRUE)
           neededFiles <- c(neededFiles, filesToGet)
         }
       }
