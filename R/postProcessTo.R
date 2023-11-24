@@ -1505,7 +1505,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
   cat(sf::st_crs(toRas)$wkt, file = tf4)
 
 
-  system.time(sf::gdal_utils(
+  sf::gdal_utils(
     util = "warp",
     source = fnSource,
     destination = filenameDest,
@@ -1520,7 +1520,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
       "-tap",
       "-overwrite"
     ))
-  )
+
   out <- terra::rast(filenameDest)
   messagePrepInputs("     ...done in ",
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
@@ -1563,7 +1563,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
 
   writeTo <- determineFilename(writeTo, destinationPath = destinationPath, verbose = verbose)
 
-  system.time(sf::gdal_utils(
+  sf::gdal_utils(
     util = "warp",
     source = fnSource,
     destination = writeTo,
@@ -1572,7 +1572,6 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
       "-dstnodata", "NA",
       "-overwrite"
     ))
-  )
 
   out <- terra::rast(writeTo)
   messagePrepInputs("     ...done in ",
