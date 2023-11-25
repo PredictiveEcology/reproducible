@@ -398,28 +398,18 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           FALSE
         }
         if (any(existInDestDir)) {
-
           from <- neededFiles[existInDestDir]
           to <- makeAbsolute(neededFilesNew[existInDestDir],
                              absoluteBase = destinationPathNew
           )
-          fifrom <- file.info(from)
-          fito <- file.info(to)
-          whNotSame <- fifrom$ctime != fito$ctime
-          needCopy <- !whNotSame %in% FALSE
-          if (any(needCopy)) {
-            linkOrCopy(from[needCopy], to[needCopy],
-                       verbose = verbose - 1
-            )
-          }
+          linkOrCopyUpdateOnly(from, to, verbose = verbose)
         }
         if (any(archiveExistInDestDir)) {
-          linkOrCopy(archive[archiveExistInDestDir],
-            makeAbsolute(makeRelative(archive[archiveExistInDestDir], destinationPath),
-              absoluteBase = destinationPathNew
-            ),
-            verbose = verbose - 1
+          from <- archive[archiveExistInDestDir]
+          to <- makeAbsolute(makeRelative(archive[archiveExistInDestDir], destinationPath),
+                             absoluteBase = destinationPathNew
           )
+          linkOrCopyUpdateOnly(from, to, verbose = verbose - 1)
         }
         targetPath <- targetFilePathNew
         destinationPath <- destinationPathNew
@@ -541,9 +531,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         if (any(!makeAbsolute(targetFilePath, destinationPath) %in%
                 makeAbsolute(neededFiles, destinationPath))) {
           if (!basename2(targetFilePath) %in% makeRelative(neededFiles, destinationPath)) {
-          targetFilePath <- grep(basename2(targetFilePath), neededFiles, value = TRUE)
+            targetFilePath <- grep(basename2(targetFilePath), neededFiles, value = TRUE)
+          }
         }
-      }
 
     filesExtr <- c(filesToChecksum, neededFiles)
     filesExtr <- setdiff(filesExtr, .isArchive(filesExtr))
@@ -1781,4 +1771,16 @@ isNULLorNA <- function(x) {
 
 identifyCHECKSUMStxtFile <- function(path) {
   file.path(path, "CHECKSUMS.txt")
+}
+
+linkOrCopyUpdateOnly <- function(from, to, verbose) {
+  fifrom <- file.info(from)
+  fito <- file.info(to)
+  whNotSame <- fifrom$ctime != fito$ctime
+  needCopy <- !whNotSame %in% FALSE
+  if (any(needCopy)) {
+    linkOrCopy(from[needCopy], to[needCopy],
+               verbose = verbose - 1
+    )
+  }
 }
