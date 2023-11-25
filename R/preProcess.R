@@ -538,9 +538,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       messagePrepInputs("  Skipping extractFromArchive attempt: no files missing", verbose = verbose)
     }
     if (!is.null(targetFilePath))
-      if (any(!makeAbsolute(targetFilePath, destinationPath) %in%
-          makeAbsolute(neededFiles, destinationPath))) {
-        if (!basename2(targetFilePath) %in% makeRelative(neededFiles, destinationPath)) {
+      if (isTRUE(!is.na(targetFilePath)))
+        if (any(!makeAbsolute(targetFilePath, destinationPath) %in%
+                makeAbsolute(neededFiles, destinationPath))) {
+          if (!basename2(targetFilePath) %in% makeRelative(neededFiles, destinationPath)) {
           targetFilePath <- grep(basename2(targetFilePath), neededFiles, value = TRUE)
         }
       }

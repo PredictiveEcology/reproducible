@@ -46,7 +46,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
         if (any(localArchivesExist)) {
           filesInLocalArchives <- unique(unlist(lapply(archive, .listFilesInArchive)))
           neededFilesRel <- makeRelative(neededFiles, destinationPath)
-          haveAll <- if (isNULLorNA(neededFiles)) FALSE else all(neededFilesRel %in% filesInLocalArchives)
+          haveAll <- if (isNULLorNA(neededFiles) || length(neededFiles) == 0) FALSE else all(neededFilesRel %in% filesInLocalArchives)
           if (haveAll) { # local archive has all files needed
             extractedFromArchive <- extractFromArchive(
               archive = archive[localArchivesExist],
@@ -57,7 +57,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
               quick = quick,
               .tempPath = .tempPath
             )
-            checkSums <- if (!file.exists(checksumFile) || is.null(neededFiles)) {
+            checkSums <- if (!file.exists(checksumFile) || is.null(neededFiles) || length(neededFiles) == 0) {
               needChecksums <- 1
               .emptyChecksumsResult
             } else {

@@ -381,7 +381,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # Load object to R
   ##################################################################
   if (!is.null(out$targetFilePath)) {
-    messagePrepInputs("targetFile located at ", out$targetFilePath, verbose = verbose)
+    if (!is.na(out$targetFilePath))
+      messagePrepInputs("targetFile located at ", out$targetFilePath, verbose = verbose)
   }
   x <- process(out,
     funCaptured = funCaptured,
