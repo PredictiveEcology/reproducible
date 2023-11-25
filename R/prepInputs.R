@@ -733,11 +733,15 @@ extractFromArchive <- function(archive,
         }
       }
       if (length(targetFilePath) > 1) {
-        messagePrepInputs("  More than one possible files to load:\n",
-                          paste(targetFilePath, collapse = "\n"),
-                          "\nPicking the last one. If not correct, specify a targetFile.",
-                          verbose = verbose
-        )
+        messagePrepInputs("  More than one possible files to load:\n", verbose = verbose)
+        if (length(targetFilePath) > 100) {
+          filesForMess <- data.table(Extracted = targetFilePath)
+          messageDF(filesForMess, verbose = verbose)
+        } else {
+          filesForMess <- paste(targetFilePath, collapse = "\n")
+          messagePrepInputs(filesForMess)
+        }
+        messagePrepInputs("Picking the last one. If not correct, specify a targetFile.", verbose = verbose)
         targetFilePath <- targetFilePath[length(targetFilePath)]
       }
     }
@@ -849,12 +853,13 @@ extractFromArchive <- function(archive,
     }
 
     if (!tooBig) {
-      mess <- capture.output(
+      messagePrepInputs("Extracting with R's unzip ... ")
+      stExtract <- system.time(mess <- capture.output(
         {
           extractedFiles <- do.call(fun, c(args, argList))
         },
         type = "message"
-      )
+      ))
       worked <- if (isUnzip) {
         all(normPath(file.path(args$exdir, argList[[1]])) %in% normPath(extractedFiles))
       } else {
@@ -968,6 +973,12 @@ extractFromArchive <- function(archive,
     recursive = TRUE,
     include.dirs = TRUE
   )
+
+  mess <- paste0("       ... Done extracting ", length(extractedFiles), " files")
+  if (exists("stExtract", inherits = FALSE))
+    mess <- paste0(mess, "; took ", format(as.difftime(stExtract[3], units = "secs"), units = "auto"))
+  messagePrepInputs(mess)
+
   from <- makeAbsolute(extractedFiles, .tempPath)
   on.exit(
     {
@@ -1401,7 +1412,8 @@ process <- function(out, funCaptured,
 
   if (!(naFun || is.null(theFun))) {
     x <- if (is.null(out$object)) {
-      messagePrepInputs("Loading object into R", verbose = verbose)
+      if (!isTRUE(is.na(out$targetFilePath)))
+        messagePrepInputs("Loading object into R", verbose = verbose)
       needRaster <- any(grepl("raster$|stack$|brick$", funCaptured))
       needTerra <- any(grepl("terra|rast$", funCaptured))
       if (needRaster) {

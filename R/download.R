@@ -76,6 +76,9 @@ downloadFile <- function(archive, targetFile, neededFiles,
             if (!missingNeededFiles) {
               archive <- archive[localArchivesExist]
             }
+          } else {
+            messagePrepInputs("Have local archive, ", archive, ", but its files are not listed in the CHECKSUMS.txt file.", verbose = verbose)
+            messagePrepInputs("\nRedownloading to start from file at url...", verbose = verbose)
           }
         }
       }

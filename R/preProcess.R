@@ -257,7 +257,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       archive <- makeRelative(archive, inputPaths$destinationPathUser)
       archive <- makeAbsolute(archive, destinationPath)
     }
-
   }
 
 
