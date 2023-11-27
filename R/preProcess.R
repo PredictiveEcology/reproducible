@@ -531,7 +531,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         if (any(!makeAbsolute(targetFilePath, destinationPath) %in%
                 makeAbsolute(neededFiles, destinationPath))) {
           if (!basename2(targetFilePath) %in% makeRelative(neededFiles, destinationPath)) {
-            targetFilePath <- grep(basename2(targetFilePath), neededFiles, value = TRUE)
+            targetFilePathPoss <- grep(basename2(targetFilePath), neededFiles, value = TRUE)
+            if (length(targetFilePath) > 1)
+              targetFilePath <- targetFilePathPoss
+
           }
         }
 
