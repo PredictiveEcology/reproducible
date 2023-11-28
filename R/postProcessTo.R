@@ -226,7 +226,11 @@ postProcessTo <- function(from, to,
 
     from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
     from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose)
-    from <- gdalMask(fromRas = from, maskToVect = maskTo, writeTo = writeTo, verbose = verbose, ...)
+    if (isGridded(maskTo)) { # won't be used at the moment because couldDoGDAL = FALSE for gridded
+      from <- maskTo(from = from, maskTo = maskTo, verbose = verbose, ...)
+    } else {
+      from <- gdalMask(fromRas = from, maskToVect = maskTo, writeTo = writeTo, verbose = verbose, ...)
+    }
     # from <- setMinMax(from)
 
   } else {
@@ -1547,6 +1551,12 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
   }
 
   tf3 <- tempfile(fileext = ".shp")
+  if (isGridded(maskToVect)) { # not used by default because postProcessTo will return couldDoGDAL = FALSE
+    if (!is(maskToVect, "SpatRaster")) {
+      maskToVect <- terra::rast(maskToVect)
+    }
+    maskToVect <- terra::as.polygons(maskToVect, values=FALSE)
+  }
   shp <- terra::project(maskToVect, terra::crs(fromRas))
   terra::writeVector(shp, file = tf3)
 
