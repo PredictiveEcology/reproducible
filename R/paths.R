@@ -46,7 +46,7 @@ setMethod(
         if (!all(nas)) {
           if (any(!nas)) {
             path[!nas] <-
-              fs::path_abs(path[!nas]) # way faster than normalizePath for
+              fs::path_expand_r(fs::path_abs(path[!nas])) # faster than normalizePath on some marchines
           }
           if (any(nas)) {
             path[nas] <- NA_character_
