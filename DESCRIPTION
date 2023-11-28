@@ -20,7 +20,7 @@ URL:
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
 Date: 2023-11-28
-Version: 2.0.10.9002
+Version: 2.0.10.9003
 Authors@R: 
     c(person(given = "Eliot J B",
              family = "McIntire",
@@ -79,6 +79,7 @@ Suggests:
     rlang,
     rmarkdown,
     RSQLite,
+    R.utils,
     sf,
     sp (>= 1.4-2),
     terra (>= 1.7-20),

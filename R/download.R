@@ -401,9 +401,19 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       class(fs) <- "object_size"
     }
     isLargeFile <- ifelse(is.null(fs), FALSE, fs > 1e6)
+    downloadCall <- quote(
+      googledrive::drive_download(
+        googledrive::as_id(url),
+        path = destFile,
+        type = type,
+        overwrite = overwrite, verbose = TRUE)
+    )
+
     if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&
       !isFALSE(getOption("reproducible.futurePlan"))) {
       messagePrepInputs("Downloading a large file in background using future", verbose = verbose)
+      message("Make sure to set\noptions(gargle_oauth_email = 'youremail@somewhere.edu')\n, and possibly ",
+              "\noptions(gargle_oauth_cache = 'localPathToCache')")
       fp <- future::plan()
       if (!is(fp, getOption("reproducible.futurePlan"))) {
         fpNew <- getOption("reproducible.futurePlan")
@@ -412,15 +422,24 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
           future::plan(fp)
         })
       }
+      b <- future::future({
+        options(gargle_oauth_cache = goc,
+                gargle_oauth_email = goe)
+      },
+      globals = list(
+
+      ))
       a <- future::future(
         {
-          retry(retries = 2, quote(googledrive::drive_download(googledrive::as_id(url),
-            path = destFile,
-            type = type,
-            overwrite = overwrite, verbose = TRUE
-          )))
+          googledrive::drive_auth(email = goe,
+                                  cache = goc)
+          retry(retries = 2,
+                downloadCall)
         },
         globals = list(
+          goc = getOption("gargle_oauth_cache"),
+          goe = getOption("gargle_oauth_email"),
+          downloadCall = downloadCall,
           drive_download = googledrive::drive_download,
           as_id = googledrive::as_id,
           retry = retry,
@@ -447,18 +466,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       }
       cat("\nDone!\n")
     } else {
-      a <- retry(
-        retries = 2,
-        quote(
-          R.utils::withTimeout({
-            googledrive::drive_download(
-            googledrive::as_id(url),
-            path = destFile,
-            type = type,
-            overwrite = overwrite, verbose = TRUE)
-          }, timeout = 1200, onTimeout = "error")
-        )
-      ) ## TODO: unrecognized type "shp"
+      a <- retry(downloadCall, retries = 2)
     }
   } else {
     messagePrepInputs(messSkipDownload, verbose = verbose)
@@ -525,7 +533,6 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            destinationPath, overwrite, needChecksums, .tempPath, preDigest,
                            verbose = getOption("reproducible.verbose", 1), ...) {
   noTargetFile <- is.null(targetFile) || length(targetFile) == 0
-  # browser(expr = exists("._downloadRemote_1"))
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit(

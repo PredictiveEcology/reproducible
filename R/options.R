@@ -117,6 +117,12 @@
 #'   \item{`showSimilar`}{
 #'     Default `FALSE`. Passed to `Cache`.
 #'   }
+#'   \item{`timeout`}{
+#'     Default `1200`. Used in `preProcess` when downloading occurs. If a user has `R.utils`
+#'     package installed, R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))
+#'     will be wrapped around the download so that it will timeout (and error) after this many
+#'     seconds.
+#'   }
 #'   \item{`useCache`}{
 #'     Default: `TRUE`. Used in [Cache()]. If `FALSE`, then the entire
 #'     `Cache` machinery is skipped and the functions are run as if there was no Cache occurring.
@@ -144,9 +150,6 @@
 #'     Default: `TRUE` if \pkg{DBI} is available.
 #'     Default value can be overridden by setting environment variable `R_REPRODUCIBLE_USE_DBI`.
 #'     As of version 0.3, the backend is now \pkg{DBI} instead of \pkg{archivist}.
-#'   }
-#'   \item{`useGDAL`}{
-#'     Default `TRUE`. Passed to `useGDAL`. Deprecated.
 #'   }
 #'   \item{`useMemoise`}{
 #'     Default: `FALSE`. Used in [Cache()]. If `TRUE`, recovery of cached
@@ -232,6 +235,7 @@ reproducibleOptions <- function() {
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
+    reproducible.timeout = 1200,
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
     reproducible.useDBI = {getEnv("R_REPRODUCIBLE_USE_DBI",

@@ -122,6 +122,12 @@ it will use \code{raster::shapefile}
 \item{\code{showSimilar}}{
 Default \code{FALSE}. Passed to \code{Cache}.
 }
+\item{\code{timeout}}{
+Default \code{1200}. Used in \code{preProcess} when downloading occurs. If a user has \code{R.utils}
+package installed, R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))
+will be wrapped around the download so that it will timeout (and error) after this many
+seconds.
+}
 \item{\code{useCache}}{
 Default: \code{TRUE}. Used in \code{\link[=Cache]{Cache()}}. If \code{FALSE}, then the entire
 \code{Cache} machinery is skipped and the functions are run as if there was no Cache occurring.
@@ -149,9 +155,6 @@ Default \code{FALSE}. Passed to \code{Cache}.
 Default: \code{TRUE} if \pkg{DBI} is available.
 Default value can be overridden by setting environment variable \code{R_REPRODUCIBLE_USE_DBI}.
 As of version 0.3, the backend is now \pkg{DBI} instead of \pkg{archivist}.
-}
-\item{\code{useGDAL}}{
-Default \code{TRUE}. Passed to \code{useGDAL}. Deprecated.
 }
 \item{\code{useMemoise}}{
 Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}. If \code{TRUE}, recovery of cached

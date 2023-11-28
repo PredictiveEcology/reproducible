@@ -433,15 +433,46 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ###############################################################
   # Download
   ###############################################################
-  downloadFileResult <- downloadFile(
-    archive = if (isTRUE(is.na(archive))) NULL else archive,
-    targetFile = targetFile, neededFiles = neededFiles, destinationPath = destinationPath,
-    quick = quick, checkSums = checkSums, dlFun = dlFunCaptured, url = url,
-    checksumFile = asPath(checkSumFilePath), needChecksums = needChecksums,
-    overwrite = overwrite, purge = purge, # may need to try purging again if no target,
-    #    archive or alsoExtract were known yet
-    verbose = verbose, .tempPath = .tempPath, ...
+  hasRutils <- .requireNamespace("R.utils", stopOnFALSE = FALSE, messageStart = "")
+  downloadCall <- quote(
+    downloadFile(
+      archive = if (isTRUE(is.na(archive))) NULL else archive,
+      targetFile = targetFile, neededFiles = neededFiles, destinationPath = destinationPath,
+      quick = quick, checkSums = checkSums, dlFun = dlFunCaptured, url = url,
+      checksumFile = asPath(checkSumFilePath), needChecksums = needChecksums,
+      overwrite = overwrite, purge = purge, # may need to try purging again if no target,
+      #    archive or alsoExtract were known yet
+      verbose = verbose, .tempPath = .tempPath, ...
+    )
   )
+  if ( hasRutils) {
+    # wrap the googledrive::drive_download with R.utils::withTimeout
+    downloadCall <- append(append(list(R.utils::withTimeout), downloadCall),
+                 list(timeout = getOption("reproducible.timeout", 1200), onTimeout = "error"))
+    downloadCall <- as.call(downloadCall)
+  }
+
+  withCallingHandlers(
+    downloadFileResult <- eval(downloadCall, envir = environment()),
+    error = function(e) {
+      if (!hasRutils) {
+        message("If the download stalls/stalled, please interrupt this function ",
+                "then install R.utils, then rerun this prepInputs/preProcess. This ",
+                "function will then use `R.utils::withTimeout`, which will cause an error ",
+                "sooner")
+      }
+    })
+
+
+  # downloadFileResult <- downloadFile(
+  #   archive = if (isTRUE(is.na(archive))) NULL else archive,
+  #   targetFile = targetFile, neededFiles = neededFiles, destinationPath = destinationPath,
+  #   quick = quick, checkSums = checkSums, dlFun = dlFunCaptured, url = url,
+  #   checksumFile = asPath(checkSumFilePath), needChecksums = needChecksums,
+  #   overwrite = overwrite, purge = purge, # may need to try purging again if no target,
+  #   #    archive or alsoExtract were known yet
+  #   verbose = verbose, .tempPath = .tempPath, ...
+  # )
 
   downloadFileResult <- .fixNoFileExtension(
     downloadFileResult = downloadFileResult,
