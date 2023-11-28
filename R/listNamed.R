@@ -1,5 +1,5 @@
 
-list2 <- function(...) {
+listNamed <- function(...) {
   dotsSUB <- as.list(substitute(list(...)))[-1]
   names <- vapply(dotsSUB, deparse, FUN.VALUE = character(1))
   ll <- list(...)
