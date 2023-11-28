@@ -107,6 +107,7 @@ Collate:
     'exportedMethods.R'
     'gis.R'
     'helpers.R'
+    'listNamed.R'
     'messages.R'
     'objectSize.R'
     'options.R'
