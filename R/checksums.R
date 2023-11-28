@@ -147,7 +147,23 @@ setMethod(
     stStart <- Sys.time()
     messagePrepInputs("Checking local files...", sep = "", verbose = verbose)
     filesToCheck <- if (length(txt$file) & length(files)) {
-      files[makeRelative(files, path) %in% txt$file]
+      inTxt <- makeRelative(files, path) %in% txt$file
+      if (isTRUE(any(inTxt)))
+        files <- files[inTxt]
+      else {
+        # might fail because it is listed in inputPaths; check there
+        possPath <- getOption("reproducible.inputPaths")
+        if (!is.null(possPath)) {
+          possPath <- normPath(possPath)
+          if (!identical(possPath, path)) {
+            inTxt <- makeRelative(files, path) %in%
+              makeRelative(txt$file, possPath)
+            if (isTRUE(any(inTxt)))
+              files <- files[inTxt]
+          }
+        }
+      }
+      files
     } else {
       files
     }
