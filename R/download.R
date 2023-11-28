@@ -450,12 +450,13 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       a <- retry(
         retries = 2,
         quote(
-          googledrive::drive_download(
+          R.utils::withTimeout({
+            googledrive::drive_download(
             googledrive::as_id(url),
             path = destFile,
             type = type,
-            overwrite = overwrite, verbose = TRUE
-          )
+            overwrite = overwrite, verbose = TRUE)
+          }, timeout = 1200, onTimeout = "error")
         )
       ) ## TODO: unrecognized type "shp"
     }
