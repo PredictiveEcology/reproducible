@@ -1227,7 +1227,8 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
 
       if (isFALSE(all(result))) {
         result <- file.copy(from[!result], to[!result], overwrite = overwrite)
-        messagePrepInputs("Copy of file: ", fromCollapsed, ", was created at: ", toCollapsed, verbose = verbose)
+        messagePrepInputs("Copy of file: ", fromCollapsed[result], ", was created at: ",
+                          toCollapsed[result], verbose = verbose)
       }
     } else {
       messagePrepInputs("File ", fromCollapsed, " does not exist. Not copying.", verbose = verbose)
