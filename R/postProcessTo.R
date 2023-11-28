@@ -1504,7 +1504,6 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
   tf4 <- tempfile(fileext = ".prj")
   cat(sf::st_crs(toRas)$wkt, file = tf4)
 
-
   sf::gdal_utils(
     util = "warp",
     source = fnSource,
@@ -1517,7 +1516,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
       "-te_srs", tf4, # 3347, 3348, 3978, 3979
       "-tr", terra::res(toRas),
       "-dstnodata", "NA",
-      "-tap",
+      # "-tap",
       "-overwrite"
     ))
 
