@@ -1496,7 +1496,9 @@ getFunctionName2 <- function(mc) {
               whereInStack(ee)
             }, silent = TRUE)
             if (is(env2, "try-error")) {
-              out <- paste(format(ee$destinationPath), collapse = " ")
+              out <- try(paste(format(ee$destinationPath), collapse = " "), silent = TRUE)
+              if (is(out, "try-error"))
+                stop(env2)
             } else {
               out <- try(eval(ee, envir = env2), silent = TRUE)
               if (is(out, "try-error")) {
