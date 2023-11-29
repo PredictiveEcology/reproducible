@@ -590,12 +590,18 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         whFilesExtrInLP <- which(file.exists(filesExtr[foundInLocalPaths]))
         if (length(whFilesExtrInLP)) {
           from <- filesExtr[whFilesExtrInLP]
-          to <- makeAbsolute(makeRelative(from, destinationPath), reproducible.inputPaths)
+          for (riP in reproducible.inputPaths) {
+            to <- makeAbsolute(makeRelative(from, destinationPath), riP)
+            if (all(from %in% to)) {
+              break
+            }
+          }
           if (!isTRUE(all(from %in% to))) {
             messagePrepInputs("... copying to getOption('reproducible.inputPaths')...",
                               verbose = verbose)
           }
           outHLC <- hardLinkOrCopy(from, to)
+
         }
       }
     }

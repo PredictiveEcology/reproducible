@@ -153,13 +153,18 @@ setMethod(
       else {
         # might fail because it is listed in inputPaths; check there
         possPath <- getOption("reproducible.inputPaths")
+        # can be length > 1
         if (!is.null(possPath)) {
           possPath <- normPath(possPath)
           if (!identical(possPath, path)) {
-            inTxt <- makeRelative(files, path) %in%
-              makeRelative(txt$file, possPath)
-            if (isTRUE(any(inTxt)))
-              files <- files[inTxt]
+            for (pp in possPath) {
+              inTxt <- makeRelative(files, path) %in%
+                makeRelative(txt$file, pp)
+              if (isTRUE(any(inTxt))) {
+                files <- files[inTxt]
+                break
+              }
+            }
           }
         }
       }
