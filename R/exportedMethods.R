@@ -76,7 +76,7 @@ setMethod(
     if (isTRUE(fromMemoise)) {
       whMessage <- .loadedMemoisedResultMsg
       messageCache(.loadedCacheMsg(whMessage, functionName), verbose = verbose)
-    } else if (!is.na(fromMemoise)) {
+    } else if (!is.na(fromMemoise) && !fromMemoise %in% FALSE) {
       whMessage <- .loadedCacheResultMsg
       messageCache(.loadedCacheMsg(whMessage, functionName), " ",
                    .addingToMemoisedMsg,
