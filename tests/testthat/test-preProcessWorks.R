@@ -542,7 +542,7 @@ test_that("lightweight tests for preProcess code coverage", {
 test_that("large test for nested file structures in zips", {
   skip_on_cran()
   skip_on_ci()
-  testInit(c("sf", "googledrive", "terra"), needInternet = TRUE)
+  testInit(c("sf", "googledrive", "terra"), needInternet = TRUE, needGoogleDriveAuth = TRUE)
   climateDataURL <- "https://drive.google.com/file/d/1we9GqEVAORWLbHi3it66VnCcvLu85QIk"
 
   ## extracts flat files, overwriting and keeping only the last subdir's files
