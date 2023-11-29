@@ -574,14 +574,14 @@ test_that("more nested file structures in zip; alsoExtract NA", {
   system.time({
     ras <- lapply(1:2, function(x) {
       td <- tempdir2()
-      terra::rast(terra::ext(0, 4, 0, 4), vals = sample(1:16), res = 1) |>
+      terra::rast(terra::ext(0, 4, 0, 4), vals = sample(1:16), resolution = 1) |>
         terra::writeRaster(filename = file.path(td, basename(tempfile(fileext = ".tif"))))
     })
     setwd(dirname(dirname(Filenames(ras[[1]]))))
     fns1 <- Filenames(ras)
     # zip(zipName, files = file.path(basename(dirname(fns)), basename(fns)))
     ras <- lapply(1:2, function(x) {
-      terra::rast(terra::ext(0, 4, 0, 4), vals = sample(1:16), res = 1) |>
+      terra::rast(terra::ext(0, 4, 0, 4), vals = sample(1:16), resolution = 1) |>
         terra::writeRaster(filename = file.path(basename(tempfile(fileext = ".tif"))))
     })
     fns2 <- Filenames(ras)
