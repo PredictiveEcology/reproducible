@@ -172,111 +172,113 @@ postProcessTo <- function(from, to,
     if (is.null(projectTo)) projectTo <- to
   }
 
-  # ASSERTION STEP
-  postProcessToAssertions(from, to, cropTo, maskTo, projectTo)
+  if (!all(is.null(to), is.null(cropTo), is.null(maskTo), is.null(projectTo))) {
+    # ASSERTION STEP
+    postProcessToAssertions(from, to, cropTo, maskTo, projectTo)
 
-  # Get the original class of from so that it can be recovered
-  origFromClass <- is(from)
-  isRaster <- any(origFromClass == "Raster")
-  isRasterLayer <- any(origFromClass == "RasterLayer")
-  isStack <- any(origFromClass == "RasterStack")
-  isBrick <- any(origFromClass == "RasterBrick")
-  isSF <- any(origFromClass == "sf")
-  isSpatial <- any(startsWith(origFromClass, "Spatial"))
-  isSpatRaster <- any(origFromClass == "SpatRaster")
-  isVectorNonTerra <- isVector(from) && !isSpat(from)
+    # Get the original class of from so that it can be recovered
+    origFromClass <- is(from)
+    isRaster <- any(origFromClass == "Raster")
+    isRasterLayer <- any(origFromClass == "RasterLayer")
+    isStack <- any(origFromClass == "RasterStack")
+    isBrick <- any(origFromClass == "RasterBrick")
+    isSF <- any(origFromClass == "sf")
+    isSpatial <- any(startsWith(origFromClass, "Spatial"))
+    isSpatRaster <- any(origFromClass == "SpatRaster")
+    isVectorNonTerra <- isVector(from) && !isSpat(from)
 
-  # converting sf to terra then cropping is slower than cropping then converting to terra
-  #    so if both are vector datasets, and sf format, crop first
-  from <- cropSF(from, cropTo)
+    # converting sf to terra then cropping is slower than cropping then converting to terra
+    #    so if both are vector datasets, and sf format, crop first
+    from <- cropSF(from, cropTo)
 
-  if (isRaster) {
-    fromCRS <- terra::crs(from)
-    from <- terra::rast(from)
-    if (!nzchar(terra::crs(from))) {
-      terra::crs(from) <- fromCRS
-    } # $input
-  } else if (isSpatial) {
-    osFrom <- object.size(from)
-    lg <- osFrom > 5e8
-    if (lg) {
-      st <- Sys.time()
-      messagePrepInputs("  `from` is large, converting to terra object will take some time ...",
+    if (isRaster) {
+      fromCRS <- terra::crs(from)
+      from <- terra::rast(from)
+      if (!nzchar(terra::crs(from))) {
+        terra::crs(from) <- fromCRS
+      } # $input
+    } else if (isSpatial) {
+      osFrom <- object.size(from)
+      lg <- osFrom > 5e8
+      if (lg) {
+        st <- Sys.time()
+        messagePrepInputs("  `from` is large, converting to terra object will take some time ...",
+                          verbose = verbose
+        )
+      }
+      from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
+      if (lg) {
+        messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
+                                               units = "secs", digits = 3
+        ),
         verbose = verbose
-      )
+        )
+      }
     }
-    from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
-    if (lg) {
-      messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
-        units = "secs", digits = 3
-      ),
-      verbose = verbose
-      )
-    }
-  }
 
-  couldDoGDAL <- isGridded(from) && isVector(maskTo) && isGridded(projectTo)
+    couldDoGDAL <- isGridded(from) && isVector(maskTo) && isGridded(projectTo)
 
-  if (isTRUE(getOption("reproducible.gdalwarp", FALSE)) && couldDoGDAL) {
-    #############################################################
-    # project resample mask sequence ################################
-    #############################################################
-    messagePrepInputs("  using sf::gdal_utils('warp') because options(\"reproducible.gdalwarp\" = TRUE) ...", appendLF = FALSE, verbose = verbose)
-    st <- Sys.time()
+    if (isTRUE(getOption("reproducible.gdalwarp", FALSE)) && couldDoGDAL) {
+      #############################################################
+      # project resample mask sequence ################################
+      #############################################################
+      messagePrepInputs("  using sf::gdal_utils('warp') because options(\"reproducible.gdalwarp\" = TRUE) ...", appendLF = FALSE, verbose = verbose)
+      st <- Sys.time()
 
-    from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
-    from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose)
-    if (isGridded(maskTo)) { # won't be used at the moment because couldDoGDAL = FALSE for gridded
-      from <- maskTo(from = from, maskTo = maskTo, verbose = verbose, ...)
+      from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
+      from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose)
+      if (isGridded(maskTo)) { # won't be used at the moment because couldDoGDAL = FALSE for gridded
+        from <- maskTo(from = from, maskTo = maskTo, verbose = verbose, ...)
+      } else {
+        from <- gdalMask(fromRas = from, maskToVect = maskTo, writeTo = writeTo, verbose = verbose, ...)
+      }
+      # from <- setMinMax(from)
+
     } else {
-      from <- gdalMask(fromRas = from, maskToVect = maskTo, writeTo = writeTo, verbose = verbose, ...)
-    }
-    # from <- setMinMax(from)
+      if (couldDoGDAL)
+        message("Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm")
+      #############################################################
+      # crop project mask sequence ################################
+      #############################################################
+      # Basically, when both layers are vector, it appears to sometimes be lossy to do first
+      #   cropTo --> i.e., projecting cropTo to from's crs, then crop, then proceed was making
+      #   errors and slivers
+      if (!(isPolygons(from) && isPolygons(projectTo) && identical(cropTo, projectTo)))
+        from <- cropTo(from, cropTo, needBuffer = TRUE, ..., overwrite = overwrite) # crop first for speed
+      from <- projectTo(from, projectTo, ..., overwrite = overwrite) # need to project with edges intact
+      from <- maskTo(from, maskTo, ..., overwrite = overwrite)
+      from <- cropTo(from, cropTo, needBuffer = FALSE, ..., overwrite = overwrite) # need to recrop to trim excess pixels in new projection
 
-  } else {
-    if (couldDoGDAL)
-      message("Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm")
-    #############################################################
-    # crop project mask sequence ################################
-    #############################################################
-    # Basically, when both layers are vector, it appears to sometimes be lossy to do first
-    #   cropTo --> i.e., projecting cropTo to from's crs, then crop, then proceed was making
-    #   errors and slivers
-    if (!(isPolygons(from) && isPolygons(projectTo) && identical(cropTo, projectTo)))
-      from <- cropTo(from, cropTo, needBuffer = TRUE, ..., overwrite = overwrite) # crop first for speed
-    from <- projectTo(from, projectTo, ..., overwrite = overwrite) # need to project with edges intact
-    from <- maskTo(from, maskTo, ..., overwrite = overwrite)
-    from <- cropTo(from, cropTo, needBuffer = FALSE, ..., overwrite = overwrite) # need to recrop to trim excess pixels in new projection
+      # Put this message near the end so doesn't get lost
+      if (is.naSpatial(cropTo) && isVector(maskTo)) {
+        messagePrepInputs("    ** cropTo is NA, but maskTo is a Vector dataset; ",
+                          verbose = verbose
+        )
+        messagePrepInputs("      this has the effect of cropping anyway",
+                          verbose = verbose
+        )
+      }
 
-    # Put this message near the end so doesn't get lost
-    if (is.naSpatial(cropTo) && isVector(maskTo)) {
-      messagePrepInputs("    ** cropTo is NA, but maskTo is a Vector dataset; ",
-                        verbose = verbose
+      # from <- terra::setMinMax(from)
+
+      # WRITE STEP
+      from <- writeTo(
+        from, writeTo, overwrite, isStack, isBrick, isRaster, isSpatRaster,
+        ...
       )
-      messagePrepInputs("      this has the effect of cropping anyway",
-                        verbose = verbose
+
+    }
+
+
+    # REVERT TO ORIGINAL INPUT CLASS
+    from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial,
+                        origFromClass = origFromClass)
+    messagePrepInputs("  postProcessTo done in ", format(difftime(Sys.time(), startTime),
+                                                         units = "secs", digits = 3
+    ),
+    verbose = verbose
     )
   }
-
-  # from <- terra::setMinMax(from)
-
-  # WRITE STEP
-  from <- writeTo(
-    from, writeTo, overwrite, isStack, isBrick, isRaster, isSpatRaster,
-      ...
-    )
-
-  }
-
-
-  # REVERT TO ORIGINAL INPUT CLASS
-  from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial,
-                      origFromClass = origFromClass)
-  messagePrepInputs("  postProcessTo done in ", format(difftime(Sys.time(), startTime),
-                                                       units = "secs", digits = 3
-  ),
-  verbose = verbose
-  )
   from
 }
 
