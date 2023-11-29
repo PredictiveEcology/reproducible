@@ -291,6 +291,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   neededFiles <- c(targetFile, makeAbsolute(alsoExtract, destinationPath)) # if (!is.null(alsoExtract)) basename2(alsoExtract))
   if (is.null(neededFiles)) neededFiles <- makeAbsolute(archive)
+  # alsoExtract can be set to NA to say "don't try to extract anything else"; these would be in neededFiles now
+  #   --> remove them
+  if (any(is.na(neededFiles))) neededFiles <- na.omit(neededFiles)
 
   # remove "similar" from needed files. It is for extracting.
   neededFiles <- grep("similar$", neededFiles, value = TRUE, invert = TRUE)
@@ -437,8 +440,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     archive = if (isTRUE(is.na(archive))) NULL else archive,
     targetFile = targetFile, neededFiles = neededFiles, destinationPath = destinationPath,
     quick = quick, checkSums = checkSums, dlFun = dlFunCaptured, url = url,
-      checksumFile = asPath(checkSumFilePath), needChecksums = needChecksums,
-      overwrite = overwrite, purge = purge, # may need to try purging again if no target,
+    checksumFile = asPath(checkSumFilePath), needChecksums = needChecksums,
+    overwrite = overwrite, purge = purge, # may need to try purging again if no target,
     #    archive or alsoExtract were known yet
     verbose = verbose, .tempPath = .tempPath, ...
   )
