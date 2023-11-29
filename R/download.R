@@ -1,3 +1,7 @@
+utils::globalVariables(c(
+  "goe", "goc"
+))
+
 #' A wrapper around a set of downloading functions
 #'
 #' Currently, this only deals with `googledrive::drive_download`,
