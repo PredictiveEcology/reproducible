@@ -11,6 +11,11 @@ opts <- options(
   warnPartialMatchAttr = TRUE,
   warnPartialMatchDollar = TRUE
 )
+if (Sys.info()["nodename"] %in% "W-VIC-A127585") {
+  opts2 <- options(gargle_oauth_cache = "C:/Eliot/.secret",
+                   gargle_oauth_email = "eliotmcintire@gmail.com")
+  opts <- append(opts, opts2)
+}
 setDTthreads(2)
 withr::defer(
   {
