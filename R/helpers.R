@@ -247,9 +247,31 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
   if (exponentialDecayBase < 1) {
     stop("exponentialDecayBase must be equal to or greater than 1")
   }
+  hasRutils <- .requireNamespace("R.utils", stopOnFALSE = FALSE, messageStart = "")
+
   for (i in seq_len(retries)) {
     if (!(is.call(expr) || is.name(expr))) warning("expr is not a quoted expression")
-    result <- try(expr = eval(expr, envir = envir), silent = silent)
+
+    if ( hasRutils) {
+      # wrap the expr with R.utils::withTimeout
+      expr2 <- append(append(list(R.utils::withTimeout), expr),
+                             list(timeout = getOption("reproducible.timeout", 1200), onTimeout = "error"))
+      expr <- as.call(expr2)
+    }
+
+    result <- try(silent = silent,
+                  expr = withCallingHandlers(
+                    eval(expr, envir = envir),
+                    error = function(e) {
+                      if (!hasRutils) {
+                        message("If the download stalls/stalled, please interrupt this function ",
+                                "then install R.utils, then rerun this prepInputs/preProcess. This ",
+                                "function will then use `R.utils::withTimeout`, which will cause an error ",
+                                "sooner")
+                      }
+                    })
+    )
+
     if (inherits(result, "try-error")) {
       if (!is.null(exprBetween)) {
         finalPart <- length(format(exprBetween))
