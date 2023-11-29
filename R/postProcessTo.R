@@ -552,7 +552,7 @@ maskTo <- function(from, maskTo, # touches = FALSE,
         }
 
         from <- fromInt
-        messagePrepInputs("...done in ",
+        messagePrepInputs("     ...done in ",
           format(difftime(Sys.time(), st), units = "secs", digits = 3),
           verbose = verbose
         )
@@ -914,7 +914,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
         attempt <- attempt + 1
       }
       from <- fromInt
-      messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
+      messagePrepInputs("     ...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
         verbose = verbose
       )
     }
@@ -1025,7 +1025,7 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
           }
         }
         if (isTRUE(writeDone)) {
-          messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
+          messagePrepInputs("     ...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
             verbose = verbose
           )
         } else {
