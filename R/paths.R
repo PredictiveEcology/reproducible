@@ -351,6 +351,7 @@ getRelative <- Vectorize(getRelative, USE.NAMES = FALSE)
 #' @export
 #' @rdname relativePaths
 makeRelative <- function(files, absoluteBase) {
+  # NOT VECTORIZED on absoluteBase
   isList <- is(files, "list")
   filesOrig <- files
   if (isList) {
@@ -361,7 +362,9 @@ makeRelative <- function(files, absoluteBase) {
     areAbs <- isAbsolutePath(files)
     if (any(areAbs)) {
       absoluteBase <- normPath(absoluteBase) # can be "." which means 'any character' in a grep
+      if (length(absoluteBase) > 1) browser()
       files[areAbs] <- gsub(paste0("^", absoluteBase, "/{0,1}"), "", files[areAbs])
+
       # this does dumb things when it is not relative ... i.e., with prepend ../../../../../..
       # files[areAbs] <- fs::path_rel(start = absoluteBase, files[areAbs])
     }
