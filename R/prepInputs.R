@@ -1000,7 +1000,7 @@ extractFromArchive <- function(archive,
     stop(paste("Could not move extractedfiles from", .tempPath, "to", args$exdir))
   }
   extractedFiles <- to
-  unlink(.tempPath, recursive = TRUE)
+  # unlink(.tempPath, recursive = TRUE) # don't delete it if it was not created here --> on.exit does this
 
   if (length(extractedFiles) == 0) {
     stop(
