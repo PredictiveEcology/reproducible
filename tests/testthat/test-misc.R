@@ -2,7 +2,7 @@ test_that("test miscellaneous fns (part 1)", {
   # ONLY RELEVANT FOR RASTERS
   testInit("raster", tmpFileExt = c(".tif", ".grd"))
 
-  expect_is(searchFullEx(), "list")
+  expect_type(searchFullEx(), "list")
   expect_true(length(searchFullEx()) > length(search()))
   expect_true(length(searchFullEx()) == (3 + length(search())))
 
@@ -40,10 +40,10 @@ test_that("test miscellaneous fns (part 1)", {
   r3 <- suppressWarnings(writeRaster(r1, tmpfile[1], overwrite = TRUE)) ## TODO: raster needs updating for crs stuff
   r4 <- suppressWarnings(convertRasterPaths(tmpfile[1], dirname(tmpfile[1]), newPaths)) ## TODO: raster needs updating for crs stuff
 
-  expect_true(identical(
+  expect_identical(
     normPath(file.path(newPaths, basename(filename(r4)))),
-    normPath(filename(r4))
-  ))
+    normPath(Filenames(r4))
+  )
 
   expect_silent({
     b <- retry(quote(rnorm(1)), retries = 1, silent = TRUE)

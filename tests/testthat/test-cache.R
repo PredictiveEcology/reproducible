@@ -2,7 +2,8 @@ test_that("test file-backed raster caching", {
   skip_on_cran()
   testInit("terra",
            tmpFileExt = c(".tif", ".grd"),
-           opts = list(reproducible.useMemoise = FALSE)
+           opts = list(reproducible.useMemoise = FALSE,
+                       reproducible.verbose = FALSE)
   )
 
   nOT <- Sys.time()
@@ -16,9 +17,8 @@ test_that("test file-backed raster caching", {
 
   a <- randomPolyToDisk(tmpfile[1])
   # confirm that the raster has the given tmp filename
-  expect_equivalent(
-    strsplit(normPath(tmpfile[1]), split = "[\\/]"),
-    strsplit(normPath(Filenames(a)), split = "[\\/]")
+  expect_identical(normPath(tmpfile[1]),
+                   normPath(Filenames(a))
   )
 
   # Using mock interactive function
@@ -239,8 +239,8 @@ test_that("test file-backed raster caching", {
   # changed behaviour as of reproducible 1.2.0.9020 -- now Cache doesn't protect user from filename collisions if user makes them
   expect_true(unique(dirname(normPath(Filenames(bb)))) != normPath(file.path(tmpdir, "rasters")))
   expect_true(identical(basename(Filenames(bb, allowMultiple = FALSE)), basename(tmpfile[2])))
-  expect_equivalent(normPath(Filenames(bb, allowMultiple = FALSE)), normPath(tmpfile[2]))
-  expect_equivalent(normPath(dirname(Filenames(bb1, allowMultiple = FALSE))), normPath(dirname(tmpfile[2])))
+  expect_identical(normPath(Filenames(bb, allowMultiple = FALSE)), normPath(tmpfile[2]))
+  expect_identical(normPath(dirname(Filenames(bb1, allowMultiple = FALSE))), normPath(dirname(tmpfile[2])))
   expect_true(basename(Filenames(bb1, allowMultiple = FALSE)) == basename(tmpfile[2]))
   expect_true(dataType2(bb) == "INT1U")
   if (.requireNamespace("raster")) {
@@ -1331,7 +1331,7 @@ test_that("Cache the dots; .cacheExtra", {
     out6 <- Cache(mean, 7, omitArgs = "x", .cacheExtra = "234", cachePath = tmpCache)
   })
   expect_true(out6 - 6 == 0) # takes first one
-  expect_equivalent(out5, out6) # the attributes will be different because one is a recovery of the other
+  expect_equal(out5, out6, ignore_attr = TRUE) # the attributes will be different because one is a recovery of the other
 })
 
 test_that("change to new capturing of FUN & base pipe", {
@@ -1706,7 +1706,7 @@ test_that("Issue 316 - writeOutputs in a non getwd dir", {
     )
   }
 
-  expect_equivalent(rasterToMatchLarge[[1]], rasterToMatchLarge[[2]])
+  expect_true(terra::all.equal(rasterToMatchLarge[[1]][], rasterToMatchLarge[[2]][]))
 })
 
 test_that("test useDBI TRUE <--> FALSE", {
