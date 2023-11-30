@@ -45,8 +45,15 @@ setMethod(
         nas <- is.na(path)
         if (!all(nas)) {
           if (any(!nas)) {
+            # fs has different behaviour than `normalizePath`. Need to replace all the differences:
+            # Below are "differences"... i.e., I am not writing what normalizePath does, as it is not this:
+            # 1. fs::path_norm doesn't expand
+            # 2. fs::path_expand: doesn't expand R_USER env var --> must use fs::path_expand_r
+            # 3. fs::??? Long windows paths that are shortened to 8 characters (e.g., on GitHub Actions),
+            #    normalizePaths does this, can't find equivalent in fs
             path[!nas] <-
-              fs::path_expand_r(fs::path_abs(path[!nas])) # faster than normalizePath on some marchines
+              normalizePath(path[!nas], winslash = "/", mustWork = FALSE)
+              # fs::path_expand_r(fs::path_abs(path[!nas])) # faster than normalizePath on some machines
           }
           if (any(nas)) {
             path[nas] <- NA_character_
