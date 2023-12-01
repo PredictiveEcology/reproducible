@@ -2230,21 +2230,26 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
                               debugCache, # sideEffect,
                               quick, algo, preDigest, startCacheTime, drv, conn,
                               outputHash, useCloud, gdriveLs, cloudFolderID, lastEntry, lastOne, ...) {
-  objSize <- # if (useDBI()) {
-    as.numeric(tail(fullCacheTableForObj[["tagValue"]][
-      fullCacheTableForObj$tagKey == "file.size"
-    ], 1))
-  class(objSize) <- "object_size"
-  bigFile <- isTRUE(objSize > 1e6)
-  fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
-  messageCache("  ...(Object to retrieve (fn: ", fnDetails$functionName, ", ",
-    basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]], format = fileFormat)),
-    ")",
-    if (bigFile) " is large: ",
-    if (bigFile) format(objSize, units = "auto"),
-    ")",
-    verbose = verbose
-  )
+  .cacheMessageObjectToRetrieve(fnDetails$functionName, fullCacheTableForObj,
+                           cachePath, cacheId = isInRepo[[.cacheTableHashColName()]], verbose)
+
+  if (FALSE) {
+    objSize <- # if (useDBI()) {
+      as.numeric(tail(fullCacheTableForObj[["tagValue"]][
+        fullCacheTableForObj$tagKey == "file.size"
+      ], 1))
+    class(objSize) <- "object_size"
+    bigFile <- isTRUE(objSize > 1e6)
+    fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
+    messageCache("  ...(Object to retrieve (fn: ", fnDetails$functionName, ", ",
+                 basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]], format = fileFormat)),
+                 ")",
+                 if (bigFile) " is large: ",
+                 if (bigFile) format(objSize, units = "auto"),
+                 ")",
+                 verbose = verbose
+    )
+  }
 
   preLoadTime <- Sys.time()
   output <- try(.getFromRepo(FUN,

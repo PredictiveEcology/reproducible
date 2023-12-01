@@ -90,6 +90,37 @@ setMethod(
   }
 )
 
+#' @export
+#' @param fullCacheTableForObj The data.table entry from the Cache database for only
+#' this `cacheId`, e.g., via showCache()
+#' @inheritParams Cache
+#' @inheritParams .unwrap
+#' @details
+#' `.objecxtToRetrieveMessage` is the messaging for recovering an object from Cache.
+#'
+#' @rdname exportedMethods
+.cacheMessageObjectToRetrieve <- function(functionName, fullCacheTableForObj, cachePath, cacheId, verbose) {
+  objSize <- as.numeric(tail(extractFromCache(fullCacheTableForObj, elem = "file.size"), 1))
+  # objSize <- # if (useDBI()) {
+  #   as.numeric(tail(fullCacheTableForObj[["tagValue"]][
+  #     fullCacheTableForObj$tagKey == "file.size"
+  #   ], 1))
+  class(objSize) <- "object_size"
+  bigFile <- isTRUE(objSize > 1e6)
+
+  fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
+
+  messageCache("  ...(Object to retrieve (fn: ", functionName, ", ",
+               basename2(CacheStoredFile(cachePath, cacheId, format = fileFormat)),
+               ")",
+               if (bigFile) " is large: ",
+               if (bigFile) format(objSize, units = "auto"),
+               ")",
+               verbose = verbose
+  )
+}
+
+
 ################################################################################
 #' @details
 #' `.addTagsToOutput` should add one or more attributes to an object, named either
