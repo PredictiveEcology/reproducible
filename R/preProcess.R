@@ -1235,9 +1235,17 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       }
 
       if (isFALSE(all(result))) {
-        result <- file.copy(from[!result], to[!result], overwrite = overwrite)
-        messagePrepInputs("Copy of file: ", fromCollapsed[result], ", was created at: ",
-                          toCollapsed[result], verbose = verbose)
+        len <- length(from[!result])
+        if (len < 50) fromCollapsed[!result] else c(head(fromCollapsed[!result]), tail(fromCollapsed[!result]))
+        if (len < 50) {
+          fromMess <- fromCollapsed[!result]
+          toMess <- toCollapsed[!result]
+        } else {
+          fromMess <- c(head(fromCollapsed[!result]), tail(fromCollapsed[!result]))
+          toMess <- c(head(toCollapsed[!result], 24), "... (omitting many)", tail(toCollapsed[!result], 24))
+        }
+        result2 <- file.copy(from[!result], to[!result], overwrite = overwrite)
+        messagePrepInputs("Copy of file: ", fromMess, ", was created at: ", toMess, verbose = verbose)
       }
     } else {
       messagePrepInputs("File ", fromCollapsed, " does not exist. Not copying.", verbose = verbose)

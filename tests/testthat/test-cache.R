@@ -1331,7 +1331,9 @@ test_that("Cache the dots; .cacheExtra", {
     out6 <- Cache(mean, 7, omitArgs = "x", .cacheExtra = "234", cachePath = tmpCache)
   })
   expect_true(out6 - 6 == 0) # takes first one
-  expect_equal(out5, out6, ignore_attr = TRUE) # the attributes will be different because one is a recovery of the other
+  attr(out5, ".Cache") <- NULL
+  attr(out6, ".Cache") <- NULL
+  expect_equal(out5, out6, ignore_attr = TRUE )# the attributes will be different because one is a recovery of the other
 })
 
 test_that("change to new capturing of FUN & base pipe", {
