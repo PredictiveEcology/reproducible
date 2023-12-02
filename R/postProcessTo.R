@@ -142,10 +142,19 @@
 #'   `method`, `touches`, and `datatype`. If `filename` is passed, it will be ignored; use
 #'   `writeTo = `.
 #' @inheritParams Cache
-#' @export
 #'
-#' @seealso This function is meant to replace [postProcess()] with the more efficient
+#' @details
+#'
+#' This function is meant to replace [postProcess()] with the more efficient
 #' and faster `terra` functions.
+#'
+#' @export
+#' @seealso [maskTo()], [cropTo()], [processTo()], [writeTo()], and [fixErrorsIn()].
+#' Also the functions that
+#' call `sf::gdal_utils(...)` directly: [gdalProject()], [gdalResample()], [gdalMask()],
+#' and [gdalMerge()]
+#' @rdname postProcessTo
+#' @example inst/examples/example_postProcessTo.R
 #'
 postProcessTo <- function(from, to,
                           cropTo = NULL, projectTo = NULL, maskTo = NULL, writeTo = NULL,
@@ -222,7 +231,7 @@ postProcessTo <- function(from, to,
       #############################################################
       # project resample mask sequence ################################
       #############################################################
-      messagePrepInputs("  using sf::gdal_utils('warp') because options(\"reproducible.gdalwarp\" = TRUE) ...", appendLF = FALSE, verbose = verbose)
+      messagePrepInputs("  using sf::gdal_utils('warp') because options(\"reproducible.gdalwarp\" = TRUE) ...", appendLF = TRUE, verbose = verbose)
       st <- Sys.time()
 
       from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
@@ -729,8 +738,8 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
 #'   of the ordinary. If `TRUE`, then a buffer around the cropTo, so that if a reprojection
 #'   has to happen on the `cropTo` prior to using it as a crop layer, then a buffer
 #'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
-#' @export
 #' @rdname postProcessTo
+#' @export
 cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
                    verbose = getOption("reproducible.verbose"), ...) {
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
@@ -1430,6 +1439,33 @@ isGeomType <- function(geom, type) {
 
 
 
+#' 3-Step postProcess sequence for SpatRasters using `gdalwarp`
+#'
+#' `gdalProject` is a thin wrapper around `sf::gdal_utils('gdalwarp', ...)` with specific options
+#' set, notably, `-r` to `method` (in the ...), `-t_srs` to the crs of the `toRas`,
+#' `-te` to the extent of the `toRas`, `-te_srs` to the `crs` of the `toRas`,
+#' `-dstnodata = NA`, and `-overwrite`.
+#'
+#' @details
+#' These three functions are used within `postProcessTo`, in the sequence:
+#' `gdalProject`, `gdalResample` and `gdalMask`, when `from` and `projectTo` are `SpatRaster` and
+#' `maskTo` is a `SpatVector`, but only if `options(reproducible.gdalwarp = TRUE)` is set.
+#'
+#' This sequence is a slightly different order than the sequence when `gdalwarp = FALSE` or
+#' the arguments do not match the above. This sequence was determined to be faster and
+#' more accurate than any other sequence, including running all three steps in one
+#' `gdalwarp` call (which `gdalwarp` can do). Using one-step `gdalwarp` resulted in
+#' very coarse pixelation when converting from a coarse resolution to fine resolution, which
+#' visually was inappropriate in test cases.
+#'
+#' @export
+#' @example inst/examples/example_postProcessTo.R
+#' @rdname gdalwarpFns
+#' @aliases gdalProject
+#' @param ... Currently can only be `destinationPath`
+#' @inheritParams gdalResample
+#' @inheritParams postProcessTo
+#' @seealso [gdalResample()], and [gdalMask()] and the overarching [postProcessTo()]
 gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("reproducible.verbose"), ...) {
 
   if (!requireNamespace("sf") && !requireNamespace("terra"))
@@ -1487,13 +1523,38 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
 
 
 
-gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("reproducible.verbose")) {
+#' @description
+#' `gdalResample` is a thin wrapper around `sf::gdal_utils('gdalwarp', ...)` with specific options
+#' set, notably, `"-r", "near"`, `-te`, `-te_srs`, `tr`, `-dstnodata = NA`, `-overwrite`.
+#'
+#'
+#' @export
+#' @param fromRas see `from` argument from [postProcessTo()], but can only be a  `SpatRaster`.
+#' @param toRas see `to` argument from [postProcessTo()], but can only be a  `SpatRaster`.
+#' @param filenameDest A filename with an appropriate extension (e.g., `.tif`) for
+#'   `gdal` to write the output to. Since this function is conceived to be part of a
+#'   chain, and not the final step, this function does not use `writeTo`, which is
+#'   reserved for the final step in the chain.
+#' @param ... Currently can only be `destinationPath` or `method`
+#' @inheritParams postProcessTo
+#' @rdname gdalwarpFns
+#' @aliases gdalResample
+gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("reproducible.verbose"), ...) {
 
   if (!requireNamespace("sf") && !requireNamespace("terra"))
     stop("Can't use gdalResample without sf and terra")
 
   messagePrepInputs("     running gdalResample ...", appendLF = FALSE, verbose = verbose)
   st <- Sys.time()
+
+  hasMethod <- which(...names() %in% "method")
+  method <- if (length(hasMethod)) {
+    method <- assessDataTypeOuter(fromRas, ...elt(hasMethod))
+  } else {
+    NULL
+  }
+  if (is.null(method))
+    method <- "near"
 
   fns <- unique(Filenames(fromRas))
   if (length(fns) ==1 && isTRUE(nzchar(fns))) {
@@ -1515,7 +1576,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
     source = fnSource,
     destination = filenameDest,
     options = c(
-      "-r", "near",
+      "-r", method,
       "-te", c(terra::xmin(toRas), terra::ymin(toRas),
                terra::xmin(toRas) + (terra::ncol(toRas) ) * terra::res(toRas)[1],
                terra::ymin(toRas) + (terra::nrow(toRas) ) * terra::res(toRas)[2]),
@@ -1534,6 +1595,17 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
 }
 
 
+#' @description
+#' `gdalMask` is a thin wrapper around `sf::gdal_utils('gdalwarp', ...)` with specific options
+#' set, notably, `-cutline`, `-dstnodata = NA`, and `-overwrite`.
+#'
+#' @export
+#' @param fromRas see `from` argument from [postProcessTo()], but can only be a  `SpatRaster`.
+#' @param maskToVect see `maskTo` argeument from [maskTo()], but can only be a `SpatVector`
+#' @param ... Currently can only be `destinationPath`
+#' @inheritParams postProcessTo
+#' @rdname gdalwarpFns
+#' @aliases gdalMask
 gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("reproducible.verbose"), ...) {
 
   if (!requireNamespace("sf") && !requireNamespace("terra"))
