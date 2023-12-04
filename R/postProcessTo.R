@@ -1624,6 +1624,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
   }
 
   tf3 <- tempfile(fileext = ".shp")
+  on.exit(unlink(tf3), add = TRUE)
   if (isGridded(maskToVect)) { # not used by default because postProcessTo will return couldDoGDAL = FALSE
     if (!is(maskToVect, "SpatRaster")) {
       maskToVect <- terra::rast(maskToVect)
