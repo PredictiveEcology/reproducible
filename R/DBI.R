@@ -216,14 +216,15 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     cacheId <- unique(cacheId)
   }
 
-  isMemoised <- NA
-  if (isTRUE(getOption("reproducible.useMemoise"))) {
-    isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
-    if (isTRUE(isMemoised)) {
-      obj <- get(cacheId, envir = memoiseEnv(cachePath))
-      obj <- unmakeMemoisable(obj)
-    }
+  isMemoised <- isMemoised(cacheId, envir = memoiseEnv(cachePath))
+  # isMemoised <- NA
+  # if (isTRUE(getOption("reproducible.useMemoise"))) {
+  #   isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
+  if (isTRUE(isMemoised)) {
+    obj <- get(cacheId, envir = memoiseEnv(cachePath))
+    obj <- unmakeMemoisable(obj)
   }
+  # }
 
   if (!isTRUE(isMemoised)) {
     f <- CacheStoredFile(cachePath, cacheId, format)
@@ -1005,3 +1006,11 @@ memoiseEnv <- function(cachePath, envir = .GlobalEnv) {
 
 
 otherFunctions <- "otherFunctions"
+
+isMemoised <- function(cacheId, cachePath = getOption("reproducible.cachePath")) {
+  isMemoised <- NA
+  if (isTRUE(getOption("reproducible.useMemoise"))) {
+    isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
+  }
+  isMemoised
+}
