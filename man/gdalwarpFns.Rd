@@ -85,7 +85,7 @@ elev1 <- terra::rast(rf)
 #'
 ras2 <- terra::deepcopy(elev1)
 ras2[ras2 > 200 & ras2 < 300] <- NA_integer_
-terra::values(elevRas) <- rep(1L, terra::ncell(ras2))
+terra::values(elev1) <- rep(1L, terra::ncell(ras2))
 #'
 # a polygon vector
 f <- system.file("ex/lux.shp", package = "terra")
@@ -98,6 +98,7 @@ vAsRasInLongLat <- terra::rast(vOrig, resolution = 0.008333333)
 res100 <- 100
 rInUTM <- terra::rast(vInUTM, resolution = res100)
 # crop, reproject, mask, crop a raster with a vector in a different projection
+#  --> gives message about not enough information
 t1 <- postProcessTo(elev1, to = vInUTM)
 # crop, reproject, mask a raster to a different projection, then mask
 t2a <- postProcessTo(elev1, to = vAsRasInLongLat, maskTo = vInUTM)

@@ -149,10 +149,9 @@
 #' and faster `terra` functions.
 #'
 #' @export
-#' @seealso [maskTo()], [cropTo()], [processTo()], [writeTo()], and [fixErrorsIn()].
+#' @seealso [maskTo()], [cropTo()], [projectTo()], [writeTo()], and [fixErrorsIn()].
 #' Also the functions that
-#' call `sf::gdal_utils(...)` directly: [gdalProject()], [gdalResample()], [gdalMask()],
-#' and [gdalMerge()]
+#' call `sf::gdal_utils(...)` directly: [gdalProject()], [gdalResample()], [gdalMask()]
 #' @rdname postProcessTo
 #' @example inst/examples/example_postProcessTo.R
 #'
