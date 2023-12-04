@@ -570,10 +570,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           from <- filesExtr[whFilesExtrInIP]
           to <- makeAbsolute(makeRelative(from, destinationPath), destinationPathUser)
           if (!isTRUE(all(from %in% to))) {
-            messagePrepInputs("...using copy in getOption('reproducible.inputPaths')...",
+            messagePrepInputs("   ...using file in getOption('reproducible.inputPaths')...",
                               verbose = verbose)
           }
-          outHLC <- hardLinkOrCopy(from, to)
+          outHLC <- hardLinkOrCopy(from, to, verbose = verbose - 1)
           filesExtr[foundInInputPaths] <- to
         }
       }
@@ -607,10 +607,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             }
           }
           if (!isTRUE(all(from %in% to))) {
-            messagePrepInputs("... copying to getOption('reproducible.inputPaths')...",
+            messagePrepInputs("   ... linking/copying to getOption('reproducible.inputPaths')...",
                               verbose = verbose)
           }
-          outHLC <- hardLinkOrCopy(from, to)
+          outHLC <- hardLinkOrCopy(from, to, verbose = verbose)
 
         }
       }
