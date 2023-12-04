@@ -351,6 +351,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       )
       needChecksums <- 0
     }
+  } else {
+    # May need to update the guessed "targetFilePath"
+    targetFilePoss <- makeRelative(targetFilePath, destinationPath)
+    if (isTRUE(!targetFilePoss %in% names(isOK))) {
+      whNewTargetFilePath <- grep(targetFilePoss, names(isOK))
+      if (length(whNewTargetFilePath)) {
+        targetFilePath <- names(isOK)[whNewTargetFilePath]
+      }
+    }
+
+
   }
 
   # Check for local copies in all values of reproducible.inputPaths
@@ -366,7 +377,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Change the destinationPath to the reproducible.inputPaths temporarily, so
   #   download happens there. Later it will be linked to the user destinationPath
-
   if (!is.null(reproducible.inputPaths)) {
     # may already have been changed above
     outCheck <- if (!is.null(targetFilePath)) {
