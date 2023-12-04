@@ -168,7 +168,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   #  So effectively, it is like 6x buffer to try to avoid false positives.
   whichOS <- which(tagKey == "object.size")
   if (length(whichOS)) {
-    objSize <- if (identical(tagValue[whichOS], "NA")) NA else as.numeric(tagValue[whichOS])
+    objSize <- if (identical(unname(tagValue[whichOS]), "NA")) NA else as.numeric(tagValue[whichOS])
     fsBig <- (objSize * 4) < fs
     if (isTRUE(fsBig)) {
       messageCache("Object with cacheId ", cacheId, " appears to have a much larger size ",
@@ -216,7 +216,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     cacheId <- unique(cacheId)
   }
 
-  isMemoised <- isMemoised(cacheId, envir = memoiseEnv(cachePath))
+  isMemoised <- isMemoised(cacheId, cachePath = cachePath)
   # isMemoised <- NA
   # if (isTRUE(getOption("reproducible.useMemoise"))) {
   #   isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))

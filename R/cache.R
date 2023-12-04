@@ -953,7 +953,7 @@ Cache <-
         otsObjSize <- gsub(grep("object\\.size:", userTags, value = TRUE),
           pattern = "object.size:", replacement = ""
         )
-        otsObjSize <- if (identical(otsObjSize, "NA")) NA else as.numeric(otsObjSize)
+        otsObjSize <- if (identical(unname(otsObjSize), "NA")) NA else as.numeric(otsObjSize)
         class(otsObjSize) <- "object_size"
         isBig <- isTRUE(otsObjSize > 1e7)
 
