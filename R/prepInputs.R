@@ -807,7 +807,9 @@ extractFromArchive <- function(archive,
   }
 
   if (is.character(fun)) {
-    messagePrepInputs(paste0("The archive appears to be not a .zip. Trying a system call to ", fun), verbose = verbose)
+    messagePrepInputs(
+      paste0("The archive appears to be not a .zip. Trying a system call to ", fun),
+      verbose = verbose)
     extractSystemCallPath <- .testForArchiveExtract()
     if (grepl(x = extractSystemCallPath, pattern = "7z")) {
       prependPath <- if (isWindows()) {
@@ -818,7 +820,8 @@ extractFromArchive <- function(archive,
 
       # This spits out a message on non-Windows about arguments that are ignored
       suppressMessages({
-        output <- system(paste0(prependPath, " x -aoa -o\"", .tempPath, "\" \"", args[[1]], "\""),
+        output <- system(paste0(prependPath, " x -aoa -o\"", .tempPath, "\" \"",
+                                args[[1]], "\""),
           wait = TRUE,
           ignore.stdout = FALSE,
           ignore.stderr = FALSE,
@@ -841,125 +844,144 @@ extractFromArchive <- function(archive,
     } else {
       c(argList)
     }
-    opt <- options("warn")$warn
-    on.exit(options(warn = opt), add = TRUE)
-    options(warn = 1)
-    tooBig <- file.size(args[[1]]) > 5e9
-    worked <- FALSE
-    if (isUnzip && !tooBig) {
-      fattrs <- unzip(args[[1]], list = TRUE)
-      ids <- which(fattrs[["Name"]] %in% argList$files)
-      tooBig <- any(fattrs[ids, ]["Length"][[1]] >= 4294967295) ## files >= 4GB are truncated; see ?unzip
+
+
+    if (.requireNamespace("archive", stopOnFALSE = FALSE)) {
+      system.time(
+        extractedFiles <- archive::archive_extract(args[[1]], args$exdir, argList$files))
+      listOfFilesExtracted <- extractedFiles <- list.files(
+        path = .tempPath,
+        # list of full paths of all extracted files!
+        recursive = TRUE,
+        include.dirs = TRUE
+      )
+
+      worked <- all(extractedFiles %in% listOfFilesExtracted)
     }
 
-    if (!tooBig) {
-      messagePrepInputs("Extracting with R's unzip ... ")
-      stExtract <- system.time(mess <- capture.output(
-        {
-          extractedFiles <- do.call(fun, c(args, argList))
-        },
-        type = "message"
-      ))
-      worked <- if (isUnzip) {
-        all(normPath(file.path(args$exdir, argList[[1]])) %in% normPath(extractedFiles))
-      } else {
-        isTRUE(extractedFiles == 0)
-      }
-    }
-    if (!isTRUE(worked) || isTRUE(tooBig)) {
-      unz <- Sys.which("unzip")
-      sZip <- Sys.which("7z")
+    if (!worked) {
+      rm(listOfFilesExtracted)
 
-      if (!isTRUE(tooBig)) {
-        messagePrepInputs("File unzipping using R does not appear to have worked.",
-          " Trying a system call of unzip...",
-          verbose = verbose
-        )
-      } else {
-        messPart1 <- "R's unzip utility cannot handle a zip file this size.\n"
-        if (nchar(sZip) > 0) {
-          messagePrepInputs(messPart1, verbose = verbose)
-        } else {
-          messagePrepInputs(
-            paste(
-              messPart1,
-              "Install 7zip and add it to your PATH (see https://www.7-zip.org/)."
-            ),
-            verbose = verbose
-          )
-        }
+      opt <- options("warn")$warn
+      on.exit(options(warn = opt), add = TRUE)
+      options(warn = 1)
+      tooBig <- file.size(args[[1]]) > 5e9
+      worked <- FALSE
+      if (isUnzip && !tooBig) {
+        fattrs <- unzip(args[[1]], list = TRUE)
+        ids <- which(fattrs[["Name"]] %in% argList$files)
+        tooBig <- any(fattrs[ids, ]["Length"][[1]] >= 4294967295) ## files >= 4GB are truncated; see ?unzip
       }
 
-      if (file.exists(args[[1]])) {
-        pathToFile <- normPath(args[[1]])
-      } else {
-        if (file.exists(file.path(args$exdir, args[[1]]))) {
-          pathToFile <- normPath(file.path(args$exdir, args[[1]]))
-        } else {
-          warning(mess)
-          stop(
-            "prepInputs cannot find the file ", basename2(args[[1]]), ".",
-            " The file might have been moved during unzipping or is corrupted."
-          )
-        }
-      }
-      if (nchar(sZip) > 0) {
-        messagePrepInputs("Using '7zip'")
-        op <- setwd(.tempPath)
-        on.exit(
+      if (!tooBig) {
+        messagePrepInputs("Extracting with R's unzip ... ")
+        stExtract <- system.time(mess <- capture.output(
           {
-            setwd(op)
+            extractedFiles <- do.call(fun, c(args, argList))
           },
-          add = TRUE
-        )
-        lstFiles <- system(paste0(sZip, " l ", pathToFile), intern = TRUE, wait = TRUE)
-        startAndEnd <- grep("-----------", lstFiles)
-        if (diff(startAndEnd) > 1) {
-          lstFiles <- lstFiles[(startAndEnd[1] + 1):(startAndEnd[2] - 1)]
+          type = "message"
+        ))
+        worked <- if (isUnzip) {
+          all(normPath(file.path(args$exdir, argList[[1]])) %in% normPath(extractedFiles))
+        } else {
+          isTRUE(extractedFiles == 0)
         }
-        needListFiles <- FALSE
-        if (length(files)) {
-          filesAreInArch <- filenamesFromArchiveLst(lstFiles)
-          if (all(files %in% filesAreInArch)) {
-            if (all(filesAreInArch %in% files))
-              needListFiles <- FALSE
-            else
-              needListFiles <- TRUE
+      }
+      if (!isTRUE(worked) || isTRUE(tooBig)) {
+        unz <- Sys.which("unzip")
+        sZip <- Sys.which("7z")
+
+        if (!isTRUE(tooBig)) {
+          messagePrepInputs("File unzipping using R does not appear to have worked.",
+                            " Trying a system call of unzip...",
+                            verbose = verbose
+          )
+        } else {
+          messPart1 <- "R's unzip utility cannot handle a zip file this size.\n"
+          if (nchar(sZip) > 0) {
+            messagePrepInputs(messPart1, verbose = verbose)
           } else {
-            stop("Some files are not in the archive (", pathToFile, "). Specifically:\n",
-                 paste(files[!files %in% filesAreInArch], collapse = "\n"))
+            messagePrepInputs(
+              paste(
+                messPart1,
+                "Install 7zip and add it to your PATH (see https://www.7-zip.org/)."
+              ),
+              verbose = verbose
+            )
           }
         }
 
-        # filesAreInArch <- unlist(lapply(files, function(x) any(grepl(x, lstFiles))))
-        arg22 <- paste0(" x ", pathToFile)
-        if (needListFiles) {
-          arg22 <- paste(arg22, paste(files, collapse = " "))
+        if (file.exists(args[[1]])) {
+          pathToFile <- normPath(args[[1]])
+        } else {
+          if (file.exists(file.path(args$exdir, args[[1]]))) {
+            pathToFile <- normPath(file.path(args$exdir, args[[1]]))
+          } else {
+            warning(mess)
+            stop(
+              "prepInputs cannot find the file ", basename2(args[[1]]), ".",
+              " The file might have been moved during unzipping or is corrupted."
+            )
+          }
         }
-        system2(sZip,
-          args = arg22,
-          wait = TRUE,
-          stdout = NULL
-        )
-      } else if (nchar(unz) > 0) {
-        messagePrepInputs("Using 'unzip'")
-        system2(unz,
-          args = paste0(pathToFile, " -d ", .tempPath),
-          wait = TRUE,
-          stdout = NULL
-        )
-      } else {
-        if (nchar(unz) == 0) {
+        if (nchar(sZip) > 0) {
+          messagePrepInputs("Using '7zip'")
+          op <- setwd(.tempPath)
+          on.exit(
+            {
+              setwd(op)
+            },
+            add = TRUE
+          )
+          lstFiles <- system(paste0(sZip, " l ", pathToFile), intern = TRUE, wait = TRUE)
+          startAndEnd <- grep("-----------", lstFiles)
+          if (diff(startAndEnd) > 1) {
+            lstFiles <- lstFiles[(startAndEnd[1] + 1):(startAndEnd[2] - 1)]
+          }
+          needListFiles <- FALSE
+          if (length(files)) {
+            filesAreInArch <- filenamesFromArchiveLst(lstFiles)
+            if (all(files %in% filesAreInArch)) {
+              if (all(filesAreInArch %in% files))
+                needListFiles <- FALSE
+              else
+                needListFiles <- TRUE
+            } else {
+              stop("Some files are not in the archive (", pathToFile, "). Specifically:\n",
+                   paste(files[!files %in% filesAreInArch], collapse = "\n"))
+            }
+          }
+
+          # filesAreInArch <- unlist(lapply(files, function(x) any(grepl(x, lstFiles))))
+          arg22 <- paste0(" x ", pathToFile)
+          if (needListFiles) {
+            arg22 <- paste(arg22, paste(files, collapse = " "))
+          }
+          system2(sZip,
+                  args = arg22,
+                  wait = TRUE,
+                  stdout = NULL
+          )
+        } else if (nchar(unz) > 0) {
+          messagePrepInputs("Using 'unzip'")
+          system2(unz,
+                  args = paste0(pathToFile, " -d ", .tempPath),
+                  wait = TRUE,
+                  stdout = NULL
+          )
+        } else {
+          if (nchar(unz) == 0) {
+            stop(
+              "unzip command cannot be found.",
+              " Please try reinstalling Rtools if on Windows, and/or add unzip to system path",
+              " (e.g., see 'https://cran.r-project.org/bin/windows/Rtools/'.)"
+            )
+          }
           stop(
-            "unzip command cannot be found.",
-            " Please try reinstalling Rtools if on Windows, and/or add unzip to system path",
-            " (e.g., see 'https://cran.r-project.org/bin/windows/Rtools/'.)"
+            "There was no way to unzip all files; try manually. The file is located at: \n",
+            pathToFile
           )
         }
-        stop(
-          "There was no way to unzip all files; try manually. The file is located at: \n",
-          pathToFile
-        )
       }
     }
     if (!isUnzip) {
@@ -967,19 +989,20 @@ extractFromArchive <- function(archive,
     }
   }
 
-  extractedFiles <- list.files(
+  if (!exists("listOfFilesExtracted", inherits = FALSE))
+  listOfFilesExtracted <- list.files(
     path = .tempPath,
     # list of full paths of all extracted files!
     recursive = TRUE,
     include.dirs = TRUE
   )
 
-  mess <- paste0("       ... Done extracting ", length(extractedFiles), " files")
+  mess <- paste0("       ... Done extracting ", length(listOfFilesExtracted), " files")
   if (exists("stExtract", inherits = FALSE))
     mess <- paste0(mess, "; took ", format(as.difftime(stExtract[3], units = "secs"), units = "auto"))
   messagePrepInputs(mess)
 
-  from <- makeAbsolute(extractedFiles, .tempPath)
+  from <- makeAbsolute(listOfFilesExtracted, .tempPath)
   on.exit(
     {
       if (any(file.exists(from))) {
@@ -990,25 +1013,25 @@ extractFromArchive <- function(archive,
   )
 
   args$exdir <- origExdir
-  to <- file.path(args$exdir, extractedFiles)
+  to <- file.path(args$exdir, listOfFilesExtracted)
 
   suppressWarnings({
     out <- hardLinkOrCopy(from, to, verbose = 0)
   })
 
   if (!isTRUE(all(file.exists(to)))) {
-    stop(paste("Could not move extractedfiles from", .tempPath, "to", args$exdir))
+    stop(paste("Could not move listOfFilesExtracted from", .tempPath, "to", args$exdir))
   }
-  extractedFiles <- to
+  listOfFilesExtracted <- to
   # unlink(.tempPath, recursive = TRUE) # don't delete it if it was not created here --> on.exit does this
 
-  if (length(extractedFiles) == 0) {
+  if (length(listOfFilesExtracted) == 0) {
     stop(
       "preProcess could not extract the files from the archive ", args[[1]], ".",
       "Please try to extract it manually to the destinationPath"
     )
   }
-  return(extractedFiles)
+  return(listOfFilesExtracted)
 }
 
 #' @keywords internal
