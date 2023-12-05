@@ -1643,7 +1643,7 @@ test_that("options inputPaths", {
         level = if (useGADM) 0 else NULL,
         path = if (useGADM) tmpdir else NULL,
         destinationPath = tmpCache,
-        getDataFn = dlFun1
+        getDataFn = dlFun1, verbose = 2
       )
     })
   })
@@ -1664,11 +1664,13 @@ test_that("options inputPaths", {
         country = if (useGADM) "LUX" else NULL,
         level = if (useGADM) 0 else NULL,
         path = if (useGADM) tmpdir else NULL,
-        destinationPath = tmpdir3
+        destinationPath = tmpdir3, verbose = 2
       )
     })
   })
-  expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ":\n", tmpdir3), mess1)) == 1)
+  expect_true(sum(grepl(paste0(hardlinkOrSymlinkMessagePrefixForGrep), mess1)) == 1)
+  expect_true(sum(grepl(paste0(tmpdir3), mess1)) == 1)
+
 
   # THIS NEXT ONE DOESN"T PASS ON GA on WINDOWS, skip it
   #  should copy from 2nd directory (tmpCache) because it is removed in the lower
@@ -1688,12 +1690,13 @@ test_that("options inputPaths", {
           country = if (useGADM) "LUX" else NULL,
           level = if (useGADM) 0 else NULL,
           path = if (useGADM) tmpdir else NULL,
-          destinationPath = tmpdir1
+          destinationPath = tmpdir1, verbose = 3
         )
       })
     })
-    expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ":\n", file.path(tmpdir1, theFile)), mess1)) == 1)
-    expect_true(sum(grepl(paste0("", whPointsToMessForGrep, "\n", file.path(tmpdir1, theFile)), mess1)) == 1)
+    expect_true(sum(grepl(paste0(hardlinkOrSymlinkMessagePrefixForGrep), mess1)) == 1)
+    expect_true(sum(grepl(paste0("", whPointsToMessForGrep), mess1)) == 1)
+    expect_true(sum(grepl(paste0(file.path(tmpdir1, theFile)), mess1)) == 2)
     expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 3)
   }
   ## Try download to inputPath, intercepting the destination, creating a link
@@ -1723,7 +1726,7 @@ test_that("options inputPaths", {
   })
 
   # Must remove the link that happens during downloading to a .tempPath
-  test10 <- grep(hardlinkMessagePrefixForGrep, mess1, value = TRUE)
+  test10 <- grep(hardlinkOrSymlinkMessagePrefixForGrep, mess1, value = TRUE)
   test10 <- grep(tmpdir2, test10, invert = TRUE, value = TRUE)
   expect_true(length(test10) == (1 - useGADM)) #
 
@@ -1742,12 +1745,13 @@ test_that("options inputPaths", {
         country = if (useGADM) "LUX" else NULL,
         level = if (useGADM) 0 else NULL,
         path = if (useGADM) tmpdir else NULL,
-        destinationPath = tmpdir2
+        destinationPath = tmpdir2, verbose = 3
       )
     })
   })
-  expect_true(sum(grepl(hardlinkMessagePrefixForGrep, mess1)) == 1) # used a linked version
-  expect_true(sum(grepl(paste0("Hardlinked.*", basename(tmpdir2)), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
+  expect_true(sum(grepl(hardlinkOrSymlinkMessagePrefixForGrep, mess1)) == 1) # used a linked version
+  expect_true(sum(grepl(paste0("Hardlinked.*"), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
+  expect_true(sum(grepl(paste0(basename(tmpdir2)), mess1)) == 2) # it is now in tmpdir2, i.e., the destinationPath
 
   # Have file in destinationPath, not in inputPath
   unlink(file.path(tmpdir, theFile))
@@ -1763,11 +1767,11 @@ test_that("options inputPaths", {
         country = if (useGADM) "LUX" else NULL,
         level = if (useGADM) 0 else NULL,
         path = if (useGADM) tmpdir else NULL,
-        destinationPath = tmpdir2
+        destinationPath = tmpdir2, verbose = 2
       )
     })
   })
-  # expect_true(sum(grepl(hardlinkMessagePrefixForGrep, mess1)) == 1) # used a linked version
+  # expect_true(sum(grepl(hardlinkOrSymlinkMessagePrefixForGrep, mess1)) == 1) # used a linked version
   # expect_true(sum(grepl(paste0("Hardlinked.*",basename(tmpdir2)), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
 
   ## Try with inputPaths == destinationPath
@@ -1787,14 +1791,14 @@ test_that("options inputPaths", {
           country = if (useGADM) "LUX" else NULL,
           level = if (useGADM) 0 else NULL,
           path = if (useGADM) tmpdir else NULL,
-          destinationPath = tmpdir
+          destinationPath = tmpdir, verbose = 2
         )
       })
     })
   })
   objType <- if (useGADM) vectorType() else rasterType()
   expect_true(is(test1, objType) || is(test1, "SpatVector"))
-  test11 <- grep(hardlinkMessagePrefixForGrep, mess1, value = TRUE)
+  test11 <- grep(hardlinkOrSymlinkMessagePrefixForGrep, mess1, value = TRUE)
   test11 <- grep(tmpdir, test11, invert = TRUE)
   expect_true(length(test11) == 0) # no link made b/c identical dir
   expect_true(sum(grepl(paste0("Hardlinked.*", basename(tmpdir2)), mess1)) == 0) # no link made b/c identical dir
