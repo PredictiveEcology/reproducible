@@ -1222,13 +1222,13 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       attr(result, "warning") <- NULL
 
       if (isTRUE(all(result))) {
-        messagePrepInputs(hardlinkMessagePrefix, ":", verbose = verbose)
+        messagePrepInputs("Hardlinked ", hardlinkOrSymlinkMessagePrefix, ":", verbose = verbose)
         messagePrepInputs("\n", toCollapsed, "\n",
           whPointsToMess, "\n",
           fromCollapsed,
           verbose = verbose - 1
         )
-        messagePrepInputs("\n... no copy/copies made.", verbose = verbose)
+        messagePrepInputs(messageNoCopyMade, verbose = verbose)
       }
 
       if (any(grepl("file already exists", warns))) {
@@ -1241,10 +1241,13 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
         if (!isWindows()) {
           result <- suppressWarnings(file.symlink(from[!result], to[!result]))
           if (isTRUE(all(result))) {
-            messagePrepInputs("Symlinked version of file created at: ", toCollapsed, ", ", whPointsToMess, " ",
-              fromCollapsed, "; no copy was made.",
-              verbose = verbose
+            messagePrepInputs("Symlinked", hardlinkOrSymlinkMessagePrefix, verbose = verbose)
+            messagePrepInputs("\n", toCollapsed, "\n",
+                              whPointsToMess, "\n",
+                              fromCollapsed,
+                              verbose = verbose - 1
             )
+            messagePrepInputs(messageNoCopyMade, verbose = verbose)
           }
         }
       }
@@ -1601,8 +1604,10 @@ escapeRegexChars <- function(str, repl = c("(", ")")) {
   str
 }
 
-hardlinkMessagePrefix <- "Hardlinked version of file(s) created at"
-hardlinkMessagePrefixForGrep <- escapeRegexChars(hardlinkMessagePrefix)
+hardlinkOrSymlinkMessagePrefix <- "version of file(s) created"
+hardlinkOrSymlinkMessagePrefixForGrep <- escapeRegexChars(hardlinkOrSymlinkMessagePrefix)
+
+messageNoCopyMade <- "... no copy/copies made."
 
 whPointsToMess <- "which point(s) to"
 whPointsToMessForGrep <- escapeRegexChars(whPointsToMess)
