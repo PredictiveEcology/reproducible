@@ -2,7 +2,10 @@
 % Please edit documentation in R/helpers.R
 \name{messageDF}
 \alias{messageDF}
+\alias{messagePrepInputs}
+\alias{messageCache}
 \alias{messageQuestion}
+\alias{messageFunction}
 \alias{messageColoured}
 \title{Use \code{message} with a consistent use of \code{verbose}}
 \usage{
@@ -16,7 +19,29 @@ messageDF(
   appendLF = TRUE
 )
 
+messagePrepInputs(
+  ...,
+  appendLF = TRUE,
+  verbose = getOption("reproducible.verbose"),
+  verboseLevel = 1
+)
+
+messageCache(
+  ...,
+  colour = getOption("reproducible.messageColourCache"),
+  verbose = getOption("reproducible.verbose"),
+  verboseLevel = 1,
+  appendLF = TRUE
+)
+
 messageQuestion(..., verboseLevel = 0, appendLF = TRUE)
+
+messageFunction(
+  ...,
+  appendLF = TRUE,
+  verbose = getOption("reproducible.verbose"),
+  verboseLevel = 1
+)
 
 messageColoured(
   ...,
@@ -51,9 +76,7 @@ will show a message.}
 \item{appendLF}{logical: should messages given as a character string
     have a newline appended?}
 
-\item{...}{zero or more objects which can be coerced to character
-    (and which are pasted together with no separator) or (for
-    \code{message} only) a single condition object.}
+\item{...}{Any character vector, passed to \code{paste0(...)}}
 }
 \value{
 Used for side effects. This will produce a message of a structured \code{data.frame}.

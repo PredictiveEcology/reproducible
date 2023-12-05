@@ -965,7 +965,7 @@ Cache <-
           ),
           doProgress = isBig,
           message = c(
-            "Saving ", "large "[isBig], "object (fn: ", fnDetails$functionName,
+            "Saving ", "large "[isBig], "object (fn: ", messageFunction(fnDetails$functionName),
             ", cacheId: ", outputHash, ") to Cache", ": "[isBig],
             format(otsObjSize, units = "auto")[isBig]
           ),
@@ -2241,7 +2241,7 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
     class(objSize) <- "object_size"
     bigFile <- isTRUE(objSize > 1e6)
     fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
-    messageCache("  ...(Object to retrieve (fn: ", fnDetails$functionName, ", ",
+    messageCache("  ...(Object to retrieve (fn: ", messageFunction(fnDetails$functionName), ", ",
                  basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]], format = fileFormat)),
                  ")",
                  if (bigFile) " is large: ",

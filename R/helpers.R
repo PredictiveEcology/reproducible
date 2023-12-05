@@ -480,6 +480,7 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL,
   }
 }
 
+#' @rdname messageColoured
 messagePrepInputs <- function(..., appendLF = TRUE,
                               verbose = getOption("reproducible.verbose"),
                               verboseLevel = 1) {
@@ -489,6 +490,7 @@ messagePrepInputs <- function(..., appendLF = TRUE,
   )
 }
 
+#' @rdname messageColoured
 messageCache <- function(..., colour = getOption("reproducible.messageColourCache"),
                          verbose = getOption("reproducible.verbose"), verboseLevel = 1,
                          appendLF = TRUE) {
@@ -507,9 +509,18 @@ messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
   )
 }
 
+#' @rdname messageColoured
+messageFunction <- function(..., appendLF = TRUE, verbose = getOption("reproducible.verbose"),
+                            verboseLevel = 1) {
+  fn <- getFromNamespace(getOption("reproducible.messageColourFunction"), asNamespace("crayon"))
+  fn(...)
+}
+
+#' @export
 #' @importFrom utils getFromNamespace
 #' @param colour Any colour that can be understood by `crayon`
 #' @rdname messageColoured
+#' @param ... Any character vector, passed to `paste0(...)`
 messageColoured <- function(..., colour = NULL,
                             verbose = getOption("reproducible.verbose", 1),
                             verboseLevel = 1, appendLF = TRUE) {

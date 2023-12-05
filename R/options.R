@@ -223,6 +223,7 @@ reproducibleOptions <- function() {
     reproducible.messageColourPrepInputs = "cyan",
     reproducible.messageColourCache = "blue",
     reproducible.messageColourQuestion = "green",
+    reproducible.messageColourFunction = "red",
     reproducible.nThreads = 1,
     reproducible.objSize = TRUE,
     reproducible.overwrite = FALSE,
