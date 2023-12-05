@@ -607,9 +607,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             }
           }
           if (!isTRUE(all(from %in% to))) {
-            messagePrepInputs("   ... linking/copying to getOption('reproducible.inputPaths')...",
+            messagePrepInputs("   ... linking to getOption('reproducible.inputPaths')...",
                               verbose = verbose)
           }
+          browser()
+          fe <- file.exists(to)
+          if (any(fe))
+            unlink(to[fe])
           outHLC <- hardLinkOrCopy(from, to, verbose = verbose)
 
         }
