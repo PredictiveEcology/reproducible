@@ -564,6 +564,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       foundInInputPaths <- grepl(normPath(destinationPath), normPath(filesExtr))
       # Make sure they are all in options("reproducible.inputPaths"), accounting for
       #   the fact that some may have been in sub-folders -- i.e., don't deal with these
+      to <- targetFilePath
       if (isTRUE(any(foundInInputPaths))) {
         whFilesExtrInIP <- which(file.exists(filesExtr[foundInInputPaths]))
         if (length(whFilesExtrInIP)) {
@@ -1023,7 +1024,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   successfulDir <- character()
   if (!is.null(neededFiles)) {
     filesInHand <- checkSums[compareNA(checkSums$result, "OK"), ]$expectedFile
-    if (!all(neededFiles %in% filesInHand)) {
+    neededFilesRel <- makeRelative(neededFiles, destinationPath)
+    if (!all(neededFilesRel %in% filesInHand)) {
       for (op in otherPaths) {
         recursively <- if (!is.null(getOption("reproducible.inputPathsRecursive"))) {
           getOption("reproducible.inputPathsRecursive")
@@ -1031,7 +1033,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           FALSE
         }
         opFiles <- dir(op, recursive = recursively, full.names = TRUE)
-        neededFilesRel <- makeRelative(neededFiles, destinationPath)
         if (any(neededFilesRel %in% basename2(opFiles))) {
           isNeeded <- basename2(opFiles) %in% neededFilesRel
           dirNameOPFiles <- dirname(opFiles[isNeeded])
@@ -1178,20 +1179,12 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
                        verbose = getOption("reproducible.verbose", 1)) {
   existsLogical <- file.exists(from)
   existsTo <- file.exists(to)
-  if (any(existsTo)) {
-    unlink(to[existsTo])
-    # toDig <- unlist(.robustDigest(asPath(to[existsTo])))
-    # fromDig <- unname(unlist(.robustDigest(asPath(from[existsTo]))))
-    # existsToSame <- toDig == fromDig
-    # if (any(existsToSame)) {
-    #   to <- c(to[existsTo][!existsToSame], to[!existsTo])
-    #   from <- c(from[existsTo][!existsToSame], from[!existsTo])
-    # }
-  }
+
   toCollapsed <- paste(to, collapse = "\n")
   fromCollapsed <- paste(from, collapse = "\n")
   result <- TRUE
-  if (!all(to %in% from)) {
+
+  if (!all(to %in% from)) { # if the filename is the same, you can't copy from self to self
     if (any(existsLogical)) {
       toDirs1 <- unique(dirname(to))
       dirDoesntExist1 <- !dir.exists(toDirs1)
@@ -1214,6 +1207,9 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       isDir <- dir.exists(to)
       dups <- duplicated(from)
 
+      if (any(existsTo)) {
+        unlink(to[existsTo])
+      }
       # Try hard link first -- the only type that R deeply recognizes
       result <- captureWarningsToAttr(
         file.link(from[!dups & !isDir], to[!dups & !isDir])
