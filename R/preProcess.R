@@ -610,10 +610,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             messagePrepInputs("   ... linking to getOption('reproducible.inputPaths')...",
                               verbose = verbose)
           }
-          browser()
-          fe <- file.exists(to)
-          if (any(fe))
-            unlink(to[fe])
           outHLC <- hardLinkOrCopy(from, to, verbose = verbose)
 
         }
@@ -1183,13 +1179,14 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
   existsLogical <- file.exists(from)
   existsTo <- file.exists(to)
   if (any(existsTo)) {
-    toDig <- unlist(.robustDigest(asPath(to[existsTo])))
-    fromDig <- unname(unlist(.robustDigest(asPath(from[existsTo]))))
-    existsToSame <- toDig == fromDig
-    if (any(existsToSame)) {
-      to <- c(to[existsTo][!existsToSame], to[!existsTo])
-      from <- c(from[existsTo][!existsToSame], from[!existsTo])
-    }
+    unlink(to[existsTo])
+    # toDig <- unlist(.robustDigest(asPath(to[existsTo])))
+    # fromDig <- unname(unlist(.robustDigest(asPath(from[existsTo]))))
+    # existsToSame <- toDig == fromDig
+    # if (any(existsToSame)) {
+    #   to <- c(to[existsTo][!existsToSame], to[!existsTo])
+    #   from <- c(from[existsTo][!existsToSame], from[!existsTo])
+    # }
   }
   toCollapsed <- paste(to, collapse = "\n")
   fromCollapsed <- paste(from, collapse = "\n")
@@ -1225,11 +1222,13 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       attr(result, "warning") <- NULL
 
       if (isTRUE(all(result))) {
-        messagePrepInputs(hardlinkMessagePrefix, ":\n", toCollapsed, "\n",
+        messagePrepInputs(hardlinkMessagePrefix, ":", verbose = verbose)
+        messagePrepInputs("\n", toCollapsed, "\n",
           whPointsToMess, "\n",
-          fromCollapsed, "\n... no copy/copies made.",
-          verbose = verbose
+          fromCollapsed,
+          verbose = verbose - 1
         )
+        messagePrepInputs("\n... no copy/copies made.", verbose = verbose)
       }
 
       if (any(grepl("file already exists", warns))) {
