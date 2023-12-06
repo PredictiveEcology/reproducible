@@ -1225,6 +1225,14 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
           verbose = verbose - 1
         )
         messagePrepInputs(messageNoCopyMade, verbose = verbose)
+      } else {
+        if (grepl("cannot link.+different disk drive", warns) && !isTRUE(symlink)) {
+          messageColoured("An attempt was made to use hard links to make a quick pointer ",
+                          "from one (set of) file(s) to another; \nthis is not possible because ",
+                          "the files would be on different drives. Consider changing the paths\n",
+                          "so that they will be on the same physical drive", colour = "red")
+          message(warns)
+        }
       }
 
       if (any(grepl("file already exists", warns))) {
