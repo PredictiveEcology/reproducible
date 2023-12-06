@@ -585,11 +585,11 @@ unmakeMemoisable.default <- function(x) {
                           conn = getOption("reproducible.conn", NULL),
                           verbose = getOption("reproducible.verbose"), ...) {
   rasters <- is(obj, "Raster")
+  atts <- attributes(obj)
 
   if (any(rasters)) {
     .requireNamespace("raster", stopOnFALSE = TRUE)
     objOrig <- obj
-    atts <- attributes(obj)
     obj <- .prepareFileBackedRaster(obj,
                                     repoDir = cachePath,
                                     overwrite = FALSE, drv = drv, conn = conn
@@ -640,7 +640,7 @@ unmakeMemoisable.default <- function(x) {
       stop("Please install terra package")
     }
     messageCache("...wrapping terra object for saving...", verboseLevel = 2, verbose = verbose)
-    attrs <- attr(obj, ".Cache")
+    # attrs <- attr(obj, ".Cache")
 
     # next is for terra objects --> terra::wrap is ridiculously slow for SpatVector objects; use
     #   custom version in reproducible where here
@@ -666,10 +666,14 @@ unmakeMemoisable.default <- function(x) {
       obj <- terra::wrap(obj)
     } # let method dispatch work
 
-    attr(obj, ".Cache") <- attrs
+    # attr(obj, ".Cache") <- attrs
 
     messageCache("\b Done!", verboseLevel = 2, verbose = verbose)
   }
+
+  # put attributes back on the potentially packed object
+  obj <- attributesReassign(atts, obj)
+
   obj
 }
 
@@ -678,6 +682,7 @@ unmakeMemoisable.default <- function(x) {
 .unwrap.default <- function(obj, cachePath, cacheId,
                             drv = getDrv(getOption("reproducible.drv", NULL)),
                             conn = getOption("reproducible.conn", NULL), ...) {
+  atts <- attributes(obj)
   if (any(inherits(obj, c("PackedSpatVector", "PackedSpatRaster", "PackedSpatExtent")))) {
     if (!requireNamespace("terra")) stop("Please install.packages('terra')")
     if (any(inherits(obj, "PackedSpatVector"))) {
@@ -692,16 +697,20 @@ unmakeMemoisable.default <- function(x) {
   } else if (is(obj, "Path")) {
     obj <- unwrapSpatRaster(obj, cachePath, ...)
   }
+  # put attributes back on the potentially packed object
+  obj <- attributesReassign(atts, obj)
 
   obj
 }
 
 wrapSpatRaster <- function(obj, cachePath, ...) {
-  cls <- class(obj)
+
   fns <- Filenames(obj, allowMultiple = FALSE)
+
+  cls <- class(obj)
   fnsMulti <- Filenames(obj, allowMultiple = TRUE)
   obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
-  nlyrsInFile <- as.integer(terra::nlyr(terra::rast(fns)))
+    nlyrsInFile <- as.integer(terra::nlyr(terra::rast(fns)))
   layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
 
   # A file-backed rast can 1) not be using all the layers in the file and
@@ -848,11 +857,15 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
                                 drv = getDrv(getOption("reproducible.drv", NULL)),
                                 conn = getOption("reproducible.conn", NULL), ...) {
   # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
+  atts <- attributes(obj)
   objList <- as.list(obj) # don't overwrite everything, just the ones in the list part
 
   outList <- .unwrap(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn, ...)
   output2 <- list2envAttempts(outList, obj) # don't return it if the list2env retured nothing (a normal environment situation; not simList)
   if (!is.null(output2)) obj <- output2
+
+  # put attributes back on the potentially packed object
+  obj <- attributesReassign(atts, obj)
 
   obj
 }
@@ -862,6 +875,7 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
 .unwrap.list <- function(obj, cachePath, cacheId,
                          drv = getDrv(getOption("reproducible.drv", NULL)),
                          conn = getOption("reproducible.conn", NULL), ...) {
+  atts <- attributes(obj)
   anyNames <- names(obj)
   isSpatVector <- if (is.null(anyNames)) FALSE else all(names(obj) %in% spatVectorNamesForCache)
   if (isTRUE(isSpatVector)) {
@@ -876,6 +890,10 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
       })
     }
   }
+  # put attributes back on the potentially packed object
+  obj <- attributesReassign(atts, obj)
+
+  obj
 }
 
 unwrapRaster <- function(obj, cachePath, cacheId) {
@@ -1052,4 +1070,15 @@ remapFilenames <- function(obj, tags, cachePath, ...) {
 }
 
 grepStartsTwoDots <- "^\\.\\."
+
+
+attributesReassign <- function(atts, obj) {
+  if (length(atts))
+    for (att in names(atts)) {
+      if (is.null(attr(obj, att))) {
+        attr(obj, att) <- atts[[att]]
+      }
+    }
+  obj
+}
 
