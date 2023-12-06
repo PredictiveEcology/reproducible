@@ -1631,8 +1631,13 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
     }
     maskToVect <- terra::as.polygons(maskToVect, values=FALSE)
   }
-  shp <- terra::project(maskToVect, terra::crs(fromRas))
-  terra::writeVector(shp, file = tf3)
+  if (isSF(maskToVect)) {
+    shp <- sf::st_transform(maskToVect, terra::crs(fromRas))
+    sf::st_write(shp, dsn = tf3)
+  } else {
+    shp <- terra::project(maskToVect, terra::crs(fromRas))
+    terra::writeVector(shp, file = tf3)
+  }
 
   dPath <- which(...names() %in% "destinationPath")
   destinationPath <- if (length(dPath)) {
