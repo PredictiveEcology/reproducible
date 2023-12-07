@@ -979,13 +979,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     if (rerunChecksums) {
       neededFiles <- checkRelative(neededFiles, destinationPath, allFiles)
       if (is.null(targetFile) || isTRUE(all(is.na(targetFile)))) {
-        messagePrepInputs("No targetFile supplied. ",
-                          "Extracting all files from archive",
-                          verbose = verbose
-        )
+        messagePrepInputs("No targetFile supplied. ", messageEvaluatingAllFiles,
+                          verbose = verbose)
         neededFiles <- allFiles
       } else if ("all" %in% lookForSimilar) {
-        messagePrepInputs("Extracting all files from archive", verbose = verbose)
+        messagePrepInputs(messageEvaluatingAllFiles, verbose = verbose)
         neededFiles <- allFiles
       } else {
         allOK <- .similarFilesInCheckSums(targetFile, checkSums, alsoExtract)
@@ -1829,3 +1827,5 @@ linkOrCopyUpdateOnly <- function(from, to, verbose) {
     )
   }
 }
+
+messageEvaluatingAllFiles <- "Evaluating all files in archive"
