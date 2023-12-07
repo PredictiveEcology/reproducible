@@ -625,6 +625,7 @@ suppressWarningsSpecific <- function(code, falseWarnings, verbose = getOption("r
 
 #' @importFrom utils capture.output
 captureWarningsToAttr <- function(code, verbose = getOption("reproducible.verbose", 1)) {
+  warns <- character()
   warn <- capture.output(
     type = "message",
     suppressWarnings(withCallingHandlers(
@@ -632,16 +633,16 @@ captureWarningsToAttr <- function(code, verbose = getOption("reproducible.verbos
         yy <- eval(code)
       },
       warning = function(xx) {
-        messagePrepInputs(paste0("warn::", xx$messagePrepInputs), verbose = verbose)
+        warns <<- paste0("warn::", xx$message)
       }
     ))
   )
-  trueWarnings <- grepl("warn::.*", warn)
+  trueWarnings <- grepl("warn::.*", warns)
   if (length(warn[!trueWarnings])) {
-    messagePrepInputs(paste(warn[!trueWarnings], collapse = "\n  "))
+    lapply(warns[!trueWarnings], warning)
   }
-  warn <- gsub("warn::", "", warn[trueWarnings])
-  attr(yy, "warning") <- paste(warn, collapse = "\n")
+  warns <- gsub("warn::", "", warns[trueWarnings])
+  attr(yy, "warning") <- paste(warns, collapse = "\n")
   return(yy)
 }
 
