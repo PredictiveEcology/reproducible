@@ -249,16 +249,17 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
           preDigest = preDigest,
           verbose = verbose
         )
-        obj <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
+
+        obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
         fs <- saveToCache(
-          obj = obj, cachePath = cachePath, drv = drv, conn = conn,
+          obj = obj2, cachePath = cachePath, drv = drv, conn = conn,
           cacheId = cacheId
         )
         rmFromCache(
           cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
           format = fileExt(sameCacheID)
         )
-        return(fs)
+        return(obj)
       }
     }
     # Need exclusive lock
