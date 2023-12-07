@@ -563,7 +563,7 @@ maskTo <- function(from, maskTo, # touches = FALSE,
         }
 
         from <- fromInt
-        messagePrepInputs("     ...done in ",
+        messagePrepInputs(messagePrefixDoneIn,
           format(difftime(Sys.time(), st), units = "secs", digits = 3),
           verbose = verbose
         )
@@ -724,7 +724,7 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
           from
         }
       }
-      messagePrepInputs("done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
+      messagePrepInputs(messagePrefixDoneIn, format(difftime(Sys.time(), st), units = "secs", digits = 3),
         verbose = verbose
       )
     }
@@ -925,7 +925,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
         attempt <- attempt + 1
       }
       from <- fromInt
-      messagePrepInputs("     ...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
+      messagePrepInputs(messagePrefixDoneIn, format(difftime(Sys.time(), st), units = "secs", digits = 3),
         verbose = verbose
       )
     }
@@ -1036,7 +1036,7 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
           }
         }
         if (isTRUE(writeDone)) {
-          messagePrepInputs("     ...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
+          messagePrepInputs(messagePrefixDoneIn, format(difftime(Sys.time(), st), units = "secs", digits = 3),
             verbose = verbose
           )
         } else {
@@ -1187,6 +1187,7 @@ cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")
 
       attempt <- attempt + 1
     }
+
     if (extntNA(from2)) {
       messagePrepInputs("    resulting extent is NA, probably because objects don't overlap",
         verbose = verbose
@@ -1514,7 +1515,7 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
     ))
 
   out <- terra::rast(filenameDest)
-  messagePrepInputs("     ...done in ",
+  messagePrepInputs(messagePrefixDoneIn,
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)
 
@@ -1588,7 +1589,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
     ))
 
   out <- terra::rast(filenameDest)
-  messagePrepInputs("     ...done in ",
+  messagePrepInputs(messagePrefixDoneIn,
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)
   out
@@ -1663,7 +1664,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
     ))
 
   out <- terra::rast(writeTo)
-  messagePrepInputs("     ...done in ",
+  messagePrepInputs(messagePrefixDoneIn,
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)
   out
