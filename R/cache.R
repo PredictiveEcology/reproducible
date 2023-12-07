@@ -1810,7 +1810,8 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     similar2[(hash %in% "other"), deeperThan3 := TRUE]
     similar2[(hash %in% "other"), differs := NA]
     differed <- FALSE
-    fnTxt <- paste0(if (!is.null(functionName)) paste0("of '", functionName, "' ") else "call ")
+    fnTxt <- paste0(if (!is.null(functionName))
+      paste0("of '", messageFunction(functionName), "' ") else "call ")
     if (isDevMode) {
       messageCache("    ------ devMode -------", verbose = verbose)
       messageCache("    This call to cache will replace", verbose = verbose)
