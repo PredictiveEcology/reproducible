@@ -1676,20 +1676,22 @@ messagePrefixDoneIn <- "     ...done in "
 #' @param newObj The new, derived sf object
 #' @param origObj The previous, object whose geometries should be used.
 keepOrigGeom <- function(newObj, origObj) {
-  from2Geom <- unique(st_geometry_type(newObj))
-  fromGeom <- unique(st_geometry_type(origObj))
-  possTypes <- c("POINT", "LINESTRING", "POLYGON")
-  hasTypes <- try(vapply(possTypes, function(pt) grepl(pt, fromGeom), FUN.VALUE = logical(1)))
-  if (is(hasTypes, "try-error")) browser()
-  fromGeomSimple <- names(hasTypes)[hasTypes]
+  from2Geom <- sort(unique(st_geometry_type(newObj)))
+  fromGeom <- sort(unique(st_geometry_type(origObj)))
+  if (!identical(from2Geom, fromGeom)) {
+    possTypes <- c("POINT", "LINESTRING", "POLYGON")
+    hasTypes <- vapply(possTypes, function(pt) isTRUE(any(grepl(pt, fromGeom))), FUN.VALUE = logical(1))
+    # if (is(hasTypes, "try-error")) browser()
+    fromGeomSimple <- names(hasTypes)[hasTypes]
 
-  # hasTypes2 <- sapply(possTypes, function(pt) any(grepl(pt, from2Geom)))#, FUN.VALUE = logical(1))
-  # from2GeomSimple <- names(hasTypes2)[hasTypes2]
+    # hasTypes2 <- sapply(possTypes, function(pt) any(grepl(pt, from2Geom)))#, FUN.VALUE = logical(1))
+    # from2GeomSimple <- names(hasTypes2)[hasTypes2]
 
-  # isSameTypeAsFromGeom <- apply(do.call(rbind, lapply(fromGeom, function(fg) grepl(fg, from2Geom))), 2, all)
-  if (!all(from2Geom %in% fromGeom)) {
-    # hasMulti <- grepl("MULTI", from2Geom) & isSameTypeAsFromGeom
-    newObj <- sf::st_collection_extract(newObj, type = as.character(fromGeomSimple))
+    # isSameTypeAsFromGeom <- apply(do.call(rbind, lapply(fromGeom, function(fg) grepl(fg, from2Geom))), 2, all)
+    if (!all(from2Geom %in% fromGeom)) {
+      # hasMulti <- grepl("MULTI", from2Geom) & isSameTypeAsFromGeom
+      newObj <- sf::st_collection_extract(newObj, type = as.character(fromGeomSimple))
+    }
   }
   newObj
 }
