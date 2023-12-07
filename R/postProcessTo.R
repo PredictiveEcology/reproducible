@@ -181,6 +181,7 @@ postProcessTo <- function(from, to,
   }
 
   if (!all(is.null(to), is.null(cropTo), is.null(maskTo), is.null(projectTo))) {
+    fromOrig <- from # may need it later
     # ASSERTION STEP
     postProcessToAssertions(from, to, cropTo, maskTo, projectTo)
 
@@ -266,8 +267,8 @@ postProcessTo <- function(from, to,
                           verbose = verbose
         )
       }
-
-      # from <- terra::setMinMax(from)
+      if (isSF(from))
+        from <- keepOrigGeom(from, fromOrig)
 
       # WRITE STEP
       from <- writeTo(
@@ -1668,3 +1669,26 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
   out
 }
 
+messagePrefixDoneIn <- "     ...done in "
+
+
+#' @param newObj The new, derived sf object
+#' @param origObj The previous, object whose geometries should be used.
+keepOrigGeom <- function(newObj, origObj) {
+  from2Geom <- unique(st_geometry_type(newObj))
+  fromGeom <- unique(st_geometry_type(origObj))
+  possTypes <- c("POINT", "LINESTRING", "POLYGON")
+  hasTypes <- try(vapply(possTypes, function(pt) grepl(pt, fromGeom), FUN.VALUE = logical(1)))
+  if (is(hasTypes, "try-error")) browser()
+  fromGeomSimple <- names(hasTypes)[hasTypes]
+
+  # hasTypes2 <- sapply(possTypes, function(pt) any(grepl(pt, from2Geom)))#, FUN.VALUE = logical(1))
+  # from2GeomSimple <- names(hasTypes2)[hasTypes2]
+
+  # isSameTypeAsFromGeom <- apply(do.call(rbind, lapply(fromGeom, function(fg) grepl(fg, from2Geom))), 2, all)
+  if (!all(from2Geom %in% fromGeom)) {
+    # hasMulti <- grepl("MULTI", from2Geom) & isSameTypeAsFromGeom
+    newObj <- sf::st_collection_extract(newObj, type = as.character(fromGeomSimple))
+  }
+  newObj
+}
