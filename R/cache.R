@@ -762,7 +762,9 @@ Cache <-
             cloudFolderID = cloudFolderID,
             lastEntry = lastEntry, lastOne = lastOne, ...
           )
-          out <- addCacheAttr(out, .CacheIsNew = FALSE, outputHash, FUN)
+          # if (exists("aaaa", .GlobalEnv)) browser()
+          if (!is.null(out))
+            out <- addCacheAttr(out, .CacheIsNew = FALSE, outputHash, FUN)
           if (!is(out, "try-error"))
             return(out)
         }

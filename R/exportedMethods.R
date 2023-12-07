@@ -731,7 +731,7 @@ wrapSpatRaster <- function(obj, cachePath, ...) {
   cls <- class(obj)
   fnsMulti <- Filenames(obj, allowMultiple = TRUE)
   obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
-    nlyrsInFile <- as.integer(terra::nlyr(terra::rast(fns)))
+  nlyrsInFile <- as.integer(terra::nlyr(terra::rast(fns)))
   layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
 
   # A file-backed rast can 1) not be using all the layers in the file and
@@ -1094,8 +1094,9 @@ grepStartsTwoDots <- "^\\.\\."
 
 
 attributesReassign <- function(atts, obj) {
-  if (length(atts))
-    for (att in names(atts)) {
+  attsNames <- setdiff(names(atts), knownAtts)
+  if (length(attsNames))
+    for (att in attsNames) {
       if (is.null(attr(obj, att))) {
         attr(obj, att) <- atts[[att]]
       }
@@ -1103,3 +1104,5 @@ attributesReassign <- function(atts, obj) {
   obj
 }
 
+
+knownAtts <- c("cpp", "class", "attributes", "values", "definition")
