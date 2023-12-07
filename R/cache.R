@@ -1864,7 +1864,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   } else {
     if (!identical("devMode", useCache)) {
       messageCache("There is no similar item in the cachePath ",
-        if (!is.null(functionName)) paste0("of '", functionName, "' "),
+        if (!is.null(functionName)) paste0("of '", functionName, "' ") else "",
         verbose = verbose)
       messageCache("  ", userTagsMess, verbose = verbose)
     }
