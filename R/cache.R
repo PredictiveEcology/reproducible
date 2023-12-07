@@ -833,6 +833,7 @@ Cache <-
       # Can make new methods by class to add tags to outputs
       if (.CacheIsNew) {
         outputToSave <- .wrap(output, cachePath, preDigest = preDigest,
+                              outputObjects = outputObjects,
                               drv = drv, conn = conn, verbose = verbose)
         if (isTRUE(is.character(outputToSave)) && isTRUE(!is.character(output)))
           outputToSave <- asPath(outputToSave)
@@ -976,7 +977,6 @@ Cache <-
 
       if (useCloud && .CacheIsNew) {
         # Here, upload local copy to cloud folder if it isn't already there
-        # browser(expr = exists("._Cache_15"))
         cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cachePath, cloudFolderID, ## TODO: saved not found
           outputToSave,
           verbose = verbose

@@ -526,7 +526,7 @@ unmakeMemoisable.default <- function(x) {
 #'
 .wrap <- function(obj, cachePath, preDigest,  drv = getDrv(getOption("reproducible.drv", NULL)),
                   conn = getOption("reproducible.conn", NULL),
-                  verbose = getOption("reproducible.verbose"), ...) {
+                  verbose = getOption("reproducible.verbose"), outputObjects  = NULL, ...) {
   UseMethod(".wrap")
 }
 
@@ -534,7 +534,18 @@ unmakeMemoisable.default <- function(x) {
 #' @rdname dotWrap
 .wrap.list <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                        conn = getOption("reproducible.conn", NULL),
-                       verbose = getOption("reproducible.verbose"), ...) {
+                       verbose = getOption("reproducible.verbose"), outputObjects = NULL, ...) {
+
+  if (!is.null(outputObjects)) {
+    allObjs <- ls(obj)
+    nullify <- setdiff(allObjs, outputObjects)
+    if (is.environment(obj))
+      rm(list = nullify, envir = envir(obj))
+    else
+      obj[nullify] <- NULL
+  }
+
+
   attrsOrig <- attributes(obj)
   obj <- lapply(obj, .wrap, preDigest = preDigest, cachePath = cachePath, drv = drv,
                 conn = conn, verbose = verbose, ...)
@@ -559,10 +570,20 @@ unmakeMemoisable.default <- function(x) {
 #' @rdname dotWrap
 .wrap.environment <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                               conn = getOption("reproducible.conn", NULL),
-                              verbose = getOption("reproducible.verbose"), ...) {
+                              verbose = getOption("reproducible.verbose"), outputObjects = NULL, ...) {
+
+  if (!is.null(outputObjects)) {
+    allObjs <- ls(obj)
+    nullify <- setdiff(allObjs, outputObjects)
+    if (is.environment(obj))
+      rm(list = nullify, envir = envir(obj))
+    else
+      obj[nullify] <- NULL
+  }
+
   obj2 <- as.list(obj, all.names = FALSE)
   out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
-               conn = conn, verbose = verbose, ...)
+               conn = conn, verbose = verbose, outputObjects = outputObjects, ...)
   obj <- Copy(obj)
   obj2 <- list2envAttempts(out, obj)
   if (!is.null(obj2)) obj <- obj2

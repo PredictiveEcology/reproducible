@@ -138,7 +138,6 @@ test_that("test file-backed raster caching", {
   fn2 <- function(stk) {
     stk
   }
-  aaaa <<- 1
   out <- Cache(fn2, bbS, cachePath = tmpCache, userTags = "something2")
   froms <- normPath(dir(tmpCache, recursive = TRUE, full.names = TRUE))
   # checkPath(file.path(tmpdir, "rasters"), create = TRUE)
