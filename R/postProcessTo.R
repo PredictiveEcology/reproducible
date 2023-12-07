@@ -1676,8 +1676,8 @@ messagePrefixDoneIn <- "     ...done in "
 #' @param newObj The new, derived sf object
 #' @param origObj The previous, object whose geometries should be used.
 keepOrigGeom <- function(newObj, origObj) {
-  from2Geom <- sort(unique(st_geometry_type(newObj)))
-  fromGeom <- sort(unique(st_geometry_type(origObj)))
+  from2Geom <- sort(unique(sf::st_geometry_type(newObj)))
+  fromGeom <- sort(unique(sf::st_geometry_type(origObj)))
   if (!identical(from2Geom, fromGeom)) {
     possTypes <- c("POINT", "LINESTRING", "POLYGON")
     hasTypes <- vapply(possTypes, function(pt) isTRUE(any(grepl(pt, fromGeom))), FUN.VALUE = logical(1))
