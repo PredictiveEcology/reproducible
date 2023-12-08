@@ -845,7 +845,8 @@ extractFromArchive <- function(archive,
       c(argList)
     }
 
-
+    # Start the extracting, starting with `archive`
+    worked <- FALSE
     if (.requireNamespace("archive", stopOnFALSE = FALSE)) {
       system.time(
         extractedFiles <- archive::archive_extract(args[[1]], args$exdir, argList$files))
