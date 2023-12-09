@@ -3,13 +3,13 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   a <- 1
   mess <- capture_message(.cacheMessage(a, "test", TRUE))
-  expect_true(any(grepl(.loadedMemoisedResultMsg, mess)))
+  expect_true(any(grepl(.messageLoadedMemoisedResult, mess)))
 
   mess <- capture_message(.cacheMessage(a, "test", FALSE))
-  expect_false(any(grepl(paste0(.loadedCacheResultMsg, ".*added"), mess)))
+  expect_false(any(grepl(paste0(.messageLoadedCacheResult, ".*added"), mess)))
 
   mess <- capture_message(.cacheMessage(a, "test", NA))
-  expect_true(any(grepl(.loadedCacheResultMsg, mess)))
+  expect_true(any(grepl(.messageLoadedCacheResult, mess)))
   expect_false(all(grepl("adding", mess)))
 
   # studyAreaName with sf and sfc

@@ -11,6 +11,7 @@ Checksums(
   write,
   quickCheck = FALSE,
   checksumFile = identifyCHECKSUMStxtFile(path),
+  checksumsObj = NULL,
   files = NULL,
   verbose = getOption("reproducible.verbose", 1),
   ...
@@ -21,6 +22,7 @@ Checksums(
   write,
   quickCheck = FALSE,
   checksumFile = identifyCHECKSUMStxtFile(path),
+  checksumsObj = NULL,
   files = NULL,
   verbose = getOption("reproducible.verbose", 1),
   ...
@@ -31,6 +33,7 @@ Checksums(
   write,
   quickCheck = FALSE,
   checksumFile = identifyCHECKSUMStxtFile(path),
+  checksumsObj = NULL,
   files = NULL,
   verbose = getOption("reproducible.verbose", 1),
   ...
@@ -55,6 +58,10 @@ The default is \file{CHECKSUMS.txt} located at
 It is likely not a good idea to change this, and should
 only be used in cases such as \code{Cache}, which can
 evaluate if the \code{checksumFile} has changed.}
+
+\item{checksumsObj}{An optional object with a result from a previous \code{Checksums}
+call. If supplied, this will be used instead of the
+\code{checksumFile}.}
 
 \item{files}{An optional character string or vector of specific files to checksum.
 This may be very important if there are many files listed in a

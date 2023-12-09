@@ -81,8 +81,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
               archive <- archive[localArchivesExist]
             }
           } else {
-            messagePrepInputs("Have local archive, ", archive, ", but its files are not listed in the CHECKSUMS.txt file.", verbose = verbose)
-            messagePrepInputs("\nRedownloading to start from file at url...", verbose = verbose)
+            messagePreProcess("Have local archive, ", archive, ", but its files are not listed in the CHECKSUMS.txt file.", verbose = verbose)
+            messagePreProcess("\nRedownloading to start from file at url...", verbose = verbose)
           }
         }
       }
@@ -172,7 +172,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
               if (failed == numTries + 2) {
                 stop(paste(messOrig, collapse = "\n"))
               } else {
-                messagePrepInputs(mess, verbose = verbose + 1)
+                messagePreProcess(mess, verbose = verbose + 1)
               }
               resultOfPrompt <- .readline("Type y if you have attempted a manual download and put it in the correct place: ")
               resultOfPrompt <- tolower(resultOfPrompt)
@@ -201,7 +201,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
           # This is so that we essentially treat it as a file, not an object, which means
           #   the second time we try this call, we can access the file locally, without needed to download
           if (is(downloadResults$out, "Spatial")) downloadResults$out <- NULL # TODO This appears to be a bug
-          # messagePrepInputs(messOrig, verbose = verbose)
+          # messagePreProcess(messOrig, verbose = verbose)
           failed <- 0
         }
       }
@@ -321,19 +321,19 @@ downloadFile <- function(archive, targetFile, neededFiles,
         destFile = makeAbsolute(fileAlreadyDownloaded, destinationPath)
       )
       if (is.null(targetFile)) {
-        messagePrepInputs("   Skipping download because all needed files are listed in ",
+        messagePreProcess("Skipping download because all needed files are listed in ",
           "CHECKSUMS.txt file and are present.",
           " If this is not correct, rerun prepInputs with purge = TRUE",
           verbose = verbose
         )
       } else {
         if (exists("extractedFromArchive", inherits = FALSE)) {
-          messagePrepInputs("  Skipping download: All requested files extracted from local archive:\n    ",
+          messagePreProcess("Skipping download: All requested files extracted from local archive:\n    ",
             archive,
             verbose = verbose
           )
         } else {
-          messagePrepInputs("  Skipping download. All requested files already present", verbose = verbose)
+          messagePreProcess("Skipping download. All requested files already present", verbose = verbose)
         }
       }
     }
@@ -393,7 +393,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 
   destFile <- file.path(destinationPath, basename2(downloadFilename))
   if (!isTRUE(checkSums[checkSums$expectedFile == basename(destFile), ]$result == "OK")) {
-    messagePrepInputs("  Downloading from Google Drive.", verbose = verbose)
+    messagePreProcess("Downloading from Google Drive.", verbose = verbose)
     fs <- attr(archive, "fileSize")
     if (is.null(fs)) {
       fs <- attr(downloadFilename, "fileSize")
@@ -415,7 +415,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 
     if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&
       !isFALSE(getOption("reproducible.futurePlan"))) {
-      messagePrepInputs("Downloading a large file in background using future", verbose = verbose)
+      messagePreProcess("Downloading a large file in background using future", verbose = verbose)
       message("Make sure to set\noptions(gargle_oauth_email = 'youremail@somewhere.edu')\n, and possibly ",
               "\noptions(gargle_oauth_cache = 'localPathToCache')")
       fp <- future::plan()
@@ -473,7 +473,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       a <- retry(downloadCall, retries = 2)
     }
   } else {
-    messagePrepInputs(messSkipDownload, verbose = verbose)
+    messagePreProcess(messSkipDownload, verbose = verbose)
     needChecksums <- 0
   }
   return(list(destFile = destFile, needChecksums = needChecksums))
@@ -499,7 +499,7 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
   # if (suppressWarnings(httr::http_error(url))) ## TODO: http_error is throwing warnings
   #   stop("Can not access url ", url)
 
-  messagePrepInputs("  Downloading ", url, " ...", verbose = verbose)
+  messagePreProcess("Downloading ", url, " ...", verbose = verbose)
 
 
   if (.requireNamespace("httr") && .requireNamespace("curl")) {
@@ -551,7 +551,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
   if (!is.null(url) || !is.null(dlFun)) { # if no url, no download
     # if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
     if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE))) {
-      messagePrepInputs("...downloading...", verbose = verbose)
+      messagePreProcess("...downloading...", verbose = verbose)
 
       ## NA means archive already in hand
       out <- NULL
@@ -632,7 +632,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                      !grepl("\\.[^\\.]+$", url)) # doesn't have an extension --> GDrive ID's as url
         if (any(isGID, grepl("d.+.google.com", url))) {
           if (!requireNamespace("googledrive", quietly = TRUE)) {
-            stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+            stop(.messageRequireNamespaceFn("googledrive", "to use google drive files"))
           }
 
           teamDrive <- getTeamDrive(dots)
@@ -701,11 +701,11 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
       }
       # }
     } else {
-      messagePrepInputs(messSkipDownload, verbose = verbose)
+      messagePreProcess(messSkipDownload, verbose = verbose)
       downloadResults <- list(needChecksums = 0, destFile = NULL)
     }
   } else {
-    messagePrepInputs("No downloading; no url", verbose = verbose)
+    messagePreProcess("No downloading; no url", verbose = verbose)
   }
   downloadResults
 }
@@ -728,7 +728,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
                          verbose = getOption("reproducible.verbose", 1),
                          team_drive = NULL) {
   if (!requireNamespace("googledrive", quietly = TRUE)) {
-    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+    stop(.messageRequireNamespaceFn("googledrive", "to use google drive files"))
   }
   if (.isRstudioServer()) {
     .requireNamespace("httr", stopOnFALSE = TRUE)
@@ -750,7 +750,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     if (!is.null(fileSize)) {
       fileSize <- as.numeric(fileSize)
       class(fileSize) <- "object_size"
-      messagePrepInputs("  File on Google Drive is ", format(fileSize, units = "auto"),
+      messagePreProcess("File on Google Drive is ", format(fileSize, units = "auto"),
         verbose = verbose
       )
     }
@@ -774,15 +774,15 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   return(downloadFilename)
 }
 
-requireNamespaceMsg <- function(pkg, extraMsg = character(), minVersion = NULL) {
+.messageRequireNamespaceFn <- function(pkg, messageExtra = character(), minVersion = NULL) {
   mess <- paste0(
     pkg, if (!is.null(minVersion)) {
       paste0("(>=", minVersion, ")")
     }, " is required but not yet installed. Try: ",
     "install.packages('", pkg, "')"
   )
-  if (length(extraMsg) > 0) {
-    mess <- paste(mess, extraMsg)
+  if (length(messageExtra) > 0) {
+    mess <- paste(mess, messageExtra)
   }
   mess
 }

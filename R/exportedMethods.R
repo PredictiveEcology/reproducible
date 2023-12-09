@@ -74,17 +74,17 @@ setMethod(
   signature = "ANY",
   definition = function(object, functionName, fromMemoise, verbose = getOption("reproducible.verbose", 1)) {
     if (isTRUE(fromMemoise)) {
-      whMessage <- .loadedMemoisedResultMsg
-      messageCache(.loadedCacheMsg(whMessage, functionName), verbose = verbose)
+      whMessage <- .messageLoadedMemoisedResult
+      messageCache(.messageLoadedCache(whMessage, functionName), verbose = verbose)
     } else if (!is.na(fromMemoise) && !fromMemoise %in% FALSE) {
-      whMessage <- .loadedCacheResultMsg
-      messageCache(.loadedCacheMsg(whMessage, functionName), " ",
-                   .addingToMemoisedMsg,
+      whMessage <- .messageLoadedCacheResult
+      messageCache(.messageLoadedCache(whMessage, functionName), " ",
+                   .messageAddingToMemoised,
                    sep = "", verbose = verbose
       )
     } else {
-      whMessage <- .loadedCacheResultMsg
-      messageCache(.loadedCacheMsg(whMessage, functionName), verbose = verbose)
+      whMessage <- .messageLoadedCacheResult
+      messageCache(.messageLoadedCache(whMessage, functionName), verbose = verbose)
     }
     return(invisible(whMessage))
   }

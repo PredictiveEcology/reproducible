@@ -343,6 +343,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        verbose = getOption("reproducible.verbose", 1),
                        ...) {
   # Download, Checksum, Extract from Archive
+  messagePrepInputs("Running `prepInputs`", verbose = verbose, verboseLevel = 0)
+  stStart <- Sys.time()
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit(
@@ -360,7 +362,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # preProcess
   ##################################################################
 
-  messagePrepInputs("Running preProcess", verbose = verbose, verboseLevel = 0)
+  messagePrepInputs("  Running `preProcess`", verbose = verbose, verboseLevel = 0)
   out <- preProcess(
     targetFile = targetFile,
     url = url,
@@ -376,18 +378,20 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     verbose = verbose,
     ...
   )
+  stNext <- reportTime(stStart, mess = "  `preProcess`; took ", minSeconds = 120)
 
   ##################################################################
   # Load object to R
   ##################################################################
   if (!is.null(out$targetFilePath)) {
     if (!all(is.na(out$targetFilePath)))
-      messagePrepInputs("targetFile located at ", out$targetFilePath, verbose = verbose)
+      messagePrepInputs("  targetFile located at ", out$targetFilePath, verbose = verbose)
   }
   x <- process(out,
     funCaptured = funCaptured,
     useCache = useCache, verbose = verbose, ...
   )
+  stNext <- reportTime(stNext, mess = "  `process` took ", minSeconds = 120)
 
   ##################################################################
   # postProcess
@@ -408,6 +412,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
     )
   }
+  stFinal <- reportTime(stStart, mess = "`prepInputs` took ", minSeconds = 180)
 
   return(x)
 }

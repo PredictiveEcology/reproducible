@@ -265,7 +265,7 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
   files <- dir(tmpdir, pattern = filePattern, full.names = TRUE)
   expect_true(length(files) == numFiles)
   expect_true(inherits(test, class))
-  messagePrepInputs(mess)
+  # messagePrepInputs(mess)
   hasMessageNum <- paste(collapse = "_", which(unlist(
     lapply(strsplit(expectedMess, "\\|")[[1]], function(m) {
       any(grepl(m, mess))

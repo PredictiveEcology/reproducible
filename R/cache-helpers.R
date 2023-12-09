@@ -432,13 +432,13 @@ list2envAttempts <- function(x, envir) {
   output
 }
 
-.loadedCacheResultMsg <- "loaded cached result from previous"
+.messageLoadedCacheResult <- "loaded cached result from previous"
 
-.loadedMemoisedResultMsg <- "loaded memoised result from previous"
+.messageLoadedMemoisedResult <- "loaded memoised result from previous"
 
-.addingToMemoisedMsg <- "(and added a memoised copy)"
+.messageAddingToMemoised <- "(and added a memoised copy)"
 
-.loadedCacheMsg <- function(root, functionName) {
+.messageLoadedCache <- function(root, functionName) {
   paste0("     ", root, " ", functionName, " call")
 }
 
