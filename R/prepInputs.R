@@ -1567,3 +1567,13 @@ filenamesFromArchiveLst <- function(filesOutput) {
 
   filesInArchive
 }
+
+
+
+reportTime <- function(stStart, mess, minSeconds) {
+  stNow <- Sys.time()
+  dt1sec <- difftime(stNow, stStart, units = "secs")
+  dt1auto <- difftime(stNow, stStart)
+  messagePrepInputs(mess, format(dt1auto, units = "auto"), verbose = dt1sec > minSeconds)
+  stNow
+}
