@@ -1673,8 +1673,19 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
 messagePrefixDoneIn <- "     ...done in "
 
 
+#' Keep original geometries of `sf` objects
+#'
+#' When intersections occur, what was originally 2 polygons features can become
+#' LINESTRING and/or POINT and any COLLECTIONS or MULTI- verions of these. This
+#' function evaluates what the original geometry was and drops any newly created
+#' *different* geometries. For example, if a `POLYGON` becomes a `COLLECTION` of
+#' `MULTIPOLYGON`, `POLYGON` and `POINT` geometries, the `POINT` geometries will
+#' be dropped. This function is used internally in [postProcessTo()]
 #' @param newObj The new, derived sf object
 #' @param origObj The previous, object whose geometries should be used.
+#' @return The original `newObj`, but with only the type of geometry that entered
+#' into the function.
+#'
 keepOrigGeom <- function(newObj, origObj) {
   from2Geom <- sort(unique(sf::st_geometry_type(newObj)))
   fromGeom <- sort(unique(sf::st_geometry_type(origObj)))
@@ -1684,11 +1695,14 @@ keepOrigGeom <- function(newObj, origObj) {
     # if (is(hasTypes, "try-error")) browser()
     fromGeomSimple <- names(hasTypes)[hasTypes]
 
+    has2Types <- vapply(possTypes, function(pt) isTRUE(any(grepl(pt, from2Geom))), FUN.VALUE = logical(1))
+    from2GeomSimple <- names(has2Types)[has2Types]
+
     # hasTypes2 <- sapply(possTypes, function(pt) any(grepl(pt, from2Geom)))#, FUN.VALUE = logical(1))
     # from2GeomSimple <- names(hasTypes2)[hasTypes2]
 
     # isSameTypeAsFromGeom <- apply(do.call(rbind, lapply(fromGeom, function(fg) grepl(fg, from2Geom))), 2, all)
-    if (!all(from2Geom %in% fromGeom)) {
+    if (!all(from2GeomSimple %in% fromGeomSimple)) {
       # hasMulti <- grepl("MULTI", from2Geom) & isSameTypeAsFromGeom
       newObj <- sf::st_collection_extract(newObj, type = as.character(fromGeomSimple))
     }
