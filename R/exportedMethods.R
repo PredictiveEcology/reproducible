@@ -539,10 +539,7 @@ unmakeMemoisable.default <- function(x) {
   if (!is.null(outputObjects)) {
     allObjs <- ls(obj)
     nullify <- setdiff(allObjs, outputObjects)
-    if (is.environment(obj))
-      rm(list = nullify, envir = envir(obj))
-    else
-      obj[nullify] <- NULL
+    obj[nullify] <- NULL
   }
 
 
@@ -575,10 +572,7 @@ unmakeMemoisable.default <- function(x) {
   if (!is.null(outputObjects)) {
     allObjs <- ls(obj)
     nullify <- setdiff(allObjs, outputObjects)
-    if (is.environment(obj))
-      rm(list = nullify, envir = envir(obj))
-    else
-      obj[nullify] <- NULL
+    rm(list = nullify, envir = obj)
   }
 
   obj2 <- as.list(obj, all.names = FALSE)
