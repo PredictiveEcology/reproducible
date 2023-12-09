@@ -70,7 +70,7 @@ utils::globalVariables(c(
 #' Checksums(files = moduleName, modulePath, write = TRUE)
 #' }
 #'
-setGeneric("Checksums", function(path, write, quickCheck = FALSE,
+setGeneric("Checksums", function(path, write, quickCheck = getOption("reproducible.quickCheck", FALSE),
                                  checksumFile = identifyCHECKSUMStxtFile(path),
                                  files = NULL, verbose = getOption("reproducible.verbose", 1),
                                  ...) {
@@ -88,7 +88,9 @@ setMethod(
     path = "character", quickCheck = "ANY",
     write = "logical", files = "ANY"
   ),
-  definition = function(path, write, quickCheck, checksumFile, files, verbose = getOption("reproducible.verbose", 1), ...) {
+  definition = function(path, write, quickCheck = getOption("reproducible.quickCheck", FALSE),
+                        checksumFile,
+                        files, verbose = getOption("reproducible.verbose", 1), ...) {
     defaultHashAlgo <- "xxhash64"
     defaultWriteHashAlgo <- "xxhash64"
     dots <- list(...)
@@ -305,7 +307,8 @@ setMethod(
     path = "character", quickCheck = "ANY",
     write = "missing", files = "ANY"
   ),
-  definition = function(path, quickCheck, checksumFile, files, verbose, ...) {
+  definition = function(path, quickCheck = getOption("reproducible.quickCheck", FALSE), checksumFile,
+                        files, verbose, ...) {
     Checksums(path,
       write = FALSE, quickCheck = quickCheck, checksumFile = checksumFile,
       files = files, verbose = verbose, ...
