@@ -570,7 +570,7 @@ extractFromArchive <- function(archive,
           #   extractingTheseFiles <- paste0("all files: ",
           #                                  paste(filesInArchive, collapse = "\n"))
           messagePrepInputs("From:\n", archive[1], "  \n", "Extracting", verbose = verbose)
-          messageDF(dt, verbose = verbose, colour = getOption("reproducible.messageColourPrepInputs"))
+          messageDF(dt, indent = .messagePreProcessIndent, verbose = verbose, colour = getOption("reproducible.messageColourPrepInputs"))
           filesExtracted <- c(
             filesExtracted,
             .callArchiveExtractFn(funWArgs$fun,
@@ -741,7 +741,7 @@ extractFromArchive <- function(archive,
         messagePrepInputs("  More than one possible files to load:\n", verbose = verbose)
         if (length(targetFilePath) > 100) {
           filesForMess <- data.table(Extracted = targetFilePath)
-          messageDF(filesForMess, verbose = verbose)
+          messageDF(filesForMess, indent = .messagePreProcessIndent, verbose = verbose)
         } else {
           filesForMess <- paste(targetFilePath, collapse = "\n")
           messagePrepInputs(filesForMess)
