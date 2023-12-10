@@ -575,7 +575,7 @@ unmakeMemoisable.default <- function(x) {
     rm(list = nullify, envir = obj)
   }
 
-  obj2 <- as.list(obj, all.names = FALSE)
+  obj2 <- as.list(obj, all.names = TRUE)
   out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
                conn = conn, verbose = verbose, outputObjects = outputObjects, ...)
   obj <- Copy(obj)
