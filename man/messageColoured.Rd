@@ -3,6 +3,7 @@
 \name{messageDF}
 \alias{messageDF}
 \alias{messagePrepInputs}
+\alias{messagePreProcess}
 \alias{messageCache}
 \alias{messageQuestion}
 \alias{messageFunction}
@@ -14,12 +15,20 @@ messageDF(
   round,
   colour = NULL,
   colnames = NULL,
+  indent = NULL,
   verbose = getOption("reproducible.verbose"),
   verboseLevel = 1,
   appendLF = TRUE
 )
 
 messagePrepInputs(
+  ...,
+  appendLF = TRUE,
+  verbose = getOption("reproducible.verbose"),
+  verboseLevel = 1
+)
+
+messagePreProcess(
   ...,
   appendLF = TRUE,
   verbose = getOption("reproducible.verbose"),
@@ -46,6 +55,8 @@ messageFunction(
 messageColoured(
   ...,
   colour = NULL,
+  indent = NULL,
+  hangingIndent = TRUE,
   verbose = getOption("reproducible.verbose", 1),
   verboseLevel = 1,
   appendLF = TRUE
@@ -63,6 +74,8 @@ column names even if there aren't any in the \code{df} (i.e., they will)
 be \code{V1} etc., \code{NULL} will print them if they exist, and \code{FALSE}
 which will omit them.}
 
+\item{indent}{An integer, indicating whether to indent each line}
+
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
@@ -77,6 +90,9 @@ will show a message.}
     have a newline appended?}
 
 \item{...}{Any character vector, passed to \code{paste0(...)}}
+
+\item{hangingIndent}{Logical. If there are \n should there be a handing indent of 2 spaces.
+Default is \code{TRUE}}
 }
 \value{
 Used for side effects. This will produce a message of a structured \code{data.frame}.
