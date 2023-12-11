@@ -578,7 +578,7 @@ unmakeMemoisable.default <- function(x) {
   obj2 <- as.list(obj, all.names = TRUE)
   out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
                conn = conn, verbose = verbose, outputObjects = outputObjects, ...)
-  obj <- Copy(obj)
+    # obj <- Copy(obj)
   obj2 <- list2envAttempts(out, obj)
   if (!is.null(obj2)) obj <- obj2
 
