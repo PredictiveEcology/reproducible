@@ -559,7 +559,11 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
     }
 
     if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
-      message(getFromNamespace(colour, "crayon")(mess), appendLF = appendLF)
+      mess <- lapply(strsplit(mess, "\n"), function(m) paste0(getFromNamespace(colour, "crayon")(m)))[[1]]
+      if (length(mess) > 1)
+        mess[1:(length(mess)-1)] <- paste0(mess[1:(length(mess)-1)], "\n")
+      message(mess, appendLF = appendLF)
+      # message(getFromNamespace(colour, "crayon")(mess), appendLF = appendLF)
     } else {
       if (needCrayon && !isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("crayon")) {
         message("To add colours to messages, install.packages('crayon')", appendLF = appendLF)
