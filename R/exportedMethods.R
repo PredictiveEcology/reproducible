@@ -650,7 +650,7 @@ unmakeMemoisable.default <- function(x) {
     }
   }
 
-  if (any(inherits(obj, c("SpatVector", "SpatRaster", "SpatExtent")))) {
+  if (any(inherits(obj, c("SpatVector", "SpatRaster", "SpatExtent", "data.table")))) {
     if (!requireNamespace("terra", quietly = TRUE)) {
       stop("Please install terra package")
     }
@@ -674,6 +674,10 @@ unmakeMemoisable.default <- function(x) {
         ymin = terra::ymin(obj), ymax = terra::ymax(obj)
       )
       attr(obj, "class") <- "PackedSpatExtent"
+      useWrap <- FALSE
+    }
+    if (is(obj, "data.table")) {
+      obj <- data.table::copy(obj)
       useWrap <- FALSE
     }
 
