@@ -74,17 +74,17 @@ setMethod(
   signature = "ANY",
   definition = function(object, functionName, fromMemoise, verbose = getOption("reproducible.verbose", 1)) {
     if (isTRUE(fromMemoise)) {
-      whMessage <- .loadedMemoisedResultMsg
-      messageCache(.loadedCacheMsg(whMessage, functionName), verbose = verbose)
+      whMessage <- .messageLoadedMemoisedResult
+      messageCache(.messageLoadedCache(whMessage, functionName), verbose = verbose)
     } else if (!is.na(fromMemoise) && !fromMemoise %in% FALSE) {
-      whMessage <- .loadedCacheResultMsg
-      messageCache(.loadedCacheMsg(whMessage, functionName), " ",
-                   .addingToMemoisedMsg,
+      whMessage <- .messageLoadedCacheResult
+      messageCache(.messageLoadedCache(whMessage, functionName), " ",
+                   .messageAddingToMemoised,
                    sep = "", verbose = verbose
       )
     } else {
-      whMessage <- .loadedCacheResultMsg
-      messageCache(.loadedCacheMsg(whMessage, functionName), verbose = verbose)
+      whMessage <- .messageLoadedCacheResult
+      messageCache(.messageLoadedCache(whMessage, functionName), verbose = verbose)
     }
     return(invisible(whMessage))
   }
@@ -537,12 +537,9 @@ unmakeMemoisable.default <- function(x) {
                        verbose = getOption("reproducible.verbose"), outputObjects = NULL, ...) {
 
   if (!is.null(outputObjects)) {
-    allObjs <- ls(obj)
+    allObjs <- names(obj)
     nullify <- setdiff(allObjs, outputObjects)
-    if (is.environment(obj))
-      rm(list = nullify, envir = envir(obj))
-    else
-      obj[nullify] <- NULL
+    obj[nullify] <- NULL
   }
 
 
@@ -560,7 +557,7 @@ unmakeMemoisable.default <- function(x) {
     attrsOrig["tags"] <- newList
   }
   if (!is.null(attrsOrig)) {
-    for (tt in c(".Cache", "tags", "call"))
+    for (tt in intersect(names(attrsOrig), c(".Cache", "tags", "call")))
       attr(obj, tt) <- attrsOrig[[tt]]
   }
   obj
@@ -575,19 +572,18 @@ unmakeMemoisable.default <- function(x) {
   if (!is.null(outputObjects)) {
     allObjs <- ls(obj)
     nullify <- setdiff(allObjs, outputObjects)
-    if (is.environment(obj))
-      rm(list = nullify, envir = envir(obj))
-    else
-      obj[nullify] <- NULL
+    rm(list = nullify, envir = obj)
   }
 
-  obj2 <- as.list(obj, all.names = FALSE)
+  if (length(ls(obj, all.names = T)) > 0) {
+  obj2 <- as.list(obj, all.names = TRUE)
   out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
                conn = conn, verbose = verbose, outputObjects = outputObjects, ...)
-  obj <- Copy(obj)
-  obj2 <- list2envAttempts(out, obj)
-  if (!is.null(obj2)) obj <- obj2
+    # obj <- Copy(obj)
+    obj2 <- list2envAttempts(out, obj)
+    if (!is.null(obj2)) obj <- obj2
 
+  }
   obj
 }
 
@@ -656,7 +652,7 @@ unmakeMemoisable.default <- function(x) {
     }
   }
 
-  if (any(inherits(obj, c("SpatVector", "SpatRaster", "SpatExtent")))) {
+  if (any(inherits(obj, c("SpatVector", "SpatRaster", "SpatExtent", "data.table")))) {
     if (!requireNamespace("terra", quietly = TRUE)) {
       stop("Please install terra package")
     }
@@ -680,6 +676,10 @@ unmakeMemoisable.default <- function(x) {
         ymin = terra::ymin(obj), ymax = terra::ymax(obj)
       )
       attr(obj, "class") <- "PackedSpatExtent"
+      useWrap <- FALSE
+    }
+    if (is(obj, "data.table")) {
+      obj <- data.table::copy(obj)
       useWrap <- FALSE
     }
 
@@ -879,7 +879,8 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
                                 conn = getOption("reproducible.conn", NULL), ...) {
   # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
   atts <- attributes(obj)
-  objList <- as.list(obj) # don't overwrite everything, just the ones in the list part
+  # if (!is.null(obj$fireSense_dataPrepFit$.objects$studyAreaUnion)) browser()
+  objList <- as.list(obj, all.names = TRUE) # don't overwrite everything, just the ones in the list part; but need .mods, .objects etc.
 
   outList <- .unwrap(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn, ...)
   output2 <- list2envAttempts(outList, obj) # don't return it if the list2env retured nothing (a normal environment situation; not simList)

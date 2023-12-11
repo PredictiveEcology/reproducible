@@ -373,7 +373,7 @@ isMac <- function() {
 
   if (need) { # separate these so it is faster
     if (isTRUE(stopOnFALSE)) {
-      stop(requireNamespaceMsg(pkg, extraMsg = messageStart, minVersion = minVersion))
+      stop(.messageRequireNamespaceFn(pkg, messageExtra = messageStart, minVersion = minVersion))
     }
   }
   !need
@@ -438,6 +438,7 @@ isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
 #' @param verboseLevel The numeric value for this `message*` call, equal or above
 #'   which `verbose` must be. The higher this is set, the more unlikely the call
 #'   will show a message.
+#' @param indent An integer, indicating whether to indent each line
 #' @inheritParams base::message
 #'
 #' @export
@@ -448,7 +449,7 @@ isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
 #' @importFrom utils capture.output
 #' @rdname messageColoured
 #' @inheritParams Cache
-messageDF <- function(df, round, colour = NULL, colnames = NULL,
+messageDF <- function(df, round, colour = NULL, colnames = NULL, indent = NULL,
                       verbose = getOption("reproducible.verbose"), verboseLevel = 1,
                       appendLF = TRUE) {
   if (isTRUE(verboseLevel <= verbose)) {
@@ -471,12 +472,16 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL,
     }
     outMess <- capture.output(df)
     if (skipColNames) outMess <- outMess[-1]
-    out <- lapply(outMess, function(x) {
-      messageColoured(x,
-        colour = colour, appendLF = appendLF, verbose = verbose,
-        verboseLevel = verboseLevel
-      )
-    })
+    outMess <- paste0(outMess, "\n")
+    messageColoured(outMess, indent = indent, hangingIndent = FALSE,
+                    colour = colour, verbose = verbose,
+                    verboseLevel = verboseLevel, appendLF = appendLF)
+    # out <- lapply(outMess, function(x) {
+    #   messageColoured(x,
+    #     colour = colour, indent = indent, appendLF = appendLF, verbose = verbose,
+    #     verboseLevel = verboseLevel
+    #   )
+    # })
   }
 }
 
@@ -487,6 +492,16 @@ messagePrepInputs <- function(..., appendLF = TRUE,
   messageColoured(...,
     colour = getOption("reproducible.messageColourPrepInputs"),
     verboseLevel = verboseLevel, verbose = verbose, appendLF = appendLF
+  )
+}
+
+#' @rdname messageColoured
+messagePreProcess <- function(..., appendLF = TRUE,
+                              verbose = getOption("reproducible.verbose"),
+                              verboseLevel = 1) {
+  messageColoured(..., indent = .messagePreProcessIndent,
+                  colour = getOption("reproducible.messageColourPrepInputs"),
+                  verboseLevel = verboseLevel, verbose = verbose, appendLF = appendLF
   )
 }
 
@@ -519,9 +534,11 @@ messageFunction <- function(..., appendLF = TRUE, verbose = getOption("reproduci
 #' @export
 #' @importFrom utils getFromNamespace
 #' @param colour Any colour that can be understood by `crayon`
+#' @param hangingIndent Logical. If there are \n should there be a handing indent of 2 spaces.
+#'   Default is `TRUE`
 #' @rdname messageColoured
 #' @param ... Any character vector, passed to `paste0(...)`
-messageColoured <- function(..., colour = NULL,
+messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = TRUE,
                             verbose = getOption("reproducible.verbose", 1),
                             verboseLevel = 1, appendLF = TRUE) {
   if (isTRUE(verboseLevel <= verbose)) {
@@ -531,14 +548,28 @@ messageColoured <- function(..., colour = NULL,
         needCrayon <- TRUE
       }
     }
+    mess <- paste0(..., collapse = "")
+    if (!is.null(indent)) {
+      mess <- paste0(indent, mess)
+    }
+
+    hi <- if (isTRUE(hangingIndent)) paste0(indent, "  ") else indent
+    if (any(grepl("\n", mess))) {
+      mess <- gsub("\n *", paste0("\n", hi), mess)
+    }
+
     if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
-      message(getFromNamespace(colour, "crayon")(paste0(...)), appendLF = appendLF)
+      mess <- lapply(strsplit(mess, "\n"), function(m) paste0(getFromNamespace(colour, "crayon")(m)))[[1]]
+      if (length(mess) > 1)
+        mess[1:(length(mess)-1)] <- paste0(mess[1:(length(mess)-1)], "\n")
+      message(mess, appendLF = appendLF)
+      # message(getFromNamespace(colour, "crayon")(mess), appendLF = appendLF)
     } else {
       if (needCrayon && !isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("crayon")) {
         message("To add colours to messages, install.packages('crayon')", appendLF = appendLF)
         .pkgEnv$.checkedCrayon <- TRUE
       }
-      message(paste0(...), appendLF = appendLF)
+      message(mess, appendLF = appendLF)
     }
   }
 }

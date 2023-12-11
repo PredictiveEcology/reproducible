@@ -351,12 +351,12 @@ test_that("test 'quick' argument", {
 
   expect_true(sum(grepl(
     paste0(
-      paste(.loadedCacheMsg(.loadedCacheResultMsg, "quickFun"), .addingToMemoisedMsg), "|",
-      .loadedCacheMsg(.loadedMemoisedResultMsg, "quickFun")
+      paste(.messageLoadedCache(.messageLoadedCacheResult, "quickFun"), .messageAddingToMemoised), "|",
+      .messageLoadedCache(.messageLoadedMemoisedResult, "quickFun")
     ),
     mess1
   )) == 0)
-  # expect_true(any(grepl(paste(.loadedCacheResultMsg, "quickFun call, adding to memoised copy"), mess1 )))
+  # expect_true(any(grepl(paste(.messageLoadedCacheResult, "quickFun call, adding to memoised copy"), mess1 )))
   mess2 <- capture_messages({
     out1c <- Cache(quickFun, thePath, cachePath = tmpdir, quick = FALSE)
   })
@@ -378,8 +378,8 @@ test_that("test 'quick' argument", {
   })
   expect_true(sum(grepl(
     paste0(
-      paste(.loadedCacheMsg(.loadedCacheResultMsg, "quickFun"), .addingToMemoisedMsg), "|",
-      paste(.loadedMemoisedResultMsg, "quickFun call")
+      paste(.messageLoadedCache(.messageLoadedCacheResult, "quickFun"), .messageAddingToMemoised), "|",
+      paste(.messageLoadedMemoisedResult, "quickFun call")
     ),
     mess1
   )) == 0)
@@ -541,8 +541,8 @@ test_that("test asPath", {
   expect_true(length(a1) == 0)
   expect_true(length(a2) == 0)
   expect_true(sum(grepl(paste(
-    .loadedMemoisedResultMsg, "|",
-    .loadedCacheResultMsg
+    .messageLoadedMemoisedResult, "|",
+    .messageLoadedCacheResult
   ), a3)) == 1)
 
   unlink("filename.RData")
@@ -561,10 +561,10 @@ test_that("test asPath", {
   ))
   expect_true(length(a1) == 0)
   expect_true(sum(grepl(paste(
-    .loadedCacheResultMsg, "|",
-    .loadedMemoisedResultMsg
+    .messageLoadedCacheResult, "|",
+    .messageLoadedMemoisedResult
   ), a2)) == 1)
-  expect_true(sum(grepl(paste(.loadedMemoisedResultMsg, "saveRDS call"), a3)) == 1)
+  expect_true(sum(grepl(paste(.messageLoadedMemoisedResult, "saveRDS call"), a3)) == 1)
 
   unlink("filename.RData")
   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
@@ -582,10 +582,10 @@ test_that("test asPath", {
   ))
   expect_true(length(a1) == 0)
   expect_true(sum(grepl(paste(
-    .loadedCacheResultMsg, "|",
-    .loadedMemoisedResultMsg
+    .messageLoadedCacheResult, "|",
+    .messageLoadedMemoisedResult
   ), a2)) == 1)
-  expect_true(sum(grepl(paste(.loadedMemoisedResultMsg, "saveRDS call"), a3)) == 1)
+  expect_true(sum(grepl(paste(.messageLoadedMemoisedResult, "saveRDS call"), a3)) == 1)
 })
 
 test_that("test wrong ways of calling Cache", {
@@ -654,7 +654,7 @@ test_that("test Cache argument inheritance to inner functions", {
   # does cachePath propagate to outer ones -- no message about cachePath being tempdir()
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
   expect_true(length(out) == 2)
-  expect_true(sum(grepl(paste(.loadedCacheResultMsg, "outer call"), out)) == 1)
+  expect_true(sum(grepl(paste(.messageLoadedCacheResult, "outer call"), out)) == 1)
 
   # check that the rnorm inside "outer" returns cached value even if outer "outer" function is changed
   outer <- function(n) {
@@ -663,7 +663,7 @@ test_that("test Cache argument inheritance to inner functions", {
   }
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
   expect_true(length(out) == 3)
-  msgGrep <- paste(paste(.loadedCacheResultMsg, "rnorm call"),
+  msgGrep <- paste(paste(.messageLoadedCacheResult, "rnorm call"),
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
@@ -690,7 +690,7 @@ test_that("test Cache argument inheritance to inner functions", {
   # Second time will get a cache on outer
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
   expect_true(length(out) == 2)
-  expect_true(sum(grepl(paste(.loadedCacheResultMsg, "outer call"), out)) == 1)
+  expect_true(sum(grepl(paste(.messageLoadedCacheResult, "outer call"), out)) == 1)
 
   # doubly nested
   inner <- function(mean, useCache = TRUE) {
@@ -707,7 +707,7 @@ test_that("test Cache argument inheritance to inner functions", {
   }
 
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir, notOlderThan = Sys.time()))
-  msgGrep <- paste(paste(.loadedCacheResultMsg, "inner call"),
+  msgGrep <- paste(paste(.messageLoadedCacheResult, "inner call"),
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
@@ -724,7 +724,7 @@ test_that("test Cache argument inheritance to inner functions", {
   }
 
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir, notOlderThan = Sys.time()))
-  msgGrep <- paste(paste(.loadedCacheResultMsg, "rnorm call"),
+  msgGrep <- paste(paste(.messageLoadedCacheResult, "rnorm call"),
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
