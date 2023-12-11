@@ -575,6 +575,7 @@ unmakeMemoisable.default <- function(x) {
     rm(list = nullify, envir = obj)
   }
 
+  if (length(ls(obj, all.names = T)) > 0) {
   obj2 <- as.list(obj, all.names = TRUE)
   out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
                conn = conn, verbose = verbose, outputObjects = outputObjects, ...)
@@ -582,6 +583,7 @@ unmakeMemoisable.default <- function(x) {
   obj2 <- list2envAttempts(out, obj)
   if (!is.null(obj2)) obj <- obj2
 
+  }
   obj
 }
 
