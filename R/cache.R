@@ -511,11 +511,17 @@ Cache <-
       if (!is.null(.cacheExtra)) {
         toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
       }
-      cacheDigest <- CacheDigest(toDigest,
-        .objects = .objects,
-        length = length, algo = algo, quick = quick,
-        classOptions = classOptions, calledFrom = "Cache"
-      )
+      withCallingHandlers(
+        cacheDigest <- CacheDigest(toDigest,
+                                   .functionName = fnDetails$functionName,
+                                   .objects = .objects,
+                                   length = length, algo = algo, quick = quick,
+                                   classOptions = classOptions, calledFrom = "Cache"
+        ),
+        error = function(e) {
+          messageCache("Error occurred during Cache call of: ", messageFunction(fnDetails$functionName),
+                       ". Call was:\n", paste0(head(format(FUNcaptured)), collapse = "\n"))
+        })
       postCacheDigestTime <- Sys.time()
       elapsedTimeCacheDigest <- postCacheDigestTime - preCacheDigestTime
 
@@ -762,7 +768,6 @@ Cache <-
             cloudFolderID = cloudFolderID,
             lastEntry = lastEntry, lastOne = lastOne, ...
           )
-          # if (exists("aaaa", .GlobalEnv)) browser()
           if (!is.null(out))
             out <- addCacheAttr(out, .CacheIsNew = FALSE, outputHash, FUN)
           if (!is(out, "try-error"))
@@ -1702,13 +1707,17 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   }
 
 
-  preDigest <- lapply(objsToDigest, function(x) {
+  preDigest <- Map(nam = names(objsToDigest), x = objsToDigest, function(x, nam) {
     # remove the "newCache" attribute, which is irrelevant for digest
     if (!is.null(attr(x, ".Cache")$newCache)) {
       x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
       if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
     }
-    .robustDigest(x, algo = algo, quick = FALSE, ...)
+    withCallingHandlers({
+      .robustDigest(x, algo = algo, quick = FALSE, ...)
+    }, error = function(e) {
+      messageCache("Error occurred during .robustDigest of ", nam, " in ", .functionName)
+    })
   })
   if (is.character(quick) || isTRUE(quick)) {
     preDigest <- append(preDigest, preDigestQuick)
