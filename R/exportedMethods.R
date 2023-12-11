@@ -557,7 +557,7 @@ unmakeMemoisable.default <- function(x) {
     attrsOrig["tags"] <- newList
   }
   if (!is.null(attrsOrig)) {
-    for (tt in c(".Cache", "tags", "call"))
+    for (tt in intersect(names(attrsOrig), c(".Cache", "tags", "call")))
       attr(obj, tt) <- attrsOrig[[tt]]
   }
   obj
@@ -580,8 +580,8 @@ unmakeMemoisable.default <- function(x) {
   out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
                conn = conn, verbose = verbose, outputObjects = outputObjects, ...)
     # obj <- Copy(obj)
-  obj2 <- list2envAttempts(out, obj)
-  if (!is.null(obj2)) obj <- obj2
+    obj2 <- list2envAttempts(out, obj)
+    if (!is.null(obj2)) obj <- obj2
 
   }
   obj
