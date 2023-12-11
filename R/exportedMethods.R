@@ -537,7 +537,7 @@ unmakeMemoisable.default <- function(x) {
                        verbose = getOption("reproducible.verbose"), outputObjects = NULL, ...) {
 
   if (!is.null(outputObjects)) {
-    allObjs <- ls(obj)
+    allObjs <- names(obj)
     nullify <- setdiff(allObjs, outputObjects)
     obj[nullify] <- NULL
   }
@@ -873,7 +873,8 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
                                 conn = getOption("reproducible.conn", NULL), ...) {
   # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
   atts <- attributes(obj)
-  objList <- as.list(obj) # don't overwrite everything, just the ones in the list part
+  # if (!is.null(obj$fireSense_dataPrepFit$.objects$studyAreaUnion)) browser()
+  objList <- as.list(obj, all.names = TRUE) # don't overwrite everything, just the ones in the list part; but need .mods, .objects etc.
 
   outList <- .unwrap(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn, ...)
   output2 <- list2envAttempts(outList, obj) # don't return it if the list2env retured nothing (a normal environment situation; not simList)
