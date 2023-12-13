@@ -1707,7 +1707,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   }
 
 
-  preDigest <- Map(nam = names(objsToDigest), x = objsToDigest, function(x, nam) {
+  preDigest <- Map(i = seq_along(objsToDigest), x = objsToDigest, function(x, i) {
     # remove the "newCache" attribute, which is irrelevant for digest
     if (!is.null(attr(x, ".Cache")$newCache)) {
       x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
@@ -1716,7 +1716,9 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     withCallingHandlers({
       .robustDigest(x, algo = algo, quick = FALSE, ...)
     }, error = function(e) {
-      messageCache("Error occurred during .robustDigest of ", nam, " in ", .functionName)
+      nam <- names(objToDigest)
+      if (!is.null(nam))
+        messageCache("Error occurred during .robustDigest of ", nam[i], " in ", .functionName)
     })
   })
   if (is.character(quick) || isTRUE(quick)) {
