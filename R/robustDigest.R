@@ -394,6 +394,16 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
+    if (identical(getOption("reproducible.cacheSaveFormat"), "qs") &&
+        identical(getOption("reproducible.cacheSpeed"), "fast")) {
+      os <- objSize(object)
+      if (os == 680) {
+        # Means it is ALTREP --> convert to non-ALTREP for qs only
+        object <- as.integer(object + 0.0)
+      }
+      # qs doesn't save ALTREP yet for numerics
+
+    }
     # From ad hoc tests, 7 was the highest I could go to maintain consistent between Linux and Windows
     .doDigest(object, algo = algo)
   }
