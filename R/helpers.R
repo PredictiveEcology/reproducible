@@ -553,6 +553,44 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
       mess <- paste0(indent, mess)
     }
 
+    # do line wrap with hanging indent
+    maxLineLngth <- getOption("width") - 10 - 30
+    chars <- nchar(mess)
+    if (chars > maxLineLngth) {
+      splitOnSlashN <- strsplit(mess, "\n")
+      newMess <- lapply(splitOnSlashN, function(m) {
+        anyOneLine <- any(nchar(m) > maxLineLngth)
+        if (anyOneLine) {
+          browser()
+          messSplit <- strsplit(mess, split = " ")
+          remainingChars <- chars
+          messBuild <- character()
+          while (remainingChars > maxLineLngth) {
+            whNewLine <- which(cumsum(nchar(messSplit[[1]]) + 1) >= maxLineLngth)[1] - 1
+            keepInd <- 1:whNewLine
+            newMess <- paste(messSplit[[1]][keepInd], collapse = " ")
+            messBuild <- c(messBuild, newMess)
+            if (is.null(indent)) {
+              # if it starts with a space -- that is the indent that is needed
+              if (startsWith(newMess, " ")) {
+                indent <<- sub("^( +).+", "\\1", newMess)
+              } else {
+                indent <<- ""
+              }
+
+            }
+            messSplit[[1]] <- messSplit[[1]][-keepInd]
+            remainingChars <- remainingChars - nchar(newMess)
+            hangingIndent <<- TRUE
+          }
+          newMess <- paste(messSplit[[1]], collapse = " ")
+          m <- c(messBuild, newMess)
+        }
+        m
+        })
+      mess <- unlist(newMess)
+      mess <- paste0(.addSlashNToAllButFinalElement(mess), collapse = "")
+    }
     hi <- if (isTRUE(hangingIndent)) paste0(indent, "  ") else indent
     if (any(grepl("\n", mess))) {
       mess <- gsub("\n *", paste0("\n", hi), mess)
