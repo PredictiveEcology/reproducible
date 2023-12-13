@@ -472,7 +472,7 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL, indent = NULL,
     }
     outMess <- capture.output(df)
     if (skipColNames) outMess <- outMess[-1]
-    outMess <- paste0(outMess, "\n")
+    outMess <- .addSlashNToAllButFinalElement(outMess)
     messageColoured(outMess, indent = indent, hangingIndent = FALSE,
                     colour = colour, verbose = verbose,
                     verboseLevel = verboseLevel, appendLF = appendLF)
@@ -560,8 +560,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
     if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
       mess <- lapply(strsplit(mess, "\n"), function(m) paste0(getFromNamespace(colour, "crayon")(m)))[[1]]
-      if (length(mess) > 1)
-        mess[1:(length(mess)-1)] <- paste0(mess[1:(length(mess)-1)], "\n")
+      mess <- .addSlashNToAllButFinalElement(mess)
       message(mess, appendLF = appendLF)
       # message(getFromNamespace(colour, "crayon")(mess), appendLF = appendLF)
     } else {
@@ -784,4 +783,11 @@ urlExists <- function(url) {
   on.exit(try(close(con), silent = TRUE), add = TRUE)
   a <- try(suppressWarnings(readLines(con, n = 1)), silent = TRUE)
   !is(a, "try-error")
+}
+
+
+.addSlashNToAllButFinalElement <- function(mess) {
+  if (length(mess) > 1)
+    mess[1:(length(mess)-1)] <- paste0(mess[1:(length(mess)-1)], "\n")
+  mess
 }
