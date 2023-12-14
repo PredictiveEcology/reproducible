@@ -561,7 +561,6 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
       newMess <- lapply(splitOnSlashN, function(m) {
         anyOneLine <- any(nchar(m) > maxLineLngth)
         if (anyOneLine) {
-          browser()
           messSplit <- strsplit(mess, split = " ")
           remainingChars <- chars
           messBuild <- character()
