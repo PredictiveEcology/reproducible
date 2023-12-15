@@ -1707,7 +1707,12 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   }
 
 
-  preDigest <- Map(i = seq_along(objsToDigest), x = objsToDigest, function(x, i) {
+  # isSimList <- sapply(objsToDigest, is, "simList")
+  # if (any(isSimList)) {
+  #   if (currentModule(objsToDigest[[which(isSimList)]])
+  #     == "fireSense_dataPrepFit") browser()
+  # }
+  preDigest <- Map(x = objsToDigest, i = seq_along(objsToDigest), function(x, i) {
     # remove the "newCache" attribute, which is irrelevant for digest
     if (!is.null(attr(x, ".Cache")$newCache)) {
       x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
