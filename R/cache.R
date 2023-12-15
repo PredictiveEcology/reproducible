@@ -1757,6 +1757,9 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   hashName <- .cacheTableHashColName()
   cn <- if (any(colnames(localTags) %in% "tag")) "tag" else "tagKey"
 
+  # if (is.null(userTagsOrig)) {
+  #   userTagsOrig <- gsub("function:", "", grep("function:", value = TRUE, userTags))
+  # }
   if (!(cn %in% "tag")) {
     tag <- localTags[paste(tagKey, get(.cacheTableTagColName()), sep = ":"),
       on = .cacheTableHashColName()
@@ -1764,7 +1767,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     utOrig <- paste0(userTagsOrig, ":", userTagsOrig)
   }
   aa <- localTags[tag %in% userTags3 | tag %in% utOrig]
-  hasCommonFUN <- startsWith(aa$tagValue, ".FUN")
+  hasCommonFUN <- startsWith(aa$tagValue, ".FUN") | startsWith(aa$tagKey, "function")
   if (any(hasCommonFUN)) {
     hasCommonUserTagsOrig <- userTagsOrig %in% aa[[.cacheTableTagColName()]]
     if (any(hasCommonUserTagsOrig %in% FALSE)) { # Doesn't share userTagsOrig
@@ -1885,8 +1888,6 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
         verbose = verbose)
       if (!is.null(userTagsMess)) {
         messageCache("  ", userTagsMess, "\n", verbose = verbose)
-      } else {
-        browser()
       }
     }
   }
