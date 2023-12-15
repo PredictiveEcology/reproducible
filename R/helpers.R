@@ -509,7 +509,7 @@ messagePreProcess <- function(..., appendLF = TRUE,
 messageCache <- function(..., colour = getOption("reproducible.messageColourCache"),
                          verbose = getOption("reproducible.verbose"), verboseLevel = 1,
                          appendLF = TRUE) {
-  messageColoured(...,
+  messageColoured(..., indent = .messageCacheIndent,
     colour = colour, appendLF = appendLF,
     verboseLevel = verboseLevel, verbose = verbose
   )
@@ -561,7 +561,6 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
       newMess <- lapply(splitOnSlashN, function(m) {
         anyOneLine <- any(nchar(m) > maxLineLngth)
         if (anyOneLine) {
-          browser()
           messSplit <- strsplit(mess, split = " ")
           remainingChars <- chars
           messBuild <- character()
@@ -574,6 +573,9 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
               # if it starts with a space -- that is the indent that is needed
               if (startsWith(newMess, " ")) {
                 indent <<- sub("^( +).+", "\\1", newMess)
+                if (grepl("^ +\\.\\.\\.", newMess)) {
+                  indent <<- paste0(indent, " ")
+                }
               } else {
                 indent <<- ""
               }
@@ -591,7 +593,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
       mess <- unlist(newMess)
       mess <- paste0(.addSlashNToAllButFinalElement(mess), collapse = "")
     }
-    hi <- if (isTRUE(hangingIndent)) paste0(indent, "  ") else indent
+    hi <- if (isTRUE(hangingIndent)) paste0(indent, .messageHangingIndent) else indent
     if (any(grepl("\n", mess))) {
       mess <- gsub("\n *", paste0("\n", hi), mess)
     }

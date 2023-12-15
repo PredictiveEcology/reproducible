@@ -950,7 +950,7 @@ Cache <-
             )
           )
         if (is.null(.reproEnv$alreadyMsgFuture)) {
-          messageCache("  Cache saved in a separate 'future' process. ",
+          messageCache("Cache saved in a separate 'future' process. ",
             "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour.",
             "This message will not be shown again until next reload of reproducible",
             verbose = verbose
@@ -1779,8 +1779,8 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   }
 
   userTagsMess <- if (!is.null(userTagsOrig)) {
-    paste0(
-      " with user supplied tags: '",
+    paste0(.messageHangingIndent,
+      "with user supplied tags: '",
       paste(userTagsOrig, collapse = ", "), "' "
     )
   }
@@ -1824,10 +1824,10 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     fnTxt <- paste0(if (!is.null(functionName))
       paste0("of '", messageFunction(functionName), "' ") else "call ")
     if (isDevMode) {
-      messageCache("    ------ devMode -------", verbose = verbose)
-      messageCache("    This call to cache will replace", verbose = verbose)
+      messageCache("------ devMode -------", verbose = verbose)
+      messageCache("This call to cache will replace", verbose = verbose)
     } else {
-      messageCache("    Cache ",
+      messageCache("Cache ",
         fnTxt,
         "differs from",
         verbose = verbose
@@ -1840,14 +1840,15 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     if (!all(sameNames)) {
       fnTxt <- paste0("(whose function name(s) was/were '", paste(simFun$funName, collapse = "', '"), "')")
     }
-    messageCache(paste0("    the next closest cacheId(s) ", paste(cacheIdOfSimilar, collapse = ", "), " ",
-      fnTxt, userTagsMess,
-      collapse = "\n"
-    ), appendLF = FALSE, verbose = verbose)
+    messageCache(paste0(.messageHangingIndent, "the next closest cacheId(s) ",
+                        paste(cacheIdOfSimilar, collapse = ", "), " ",
+                        fnTxt, userTagsMess,
+                        collapse = "\n"
+    ), appendLF = TRUE, verbose = verbose)
 
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
       differed <- TRUE
-      messageCache("    ... because of (a) different ",
+      messageCache(.messageBecauseOfA, " different ",
         paste(unique(similar2[differs %in% TRUE]$fun), collapse = ", "),
         verbose = verbose
       )
@@ -1855,7 +1856,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
 
     if (length(similar2[is.na(differs) & deeperThan3 == TRUE]$differs)) {
       differed <- TRUE
-      messageCache("    ... possible, unknown, differences in a nested list ",
+      messageCache("...possible, unknown, differences in a nested list ",
         "that is deeper than ", getOption("reproducible.showSimilarDepth", 3), " in ",
         paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun)),
         verbose = verbose
@@ -1864,20 +1865,24 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     missingArgs <- similar2[is.na(deeperThan3) & is.na(differs)]$fun
     if (length(missingArgs)) {
       differed <- TRUE
-      messageCache("    ... because of (a) new argument(s): ",
+      messageCache(.messageBecauseOfA, " new argument(s): ",
         paste(as.character(missingArgs), collapse = ", "),
         verbose = verbose
       )
     }
     if (isDevMode) {
-      messageCache(" ------ end devMode -------", verbose = verbose)
+      messageCache("------ end devMode -------", verbose = verbose)
     }
   } else {
     if (!identical("devMode", useCache)) {
       messageCache("There is no similar item in the cachePath ",
         if (!is.null(functionName)) paste0("of '", functionName, "' ") else "",
         verbose = verbose)
-      messageCache("  ", userTagsMess, verbose = verbose)
+      if (!is.null(userTagsMess)) {
+        messageCache("  ", userTagsMess, "\n", verbose = verbose)
+      } else {
+        browser()
+      }
     }
   }
 }
@@ -2202,13 +2207,17 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
 
         if (!file.exists(dtFile)) { # check first for wrong rds vs qs
           dtFile <- CacheDBFileSingle(cachePath = repo, cacheId = outputHash, format = "check")
-          if (!file.exists(dtFile)) { # still doesn't == means it is broken state
+          fe <- file.exists(dtFile)
+          if (isTRUE(!(fe))) { # still doesn't == means it is broken state
             unlink(csf)
             dtFile <- NULL
             warning(
               "The Cache file exists, but there is no database entry for it; removing ",
               "the file and rerunning the call"
             )
+          } else if (length(fe) > 1) { # has both the qs and rds dbFile
+            browser()
+
           }
         }
 
@@ -2377,3 +2386,6 @@ addCacheAttr <- function(output, .CacheIsNew, outputHash, FUN) {
   }
   output
 }
+
+.messageBecauseOfA <- "...because of (a)"
+.messageHangingIndent <- "  "

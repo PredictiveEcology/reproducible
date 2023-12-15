@@ -110,7 +110,7 @@ setMethod(
 
   fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
 
-  messageCache("  ...(Object to retrieve (fn: ", messageFunction(functionName), ", ",
+  messageCache("...(Object to retrieve (fn: ", messageFunction(functionName), ", ",
                basename2(CacheStoredFile(cachePath, cacheId, format = fileFormat)),
                ")",
                if (bigFile) " is large: ",

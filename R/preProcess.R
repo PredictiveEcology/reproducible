@@ -1832,3 +1832,4 @@ linkOrCopyUpdateOnly <- function(from, to, verbose) {
 messageEvaluatingAllFiles <- "Evaluating all files in archive"
 
 .messagePreProcessIndent <- "    "
+.messageCacheIndent <- "    "
