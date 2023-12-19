@@ -134,7 +134,7 @@ setMethod(
 
     dots <- list(...)
     sortedOrRegexp <- c("sorted", "regexp")
-    browser()
+    # browser()
     hasNoOther <- is.null(dots[!names(dots) %in% sortedOrRegexp])
 
     # Check if no args -- faster to delete all then make new empty repo for large repos

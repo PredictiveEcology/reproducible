@@ -1725,7 +1725,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     withCallingHandlers({
       .robustDigest(x, algo = algo, quick = FALSE, ...)
     }, error = function(e) {
-      nam <- names(objToDigest)
+      nam <- names(objsToDigest)
       if (!is.null(nam))
         messageCache("Error occurred during .robustDigest of ", nam[i], " in ", .functionName)
     })
