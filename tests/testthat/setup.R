@@ -12,8 +12,10 @@ opts <- options(
   warnPartialMatchDollar = TRUE
 )
 if (Sys.info()["nodename"] %in% "W-VIC-A127585") {
-  opts2 <- options(gargle_oauth_cache = "C:/Eliot/.secret",
-                   gargle_oauth_email = "eliotmcintire@gmail.com")
+  opts2 <- options(gargle_oauth_email = "eliotmcintire@gmail.com")
+  if (isWindows())
+    opts2 <- append(options(gargle_oauth_cache = "C:/Eliot/.secret"),
+                    opts2)
   if (requireNamespace("googledrive"))
     googledrive::drive_auth()
   opts <- append(opts, opts2)
