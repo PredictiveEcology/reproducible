@@ -6,7 +6,7 @@
 \alias{messagePreProcess}
 \alias{messageCache}
 \alias{messageQuestion}
-\alias{messageFunction}
+\alias{.messageFunctionFn}
 \alias{messageColoured}
 \title{Use \code{message} with a consistent use of \code{verbose}}
 \usage{
@@ -45,7 +45,7 @@ messageCache(
 
 messageQuestion(..., verboseLevel = 0, appendLF = TRUE)
 
-messageFunction(
+.messageFunctionFn(
   ...,
   appendLF = TRUE,
   verbose = getOption("reproducible.verbose"),
@@ -91,7 +91,7 @@ will show a message.}
 
 \item{...}{Any character vector, passed to \code{paste0(...)}}
 
-\item{hangingIndent}{Logical. If there are \n should there be a handing indent of 2 spaces.
+\item{hangingIndent}{Logical. If there are \verb{\\n}, should there be a handing indent of 2 spaces.
 Default is \code{TRUE}}
 }
 \value{
