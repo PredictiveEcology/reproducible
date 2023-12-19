@@ -15,6 +15,8 @@ clearCache(
   userTags = character(),
   after = NULL,
   before = NULL,
+  fun = NULL,
+  cacheId = NULL,
   ask = getOption("reproducible.ask"),
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
@@ -29,6 +31,8 @@ clearCache(
   userTags = character(),
   after = NULL,
   before = NULL,
+  fun = NULL,
+  cacheId = NULL,
   ask = getOption("reproducible.ask"),
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
@@ -45,6 +49,8 @@ showCache(
   userTags = character(),
   after = NULL,
   before = NULL,
+  fun = NULL,
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
@@ -56,6 +62,8 @@ showCache(
   userTags = character(),
   after = NULL,
   before = NULL,
+  fun = NULL,
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
@@ -110,6 +118,14 @@ Objects cached after this time will be shown or deleted.}
 \item{before}{A time (POSIX, character understandable by data.table).
 Objects cached before this time will be shown or deleted.}
 
+\item{fun}{An optional character vector describing the function name to extract.
+Only functions with this/these functions will be returned.}
+
+\item{cacheId}{An optional character vector describing the \code{cacheId}s to extract.
+Only entries with this/these \code{cacheId}s will be returned. If \code{useDBI(FALSE)},
+this will also be dramatically faster than using \code{userTags}, for a large
+cache.}
+
 \item{ask}{Logical. If \code{FALSE}, then it will not ask to confirm deletions using
 \code{clearCache} or \code{keepCache}. Default is \code{TRUE}}
 
@@ -135,8 +151,12 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Other arguments. Currently, \code{regexp}, a logical, can be provided.
-This must be \code{TRUE} if the use is passing a regular expression.
+\item{...}{Other arguments. Can be in the form of \code{tagKey = tagValue}, such as,
+\code{class = "numeric"} to find all entries that are numerics in the cache.
+Note: the special cases of \code{cacheId} and \code{fun} have their own
+named arguments in these functions.
+Also can be \code{regexp = xx}, where xx is \code{TRUE} if the user
+is passing a regular expression.
 Otherwise, \code{userTags} will need to be exact matches. Default is
 missing, which is the same as \code{TRUE}. If there are errors due
 to regular expression problem, try \code{FALSE}. For \code{cc}, it is
