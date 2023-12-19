@@ -230,34 +230,41 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     f <- CacheStoredFile(cachePath, cacheId, format)
     f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
 
-    # First test if it is correct format
-    if (!all(file.exists(f))) {
-      sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
-      if (!useDBI() || length(sameCacheID) > 1) {
-        sameCacheID <- onlyStorageFiles(sameCacheID)
-      }
+      # First test if it is correct format
+      if (!all(file.exists(f))) {
+        sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
+        if (!useDBI() || length(sameCacheID) > 1) {
+          sameCacheID <- onlyStorageFiles(sameCacheID)
+        }
 
-      if (length(sameCacheID)) {
-        messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
-          fileExt(f), ")",
-          verbose = verbose
-        )
-        obj <- loadFromCache(
-          cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
-          cacheId = cacheId,
-          format = fileExt(sameCacheID),
-          preDigest = preDigest,
-          verbose = verbose
-        )
+        if (length(sameCacheID)) {
+          if (!identical(whereInStack("sim"), .GlobalEnv)) {
+            format <- setdiff(c("rds", "qs"), format)
+            stop("User tried to change options('reproducible.cacheSaveFormat') for an ",
+                    "existing cache. This currently does not work. Resetting the ",
+                    "option to: ")
+          }
 
-        obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
-        fs <- saveToCache(
-          obj = obj2, cachePath = cachePath, drv = drv, conn = conn,
-          cacheId = cacheId
-        )
-        rmFromCache(
-          cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
-          format = fileExt(sameCacheID)
+          messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
+                       fileExt(f), ")",
+                       verbose = verbose
+          )
+          obj <- loadFromCache(
+            cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
+            cacheId = cacheId,
+            format = fileExt(sameCacheID),
+            preDigest = preDigest,
+            verbose = verbose
+          )
+
+          obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
+          fs <- saveToCache(
+            obj = obj2, cachePath = cachePath, drv = drv, conn = conn,
+            cacheId = cacheId
+          )
+          rmFromCache(
+            cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+            format = fileExt(sameCacheID)
           )
           return(obj)
         }
