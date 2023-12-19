@@ -2232,7 +2232,7 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
         }
 
         isInRepo <- if (!is.null(dtFile)) {
-          loadFile(dtFile, cachePath = repo)
+          loadFile(dtFile)
         } else {
           NULL
         }

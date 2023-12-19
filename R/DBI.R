@@ -258,15 +258,12 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
         rmFromCache(
           cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
           format = fileExt(sameCacheID)
-        )
-        return(obj)
+          )
+          return(obj)
+        }
       }
-    }
     # Need exclusive lock
-    obj <- loadFile(f, # format = fileFormat,
-      fullCacheTableForObj = fullCacheTableForObj,
-      cachePath = cachePath
-    )
+    obj <- loadFile(f)
     obj <- .unwrap(obj,
       cachePath = cachePath,
       cacheId = cacheId,
@@ -817,8 +814,7 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
   return(invisible())
 }
 
-loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL,
-                     cachePath = getOption("reproducible.cachePath")) {
+loadFile <- function(file, format = NULL) {
   if (is.null(format)) {
     format <- fileExt(file)
   }
