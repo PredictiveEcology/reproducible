@@ -519,7 +519,7 @@ Cache <-
                                    classOptions = classOptions, calledFrom = "Cache"
         ),
         error = function(e) {
-          messageCache("Error occurred during Cache call of: ", messageFunction(fnDetails$functionName),
+          messageCache("Error occurred during Cache call of: ", .messageFunctionFn(fnDetails$functionName),
                        ". Call was:\n", paste0(head(format(FUNcaptured)), collapse = "\n"))
         })
       postCacheDigestTime <- Sys.time()
@@ -973,13 +973,17 @@ Cache <-
           ),
           doProgress = isBig,
           message = c(
-            "Saving ", "large "[isBig], "object (fn: ", messageFunction(fnDetails$functionName),
+            "Saving ", "large "[isBig], "object (fn: ", .messageFunctionFn(fnDetails$functionName),
             ", cacheId: ", outputHash, ") to Cache", ": "[isBig],
             format(otsObjSize, units = "auto")[isBig]
           ),
           verboseLevel = 2 - isBig, verbose = verbose,
           colour = getOption("reproducible.messageColourCache")
         )
+        messageCache("Saved cache file: ",
+                     basename2(CacheStoredFile(cachePath = cachePath, cacheId = outputHash)),
+                     "; fn: ", .messageFunctionFn(fnDetails$functionName),
+                     verbose = verbose)
       }
 
       if (useCloud && .CacheIsNew) {
@@ -1830,7 +1834,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     similar2[(hash %in% "other"), differs := NA]
     differed <- FALSE
     fnTxt <- paste0(if (!is.null(functionName))
-      paste0("of '", messageFunction(functionName), "' ") else "call ")
+      paste0("of '", .messageFunctionFn(functionName), "' ") else "call ")
     if (isDevMode) {
       messageCache("------ devMode -------", verbose = verbose)
       messageCache("This call to cache will replace", verbose = verbose)
@@ -1856,7 +1860,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
 
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
       differed <- TRUE
-      messageCache(.messageBecauseOfA, " different ",
+      messageCache(.messageHangingIndent, .messageBecauseOfA, " different ",
         paste(unique(similar2[differs %in% TRUE]$fun), collapse = ", "),
         verbose = verbose
       )
@@ -1873,7 +1877,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     missingArgs <- similar2[is.na(deeperThan3) & is.na(differs)]$fun
     if (length(missingArgs)) {
       differed <- TRUE
-      messageCache(.messageBecauseOfA, " new argument(s): ",
+      messageCache(.messageHangingIndent, .messageBecauseOfA, " new argument(s): ",
         paste(as.character(missingArgs), collapse = ", "),
         verbose = verbose
       )
@@ -2270,7 +2274,8 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
     class(objSize) <- "object_size"
     bigFile <- isTRUE(objSize > 1e6)
     fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
-    messageCache("  ...(Object to retrieve (fn: ", messageFunction(fnDetails$functionName), ", ",
+    messageCache(.messageObjToRetrieveFn(fnDetails$functionName), ", ",
+    # messageCache("...(Object to retrieve (fn: ", .messageFunctionFn(fnDetails$functionName), ", ",
                  basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]], format = fileFormat)),
                  ")",
                  if (bigFile) " is large: ",
@@ -2393,5 +2398,3 @@ addCacheAttr <- function(output, .CacheIsNew, outputHash, FUN) {
   output
 }
 
-.messageBecauseOfA <- "...because of (a)"
-.messageHangingIndent <- "  "

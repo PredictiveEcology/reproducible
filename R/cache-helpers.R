@@ -432,16 +432,6 @@ list2envAttempts <- function(x, envir) {
   output
 }
 
-.messageLoadedCacheResult <- "loaded cached result from previous"
-
-.messageLoadedMemoisedResult <- "loaded memoised result from previous"
-
-.messageAddingToMemoised <- "(and added a memoised copy)"
-
-.messageLoadedCache <- function(root, functionName) {
-  paste0("     ", root, " ", functionName, " call")
-}
-
 #' Copy the file-backing of a file-backed Raster* object
 #'
 #' Rasters are sometimes file-based, so the normal save and copy and assign

@@ -487,9 +487,6 @@ fnCacheHelper <- function(a, cacheRepo2) {
 
 crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84"
 
-messageNoCacheRepo <- "No cachePath supplied and getOption\\('reproducible.cachePath'\\) is inside"
-
-
 .writeRaster <- function(...) {
   .requireNamespace("terra", stopOnFALSE = TRUE)
   suppressWarningsSpecific(

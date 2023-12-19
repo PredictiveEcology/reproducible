@@ -633,23 +633,23 @@ test_that("test Cache argument inheritance to inner functions", {
   }
 
   mess <- capture_messages(Cache(outer, n = 2))
-  expect_true(all(grepl(messageNoCacheRepo, mess)))
+  expect_true(all(grepl(.messageNoCacheRepoSuppliedGrep, mess)))
   clearCache(ask = FALSE, x = tmpdir)
 
   # options(reproducible.cachePath = tmpCache)
   out <- capture_messages(Cache(outer, n = 2))
   expect_true(all(unlist(lapply(
-    c(messageNoCacheRepo, messageNoCacheRepo),
+    c(.messageNoCacheRepoSuppliedGrep, .messageNoCacheRepoSuppliedGrep),
     function(mess) any(grepl(mess, out))
   ))))
 
   # does Sys.time() propagate to outer ones
   out <- capture_messages(Cache(outer(n = 2, not = Sys.time() + 1), notOlderThan = Sys.time() + 1))
-  expect_true(all(grepl(messageNoCacheRepo, out)))
+  expect_true(all(grepl(.messageNoCacheRepo, out)))
 
   # does Sys.time() propagate to outer ones -- no message about cachePath being tempdir()
   mess <- capture_messages(Cache(outer(n = 2, not = Sys.time()), notOlderThan = Sys.time(), cachePath = tmpdir))
-  expect_true(all(grepl(messageNoCacheRepo, mess)))
+  expect_true(all(grepl(.messageNoCacheRepo, mess)))
 
   # does cachePath propagate to outer ones -- no message about cachePath being tempdir()
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
@@ -675,7 +675,7 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n, notOlderThan = Sys.time() + 1)
   }
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-  expect_true(all(grepl(messageNoCacheRepo, out)))
+  expect_true(all(grepl(.messageNoCacheRepo, out)))
 
   # change the outer function, so no cache on that, & have notOlderThan on rnorm,
   #    so no Cache on that
@@ -684,7 +684,7 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n, notOlderThan = Sys.time() + 1)
   }
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-  expect_true(all(grepl(messageNoCacheRepo, out)))
+  expect_true(all(grepl(.messageNoCacheRepo, out)))
 
   # expect_true(all(grepl("There is no similar item in the cachePath", out)))
   # Second time will get a cache on outer
@@ -711,7 +711,7 @@ test_that("test Cache argument inheritance to inner functions", {
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
-  expect_true(sum(grepl(messageNoCacheRepo, out)) == 1)
+  expect_true(sum(grepl(.messageNoCacheRepo, out)) == 1)
 
   # expect_true(sum(grepl(msgGrep, out)) == 1)
 

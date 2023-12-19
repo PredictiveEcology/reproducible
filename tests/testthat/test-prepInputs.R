@@ -1418,8 +1418,8 @@ test_that("lightweight tests for code coverage", {
   ras <- terra::rast(terra::ext(0, 10, 0, 10), resolution = 1, vals = 1:100)
   terra::crs(ras) <- crsToUse
 
-  expect_error(postProcess(ras, studyArea = 1), .msgGrep$anySpatialClass)
-  expect_error(postProcess(ras, rasterToMatch = 1), .msgGrep$anySpatialClass)
+  expect_error(postProcess(ras, studyArea = 1), .messageGreps$anySpatialClass)
+  expect_error(postProcess(ras, rasterToMatch = 1), .messageGreps$anySpatialClass)
 
 
   ## cropInputs.default

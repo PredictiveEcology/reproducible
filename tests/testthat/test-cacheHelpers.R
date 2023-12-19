@@ -51,7 +51,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   # .checkCacheRepo
   options(reproducible.cachePath = .reproducibleTempCacheDir())
   mess <- capture_message(.checkCacheRepo(a))
-  expect_true(any(grepl(messageNoCacheRepo, mess)))
+  expect_true(any(grepl(.messageNoCacheRepoSuppliedGrep, mess)))
 
   opt11 <- options("reproducible.cachePath" = NULL)
   on.exit(
@@ -61,7 +61,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
     add = TRUE
   )
   mess <- capture_message(.checkCacheRepo(a))
-  expect_true(any(grepl("No cachePath supplied. Using", mess)))
+  expect_true(any(grepl(.messageNoCachePathSupplied, ". Using", mess)))
 
   ## nextNumericName
   b <- nextNumericName("test.pdf")
