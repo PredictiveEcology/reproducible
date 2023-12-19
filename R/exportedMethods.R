@@ -654,6 +654,11 @@ unmakeMemoisable.default <- function(x) {
     }
   }
 
+  if (is(obj, "SpatVectorCollection")) {
+    obj <- .wrap(as.list(obj))
+    class(obj) <- "PackedSpatVectorCollection"
+  }
+
   if (any(inherits(obj, c("SpatVector", "SpatRaster", "SpatExtent", "data.table")))) {
     if (!requireNamespace("terra", quietly = TRUE)) {
       stop("Please install terra package")
@@ -706,6 +711,10 @@ unmakeMemoisable.default <- function(x) {
                             drv = getDrv(getOption("reproducible.drv", NULL)),
                             conn = getOption("reproducible.conn", NULL), ...) {
   atts <- attributes(obj)
+  if (any(inherits(obj, "PackedSpatVectorCollection"))) {
+    obj <- lapply(obj, .unwrap)
+    obj <- terra::svc(obj)
+  }
   if (any(inherits(obj, c("PackedSpatVector", "PackedSpatRaster", "PackedSpatExtent")))) {
     if (!requireNamespace("terra")) stop("Please install.packages('terra')")
     if (any(inherits(obj, "PackedSpatVector"))) {
@@ -1108,5 +1117,5 @@ attributesReassign <- function(atts, obj) {
 }
 
 
-knownAtts <- c("cpp", "class", "attributes", "values", "definition")
+knownAtts <- c("cpp", "class", "attributes", "values", "definition", "pnt")
 
