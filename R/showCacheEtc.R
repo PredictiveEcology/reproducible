@@ -462,25 +462,26 @@ setMethod(
       }
     }
 
+    onCol <- "cacheId"
     if (!is.null(cacheId)) {
       cacheIds <- cacheId
-      objsDT <- objsDT[unique(objsDT[cacheId %in% cacheIds, "cacheId"]), on = "cacheId"]
+      objsDT <- objsDT[unique(objsDT[cacheId %in% cacheIds, ..onCol]), on = onCol]
     }
     if (!is.null(fun)) {
-      objsDT <- objsDT[objsDT[tagKey %in% "function" & tagValue %in% fun], on = "cacheId"]
+      objsDT <- objsDT[objsDT[tagKey %in% "function" & tagValue %in% fun, ..onCol], on = onCol]
     }
     dots <- list(...)
     sortedOrRegexp <- c("sorted", "regexp")
     dots <- dots[!names(dots) %in% sortedOrRegexp]
     if (length(dots)) {
       Map(nam = names(dots), val = dots, function(nam, val) {
-        objsDT <<- objsDT[objsDT[tagKey %in% nam & tagValue %in% val, "cacheId"], on = "cacheId"]
+        objsDT <<- objsDT[objsDT[tagKey %in% nam & tagValue %in% val, ..onCol], on = onCol]
       })
 
     }
     sorted <- !isFALSE(list(...)$sorted) # NULL and TRUE are sorted
     if (isTRUE(sorted) && NROW(objsDT)) {
-      data.table::setorderv(objsDT, "cacheId")
+      data.table::setorderv(objsDT, onCol)
     }
     # }
 
@@ -518,8 +519,8 @@ setMethod(
         } else {
           # if (useDBI()) {
           objsDT2 <- objsDT[cacheId %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
-          setkeyv(objsDT2, "cacheId")
-          shortDT <- unique(objsDT2, by = "cacheId")[, cacheId]
+          setkeyv(objsDT2, onCol)
+          shortDT <- unique(objsDT2, by = onCol)[, cacheId]
           objsDT <- if (NROW(shortDT)) objsDT[shortDT, on = .cacheTableHashColName()] else objsDT[0] # merge each userTags
           # } else {
           #   objsDT2 <- objsDT[artifact %in% userTags | tagKey %in% userTags | tagValue %in% userTags]

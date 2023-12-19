@@ -980,7 +980,7 @@ Cache <-
           verboseLevel = 2 - isBig, verbose = verbose,
           colour = getOption("reproducible.messageColourCache")
         )
-        messageCache("Saved cache file: ",
+        messageCache(.messageHangingIndent, "Saved cache file: ",
                      basename2(CacheStoredFile(cachePath = cachePath, cacheId = outputHash)),
                      "; fn: ", .messageFunctionFn(fnDetails$functionName),
                      verbose = verbose)
