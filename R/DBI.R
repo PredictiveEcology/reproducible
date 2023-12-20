@@ -227,8 +227,10 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   # }
 
   if (!isTRUE(isMemoised)) {
-    f <- CacheStoredFile(cachePath, cacheId, format)
-    f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
+    # Put this in a loop -- try the format that the user requested, but switch back if can't do it
+    for (i in 1:2) {
+      f <- CacheStoredFile(cachePath, cacheId, format)
+      f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
 
       # First test if it is correct format
       if (!all(file.exists(f))) {
@@ -240,9 +242,11 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
         if (length(sameCacheID)) {
           if (!identical(whereInStack("sim"), .GlobalEnv)) {
             format <- setdiff(c("rds", "qs"), format)
-            stop("User tried to change options('reproducible.cacheSaveFormat') for an ",
-                    "existing cache. This currently does not work. Resetting the ",
+            message("User tried to change options('reproducible.cacheSaveFormat') for an ",
+                    "existing cache, while using a simList. ",
+                    "This currently does not work. Resetting the ",
                     "option to: ")
+            next
           }
 
           messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
@@ -269,13 +273,15 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
           return(obj)
         }
       }
-    # Need exclusive lock
-    obj <- loadFile(f)
-    obj <- .unwrap(obj,
-      cachePath = cachePath,
-      cacheId = cacheId,
-      drv = drv, conn = conn
-    )
+      # Need exclusive lock
+      obj <- loadFile(f)
+      obj <- .unwrap(obj,
+                     cachePath = cachePath,
+                     cacheId = cacheId,
+                     drv = drv, conn = conn
+      )
+      break # if you got this far, then break out of the for i loop
+    }
   }
 
   # Class-specific message
