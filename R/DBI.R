@@ -244,8 +244,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
             format <- setdiff(c("rds", "qs"), format)
             message("User tried to change options('reproducible.cacheSaveFormat') for an ",
                     "existing cache, while using a simList. ",
-                    "This currently does not work. Resetting the ",
-                    "option to: ")
+                    "This currently does not work. Keeping the ",
+                    "option at: ", format)
             next
           }
 
