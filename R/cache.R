@@ -2219,12 +2219,12 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
           dtFile <- CacheDBFileSingle(cachePath = repo, cacheId = outputHash, format = "check")
           fe <- file.exists(dtFile)
           if (isTRUE(!(fe))) { # still doesn't == means it is broken state
-            unlink(csf)
-            dtFile <- NULL
             warning(
-              "The Cache file exists, but there is no database entry for it; removing ",
+              "The Cache file exists for ", outputHash, ", but there is no database entry for it; removing ",
               "the file and rerunning the call"
             )
+            unlink(csf)
+            dtFile <- NULL
           } else if (length(fe) > 1) { # has both the qs and rds dbFile
             browser()
 
