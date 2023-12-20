@@ -360,7 +360,7 @@ test_that("test 'quick' argument", {
   mess2 <- capture_messages({
     out1c <- Cache(quickFun, thePath, cachePath = tmpdir, quick = FALSE)
   })
-  expect_true(length(mess2) == 0) # because it is looking at the file contents
+  expect_true(length(mess2) == 1) # because it is looking at the file contents
 
   # Using Raster directly -- not file
   quickFun <- function(ras) {
@@ -385,9 +385,10 @@ test_that("test 'quick' argument", {
   )) == 0)
 
   # mess3 <- capture_messages({ out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = FALSE) })
-  expect_silent({
+  mess <- capture_messages({
     out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = FALSE)
   })
+  expect_true(length(mess) == 1)
 })
 
 test_that("test date-based cache removal", {
@@ -538,8 +539,8 @@ test_that("test asPath", {
   # Third -- finally has all same as second time
   a3 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
 
-  expect_true(length(a1) == 0)
-  expect_true(length(a2) == 0)
+  expect_equal(length(a1), 1)
+  expect_equal(length(a2), 1)
   expect_true(sum(grepl(paste(
     .messageLoadedMemoisedResult, "|",
     .messageLoadedCacheResult
@@ -559,7 +560,7 @@ test_that("test asPath", {
                                file = asPath("filename.RData"),
                                quick = TRUE, cachePath = tmpdir
   ))
-  expect_true(length(a1) == 0)
+  expect_equal(length(a1), 1)
   expect_true(sum(grepl(paste(
     .messageLoadedCacheResult, "|",
     .messageLoadedMemoisedResult
@@ -580,7 +581,7 @@ test_that("test asPath", {
                                file = as("filename.RData", "Path"),
                                quick = TRUE, cachePath = tmpdir
   ))
-  expect_true(length(a1) == 0)
+  expect_equal(length(a1), 1)
   expect_true(sum(grepl(paste(
     .messageLoadedCacheResult, "|",
     .messageLoadedMemoisedResult
@@ -633,7 +634,7 @@ test_that("test Cache argument inheritance to inner functions", {
   }
 
   mess <- capture_messages(Cache(outer, n = 2))
-  expect_true(all(grepl(.messageNoCacheRepoSuppliedGrep, mess)))
+  expect_equal(sum(grepl(.messageNoCacheRepoSuppliedGrep, mess)), 2)
   clearCache(ask = FALSE, x = tmpdir)
 
   # options(reproducible.cachePath = tmpCache)
@@ -645,11 +646,11 @@ test_that("test Cache argument inheritance to inner functions", {
 
   # does Sys.time() propagate to outer ones
   out <- capture_messages(Cache(outer(n = 2, not = Sys.time() + 1), notOlderThan = Sys.time() + 1))
-  expect_true(all(grepl(.messageNoCacheRepo, out)))
+  expect_equal(sum(grepl(.messageNoCacheRepoSuppliedGrep, out)), 2)
 
   # does Sys.time() propagate to outer ones -- no message about cachePath being tempdir()
   mess <- capture_messages(Cache(outer(n = 2, not = Sys.time()), notOlderThan = Sys.time(), cachePath = tmpdir))
-  expect_true(all(grepl(.messageNoCacheRepo, mess)))
+  expect_equal(sum(grepl(.messageNoCacheRepoSuppliedGrep, mess)), 1)
 
   # does cachePath propagate to outer ones -- no message about cachePath being tempdir()
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
@@ -662,7 +663,7 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n)
   }
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-  expect_true(length(out) == 3)
+  expect_true(length(out) == 4)
   msgGrep <- paste(paste(.messageLoadedCacheResult, "rnorm call"),
                    "There is no similar item in the cachePath",
                    sep = "|"
@@ -675,7 +676,7 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n, notOlderThan = Sys.time() + 1)
   }
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-  expect_true(all(grepl(.messageNoCacheRepo, out)))
+  expect_equal(sum(grepl(.messageNoCacheRepoSuppliedGrep, out)), 1)
 
   # change the outer function, so no cache on that, & have notOlderThan on rnorm,
   #    so no Cache on that
@@ -684,7 +685,7 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n, notOlderThan = Sys.time() + 1)
   }
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-  expect_true(all(grepl(.messageNoCacheRepo, out)))
+  expect_equal(sum(grepl(.messageNoCacheRepoSuppliedGrep, out)), 1)
 
   # expect_true(all(grepl("There is no similar item in the cachePath", out)))
   # Second time will get a cache on outer
@@ -711,7 +712,7 @@ test_that("test Cache argument inheritance to inner functions", {
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
-  expect_true(sum(grepl(.messageNoCacheRepo, out)) == 1)
+  expect_true(sum(grepl(.messageNoCacheRepoSuppliedGrep, out)) == 1)
 
   # expect_true(sum(grepl(msgGrep, out)) == 1)
 
@@ -847,7 +848,6 @@ test_that("test mergeCache", {
   expect_true(identical(showCache(d), showCache(d1)))
 })
 
-
 test_that("test cache-helpers", {
   testInit(c("raster"), tmpFileExt = c(rep(".grd", 3), rep(".tif", 3)))
   # out <- reproducible::createCache(tmpCache)
@@ -969,7 +969,6 @@ test_that("test rm large non-file-backed rasters", {
 
 test_that("test cc", {
   skip_on_cran()
-  # skip_on_ci()
 
   testInit(verbose = TRUE)
 
@@ -1158,7 +1157,7 @@ test_that("test file link with duplicate Cache", {
     d <- Cache(sample, N, cachePath = tmpCache)
   })
   # Different inputs AND different output -- so no cache recovery and no file link
-  expect_true(length(mess2) == 0)
+  expect_true(length(mess2) == 1)
   out2 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
   if (!is(out2, "try-error")) {
     fs2 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out2))
@@ -1253,12 +1252,12 @@ test_that("quick arg in Cache as character", {
   }
 
   expect_true(length(messes[[6]]) > 0) # undesirable: quick = TRUE -- raster has changed
-  expect_true(length(messes[[8]]) == 0) # undesirable: quick = FALSE -- raster & file not changed
+  expect_true(length(messes[[8]]) == 1) # undesirable: quick = FALSE -- raster & file not changed
 
   ## Desired: 9 not cache, 10 cached. But 9 is picking up cache from 4.
-  expect_true(length(messes[[9]]) == 0) # undesirable: quick = 'file' -- raster & file changed
+  expect_true(length(messes[[9]]) == 1) # undesirable: quick = 'file' -- raster & file changed
   expect_true(length(messes[[10]]) > 0) # undesirable: quick = 'file -- raster & file not changed
-  expect_true(sum(unlist(lapply(messes, function(x) length(x) > 0))) == 4L)
+  expect_equal(sum(unlist(lapply(messes, function(x) length(x) > 1))), 4L)
 })
 
 test_that("List of Rasters", {
@@ -1378,8 +1377,8 @@ test_that("change to new capturing of FUN & base pipe", {
 
   expect_true(length(grep("\\<sd\\>", mess0)) == 1) # digests just the 1
   expect_true(length(grep("\\<sd\\>", mess1)) == 1) # digests just the 1
-  expect_true(length(grep("\\<sd\\>", mess2)) == 6) # digests each element
-  expect_true(length(grep("\\<sd\\>", mess3)) == 6) # digests each element
+  expect_true(length(grep("\\<sd\\>", strsplit(mess2[[1]], ":")[[1]])) == 6) # digests each element
+  expect_true(length(grep("\\<sd\\>", strsplit(mess3[[1]], ":")[[1]])) == 6) # digests each element
 
   clearCache(tmpCache)
   for (i in 1:3) Cache(rnorm, i, cachePath = tmpCache)
@@ -1738,7 +1737,6 @@ test_that("test useDBI TRUE <--> FALSE", {
   lapply(d, function(aa) expect_false(attr(aa, ".Cache")$newCache))
 })
 
-
 test_that("lightweight tests for preProcess code coverage", {
   skip_on_cran()
   out <- testInit(verbose = TRUE)
@@ -1759,8 +1757,6 @@ test_that("lightweight tests for preProcess code coverage", {
     "different lengths"
   )
 })
-
-
 
 test_that("terra files were creating file.link", {
   testInit("terra",

@@ -133,8 +133,6 @@ setMethod(
     }
 
     dots <- list(...)
-    sortedOrRegexp <- c("sorted", "regexp")
-    # browser()
     hasNoOther <- is.null(dots[!names(dots) %in% sortedOrRegexp])
 
     # Check if no args -- faster to delete all then make new empty repo for large repos
@@ -471,7 +469,7 @@ setMethod(
       objsDT <- objsDT[objsDT[tagKey %in% "function" & tagValue %in% fun, ..onCol], on = onCol]
     }
     dots <- list(...)
-    sortedOrRegexp <- c("sorted", "regexp")
+
     dots <- dots[!names(dots) %in% sortedOrRegexp]
     if (length(dots)) {
       Map(nam = names(dots), val = dots, function(nam, val) {
@@ -628,10 +626,10 @@ setMethod(
     }
 
     suppressMessages({
-      cacheFromList <- showCache(cacheFrom, drv = drvFrom, connFrom = connFrom, sorted = FALSE)
+      cacheFromList <- showCache(cacheFrom, drv = drvFrom, conn = connFrom, sorted = FALSE)
     })
     suppressMessages({
-      cacheToList <- showCache(cacheTo, drv = drvTo, connTo = connTo, sorted = FALSE)
+      cacheToList <- showCache(cacheTo, drv = drvTo, conn = connTo, sorted = FALSE)
     })
 
     artifacts <- unique(cacheFromList[[.cacheTableHashColName()]])
@@ -791,3 +789,5 @@ showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath
   }
   sc[]
 }
+
+sortedOrRegexp <- c("sorted", "regexp", "ask")
