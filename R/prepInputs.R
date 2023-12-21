@@ -1503,7 +1503,7 @@ process <- function(out, funCaptured,
               )
             },
             message = function(m) {
-              m$message <- grep(.messageNoCachePathSupplied, "|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
+              m$message <- grep(paste0(.messageNoCachePathSupplied, "|useCache is FALSE"), m$message, invert = TRUE, value = TRUE)
               if (length(m$message)) {
                 mm <- gsub("(.*)\n$", "\\1", m$message)
                 messagePrepInputs(mm)
