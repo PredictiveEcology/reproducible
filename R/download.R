@@ -470,7 +470,28 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       }
       cat("\nDone!\n")
     } else {
-      a <- retry(downloadCall, retries = 2)
+      useGoogleDrive <- TRUE
+      if (isTRUE(getOption("reproducible.useGdown", FALSE))) {
+        messForGdownIsTRUE <- "options('reproducible.useGdown') is TRUE"
+        gdown <- "gdown"
+        if (nchar(Sys.which(gdown))) {
+          gdownCall <- paste0(gdown, " ", googledrive::as_id(url), " -O '", destFile, "'")
+          messagePreProcess("Using gdown to get files from GoogleDrive because ", messForGdownIsTRUE)
+
+          b <- try(system(gdownCall))
+          if (!is(b, "try-error")) {# likely because of authentication
+            messagePreProcess(messForGdownIsTRUE, ", but the attempt failed; possibly a private url?\n",
+                    url, "\nUsing googledrive package")
+            useGoogleDrive <- FALSE
+          }
+        } else {
+          messagePreProcess(messForGdownIsTRUE,
+                            ", but gdown is not available at the cmd line; skipping")
+        }
+      }
+      if (isTRUE(useGoogleDrive))
+        a <- retry(downloadCall, retries = 2)
+
     }
   } else {
     messagePreProcess(messSkipDownload, verbose = verbose)
