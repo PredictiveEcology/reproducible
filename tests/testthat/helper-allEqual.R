@@ -333,7 +333,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   tempFile <- replicate(14, tempfile(tmpdir = tmpdir, fileext = fileext))
 
   mc <- match.call()
-  r1Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 1, res = 1)
+  r1Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 1, resolution = 1)
   r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[1], overwrite = TRUE)
 
   if (mc$type == "Stack") {
@@ -360,7 +360,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   ####################################################
   # cloud copy exists only -- should download to local copy
   ####################################################
-  r2Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 1, res = 1)
+  r2Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 1, resolution = 1)
   r2Orig <- terra::writeRaster(r2Orig, filename = tempFile[3], overwrite = TRUE)
   if (mc$type == "Stack") {
     r2Orig2 <- terra::writeRaster(r2Orig, filename = tempFile[4], overwrite = TRUE)
@@ -401,7 +401,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   # only local exists -- upload to cloud
   ####################################################
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
-  r1Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 5, res = 1)
+  r1Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 5, resolution = 1)
   r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[5], overwrite = TRUE)
   if (mc$type == "Stack") {
     r1Orig2 <- terra::writeRaster(r1Orig, filename = tempFile[12], overwrite = TRUE)
@@ -436,7 +436,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   # both cloud and local exist -- take local only -- no change to cloud
   ####################################################
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
-  r1Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 5, res = 1)
+  r1Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 5, resolution = 1)
   r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[6], overwrite = TRUE)
   if (mc$type == "Stack") {
     r1Orig2 <- terra::writeRaster(r1Orig, filename = tempFile[13], overwrite = TRUE)
@@ -455,7 +455,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
 
 
   driveLsBefore <- googledrive::drive_ls(cloudFolderID)
-  r5Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 5, res = 1)
+  r5Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 5, resolution = 1)
   r5Orig <- terra::writeRaster(r5Orig, filename = tempFile[9], overwrite = TRUE)
   if (mc$type == "Stack") {
     r5Orig2 <- terra::writeRaster(r5Orig, filename = tempFile[14], overwrite = TRUE)
@@ -486,9 +486,6 @@ fnCacheHelper <- function(a, cacheRepo2) {
 }
 
 crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84"
-
-messageNoCacheRepo <- "No cachePath supplied and getOption\\('reproducible.cachePath'\\) is inside"
-
 
 .writeRaster <- function(...) {
   .requireNamespace("terra", stopOnFALSE = TRUE)

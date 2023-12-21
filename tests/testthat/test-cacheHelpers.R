@@ -51,7 +51,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   # .checkCacheRepo
   options(reproducible.cachePath = .reproducibleTempCacheDir())
   mess <- capture_message(.checkCacheRepo(a))
-  expect_true(any(grepl(messageNoCacheRepo, mess)))
+  expect_true(any(grepl(.messageNoCacheRepoSuppliedGrep, mess)))
 
   opt11 <- options("reproducible.cachePath" = NULL)
   on.exit(
@@ -61,7 +61,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
     add = TRUE
   )
   mess <- capture_message(.checkCacheRepo(a))
-  expect_true(any(grepl("No cachePath supplied. Using", mess)))
+  expect_true(any(grepl(paste0(.messageNoCachePathSupplied, ". Using"), mess)))
 
   ## nextNumericName
   b <- nextNumericName("test.pdf")
@@ -158,7 +158,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(any(grepl("no similar item", fMess))) # shouldn't find b/c args are same
   expect_true(any(grepl("next closest.+rmultin", gMess))) # should only find rmultinom
   expect_true(any(grepl("next closest.+rbinom", hMess))) # should only find rbinom
-  expect_true(sum(grepl(".+rcompletelynew|next closest.+rmultin", iMess)) == 2) # should notice different name, but still find
+  expect_true(sum(grepl(".+rcompletelynew|next closest.+rmultin", iMess)) == 3) # should notice different name, but still find
 
 
   ### UserTags matching -- prefer similar if all userTags match
@@ -257,8 +257,8 @@ test_that("test cache-helpers with stacks", {
 
   tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   tmpfile2 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-  r <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
-  r1 <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
+  r <- raster(extent(0, 5, 0, 5), resolution = 1, vals = rep(1:2, length.out = 25))
+  r1 <- raster(extent(0, 5, 0, 5), resolution = 1, vals = rep(1:2, length.out = 25))
   s <- raster::stack(r, r1)
 
   ## in memory

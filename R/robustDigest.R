@@ -399,7 +399,8 @@ setMethod(
       os <- objSize(object)
       if (os == 680) {
         # Means it is ALTREP --> convert to non-ALTREP for qs only
-        object <- as.integer(object + 0.0)
+        if (!is.factor(object)) # browser()
+          object <- as.integer(object + 0.0)
       }
       # qs doesn't save ALTREP yet for numerics
 

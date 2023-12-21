@@ -227,51 +227,61 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   # }
 
   if (!isTRUE(isMemoised)) {
-    f <- CacheStoredFile(cachePath, cacheId, format)
-    f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
+    # Put this in a loop -- try the format that the user requested, but switch back if can't do it
+    for (i in 1:2) {
+      f <- CacheStoredFile(cachePath, cacheId, format)
+      f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
 
-    # First test if it is correct format
-    if (!all(file.exists(f))) {
-      sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
-      if (!useDBI() || length(sameCacheID) > 1) {
-        sameCacheID <- onlyStorageFiles(sameCacheID)
+      # First test if it is correct format
+      if (!all(file.exists(f))) {
+        sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
+        if (!useDBI() || length(sameCacheID) > 1) {
+          sameCacheID <- onlyStorageFiles(sameCacheID)
+        }
+
+        if (length(sameCacheID)) {
+          if (!identical(whereInStack("sim"), .GlobalEnv)) {
+            format <- setdiff(c("rds", "qs"), format)
+            message("User tried to change options('reproducible.cacheSaveFormat') for an ",
+                    "existing cache, while using a simList. ",
+                    "This currently does not work. Keeping the ",
+                    "option at: ", format)
+            next
+          }
+
+          messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
+                       fileExt(f), ")",
+                       verbose = verbose
+          )
+          obj <- loadFromCache(
+            cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
+            cacheId = cacheId,
+            format = fileExt(sameCacheID),
+            preDigest = preDigest,
+            verbose = verbose
+          )
+
+          obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
+          fs <- saveToCache(
+            obj = obj2, cachePath = cachePath, drv = drv, conn = conn,
+            cacheId = cacheId
+          )
+          rmFromCache(
+            cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+            format = fileExt(sameCacheID)
+          )
+          return(obj)
+        }
       }
-
-      if (length(sameCacheID)) {
-        messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
-          fileExt(f), ")",
-          verbose = verbose
-        )
-        obj <- loadFromCache(
-          cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
-          cacheId = cacheId,
-          format = fileExt(sameCacheID),
-          preDigest = preDigest,
-          verbose = verbose
-        )
-
-        obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
-        fs <- saveToCache(
-          obj = obj2, cachePath = cachePath, drv = drv, conn = conn,
-          cacheId = cacheId
-        )
-        rmFromCache(
-          cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
-          format = fileExt(sameCacheID)
-        )
-        return(obj)
-      }
+      # Need exclusive lock
+      obj <- loadFile(f)
+      obj <- .unwrap(obj,
+                     cachePath = cachePath,
+                     cacheId = cacheId,
+                     drv = drv, conn = conn
+      )
+      break # if you got this far, then break out of the for i loop
     }
-    # Need exclusive lock
-    obj <- loadFile(f, # format = fileFormat,
-      fullCacheTableForObj = fullCacheTableForObj,
-      cachePath = cachePath
-    )
-    obj <- .unwrap(obj,
-      cachePath = cachePath,
-      cacheId = cacheId,
-      drv = drv, conn = conn
-    )
   }
 
   # Class-specific message
@@ -817,8 +827,7 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
   return(invisible())
 }
 
-loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL,
-                     cachePath = getOption("reproducible.cachePath")) {
+loadFile <- function(file, format = NULL) {
   if (is.null(format)) {
     format <- fileExt(file)
   }

@@ -116,7 +116,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
               downloadRemote(
                 url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
                 targetFile = targetFile, fileToDownload = fileToDownload,
-                messSkipDownload = messSkipDownload, checkSums = checkSums,
+                messSkipDownload = .messageSkipDownload, checkSums = checkSums,
                 dlFun = dlFun, destinationPath = destinationPath,
                 overwrite = overwrite, needChecksums = needChecksums, preDigest = preDigest,
                 verbose = verbose, .tempPath = .tempPath, ...
@@ -470,7 +470,28 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       }
       cat("\nDone!\n")
     } else {
-      a <- retry(downloadCall, retries = 2)
+      useGoogleDrive <- TRUE
+      if (isTRUE(getOption("reproducible.useGdown", FALSE))) {
+        messForGdownIsTRUE <- "options('reproducible.useGdown') is TRUE"
+        gdown <- "gdown"
+        if (nchar(Sys.which(gdown))) {
+          gdownCall <- paste0(gdown, " ", googledrive::as_id(url), " -O '", destFile, "'")
+          messagePreProcess("Using gdown to get files from GoogleDrive because ", messForGdownIsTRUE)
+
+          b <- try(system(gdownCall))
+          if (!is(b, "try-error")) {# likely because of authentication
+            messagePreProcess(messForGdownIsTRUE, ", but the attempt failed; possibly a private url?\n",
+                    url, "\nUsing googledrive package")
+            useGoogleDrive <- FALSE
+          }
+        } else {
+          messagePreProcess(messForGdownIsTRUE,
+                            ", but gdown is not available at the cmd line; skipping")
+        }
+      }
+      if (isTRUE(useGoogleDrive))
+        a <- retry(downloadCall, retries = 2)
+
     }
   } else {
     messagePreProcess(messSkipDownload, verbose = verbose)
@@ -774,18 +795,6 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   return(downloadFilename)
 }
 
-.messageRequireNamespaceFn <- function(pkg, messageExtra = character(), minVersion = NULL) {
-  mess <- paste0(
-    pkg, if (!is.null(minVersion)) {
-      paste0("(>=", minVersion, ")")
-    }, " is required but not yet installed. Try: ",
-    "install.packages('", pkg, "')"
-  )
-  if (length(messageExtra) > 0) {
-    mess <- paste(mess, messageExtra)
-  }
-  mess
-}
 
 .isRstudioServer <- function() {
   isRstudioServer <- FALSE

@@ -1407,6 +1407,7 @@ is.nulls <- function(x) lapply(x, is.null)
 
 
 
+#' @include messages.R
 process <- function(out, funCaptured,
                     useCache = getOption("reproducible.useCache"),
                     verbose = getOption("reproducible.verbose"),
@@ -1502,7 +1503,7 @@ process <- function(out, funCaptured,
               )
             },
             message = function(m) {
-              m$message <- grep("No cachePath supplied|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
+              m$message <- grep(.messageNoCachePathSupplied, "|useCache is FALSE", m$message, invert = TRUE, value = TRUE)
               if (length(m$message)) {
                 mm <- gsub("(.*)\n$", "\\1", m$message)
                 messagePrepInputs(mm)
