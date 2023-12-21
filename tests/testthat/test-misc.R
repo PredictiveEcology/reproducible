@@ -144,8 +144,8 @@ test_that("test miscellaneous fns (part 2)", {
     add = TRUE
   )
 
-  ras <- terra::rast(terra::ext(0, 1, 0, 1), res = 1, vals = 1)
-  ras <- terra::writeRaster(ras, file = tmpfile[1], overwrite = TRUE)
+  ras <- terra::rast(terra::ext(0, 1, 0, 1), resolution = 1, vals = 1)
+  ras <- terra::writeRaster(ras, filename = tmpfile[1], overwrite = TRUE)
 
   gdriveLs1 <- data.frame(name = "GADM", id = "sdfsd", drive_resource = list(sdfsd = 1))
   tmpCloudFolderID <- checkAndMakeCloudFolderID(create = TRUE)
@@ -221,8 +221,8 @@ test_that("Filenames for environment", {
   )
 
   s <- new.env(parent = emptyenv())
-  s$r <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1, res = 1)
-  s$r2 <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1, res = 1)
+  s$r <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1, resolution = 1)
+  s$r2 <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1, resolution = 1)
   s$r <- suppressWarningsSpecific(
     terra::writeRaster(s$r, filename = tmpfile[1], overwrite = TRUE),
     "NOT UPDATED FOR PROJ >= 6"
@@ -299,6 +299,7 @@ test_that("test miscellaneous fns", {
   expect_true(all(unlist(lapply(whZero, function(ws) identical(x1[[ws]], a[[ws]])))))
 
   out <- capture_messages(messageDF(cbind(a = 1.1232), round = 2))
+  out <- strsplit(out, "\n")[[1]] # the prev line is all on one line now (Dec 2023), with \n separating
   expect_true(is.character(out))
   expect_identical(length(out), 2L) ## TODO: only passes when run line by line interactively
   expect_true(is.numeric(as.numeric(gsub("\033.*", "", gsub(".*: ", "", out)[2]))))
@@ -311,6 +312,7 @@ test_that("test miscellaneous fns", {
 
 
   out <- capture_messages(messageDF(1.1232, round = 2, colnames = TRUE))
+  out <- strsplit(out, "\n")[[1]] # the prev line is all on one line now (Dec 2023), with \n separating
   expect_true(is.character(out))
   expect_identical(length(out), 2L) ## TODO: only passes when run line by line interactively
   expect_true(is.numeric(as.numeric(gsub("\033.*", "", gsub(".*: ", "", out)[2]))))

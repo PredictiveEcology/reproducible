@@ -90,14 +90,15 @@ test_that("prepInputs doesn't work (part 1)", {
       {
         mess <- capture_messages(
           shpEcozoneSm <- Cache(
-            prepInputs,
-            url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-            targetFile = reproducible::asPath(ecozoneFilename),
-            alsoExtract = reproducible::asPath(ecozoneFiles),
-            studyArea = StudyArea,
-            destinationPath = dPath,
-            filename2 = "EcozoneFile.shp",
-            useCache = FALSE
+            prepInputs(
+              url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+              targetFile = reproducible::asPath(ecozoneFilename),
+              alsoExtract = reproducible::asPath(ecozoneFiles),
+              studyArea = StudyArea,
+              destinationPath = dPath,
+              filename2 = "EcozoneFile.shp",
+              useCache = FALSE
+            ), quick = "destinationPath"
           )
         )
       }
@@ -119,7 +120,7 @@ test_that("prepInputs doesn't work (part 1)", {
             destinationPath = dPath,
             filename2 = "EcozoneFile.shp",
             useCache = TRUE # with useTerra = TRUE, this is only for loading, not postProcess
-          )
+          ), quick = "destinationPath"
         )
       }
     )
