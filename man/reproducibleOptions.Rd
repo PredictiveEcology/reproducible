@@ -156,6 +156,17 @@ Default: \code{TRUE} if \pkg{DBI} is available.
 Default value can be overridden by setting environment variable \code{R_REPRODUCIBLE_USE_DBI}.
 As of version 0.3, the backend is now \pkg{DBI} instead of \pkg{archivist}.
 }
+\item{\code{useGdown}}{
+Default: \code{FALSE}. If a user provides a Google Drive url to \code{preProcess}/\code{prepInputs},
+\code{reproducible} will use the \code{googledrive} package. This works reliably in most cases.
+However, for large files on unstable internet connections, it will stall and
+stop the download with no error. If a user is finding this behaviour, they can
+install the \code{gdown} package, making sure it is available on the PATH. This call
+to \code{gdown} will only work for files that do not need authentication. If authentication
+is needed, \code{dlGoogle} will fall back to \code{googledrive::drive_download}, even
+if this option is \code{TRUE}, with a message.
+.
+}
 \item{\code{useMemoise}}{
 Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}. If \code{TRUE}, recovery of cached
 elements from the \code{cachePath} will use \code{memoise::memoise}.

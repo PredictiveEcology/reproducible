@@ -151,6 +151,17 @@
 #'     Default value can be overridden by setting environment variable `R_REPRODUCIBLE_USE_DBI`.
 #'     As of version 0.3, the backend is now \pkg{DBI} instead of \pkg{archivist}.
 #'   }
+#'   \item{`useGdown`}{
+#'     Default: `FALSE`. If a user provides a Google Drive url to `preProcess`/`prepInputs`,
+#'     `reproducible` will use the `googledrive` package. This works reliably in most cases.
+#'     However, for large files on unstable internet connections, it will stall and
+#'     stop the download with no error. If a user is finding this behaviour, they can
+#'     install the `gdown` package, making sure it is available on the PATH. This call
+#'     to `gdown` will only work for files that do not need authentication. If authentication
+#'     is needed, `dlGoogle` will fall back to `googledrive::drive_download`, even
+#'     if this option is `TRUE`, with a message.
+#'     .
+#'   }
 #'   \item{`useMemoise`}{
 #'     Default: `FALSE`. Used in [Cache()]. If `TRUE`, recovery of cached
 #'     elements from the `cachePath` will use `memoise::memoise`.
@@ -244,6 +255,7 @@ reproducibleOptions <- function() {
                        verbose = interactive() - (useDBI() + 1)), # `FALSE` is useMultipleDBFiles now
       allowed = c("true", "false")
     ) |> as.logical()},
+    reproducible.useGdown = FALSE,
     reproducible.useMemoise = FALSE, # memoise
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1
