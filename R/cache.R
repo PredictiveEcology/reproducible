@@ -635,7 +635,7 @@ Cache <-
       )
 
       isInRepo <- inRepos$isInRepo
-      dbTabNam <- inRepos$dbTabName
+      # dbTabNam <- inRepos$dbTabName
       fullCacheTableForObj <- inRepos$fullCacheTableForObj
       cachePath <- inRepos$cachePath # i.e., if there was > 1, then we now know which one
 
