@@ -278,7 +278,7 @@ if (requireNamespace("terra", quietly = TRUE)) {
   r <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1:100)
 
   # write to disk manually -- will be in tempdir()
-  r <- terra::writeRaster(r, file = tempfile(fileext = ".tif"))
+  r <- terra::writeRaster(r, filename = tempfile(fileext = ".tif"))
 
   # copy it to the cache repository
   r <- .prepareOutput(r, tempdir())

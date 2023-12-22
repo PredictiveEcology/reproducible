@@ -1638,7 +1638,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
     sf::st_write(shp, dsn = tf3)
   } else {
     shp <- terra::project(maskToVect, terra::crs(fromRas))
-    terra::writeVector(shp, file = tf3)
+    terra::writeVector(shp, filename = tf3)
   }
 
   dPath <- which(...names() %in% "destinationPath")
