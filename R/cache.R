@@ -634,24 +634,40 @@ Cache <-
         add = TRUE
       )
 
+      if (!is.null(cacheId)) {
+        if  (identical(cacheId, "previous")) {
+          sc <- showCache(fun = .functionName, verbose = -2)
+          if (NROW(sc)) {
+            messageCache("cacheId is 'previous' meaning it will recover the most recent ",
+                         "cache item (accessed) that matches on .functionName: ",
+                         .messageFunctionFn(.functionName), "\nPlease ensure ",
+                         "the function name is precise enough for this behaviour", verbose = verbose)
+            outputHashNew <- data.table::setorderv(sc[tagKey == "accessed"], "tagValue", order = -1L)
+            outputHash <- outputHashNew$cacheId[1]
+            inRepos$isInRepo <- outputHashNew[1, ]
+            inRepos$fullCacheTableForObj <- showCacheFast(cacheId = outputHash)
+          }
+        } else {
+          outputHashManual <- cacheId
+          if (identical(outputHashManual, outputHash)) {
+            messageCache("cacheId is same as calculated hash",
+                         verbose = verbose
+            )
+          } else {
+            messageCache("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId,
+                         verbose = verbose
+            )
+          }
+          outputHash <- outputHashManual
+        }
+
+      }
+
       isInRepo <- inRepos$isInRepo
       # dbTabNam <- inRepos$dbTabName
       fullCacheTableForObj <- inRepos$fullCacheTableForObj
       cachePath <- inRepos$cachePath # i.e., if there was > 1, then we now know which one
 
-      if (!is.null(cacheId)) {
-        outputHashManual <- cacheId
-        if (identical(outputHashManual, outputHash)) {
-          messageCache("cacheId is same as calculated hash",
-            verbose = verbose
-          )
-        } else {
-          messageCache("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId,
-            verbose = verbose
-          )
-        }
-        outputHash <- outputHashManual
-      }
 
       # compare outputHash to existing Cache record
       if (useCloud) {

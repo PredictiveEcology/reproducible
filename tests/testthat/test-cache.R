@@ -1806,3 +1806,27 @@ test_that("multifile cache saving", {
   expect_false(all(Filenames(a) %in% dir(CacheStorageDir(), full.names = TRUE)))
 
 })
+
+
+test_that("cacheId = 'previous'", {
+  testInit()
+  opts <- options(reproducible.cachePath = tmpdir)
+  on.exit(options(opts), add = TRUE)
+
+  fnName <- "rnorm_this_one"
+  a <- rnorm(1) |> Cache(.functionName = fnName)
+  b <- rnorm(3) |> Cache(.functionName = fnName)
+  d <- rnorm(2) |> Cache(.functionName = fnName, cacheId = "previous")
+  e <- rnorm(2) |> Cache(.functionName = fnName)
+  expect_true(all.equalWONewCache(b, d))
+  expect_false(isTRUE(all.equalWONewCache(e, d)))
+
+  # cacheId = "previous" returns normal if there is no previous
+  fnName <- "rnorm_this_second"
+  d <- rnorm(4) |> Cache(.functionName = fnName, cacheId = "previous")
+  expect_true(unlist(attr(d, ".Cache")))
+  e <- rnorm(4) |> Cache(.functionName = fnName, cacheId = "previous")
+  expect_false(unlist(attr(e, ".Cache")))
+
+
+})
