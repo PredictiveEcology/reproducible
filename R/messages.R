@@ -184,7 +184,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
     }
 
     # do line wrap with hanging indent
-    maxLineLngth <- getOption("width") - 10 - 30
+    maxLineLngth <- getOption("width") - 10 # 10 is a "buffer" for Rstudio miscalculations
     chars <- nchar(mess)
     if (chars > maxLineLngth) {
       splitOnSlashN <- strsplit(mess, "\n")
