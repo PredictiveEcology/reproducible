@@ -73,19 +73,17 @@ setMethod(
   ".cacheMessage",
   signature = "ANY",
   definition = function(object, functionName, fromMemoise, verbose = getOption("reproducible.verbose", 1)) {
+    postMess <- NULL
+    whMessage <- .messageLoadedCacheResult
     if (isTRUE(fromMemoise)) {
       whMessage <- .messageLoadedMemoisedResult
-      messageCache(.messageLoadedCache(whMessage, functionName), verbose = verbose)
-    } else if (!is.na(fromMemoise) && !fromMemoise %in% FALSE) {
-      whMessage <- .messageLoadedCacheResult
-      messageCache(.messageLoadedCache(whMessage, functionName), " ",
-                   .messageAddingToMemoised,
-                   sep = "", verbose = verbose
-      )
-    } else {
-      whMessage <- .messageLoadedCacheResult
-      messageCache(.messageLoadedCache(whMessage, functionName), verbose = verbose)
+    } else if (fromMemoise %in% FALSE) {
+      postMess <- paste0(" ", .messageAddingToMemoised)
     }
+    baseMess <- .messageLoadedCache(whMessage, functionName)
+    if (!is.null(postMess))
+      baseMess <- paste0(baseMess, postMess)
+    messageCache(baseMess, verbose = verbose)
     return(invisible(whMessage))
   }
 )

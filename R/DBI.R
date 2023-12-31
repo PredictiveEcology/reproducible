@@ -285,13 +285,15 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   }
 
   # Class-specific message
-  loadFromMgs <- .cacheMessage(obj, .functionName, fromMemoise = isMemoised, verbose = verbose)
+  useMemoise <- if (getOption("reproducible.useMemoise") %in% TRUE) TRUE else NA
+  fromMemoise <- isMemoised && useMemoise
+  loadFromMgs <- .cacheMessage(obj, .functionName, fromMemoise = fromMemoise, verbose = verbose)
 
   # # This allows for any class specific things
-  obj <-
-    do.call(.prepareOutput, args = append(list(obj, cachePath), .dotsFromCache))
+  obj <- do.call(.prepareOutput, args = append(list(obj, cachePath), .dotsFromCache))
 
-  if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
+  if (isTRUE(useMemoise) && !isTRUE(isMemoised)) {
+  # if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
     obj2 <- makeMemoisable(obj)
     assign(cacheId, obj2, envir = memoiseEnv(cachePath))
   }
