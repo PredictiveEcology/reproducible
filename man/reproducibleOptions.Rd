@@ -69,6 +69,10 @@ this option to \code{TRUE} will use \code{sf::gdal_utils("warp")}. In many test 
 this is much faster than the \code{terra} sequence. The resulting \code{SpatRaster} is
 not identical, but it is very similar.
 }
+\item{\code{gdalwarpThreads}}{
+Default: \code{2}. This will set \verb{-wo NUM_THREADS=} to this number. Default is now \code{2}, meaning
+\code{gdalwarp} will use 2 threads with \code{gdalProject}. To turn off threading, set to \code{0}, \code{1} or \code{NA}.
+}
 \item{\code{inputPaths}}{
 Default: \code{NULL}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
 If set to a path, this will cause these functions to save their downloaded and preprocessed

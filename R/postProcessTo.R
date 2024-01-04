@@ -140,7 +140,8 @@
 #'   or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`, as well `postProcess`'s
 #'   `rasterToMatch` and `studyArea` arguments (see below). Commonly used arguments might be
 #'   `method`, `touches`, and `datatype`. If `filename` is passed, it will be ignored; use
-#'   `writeTo = `.
+#'   `writeTo = `. If `reproducible.gdalwarp = TRUE`, then these will be passed to the
+#'   `gdal*` functions. See them for details.
 #' @inheritParams Cache
 #'
 #' @details

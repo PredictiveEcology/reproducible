@@ -123,7 +123,8 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 or \code{terra::writeRaster} (for \code{writeTo}) and not used for \code{cropTo}, as well \code{postProcess}'s
 \code{rasterToMatch} and \code{studyArea} arguments (see below). Commonly used arguments might be
 \code{method}, \code{touches}, and \code{datatype}. If \code{filename} is passed, it will be ignored; use
-\verb{writeTo = }.}
+\verb{writeTo = }. If \code{reproducible.gdalwarp = TRUE}, then these will be passed to the
+\verb{gdal*} functions. See them for details.}
 
 \item{needBuffer}{Logical. Defaults to \code{TRUE}, meaning nothing is done out
 of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection

@@ -46,7 +46,8 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Currently can only be \code{destinationPath}}
+\item{...}{For \code{gdalProject}, this can be \code{method}. For \code{gdalMask} can be \code{destinationPath} and \code{touches}.
+For all \verb{gdal*}, this can also be and \code{datatype}.}
 
 \item{maskToVect}{see \code{maskTo} argeument from \code{\link[=maskTo]{maskTo()}}, but can only be a \code{SpatVector}}
 

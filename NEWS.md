@@ -1,3 +1,11 @@
+# reproducible 2.0.11
+
+## Changes
+* default for `gdalMask` has changed default for "touches". Now has equivalent for `terra::mask(..., touches = TRUE)`, using `"-wo CUTLINE_ALL_TOUCHED=TRUE"`
+* `gdalProject` now uses 2 threads, setting `"-wo NUM_THREADS=2"`; can be changed by user with `options("reproducible.gdalwarpThreads" = X)`; see `?reproducibleOptions`
+* `showSimilar` (e.g., `options(reproducible.showSimilar = 1)`) now preferentially shows the most recent item in cache if there are several with equivalent matching.
+
+
 # reproducible 2.0.10
 
 ## Bug fixes
