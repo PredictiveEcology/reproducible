@@ -1515,6 +1515,7 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
     "-overwrite"
   )
 
+  opts <- addDataType(opts, ...)
 
   sf::gdal_utils(
     util = "warp",
@@ -1579,21 +1580,25 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
   tf4 <- tempfile(fileext = ".prj")
   cat(sf::st_crs(toRas)$wkt, file = tf4)
 
-  sf::gdal_utils(
-    util = "warp",
-    source = fnSource,
-    destination = filenameDest,
-    options = c(
-      "-r", method,
-      "-te", c(terra::xmin(toRas), terra::ymin(toRas),
-               terra::xmin(toRas) + (terra::ncol(toRas) ) * terra::res(toRas)[1],
+
+  opts <- c(
+    "-r", method,
+    "-te", c(terra::xmin(toRas), terra::ymin(toRas),
+             terra::xmin(toRas) + (terra::ncol(toRas) ) * terra::res(toRas)[1],
                terra::ymin(toRas) + (terra::nrow(toRas) ) * terra::res(toRas)[2]),
       "-te_srs", tf4, # 3347, 3348, 3978, 3979
       "-tr", terra::res(toRas),
       "-dstnodata", "NA",
       # "-tap",
       "-overwrite"
-    ))
+  )
+
+  opts <- addDataType(opts, ...)
+  sf::gdal_utils(
+    util = "warp",
+    source = fnSource,
+    destination = filenameDest,
+    options = opts)
 
   out <- terra::rast(filenameDest)
   messagePrepInputs(messagePrefixDoneIn,
@@ -1666,6 +1671,8 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
   )
   if (!isFALSE(list(...)$touches)) # default is TRUE, like terra::mask
     opts <- c(opts, "-wo", "CUTLINE_ALL_TOUCHED=TRUE")
+
+  opts <- addDataType(opts, ...)
 
   sf::gdal_utils(
     util = "warp",
@@ -1749,4 +1756,14 @@ detectThreads <- function(threads = getOption("reproducible.gdalwarpThreads", 2)
   }
 
   threads
+}
+
+addDataType <- function(opts, ...) {
+  hasDatatype <- which(...names() %in% "datatype")
+  datatype <- if (length(hasDatatype)) ...elt(hasDatatype) else NULL
+  if (!is.null(datatype)) {
+    datatype <- switchDataTypes(datatype, type = "GDAL")
+    opts <- c(opts, "-ot", datatype)
+  }
+  opts
 }
