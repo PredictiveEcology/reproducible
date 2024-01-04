@@ -181,6 +181,13 @@ postProcessTo <- function(from, to,
   }
 
   if (!all(is.null(to), is.null(cropTo), is.null(maskTo), is.null(projectTo))) {
+    if (isTRUE(is.character(from))) {
+      fe <- fileExt(from)
+      if (fe %in% "shp") {
+        shpFilename <- gdalTransform(from, cropTo, projectTo, maskTo, writeTo)
+        return(shpFilename)
+      }
+    }
     fromOrig <- from # may need it later
     # ASSERTION STEP
     postProcessToAssertions(from, to, cropTo, maskTo, projectTo)
@@ -1766,4 +1773,48 @@ addDataType <- function(opts, ...) {
     opts <- c(opts, "-ot", datatype)
   }
   opts
+}
+
+
+gdalTransform <- function(from, cropTo, projectTo, maskTo, writeTo) {
+  messagePrepInputs("     running gdalTransform ...", appendLF = FALSE, verbose = verbose)
+  st <- Sys.time()
+  tf4 <- tempfile(fileext = ".prj")
+  on.exit(unlink(tf4), add = TRUE)
+  wkt1 <- sf::st_crs(projectTo)$wkt
+  cat(wkt1, file = tf4)
+  tf <- tempfile(fileext = ".shp")
+  tf2 <- tempfile(fileext = ".shp")
+  # tf3 <- tempfile(fileext = ".shp")
+  if (!sf::st_crs(projectTo) == sf::st_crs(maskTo)) {
+    stop("maskTo and projectTo must have the same crs")
+  }
+  # prjFile <- dir(dirname(from), pattern = paste0(basename(tools::file_path_sans_ext(from)), ".prj"), full.names = TRUE)
+  # maskToInFromCRS <- terra::project(maskTo, prjFile)
+  # writeVector(maskToInFromCRS, filename = tf3, overwrite = TRUE)
+  # system.time(gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
+  #                        destination = tf2, options =
+  #                          c(# "-t_srs", tf4,
+  #                            "-clipdst", tf3, "-overwrite"
+  #                          )))
+  # system.time(gdal_utils(util = "vectortranslate",
+  #                        source = tf2,
+  #                        destination = tf,
+  #                        options =
+  #                          c("-t_srs", tf4,
+  #                            # "-clipdst", tf2,
+  #                            "-overwrite"
+  #                          )))
+  #
+  # browser()
+  writeVector(maskTo, filename = tf2)
+  system.time(gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
+                         destination = tf, options =
+                           c("-t_srs", tf4,
+                             "-clipdst", tf2, "-overwrite"
+                             )))
+  messagePrepInputs(messagePrefixDoneIn,
+                    format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                    verbose = verbose)
+  tf
 }
