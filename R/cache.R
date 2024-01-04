@@ -1803,9 +1803,8 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   }
   aa <- aa[, .N, keyby = hashName]
   setkeyv(aa, "N")
-  aaWithMaxN <- aa[aa$N == max(aa$N)]
-  numSimilar <- NROW(aaWithMaxN)# unname(tail(table(aa$N), 1))
   similar <- if (NROW(aa) > 0) {
+    aaWithMaxN <- aa[aa$N == max(aa$N)]
     localTags[localTags$cacheId %in% aaWithMaxN$cacheId]
   } else {
     localTags[0]
