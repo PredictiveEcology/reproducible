@@ -1602,6 +1602,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
   )
 
   opts <- addDataType(opts, ...)
+
   sf::gdal_utils(
     util = "warp",
     source = fnSource,

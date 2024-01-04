@@ -221,7 +221,7 @@ basename2 <- function(x) {
 #' @details
 #' Based on <https://github.com/jennybc/googlesheets/issues/219#issuecomment-195218525>.
 #'
-#' @param expr     Quoted expression to run, i.e., `quote(...)`
+#' @param expr     An expression to run, i.e., `rnorm(1)`, similar to what is passed to `try`
 #' @param retries  Numeric. The maximum number of retries.
 #' @param envir    The environment in which to evaluate the quoted expression, default
 #'   to `parent.frame(1)`
@@ -250,18 +250,24 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
   hasRutils <- .requireNamespace("R.utils", stopOnFALSE = FALSE, messageStart = "")
 
   for (i in seq_len(retries)) {
-    if (!(is.call(expr) || is.name(expr))) warning("expr is not a quoted expression")
+    exprSub <- substitute(expr) # Have to deal with case where expr is already quoted
+    # if (!(is.call(expr) || is.name(expr))) warning("expr is not a quoted expression")
 
     if ( hasRutils) {
       # wrap the expr with R.utils::withTimeout
-      expr2 <- append(append(list(R.utils::withTimeout), expr),
+      expr2 <- append(append(list(R.utils::withTimeout), exprSub),
                              list(timeout = getOption("reproducible.timeout", 1200), onTimeout = "error"))
-      expr <- as.call(expr2)
+      exprSub <- as.call(expr2)
     }
 
     result <- try(silent = silent,
-                  expr = withCallingHandlers(
-                    eval(expr, envir = envir),
+                  expr = withCallingHandlers({
+                    res <- eval(exprSub, envir = envir)
+                    if (is.call(res))
+                      if (is.call(expr))
+                        res <- eval(res, envir = envir)
+                    res
+                    },
                     error = function(e) {
                       if (!hasRutils) {
                         message("If the download stalls/stalled, please interrupt this function ",
