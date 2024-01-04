@@ -169,6 +169,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        purge = FALSE,
                        verbose = getOption("reproducible.verbose", 1),
                        .tempPath, ...) {
+  st <- Sys.time()
+  messagePrepInputs("  Running `preProcess`", verbose = verbose, verboseLevel = 0)
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit(
@@ -786,6 +788,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     destinationPath = destinationPath,
     object = downloadFileResult$object
   )
+  stNext <- reportTime(st, mess = "  `preProcess` done; took ", minSeconds = 10)
   return(out)
 }
 
@@ -863,7 +866,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
                  !grepl("\\.[^\\.]+$", url)) # doesn't have an extension
     if (any(grepl("drive.google.com", url), isGID)) {
-      if (isGID) message("url seems to be a Google Drive ID")
+      if (isGID) messagePreProcess("url seems to be a Google Drive ID", verbose = verbose, verboseLevel = 2)
 
     # if (grepl("drive.google.com", url)) {
       # ie <- isTRUE(internetExists())
@@ -988,11 +991,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     if (rerunChecksums) {
       neededFiles <- checkRelative(neededFiles, destinationPath, allFiles)
       if (is.null(targetFile) || isTRUE(all(is.na(targetFile)))) {
-        messagePrepInputs("No targetFile supplied. ", messageEvaluatingAllFiles,
+        messagePreProcess("No targetFile supplied. ", messageChecksummingAllFiles,
                           verbose = verbose)
         neededFiles <- allFiles
       } else if ("all" %in% lookForSimilar) {
-        messagePrepInputs(messageEvaluatingAllFiles, verbose = verbose)
+        messagePrepInputs(messageChecksummingAllFiles, verbose = verbose)
         neededFiles <- allFiles
       } else {
         allOK <- .similarFilesInCheckSums(targetFile, checkSums, alsoExtract)
@@ -1837,5 +1840,5 @@ linkOrCopyUpdateOnly <- function(from, to, verbose) {
   }
 }
 
-messageEvaluatingAllFiles <- "Evaluating all files in archive"
+messageChecksummingAllFiles <- "Checksumming all files in archive"
 

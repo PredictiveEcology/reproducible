@@ -160,7 +160,7 @@ postProcessTo <- function(from, to,
                           cropTo = NULL, projectTo = NULL, maskTo = NULL, writeTo = NULL,
                           overwrite = TRUE, verbose = getOption("reproducible.verbose"),
                           ...) {
-  startTime <- Sys.time()
+  st <- Sys.time()
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
 
@@ -182,6 +182,7 @@ postProcessTo <- function(from, to,
   }
 
   if (!all(is.null(to), is.null(cropTo), is.null(maskTo), is.null(projectTo))) {
+    messagePrepInputs("  Running `postProcessTo`", verbose = verbose, verboseLevel = 0)
     if (isTRUE(is.character(from))) {
       fe <- fileExt(from)
       if (fe %in% "shp") {
@@ -219,13 +220,13 @@ postProcessTo <- function(from, to,
       lg <- osFrom > 5e8
       if (lg) {
         st <- Sys.time()
-        messagePrepInputs("  `from` is large, converting to terra object will take some time ...",
+        messagePreProcess("`from` is large, converting to terra object will take some time ...",
                           verbose = verbose
         )
       }
       from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
       if (lg) {
-        messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
+        messagePreProcess("done in ", format(difftime(Sys.time(), st),
                                                units = "secs", digits = 3
         ),
         verbose = verbose
@@ -239,7 +240,7 @@ postProcessTo <- function(from, to,
       #############################################################
       # project resample mask sequence ################################
       #############################################################
-      messagePrepInputs("  using sf::gdal_utils('warp') because options(\"reproducible.gdalwarp\" = TRUE) ...", appendLF = TRUE, verbose = verbose)
+      messagePreProcess("using sf::gdal_utils('warp') because options(\"reproducible.gdalwarp\" = TRUE) ...", appendLF = TRUE, verbose = verbose)
       st <- Sys.time()
 
       from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
@@ -268,10 +269,10 @@ postProcessTo <- function(from, to,
 
       # Put this message near the end so doesn't get lost
       if (is.naSpatial(cropTo) && isVector(maskTo)) {
-        messagePrepInputs("    ** cropTo is NA, but maskTo is a Vector dataset; ",
+        messagePreProcess("** cropTo is NA, but maskTo is a Vector dataset; ",
                           verbose = verbose
         )
-        messagePrepInputs("      this has the effect of cropping anyway",
+        messagePreProcess("this has the effect of cropping anyway",
                           verbose = verbose
         )
       }
@@ -290,11 +291,14 @@ postProcessTo <- function(from, to,
     # REVERT TO ORIGINAL INPUT CLASS
     from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial,
                         origFromClass = origFromClass)
-    messagePrepInputs("  postProcessTo done in ", format(difftime(Sys.time(), startTime),
-                                                         units = "secs", digits = 3
-    ),
-    verbose = verbose
-    )
+    messagePrepInputs("  postProcessTo ", gsub("^\b", "", messagePrefixDoneIn),
+                      format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                      verbose = verbose)
+    # messagePreProcess("postProcessTo done in ", format(difftime(Sys.time(), st),
+    #                                                    units = "secs", digits = 3
+    # ),
+    # verbose = verbose
+    # )
   }
   from
 }
@@ -337,7 +341,7 @@ fixErrorsIn <- function(x, error = NULL, verbose = getOption("reproducible.verbo
       messageDeclareError(error, fromFnName, verbose)
       os <- objSize(x)
       if (os > 1e9) {
-        messagePrepInputs("... this may take a long time because the object is large (",
+        messagePreProcess("... this may take a long time because the object is large (",
           format(os), ")",
           verbose = verbose
         )
@@ -348,7 +352,7 @@ fixErrorsIn <- function(x, error = NULL, verbose = getOption("reproducible.verbo
       xValids <- sf::st_is_valid(x)
       if (any(!xValids)) {
         if (os > 1e9) {
-          messagePrepInputs("... found invalid components ... running sf::st_make_valid",
+          messagePreProcess("... found invalid components ... running sf::st_make_valid",
             verbose = verbose
           )
         }
@@ -362,7 +366,7 @@ fixErrorsIn <- function(x, error = NULL, verbose = getOption("reproducible.verbo
         x <- terra::vect(x)
       }
       if (os > 1e9 && isTRUE(getOption("reproducible.useCache"))) {
-        messagePrepInputs("... Caching the fixErrorTerra call on this large object", verbose = verbose)
+        messagePreProcess("... Caching the fixErrorTerra call on this large object", verbose = verbose)
         x <- Cache(makeVal(x), .functionName = "make.valid")
       } else {
         x <- makeVal(x)
@@ -490,7 +494,7 @@ maskTo <- function(from, maskTo, # touches = FALSE,
             message("... converting to sf object worked to deal with ", warningCertificateGrep)
           maskTo <- maskTo3
         }
-        messagePrepInputs("    masking...", appendLF = FALSE, verbose = verbose)
+        messagePreProcess("masking...", appendLF = FALSE, verbose = verbose)
         st <- Sys.time()
 
         # There are 2 tries; first is for `maskTo`, second is for `from`, rather than fix both in one step, which may be unnecessary
@@ -563,7 +567,7 @@ maskTo <- function(from, maskTo, # touches = FALSE,
             }
           } else {
             if (attempt > 1) {
-              messagePrepInputs("...fixed!", verbose = verbose, verboseLevel = 1, appendLF = FALSE)
+              messagePreProcess("...fixed!", verbose = verbose, verboseLevel = 1, appendLF = FALSE)
             }
             break
           }
@@ -617,13 +621,13 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
       }
 
       # if (sameProj && sameRes) {
-      #   messagePrepInputs("    projection of from is same as projectTo, not projecting",
+      #   messagePreProcess("projection of from is same as projectTo, not projecting",
       #                     verbose = verbose)
       # } else {
       if (isSF(from) || isSF(projectTo)) {
         .requireNamespace("sf", stopOnFALSE = TRUE)
       }
-      messagePrepInputs("    projecting...",
+      messagePreProcess("projecting...",
         appendLF = FALSE,
         verbose = verbose
       )
@@ -643,14 +647,14 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
             projectTo <- terra::vect(projectTo)
           }
 
-          messagePrepInputs("", verbose = verbose)
-          messagePrepInputs("         projectTo is a Vector dataset, which does not define all metadata required. ",
+          messagePreProcess("", verbose = verbose)
+          messagePreProcess("projectTo is a Vector dataset, which does not define all metadata required. ",
             verbose = verbose
           )
           if (!terra::is.lonlat(from)) {
             # if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
             newRes <- terra::res(from)
-            messagePrepInputs("         Using resolution of ", paste(newRes, collapse = "x"), "m; ",
+            messagePreProcess("Using resolution of ", paste(newRes, collapse = "x"), "m; ",
               verbose = verbose
             )
             projectTo <- terra::rast(projectTo, resolution = newRes)
@@ -658,16 +662,16 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
             projectTo <- terra::crs(projectTo)
           }
 
-          messagePrepInputs("         in the projection of `projectTo`, using the origin and extent",
+          messagePreProcess("in the projection of `projectTo`, using the origin and extent",
             verbose = verbose
           )
-          messagePrepInputs("         from `ext(from)` (in the projection from `projectTo`).",
+          messagePreProcess("from `ext(from)` (in the projection from `projectTo`).",
             verbose = verbose
           )
-          messagePrepInputs("         If this is not correct, create a template gridded object and pass that to projectTo...",
+          messagePreProcess("If this is not correct, create a template gridded object and pass that to projectTo...",
             verbose = verbose
           )
-          messagePrepInputs("         ",
+          messagePreProcess("",
             appendLF = FALSE,
             verbose = verbose
           )
@@ -779,7 +783,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
         from <- terra::vect(from)
       }
 
-      messagePrepInputs("    cropping...",
+      messagePreProcess("cropping...",
         appendLF = FALSE,
         verbose = verbose
       )
@@ -902,7 +906,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
             }
           }
           if (NROW(fromInt) == 0) { # likely don't overlap
-            messagePrepInputs("It looks like the cropping results in no data ",
+            messagePreProcess("It looks like the cropping results in no data ",
               "(do not overlap or no intersection)",
               verbose = verbose
             )
@@ -923,7 +927,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
           }
         } else {
           if (attempt > 1) {
-            messagePrepInputs("...fixed!",
+            messagePreProcess("...fixed!",
               verbose = verbose, verboseLevel = 1,
               appendLF = FALSE
             )
@@ -977,7 +981,7 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
 
       if (!any(is.na(writeTo))) {
         .requireNamespace("terra", stopOnFALSE = TRUE)
-        messagePrepInputs("    writing...",
+        messagePreProcess("writing...",
           appendLF = FALSE,
           verbose = verbose
         )
@@ -1038,7 +1042,7 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
           if (any(whType)) {
             eval(parse(text = fe$saveFun[whType]))(from, writeTo)
           } else {
-            messagePrepInputs("... nothing written; object not a known object type to write.",
+            messagePreProcess("... nothing written; object not a known object type to write.",
               verbose = verbose
             )
           }
@@ -1048,7 +1052,7 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
             verbose = verbose
           )
         } else {
-          messagePrepInputs("", verbose = verbose) # need to "end" the line
+          messagePreProcess("", verbose = verbose) # need to "end" the line
         }
       }
     }
@@ -1164,7 +1168,7 @@ cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")
   st <- Sys.time()
   if (isSF(from) && (isSF(cropToVect) || is(cropToVect, "Spatial"))) {
     .requireNamespace("sf", stopOnFALSE = TRUE)
-    messagePrepInputs("    pre-cropping because `from` is sf and cropTo is sf/Spatial*",
+    messagePreProcess("pre-cropping because `from` is sf and cropTo is sf/Spatial*",
       verbose = verbose
     )
     attempt <- 1
@@ -1185,7 +1189,7 @@ cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")
         }
       } else {
         if (attempt > 1) {
-          messagePrepInputs("...fixed!",
+          messagePreProcess("...fixed!",
             verbose = verbose, verboseLevel = 1,
             appendLF = FALSE
           )
@@ -1197,7 +1201,7 @@ cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")
     }
 
     if (extntNA(from2)) {
-      messagePrepInputs("    resulting extent is NA, probably because objects don't overlap",
+      messagePreProcess("resulting extent is NA, probably because objects don't overlap",
         verbose = verbose
       )
     }
@@ -1205,7 +1209,7 @@ cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")
       from <- from2
     }
 
-    messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
+    messagePreProcess("done in ", format(difftime(Sys.time(), st),
       units = "secs", digits = 3
     ),
     verbose = verbose
@@ -1250,7 +1254,7 @@ revertClass <- function(from, isStack = FALSE, isBrick = FALSE, isRasterLayer = 
 
 messageDeclareError <- function(error, fromFnName, verbose = getOption("reproducible.verbose")) {
   errWOWordError <- gsub("Error {0,1}: ", "", error)
-  messagePrepInputs("    ", fromFnName, " resulted in following error: \n    - ", errWOWordError, "    --> attempting to fix",
+  messagePreProcess("", fromFnName, " resulted in following error: \n    - ", errWOWordError, "    --> attempting to fix",
     appendLF = FALSE, verbose = verbose, verboseLevel = 1
   )
 }
@@ -1290,7 +1294,7 @@ remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.fr
       function(elem, newHere) {
         if (length(elem)) {
           mes <- paste(newHere, collapse = ", ")
-          messagePrepInputs(elem, " is supplied (deprecated); assigning it to ", mes,
+          messagePreProcess(elem, " is supplied (deprecated); assigning it to ", mes,
             verbose = verbose - 1
           )
           lapply(newHere, function(nh) ret[nh] <<- list(dots[[elem]]))
@@ -1481,7 +1485,7 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
   if (!requireNamespace("sf") && !requireNamespace("terra"))
     stop("Can't use gdalProject without sf and terra")
 
-  messagePrepInputs("     running gdalProject ...", appendLF = FALSE, verbose = verbose)
+  messagePreProcess("running gdalProject ...", appendLF = FALSE, verbose = verbose)
   st <- Sys.time()
 
   hasMethod <- which(...names() %in% "method")
@@ -1561,7 +1565,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
   if (!requireNamespace("sf") && !requireNamespace("terra"))
     stop("Can't use gdalResample without sf and terra")
 
-  messagePrepInputs("     running gdalResample ...", appendLF = FALSE, verbose = verbose)
+  messagePreProcess("running gdalResample ...", appendLF = FALSE, verbose = verbose)
   st <- Sys.time()
 
   hasMethod <- which(...names() %in% "method")
@@ -1632,7 +1636,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
   if (!requireNamespace("sf") && !requireNamespace("terra"))
     stop("Can't use gdalMask without sf and terra")
 
-  messagePrepInputs("     running gdalMask ...", appendLF = FALSE, verbose = verbose)
+  messagePreProcess("running gdalMask ...", appendLF = FALSE, verbose = verbose)
   st <- Sys.time()
 
   fns <- unique(Filenames(fromRas))
@@ -1696,7 +1700,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
   out
 }
 
-messagePrefixDoneIn <- "     ...done in "
+messagePrefixDoneIn <- "\bdone! took:  "
 
 
 #' Keep original geometries of `sf` objects
@@ -1779,7 +1783,7 @@ addDataType <- function(opts, ...) {
 
 
 gdalTransform <- function(from, cropTo, projectTo, maskTo, writeTo) {
-  messagePrepInputs("     running gdalTransform ...", appendLF = FALSE, verbose = verbose)
+  messagePreProcess("running gdalTransform ...", appendLF = FALSE, verbose = verbose)
   st <- Sys.time()
   tf4 <- tempfile(fileext = ".prj")
   on.exit(unlink(tf4), add = TRUE)

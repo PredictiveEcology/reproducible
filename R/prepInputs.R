@@ -342,7 +342,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        .tempPath,
                        verbose = getOption("reproducible.verbose", 1),
                        ...) {
-  # Download, Checksum, Extract from Archive
   messagePrepInputs("Running `prepInputs`", verbose = verbose, verboseLevel = 0)
   stStart <- Sys.time()
   if (missing(.tempPath)) {
@@ -356,13 +355,10 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
   funCaptured <- substitute(fun)
   prepInputsAssertions(environment())
-  mess <- character(0)
 
   ##################################################################
   # preProcess
   ##################################################################
-
-  messagePrepInputs("  Running `preProcess`", verbose = verbose, verboseLevel = 0)
   out <- preProcess(
     targetFile = targetFile,
     url = url,
@@ -378,20 +374,18 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     verbose = verbose,
     ...
   )
-  stNext <- reportTime(stStart, mess = "  `preProcess`; took ", minSeconds = 120)
 
   ##################################################################
   # Load object to R
   ##################################################################
   if (!is.null(out$targetFilePath)) {
     if (!all(is.na(out$targetFilePath)))
-      messagePrepInputs("  targetFile located at ", out$targetFilePath, verbose = verbose)
+      messagePreProcess("targetFile located at ", out$targetFilePath, verbose = verbose)
   }
   x <- process(out,
     funCaptured = funCaptured,
     useCache = useCache, verbose = verbose, ...
   )
-  stNext <- reportTime(stNext, mess = "  `process` took ", minSeconds = 120)
 
   ##################################################################
   # postProcess
@@ -412,7 +406,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
     )
   }
-  stFinal <- reportTime(stStart, mess = "`prepInputs` took ", minSeconds = 180)
+  stFinal <- reportTime(stStart, mess = "`prepInputs` done; took ", minSeconds = 10)
 
   return(x)
 }
@@ -1442,8 +1436,10 @@ process <- function(out, funCaptured,
 
   if (!(naFun || is.null(theFun))) {
     x <- if (is.null(out$object)) {
+      st <- Sys.time()
+      messagePrepInputs("  Running `process` (i.e., loading file into R)", verbose = verbose, verboseLevel = 0)
       if (!isTRUE(is.na(out$targetFilePath)))
-        messagePrepInputs("Loading object into R", verbose = verbose)
+        messagePreProcess("Loading object into R", verbose = verbose)
       needRaster <- any(grepl("raster$|stack$|brick$", funCaptured))
       needTerra <- any(grepl("terra|rast$", funCaptured))
       if (needRaster) {
@@ -1452,7 +1448,7 @@ process <- function(out, funCaptured,
       if (needRaster || needTerra) {
         ## Don't cache the reading of a raster
         ## -- normal reading of raster on disk is fast b/c only reads metadata
-        do.call(theFun, append(list(asPath(out$targetFilePath)), args))
+        outProcess <- do.call(theFun, append(list(asPath(out$targetFilePath)), args))
       } else {
         if (identical(theFun, base::load)) {
           if (is.null(args$envir)) {
@@ -1468,9 +1464,9 @@ process <- function(out, funCaptured,
             returnAsList <- FALSE
           }
           args2 <- append(list(file = out$targetFilePath, envir = tmpEnv), args)
-          objs <- do.call(theFun, args2)
+          outProcess <- do.call(theFun, args2)
           if (returnAsList) {
-            as.list(tmpEnv, all.names = TRUE)
+            outProcess <- as.list(tmpEnv, all.names = TRUE)
           }
         } else {
           useCache2 <- useCache
@@ -1491,13 +1487,13 @@ process <- function(out, funCaptured,
                 args
               )
               out[["targetFile"]] <- out[["targetFilePath"]] # handle both
-              obj <- Cache(eval(theFun, envir = out),
+              outProcess <- Cache(eval(theFun, envir = out),
                 useCache = useCache2, .cacheExtra = .cacheExtra,
                 .functionName = funChar
               )
             } else {
               args2 <- append(list(asPath(out$targetFilePath)), args)
-              obj <- Cache(do.call, theFun, args2,
+              outProcess <- Cache(do.call, theFun, args2,
                 useCache = useCache2, .cacheExtra = .cacheExtra,
                 .functionName = funChar
               )
@@ -1511,9 +1507,12 @@ process <- function(out, funCaptured,
               tryInvokeRestart("muffleMessage")
             }
           )
-          obj
+          # outProcess
         }
       }
+      stNext <- reportTime(st, mess = "  `process` done; took ", minSeconds = 10)
+      outProcess
+
     } else {
       # if (is.null(fun) || is.na(fun)) {
       x <- out$object
