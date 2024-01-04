@@ -607,12 +607,20 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
               break
             }
           }
-          if (!isTRUE(all(from %in% to))) {
+
+          # Check that CHECKSUMS.txt in destinationPath has one or more of the files
+          a <- fread(checkSumFilePath)
+          common <- checkSums[checkSums$expectedFile %in% a$file]
+          missingFiles <- common[!a, on = c("expectedFile" = "file", "checksum.x" = "checksum")]
+
+          if (NROW(missingFiles)) {
             messagePreProcess("... linking to getOption('reproducible.inputPaths')...",
                               verbose = verbose)
+            # browser()
+            outHLC <- hardLinkOrCopy(from, to, verbose = verbose)
+          } else {
+            messagePreProcess("Skipping copy from inputPaths; all files present", verbose = verbose)
           }
-          outHLC <- hardLinkOrCopy(from, to, verbose = verbose)
-
         }
       }
     }
