@@ -235,7 +235,7 @@ postProcessTo <- function(from, to,
       st <- Sys.time()
 
       from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
-      from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose)
+      from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose, ...)
       if (isGridded(maskTo)) { # won't be used at the moment because couldDoGDAL = FALSE for gridded
         from <- maskTo(from = from, maskTo = maskTo, verbose = verbose, ...)
       } else {
@@ -1463,7 +1463,8 @@ isGeomType <- function(geom, type) {
 #' @example inst/examples/example_postProcessTo.R
 #' @rdname gdalwarpFns
 #' @aliases gdalProject
-#' @param ... Currently can only be `destinationPath`
+#' @param ... For `gdalProject`, this can be `method`. For `gdalMask` can be `destinationPath` and `touches`.
+#'   For all `gdal*`, this can also be and `datatype`.
 #' @inheritParams gdalResample
 #' @inheritParams postProcessTo
 #' @seealso [gdalResample()], and [gdalMask()] and the overarching [postProcessTo()]
@@ -1536,7 +1537,6 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
 #'   `gdal` to write the output to. Since this function is conceived to be part of a
 #'   chain, and not the final step, this function does not use `writeTo`, which is
 #'   reserved for the final step in the chain.
-#' @param ... Currently can only be `destinationPath` or `method`
 #' @inheritParams postProcessTo
 #' @rdname gdalwarpFns
 #' @aliases gdalResample
@@ -1603,7 +1603,6 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
 #' @export
 #' @param fromRas see `from` argument from [postProcessTo()], but can only be a  `SpatRaster`.
 #' @param maskToVect see `maskTo` argeument from [maskTo()], but can only be a `SpatVector`
-#' @param ... Currently can only be `destinationPath`
 #' @inheritParams postProcessTo
 #' @rdname gdalwarpFns
 #' @aliases gdalMask
