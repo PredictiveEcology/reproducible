@@ -1653,15 +1653,19 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
 
   writeTo <- determineFilename(writeTo, destinationPath = destinationPath, verbose = verbose)
 
+  opts <- c(
+    "-cutline", tf3,
+    "-dstnodata", "NA",
+    "-overwrite"
+  )
+  if (!isFALSE(list(...)$touches)) # default is TRUE, like terra::mask
+    opts <- c(opts, "-wo", "CUTLINE_ALL_TOUCHED=TRUE")
+
   sf::gdal_utils(
     util = "warp",
     source = fnSource,
     destination = writeTo,
-    options = c(
-      "-cutline", tf3,
-      "-dstnodata", "NA",
-      "-overwrite"
-    ))
+    options = opts)
 
   out <- terra::rast(writeTo)
   messagePrepInputs(messagePrefixDoneIn,
