@@ -1500,20 +1500,27 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
   tf4 <- tempfile(fileext = ".prj")
   on.exit(unlink(tf4), add = TRUE)
   cat(sf::st_crs(toRas)$wkt, file = tf4)
+
+  threads <- detectThreads()
+
+  opts <- c(
+    "-t_srs", tf4,
+    "-r", method,
+    "-te", c(terra::xmin(toRas), terra::ymin(toRas),
+             terra::xmin(toRas) + (terra::ncol(toRas) ) * terra::res(toRas)[1],
+             terra::ymin(toRas) + (terra::nrow(toRas) ) * terra::res(toRas)[2]),
+    "-te_srs", tf4,
+    "-wo", paste0("NUM_THREADS=", threads),
+    "-dstnodata", "NA",
+    "-overwrite"
+  )
+
+
   sf::gdal_utils(
     util = "warp",
     source = fnSource,
     destination = filenameDest,
-    options = c(
-      "-t_srs", tf4,
-      "-r", method,
-      "-te", c(terra::xmin(toRas), terra::ymin(toRas),
-               terra::xmin(toRas) + (terra::ncol(toRas) ) * terra::res(toRas)[1],
-               terra::ymin(toRas) + (terra::nrow(toRas) ) * terra::res(toRas)[2]),
-      "-te_srs", tf4,
-      "-dstnodata", "NA",
-      "-overwrite"
-    ))
+    options = opts)
 
   out <- terra::rast(filenameDest)
   messagePrepInputs(messagePrefixDoneIn,
@@ -1711,4 +1718,35 @@ keepOrigGeom <- function(newObj, origObj) {
     }
   }
   newObj
+}
+
+detectThreads <- function(threads = getOption("reproducible.gdalwarpThreads", 2)) {
+  isNotNumThreads <- !is.numeric(threads)
+  lenNumThreadsNot1 <- length(threads) > 1
+  isNAThreads <- all(is.na(threads))
+  isNULLThreads <- is.null(threads)
+  if (isNULLThreads) {
+    threads <- 1L
+  } else {
+
+    if (isNotNumThreads || isNAThreads || lenNumThreadsNot1) {
+      if (isNotNumThreads)
+        threads <- 2L
+      if (lenNumThreadsNot1)
+        threads <- threads[1]
+      if (isNAThreads)
+        threads <- 1L
+    } else {
+      if (threads < 1) {
+        threads <- 1L
+      } else {
+        .requireNamespace("parallel", stopOnFALSE = TRUE)
+        detCors <- parallel::detectCores()
+        if (threads > detCors)
+          threads <- detCors - 1
+      }
+    }
+  }
+
+  threads
 }
