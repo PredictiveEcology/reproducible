@@ -265,7 +265,7 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
                     res <- eval(exprSub, envir = envir)
                     if (is.call(res))
                       if (is.call(expr))
-                        res <- eval(res)
+                        res <- eval(res, envir = envir)
                     res
                     },
                     error = function(e) {
