@@ -682,18 +682,56 @@ progressBarCode <- function(..., doProgress = TRUE, message,
 
 
 switchDataTypes <- function(datatype, type) {
+
+  gdalVersion <- "3.1"
+  if (.requireNamespace("sf"))
+    gdalVersion <- sf::sf_extSoftVersion()["GDAL"]
+
+  if (missing(datatype))
+    datatype <- "Float32"
+  gdals <- list(
+    LOG1S = "Byte",
+    INT1S = "Int8", # added below if gdalversion ok
+    INT2S = "Int16",
+    INT4S = "Int32",
+    INT8S = "Int64",
+    INT1U = "Byte",
+    INT2U = "UInt16",
+    # INT4U = "UInt32", # added below if gdalversion ok
+    # INT8U = "UInt64", # added below if gdalversion ok
+    FLT4S = "Float32",
+    FLT8S = "Float64"
+  )
+
+  gdalsOrig <- gdals
+
+  if (gdalVersion >= as.numeric_version("3.5"))
+    gdals <- append(gdals,
+                    list(
+                      INT4U = "UInt32",
+                      INT8U = "UInt64"
+                    ))
+  if (gdalVersion >= as.numeric_version("3.7"))
+    gdals <- append(gdals,
+                    list(
+                      INT1S = "Int8"
+                    ))
+
+  if (identical(type, "GDAL"))
+    if (!datatype %in% names(gdals))
+      if (!datatype %in% unname(unlist(gdals))) {
+        warning("datatype ", datatype, " is not an option with this version of gdal: ",
+                gdalVersion, "\nSetting to ", tail(gdalsOrig, 1))
+        datatype <- tail(gdalsOrig, 1)
+      }
+
+  gdals <- append(
+    gdals,
+    list(datatype)) # default is user-supplied -- which could be already a gdal-correct specification for example
+
   datatype <- switch(type,
     GDAL = {
-      switch(datatype,
-        LOG1S = "Byte",
-        INT1S = "Int16",
-        INT2S = "Int16",
-        INT4S = "Int32",
-        INT1U = "Byte",
-        INT2U = "UInt16",
-        INT4U = "UInt32",
-        datatype <- "Float32" # there is no GDAL FLT8S
-      )
+      do.call(switch, append(list(datatype), gdals))
     },
     projectRaster = {
       switch(datatype,
