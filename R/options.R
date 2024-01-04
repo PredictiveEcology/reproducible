@@ -64,6 +64,10 @@
 #'     this is much faster than the `terra` sequence. The resulting `SpatRaster` is
 #'     not identical, but it is very similar.
 #'   }
+#'   \item{`gdalwarpThreads`}{
+#'     Default: `2`. This will set `-wo NUM_THREADS=` to this number. Default is now `2`, meaning
+#'     `gdalwarp` will use 2 threads with `gdalProject`. To turn off threading, set to `0`, `1` or `NA`.
+#'   }
 #'   \item{`inputPaths`}{
 #'     Default: `NULL`. Used in [prepInputs()] and [preProcess()].
 #'     If set to a path, this will cause these functions to save their downloaded and preprocessed
@@ -226,6 +230,7 @@ reproducibleOptions <- function() {
     reproducible.drv = NULL, # RSQLite::SQLite(),
     reproducible.futurePlan = FALSE, # future::plan("multisession"), #memoise
     reproducible.gdalwarp = FALSE,
+    reproducible.gdalwarpThreads = 2L,
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
