@@ -1528,8 +1528,9 @@ process <- function(out, funCaptured,
     x <- if ((is.null(theFun) || is.na(theFun)) && !is.null(out$object)) {
       out$object
     } else {
-      messagePrepInputs("No loading of object into R; fun = ", theFun, verbose = verbose)
-      out
+      messagePrepInputs("No loading of object into R; fun = ", theFun, "; returning the targetFilePath: ",
+                        out$targetFilePath, verbose = verbose)
+      out$targetFilePath
     }
   }
   x
