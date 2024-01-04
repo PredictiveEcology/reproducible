@@ -134,10 +134,8 @@ utils::globalVariables(c(
 #' As a result `Cache(glm, x ~ y, rnorm(1))` will not work as a means of forcing
 #' a new evaluation each time, as the `rnorm(1)` is not evaluated before the call
 #' is assessed against the cache database. To force a new call each time, evaluate
-#' the randomness prior to the Cache call, e.g., `ran = rnorm(1); Cache(glm, x ~ y, ran)`.
-#' Note this does not work for `glm` because `glm` accepts `...`.
-#' Rather, this randomness should be passed to `.cacheExtra`, e.g.,
-#' `Cache(glm, x ~ y, .cacheExtra = ran)`
+#' the randomness prior to the Cache call, e.g., `ran = rnorm(1)` then pass this
+#' to `.cacheExtra`, e.g., `Cache(glm, x ~ y, .cacheExtra = ran)`
 #'
 #' @section `drv` and `conn`:
 #' By default, `drv` uses an SQLite database. This can be sufficient for most cases.
@@ -247,7 +245,10 @@ utils::globalVariables(c(
 #'                objects, this will only be applied outermost first.
 #'
 #' @param .cacheExtra A an arbitrary R object that will be included in the `CacheDigest`,
-#'       but otherwise not passed into the `FUN`.
+#'       but otherwise not passed into the `FUN`. If the user supplies a named list, then
+#'       `Cache` will report which individual elements of `.cacheExtra` have changed
+#'       when `options("reproducible.showSimilar" = TRUE)`. This can allow a user
+#'       more control and understanding for debugging.
 #'
 #' @param .functionName A an arbitrary character string that provides a name that is different
 #'       than the actual function name (e.g., "rnorm") which will be used for messaging. This
@@ -1769,6 +1770,9 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   # browser(expr = exists("._findSimilar_1"))
   # deal with tag
   userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
+  noValue <- endsWith(userTags2, ":")
+  if (isTRUE(any(noValue)))
+    userTags2 <- userTags2[!noValue]
   userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc),
     preDigestUnlistTrunc,
     sep = ":"
@@ -1777,17 +1781,16 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   hashName <- .cacheTableHashColName()
   cn <- if (any(colnames(localTags) %in% "tag")) "tag" else "tagKey"
 
-  # if (is.null(userTagsOrig)) {
-  #   userTagsOrig <- gsub("function:", "", grep("function:", value = TRUE, userTags))
-  # }
   if (!(cn %in% "tag")) {
     tag <- localTags[paste(tagKey, get(.cacheTableTagColName()), sep = ":"),
       on = .cacheTableHashColName()
     ][[hashName]]
-    utOrig <- paste0(userTagsOrig, ":", userTagsOrig)
+    utOrig <- if (is.null(userTagsOrig)) NULL else paste0(userTagsOrig, ":", userTagsOrig)
   }
   aa <- localTags[tag %in% userTags3 | tag %in% utOrig]
-  hasCommonFUN <- startsWith(aa$tagValue, ".FUN") | startsWith(aa$tagKey, "function")
+  accessed <- localTags[tagKey == "accessed"]
+  hasCommonFUN <- startsWith(aa$tagValue, ".FUN") |  # same function
+    startsWith(aa$tagKey, "function")  # same function name
   if (any(hasCommonFUN)) {
     hasCommonUserTagsOrig <- userTagsOrig %in% aa[[.cacheTableTagColName()]]
     if (any(hasCommonUserTagsOrig %in% FALSE)) { # Doesn't share userTagsOrig
@@ -1800,11 +1803,17 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   }
   aa <- aa[, .N, keyby = hashName]
   setkeyv(aa, "N")
+  aaWithMaxN <- aa[aa$N == max(aa$N)]
+  numSimilar <- NROW(aaWithMaxN)# unname(tail(table(aa$N), 1))
   similar <- if (NROW(aa) > 0) {
-    localTags[tail(aa, as.numeric(showSimilar)), on = hashName][N == max(N)]
+    localTags[localTags$cacheId %in% aaWithMaxN$cacheId]
   } else {
     localTags[0]
   }
+  # tail(aa, as.numeric(showSimilar))
+  accessed <- accessed[accessed$cacheId %in% similar$cacheId]
+  data.table::setorderv(accessed, "tagValue", order = -1L) # will be top one
+  similar <- similar[similar$cacheId %in% accessed$cacheId[as.numeric(showSimilar)]]
 
   userTagsMess <- if (!is.null(userTagsOrig)) {
     paste0(.messageHangingIndent,
