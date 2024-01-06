@@ -647,12 +647,13 @@ captureWarningsToAttr <- function(code, verbose = getOption("reproducible.verbos
 }
 
 dtp <- list()
+dtp[["LOG1S"]] <- 1
 dtp[["INT1"]] <- 255 / 2
 dtp[["INT2"]] <- 65534 / 2
 dtp[["INT4"]] <- 4294967296 / 2
 dtp[["FLT4"]] <- 3.4e+38
 dtp[["FLT8"]] <- Inf
-dtps <- c("INT1U", "INT1S", "INT2U", "INT2S", "INT4U", "INT4S", "FLT4S", "FLT8S", "FLT8U")
+dtps <- c("LOG1S", "INT1U", "INT1S", "INT2U", "INT2S", "INT4U", "INT4S", "FLT4S", "FLT8S", "FLT8U")
 names(dtps) <- dtps
 datatypeVals <- lapply(dtps, function(namdtp) {
   d <- dtp[grep(substr(namdtp, 1, 4), names(dtp), value = TRUE)]
@@ -660,7 +661,11 @@ datatypeVals <- lapply(dtps, function(namdtp) {
   mult <- ifelse(div == "U", 2, 1)
   Max <- trunc(unlist(d) * mult)
   sign1 <- ifelse(div == "U", 0, -1)
-  Min <- Max * sign1
+  if (grepl("LOG", names(d))) {
+    Min <- 0
+  } else {
+    Min <- Max * sign1
+  }
   list(Min = Min, Max = Max)
 })
 MaxVals <- lapply(datatypeVals, function(x) unname(x$Max))
@@ -717,6 +722,7 @@ switchDataTypes <- function(datatype, type) {
                       INT1S = "Int8"
                     ))
 
+
   rast <- names(gdals)
   names(rast) <- gdals
 
@@ -731,6 +737,7 @@ switchDataTypes <- function(datatype, type) {
   gdals <- append(
     gdals,
     list(datatype)) # default is user-supplied -- which could be already a gdal-correct specification for example
+  rast <- append(rast, list(datatype))
 
   datatype <- switch(type,
     GDAL = {

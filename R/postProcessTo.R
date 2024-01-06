@@ -1528,7 +1528,7 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
     "-overwrite"
   )
 
-  opts <- addDataType(opts, ...)
+  opts <- addDataType(opts, fromRas, ...)
   opts <- updateDstNoData(opts, fromRas)
 
   tried <- retry(retries = 2, exprBetween = browser(),
@@ -1608,7 +1608,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
     "-overwrite"
   )
 
-  opts <- addDataType(opts, ...)
+  opts <- addDataType(opts, fromRas, ...)
   opts <- updateDstNoData(opts, fromRas)
 
   tried <- retry(retries = 2, exprBetween = browser(),
@@ -1690,7 +1690,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
   if (!isFALSE(list(...)$touches)) # default is TRUE, like terra::mask
     opts <- c(opts, "-wo", "CUTLINE_ALL_TOUCHED=TRUE")
 
-  opts <- addDataType(opts, ...)
+  opts <- addDataType(opts, fromRas, ...)
   opts <- updateDstNoData(opts, fromRas)
 
   tried <- retry(retries = 2, exprBetween = browser(),
@@ -1778,9 +1778,11 @@ detectThreads <- function(threads = getOption("reproducible.gdalwarpThreads", 2)
   threads
 }
 
-addDataType <- function(opts, ...) {
+addDataType <- function(opts, fromRas, ...) {
   hasDatatype <- which(...names() %in% "datatype")
-  datatype <- if (length(hasDatatype)) ...elt(hasDatatype) else "FLT4S"
+  datatype <- if (length(hasDatatype)) ...elt(hasDatatype) else {
+    assessDataType(fromRas, type = "GDAL")
+  }
   if (!is.null(datatype)) {
     datatype <- switchDataTypes(datatype, type = "GDAL")
     opts <- c(opts, "-ot", datatype)
