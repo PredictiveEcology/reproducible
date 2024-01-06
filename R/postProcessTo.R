@@ -1531,11 +1531,12 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
 
   opts <- addDataType(opts, ...)
 
+  tried <- retry(retries = 2, exprBetween = browser(),
   sf::gdal_utils(
     util = "warp",
     source = fnSource,
     destination = filenameDest,
-    options = opts)
+                   options = opts))
 
   out <- terra::rast(filenameDest)
   messagePrepInputs(messagePrefixDoneIn,
@@ -1609,11 +1610,12 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
 
   opts <- addDataType(opts, ...)
 
+  tried <- retry(retries = 2, exprBetween = browser(),
   sf::gdal_utils(
     util = "warp",
     source = fnSource,
     destination = filenameDest,
-    options = opts)
+                   options = opts))
 
   out <- terra::rast(filenameDest)
   messagePrepInputs(messagePrefixDoneIn,
@@ -1689,11 +1691,12 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
 
   opts <- addDataType(opts, ...)
 
+  tried <- retry(retries = 2, exprBetween = browser(),
   sf::gdal_utils(
     util = "warp",
     source = fnSource,
     destination = writeTo,
-    options = opts)
+                   options = opts))
 
   out <- terra::rast(writeTo)
   messagePrepInputs(messagePrefixDoneIn,
