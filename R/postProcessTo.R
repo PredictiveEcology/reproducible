@@ -1530,6 +1530,7 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
   )
 
   opts <- addDataType(opts, ...)
+  opts <- updateDstNoData(opts, fromRas)
 
   tried <- retry(retries = 2, exprBetween = browser(),
   sf::gdal_utils(
@@ -1609,6 +1610,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
   )
 
   opts <- addDataType(opts, ...)
+  opts <- updateDstNoData(opts, fromRas)
 
   tried <- retry(retries = 2, exprBetween = browser(),
   sf::gdal_utils(
@@ -1690,6 +1692,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
     opts <- c(opts, "-wo", "CUTLINE_ALL_TOUCHED=TRUE")
 
   opts <- addDataType(opts, ...)
+  opts <- updateDstNoData(opts, fromRas)
 
   tried <- retry(retries = 2, exprBetween = browser(),
   sf::gdal_utils(
@@ -1828,4 +1831,23 @@ gdalTransform <- function(from, cropTo, projectTo, maskTo, writeTo) {
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)
   tf
+}
+
+updateDstNoData <- function(opts, fromRas) {
+  hasDashOT <- which(opts %in% "-ot")
+  valForNoData <- MaxVals[[switchDataTypes(opts[hasDashOT + 1], "writeRaster")]]
+  hasMM <- terra::hasMinMax(fromRas)
+  if (!isTRUE(all(hasMM)))
+    fromRas <- terra::setMinMax(fromRas)
+  minmaxRas <- terra::minmax(fromRas)
+  if (any(minmaxRas[2, ] >= valForNoData)) {
+    valForNoData <- MinVals[[switchDataTypes(opts[hasDashOT + 1], "writeRaster")]]
+    if (any(minmaxRas[1, ] <= valForNoData))
+      valForNoData <- NA
+  }
+  valForNoData <- as.character(valForNoData)
+  valForNoData
+  hasDstNoData <- which(opts %in% "-dstnodata")
+  opts[hasDstNoData + 1] <- valForNoData
+  opts
 }
