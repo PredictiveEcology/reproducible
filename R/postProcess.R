@@ -652,7 +652,7 @@ dtp[["INT2"]] <- 65534 / 2
 dtp[["INT4"]] <- 4294967296 / 2
 dtp[["FLT4"]] <- 3.4e+38
 dtp[["FLT8"]] <- Inf
-dtps <- c("INT1U", "INT1S", "INT2U", "INT2S", "INT4U", "INT4S", "FLT4S", "FLT8S")
+dtps <- c("INT1U", "INT1S", "INT2U", "INT2S", "INT4U", "INT4S", "FLT4S", "FLT8S", "FLT8U")
 names(dtps) <- dtps
 datatypeVals <- lapply(dtps, function(namdtp) {
   d <- dtp[grep(substr(namdtp, 1, 4), names(dtp), value = TRUE)]
