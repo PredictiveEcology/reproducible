@@ -674,9 +674,9 @@ progressBarCode <- function(..., doProgress = TRUE, message,
                             colour = getOption("reproducible.messageColourCache"),
                             verbose = getOption("reproducible.verbose"),
                             verboseLevel = 1) {
-  messageColoured(message, colour = colour, verbose = verbose, verboseLevel = verboseLevel)
+  messageCache(message, verbose = verbose, verboseLevel = verboseLevel)
   out <- eval(...)
-  if (doProgress) messageColoured("\b Done!", colour = colour, verbose = verbose, verboseLevel = verboseLevel)
+  if (doProgress) messageCache("\b Done!", verbose = verbose, verboseLevel = verboseLevel)
   out
 }
 

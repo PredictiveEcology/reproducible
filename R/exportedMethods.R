@@ -74,9 +74,9 @@ setMethod(
   signature = "ANY",
   definition = function(object, functionName, fromMemoise, verbose = getOption("reproducible.verbose", 1)) {
     postMess <- NULL
-    whMessage <- .messageLoadedCacheResult
+    whMessage <- .messageLoadedCacheResult()
     if (isTRUE(fromMemoise)) {
-      whMessage <- .messageLoadedMemoisedResult
+      whMessage <- .messageLoadedCacheResult(2)
     } else if (fromMemoise %in% FALSE) {
       postMess <- paste0(" ", .messageAddingToMemoised)
     }
@@ -99,10 +99,6 @@ setMethod(
 #' @rdname exportedMethods
 .cacheMessageObjectToRetrieve <- function(functionName, fullCacheTableForObj, cachePath, cacheId, verbose) {
   objSize <- as.numeric(tail(extractFromCache(fullCacheTableForObj, elem = "file.size"), 1))
-  # objSize <- # if (useDBI()) {
-  #   as.numeric(tail(fullCacheTableForObj[["tagValue"]][
-  #     fullCacheTableForObj$tagKey == "file.size"
-  #   ], 1))
   class(objSize) <- "object_size"
   bigFile <- isTRUE(objSize > 1e6)
 
@@ -114,7 +110,7 @@ setMethod(
                ")",
                if (bigFile) " is large: ",
                if (bigFile) format(objSize, units = "auto"),
-               ")",
+               " ... ",
                verbose = verbose
   )
 }
@@ -661,7 +657,7 @@ unmakeMemoisable.default <- function(x) {
     if (!requireNamespace("terra", quietly = TRUE)) {
       stop("Please install terra package")
     }
-    messageCache("...wrapping terra object for saving...", verboseLevel = 2, verbose = verbose)
+    messageCache("wrapping terra object for saving...", verboseLevel = 2, verbose = verbose)
     # attrs <- attr(obj, ".Cache")
 
     # next is for terra objects --> terra::wrap is ridiculously slow for SpatVector objects; use

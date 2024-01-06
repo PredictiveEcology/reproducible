@@ -182,7 +182,8 @@ postProcessTo <- function(from, to,
   }
 
   if (!all(is.null(to), is.null(cropTo), is.null(maskTo), is.null(projectTo))) {
-    messagePrepInputs("  Running `postProcessTo`", verbose = verbose, verboseLevel = 0)
+    messagePreProcess("Running `postProcessTo`", verbose = verbose, verboseLevel = 0)
+    .messageIndentUpdate()
     if (isTRUE(is.character(from))) {
       fe <- fileExt(from)
       if (fe %in% "shp") {
@@ -291,7 +292,8 @@ postProcessTo <- function(from, to,
     # REVERT TO ORIGINAL INPUT CLASS
     from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial,
                         origFromClass = origFromClass)
-    messagePrepInputs("  postProcessTo ", gsub("^\b", "", messagePrefixDoneIn),
+    .messageIndentRevert()
+    messagePreProcess("postProcessTo ", gsub("^\b", "", messagePrefixDoneIn),
                       format(difftime(Sys.time(), st), units = "secs", digits = 3),
                       verbose = verbose)
     # messagePreProcess("postProcessTo done in ", format(difftime(Sys.time(), st),

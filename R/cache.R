@@ -382,9 +382,10 @@ Cache <-
            showSimilar = getOption("reproducible.showSimilar", FALSE),
            drv = getDrv(getOption("reproducible.drv", NULL)),
            conn = getOption("reproducible.conn", NULL)) {
+
     if (is.null(cachePath)) {
       if (!is.null(cacheRepo)) {
-        message("The cacheRepo argument is being deprecated. Please use cachePath")
+        messageCache("The cacheRepo argument is being deprecated. Please use cachePath", verbose = verbose)
         cachePath <- cacheRepo
       }
     }
@@ -979,8 +980,13 @@ Cache <-
           pattern = "object.size:", replacement = ""
         )
         otsObjSize <- if (identical(unname(otsObjSize), "NA")) NA else as.numeric(otsObjSize)
-        class(otsObjSize) <- "object_size"
         isBig <- isTRUE(otsObjSize > 1e7)
+        if (!anyNA(otsObjSize)) {
+          class(otsObjSize) <- "object_size"
+          osMess <- format(otsObjSize, units = "auto")[isBig]
+        } else {
+          osMess <- ""
+        }
 
         outputToSave <- progressBarCode(
           saveToCache(
@@ -992,12 +998,13 @@ Cache <-
           message = c(
             "Saving ", "large "[isBig], "object (fn: ", .messageFunctionFn(fnDetails$functionName),
             ", cacheId: ", outputHash, ") to Cache", ": "[isBig],
-            format(otsObjSize, units = "auto")[isBig]
+            osMess
           ),
           verboseLevel = 2 - isBig, verbose = verbose,
           colour = getOption("reproducible.messageColourCache")
         )
-        messageCache(.messageHangingIndent, "Saved cache file: ",
+        # .messageIndentRevert() # revert the indent of 2 spaces
+        messageCache("Saved! Cache file: ",
                      basename2(CacheStoredFile(cachePath = cachePath, cacheId = outputHash)),
                      "; fn: ", .messageFunctionFn(fnDetails$functionName),
                      verbose = verbose)
@@ -1728,11 +1735,6 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   }
 
 
-  # isSimList <- sapply(objsToDigest, is, "simList")
-  # if (any(isSimList)) {
-  #   if (currentModule(objsToDigest[[which(isSimList)]])
-  #     == "fireSense_dataPrepFit") browser()
-  # }
   preDigest <- Map(x = objsToDigest, i = seq_along(objsToDigest), function(x, i) {
     # remove the "newCache" attribute, which is irrelevant for digest
     if (!is.null(attr(x, ".Cache")$newCache)) {
@@ -2191,6 +2193,7 @@ isPkgColonFn <- function(x) {
 
 evalTheFun <- function(FUNcaptured, isCapturedFUN, isSquiggly, matchedCall, envir = parent.frame(),
                        verbose = getOption("reproducible.verbose"), ...) {
+  .messageIndentUpdate()
   withCallingHandlers(
     {
       out <- eval(FUNcaptured, envir = envir)
@@ -2289,25 +2292,6 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
                               outputHash, useCloud, gdriveLs, cloudFolderID, lastEntry, lastOne, ...) {
   .cacheMessageObjectToRetrieve(fnDetails$functionName, fullCacheTableForObj,
                            cachePath, cacheId = isInRepo[[.cacheTableHashColName()]], verbose)
-
-  if (FALSE) {
-    objSize <- # if (useDBI()) {
-      as.numeric(tail(fullCacheTableForObj[["tagValue"]][
-        fullCacheTableForObj$tagKey == "file.size"
-      ], 1))
-    class(objSize) <- "object_size"
-    bigFile <- isTRUE(objSize > 1e6)
-    fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
-    messageCache(.messageObjToRetrieveFn(fnDetails$functionName), ", ",
-    # messageCache("...(Object to retrieve (fn: ", .messageFunctionFn(fnDetails$functionName), ", ",
-                 basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]], format = fileFormat)),
-                 ")",
-                 if (bigFile) " is large: ",
-                 if (bigFile) format(objSize, units = "auto"),
-                 ")",
-                 verbose = verbose
-    )
-  }
 
   preLoadTime <- Sys.time()
   output <- try(.getFromRepo(FUN,

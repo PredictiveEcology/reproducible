@@ -170,7 +170,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        verbose = getOption("reproducible.verbose", 1),
                        .tempPath, ...) {
   st <- Sys.time()
-  messagePrepInputs("  Running `preProcess`", verbose = verbose, verboseLevel = 0)
+  messagePreProcess("Running `preProcess`", verbose = verbose, verboseLevel = 0)
+  .messageIndentUpdate()
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit(
@@ -788,7 +789,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     destinationPath = destinationPath,
     object = downloadFileResult$object
   )
-  stNext <- reportTime(st, mess = "  `preProcess` done; took ", minSeconds = 10)
+  .messageIndentRevert()
+  stNext <- reportTime(st, mess = "`preProcess` done; took ", minSeconds = 10)
   return(out)
 }
 

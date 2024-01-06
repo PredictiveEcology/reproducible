@@ -10,20 +10,22 @@
   anySpatialClass = "Raster\\*, Spat\\*, sf or Spatial object"
 )
 
-.messagePreProcessIndent <- "    "
+.messagePreProcessIndentOrig <- .messagePreProcessIndent <- ""
 
 .messageCacheIndent <- "    "
 
 .messageSpatial <- lapply(.messageGreps, gsub, pattern = "\\\\", replacement = "")
 
-.messageLoadedCacheResult <- "loaded cached result from previous"
-
-.messageLoadedMemoisedResult <- "loaded memoised result from previous"
+.messageLoadedCacheResult <- function(src = 1) {
+  srcPoss <- c("Cached", "Memoised")
+  srcPoss <- srcPoss[src]
+  paste0("Loaded! ", srcPoss[1], " result from previous")
+}
 
 .messageAddingToMemoised <- "(and added a memoised copy)"
 
 .messageLoadedCache <- function(root, functionName) {
-  paste0("     ", root, " ", functionName, " call")
+  paste0(root, " ", functionName, " call")
 }
 
 .messageBecauseOfA <- "...because of (a)"
@@ -139,7 +141,10 @@ messagePreProcess <- function(..., appendLF = TRUE,
 messageCache <- function(..., colour = getOption("reproducible.messageColourCache"),
                          verbose = getOption("reproducible.verbose"), verboseLevel = 1,
                          appendLF = TRUE) {
-  messageColoured(..., indent = .messageCacheIndent,
+  needIndent <- try(any(grepl("\b", unlist(list(...)))))
+  if (is(needIndent, "try-error")) browser()
+  indent <- if (isTRUE(!needIndent)) .messagePreProcessIndent else ""
+  messageColoured(..., indent = indent, # .messageCacheIndent,
                   colour = colour, appendLF = appendLF,
                   verboseLevel = verboseLevel, verbose = verbose
   )
@@ -291,4 +296,24 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
 
 .messageObjToRetrieveFn <- function(funName)
-  paste0("...(Object to retrieve (fn: ", .messageFunctionFn(funName))
+  paste0("Object to retrieve (fn: ", .messageFunctionFn(funName))
+
+
+.messageIndentDefault <- 1
+.messageIndentUpdate <- function(nchar = .messageIndentDefault, envir = parent.frame(), ns = "reproducible") {
+  val <- paste0(rep(" ", nchar), collapse = "")
+  assignInNamespace(ns = ns, ".messagePreProcessIndent", paste0(.messagePreProcessIndent, val))
+  withr::defer(
+    envir = envir,
+    expr =
+      {
+        assignInNamespace(ns = ns, ".messagePreProcessIndent", gsub(paste0(val, "$"), "", .messagePreProcessIndent))
+      }
+  )
+}
+
+.messageIndentRevert <- function(nchar = .messageIndentDefault, envir = parent.frame(), ns = "reproducible") {
+  val <- paste0(rep(" ", nchar), collapse = "")
+  assignInNamespace(ns = "reproducible", ".messagePreProcessIndent", gsub(paste0(val, "$"), "", .messagePreProcessIndent))
+  withr::deferred_clear(envir = envir)
+}
