@@ -817,17 +817,17 @@ Cache <-
         # Run the FUN
         preRunFUNTime <- Sys.time()
         output <- evalTheFun(FUNcaptured, isCapturedFUN, isSquiggly, FUNbackup,
-          envir = parent.frame(),
-          verbose, ...
+                             envir = parent.frame(),
+                             verbose, ...
         )
         postRunFUNTime <- Sys.time()
         elapsedTimeFUN <- postRunFUNTime - preRunFUNTime
       }
 
       output <- .addChangedAttr(output, preDigest,
-        origArguments = modifiedDots,
-        .objects = outputObjects, length = length,
-        algo = algo, quick = quick, classOptions = classOptions, ...
+                                origArguments = modifiedDots,
+                                .objects = outputObjects, length = length,
+                                algo = algo, quick = quick, classOptions = classOptions, ...
       )
       verboseDF1(verbose, fnDetails$functionName, startRunTime)
 
@@ -893,9 +893,9 @@ Cache <-
       linkToCacheId <- NULL
       if (isTRUE(objSize > 1e6)) {
         resultHash <- CacheDigest(outputToSave,
-          .objects = .objects,
-          length = length, algo = algo, quick = quick,
-          classOptions = classOptions, calledFrom = "Cache"
+                                  .objects = .objects,
+                                  length = length, algo = algo, quick = quick,
+                                  classOptions = classOptions, calledFrom = "Cache"
         )$outputHash
         allCache <- showCache(cachePath, verbose = -2)
         if (NROW(allCache)) {
@@ -928,7 +928,7 @@ Cache <-
       .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
       if (.onLinux) {
         if (!isFALSE(getOption("reproducible.futurePlan")) &&
-          .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")) {
+            .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")) {
           useFuture <- TRUE
         }
       }
@@ -939,9 +939,9 @@ Cache <-
 
         if (isTRUE(getOption("reproducible.futurePlan"))) {
           messageCache('options("reproducible.futurePlan") is TRUE. Setting it to "multisession".\n',
-            "Please specify a plan by name, e.g.,\n",
-            '  options("reproducible.futurePlan" = "multisession")',
-            verbose = verbose
+                       "Please specify a plan by name, e.g.,\n",
+                       '  options("reproducible.futurePlan" = "multisession")',
+                       verbose = verbose
           )
           future::plan("multisession", workers = 1)
         } else {
@@ -954,7 +954,7 @@ Cache <-
           future::futureCall(
             FUN = writeFuture,
             args = list(written, outputToSave, cachePath, userTags, drv, conn,
-              cacheId = outputHash, linkToCacheId
+                        cacheId = outputHash, linkToCacheId
             ),
             globals = list(
               written = written,
@@ -969,15 +969,15 @@ Cache <-
           )
         if (is.null(.reproEnv$alreadyMsgFuture)) {
           messageCache("Cache saved in a separate 'future' process. ",
-            "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour.",
-            "This message will not be shown again until next reload of reproducible",
-            verbose = verbose
+                       "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour.",
+                       "This message will not be shown again until next reload of reproducible",
+                       verbose = verbose
           )
           .reproEnv$alreadyMsgFuture <- TRUE
         }
       } else {
         otsObjSize <- gsub(grep("object\\.size:", userTags, value = TRUE),
-          pattern = "object.size:", replacement = ""
+                           pattern = "object.size:", replacement = ""
         )
         otsObjSize <- if (identical(unname(otsObjSize), "NA")) NA else as.numeric(otsObjSize)
         isBig <- isTRUE(otsObjSize > 1e7)
@@ -1013,8 +1013,8 @@ Cache <-
       if (useCloud && .CacheIsNew) {
         # Here, upload local copy to cloud folder if it isn't already there
         cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cachePath, cloudFolderID, ## TODO: saved not found
-          outputToSave,
-          verbose = verbose
+                                         outputToSave,
+                                         verbose = verbose
         )) # , rasters))
         if (is(cufc, "try-error")) {
           .updateTagsRepo(outputHash, cachePath, "inCloud", "FALSE", drv = drv, conn = conn)

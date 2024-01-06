@@ -577,7 +577,7 @@ maskTo <- function(from, maskTo, # touches = FALSE,
         }
 
         from <- fromInt
-        messagePrepInputs(messagePrefixDoneIn,
+        messagePreProcess(messagePrefixDoneIn,
                           format(difftime(Sys.time(), st), units = "secs", digits = 3),
                           verbose = verbose
         )
@@ -738,7 +738,7 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
           from
         }
       }
-      messagePrepInputs(messagePrefixDoneIn, format(difftime(Sys.time(), st), units = "secs", digits = 3),
+      messagePreProcess(messagePrefixDoneIn, format(difftime(Sys.time(), st), units = "secs", digits = 3),
                         verbose = verbose
       )
     }
@@ -939,7 +939,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
         attempt <- attempt + 1
       }
       from <- fromInt
-      messagePrepInputs(messagePrefixDoneIn, format(difftime(Sys.time(), st), units = "secs", digits = 3),
+      messagePreProcess(messagePrefixDoneIn, format(difftime(Sys.time(), st), units = "secs", digits = 3),
                         verbose = verbose
       )
     }
@@ -1050,7 +1050,7 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
           }
         }
         if (isTRUE(writeDone)) {
-          messagePrepInputs(messagePrefixDoneIn, format(difftime(Sys.time(), st), units = "secs", digits = 3),
+          messagePreProcess(messagePrefixDoneIn, format(difftime(Sys.time(), st), units = "secs", digits = 3),
                             verbose = verbose
           )
         } else {
@@ -1539,7 +1539,7 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
                    options = opts))
 
   out <- terra::rast(filenameDest)
-  messagePrepInputs(messagePrefixDoneIn,
+  messagePreProcess(messagePrefixDoneIn,
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)
 
@@ -1619,7 +1619,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
                    options = opts))
 
   out <- terra::rast(filenameDest)
-  messagePrepInputs(messagePrefixDoneIn,
+  messagePreProcess(messagePrefixDoneIn,
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)
   out
@@ -1701,7 +1701,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
                    options = opts))
 
   out <- terra::rast(writeTo)
-  messagePrepInputs(messagePrefixDoneIn,
+  messagePreProcess(messagePrefixDoneIn,
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)
   out
@@ -1780,7 +1780,7 @@ detectThreads <- function(threads = getOption("reproducible.gdalwarpThreads", 2)
 
 addDataType <- function(opts, ...) {
   hasDatatype <- which(...names() %in% "datatype")
-  datatype <- if (length(hasDatatype)) ...elt(hasDatatype) else "FLT8S"
+  datatype <- if (length(hasDatatype)) ...elt(hasDatatype) else "FLT4S"
   if (!is.null(datatype)) {
     datatype <- switchDataTypes(datatype, type = "GDAL")
     opts <- c(opts, "-ot", datatype)
@@ -1827,7 +1827,7 @@ gdalTransform <- function(from, cropTo, projectTo, maskTo, writeTo) {
                            c("-t_srs", tf4,
                              "-clipdst", tf2, "-overwrite"
                            )))
-  messagePrepInputs(messagePrefixDoneIn,
+  messagePreProcess(messagePrefixDoneIn,
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)
   tf
@@ -1848,6 +1848,10 @@ updateDstNoData <- function(opts, fromRas) {
   valForNoData <- as.character(valForNoData)
   valForNoData
   hasDstNoData <- which(opts %in% "-dstnodata")
-  opts[hasDstNoData + 1] <- valForNoData
+  va <- try(valForNoData)
+  if (length(va) == 0) browser()
+  if (is(va, "try-error")) browser()
+
+  opts[hasDstNoData + 1] <- va
   opts
 }
