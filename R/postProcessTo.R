@@ -1528,7 +1528,7 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
     "-overwrite"
   )
 
-  opts <- addDataType(opts, fromRas, ...)
+  opts <- addDataType(opts, fromRas[[1]], ...)
   opts <- updateDstNoData(opts, fromRas)
 
   tried <- retry(retries = 2, exprBetween = browser(),
@@ -1608,7 +1608,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
     "-overwrite"
   )
 
-  opts <- addDataType(opts, fromRas, ...)
+  opts <- addDataType(opts, fromRas[[1]], ...)
   opts <- updateDstNoData(opts, fromRas)
 
   tried <- retry(retries = 2, exprBetween = browser(),
@@ -1690,7 +1690,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
   if (!isFALSE(list(...)$touches)) # default is TRUE, like terra::mask
     opts <- c(opts, "-wo", "CUTLINE_ALL_TOUCHED=TRUE")
 
-  opts <- addDataType(opts, fromRas, ...)
+  opts <- addDataType(opts, fromRas[[1]], ...)
   opts <- updateDstNoData(opts, fromRas)
 
   tried <- retry(retries = 2, exprBetween = browser(),

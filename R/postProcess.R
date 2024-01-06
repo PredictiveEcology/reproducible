@@ -696,7 +696,7 @@ switchDataTypes <- function(datatype, type) {
     datatype <- "Float32"
   gdals <- list(
     LOG1S = "Byte",
-    INT1S = "Int8", # added below if gdalversion ok
+    INT1S = "Int16", # added below if gdalversion ok
     INT2S = "Int16",
     INT4S = "Int32",
     INT8S = "Int64",
@@ -717,10 +717,8 @@ switchDataTypes <- function(datatype, type) {
                       INT8U = "UInt64"
                     ))
   if (gdalVersion >= as.numeric_version("3.7"))
-    gdals <- append(gdals,
-                    list(
-                      INT1S = "Int8"
-                    ))
+    gdals[which(names(gdals) %in% "INT1S")] <- list(INT1S = "Int8")
+
 
 
   rast <- names(gdals)
