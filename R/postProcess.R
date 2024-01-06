@@ -717,6 +717,9 @@ switchDataTypes <- function(datatype, type) {
                       INT1S = "Int8"
                     ))
 
+  rast <- names(gdals)
+  names(rast) <- gdals
+
   if (identical(type, "GDAL"))
     if (!datatype %in% names(gdals))
       if (!datatype %in% unname(unlist(gdals))) {
@@ -740,7 +743,9 @@ switchDataTypes <- function(datatype, type) {
         datatype <- "ngb"
       )
     },
-    writeRaster = datatype,
+    writeRaster = {
+      do.call(switch, append(list(datatype), rast))
+    },
     stop("incorrect argument: type must be one of writeRaster, projectRaster, or GDAL")
   )
   return(datatype)
