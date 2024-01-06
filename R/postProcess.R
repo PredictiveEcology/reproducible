@@ -727,7 +727,7 @@ switchDataTypes <- function(datatype, type) {
   names(rast) <- gdals
 
   if (identical(type, "GDAL"))
-    if (!datatype %in% names(gdals))
+    if (isTRUE(!datatype %in% names(gdals)))
       if (!datatype %in% unname(unlist(gdals))) {
         warning("datatype ", datatype, " is not an option with this version of gdal: ",
                 gdalVersion, "\nSetting to ", tail(gdalsOrig, 1))
