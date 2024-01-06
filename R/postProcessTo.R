@@ -1520,7 +1520,7 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
   opts <- c(
     "-t_srs", tf4,
     "-r", method,
-    "-te", as.vector(ext(toRas))[c(1, 3, 2, 4)],
+    "-te", as.vector(terra::ext(toRas))[c(1, 3, 2, 4)],
     "-te_srs", tf4,
     "-wo", paste0("NUM_THREADS=", threads),
     # "-srcnodata", "NA",
