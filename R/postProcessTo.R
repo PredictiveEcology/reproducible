@@ -1781,7 +1781,7 @@ detectThreads <- function(threads = getOption("reproducible.gdalwarpThreads", 2)
 
 addDataType <- function(opts, ...) {
   hasDatatype <- which(...names() %in% "datatype")
-  datatype <- if (length(hasDatatype)) ...elt(hasDatatype) else NULL
+  datatype <- if (length(hasDatatype)) ...elt(hasDatatype) else "FLT8S"
   if (!is.null(datatype)) {
     datatype <- switchDataTypes(datatype, type = "GDAL")
     opts <- c(opts, "-ot", datatype)
