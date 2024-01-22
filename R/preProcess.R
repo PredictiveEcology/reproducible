@@ -197,6 +197,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   teamDrive <- getTeamDrive(dots)
 
   # remove trailing slash -- causes unzip fail if it is there
+  # A user could pass `NULL` to destinationPath -- overriding the argument default -- reset default here
+  if (is.null(destinationPath))
+    destinationPath <- getOption("reproducible.destinationPath", ".")
   destinationPath <- normPath(destinationPath)
   checkSumFilePath <- identifyCHECKSUMStxtFile(destinationPath)
 
