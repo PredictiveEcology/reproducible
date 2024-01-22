@@ -366,7 +366,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     archive = archive,
     alsoExtract = alsoExtract,
     destinationPath = destinationPath,
-    fun = fun,
+    fun = funCaptured,
     quick = quick,
     overwrite = overwrite,
     purge = purge,

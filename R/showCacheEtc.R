@@ -121,7 +121,7 @@ setMethod(
                         conn = getOption("reproducible.conn", NULL),
                         verbose = getOption("reproducible.verbose"),
                         ...) {
-    # isn't clearing the raster bacekd file
+    # isn't clearing the raster backed file
     if (missing(x)) {
       x <- if (!is.null(list(...)$cachePath)) {
         messageCache("x not specified, but cachePath is; using ", list(...)$cachePath, verbose = verbose)

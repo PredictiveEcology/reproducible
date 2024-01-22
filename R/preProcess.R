@@ -836,6 +836,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @importFrom utils getFromNamespace
 .extractFunction <- function(fun, envir = parent.frame()) {
   if (!is.null(fun)) {
+    if (is.name(fun)) {
+      possFun <- get0(fun, envir = envir)
+      if (is.null(possFun)) {
+        env <- whereInStack(fun)
+        fun <- get(fun, envir = env)
+      }
+    }
     if (is.call(fun)) {
       fun
     } else {
