@@ -1004,7 +1004,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                           verbose = verbose)
         neededFiles <- allFiles
       } else if ("all" %in% lookForSimilar) {
-        messagePrepInputs(messageChecksummingAllFiles, verbose = verbose)
+        messagePreProcess(messageChecksummingAllFiles, verbose = verbose)
         neededFiles <- allFiles
       } else {
         allOK <- .similarFilesInCheckSums(targetFile, checkSums, alsoExtract)
