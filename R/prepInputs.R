@@ -1486,20 +1486,21 @@ process <- function(out, funCaptured,
               if (is.call(theFun)) { # an actual call, not just captured function name
                 # put `targetFilePath` in the first position -- allows quoted call to use first arg
                 out <- append(
-                append(
-                  list(targetFilePath = out[["targetFilePath"]]),
-                  out[-which(names(out) == "targetFilePath")]
-                ),
-                args
-              )
-              out[["targetFile"]] <- out[["targetFilePath"]] # handle both
-              outProcess <- Cache(eval(theFun, envir = out),
-                useCache = useCache2, .cacheExtra = .cacheExtra,
-                .functionName = funChar
-              )
-            } else {
-              args2 <- append(list(asPath(out$targetFilePath)), args)
-              outProcess <- Cache(do.call, theFun, args2,
+                  append(
+                    list(targetFilePath = out[["targetFilePath"]]),
+                    out[-which(names(out) == "targetFilePath")]
+                  ),
+                  args
+                )
+                out[["targetFile"]] <- out[["targetFilePath"]] # handle both
+                if (is.null(funChar)) funChar <- paste0(substr(format(theFun), start = 1, stop = 40), "...")
+                outProcess <- Cache(eval(theFun, envir = out),
+                                    useCache = useCache2, .cacheExtra = .cacheExtra,
+                                    .functionName = funChar
+                )
+              } else {
+                args2 <- append(list(asPath(out$targetFilePath)), args)
+                outProcess <- Cache(do.call, theFun, args2,
                                     useCache = useCache2, .cacheExtra = .cacheExtra,
                                     .functionName = funChar
                 )
