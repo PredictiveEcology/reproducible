@@ -1480,9 +1480,12 @@ process <- function(out, funCaptured,
           }
 
           withCallingHandlers(
-            if (is.call(theFun)) { # an actual call, not just captured function name
-              # put `targetFilePath` in the first position -- allows quoted call to use first arg
-              out <- append(
+            # theFun could have been a call to get the function, e.g., fun = getOption("reproducible.shapefileRead")
+            # so need to try 2x, just to figure out the function
+            for (i in 1:2) {
+              if (is.call(theFun)) { # an actual call, not just captured function name
+                # put `targetFilePath` in the first position -- allows quoted call to use first arg
+                out <- append(
                 append(
                   list(targetFilePath = out[["targetFilePath"]]),
                   out[-which(names(out) == "targetFilePath")]
@@ -1497,9 +1500,22 @@ process <- function(out, funCaptured,
             } else {
               args2 <- append(list(asPath(out$targetFilePath)), args)
               outProcess <- Cache(do.call, theFun, args2,
-                useCache = useCache2, .cacheExtra = .cacheExtra,
-                .functionName = funChar
-              )
+                                    useCache = useCache2, .cacheExtra = .cacheExtra,
+                                    .functionName = funChar
+                )
+              }
+              # theFun could have been a call to get the function, e.g., fun = getOption("reproducible.shapefileRead")
+              #  If this was the case, then the above will have just evaluated that
+              if (identical(1L, length(outProcess))) {
+                if (isTRUE(is.character(outProcess))) {
+                  possTheFun <- eval(parse(text = outProcess), envir = out)
+                  if (isTRUE(is.function(possTheFun))) {
+                    theFun <- possTheFun
+                    next
+                  }
+                }
+              }
+              break
             },
             message = function(m) {
               m$message <- grep(paste0(.messageNoCachePathSupplied, "|useCache is FALSE"), m$message, invert = TRUE, value = TRUE)
