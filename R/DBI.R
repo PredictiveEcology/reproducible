@@ -240,14 +240,15 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
         }
 
         if (length(sameCacheID)) {
-          if (!identical(whereInStack("sim"), .GlobalEnv)) {
-            format <- setdiff(c("rds", "qs"), format)
-            message("User tried to change options('reproducible.cacheSaveFormat') for an ",
-                    "existing cache, while using a simList. ",
-                    "This currently does not work. Keeping the ",
-                    "option at: ", format)
-            next
-          }
+          # if (!identical(whereInStack("sim"), .GlobalEnv)) {
+          #   browser()
+          #   format <- setdiff(c("rds", "qs"), format)
+          #   message("User tried to change options('reproducible.cacheSaveFormat') for an ",
+          #           "existing cache, while using a simList. ",
+          #           "This currently does not work. Keeping the ",
+          #           "option at: ", format)
+          #   next
+          # }
 
           messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
                        fileExt(f), ")",
