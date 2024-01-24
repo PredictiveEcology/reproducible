@@ -236,24 +236,34 @@ postProcessTo <- function(from, to,
     }
 
     couldDoGDAL <- isGridded(from) && isVector(maskTo) && isGridded(projectTo)
+    stillNeed <- TRUE
 
     if (isTRUE(getOption("reproducible.gdalwarp", FALSE)) && couldDoGDAL) {
+      stillNeed <- FALSE
       #############################################################
       # project resample mask sequence ################################
       #############################################################
       messagePreProcess("using sf::gdal_utils('warp') because options(\"reproducible.gdalwarp\" = TRUE) ...", appendLF = TRUE, verbose = verbose)
       st <- Sys.time()
 
-      from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
-      from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose, ...)
-      if (isGridded(maskTo)) { # won't be used at the moment because couldDoGDAL = FALSE for gridded
-        from <- maskTo(from = from, maskTo = maskTo, verbose = verbose, ...)
-      } else {
-        from <- gdalMask(fromRas = from, maskToVect = maskTo, writeTo = writeTo, verbose = verbose, ...)
-      }
+      tryCatch({
+        from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
+        from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose, ...)
+        if (isGridded(maskTo)) { # won't be used at the moment because couldDoGDAL = FALSE for gridded
+          from <- maskTo(from = from, maskTo = maskTo, verbose = verbose, ...)
+        } else {
+          from <- gdalMask(fromRas = from, maskToVect = maskTo, writeTo = writeTo, verbose = verbose, ...)
+        }
+      }, error = function(e) {
+        stillNeed <<- TRUE
+        couldDoGDAL <<- FALSE
+        message("Attempted to use gdal* functions, but errors occured; trying without gdal*...")
+      })
       # from <- setMinMax(from)
 
-    } else {
+    } # else {
+
+    if (stillNeed) {
       if (couldDoGDAL)
         message("Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm")
       #############################################################
@@ -1531,7 +1541,7 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
   opts <- addDataType(opts, fromRas[[1]], ...)
   opts <- updateDstNoData(opts, fromRas)
 
-  tried <- retry(retries = 2, exprBetween = browser(),
+  tried <- retry(retries = 2, # exprBetween = browser(),
                  sf::gdal_utils(
                    util = "warp",
                    source = fnSource,
@@ -1611,7 +1621,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
   opts <- addDataType(opts, fromRas[[1]], ...)
   opts <- updateDstNoData(opts, fromRas)
 
-  tried <- retry(retries = 2, exprBetween = browser(),
+  tried <- retry(retries = 2, # exprBetween = browser(),
                  sf::gdal_utils(
                    util = "warp",
                    source = fnSource,
@@ -1693,7 +1703,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
   opts <- addDataType(opts, fromRas[[1]], ...)
   opts <- updateDstNoData(opts, fromRas)
 
-  tried <- retry(retries = 2, exprBetween = browser(),
+  tried <- retry(retries = 2, # exprBetween = browser(),
                  sf::gdal_utils(
                    util = "warp",
                    source = fnSource,
