@@ -1366,10 +1366,10 @@ knownArchiveExtensions <- c(knownInternalArchiveExtensions, knownSystemArchiveEx
 
 prepInputsAssertions <- function(env) {
   noisy <- nullOr(c("character", "logical"), c("alsoExtract"), env = env)
-  noisy <- nullOr(c("character", "logical"), "useCache", env)
+  noisy <- nullOr(c("character", "logical"), c("useCache", "archive"), env)
   noisy <- nullOr(c("numeric", "logical"), c("purge", "verbose"), env)
   noisy <- nullOr("character", c(
-    "destinationPath", "targetFile", "url", "archive",
+    "destinationPath", "targetFile", "url", # "archive",
     ".tempPath"
   ), env = env)
   noisy <- nullOr("logical", c("quick", "overwrite"), env = env)
