@@ -366,8 +366,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         targetFilePath <- names(isOK)[whNewTargetFilePath]
       }
     }
-
-
   }
 
   # Check for local copies in all values of reproducible.inputPaths
@@ -622,7 +620,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           if (NROW(missingFiles)) {
             messagePreProcess("... linking to getOption('reproducible.inputPaths')...",
                               verbose = verbose)
-            # browser()
             outHLC <- hardLinkOrCopy(from, to, verbose = verbose)
           } else {
             messagePreProcess("Skipping copy from inputPaths; all files present", verbose = verbose)
@@ -875,9 +872,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     gf <- file.path(destinationPath, basename2(url))
 
     # Test for just Google ID supplied
-    isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
-                 !grepl("\\.[^\\.]+$", url)) # doesn't have an extension
-    if (any(grepl("drive.google.com", url), isGID)) {
+    isGID <- isGoogleID(url)
+    # isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
+    #              !grepl("\\.[^\\.]+$", url))
+      # doesn't have an extension
+    if (any(isGoogleDriveURL(url), isGID)) {
       if (isGID) messagePreProcess("url seems to be a Google Drive ID", verbose = verbose, verboseLevel = 2)
 
     # if (grepl("drive.google.com", url)) {
@@ -897,6 +896,16 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   normPath(guessedFile)
 }
 
+
+isGoogleID <- function(url) {
+  all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
+      !grepl("\\.[^\\.]+$", url)) ||
+    grepl("drive.google.com", url)
+}
+
+isGoogleDriveURL <- function(url) {
+  grepl("drive.google.com", url)
+}
 # COPIED FROM REQUIRE
 # urlExists <- function(url) {
 #   con <- url(url)
