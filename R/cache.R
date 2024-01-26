@@ -494,7 +494,9 @@ Cache <-
 
       # Do the digesting
       if (!is.null(omitArgs)) {
-        modifiedDots[omitArgs] <- NULL
+        # recursive
+        modifiedDots <- nullifyByArgName(modifiedDots, omitArgs)
+        # modifiedDots[omitArgs] <- NULL
       }
 
       preDigestByClass <- lapply(
@@ -2406,3 +2408,12 @@ addCacheAttr <- function(output, .CacheIsNew, outputHash, FUN) {
   output
 }
 
+
+nullifyByArgName <- function(a, name) {
+  if (is(a, "list")) {
+    toNull <- names(a) %in% name
+    a[toNull] <- NULL
+    a <- lapply(a, nullifyByArgName, name = name)
+  }
+  a
+}
