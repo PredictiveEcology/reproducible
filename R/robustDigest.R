@@ -179,6 +179,15 @@ setMethod(
       forDig <- wrapSpatVector(object)
     } else if (inherits(object, "SpatExtent")) {
       forDig <- .wrap(object)
+    } else if (inherits(object, "drive_id")) {
+      if (.requireNamespace("googledrive")) {
+        forDig <- try(googledrive::drive_get(object))
+        if (is(forDig, "try-error")) {
+          message("Detected that object is a googledrive id; can't access it online; ",
+                  "evaluating only the url as character string")
+          forDig <- object
+        }
+      }
     } else {
       forDig <- .removeCacheAtts(object)
     }
@@ -399,7 +408,7 @@ setMethod(
       os <- objSize(object)
       if (os == 680) {
         # Means it is ALTREP --> convert to non-ALTREP for qs only
-        if (!is.factor(object)) # browser()
+        if (!is.factor(object))
           object <- as.integer(object + 0.0)
       }
       # qs doesn't save ALTREP yet for numerics
