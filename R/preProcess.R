@@ -305,6 +305,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   neededFiles <- grep("similar$", neededFiles, value = TRUE, invert = TRUE)
 
   # Deal with "similar" in alsoExtract -- maybe this is obsolete with new feature that uses file_name_sans_ext
+  neededFilesOrig <- NULL
   if (is.null(alsoExtract)) {
     filesInsideArchive <- .listFilesInArchive(archive) # will be relative
     neededFiles <- checkRelative(neededFiles, destinationPath, filesInsideArchive)
@@ -321,9 +322,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       checkSumFilePath = checkSumFilePath, url, verbose = verboseCFS
     )
     verboseCFS <- verbose - 1
+    neededFilesOrig <- unique(makeAbsolute(neededFiles, destinationPath))
     list2env(outFromSimilar, environment()) # neededFiles, checkSums
   }
   neededFiles <- unique(makeAbsolute(neededFiles, destinationPath))
+  neededFiles <- unique(c(neededFilesOrig, neededFiles))
   neededFiles <- grep("none$", neededFiles, value = TRUE, invert = TRUE)
   # alsoExtract <- grep("none$", alsoExtract, value = TRUE, invert = TRUE)
 
