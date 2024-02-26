@@ -28,7 +28,7 @@
 
 \S4method{.robustDigest}{ANY}(object, .objects, length, algo, quick, classOptions)
 
-\S4method{.robustDigest}{`function`}(object, .objects, length, algo, quick, classOptions)
+\S4method{.robustDigest}{function}(object, .objects, length, algo, quick, classOptions)
 
 \S4method{.robustDigest}{expression}(object, .objects, length, algo, quick, classOptions)
 

@@ -16,7 +16,7 @@ normPath(path)
 
 \S4method{normPath}{list}(path)
 
-\S4method{normPath}{`NULL`}(path)
+\S4method{normPath}{NULL}(path)
 
 \S4method{normPath}{missing}()
 

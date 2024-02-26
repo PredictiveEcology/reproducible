@@ -134,10 +134,8 @@ utils::globalVariables(c(
 #' As a result `Cache(glm, x ~ y, rnorm(1))` will not work as a means of forcing
 #' a new evaluation each time, as the `rnorm(1)` is not evaluated before the call
 #' is assessed against the cache database. To force a new call each time, evaluate
-#' the randomness prior to the Cache call, e.g., `ran = rnorm(1); Cache(glm, x ~ y, ran)`.
-#' Note this does not work for `glm` because `glm` accepts `...`.
-#' Rather, this randomness should be passed to `.cacheExtra`, e.g.,
-#' `Cache(glm, x ~ y, .cacheExtra = ran)`
+#' the randomness prior to the Cache call, e.g., `ran = rnorm(1)` then pass this
+#' to `.cacheExtra`, e.g., `Cache(glm, x ~ y, .cacheExtra = ran)`
 #'
 #' @section `drv` and `conn`:
 #' By default, `drv` uses an SQLite database. This can be sufficient for most cases.
@@ -247,7 +245,10 @@ utils::globalVariables(c(
 #'                objects, this will only be applied outermost first.
 #'
 #' @param .cacheExtra A an arbitrary R object that will be included in the `CacheDigest`,
-#'       but otherwise not passed into the `FUN`.
+#'       but otherwise not passed into the `FUN`. If the user supplies a named list, then
+#'       `Cache` will report which individual elements of `.cacheExtra` have changed
+#'       when `options("reproducible.showSimilar" = TRUE)`. This can allow a user
+#'       more control and understanding for debugging.
 #'
 #' @param .functionName A an arbitrary character string that provides a name that is different
 #'       than the actual function name (e.g., "rnorm") which will be used for messaging. This
@@ -381,9 +382,10 @@ Cache <-
            showSimilar = getOption("reproducible.showSimilar", FALSE),
            drv = getDrv(getOption("reproducible.drv", NULL)),
            conn = getOption("reproducible.conn", NULL)) {
+
     if (is.null(cachePath)) {
       if (!is.null(cacheRepo)) {
-        message("The cacheRepo argument is being deprecated. Please use cachePath")
+        messageCache("The cacheRepo argument is being deprecated. Please use cachePath", verbose = verbose)
         cachePath <- cacheRepo
       }
     }
@@ -492,7 +494,9 @@ Cache <-
 
       # Do the digesting
       if (!is.null(omitArgs)) {
-        modifiedDots[omitArgs] <- NULL
+        # recursive
+        modifiedDots <- nullifyByArgName(modifiedDots, omitArgs)
+        # modifiedDots[omitArgs] <- NULL
       }
 
       preDigestByClass <- lapply(
@@ -511,11 +515,17 @@ Cache <-
       if (!is.null(.cacheExtra)) {
         toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
       }
-      cacheDigest <- CacheDigest(toDigest,
-        .objects = .objects,
-        length = length, algo = algo, quick = quick,
-        classOptions = classOptions, calledFrom = "Cache"
-      )
+      withCallingHandlers(
+        cacheDigest <- CacheDigest(toDigest,
+                                   .functionName = fnDetails$functionName,
+                                   .objects = .objects,
+                                   length = length, algo = algo, quick = quick,
+                                   classOptions = classOptions, calledFrom = "Cache"
+        ),
+        error = function(e) {
+          messageCache("Error occurred during Cache call of: ", .messageFunctionFn(fnDetails$functionName),
+                       ". Call was:\n", paste0(head(format(FUNcaptured)), collapse = "\n"))
+        })
       postCacheDigestTime <- Sys.time()
       elapsedTimeCacheDigest <- postCacheDigestTime - preCacheDigestTime
 
@@ -628,24 +638,40 @@ Cache <-
         add = TRUE
       )
 
+      if (!is.null(cacheId)) {
+        if  (identical(cacheId, "previous")) {
+          sc <- showCache(fun = .functionName, verbose = -2)
+          if (NROW(sc)) {
+            messageCache("cacheId is 'previous' meaning it will recover the most recent ",
+                         "cache item (accessed) that matches on .functionName: ",
+                         .messageFunctionFn(.functionName), "\nPlease ensure ",
+                         "the function name is precise enough for this behaviour", verbose = verbose)
+            outputHashNew <- data.table::setorderv(sc[tagKey == "accessed"], "tagValue", order = -1L)
+            outputHash <- outputHashNew$cacheId[1]
+            inRepos$isInRepo <- outputHashNew[1, ]
+            inRepos$fullCacheTableForObj <- showCacheFast(cacheId = outputHash)
+          }
+        } else {
+          outputHashManual <- cacheId
+          if (identical(outputHashManual, outputHash)) {
+            messageCache("cacheId is same as calculated hash",
+                         verbose = verbose
+            )
+          } else {
+            messageCache("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId,
+                         verbose = verbose
+            )
+          }
+          outputHash <- outputHashManual
+        }
+
+      }
+
       isInRepo <- inRepos$isInRepo
-      dbTabNam <- inRepos$dbTabName
+      # dbTabNam <- inRepos$dbTabName
       fullCacheTableForObj <- inRepos$fullCacheTableForObj
       cachePath <- inRepos$cachePath # i.e., if there was > 1, then we now know which one
 
-      if (!is.null(cacheId)) {
-        outputHashManual <- cacheId
-        if (identical(outputHashManual, outputHash)) {
-          messageCache("cacheId is same as calculated hash",
-            verbose = verbose
-          )
-        } else {
-          messageCache("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId,
-            verbose = verbose
-          )
-        }
-        outputHash <- outputHashManual
-      }
 
       # compare outputHash to existing Cache record
       if (useCloud) {
@@ -762,6 +788,8 @@ Cache <-
             cloudFolderID = cloudFolderID,
             lastEntry = lastEntry, lastOne = lastOne, ...
           )
+          if (!is.null(out))
+            out <- addCacheAttr(out, .CacheIsNew = FALSE, outputHash, FUN)
           if (!is(out, "try-error"))
             return(out)
         }
@@ -791,17 +819,17 @@ Cache <-
         # Run the FUN
         preRunFUNTime <- Sys.time()
         output <- evalTheFun(FUNcaptured, isCapturedFUN, isSquiggly, FUNbackup,
-          envir = parent.frame(),
-          verbose, ...
+                             envir = parent.frame(),
+                             verbose, ...
         )
         postRunFUNTime <- Sys.time()
         elapsedTimeFUN <- postRunFUNTime - preRunFUNTime
       }
 
       output <- .addChangedAttr(output, preDigest,
-        origArguments = modifiedDots,
-        .objects = outputObjects, length = length,
-        algo = algo, quick = quick, classOptions = classOptions, ...
+                                origArguments = modifiedDots,
+                                .objects = outputObjects, length = length,
+                                algo = algo, quick = quick, classOptions = classOptions, ...
       )
       verboseDF1(verbose, fnDetails$functionName, startRunTime)
 
@@ -832,6 +860,7 @@ Cache <-
       # Can make new methods by class to add tags to outputs
       if (.CacheIsNew) {
         outputToSave <- .wrap(output, cachePath, preDigest = preDigest,
+                              outputObjects = outputObjects,
                               drv = drv, conn = conn, verbose = verbose)
         if (isTRUE(is.character(outputToSave)) && isTRUE(!is.character(output)))
           outputToSave <- asPath(outputToSave)
@@ -866,9 +895,9 @@ Cache <-
       linkToCacheId <- NULL
       if (isTRUE(objSize > 1e6)) {
         resultHash <- CacheDigest(outputToSave,
-          .objects = .objects,
-          length = length, algo = algo, quick = quick,
-          classOptions = classOptions, calledFrom = "Cache"
+                                  .objects = .objects,
+                                  length = length, algo = algo, quick = quick,
+                                  classOptions = classOptions, calledFrom = "Cache"
         )$outputHash
         allCache <- showCache(cachePath, verbose = -2)
         if (NROW(allCache)) {
@@ -901,7 +930,7 @@ Cache <-
       .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
       if (.onLinux) {
         if (!isFALSE(getOption("reproducible.futurePlan")) &&
-          .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")) {
+            .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")) {
           useFuture <- TRUE
         }
       }
@@ -912,9 +941,9 @@ Cache <-
 
         if (isTRUE(getOption("reproducible.futurePlan"))) {
           messageCache('options("reproducible.futurePlan") is TRUE. Setting it to "multisession".\n',
-            "Please specify a plan by name, e.g.,\n",
-            '  options("reproducible.futurePlan" = "multisession")',
-            verbose = verbose
+                       "Please specify a plan by name, e.g.,\n",
+                       '  options("reproducible.futurePlan" = "multisession")',
+                       verbose = verbose
           )
           future::plan("multisession", workers = 1)
         } else {
@@ -927,7 +956,7 @@ Cache <-
           future::futureCall(
             FUN = writeFuture,
             args = list(written, outputToSave, cachePath, userTags, drv, conn,
-              cacheId = outputHash, linkToCacheId
+                        cacheId = outputHash, linkToCacheId
             ),
             globals = list(
               written = written,
@@ -941,20 +970,25 @@ Cache <-
             )
           )
         if (is.null(.reproEnv$alreadyMsgFuture)) {
-          messageCache("  Cache saved in a separate 'future' process. ",
-            "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour.",
-            "This message will not be shown again until next reload of reproducible",
-            verbose = verbose
+          messageCache("Cache saved in a separate 'future' process. ",
+                       "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour.",
+                       "This message will not be shown again until next reload of reproducible",
+                       verbose = verbose
           )
           .reproEnv$alreadyMsgFuture <- TRUE
         }
       } else {
         otsObjSize <- gsub(grep("object\\.size:", userTags, value = TRUE),
-          pattern = "object.size:", replacement = ""
+                           pattern = "object.size:", replacement = ""
         )
-        otsObjSize <- if (identical(otsObjSize, "NA")) NA else as.numeric(otsObjSize)
-        class(otsObjSize) <- "object_size"
+        otsObjSize <- if (identical(unname(otsObjSize), "NA")) NA else as.numeric(otsObjSize)
         isBig <- isTRUE(otsObjSize > 1e7)
+        if (!anyNA(otsObjSize)) {
+          class(otsObjSize) <- "object_size"
+          osMess <- format(otsObjSize, units = "auto")[isBig]
+        } else {
+          osMess <- ""
+        }
 
         outputToSave <- progressBarCode(
           saveToCache(
@@ -964,21 +998,25 @@ Cache <-
           ),
           doProgress = isBig,
           message = c(
-            "Saving ", "large "[isBig], "object (fn: ", fnDetails$functionName,
+            "Saving ", "large "[isBig], "object (fn: ", .messageFunctionFn(fnDetails$functionName),
             ", cacheId: ", outputHash, ") to Cache", ": "[isBig],
-            format(otsObjSize, units = "auto")[isBig]
+            osMess
           ),
           verboseLevel = 2 - isBig, verbose = verbose,
           colour = getOption("reproducible.messageColourCache")
         )
+        # .messageIndentRevert() # revert the indent of 2 spaces
+        messageCache("Saved! Cache file: ",
+                     basename2(CacheStoredFile(cachePath = cachePath, cacheId = outputHash)),
+                     "; fn: ", .messageFunctionFn(fnDetails$functionName),
+                     verbose = verbose)
       }
 
       if (useCloud && .CacheIsNew) {
         # Here, upload local copy to cloud folder if it isn't already there
-        # browser(expr = exists("._Cache_15"))
         cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cachePath, cloudFolderID, ## TODO: saved not found
-          outputToSave,
-          verbose = verbose
+                                         outputToSave,
+                                         verbose = verbose
         )) # , rasters))
         if (is(cufc, "try-error")) {
           .updateTagsRepo(outputHash, cachePath, "inCloud", "FALSE", drv = drv, conn = conn)
@@ -1496,7 +1534,9 @@ getFunctionName2 <- function(mc) {
               whereInStack(ee)
             }, silent = TRUE)
             if (is(env2, "try-error")) {
-              out <- paste(format(ee$destinationPath), collapse = " ")
+              out <- try(paste(format(ee$destinationPath), collapse = " "), silent = TRUE)
+              if (is(out, "try-error"))
+                stop(env2)
             } else {
               out <- try(eval(ee, envir = env2), silent = TRUE)
               if (is(out, "try-error")) {
@@ -1697,13 +1737,19 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   }
 
 
-  preDigest <- lapply(objsToDigest, function(x) {
+  preDigest <- Map(x = objsToDigest, i = seq_along(objsToDigest), function(x, i) {
     # remove the "newCache" attribute, which is irrelevant for digest
     if (!is.null(attr(x, ".Cache")$newCache)) {
       x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
       if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
     }
-    .robustDigest(x, algo = algo, quick = FALSE, ...)
+    withCallingHandlers({
+      .robustDigest(x, algo = algo, quick = FALSE, ...)
+    }, error = function(e) {
+      nam <- names(objsToDigest)
+      if (!is.null(nam))
+        messageCache("Error occurred during .robustDigest of ", nam[i], " in ", .functionName)
+    })
   })
   if (is.character(quick) || isTRUE(quick)) {
     preDigest <- append(preDigest, preDigestQuick)
@@ -1728,6 +1774,9 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   # browser(expr = exists("._findSimilar_1"))
   # deal with tag
   userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
+  noValue <- endsWith(userTags2, ":")
+  if (isTRUE(any(noValue)))
+    userTags2 <- userTags2[!noValue]
   userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc),
     preDigestUnlistTrunc,
     sep = ":"
@@ -1740,10 +1789,12 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     tag <- localTags[paste(tagKey, get(.cacheTableTagColName()), sep = ":"),
       on = .cacheTableHashColName()
     ][[hashName]]
-    utOrig <- paste0(userTagsOrig, ":", userTagsOrig)
+    utOrig <- if (is.null(userTagsOrig)) NULL else paste0(userTagsOrig, ":", userTagsOrig)
   }
   aa <- localTags[tag %in% userTags3 | tag %in% utOrig]
-  hasCommonFUN <- startsWith(aa$tagValue, ".FUN")
+  accessed <- localTags[tagKey == "accessed"]
+  hasCommonFUN <- startsWith(aa$tagValue, ".FUN") |  # same function
+    startsWith(aa$tagKey, "function")  # same function name
   if (any(hasCommonFUN)) {
     hasCommonUserTagsOrig <- userTagsOrig %in% aa[[.cacheTableTagColName()]]
     if (any(hasCommonUserTagsOrig %in% FALSE)) { # Doesn't share userTagsOrig
@@ -1757,14 +1808,19 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   aa <- aa[, .N, keyby = hashName]
   setkeyv(aa, "N")
   similar <- if (NROW(aa) > 0) {
-    localTags[tail(aa, as.numeric(showSimilar)), on = hashName][N == max(N)]
+    aaWithMaxN <- aa[aa$N == max(aa$N)]
+    localTags[localTags$cacheId %in% aaWithMaxN$cacheId]
   } else {
     localTags[0]
   }
+  # tail(aa, as.numeric(showSimilar))
+  accessed <- accessed[accessed$cacheId %in% similar$cacheId]
+  data.table::setorderv(accessed, "tagValue", order = -1L) # will be top one
+  similar <- similar[similar$cacheId %in% accessed$cacheId[as.numeric(showSimilar)]]
 
   userTagsMess <- if (!is.null(userTagsOrig)) {
-    paste0(
-      " with user supplied tags: '",
+    paste0(.messageHangingIndent,
+      "with user supplied tags: '",
       paste(userTagsOrig, collapse = ", "), "' "
     )
   }
@@ -1805,12 +1861,13 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     similar2[(hash %in% "other"), deeperThan3 := TRUE]
     similar2[(hash %in% "other"), differs := NA]
     differed <- FALSE
-    fnTxt <- paste0(if (!is.null(functionName)) paste0("of '", functionName, "' ") else "call ")
+    fnTxt <- paste0(if (!is.null(functionName))
+      paste0("of '", .messageFunctionFn(functionName), "' ") else "call ")
     if (isDevMode) {
-      messageCache("    ------ devMode -------", verbose = verbose)
-      messageCache("    This call to cache will replace", verbose = verbose)
+      messageCache("------ devMode -------", verbose = verbose)
+      messageCache("This call to cache will replace", verbose = verbose)
     } else {
-      messageCache("    Cache ",
+      messageCache("Cache ",
         fnTxt,
         "differs from",
         verbose = verbose
@@ -1823,14 +1880,15 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     if (!all(sameNames)) {
       fnTxt <- paste0("(whose function name(s) was/were '", paste(simFun$funName, collapse = "', '"), "')")
     }
-    messageCache(paste0("    the next closest cacheId(s) ", paste(cacheIdOfSimilar, collapse = ", "), " ",
-      fnTxt, userTagsMess,
-      collapse = "\n"
-    ), appendLF = FALSE, verbose = verbose)
+    messageCache(paste0(.messageHangingIndent, "the next closest cacheId(s) ",
+                        paste(cacheIdOfSimilar, collapse = ", "), " ",
+                        fnTxt, userTagsMess,
+                        collapse = "\n"
+    ), appendLF = TRUE, verbose = verbose)
 
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
       differed <- TRUE
-      messageCache("    ... because of (a) different ",
+      messageCache(.messageHangingIndent, .messageBecauseOfA, " different ",
         paste(unique(similar2[differs %in% TRUE]$fun), collapse = ", "),
         verbose = verbose
       )
@@ -1838,7 +1896,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
 
     if (length(similar2[is.na(differs) & deeperThan3 == TRUE]$differs)) {
       differed <- TRUE
-      messageCache("    ... possible, unknown, differences in a nested list ",
+      messageCache("...possible, unknown, differences in a nested list ",
         "that is deeper than ", getOption("reproducible.showSimilarDepth", 3), " in ",
         paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun)),
         verbose = verbose
@@ -1847,20 +1905,22 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     missingArgs <- similar2[is.na(deeperThan3) & is.na(differs)]$fun
     if (length(missingArgs)) {
       differed <- TRUE
-      messageCache("    ... because of (a) new argument(s): ",
+      messageCache(.messageHangingIndent, .messageBecauseOfA, " new argument(s): ",
         paste(as.character(missingArgs), collapse = ", "),
         verbose = verbose
       )
     }
     if (isDevMode) {
-      messageCache(" ------ end devMode -------", verbose = verbose)
+      messageCache("------ end devMode -------", verbose = verbose)
     }
   } else {
     if (!identical("devMode", useCache)) {
       messageCache("There is no similar item in the cachePath ",
-        if (!is.null(functionName)) paste0("of '", functionName, "' "),
+        if (!is.null(functionName)) paste0("of '", functionName, "' ") else "",
         verbose = verbose)
-      messageCache("  ", userTagsMess, verbose = verbose)
+      if (!is.null(userTagsMess)) {
+        messageCache("  ", userTagsMess, "\n", verbose = verbose)
+      }
     }
   }
 }
@@ -2135,6 +2195,7 @@ isPkgColonFn <- function(x) {
 
 evalTheFun <- function(FUNcaptured, isCapturedFUN, isSquiggly, matchedCall, envir = parent.frame(),
                        verbose = getOption("reproducible.verbose"), ...) {
+  .messageIndentUpdate()
   withCallingHandlers(
     {
       out <- eval(FUNcaptured, envir = envir)
@@ -2185,18 +2246,22 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
 
         if (!file.exists(dtFile)) { # check first for wrong rds vs qs
           dtFile <- CacheDBFileSingle(cachePath = repo, cacheId = outputHash, format = "check")
-          if (!file.exists(dtFile)) { # still doesn't == means it is broken state
-            unlink(csf)
-            dtFile <- NULL
+          fe <- file.exists(dtFile)
+          if (isTRUE(!(fe))) { # still doesn't == means it is broken state
             warning(
-              "The Cache file exists, but there is no database entry for it; removing ",
+              "The Cache file exists for ", outputHash, ", but there is no database entry for it; removing ",
               "the file and rerunning the call"
             )
+            unlink(csf)
+            dtFile <- NULL
+          } else if (length(fe) > 1) { # has both the qs and rds dbFile
+            browser()
+
           }
         }
 
         isInRepo <- if (!is.null(dtFile)) {
-          loadFile(dtFile, cachePath = repo)
+          loadFile(dtFile)
         } else {
           NULL
         }
@@ -2227,21 +2292,8 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
                               debugCache, # sideEffect,
                               quick, algo, preDigest, startCacheTime, drv, conn,
                               outputHash, useCloud, gdriveLs, cloudFolderID, lastEntry, lastOne, ...) {
-  objSize <- # if (useDBI()) {
-    as.numeric(tail(fullCacheTableForObj[["tagValue"]][
-      fullCacheTableForObj$tagKey == "file.size"
-    ], 1))
-  class(objSize) <- "object_size"
-  bigFile <- isTRUE(objSize > 1e6)
-  fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
-  messageCache("  ...(Object to retrieve (fn: ", fnDetails$functionName, ", ",
-    basename2(CacheStoredFile(cachePath, isInRepo[[.cacheTableHashColName()]], format = fileFormat)),
-    ")",
-    if (bigFile) " is large: ",
-    if (bigFile) format(objSize, units = "auto"),
-    ")",
-    verbose = verbose
-  )
+  .cacheMessageObjectToRetrieve(fnDetails$functionName, fullCacheTableForObj,
+                           cachePath, cacheId = isInRepo[[.cacheTableHashColName()]], verbose)
 
   preLoadTime <- Sys.time()
   output <- try(.getFromRepo(FUN,
@@ -2354,4 +2406,14 @@ addCacheAttr <- function(output, .CacheIsNew, outputHash, FUN) {
     }
   }
   output
+}
+
+
+nullifyByArgName <- function(a, name) {
+  if (is(a, "list")) {
+    toNull <- names(a) %in% name
+    a[toNull] <- NULL
+    a <- lapply(a, nullifyByArgName, name = name)
+  }
+  a
 }

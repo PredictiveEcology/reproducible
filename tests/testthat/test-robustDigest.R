@@ -16,3 +16,28 @@ test_that("test data.table caching", {
   bC <- CacheDigest(b)
   expect_false(identical(aC, bC))
 })
+
+test_that("test ALTREP integers", {
+  testInit("qs", opts = list(reproducible.cacheSaveFormat = "qs",
+                             reproducible.cacheSpeed = "fast"))
+
+  for (i in c("rds", "qs")) {
+    for (s in c("slow", "fast")) {
+      options(reproducible.cacheSaveFormat = i,
+              reproducible.cacheSpeed = s)
+
+      a <- 1991:20200
+      aDig <- .robustDigest(a)
+      tf <- tempfile(fileext = i);
+      if (identical(i, "rds")) {
+        saveRDS(a, file = tf);
+        b <- readRDS(tf)
+      } else {
+        qs::qsave(a, file = tf);
+        b <- qs::qread(tf)
+      }
+      bDig <- .robustDigest(b)
+      expect_true(identical(aDig, bDig))
+    }}
+
+})

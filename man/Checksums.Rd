@@ -9,7 +9,7 @@
 Checksums(
   path,
   write,
-  quickCheck = FALSE,
+  quickCheck = getOption("reproducible.quickCheck", FALSE),
   checksumFile = identifyCHECKSUMStxtFile(path),
   files = NULL,
   verbose = getOption("reproducible.verbose", 1),
@@ -19,7 +19,7 @@ Checksums(
 \S4method{Checksums}{character,logical}(
   path,
   write,
-  quickCheck = FALSE,
+  quickCheck = getOption("reproducible.quickCheck", FALSE),
   checksumFile = identifyCHECKSUMStxtFile(path),
   files = NULL,
   verbose = getOption("reproducible.verbose", 1),
@@ -29,7 +29,7 @@ Checksums(
 \S4method{Checksums}{character,missing}(
   path,
   write,
-  quickCheck = FALSE,
+  quickCheck = getOption("reproducible.quickCheck", FALSE),
   checksumFile = identifyCHECKSUMStxtFile(path),
   files = NULL,
   verbose = getOption("reproducible.verbose", 1),

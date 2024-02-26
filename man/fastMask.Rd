@@ -11,7 +11,7 @@ fastMask(
   useGDAL = FALSE,
   verbose = getOption("reproducible.verbose", 1),
   ...,
-  skipDeprecastedMsg = FALSE
+  messageSkipDeprecated = FALSE
 )
 }
 \arguments{
@@ -36,7 +36,7 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{...}{Currently unused.}
 
-\item{skipDeprecastedMsg}{Logical. If \code{TRUE}, then the message about this function
+\item{messageSkipDeprecated}{Logical. If \code{TRUE}, then the message about this function
 being deprecated will be suppressed.}
 }
 \value{

@@ -1,6 +1,6 @@
 if (requireNamespace("terra", quietly = TRUE)) {
   ## LOG1S
-  rasOrig <- terra::rast(ncol = 10, nrow = 10)
+  rasOrig <- terra::rast(ncols = 10, nrows = 10)
   ras <- rasOrig
   ras[] <- rep(c(0,1),50)
   assessDataType(ras)

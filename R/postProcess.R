@@ -625,6 +625,7 @@ suppressWarningsSpecific <- function(code, falseWarnings, verbose = getOption("r
 
 #' @importFrom utils capture.output
 captureWarningsToAttr <- function(code, verbose = getOption("reproducible.verbose", 1)) {
+  warns <- character()
   warn <- capture.output(
     type = "message",
     suppressWarnings(withCallingHandlers(
@@ -632,26 +633,27 @@ captureWarningsToAttr <- function(code, verbose = getOption("reproducible.verbos
         yy <- eval(code)
       },
       warning = function(xx) {
-        messagePrepInputs(paste0("warn::", xx$messagePrepInputs), verbose = verbose)
+        warns <<- paste0("warn::", xx$message)
       }
     ))
   )
-  trueWarnings <- grepl("warn::.*", warn)
+  trueWarnings <- grepl("warn::.*", warns)
   if (length(warn[!trueWarnings])) {
-    messagePrepInputs(paste(warn[!trueWarnings], collapse = "\n  "))
+    lapply(warns[!trueWarnings], warning)
   }
-  warn <- gsub("warn::", "", warn[trueWarnings])
-  attr(yy, "warning") <- paste(warn, collapse = "\n")
+  warns <- gsub("warn::", "", warns[trueWarnings])
+  attr(yy, "warning") <- paste(warns, collapse = "\n")
   return(yy)
 }
 
 dtp <- list()
+dtp[["LOG1S"]] <- 1
 dtp[["INT1"]] <- 255 / 2
 dtp[["INT2"]] <- 65534 / 2
 dtp[["INT4"]] <- 4294967296 / 2
 dtp[["FLT4"]] <- 3.4e+38
 dtp[["FLT8"]] <- Inf
-dtps <- c("INT1U", "INT1S", "INT2U", "INT2S", "INT4U", "INT4S", "FLT4S", "FLT8S")
+dtps <- c("LOG1S", "INT1U", "INT1S", "INT2U", "INT2S", "INT4U", "INT4S", "FLT4S", "FLT8S", "FLT8U")
 names(dtps) <- dtps
 datatypeVals <- lapply(dtps, function(namdtp) {
   d <- dtp[grep(substr(namdtp, 1, 4), names(dtp), value = TRUE)]
@@ -659,7 +661,11 @@ datatypeVals <- lapply(dtps, function(namdtp) {
   mult <- ifelse(div == "U", 2, 1)
   Max <- trunc(unlist(d) * mult)
   sign1 <- ifelse(div == "U", 0, -1)
-  Min <- Max * sign1
+  if (grepl("LOG", names(d))) {
+    Min <- 0
+  } else {
+    Min <- Max * sign1
+  }
   list(Min = Min, Max = Max)
 })
 MaxVals <- lapply(datatypeVals, function(x) unname(x$Max))
@@ -673,26 +679,67 @@ progressBarCode <- function(..., doProgress = TRUE, message,
                             colour = getOption("reproducible.messageColourCache"),
                             verbose = getOption("reproducible.verbose"),
                             verboseLevel = 1) {
-  messageColoured(message, colour = colour, verbose = verbose, verboseLevel = verboseLevel)
+  messageCache(message, verbose = verbose, verboseLevel = verboseLevel)
   out <- eval(...)
-  if (doProgress) messageColoured("\b Done!", colour = colour, verbose = verbose, verboseLevel = verboseLevel)
+  if (doProgress) messageCache("\b Done!", verbose = verbose, verboseLevel = verboseLevel)
   out
 }
 
 
 switchDataTypes <- function(datatype, type) {
+
+  gdalVersion <- "3.1"
+  if (.requireNamespace("sf"))
+    gdalVersion <- sf::sf_extSoftVersion()["GDAL"]
+
+  if (missing(datatype))
+    datatype <- "Float32"
+  gdals <- list(
+    LOG1S = "Byte",
+    INT1S = "Int16", # added below if gdalversion ok
+    INT2S = "Int16",
+    INT4S = "Int32",
+    INT8S = "Int64",
+    INT1U = "Byte",
+    INT2U = "UInt16",
+    # INT4U = "UInt32", # added below if gdalversion ok
+    # INT8U = "UInt64", # added below if gdalversion ok
+    FLT4S = "Float32",
+    FLT8S = "Float64"
+  )
+
+  gdalsOrig <- gdals
+
+  if (gdalVersion >= as.numeric_version("3.5"))
+    gdals <- append(gdals,
+                    list(
+                      INT4U = "UInt32",
+                      INT8U = "UInt64"
+                    ))
+  if (gdalVersion >= as.numeric_version("3.7"))
+    gdals[which(names(gdals) %in% "INT1S")] <- list(INT1S = "Int8")
+
+
+
+  rast <- names(gdals)
+  names(rast) <- gdals
+
+  if (identical(type, "GDAL"))
+    if (isTRUE(!datatype %in% names(gdals)))
+      if (!datatype %in% unname(unlist(gdals))) {
+        warning("datatype ", datatype, " is not an option with this version of gdal: ",
+                gdalVersion, "\nSetting to ", tail(gdalsOrig, 1))
+        datatype <- tail(gdalsOrig, 1)
+      }
+
+  gdals <- append(
+    gdals,
+    list(datatype)) # default is user-supplied -- which could be already a gdal-correct specification for example
+  rast <- append(rast, list(datatype))
+
   datatype <- switch(type,
     GDAL = {
-      switch(datatype,
-        LOG1S = "Byte",
-        INT1S = "Int16",
-        INT2S = "Int16",
-        INT4S = "Int32",
-        INT1U = "Byte",
-        INT2U = "UInt16",
-        INT4U = "UInt32",
-        datatype <- "Float32" # there is no GDAL FLT8S
-      )
+      do.call(switch, append(list(datatype), gdals))
     },
     projectRaster = {
       switch(datatype,
@@ -701,7 +748,9 @@ switchDataTypes <- function(datatype, type) {
         datatype <- "ngb"
       )
     },
-    writeRaster = datatype,
+    writeRaster = {
+      do.call(switch, append(list(datatype), rast))
+    },
     stop("incorrect argument: type must be one of writeRaster, projectRaster, or GDAL")
   )
   return(datatype)

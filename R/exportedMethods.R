@@ -73,22 +73,48 @@ setMethod(
   ".cacheMessage",
   signature = "ANY",
   definition = function(object, functionName, fromMemoise, verbose = getOption("reproducible.verbose", 1)) {
+    postMess <- NULL
+    whMessage <- .messageLoadedCacheResult()
     if (isTRUE(fromMemoise)) {
-      whMessage <- .loadedMemoisedResultMsg
-      messageCache(.loadedCacheMsg(whMessage, functionName), verbose = verbose)
-    } else if (!is.na(fromMemoise)) {
-      whMessage <- .loadedCacheResultMsg
-      messageCache(.loadedCacheMsg(whMessage, functionName), " ",
-                   .addingToMemoisedMsg,
-                   sep = "", verbose = verbose
-      )
-    } else {
-      whMessage <- .loadedCacheResultMsg
-      messageCache(.loadedCacheMsg(whMessage, functionName), verbose = verbose)
+      whMessage <- .messageLoadedCacheResult(2)
+    } else if (fromMemoise %in% FALSE) {
+      postMess <- paste0(" ", .messageAddingToMemoised)
     }
+    baseMess <- .messageLoadedCache(whMessage, functionName)
+    if (!is.null(postMess))
+      baseMess <- paste0(baseMess, postMess)
+    messageCache(baseMess, verbose = verbose)
     return(invisible(whMessage))
   }
 )
+
+#' @export
+#' @param fullCacheTableForObj The data.table entry from the Cache database for only
+#' this `cacheId`, e.g., via showCache()
+#' @inheritParams Cache
+#' @inheritParams .unwrap
+#' @details
+#' `.objecxtToRetrieveMessage` is the messaging for recovering an object from Cache.
+#'
+#' @rdname exportedMethods
+.cacheMessageObjectToRetrieve <- function(functionName, fullCacheTableForObj, cachePath, cacheId, verbose) {
+  objSize <- as.numeric(tail(extractFromCache(fullCacheTableForObj, elem = "file.size"), 1))
+  class(objSize) <- "object_size"
+  bigFile <- isTRUE(objSize > 1e6)
+
+  fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
+
+  messageCache(.messageObjToRetrieveFn(functionName), ", ",
+  #             messageCache("...(Object to retrieve (fn: ", .messageFunctionFn(functionName), ", ",
+               basename2(CacheStoredFile(cachePath, cacheId, format = fileFormat)),
+               ")",
+               if (bigFile) " is large: ",
+               if (bigFile) format(objSize, units = "auto"),
+               " ... ",
+               verbose = verbose
+  )
+}
+
 
 ################################################################################
 #' @details
@@ -180,6 +206,7 @@ setGeneric(".checkCacheRepo", function(object, create = FALSE,
 
 #' @export
 #' @rdname exportedMethods
+#' @include messages.R
 setMethod(
   ".checkCacheRepo",
   signature = "ANY",
@@ -191,14 +218,14 @@ setMethod(
         #  If no, then user is aware and doesn't need a message
         if (any(grepl(normPath(tmpDir), normPath(getOption("reproducible.cachePath")))) ||
             any(grepl(normPath(tempdir()), normPath(getOption("reproducible.cachePath"))))) {
-          messageCache("No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;\n",
+          messageCache(.messageNoCachePathSupplied, " and getOption('reproducible.cachePath') is inside a temporary directory;\n",
                        "  this will not persist across R sessions.",
                        verbose = verbose
           )
         }
         getOption("reproducible.cachePath", tmpDir)
       } else {
-        messageCache("No cachePath supplied. Using ", .reproducibleTempCacheDir(), verbose = verbose)
+        messageCache(.messageNoCachePathSupplied, ". Using ", .reproducibleTempCacheDir(), verbose = verbose)
         .reproducibleTempCacheDir()
       }
       checkPath(path = cachePath, create = create)
@@ -235,7 +262,7 @@ setMethod(
 #'   r <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1:100)
 #'
 #'   # write to disk manually -- will be in tempdir()
-#'   r <- terra::writeRaster(r, file = tempfile(fileext = ".tif"))
+#'   r <- terra::writeRaster(r, filename = tempfile(fileext = ".tif"))
 #'
 #'   # copy it to the cache repository
 #'   r <- .prepareOutput(r, tempdir())
@@ -495,7 +522,7 @@ unmakeMemoisable.default <- function(x) {
 #'
 .wrap <- function(obj, cachePath, preDigest,  drv = getDrv(getOption("reproducible.drv", NULL)),
                   conn = getOption("reproducible.conn", NULL),
-                  verbose = getOption("reproducible.verbose"), ...) {
+                  verbose = getOption("reproducible.verbose"), outputObjects  = NULL, ...) {
   UseMethod(".wrap")
 }
 
@@ -503,7 +530,15 @@ unmakeMemoisable.default <- function(x) {
 #' @rdname dotWrap
 .wrap.list <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                        conn = getOption("reproducible.conn", NULL),
-                       verbose = getOption("reproducible.verbose"), ...) {
+                       verbose = getOption("reproducible.verbose"), outputObjects = NULL, ...) {
+
+  if (!is.null(outputObjects)) {
+    allObjs <- names(obj)
+    nullify <- setdiff(allObjs, outputObjects)
+    obj[nullify] <- NULL
+  }
+
+
   attrsOrig <- attributes(obj)
   obj <- lapply(obj, .wrap, preDigest = preDigest, cachePath = cachePath, drv = drv,
                 conn = conn, verbose = verbose, ...)
@@ -518,7 +553,7 @@ unmakeMemoisable.default <- function(x) {
     attrsOrig["tags"] <- newList
   }
   if (!is.null(attrsOrig)) {
-    for (tt in c(".Cache", "tags", "call"))
+    for (tt in intersect(names(attrsOrig), c(".Cache", "tags", "call")))
       attr(obj, tt) <- attrsOrig[[tt]]
   }
   obj
@@ -528,14 +563,23 @@ unmakeMemoisable.default <- function(x) {
 #' @rdname dotWrap
 .wrap.environment <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                               conn = getOption("reproducible.conn", NULL),
-                              verbose = getOption("reproducible.verbose"), ...) {
-  obj2 <- as.list(obj, all.names = FALSE)
-  out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
-               conn = conn, verbose = verbose, ...)
-  obj <- Copy(obj)
-  obj2 <- list2envAttempts(out, obj)
-  if (!is.null(obj2)) obj <- obj2
+                              verbose = getOption("reproducible.verbose"), outputObjects = NULL, ...) {
 
+  if (!is.null(outputObjects)) {
+    allObjs <- ls(obj)
+    nullify <- setdiff(allObjs, outputObjects)
+    rm(list = nullify, envir = obj)
+  }
+
+  if (length(ls(obj, all.names = T)) > 0) {
+  obj2 <- as.list(obj, all.names = TRUE)
+  out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
+               conn = conn, verbose = verbose, outputObjects = outputObjects, ...)
+    # obj <- Copy(obj)
+    obj2 <- list2envAttempts(out, obj)
+    if (!is.null(obj2)) obj <- obj2
+
+  }
   obj
 }
 
@@ -554,11 +598,11 @@ unmakeMemoisable.default <- function(x) {
                           conn = getOption("reproducible.conn", NULL),
                           verbose = getOption("reproducible.verbose"), ...) {
   rasters <- is(obj, "Raster")
+  atts <- attributes(obj)
 
   if (any(rasters)) {
     .requireNamespace("raster", stopOnFALSE = TRUE)
     objOrig <- obj
-    atts <- attributes(obj)
     obj <- .prepareFileBackedRaster(obj,
                                     repoDir = cachePath,
                                     overwrite = FALSE, drv = drv, conn = conn
@@ -604,12 +648,17 @@ unmakeMemoisable.default <- function(x) {
     }
   }
 
-  if (any(inherits(obj, c("SpatVector", "SpatRaster", "SpatExtent")))) {
+  if (is(obj, "SpatVectorCollection")) {
+    obj <- .wrap(as.list(obj))
+    class(obj) <- "PackedSpatVectorCollection"
+  }
+
+  if (any(inherits(obj, c("SpatVector", "SpatRaster", "SpatExtent", "data.table")))) {
     if (!requireNamespace("terra", quietly = TRUE)) {
       stop("Please install terra package")
     }
-    messageCache("...wrapping terra object for saving...", verboseLevel = 2, verbose = verbose)
-    attrs <- attr(obj, ".Cache")
+    messageCache("wrapping terra object for saving...", verboseLevel = 2, verbose = verbose)
+    # attrs <- attr(obj, ".Cache")
 
     # next is for terra objects --> terra::wrap is ridiculously slow for SpatVector objects; use
     #   custom version in reproducible where here
@@ -630,15 +679,23 @@ unmakeMemoisable.default <- function(x) {
       attr(obj, "class") <- "PackedSpatExtent"
       useWrap <- FALSE
     }
+    if (is(obj, "data.table")) {
+      obj <- data.table::copy(obj)
+      useWrap <- FALSE
+    }
 
     if (useWrap) {
       obj <- terra::wrap(obj)
     } # let method dispatch work
 
-    attr(obj, ".Cache") <- attrs
+    # attr(obj, ".Cache") <- attrs
 
     messageCache("\b Done!", verboseLevel = 2, verbose = verbose)
   }
+
+  # put attributes back on the potentially packed object
+  obj <- attributesReassign(atts, obj)
+
   obj
 }
 
@@ -647,6 +704,11 @@ unmakeMemoisable.default <- function(x) {
 .unwrap.default <- function(obj, cachePath, cacheId,
                             drv = getDrv(getOption("reproducible.drv", NULL)),
                             conn = getOption("reproducible.conn", NULL), ...) {
+  atts <- attributes(obj)
+  if (any(inherits(obj, "PackedSpatVectorCollection"))) {
+    obj <- lapply(obj, .unwrap)
+    obj <- terra::svc(obj)
+  }
   if (any(inherits(obj, c("PackedSpatVector", "PackedSpatRaster", "PackedSpatExtent")))) {
     if (!requireNamespace("terra")) stop("Please install.packages('terra')")
     if (any(inherits(obj, "PackedSpatVector"))) {
@@ -661,13 +723,17 @@ unmakeMemoisable.default <- function(x) {
   } else if (is(obj, "Path")) {
     obj <- unwrapSpatRaster(obj, cachePath, ...)
   }
+  # put attributes back on the potentially packed object
+  obj <- attributesReassign(atts, obj)
 
   obj
 }
 
 wrapSpatRaster <- function(obj, cachePath, ...) {
-  cls <- class(obj)
+
   fns <- Filenames(obj, allowMultiple = FALSE)
+
+  cls <- class(obj)
   fnsMulti <- Filenames(obj, allowMultiple = TRUE)
   obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
   nlyrsInFile <- as.integer(terra::nlyr(terra::rast(fns)))
@@ -817,11 +883,16 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
                                 drv = getDrv(getOption("reproducible.drv", NULL)),
                                 conn = getOption("reproducible.conn", NULL), ...) {
   # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
-  objList <- as.list(obj) # don't overwrite everything, just the ones in the list part
+  atts <- attributes(obj)
+  # if (!is.null(obj$fireSense_dataPrepFit$.objects$studyAreaUnion)) browser()
+  objList <- as.list(obj, all.names = TRUE) # don't overwrite everything, just the ones in the list part; but need .mods, .objects etc.
 
   outList <- .unwrap(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn, ...)
   output2 <- list2envAttempts(outList, obj) # don't return it if the list2env retured nothing (a normal environment situation; not simList)
   if (!is.null(output2)) obj <- output2
+
+  # put attributes back on the potentially packed object
+  obj <- attributesReassign(atts, obj)
 
   obj
 }
@@ -831,6 +902,7 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
 .unwrap.list <- function(obj, cachePath, cacheId,
                          drv = getDrv(getOption("reproducible.drv", NULL)),
                          conn = getOption("reproducible.conn", NULL), ...) {
+  atts <- attributes(obj)
   anyNames <- names(obj)
   isSpatVector <- if (is.null(anyNames)) FALSE else all(names(obj) %in% spatVectorNamesForCache)
   if (isTRUE(isSpatVector)) {
@@ -845,6 +917,10 @@ unwrapSpatRaster <- function(obj, cachePath, ...) {
       })
     }
   }
+  # put attributes back on the potentially packed object
+  obj <- attributesReassign(atts, obj)
+
+  obj
 }
 
 unwrapRaster <- function(obj, cachePath, cacheId) {
@@ -1021,3 +1097,19 @@ remapFilenames <- function(obj, tags, cachePath, ...) {
 }
 
 grepStartsTwoDots <- "^\\.\\."
+
+
+attributesReassign <- function(atts, obj) {
+  attsNames <- setdiff(names(atts), knownAtts)
+  if (length(attsNames))
+    for (att in attsNames) {
+      if (is.null(attr(obj, att))) {
+        attr(obj, att) <- atts[[att]]
+      }
+    }
+  obj
+}
+
+
+knownAtts <- c("cpp", "class", "attributes", "values", "definition", "pnt")
+
