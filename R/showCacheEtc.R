@@ -1,3 +1,7 @@
+utils::globalVariables(c(
+  "..onCol"
+))
+
 #' @param x A simList or a directory containing a valid Cache repository. Note:
 #'   For compatibility with `Cache` argument, `cachePath` can also be
 #'   used instead of `x`, though `x` will take precedence.
@@ -18,7 +22,7 @@
 #'            `class = "numeric"` to find all entries that are numerics in the cache.
 #'            Note: the special cases of `cacheId` and `fun` have their own
 #'            named arguments in these functions.
-#'            Also can be `regexp = xx`, where xx is `TRUE` if the user
+#'            Also can be `regexp = xx`, where `xx` is `TRUE` if the user
 #'            is passing a regular expression.
 #'            Otherwise, `userTags` will need to be exact matches. Default is
 #'            missing, which is the same as `TRUE`. If there are errors due

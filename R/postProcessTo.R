@@ -1510,7 +1510,7 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
     method <- "near"
 
   fns <- unique(Filenames(fromRas))
-  if (length(fns) ==1 && isTRUE(nzchar(fns))) {
+  if (length(fns) == 1 && isTRUE(nzchar(fns))) {
     fnSource <- fns
   } else {
     fnSource <- tempfile(fileext = ".tif")
@@ -1670,7 +1670,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
     if (!is(maskToVect, "SpatRaster")) {
       maskToVect <- terra::rast(maskToVect)
     }
-    maskToVect <- terra::as.polygons(maskToVect, values=FALSE)
+    maskToVect <- terra::as.polygons(maskToVect, values = FALSE)
   }
   if (isSF(maskToVect)) {
     shp <- sf::st_transform(maskToVect, terra::crs(fromRas))
@@ -1801,8 +1801,7 @@ addDataType <- function(opts, fromRas, ...) {
   opts
 }
 
-
-gdalTransform <- function(from, cropTo, projectTo, maskTo, writeTo) {
+gdalTransform <- function(from, cropTo, projectTo, maskTo, writeTo, verbose) {
   messagePreProcess("running gdalTransform ...", appendLF = FALSE, verbose = verbose)
   st <- Sys.time()
   tf4 <- tempfile(fileext = ".prj")
@@ -1817,8 +1816,8 @@ gdalTransform <- function(from, cropTo, projectTo, maskTo, writeTo) {
   }
   # prjFile <- dir(dirname(from), pattern = paste0(basename(tools::file_path_sans_ext(from)), ".prj"), full.names = TRUE)
   # maskToInFromCRS <- terra::project(maskTo, prjFile)
-  # writeVector(maskToInFromCRS, filename = tf3, overwrite = TRUE)
-  # system.time(gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
+  # terra::writeVector(maskToInFromCRS, filename = tf3, overwrite = TRUE)
+  # system.time(sf::gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
   #                        destination = tf2, options =
   #                          c(# "-t_srs", tf4,
   #                            "-clipdst", tf3, "-overwrite"
@@ -1833,8 +1832,8 @@ gdalTransform <- function(from, cropTo, projectTo, maskTo, writeTo) {
   #                          )))
   #
   # browser()
-  writeVector(maskTo, filename = tf2)
-  system.time(gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
+  terra::writeVector(maskTo, filename = tf2)
+  system.time(sf::gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
                          destination = tf, options =
                            c("-t_srs", tf4,
                              "-clipdst", tf2, "-overwrite"

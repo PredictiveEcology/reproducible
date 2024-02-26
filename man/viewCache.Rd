@@ -155,7 +155,7 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \code{class = "numeric"} to find all entries that are numerics in the cache.
 Note: the special cases of \code{cacheId} and \code{fun} have their own
 named arguments in these functions.
-Also can be \code{regexp = xx}, where xx is \code{TRUE} if the user
+Also can be \code{regexp = xx}, where \code{xx} is \code{TRUE} if the user
 is passing a regular expression.
 Otherwise, \code{userTags} will need to be exact matches. Default is
 missing, which is the same as \code{TRUE}. If there are errors due

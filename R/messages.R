@@ -294,12 +294,13 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
   messageCache(preMessage, format(fs, "auto"), verbose = verbose)
 }
 
-
-.messageObjToRetrieveFn <- function(funName)
+.messageObjToRetrieveFn <- function(funName) {
   paste0("Object to retrieve (fn: ", .messageFunctionFn(funName))
-
+}
 
 .messageIndentDefault <- 1
+
+#' @importFrom utils assignInNamespace
 .messageIndentUpdate <- function(nchar = .messageIndentDefault, envir = parent.frame(), ns = "reproducible") {
   val <- paste0(rep(" ", nchar), collapse = "")
   assignInNamespace(ns = ns, ".messagePreProcessIndent", paste0(.messagePreProcessIndent, val))
@@ -312,6 +313,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
   )
 }
 
+#' @importFrom utils assignInNamespace
 .messageIndentRevert <- function(nchar = .messageIndentDefault, envir = parent.frame(), ns = "reproducible") {
   val <- paste0(rep(" ", nchar), collapse = "")
   assignInNamespace(ns = "reproducible", ".messagePreProcessIndent", gsub(paste0(val, "$"), "", .messagePreProcessIndent))
