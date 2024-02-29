@@ -666,7 +666,7 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
           if (!terra::is.lonlat(from)) {
             # if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
             newRes <- terra::res(from)
-            messagePreProcess("Using resolution of ", paste(newRes, collapse = "x"), "m; ",
+            messagePreProcess("Using original resolution (", paste(newRes, collapse = "x"), "m) ",
                               verbose = verbose
             )
             projectTo <- terra::rast(projectTo, resolution = newRes)
@@ -674,13 +674,10 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
             projectTo <- terra::crs(projectTo)
           }
 
-          messagePreProcess("in the projection of `projectTo`, using the origin and extent",
+          messagePreProcess("Using the origin and extent from `ext(from)` in the projection from `crs(projectTo)`.",
                             verbose = verbose
           )
-          messagePreProcess("from `ext(from)` (in the projection from `projectTo`).",
-                            verbose = verbose
-          )
-          messagePreProcess("If this is not correct, create a template gridded object and pass that to projectTo...",
+          messagePreProcess("If this is not correct, create a template gridded object and pass that to `projectTo`...",
                             verbose = verbose
           )
           messagePreProcess("",
