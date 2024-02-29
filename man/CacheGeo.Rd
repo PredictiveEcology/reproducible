@@ -57,9 +57,11 @@ folder on your google drive.}
 Defaults to \code{getOption("reproducible.useCache", 2L)} in \code{prepInputs}, and
 \code{getOption("reproducible.useCache", FALSE)} if calling any of the inner
 functions manually. For \code{prepInputs}, this mean it will use \code{Cache}
-only up to 2 nested levels, which will generally including \code{postProcess} and
-the first level of \verb{*Input} functions, e.g., \code{cropInputs}, \code{projectInputs},
-\code{maskInputs}, but not \code{fixErrors}.}
+only up to 2 nested levels, which includes \code{preProcess}. \code{postProcess} and
+its nested \verb{*Input} functions (e.g., \code{cropInputs}, \code{projectInputs},
+\code{maskInputs}) are no longer internally cached, as \code{terra} processing speeds
+mean internal caching is more time consuming. We recommend caching the full
+\code{prepInputs} call instead (e.g. \code{prepInputs(...) |> Cache()}).}
 
 \item{overwrite}{Logical. Should downloading and all the other actions occur
 even if they pass the checksums or the files are all there.}

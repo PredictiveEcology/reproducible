@@ -126,7 +126,7 @@ or \code{terra::writeRaster} (for \code{writeTo}) and not used for \code{cropTo}
 \verb{writeTo = }. If \code{reproducible.gdalwarp = TRUE}, then these will be passed to the
 \verb{gdal*} functions. See them for details.}
 
-\item{needBuffer}{Logical. Defaults to \code{TRUE}, meaning nothing is done out
+\item{needBuffer}{Logical. Defaults to \code{FALSE}, meaning nothing is done out
 of the ordinary. If \code{TRUE}, then a buffer around the cropTo, so that if a reprojection
 has to happen on the \code{cropTo} prior to using it as a crop layer, then a buffer
 of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.}
