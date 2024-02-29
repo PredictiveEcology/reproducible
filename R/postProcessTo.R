@@ -758,7 +758,7 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
   from
 }
 
-#' @param needBuffer Logical. Defaults to `TRUE`, meaning nothing is done out
+#' @param needBuffer Logical. Defaults to `FALSE`, meaning nothing is done out
 #'   of the ordinary. If `TRUE`, then a buffer around the cropTo, so that if a reprojection
 #'   has to happen on the `cropTo` prior to using it as a crop layer, then a buffer
 #'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
