@@ -14,7 +14,7 @@ checkPath(path, create)
 
 \S4method{checkPath}{character,missing}(path)
 
-\S4method{checkPath}{NULL,ANY}(path)
+\S4method{checkPath}{`NULL`,ANY}(path)
 
 \S4method{checkPath}{missing,ANY}()
 }

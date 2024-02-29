@@ -191,9 +191,11 @@ utils::globalVariables(c(
 #'   Defaults to `getOption("reproducible.useCache", 2L)` in `prepInputs`, and
 #'   `getOption("reproducible.useCache", FALSE)` if calling any of the inner
 #'   functions manually. For `prepInputs`, this mean it will use `Cache`
-#'   only up to 2 nested levels, which will generally including `postProcess` and
-#'   the first level of `*Input` functions, e.g., `cropInputs`, `projectInputs`,
-#'   `maskInputs`, but not `fixErrors`.
+#'   only up to 2 nested levels, which includes `preProcess`. `postProcess` and
+#'   its nested `*Input` functions (e.g., `cropInputs`, `projectInputs`,
+#'   `maskInputs`) are no longer internally cached, as `terra` processing speeds
+#'   mean internal caching is more time consuming. We recommend caching the full
+#'   `prepInputs` call instead (e.g. `prepInputs(...) |> Cache()`).
 #'
 #' @param .tempPath Optional temporary path for internal file intermediate steps.
 #'   Will be cleared on.exit from this function.
