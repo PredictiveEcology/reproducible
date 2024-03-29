@@ -1,4 +1,4 @@
-# reproducible 2.0.11
+# reproducible 2.0.12
 
 ## New
 * new family of functions that are called inside `postProcessTo` that use `sf::gdal_utils` directly. These are still experimental and will only be activated with `options("reproducible.gdalwarp" = TRUE)`
