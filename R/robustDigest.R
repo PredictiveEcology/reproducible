@@ -480,10 +480,6 @@ basenames3 <- function(object, nParentDirs) {
     } else if (cacheSpeed == "slow") {
       cacheSpeed <- 1L
     }
-    if (!.requireNamespace("fastdigest", stopOnFALSE = FALSE)) {
-      cacheSpeed <- 1L
-    }
-
     out <- if (cacheSpeed == 1) {
       if (length(x) == 1) {
         if (is.atomic(x))
@@ -492,7 +488,7 @@ basenames3 <- function(object, nParentDirs) {
       }
       digest::digest(x, algo = algo)
     } else if (cacheSpeed == 2) {
-      fastdigest::fastdigest(x)
+      digest::digest(x, algo = "spooky")
     } else {
       stop("options('reproducible.cacheSpeed') must be 1, 2, 'slow' or 'fast'")
     }

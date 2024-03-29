@@ -36,7 +36,7 @@ Default: \code{"rds"}. What save format to use; currently, \code{"qs"} or \code{
 \item{\code{cacheSpeed}}{
 Default \code{"slow"}. One of \code{"slow"} or \code{"fast"} (1 or 2).
 \code{"slow"} uses \code{digest::digest} internally, which is transferable across operating
-systems, but much slower than \code{fastdigest::fastdigest}.
+systems, but much slower than \verb{digest::digest(algo = "spooky)}.
 So, if all caching is happening on a single machine, \code{"fast"} would be a good setting.
 }
 \item{\code{conn}}{

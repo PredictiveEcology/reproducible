@@ -182,8 +182,7 @@ inheritance) before hashing so the correct method is being cached;
 Currently, only file-backed \verb{Raster*} or \verb{terra*} objects are digested
 (e.g., not \code{ff} objects, or any other R object where the data
 are on disk instead of in RAM);
-\item Uses \code{\link[digest:digest]{digest::digest()}} (formerly fastdigest, which does
-not translate between operating systems).
+\item Uses \code{\link[digest:digest]{digest::digest()}}
 This is used for file-backed objects as well.
 \item Cache will save arguments passed by user in a hidden environment. Any
 nested Cache functions will use arguments in this order 1) actual arguments

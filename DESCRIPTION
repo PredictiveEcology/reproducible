@@ -19,8 +19,8 @@ SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.ra
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2023-11-21
-Version: 2.0.10
+Date: 2024-03-29
+Version: 2.0.11
 Authors@R: 
     c(person(given = "Eliot J B",
              family = "McIntire",
@@ -65,7 +65,6 @@ Suggests:
     covr,
     crayon,
     DBI,
-    fastdigest,
     future,
     geodata,
     glue,
@@ -91,7 +90,7 @@ VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Collate: 
     'DBI.R'
     'cache-helpers.R'
