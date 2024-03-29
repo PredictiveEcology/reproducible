@@ -36,8 +36,7 @@ utils::globalVariables(c(
 #'         Currently, only file-backed `Raster*` or `terra*` objects are digested
 #'         (e.g., not `ff` objects, or any other R object where the data
 #'         are on disk instead of in RAM);
-#'   \item Uses [digest::digest()] (formerly fastdigest, which does
-#'         not translate between operating systems).
+#'   \item Uses [digest::digest()]
 #'         This is used for file-backed objects as well.
 #'   \item Cache will save arguments passed by user in a hidden environment. Any
 #'         nested Cache functions will use arguments in this order 1) actual arguments
