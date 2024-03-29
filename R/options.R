@@ -31,7 +31,7 @@
 #'   \item{`cacheSpeed`}{
 #'     Default `"slow"`. One of `"slow"` or `"fast"` (1 or 2).
 #'     `"slow"` uses `digest::digest` internally, which is transferable across operating
-#'     systems, but much slower than `fastdigest::fastdigest`.
+#'     systems, but much slower than `digest::digest(algo = "spooky)`.
 #'     So, if all caching is happening on a single machine, `"fast"` would be a good setting.
 #'   }
 #'   \item{`conn`}{

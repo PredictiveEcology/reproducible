@@ -1,3 +1,8 @@
+# reproducible 2.0.11
+
+## Remove dependency
+* fastdigest was removed from CRAN and so is removed from here.
+
 # reproducible 2.0.10
 
 ## Bug fixes
