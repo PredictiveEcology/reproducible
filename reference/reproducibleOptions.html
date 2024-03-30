@@ -25,7 +25,7 @@ See Details below."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/aj
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.11</span>
       </span>
     </div>
 
@@ -102,7 +102,7 @@ The default path for repositories if not passed as an argument.</p></dd>
 <dt><code>cacheSpeed</code></dt>
 <dd><p>Default <code>"slow"</code>. One of <code>"slow"</code> or <code>"fast"</code> (1 or 2).
 <code>"slow"</code> uses <code><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest::digest</a></code> internally, which is transferable across operating
-systems, but much slower than <code><a href="https://rdrr.io/pkg/fastdigest/man/fastdigest.html" class="external-link">fastdigest::fastdigest</a></code>.
+systems, but much slower than <code>digest::digest(algo = "spooky)</code>.
 So, if all caching is happening on a single machine, <code>"fast"</code> would be a good setting.</p></dd>
 
 <dt><code>conn</code></dt>
@@ -177,7 +177,7 @@ Less robust to changes, but faster. <em>NOTE: this will only affect objects on d
 
 <dt><code>rasterRead</code></dt>
 <dd><p>Used during <code>prepInputs</code> when reading <code>.tif</code>, <code>.grd</code>, and <code>.asc</code> files.
-Default: <code><a href="https://rdrr.io/pkg/terra/man/rast.html" class="external-link">terra::rast</a></code>. Can be <code><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster::raster</a></code> for backwards compatibility.
+Default: <code><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">terra::rast</a></code>. Can be <code><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster::raster</a></code> for backwards compatibility.
 Can be set using environment variable <code>R_REPRODUCIBLE_RASTER_READ</code>.</p></dd>
 
 <dt><code>shapefileRead</code></dt>

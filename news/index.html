@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.11</span>
       </span>
     </div>
 
@@ -63,6 +63,13 @@
       <small>Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="2.0.11" id="reproducible-2011">reproducible 2.0.11<small>2024-03-30</small><a class="anchor" aria-label="anchor" href="#reproducible-2011"></a></h2>
+<div class="section level3">
+<h3 id="remove-dependency-2-0-11">Remove dependency<a class="anchor" aria-label="anchor" href="#remove-dependency-2-0-11"></a></h3>
+<ul><li>fastdigest was removed from CRAN and so is removed from here.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="2.0.10" id="reproducible-2010">reproducible 2.0.10<small>2023-11-22</small><a class="anchor" aria-label="anchor" href="#reproducible-2010"></a></h2>
 <div class="section level3">
@@ -140,7 +147,7 @@
 <h2 class="page-header" data-toc-text="2.0.5" id="reproducible-205">reproducible 2.0.5<small>2023-07-03</small><a class="anchor" aria-label="anchor" href="#reproducible-205"></a></h2>
 <div class="section level3">
 <h3 id="enhancements-2-0-5">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-2-0-5"></a></h3>
-<ul><li>Updates of <code>Copy</code> &amp; new <code>.wrap</code>, <code>.unwrap</code> generics and methods to <em>wrap</em> classes that don’t save well to disk as is. This uses the name similar to <code><a href="https://rdrr.io/pkg/terra/man/wrap.html" class="external-link">terra::wrap</a></code>, but with slight differences internally to allow for <code>SpatRaster</code> objects who are file-backed and must have their files moved when they are unwrapped.</li>
+<ul><li>Updates of <code>Copy</code> &amp; new <code>.wrap</code>, <code>.unwrap</code> generics and methods to <em>wrap</em> classes that don’t save well to disk as is. This uses the name similar to <code><a href="https://rspatial.github.io/terra/reference/wrap.html" class="external-link">terra::wrap</a></code>, but with slight differences internally to allow for <code>SpatRaster</code> objects who are file-backed and must have their files moved when they are unwrapped.</li>
 <li>
 <code>loadFiles</code> updated for more cases</li>
 <li>convert to using <code>withr</code> throughout testing for cleaning up</li>
@@ -165,7 +172,7 @@
 <code>reproducible.useFuture</code> now defaults to <code>"multisession"</code>
 </li>
 <li>updated tests to deal with <code>data.table</code> development branch (<a href="https://github.com/PredictiveEcology/reproducible/issues/314" class="external-link">#314</a>)</li>
-<li>removed all use of <code><a href="https://Rdatatable.gitlab.io/data.table/reference/setattr.html" class="external-link">data.table::setattr</a></code> to deal with “modified compiler constants” issue that was detected during CRAN checks</li>
+<li>removed all use of <code><a href="https://rdatatable.gitlab.io/data.table/reference/setattr.html" class="external-link">data.table::setattr</a></code> to deal with “modified compiler constants” issue that was detected during CRAN checks</li>
 <li>Improvements with testing using GitHub Actions</li>
 </ul></div>
 <div class="section level3">
@@ -209,7 +216,7 @@
 <li>substantial changes to <code>preProcess</code> for minor efficiency gains, edge cases, code cleaning</li>
 <li>new function <code>CacheGeo</code> that weaves together <code>prepInputs</code> and <code>Cache</code> to create a geo-spatial caching. See help and examples.</li>
 <li>
-<code>maskTo</code> now allows <code>touches</code> arg for <code><a href="https://rdrr.io/pkg/terra/man/mask.html" class="external-link">terra::mask</a></code>
+<code>maskTo</code> now allows <code>touches</code> arg for <code><a href="https://rspatial.github.io/terra/reference/mask.html" class="external-link">terra::mask</a></code>
 </li>
 <li>
 <code>Spatial</code> class is also “fixed” in <code>fixErrorsIn</code>
@@ -349,7 +356,7 @@
 <ul><li>
 <code>.robustDigest</code> was removing Cache attributes from objects under many conditions, when it should have left them there. It is unclear what the issues were, as this would likely not have impacted <code>Cache</code>. Now these attributes are left on.</li>
 <li>
-<code>data.table</code> objects appear to not be recovered correctly from disk (e.g., from Cache repository. We have added <code><a href="https://Rdatatable.gitlab.io/data.table/reference/copy.html" class="external-link">data.table::copy</a></code> when recovering from Cache repository</li>
+<code>data.table</code> objects appear to not be recovered correctly from disk (e.g., from Cache repository. We have added <code><a href="https://rdatatable.gitlab.io/data.table/reference/copy.html" class="external-link">data.table::copy</a></code> when recovering from Cache repository</li>
 <li>
 <code>clearCache</code> and <code>cc</code> did not correctly remove file-backed raster files (when not clearing whole CacheRepo); this may have resulted in a proliferation of files, each a filename with an underscore and a new higher number. This fix should eliminate this problem.</li>
 <li>deal with development versions of GDAL in <code>getGDALVersion()</code> (<a href="https://github.com/PredictiveEcology/reproducible/issues/239" class="external-link">#239</a>)</li>
@@ -737,7 +744,7 @@
 <code>cc</code>: new function – a shortcut for some commonly used options for <code><a href="../reference/viewCache.html">clearCache()</a></code>
 </li>
 <li>added experimental capacity for <code>prepInputs</code> to handle <code>.rar</code> archives, on systems with correct binaries to deal with them (<a href="https://github.com/PredictiveEcology/reproducible/issues/86" class="external-link">#86</a>, <a href="https://github.com/tati-micheletti" class="external-link">@tati-micheletti</a>)</li>
-<li>remove <code><a href="https://rdrr.io/pkg/fastdigest/man/fastdigest.html" class="external-link">fastdigest::fastdigest</a></code> as it is not return the identical hash across operating systems</li>
+<li>remove <code>fastdigest::fastdigest</code> as it is not return the identical hash across operating systems</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-0-2-6">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-2-6"></a></h3>
@@ -745,7 +752,7 @@
 <code>prepInputs</code> on GIS objects that don’t use <code><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster::raster</a></code> to load object were skipping <code>postProcess</code>. Fixed.</li>
 <li>under some circumstances, the <code>prepInputs</code> would cause virtually all entries in <code>CHECKSUMS.txt</code> to be deleted. 2 cases where this happened were identified and corrected.</li>
 <li>
-<code>data.table</code> class objects would give an error sometimes due to use of <code>attr(DT)</code>. Internally, attributes are now added with <code><a href="https://Rdatatable.gitlab.io/data.table/reference/setattr.html" class="external-link">data.table::setattr</a></code> to deal with this.</li>
+<code>data.table</code> class objects would give an error sometimes due to use of <code>attr(DT)</code>. Internally, attributes are now added with <code><a href="https://rdatatable.gitlab.io/data.table/reference/setattr.html" class="external-link">data.table::setattr</a></code> to deal with this.</li>
 <li>calling <code>gdalwarp</code> from <code>prostProcess</code> now correctly matches extent (<a href="https://github.com/PredictiveEcology/reproducible/issues/73" class="external-link">#73</a>, <a href="https://github.com/tati-micheletti" class="external-link">@tati-micheletti</a>)</li>
 <li>files from url that have unknown extension are now guessed with by <code>preProcess</code> (<a href="https://github.com/PredictiveEcology/reproducible/issues/92" class="external-link">#92</a>, <a href="https://github.com/tati-micheletti" class="external-link">@tati-micheletti</a>)</li>
 </ul></div>

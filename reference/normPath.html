@@ -28,7 +28,7 @@ remove trailing slash.
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.11</span>
       </span>
     </div>
 
@@ -84,7 +84,7 @@ remove trailing slash.
 <span><span class="co"># S4 method for list</span></span>
 <span><span class="fu">normPath</span><span class="op">(</span><span class="va">path</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># S4 method for `NULL`</span></span>
+<span><span class="co"># S4 method for NULL</span></span>
 <span><span class="fu">normPath</span><span class="op">(</span><span class="va">path</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for missing</span></span>
@@ -112,12 +112,12 @@ remove trailing slash.
     <h2>Details</h2>
     <p>Additionally, <code>normPath()</code> attempts to create a absolute paths,
 whereas <code>normPathRel()</code> maintains relative paths.</p>
-<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>d<span class="sc">&gt;</span> <span class="fu">getwd</span>()</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span>] <span class="st">"/home/achubaty/Documents/GitHub/PredictiveEcology/reproducible"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>d<span class="sc">&gt;</span> <span class="fu">normPathRel</span>(<span class="st">"potato/chips"</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span>] <span class="st">"potato/chips"</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>d<span class="sc">&gt;</span> <span class="fu">normPath</span>(<span class="st">"potato/chips"</span>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span>] <span class="st">"/home/achubaty/Documents/GitHub/PredictiveEcology/reproducible/potato/chips"</span></span></code></pre><p></p></div>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>d<span class="sc">&gt;</span> <span class="fu">getwd</span>()</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>[<span class="dv">1</span>] <span class="st">"/home/achubaty/Documents/GitHub/PredictiveEcology/reproducible"</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>d<span class="sc">&gt;</span> <span class="fu">normPathRel</span>(<span class="st">"potato/chips"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>[<span class="dv">1</span>] <span class="st">"potato/chips"</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>d<span class="sc">&gt;</span> <span class="fu">normPath</span>(<span class="st">"potato/chips"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>[<span class="dv">1</span>] <span class="st">"/home/achubaty/Documents/GitHub/PredictiveEcology/reproducible/potato/chips"</span></span></code></pre><p></p></div>
     </div>
 
     <div id="ref-examples">
@@ -144,7 +144,7 @@ whereas <code>normPathRel()</code> maintains relative paths.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="checkPath.html">checkPath</a></span><span class="op">(</span><span class="va">tmpdir</span>, create <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpFPG633/example_checkPath"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpR8j2TH/example_checkPath"</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.exists</a></span><span class="op">(</span><span class="va">tmpdir</span><span class="op">)</span> <span class="co">## TRUE</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span></span></span>

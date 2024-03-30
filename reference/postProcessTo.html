@@ -37,7 +37,7 @@ This function is also used internally with the deprecated family postProcess(),
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.11</span>
       </span>
     </div>
 
@@ -226,8 +226,8 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
 
 
 <dt>...</dt>
-<dd><p>Arguments passed to <code><a href="https://rdrr.io/pkg/terra/man/mask.html" class="external-link">terra::mask</a></code> (for <code>maskTo</code>), <code><a href="https://rdrr.io/pkg/terra/man/project.html" class="external-link">terra::project</a></code> (for <code>projectTo</code>)
-or <code><a href="https://rdrr.io/pkg/terra/man/writeRaster.html" class="external-link">terra::writeRaster</a></code> (for <code>writeTo</code>) and not used for <code>cropTo</code>, as well <code>postProcess</code>'s
+<dd><p>Arguments passed to <code><a href="https://rspatial.github.io/terra/reference/mask.html" class="external-link">terra::mask</a></code> (for <code>maskTo</code>), <code><a href="https://rspatial.github.io/terra/reference/project.html" class="external-link">terra::project</a></code> (for <code>projectTo</code>)
+or <code><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">terra::writeRaster</a></code> (for <code>writeTo</code>) and not used for <code>cropTo</code>, as well <code>postProcess</code>'s
 <code>rasterToMatch</code> and <code>studyArea</code> arguments (see below). Commonly used arguments might be
 <code>method</code>, <code>touches</code>, and <code>datatype</code>. If <code>filename</code> is passed, it will be ignored; use
 <code>writeTo = </code>.</p></dd>
@@ -284,7 +284,7 @@ setting a <code>*To</code> argument to <code>NA</code> will prevent that step fr
 
 <p>Since these functions use the gis capabilities of <code>sf</code> and <code>terra</code>, they will only
 be able to do things that those functions can do. One key caution, which is
-stated clearly in <code><a href="https://rdrr.io/pkg/terra/man/project.html" class="external-link">?terra::project</a></code> is that projection of a raster (i.e., gridded)
+stated clearly in <code><a href="https://rspatial.github.io/terra/reference/project.html" class="external-link">?terra::project</a></code> is that projection of a raster (i.e., gridded)
 object should always be with another gridded object. If the user chooses to
 supply a <code>projectTo</code> that is a vector object for a <code>from</code> that is gridded,
 there may be unexpected failures due e.g., to extents not overlapping during

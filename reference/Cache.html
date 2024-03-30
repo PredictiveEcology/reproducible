@@ -31,7 +31,7 @@ will recover the object from RAM and is normally much faster (at the expense of 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.11</span>
       </span>
     </div>
 
@@ -308,8 +308,7 @@ inheritance) before hashing so the correct method is being cached;</p></li>
 Currently, only file-backed <code>Raster*</code> or <code>terra*</code> objects are digested
 (e.g., not <code>ff</code> objects, or any other R object where the data
 are on disk instead of in RAM);</p></li>
-<li><p>Uses <code><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest::digest()</a></code> (formerly fastdigest, which does
-not translate between operating systems).
+<li><p>Uses <code><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest::digest()</a></code>
 This is used for file-backed objects as well.</p></li>
 <li><p>Cache will save arguments passed by user in a hidden environment. Any
 nested Cache functions will use arguments in this order 1) actual arguments
@@ -506,8 +505,8 @@ this option. NOTE: <em>This argument will not be passed into inner/nested Cache 
 in the case of objects that are file-backed, such as <code>Raster</code> or <code>SpatRaster</code> objects.
 If a user needs to keep attributes, they may need to manually re-attach them to
 the object after recovery. With the example of <code>SpatRaster</code> objects, saving
-to disk requires <code><a href="https://rdrr.io/pkg/terra/man/wrap.html" class="external-link">terra::wrap</a></code> if it is a memory-backed object. When running
-<code><a href="https://rdrr.io/pkg/terra/man/wrap.html" class="external-link">terra::unwrap</a></code> on this object, any attributes that a user had added are lost.</p>
+to disk requires <code><a href="https://rspatial.github.io/terra/reference/wrap.html" class="external-link">terra::wrap</a></code> if it is a memory-backed object. When running
+<code><a href="https://rspatial.github.io/terra/reference/wrap.html" class="external-link">terra::unwrap</a></code> on this object, any attributes that a user had added are lost.</p>
     </div>
     <div id="sideeffect">
     <h2><code>sideEffect</code></h2>
@@ -530,7 +529,7 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">tmpDir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">opts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>reproducible.cachePath <span class="op">=</span> <span class="va">tmpDir</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -687,7 +686,7 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-in"><span><span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, .cacheExtra <span class="op">=</span> <span class="st">"sfessee11"</span><span class="op">)</span> <span class="co"># adds something other than fn args</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.1297297</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.02637</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -699,7 +698,7 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-in"><span><span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, .cacheExtra <span class="op">=</span> <span class="st">"nothing"</span><span class="op">)</span> <span class="co"># even though fn is same, the extra is different</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.95516</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.1200723</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -713,7 +712,7 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-in"><span><span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">2</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, omitArgs <span class="op">=</span> <span class="st">"sd"</span><span class="op">)</span> <span class="co"># removes one or more args from cache digest</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.8113646 -0.6892887</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.313053  1.818074</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -727,7 +726,7 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: rnorm, d1e9b95723b3afa0.rds))</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.8113646 -0.6892887</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.313053  1.818074</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -742,7 +741,7 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">cacheId is not same as calculated hash. Manually searching for cacheId:k323431232</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.7716659 -0.3392930 -0.1032666</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  0.9708913  0.4329959 -0.5093569</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -755,8 +754,9 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">cacheId is not same as calculated hash. Manually searching for cacheId:k323431232</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 0.8875581 0.2350180 0.1188088 0.1488276 0.9696905 0.4912326 0.7773070</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] 0.3832869 0.9868723 0.5856910 0.3840371 0.7983758 0.3534032 0.8947348</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 0.25336815 0.51469724 0.31181714 0.96590753 0.16818611 0.50135912</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] 0.26367892 0.88646006 0.38364046 0.26886185 0.04685373 0.44978015</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] 0.47672873 0.05157902</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -770,7 +770,7 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-in"><span><span class="va">opts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>reproducible.useCache <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span> <span class="co"># doesn't cache</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  useCache is FALSE; skipping Cache on function rnorm (currently running nested Cache level 2)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  0.17560479  0.07711494 -0.34769677</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.13750477 -0.07023214 -0.51847407</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">opts</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># showSimilar can help with debugging why a Cache call isn't picking up a cached copy</span></span></span>
@@ -780,7 +780,7 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">    Cache of 'rnorm' differs from</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">    the next closest cacheId(s) k323431232 (whose function name(s) was/were 'runif')</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">    ... because of (a) different n, .FUN</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.007600763 -0.383817723  0.450551544  0.069408582</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  1.3894721  0.3383877 -1.0986390 -1.0776980</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -808,17 +808,18 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Total (including Rasters): 246 bytes</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Selected objects (not including Rasters): 246 bytes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              cacheId              tagKey                   tagValue</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               &lt;char&gt;              &lt;char&gt;                     &lt;char&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  1: 197064fee76dde59        thisIsUnique               thisIsUnique</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  2: 197064fee76dde59        reallyUnique               reallyUnique</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  3: 197064fee76dde59            function            centralTendency</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  4: 197064fee76dde59               class                    numeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  5: 197064fee76dde59         object.size                        984</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 197064fee76dde59            accessed 2023-11-22 17:00:01.613078</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 197064fee76dde59            accessed 2024-03-30 20:08:14.769767</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  7: 197064fee76dde59             inCloud                      FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  8: 197064fee76dde59            fromDisk                      FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  9: 197064fee76dde59          resultHash                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 197064fee76dde59   elapsedTimeDigest            0.00180912 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 197064fee76dde59 elapsedTimeFirstRun          0.0001785755 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 197064fee76dde59   elapsedTimeDigest           0.001713991 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 197064fee76dde59 elapsedTimeFirstRun          0.0001301765 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12: 197064fee76dde59      otherFunctions                 build_site</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13: 197064fee76dde59      otherFunctions           build_site_local</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 14: 197064fee76dde59      otherFunctions            build_reference</span>
@@ -835,31 +836,32 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-out co"><span class="r-pr">#&gt;</span> 25: 197064fee76dde59           preDigest      .FUN:3df5c81377ae4909</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              cacheId              tagKey                   tagValue</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    createdDate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2023-11-22 17:00:01.613592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2023-11-22 17:00:01.613592</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         &lt;char&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2024-03-30 20:08:14.770274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2024-03-30 20:08:14.770274</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    createdDate</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># During development, we often redefine function internals</span></span></span>
@@ -877,17 +879,18 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Total (including Rasters): 246 bytes</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Selected objects (not including Rasters): 246 bytes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              cacheId              tagKey                   tagValue</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               &lt;char&gt;              &lt;char&gt;                     &lt;char&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  1: e3afa6e86ce220c2        thisIsUnique               thisIsUnique</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  2: e3afa6e86ce220c2        reallyUnique               reallyUnique</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  3: e3afa6e86ce220c2            function            centralTendency</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  4: e3afa6e86ce220c2               class                    numeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  5: e3afa6e86ce220c2         object.size                        984</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: e3afa6e86ce220c2            accessed 2023-11-22 17:00:01.662237</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: e3afa6e86ce220c2            accessed 2024-03-30 20:08:14.815716</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  7: e3afa6e86ce220c2             inCloud                      FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  8: e3afa6e86ce220c2            fromDisk                      FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  9: e3afa6e86ce220c2          resultHash                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: e3afa6e86ce220c2   elapsedTimeDigest           0.001690626 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: e3afa6e86ce220c2 elapsedTimeFirstRun          0.0001769066 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: e3afa6e86ce220c2   elapsedTimeDigest           0.001587391 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: e3afa6e86ce220c2 elapsedTimeFirstRun          0.0001723766 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12: e3afa6e86ce220c2      otherFunctions                 build_site</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13: e3afa6e86ce220c2      otherFunctions           build_site_local</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 14: e3afa6e86ce220c2      otherFunctions            build_reference</span>
@@ -904,31 +907,32 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-out co"><span class="r-pr">#&gt;</span> 25: e3afa6e86ce220c2           preDigest      .FUN:88d14fe75c352ad5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              cacheId              tagKey                   tagValue</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    createdDate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2023-11-22 17:00:01.662745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2023-11-22 17:00:01.662745</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         &lt;char&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2024-03-30 20:08:14.816215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2024-03-30 20:08:14.816215</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    createdDate</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># If it finds it by cacheID, doesn't matter what the userTags are</span></span></span>

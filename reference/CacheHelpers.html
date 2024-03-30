@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.11</span>
       </span>
     </div>
 
@@ -241,7 +241,7 @@ is actually a functioning cache.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">newCache</span> <span class="op">&lt;-</span> <span class="fu"><a href="tempdir2.html">tempdir2</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">createCache</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -249,7 +249,7 @@ is actually a functioning cache.</p>
 <span class="r-in"><span><span class="va">cacheId</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"cacheId:"</span>, <span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">out</span>, <span class="st">"tags"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">loadFromCache</span><span class="op">(</span><span class="va">newCache</span>, cacheId <span class="op">=</span> <span class="va">cacheId</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous  call</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.8427795</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.4496823</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -264,25 +264,25 @@ is actually a functioning cache.</p>
 <span class="r-in"><span><span class="co"># clean up</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">newCache</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">newCache</span> <span class="op">&lt;-</span> <span class="fu"><a href="tempdir2.html">tempdir2</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Given the drv and conn, creates the minimum infrastructure for a cache</span></span></span>
 <span class="r-in"><span><span class="fu">createCache</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">CacheDBFile</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span> <span class="co"># identifies the database file</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpFPG633/reproducible/tPVhy1lE/cache.db"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpR8j2TH/reproducible/BN6KokS4/cache.db"</span>
 <span class="r-in"><span><span class="fu">CacheStorageDir</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span> <span class="co"># identifies the directory where cached objects are stored</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpFPG633/reproducible/tPVhy1lE/cacheOutputs"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpR8j2TH/reproducible/BN6KokS4/cacheOutputs"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, cachePath <span class="op">=</span> <span class="va">newCache</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cacheId</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"cacheId:"</span>, <span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">out</span>, <span class="st">"tags"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">CacheStoredFile</span><span class="op">(</span><span class="va">newCache</span>, cacheId <span class="op">=</span> <span class="va">cacheId</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpFPG633/reproducible/tPVhy1lE/cacheOutputs/422bae4ed2f770cc.rds"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpR8j2TH/reproducible/BN6KokS4/cacheOutputs/422bae4ed2f770cc.rds"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The name of the table inside the SQL database</span></span></span>
 <span class="r-in"><span><span class="fu">CacheDBTableName</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "reproducible_tPVhy1lE"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "reproducible_BN6KokS4"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">CacheIsACache</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span> <span class="co"># returns TRUE</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
