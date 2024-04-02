@@ -128,7 +128,7 @@ Default \code{FALSE}. Passed to \code{Cache}.
 }
 \item{\code{timeout}}{
 Default \code{1200}. Used in \code{preProcess} when downloading occurs. If a user has \code{R.utils}
-package installed, R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))
+package installed, \code{R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))}
 will be wrapped around the download so that it will timeout (and error) after this many
 seconds.
 }

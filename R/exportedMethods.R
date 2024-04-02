@@ -1,4 +1,3 @@
-################################################################################
 #' Exported generics and methods
 #'
 #' There are a number of generics that are exported for other packages to use.
@@ -90,7 +89,7 @@ setMethod(
 
 #' @export
 #' @param fullCacheTableForObj The data.table entry from the Cache database for only
-#' this `cacheId`, e.g., via showCache()
+#' this `cacheId`, e.g., via `showCache()`.
 #' @inheritParams Cache
 #' @inheritParams .unwrap
 #' @details

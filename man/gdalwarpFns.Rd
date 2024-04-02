@@ -49,7 +49,7 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{...}{For \code{gdalProject}, this can be \code{method}. For \code{gdalMask} can be \code{destinationPath} and \code{touches}.
 For all \verb{gdal*}, this can also be and \code{datatype}.}
 
-\item{maskToVect}{see \code{maskTo} argeument from \code{\link[=maskTo]{maskTo()}}, but can only be a \code{SpatVector}}
+\item{maskToVect}{see \code{maskTo} argument from \code{\link[=maskTo]{maskTo()}}, but can only be a \code{SpatVector}}
 
 \item{writeTo}{Optional character string of a filename to use \code{writeRaster} to save the final
 object. Default is \code{NULL}, which means there is no \code{writeRaster}}

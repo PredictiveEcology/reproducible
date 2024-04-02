@@ -7,7 +7,7 @@
 keepOrigGeom(newObj, origObj)
 }
 \arguments{
-\item{newObj}{The new, derived sf object}
+\item{newObj}{The new, derived \code{sf} object}
 
 \item{origObj}{The previous, object whose geometries should be used.}
 }
@@ -17,9 +17,9 @@ into the function.
 }
 \description{
 When intersections occur, what was originally 2 polygons features can become
-LINESTRING and/or POINT and any COLLECTIONS or MULTI- verions of these. This
-function evaluates what the original geometry was and drops any newly created
+\code{LINESTRING} and/or \code{POINT} and any \code{COLLECTIONS} or \verb{MULTI-} versions of these.
+This function evaluates what the original geometry was and drops any newly created
 \emph{different} geometries. For example, if a \code{POLYGON} becomes a \code{COLLECTION} of
 \code{MULTIPOLYGON}, \code{POLYGON} and \code{POINT} geometries, the \code{POINT} geometries will
-be dropped. This function is used internally in \code{\link[=postProcessTo]{postProcessTo()}}
+be dropped. This function is used internally in \code{\link[=postProcessTo]{postProcessTo()}}.
 }

@@ -1639,7 +1639,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
 #'
 #' @export
 #' @param fromRas see `from` argument from [postProcessTo()], but can only be a  `SpatRaster`.
-#' @param maskToVect see `maskTo` argeument from [maskTo()], but can only be a `SpatVector`
+#' @param maskToVect see `maskTo` argument from [maskTo()], but can only be a `SpatVector`
 #' @inheritParams postProcessTo
 #' @rdname gdalwarpFns
 #' @aliases gdalMask
@@ -1720,12 +1720,12 @@ messagePrefixDoneIn <- "\bdone! took:  "
 #' Keep original geometries of `sf` objects
 #'
 #' When intersections occur, what was originally 2 polygons features can become
-#' LINESTRING and/or POINT and any COLLECTIONS or MULTI- verions of these. This
-#' function evaluates what the original geometry was and drops any newly created
+#' `LINESTRING` and/or `POINT` and any `COLLECTIONS` or `MULTI-` versions of these.
+#' This function evaluates what the original geometry was and drops any newly created
 #' *different* geometries. For example, if a `POLYGON` becomes a `COLLECTION` of
 #' `MULTIPOLYGON`, `POLYGON` and `POINT` geometries, the `POINT` geometries will
-#' be dropped. This function is used internally in [postProcessTo()]
-#' @param newObj The new, derived sf object
+#' be dropped. This function is used internally in [postProcessTo()].
+#' @param newObj The new, derived `sf` object
 #' @param origObj The previous, object whose geometries should be used.
 #' @return The original `newObj`, but with only the type of geometry that entered
 #' into the function.

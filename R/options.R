@@ -123,7 +123,7 @@
 #'   }
 #'   \item{`timeout`}{
 #'     Default `1200`. Used in `preProcess` when downloading occurs. If a user has `R.utils`
-#'     package installed, R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))
+#'     package installed, `R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))`
 #'     will be wrapped around the download so that it will timeout (and error) after this many
 #'     seconds.
 #'   }

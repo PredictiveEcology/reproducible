@@ -124,7 +124,7 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{fullCacheTableForObj}{The data.table entry from the Cache database for only
-this \code{cacheId}, e.g., via showCache()}
+this \code{cacheId}, e.g., via \code{showCache()}.}
 
 \item{cachePath}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
