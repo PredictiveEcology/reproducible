@@ -1,14 +1,14 @@
-# -----------------------------------------------------------
-# CITATION file created with {cffr} R package, v0.5.0
+# --------------------------------------------
+# CITATION file created with {cffr} R package
 # See also: https://docs.ropensci.org/cffr/
-# -----------------------------------------------------------
+# --------------------------------------------
  
 cff-version: 1.2.0
 message: 'To cite package "reproducible" in publications use:'
 type: software
 license: GPL-3.0-only
 title: 'reproducible: Enhance Reproducibility of R Code'
-version: 2.0.6
+version: 2.0.11
 abstract: A collection of high-level, machine- and OS-independent tools for making
   reproducible and reusable content in R. The two workhorse functions are Cache()
   and prepInputs(). Cache() allows for nested caching, is robust to environments and
@@ -53,13 +53,13 @@ preferred-citation:
     given-names: Ian
     email: ian.eddy@nrcan-rncan.gc.ca
     orcid: https://orcid.org/0000-0001-7397-2116
-  year: '2023'
-  notes: R package version 2.0.6
+  year: '2024'
+  notes: R package version 2.0.11
   url: https://reproducible.predictiveecology.org
-repository: https://PredictiveEcology.r-universe.dev/
+repository: https://CRAN.R-project.org/package=reproducible
 repository-code: https://github.com/PredictiveEcology/reproducible
 url: https://reproducible.predictiveecology.org
-date-released: '2023-07-30'
+date-released: '2024-03-29'
 contact:
 - family-names: McIntire
   given-names: Eliot J B
@@ -76,11 +76,10 @@ references:
   url: https://www.R-project.org/
   authors:
   - name: R Core Team
-  location:
-    name: Vienna, Austria
-  year: '2023'
   institution:
     name: R Foundation for Statistical Computing
+    address: Vienna, Austria
+  year: '2024'
   version: '>= 4.1'
 - type: software
   title: data.table
@@ -89,13 +88,23 @@ references:
   url: https://r-datatable.com
   repository: https://CRAN.R-project.org/package=data.table
   authors:
+  - family-names: Barrett
+    given-names: Tyson
+    email: t.barrett88@gmail.com
   - family-names: Dowle
     given-names: Matt
     email: mattjdowle@gmail.com
   - family-names: Srinivasan
     given-names: Arun
     email: asrini@pm.me
-  year: '2023'
+  - family-names: Gorecki
+    given-names: Jan
+  - family-names: Chirico
+    given-names: Michael
+  - family-names: Hocking
+    given-names: Toby
+    orcid: https://orcid.org/0000-0002-3146-0865
+  year: '2024'
   version: '>= 1.10.4'
 - type: software
   title: digest
@@ -141,8 +150,9 @@ references:
     given-names: Radford
   - family-names: Bell
     given-names: Kendon
-  - family-names: de Queljoe
+  - family-names: Queljoe
     given-names: Matthew
+    name-particle: de
   - family-names: Suruceanu
     given-names: Ion
   - family-names: Denney
@@ -151,19 +161,22 @@ references:
     given-names: Dirk
   - family-names: Chang
     given-names: Winston
-  - family-names: Attali.
+  - family-names: Attali
     given-names: Dean
-  year: '2023'
+  - family-names: Chirico.
+    given-names: Michael
+  year: '2024'
 - type: software
   title: filelock
   abstract: 'filelock: Portable File Locking'
   notes: Imports
-  url: https://github.com/r-lib/filelock#readme
+  url: https://r-lib.github.io/filelock/
   repository: https://CRAN.R-project.org/package=filelock
   authors:
   - family-names: Csárdi
     given-names: Gábor
-  year: '2023'
+    email: csardi.gabor@gmail.com
+  year: '2024'
 - type: software
   title: fpCompare
   abstract: 'fpCompare: Reliable Comparison of Floating Point Numbers'
@@ -175,7 +188,23 @@ references:
     given-names: Alex M
     email: achubaty@for-cast.ca
     orcid: https://orcid.org/0000-0001-7146-8135
-  year: '2023'
+  year: '2024'
+- type: software
+  title: fs
+  abstract: 'fs: Cross-Platform File System Operations Based on ''libuv'''
+  notes: Imports
+  url: https://fs.r-lib.org
+  repository: https://CRAN.R-project.org/package=fs
+  authors:
+  - family-names: Hester
+    given-names: Jim
+  - family-names: Wickham
+    given-names: Hadley
+    email: hadley@rstudio.com
+  - family-names: Csárdi
+    given-names: Gábor
+    email: csardi.gabor@gmail.com
+  year: '2024'
 - type: software
   title: lobstr
   abstract: 'lobstr: Visualize R Data Structures with Trees'
@@ -186,40 +215,37 @@ references:
   - family-names: Wickham
     given-names: Hadley
     email: hadley@rstudio.com
-  year: '2023'
+  year: '2024'
 - type: software
   title: methods
   abstract: 'R: A Language and Environment for Statistical Computing'
   notes: Imports
   authors:
   - name: R Core Team
-  location:
-    name: Vienna, Austria
-  year: '2023'
   institution:
     name: R Foundation for Statistical Computing
+    address: Vienna, Austria
+  year: '2024'
 - type: software
   title: stats
   abstract: 'R: A Language and Environment for Statistical Computing'
   notes: Imports
   authors:
   - name: R Core Team
-  location:
-    name: Vienna, Austria
-  year: '2023'
   institution:
     name: R Foundation for Statistical Computing
+    address: Vienna, Austria
+  year: '2024'
 - type: software
   title: utils
   abstract: 'R: A Language and Environment for Statistical Computing'
   notes: Imports
   authors:
   - name: R Core Team
-  location:
-    name: Vienna, Austria
-  year: '2023'
   institution:
     name: R Foundation for Statistical Computing
+    address: Vienna, Austria
+  year: '2024'
 - type: software
   title: covr
   abstract: 'covr: Test Coverage for Packages'
@@ -230,7 +256,7 @@ references:
   - family-names: Hester
     given-names: Jim
     email: james.f.hester@gmail.com
-  year: '2023'
+  year: '2024'
 - type: software
   title: crayon
   abstract: 'crayon: Colored Terminal Output'
@@ -241,7 +267,7 @@ references:
   - family-names: Csárdi
     given-names: Gábor
     email: csardi.gabor@gmail.com
-  year: '2023'
+  year: '2024'
 - type: software
   title: DBI
   abstract: 'DBI: R Database Interface'
@@ -254,20 +280,9 @@ references:
     given-names: Hadley
   - family-names: Müller
     given-names: Kirill
-    email: krlmlr+r@mailbox.org
+    email: kirill@cynkra.com
     orcid: https://orcid.org/0000-0002-1416-3412
-  year: '2023'
-- type: software
-  title: fastdigest
-  abstract: 'fastdigest: Fast, Low Memory-Footprint Digests of R Objects'
-  notes: Suggests
-  repository: https://CRAN.R-project.org/package=fastdigest
-  authors:
-  - family-names: Becker
-    given-names: Gabriel
-  - family-names: Jenkins
-    given-names: Bob
-  year: '2023'
+  year: '2024'
 - type: software
   title: future
   abstract: 'future: Unified Parallel and Distributed Processing in R for Everyone'
@@ -278,7 +293,8 @@ references:
   - family-names: Bengtsson
     given-names: Henrik
     email: henrikb@braju.com
-  year: '2023'
+    orcid: https://orcid.org/0000-0002-7579-5165
+  year: '2024'
 - type: software
   title: geodata
   abstract: 'geodata: Download Geographic Data'
@@ -294,7 +310,7 @@ references:
     given-names: Aniruddha
   - family-names: Mandel
     given-names: Alex
-  year: '2023'
+  year: '2024'
 - type: software
   title: glue
   abstract: 'glue: Interpreted String Literals'
@@ -307,9 +323,9 @@ references:
     orcid: https://orcid.org/0000-0002-2739-7082
   - family-names: Bryan
     given-names: Jennifer
-    email: jenny@rstudio.com
+    email: jenny@posit.co
     orcid: https://orcid.org/0000-0002-6983-2759
-  year: '2023'
+  year: '2024'
 - type: software
   title: googledrive
   abstract: 'googledrive: An Interface to Google Drive'
@@ -323,7 +339,7 @@ references:
     given-names: Jennifer
     email: jenny@posit.co
     orcid: https://orcid.org/0000-0002-6983-2759
-  year: '2023'
+  year: '2024'
 - type: software
   title: httr
   abstract: 'httr: Tools for Working with URLs and HTTP'
@@ -334,7 +350,7 @@ references:
   - family-names: Wickham
     given-names: Hadley
     email: hadley@posit.co
-  year: '2023'
+  year: '2024'
 - type: software
   title: knitr
   abstract: 'knitr: A General-Purpose Package for Dynamic Report Generation in R'
@@ -346,18 +362,17 @@ references:
     given-names: Yihui
     email: xie@yihui.name
     orcid: https://orcid.org/0000-0003-0645-5666
-  year: '2023'
+  year: '2024'
 - type: software
   title: parallel
   abstract: 'R: A Language and Environment for Statistical Computing'
   notes: Suggests
   authors:
   - name: R Core Team
-  location:
-    name: Vienna, Austria
-  year: '2023'
   institution:
     name: R Foundation for Statistical Computing
+    address: Vienna, Austria
+  year: '2024'
 - type: software
   title: qs
   abstract: 'qs: Quick Serialization of R Objects'
@@ -368,7 +383,7 @@ references:
   - family-names: Ching
     given-names: Travers
     email: traversc@gmail.com
-  year: '2023'
+  year: '2024'
 - type: software
   title: raster
   abstract: 'raster: Geographic Data Analysis and Modeling'
@@ -380,7 +395,7 @@ references:
     given-names: Robert J.
     email: r.hijmans@gmail.com
     orcid: https://orcid.org/0000-0001-5872-2872
-  year: '2023'
+  year: '2024'
   version: '>= 3.5-15'
 - type: software
   title: RCurl
@@ -392,7 +407,7 @@ references:
     given-names: Duncan
     email: duncan@r-project.org
     orcid: https://orcid.org/0000-0003-0159-1546
-  year: '2023'
+  year: '2024'
   version: '>= 1.95-4.8'
 - type: software
   title: rlang
@@ -407,7 +422,7 @@ references:
   - family-names: Wickham
     given-names: Hadley
     email: hadley@posit.co
-  year: '2023'
+  year: '2024'
 - type: software
   title: rmarkdown
   abstract: 'rmarkdown: Dynamic Documents for R'
@@ -450,7 +465,7 @@ references:
     given-names: Richard
     email: rich@posit.co
     orcid: https://orcid.org/0000-0003-3925-190X
-  year: '2023'
+  year: '2024'
 - type: software
   title: RSQLite
   abstract: 'RSQLite: SQLite Interface for R'
@@ -468,7 +483,7 @@ references:
     given-names: David A.
   - family-names: Falcon
     given-names: Seth
-  year: '2023'
+  year: '2024'
 - type: software
   title: sf
   abstract: 'sf: Simple Features for R'
@@ -480,7 +495,7 @@ references:
     given-names: Edzer
     email: edzer.pebesma@uni-muenster.de
     orcid: https://orcid.org/0000-0001-8049-7069
-  year: '2023'
+  year: '2024'
 - type: software
   title: sp
   abstract: 'sp: Classes and Methods for Spatial Data'
@@ -494,7 +509,7 @@ references:
   - family-names: Bivand
     given-names: Roger
     email: Roger.Bivand@nhh.no
-  year: '2023'
+  year: '2024'
   version: '>= 1.4-2'
 - type: software
   title: terra
@@ -507,7 +522,7 @@ references:
     given-names: Robert J.
     email: r.hijmans@gmail.com
     orcid: https://orcid.org/0000-0001-5872-2872
-  year: '2023'
+  year: '2024'
   version: '>= 1.7-20'
 - type: software
   title: testthat
@@ -519,7 +534,7 @@ references:
   - family-names: Wickham
     given-names: Hadley
     email: hadley@posit.co
-  year: '2023'
+  year: '2024'
 - type: software
   title: withr
   abstract: 'withr: Run Code ''With'' Temporarily Modified Global State'
@@ -531,7 +546,7 @@ references:
     given-names: Jim
   - family-names: Henry
     given-names: Lionel
-    email: lionel@rstudio.com
+    email: lionel@posit.co
   - family-names: Müller
     given-names: Kirill
     email: krlmlr+r@mailbox.org
@@ -540,7 +555,8 @@ references:
     email: kevinushey@gmail.com
   - family-names: Wickham
     given-names: Hadley
-    email: hadley@rstudio.com
+    email: hadley@posit.co
   - family-names: Chang
     given-names: Winston
-  year: '2023'
+  year: '2024'
+
