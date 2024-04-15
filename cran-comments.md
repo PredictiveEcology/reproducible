@@ -6,6 +6,7 @@ See `NEWS.md` for a full list of changes.
 
 ## Test environments
 
+  
 ### Previous R versions
 * Ubuntu 20.04                 (GitHub), R 4.2.3 (2023-03-15)
 * Windows                      (GitHub), R 4.2.3 (2023-03-15 ucrt)
@@ -23,13 +24,16 @@ See `NEWS.md` for a full list of changes.
 * Windows                      (GitHub), R version 4.4.0 alpha (2024-03-26 r86209 ucrt)
 * Windows                 (win-builder), R version 4.4.0 alpha (2024-03-26 r86209 ucrt)
 
+### R-hub v2
+
+* Flavours passing on 14 Apr, 2024
+** linux, macos, macos-arm64, windows, clang16, clang17, clang18, donttest, intel,
+  nold, nosuggests, ubuntu-clang, ubuntu-gcc12, ubuntu-next, ubuntu-release
+
 ## R CMD check results
 
-No NOTEs, WARNINGs or ERRORs.
+NOTEs is about this being a new package. No WARNINGs or ERRORs.
 
 ## revdepcheck results
 
-We checked 16 reverse dependencies (0 from CRAN + 16 from Bioconductor), comparing R CMD check results across CRAN and dev versions of this package.
-
- * We saw 0 new problems
- * We failed to check 0 packages
+No reverse dependencies as this was removed from CRAN.

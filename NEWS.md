@@ -1,3 +1,7 @@
+# reproducible 2.0.12
+
+* re-submission after removal from CRAN
+
 # reproducible 2.0.11
 
 ## Remove dependency
