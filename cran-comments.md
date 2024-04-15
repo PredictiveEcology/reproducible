@@ -14,18 +14,17 @@ See `NEWS.md` for a full list of changes.
 
 ### Current R versions
 * macOS Monterey 12.6.5                  (GitHub), R 4.3.3 (2024-02-29)
-* aarch64-apple-darwin20 (64-bit) (macOS-builder), R 4.3.0 Patched (2023-05-18 r84451)
+* aarch64-apple-darwin20 (64-bit) (macOS-builder), R 4.3.3 (2024-02-29)
 * Ubuntu 20.04                           (GitHub), R 4.3.3 (2024-02-29)
 * Windows                                (GitHub), R 4.3.3 (2024-02-29 ucrt)
 * Windows                           (win-builder), R 4.3.3 (2024-02-29 ucrt)
 
 ### Development R version
-* Ubuntu 20.04 LTS             (GitHub), R version 4.4.0 alpha (2024-03-26 r86209)
-* Windows                      (GitHub), R version 4.4.0 alpha (2024-03-26 r86209 ucrt)
+* Ubuntu 20.04 LTS             (GitHub), R version 4.4.0 alpha (2024-04-12 r86412)
+* Windows                      (GitHub), R version 4.4.0 alpha (2024-04-12 r86412 ucrt)
 * Windows                 (win-builder), R version 4.4.0 alpha (2024-03-26 r86209 ucrt)
 
 ### R-hub v2
-
 * Flavours passing on 14 Apr, 2024
 ** linux, macos, macos-arm64, windows, clang16, clang17, clang18, donttest, intel,
   nold, nosuggests, ubuntu-clang, ubuntu-gcc12, ubuntu-next, ubuntu-release
