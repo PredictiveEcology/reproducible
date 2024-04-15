@@ -330,23 +330,25 @@ getRelative <- function(path, relativeToPath) {
   path <- normPathRel(path)
   relativeToPath <- normPathRel(relativeToPath)
 
-  if (is_absolute_path(path)) {
-    a <- unlist(strsplit(path, "/"))
-    a <- a[nzchar(a)]
+  relPath <- vapply(path, function(p) {
+    if (is_absolute_path(p)) {
+      a <- unlist(strsplit(p, "/"))
+      a <- a[nzchar(a)]
 
-    b <- unlist(strsplit(relativeToPath, "/"))
-    b <- b[nzchar(b)]
+      b <- unlist(strsplit(relativeToPath, "/"))
+      b <- b[nzchar(b)]
 
-    id <- which(a %in% b)
-    if (length(id) > 0) {
-      ## assume most internal subdirectory is the matching one
-      relPath <- do.call(file.path, as.list(a[(max(id) + 1):length(a)]))
+      id <- which(a %in% b)
+      if (length(id) > 0) {
+        ## assume most internal subdirectory is the matching one
+        relPath <- do.call(file.path, as.list(a[(max(id) + 1):length(a)]))
+      } else {
+        relPath <- p
+      }
     } else {
-      relPath <- path
+      relPath <- p
     }
-  } else {
-    relPath <- path
-  }
+  }, character(1))
 
   return(relPath)
 }
