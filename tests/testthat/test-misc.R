@@ -281,7 +281,7 @@ test_that("Filenames for environment", {
   ))
 })
 
-test_that("test miscellaneous fns", {
+test_that("test miscellaneous fns (part 3)", {
   testInit(opts = list(datatable.print.class = FALSE))
 
   x1 <- append(as.list(c(0, 1, -1, 10^(-(1:10)))), as.list(c(0L, 1L)))
