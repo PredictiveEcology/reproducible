@@ -1,4 +1,4 @@
-# reproducible 2.0.12
+# reproducible (development version)
 
 ## New
 * new family of functions that are called inside `postProcessTo` that use `sf::gdal_utils` directly. These are still experimental and will only be activated with `options("reproducible.gdalwarp" = TRUE)`
@@ -27,17 +27,19 @@
 * `switchDataType` can now correctly switch between `gdal` formats and `terra`
 * many messaging fixes that were imprecise or missing
 
+# reproducible 2.0.12
 
+* re-submission after removal from CRAN
 
 # reproducible 2.0.11
 
 ## Remove dependency
-* fastdigest was removed from CRAN and so is removed from here.
+* `fastdigest` was removed from CRAN and so is removed from here.
 
 # reproducible 2.0.10
 
 ## Bug fixes
-* critical bugfixes for file-backed SpatRaster objects
+* critical bugfixes for file-backed `SpatRaster` objects
 
 # reproducible 2.0.9
 
@@ -56,7 +58,7 @@
 * `Cache` can now skip calculating `objSize`, which can take a non-trivial amount of time for large, complicated objects; see `reproducibleOptions()`
 
 ## Bug fixes
-* Filenames for some classes returned ""; now returns NULL so character vectors are only pointers to files
+* `Filenames` for some classes returned ""; now returns NULL so character vectors are only pointers to files
 * Cache on a terra object that writes file to disk, when `quick` argument is specified was failing, always creating the same object; fixed with #PR368
 * `useDBI` was incorrectly used if a user had set the option prior to package loading. Now works as expected.
 * several other minor
