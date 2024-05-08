@@ -30,3 +30,17 @@ test_that("getRelativePaths works as expected", {
   expect_identical(path$outputPath, file.path("outputs", "runName_for_rep01"))
   expect_identical(path$modulePath, c("modules", file.path("modules", "scfm", "modules")))
 })
+
+test_that("relativeToWhat can handle multiple paths", {
+  relativeToWhat(
+    file = "/mnt/projects/HRV/BC_HRV/outputs/NRD_Quesnel_scfm_hrv_FRT_res125/rep01/speciesLayers_2011_NRD_Quesnel.tif",
+    cachePath = NULL,
+    path = list(
+      cachePath = "/mnt/scratch/achubaty/BC_HRV/cache",
+      inputPath = "/mnt/projects/HRV/BC_HRV/inputs",
+      modulePath = c("/home/achubaty/GitHub/BC_HRV/modules", "/home/achubaty/GitHub/BC_HRV/modules/scfm/modules"),
+      outputPath = "/mnt/projects/HRV/BC_HRV/outputs/NRD_Quesnel_scfm_hrv_FRT_res125/rep01",
+      rasterPath = "/mnt/scratch/achubaty/BC_HRV/raster",
+      scratchPath = "/mnt/scratch/achubaty/BC_HRV",
+      terraPath = "/mnt/scratch/achubaty/BC_HRV/terra")
+  )
