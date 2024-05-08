@@ -42,5 +42,7 @@ test_that("relativeToWhat can handle multiple paths", {
       outputPath = "/mnt/projects/HRV/BC_HRV/outputs/NRD_Quesnel_scfm_hrv_FRT_res125/rep01",
       rasterPath = "/mnt/scratch/achubaty/BC_HRV/raster",
       scratchPath = "/mnt/scratch/achubaty/BC_HRV",
-      terraPath = "/mnt/scratch/achubaty/BC_HRV/terra")
+      terraPath = "/mnt/scratch/achubaty/BC_HRV/terra"
+    )
   )
+})
