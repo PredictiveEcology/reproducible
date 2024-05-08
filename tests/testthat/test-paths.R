@@ -35,7 +35,7 @@ test_that("relativeToWhat can handle multiple paths", {
   relativeToWhat(
     file = "/mnt/projects/HRV/BC_HRV/outputs/NRD_Quesnel_scfm_hrv_FRT_res125/rep01/speciesLayers_2011_NRD_Quesnel.tif",
     cachePath = NULL,
-    path = list(
+    paths = list(
       cachePath = "/mnt/scratch/achubaty/BC_HRV/cache",
       inputPath = "/mnt/projects/HRV/BC_HRV/inputs",
       modulePath = c("/home/achubaty/GitHub/BC_HRV/modules", "/home/achubaty/GitHub/BC_HRV/modules/scfm/modules"),
