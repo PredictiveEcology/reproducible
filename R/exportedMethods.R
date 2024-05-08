@@ -537,7 +537,6 @@ unmakeMemoisable.default <- function(x) {
     obj[nullify] <- NULL
   }
 
-
   attrsOrig <- attributes(obj)
   obj <- lapply(obj, .wrap, preDigest = preDigest, cachePath = cachePath, drv = drv,
                 conn = conn, verbose = verbose, ...)
@@ -1081,7 +1080,7 @@ remapFilenames <- function(obj, tags, cachePath, ...) {
       isOutside <- grepl(grepStartsTwoDots, origRelName)
       if (any(isOutside)) {
         # means the relative path is "outside" of something ... strip all ".." if relToWhere doesn't exist
-        while(any(grepl(grepStartsTwoDots, origRelName))) {
+        while (any(grepl(grepStartsTwoDots, origRelName))) {
           origRelName <- gsub(paste0(grepStartsTwoDots, "|(\\\\|/)"), "", origRelName)
         }
       }
