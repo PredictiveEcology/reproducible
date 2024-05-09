@@ -82,14 +82,15 @@
 #' @param indent An integer, indicating whether to indent each line
 #' @inheritParams base::message
 #'
-#' @export
 #' @return
 #' Used for side effects. This will produce a message of a structured `data.frame`.
 #'
+#' @inheritParams Cache
+#'
+#' @export
 #' @importFrom data.table is.data.table as.data.table
 #' @importFrom utils capture.output
 #' @rdname messageColoured
-#' @inheritParams Cache
 messageDF <- function(df, round, colour = NULL, colnames = NULL, indent = NULL,
                       verbose = getOption("reproducible.verbose"), verboseLevel = 1,
                       appendLF = TRUE) {
@@ -126,6 +127,7 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL, indent = NULL,
   }
 }
 
+#' @export
 #' @rdname messageColoured
 messagePrepInputs <- function(..., appendLF = TRUE,
                               verbose = getOption("reproducible.verbose"),
@@ -136,6 +138,7 @@ messagePrepInputs <- function(..., appendLF = TRUE,
   )
 }
 
+#' @export
 #' @rdname messageColoured
 messagePreProcess <- function(..., appendLF = TRUE,
                               verbose = getOption("reproducible.verbose"),
@@ -146,6 +149,7 @@ messagePreProcess <- function(..., appendLF = TRUE,
   )
 }
 
+#' @export
 #' @rdname messageColoured
 messageCache <- function(..., colour = getOption("reproducible.messageColourCache"),
                          verbose = getOption("reproducible.verbose"), verboseLevel = 1,
@@ -159,6 +163,7 @@ messageCache <- function(..., colour = getOption("reproducible.messageColourCach
   )
 }
 
+#' @export
 #' @rdname messageColoured
 messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
   # force this message to print
@@ -175,13 +180,14 @@ messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
   fn(...)
 }
 
-#' @export
-#' @importFrom utils getFromNamespace
 #' @param colour Any colour that can be understood by `crayon`
 #' @param hangingIndent Logical. If there are `\n`, should there be a handing indent of 2 spaces.
 #'   Default is `TRUE`
-#' @rdname messageColoured
 #' @param ... Any character vector, passed to `paste0(...)`
+#'
+#' @export
+#' @importFrom utils getFromNamespace
+#' @rdname messageColoured
 messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = TRUE,
                             verbose = getOption("reproducible.verbose", 1),
                             verboseLevel = 1, appendLF = TRUE) {
