@@ -32,7 +32,7 @@ test_that("getRelativePaths works as expected", {
 })
 
 test_that("relativeToWhat can handle multiple paths", {
-  relativeToWhat(
+  res <- relativeToWhat(
     file = "/mnt/projects/HRV/BC_HRV/outputs/NRD_Quesnel_scfm_hrv_FRT_res125/rep01/speciesLayers_2011_NRD_Quesnel.tif",
     cachePath = NULL,
     paths = list(
@@ -45,4 +45,5 @@ test_that("relativeToWhat can handle multiple paths", {
       terraPath = "/mnt/scratch/achubaty/BC_HRV/terra"
     )
   )
+  expect_identical(res, list(outputPath = "."))
 })
