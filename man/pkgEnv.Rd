@@ -20,8 +20,9 @@ Environment used internally to store internal package objects and methods.
 }
 \details{
 \itemize{
-\item \code{.pkgEnv} is for general use within the package;
 \item \code{.message} is specifically for messages and message-generating functions;
+\item \code{.pkgEnv} is for general use within the package;
+\item \code{.reproEnv} is used for \code{Cache}-related objects;
 }
 }
 \keyword{internal}

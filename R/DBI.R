@@ -925,7 +925,6 @@ formatCheck <- function(cachePath, cacheId, format) {
   format
 }
 
-
 getDrv <- function(drv = NULL) {
   if (useDBI()) {
     if (is.null(drv)) {
