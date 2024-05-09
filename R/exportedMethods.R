@@ -1072,6 +1072,13 @@ remapFilenames <- function(obj, tags, cachePath, ...) {
   if (missing(obj)) {
     origRelName <- extractFromCache(tags, tagOrigRelName)
     relToWhere <- extractFromCache(tags, "relToWhere")
+
+    ## NOTE: extractFromCache() is looking for specific tags which may not exist if saved
+    ## using earlier versions of the package, and cannot be restored.
+    if (is.null(relToWhere) || length(relToWhere) == 0) {
+      stop("remapFileNames() cannot restore objects saved using a previous version of 'reproducible'.")
+    }
+
     possRelPaths <- modifyListPaths(cachePath, ...)
     if (relToWhere %in% names(possRelPaths)) {
       absBase <- absoluteBase(relToWhere, cachePath, ...)
