@@ -352,7 +352,7 @@ test_that("test 'quick' argument", {
   expect_true(sum(grepl(
     paste0(
       paste(.messageLoadedCache(.messageLoadedCacheResult(), "quickFun"), .messageAddingToMemoised), "|",
-      .messageLoadedCache(.messageLoadedCacheResult("memoised"), "quickFun")
+      .messageLoadedCache(.messageLoadedCacheResult("Memoised"), "quickFun")
     ),
     mess1
   )) == 0)
@@ -378,7 +378,7 @@ test_that("test 'quick' argument", {
   expect_true(sum(grepl(
     paste0(
       paste(.messageLoadedCache(.messageLoadedCacheResult(), "quickFun"), .messageAddingToMemoised), "|",
-      paste(.messageLoadedCacheResult("memoised"), "quickFun call")
+      paste(.messageLoadedCacheResult("Memoised"), "quickFun call")
     ),
     mess1
   )) == 0)
@@ -541,7 +541,7 @@ test_that("test asPath", {
   expect_equal(length(a1), 1)
   expect_equal(length(a2), 1)
   expect_true(sum(grepl(paste(
-    .messageLoadedCacheResult("memoised"), "|",
+    .messageLoadedCacheResult("Memoised"), "|",
     .messageLoadedCacheResult()
   ), a3)) == 1)
 
@@ -561,10 +561,10 @@ test_that("test asPath", {
   ))
   expect_equal(length(a1), 1)
   expect_true(sum(grepl(paste(
-    .messageLoadedCacheResult(), "|",
-    .messageLoadedCacheResult("memoised")
+    .messageLoadedCacheResult("Memoised"), "|",
+    .messageLoadedCacheResult()
   ), a2)) == 1)
-  expect_true(sum(grepl(paste(.messageLoadedCacheResult("memoised"), "saveRDS call"), a3)) == 1)
+  expect_true(sum(grepl(paste(.messageLoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
 
   unlink("filename.RData")
   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
@@ -582,10 +582,10 @@ test_that("test asPath", {
   ))
   expect_equal(length(a1), 1)
   expect_true(sum(grepl(paste(
-    .messageLoadedCacheResult(), "|",
-    .messageLoadedCacheResult("memoised")
+    .messageLoadedCacheResult("Memoised"), "|",
+    .messageLoadedCacheResult()
   ), a2)) == 1)
-  expect_true(sum(grepl(paste(.messageLoadedCacheResult("memoised"), "saveRDS call"), a3)) == 1)
+  expect_true(sum(grepl(paste(.messageLoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
 })
 
 test_that("test wrong ways of calling Cache", {
@@ -1056,29 +1056,25 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
 })
 
 test_that("test changing reproducible.cacheSaveFormat midstream", {
-  if (!.requireNamespace("qs")) skip("Need qs; skipping test")
+  skip_if_not_installed("qs")
+
   testInit(opts = list(
-    "reproducible.useMemoise" = FALSE,
-    "reproducible.cacheSaveFormat" = "rds"
+    reproducible.cacheSaveFormat = "rds",
+    reproducible.useMemoise = FALSE
   ))
 
   b <- Cache(rnorm, 1, cachePath = tmpdir)
   sc <- showCache(tmpdir)
   ci <- unique(sc[[.cacheTableHashColName()]])
-  options("reproducible.cacheSaveFormat" = "qs")
-  on.exit(
-    {
-      options(opts)
-    },
-    add = TRUE
-  )
+  opts <- options(reproducible.cacheSaveFormat = "qs")
+  on.exit(options(opts), add = TRUE)
   mess <- capture_messages({
     b <- Cache(rnorm, 1, cachePath = tmpdir)
   })
   expect_false(attr(b, ".Cache")$newCache)
   expect_true(sum(grepl("Changing format of Cache entry from rds to qs", mess)) == 1)
 
-  options("reproducible.cacheSaveFormat" = "rds")
+  opts <- options(reproducible.cacheSaveFormat = "rds")
   mess <- capture_messages({
     b <- Cache(rnorm, 1, cachePath = tmpdir)
   })
@@ -1134,8 +1130,8 @@ test_that("test file link with duplicate Cache", {
   mess2 <- capture_messages({
     d <- Cache(sam1, N, cachePath = tmpCache)
   })
-  expect_true(any(grepl("loaded cached", mess2)))
-  expect_true(any(grepl("loaded cached", mess1)))
+  expect_true(any(grepl(.messageLoadedCacheResult(), mess2)))
+  expect_true(any(grepl(.messageLoadedCacheResult(), mess1)))
   # There are intermittent "status 5" warnings on next line on Windows -- not relevant here
   warns <- capture_warnings({
     out1 <- try(system2("du", paste0("\"", tmpCache, "\""), stdout = TRUE), silent = TRUE)
@@ -1777,7 +1773,9 @@ test_that("terra files were creating file.link", {
 
 test_that("pass NA to userTags", {
   testInit(verbose = FALSE)
-  expect_no_error(a <- Cache(rnorm(1), userTags = c("NA", "hi")))
+  expect_no_error({
+    a <- Cache(rnorm(1), userTags = c("NA", "hi"))
+  })
 })
 
 test_that("multifile cache saving", {
@@ -1826,6 +1824,4 @@ test_that("cacheId = 'previous'", {
   expect_true(unlist(attr(d, ".Cache")))
   e <- rnorm(4) |> Cache(.functionName = fnName, cacheId = "previous")
   expect_false(unlist(attr(e, ".Cache")))
-
-
 })

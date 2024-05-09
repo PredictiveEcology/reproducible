@@ -18,8 +18,12 @@
 
 .messageLoadedCacheResult <- function(src = 1) {
   srcPoss <- c("Cached", "Memoised")
-  srcPoss <- srcPoss[src]
-  paste0("Loaded! ", srcPoss[1], " result from previous")
+  if (is.numeric(src)) {
+    src <- srcPoss[src]
+  } else if (is.character(src)) {
+    src <- srcPoss[grepl(src, srcPoss)]
+  }
+  paste0("Loaded! ", src, " result from previous")
 }
 
 .messageAddingToMemoised <- "(and added a memoised copy)"
