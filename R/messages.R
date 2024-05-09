@@ -63,10 +63,11 @@
 #'
 #' This family has a consistent use of `verbose` allowing messages to be
 #' turned on or off or verbosity increased or decreased throughout the family of
-#' messaging in `reproducible`. `messageDF` uses `message` to print a clean
-#' square data structure. `messageColoured`
-#' allows specific colours to be used. `messageQuestion` sets a high level for
-#' `verbose` so that the message always gets asked.
+#' messaging in `reproducible`.
+#'
+#' - `messageDF` uses `message` to print a clean square data structure.
+#' - `messageColoured` allows specific colours to be used.
+#' - `messageQuestion` sets a high level for `verbose` so that the message always gets asked.
 #'
 #' @param df A data.frame, data.table, matrix
 #' @param round An optional numeric to pass to `round`

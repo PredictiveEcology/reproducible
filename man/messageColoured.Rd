@@ -100,8 +100,12 @@ Used for side effects. This will produce a message of a structured \code{data.fr
 \description{
 This family has a consistent use of \code{verbose} allowing messages to be
 turned on or off or verbosity increased or decreased throughout the family of
-messaging in \code{reproducible}. \code{messageDF} uses \code{message} to print a clean
-square data structure. \code{messageColoured}
-allows specific colours to be used. \code{messageQuestion} sets a high level for
-\code{verbose} so that the message always gets asked.
+messaging in \code{reproducible}.
+}
+\details{
+\itemize{
+\item \code{messageDF} uses \code{message} to print a clean square data structure.
+\item \code{messageColoured} allows specific colours to be used.
+\item \code{messageQuestion} sets a high level for \code{verbose} so that the message always gets asked.
+}
 }
