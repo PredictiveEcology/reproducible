@@ -345,7 +345,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        verbose = getOption("reproducible.verbose", 1),
                        ...) {
   messagePreProcess("Running `prepInputs`", verbose = verbose, verboseLevel = 0)
-  .messageIndentUpdate()
+  .message$IndentUpdate()
   stStart <- Sys.time()
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
@@ -405,7 +405,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
     )
   }
-  .messageIndentRevert()
+  .message$IndentRevert()
   stFinal <- reportTime(stStart, mess = "`prepInputs` done; took ", minSeconds = 10)
   return(x)
 }
@@ -563,7 +563,7 @@ extractFromArchive <- function(archive,
           #   extractingTheseFiles <- paste0("all files: ",
           #                                  paste(filesInArchive, collapse = "\n"))
           messagePreProcess("From:\n", archive[1], "  \n", "Extracting", verbose = verbose)
-          messageDF(dt, indent = .messagePreProcessIndent, verbose = verbose, colour = getOption("reproducible.messageColourPrepInputs"))
+          messageDF(dt, indent = .message$PreProcessIndent, verbose = verbose, colour = getOption("reproducible.messageColourPrepInputs"))
           filesExtracted <- c(
             filesExtracted,
             .callArchiveExtractFn(funWArgs$fun,
@@ -734,7 +734,7 @@ extractFromArchive <- function(archive,
         messagePreProcess("More than one possible files to load:\n", verbose = verbose)
         if (length(targetFilePath) > 100) {
           filesForMess <- data.table(Extracted = targetFilePath)
-          messageDF(filesForMess, indent = .messagePreProcessIndent, verbose = verbose)
+          messageDF(filesForMess, indent = .message$PreProcessIndent, verbose = verbose)
         } else {
           filesForMess <- paste(targetFilePath, collapse = "\n")
           messagePreProcess(filesForMess)
@@ -1437,7 +1437,7 @@ process <- function(out, funCaptured,
     x <- if (is.null(out$object)) {
       st <- Sys.time()
       messagePreProcess("Running `process` (i.e., loading file into R)", verbose = verbose, verboseLevel = 0)
-      .messageIndentUpdate()
+      .message$IndentUpdate()
       if (!is.null(out$targetFilePath)) {
         if (!all(is.na(out$targetFilePath)))
           messagePreProcess("targetFile located at ", out$targetFilePath, verbose = verbose)
@@ -1521,7 +1521,7 @@ process <- function(out, funCaptured,
               break
             },
             message = function(m) {
-              m$message <- grep(paste0(.messageNoCachePathSupplied, "|useCache is FALSE"), m$message, invert = TRUE, value = TRUE)
+              m$message <- grep(paste0(.message$NoCachePathSupplied, "|useCache is FALSE"), m$message, invert = TRUE, value = TRUE)
               if (length(m$message)) {
                 mm <- gsub("(.*)\n$", "\\1", m$message)
                 message(mm) # this MUST NOT CREATE INDENTING -- using 'message' here
@@ -1532,7 +1532,7 @@ process <- function(out, funCaptured,
           # outProcess
         }
       }
-      .messageIndentRevert()
+      .message$IndentRevert()
       stNext <- reportTime(st, mess = "`process` done; took ", minSeconds = 10)
       outProcess
 

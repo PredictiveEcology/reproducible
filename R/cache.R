@@ -1004,7 +1004,7 @@ Cache <-
           verboseLevel = 2 - isBig, verbose = verbose,
           colour = getOption("reproducible.messageColourCache")
         )
-        # .messageIndentRevert() # revert the indent of 2 spaces
+        # .message$IndentRevert() # revert the indent of 2 spaces
         messageCache("Saved! Cache file: ",
                      basename2(CacheStoredFile(cachePath = cachePath, cacheId = outputHash)),
                      "; fn: ", .messageFunctionFn(fnDetails$functionName),
@@ -1818,7 +1818,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   similar <- similar[similar$cacheId %in% accessed$cacheId[as.numeric(showSimilar)]]
 
   userTagsMess <- if (!is.null(userTagsOrig)) {
-    paste0(.messageHangingIndent,
+    paste0(.message$BecauseOfA,
       "with user supplied tags: '",
       paste(userTagsOrig, collapse = ", "), "' "
     )
@@ -1879,7 +1879,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     if (!all(sameNames)) {
       fnTxt <- paste0("(whose function name(s) was/were '", paste(simFun$funName, collapse = "', '"), "')")
     }
-    messageCache(paste0(.messageHangingIndent, "the next closest cacheId(s) ",
+    messageCache(paste0(.message$BecauseOfA, "the next closest cacheId(s) ",
                         paste(cacheIdOfSimilar, collapse = ", "), " ",
                         fnTxt, userTagsMess,
                         collapse = "\n"
@@ -1887,7 +1887,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
 
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
       differed <- TRUE
-      messageCache(.messageHangingIndent, .messageBecauseOfA, " different ",
+      messageCache(.message$BecauseOfA, .message$BecauseOfA, " different ",
         paste(unique(similar2[differs %in% TRUE]$fun), collapse = ", "),
         verbose = verbose
       )
@@ -1904,7 +1904,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     missingArgs <- similar2[is.na(deeperThan3) & is.na(differs)]$fun
     if (length(missingArgs)) {
       differed <- TRUE
-      messageCache(.messageHangingIndent, .messageBecauseOfA, " new argument(s): ",
+      messageCache(.message$BecauseOfA, .message$BecauseOfA, " new argument(s): ",
         paste(as.character(missingArgs), collapse = ", "),
         verbose = verbose
       )
@@ -2194,7 +2194,7 @@ isPkgColonFn <- function(x) {
 
 evalTheFun <- function(FUNcaptured, isCapturedFUN, isSquiggly, matchedCall, envir = parent.frame(),
                        verbose = getOption("reproducible.verbose"), ...) {
-  .messageIndentUpdate()
+  .message$IndentUpdate()
   withCallingHandlers(
     {
       out <- eval(FUNcaptured, envir = envir)

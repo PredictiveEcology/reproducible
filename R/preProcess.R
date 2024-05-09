@@ -171,7 +171,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        .tempPath, ...) {
   st <- Sys.time()
   messagePreProcess("Running `preProcess`", verbose = verbose, verboseLevel = 0)
-  .messageIndentUpdate()
+  .message$IndentUpdate()
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit(
@@ -792,7 +792,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     destinationPath = destinationPath,
     object = downloadFileResult$object
   )
-  .messageIndentRevert()
+  .message$IndentRevert()
   stNext <- reportTime(st, mess = "`preProcess` done; took ", minSeconds = 10)
   return(out)
 }

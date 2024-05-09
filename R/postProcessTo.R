@@ -183,7 +183,7 @@ postProcessTo <- function(from, to,
 
   if (!all(is.null(to), is.null(cropTo), is.null(maskTo), is.null(projectTo))) {
     messagePreProcess("Running `postProcessTo`", verbose = verbose, verboseLevel = 0)
-    .messageIndentUpdate()
+    .message$IndentUpdate()
     if (isTRUE(is.character(from))) {
       fe <- fileExt(from)
       if (fe %in% "shp") {
@@ -302,7 +302,7 @@ postProcessTo <- function(from, to,
     # REVERT TO ORIGINAL INPUT CLASS
     from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial,
                         origFromClass = origFromClass)
-    .messageIndentRevert()
+    .message$IndentRevert()
     messagePreProcess("postProcessTo ", gsub("^\b", "", messagePrefixDoneIn),
                       format(difftime(Sys.time(), st), units = "secs", digits = 3),
                       verbose = verbose)
@@ -1110,7 +1110,7 @@ postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo,
 
   if (!missing(to)) {
     if (!is.null(to)) {
-      if (!isSpatialAny(to) && !isCRSANY(to)) stop("to must be a ", .messageSpatial$anySpatialClass)
+      if (!isSpatialAny(to) && !isCRSANY(to)) stop("to must be a ", .message$Spatial$anySpatialClass)
       # if (isVector(from))
       #   if (!isVector(to) && !isCRSANY(to)) {
       #     # as long as maskTo and projectTo are supplied, then it is OK
@@ -1124,7 +1124,7 @@ postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo,
     if (!is.naSpatial(cropTo)) {
       if (!is.null(cropTo)) {
         if (!isSpatialAny(cropTo) && !isCRSANY(cropTo)) {
-          stop("cropTo must be a ", .messageSpatial$anySpatialClass)
+          stop("cropTo must be a ", .message$Spatial$anySpatialClass)
         }
         # apparently, cropTo can be a gridded object no matter what
         # if (isVector(from)) if (!isVector(cropTo) && !isCRSANY(cropTo))
@@ -1136,7 +1136,7 @@ postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo,
     if (!is.naSpatial(maskTo)) {
       if (!is.null(maskTo)) {
         if (!isSpatialAny(maskTo) && !isCRSANY(maskTo)) {
-          stop("maskTo must be a ", .messageSpatial$anySpatialClass)
+          stop("maskTo must be a ", .message$Spatial$anySpatialClass)
         }
         # if (isVector(from)) if (!isVector(maskTo) && !isCRSANY(maskTo))
         #   stop("if from is a Vector object, maskTo must also be a Vector object")
@@ -1151,7 +1151,7 @@ postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo,
         }
         if (!isCRSANY(projectTo)) {
           if (!isSpatialAny(projectTo)) {
-            stop("projectTo must be a ", .messageSpatial$anySpatialClass)
+            stop("projectTo must be a ", .message$Spatial$anySpatialClass)
           }
           # if (isVector(from)) if (!isVector(projectTo))
           # stop("if from is a Vector object, projectTo must also be a Vector object")

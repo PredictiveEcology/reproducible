@@ -111,19 +111,29 @@ downloadFile <- function(archive, targetFile, neededFiles,
 
       while (failed > 0 && failed <= numTries) {
         messOrig <- character()
-        withCallingHandlers(
+        withCallingHandlers({
             downloadResults <- try(
               downloadRemote(
-                url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
-                targetFile = targetFile, fileToDownload = fileToDownload,
-                messSkipDownload = .messageSkipDownload, checkSums = checkSums,
-                dlFun = dlFun, destinationPath = destinationPath,
-                overwrite = overwrite, needChecksums = needChecksums, preDigest = preDigest,
-                verbose = verbose, .tempPath = .tempPath, ...
+                url = url,
+                archive = archive, # both url and fileToDownload must be NULL to skip downloading
+                targetFile = targetFile,
+                fileToDownload = fileToDownload,
+                messSkipDownload = .message$SkipDownload,
+                checkSums = checkSums,
+                dlFun = dlFun,
+                destinationPath = destinationPath,
+                overwrite = overwrite,
+                needChecksums = needChecksums,
+                preDigest = preDigest,
+                verbose = verbose,
+                .tempPath = .tempPath,
+                ...
             )
-          ), message = function(m) {
-            messOrig <<- c(messOrig, m$message)
-          })
+          )
+        },
+        message = function(m) {
+          messOrig <<- c(messOrig, m$message)
+        })
 
         if (is(downloadResults, "try-error")) {
           if (isTRUE(grepl("already exists", downloadResults))) {
@@ -150,7 +160,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
           if (failed >= numTries) {
             isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
                          !grepl("\\.[^\\.]+$", url)) # doesn't have an extension
-            if (isGID){
+            if (isGID) {
               urlMessage <- paste0("https://drive.google.com/file/d/", url)
             } else {
               urlMessage <- url
@@ -348,9 +358,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
       archive
     }
 
-
-    # This was commented out because of LandWeb -- removed b/c of this case:
-    #  have local archive, but not yet have the targetFile
+    ## This was commented out because of LandWeb -- removed b/c of this case:
+    ##  have local archive, but not yet have the targetFile
     # if (!is.null(downloadResults$destFile))
     #   neededFiles <- unique(basename(c(downloadResults$destFile, neededFiles)))
   } else {
@@ -363,7 +372,6 @@ downloadFile <- function(archive, targetFile, neededFiles,
     downloaded = downloadResults$destFile, checkSums = checkSums, object = downloadResults$out
   )
 }
-
 
 #' Download file from Google Drive
 #'
@@ -653,7 +661,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                      !grepl("\\.[^\\.]+$", url)) # doesn't have an extension --> GDrive ID's as url
         if (any(isGID, grepl("d.+.google.com", url))) {
           if (!requireNamespace("googledrive", quietly = TRUE)) {
-            stop(.messageRequireNamespaceFn("googledrive", "to use google drive files"))
+            stop(.message$RequireNamespaceFn("googledrive", "to use google drive files"))
           }
 
           teamDrive <- getTeamDrive(dots)
@@ -749,7 +757,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
                          verbose = getOption("reproducible.verbose", 1),
                          team_drive = NULL) {
   if (!requireNamespace("googledrive", quietly = TRUE)) {
-    stop(.messageRequireNamespaceFn("googledrive", "to use google drive files"))
+    stop(.message$RequireNamespaceFn("googledrive", "to use google drive files"))
   }
   if (.isRstudioServer()) {
     .requireNamespace("httr", stopOnFALSE = TRUE)

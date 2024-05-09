@@ -73,13 +73,13 @@ setMethod(
   signature = "ANY",
   definition = function(object, functionName, fromMemoise, verbose = getOption("reproducible.verbose", 1)) {
     postMess <- NULL
-    whMessage <- .messageLoadedCacheResult()
+    whMessage <- .message$LoadedCacheResult()
     if (isTRUE(fromMemoise)) {
-      whMessage <- .messageLoadedCacheResult(2)
+      whMessage <- .message$LoadedCacheResult(2)
     } else if (fromMemoise %in% FALSE) {
-      postMess <- paste0(" ", .messageAddingToMemoised)
+      postMess <- paste0(" ", .message$AddingToMemoised)
     }
-    baseMess <- .messageLoadedCache(whMessage, functionName)
+    baseMess <- .message$LoadedCache(whMessage, functionName)
     if (!is.null(postMess))
       baseMess <- paste0(baseMess, postMess)
     messageCache(baseMess, verbose = verbose)
@@ -103,7 +103,7 @@ setMethod(
 
   fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
 
-  messageCache(.messageObjToRetrieveFn(functionName), ", ",
+  messageCache(.message$ObjToRetrieveFn(functionName), ", ",
   #             messageCache("...(Object to retrieve (fn: ", .messageFunctionFn(functionName), ", ",
                basename2(CacheStoredFile(cachePath, cacheId, format = fileFormat)),
                ")",
@@ -217,14 +217,14 @@ setMethod(
         #  If no, then user is aware and doesn't need a message
         if (any(grepl(normPath(tmpDir), normPath(getOption("reproducible.cachePath")))) ||
             any(grepl(normPath(tempdir()), normPath(getOption("reproducible.cachePath"))))) {
-          messageCache(.messageNoCachePathSupplied, " and getOption('reproducible.cachePath') is inside a temporary directory;\n",
+          messageCache(.message$NoCachePathSupplied, " and getOption('reproducible.cachePath') is inside a temporary directory;\n",
                        "  this will not persist across R sessions.",
                        verbose = verbose
           )
         }
         getOption("reproducible.cachePath", tmpDir)
       } else {
-        messageCache(.messageNoCachePathSupplied, ". Using ", .reproducibleTempCacheDir(), verbose = verbose)
+        messageCache(.message$NoCachePathSupplied, ". Using ", .reproducibleTempCacheDir(), verbose = verbose)
         .reproducibleTempCacheDir()
       }
       checkPath(path = cachePath, create = create)

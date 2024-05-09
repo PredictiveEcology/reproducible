@@ -533,7 +533,7 @@ setMethod(
         }
       }
     }
-    .messageCacheSize(x,
+    .message$CacheSize(x,
       artifacts = unique(objsDT[[.cacheTableHashColName()]]),
       cacheTable = objsDT, verbose = verbose
     )
@@ -666,7 +666,7 @@ setMethod(
       }
     })
 
-    .messageCacheSize(cacheTo, cacheTable = showCache(cacheTo, sorted = FALSE), verbose = verbose)
+    .message$CacheSize(cacheTo, cacheTable = showCache(cacheTo, sorted = FALSE), verbose = verbose)
 
     return(invisible(cacheTo))
   }

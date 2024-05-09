@@ -1,22 +1,28 @@
-# This is an incomplete file; it will be slowly transitioned to have all messaging here
-# Any new message should be written as a .messageGreps entry, then used in the functions
-# with the mess*
+## This is an incomplete file; it will be slowly transitioned to have all messaging here
+## Any new message should be written as a .messageGreps entry, then used in the functions
+## with the mess*.
+## All messages and message-generating functions are stored in the .message environment,
+## to allow updating (i.e., `.message$PreProcessIndent`).
 
-.messageSkipDownload <- "Skipping download of url; local copy already exists and passes checksums"
+#' @keywords internal
+#' @rdname pkgEnv
+.message <- new.env()
 
-.messageGreps <- list(
+.message$SkipDownload <- "Skipping download of url; local copy already exists and passes checksums"
+
+.message$Greps <- list(
   studyArea_Spatial = "The \\'studyArea\\' provided is not a Spatial\\* object.",
   rasterToMatch_Raster = "The \\'rasterToMatch\\' provided is not a Raster\\* object.",
   anySpatialClass = "Raster\\*, Spat\\*, sf or Spatial object"
 )
 
-.messagePreProcessIndentOrig <- .messagePreProcessIndent <- ""
+.message$PreProcessIndentOrig <- .message$PreProcessIndent <- ""
 
-.messageCacheIndent <- "    "
+.message$CacheIndent <- "    "
 
-.messageSpatial <- lapply(.messageGreps, gsub, pattern = "\\\\", replacement = "")
+.message$Spatial <- lapply(.message$Greps, gsub, pattern = "\\\\", replacement = "")
 
-.messageLoadedCacheResult <- function(src = 1) {
+.message$LoadedCacheResult <- function(src = 1) {
   srcPoss <- c("Cached", "Memoised")
   if (is.numeric(src)) {
     src <- srcPoss[src]
@@ -26,21 +32,21 @@
   paste0("Loaded! ", src, " result from previous")
 }
 
-.messageAddingToMemoised <- "(and added a memoised copy)"
+.message$AddingToMemoised <- "(and added a memoised copy)"
 
-.messageLoadedCache <- function(root, functionName) {
+.message$LoadedCache <- function(root, functionName) {
   paste0(root, " ", functionName, " call")
 }
 
-.messageBecauseOfA <- "...because of (a)"
+.message$BecauseOfA <- "...because of (a)"
 
-.messageHangingIndent <- "  "
+.message$BecauseOfA <- "  "
 
-.messageNoCachePathSupplied <- "No cachePath supplied"
+.message$NoCachePathSupplied <- "No cachePath supplied"
 
-.messageNoCacheRepoSuppliedGrep <- paste0(.messageNoCachePathSupplied, " and.+getOption\\('reproducible.cachePath'\\).+is.+inside")
+.message$NoCacheRepoSuppliedGrep <- paste0(.message$NoCachePathSupplied, " and.+getOption\\('reproducible.cachePath'\\).+is.+inside")
 
-.messageRequireNamespaceFn <- function(pkg, messageExtra = character(), minVersion = NULL) {
+.message$RequireNamespaceFn <- function(pkg, messageExtra = character(), minVersion = NULL) {
   mess <- paste0(
     pkg, if (!is.null(minVersion)) {
       paste0("(>=", minVersion, ")")
@@ -52,7 +58,6 @@
   }
   mess
 }
-
 
 #' Use `message` with a consistent use of `verbose`
 #'
@@ -135,7 +140,7 @@ messagePrepInputs <- function(..., appendLF = TRUE,
 messagePreProcess <- function(..., appendLF = TRUE,
                               verbose = getOption("reproducible.verbose"),
                               verboseLevel = 1) {
-  messageColoured(..., indent = .messagePreProcessIndent,
+  messageColoured(..., indent = .message$PreProcessIndent,
                   colour = getOption("reproducible.messageColourPrepInputs"),
                   verboseLevel = verboseLevel, verbose = verbose, appendLF = appendLF
   )
@@ -147,8 +152,8 @@ messageCache <- function(..., colour = getOption("reproducible.messageColourCach
                          appendLF = TRUE) {
   needIndent <- try(any(grepl("\b", unlist(list(...)))))
   if (is(needIndent, "try-error")) browser()
-  indent <- if (isTRUE(!needIndent)) .messagePreProcessIndent else ""
-  messageColoured(..., indent = indent, # .messageCacheIndent,
+  indent <- if (isTRUE(!needIndent)) .message$PreProcessIndent else ""
+  messageColoured(..., indent = indent, # .message$CacheIndent,
                   colour = colour, appendLF = appendLF,
                   verboseLevel = verboseLevel, verbose = verbose
   )
@@ -235,7 +240,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
       mess <- unlist(newMess)
       mess <- paste0(.addSlashNToAllButFinalElement(mess), collapse = "")
     }
-    hi <- if (isTRUE(hangingIndent)) paste0(indent, .messageHangingIndent) else indent
+    hi <- if (isTRUE(hangingIndent)) paste0(indent, .message$BecauseOfA) else indent
     if (any(grepl("\n", mess))) {
       mess <- gsub("\n *", paste0("\n", hi), mess)
     }
@@ -255,9 +260,8 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
   }
 }
 
-
 #' @keywords internal
-.messageCacheSize <- function(x, artifacts = NULL, cacheTable,
+.message$CacheSize <- function(x, artifacts = NULL, cacheTable,
                               verbose = getOption("reproducible.verbose")) {
   tagCol <- "tagValue"
   if (missing(cacheTable)) {
@@ -298,28 +302,26 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
   messageCache(preMessage, format(fs, "auto"), verbose = verbose)
 }
 
-.messageObjToRetrieveFn <- function(funName) {
+.message$ObjToRetrieveFn <- function(funName) {
   paste0("Object to retrieve (fn: ", .messageFunctionFn(funName))
 }
 
-.messageIndentDefault <- 1
+.message$IndentDefault <- 1
 
-#' @importFrom utils assignInNamespace
-.messageIndentUpdate <- function(nchar = .messageIndentDefault, envir = parent.frame(), ns = "reproducible") {
+.message$IndentUpdate <- function(nchar = .message$IndentDefault, envir = parent.frame(), ns = "reproducible") {
   val <- paste0(rep(" ", nchar), collapse = "")
-  assignInNamespace(ns = ns, ".messagePreProcessIndent", paste0(.messagePreProcessIndent, val))
+  .message$PreProcessIndent <- paste0(.message$PreProcessIndent, val)
   withr::defer(
     envir = envir,
     expr =
       {
-        assignInNamespace(ns = ns, ".messagePreProcessIndent", gsub(paste0(val, "$"), "", .messagePreProcessIndent))
+        .message$PreProcessIndent <- gsub(paste0(val, "$"), "", .message$PreProcessIndent)
       }
   )
 }
 
-#' @importFrom utils assignInNamespace
-.messageIndentRevert <- function(nchar = .messageIndentDefault, envir = parent.frame(), ns = "reproducible") {
+.message$IndentRevert <- function(nchar = .message$IndentDefault, envir = parent.frame(), ns = "reproducible") {
   val <- paste0(rep(" ", nchar), collapse = "")
-  assignInNamespace(ns = "reproducible", ".messagePreProcessIndent", gsub(paste0(val, "$"), "", .messagePreProcessIndent))
+  .message$PreProcessIndent <- gsub(paste0(val, "$"), "", .message$PreProcessIndent)
   withr::deferred_clear(envir = envir)
 }

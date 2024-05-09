@@ -51,9 +51,12 @@
   ))
 ))
 
-#' The `reproducible` package environment
+#' The `reproducible` package environments
 #'
 #' Environment used internally to store internal package objects and methods.
+#'
+#' - `.pkgEnv` is for general use within the package;
+#' - `.message` is specifically for messages and message-generating functions;
 #'
 #' @keywords internal
 #' @rdname pkgEnv

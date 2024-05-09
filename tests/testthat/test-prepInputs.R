@@ -127,7 +127,7 @@ test_that("prepInputs doesn't work (part 1)", {
     )
   })
 
-  expect_true(any(grepl(.messageLoadedCacheResult(), mess)))
+  expect_true(any(grepl(.message$LoadedCacheResult(), mess)))
 
   ##  archive
   ## don't pass url -- use local copy of archive only
@@ -1421,8 +1421,8 @@ test_that("lightweight tests for code coverage", {
   ras <- terra::rast(terra::ext(0, 10, 0, 10), resolution = 1, vals = 1:100)
   terra::crs(ras) <- crsToUse
 
-  expect_error(postProcess(ras, studyArea = 1), .messageGreps$anySpatialClass)
-  expect_error(postProcess(ras, rasterToMatch = 1), .messageGreps$anySpatialClass)
+  expect_error(postProcess(ras, studyArea = 1), .message$Greps$anySpatialClass)
+  expect_error(postProcess(ras, rasterToMatch = 1), .message$Greps$anySpatialClass)
 
   ## cropInputs.default
   b <- 1

@@ -379,7 +379,7 @@ isMac <- function() {
 
   if (need) { # separate these so it is faster
     if (isTRUE(stopOnFALSE)) {
-      stop(.messageRequireNamespaceFn(pkg, messageExtra = messageStart, minVersion = minVersion))
+      stop(.message$RequireNamespaceFn(pkg, messageExtra = messageStart, minVersion = minVersion))
     }
   }
   !need

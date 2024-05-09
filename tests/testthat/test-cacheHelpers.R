@@ -6,14 +6,14 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   a <- 1
   mess <- capture_message(.cacheMessage(a, "test", TRUE))
-  expect_true(any(grepl(.messageLoadedCacheResult("Memoised"), mess)))
+  expect_true(any(grepl(.message$LoadedCacheResult("Memoised"), mess)))
 
   mess <- capture_message(.cacheMessage(a, "test", FALSE))
   ## TODO: what was the old expected behaviour here? message now includes "added memoised copy"
-  # expect_false(any(grepl(paste0(.messageLoadedCacheResult(), ".*added"), mess)))
+  # expect_false(any(grepl(paste0(.message$LoadedCacheResult(), ".*added"), mess)))
 
   mess <- capture_message(.cacheMessage(a, "test", NA))
-  expect_true(any(grepl(.messageLoadedCacheResult(), mess)))
+  expect_true(any(grepl(.message$LoadedCacheResult(), mess)))
   expect_false(all(grepl("adding", mess)))
 
   # studyAreaName with sf and sfc
@@ -55,7 +55,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   # .checkCacheRepo
   options(reproducible.cachePath = .reproducibleTempCacheDir())
   mess <- capture_message(.checkCacheRepo(a))
-  expect_true(any(grepl(.messageNoCacheRepoSuppliedGrep, mess)))
+  expect_true(any(grepl(.message$NoCacheRepoSuppliedGrep, mess)))
 
   opt11 <- options("reproducible.cachePath" = NULL)
   on.exit(
@@ -65,7 +65,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
     add = TRUE
   )
   mess <- capture_message(.checkCacheRepo(a))
-  expect_true(any(grepl(paste0(.messageNoCachePathSupplied, ". Using"), mess)))
+  expect_true(any(grepl(paste0(.message$NoCachePathSupplied, ". Using"), mess)))
 
   ## nextNumericName
   b <- nextNumericName("test.pdf")
@@ -98,8 +98,8 @@ test_that("test miscellaneous unit tests cache-helpers", {
     a <- Cache(rnorm, 1, cachePath = tmpCache)
   })
   # expect_true(identical(aMess, bMess[1]))
-  expect_false(any(grepl(.messageLoadedCacheResult("Memoised"), bMess)))
-  expect_true(any(grepl(.messageLoadedCacheResult("Memoised"), dMess)))
+  expect_false(any(grepl(.message$LoadedCacheResult("Memoised"), bMess)))
+  expect_true(any(grepl(.message$LoadedCacheResult("Memoised"), dMess)))
 
   ## showSimilar
   try(clearCache(ask = FALSE, x = tmpCache), silent = TRUE)
