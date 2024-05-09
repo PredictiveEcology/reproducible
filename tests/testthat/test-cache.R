@@ -1042,13 +1042,13 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
 
 
   rm(b)
-  mess <- capture_messages(
+  mess <- capture_messages({
     warn <- capture_warnings({
       err <- capture_error({
         d <- Cache(rnorm, 1, cachePath = tmpdir)
       })
     })
-  )
+  })
   expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), mess)) == 1)
   expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), err)) == 0)
   expect_true(grepl(paste0("[cannot|failed to] open"), paste(warn, err)))
@@ -1334,15 +1334,14 @@ test_that("change to new capturing of FUN & base pipe", {
   skip_if(getRversion() < "4.2.0")
 
   Nrand2 <- Nrand <- 1e6
-  mess0 <- capture_messages(
+  mess0 <- capture_messages({
     out0 <- Cache(rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1)))), cachePath = tmpCache)
-  )
+  })
 
-  mess1 <- capture_messages(
+  mess1 <- capture_messages({
     out1 <- Cache(do.call(rnorm, list(1, 2, sd = round(mean(runif(Nrand2, 1, 1.1))))),
-                  cachePath = tmpCache
-    )
-  )
+                  cachePath = tmpCache)
+  })
 
   # NO LONGER THE SAME CALL AS ABOVE
   f1 <- paste("
@@ -1352,9 +1351,9 @@ test_that("change to new capturing of FUN & base pipe", {
         rnorm(1, 2, sd = _)} |> # _ Only works with R >= 4.2.0
         Cache(cachePath = tmpCache)
     ")
-  mess2 <- capture_messages(
+  mess2 <- capture_messages({
     out2 <- eval(parse(text = f1))
-  )
+  })
   f2 <- paste("out3 <- {runif(Nrand, 1, 1.1) |>
         mean() |>
         round() |>
@@ -1409,20 +1408,26 @@ test_that("change to new capturing of FUN & base pipe", {
         Cache(cachePath = tmpCache)
     ")
   mn <- 1
-  st3 <- system.time(out2 <- eval(parse(text = f1)))
-  st4 <- system.time(out3 <- Cache(
-    {
-      rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1))))
-    },
-    cachePath = tmpCache
-  ))
+  st3 <- system.time({
+    out2 <- eval(parse(text = f1))
+  })
+  st4 <- system.time({
+    out3 <- Cache(
+      {
+        rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1))))
+      },
+      cachePath = tmpCache
+    )
+  })
   # can pass a variable, but not a function
-  st5 <- system.time(out3 <- Cache(
-    {
-      rnorm(1, 2, round(mean(runif(Nrand, mn, 1.1))))
-    },
-    cachePath = tmpCache
-  ))
+  st5 <- system.time({
+    out3 <- Cache(
+      {
+        rnorm(1, 2, round(mean(runif(Nrand, mn, 1.1))))
+      },
+      cachePath = tmpCache
+    )
+  })
   f1 <- paste("
       { a <- runif(Nrand, 1, 1.1)
         b <- mean(a)
@@ -1430,7 +1435,9 @@ test_that("change to new capturing of FUN & base pipe", {
         rnorm(1, 2, sd = d)} |> # _ Only works with R >= 4.2.0
         Cache(cachePath = tmpCache)
     ")
-  err <- capture_error(out2 <- eval(parse(text = f1)))
+  err <- capture_error({
+    out2 <- eval(parse(text = f1))
+  })
   expect_true(is(err, "simpleError"))
 
   # Test for new `round` in R > 4.3.1 with ... i.e., a primitive with method dispatch
@@ -1440,9 +1447,11 @@ test_that("change to new capturing of FUN & base pipe", {
         round()} |> # _ Only works with R >= 4.2.0
         Cache(cachePath = tmpCache)
     ")
-  expect_no_error(mess2 <- capture_messages(
-    out2 <- eval(parse(text = f1))
-  ))
+  expect_no_error({
+    mess2 <- capture_messages({
+      out2 <- eval(parse(text = f1))
+    })
+  })
 })
 
 test_that("test cache with new approach to match.call", {
@@ -1803,7 +1812,6 @@ test_that("multifile cache saving", {
   expect_false(all(Filenames(a) %in% dir(CacheStorageDir(), full.names = TRUE)))
 
 })
-
 
 test_that("cacheId = 'previous'", {
   testInit()
