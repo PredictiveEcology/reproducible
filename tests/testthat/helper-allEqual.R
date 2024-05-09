@@ -19,7 +19,6 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
 
   pf <- parent.frame()
 
-
   if (isTRUE(needGoogleDriveAuth)) {
     libraries <- c(libraries, "googledrive")
     needInternet <- TRUE
@@ -40,7 +39,6 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
     if (!intExists) skip("Need internet")
   }
 
-
   if (length(libraries)) {
     libraries <- unique(libraries)
     loadedAlready <- vapply(libraries, function(pkg) {
@@ -56,7 +54,6 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
       suppressWarnings(lapply(libraries, withr::local_package, .local_envir = pf))
     }
   }
-
 
   skip_gauth <- identical(Sys.getenv("SKIP_GAUTH"), "true") # only set in setup.R for covr
   if (isTRUE(needGoogleDriveAuth)) {
