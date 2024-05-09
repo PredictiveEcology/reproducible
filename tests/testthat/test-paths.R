@@ -32,18 +32,20 @@ test_that("getRelativePaths works as expected", {
 })
 
 test_that("relativeToWhat can handle multiple paths", {
-  res <- relativeToWhat(
-    file = "/mnt/projects/HRV/BC_HRV/outputs/NRD_Quesnel_scfm_hrv_FRT_res125/rep01/speciesLayers_2011_NRD_Quesnel.tif",
-    cachePath = NULL,
-    paths = list(
-      cachePath = "/mnt/scratch/achubaty/BC_HRV/cache",
-      inputPath = "/mnt/projects/HRV/BC_HRV/inputs",
-      modulePath = c("/home/achubaty/GitHub/BC_HRV/modules", "/home/achubaty/GitHub/BC_HRV/modules/scfm/modules"),
-      outputPath = "/mnt/projects/HRV/BC_HRV/outputs/NRD_Quesnel_scfm_hrv_FRT_res125/rep01",
-      rasterPath = "/mnt/scratch/achubaty/BC_HRV/raster",
-      scratchPath = "/mnt/scratch/achubaty/BC_HRV",
-      terraPath = "/mnt/scratch/achubaty/BC_HRV/terra"
+  expect_no_error({
+    res <- relativeToWhat(
+      file = "/mnt/projects/HRV/BC_HRV/outputs/NRD_Quesnel_scfm_hrv_FRT_res125/rep01/speciesLayers_2011_NRD_Quesnel.tif",
+      cachePath = NULL,
+      paths = list(
+        cachePath = "/mnt/scratch/achubaty/BC_HRV/cache",
+        inputPath = "/mnt/projects/HRV/BC_HRV/inputs",
+        modulePath = c("/home/achubaty/GitHub/BC_HRV/modules", "/home/achubaty/GitHub/BC_HRV/modules/scfm/modules"),
+        outputPath = "/mnt/projects/HRV/BC_HRV/outputs/NRD_Quesnel_scfm_hrv_FRT_res125/rep01",
+        rasterPath = "/mnt/scratch/achubaty/BC_HRV/raster",
+        scratchPath = "/mnt/scratch/achubaty/BC_HRV",
+        terraPath = "/mnt/scratch/achubaty/BC_HRV/terra"
+      )
     )
-  )
+  })
   expect_identical(res, list(outputPath = "."))
 })
