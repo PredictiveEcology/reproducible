@@ -979,7 +979,7 @@ relativeToWhat <- function(file, cachePath, ...) {
       fs::path_common(c(dirname(fn), possRelPaths[[nams]]))
     )
 
-    out <- vapply(possRelPaths[[nams]], fs::path_rel, path = pc, character(1)) |> as.character()
+    out <- sapply(possRelPaths[[nams]], fs::path_rel, path = pc) |> as.character()
     whSame <- pc == dirnameFile
     if (all(whSame)) {
       out <- list(out)
