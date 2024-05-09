@@ -1167,7 +1167,7 @@ test_that("test file link with duplicate Cache", {
   warn <- capture_warnings({
     d1 <- Cache(sam1, N, cachePath = tmpCache)
   })
-  expect_true(length(warn) == 0)
+  expect_true(length(warn) == 0) ## TODO: sometimes not true?
 })
 
 test_that("test .object arg for list in Cache", {

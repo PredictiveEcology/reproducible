@@ -314,10 +314,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     }
   }
 
-
   obj
 }
-
 
 extractFromCache <- function(sc, elem, ifNot = NULL) {
   rowNum <- sc[["tagKey"]] %in% elem
@@ -328,7 +326,6 @@ extractFromCache <- function(sc, elem, ifNot = NULL) {
   }
   elemExtracted
 }
-
 
 #' Low level tools to work with Cache
 #'
