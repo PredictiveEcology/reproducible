@@ -217,7 +217,7 @@ setMethod(
           }
         }
       }
-      if (SysInfo[["sysname"]] == "Darwin") path <- normPath(path) # ensure path re-normalized after creation
+      if (.pkgEnv$SysInfo[["sysname"]] == "Darwin") path <- normPath(path) # ensure path re-normalized after creation
 
       return(path)
     }
@@ -483,5 +483,3 @@ tempfile2 <- function(sub = "",
                       ...) {
   normPath(file.path(tempdir2(sub = sub, tempdir = tempdir), basename(tempfile(...))))
 }
-
-SysInfo <- Sys.info() # do this on load; nothing can change, so repeated calls are a waste
