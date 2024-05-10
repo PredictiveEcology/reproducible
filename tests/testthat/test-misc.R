@@ -79,7 +79,7 @@ test_that("setting options works correctly", {
     "reproducible.cachePath",
     "reproducible.overwrite", # This is a bug # TODO... something prior to this test is changing it
     "reproducible.useDBI",
-    # "reproducible.cacheSaveFormat",
+    "reproducible.cacheSaveFormat",
     "reproducible.shapefileRead"
   ))
   a <- a[keep]
