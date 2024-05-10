@@ -1,9 +1,9 @@
 #' Normalize file paths
 #'
 #' Checks the specified path for formatting consistencies:
-#'  1) use slash instead of backslash;
-#'  2) do tilde etc. expansion;
-#'  3) remove trailing slash.
+#' 1. use slash instead of backslash;
+#' 2. do tilde etc. expansion;
+#' 3. remove trailing slash.
 #'
 #' Additionally, `normPath()` attempts to create a absolute paths,
 #' whereas `normPathRel()` maintains relative paths.
