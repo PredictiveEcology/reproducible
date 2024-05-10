@@ -144,8 +144,8 @@ treat this as a folder name to create or use on GoogleDrive.}
 \item{showSimilar}{A logical or numeric. Useful for debugging.
 If \code{TRUE} or \code{1}, then if the Cache
 does not find an identical archive in the \code{cachePath}, it will report (via message)
-the next most similar archive, and indicate which argument(s) is/are different.
-If a number larger than \code{1}, then it will report the N most similar archived
+the next most recent similar archive, and indicate which argument(s) is/are different.
+If a number larger than \code{1}, then it will report the N most recent similar archived
 objects.}
 
 \item{drv}{if using a database backend, drv must be an object that

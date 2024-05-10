@@ -332,8 +332,8 @@ utils::globalVariables(c(
 #' @param showSimilar A logical or numeric. Useful for debugging.
 #'        If `TRUE` or `1`, then if the Cache
 #'        does not find an identical archive in the `cachePath`, it will report (via message)
-#'        the next most similar archive, and indicate which argument(s) is/are different.
-#'        If a number larger than `1`, then it will report the N most similar archived
+#'        the next most recent similar archive, and indicate which argument(s) is/are different.
+#'        If a number larger than `1`, then it will report the N most recent similar archived
 #'        objects.
 #'
 #' @param drv if using a database backend, drv must be an object that
@@ -1823,6 +1823,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
       paste(userTagsOrig, collapse = ", "), "' "
     )
   }
+
   if (NROW(similar)) {
     if (cn %in% "tag") {
       similar2 <- similar[grepl("preDigest", tag)]

@@ -168,32 +168,42 @@ test_that("test miscellaneous unit tests cache-helpers", {
   # Now check function is prefered over args
   clearCache(tmpCache, ask = FALSE)
   jMess <- capture_messages({
-    b <- Cache(rnorm, 1, 2, 3, showSimilar = TRUE, cachePath = tmpCache, userTags = c("Hi"))
-  })
-  kMess <- capture_messages({
-    b1 <- Cache(rnorm, 1, 3, 4, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # not similar
-  })
-  lMess <- capture_messages({
-    b <- Cache(rnorm, 1, 3, 4, showSimilar = TRUE, cachePath = tmpCache, userTags = c("Hi")) # same, recovered
-  })
-  mMess <- capture_messages({
-    b <- Cache(rnorm, 1, 2, 3, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # same recovered
-  })
-  nMess <- capture_messages({
-    b <- Cache(rnorm, 1, 2, 2, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # similar to kMess
-  })
-  oMess <- capture_messages({
-    b <- Cache(rnorm, 1, 2, 1, showSimilar = TRUE, cachePath = tmpCache) # similar to kMess
+    bj <- Cache(rnorm, 1, 2, 3, showSimilar = TRUE, cachePath = tmpCache, userTags = c("Hi"))
   })
   expect_true(any(grepl("no similar item", jMess))) # shouldn't find b/c new
+
+  kMess <- capture_messages({
+    bk <- Cache(rnorm, 1, 3, 4, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # not similar
+  })
   expect_true(any(grepl("no similar item", kMess))) # shouldn't find b/c args are same
+
+  lMess <- capture_messages({
+    bl <- Cache(rnorm, 1, 3, 4, showSimilar = TRUE, cachePath = tmpCache, userTags = c("Hi")) # same, recovered
+  })
   expect_true(any(grepl("Loaded", lMess))) # should only find rmultinom
+
+  mMess <- capture_messages({
+    bm <- Cache(rnorm, 1, 2, 3, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # same recovered
+  })
   expect_true(any(grepl("Loaded", mMess))) # should only find rmultinom
+
+  nMess <- capture_messages({
+    bn <- Cache(rnorm, 1, 2, 2, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # similar to kMess
+  })
   nMess <- grep("^.+next closest cacheId\\(s\\) (.+) of .+$", nMess, value = TRUE)
   expect_true(grepl(
-    x = attr(b1, "tags"),
-    gsub("^.+next closest cacheId\\(s\\) (.+) of .+$", "\\1", nMess) ## TODO: fix failing test
-  )) # should only find kMess
+    x = attr(bm, "tags"),
+    gsub("^.+next closest cacheId\\(s\\) (.+) of .+$", "\\1", nMess)
+  )) ## find mMess (jMess) because it's the most recent
+
+  oMess <- capture_messages({
+    bo <- Cache(rnorm, 1, 2, 1, showSimilar = TRUE, cachePath = tmpCache) # similar to kMess
+  })
+  oMess <- grep("^.+next closest cacheId\\(s\\) (.+) of .+$", oMess, value = TRUE)
+  expect_true(grepl(
+    x = attr(bn, "tags"),
+    gsub("^.+next closest cacheId\\(s\\) (.+) of .+$", "\\1", oMess) ## TODO: fix failing test
+  )) ## find nMess (jMess) because it's the most recent
 
   ## debugCache -- "complete"
   thing <- 1
