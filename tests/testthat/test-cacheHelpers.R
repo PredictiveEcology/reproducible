@@ -139,7 +139,6 @@ test_that("test miscellaneous unit tests cache-helpers", {
     expect_true(identical(dMessCacheId, bMessCacheId))
   }
 
-
   rcompletelynew <- rmultinom
   # Now check function is prefered over args
   clearCache(tmpCache, ask = FALSE)

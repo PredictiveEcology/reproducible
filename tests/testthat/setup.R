@@ -32,6 +32,7 @@ withr::defer(
     }
     options(opts)
     data.table::setDTthreads(origDTthreads)
+    try(reproducible::clearCache(ask = FALSE, verbose = -1))
     try(unlink("CHECKSUMS.txt"), silent = TRUE) # comes from an unknown place
   },
   teardown_env()

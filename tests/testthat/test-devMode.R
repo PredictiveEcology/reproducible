@@ -1,5 +1,5 @@
 test_that("test devMode", {
-  testInit(opts = list("reproducible.useCache" = "devMode"))
+  testInit(opts = list(reproducible.useCache = "devMode"))
 
   clearCache(tmpCache, ask = FALSE)
   theTags <- "hiTest"
@@ -58,7 +58,7 @@ test_that("test devMode", {
   expect_true(NROW(unique(a[[.cacheTableHashColName()]])) == 4)
 
   # Test multiple with same userTags, ie, not unambiguous
-  opt <- options("reproducible.useCache" = TRUE)
+  opt <- options(reproducible.useCache = TRUE)
   ranNumsG <- Cache(centralTendency, 1:12, cachePath = tmpCache, userTags = theTags)
   options(opt)
   centralTendency <- function(x) median(x)

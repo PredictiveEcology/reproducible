@@ -137,7 +137,7 @@ setMethod(
     }
 
     dots <- list(...)
-    hasNoOther <- is.null(dots[!names(dots) %in% sortedOrRegexp])
+    hasNoOther <- (length(dots)) == 0 | is.null(dots[!names(dots) %in% sortedOrRegexp])
 
     # Check if no args -- faster to delete all then make new empty repo for large repos
     clearWholeCache <- all(missing(userTags), is.null(after), is.null(before),
@@ -190,7 +190,9 @@ setMethod(
           }
         }
       }
+
       unlink(CacheStorageDir(x), recursive = TRUE)
+
       if (useDBI()) {
         unlink(file.path(x, "rasters"), recursive = TRUE)
         unlink(CacheDBFile(x, drv = drv, conn = conn), recursive = TRUE, force = TRUE)

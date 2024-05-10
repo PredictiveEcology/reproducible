@@ -110,6 +110,11 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
     out$tmpfile <- normPath(withr::local_tempfile(fileext = tmpFileExt))
   }
   withr::local_dir(tmpdir, .local_envir = pf)
+  withr::defer({
+    try(reproducible::clearCache(cachePath = tmpCache, ask = FALSE, verbose = -1))
+    try(reproducible::clearCache(ask = FALSE, verbose = -1))
+    try(unlink(tmpCache, recursive = TRUE))
+  }, envir = pf)
 
   out <- append(out, list(tmpdir = tmpdir, tmpCache = tmpCache))
   list2env(out, envir = pf)
