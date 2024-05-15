@@ -69,6 +69,10 @@ this option to \code{TRUE} will use \code{sf::gdal_utils("warp")}. In many test 
 this is much faster than the \code{terra} sequence. The resulting \code{SpatRaster} is
 not identical, but it is very similar.
 }
+\item{\code{gdalwarpThreads}}{
+Default: \code{2}. This will set \verb{-wo NUM_THREADS=} to this number. Default is now \code{2}, meaning
+\code{gdalwarp} will use 2 threads with \code{gdalProject}. To turn off threading, set to \code{0}, \code{1} or \code{NA}.
+}
 \item{\code{inputPaths}}{
 Default: \code{NULL}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
 If set to a path, this will cause these functions to save their downloaded and preprocessed
@@ -122,6 +126,12 @@ it will use \code{raster::shapefile}
 \item{\code{showSimilar}}{
 Default \code{FALSE}. Passed to \code{Cache}.
 }
+\item{\code{timeout}}{
+Default \code{1200}. Used in \code{preProcess} when downloading occurs. If a user has \code{R.utils}
+package installed, \code{R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))}
+will be wrapped around the download so that it will timeout (and error) after this many
+seconds.
+}
 \item{\code{useCache}}{
 Default: \code{TRUE}. Used in \code{\link[=Cache]{Cache()}}. If \code{FALSE}, then the entire
 \code{Cache} machinery is skipped and the functions are run as if there was no Cache occurring.
@@ -150,8 +160,16 @@ Default: \code{TRUE} if \pkg{DBI} is available.
 Default value can be overridden by setting environment variable \code{R_REPRODUCIBLE_USE_DBI}.
 As of version 0.3, the backend is now \pkg{DBI} instead of \pkg{archivist}.
 }
-\item{\code{useGDAL}}{
-Default \code{TRUE}. Passed to \code{useGDAL}. Deprecated.
+\item{\code{useGdown}}{
+Default: \code{FALSE}. If a user provides a Google Drive url to \code{preProcess}/\code{prepInputs},
+\code{reproducible} will use the \code{googledrive} package. This works reliably in most cases.
+However, for large files on unstable internet connections, it will stall and
+stop the download with no error. If a user is finding this behaviour, they can
+install the \code{gdown} package, making sure it is available on the PATH. This call
+to \code{gdown} will only work for files that do not need authentication. If authentication
+is needed, \code{dlGoogle} will fall back to \code{googledrive::drive_download}, even
+if this option is \code{TRUE}, with a message.
+.
 }
 \item{\code{useMemoise}}{
 Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}. If \code{TRUE}, recovery of cached

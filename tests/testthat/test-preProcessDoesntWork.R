@@ -6,17 +6,17 @@ test_that("preProcess fails if user provides non-existing file", {
       FALSE
     },
     {
-      errMsg <- testthat::capture_error(
-        co <- capture.output(
+      errMsg <- testthat::capture_error({
+        co <- capture.output({
           co <- capture.output(
-            type = "message",
+            type = "message", {
             reproducible::preProcess(
               url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
               destinationPath = tmpdir
             )
-          )
-        )
-      )
+          })
+        })
+      })
     },
     .env = "reproducible"
   )
@@ -24,16 +24,14 @@ test_that("preProcess fails if user provides non-existing file", {
   expect_true(grepl("appendChecksumsTable", errMsg))
 
   optsOrig <- options(reproducible.interactiveOnDownloadFail = FALSE)
-  co <- capture.output(
-    #   co <- capture.output(type = "message", {
+  co <- capture.output({
     errMsg <- testthat::capture_error({
       reproducible::preProcess(
         url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
         destinationPath = tmpdir
       )
     })
-    # })
-  )
+  })
   expect_true(grepl("manual download", errMsg))
   expect_true(grepl("appendChecksumsTable", errMsg))
   options(optsOrig)
@@ -80,26 +78,21 @@ test_that("preProcess fails if user provides non-existing file", {
       "y"
     },
     {
-      co <- capture.output(
-        #      co <- capture.output(type = "message", {
-        mess <- testthat::capture_messages(
-          errMsg <- testthat::capture_error(
+      co <- capture.output({
+        mess <- testthat::capture_messages({
+          errMsg <- testthat::capture_error({
             reproducible::preProcess(
               url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
               destinationPath = tmpdir
             )
-          )
-          #       })
-        )
-      )
+          })
+        })
+      })
     },
     .env = "reproducible"
   )
   expect_true(sum(grepl("manual download", mess)) == 1)
   expect_true(sum(grepl("To prevent", mess)) == 1)
-  if (isWindows()) { # windows can't tell a zip file is a zip file, but Unix-alikes can
-    expect_true(sum(grepl("Will assume the file is an archive", mess)) == 1)
-  }
   expect_true(file.exists(file.path(tmpdir, "rasterTest.zip")))
   cs <- read.table(file.path(tmpdir, "CHECKSUMS.txt"), header = TRUE)
   expect_true(NROW(cs) == 2 || NROW(cs) == 3) # TODO this may be detecting a bug == on GA it is 2, locally it is 3

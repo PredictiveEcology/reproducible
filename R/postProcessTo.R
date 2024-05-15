@@ -140,18 +140,27 @@
 #'   or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`, as well `postProcess`'s
 #'   `rasterToMatch` and `studyArea` arguments (see below). Commonly used arguments might be
 #'   `method`, `touches`, and `datatype`. If `filename` is passed, it will be ignored; use
-#'   `writeTo = `.
+#'   `writeTo = `. If `reproducible.gdalwarp = TRUE`, then these will be passed to the
+#'   `gdal*` functions. See them for details.
 #' @inheritParams Cache
-#' @export
 #'
-#' @seealso This function is meant to replace [postProcess()] with the more efficient
+#' @details
+#'
+#' This function is meant to replace [postProcess()] with the more efficient
 #' and faster `terra` functions.
+#'
+#' @export
+#' @seealso [maskTo()], [cropTo()], [projectTo()], [writeTo()], and [fixErrorsIn()].
+#' Also the functions that
+#' call `sf::gdal_utils(...)` directly: [gdalProject()], [gdalResample()], [gdalMask()]
+#' @rdname postProcessTo
+#' @example inst/examples/example_postProcessTo.R
 #'
 postProcessTo <- function(from, to,
                           cropTo = NULL, projectTo = NULL, maskTo = NULL, writeTo = NULL,
                           overwrite = TRUE, verbose = getOption("reproducible.verbose"),
                           ...) {
-  startTime <- Sys.time()
+  st <- Sys.time()
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
 
@@ -172,107 +181,137 @@ postProcessTo <- function(from, to,
     if (is.null(projectTo)) projectTo <- to
   }
 
-  # ASSERTION STEP
-  postProcessToAssertions(from, to, cropTo, maskTo, projectTo)
+  if (!all(is.null(to), is.null(cropTo), is.null(maskTo), is.null(projectTo))) {
+    messagePreProcess("Running `postProcessTo`", verbose = verbose, verboseLevel = 0)
+    .message$IndentUpdate()
+    if (isTRUE(is.character(from))) {
+      fe <- fileExt(from)
+      if (fe %in% "shp") {
+        shpFilename <- gdalTransform(from, cropTo, projectTo, maskTo, writeTo)
+        return(shpFilename)
+      }
+    }
+    fromOrig <- from # may need it later
+    # ASSERTION STEP
+    postProcessToAssertions(from, to, cropTo, maskTo, projectTo)
 
-  # Get the original class of from so that it can be recovered
-  origFromClass <- is(from)
-  isRaster <- any(origFromClass == "Raster")
-  isRasterLayer <- any(origFromClass == "RasterLayer")
-  isStack <- any(origFromClass == "RasterStack")
-  isBrick <- any(origFromClass == "RasterBrick")
-  isSF <- any(origFromClass == "sf")
-  isSpatial <- any(startsWith(origFromClass, "Spatial"))
-  isSpatRaster <- any(origFromClass == "SpatRaster")
-  isVectorNonTerra <- isVector(from) && !isSpat(from)
+    # Get the original class of from so that it can be recovered
+    origFromClass <- is(from)
+    isRaster <- any(origFromClass == "Raster")
+    isRasterLayer <- any(origFromClass == "RasterLayer")
+    isStack <- any(origFromClass == "RasterStack")
+    isBrick <- any(origFromClass == "RasterBrick")
+    isSF <- any(origFromClass == "sf")
+    isSpatial <- any(startsWith(origFromClass, "Spatial"))
+    isSpatRaster <- any(origFromClass == "SpatRaster")
+    isVectorNonTerra <- isVector(from) && !isSpat(from)
 
-  # converting sf to terra then cropping is slower than cropping then converting to terra
-  #    so if both are vector datasets, and sf format, crop first
-  from <- cropSF(from, cropTo)
+    # converting sf to terra then cropping is slower than cropping then converting to terra
+    #    so if both are vector datasets, and sf format, crop first
+    from <- cropSF(from, cropTo)
 
-  if (isRaster) {
-    fromCRS <- terra::crs(from)
-    from <- terra::rast(from)
-    if (!nzchar(terra::crs(from))) {
-      terra::crs(from) <- fromCRS
-    } # $input
-  } else if (isSpatial) {
-    osFrom <- object.size(from)
-    lg <- osFrom > 5e8
-    if (lg) {
-      st <- Sys.time()
-      messagePrepInputs("  `from` is large, converting to terra object will take some time ...",
+    if (isRaster) {
+      fromCRS <- terra::crs(from)
+      from <- terra::rast(from)
+      if (!nzchar(terra::crs(from))) {
+        terra::crs(from) <- fromCRS
+      } # $input
+    } else if (isSpatial) {
+      osFrom <- object.size(from)
+      lg <- osFrom > 5e8
+      if (lg) {
+        st <- Sys.time()
+        messagePreProcess("`from` is large, converting to terra object will take some time ...",
+                          verbose = verbose
+        )
+      }
+      from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
+      if (lg) {
+        messagePreProcess("done in ", format(difftime(Sys.time(), st),
+                                             units = "secs", digits = 3
+        ),
         verbose = verbose
-      )
+        )
+      }
     }
-    from <- suppressWarningsSpecific(terra::vect(from), shldBeChar)
-    if (lg) {
-      messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
-        units = "secs", digits = 3
-      ),
-      verbose = verbose
+
+    couldDoGDAL <- isGridded(from) && isVector(maskTo) && isGridded(projectTo)
+    stillNeed <- TRUE
+
+    if (isTRUE(getOption("reproducible.gdalwarp", FALSE)) && couldDoGDAL) {
+      stillNeed <- FALSE
+      #############################################################
+      # project resample mask sequence ################################
+      #############################################################
+      messagePreProcess("using sf::gdal_utils('warp') because options(\"reproducible.gdalwarp\" = TRUE) ...", appendLF = TRUE, verbose = verbose)
+      st <- Sys.time()
+
+      tryCatch({
+        from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
+        from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose, ...)
+        if (isGridded(maskTo)) { # won't be used at the moment because couldDoGDAL = FALSE for gridded
+          from <- maskTo(from = from, maskTo = maskTo, verbose = verbose, ...)
+        } else {
+          from <- gdalMask(fromRas = from, maskToVect = maskTo, writeTo = writeTo, verbose = verbose, ...)
+        }
+      }, error = function(e) {
+        stillNeed <<- TRUE
+        couldDoGDAL <<- FALSE
+        message("Attempted to use gdal* functions, but errors occured; trying without gdal*...")
+      })
+      # from <- setMinMax(from)
+
+    } # else {
+
+    if (stillNeed) {
+      if (couldDoGDAL)
+        message("Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm")
+      #############################################################
+      # crop project mask sequence ################################
+      #############################################################
+      # Basically, when both layers are vector, it appears to sometimes be lossy to do first
+      #   cropTo --> i.e., projecting cropTo to from's crs, then crop, then proceed was making
+      #   errors and slivers
+      if (!(isPolygons(from) && isPolygons(projectTo) && identical(cropTo, projectTo)))
+        from <- cropTo(from, cropTo, needBuffer = TRUE, ..., overwrite = overwrite) # crop first for speed
+      from <- projectTo(from, projectTo, ..., overwrite = overwrite) # need to project with edges intact
+      from <- maskTo(from, maskTo, ..., overwrite = overwrite)
+      from <- cropTo(from, cropTo, needBuffer = FALSE, ..., overwrite = overwrite) # need to recrop to trim excess pixels in new projection
+
+      # Put this message near the end so doesn't get lost
+      if (is.naSpatial(cropTo) && isVector(maskTo)) {
+        messagePreProcess("** cropTo is NA, but maskTo is a Vector dataset; ",
+                          verbose = verbose
+        )
+        messagePreProcess("this has the effect of cropping anyway",
+                          verbose = verbose
+        )
+      }
+      if (isSF(from))
+        from <- keepOrigGeom(from, fromOrig)
+
+      # WRITE STEP
+      from <- writeTo(
+        from, writeTo, overwrite, isStack, isBrick, isRaster, isSpatRaster,
+        ...
       )
+
     }
+
+
+    # REVERT TO ORIGINAL INPUT CLASS
+    from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial,
+                        origFromClass = origFromClass)
+    .message$IndentRevert()
+    messagePreProcess("postProcessTo ", gsub("^\b", "", messagePrefixDoneIn),
+                      format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                      verbose = verbose)
+    # messagePreProcess("postProcessTo done in ", format(difftime(Sys.time(), st),
+    #                                                    units = "secs", digits = 3
+    # ),
+    # verbose = verbose
+    # )
   }
-
-  couldDoGDAL <- isGridded(from) && isVector(maskTo) && isGridded(projectTo)
-
-  if (isTRUE(getOption("reproducible.gdalwarp", FALSE)) && couldDoGDAL) {
-    #############################################################
-    # project resample mask sequence ################################
-    #############################################################
-    messagePrepInputs("  using sf::gdal_utils('warp') because options(\"reproducible.gdalwarp\" = TRUE) ...", appendLF = FALSE, verbose = verbose)
-    st <- Sys.time()
-
-    from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
-    from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose)
-    from <- gdalMask(fromRas = from, maskToVect = maskTo, writeTo = writeTo, verbose = verbose, ...)
-    # from <- setMinMax(from)
-
-  } else {
-    if (couldDoGDAL)
-      message("Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm")
-    #############################################################
-    # crop project mask sequence ################################
-    #############################################################
-    # Basically, when both layers are vector, it appears to sometimes be lossy to do first
-    #   cropTo --> i.e., projecting cropTo to from's crs, then crop, then proceed was making
-    #   errors and slivers
-    if (!(isPolygons(from) && isPolygons(projectTo) && identical(cropTo, projectTo)))
-      from <- cropTo(from, cropTo, needBuffer = TRUE, ..., overwrite = overwrite) # crop first for speed
-    from <- projectTo(from, projectTo, ..., overwrite = overwrite) # need to project with edges intact
-    from <- maskTo(from, maskTo, ..., overwrite = overwrite)
-    from <- cropTo(from, cropTo, needBuffer = FALSE, ..., overwrite = overwrite) # need to recrop to trim excess pixels in new projection
-
-    # Put this message near the end so doesn't get lost
-    if (is.naSpatial(cropTo) && isVector(maskTo)) {
-      messagePrepInputs("    ** cropTo is NA, but maskTo is a Vector dataset; ",
-                        verbose = verbose
-      )
-      messagePrepInputs("      this has the effect of cropping anyway",
-                        verbose = verbose
-    )
-  }
-
-  # from <- terra::setMinMax(from)
-
-  # WRITE STEP
-  from <- writeTo(
-    from, writeTo, overwrite, isStack, isBrick, isRaster, isSpatRaster,
-      ...
-    )
-
-  }
-
-
-  # REVERT TO ORIGINAL INPUT CLASS
-  from <- revertClass(from, isStack, isBrick, isRasterLayer, isSF, isSpatial,
-                      origFromClass = origFromClass)
-  messagePrepInputs("  postProcessTo done in ", format(difftime(Sys.time(), startTime),
-                                                       units = "secs", digits = 3
-  ),
-  verbose = verbose
-  )
   from
 }
 
@@ -314,9 +353,9 @@ fixErrorsIn <- function(x, error = NULL, verbose = getOption("reproducible.verbo
       messageDeclareError(error, fromFnName, verbose)
       os <- objSize(x)
       if (os > 1e9) {
-        messagePrepInputs("... this may take a long time because the object is large (",
-          format(os), ")",
-          verbose = verbose
+        messagePreProcess("... this may take a long time because the object is large (",
+                          format(os), ")",
+                          verbose = verbose
         )
       }
     }
@@ -325,8 +364,8 @@ fixErrorsIn <- function(x, error = NULL, verbose = getOption("reproducible.verbo
       xValids <- sf::st_is_valid(x)
       if (any(!xValids)) {
         if (os > 1e9) {
-          messagePrepInputs("... found invalid components ... running sf::st_make_valid",
-            verbose = verbose
+          messagePreProcess("... found invalid components ... running sf::st_make_valid",
+                            verbose = verbose
           )
         }
 
@@ -339,7 +378,7 @@ fixErrorsIn <- function(x, error = NULL, verbose = getOption("reproducible.verbo
         x <- terra::vect(x)
       }
       if (os > 1e9 && isTRUE(getOption("reproducible.useCache"))) {
-        messagePrepInputs("... Caching the fixErrorTerra call on this large object", verbose = verbose)
+        messagePreProcess("... Caching the fixErrorTerra call on this large object", verbose = verbose)
         x <- Cache(makeVal(x), .functionName = "make.valid")
       } else {
         x <- makeVal(x)
@@ -467,7 +506,7 @@ maskTo <- function(from, maskTo, # touches = FALSE,
             message("... converting to sf object worked to deal with ", warningCertificateGrep)
           maskTo <- maskTo3
         }
-        messagePrepInputs("    masking...", appendLF = FALSE, verbose = verbose)
+        messagePreProcess("masking...", appendLF = FALSE, verbose = verbose)
         st <- Sys.time()
 
         # There are 2 tries; first is for `maskTo`, second is for `from`, rather than fix both in one step, which may be unnecessary
@@ -540,7 +579,7 @@ maskTo <- function(from, maskTo, # touches = FALSE,
             }
           } else {
             if (attempt > 1) {
-              messagePrepInputs("...fixed!", verbose = verbose, verboseLevel = 1, appendLF = FALSE)
+              messagePreProcess("...fixed!", verbose = verbose, verboseLevel = 1, appendLF = FALSE)
             }
             break
           }
@@ -548,9 +587,9 @@ maskTo <- function(from, maskTo, # touches = FALSE,
         }
 
         from <- fromInt
-        messagePrepInputs("...done in ",
-          format(difftime(Sys.time(), st), units = "secs", digits = 3),
-          verbose = verbose
+        messagePreProcess(messagePrefixDoneIn,
+                          format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                          verbose = verbose
         )
         from <- revertClass(from, origFromClass = origFromClass)
       }
@@ -594,15 +633,15 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
       }
 
       # if (sameProj && sameRes) {
-      #   messagePrepInputs("    projection of from is same as projectTo, not projecting",
+      #   messagePreProcess("projection of from is same as projectTo, not projecting",
       #                     verbose = verbose)
       # } else {
       if (isSF(from) || isSF(projectTo)) {
         .requireNamespace("sf", stopOnFALSE = TRUE)
       }
-      messagePrepInputs("    projecting...",
-        appendLF = FALSE,
-        verbose = verbose
+      messagePreProcess("projecting...",
+                        appendLF = FALSE,
+                        verbose = verbose
       )
       st <- Sys.time()
       if (isProjectToVecOrCRS && (isSF(projectTo) || isSpatial(projectTo))) {
@@ -620,33 +659,30 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
             projectTo <- terra::vect(projectTo)
           }
 
-          messagePrepInputs("", verbose = verbose)
-          messagePrepInputs("         projectTo is a Vector dataset, which does not define all metadata required. ",
-            verbose = verbose
+          messagePreProcess("", verbose = verbose)
+          messagePreProcess("projectTo is a Vector dataset, which does not define all metadata required. ",
+                            verbose = verbose
           )
           if (!terra::is.lonlat(from)) {
             # if (sf::st_crs("epsg:4326") != sf::st_crs(from)) {
             newRes <- terra::res(from)
-            messagePrepInputs("         Using resolution of ", paste(newRes, collapse = "x"), "m; ",
-              verbose = verbose
+            messagePreProcess("Using original resolution (", paste(newRes, collapse = "x"), "m) ",
+                              verbose = verbose
             )
             projectTo <- terra::rast(projectTo, resolution = newRes)
           } else {
             projectTo <- terra::crs(projectTo)
           }
 
-          messagePrepInputs("         in the projection of `projectTo`, using the origin and extent",
-            verbose = verbose
+          messagePreProcess("Using the origin and extent from `ext(from)` in the projection from `crs(projectTo)`.",
+                            verbose = verbose
           )
-          messagePrepInputs("         from `ext(from)` (in the projection from `projectTo`).",
-            verbose = verbose
+          messagePreProcess("If this is not correct, create a template gridded object and pass that to `projectTo`...",
+                            verbose = verbose
           )
-          messagePrepInputs("         If this is not correct, create a template gridded object and pass that to projectTo...",
-            verbose = verbose
-          )
-          messagePrepInputs("         ",
-            appendLF = FALSE,
-            verbose = verbose
+          messagePreProcess("",
+                            appendLF = FALSE,
+                            verbose = verbose
           )
         } else {
           projectTo <- terra::crs(projectTo)
@@ -697,7 +733,7 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
           dotArgs <- list(...)[dotArgs]
         }
         sameGeom <- if (isSpat(from) && isSpat(projectTo) ||
-          (isRaster(from) || isRaster(projectTo))) {
+                        (isRaster(from) || isRaster(projectTo))) {
           terra::compareGeom(from, projectTo, stopOnError = FALSE)
         } else {
           FALSE
@@ -709,8 +745,8 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
           from
         }
       }
-      messagePrepInputs("done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
-        verbose = verbose
+      messagePreProcess(messagePrefixDoneIn, format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                        verbose = verbose
       )
     }
     # }
@@ -719,12 +755,12 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
   from
 }
 
-#' @param needBuffer Logical. Defaults to `TRUE`, meaning nothing is done out
+#' @param needBuffer Logical. Defaults to `FALSE`, meaning nothing is done out
 #'   of the ordinary. If `TRUE`, then a buffer around the cropTo, so that if a reprojection
 #'   has to happen on the `cropTo` prior to using it as a crop layer, then a buffer
 #'   of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.
-#' @export
 #' @rdname postProcessTo
+#' @export
 cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
                    verbose = getOption("reproducible.verbose"), ...) {
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
@@ -756,9 +792,9 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
         from <- terra::vect(from)
       }
 
-      messagePrepInputs("    cropping...",
-        appendLF = FALSE,
-        verbose = verbose
+      messagePreProcess("cropping...",
+                        appendLF = FALSE,
+                        verbose = verbose
       )
       st <- Sys.time()
 
@@ -879,9 +915,9 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
             }
           }
           if (NROW(fromInt) == 0) { # likely don't overlap
-            messagePrepInputs("It looks like the cropping results in no data ",
-              "(do not overlap or no intersection)",
-              verbose = verbose
+            messagePreProcess("It looks like the cropping results in no data ",
+                              "(do not overlap or no intersection)",
+                              verbose = verbose
             )
             fail <- FALSE
           }
@@ -900,9 +936,9 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
           }
         } else {
           if (attempt > 1) {
-            messagePrepInputs("...fixed!",
-              verbose = verbose, verboseLevel = 1,
-              appendLF = FALSE
+            messagePreProcess("...fixed!",
+                              verbose = verbose, verboseLevel = 1,
+                              appendLF = FALSE
             )
           }
           break
@@ -910,8 +946,8 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
         attempt <- attempt + 1
       }
       from <- fromInt
-      messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
-        verbose = verbose
+      messagePreProcess(messagePrefixDoneIn, format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                        verbose = verbose
       )
     }
     from <- revertClass(from, origFromClass = origFromClass)
@@ -954,9 +990,9 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
 
       if (!any(is.na(writeTo))) {
         .requireNamespace("terra", stopOnFALSE = TRUE)
-        messagePrepInputs("    writing...",
-          appendLF = FALSE,
-          verbose = verbose
+        messagePreProcess("writing...",
+                          appendLF = FALSE,
+                          verbose = verbose
         )
         st <- Sys.time()
 
@@ -977,8 +1013,8 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
             ## this can happen when multiple modules touch the same object
             if (!any(file.exists(writeTo))) {
               from <- terra::writeRaster(from,
-                filename = writeTo, overwrite = FALSE,
-                datatype = datatype
+                                         filename = writeTo, overwrite = FALSE,
+                                         datatype = datatype
               )
               writeDone <- TRUE
             } else {
@@ -996,14 +1032,14 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
           nlyrsFrom <- nlayers2(from)
           if (nlyrsFrom == 1 || length(writeTo) == 1) {
             from <- terra::writeRaster(from,
-              filename = writeTo, overwrite = overwrite,
-              datatype = datatype
+                                       filename = writeTo, overwrite = overwrite,
+                                       datatype = datatype
             )
           } else {
             outs <- lapply(seq(nlyrsFrom), function(ind) {
               out <- terra::writeRaster(from[[ind]],
-                filename = writeTo[ind], overwrite = overwrite,
-                datatype = datatype
+                                        filename = writeTo[ind], overwrite = overwrite,
+                                        datatype = datatype
               )
             })
             from <- raster::stack(outs)
@@ -1015,17 +1051,17 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
           if (any(whType)) {
             eval(parse(text = fe$saveFun[whType]))(from, writeTo)
           } else {
-            messagePrepInputs("... nothing written; object not a known object type to write.",
-              verbose = verbose
+            messagePreProcess("... nothing written; object not a known object type to write.",
+                              verbose = verbose
             )
           }
         }
         if (isTRUE(writeDone)) {
-          messagePrepInputs("...done in ", format(difftime(Sys.time(), st), units = "secs", digits = 3),
-            verbose = verbose
+          messagePreProcess(messagePrefixDoneIn, format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                            verbose = verbose
           )
         } else {
-          messagePrepInputs("", verbose = verbose) # need to "end" the line
+          messagePreProcess("", verbose = verbose) # need to "end" the line
         }
       }
     }
@@ -1074,7 +1110,7 @@ postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo,
 
   if (!missing(to)) {
     if (!is.null(to)) {
-      if (!isSpatialAny(to) && !isCRSANY(to)) stop("to must be a ", .msg$anySpatialClass)
+      if (!isSpatialAny(to) && !isCRSANY(to)) stop("to must be a ", .message$Spatial$anySpatialClass)
       # if (isVector(from))
       #   if (!isVector(to) && !isCRSANY(to)) {
       #     # as long as maskTo and projectTo are supplied, then it is OK
@@ -1088,7 +1124,7 @@ postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo,
     if (!is.naSpatial(cropTo)) {
       if (!is.null(cropTo)) {
         if (!isSpatialAny(cropTo) && !isCRSANY(cropTo)) {
-          stop("cropTo must be a ", .msg$anySpatialClass)
+          stop("cropTo must be a ", .message$Spatial$anySpatialClass)
         }
         # apparently, cropTo can be a gridded object no matter what
         # if (isVector(from)) if (!isVector(cropTo) && !isCRSANY(cropTo))
@@ -1100,7 +1136,7 @@ postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo,
     if (!is.naSpatial(maskTo)) {
       if (!is.null(maskTo)) {
         if (!isSpatialAny(maskTo) && !isCRSANY(maskTo)) {
-          stop("maskTo must be a ", .msg$anySpatialClass)
+          stop("maskTo must be a ", .message$Spatial$anySpatialClass)
         }
         # if (isVector(from)) if (!isVector(maskTo) && !isCRSANY(maskTo))
         #   stop("if from is a Vector object, maskTo must also be a Vector object")
@@ -1115,7 +1151,7 @@ postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo,
         }
         if (!isCRSANY(projectTo)) {
           if (!isSpatialAny(projectTo)) {
-            stop("projectTo must be a ", .msg$anySpatialClass)
+            stop("projectTo must be a ", .message$Spatial$anySpatialClass)
           }
           # if (isVector(from)) if (!isVector(projectTo))
           # stop("if from is a Vector object, projectTo must also be a Vector object")
@@ -1141,8 +1177,8 @@ cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")
   st <- Sys.time()
   if (isSF(from) && (isSF(cropToVect) || is(cropToVect, "Spatial"))) {
     .requireNamespace("sf", stopOnFALSE = TRUE)
-    messagePrepInputs("    pre-cropping because `from` is sf and cropTo is sf/Spatial*",
-      verbose = verbose
+    messagePreProcess("pre-cropping because `from` is sf and cropTo is sf/Spatial*",
+                      verbose = verbose
     )
     attempt <- 1
     while (attempt <= 2) {
@@ -1162,9 +1198,9 @@ cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")
         }
       } else {
         if (attempt > 1) {
-          messagePrepInputs("...fixed!",
-            verbose = verbose, verboseLevel = 1,
-            appendLF = FALSE
+          messagePreProcess("...fixed!",
+                            verbose = verbose, verboseLevel = 1,
+                            appendLF = FALSE
           )
         }
         break
@@ -1172,17 +1208,18 @@ cropSF <- function(from, cropToVect, verbose = getOption("reproducible.verbose")
 
       attempt <- attempt + 1
     }
+
     if (extntNA(from2)) {
-      messagePrepInputs("    resulting extent is NA, probably because objects don't overlap",
-        verbose = verbose
+      messagePreProcess("resulting extent is NA, probably because objects don't overlap",
+                        verbose = verbose
       )
     }
     if (!is(from2, "try-error")) {
       from <- from2
     }
 
-    messagePrepInputs("  done in ", format(difftime(Sys.time(), st),
-      units = "secs", digits = 3
+    messagePreProcess("done in ", format(difftime(Sys.time(), st),
+                                         units = "secs", digits = 3
     ),
     verbose = verbose
     )
@@ -1226,8 +1263,8 @@ revertClass <- function(from, isStack = FALSE, isBrick = FALSE, isRasterLayer = 
 
 messageDeclareError <- function(error, fromFnName, verbose = getOption("reproducible.verbose")) {
   errWOWordError <- gsub("Error {0,1}: ", "", error)
-  messagePrepInputs("    ", fromFnName, " resulted in following error: \n    - ", errWOWordError, "    --> attempting to fix",
-    appendLF = FALSE, verbose = verbose, verboseLevel = 1
+  messagePreProcess("", fromFnName, " resulted in following error: \n    - ", errWOWordError, "    --> attempting to fix",
+                    appendLF = FALSE, verbose = verbose, verboseLevel = 1
   )
 }
 
@@ -1266,8 +1303,8 @@ remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.fr
       function(elem, newHere) {
         if (length(elem)) {
           mes <- paste(newHere, collapse = ", ")
-          messagePrepInputs(elem, " is supplied (deprecated); assigning it to ", mes,
-            verbose = verbose - 1
+          messagePreProcess(elem, " is supplied (deprecated); assigning it to ", mes,
+                            verbose = verbose - 1
           )
           lapply(newHere, function(nh) ret[nh] <<- list(dots[[elem]]))
         }
@@ -1424,12 +1461,121 @@ isGeomType <- function(geom, type) {
 
 
 
+#' 3-Step postProcess sequence for SpatRasters using `gdalwarp`
+#'
+#' `gdalProject` is a thin wrapper around `sf::gdal_utils('gdalwarp', ...)` with specific options
+#' set, notably, `-r` to `method` (in the ...), `-t_srs` to the crs of the `toRas`,
+#' `-te` to the extent of the `toRas`, `-te_srs` to the `crs` of the `toRas`,
+#' `-dstnodata = NA`, and `-overwrite`.
+#'
+#' @details
+#' These three functions are used within `postProcessTo`, in the sequence:
+#' `gdalProject`, `gdalResample` and `gdalMask`, when `from` and `projectTo` are `SpatRaster` and
+#' `maskTo` is a `SpatVector`, but only if `options(reproducible.gdalwarp = TRUE)` is set.
+#'
+#' This sequence is a slightly different order than the sequence when `gdalwarp = FALSE` or
+#' the arguments do not match the above. This sequence was determined to be faster and
+#' more accurate than any other sequence, including running all three steps in one
+#' `gdalwarp` call (which `gdalwarp` can do). Using one-step `gdalwarp` resulted in
+#' very coarse pixelation when converting from a coarse resolution to fine resolution, which
+#' visually was inappropriate in test cases.
+#'
+#' @export
+#' @example inst/examples/example_postProcessTo.R
+#' @rdname gdalwarpFns
+#' @aliases gdalProject
+#' @param ... For `gdalProject`, this can be `method`. For `gdalMask` can be `destinationPath` and `touches`.
+#'   For all `gdal*`, this can also be and `datatype`.
+#' @inheritParams gdalResample
+#' @inheritParams postProcessTo
+#' @seealso [gdalResample()], and [gdalMask()] and the overarching [postProcessTo()]
 gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("reproducible.verbose"), ...) {
 
   if (!requireNamespace("sf") && !requireNamespace("terra"))
     stop("Can't use gdalProject without sf and terra")
 
-  messagePrepInputs("     running gdalProject ...", appendLF = FALSE, verbose = verbose)
+  messagePreProcess("running gdalProject ...", appendLF = FALSE, verbose = verbose)
+  st <- Sys.time()
+
+  hasMethod <- which(...names() %in% "method")
+  method <- if (length(hasMethod)) {
+    method <- assessDataTypeOuter(fromRas, ...elt(hasMethod))
+  } else {
+    NULL
+  }
+  if (is.null(method))
+    method <- "near"
+
+  fns <- unique(Filenames(fromRas))
+  if (length(fns) == 1 && isTRUE(nzchar(fns))) {
+    fnSource <- fns
+  } else {
+    fnSource <- tempfile(fileext = ".tif")
+    terra::writeRaster(fromRas, filename = fnSource)
+    on.exit(unlink(fnSource))
+  }
+
+  if (missing(filenameDest))
+    filenameDest <- tempfile(fileext = ".tif")
+
+  tf4 <- tempfile(fileext = ".prj")
+  on.exit(unlink(tf4), add = TRUE)
+  cat(sf::st_crs(toRas)$wkt, file = tf4)
+
+  threads <- detectThreads()
+
+  opts <- c(
+    "-t_srs", tf4,
+    "-r", method,
+    "-te", as.vector(terra::ext(toRas))[c(1, 3, 2, 4)],
+    "-te_srs", tf4,
+    "-wo", paste0("NUM_THREADS=", threads),
+    # "-srcnodata", "NA",
+    "-dstnodata", "NA", # THERE IS AN ARTIFACT THAT OCCURS
+    "-overwrite"
+  )
+
+  opts <- addDataType(opts, fromRas[[1]], ...)
+  opts <- updateDstNoData(opts, fromRas)
+
+  tried <- retry(retries = 2, # exprBetween = browser(),
+                 sf::gdal_utils(
+                   util = "warp",
+                   source = fnSource,
+                   destination = filenameDest,
+                   options = opts))
+
+  out <- terra::rast(filenameDest)
+  messagePreProcess(messagePrefixDoneIn,
+                    format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                    verbose = verbose)
+
+  out
+}
+
+
+
+#' @description
+#' `gdalResample` is a thin wrapper around `sf::gdal_utils('gdalwarp', ...)` with specific options
+#' set, notably, `"-r", "near"`, `-te`, `-te_srs`, `tr`, `-dstnodata = NA`, `-overwrite`.
+#'
+#'
+#' @export
+#' @param fromRas see `from` argument from [postProcessTo()], but can only be a  `SpatRaster`.
+#' @param toRas see `to` argument from [postProcessTo()], but can only be a  `SpatRaster`.
+#' @param filenameDest A filename with an appropriate extension (e.g., `.tif`) for
+#'   `gdal` to write the output to. Since this function is conceived to be part of a
+#'   chain, and not the final step, this function does not use `writeTo`, which is
+#'   reserved for the final step in the chain.
+#' @inheritParams postProcessTo
+#' @rdname gdalwarpFns
+#' @aliases gdalResample
+gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("reproducible.verbose"), ...) {
+
+  if (!requireNamespace("sf") && !requireNamespace("terra"))
+    stop("Can't use gdalResample without sf and terra")
+
+  messagePreProcess("running gdalResample ...", appendLF = FALSE, verbose = verbose)
   st <- Sys.time()
 
   hasMethod <- which(...names() %in% "method")
@@ -1454,87 +1600,55 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
     filenameDest <- tempfile(fileext = ".tif")
 
   tf4 <- tempfile(fileext = ".prj")
-  on.exit(unlink(tf4), add = TRUE)
-  cat(sf::st_crs(toRas)$wkt, file = tf4)
-  sf::gdal_utils(
-    util = "warp",
-    source = fnSource,
-    destination = filenameDest,
-    options = c(
-      "-t_srs", tf4,
-      "-r", method,
-      "-te", c(terra::xmin(toRas), terra::ymin(toRas),
-               terra::xmin(toRas) + (terra::ncol(toRas) ) * terra::res(toRas)[1],
-               terra::ymin(toRas) + (terra::nrow(toRas) ) * terra::res(toRas)[2]),
-      "-te_srs", tf4,
-      "-dstnodata", "NA",
-      "-overwrite"
-    ))
-
-  out <- terra::rast(filenameDest)
-  messagePrepInputs("     ...done in ",
-                    format(difftime(Sys.time(), st), units = "secs", digits = 3),
-                    verbose = verbose)
-
-  out
-}
-
-
-
-gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("reproducible.verbose")) {
-
-  if (!requireNamespace("sf") && !requireNamespace("terra"))
-    stop("Can't use gdalResample without sf and terra")
-
-  messagePrepInputs("     running gdalResample ...", appendLF = FALSE, verbose = verbose)
-  st <- Sys.time()
-
-  fns <- unique(Filenames(fromRas))
-  if (length(fns) ==1 && isTRUE(nzchar(fns))) {
-    fnSource <- fns
-  } else {
-    fnSource <- tempfile(fileext = ".tif")
-    terra::writeRaster(fromRas, filename = fnSource)
-    on.exit(unlink(fnSource))
-  }
-
-  if (missing(filenameDest))
-    filenameDest <- tempfile(fileext = ".tif")
-
-  tf4 <- tempfile(fileext = ".prj")
   cat(sf::st_crs(toRas)$wkt, file = tf4)
 
 
-  system.time(sf::gdal_utils(
-    util = "warp",
-    source = fnSource,
-    destination = filenameDest,
-    options = c(
-      "-r", "near",
-      "-te", c(terra::xmin(toRas), terra::ymin(toRas),
-               terra::xmin(toRas) + (terra::ncol(toRas) ) * terra::res(toRas)[1],
-               terra::ymin(toRas) + (terra::nrow(toRas) ) * terra::res(toRas)[2]),
-      "-te_srs", tf4, # 3347, 3348, 3978, 3979
-      "-tr", terra::res(toRas),
-      "-dstnodata", "NA",
-      "-tap",
-      "-overwrite"
-    ))
+  opts <- c(
+    "-r", method,
+    "-te", c(terra::xmin(toRas), terra::ymin(toRas),
+             terra::xmin(toRas) + (terra::ncol(toRas) ) * terra::res(toRas)[1],
+             terra::ymin(toRas) + (terra::nrow(toRas) ) * terra::res(toRas)[2]),
+    "-te_srs", tf4, # 3347, 3348, 3978, 3979
+    "-tr", terra::res(toRas),
+    "-dstnodata", "NA",
+    # "-tap",
+    "-overwrite"
   )
+
+  opts <- addDataType(opts, fromRas[[1]], ...)
+  opts <- updateDstNoData(opts, fromRas)
+
+  tried <- retry(retries = 2, # exprBetween = browser(),
+                 sf::gdal_utils(
+                   util = "warp",
+                   source = fnSource,
+                   destination = filenameDest,
+                   options = opts))
+
   out <- terra::rast(filenameDest)
-  messagePrepInputs("     ...done in ",
+  messagePreProcess(messagePrefixDoneIn,
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)
   out
 }
 
 
+#' @description
+#' `gdalMask` is a thin wrapper around `sf::gdal_utils('gdalwarp', ...)` with specific options
+#' set, notably, `-cutline`, `-dstnodata = NA`, and `-overwrite`.
+#'
+#' @export
+#' @param fromRas see `from` argument from [postProcessTo()], but can only be a  `SpatRaster`.
+#' @param maskToVect see `maskTo` argument from [maskTo()], but can only be a `SpatVector`
+#' @inheritParams postProcessTo
+#' @rdname gdalwarpFns
+#' @aliases gdalMask
 gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("reproducible.verbose"), ...) {
 
   if (!requireNamespace("sf") && !requireNamespace("terra"))
     stop("Can't use gdalMask without sf and terra")
 
-  messagePrepInputs("     running gdalMask ...", appendLF = FALSE, verbose = verbose)
+  messagePreProcess("running gdalMask ...", appendLF = FALSE, verbose = verbose)
   st <- Sys.time()
 
   fns <- unique(Filenames(fromRas))
@@ -1548,8 +1662,20 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
   }
 
   tf3 <- tempfile(fileext = ".shp")
-  shp <- terra::project(maskToVect, terra::crs(fromRas))
-  terra::writeVector(shp, file = tf3)
+  on.exit(unlink(tf3), add = TRUE)
+  if (isGridded(maskToVect)) { # not used by default because postProcessTo will return couldDoGDAL = FALSE
+    if (!is(maskToVect, "SpatRaster")) {
+      maskToVect <- terra::rast(maskToVect)
+    }
+    maskToVect <- terra::as.polygons(maskToVect, values = FALSE)
+  }
+  if (isSF(maskToVect)) {
+    shp <- sf::st_transform(maskToVect, terra::crs(fromRas))
+    sf::st_write(shp, dsn = tf3)
+  } else {
+    shp <- terra::project(maskToVect, terra::crs(fromRas))
+    terra::writeVector(shp, filename = tf3)
+  }
 
   dPath <- which(...names() %in% "destinationPath")
   destinationPath <- if (length(dPath)) {
@@ -1563,21 +1689,177 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
 
   writeTo <- determineFilename(writeTo, destinationPath = destinationPath, verbose = verbose)
 
-  system.time(sf::gdal_utils(
-    util = "warp",
-    source = fnSource,
-    destination = writeTo,
-    options = c(
-      "-cutline", tf3,
-      "-dstnodata", "NA",
-      "-overwrite"
-    ))
+  opts <- c(
+    "-cutline", tf3,
+    "-dstnodata", "NA",
+    "-overwrite"
   )
+  if (!isFALSE(list(...)$touches)) # default is TRUE, like terra::mask
+    opts <- c(opts, "-wo", "CUTLINE_ALL_TOUCHED=TRUE")
+
+  opts <- addDataType(opts, fromRas[[1]], ...)
+  opts <- updateDstNoData(opts, fromRas)
+
+  tried <- retry(retries = 2, # exprBetween = browser(),
+                 sf::gdal_utils(
+                   util = "warp",
+                   source = fnSource,
+    destination = writeTo,
+                   options = opts))
 
   out <- terra::rast(writeTo)
-  messagePrepInputs("     ...done in ",
+  messagePreProcess(messagePrefixDoneIn,
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)
   out
 }
 
+messagePrefixDoneIn <- "\bdone! took:  "
+
+
+#' Keep original geometries of `sf` objects
+#'
+#' When intersections occur, what was originally 2 polygons features can become
+#' `LINESTRING` and/or `POINT` and any `COLLECTIONS` or `MULTI-` versions of these.
+#' This function evaluates what the original geometry was and drops any newly created
+#' *different* geometries. For example, if a `POLYGON` becomes a `COLLECTION` of
+#' `MULTIPOLYGON`, `POLYGON` and `POINT` geometries, the `POINT` geometries will
+#' be dropped. This function is used internally in [postProcessTo()].
+#' @param newObj The new, derived `sf` object
+#' @param origObj The previous, object whose geometries should be used.
+#' @return The original `newObj`, but with only the type of geometry that entered
+#' into the function.
+#'
+keepOrigGeom <- function(newObj, origObj) {
+  from2Geom <- sort(unique(sf::st_geometry_type(newObj)))
+  fromGeom <- sort(unique(sf::st_geometry_type(origObj)))
+  if (!identical(from2Geom, fromGeom)) {
+    possTypes <- c("POINT", "LINESTRING", "POLYGON")
+    hasTypes <- vapply(possTypes, function(pt) isTRUE(any(grepl(pt, fromGeom))), FUN.VALUE = logical(1))
+    # if (is(hasTypes, "try-error")) browser()
+    fromGeomSimple <- names(hasTypes)[hasTypes]
+
+    has2Types <- vapply(possTypes, function(pt) isTRUE(any(grepl(pt, from2Geom))), FUN.VALUE = logical(1))
+    from2GeomSimple <- names(has2Types)[has2Types]
+
+    # hasTypes2 <- sapply(possTypes, function(pt) any(grepl(pt, from2Geom)))#, FUN.VALUE = logical(1))
+    # from2GeomSimple <- names(hasTypes2)[hasTypes2]
+
+    # isSameTypeAsFromGeom <- apply(do.call(rbind, lapply(fromGeom, function(fg) grepl(fg, from2Geom))), 2, all)
+    if (!all(from2GeomSimple %in% fromGeomSimple)) {
+      # hasMulti <- grepl("MULTI", from2Geom) & isSameTypeAsFromGeom
+      newObj <- sf::st_collection_extract(newObj, type = as.character(fromGeomSimple))
+    }
+  }
+  newObj
+}
+
+detectThreads <- function(threads = getOption("reproducible.gdalwarpThreads", 2)) {
+  isNotNumThreads <- !is.numeric(threads)
+  lenNumThreadsNot1 <- length(threads) > 1
+  isNAThreads <- all(is.na(threads))
+  isNULLThreads <- is.null(threads)
+  if (isNULLThreads) {
+    threads <- 1L
+  } else {
+
+    if (isNotNumThreads || isNAThreads || lenNumThreadsNot1) {
+      if (isNotNumThreads)
+        threads <- 2L
+      if (lenNumThreadsNot1)
+        threads <- threads[1]
+      if (isNAThreads)
+        threads <- 1L
+    } else {
+      if (threads < 1) {
+        threads <- 1L
+      } else {
+        .requireNamespace("parallel", stopOnFALSE = TRUE)
+        detCors <- parallel::detectCores()
+        if (threads > detCors)
+          threads <- detCors - 1
+      }
+    }
+  }
+
+  threads
+}
+
+addDataType <- function(opts, fromRas, ...) {
+  hasDatatype <- which(...names() %in% "datatype")
+  datatype <- if (length(hasDatatype)) ...elt(hasDatatype) else {
+    assessDataType(fromRas, type = "GDAL")
+  }
+  if (!is.null(datatype)) {
+    datatype <- switchDataTypes(datatype, type = "GDAL")
+    opts <- c(opts, "-ot", datatype)
+  }
+  opts <- unname(opts)
+  opts
+}
+
+gdalTransform <- function(from, cropTo, projectTo, maskTo, writeTo, verbose) {
+  messagePreProcess("running gdalTransform ...", appendLF = FALSE, verbose = verbose)
+  st <- Sys.time()
+  tf4 <- tempfile(fileext = ".prj")
+  on.exit(unlink(tf4), add = TRUE)
+  wkt1 <- sf::st_crs(projectTo)$wkt
+  cat(wkt1, file = tf4)
+  tf <- tempfile(fileext = ".shp")
+  tf2 <- tempfile(fileext = ".shp")
+  # tf3 <- tempfile(fileext = ".shp")
+  if (!sf::st_crs(projectTo) == sf::st_crs(maskTo)) {
+    stop("maskTo and projectTo must have the same crs")
+  }
+  # prjFile <- dir(dirname(from), pattern = paste0(basename(tools::file_path_sans_ext(from)), ".prj"), full.names = TRUE)
+  # maskToInFromCRS <- terra::project(maskTo, prjFile)
+  # terra::writeVector(maskToInFromCRS, filename = tf3, overwrite = TRUE)
+  # system.time(sf::gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
+  #                        destination = tf2, options =
+  #                          c(# "-t_srs", tf4,
+  #                            "-clipdst", tf3, "-overwrite"
+  #                          )))
+  # system.time(gdal_utils(util = "vectortranslate",
+  #                        source = tf2,
+  #                        destination = tf,
+  #                        options =
+  #                          c("-t_srs", tf4,
+  #                            # "-clipdst", tf2,
+  #                            "-overwrite"
+  #                          )))
+  #
+  # browser()
+  terra::writeVector(maskTo, filename = tf2)
+  system.time(sf::gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
+                         destination = tf, options =
+                           c("-t_srs", tf4,
+                             "-clipdst", tf2, "-overwrite"
+                           )))
+  messagePreProcess(messagePrefixDoneIn,
+                    format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                    verbose = verbose)
+  tf
+}
+
+updateDstNoData <- function(opts, fromRas) {
+  hasDashOT <- which(opts %in% "-ot")
+  valForNoData <- MaxVals[[switchDataTypes(opts[hasDashOT + 1], "writeRaster")]]
+  hasMM <- terra::hasMinMax(fromRas)
+  if (!isTRUE(all(hasMM)))
+    fromRas <- terra::setMinMax(fromRas)
+  minmaxRas <- terra::minmax(fromRas)
+  if (any(minmaxRas[2, ] >= valForNoData)) {
+    valForNoData <- MinVals[[switchDataTypes(opts[hasDashOT + 1], "writeRaster")]]
+    if (any(minmaxRas[1, ] <= valForNoData))
+      valForNoData <- NA
+  }
+  valForNoData <- as.character(valForNoData)
+  valForNoData
+  hasDstNoData <- which(opts %in% "-dstnodata")
+  va <- try(valForNoData)
+  if (length(va) == 0) browser()
+  if (is(va, "try-error")) browser()
+
+  opts[hasDstNoData + 1] <- va
+  opts
+}

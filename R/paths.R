@@ -1,9 +1,9 @@
 #' Normalize file paths
 #'
 #' Checks the specified path for formatting consistencies:
-#'  1) use slash instead of backslash;
-#'  2) do tilde etc. expansion;
-#'  3) remove trailing slash.
+#' 1. use slash instead of backslash;
+#' 2. do tilde etc. expansion;
+#' 3. remove trailing slash.
 #'
 #' Additionally, `normPath()` attempts to create a absolute paths,
 #' whereas `normPathRel()` maintains relative paths.
@@ -45,8 +45,15 @@ setMethod(
         nas <- is.na(path)
         if (!all(nas)) {
           if (any(!nas)) {
+            # fs has different behaviour than `normalizePath`. Need to replace all the differences:
+            # Below are "differences"... i.e., I am not writing what normalizePath does, as it is not this:
+            # 1. fs::path_norm doesn't expand
+            # 2. fs::path_expand: doesn't expand R_USER env var --> must use fs::path_expand_r
+            # 3. fs::??? Long windows paths that are shortened to 8 characters (e.g., on GitHub Actions),
+            #    normalizePaths does this, can't find equivalent in fs
             path[!nas] <-
               normalizePath(path[!nas], winslash = "/", mustWork = FALSE)
+              # fs::path_expand_r(fs::path_abs(path[!nas])) # faster than normalizePath on some machines
           }
           if (any(nas)) {
             path[nas] <- NA_character_
@@ -210,7 +217,7 @@ setMethod(
           }
         }
       }
-      if (SysInfo[["sysname"]] == "Darwin") path <- normPath(path) # ensure path re-normalized after creation
+      if (.pkgEnv$SysInfo[["sysname"]] == "Darwin") path <- normPath(path) # ensure path re-normalized after creation
 
       return(path)
     }
@@ -256,14 +263,20 @@ isAbsolutePath <- function(pathnames) {
 makeAbsolute <- function(files, absoluteBase) {
   nas <- is.na(files)
   if (!all(nas)) {
+    needNormPath <- rep(TRUE, length(files))
     if (length(files[!nas])) {
       areAbs <- isAbsolutePath(files[!nas])
       if (any(!areAbs)) {
         files[!nas][!areAbs] <- fs::path_abs(files[!nas][!areAbs], absoluteBase)
+        needNormPath[!nas][!areAbs] <- FALSE
       }
     }
-    normPath(files)
+    if (any(needNormPath))
+      files[needNormPath] <- normPath(files[needNormPath])
+  } else {
+    files
   }
+  files
 }
 
 #' Relative paths
@@ -347,6 +360,7 @@ getRelative <- Vectorize(getRelative, USE.NAMES = FALSE)
 #' @export
 #' @rdname relativePaths
 makeRelative <- function(files, absoluteBase) {
+  # NOT VECTORIZED on absoluteBase
   isList <- is(files, "list")
   filesOrig <- files
   if (isList) {
@@ -357,7 +371,11 @@ makeRelative <- function(files, absoluteBase) {
     areAbs <- isAbsolutePath(files)
     if (any(areAbs)) {
       absoluteBase <- normPath(absoluteBase) # can be "." which means 'any character' in a grep
-      files[areAbs] <- gsub(paste0(absoluteBase, "/*"), "", files[areAbs])
+      if (length(absoluteBase) > 1) browser()
+      files[areAbs] <- gsub(paste0("^", absoluteBase, "/{0,1}"), "", files[areAbs])
+
+      # this does dumb things when it is not relative ... i.e., with prepend ../../../../../..
+      # files[areAbs] <- fs::path_rel(start = absoluteBase, files[areAbs])
     }
   }
   if (isList) {
@@ -465,5 +483,3 @@ tempfile2 <- function(sub = "",
                       ...) {
   normPath(file.path(tempdir2(sub = sub, tempdir = tempdir), basename(tempfile(...))))
 }
-
-SysInfo <- Sys.info() # do this on load; nothing can change, so repeated calls are a waste

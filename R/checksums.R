@@ -70,7 +70,7 @@ utils::globalVariables(c(
 #' Checksums(files = moduleName, modulePath, write = TRUE)
 #' }
 #'
-setGeneric("Checksums", function(path, write, quickCheck = FALSE,
+setGeneric("Checksums", function(path, write, quickCheck = getOption("reproducible.quickCheck", FALSE),
                                  checksumFile = identifyCHECKSUMStxtFile(path),
                                  files = NULL, verbose = getOption("reproducible.verbose", 1),
                                  ...) {
@@ -88,7 +88,9 @@ setMethod(
     path = "character", quickCheck = "ANY",
     write = "logical", files = "ANY"
   ),
-  definition = function(path, write, quickCheck, checksumFile, files, verbose = getOption("reproducible.verbose", 1), ...) {
+  definition = function(path, write, quickCheck = getOption("reproducible.quickCheck", FALSE),
+                        checksumFile,
+                        files, verbose = getOption("reproducible.verbose", 1), ...) {
     defaultHashAlgo <- "xxhash64"
     defaultWriteHashAlgo <- "xxhash64"
     dots <- list(...)
@@ -145,18 +147,38 @@ setMethod(
     }
 
     stStart <- Sys.time()
-    messagePrepInputs("Checking local files...", sep = "", verbose = verbose)
     filesToCheck <- if (length(txt$file) & length(files)) {
-      files[makeRelative(files, path) %in% txt$file]
+      inTxt <- makeRelative(files, path) %in% txt$file
+      if (isTRUE(any(inTxt)))
+        files <- files[inTxt]
+      else {
+        # might fail because it is listed in inputPaths; check there
+        possPath <- getOption("reproducible.inputPaths")
+        # can be length > 1
+        if (!is.null(possPath)) {
+          possPath <- normPath(possPath)
+          if (!identical(possPath, path)) {
+            for (pp in possPath) {
+              inTxt <- makeRelative(files, path) %in%
+                makeRelative(txt$file, pp)
+              if (isTRUE(any(inTxt))) {
+                files <- files[inTxt]
+                break
+              }
+            }
+          }
+        }
+      }
+      files
     } else {
       files
     }
 
-    if (length(filesToCheck) != length(files)) {
+    if (length(filesToCheck) != length(files[!endsWith(files, "similar")])) {
       # Could be a case of user passing file path that is not with subdirectories; offer help
       justByBasename <- basename(txt$file) %in% basename(files)
       if (sum(justByBasename) == length(files)) {
-        messagePrepInputs(
+        messagePreProcess(
           "Files found in CHECKSUMS.txt that match by basename; using these.\n",
           "  User should specify all files (e.g., targetFile, alsoExtract, archive)\n",
           "  with subfolders specified."
@@ -190,7 +212,7 @@ setMethod(
 
     if (is.null(txt$filesize)) {
       quickCheck <- FALSE
-      messagePrepInputs("  Not possible to use quickCheck;\n ",
+      messagePreProcess("Not possible to use quickCheck;\n ",
         "    CHECKSUMS.txt file does not have filesizes",
         sep = "", verbose = verbose
       )
@@ -198,9 +220,9 @@ setMethod(
     checksums <- rep(list(rep("", length(filesToCheck))), 2)
     dirs <- dir.exists(filesToCheck)
     filesToCheckWODirs <- filesToCheck[!dirs]
-    if (quickCheck | write) {
-      checksums[[2]][!dirs] <- do.call(.digest,
-        args = append(
+      if (quickCheck | write) {
+        checksums[[2]][!dirs] <- do.call(.digest,
+                                         args = append(
           list(file = filesToCheckWODirs, quickCheck = TRUE),
           dots
         )
@@ -221,7 +243,7 @@ setMethod(
     }
 
     verboseTmp <- difftime(Sys.time(), stStart) > 8
-      messagePrepInputs("Finished checking local files.", sep = "", verbose = verbose - 1 + verboseTmp)
+      messagePreProcess("Finished checking local files.", sep = "", verbose = verbose - 1 + verboseTmp)
 
     filesToCheckRel <- makeRelative(filesToCheck, path)
     out <- if (length(filesToCheck)) {
@@ -284,7 +306,8 @@ setMethod(
     path = "character", quickCheck = "ANY",
     write = "missing", files = "ANY"
   ),
-  definition = function(path, quickCheck, checksumFile, files, verbose, ...) {
+  definition = function(path, quickCheck = getOption("reproducible.quickCheck", FALSE), checksumFile,
+                        files, verbose, ...) {
     Checksums(path,
       write = FALSE, quickCheck = quickCheck, checksumFile = checksumFile,
       files = files, verbose = verbose, ...
@@ -313,6 +336,8 @@ writeChecksumsTable <- function(out, checksumFile, dots) {
 #' Internal function. Wrapper for [digest::digest()] using `xxhash64`.
 #'
 #' @param file  Character vector of file paths.
+#' @param quickCheck Logical indicating whether to use a fast file size check as a heuristic
+#'                   for determining changes to a file.
 #' @param ...   Additional arguments to `digest::digest`.
 #'
 #' @return A character vector of hashes.

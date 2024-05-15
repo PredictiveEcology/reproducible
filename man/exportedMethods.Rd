@@ -8,6 +8,7 @@
 \alias{.tagsByClass,ANY-method}
 \alias{.cacheMessage}
 \alias{.cacheMessage,ANY-method}
+\alias{.cacheMessageObjectToRetrieve}
 \alias{.addTagsToOutput}
 \alias{.addTagsToOutput,ANY-method}
 \alias{.preDigestByClass}
@@ -49,6 +50,14 @@
   functionName,
   fromMemoise = getOption("reproducible.useMemoise", TRUE),
   verbose = getOption("reproducible.verbose", 1)
+)
+
+.cacheMessageObjectToRetrieve(
+  functionName,
+  fullCacheTableForObj,
+  cachePath,
+  cacheId,
+  verbose
 )
 
 .addTagsToOutput(object, outputObjects, FUN, preDigestByClass)
@@ -114,6 +123,20 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
+\item{fullCacheTableForObj}{The data.table entry from the Cache database for only
+this \code{cacheId}, e.g., via \code{showCache()}.}
+
+\item{cachePath}{A repository used for storing cached objects.
+This is optional if \code{Cache} is used inside a SpaDES module.}
+
+\item{cacheId}{Character string. If passed, this will override the calculated hash
+of the inputs, and return the result from this cacheId in the \code{cachePath}.
+Setting this is equivalent to manually saving the output of this function, i.e.,
+the object will be on disk, and will be recovered in subsequent
+This may help in some particularly finicky situations
+where Cache is not correctly detecting unchanged inputs. This will guarantee
+the object will be identical each time; this may be useful in operational code.}
+
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}
 
@@ -122,9 +145,6 @@ return. This is only relevant for list, environment (or similar) objects}
 \item{preDigestByClass}{A list, usually from \code{.preDigestByClass}}
 
 \item{create}{Logical. If TRUE, then it will create the path for cache.}
-
-\item{cachePath}{A repository used for storing cached objects.
-This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{...}{Anything passed to methods.}
 
@@ -197,6 +217,8 @@ two parts: the tag type and tag value, for the specific class.
 \code{.cacheMessage} should make a call to \code{message} that gives information about
 the loaded cached object being returned.
 
+\code{.objecxtToRetrieveMessage} is the messaging for recovering an object from Cache.
+
 \code{.addTagsToOutput} should add one or more attributes to an object, named either
 \code{"tags"}, \code{"call"} or \code{"function"}. It may be wise to do a "deep" copy within this
 method, but it may not be necessary.
@@ -256,7 +278,7 @@ if (requireNamespace("terra", quietly = TRUE)) {
   r <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1:100)
 
   # write to disk manually -- will be in tempdir()
-  r <- terra::writeRaster(r, file = tempfile(fileext = ".tif"))
+  r <- terra::writeRaster(r, filename = tempfile(fileext = ".tif"))
 
   # copy it to the cache repository
   r <- .prepareOutput(r, tempdir())

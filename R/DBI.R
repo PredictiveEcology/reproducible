@@ -168,7 +168,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   #  So effectively, it is like 6x buffer to try to avoid false positives.
   whichOS <- which(tagKey == "object.size")
   if (length(whichOS)) {
-    objSize <- if (identical(tagValue[whichOS], "NA")) NA else as.numeric(tagValue[whichOS])
+    objSize <- if (identical(unname(tagValue[whichOS]), "NA")) NA else as.numeric(tagValue[whichOS])
     fsBig <- (objSize * 4) < fs
     if (isTRUE(fsBig)) {
       messageCache("Object with cacheId ", cacheId, " appears to have a much larger size ",
@@ -216,70 +216,85 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     cacheId <- unique(cacheId)
   }
 
-  isMemoised <- NA
-  if (isTRUE(getOption("reproducible.useMemoise"))) {
-    isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
-    if (isTRUE(isMemoised)) {
-      obj <- get(cacheId, envir = memoiseEnv(cachePath))
-      obj <- unmakeMemoisable(obj)
-    }
+  isMemoised <- isMemoised(cacheId, cachePath = cachePath)
+  # isMemoised <- NA
+  # if (isTRUE(getOption("reproducible.useMemoise"))) {
+  #   isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
+  if (isTRUE(isMemoised)) {
+    obj <- get(cacheId, envir = memoiseEnv(cachePath))
+    obj <- unmakeMemoisable(obj)
   }
+  # }
 
   if (!isTRUE(isMemoised)) {
-    f <- CacheStoredFile(cachePath, cacheId, format)
-    f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
+    # Put this in a loop -- try the format that the user requested, but switch back if can't do it
+    for (i in 1:2) {
+      f <- CacheStoredFile(cachePath, cacheId, format)
+      f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
 
-    # First test if it is correct format
-    if (!all(file.exists(f))) {
-      sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
-      if (!useDBI() || length(sameCacheID) > 1) {
-        sameCacheID <- onlyStorageFiles(sameCacheID)
-      }
+      # First test if it is correct format
+      if (!all(file.exists(f))) {
+        sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
+        if (!useDBI() || length(sameCacheID) > 1) {
+          sameCacheID <- onlyStorageFiles(sameCacheID)
+        }
 
-      if (length(sameCacheID)) {
-        messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
-          fileExt(f), ")",
-          verbose = verbose
-        )
-        obj <- loadFromCache(
-          cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
-          cacheId = cacheId,
-          format = fileExt(sameCacheID),
-          preDigest = preDigest,
-          verbose = verbose
-        )
-        obj <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
-        fs <- saveToCache(
-          obj = obj, cachePath = cachePath, drv = drv, conn = conn,
-          cacheId = cacheId
-        )
-        rmFromCache(
-          cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
-          format = fileExt(sameCacheID)
-        )
-        return(fs)
+        if (length(sameCacheID)) {
+          # if (!identical(whereInStack("sim"), .GlobalEnv)) {
+          #   browser()
+          #   format <- setdiff(c("rds", "qs"), format)
+          #   message("User tried to change options('reproducible.cacheSaveFormat') for an ",
+          #           "existing cache, while using a simList. ",
+          #           "This currently does not work. Keeping the ",
+          #           "option at: ", format)
+          #   next
+          # }
+
+          messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
+                       fileExt(f), ")",
+                       verbose = verbose
+          )
+          obj <- loadFromCache(
+            cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
+            cacheId = cacheId,
+            format = fileExt(sameCacheID),
+            preDigest = preDigest,
+            verbose = verbose
+          )
+
+          obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
+          fs <- saveToCache(
+            obj = obj2, cachePath = cachePath, drv = drv, conn = conn,
+            cacheId = cacheId
+          )
+          rmFromCache(
+            cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+            format = fileExt(sameCacheID)
+          )
+          return(obj)
+        }
       }
+      # Need exclusive lock
+      obj <- loadFile(f)
+      obj <- .unwrap(obj,
+                     cachePath = cachePath,
+                     cacheId = cacheId,
+                     drv = drv, conn = conn
+      )
+      break # if you got this far, then break out of the for i loop
     }
-    # Need exclusive lock
-    obj <- loadFile(f, # format = fileFormat,
-      fullCacheTableForObj = fullCacheTableForObj,
-      cachePath = cachePath
-    )
-    obj <- .unwrap(obj,
-      cachePath = cachePath,
-      cacheId = cacheId,
-      drv = drv, conn = conn
-    )
   }
 
   # Class-specific message
-  loadFromMgs <- .cacheMessage(obj, .functionName, fromMemoise = isMemoised, verbose = verbose)
+  useMemoise <- if (getOption("reproducible.useMemoise") %in% TRUE) TRUE else NA
+  fromMemoise <- isMemoised && useMemoise
+  loadFromMgs <- .cacheMessage(obj, .functionName, fromMemoise = fromMemoise, verbose = verbose)
 
   # # This allows for any class specific things
-  obj <-
-    do.call(.prepareOutput, args = append(list(obj, cachePath), .dotsFromCache))
+  obj <- do.call(.prepareOutput, args = append(list(obj, cachePath), .dotsFromCache))
 
-  if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
+  if (isTRUE(useMemoise) && !isTRUE(isMemoised)) {
+  # if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
     obj2 <- makeMemoisable(obj)
     assign(cacheId, obj2, envir = memoiseEnv(cachePath))
   }
@@ -299,10 +314,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     }
   }
 
-
   obj
 }
-
 
 extractFromCache <- function(sc, elem, ifNot = NULL) {
   rowNum <- sc[["tagKey"]] %in% elem
@@ -313,7 +326,6 @@ extractFromCache <- function(sc, elem, ifNot = NULL) {
   }
   elemExtracted
 }
-
 
 #' Low level tools to work with Cache
 #'
@@ -815,17 +827,17 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
   return(invisible())
 }
 
-loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL,
-                     cachePath = getOption("reproducible.cachePath")) {
+loadFile <- function(file, format = NULL) {
   if (is.null(format)) {
     format <- fileExt(file)
   }
+  isQs <- format %in% "qs"
 
-  if (format %in% "qs") {
+  if (any(isQs)) {
     .requireNamespace("qs", stopOnFALSE = TRUE)
-    obj <- qs::qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
+    obj <- qs::qread(file = file[isQs], nthreads = getOption("reproducible.nThreads", 1))
   } else {
-    obj <- readRDS(file = file)
+    obj <- readRDS(file = file[!isQs])
   }
 
   obj
@@ -848,7 +860,8 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
     .requireNamespace("qs", stopOnFALSE = TRUE)
     for (attempt in 1:2) {
       fs <- qs::qsave(obj,
-        file = fts, nthreads = getOption("reproducible.nThreads", 1),
+        file = fts,
+        nthreads = getOption("reproducible.nThreads", 1),
         preset = getOption("reproducible.qsavePreset", "high")
       )
       fs1 <- file.size(fts)
@@ -912,7 +925,6 @@ formatCheck <- function(cachePath, cacheId, format) {
   }
   format
 }
-
 
 getDrv <- function(drv = NULL) {
   if (useDBI()) {
@@ -1005,3 +1017,11 @@ memoiseEnv <- function(cachePath, envir = .GlobalEnv) {
 
 
 otherFunctions <- "otherFunctions"
+
+isMemoised <- function(cacheId, cachePath = getOption("reproducible.cachePath")) {
+  isMemoised <- NA
+  if (isTRUE(getOption("reproducible.useMemoise"))) {
+    isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
+  }
+  isMemoised
+}

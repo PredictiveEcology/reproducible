@@ -1,3 +1,32 @@
+# reproducible (development version)
+
+## New
+* new family of functions that are called inside `postProcessTo` that use `sf::gdal_utils` directly. These are still experimental and will only be activated with `options("reproducible.gdalwarp" = TRUE)`
+* default for `gdalMask` has changed default for "touches". Now has equivalent for `terra::mask(..., touches = TRUE)`, using `"-wo CUTLINE_ALL_TOUCHED=TRUE"`
+* `gdalProject` now uses 2 threads, setting `"-wo NUM_THREADS=2"`; can be changed by user with `options("reproducible.gdalwarpThreads" = X)`; see `?reproducibleOptions`
+* `gdal*` functions now address `datatype` issues
+* `gdal*` defaults to `FLT8S` if `datatype` not passed
+* `makeRelative`, `makeAbsolute` and similar have been created to ease many issues encountered in `preProcess`
+
+## Changes
+* `showSimilar` (e.g., `options(reproducible.showSimilar = 1)`) now preferentially shows the most recent item in cache if there are several with equivalent matching.
+* overhaul of messaging in `Cache` and `prepInputs` families; functions are highlighted with a different colour; indent level reflects nesting of both `Cache` and `prepInputs`, so it is easier to identify which message goes with which function call.
+* `preProcess` is a lot faster now for large numbers of files; uses `CHECKSUMS` more effectively and fewer times
+* `retry` now captures its `expr` so it doesn't need a `quote`; is like `try` now.
+* `showSimilar` mechanisms now returns the most recent, if there are >1 similar that are equivalently similar
+* if a user is having troubles with `googledrive` for e.g., large files on spotting connections, instructions for using `gdown` are provided
+* `showCache`, `clearCache` now have extra arguments `fun`, `cacheId`, and `...` now can take any arbitrary `tag = value` pair. The `cacheId` argument will be very fast if a user is not using `useDBI()` is `FALSE`.
+* `.wrap` and `.unwrap` can now deal with `SpatVectorCollection` (a `terra` class that does not have a `wrap`/`unwrap` method in `terra`)
+* ALTREP digesting when using `spooky` or `fastdigest` were not stable for `integers` and `factors`. There is now a work around in `.robustDigest` that stabilizes these by expanding them from their ALTREP representation  first. Since they will be saved and recovered anyway, this will have little effect. 
+* `.wrap` and `.unwrap` are becoming more mature and can handle many more classes effectively. Methods can still be written, if needed.
+
+## Testing
+* lots of testing with `cacheSaveFormat = "qs"`, which previously was not reliable especially for environments. With all recent changes to `.wrap` and `.unwrap`, these appear stable now and should be able to be used for `environments`.
+
+## Bugfixes
+* `switchDataType` can now correctly switch between `gdal` formats and `terra`
+* many messaging fixes that were imprecise or missing
+
 # reproducible 2.0.12
 
 * re-submission after removal from CRAN
@@ -5,12 +34,12 @@
 # reproducible 2.0.11
 
 ## Remove dependency
-* fastdigest was removed from CRAN and so is removed from here.
+* `fastdigest` was removed from CRAN and so is removed from here.
 
 # reproducible 2.0.10
 
 ## Bug fixes
-* critical bugfixes for file-backed SpatRaster objects
+* critical bugfixes for file-backed `SpatRaster` objects
 
 # reproducible 2.0.9
 
@@ -29,7 +58,7 @@
 * `Cache` can now skip calculating `objSize`, which can take a non-trivial amount of time for large, complicated objects; see `reproducibleOptions()`
 
 ## Bug fixes
-* Filenames for some classes returned ""; now returns NULL so character vectors are only pointers to files
+* `Filenames` for some classes returned ""; now returns NULL so character vectors are only pointers to files
 * Cache on a terra object that writes file to disk, when `quick` argument is specified was failing, always creating the same object; fixed with #PR368
 * `useDBI` was incorrectly used if a user had set the option prior to package loading. Now works as expected.
 * several other minor
