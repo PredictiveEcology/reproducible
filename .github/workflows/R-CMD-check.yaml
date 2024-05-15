@@ -60,6 +60,7 @@ jobs:
             any::rcmdcheck
             any::Rcpp
             any::RCurl
+          pak-version: devel
 
       - uses: r-lib/actions/check-r-package@v2
         with:
