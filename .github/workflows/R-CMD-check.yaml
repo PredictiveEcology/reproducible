@@ -59,6 +59,7 @@ jobs:
           extra-packages: |
             any::rcmdcheck
             any::Rcpp
+            any::RCurl
 
       - uses: r-lib/actions/check-r-package@v2
         with:
