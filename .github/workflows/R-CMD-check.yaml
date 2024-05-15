@@ -59,6 +59,7 @@ jobs:
           extra-packages: |
             any::rcmdcheck
             any::Rcpp
+            traversc/qs
           pak-version: devel
 
       - uses: r-lib/actions/check-r-package@v2
