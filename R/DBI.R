@@ -860,7 +860,8 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
     .requireNamespace("qs", stopOnFALSE = TRUE)
     for (attempt in 1:2) {
       fs <- qs::qsave(obj,
-        file = fts, nthreads = getOption("reproducible.nThreads", 1),
+        file = fts,
+        nthreads = getOption("reproducible.nThreads", 1),
         preset = getOption("reproducible.qsavePreset", "high")
       )
       fs1 <- file.size(fts)
