@@ -132,44 +132,6 @@ relativeToWhat <- function(file, cachePath, ...) {
   out
 }
 
-#' @export
-#' @importFrom fs path_join path_norm
-remapFilenames <- function(obj, tags, cachePath, ...) {
-  tags <- parseTags(tags)
-  origFilename <- extractFromCache(tags, tagOrigFilename) # tv[tk == tagOrigFilename]
-  if (missing(obj)) {
-    origRelName <- extractFromCache(tags, tagOrigRelName) |> fs::path_norm()
-    relToWhere <- extractFromCache(tags, "relToWhere")
-
-    ## NOTE: extractFromCache() is looking for specific tags which may not exist if saved
-    ## using earlier versions of the package, and cannot be restored.
-    if (is.null(relToWhere) || length(relToWhere) == 0) {
-      stop("remapFileNames() cannot restore objects saved using a previous version of 'reproducible'.")
-    }
-
-    possRelPaths <- modifyListPaths(cachePath, ...)
-    if (relToWhere %in% names(possRelPaths)) {
-      absBase <- absoluteBase(relToWhere, cachePath, ...)
-    } else {
-      absBase <- possRelPaths[[1]]
-      isOutside <- grepl(grepStartsTwoDots, origRelName)
-      if (any(isOutside)) {
-        ## means the relative path is "outside" of something;
-        ## strip all ".." if relToWhere doesn't exist
-        while (any(grepl(grepStartsTwoDots, origRelName))) {
-          origRelName <- gsub(paste0(grepStartsTwoDots, "|(\\\\|/)"), "", origRelName)
-        }
-      }
-    }
-    newName <- fs::path_join(c(absBase, origRelName)) |> fs::path_norm()
-  } else {
-    newName <- obj
-  }
-
-  whFiles <- newName[match(basename(extractFromCache(tags, tagFilesToLoad)), origFilename)]
-  list(newName = newName, whFiles = whFiles, tagsParsed = tags)
-}
-
 ## non-exported wrap functions --------------------------------------------------
 
 wrapSpatRaster <- function(obj, cachePath, ...) {
@@ -181,8 +143,9 @@ wrapSpatRaster <- function(obj, cachePath, ...) {
   nlyrsInFile <- as.integer(terra::nlyr(terra::rast(fns)))
   layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
 
-  # A file-backed rast can 1) not be using all the layers in the file and
-  # 2) have layer names renamed
+  ## A file-backed raster can:
+  ## 1) not be using all the layers in the file; and
+  ## 2) have layer names renamed.
   whLayers <- seq_along(names(obj))
   if (!identical(nlyrsInFile, length(names(obj)))) {
     rr <- terra::rast(fns);
@@ -344,6 +307,8 @@ grepStartsTwoDots <- "^\\.\\."
 
 ## exported generics and functions ----------------------------------------------
 
+### .tagsByClass ----------------------------------------------------------------
+
 #' Exported generics and methods
 #'
 #' There are a number of generics that are exported for other packages to use.
@@ -384,7 +349,8 @@ setMethod(
   }
 )
 
-################################################################################
+### .cacheMessage ---------------------------------------------------------------
+
 #' @details
 #' `.cacheMessage` should make a call to `message` that gives information about
 #' the loaded cached object being returned.
@@ -433,14 +399,17 @@ setMethod(
   }
 )
 
-#' @export
+### .cacheMessageObjectToRetrieve -------------------------------------------------------------
+
 #' @param fullCacheTableForObj The data.table entry from the Cache database for only
 #' this `cacheId`, e.g., via `showCache()`.
 #' @inheritParams Cache
 #' @inheritParams .unwrap
+#'
 #' @details
 #' `.objecxtToRetrieveMessage` is the messaging for recovering an object from Cache.
 #'
+#' @export
 #' @rdname exportedMethods
 .cacheMessageObjectToRetrieve <- function(functionName, fullCacheTableForObj, cachePath, cacheId, verbose) {
   objSize <- as.numeric(tail(extractFromCache(fullCacheTableForObj, elem = "file.size"), 1))
@@ -460,7 +429,6 @@ setMethod(
   )
 }
 
-################################################################################
 #' @details
 #' `.addTagsToOutput` should add one or more attributes to an object, named either
 #' `"tags"`, `"call"` or `"function"`. It may be wise to do a "deep" copy within this
@@ -494,7 +462,9 @@ setMethod(
   }
 )
 
-################################################################################
+
+### .preDigestByClass ---------------------------------------------------------------------------
+
 #' `preDigestByClass`: A function called to do any miscellaneous things to
 #' do before `.robustDigest` and after `FUN` call
 #'
@@ -526,7 +496,8 @@ setMethod(
   }
 )
 
-################################################################################
+### .checkCacheRepo ---------------------------------------------------------------------------
+
 #' `.checkCacheRepo`: normally, `checkPath` can be called directly, and if more
 #' friendly, but that does not have class-specific methods.
 #'
@@ -577,7 +548,8 @@ setMethod(
   }
 )
 
-################################################################################
+### .prepareOutput ----------------------------------------------------------------------------
+
 #'  @details
 #'  `.prepareOutput` allows a package developer to do whatever is needed to prepare
 #'  the output on recovery from the cache repository. In other words,
@@ -631,7 +603,8 @@ setMethod(
   }
 )
 
-################################################################################
+### .addChangedAttr ---------------------------------------------------------------------------
+
 #' @details
 #' `.addChangedAttr` should return the same object, with this a very specific
 #' attribute added: it must be named ".Cache", and have a sub-list element named
@@ -670,6 +643,45 @@ setMethod(
     object
   }
 )
+
+#' @export
+#' @importFrom fs path_join path_norm
+remapFilenames <- function(obj, tags, cachePath, ...) {
+  tags <- parseTags(tags)
+  origFilename <- extractFromCache(tags, tagOrigFilename) # tv[tk == tagOrigFilename]
+
+  if (missing(obj)) {
+    origRelName <- extractFromCache(tags, tagOrigRelName) |> fs::path_norm()
+    relToWhere <- extractFromCache(tags, "relToWhere")
+
+    ## NOTE: extractFromCache() is looking for specific tags which may not exist if saved
+    ## using earlier versions of the package, and cannot be restored.
+    if (is.null(relToWhere) || length(relToWhere) == 0) {
+      stop("remapFileNames() cannot restore objects saved using a previous version of 'reproducible'.")
+    }
+
+    possRelPaths <- modifyListPaths(cachePath, ...)
+    if (relToWhere %in% names(possRelPaths)) {
+      absBase <- absoluteBase(relToWhere, cachePath, ...)
+    } else {
+      absBase <- possRelPaths[[1]]
+      isOutside <- grepl(grepStartsTwoDots, origRelName)
+      if (any(isOutside)) {
+        ## means the relative path is "outside" of something;
+        ## strip all ".." if relToWhere doesn't exist
+        while (any(grepl(grepStartsTwoDots, origRelName))) {
+          origRelName <- gsub(paste0(grepStartsTwoDots, "|(\\\\|/)"), "", origRelName)
+        }
+      }
+    }
+    newName <- fs::path_join(c(absBase, origRelName)) |> fs::path_norm()
+  } else {
+    newName <- obj
+  }
+
+  whFiles <- newName[match(basename(extractFromCache(tags, tagFilesToLoad)), origFilename)]
+  list(newName = newName, whFiles = whFiles, tagsParsed = tags)
+}
 
 #' @details
 #' `updateFilenameSlots`: this exists because when copying file-backed rasters, the
@@ -857,12 +869,11 @@ unmakeMemoisable.default <- function(x) {
 #' @param ... Arguments passed to methods; default does not use anything in `...`.
 #' @inheritParams Cache
 #' @inheritParams loadFromCache
-#' @rdname dotWrap
-#' @return
-#' Returns an object that can be saved to disk e.g., via `saveRDS`.
+#'
+#' @return Returns an object that can be saved to disk e.g., via `saveRDS`.
 #'
 #' @export
-#'
+#' @rdname dotWrap
 .wrap <- function(obj, cachePath, preDigest,  drv = getDrv(getOption("reproducible.drv", NULL)),
                   conn = getOption("reproducible.conn", NULL),
                   verbose = getOption("reproducible.verbose"), outputObjects  = NULL, ...) {
