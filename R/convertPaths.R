@@ -124,11 +124,10 @@ setMethod(
     } else {
       fns <- NULL
     }
-    # DON"T BE TEMPTED TO RM NZ i.e., MEMORY LAYERS -- NEED TO KNOW THAT THERE WERE SOME
+    ## DON"T BE TEMPTED TO RM NZ i.e., MEMORY LAYERS -- NEED TO KNOW THAT THERE WERE SOME
     normPath(fns)
   }
 )
-
 
 #' @export
 #' @rdname Filenames
