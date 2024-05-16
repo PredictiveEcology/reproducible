@@ -422,10 +422,6 @@ isFile <- function(pathnames) {
   iF
 }
 
-# This is so that we don't need to import from backports
-isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
-
-
 methodFormals <- function(fun, signature = character(), envir = parent.frame()) {
   if (is.character(fun)) {
     fun <- get(fun, mode = "function", envir = envir)
