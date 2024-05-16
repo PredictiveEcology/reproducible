@@ -684,7 +684,9 @@ remapFilenames <- function(obj, tags, cachePath, ...) {
         }
       }
     }
-    newName <- fs::path_join(c(absBase, origRelName)) |> fs::path_norm()
+    newName <- vapply(origRelName, function(x) {
+      fs::path_join(c(absBase, x)) |> fs::path_norm()
+    }, character(1))
   } else {
     newName <- obj
   }
