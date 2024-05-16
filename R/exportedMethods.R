@@ -132,11 +132,13 @@ relativeToWhat <- function(file, cachePath, ...) {
   out
 }
 
+#' @export
+#' @importFrom fs path_join path_norm
 remapFilenames <- function(obj, tags, cachePath, ...) {
   tags <- parseTags(tags)
   origFilename <- extractFromCache(tags, tagOrigFilename) # tv[tk == tagOrigFilename]
   if (missing(obj)) {
-    origRelName <- extractFromCache(tags, tagOrigRelName)
+    origRelName <- extractFromCache(tags, tagOrigRelName) |> fs::path_norm()
     relToWhere <- extractFromCache(tags, "relToWhere")
 
     ## NOTE: extractFromCache() is looking for specific tags which may not exist if saved
@@ -152,13 +154,14 @@ remapFilenames <- function(obj, tags, cachePath, ...) {
       absBase <- possRelPaths[[1]]
       isOutside <- grepl(grepStartsTwoDots, origRelName)
       if (any(isOutside)) {
-        # means the relative path is "outside" of something ... strip all ".." if relToWhere doesn't exist
+        ## means the relative path is "outside" of something;
+        ## strip all ".." if relToWhere doesn't exist
         while (any(grepl(grepStartsTwoDots, origRelName))) {
           origRelName <- gsub(paste0(grepStartsTwoDots, "|(\\\\|/)"), "", origRelName)
         }
       }
     }
-    newName <- file.path(absBase, origRelName)
+    newName <- fs::path_join(c(absBase, origRelName)) |> fs::path_norm()
   } else {
     newName <- obj
   }
