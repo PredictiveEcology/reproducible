@@ -566,7 +566,7 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 #' - `CacheDBFiles()` (i.e,. plural) returns the name of all the database files for
 #' a given Cache when `useDBI() == TRUE`, or `NULL` if `FALSE`;
 #' - `CacheStoredFile()` returns the file path to the file with the specified hash value,
-#' This can be loaded to memory with e.g., `loadFile()`.;
+#' This can be loaded to memory with e.g., [loadFile()].;
 #'
 #' @export
 #' @rdname CacheHelpers
@@ -859,6 +859,17 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
   return(invisible())
 }
 
+
+#' Load a file from the cache
+#'
+#' @param file character specifying the path to the file
+#'
+#' @param format (optional) character string specifying file extension "qs" or "rds" of `file`;
+#'        if not specified (i.e., NULL), will be deduced from the file extension of `file`.
+#'
+#' @return the object loaded from `file`
+#'
+#' @export
 loadFile <- function(file, format = NULL) {
   if (is.null(format)) {
     format <- fileExt(file)

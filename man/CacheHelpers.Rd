@@ -138,7 +138,7 @@ when \code{useDBI() == FALSE}, or \code{NULL} if \code{TRUE};
 \item \code{CacheDBFiles()} (i.e,. plural) returns the name of all the database files for
 a given Cache when \code{useDBI() == TRUE}, or \code{NULL} if \code{FALSE};
 \item \code{CacheStoredFile()} returns the file path to the file with the specified hash value,
-This can be loaded to memory with e.g., \code{loadFile()}.;
+This can be loaded to memory with e.g., \code{\link[=loadFile]{loadFile()}}.;
 }
 
 \itemize{
