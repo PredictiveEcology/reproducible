@@ -17,5 +17,5 @@ remapFilenames(obj, tags, cachePath, ...)
 }
 \description{
 Update file path metadata for file-backed objects (e.g., \code{SpatRasters}).
-Useful when moving saved objects between porjects or machines.
+Useful when moving saved objects between projects or machines.
 }
