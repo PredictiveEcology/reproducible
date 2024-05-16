@@ -385,12 +385,13 @@ isMac <- function() {
   !need
 }
 
-# This is directly from tools::file_ext_sans_ext
+## TODO: why not use the original funs below? why copy them?
+## This is directly from tools::file_path_sans_ext
 filePathSansExt <- function(x) {
   sub("([^.]+)\\.[[:alnum:]]+$", "\\1", x)
 }
 
-# This is directly from tools::file_ext
+## This is directly from tools::file_ext
 fileExt <- function(x) {
   pos <- regexpr("\\.([[:alnum:]]+)$", x)
   ifelse(pos > -1L, substring(x, pos + 1L), "")
