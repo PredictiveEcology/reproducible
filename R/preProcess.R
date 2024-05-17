@@ -1218,15 +1218,17 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
   fromCollapsed <- paste(from, collapse = "\n")
   result <- TRUE
 
-  if (!all(to %in% from)) { # if the filename is the same, you can't copy from self to self
+  ## if the filename is the same, you can't copy from self to self
+  if (!all(normPath(to) %in% normPath(from))) {
     if (any(existsLogical)) {
       toDirs1 <- unique(dirname(to))
       dirDoesntExist1 <- !dir.exists(toDirs1)
 
-      # some directories in from won't look like directories in the prev "to"
-      #  e.g., test\folder1\folder2 --> folder 2 could be a file or a dir, and "dir.exists(to)" won't know which
-      #  because test\folder1 didn't exist
-      # So, identify the dirs in the `from`, and those ones will also be dirs in to
+      ## some directories in `from` won't look like directories in the prev `to`
+      ##  e.g., test/folder1/folder2
+      ##     folder2 could be a file or a dir, and "dir.exists(to)" won't know which
+      ##     because test/folder1 didn't exist
+      ## So, identify the dirs in the `from`, and those ones will also be dirs in `to`
       fromDirs <- dir.exists(from)
       toDirs2 <- to[fromDirs]
       dirDoesntExist2 <- rep(TRUE, length(toDirs2))
