@@ -405,7 +405,7 @@ Cache <-
     preCacheDigestTime <- Sys.time()
     fnDetails <- .fnCleanup(
       FUN = FUN, callingFun = "Cache", ..., .functionName = .functionName,
-      FUNcaptured = FUNcaptured, CacheMatchedCall = CacheMatchedCall
+      FUNcaptured = FUNcaptured, CacheMatchedCall = CacheMatchedCall, omitArgs = omitArgs
     )
     # next line is (1 && 1) && 1 -- if it has :: or $ or [] e.g., fun$b, it MUST be length 3 for it to not be "captured function"
     isCapturedFUN <- isFALSE(isDollarSqBrPkgColon(FUNcaptured) &&
@@ -1429,7 +1429,8 @@ getFunctionName2 <- function(mc) {
 
 #' @importFrom utils modifyList isS3stdGeneric methods
 .fnCleanup <- function(FUN, ..., callingFun, FUNcaptured = NULL, CacheMatchedCall,
-                       .functionName = NULL, callingEnv = parent.frame(2)) {
+                       .functionName = NULL, callingEnv = parent.frame(2), .fnCleanup,
+                       omitArgs = "") {
   if (is.null(FUNcaptured)) {
     FUNcaptured <- substitute(FUN)
   }
@@ -1521,10 +1522,24 @@ getFunctionName2 <- function(mc) {
     if (length(FUNcaptured) > 1) {
       # The next line works for any object that is NOT in a ..., because the
       #   object never shows up in the environment; it is passed through
-      FUNcapturedArgs <- lapply(as.list(FUNcaptured[-1]), function(ee) {
-        out <- try(eval(ee, envir = callingEnv), silent = TRUE)
-        if (is(out, "try-error")) {
-          if (identical(as.name("..."), ee)) {
+      # mced <- names(CacheMatchedCall)
+      # if (exists("aaaa")) browser()
+
+      # if (!is.null(unlist(argsToKeep))) {
+      FUNcapturedList <- as.list(FUNcaptured[-1])
+      nams <- names(FUNcapturedList)
+      if (is.null(nams))
+        nams <- sapply(seq_along(FUNcapturedList), function(x) paste0(sample(LETTERS, 14), collapse = ""))
+      FUNcapturedArgs <- Map(
+        ee = FUNcapturedList, nam = nams, function(ee, nam) {
+          # if (is.call(ee) && length(ee) > 1 && !isDollarSqBrPkgColon(ee)) browser()
+          if (nam %in% omitArgs) {
+            out <- NULL
+          } else {
+
+            out <- try(eval(ee, envir = callingEnv), silent = TRUE)
+            if (is(out, "try-error")) {
+              if (identical(as.name("..."), ee)) {
             out <- "..."
           } else {
             env2 <- try(if (isDollarSqBrPkgColon(ee)) {
@@ -1541,14 +1556,17 @@ getFunctionName2 <- function(mc) {
               if (is(out, "try-error")) {
                 out <- as.character(parse(text = ee))
               }
+                }
+              }
             }
           }
-        }
-        out
-      }) # may be slow as it is evaluating the args
+
+          out
+        }) # may be slow as it is evaluating the args
       if (needRmList) { # it has one too many list elements # not sure about the length(out) == 1
         FUNcapturedArgs <- FUNcapturedArgs[[1]]
       }
+      # }
 
       FUNcapturedNamesEvaled <- as.call(append(list(FUNcaptured[[1]]), FUNcapturedArgs))
       FUNcapturedNamesEvaled <- matchCall(FUNcapturedNamesEvaled, callingEnv, fnName = fnNameInit)
