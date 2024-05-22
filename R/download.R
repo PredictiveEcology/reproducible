@@ -606,7 +606,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         }
         args <- args[!names(args) %in% forms]
         if (noTargetFile) {
-          fileInfo <- file.info(dir(destinationPath))
+          fileInfo <- file.info(dir(destinationPath, full.names = TRUE))
         }
 
         if (is.call(dlFun)) {
@@ -614,7 +614,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           for (i in seq_along(sfs)) {
             env1 <- new.env(parent = sys.frame(-i))
             list2env(args, env1)
-            out <- try(eval(dlFun, envir = env1), silent = TRUE)
+            out <- try(eval(dlFun, envir = env1))
             if (is.function(out)) { # in the previous "call", it may have just returned an unevaluated function
               dlFun <- out
             }
@@ -630,8 +630,9 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
         needSave <- !is.null(out) # TRUE
         if (noTargetFile) {
-          fileInfoAfter <- file.info(dir(destinationPath))
+          fileInfoAfter <- file.info(dir(destinationPath, full.names = TRUE))
           possibleTargetFile <- setdiff(rownames(fileInfoAfter), rownames(fileInfo))
+
           possibleTargetFile <- makeAbsolute(possibleTargetFile, destinationPath)
 
           if (length(possibleTargetFile)) {
@@ -688,10 +689,9 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
       # Don't use .tempPath directly because of non-google approaches too
       if (!(identical(
-        dirname(normPath(downloadResults$destFile)),
+        unique(dirname(normPath(downloadResults$destFile))),
         normPath(as.character(destinationPath))
-      )) ||
-        testFTD) {
+      )) || testFTD) {
         # basename2 is OK because the destFile will be flat; it is just archive extraction that needs to allow nesting
         desiredPath <- makeAbsolute(basename2(downloadResults$destFile), destinationPath)
         desiredPathExists <- file.exists(desiredPath)
