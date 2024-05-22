@@ -1536,6 +1536,8 @@ test_that("test cache with new approach to match.call", {
     a <- list()
 
     p1 <- sf::st_as_sfc("POLYGON((0 0, 0 10, 10 0, 10 10, 0 0))")
+    aaaa <<- 1
+    on.exit(rm(aaaa, envir = .GlobalEnv))
     a[[1]] <- Cache(sf::st_make_valid(p1)) # not
     a[[2]] <- Cache(sf::st_make_valid, p1) # not
     a[[3]] <- Cache(quote(sf::st_make_valid(p1))) # not

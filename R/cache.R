@@ -1132,10 +1132,17 @@ findFun <- function(FUNcaptured, envir) {
 isDollarSqBrPkgColon <- function(args) {
   ret <- FALSE
   if (length(args) == 3) { # i.e., only possible if it is just b$fun or stats::runif, not stats::runif(1) or b$fun(1)
-    ret <- isTRUE(any(try(grepl("^\\$|\\[|\\:\\:", args)[1], silent = TRUE)))
+    ret <- isDollarOnlySqBr(args) | isPkgColon(args)
+    # ret <- isTRUE(any(try(grepl("^\\$|\\[|\\:\\:", args)[1], silent = TRUE)))
   }
   ret
 }
+
+isPkgColon <- function(args)
+  isTRUE(any(try(grepl("\\:\\:", args)[1], silent = TRUE)))
+
+isDollarOnlySqBr <- function(args)
+  isTRUE(any(try(grepl("^\\$|\\[", args)[1], silent = TRUE)))
 
 recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, recursive = TRUE) {
   needsEvaling <- (length(args) > 1) || (length(args) == 1 && is.call(args)) # second case is fun() i.e., no args
@@ -1457,7 +1464,13 @@ getFunctionName2 <- function(mc) {
   # Backward compatibility; has no effect now
   userTagsOtherFunctions <- NULL
 
-  if (isDollarSqBrPkgColon(FUNcaptured)) { # this is TRUE ONLY if it is *just* b$fun or stats::runif, i.e., not b$fun(1)
+  if (isPkgColon(FUNcaptured)) { # this is TRUE ONLY if it is *just* b$fun or stats::runif, i.e., not b$fun(1)
+    if (exists("aaaa")) browser()
+    FUNcaptured[[1]] <- eval(FUNcaptured[[1]], envir = callingEnv)
+  }
+
+  if (isDollarOnlySqBr(FUNcaptured)) {
+    if (exists("aaaa")) browser()
     FUNcaptured <- eval(FUNcaptured, envir = callingEnv)
   }
 
@@ -1540,22 +1553,22 @@ getFunctionName2 <- function(mc) {
             out <- try(eval(ee, envir = callingEnv), silent = TRUE)
             if (is(out, "try-error")) {
               if (identical(as.name("..."), ee)) {
-            out <- "..."
-          } else {
-            env2 <- try(if (isDollarSqBrPkgColon(ee)) {
-              whereInStack(ee[[2]])
-            } else {
-              whereInStack(ee)
-            }, silent = TRUE)
-            if (is(env2, "try-error")) {
-              out <- try(paste(format(ee$destinationPath), collapse = " "), silent = TRUE)
-              if (is(out, "try-error"))
-                stop(env2)
-            } else {
-              out <- try(eval(ee, envir = env2), silent = TRUE)
-              if (is(out, "try-error")) {
-                out <- as.character(parse(text = ee))
-              }
+                out <- "..."
+              } else {
+                env2 <- try(if (isDollarSqBrPkgColon(ee)) {
+                  whereInStack(ee[[2]])
+                } else {
+                  whereInStack(ee)
+                }, silent = TRUE)
+                if (is(env2, "try-error")) {
+                  out <- try(paste(format(ee$destinationPath), collapse = " "), silent = TRUE)
+                  if (is(out, "try-error"))
+                    stop(env2)
+                } else {
+                  out <- try(eval(ee, envir = env2), silent = TRUE)
+                  if (is(out, "try-error")) {
+                    out <- as.character(parse(text = ee))
+                  }
                 }
               }
             }
@@ -1570,8 +1583,8 @@ getFunctionName2 <- function(mc) {
 
       FUNcapturedNamesEvaled <- as.call(append(list(FUNcaptured[[1]]), FUNcapturedArgs))
       FUNcapturedNamesEvaled <- matchCall(FUNcapturedNamesEvaled, callingEnv, fnName = fnNameInit)
-    } else { # this is a function called with no arguments
-      FUNcapturedNamesEvaled <- FUNcaptured
+                             } else { # this is a function called with no arguments
+                               FUNcapturedNamesEvaled <- FUNcaptured
     }
   }
 
