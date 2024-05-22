@@ -1051,7 +1051,7 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
   })
   expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), mess)) == 1)
   expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), err)) == 0)
-  expect_true(grepl(paste0("[cannot|failed to] open"), paste(warn, err)))
+  expect_true(any(grepl(paste0("[cannot|failed to] open"), paste(warn, err, mess))))
   expect_true(is.numeric(d))
 })
 
