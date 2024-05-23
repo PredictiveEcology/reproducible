@@ -449,7 +449,7 @@ test_that("masking with larger extent obj", {
     a <- terra::ext(smallRT)
   }
   a <- terra::extend(a, -3e5) # make it small
-  test <- rasterRead(a, res = 250, vals = 2)
+  test <- rasterRead(a, resolution = 250, vals = 2)
   terra::crs(test) <- terra::crs(smallRT)
   b <- postProcess(x = test, rasterToMatch = smallRT, maskWithRTM = TRUE)
   expect_true(is(b, rasterType()))
