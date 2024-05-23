@@ -295,12 +295,12 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
 }
 
 expectedMessageRaw <- c(
-  "Running preP", "Preparing:", "File downloaded",
+  "Running `preP", "Preparing:", "File downloaded",
   "From:.*Shapefile", "Checking local", "Finished checking",
   "Downloading", "Skipping download", "Skipping extractFrom",
   "targetFile was not.*ry",
   "Writing checksums.*you can specify targetFile",
-  "No targetFile supplied. Extracting", "Appending checksums", "although coordinates are longitude"
+  "No targetFile supplied. Checksumming", "Appending checksums", "although coordinates are longitude"
 )
 expectedMessage <- paste0(collapse = "|", expectedMessageRaw)
 

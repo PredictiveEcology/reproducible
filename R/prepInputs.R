@@ -80,14 +80,14 @@ utils::globalVariables(c(
 #'  (e.g., raster::getData returns an object), `fun` must deal with an object.
 #'
 #'  `fun` can be supplied in three ways: a function, a character string
-#'   (i.e., a function name as a string), or a quoted expression.
+#'   (i.e., a function name as a string), or an expression.
 #'   If a character string or function, is should have the package name e.g.,
 #'   `"terra::rast"` or as an actual function, e.g., `base::readRDS`.
 #'   In these cases, it will evaluate this function call while passing `targetFile`
 #'   as the first argument. These will only work in the simplest of cases.
 #'
-#'   When more precision is required, the full call can be written, surrounded by
-#'   `quote`, and where the filename can be referred to as `targetFile` if the function
+#'   When more precision is required, the full call can be written and where the
+#'   filename can be referred to as `targetFile` if the function
 #'   is loading a file. If `preProcess` returns an object, `fun` should be set to
 #'   `fun = NA`.
 #'
@@ -163,8 +163,8 @@ utils::globalVariables(c(
 #'   function (e.g., sf::st_read), character string (e.g., "base::load"),
 #'   NA (for no loading, useful if `dlFun` already loaded the file) or
 #'   if extra arguments are required
-#'   in the function call, it must be a quoted call naming
-#'   `targetFile` (e.g., `quote(sf::st_read(targetFile, quiet = TRUE))`)
+#'   in the function call, it must be a call naming
+#'   `targetFile` (e.g., `sf::st_read(targetFile, quiet = TRUE)`)
 #'   as the file path to the file to load. See details and examples below.
 #'
 #' @param quick Logical. This is passed internally to [Checksums()]
@@ -323,16 +323,16 @@ utils::globalVariables(c(
 #' }
 #'
 #' ## Using quoted dlFun and fun -- this is not intended to be run but used as a template
-#' ## prepInputs(..., fun = quote(customFun(x = targetFile)), customFun = customFun)
+#' ## prepInputs(..., fun = customFun(x = targetFile), customFun = customFun)
 #' ##   # or more complex
 #' ##  test5 <- prepInputs(
 #' ##   targetFile = targetFileLuxRDS,
-#' ##   dlFun = quote({
+#' ##   dlFun =
 #' ##     getDataFn(name = "GADM", country = "LUX", level = 0) # preProcess keeps file from this!
-#' ##   }),
-#' ##   fun = quote({
+#' ##   ,
+#' ##   fun = {
 #' ##     out <- readRDS(targetFile)
-#' ##     sf::st_as_sf(out)})
+#' ##     sf::st_as_sf(out)}
 #' ##  )
 prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = getOption("reproducible.destinationPath", "."),
@@ -859,7 +859,8 @@ extractFromArchive <- function(archive,
     }
 
     if (!worked) {
-      rm(listOfFilesExtracted)
+      if (exists("listOfFilesExtracted", inherits = FALSE))
+        rm(listOfFilesExtracted)
 
       opt <- options("warn")$warn
       on.exit(options(warn = opt), add = TRUE)

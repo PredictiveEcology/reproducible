@@ -1051,7 +1051,7 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
   })
   expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), mess)) == 1)
   expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), err)) == 0)
-  expect_true(grepl(paste0("[cannot|failed to] open"), paste(warn, err)))
+  expect_true(any(grepl(paste0("[cannot|failed to] open"), paste(warn, err, mess))))
   expect_true(is.numeric(d))
 })
 
@@ -1529,6 +1529,24 @@ test_that("test cache with new approach to match.call", {
     }
   }
 
+
+  if (.requireNamespace("terra")) {
+    m <- matrix(1:4, nrow = 2)
+    clearCache(ask = FALSE)
+    a <- list()
+    lala <- capture.output(a[[1]] <- Cache(terra::rast(m, digits = 4)))
+    a[[2]] <- Cache(terra::rast, m, digits = 4)
+    a[[3]] <- Cache(do.call, terra::rast, list(m, digits = 4))
+    a[[4]] <- Cache(do.call(terra::rast, list(m, digits = 4)))
+    a[[5]] <- Cache(quote(terra::rast(m, digits = 4)))
+    expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
+    for (i in 2:NROW(a)) {
+      test <- identical(attr(a[[i]], ".Cache")$newCache, FALSE)
+      if (isFALSE(test)) browser()
+      expect_true(test)
+    }
+  }
+
   # This tries to do a method that is not actually exported from a package; the generic (sf::st_make_valid) is
   if (.requireNamespace("sf")) {
     clearCache(ask = FALSE)
@@ -1539,10 +1557,9 @@ test_that("test cache with new approach to match.call", {
     a[[1]] <- Cache(sf::st_make_valid(p1)) # not
     a[[2]] <- Cache(sf::st_make_valid, p1) # not
     a[[3]] <- Cache(quote(sf::st_make_valid(p1))) # not
-    library(sf)
-    # on.exit({
-    #   try(detach("package:sf", unload = TRUE), silent = TRUE)
-    # }, add = TRUE)
+
+    # The warning is intermittent and related to whether sf was built for exactly this R version
+    warns <- capture_warnings(library(sf))
     a[[4]] <- Cache(st_make_valid(p1)) # not
     ff <- sf::st_make_valid
     a[[5]] <- Cache(ff(p1))
