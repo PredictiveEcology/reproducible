@@ -1529,6 +1529,25 @@ test_that("test cache with new approach to match.call", {
     }
   }
 
+
+  fun <- stats::rnorm
+  clearCache(ask = FALSE)
+  a <- list()
+  lala <- capture.output(a[[1]] <- Cache(fun(1, 2)))
+  a[[2]] <- Cache(fun, 1, 2)
+  a[[3]] <- Cache(do.call, fun, list(1, 2))
+  a[[4]] <- Cache(do.call(fun, list(1, 2)))
+  a[[5]] <- Cache(quote(fun(1, 2)))
+  expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
+  for (i in 2:NROW(a)) {
+    test <- identical(attr(a[[i]], ".Cache")$newCache, FALSE)
+    if (isFALSE(test)) browser()
+    expect_true(test)
+  }
+
+
+
+
   # This tries to do a method that is not actually exported from a package; the generic (sf::st_make_valid) is
   if (.requireNamespace("sf")) {
     clearCache(ask = FALSE)
@@ -1536,8 +1555,6 @@ test_that("test cache with new approach to match.call", {
     a <- list()
 
     p1 <- sf::st_as_sfc("POLYGON((0 0, 0 10, 10 0, 10 10, 0 0))")
-    aaaa <<- 1
-    on.exit(rm(aaaa, envir = .GlobalEnv))
     a[[1]] <- Cache(sf::st_make_valid(p1)) # not
     a[[2]] <- Cache(sf::st_make_valid, p1) # not
     a[[3]] <- Cache(quote(sf::st_make_valid(p1))) # not

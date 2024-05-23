@@ -1132,17 +1132,27 @@ findFun <- function(FUNcaptured, envir) {
 isDollarSqBrPkgColon <- function(args) {
   ret <- FALSE
   if (length(args) == 3) { # i.e., only possible if it is just b$fun or stats::runif, not stats::runif(1) or b$fun(1)
-    ret <- isDollarOnlySqBr(args) | isPkgColon(args)
-    # ret <- isTRUE(any(try(grepl("^\\$|\\[|\\:\\:", args)[1], silent = TRUE)))
+    # ret <- isDollarOnlySqBr(args) | isPkgColon(args)
+    ret <- isTRUE(any(try(grepl("^\\$|\\[|\\:\\:", args)[1], silent = TRUE)))
   }
   ret
 }
 
-isPkgColon <- function(args)
-  isTRUE(any(try(grepl("\\:\\:", args)[1], silent = TRUE)))
+isPkgColon <- function(args) {
+  ret <- FALSE
+  if (length(args) == 3) { # i.e., only possible if it is just b$fun or stats::runif, not stats::runif(1) or b$fun(1)
+    ret <- isTRUE(any(try(grepl("\\:\\:", args)[1], silent = TRUE)))
+  }
+  ret
+}
 
-isDollarOnlySqBr <- function(args)
-  isTRUE(any(try(grepl("^\\$|\\[", args)[1], silent = TRUE)))
+isDollarOnlySqBr <- function(args) {
+  ret <- FALSE
+  if (length(args) == 3) { # i.e., only possible if it is just b$fun or stats::runif, not stats::runif(1) or b$fun(1)
+    ret <- isTRUE(any(try(grepl("^\\$|\\[", args)[1], silent = TRUE)))
+  }
+  ret
+}
 
 recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, recursive = TRUE) {
   needsEvaling <- (length(args) > 1) || (length(args) == 1 && is.call(args)) # second case is fun() i.e., no args
@@ -1464,14 +1474,14 @@ getFunctionName2 <- function(mc) {
   # Backward compatibility; has no effect now
   userTagsOtherFunctions <- NULL
 
-  if (isPkgColon(FUNcaptured)) { # this is TRUE ONLY if it is *just* b$fun or stats::runif, i.e., not b$fun(1)
-    if (exists("aaaa")) browser()
-    FUNcaptured[[1]] <- eval(FUNcaptured[[1]], envir = callingEnv)
-  }
-
-  if (isDollarOnlySqBr(FUNcaptured)) {
-    if (exists("aaaa")) browser()
-    FUNcaptured <- eval(FUNcaptured, envir = callingEnv)
+  if (isDollarSqBrPkgColon(FUNcaptured)) {
+    if (isPkgColonFn(FUNcaptured)) {
+      FUNcaptured <- eval(FUNcaptured, envir = callingEnv)
+    } else if (isPkgColon(FUNcaptured)) { # this is TRUE ONLY if it is *just* b$fun or stats::runif, i.e., not b$fun(1)
+      FUNcaptured[[1]] <- eval(FUNcaptured[[1]], envir = callingEnv)
+    } else if (isDollarOnlySqBr(FUNcaptured)) {
+      FUNcaptured <- eval(FUNcaptured, envir = callingEnv)
+    }
   }
 
   if (length(FUNcaptured) > 1) { # this will cover the cases where previous misses, e.g.,
@@ -2448,3 +2458,4 @@ nullifyByArgName <- function(a, name) {
   }
   a
 }
+
