@@ -75,8 +75,8 @@ file was downloaded during \code{preProcess} via \code{dlFun}. This can be eithe
 function (e.g., sf::st_read), character string (e.g., "base::load"),
 NA (for no loading, useful if \code{dlFun} already loaded the file) or
 if extra arguments are required
-in the function call, it must be a quoted call naming
-\code{targetFile} (e.g., \code{quote(sf::st_read(targetFile, quiet = TRUE))})
+in the function call, it must be a call naming
+\code{targetFile} (e.g., \code{sf::st_read(targetFile, quiet = TRUE)})
 as the file path to the file to load. See details and examples below.}
 
 \item{dlFun}{Optional "download function" name, such as \code{"raster::getData"}, which does

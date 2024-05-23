@@ -300,7 +300,7 @@ expectedMessageRaw <- c(
   "Downloading", "Skipping download", "Skipping extractFrom",
   "targetFile was not.*ry",
   "Writing checksums.*you can specify targetFile",
-  "No targetFile supplied. Extracting", "Appending checksums", "although coordinates are longitude"
+  "No targetFile supplied. Checksumming", "Appending checksums", "although coordinates are longitude"
 )
 expectedMessage <- paste0(collapse = "|", expectedMessageRaw)
 

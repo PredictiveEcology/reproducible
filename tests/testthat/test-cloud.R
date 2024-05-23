@@ -40,7 +40,6 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   mess2 <- capture_messages({
     a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
   })
-  browser()
   expect_true(any(grepl(.message$LoadedCacheResult(), mess2)))
   .message$LoadedCacheResult
   expect_false(all(grepl("uploaded", ignore.case = TRUE, mess2)))

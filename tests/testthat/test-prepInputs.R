@@ -1,321 +1,321 @@
-# test_that("prepInputs doesn't work (part 1)", {
-#   skip_on_cran()
-#   skip_on_ci()
-#
-#   testInit("terra", opts = list(
-#     "rasterTmpDir" = tempdir2(rndstr(1, 6)),
-#     "reproducible.inputPaths" = NULL,
-#     "reproducible.overwrite" = TRUE,
-#     reproducible.showSimilar = TRUE
-#   ), needInternet = TRUE)
-#
-#   options(reproducible.cachePath = tmpdir)
-#
-#   # Add a study area to Crop and Mask to
-#   # Create a "study area"
-#   coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-#     .Dim = c(5L, 2L)
-#   )
-#   StudyArea <- terra::vect(coords, "polygons")
-#   terra::crs(StudyArea) <- crsToUse
-#
-#   dPath <- file.path(tmpdir, "ecozones")
-#
-#   ### url
-#   url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
-#
-#   noisyOutput <- capture.output({
-#     mess <- capture_messages({
-#       shpEcozone <- prepInputs(destinationPath = dPath, url = url)
-#     })
-#   })
-#   expect_true(any(grepl(mess, pattern = "ecozone_shp[.]zip")))
-#   expect_true(any(grepl(mess, pattern = "Appending")))
-#   # expect_true(any(grepl(mess, pattern = "Finished")))
-#   expect_true(is(shpEcozone, vectorType()))
-#
-#   # Robust to partial file deletions:
-#   unlink(dir(dPath, full.names = TRUE)[1:3])
-#   expect_error(terra::vect(file.path(dPath, "ecozone_shp.zip")))
-#   rm(shpEcozone)
-#   noisyOutput <- capture.output({
-#     shpEcozone1 <- prepInputs(destinationPath = dPath, url = url)
-#   })
-#   expect_true(is(shpEcozone1, vectorType()))
-#   unlink(dPath, recursive = TRUE)
-#
-#   ### url, targetFile, alsoExtract ######g
-#   # Once this is done, can be more precise in operational code:
-#   #  specify targetFile, alsoExtract, and fun, wrap with Cache
-#   ecozoneFilename <- file.path(dPath, "Ecozones/ecozones.shp")
-#   ecozoneFiles <- c(
-#     "ecozones.dbf",
-#     "ecozones.prj",
-#     "ecozones.sbn",
-#     "ecozones.sbx",
-#     "ecozones.shp",
-#     "ecozones.shx"
-#   )
-#   noisyOutput <- capture.output({
-#     shpEcozone2 <- prepInputs(
-#       targetFile = ecozoneFilename,
-#       url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-#       alsoExtract = ecozoneFiles,
-#       destinationPath = dPath
-#     )
-#   })
-#
-#   if (.requireNamespace("sf")) {
-#     expect_true(is(shpEcozone2, "sf"))
-#     testObj <- if (!is(shpEcozone1, "sf")) as(shpEcozone1, "sf") else shpEcozone1
-#   }
-#
-#   # As of Jan 2022 -- these objects are very different; character encoding of accents, numbers interpreted as character
-#   # expect_equivalent(testObj, shpEcozone2) # different attribute newCache
-#
-#   ### url, targetFile, alsoExtract -- with Cache
-#   # specify targetFile, alsoExtract, and fun, wrap with Cache -- it is wrong b/c no subfolder
-#   ecozoneFilename <- file.path(dPath, "ecozones.shp")
-#   # Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the
-#   #   targetFile is there, it will not redownload the archive.
-#
-#   unlink(dirname(ecozoneFilename), recursive = TRUE)
-#   # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
-#   # aaaa <<- 1
-#   # on.exit(rm(aaaa, envir = .GlobalEnv))
-#   noisyOutput <- capture.output({
-#     warn <- suppressWarningsSpecific(
-#       falseWarnings = "attribute variables are assumed to be spatially constant",
-#       {
-#         mess <- capture_messages({
-#           shpEcozoneSm <- Cache(
-#             prepInputs(
-#               url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-#               targetFile = reproducible::asPath(ecozoneFilename),
-#               alsoExtract = reproducible::asPath(ecozoneFiles),
-#               studyArea = StudyArea,
-#               destinationPath = dPath,
-#               filename2 = "EcozoneFile.shp",
-#               useCache = FALSE
-#             ),
-#             quick = "destinationPath"
-#           )
-#         })
-#       }
-#     )
-#   })
-#   expect_false(all(grepl("loading", mess)))
-#
-#   # Test useCache -- doesn't error and loads from cache
-#   mess <- capture_messages({
-#     warn <- suppressWarningsSpecific(
-#       falseWarnings = "attribute variables are assumed to be spatially constant",
-#       {
-#         shpEcozoneSm <- Cache(
-#           prepInputs(
-#             url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-#             targetFile = reproducible::asPath(ecozoneFilename),
-#             alsoExtract = reproducible::asPath(ecozoneFiles),
-#             studyArea = StudyArea,
-#             destinationPath = dPath,
-#             filename2 = "EcozoneFile.shp",
-#             useCache = TRUE # with useTerra = TRUE, this is only for loading, not postProcess
-#           ),
-#           quick = "destinationPath"
-#         )
-#       }
-#     )
-#   })
-#
-#   expect_true(any(grepl(.message$LoadedCacheResult(), mess)))
-#
-#   ##  archive
-#   ## don't pass url -- use local copy of archive only
-#   ## use purge = TRUE to rm checksums file, rewrite it here
-#   noisyOutput <- capture.output({
-#     shpEcozone <- prepInputs(
-#       destinationPath = dPath,
-#       archive = file.path(dPath, "ecozone_shp.zip"), purge = TRUE
-#     )
-#   })
-#   expect_true(is(shpEcozone, vectorType()))
-#
-#   ### archive, alsoExtract char
-#   shpEcozone <- prepInputs(
-#     destinationPath = dPath,
-#     archive = file.path(dPath, "ecozone_shp.zip"),
-#     alsoExtract = c(
-#       "ecozones.dbf", "ecozones.prj", "ecozones.sbn",
-#       "ecozones.sbx", "ecozones.shp", "ecozones.shx"
-#     )
-#   )
-#   expect_true(is(shpEcozone, vectorType()))
-#
-#   rm(shpEcozone)
-#   expect_false(exists("shpEcozone", inherits = FALSE))
-#
-#   ### url, alsoExtract, archive
-#   # try again with url - should *not* download, even though checksums came from the
-#   #   prepInputs that had locally generated -- confirming that checksums with a manually copied file will work
-#   #   instead of forcing prepInputs to get the file.
-#   shpEcozone <- prepInputs(
-#     destinationPath = dPath,
-#     url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-#     archive = file.path(dPath, "ecozone_shp.zip"),
-#     alsoExtract = c(
-#       "ecozones.dbf", "ecozones.prj", "ecozones.sbn",
-#       "ecozones.sbx", "ecozones.shp", "ecozones.shx"
-#     )
-#   )
-#   expect_true(is(shpEcozone, vectorType()))
-# })
-#
-# test_that("interactive prepInputs", {
-#   skip_on_cran()
-#   skip_on_ci()
-#
-#   testInit("terra",
-#     opts = list(
-#       "rasterTmpDir" = tempdir2(rndstr(1, 6)),
-#       "reproducible.overwrite" = TRUE,
-#       "reproducible.inputPaths" = NULL
-#     ),
-#     needGoogleDriveAuth = TRUE
-#   )
-#
-#   # skip_if_not(isInteractive())
-#   #######################################
-#   ### url
-#   # tmpdir <- "data/FMA"
-#   # checkPath(tmpdir, create = TRUE)
-#
-#   noisyOutput <- capture.output({
-#     warns <- capture_warnings({
-#       test <- prepInputs(
-#         url = "https://drive.google.com/file/d/1BNsUiMqENJa0I8gzhO68K307ySPHbdGk/view?usp=sharing",
-#         destinationPath = tmpdir
-#       )
-#     })
-#   })
-#   files <- dir(tmpdir, pattern = "FMA_Boundary")
-#   expect_true(length(files) == 9)
-#   expect_true(inherits(test, vectorType()))
-#
-#   #######################################
-#   ### url, targetFile
-#   # need authentication for this
-#   # tmpdir <- "data/FMA"
-#   # checkPath(tmpdir, create = TRUE)
-#   noisyOutput <- capture.output({
-#     warns <- capture_warnings({
-#       test <- prepInputs(
-#         targetFile = "FMA_Boundary_Updated.shp",
-#         url = "https://drive.google.com/file/d/1BNsUiMqENJa0I8gzhO68K307ySPHbdGk",
-#         destinationPath = tmpdir
-#       )
-#     })
-#   })
-#   # There is a meaningless warning for this unit test -- ignore it :
-#   # In rgdal::readOGR(dirname(x), fn, stringsAsFactors = stringsAsFactors,  :
-#   #                  Z-dimension discarded
-#   expect_true(inherits(test, vectorType()))
-#
-#   # From Bird/Tati project
-#   testInit("terra",
-#     opts = list(
-#       "reproducible.overwrite" = TRUE,
-#       "reproducible.inputPaths" = NULL
-#     ),
-#     needGoogleDriveAuth = TRUE
-#   )
-#   birdSpecies <- c("BBWA", "YRWA")
-#   urls <- c(
-#     "https://drive.google.com/open?id=1CmzYNpxwWr82PoRSbHWG8yg2cC3hncfb",
-#     "https://drive.google.com/open?id=11Hxk0CcwJsoAnUgfrwbJhXBJNM5Xbd9e"
-#   )
-#
-#   #######################################
-#   ### url, targetFile, archive
-#   outsideModule <- Map(
-#     x = birdSpecies, url = urls,
-#     MoreArgs = list(tmpdir = tmpdir),
-#     function(x, url, tmpdir) {
-#       ras <- prepInputs(
-#         targetFile = paste0(x, "_currmean.asc"),
-#         archive = paste0(x, "_current.zip"),
-#         # fun = "raster::raster",
-#         url = url,
-#         destinationPath = tmpdir,
-#         overwrite = TRUE
-#       )
-#     }
-#   )
-#   expect_true(inherits(outsideModule[[1]], rasterType()))
-#   expect_true(inherits(outsideModule[[2]], rasterType()))
-#   # expect_true(inherits(terra::crs(outsideModule[[2]]), "CRS"))
-#   # expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
-#   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
-#
-#   # remove the .prj files -- test "similar"
-#   #######################################
-#   ### url, targetFile, archive, alsoExtract similar
-#   file.remove(grep(
-#     pattern = "asc|zip|CHECK",
-#     invert = TRUE, value = TRUE,
-#     dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))]
-#   ))
-#
-#   outsideModule <- Map(
-#     x = birdSpecies, url = urls,
-#     MoreArgs = list(tmpdir = tmpdir),
-#     function(x, url, tmpdir, purge) {
-#       ras <- prepInputs(
-#         targetFile = paste0(x, "_currmean.asc"),
-#         archive = paste0(x, "_current.zip"),
-#         url = url,
-#         # fun = "raster::raster",
-#         alsoExtract = "similar",
-#         destinationPath = tmpdir,
-#         overwrite = TRUE
-#       )
-#     }
-#   )
-#   expect_true(inherits(outsideModule[[1]], rasterType()))
-#   expect_true(inherits(outsideModule[[2]], rasterType()))
-#   # expect_true(inherits(crs(outsideModule[[2]]), "CRS"))
-#   # expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
-#   expect_true(!is.na(crs(outsideModule[[1]])))
-#   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
-#
-#   # remove the .prj files -- test "similar"
-#   file.remove(grep(
-#     pattern = "asc|zip|CHECK",
-#     invert = TRUE, value = TRUE,
-#     dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))]
-#   ))
-#
-#   #######################################
-#   ### url, targetFile, archive, alsoExtract NA
-#   # because alsoExtract is NA ... no other files are unzipped, so no .prj and so no CRS
-#   outsideModule <- Map(
-#     x = birdSpecies, url = urls,
-#     MoreArgs = list(tmpdir = tmpdir),
-#     function(x, url, tmpdir, purge) {
-#       ras <- prepInputs(
-#         targetFile = paste0(x, "_currmean.asc"),
-#         archive = paste0(x, "_current.zip"),
-#         url = url,
-#         alsoExtract = NULL,
-#         destinationPath = tmpdir,
-#         overwrite = TRUE
-#       )
-#     }
-#   )
-#   expect_true(inherits(outsideModule[[1]], rasterType()))
-#   expect_true(inherits(outsideModule[[2]], rasterType()))
-#   expect_false(identical(terra::crs(outsideModule[[1]]), "")) # now with subfolders & all files, has crs
-#   expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
-# })
+test_that("prepInputs doesn't work (part 1)", {
+  skip_on_cran()
+  skip_on_ci()
+
+  testInit("terra", opts = list(
+    "rasterTmpDir" = tempdir2(rndstr(1, 6)),
+    "reproducible.inputPaths" = NULL,
+    "reproducible.overwrite" = TRUE,
+    reproducible.showSimilar = TRUE
+  ), needInternet = TRUE)
+
+  options(reproducible.cachePath = tmpdir)
+
+  # Add a study area to Crop and Mask to
+  # Create a "study area"
+  coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+    .Dim = c(5L, 2L)
+  )
+  StudyArea <- terra::vect(coords, "polygons")
+  terra::crs(StudyArea) <- crsToUse
+
+  dPath <- file.path(tmpdir, "ecozones")
+
+  ### url
+  url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
+
+  noisyOutput <- capture.output({
+    mess <- capture_messages({
+      shpEcozone <- prepInputs(destinationPath = dPath, url = url)
+    })
+  })
+  expect_true(any(grepl(mess, pattern = "ecozone_shp[.]zip")))
+  expect_true(any(grepl(mess, pattern = "Appending")))
+  # expect_true(any(grepl(mess, pattern = "Finished")))
+  expect_true(is(shpEcozone, vectorType()))
+
+  # Robust to partial file deletions:
+  unlink(dir(dPath, full.names = TRUE)[1:3])
+  expect_error(terra::vect(file.path(dPath, "ecozone_shp.zip")))
+  rm(shpEcozone)
+  noisyOutput <- capture.output({
+    shpEcozone1 <- prepInputs(destinationPath = dPath, url = url)
+  })
+  expect_true(is(shpEcozone1, vectorType()))
+  unlink(dPath, recursive = TRUE)
+
+  ### url, targetFile, alsoExtract ######g
+  # Once this is done, can be more precise in operational code:
+  #  specify targetFile, alsoExtract, and fun, wrap with Cache
+  ecozoneFilename <- file.path(dPath, "Ecozones/ecozones.shp")
+  ecozoneFiles <- c(
+    "ecozones.dbf",
+    "ecozones.prj",
+    "ecozones.sbn",
+    "ecozones.sbx",
+    "ecozones.shp",
+    "ecozones.shx"
+  )
+  noisyOutput <- capture.output({
+    shpEcozone2 <- prepInputs(
+      targetFile = ecozoneFilename,
+      url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+      alsoExtract = ecozoneFiles,
+      destinationPath = dPath
+    )
+  })
+
+  if (.requireNamespace("sf")) {
+    expect_true(is(shpEcozone2, "sf"))
+    testObj <- if (!is(shpEcozone1, "sf")) as(shpEcozone1, "sf") else shpEcozone1
+  }
+
+  # As of Jan 2022 -- these objects are very different; character encoding of accents, numbers interpreted as character
+  # expect_equivalent(testObj, shpEcozone2) # different attribute newCache
+
+  ### url, targetFile, alsoExtract -- with Cache
+  # specify targetFile, alsoExtract, and fun, wrap with Cache -- it is wrong b/c no subfolder
+  ecozoneFilename <- file.path(dPath, "ecozones.shp")
+  # Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the
+  #   targetFile is there, it will not redownload the archive.
+
+  unlink(dirname(ecozoneFilename), recursive = TRUE)
+  # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
+  # aaaa <<- 1
+  # on.exit(rm(aaaa, envir = .GlobalEnv))
+  noisyOutput <- capture.output({
+    warn <- suppressWarningsSpecific(
+      falseWarnings = "attribute variables are assumed to be spatially constant",
+      {
+        mess <- capture_messages({
+          shpEcozoneSm <- Cache(
+            prepInputs(
+              url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+              targetFile = reproducible::asPath(ecozoneFilename),
+              alsoExtract = reproducible::asPath(ecozoneFiles),
+              studyArea = StudyArea,
+              destinationPath = dPath,
+              filename2 = "EcozoneFile.shp",
+              useCache = FALSE
+            ),
+            quick = "destinationPath"
+          )
+        })
+      }
+    )
+  })
+  expect_false(all(grepl("loading", mess)))
+
+  # Test useCache -- doesn't error and loads from cache
+  mess <- capture_messages({
+    warn <- suppressWarningsSpecific(
+      falseWarnings = "attribute variables are assumed to be spatially constant",
+      {
+        shpEcozoneSm <- Cache(
+          prepInputs(
+            url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+            targetFile = reproducible::asPath(ecozoneFilename),
+            alsoExtract = reproducible::asPath(ecozoneFiles),
+            studyArea = StudyArea,
+            destinationPath = dPath,
+            filename2 = "EcozoneFile.shp",
+            useCache = TRUE # with useTerra = TRUE, this is only for loading, not postProcess
+          ),
+          quick = "destinationPath"
+        )
+      }
+    )
+  })
+
+  expect_true(any(grepl(.message$LoadedCacheResult(), mess)))
+
+  ##  archive
+  ## don't pass url -- use local copy of archive only
+  ## use purge = TRUE to rm checksums file, rewrite it here
+  noisyOutput <- capture.output({
+    shpEcozone <- prepInputs(
+      destinationPath = dPath,
+      archive = file.path(dPath, "ecozone_shp.zip"), purge = TRUE
+    )
+  })
+  expect_true(is(shpEcozone, vectorType()))
+
+  ### archive, alsoExtract char
+  shpEcozone <- prepInputs(
+    destinationPath = dPath,
+    archive = file.path(dPath, "ecozone_shp.zip"),
+    alsoExtract = c(
+      "ecozones.dbf", "ecozones.prj", "ecozones.sbn",
+      "ecozones.sbx", "ecozones.shp", "ecozones.shx"
+    )
+  )
+  expect_true(is(shpEcozone, vectorType()))
+
+  rm(shpEcozone)
+  expect_false(exists("shpEcozone", inherits = FALSE))
+
+  ### url, alsoExtract, archive
+  # try again with url - should *not* download, even though checksums came from the
+  #   prepInputs that had locally generated -- confirming that checksums with a manually copied file will work
+  #   instead of forcing prepInputs to get the file.
+  shpEcozone <- prepInputs(
+    destinationPath = dPath,
+    url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+    archive = file.path(dPath, "ecozone_shp.zip"),
+    alsoExtract = c(
+      "ecozones.dbf", "ecozones.prj", "ecozones.sbn",
+      "ecozones.sbx", "ecozones.shp", "ecozones.shx"
+    )
+  )
+  expect_true(is(shpEcozone, vectorType()))
+})
+
+test_that("interactive prepInputs", {
+  skip_on_cran()
+  skip_on_ci()
+
+  testInit("terra",
+    opts = list(
+      "rasterTmpDir" = tempdir2(rndstr(1, 6)),
+      "reproducible.overwrite" = TRUE,
+      "reproducible.inputPaths" = NULL
+    ),
+    needGoogleDriveAuth = TRUE
+  )
+
+  # skip_if_not(isInteractive())
+  #######################################
+  ### url
+  # tmpdir <- "data/FMA"
+  # checkPath(tmpdir, create = TRUE)
+
+  noisyOutput <- capture.output({
+    warns <- capture_warnings({
+      test <- prepInputs(
+        url = "https://drive.google.com/file/d/1BNsUiMqENJa0I8gzhO68K307ySPHbdGk/view?usp=sharing",
+        destinationPath = tmpdir
+      )
+    })
+  })
+  files <- dir(tmpdir, pattern = "FMA_Boundary")
+  expect_true(length(files) == 9)
+  expect_true(inherits(test, vectorType()))
+
+  #######################################
+  ### url, targetFile
+  # need authentication for this
+  # tmpdir <- "data/FMA"
+  # checkPath(tmpdir, create = TRUE)
+  noisyOutput <- capture.output({
+    warns <- capture_warnings({
+      test <- prepInputs(
+        targetFile = "FMA_Boundary_Updated.shp",
+        url = "https://drive.google.com/file/d/1BNsUiMqENJa0I8gzhO68K307ySPHbdGk",
+        destinationPath = tmpdir
+      )
+    })
+  })
+  # There is a meaningless warning for this unit test -- ignore it :
+  # In rgdal::readOGR(dirname(x), fn, stringsAsFactors = stringsAsFactors,  :
+  #                  Z-dimension discarded
+  expect_true(inherits(test, vectorType()))
+
+  # From Bird/Tati project
+  testInit("terra",
+    opts = list(
+      "reproducible.overwrite" = TRUE,
+      "reproducible.inputPaths" = NULL
+    ),
+    needGoogleDriveAuth = TRUE
+  )
+  birdSpecies <- c("BBWA", "YRWA")
+  urls <- c(
+    "https://drive.google.com/open?id=1CmzYNpxwWr82PoRSbHWG8yg2cC3hncfb",
+    "https://drive.google.com/open?id=11Hxk0CcwJsoAnUgfrwbJhXBJNM5Xbd9e"
+  )
+
+  #######################################
+  ### url, targetFile, archive
+  outsideModule <- Map(
+    x = birdSpecies, url = urls,
+    MoreArgs = list(tmpdir = tmpdir),
+    function(x, url, tmpdir) {
+      ras <- prepInputs(
+        targetFile = paste0(x, "_currmean.asc"),
+        archive = paste0(x, "_current.zip"),
+        # fun = "raster::raster",
+        url = url,
+        destinationPath = tmpdir,
+        overwrite = TRUE
+      )
+    }
+  )
+  expect_true(inherits(outsideModule[[1]], rasterType()))
+  expect_true(inherits(outsideModule[[2]], rasterType()))
+  # expect_true(inherits(terra::crs(outsideModule[[2]]), "CRS"))
+  # expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
+  expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
+
+  # remove the .prj files -- test "similar"
+  #######################################
+  ### url, targetFile, archive, alsoExtract similar
+  file.remove(grep(
+    pattern = "asc|zip|CHECK",
+    invert = TRUE, value = TRUE,
+    dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))]
+  ))
+
+  outsideModule <- Map(
+    x = birdSpecies, url = urls,
+    MoreArgs = list(tmpdir = tmpdir),
+    function(x, url, tmpdir, purge) {
+      ras <- prepInputs(
+        targetFile = paste0(x, "_currmean.asc"),
+        archive = paste0(x, "_current.zip"),
+        url = url,
+        # fun = "raster::raster",
+        alsoExtract = "similar",
+        destinationPath = tmpdir,
+        overwrite = TRUE
+      )
+    }
+  )
+  expect_true(inherits(outsideModule[[1]], rasterType()))
+  expect_true(inherits(outsideModule[[2]], rasterType()))
+  # expect_true(inherits(crs(outsideModule[[2]]), "CRS"))
+  # expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
+  expect_true(!is.na(crs(outsideModule[[1]])))
+  expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
+
+  # remove the .prj files -- test "similar"
+  file.remove(grep(
+    pattern = "asc|zip|CHECK",
+    invert = TRUE, value = TRUE,
+    dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))]
+  ))
+
+  #######################################
+  ### url, targetFile, archive, alsoExtract NA
+  # because alsoExtract is NA ... no other files are unzipped, so no .prj and so no CRS
+  outsideModule <- Map(
+    x = birdSpecies, url = urls,
+    MoreArgs = list(tmpdir = tmpdir),
+    function(x, url, tmpdir, purge) {
+      ras <- prepInputs(
+        targetFile = paste0(x, "_currmean.asc"),
+        archive = paste0(x, "_current.zip"),
+        url = url,
+        alsoExtract = NULL,
+        destinationPath = tmpdir,
+        overwrite = TRUE
+      )
+    }
+  )
+  expect_true(inherits(outsideModule[[1]], rasterType()))
+  expect_true(inherits(outsideModule[[2]], rasterType()))
+  expect_false(identical(terra::crs(outsideModule[[1]]), "")) # now with subfolders & all files, has crs
+  expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
+})
 
 test_that("preProcess doesn't work", {
   skip_on_cran()
@@ -345,7 +345,6 @@ test_that("preProcess doesn't work", {
       })
     })
   })
-  browser()
   runTest("1_2_7_10_13", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
@@ -358,7 +357,7 @@ test_that("preProcess doesn't work", {
     })
   })
 
-  runTest("1_2_5_8_10", cls, 1, mess,
+  runTest("1_2_8_10", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -373,7 +372,7 @@ test_that("preProcess doesn't work", {
     })
   })
 
-  runTest("1_2_4_5_7_10_12_13", vectorType(), 5, mess,
+  runTest("1_4_7_10_12_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", # the file name is actually Shapefile1...
     tmpdir = tmpdir, test = test
@@ -387,7 +386,7 @@ test_that("preProcess doesn't work", {
       })
     })
   })
-  runTest("1_2_5_8_9_10_12", vectorType(), 5, mess,
+  runTest("1_8_9_10_12", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -403,7 +402,7 @@ test_that("preProcess doesn't work", {
       })
     })
   })
-  runTest("1_2_5_7_13", cls, 1, mess,
+  runTest("1_2_7_13", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -414,7 +413,7 @@ test_that("preProcess doesn't work", {
       test <- prepInputs(url = urlTif1, targetFile = basename(urlTif1), destinationPath = tmpdir)
     })
   })
-  runTest("1_2_5_8", cls, 1, mess,
+  runTest("1_2_8", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -431,7 +430,7 @@ test_that("preProcess doesn't work", {
       })
     })
   })
-  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -447,7 +446,7 @@ test_that("preProcess doesn't work", {
       })
     })
   })
-  runTest("1_2_5_8_9", vectorType(), 5, mess,
+  runTest("1_2_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -463,7 +462,7 @@ test_that("preProcess doesn't work", {
       })
     })
   })
-  runTest("1_2_5_7_10_13", cls, 1, mess,
+  runTest("1_2_7_10_13", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -478,7 +477,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_8_10", cls, 1, mess,
+  runTest("1_2_8_10", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -496,7 +495,7 @@ test_that("preProcess doesn't work", {
       })
     })
   })
-  runTest("1_2_4_5_7_10_13", vectorType(), 5, mess,
+  runTest("1_4_7_10_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -513,7 +512,7 @@ test_that("preProcess doesn't work", {
       })
     })
   })
-  runTest("1_2_5_8_9_10", vectorType(), 5, mess,
+  runTest("1_8_9_10", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -535,7 +534,7 @@ test_that("preProcess doesn't work", {
       })
     })
   })
-  runTest("1_2_4_5_7_10_12_13", vectorType(), 9, mess,
+  runTest("1_4_7_10_12_13", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -550,7 +549,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_8_9_10_12", vectorType(), 9, mess,
+  runTest("1_8_9_10_12", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -572,7 +571,7 @@ test_that("preProcess doesn't work", {
       })
     })
   })
-  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -590,7 +589,7 @@ test_that("preProcess doesn't work", {
       })
     })
   })
-  runTest("1_2_5_8_9", vectorType(), 5, mess,
+  runTest("1_2_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -610,7 +609,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -626,7 +625,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_8_9", vectorType(), 5, mess,
+  runTest("1_2_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -642,7 +641,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -658,7 +657,7 @@ test_that("preProcess doesn't work", {
       })
     })
   })
-  runTest("1_2_5_7_13", cls, 1, mess,
+  runTest("1_2_7_13", cls, 1, mess,
     expectedMess = expectedMessage,
     filePattern = "DEM", tmpdir = tmpdir, test = test
   )
@@ -678,7 +677,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_7_10_12_13", vectorType(), 9, mess,
+  runTest("1_4_7_10_12_13", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -694,7 +693,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_8_9_10_12", vectorType(), 9, mess,
+  runTest("1_8_9_10_12", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -729,7 +728,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -743,7 +742,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_8_9", vectorType(), 5, mess,
+  runTest("1_2_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -760,7 +759,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -776,7 +775,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_8_9", vectorType(), 5, mess,
+  runTest("1_2_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -797,7 +796,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_7_13", vectorType(), 5, mess,
+  runTest("1_2_4_7_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -814,7 +813,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_8_9", vectorType(), 5, mess,
+  runTest("1_2_8_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -834,7 +833,8 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_9_10_12_13", vectorType(), 9, mess,
+
+  runTest("1_4_9_10_13", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -848,7 +848,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_9_10_12", vectorType(), 9, mess,
+  runTest("1_9_10_12", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -870,7 +870,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_9_13", vectorType(), 9, mess,
+  runTest("1_2_4_9_13", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -885,7 +885,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_9", vectorType(), 9, mess,
+  runTest("1_2_9", vectorType(), 9, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -908,7 +908,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_9_13", vectorType(), 5, mess,
+  runTest("1_2_4_9_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -924,7 +924,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_9", vectorType(), 5, mess,
+  runTest("1_2_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -945,7 +945,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_9_13", vectorType(), 5, mess,
+  runTest("1_2_4_9_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -961,7 +961,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_9", vectorType(), 5, mess,
+  runTest("1_2_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -975,7 +975,7 @@ test_that("preProcess doesn't work", {
       test <- prepInputs(targetFile = "Shapefile1.shp", destinationPath = tmpdir)
     })
   })
-  runTest("1_2_5", vectorType(), 5, mess,
+  runTest("1_2", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -984,7 +984,7 @@ test_that("preProcess doesn't work", {
       test <- prepInputs(targetFile = "Shapefile1.shp", destinationPath = tmpdir)
     })
   })
-  runTest("1_2_5", vectorType(), 5, mess,
+  runTest("1_2", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1004,7 +1004,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5", vectorType(), 5, mess,
+  runTest("1_2", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1017,7 +1017,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5", vectorType(), 5, mess,
+  runTest("1_2", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1057,7 +1057,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_9_10_13", vectorType(), 5, mess,
+  runTest("1_4_9_10_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1072,7 +1072,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_9_10", vectorType(), 5, mess,
+  runTest("1_9_10", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1109,7 +1109,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_4_5_9_13", vectorType(), 5, mess,
+  runTest("1_2_4_9_13", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1125,7 +1125,7 @@ test_that("preProcess doesn't work", {
       )
     })
   })
-  runTest("1_2_5_9", vectorType(), 5, mess,
+  runTest("1_2_9", vectorType(), 5, mess,
     expectedMess = expectedMessage,
     filePattern = "Shapefile", tmpdir = tmpdir, test = test
   )
@@ -1827,8 +1827,8 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
 
   b1 <- suppressWarnings(terra::writeRaster(a, filename = tifTmp, overwrite = TRUE)) # the GDAL>6 issue
   b1a <- writeOutputs(a, filename2 = tifTmp)
-  expect_true(identical(b1, b1a))
-  expect_true(all.equal(b1[], b1a[]))
+  expect_equivalent(b1, b1a)
+  expect_equivalent(b1[], b1a[])
 
   expect_true(identical(normPath(Filenames(b1)), normPath(tifTmp)))
 })
