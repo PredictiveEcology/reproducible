@@ -40,7 +40,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   mess2 <- capture_messages({
     a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
   })
-  expect_true(any(grepl("loaded cached", mess2)))
+  browser()
+  expect_true(any(grepl(.message$LoadedCacheResult(), mess2)))
+  .message$LoadedCacheResult
   expect_false(all(grepl("uploaded", ignore.case = TRUE, mess2)))
   expect_false(all(grepl("download", mess2)))
 
@@ -53,7 +55,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   mess3 <- capture_messages({
     a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
   })
-  expect_false(any(grepl("loaded cached", mess3)))
+  expect_false(any(grepl(.message$LoadedCacheResult(), mess3)))
   expect_false(any(grepl("Uploaded", mess3)))
   expect_true(any(grepl("Downloading", mess3)))
 
@@ -66,7 +68,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     a2 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
   })
 
-  expect_true(any(grepl("loaded cached", mess4)))
+  expect_true(any(grepl(.message$LoadedCacheResult(), mess4)))
   expect_true(any(grepl("Uploading", mess4)))
   expect_false(any(grepl("Download", mess4)))
 
@@ -95,7 +97,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   # expect_false(any(grepl("Folder created", mess6)))
   expect_true(any(grepl("Uploading", mess6)))
   expect_false(any(grepl("Download", mess6)))
-  expect_false(any(grepl("loaded cached", mess6)))
+  expect_false(any(grepl(.message$LoadedCacheResult(), mess6)))
   expect_true(isTRUE(all.equal(length(warn6), 0)))
 
   ########

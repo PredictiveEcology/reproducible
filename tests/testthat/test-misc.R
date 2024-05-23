@@ -182,7 +182,7 @@ test_that("test miscellaneous fns (part 2)", {
       gdriveLs = gdriveLs1, cloudFolderID = "testy", cachePath = tmpCache
     )
   })))
-  expect_true(grepl("Downloading cloud copy of test\\.tif", mess1))
+  expect_true(sum(grepl("Downloading cloud copy of test\\.tif", mess1)) == 1)
   testthat::with_mock(
     "reproducible::retry" = function(..., retries = 1) TRUE,
     {

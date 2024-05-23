@@ -295,7 +295,7 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
 }
 
 expectedMessageRaw <- c(
-  "Running preP", "Preparing:", "File downloaded",
+  "Running `preP", "Preparing:", "File downloaded",
   "From:.*Shapefile", "Checking local", "Finished checking",
   "Downloading", "Skipping download", "Skipping extractFrom",
   "targetFile was not.*ry",
