@@ -236,7 +236,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     cacheId <- unique(cacheId)
   }
 
-  isMemoised <- isMemoised(cacheId, cachePath = cachePath)
+  isMemoised <- .isMemoised(cacheId, cachePath = cachePath)
   # isMemoised <- NA
   # if (isTRUE(getOption("reproducible.useMemoise"))) {
   #   isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
@@ -1061,7 +1061,15 @@ memoiseEnv <- function(cachePath, envir = .GlobalEnv) {
 
 otherFunctions <- "otherFunctions"
 
-isMemoised <- function(cacheId, cachePath = getOption("reproducible.cachePath")) {
+#' Evaluate whether a cacheId is memoised
+#'
+#' Intended for internal use. Exported so other packages can use this function.
+#'
+#' @inheritParams Cache
+#' @return A logical, length 1 indicating whether the `cacheId` is memoised.
+#'
+#' @export
+.isMemoised <- function(cacheId, cachePath = getOption("reproducible.cachePath")) {
   isMemoised <- NA
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
