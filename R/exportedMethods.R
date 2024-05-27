@@ -963,6 +963,7 @@ unmakeMemoisable.default <- function(x) {
                           verbose = getOption("reproducible.verbose"), ...) {
   rasters <- is(obj, "Raster")
   atts <- attributes(obj)
+  reassignAtts <- TRUE
 
   if (any(rasters)) {
     .requireNamespace("raster", stopOnFALSE = TRUE)
@@ -1042,6 +1043,7 @@ unmakeMemoisable.default <- function(x) {
       )
       attr(obj, "class") <- "PackedSpatExtent"
       useWrap <- FALSE
+      reassignAtts <- FALSE
     }
     if (is(obj, "data.table")) {
       obj <- data.table::copy(obj)
@@ -1058,7 +1060,8 @@ unmakeMemoisable.default <- function(x) {
   }
 
   # put attributes back on the potentially packed object
-  obj <- attributesReassign(atts, obj)
+  if (isTRUE(reassignAtts))
+    obj <- attributesReassign(atts, obj)
 
   obj
 }
