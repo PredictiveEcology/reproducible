@@ -85,6 +85,8 @@ Suggests:
     terra (>= 1.7-20),
     testthat,
     withr
+Remotes:
+    https://github.com/rspatial/geodata
 Encoding: UTF-8
 Language: en-CA
 License: GPL-3
