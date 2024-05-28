@@ -87,6 +87,7 @@ Suggests:
     withr
 Remotes:
     https://github.com/rspatial/geodata
+Additional_repositories: https://predictiveecology.r-universe.dev/
 Encoding: UTF-8
 Language: en-CA
 License: GPL-3
