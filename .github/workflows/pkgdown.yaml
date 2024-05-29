@@ -36,6 +36,7 @@ jobs:
           extra-packages: |
             any::pkgdown
             local::.
+            rspatial/geodata
           needs: website
 
       - name: Build site
