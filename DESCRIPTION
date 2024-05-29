@@ -86,7 +86,7 @@ Suggests:
     testthat,
     withr
 Remotes:
-    https://github.com/rspatial/geodata
+    rspatial/geodata
 Additional_repositories: https://predictiveecology.r-universe.dev/
 Encoding: UTF-8
 Language: en-CA
