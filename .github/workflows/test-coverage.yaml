@@ -34,6 +34,7 @@ jobs:
         with:
           extra-packages: |
             any::covr
+            rspatial/geodata
 
       - name: Test coverage
         run: covr::codecov()
