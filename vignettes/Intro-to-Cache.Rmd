@@ -37,7 +37,7 @@ The `reproducible::Cache` function is built to work with any R function.
 
 ## Differences with other approaches
 
-`Cache` users `DBI` as a backend, with key functions, `dbReadTable`, `dbRemoveTable`, `dbSendQuery`, `dbSendStatement`, `dbCreateTable` and `dbAppendTable`. These can all be accessed via `Cache`, `showCache`, `clearCache`, and `keepCache`. It is optimized for speed of transactions, using `fastdigest::fastdigest` on R memory objects and `digest::digest` on files.
+`Cache` users `DBI` as a backend, with key functions, `dbReadTable`, `dbRemoveTable`, `dbSendQuery`, `dbSendStatement`, `dbCreateTable` and `dbAppendTable`. These can all be accessed via `Cache`, `showCache`, `clearCache`, and `keepCache`. It is optimized for speed of transactions, using `digest::digest` on objects and files.
 The main function is superficially similar to `archivist::cache`, which uses `digest::digest` in all cases to determine whether the arguments are identical in subsequent iterations.
 It also but does *many* things that make standard caching with `digest::digest` don't work reliably between systems.
 For these, the function `.robustDigest` is introduced to make caching transferable between systems.

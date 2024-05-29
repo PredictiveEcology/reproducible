@@ -15,7 +15,7 @@ retry(
 )
 }
 \arguments{
-\item{expr}{Quoted expression to run, i.e., \code{quote(...)}}
+\item{expr}{An expression to run, i.e., \code{rnorm(1)}, similar to what is passed to \code{try}}
 
 \item{envir}{The environment in which to evaluate the quoted expression, default
 to \code{parent.frame(1)}}

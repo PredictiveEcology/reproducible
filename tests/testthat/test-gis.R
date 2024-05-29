@@ -35,7 +35,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
         prepInputs(
           url = "http://cwfis.cfs.nrcan.gc.ca/downloads/nfdb/fire_pnt/current_version/NFDB_point.zip",
           overwrite = TRUE,
-          fun = quote(sf::st_read(targetFile, quiet = TRUE))
+          fun = sf::st_read(targetFile, quiet = TRUE)
         )
       expect_is(NFDB_PT, "sf")
       expect_true(all(c("zip", "sbx", "shp", "xml", "shx", "sbn") %in%

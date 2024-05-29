@@ -8,31 +8,46 @@ See `NEWS.md` for a full list of changes.
 
   
 ### Previous R versions
-* Ubuntu 20.04                 (GitHub), R 4.2.3 (2023-03-15)
-* Windows                      (GitHub), R 4.2.3 (2023-03-15 ucrt)
-* Windows                 (win-builder), R 4.2.3 (2023-03-15 ucrt)
+* Ubuntu 20.04                 (GitHub), R 4.1.3, 4.2.3, 4.3.3
+* Windows                      (GitHub), R 4.1.3, 4.2.3, 4.3.3
+* Windows                 (win-builder), R 4.3.3
 
 ### Current R versions
-* macOS Monterey 12.6.5                  (GitHub), R 4.3.3 (2024-02-29)
-* aarch64-apple-darwin20 (64-bit) (macOS-builder), R 4.3.3 (2024-02-29)
-* Ubuntu 20.04                           (GitHub), R 4.3.3 (2024-02-29)
-* Windows                                (GitHub), R 4.3.3 (2024-02-29 ucrt)
-* Windows                           (win-builder), R 4.3.3 (2024-02-29 ucrt)
+* macOS 12.6.3                 (GitHub), R 4.4.0
+* macOS 13.3.1            (mac-builder), R 4.4.0
+* macOS 14.4.1                  (local), R 4.4.0
+* Ubuntu 20.04                 (GitHub), R 4.4.0
+* Ubuntu 20.04                  (local), R 4.4.0
+* Windows                      (GitHub), R 4.4.0
+* Windows                       (local), R 4.4.0
+* Windows                 (win-builder), R 4.4.0
 
 ### Development R version
-* Ubuntu 20.04 LTS             (GitHub), R version 4.4.0 alpha (2024-04-12 r86412)
-* Windows                      (GitHub), R version 4.4.0 alpha (2024-04-12 r86412 ucrt)
-* Windows                 (win-builder), R version 4.4.0 alpha (2024-03-26 r86209 ucrt)
-
-### R-hub v2
-* Flavours passing on 14 Apr, 2024
-** linux, macos, macos-arm64, windows, clang16, clang17, clang18, donttest, intel,
-  nold, nosuggests, ubuntu-clang, ubuntu-gcc12, ubuntu-next, ubuntu-release
+* Ubuntu 20.04                 (GitHub), R-devel (2024-05-28 r86639)
+* Ubuntu 20.04                  (local), R-devel (2024-05-28 r86640)
+* Windows                      (GitHub), R-devel (2024-05-28 r86639 ucrt)
+* Windows                 (win-builder), R-devel (2024-05-28 r86639 ucrt)
 
 ## R CMD check results
 
-NOTEs is about this being a new package. No WARNINGs or ERRORs.
+There are no errors, or warnings in any of the above.
 
-## revdepcheck results
+There are some NOTEs:
 
-No reverse dependencies as this was removed from CRAN.
+1. The suggested package `geodata` is optionally installed from our R-universe repository
+  (until the maintainers of that package are able to get it back on CRAN).
+  Instructions for installation are provided in the README, DESCRIPTION, and via a message to the user.
+  We believe this should satisfy the CRAN policy requirement regarding additional dependencies.
+
+        Suggests or Enhances not in mainstream repositories:
+          geodata
+        Availability using Additional_repositories specification:
+          geodata      yes   https://predictiveecology.r-universe.dev/
+
+## Downstream dependencies
+
+We checked all reverse dependency from CRAN, comparing R CMD check results across CRAN and dev versions of this package.
+
+ * We saw 1 new problem with package `SpaDES.core`, which we will submit an updated version of as soon as `reproducible` is updated on CRAN.
+
+ * We failed to check 0 packages

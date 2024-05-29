@@ -18,6 +18,7 @@
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
+  outputObjects = NULL,
   ...
 )
 
@@ -28,6 +29,7 @@
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
+  outputObjects = NULL,
   ...
 )
 
@@ -38,6 +40,7 @@
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
+  outputObjects = NULL,
   ...
 )
 
@@ -105,6 +108,9 @@ inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{outputObjects}{Optional character vector indicating which objects to
+return. This is only relevant for list, environment (or similar) objects}
 
 \item{...}{Arguments passed to methods; default does not use anything in \code{...}.}
 

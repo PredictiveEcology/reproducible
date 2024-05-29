@@ -12,6 +12,9 @@
 \arguments{
 \item{file}{Character vector of file paths.}
 
+\item{quickCheck}{Logical indicating whether to use a fast file size check as a heuristic
+for determining changes to a file.}
+
 \item{...}{Additional arguments to \code{digest::digest}.}
 }
 \value{

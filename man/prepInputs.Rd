@@ -68,8 +68,8 @@ file was downloaded during \code{preProcess} via \code{dlFun}. This can be eithe
 function (e.g., sf::st_read), character string (e.g., "base::load"),
 NA (for no loading, useful if \code{dlFun} already loaded the file) or
 if extra arguments are required
-in the function call, it must be a quoted call naming
-\code{targetFile} (e.g., \code{quote(sf::st_read(targetFile, quiet = TRUE))})
+in the function call, it must be a call naming
+\code{targetFile} (e.g., \code{sf::st_read(targetFile, quiet = TRUE)})
 as the file path to the file to load. See details and examples below.}
 
 \item{quick}{Logical. This is passed internally to \code{\link[=Checksums]{Checksums()}}
@@ -89,9 +89,11 @@ even if they pass the checksums or the files are all there.}
 Defaults to \code{getOption("reproducible.useCache", 2L)} in \code{prepInputs}, and
 \code{getOption("reproducible.useCache", FALSE)} if calling any of the inner
 functions manually. For \code{prepInputs}, this mean it will use \code{Cache}
-only up to 2 nested levels, which will generally including \code{postProcess} and
-the first level of \verb{*Input} functions, e.g., \code{cropInputs}, \code{projectInputs},
-\code{maskInputs}, but not \code{fixErrors}.}
+only up to 2 nested levels, which includes \code{preProcess}. \code{postProcess} and
+its nested \verb{*Input} functions (e.g., \code{cropInputs}, \code{projectInputs},
+\code{maskInputs}) are no longer internally cached, as \code{terra} processing speeds
+mean internal caching is more time consuming. We recommend caching the full
+\code{prepInputs} call instead (e.g. \code{prepInputs(...) |> Cache()}).}
 
 \item{.tempPath}{Optional temporary path for internal file intermediate steps.
 Will be cleared on.exit from this function.}
@@ -197,14 +199,14 @@ dealt with: when the \code{preProcess} downloads a file (including via \code{dlF
 (e.g., raster::getData returns an object), \code{fun} must deal with an object.
 
 \code{fun} can be supplied in three ways: a function, a character string
-(i.e., a function name as a string), or a quoted expression.
+(i.e., a function name as a string), or an expression.
 If a character string or function, is should have the package name e.g.,
 \code{"terra::rast"} or as an actual function, e.g., \code{base::readRDS}.
 In these cases, it will evaluate this function call while passing \code{targetFile}
 as the first argument. These will only work in the simplest of cases.
 
-When more precision is required, the full call can be written, surrounded by
-\code{quote}, and where the filename can be referred to as \code{targetFile} if the function
+When more precision is required, the full call can be written and where the
+filename can be referred to as \code{targetFile} if the function
 is loading a file. If \code{preProcess} returns an object, \code{fun} should be set to
 \code{fun = NA}.
 
@@ -342,16 +344,16 @@ if (requireNamespace("terra", quietly = TRUE) &&
 }
 
 ## Using quoted dlFun and fun -- this is not intended to be run but used as a template
-## prepInputs(..., fun = quote(customFun(x = targetFile)), customFun = customFun)
+## prepInputs(..., fun = customFun(x = targetFile), customFun = customFun)
 ##   # or more complex
 ##  test5 <- prepInputs(
 ##   targetFile = targetFileLuxRDS,
-##   dlFun = quote({
+##   dlFun =
 ##     getDataFn(name = "GADM", country = "LUX", level = 0) # preProcess keeps file from this!
-##   }),
-##   fun = quote({
+##   ,
+##   fun = {
 ##     out <- readRDS(targetFile)
-##     sf::st_as_sf(out)})
+##     sf::st_as_sf(out)}
 ##  )
 }
 \seealso{

@@ -2,7 +2,7 @@ test_that("test miscellaneous fns (part 1)", {
   # ONLY RELEVANT FOR RASTERS
   testInit("raster", tmpFileExt = c(".tif", ".grd"))
 
-  expect_is(searchFullEx(), "list")
+  expect_type(searchFullEx(), "list")
   expect_true(length(searchFullEx()) > length(search()))
   expect_true(length(searchFullEx()) == (3 + length(search())))
 
@@ -40,10 +40,10 @@ test_that("test miscellaneous fns (part 1)", {
   r3 <- suppressWarnings(writeRaster(r1, tmpfile[1], overwrite = TRUE)) ## TODO: raster needs updating for crs stuff
   r4 <- suppressWarnings(convertRasterPaths(tmpfile[1], dirname(tmpfile[1]), newPaths)) ## TODO: raster needs updating for crs stuff
 
-  expect_true(identical(
+  expect_identical(
     normPath(file.path(newPaths, basename(filename(r4)))),
-    normPath(filename(r4))
-  ))
+    normPath(Filenames(r4))
+  )
 
   expect_silent({
     b <- retry(quote(rnorm(1)), retries = 1, silent = TRUE)
@@ -79,7 +79,7 @@ test_that("setting options works correctly", {
     "reproducible.cachePath",
     "reproducible.overwrite", # This is a bug # TODO... something prior to this test is changing it
     "reproducible.useDBI",
-    # "reproducible.cacheSaveFormat",
+    "reproducible.cacheSaveFormat",
     "reproducible.shapefileRead"
   ))
   a <- a[keep]
@@ -144,8 +144,8 @@ test_that("test miscellaneous fns (part 2)", {
     add = TRUE
   )
 
-  ras <- terra::rast(terra::ext(0, 1, 0, 1), res = 1, vals = 1)
-  ras <- terra::writeRaster(ras, file = tmpfile[1], overwrite = TRUE)
+  ras <- terra::rast(terra::ext(0, 1, 0, 1), resolution = 1, vals = 1)
+  ras <- terra::writeRaster(ras, filename = tmpfile[1], overwrite = TRUE)
 
   gdriveLs1 <- data.frame(name = "GADM", id = "sdfsd", drive_resource = list(sdfsd = 1))
   tmpCloudFolderID <- checkAndMakeCloudFolderID(create = TRUE)
@@ -182,7 +182,7 @@ test_that("test miscellaneous fns (part 2)", {
       gdriveLs = gdriveLs1, cloudFolderID = "testy", cachePath = tmpCache
     )
   })))
-  expect_true(grepl("Downloading cloud copy of test\\.tif", mess1))
+  expect_true(sum(grepl("Downloading cloud copy of test\\.tif", mess1)) == 1)
   testthat::with_mock(
     "reproducible::retry" = function(..., retries = 1) TRUE,
     {
@@ -221,8 +221,8 @@ test_that("Filenames for environment", {
   )
 
   s <- new.env(parent = emptyenv())
-  s$r <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1, res = 1)
-  s$r2 <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1, res = 1)
+  s$r <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1, resolution = 1)
+  s$r2 <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1, resolution = 1)
   s$r <- suppressWarningsSpecific(
     terra::writeRaster(s$r, filename = tmpfile[1], overwrite = TRUE),
     "NOT UPDATED FOR PROJ >= 6"
@@ -281,7 +281,7 @@ test_that("Filenames for environment", {
   ))
 })
 
-test_that("test miscellaneous fns", {
+test_that("test miscellaneous fns (part 3)", {
   testInit(opts = list(datatable.print.class = FALSE))
 
   x1 <- append(as.list(c(0, 1, -1, 10^(-(1:10)))), as.list(c(0L, 1L)))
@@ -299,6 +299,7 @@ test_that("test miscellaneous fns", {
   expect_true(all(unlist(lapply(whZero, function(ws) identical(x1[[ws]], a[[ws]])))))
 
   out <- capture_messages(messageDF(cbind(a = 1.1232), round = 2))
+  out <- strsplit(out, "\n")[[1]] # the prev line is all on one line now (Dec 2023), with \n separating
   expect_true(is.character(out))
   expect_identical(length(out), 2L) ## TODO: only passes when run line by line interactively
   expect_true(is.numeric(as.numeric(gsub("\033.*", "", gsub(".*: ", "", out)[2]))))
@@ -311,6 +312,7 @@ test_that("test miscellaneous fns", {
 
 
   out <- capture_messages(messageDF(1.1232, round = 2, colnames = TRUE))
+  out <- strsplit(out, "\n")[[1]] # the prev line is all on one line now (Dec 2023), with \n separating
   expect_true(is.character(out))
   expect_identical(length(out), 2L) ## TODO: only passes when run line by line interactively
   expect_true(is.numeric(as.numeric(gsub("\033.*", "", gsub(".*: ", "", out)[2]))))

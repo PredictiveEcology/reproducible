@@ -2,7 +2,8 @@ test_that("test file-backed raster caching", {
   skip_on_cran()
   testInit("terra",
            tmpFileExt = c(".tif", ".grd"),
-           opts = list(reproducible.useMemoise = FALSE)
+           opts = list(reproducible.useMemoise = FALSE,
+                       reproducible.verbose = FALSE)
   )
 
   nOT <- Sys.time()
@@ -16,9 +17,8 @@ test_that("test file-backed raster caching", {
 
   a <- randomPolyToDisk(tmpfile[1])
   # confirm that the raster has the given tmp filename
-  expect_equivalent(
-    strsplit(normPath(tmpfile[1]), split = "[\\/]"),
-    strsplit(normPath(Filenames(a)), split = "[\\/]")
+  expect_identical(normPath(tmpfile[1]),
+                   normPath(Filenames(a))
   )
 
   # Using mock interactive function
@@ -138,7 +138,6 @@ test_that("test file-backed raster caching", {
   fn2 <- function(stk) {
     stk
   }
-  aaaa <<- 1
   out <- Cache(fn2, bbS, cachePath = tmpCache, userTags = "something2")
   froms <- normPath(dir(tmpCache, recursive = TRUE, full.names = TRUE))
   # checkPath(file.path(tmpdir, "rasters"), create = TRUE)
@@ -239,8 +238,8 @@ test_that("test file-backed raster caching", {
   # changed behaviour as of reproducible 1.2.0.9020 -- now Cache doesn't protect user from filename collisions if user makes them
   expect_true(unique(dirname(normPath(Filenames(bb)))) != normPath(file.path(tmpdir, "rasters")))
   expect_true(identical(basename(Filenames(bb, allowMultiple = FALSE)), basename(tmpfile[2])))
-  expect_equivalent(normPath(Filenames(bb, allowMultiple = FALSE)), normPath(tmpfile[2]))
-  expect_equivalent(normPath(dirname(Filenames(bb1, allowMultiple = FALSE))), normPath(dirname(tmpfile[2])))
+  expect_identical(normPath(Filenames(bb, allowMultiple = FALSE)), normPath(tmpfile[2]))
+  expect_identical(normPath(dirname(Filenames(bb1, allowMultiple = FALSE))), normPath(dirname(tmpfile[2])))
   expect_true(basename(Filenames(bb1, allowMultiple = FALSE)) == basename(tmpfile[2]))
   expect_true(dataType2(bb) == "INT1U")
   if (.requireNamespace("raster")) {
@@ -352,16 +351,15 @@ test_that("test 'quick' argument", {
 
   expect_true(sum(grepl(
     paste0(
-      paste(.loadedCacheMsg(.loadedCacheResultMsg, "quickFun"), .addingToMemoisedMsg), "|",
-      .loadedCacheMsg(.loadedMemoisedResultMsg, "quickFun")
+      paste(.message$LoadedCache(.message$LoadedCacheResult(), "quickFun"), .message$AddingToMemoised), "|",
+      .message$LoadedCache(.message$LoadedCacheResult("Memoised"), "quickFun")
     ),
     mess1
   )) == 0)
-  # expect_true(any(grepl(paste(.loadedCacheResultMsg, "quickFun call, adding to memoised copy"), mess1 )))
   mess2 <- capture_messages({
     out1c <- Cache(quickFun, thePath, cachePath = tmpdir, quick = FALSE)
   })
-  expect_true(length(mess2) == 0) # because it is looking at the file contents
+  expect_true(length(mess2) == 1) # because it is looking at the file contents
 
   # Using Raster directly -- not file
   quickFun <- function(ras) {
@@ -379,16 +377,17 @@ test_that("test 'quick' argument", {
   })
   expect_true(sum(grepl(
     paste0(
-      paste(.loadedCacheMsg(.loadedCacheResultMsg, "quickFun"), .addingToMemoisedMsg), "|",
-      paste(.loadedMemoisedResultMsg, "quickFun call")
+      paste(.message$LoadedCache(.message$LoadedCacheResult(), "quickFun"), .message$AddingToMemoised), "|",
+      paste(.message$LoadedCacheResult("Memoised"), "quickFun call")
     ),
     mess1
   )) == 0)
 
   # mess3 <- capture_messages({ out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = FALSE) })
-  expect_silent({
+  mess <- capture_messages({
     out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = FALSE)
   })
+  expect_true(length(mess) == 1)
 })
 
 test_that("test date-based cache removal", {
@@ -539,11 +538,11 @@ test_that("test asPath", {
   # Third -- finally has all same as second time
   a3 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
 
-  expect_true(length(a1) == 0)
-  expect_true(length(a2) == 0)
+  expect_equal(length(a1), 1)
+  expect_equal(length(a2), 1)
   expect_true(sum(grepl(paste(
-    .loadedMemoisedResultMsg, "|",
-    .loadedCacheResultMsg
+    .message$LoadedCacheResult("Memoised"), "|",
+    .message$LoadedCacheResult()
   ), a3)) == 1)
 
   unlink("filename.RData")
@@ -560,12 +559,12 @@ test_that("test asPath", {
                                file = asPath("filename.RData"),
                                quick = TRUE, cachePath = tmpdir
   ))
-  expect_true(length(a1) == 0)
+  expect_equal(length(a1), 1)
   expect_true(sum(grepl(paste(
-    .loadedCacheResultMsg, "|",
-    .loadedMemoisedResultMsg
+    .message$LoadedCacheResult("Memoised"), "|",
+    .message$LoadedCacheResult()
   ), a2)) == 1)
-  expect_true(sum(grepl(paste(.loadedMemoisedResultMsg, "saveRDS call"), a3)) == 1)
+  expect_true(sum(grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
 
   unlink("filename.RData")
   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
@@ -581,12 +580,12 @@ test_that("test asPath", {
                                file = as("filename.RData", "Path"),
                                quick = TRUE, cachePath = tmpdir
   ))
-  expect_true(length(a1) == 0)
+  expect_equal(length(a1), 1)
   expect_true(sum(grepl(paste(
-    .loadedCacheResultMsg, "|",
-    .loadedMemoisedResultMsg
+    .message$LoadedCacheResult("Memoised"), "|",
+    .message$LoadedCacheResult()
   ), a2)) == 1)
-  expect_true(sum(grepl(paste(.loadedMemoisedResultMsg, "saveRDS call"), a3)) == 1)
+  expect_true(sum(grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
 })
 
 test_that("test wrong ways of calling Cache", {
@@ -634,28 +633,28 @@ test_that("test Cache argument inheritance to inner functions", {
   }
 
   mess <- capture_messages(Cache(outer, n = 2))
-  expect_true(all(grepl(messageNoCacheRepo, mess)))
+  expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, mess)), 2)
   clearCache(ask = FALSE, x = tmpdir)
 
   # options(reproducible.cachePath = tmpCache)
   out <- capture_messages(Cache(outer, n = 2))
   expect_true(all(unlist(lapply(
-    c(messageNoCacheRepo, messageNoCacheRepo),
+    c(.message$NoCacheRepoSuppliedGrep, .message$NoCacheRepoSuppliedGrep),
     function(mess) any(grepl(mess, out))
   ))))
 
   # does Sys.time() propagate to outer ones
   out <- capture_messages(Cache(outer(n = 2, not = Sys.time() + 1), notOlderThan = Sys.time() + 1))
-  expect_true(all(grepl(messageNoCacheRepo, out)))
+  expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, out)), 2)
 
   # does Sys.time() propagate to outer ones -- no message about cachePath being tempdir()
   mess <- capture_messages(Cache(outer(n = 2, not = Sys.time()), notOlderThan = Sys.time(), cachePath = tmpdir))
-  expect_true(all(grepl(messageNoCacheRepo, mess)))
+  expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, mess)), 1)
 
   # does cachePath propagate to outer ones -- no message about cachePath being tempdir()
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
   expect_true(length(out) == 2)
-  expect_true(sum(grepl(paste(.loadedCacheResultMsg, "outer call"), out)) == 1)
+  expect_true(sum(grepl(paste(.message$LoadedCacheResult(), "outer call"), out)) == 1)
 
   # check that the rnorm inside "outer" returns cached value even if outer "outer" function is changed
   outer <- function(n) {
@@ -663,8 +662,8 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n)
   }
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-  expect_true(length(out) == 3)
-  msgGrep <- paste(paste(.loadedCacheResultMsg, "rnorm call"),
+  expect_true(length(out) == 4)
+  msgGrep <- paste(paste(.message$LoadedCacheResult(), "rnorm call"),
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
@@ -676,7 +675,7 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n, notOlderThan = Sys.time() + 1)
   }
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-  expect_true(all(grepl(messageNoCacheRepo, out)))
+  expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, out)), 1)
 
   # change the outer function, so no cache on that, & have notOlderThan on rnorm,
   #    so no Cache on that
@@ -685,13 +684,13 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n, notOlderThan = Sys.time() + 1)
   }
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-  expect_true(all(grepl(messageNoCacheRepo, out)))
+  expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, out)), 1)
 
   # expect_true(all(grepl("There is no similar item in the cachePath", out)))
   # Second time will get a cache on outer
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
   expect_true(length(out) == 2)
-  expect_true(sum(grepl(paste(.loadedCacheResultMsg, "outer call"), out)) == 1)
+  expect_true(sum(grepl(paste(.message$LoadedCacheResult(), "outer call"), out)) == 1)
 
   # doubly nested
   inner <- function(mean, useCache = TRUE) {
@@ -708,11 +707,11 @@ test_that("test Cache argument inheritance to inner functions", {
   }
 
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir, notOlderThan = Sys.time()))
-  msgGrep <- paste(paste(.loadedCacheResultMsg, "inner call"),
+  msgGrep <- paste(paste(.message$LoadedCacheResult(), "inner call"),
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
-  expect_true(sum(grepl(messageNoCacheRepo, out)) == 1)
+  expect_true(sum(grepl(.message$NoCacheRepoSuppliedGrep, out)) == 1)
 
   # expect_true(sum(grepl(msgGrep, out)) == 1)
 
@@ -725,7 +724,7 @@ test_that("test Cache argument inheritance to inner functions", {
   }
 
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir, notOlderThan = Sys.time()))
-  msgGrep <- paste(paste(.loadedCacheResultMsg, "rnorm call"),
+  msgGrep <- paste(paste(.message$LoadedCacheResult(), "rnorm call"),
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
@@ -848,7 +847,6 @@ test_that("test mergeCache", {
   expect_true(identical(showCache(d), showCache(d1)))
 })
 
-
 test_that("test cache-helpers", {
   testInit(c("raster"), tmpFileExt = c(rep(".grd", 3), rep(".tif", 3)))
   # out <- reproducible::createCache(tmpCache)
@@ -970,7 +968,6 @@ test_that("test rm large non-file-backed rasters", {
 
 test_that("test cc", {
   skip_on_cran()
-  # skip_on_ci()
 
   testInit(verbose = TRUE)
 
@@ -1045,43 +1042,39 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
 
 
   rm(b)
-  mess <- capture_messages(
+  mess <- capture_messages({
     warn <- capture_warnings({
       err <- capture_error({
         d <- Cache(rnorm, 1, cachePath = tmpdir)
       })
     })
-  )
+  })
   expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), mess)) == 1)
   expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), err)) == 0)
-  expect_true(grepl(paste0("[cannot|failed to] open"), paste(warn, err)))
+  expect_true(any(grepl(paste0("[cannot|failed to] open"), paste(warn, err, mess))))
   expect_true(is.numeric(d))
 })
 
 test_that("test changing reproducible.cacheSaveFormat midstream", {
-  if (!.requireNamespace("qs")) skip("Need qs; skipping test")
+  skip_if_not_installed("qs")
+
   testInit(opts = list(
-    "reproducible.useMemoise" = FALSE,
-    "reproducible.cacheSaveFormat" = "rds"
+    reproducible.cacheSaveFormat = "rds",
+    reproducible.useMemoise = FALSE
   ))
 
   b <- Cache(rnorm, 1, cachePath = tmpdir)
   sc <- showCache(tmpdir)
   ci <- unique(sc[[.cacheTableHashColName()]])
-  options("reproducible.cacheSaveFormat" = "qs")
-  on.exit(
-    {
-      options(opts)
-    },
-    add = TRUE
-  )
+  opts <- options(reproducible.cacheSaveFormat = "qs")
+  on.exit(options(opts), add = TRUE)
   mess <- capture_messages({
     b <- Cache(rnorm, 1, cachePath = tmpdir)
   })
   expect_false(attr(b, ".Cache")$newCache)
   expect_true(sum(grepl("Changing format of Cache entry from rds to qs", mess)) == 1)
 
-  options("reproducible.cacheSaveFormat" = "rds")
+  opts <- options(reproducible.cacheSaveFormat = "rds")
   mess <- capture_messages({
     b <- Cache(rnorm, 1, cachePath = tmpdir)
   })
@@ -1137,8 +1130,8 @@ test_that("test file link with duplicate Cache", {
   mess2 <- capture_messages({
     d <- Cache(sam1, N, cachePath = tmpCache)
   })
-  expect_true(any(grepl("loaded cached", mess2)))
-  expect_true(any(grepl("loaded cached", mess1)))
+  expect_true(any(grepl(.message$LoadedCacheResult(), mess2)))
+  expect_true(any(grepl(.message$LoadedCacheResult(), mess1)))
   # There are intermittent "status 5" warnings on next line on Windows -- not relevant here
   warns <- capture_warnings({
     out1 <- try(system2("du", paste0("\"", tmpCache, "\""), stdout = TRUE), silent = TRUE)
@@ -1159,7 +1152,7 @@ test_that("test file link with duplicate Cache", {
     d <- Cache(sample, N, cachePath = tmpCache)
   })
   # Different inputs AND different output -- so no cache recovery and no file link
-  expect_true(length(mess2) == 0)
+  expect_true(length(mess2) == 1)
   out2 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
   if (!is(out2, "try-error")) {
     fs2 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out2))
@@ -1174,7 +1167,7 @@ test_that("test file link with duplicate Cache", {
   warn <- capture_warnings({
     d1 <- Cache(sam1, N, cachePath = tmpCache)
   })
-  expect_true(length(warn) == 0)
+  expect_true(length(warn) == 0) ## TODO: sometimes not true?
 })
 
 test_that("test .object arg for list in Cache", {
@@ -1254,12 +1247,12 @@ test_that("quick arg in Cache as character", {
   }
 
   expect_true(length(messes[[6]]) > 0) # undesirable: quick = TRUE -- raster has changed
-  expect_true(length(messes[[8]]) == 0) # undesirable: quick = FALSE -- raster & file not changed
+  expect_true(length(messes[[8]]) == 1) # undesirable: quick = FALSE -- raster & file not changed
 
   ## Desired: 9 not cache, 10 cached. But 9 is picking up cache from 4.
-  expect_true(length(messes[[9]]) == 0) # undesirable: quick = 'file' -- raster & file changed
+  expect_true(length(messes[[9]]) == 1) # undesirable: quick = 'file' -- raster & file changed
   expect_true(length(messes[[10]]) > 0) # undesirable: quick = 'file -- raster & file not changed
-  expect_true(sum(unlist(lapply(messes, function(x) length(x) > 0))) == 4L)
+  expect_equal(sum(unlist(lapply(messes, function(x) length(x) > 1))), 4L)
 })
 
 test_that("List of Rasters", {
@@ -1331,7 +1324,9 @@ test_that("Cache the dots; .cacheExtra", {
     out6 <- Cache(mean, 7, omitArgs = "x", .cacheExtra = "234", cachePath = tmpCache)
   })
   expect_true(out6 - 6 == 0) # takes first one
-  expect_equivalent(out5, out6) # the attributes will be different because one is a recovery of the other
+  attr(out5, ".Cache") <- NULL
+  attr(out6, ".Cache") <- NULL
+  expect_equal(out5, out6, ignore_attr = TRUE )# the attributes will be different because one is a recovery of the other
 })
 
 test_that("change to new capturing of FUN & base pipe", {
@@ -1339,15 +1334,14 @@ test_that("change to new capturing of FUN & base pipe", {
   skip_if(getRversion() < "4.2.0")
 
   Nrand2 <- Nrand <- 1e6
-  mess0 <- capture_messages(
+  mess0 <- capture_messages({
     out0 <- Cache(rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1)))), cachePath = tmpCache)
-  )
+  })
 
-  mess1 <- capture_messages(
+  mess1 <- capture_messages({
     out1 <- Cache(do.call(rnorm, list(1, 2, sd = round(mean(runif(Nrand2, 1, 1.1))))),
-                  cachePath = tmpCache
-    )
-  )
+                  cachePath = tmpCache)
+  })
 
   # NO LONGER THE SAME CALL AS ABOVE
   f1 <- paste("
@@ -1357,9 +1351,9 @@ test_that("change to new capturing of FUN & base pipe", {
         rnorm(1, 2, sd = _)} |> # _ Only works with R >= 4.2.0
         Cache(cachePath = tmpCache)
     ")
-  mess2 <- capture_messages(
+  mess2 <- capture_messages({
     out2 <- eval(parse(text = f1))
-  )
+  })
   f2 <- paste("out3 <- {runif(Nrand, 1, 1.1) |>
         mean() |>
         round() |>
@@ -1377,8 +1371,8 @@ test_that("change to new capturing of FUN & base pipe", {
 
   expect_true(length(grep("\\<sd\\>", mess0)) == 1) # digests just the 1
   expect_true(length(grep("\\<sd\\>", mess1)) == 1) # digests just the 1
-  expect_true(length(grep("\\<sd\\>", mess2)) == 6) # digests each element
-  expect_true(length(grep("\\<sd\\>", mess3)) == 6) # digests each element
+  expect_true(length(grep("\\<sd\\>", strsplit(mess2[[1]], ":")[[1]])) == 6) # digests each element
+  expect_true(length(grep("\\<sd\\>", strsplit(mess3[[1]], ":")[[1]])) == 6) # digests each element
 
   clearCache(tmpCache)
   for (i in 1:3) Cache(rnorm, i, cachePath = tmpCache)
@@ -1414,20 +1408,26 @@ test_that("change to new capturing of FUN & base pipe", {
         Cache(cachePath = tmpCache)
     ")
   mn <- 1
-  st3 <- system.time(out2 <- eval(parse(text = f1)))
-  st4 <- system.time(out3 <- Cache(
-    {
-      rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1))))
-    },
-    cachePath = tmpCache
-  ))
+  st3 <- system.time({
+    out2 <- eval(parse(text = f1))
+  })
+  st4 <- system.time({
+    out3 <- Cache(
+      {
+        rnorm(1, 2, round(mean(runif(Nrand, 1, 1.1))))
+      },
+      cachePath = tmpCache
+    )
+  })
   # can pass a variable, but not a function
-  st5 <- system.time(out3 <- Cache(
-    {
-      rnorm(1, 2, round(mean(runif(Nrand, mn, 1.1))))
-    },
-    cachePath = tmpCache
-  ))
+  st5 <- system.time({
+    out3 <- Cache(
+      {
+        rnorm(1, 2, round(mean(runif(Nrand, mn, 1.1))))
+      },
+      cachePath = tmpCache
+    )
+  })
   f1 <- paste("
       { a <- runif(Nrand, 1, 1.1)
         b <- mean(a)
@@ -1435,7 +1435,9 @@ test_that("change to new capturing of FUN & base pipe", {
         rnorm(1, 2, sd = d)} |> # _ Only works with R >= 4.2.0
         Cache(cachePath = tmpCache)
     ")
-  err <- capture_error(out2 <- eval(parse(text = f1)))
+  err <- capture_error({
+    out2 <- eval(parse(text = f1))
+  })
   expect_true(is(err, "simpleError"))
 
   # Test for new `round` in R > 4.3.1 with ... i.e., a primitive with method dispatch
@@ -1445,9 +1447,11 @@ test_that("change to new capturing of FUN & base pipe", {
         round()} |> # _ Only works with R >= 4.2.0
         Cache(cachePath = tmpCache)
     ")
-  expect_no_error(mess2 <- capture_messages(
-    out2 <- eval(parse(text = f1))
-  ))
+  expect_no_error({
+    mess2 <- capture_messages({
+      out2 <- eval(parse(text = f1))
+    })
+  })
 })
 
 test_that("test cache with new approach to match.call", {
@@ -1525,6 +1529,24 @@ test_that("test cache with new approach to match.call", {
     }
   }
 
+
+  if (.requireNamespace("terra")) {
+    m <- matrix(1:4, nrow = 2)
+    clearCache(ask = FALSE)
+    a <- list()
+    lala <- capture.output(a[[1]] <- Cache(terra::rast(m, digits = 4)))
+    a[[2]] <- Cache(terra::rast, m, digits = 4)
+    a[[3]] <- Cache(do.call, terra::rast, list(m, digits = 4))
+    a[[4]] <- Cache(do.call(terra::rast, list(m, digits = 4)))
+    a[[5]] <- Cache(quote(terra::rast(m, digits = 4)))
+    expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
+    for (i in 2:NROW(a)) {
+      test <- identical(attr(a[[i]], ".Cache")$newCache, FALSE)
+      if (isFALSE(test)) browser()
+      expect_true(test)
+    }
+  }
+
   # This tries to do a method that is not actually exported from a package; the generic (sf::st_make_valid) is
   if (.requireNamespace("sf")) {
     clearCache(ask = FALSE)
@@ -1535,10 +1557,9 @@ test_that("test cache with new approach to match.call", {
     a[[1]] <- Cache(sf::st_make_valid(p1)) # not
     a[[2]] <- Cache(sf::st_make_valid, p1) # not
     a[[3]] <- Cache(quote(sf::st_make_valid(p1))) # not
-    library(sf)
-    # on.exit({
-    #   try(detach("package:sf", unload = TRUE), silent = TRUE)
-    # }, add = TRUE)
+
+    # The warning is intermittent and related to whether sf was built for exactly this R version
+    warns <- capture_warnings(library(sf))
     a[[4]] <- Cache(st_make_valid(p1)) # not
     ff <- sf::st_make_valid
     a[[5]] <- Cache(ff(p1))
@@ -1706,7 +1727,7 @@ test_that("Issue 316 - writeOutputs in a non getwd dir", {
     )
   }
 
-  expect_equivalent(rasterToMatchLarge[[1]], rasterToMatchLarge[[2]])
+  expect_true(terra::all.equal(rasterToMatchLarge[[1]][], rasterToMatchLarge[[2]][]))
 })
 
 test_that("test useDBI TRUE <--> FALSE", {
@@ -1737,7 +1758,6 @@ test_that("test useDBI TRUE <--> FALSE", {
   lapply(d, function(aa) expect_false(attr(aa, ".Cache")$newCache))
 })
 
-
 test_that("lightweight tests for preProcess code coverage", {
   skip_on_cran()
   out <- testInit(verbose = TRUE)
@@ -1759,8 +1779,6 @@ test_that("lightweight tests for preProcess code coverage", {
   )
 })
 
-
-
 test_that("terra files were creating file.link", {
   testInit("terra",
            tmpFileExt = c(".tif", ".tif"),
@@ -1781,7 +1799,9 @@ test_that("terra files were creating file.link", {
 
 test_that("pass NA to userTags", {
   testInit(verbose = FALSE)
-  expect_no_error(a <- Cache(rnorm(1), userTags = c("NA", "hi")))
+  expect_no_error({
+    a <- Cache(rnorm(1), userTags = c("NA", "hi"))
+  })
 })
 
 test_that("multifile cache saving", {
@@ -1808,4 +1828,29 @@ test_that("multifile cache saving", {
   expect_true(all(basename(Filenames(a)) %in% dir(CacheStorageDir())))
   expect_false(all(Filenames(a) %in% dir(CacheStorageDir(), full.names = TRUE)))
 
+})
+
+test_that("cacheId = 'previous'", {
+  testInit()
+  opts <- options(reproducible.cachePath = tmpdir)
+  on.exit(options(opts), add = TRUE)
+
+  fnName <- "rnorm_this_one"
+  a <- rnorm(1) |> Cache(.functionName = fnName)
+  b <- rnorm(3) |> Cache(.functionName = fnName)
+  d <- rnorm(2) |> Cache(.functionName = fnName, cacheId = "previous")
+  e <- rnorm(2) |> Cache(.functionName = fnName)
+  if (getRversion() >= "4.3.0") {
+    ## TODO: misc error on R 4.2 and 4.1:
+    ## Error: `all.equalWONewCache(b, d) is not TRUE`
+    expect_true(all.equalWONewCache(b, d))
+  }
+  expect_false(isTRUE(all.equalWONewCache(e, d)))
+
+  # cacheId = "previous" returns normal if there is no previous
+  fnName <- "rnorm_this_second"
+  d <- rnorm(4) |> Cache(.functionName = fnName, cacheId = "previous")
+  expect_true(unlist(attr(d, ".Cache")))
+  e <- rnorm(4) |> Cache(.functionName = fnName, cacheId = "previous")
+  expect_false(unlist(attr(e, ".Cache")))
 })

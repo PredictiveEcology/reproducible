@@ -41,7 +41,7 @@ test_that("test Copy", {
   ### environments
   dt <- data.table(a = 1:2, b = rev(LETTERS[1:2]))
   li <- list(dt = dt, ras = ras, ras2 = ras2)
-  li <- list2env(li, env = new.env(parent = emptyenv()))
+  li <- list2env(li, envir = new.env(parent = emptyenv()))
 
   tmpdir <- tempdir2("ras3")
   li2 <- Copy(li, tmpdir)
@@ -68,7 +68,7 @@ test_that("test Copy", {
   li <- list(dt = dt, ras = ras, ras2 = ras2)
   env1 <- new.env(parent = emptyenv())
   env2 <- new.env(parent = emptyenv())
-  liEnv <- list2env(li, env = env1)
+  liEnv <- list2env(li, envir = env1)
   liEnv[["env"]] <- li
 
   tmpdir <- tempdir2("ras3")

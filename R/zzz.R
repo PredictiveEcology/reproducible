@@ -1,10 +1,23 @@
+#' The `reproducible` package environments
+#'
+#' Environment used internally to store internal package objects and methods.
+#'
+#' - `.message` is specifically for messages and message-generating functions;
+#' - `.pkgEnv` is for general use within the package;
+#' - `.reproEnv` is used for `Cache`-related objects;
+#'
+#' @keywords internal
+#' @rdname pkgEnv
+.pkgEnv <- new.env(parent = emptyenv())
+.pkgEnv$testCacheCounter <- 1L
+
 .onLoad <- function(libname, pkgname) {
   ## set options using the approach used by devtools
   opts <- options()
   opts.reproducible <- reproducibleOptions()
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
-  SysInfo <<- Sys.info() # update with system at time of loading; all we need is username
+  .pkgEnv$SysInfo <- Sys.info() # record once at loading; repeatedly calling Sys.info is a waste
   invisible()
 }
 
@@ -50,12 +63,3 @@
     function(x) names(formals(x))
   ))
 ))
-
-#' The `reproducible` package environment
-#'
-#' Environment used internally to store internal package objects and methods.
-#'
-#' @keywords internal
-#' @rdname pkgEnv
-.pkgEnv <- new.env(parent = emptyenv())
-.pkgEnv$testCacheCounter <- 1L

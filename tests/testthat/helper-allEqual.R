@@ -19,7 +19,6 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
 
   pf <- parent.frame()
 
-
   if (isTRUE(needGoogleDriveAuth)) {
     libraries <- c(libraries, "googledrive")
     needInternet <- TRUE
@@ -40,7 +39,6 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
     if (!intExists) skip("Need internet")
   }
 
-
   if (length(libraries)) {
     libraries <- unique(libraries)
     loadedAlready <- vapply(libraries, function(pkg) {
@@ -56,7 +54,6 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
       suppressWarnings(lapply(libraries, withr::local_package, .local_envir = pf))
     }
   }
-
 
   skip_gauth <- identical(Sys.getenv("SKIP_GAUTH"), "true") # only set in setup.R for covr
   if (isTRUE(needGoogleDriveAuth)) {
@@ -113,6 +110,11 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
     out$tmpfile <- normPath(withr::local_tempfile(fileext = tmpFileExt))
   }
   withr::local_dir(tmpdir, .local_envir = pf)
+  withr::defer({
+    try(reproducible::clearCache(cachePath = tmpCache, ask = FALSE, verbose = -1))
+    try(reproducible::clearCache(ask = FALSE, verbose = -1))
+    try(unlink(tmpCache, recursive = TRUE))
+  }, envir = pf)
 
   out <- append(out, list(tmpdir = tmpdir, tmpCache = tmpCache))
   list2env(out, envir = pf)
@@ -265,7 +267,7 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
   files <- dir(tmpdir, pattern = filePattern, full.names = TRUE)
   expect_true(length(files) == numFiles)
   expect_true(inherits(test, class))
-  messagePrepInputs(mess)
+  # messagePrepInputs(mess)
   hasMessageNum <- paste(collapse = "_", which(unlist(
     lapply(strsplit(expectedMess, "\\|")[[1]], function(m) {
       any(grepl(m, mess))
@@ -293,12 +295,12 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
 }
 
 expectedMessageRaw <- c(
-  "Running preP", "Preparing:", "File downloaded",
+  "Running `preP", "Preparing:", "File downloaded",
   "From:.*Shapefile", "Checking local", "Finished checking",
   "Downloading", "Skipping download", "Skipping extractFrom",
   "targetFile was not.*ry",
   "Writing checksums.*you can specify targetFile",
-  "No targetFile supplied. Extracting", "Appending checksums", "although coordinates are longitude"
+  "No targetFile supplied. Checksumming", "Appending checksums", "although coordinates are longitude"
 )
 expectedMessage <- paste0(collapse = "|", expectedMessageRaw)
 
@@ -312,12 +314,8 @@ urlTif1 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master
 urlShapefiles1Zip <- "https://drive.google.com/file/d/1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb/view?usp=sharing"
 urlShapefilesZip <- "https://drive.google.com/file/d/1z1x0oI5jUDJQosOXacI8xbzbR15HFi0W/view?usp=sharing"
 
-### Raster package function getData is failing for GADM objects because that site seems to have changed its url
-# targetFileLuxRDS <- "GADM_3.6_LUX_adm0.rds"
 targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
 
-
-## TODO: switch to `geodata` package (raster::getData() is deprecated) (#256)
 testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
                               type = c("Raster", "Stack", "Brick")) {
   .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
@@ -333,7 +331,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   tempFile <- replicate(14, tempfile(tmpdir = tmpdir, fileext = fileext))
 
   mc <- match.call()
-  r1Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 1, res = 1)
+  r1Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 1, resolution = 1)
   r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[1], overwrite = TRUE)
 
   if (mc$type == "Stack") {
@@ -360,7 +358,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   ####################################################
   # cloud copy exists only -- should download to local copy
   ####################################################
-  r2Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 1, res = 1)
+  r2Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 1, resolution = 1)
   r2Orig <- terra::writeRaster(r2Orig, filename = tempFile[3], overwrite = TRUE)
   if (mc$type == "Stack") {
     r2Orig2 <- terra::writeRaster(r2Orig, filename = tempFile[4], overwrite = TRUE)
@@ -401,7 +399,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   # only local exists -- upload to cloud
   ####################################################
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
-  r1Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 5, res = 1)
+  r1Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 5, resolution = 1)
   r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[5], overwrite = TRUE)
   if (mc$type == "Stack") {
     r1Orig2 <- terra::writeRaster(r1Orig, filename = tempFile[12], overwrite = TRUE)
@@ -436,7 +434,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   # both cloud and local exist -- take local only -- no change to cloud
   ####################################################
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
-  r1Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 5, res = 1)
+  r1Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 5, resolution = 1)
   r1Orig <- terra::writeRaster(r1Orig, filename = tempFile[6], overwrite = TRUE)
   if (mc$type == "Stack") {
     r1Orig2 <- terra::writeRaster(r1Orig, filename = tempFile[13], overwrite = TRUE)
@@ -455,7 +453,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
 
 
   driveLsBefore <- googledrive::drive_ls(cloudFolderID)
-  r5Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 5, res = 1)
+  r5Orig <- terra::rast(terra::ext(0, 200, 0, 200), vals = 5, resolution = 1)
   r5Orig <- terra::writeRaster(r5Orig, filename = tempFile[9], overwrite = TRUE)
   if (mc$type == "Stack") {
     r5Orig2 <- terra::writeRaster(r5Orig, filename = tempFile[14], overwrite = TRUE)
@@ -486,9 +484,6 @@ fnCacheHelper <- function(a, cacheRepo2) {
 }
 
 crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84"
-
-messageNoCacheRepo <- "No cachePath supplied and getOption\\('reproducible.cachePath'\\) is inside"
-
 
 .writeRaster <- function(...) {
   .requireNamespace("terra", stopOnFALSE = TRUE)

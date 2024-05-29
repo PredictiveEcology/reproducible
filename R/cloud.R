@@ -161,7 +161,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
     }))
     if (i %in% 1) {
       dtFile <- outs[[1]]$local_path # grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE)
-      dt <- loadFile(dtFile, format = fileExt(dtFile), cachePath = cachePath)
+      dt <- loadFile(dtFile, format = fileExt(dtFile))
       fromDisk <- extractFromCache(dt, elem = "fromDisk") %in% "TRUE"
       if (all(!fromDisk)) break
       newFileName <- extractFromCache(dt, elem = "origFilename")

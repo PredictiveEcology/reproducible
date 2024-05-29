@@ -221,7 +221,7 @@ basename2 <- function(x) {
 #' @details
 #' Based on <https://github.com/jennybc/googlesheets/issues/219#issuecomment-195218525>.
 #'
-#' @param expr     Quoted expression to run, i.e., `quote(...)`
+#' @param expr     An expression to run, i.e., `rnorm(1)`, similar to what is passed to `try`
 #' @param retries  Numeric. The maximum number of retries.
 #' @param envir    The environment in which to evaluate the quoted expression, default
 #'   to `parent.frame(1)`
@@ -247,9 +247,37 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
   if (exponentialDecayBase < 1) {
     stop("exponentialDecayBase must be equal to or greater than 1")
   }
+  hasRutils <- .requireNamespace("R.utils", stopOnFALSE = FALSE, messageStart = "")
+
   for (i in seq_len(retries)) {
-    if (!(is.call(expr) || is.name(expr))) warning("expr is not a quoted expression")
-    result <- try(expr = eval(expr, envir = envir), silent = silent)
+    exprSub <- substitute(expr) # Have to deal with case where expr is already quoted
+    # if (!(is.call(expr) || is.name(expr))) warning("expr is not a quoted expression")
+
+    if ( hasRutils) {
+      # wrap the expr with R.utils::withTimeout
+      expr2 <- append(append(list(R.utils::withTimeout), exprSub),
+                             list(timeout = getOption("reproducible.timeout", 1200), onTimeout = "error"))
+      exprSub <- as.call(expr2)
+    }
+
+    result <- try(silent = silent,
+                  expr = withCallingHandlers({
+                    res <- eval(exprSub, envir = envir)
+                    if (is.call(res))
+                      if (is.call(expr))
+                        res <- eval(res, envir = envir)
+                    res
+                    },
+                    error = function(e) {
+                      if (!hasRutils) {
+                        message("If the download stalls/stalled, please interrupt this function ",
+                                "then install R.utils, then rerun this prepInputs/preProcess. This ",
+                                "function will then use `R.utils::withTimeout`, which will cause an error ",
+                                "sooner")
+                      }
+                    })
+    )
+
     if (inherits(result, "try-error")) {
       if (!is.null(exprBetween)) {
         finalPart <- length(format(exprBetween))
@@ -351,18 +379,19 @@ isMac <- function() {
 
   if (need) { # separate these so it is faster
     if (isTRUE(stopOnFALSE)) {
-      stop(requireNamespaceMsg(pkg, extraMsg = messageStart, minVersion = minVersion))
+      stop(.message$RequireNamespaceFn(pkg, messageExtra = messageStart, minVersion = minVersion))
     }
   }
   !need
 }
 
-# This is directly from tools::file_ext_sans_ext
+## TODO: why not use the original funs below? why copy them?
+## This is directly from tools::file_path_sans_ext
 filePathSansExt <- function(x) {
   sub("([^.]+)\\.[[:alnum:]]+$", "\\1", x)
 }
 
-# This is directly from tools::file_ext
+## This is directly from tools::file_ext
 fileExt <- function(x) {
   pos <- regexpr("\\.([[:alnum:]]+)$", x)
   ifelse(pos > -1L, substring(x, pos + 1L), "")
@@ -391,123 +420,6 @@ isFile <- function(pathnames) {
   iF[iF] <- !file.info(pathnames[iF])$isdir
   names(iF) <- origPn
   iF
-}
-
-# This is so that we don't need to import from backports
-isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
-
-#' Use `message` with a consistent use of `verbose`
-#'
-#' This family has a consistent use of `verbose` allowing messages to be
-#' turned on or off or verbosity increased or decreased throughout the family of
-#' messaging in `reproducible`. `messageDF` uses `message` to print a clean
-#' square data structure. `messageColoured`
-#' allows specific colours to be used. `messageQuestion` sets a high level for
-#' `verbose` so that the message always gets asked.
-#'
-#' @param df A data.frame, data.table, matrix
-#' @param round An optional numeric to pass to `round`
-#' @param colour Passed to `getFromNamespace(colour, ns = "crayon")`,
-#'   so any colour that `crayon` can use
-#' @param colnames Logical or `NULL`. If `TRUE`, then it will print
-#'   column names even if there aren't any in the `df` (i.e., they will)
-#'   be `V1` etc., `NULL` will print them if they exist, and `FALSE`
-#'   which will omit them.
-#' @param verboseLevel The numeric value for this `message*` call, equal or above
-#'   which `verbose` must be. The higher this is set, the more unlikely the call
-#'   will show a message.
-#' @inheritParams base::message
-#'
-#' @export
-#' @return
-#' Used for side effects. This will produce a message of a structured `data.frame`.
-#'
-#' @importFrom data.table is.data.table as.data.table
-#' @importFrom utils capture.output
-#' @rdname messageColoured
-#' @inheritParams Cache
-messageDF <- function(df, round, colour = NULL, colnames = NULL,
-                      verbose = getOption("reproducible.verbose"), verboseLevel = 1,
-                      appendLF = TRUE) {
-  if (isTRUE(verboseLevel <= verbose)) {
-    origColNames <- if (is.null(colnames) || isTRUE(colnames)) colnames(df) else NULL
-
-    if (is.matrix(df)) {
-      df <- as.data.frame(df)
-    }
-    if (!is.data.table(df)) {
-      df <- as.data.table(df)
-    }
-    df <- Copy(df)
-    skipColNames <- if (is.null(origColNames) && !isTRUE(colnames)) TRUE else FALSE
-    if (!missing(round)) {
-      isNum <- sapply(df, is.numeric)
-      isNum <- colnames(df)[isNum]
-      for (Col in isNum) {
-        set(df, NULL, Col, round(df[[Col]], round))
-      }
-    }
-    outMess <- capture.output(df)
-    if (skipColNames) outMess <- outMess[-1]
-    out <- lapply(outMess, function(x) {
-      messageColoured(x,
-        colour = colour, appendLF = appendLF, verbose = verbose,
-        verboseLevel = verboseLevel
-      )
-    })
-  }
-}
-
-messagePrepInputs <- function(..., appendLF = TRUE,
-                              verbose = getOption("reproducible.verbose"),
-                              verboseLevel = 1) {
-  messageColoured(...,
-    colour = getOption("reproducible.messageColourPrepInputs"),
-    verboseLevel = verboseLevel, verbose = verbose, appendLF = appendLF
-  )
-}
-
-messageCache <- function(..., colour = getOption("reproducible.messageColourCache"),
-                         verbose = getOption("reproducible.verbose"), verboseLevel = 1,
-                         appendLF = TRUE) {
-  messageColoured(...,
-    colour = colour, appendLF = appendLF,
-    verboseLevel = verboseLevel, verbose = verbose
-  )
-}
-
-#' @rdname messageColoured
-messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
-  # force this message to print
-  messageColoured(...,
-    colour = getOption("reproducible.messageColourQuestion"),
-    verbose = 10, verboseLevel = verboseLevel, appendLF = appendLF
-  )
-}
-
-#' @importFrom utils getFromNamespace
-#' @param colour Any colour that can be understood by `crayon`
-#' @rdname messageColoured
-messageColoured <- function(..., colour = NULL,
-                            verbose = getOption("reproducible.verbose", 1),
-                            verboseLevel = 1, appendLF = TRUE) {
-  if (isTRUE(verboseLevel <= verbose)) {
-    needCrayon <- FALSE
-    if (!is.null(colour)) {
-      if (is.character(colour)) {
-        needCrayon <- TRUE
-      }
-    }
-    if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
-      message(getFromNamespace(colour, "crayon")(paste0(...)), appendLF = appendLF)
-    } else {
-      if (needCrayon && !isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("crayon")) {
-        message("To add colours to messages, install.packages('crayon')", appendLF = appendLF)
-        .pkgEnv$.checkedCrayon <- TRUE
-      }
-      message(paste0(...), appendLF = appendLF)
-    }
-  }
 }
 
 methodFormals <- function(fun, signature = character(), envir = parent.frame()) {
@@ -671,12 +583,17 @@ set.randomseed <- function(set.seed = TRUE) {
 
 # This used to be in helper-allEqual.R --> one of the tests couldn't find it
 getDataFn <- function(...) {
-  suppressWarningsSpecific(
-    {
-      geodata::gadm(...)
-    },
-    falseWarnings = "getData will be removed in a future version of raster"
-  )
+  if (requireNamespace("geodata", quietly = TRUE)) {
+    suppressWarningsSpecific(
+      {
+        geodata::gadm(...)
+      },
+      falseWarnings = "getData will be removed in a future version of raster"
+    )
+  } else {
+    stop("dependency package 'geodata' is not installed.\n",
+         "Try `install.packages('geodata', repos = 'https://predictiveecology.r-universe.dev/')`")
+  }
 }
 
 milliseconds <- function(time = Sys.time()) {
@@ -720,4 +637,11 @@ urlExists <- function(url) {
   on.exit(try(close(con), silent = TRUE), add = TRUE)
   a <- try(suppressWarnings(readLines(con, n = 1)), silent = TRUE)
   !is(a, "try-error")
+}
+
+
+.addSlashNToAllButFinalElement <- function(mess) {
+  if (length(mess) > 1)
+    mess[1:(length(mess)-1)] <- paste0(mess[1:(length(mess)-1)], "\n")
+  mess
 }

@@ -11,7 +11,7 @@
 #'           triggered. `'AUTO'` will calculate 90% of the total
 #'           number of cores in the system, while an integer or rounded
 #'           float will be passed as the exact number of cores to be used.
-#' @param skipDeprecastedMsg Logical. If `TRUE`, then the message about this function
+#' @param messageSkipDeprecated Logical. If `TRUE`, then the message about this function
 #'           being deprecated will be suppressed.
 #'
 #' @param useGDAL Deprecated. Logical or `"force"`. This is defunct; internals now can use
@@ -30,8 +30,8 @@
 #'
 fastMask <- function(x, y, cores = NULL, useGDAL = FALSE,
                      verbose = getOption("reproducible.verbose", 1), ...,
-                     skipDeprecastedMsg = FALSE) {
-  if (!skipDeprecastedMsg) {
+                     messageSkipDeprecated = FALSE) {
+  if (!messageSkipDeprecated) {
     .Deprecated("mask", "terra", "fastMask is deprecated; using maskTo and terra")
   }
   touches <- list(...)$touches

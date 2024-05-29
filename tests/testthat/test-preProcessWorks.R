@@ -449,7 +449,7 @@ test_that("masking with larger extent obj", {
     a <- terra::ext(smallRT)
   }
   a <- terra::extend(a, -3e5) # make it small
-  test <- rasterRead(a, res = 250, vals = 2)
+  test <- rasterRead(a, resolution = 250, vals = 2)
   terra::crs(test) <- terra::crs(smallRT)
   b <- postProcess(x = test, rasterToMatch = smallRT, maskWithRTM = TRUE)
   expect_true(is(b, rasterType()))
@@ -542,7 +542,7 @@ test_that("lightweight tests for preProcess code coverage", {
 test_that("large test for nested file structures in zips", {
   skip_on_cran()
   skip_on_ci()
-  testInit(c("sf", "googledrive", "terra"), needInternet = TRUE)
+  testInit(c("sf", "googledrive", "terra"), needInternet = TRUE, needGoogleDriveAuth = TRUE)
   climateDataURL <- "https://drive.google.com/file/d/1we9GqEVAORWLbHi3it66VnCcvLu85QIk"
 
   ## extracts flat files, overwriting and keeping only the last subdir's files
@@ -574,14 +574,14 @@ test_that("more nested file structures in zip; alsoExtract NA", {
   system.time({
     ras <- lapply(1:2, function(x) {
       td <- tempdir2()
-      terra::rast(terra::ext(0, 4, 0, 4), vals = sample(1:16), res = 1) |>
+      terra::rast(terra::ext(0, 4, 0, 4), vals = sample(1:16), resolution = 1) |>
         terra::writeRaster(filename = file.path(td, basename(tempfile(fileext = ".tif"))))
     })
     setwd(dirname(dirname(Filenames(ras[[1]]))))
     fns1 <- Filenames(ras)
     # zip(zipName, files = file.path(basename(dirname(fns)), basename(fns)))
     ras <- lapply(1:2, function(x) {
-      terra::rast(terra::ext(0, 4, 0, 4), vals = sample(1:16), res = 1) |>
+      terra::rast(terra::ext(0, 4, 0, 4), vals = sample(1:16), resolution = 1) |>
         terra::writeRaster(filename = file.path(basename(tempfile(fileext = ".tif"))))
     })
     fns2 <- Filenames(ras)

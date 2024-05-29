@@ -9,6 +9,8 @@
 
 A set of tools for R that enhance reproducibility for data analytics and forecasting.
 This package aims at making high-level, robust, machine and OS independent tools for making deeply reproducible and reusable content in R.
+The suggested package `geodata` can be installed from the repository 
+(<https://PredictiveEcology.r-universe.dev>).
 
 ## News
 

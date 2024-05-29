@@ -57,10 +57,10 @@ test_that("prepInputs doesn't work (part 3)", {
   expect_equal(terra::ext(b), terra::ext(ncSmall))
   expect_true(sf::st_area(b) < sf::st_area(nc1))
 
-  r <- suppressWarnings(terra::rast(nc1, res = 1000)) # TODO: temporary until raster crs fixes
+  r <- suppressWarnings(terra::rast(nc1, resolution = 1000)) # TODO: temporary until raster crs fixes
 
-  rB <- suppressWarnings(terra::rast(nc1, res = 4000)) # TODO: temporary until raster crs fixes
-  rSmall <- suppressWarnings(terra::rast(ncSmall, res = 4000)) # TODO: temporary until raster crs fixes
+  rB <- suppressWarnings(terra::rast(nc1, resolution = 4000)) # TODO: temporary until raster crs fixes
+  rSmall <- suppressWarnings(terra::rast(ncSmall, resolution = 4000)) # TODO: temporary until raster crs fixes
 
   # Tests with RasterBrick
   r2 <- r1 <- rB
@@ -125,8 +125,8 @@ test_that("prepInputs doesn't work (part 3)", {
   expect_true((terra::xmax(terra::ext(ncSmall)) - terra::xmax(r2)) > -(terra::res(r2)[2] * 2))
 
   # postProcess
-  expect_error(postProcess(1), regexp = "from must be a")
-  expect_error(postProcess(list(1, 1)), regexp = "from must be a")
+  expect_error(postProcess(1, to = r2), regexp = "from must be a")
+  expect_error(postProcess(list(1, 1), to = r2), regexp = "from must be a")
 
   nc2 <- postProcess(nc1, studyArea = as(ncSmall, "sf"))
   expect_equal(st_area(nc2), st_area(ncSmall))
@@ -209,7 +209,7 @@ test_that("writeOutputs with non-matching filename2", {
   testInit(c("terra"), tmpFileExt = c(".grd", ".tif"))
 
   r <- terra::rast(terra::ext(0, 10, 0, 10), vals = rnorm(100))
-  r <- terra::writeRaster(r, file = tmpfile[1], overwrite = TRUE)
+  r <- terra::writeRaster(r, filename = tmpfile[1], overwrite = TRUE)
   r[] <- r[]
   warn <- capture_warnings({
     r1 <- writeOutputs(r, filename2 = tmpfile[2])
@@ -246,7 +246,7 @@ test_that("cropInputs crops too closely when input projections are different", {
       "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0",
       "+a=6370997 +b=6370997 +units=m +no_defs"
     ),
-    res = c(10000, 10000)
+    resolution = c(10000, 10000)
   )
   x <- terra::setValues(x, 1)
 
@@ -261,7 +261,7 @@ test_that("cropInputs crops too closely when input projections are different", {
       "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0",
       "+ellps=GRS80 +units=m +no_defs"
     ),
-    res = c(250, 250)
+    resolution = c(250, 250)
   )
   RTM <- setValues(RTM, 2)
   out <- postProcess(x = x, rasterToMatch = RTM, filename2 = NULL)
@@ -288,7 +288,7 @@ test_that("maskInputs errors when x is Lat-Long", {
 
   x <- terra::rast(smallSA,
     crs = "+proj=longlat +ellps=GRS80 +no_defs",
-    res = c(0.001, 0.001)
+    resolution = c(0.001, 0.001)
   )
   suppressWarnings(smallSA <- terra::vect(terra::ext(x), "polygons"))
   terra::crs(smallSA) <- terra::crs(x)

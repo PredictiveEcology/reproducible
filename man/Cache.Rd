@@ -51,7 +51,10 @@ the list, environment or similar objects. In the case of nested list-type
 objects, this will only be applied outermost first.}
 
 \item{.cacheExtra}{A an arbitrary R object that will be included in the \code{CacheDigest},
-but otherwise not passed into the \code{FUN}.}
+but otherwise not passed into the \code{FUN}. If the user supplies a named list, then
+\code{Cache} will report which individual elements of \code{.cacheExtra} have changed
+when \code{options("reproducible.showSimilar" = TRUE)}. This can allow a user
+more control and understanding for debugging.}
 
 \item{.functionName}{A an arbitrary character string that provides a name that is different
 than the actual function name (e.g., "rnorm") which will be used for messaging. This
@@ -141,8 +144,8 @@ treat this as a folder name to create or use on GoogleDrive.}
 \item{showSimilar}{A logical or numeric. Useful for debugging.
 If \code{TRUE} or \code{1}, then if the Cache
 does not find an identical archive in the \code{cachePath}, it will report (via message)
-the next most similar archive, and indicate which argument(s) is/are different.
-If a number larger than \code{1}, then it will report the N most similar archived
+the next most recent similar archive, and indicate which argument(s) is/are different.
+If a number larger than \code{1}, then it will report the N most recent similar archived
 objects.}
 
 \item{drv}{if using a database backend, drv must be an object that
@@ -295,10 +298,8 @@ desired, e.g., \code{Cache(rnorm(1))} is unlikely to be useful in many cases. Ho
 As a result \code{Cache(glm, x ~ y, rnorm(1))} will not work as a means of forcing
 a new evaluation each time, as the \code{rnorm(1)} is not evaluated before the call
 is assessed against the cache database. To force a new call each time, evaluate
-the randomness prior to the Cache call, e.g., \verb{ran = rnorm(1); Cache(glm, x ~ y, ran)}.
-Note this does not work for \code{glm} because \code{glm} accepts \code{...}.
-Rather, this randomness should be passed to \code{.cacheExtra}, e.g.,
-\code{Cache(glm, x ~ y, .cacheExtra = ran)}
+the randomness prior to the Cache call, e.g., \code{ran = rnorm(1)} then pass this
+to \code{.cacheExtra}, e.g., \code{Cache(glm, x ~ y, .cacheExtra = ran)}
 }
 
 \section{\code{drv} and \code{conn}}{

@@ -64,6 +64,10 @@
 #'     this is much faster than the `terra` sequence. The resulting `SpatRaster` is
 #'     not identical, but it is very similar.
 #'   }
+#'   \item{`gdalwarpThreads`}{
+#'     Default: `2`. This will set `-wo NUM_THREADS=` to this number. Default is now `2`, meaning
+#'     `gdalwarp` will use 2 threads with `gdalProject`. To turn off threading, set to `0`, `1` or `NA`.
+#'   }
 #'   \item{`inputPaths`}{
 #'     Default: `NULL`. Used in [prepInputs()] and [preProcess()].
 #'     If set to a path, this will cause these functions to save their downloaded and preprocessed
@@ -117,6 +121,12 @@
 #'   \item{`showSimilar`}{
 #'     Default `FALSE`. Passed to `Cache`.
 #'   }
+#'   \item{`timeout`}{
+#'     Default `1200`. Used in `preProcess` when downloading occurs. If a user has `R.utils`
+#'     package installed, `R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))`
+#'     will be wrapped around the download so that it will timeout (and error) after this many
+#'     seconds.
+#'   }
 #'   \item{`useCache`}{
 #'     Default: `TRUE`. Used in [Cache()]. If `FALSE`, then the entire
 #'     `Cache` machinery is skipped and the functions are run as if there was no Cache occurring.
@@ -145,8 +155,16 @@
 #'     Default value can be overridden by setting environment variable `R_REPRODUCIBLE_USE_DBI`.
 #'     As of version 0.3, the backend is now \pkg{DBI} instead of \pkg{archivist}.
 #'   }
-#'   \item{`useGDAL`}{
-#'     Default `TRUE`. Passed to `useGDAL`. Deprecated.
+#'   \item{`useGdown`}{
+#'     Default: `FALSE`. If a user provides a Google Drive url to `preProcess`/`prepInputs`,
+#'     `reproducible` will use the `googledrive` package. This works reliably in most cases.
+#'     However, for large files on unstable internet connections, it will stall and
+#'     stop the download with no error. If a user is finding this behaviour, they can
+#'     install the `gdown` package, making sure it is available on the PATH. This call
+#'     to `gdown` will only work for files that do not need authentication. If authentication
+#'     is needed, `dlGoogle` will fall back to `googledrive::drive_download`, even
+#'     if this option is `TRUE`, with a message.
+#'     .
 #'   }
 #'   \item{`useMemoise`}{
 #'     Default: `FALSE`. Used in [Cache()]. If `TRUE`, recovery of cached
@@ -212,6 +230,7 @@ reproducibleOptions <- function() {
     reproducible.drv = NULL, # RSQLite::SQLite(),
     reproducible.futurePlan = FALSE, # future::plan("multisession"), #memoise
     reproducible.gdalwarp = FALSE,
+    reproducible.gdalwarpThreads = 2L,
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
@@ -220,6 +239,7 @@ reproducibleOptions <- function() {
     reproducible.messageColourPrepInputs = "cyan",
     reproducible.messageColourCache = "blue",
     reproducible.messageColourQuestion = "green",
+    reproducible.messageColourFunction = "red",
     reproducible.nThreads = 1,
     reproducible.objSize = TRUE,
     reproducible.overwrite = FALSE,
@@ -232,6 +252,7 @@ reproducibleOptions <- function() {
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
+    reproducible.timeout = 1200,
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
     reproducible.useDBI = {getEnv("R_REPRODUCIBLE_USE_DBI",
@@ -239,6 +260,7 @@ reproducibleOptions <- function() {
                        verbose = interactive() - (useDBI() + 1)), # `FALSE` is useMultipleDBFiles now
       allowed = c("true", "false")
     ) |> as.logical()},
+    reproducible.useGdown = FALSE,
     reproducible.useMemoise = FALSE, # memoise
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1

@@ -3,13 +3,14 @@
 \name{createCache}
 \alias{createCache}
 \alias{loadFromCache}
+\alias{extractFromCache}
 \alias{rmFromCache}
 \alias{CacheDBFile}
 \alias{CacheStorageDir}
 \alias{CacheStoredFile}
 \alias{CacheDBTableName}
 \alias{CacheIsACache}
-\title{Functions to create and work with a cache}
+\title{Low-level functions to create and work with a cache}
 \usage{
 createCache(
   cachePath = getOption("reproducible.cachePath"),
@@ -31,6 +32,8 @@ loadFromCache(
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose")
 )
+
+extractFromCache(sc, elem, ifNot = NULL)
 
 rmFromCache(
   cachePath = getOption("reproducible.cachePath"),
@@ -99,54 +102,85 @@ to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 
 \item{.dotsFromCache}{Optional. Used internally.}
 
+\item{sc}{a cache tags \code{data.table} object}
+
+\item{elem}{character string specifying a \code{tagKey} value to match}
+
+\item{ifNot}{character (or NULL) specifying the return value to use if \code{elem} not matched}
+
 \item{obj}{The optional object that is of interest; it may have an attribute "saveRawFile"
 that would be important.}
 
-\item{create}{Logical. Currently only affects non RQSLite default drivers. If this
-is \code{TRUE} and there is no Cache database, the function will create one.}
+\item{create}{Logical. Currently only affects non \pkg{RSQLite} default drivers.
+If \code{TRUE} and there is no Cache database, the function will create one.}
 }
 \value{
-\code{createCache} does not return a value; it is called for side effects.
+\itemize{
+\item \code{createCache()} returns \code{NULL} (invisibly) and intended to be called for side effects;
+}
 
-\code{loadFromCache} returns the object from the cache that has the particular \code{cacheId}.
+\itemize{
+\item \code{loadFromCache()} returns the object from the cache that has the particular \code{cacheId};
+}
 
-\code{rmFromCache} has no return value; it is called for its side effects.
+\itemize{
+\item \code{extractFromCache()} returns the \code{tagValue} from the cache corresponding to \code{elem} if found,
+otherwise the value of \code{ifNot};
+}
 
-\code{CacheDBFile} returns the name of the database file for a given Cache,
-when \code{useDBI() == FALSE}, or \code{NULL} if \code{TRUE}.
-\code{CacheDBFiles} (i.e,. plural) returns the name of all the database files for
-a given Cache when \code{useDBI() == TRUE}, or \code{NULL} if \code{FALSE}
+\itemize{
+\item \code{rmFromCache()} returns \code{NULL} (invisibly) and is intended to be called for side effects;
+}
 
-\code{CacheStorageDir} returns the name of the directory where cached objects are
-stored.
+\itemize{
+\item \code{CacheDBFile()} returns the name of the database file for a given Cache,
+when \code{useDBI() == FALSE}, or \code{NULL} if \code{TRUE};
+\item \code{CacheDBFiles()} (i.e,. plural) returns the name of all the database files for
+a given Cache when \code{useDBI() == TRUE}, or \code{NULL} if \code{FALSE};
+\item \code{CacheStoredFile()} returns the file path to the file with the specified hash value,
+This can be loaded to memory with e.g., \code{\link[=loadFile]{loadFile()}}.;
+}
 
-\code{CacheStoredFile} returns the name of the file in which the cacheId object is stored.
-This can be loaded to memory with e.g., \code{loadFile}.
+\itemize{
+\item \code{CacheStorageDir()} returns the name of the directory where cached objects are stored;
+}
 
-\code{CacheDBTableName} returns the name of the table inside the SQL database, if that
-is being used.
+\itemize{
+\item \code{CacheStoredFile} returns the file path to the file with the specified hash value;
+}
 
-\code{CacheIsACache} returns a logical indicating whether the \code{cachePath} is currently
-a \code{reproducible} cache database.
+\itemize{
+\item \code{CacheDBTableName()} returns the name of the table inside the SQL database, if that
+is being used;
+}
+
+\itemize{
+\item \code{CacheIsACache()} returns a logical indicating whether the \code{cachePath} is currently
+a \code{reproducible} cache database;
+}
 }
 \description{
-These are not intended for normal use.
+\strong{These are intended for advanced use only.}
 }
 \details{
-\code{createCache} function will create a Cache folder structure and necessary files, based on
-the particular \code{drv} or \code{conn} provided.
+\itemize{
+\item \code{createCache()} will create a Cache folder structure and necessary files, based on
+the particular \code{drv} or \code{conn} provided;
+}
 
-\code{loadFromCache} is a function to get a single object from the cache, given its \code{cacheId}.
+\itemize{
+\item \code{loadFromCache()} retrieves a single object from the cache, given its \code{cacheId};
+}
 
-\code{rmFromCache} removes one or more items from the cache, and updates the cache
+\itemize{
+\item \code{extractFromCache()} retrieves a single \code{tagValue} from the cache based on
+the \code{tagKey} of \code{elem};
+}
+
+\itemize{
+\item \code{rmFromCache()} removes one or more items from the cache, and updates the cache
 database files.
-
-\code{CacheStoredFile} returns the file path to the file with the specified hash value.
-
-\code{CacheStoredFile} returns the file path to the file with the specified hash value.
-
-\code{CacheIsACache} returns a logical of whether the specified \code{cachePath}
-is actually a functioning cache.
+}
 }
 \examples{
 data.table::setDTthreads(2)

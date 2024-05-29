@@ -1,21 +1,28 @@
-#' Functions to create and work with a cache
+#' Low-level functions to create and work with a cache
+#'
+#' **These are intended for advanced use only.**
 #'
 #' @param cachePath A path describing the directory in which to create
 #'   the database file(s)
+#'
 #' @inheritParams Cache
+#'
 #' @param drv A driver, passed to `dbConnect`
+#'
 #' @param force Logical. Should it create a cache in the `cachePath`,
 #'   even if it already exists, overwriting.
-#' @importFrom data.table data.table
-#' @rdname CacheHelpers
+#'
 #' @details
-#' `createCache` function will create a Cache folder structure and necessary files, based on
-#' the particular `drv` or `conn` provided.
+#' - `createCache()` will create a Cache folder structure and necessary files, based on
+#' the particular `drv` or `conn` provided;
 #'
 #' @return
-#' `createCache` does not return a value; it is called for side effects.
+#' - `createCache()` returns `NULL` (invisibly) and intended to be called for side effects;
 #'
 #' @export
+#' @importFrom data.table data.table
+#' @rdname CacheHelpers
+#'
 #' @examples
 #' data.table::setDTthreads(2)
 #' newCache <- tempdir2()
@@ -47,8 +54,11 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
   if (useDBI()) {
     .createCache(cachePath = cachePath, drv = drv, conn = conn)
   }
+
+  invisible(NULL)
 }
 
+#' @keywords internal
 .createCache <- function(cachePath, drv, conn) {
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
@@ -77,16 +87,20 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
 
 #' Save an object to Cache
 #'
-#' This is not expected to be used by a user as it requires that the `cacheId`
-#' be calculated in exactly the same as it calculated inside `Cache` (which requires
-#' `match.call` to match arguments with their names, among other things).
+#' This is not expected to be used by a user as it requires that the `cacheId` be
+#' calculated in exactly the same as it calculated inside `Cache`
+#' (which requires `match.call` to match arguments with their names, among other things).
 #'
 #' @inheritParams Cache
+#'
 #' @param cacheId The hash string representing the result of `.robustDigest`
+#'
 #' @param obj The R object to save to the cache
+#'
 #' @param linkToCacheId Optional. If a `cacheId` is provided here, then a `file.link`
 #'   will be made to the file with that `cacheId` name in the cache repo.
 #'   This is used when identical outputs exist in the cache. This will save disk space.
+#'
 #' @return
 #' This is used for its side effects, namely, it will add the object to the cache and
 #' cache database.
@@ -168,7 +182,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   #  So effectively, it is like 6x buffer to try to avoid false positives.
   whichOS <- which(tagKey == "object.size")
   if (length(whichOS)) {
-    objSize <- if (identical(tagValue[whichOS], "NA")) NA else as.numeric(tagValue[whichOS])
+    objSize <- if (identical(unname(tagValue[whichOS]), "NA")) NA else as.numeric(tagValue[whichOS])
     fsBig <- (objSize * 4) < fs
     if (isTRUE(fsBig)) {
       messageCache("Object with cacheId ", cacheId, " appears to have a much larger size ",
@@ -187,19 +201,25 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   return(obj)
 }
 
-#' @export
-#' @rdname CacheHelpers
 #' @inheritParams CacheStoredFile
+#'
 #' @param fullCacheTableForObj The result of `showCache`, but subsetted for only
 #'   the `cacheId` being loaded or selected
-#' @param .dotsFromCache Optional. Used internally.
-#' @param .functionName Optional. Used for messaging when this function is called from `Cache`
-#' @param preDigest The list of `preDigest` that comes from `CacheDigest` of an object
-#' @details
-#' `loadFromCache` is a function to get a single object from the cache, given its `cacheId`.
-#' @return
-#' `loadFromCache` returns the object from the cache that has the particular `cacheId`.
 #'
+#' @param .dotsFromCache Optional. Used internally.
+#'
+#' @param .functionName Optional. Used for messaging when this function is called from `Cache`
+#'
+#' @param preDigest The list of `preDigest` that comes from `CacheDigest` of an object
+#'
+#' @details
+#' - `loadFromCache()` retrieves a single object from the cache, given its `cacheId`;
+#'
+#' @return
+#' - `loadFromCache()` returns the object from the cache that has the particular `cacheId`;
+#'
+#' @export
+#' @rdname CacheHelpers
 loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                           cacheId, preDigest,
                           fullCacheTableForObj = NULL,
@@ -216,70 +236,85 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     cacheId <- unique(cacheId)
   }
 
-  isMemoised <- NA
-  if (isTRUE(getOption("reproducible.useMemoise"))) {
-    isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
-    if (isTRUE(isMemoised)) {
-      obj <- get(cacheId, envir = memoiseEnv(cachePath))
-      obj <- unmakeMemoisable(obj)
-    }
+  isMemoised <- .isMemoised(cacheId, cachePath = cachePath)
+  # isMemoised <- NA
+  # if (isTRUE(getOption("reproducible.useMemoise"))) {
+  #   isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
+  if (isTRUE(isMemoised)) {
+    obj <- get(cacheId, envir = memoiseEnv(cachePath))
+    obj <- unmakeMemoisable(obj)
   }
+  # }
 
   if (!isTRUE(isMemoised)) {
-    f <- CacheStoredFile(cachePath, cacheId, format)
-    f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
+    # Put this in a loop -- try the format that the user requested, but switch back if can't do it
+    for (i in 1:2) {
+      f <- CacheStoredFile(cachePath, cacheId, format)
+      f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
 
-    # First test if it is correct format
-    if (!all(file.exists(f))) {
-      sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
-      if (!useDBI() || length(sameCacheID) > 1) {
-        sameCacheID <- onlyStorageFiles(sameCacheID)
-      }
+      # First test if it is correct format
+      if (!all(file.exists(f))) {
+        sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
+        if (!useDBI() || length(sameCacheID) > 1) {
+          sameCacheID <- onlyStorageFiles(sameCacheID)
+        }
 
-      if (length(sameCacheID)) {
-        messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
-          fileExt(f), ")",
-          verbose = verbose
-        )
-        obj <- loadFromCache(
-          cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
-          cacheId = cacheId,
-          format = fileExt(sameCacheID),
-          preDigest = preDigest,
-          verbose = verbose
-        )
-        obj <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
-        fs <- saveToCache(
-          obj = obj, cachePath = cachePath, drv = drv, conn = conn,
-          cacheId = cacheId
-        )
-        rmFromCache(
-          cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
-          format = fileExt(sameCacheID)
-        )
-        return(fs)
+        if (length(sameCacheID)) {
+          # if (!identical(whereInStack("sim"), .GlobalEnv)) {
+          #   browser()
+          #   format <- setdiff(c("rds", "qs"), format)
+          #   message("User tried to change options('reproducible.cacheSaveFormat') for an ",
+          #           "existing cache, while using a simList. ",
+          #           "This currently does not work. Keeping the ",
+          #           "option at: ", format)
+          #   next
+          # }
+
+          messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
+                       fileExt(f), ")",
+                       verbose = verbose
+          )
+          obj <- loadFromCache(
+            cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
+            cacheId = cacheId,
+            format = fileExt(sameCacheID),
+            preDigest = preDigest,
+            verbose = verbose
+          )
+
+          obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
+          fs <- saveToCache(
+            obj = obj2, cachePath = cachePath, drv = drv, conn = conn,
+            cacheId = cacheId
+          )
+          rmFromCache(
+            cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+            format = fileExt(sameCacheID)
+          )
+          return(obj)
+        }
       }
+      # Need exclusive lock
+      obj <- loadFile(f)
+      obj <- .unwrap(obj,
+                     cachePath = cachePath,
+                     cacheId = cacheId,
+                     drv = drv, conn = conn
+      )
+      break # if you got this far, then break out of the for i loop
     }
-    # Need exclusive lock
-    obj <- loadFile(f, # format = fileFormat,
-      fullCacheTableForObj = fullCacheTableForObj,
-      cachePath = cachePath
-    )
-    obj <- .unwrap(obj,
-      cachePath = cachePath,
-      cacheId = cacheId,
-      drv = drv, conn = conn
-    )
   }
 
   # Class-specific message
-  loadFromMgs <- .cacheMessage(obj, .functionName, fromMemoise = isMemoised, verbose = verbose)
+  useMemoise <- if (getOption("reproducible.useMemoise") %in% TRUE) TRUE else NA
+  fromMemoise <- isMemoised && useMemoise
+  loadFromMgs <- .cacheMessage(obj, .functionName, fromMemoise = fromMemoise, verbose = verbose)
 
   # # This allows for any class specific things
-  obj <-
-    do.call(.prepareOutput, args = append(list(obj, cachePath), .dotsFromCache))
+  obj <- do.call(.prepareOutput, args = append(list(obj, cachePath), .dotsFromCache))
 
-  if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
+  if (isTRUE(useMemoise) && !isTRUE(isMemoised)) {
+  # if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
     obj2 <- makeMemoisable(obj)
     assign(cacheId, obj2, envir = memoiseEnv(cachePath))
   }
@@ -299,11 +334,23 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     }
   }
 
-
   obj
 }
 
-
+#' @param sc a cache tags `data.table` object
+#' @param elem character string specifying a `tagKey` value to match
+#' @param ifNot character (or NULL) specifying the return value to use if `elem` not matched
+#'
+#' @details
+#' - `extractFromCache()` retrieves a single `tagValue` from the cache based on
+#' the `tagKey` of `elem`;
+#'
+#' @return
+#' - `extractFromCache()` returns the `tagValue` from the cache corresponding to `elem` if found,
+#' otherwise the value of `ifNot`;
+#'
+#' @export
+#' @rdname CacheHelpers
 extractFromCache <- function(sc, elem, ifNot = NULL) {
   rowNum <- sc[["tagKey"]] %in% elem
   elemExtracted <- if (any(rowNum)) {
@@ -314,17 +361,15 @@ extractFromCache <- function(sc, elem, ifNot = NULL) {
   elemExtracted
 }
 
-
-#' Low level tools to work with Cache
-#'
-#' @export
-#' @rdname CacheHelpers
 #' @details
-#' `rmFromCache` removes one or more items from the cache, and updates the cache
+#' - `rmFromCache()` removes one or more items from the cache, and updates the cache
 #' database files.
 #'
 #' @return
-#' `rmFromCache` has no return value; it is called for its side effects.
+#' - `rmFromCache()` returns `NULL` (invisibly) and is intended to be called for side effects;
+#'
+#' @export
+#' @rdname CacheHelpers
 rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                         cacheId, drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL),
@@ -511,21 +556,20 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
   "tagValue"
 }
 
-#' A collection of low level tools for Cache
-#'
-#' These are not intended for normal use.
-#'
 #' @inheritParams Cache
+#'
 #' @inheritParams createCache
-#' @rdname CacheHelpers
-#' @export
+#'
 #' @return
-#' `CacheDBFile` returns the name of the database file for a given Cache,
-#' when `useDBI() == FALSE`, or `NULL` if `TRUE`.
-#' `CacheDBFiles` (i.e,. plural) returns the name of all the database files for
-#' a given Cache when `useDBI() == TRUE`, or `NULL` if `FALSE`
-#' @details
-#' `CacheStoredFile` returns the file path to the file with the specified hash value.
+#' - `CacheDBFile()` returns the name of the database file for a given Cache,
+#' when `useDBI() == FALSE`, or `NULL` if `TRUE`;
+#' - `CacheDBFiles()` (i.e,. plural) returns the name of all the database files for
+#' a given Cache when `useDBI() == TRUE`, or `NULL` if `FALSE`;
+#' - `CacheStoredFile()` returns the file path to the file with the specified hash value,
+#' This can be loaded to memory with e.g., [loadFile()].;
+#'
+#' @export
+#' @rdname CacheHelpers
 #'
 #' @examples
 #' data.table::setDTthreads(2)
@@ -569,29 +613,29 @@ CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
   }
 }
 
-#' @rdname CacheHelpers
-#' @export
 #' @return
-#' `CacheStorageDir` returns the name of the directory where cached objects are
-#' stored.
+#' - `CacheStorageDir()` returns the name of the directory where cached objects are stored;
+#'
+#' @export
+#' @rdname CacheHelpers
 CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
   file.path(cachePath, "cacheOutputs")
 }
 
-#' @details
-#' `CacheStoredFile` returns the file path to the file with the specified hash value.
-#'
-#' @rdname CacheHelpers
 #' @param obj The optional object that is of interest; it may have an attribute "saveRawFile"
 #'   that would be important.
-#' @export
+#'
 #' @param cacheId The cacheId or otherwise digested hash value, as character string.
+#'
 #' @param format The text string representing the file extension used normally by
 #'   different save formats; currently only `"rds"` or `"qs"`. Defaults
 #'   to `getOption("reproducible.cacheSaveFormat", "rds")`
+#'
 #' @return
-#' `CacheStoredFile` returns the name of the file in which the cacheId object is stored.
-#' This can be loaded to memory with e.g., `loadFile`.
+#' - `CacheStoredFile` returns the file path to the file with the specified hash value;
+#'
+#' @export
+#' @rdname CacheHelpers
 CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cacheId,
                             format = NULL, obj = NULL) {
   if (is.null(format)) format <- getOption("reproducible.cacheSaveFormat", "rds")
@@ -624,11 +668,12 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
   file.path(CacheStorageDir(cachePath), c(filename, fns))
 }
 
-#' @rdname CacheHelpers
-#' @export
 #' @return
-#' `CacheDBTableName` returns the name of the table inside the SQL database, if that
-#' is being used.
+#' - `CacheDBTableName()` returns the name of the table inside the SQL database, if that
+#' is being used;
+#'
+#' @export
+#' @rdname CacheHelpers
 CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
                              drv = getDrv(getOption("reproducible.drv", NULL))) {
   if (!is(cachePath, "Path")) {
@@ -653,16 +698,15 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
   return(newPath)
 }
 
-#' @rdname CacheHelpers
-#' @param create Logical. Currently only affects non RQSLite default drivers. If this
-#'   is `TRUE` and there is no Cache database, the function will create one.
-#' @export
+#' @param create Logical. Currently only affects non \pkg{RSQLite} default drivers.
+#'        If `TRUE` and there is no Cache database, the function will create one.
+#'
 #' @return
-#' `CacheIsACache` returns a logical indicating whether the `cachePath` is currently
-#' a `reproducible` cache database.
-#' @details
-#' `CacheIsACache` returns a logical of whether the specified `cachePath`
-#'   is actually a functioning cache.
+#' - `CacheIsACache()` returns a logical indicating whether the `cachePath` is currently
+#' a `reproducible` cache database;
+#'
+#' @export
+#' @rdname CacheHelpers
 CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), create = FALSE,
                           drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL)) {
@@ -678,7 +722,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
     list.files(cachePath))
 
-  # Need to check even if ret is TRUE because we may be in the process of changing
+  ## Need to check even if ret is TRUE because we may be in the process of changing
   convertDBbackendIfIncorrect(cachePath, drv, conn)
 
   needCreate <- FALSE
@@ -815,17 +859,28 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
   return(invisible())
 }
 
-loadFile <- function(file, format = NULL, fullCacheTableForObj = NULL,
-                     cachePath = getOption("reproducible.cachePath")) {
+
+#' Load a file from the cache
+#'
+#' @param file character specifying the path to the file
+#'
+#' @param format (optional) character string specifying file extension ("qs" or "rds") of `file`;
+#'        if not specified (i.e., NULL), will be deduced from the file extension of `file`.
+#'
+#' @return the object loaded from `file`
+#'
+#' @export
+loadFile <- function(file, format = NULL) {
   if (is.null(format)) {
     format <- fileExt(file)
   }
+  isQs <- format %in% "qs"
 
-  if (format %in% "qs") {
+  if (any(isQs)) {
     .requireNamespace("qs", stopOnFALSE = TRUE)
-    obj <- qs::qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
+    obj <- qs::qread(file = file[isQs], nthreads = getOption("reproducible.nThreads", 1))
   } else {
-    obj <- readRDS(file = file)
+    obj <- readRDS(file = file[!isQs])
   }
 
   obj
@@ -848,7 +903,8 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
     .requireNamespace("qs", stopOnFALSE = TRUE)
     for (attempt in 1:2) {
       fs <- qs::qsave(obj,
-        file = fts, nthreads = getOption("reproducible.nThreads", 1),
+        file = fts,
+        nthreads = getOption("reproducible.nThreads", 1),
         preset = getOption("reproducible.qsavePreset", "high")
       )
       fs1 <- file.size(fts)
@@ -912,7 +968,6 @@ formatCheck <- function(cachePath, cacheId, format) {
   }
   format
 }
-
 
 getDrv <- function(drv = NULL) {
   if (useDBI()) {
@@ -1005,3 +1060,19 @@ memoiseEnv <- function(cachePath, envir = .GlobalEnv) {
 
 
 otherFunctions <- "otherFunctions"
+
+#' Evaluate whether a cacheId is memoised
+#'
+#' Intended for internal use. Exported so other packages can use this function.
+#'
+#' @inheritParams Cache
+#' @return A logical, length 1 indicating whether the `cacheId` is memoised.
+#'
+#' @export
+.isMemoised <- function(cacheId, cachePath = getOption("reproducible.cachePath")) {
+  isMemoised <- NA
+  if (isTRUE(getOption("reproducible.useMemoise"))) {
+    isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
+  }
+  isMemoised
+}
