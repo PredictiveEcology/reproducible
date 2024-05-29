@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.12</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
       </span>
     </div>
 
@@ -79,9 +79,9 @@
         </td>
         <td><p>Cache-like function for spatial domains</p></td>
       </tr><tr><td>
-          <p><code><a href="CacheHelpers.html">createCache()</a></code> <code><a href="CacheHelpers.html">loadFromCache()</a></code> <code><a href="CacheHelpers.html">rmFromCache()</a></code> <code><a href="CacheHelpers.html">CacheDBFile()</a></code> <code><a href="CacheHelpers.html">CacheStorageDir()</a></code> <code><a href="CacheHelpers.html">CacheStoredFile()</a></code> <code><a href="CacheHelpers.html">CacheDBTableName()</a></code> <code><a href="CacheHelpers.html">CacheIsACache()</a></code> </p>
+          <p><code><a href="CacheHelpers.html">createCache()</a></code> <code><a href="CacheHelpers.html">loadFromCache()</a></code> <code><a href="CacheHelpers.html">extractFromCache()</a></code> <code><a href="CacheHelpers.html">rmFromCache()</a></code> <code><a href="CacheHelpers.html">CacheDBFile()</a></code> <code><a href="CacheHelpers.html">CacheStorageDir()</a></code> <code><a href="CacheHelpers.html">CacheStoredFile()</a></code> <code><a href="CacheHelpers.html">CacheDBTableName()</a></code> <code><a href="CacheHelpers.html">CacheIsACache()</a></code> </p>
         </td>
-        <td><p>Functions to create and work with a cache</p></td>
+        <td><p>Low-level functions to create and work with a cache</p></td>
       </tr><tr><td>
           <p><code><a href="Checksums.html">Checksums()</a></code> </p>
         </td>
@@ -147,6 +147,10 @@
         </td>
         <td><p>Move a file to a new location -- Defunct -- use <code>hardLinkOrCopy</code></p></td>
       </tr><tr><td>
+          <p><code><a href="dot-isMemoised.html">.isMemoised()</a></code> </p>
+        </td>
+        <td><p>Evaluate whether a cacheId is memoised</p></td>
+      </tr><tr><td>
           <p><code><a href="dot-removeCacheAtts.html">.removeCacheAtts()</a></code> </p>
         </td>
         <td><p>Remove attributes that are highly varying</p></td>
@@ -179,6 +183,10 @@
         </td>
         <td><p>Fix common errors in GIS layers, using <code>terra</code></p></td>
       </tr><tr><td>
+          <p><code><a href="gdalwarpFns.html">gdalProject()</a></code> <code><a href="gdalwarpFns.html">gdalResample()</a></code> <code><a href="gdalwarpFns.html">gdalMask()</a></code> </p>
+        </td>
+        <td><p>3-Step postProcess sequence for SpatRasters using <code>gdalwarp</code></p></td>
+      </tr><tr><td>
           <p><code><a href="internetExists.html">internetExists()</a></code> <code><a href="internetExists.html">urlExists()</a></code> </p>
         </td>
         <td><p>Checks for existed of a url or the internet using <a href="https://CRAN.R-project.org" class="external-link">https://CRAN.R-project.org</a></p></td>
@@ -187,15 +195,27 @@
         </td>
         <td><p>Has a cached object has been updated?</p></td>
       </tr><tr><td>
+          <p><code><a href="keepOrigGeom.html">keepOrigGeom()</a></code> </p>
+        </td>
+        <td><p>Keep original geometries of <code>sf</code> objects</p></td>
+      </tr><tr><td>
           <p><code><a href="linkOrCopy.html">linkOrCopy()</a></code> </p>
         </td>
         <td><p>Hardlink, symlink, or copy a file</p></td>
+      </tr><tr><td>
+          <p><code><a href="listNamed.html">listNamed()</a></code> </p>
+        </td>
+        <td><p>Create a list with names from object names</p></td>
+      </tr><tr><td>
+          <p><code><a href="loadFile.html">loadFile()</a></code> </p>
+        </td>
+        <td><p>Load a file from the cache</p></td>
       </tr><tr><td>
           <p><code><a href="mergeCache.html">mergeCache()</a></code> </p>
         </td>
         <td><p>Merge two cache repositories together</p></td>
       </tr><tr><td>
-          <p><code><a href="messageColoured.html">messageDF()</a></code> <code><a href="messageColoured.html">messageQuestion()</a></code> <code><a href="messageColoured.html">messageColoured()</a></code> </p>
+          <p><code><a href="messageColoured.html">messageDF()</a></code> <code><a href="messageColoured.html">messagePrepInputs()</a></code> <code><a href="messageColoured.html">messagePreProcess()</a></code> <code><a href="messageColoured.html">messageCache()</a></code> <code><a href="messageColoured.html">messageQuestion()</a></code> <code><a href="messageColoured.html">.messageFunctionFn()</a></code> <code><a href="messageColoured.html">messageColoured()</a></code> </p>
         </td>
         <td><p>Use <code>message</code> with a consistent use of <code>verbose</code></p></td>
       </tr><tr><td>
@@ -246,6 +266,10 @@
           <p><code><a href="relativePaths.html">getRelative()</a></code> <code><a href="relativePaths.html">makeRelative()</a></code> </p>
         </td>
         <td><p>Relative paths</p></td>
+      </tr><tr><td>
+          <p><code><a href="remapFilenames.html">remapFilenames()</a></code> </p>
+        </td>
+        <td><p>Remap file names</p></td>
       </tr><tr><td>
           <p><code><a href="reproducible-package.html">reproducible</a></code> <code><a href="reproducible-package.html">reproducible-package</a></code> </p>
         </td>
@@ -315,7 +339,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.8.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
 </div>
 
       </footer></div>

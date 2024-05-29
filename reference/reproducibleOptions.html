@@ -25,7 +25,7 @@ See Details below."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/aj
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.12</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
       </span>
     </div>
 
@@ -135,6 +135,10 @@ this option to <code>TRUE</code> will use <code>sf::gdal_utils("warp")</code>. I
 this is much faster than the <code>terra</code> sequence. The resulting <code>SpatRaster</code> is
 not identical, but it is very similar.</p></dd>
 
+<dt><code>gdalwarpThreads</code></dt>
+<dd><p>Default: <code>2</code>. This will set <code>-wo NUM_THREADS=</code> to this number. Default is now <code>2</code>, meaning
+<code>gdalwarp</code> will use 2 threads with <code>gdalProject</code>. To turn off threading, set to <code>0</code>, <code>1</code> or <code>NA</code>.</p></dd>
+
 <dt><code>inputPaths</code></dt>
 <dd><p>Default: <code>NULL</code>. Used in <code><a href="prepInputs.html">prepInputs()</a></code> and <code><a href="preProcess.html">preProcess()</a></code>.
 If set to a path, this will cause these functions to save their downloaded and preprocessed
@@ -188,6 +192,12 @@ it will use <code><a href="https://rdrr.io/pkg/raster/man/shapefile.html" class=
 <dt><code>showSimilar</code></dt>
 <dd><p>Default <code>FALSE</code>. Passed to <code>Cache</code>.</p></dd>
 
+<dt><code>timeout</code></dt>
+<dd><p>Default <code>1200</code>. Used in <code>preProcess</code> when downloading occurs. If a user has <code>R.utils</code>
+package installed, <code>R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))</code>
+will be wrapped around the download so that it will timeout (and error) after this many
+seconds.</p></dd>
+
 <dt><code>useCache</code></dt>
 <dd><p>Default: <code>TRUE</code>. Used in <code><a href="Cache.html">Cache()</a></code>. If <code>FALSE</code>, then the entire
 <code>Cache</code> machinery is skipped and the functions are run as if there was no Cache occurring.
@@ -216,8 +226,16 @@ This, therefore, is most useful if the user is using unique values for <code>use
 Default value can be overridden by setting environment variable <code>R_REPRODUCIBLE_USE_DBI</code>.
 As of version 0.3, the backend is now <span class="pkg">DBI</span> instead of <span class="pkg">archivist</span>.</p></dd>
 
-<dt><code>useGDAL</code></dt>
-<dd><p>Default <code>TRUE</code>. Passed to <code>useGDAL</code>. Deprecated.</p></dd>
+<dt><code>useGdown</code></dt>
+<dd><p>Default: <code>FALSE</code>. If a user provides a Google Drive url to <code>preProcess</code>/<code>prepInputs</code>,
+<code>reproducible</code> will use the <code>googledrive</code> package. This works reliably in most cases.
+However, for large files on unstable internet connections, it will stall and
+stop the download with no error. If a user is finding this behaviour, they can
+install the <code>gdown</code> package, making sure it is available on the PATH. This call
+to <code>gdown</code> will only work for files that do not need authentication. If authentication
+is needed, <code>dlGoogle</code> will fall back to <code><a href="https://googledrive.tidyverse.org/reference/drive_download.html" class="external-link">googledrive::drive_download</a></code>, even
+if this option is <code>TRUE</code>, with a message.
+.</p></dd>
 
 <dt><code>useMemoise</code></dt>
 <dd><p>Default: <code>FALSE</code>. Used in <code><a href="Cache.html">Cache()</a></code>. If <code>TRUE</code>, recovery of cached
@@ -287,7 +305,7 @@ User agent for downloads using this package.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.8.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
 </div>
 
       </footer></div>

@@ -31,7 +31,7 @@ will recover the object from RAM and is normally much faster (at the expense of 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.12</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
       </span>
     </div>
 
@@ -143,7 +143,10 @@ objects, this will only be applied outermost first.</p></dd>
 
 <dt>.cacheExtra</dt>
 <dd><p>A an arbitrary R object that will be included in the <code>CacheDigest</code>,
-but otherwise not passed into the <code>FUN</code>.</p></dd>
+but otherwise not passed into the <code>FUN</code>. If the user supplies a named list, then
+<code>Cache</code> will report which individual elements of <code>.cacheExtra</code> have changed
+when <code>options("reproducible.showSimilar" = TRUE)</code>. This can allow a user
+more control and understanding for debugging.</p></dd>
 
 
 <dt>.functionName</dt>
@@ -273,8 +276,8 @@ treat this as a folder name to create or use on GoogleDrive.</p></dd>
 <dd><p>A logical or numeric. Useful for debugging.
 If <code>TRUE</code> or <code>1</code>, then if the Cache
 does not find an identical archive in the <code>cachePath</code>, it will report (via message)
-the next most similar archive, and indicate which argument(s) is/are different.
-If a number larger than <code>1</code>, then it will report the N most similar archived
+the next most recent similar archive, and indicate which argument(s) is/are different.
+If a number larger than <code>1</code>, then it will report the N most recent similar archived
 objects.</p></dd>
 
 
@@ -417,10 +420,8 @@ desired, e.g., <code>Cache(rnorm(1))</code> is unlikely to be useful in many cas
 As a result <code>Cache(glm, x ~ y, rnorm(1))</code> will not work as a means of forcing
 a new evaluation each time, as the <code>rnorm(1)</code> is not evaluated before the call
 is assessed against the cache database. To force a new call each time, evaluate
-the randomness prior to the Cache call, e.g., <code>ran = rnorm(1); Cache(glm, x ~ y, ran)</code>.
-Note this does not work for <code>glm</code> because <code>glm</code> accepts <code>...</code>.
-Rather, this randomness should be passed to <code>.cacheExtra</code>, e.g.,
-<code>Cache(glm, x ~ y, .cacheExtra = ran)</code></p>
+the randomness prior to the Cache call, e.g., <code>ran = rnorm(1)</code> then pass this
+to <code>.cacheExtra</code>, e.g., <code>Cache(glm, x ~ y, .cacheExtra = ran)</code></p>
     </div>
     <div id="drv-and-conn">
     <h2><code>drv</code> and <code>conn</code></h2>
@@ -543,83 +544,118 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-in"><span><span class="va">ee</span><span class="op">$</span><span class="va">qq</span> <span class="op">&lt;-</span> <span class="va">bbb</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="co"># no evaluation prior to Cache</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: 422bae4ed2f770cc.rds; fn: </span><span style="color: #BB0000;">rnorm</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">1</span><span class="op">)</span> <span class="co"># no evaluation prior to Cache</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: rnorm, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous rnorm call</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="va">do.call</span>, <span class="va">rnorm</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: rnorm, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous rnorm call</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">4</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: rnorm, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous rnorm call</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">5</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">b</span><span class="op">$</span><span class="va">fun</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: b$fun, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous b$fun call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">b$fun</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous b$fun call</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">6</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="va">do.call</span>, <span class="va">b</span><span class="op">$</span><span class="va">fun</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: b$fun, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous b$fun call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">b$fun</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous b$fun call</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">7</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="va">b</span><span class="op">$</span><span class="va">fun</span>, <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: b$fun, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous b$fun call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">b$fun</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous b$fun call</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">8</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="va">b</span><span class="op">$</span><span class="fu">fun</span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: $, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous $ call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">$</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous $ call</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">10</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substitute.html" class="external-link">quote</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: quote, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous quote call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">quote</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous quote call</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">11</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: stats::rnorm, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous stats::rnorm call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">stats::rnorm</span><span style="color: #0000BB;">,</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  422bae4ed2f770cc.rds) ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous stats::rnorm call</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">12</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span>, <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: stats::rnorm, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous stats::rnorm call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">stats::rnorm</span><span style="color: #0000BB;">,</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  422bae4ed2f770cc.rds) ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous stats::rnorm call</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">13</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/get.html" class="external-link">get</a></span><span class="op">(</span><span class="st">"bbb"</span>, inherits <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: rnorm, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous rnorm call</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">14</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/get.html" class="external-link">get</a></span><span class="op">(</span><span class="st">"qq"</span>, inherits <span class="op">=</span> <span class="cn">FALSE</span>, envir <span class="op">=</span> <span class="va">ee</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: rnorm, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous rnorm call</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">15</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">bbb</span> <span class="op">-</span> <span class="va">bbb</span>, <span class="fu"><a href="https://rdrr.io/r/base/get.html" class="external-link">get</a></span><span class="op">(</span><span class="st">"bbb"</span>, inherits <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: rnorm, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous rnorm call</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">16</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>sd <span class="op">=</span> <span class="fl">1</span>, <span class="fl">0</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/get.html" class="external-link">get</a></span><span class="op">(</span><span class="st">"bbb"</span>, inherits <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="co"># change order</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: rnorm, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous rnorm call</span></span>
 <span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">17</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span>, sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/get.html" class="external-link">get</a></span><span class="op">(</span><span class="st">"ee"</span>, inherits <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">$</span><span class="va">qq</span><span class="op">)</span>, mean <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: rnorm, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous rnorm call</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># with base pipe -- this is put in quotes ('') because R version 4.0 can't understand this</span></span></span>
 <span class="r-in"><span><span class="co">#  if you are using R &gt;= 4.1 or R &gt;= 4.2 if using the _ placeholder,</span></span></span>
@@ -636,20 +672,24 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric_version.html" class="external-link">getRversion</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="st">"4.1"</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">a</span><span class="op">[[</span><span class="fl">9</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">parse</a></span><span class="op">(</span>text <span class="op">=</span> <span class="va">usingPipe1</span><span class="op">)</span><span class="op">)</span> <span class="co"># recovers cached copy</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: $, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous $ call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">$</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous $ call</span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric_version.html" class="external-link">getRversion</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="st">"4.2"</span><span class="op">)</span> <span class="op">{</span> <span class="co"># uses the _ placeholder; only available in R &gt;= 4.2</span></span></span>
 <span class="r-in"><span>  <span class="va">a</span><span class="op">[[</span><span class="fl">18</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">parse</a></span><span class="op">(</span>text <span class="op">=</span> <span class="va">usingPipe2</span><span class="op">)</span><span class="op">)</span> <span class="co"># recovers cached copy</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> There is an `eval` call in a chain of calls for Cache; </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   eval is evaluated before Cache which may be undesired. </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Perhaps use `do.call` if the evaluation should not occur prior to Cache</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: rnorm, 422bae4ed2f770cc.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous rnorm call</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">a</span><span class="op">)</span><span class="op">)</span> <span class="op">==</span> <span class="fl">1</span> <span class="co">#  all same</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -667,16 +707,27 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">b1a</span>, <span class="va">b1b</span><span class="op">)</span> <span class="co"># Not TRUE because the sample is run first</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">b2a</span>, <span class="va">b2b</span><span class="op">)</span> <span class="co"># TRUE because of {  }</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: rnorm, 65d6fc4cf6012274.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: f1649216458bd037.rds; fn: </span><span style="color: #BB0000;">rnorm</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: 56715e20e6a0b4fc.rds; fn: </span><span style="color: #BB0000;">rnorm</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: 65d6fc4cf6012274.rds; fn: </span><span style="color: #BB0000;">rnorm</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, 65d6fc4cf6012274.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous rnorm call</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Attributes: &lt; Component “.Cache”: Component “newCache”: 1 element mismatch &gt;"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#########################</span></span></span>
@@ -685,9 +736,12 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># .cacheExtra -- add something to digest</span></span></span>
 <span class="r-in"><span><span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, .cacheExtra <span class="op">=</span> <span class="st">"sfessee11"</span><span class="op">)</span> <span class="co"># adds something other than fn args</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.02637</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: 15a06cafd7e0d37e.rds; fn: </span><span style="color: #BB0000;">rnorm</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.9531766</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -697,9 +751,12 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"call")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] ""</span>
 <span class="r-in"><span><span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, .cacheExtra <span class="op">=</span> <span class="st">"nothing"</span><span class="op">)</span> <span class="co"># even though fn is same, the extra is different</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.1200723</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: b35d37e57ba86333.rds; fn: </span><span style="color: #BB0000;">rnorm</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.3595797</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -711,9 +768,12 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># omitArgs -- remove something from digest (kind of the opposite of .cacheExtra)</span></span></span>
 <span class="r-in"><span><span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">2</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, omitArgs <span class="op">=</span> <span class="st">"sd"</span><span class="op">)</span> <span class="co"># removes one or more args from cache digest</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.313053  1.818074</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: d1e9b95723b3afa0.rds; fn: </span><span style="color: #BB0000;">rnorm</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.7026927 -0.8775034</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -723,11 +783,13 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"call")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] ""</span>
 <span class="r-in"><span><span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">2</span>, sd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>, omitArgs <span class="op">=</span> <span class="st">"sd"</span><span class="op">)</span> <span class="co"># b/c sd is not used, this is same as previous</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: rnorm, d1e9b95723b3afa0.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous rnorm call</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.313053  1.818074</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, d1e9b95723b3afa0.rds) ... </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous rnorm call</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.7026927 -0.8775034</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -739,10 +801,14 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># cacheId -- force the use of a digest -- can give undesired consequences</span></span></span>
 <span class="r-in"><span><span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span>, cacheId <span class="op">=</span> <span class="st">"k323431232"</span><span class="op">)</span> <span class="co"># sets the cacheId for this call</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">cacheId is not same as calculated hash. Manually searching for cacheId:k323431232</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  0.9708913  0.4329959 -0.5093569</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">cacheId is not same as calculated hash. Manually searching for</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  cacheId:k323431232</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: k323431232.rds; fn: </span><span style="color: #BB0000;">rnorm</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.2223622 -1.5034283  0.5517413</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -752,12 +818,16 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"call")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] ""</span>
 <span class="r-in"><span><span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">14</span><span class="op">)</span>, cacheId <span class="op">=</span> <span class="st">"k323431232"</span><span class="op">)</span> <span class="co"># recovers same as above, i.e, rnorm(3)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">cacheId is not same as calculated hash. Manually searching for cacheId:k323431232</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 0.25336815 0.51469724 0.31181714 0.96590753 0.16818611 0.50135912</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] 0.26367892 0.88646006 0.38364046 0.26886185 0.04685373 0.44978015</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13] 0.47672873 0.05157902</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">cacheId is not same as calculated hash. Manually searching for</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  cacheId:k323431232</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: k323431232.rds; fn: </span><span style="color: #BB0000;">runif</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 0.58962461 0.40114562 0.80467587 0.07162077 0.93387892 0.13442103</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] 0.91628433 0.72934507 0.14009278 0.99380549 0.06324982 0.94394690</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] 0.29200244 0.28750280</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -770,18 +840,23 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-in"><span><span class="co"># Turn off Caching session-wide</span></span></span>
 <span class="r-in"><span><span class="va">opts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>reproducible.useCache <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span> <span class="co"># doesn't cache</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  useCache is FALSE; skipping Cache on function rnorm (currently running nested Cache level 2)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.13750477 -0.07023214 -0.51847407</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  useCache is FALSE; skipping Cache on function rnorm (currently</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  running nested Cache level 2)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.1320896 -0.2202324 -0.3329412</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">opts</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># showSimilar can help with debugging why a Cache call isn't picking up a cached copy</span></span></span>
 <span class="r-in"><span><span class="fu">Cache</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">4</span><span class="op">)</span>, showSimilar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># shows that the argument `n` is different</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">    Cache of 'rnorm' differs from</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">    the next closest cacheId(s) k323431232 (whose function name(s) was/were 'runif')</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">    ... because of (a) different n, .FUN</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  1.3894721  0.3383877 -1.0986390 -1.0776980</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Cache of '</span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">' differs from</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  the next closest cacheId(s) k323431232 (whose function name(s)</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  was/were 'runif')</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     different n, .FUN</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: ad0ea27476c50b66.rds; fn: </span><span style="color: #BB0000;">rnorm</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.4601407 -0.2761030  0.8114422  0.3416315</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,".Cache")$newCache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -804,6 +879,7 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-in"><span><span class="va">uniqueUserTags</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"thisIsUnique"</span>, <span class="st">"reallyUnique"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">ranNumsB</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="va">centralTendency</span>, <span class="va">funnyData</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>,</span></span>
 <span class="r-in"><span>                  userTags <span class="op">=</span> <span class="va">uniqueUserTags</span><span class="op">)</span> <span class="co"># sets new value to Cache</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: 197064fee76dde59.rds; fn: </span><span style="color: #BB0000;">centralTendency</span></span>
 <span class="r-in"><span><span class="fu"><a href="viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpDir</span><span class="op">)</span> <span class="co"># 1 unique cacheId -- cacheId is 71cd24ec3b0d0cac</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Cache size: </span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Total (including Rasters): 246 bytes</span></span>
@@ -815,54 +891,56 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-out co"><span class="r-pr">#&gt;</span>  3: 197064fee76dde59            function            centralTendency</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  4: 197064fee76dde59               class                    numeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  5: 197064fee76dde59         object.size                        984</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 197064fee76dde59            accessed 2024-04-16 02:42:19.202703</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 197064fee76dde59            accessed 2024-05-29 18:53:41.471938</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  7: 197064fee76dde59             inCloud                      FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  8: 197064fee76dde59            fromDisk                      FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  9: 197064fee76dde59          resultHash                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 197064fee76dde59   elapsedTimeDigest           0.001470089 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 197064fee76dde59 elapsedTimeFirstRun          0.0001125336 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 197064fee76dde59   elapsedTimeDigest           0.001631737 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 197064fee76dde59 elapsedTimeFirstRun          0.0001525879 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12: 197064fee76dde59      otherFunctions                 build_site</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13: 197064fee76dde59      otherFunctions           build_site_local</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 14: 197064fee76dde59      otherFunctions            build_reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 197064fee76dde59      otherFunctions                       map_</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 197064fee76dde59      otherFunctions        with_indexed_errors</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 197064fee76dde59      otherFunctions          call_with_cleanup</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 197064fee76dde59      otherFunctions       data_reference_topic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 197064fee76dde59      otherFunctions               run_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 197064fee76dde59      otherFunctions         highlight_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 197064fee76dde59      otherFunctions                  timing_fn</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 197064fee76dde59      otherFunctions                     handle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 197064fee76dde59      otherFunctions                        try</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 197064fee76dde59           preDigest         x:e4aa8de28dc6c1bb</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 197064fee76dde59           preDigest      .FUN:3df5c81377ae4909</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 197064fee76dde59      otherFunctions         unwrap_purrr_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 197064fee76dde59      otherFunctions                       map_</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 197064fee76dde59      otherFunctions        with_indexed_errors</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 197064fee76dde59      otherFunctions          call_with_cleanup</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 197064fee76dde59      otherFunctions       data_reference_topic</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 197064fee76dde59      otherFunctions               run_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 197064fee76dde59      otherFunctions         highlight_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 197064fee76dde59      otherFunctions                  timing_fn</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 197064fee76dde59      otherFunctions                     handle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 197064fee76dde59      otherFunctions                        try</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 197064fee76dde59           preDigest         x:e4aa8de28dc6c1bb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 197064fee76dde59           preDigest      .FUN:3df5c81377ae4909</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              cacheId              tagKey                   tagValue</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    createdDate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                         &lt;char&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2024-04-16 02:42:19.203133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2024-04-16 02:42:19.203133</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2024-05-29 18:53:41.472635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 2024-05-29 18:53:41.472635</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    createdDate</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># During development, we often redefine function internals</span></span></span>
@@ -874,7 +952,9 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-in"><span><span class="co">#   it will replace the entry in the Cache, effetively overwriting it, even though</span></span></span>
 <span class="r-in"><span><span class="co">#   it has a different cacheId</span></span></span>
 <span class="r-in"><span><span class="va">ranNumsD</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="va">centralTendency</span>, <span class="va">funnyData</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="va">uniqueUserTags</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Overwriting Cache entry with userTags: 'thisIsUnique, reallyUnique, centralTendency'</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Overwriting Cache entry with userTags: 'thisIsUnique, reallyUnique,</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  centralTendency'</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: e3afa6e86ce220c2.rds; fn: </span><span style="color: #BB0000;">centralTendency</span></span>
 <span class="r-in"><span><span class="fu"><a href="viewCache.html">showCache</a></span><span class="op">(</span><span class="va">tmpDir</span><span class="op">)</span> <span class="co"># 1 unique artifact -- cacheId is 632cd06f30e111be</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Cache size: </span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Total (including Rasters): 246 bytes</span></span>
@@ -886,60 +966,63 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-out co"><span class="r-pr">#&gt;</span>  3: e3afa6e86ce220c2            function            centralTendency</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  4: e3afa6e86ce220c2               class                    numeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  5: e3afa6e86ce220c2         object.size                        984</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: e3afa6e86ce220c2            accessed 2024-04-16 02:42:19.241516</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: e3afa6e86ce220c2            accessed 2024-05-29 18:53:41.524799</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  7: e3afa6e86ce220c2             inCloud                      FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  8: e3afa6e86ce220c2            fromDisk                      FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  9: e3afa6e86ce220c2          resultHash                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: e3afa6e86ce220c2   elapsedTimeDigest           0.001426935 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: e3afa6e86ce220c2 elapsedTimeFirstRun          0.0001416206 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: e3afa6e86ce220c2   elapsedTimeDigest           0.001501322 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: e3afa6e86ce220c2 elapsedTimeFirstRun          0.0001885891 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12: e3afa6e86ce220c2      otherFunctions                 build_site</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13: e3afa6e86ce220c2      otherFunctions           build_site_local</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 14: e3afa6e86ce220c2      otherFunctions            build_reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15: e3afa6e86ce220c2      otherFunctions                       map_</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16: e3afa6e86ce220c2      otherFunctions        with_indexed_errors</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17: e3afa6e86ce220c2      otherFunctions          call_with_cleanup</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18: e3afa6e86ce220c2      otherFunctions       data_reference_topic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19: e3afa6e86ce220c2      otherFunctions               run_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20: e3afa6e86ce220c2      otherFunctions         highlight_examples</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21: e3afa6e86ce220c2      otherFunctions                  timing_fn</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22: e3afa6e86ce220c2      otherFunctions                     handle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23: e3afa6e86ce220c2      otherFunctions                        try</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24: e3afa6e86ce220c2           preDigest         x:e4aa8de28dc6c1bb</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25: e3afa6e86ce220c2           preDigest      .FUN:88d14fe75c352ad5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15: e3afa6e86ce220c2      otherFunctions         unwrap_purrr_error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16: e3afa6e86ce220c2      otherFunctions                       map_</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17: e3afa6e86ce220c2      otherFunctions        with_indexed_errors</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18: e3afa6e86ce220c2      otherFunctions          call_with_cleanup</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19: e3afa6e86ce220c2      otherFunctions       data_reference_topic</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20: e3afa6e86ce220c2      otherFunctions               run_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21: e3afa6e86ce220c2      otherFunctions         highlight_examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22: e3afa6e86ce220c2      otherFunctions                  timing_fn</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23: e3afa6e86ce220c2      otherFunctions                     handle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24: e3afa6e86ce220c2      otherFunctions                        try</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25: e3afa6e86ce220c2           preDigest         x:e4aa8de28dc6c1bb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26: e3afa6e86ce220c2           preDigest      .FUN:88d14fe75c352ad5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              cacheId              tagKey                   tagValue</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    createdDate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                         &lt;char&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2024-04-16 02:42:19.241929</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2024-04-16 02:42:19.241929</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2024-05-29 18:53:41.525464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 2024-05-29 18:53:41.525464</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    createdDate</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># If it finds it by cacheID, doesn't matter what the userTags are</span></span></span>
 <span class="r-in"><span><span class="va">ranNumsD</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="va">centralTendency</span>, <span class="va">funnyData</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"thisIsUnique"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  ...(Object to retrieve (fn: centralTendency, e3afa6e86ce220c2.rds))</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous centralTendency call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">centralTendency</span><span style="color: #0000BB;">,</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  e3afa6e86ce220c2.rds) ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous centralTendency call</span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">opt</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#########################################</span></span></span>
@@ -960,7 +1043,7 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.8.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
 </div>
 
       </footer></div>

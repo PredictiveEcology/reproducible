@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.12</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
       </span>
     </div>
 
@@ -64,6 +64,57 @@
     </div>
 
     <div class="section level2">
+<h2 class="page-header" data-toc-text="2.1.0" id="reproducible-210">reproducible 2.1.0<a class="anchor" aria-label="anchor" href="#reproducible-210"></a></h2>
+<div class="section level3">
+<h3 id="new-2-1-0">New<a class="anchor" aria-label="anchor" href="#new-2-1-0"></a></h3>
+<ul><li>new family of functions that are called inside <code>postProcessTo</code> that use <code><a href="https://r-spatial.github.io/sf/reference/gdal_utils.html" class="external-link">sf::gdal_utils</a></code> directly. These are still experimental and will only be activated with <code>options("reproducible.gdalwarp" = TRUE)</code>
+</li>
+<li>default for <code>gdalMask</code> has changed default for “touches”. Now has equivalent for <code>terra::mask(..., touches = TRUE)</code>, using <code>"-wo CUTLINE_ALL_TOUCHED=TRUE"</code>
+</li>
+<li>
+<code>gdalProject</code> now uses 2 threads, setting <code>"-wo NUM_THREADS=2"</code>; can be changed by user with <code>options("reproducible.gdalwarpThreads" = X)</code>; see <code><a href="../reference/reproducibleOptions.html">?reproducibleOptions</a></code>
+</li>
+<li>
+<code>gdal*</code> functions now address <code>datatype</code> issues</li>
+<li>
+<code>gdal*</code> defaults to <code>FLT8S</code> if <code>datatype</code> not passed</li>
+<li>
+<code>makeRelative</code>, <code>makeAbsolute</code> and similar have been created to ease many issues encountered in <code>preProcess</code>
+</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changes-2-1-0">Changes<a class="anchor" aria-label="anchor" href="#changes-2-1-0"></a></h3>
+<ul><li>
+<code>showSimilar</code> (e.g., <code>options(reproducible.showSimilar = 1)</code>) now preferentially shows the most recent item in cache if there are several with equivalent matching.</li>
+<li>overhaul of messaging in <code>Cache</code> and <code>prepInputs</code> families; functions are highlighted with a different colour; indent level reflects nesting of both <code>Cache</code> and <code>prepInputs</code>, so it is easier to identify which message goes with which function call.</li>
+<li>
+<code>preProcess</code> is a lot faster now for large numbers of files; uses <code>CHECKSUMS</code> more effectively and fewer times</li>
+<li>
+<code>retry</code> now captures its <code>expr</code> so it doesn’t need a <code>quote</code>; is like <code>try</code> now.</li>
+<li>
+<code>showSimilar</code> mechanisms now returns the most recent, if there are &gt;1 similar that are equivalently similar</li>
+<li>if a user is having troubles with <code>googledrive</code> for e.g., large files on spotting connections, instructions for using <code>gdown</code> are provided</li>
+<li>
+<code>showCache</code>, <code>clearCache</code> now have extra arguments <code>fun</code>, <code>cacheId</code>, and <code>...</code> now can take any arbitrary <code>tag = value</code> pair. The <code>cacheId</code> argument will be very fast if a user is not using <code>useDBI()</code> is <code>FALSE</code>.</li>
+<li>
+<code>.wrap</code> and <code>.unwrap</code> can now deal with <code>SpatVectorCollection</code> (a <code>terra</code> class that does not have a <code>wrap</code>/<code>unwrap</code> method in <code>terra</code>)</li>
+<li>ALTREP digesting when using <code>spooky</code> or <code>fastdigest</code> were not stable for <code>integers</code> and <code>factors</code>. There is now a work around in <code>.robustDigest</code> that stabilizes these by expanding them from their ALTREP representation first. Since they will be saved and recovered anyway, this will have little effect.</li>
+<li>
+<code>.wrap</code> and <code>.unwrap</code> are becoming more mature and can handle many more classes effectively. Methods can still be written, if needed.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="testing-2-1-0">Testing<a class="anchor" aria-label="anchor" href="#testing-2-1-0"></a></h3>
+<ul><li>lots of testing with <code>cacheSaveFormat = "qs"</code>, which previously was not reliable especially for environments. With all recent changes to <code>.wrap</code> and <code>.unwrap</code>, these appear stable now and should be able to be used for <code>environments</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bugfixes-2-1-0">Bugfixes<a class="anchor" aria-label="anchor" href="#bugfixes-2-1-0"></a></h3>
+<ul><li>
+<code>switchDataType</code> can now correctly switch between <code>gdal</code> formats and <code>terra</code>
+</li>
+<li>many messaging fixes that were imprecise or missing</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="page-header" data-toc-text="2.0.12" id="reproducible-2012">reproducible 2.0.12<small>2024-04-15</small><a class="anchor" aria-label="anchor" href="#reproducible-2012"></a></h2>
 <ul><li>re-submission after removal from CRAN</li>
 </ul></div>
@@ -71,14 +122,15 @@
 <h2 class="page-header" data-toc-text="2.0.11" id="reproducible-2011">reproducible 2.0.11<small>2024-03-30</small><a class="anchor" aria-label="anchor" href="#reproducible-2011"></a></h2>
 <div class="section level3">
 <h3 id="remove-dependency-2-0-11">Remove dependency<a class="anchor" aria-label="anchor" href="#remove-dependency-2-0-11"></a></h3>
-<ul><li>fastdigest was removed from CRAN and so is removed from here.</li>
+<ul><li>
+<code>fastdigest</code> was removed from CRAN and so is removed from here.</li>
 </ul></div>
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="2.0.10" id="reproducible-2010">reproducible 2.0.10<small>2023-11-22</small><a class="anchor" aria-label="anchor" href="#reproducible-2010"></a></h2>
 <div class="section level3">
 <h3 id="bug-fixes-2-0-10">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-2-0-10"></a></h3>
-<ul><li>critical bugfixes for file-backed SpatRaster objects</li>
+<ul><li>critical bugfixes for file-backed <code>SpatRaster</code> objects</li>
 </ul></div>
 </div>
     <div class="section level2">
@@ -109,7 +161,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-2-0-9">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-2-0-9"></a></h3>
-<ul><li>Filenames for some classes returned ““; now returns NULL so character vectors are only pointers to files</li>
+<ul><li>
+<code>Filenames</code> for some classes returned ““; now returns NULL so character vectors are only pointers to files</li>
 <li>Cache on a terra object that writes file to disk, when <code>quick</code> argument is specified was failing, always creating the same object; fixed with #PR368</li>
 <li>
 <code>useDBI</code> was incorrectly used if a user had set the option prior to package loading. Now works as expected.</li>
@@ -982,7 +1035,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.8.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
 </div>
 
       </footer></div>

@@ -25,7 +25,7 @@ wrapper around digest::digest."><!-- mathjax --><script src="https://cdnjs.cloud
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.12</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
       </span>
     </div>
 
@@ -76,7 +76,7 @@ wrapper around <code><a href="https://rdrr.io/pkg/digest/man/digest.html" class=
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">Checksums</span><span class="op">(</span></span>
 <span>  <span class="va">path</span>,</span>
 <span>  <span class="va">write</span>,</span>
-<span>  quickCheck <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  quickCheck <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.quickCheck"</span>, <span class="cn">FALSE</span><span class="op">)</span>,</span>
 <span>  checksumFile <span class="op">=</span> <span class="fu">identifyCHECKSUMStxtFile</span><span class="op">(</span><span class="va">path</span><span class="op">)</span>,</span>
 <span>  files <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span>, <span class="fl">1</span><span class="op">)</span>,</span>
@@ -87,7 +87,7 @@ wrapper around <code><a href="https://rdrr.io/pkg/digest/man/digest.html" class=
 <span><span class="fu">Checksums</span><span class="op">(</span></span>
 <span>  <span class="va">path</span>,</span>
 <span>  <span class="va">write</span>,</span>
-<span>  quickCheck <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  quickCheck <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.quickCheck"</span>, <span class="cn">FALSE</span><span class="op">)</span>,</span>
 <span>  checksumFile <span class="op">=</span> <span class="fu">identifyCHECKSUMStxtFile</span><span class="op">(</span><span class="va">path</span><span class="op">)</span>,</span>
 <span>  files <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span>, <span class="fl">1</span><span class="op">)</span>,</span>
@@ -98,7 +98,7 @@ wrapper around <code><a href="https://rdrr.io/pkg/digest/man/digest.html" class=
 <span><span class="fu">Checksums</span><span class="op">(</span></span>
 <span>  <span class="va">path</span>,</span>
 <span>  <span class="va">write</span>,</span>
-<span>  quickCheck <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  quickCheck <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.quickCheck"</span>, <span class="cn">FALSE</span><span class="op">)</span>,</span>
 <span>  checksumFile <span class="op">=</span> <span class="fu">identifyCHECKSUMStxtFile</span><span class="op">(</span><span class="va">path</span><span class="op">)</span>,</span>
 <span>  files <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span>, <span class="fl">1</span><span class="op">)</span>,</span>
@@ -210,7 +210,7 @@ To update your <code class="file">CHECKSUMS.txt</code> files using the new algor
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.8.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
 </div>
 
       </footer></div>

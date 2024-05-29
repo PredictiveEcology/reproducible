@@ -25,7 +25,7 @@ they are made available for package developers to build specific methods."><!-- 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.12</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
       </span>
     </div>
 
@@ -95,6 +95,14 @@ they are made available for package developers to build specific methods.</p>
 <span>  <span class="va">functionName</span>,</span>
 <span>  fromMemoise <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.useMemoise"</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">.cacheMessageObjectToRetrieve</span><span class="op">(</span></span>
+<span>  <span class="va">functionName</span>,</span>
+<span>  <span class="va">fullCacheTableForObj</span>,</span>
+<span>  <span class="va">cachePath</span>,</span>
+<span>  <span class="va">cacheId</span>,</span>
+<span>  <span class="va">verbose</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">.addTagsToOutput</span><span class="op">(</span><span class="va">object</span>, <span class="va">outputObjects</span>, <span class="va">FUN</span>, <span class="va">preDigestByClass</span><span class="op">)</span></span>
@@ -183,6 +191,26 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></dd>
 
 
+<dt>fullCacheTableForObj</dt>
+<dd><p>The data.table entry from the Cache database for only
+this <code>cacheId</code>, e.g., via <code><a href="viewCache.html">showCache()</a></code>.</p></dd>
+
+
+<dt>cachePath</dt>
+<dd><p>A repository used for storing cached objects.
+This is optional if <code>Cache</code> is used inside a SpaDES module.</p></dd>
+
+
+<dt>cacheId</dt>
+<dd><p>Character string. If passed, this will override the calculated hash
+of the inputs, and return the result from this cacheId in the <code>cachePath</code>.
+Setting this is equivalent to manually saving the output of this function, i.e.,
+the object will be on disk, and will be recovered in subsequent
+This may help in some particularly finicky situations
+where Cache is not correctly detecting unchanged inputs. This will guarantee
+the object will be identical each time; this may be useful in operational code.</p></dd>
+
+
 <dt>outputObjects</dt>
 <dd><p>Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects</p></dd>
@@ -198,11 +226,6 @@ return. This is only relevant for list, environment (or similar) objects</p></dd
 
 <dt>create</dt>
 <dd><p>Logical. If TRUE, then it will create the path for cache.</p></dd>
-
-
-<dt>cachePath</dt>
-<dd><p>A repository used for storing cached objects.
-This is optional if <code>Cache</code> is used inside a SpaDES module.</p></dd>
 
 
 <dt>...</dt>
@@ -294,6 +317,7 @@ It also sorts lower case before upper case.</p>
 two parts: the tag type and tag value, for the specific class.</p>
 <p><code>.cacheMessage</code> should make a call to <code>message</code> that gives information about
 the loaded cached object being returned.</p>
+<p><code>.objecxtToRetrieveMessage</code> is the messaging for recovering an object from Cache.</p>
 <p><code>.addTagsToOutput</code> should add one or more attributes to an object, named either
 <code>"tags"</code>, <code>"call"</code> or <code>"function"</code>. It may be wise to do a "deep" copy within this
 method, but it may not be necessary.</p>
@@ -344,7 +368,8 @@ for most class. <code>reproducible</code> only has a method for <code>data.table
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fl">1</span></span></span>
 <span class="r-in"><span><span class="fu">.cacheMessage</span><span class="op">(</span><span class="va">a</span>, <span class="st">"mean"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">     loaded cached result from previous mean call (and added a memoised copy)</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous mean call (and added a memoised</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  copy)</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fl">1</span></span></span>
 <span class="r-in"><span><span class="fu">.preDigestByClass</span><span class="op">(</span><span class="va">a</span><span class="op">)</span> <span class="co"># returns NULL in the simple case here.</span></span></span>
@@ -365,7 +390,7 @@ for most class. <code>reproducible</code> only has a method for <code>data.table
 <span class="r-in"><span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span>, <span class="fl">0</span>, <span class="fl">10</span><span class="op">)</span>, vals <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># write to disk manually -- will be in tempdir()</span></span></span>
-<span class="r-in"><span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">writeRaster</a></span><span class="op">(</span><span class="va">r</span>, file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".tif"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">writeRaster</a></span><span class="op">(</span><span class="va">r</span>, filename <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".tif"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># copy it to the cache repository</span></span></span>
 <span class="r-in"><span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu">.prepareOutput</span><span class="op">(</span><span class="va">r</span>, <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
@@ -387,7 +412,7 @@ for most class. <code>reproducible</code> only has a method for <code>data.table
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.8.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
 </div>
 
       </footer></div>

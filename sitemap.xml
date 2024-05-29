@@ -103,6 +103,9 @@
     <loc>https://reproducible.predictiveecology.org/reference/dot-formalsNotInCurrentDots.html</loc>
   </url>
   <url>
+    <loc>https://reproducible.predictiveecology.org/reference/dot-isMemoised.html</loc>
+  </url>
+  <url>
     <loc>https://reproducible.predictiveecology.org/reference/dot-removeCacheAtts.html</loc>
   </url>
   <url>
@@ -130,6 +133,9 @@
     <loc>https://reproducible.predictiveecology.org/reference/fixErrorsIn.html</loc>
   </url>
   <url>
+    <loc>https://reproducible.predictiveecology.org/reference/gdalwarpFns.html</loc>
+  </url>
+  <url>
     <loc>https://reproducible.predictiveecology.org/reference/grepSysCalls.html</loc>
   </url>
   <url>
@@ -151,10 +157,19 @@
     <loc>https://reproducible.predictiveecology.org/reference/isWindows.html</loc>
   </url>
   <url>
+    <loc>https://reproducible.predictiveecology.org/reference/keepOrigGeom.html</loc>
+  </url>
+  <url>
     <loc>https://reproducible.predictiveecology.org/reference/linkOrCopy.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/listFilesInArchive.html</loc>
+  </url>
+  <url>
+    <loc>https://reproducible.predictiveecology.org/reference/listNamed.html</loc>
+  </url>
+  <url>
+    <loc>https://reproducible.predictiveecology.org/reference/loadFile.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/mergeCache.html</loc>
@@ -203,6 +218,9 @@
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/relativePaths.html</loc>
+  </url>
+  <url>
+    <loc>https://reproducible.predictiveecology.org/reference/remapFilenames.html</loc>
   </url>
   <url>
     <loc>https://reproducible.predictiveecology.org/reference/reproducible-package.html</loc>
