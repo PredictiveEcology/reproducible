@@ -864,7 +864,7 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
 #'
 #' @param file character specifying the path to the file
 #'
-#' @param format (optional) character string specifying file extension "qs" or "rds" of `file`;
+#' @param format (optional) character string specifying file extension ("qs" or "rds") of `file`;
 #'        if not specified (i.e., NULL), will be deduced from the file extension of `file`.
 #'
 #' @return the object loaded from `file`

@@ -583,12 +583,17 @@ set.randomseed <- function(set.seed = TRUE) {
 
 # This used to be in helper-allEqual.R --> one of the tests couldn't find it
 getDataFn <- function(...) {
-  suppressWarningsSpecific(
-    {
-      geodata::gadm(...)
-    },
-    falseWarnings = "getData will be removed in a future version of raster"
-  )
+  if (requireNamespace("geodata", quietly = TRUE)) {
+    suppressWarningsSpecific(
+      {
+        geodata::gadm(...)
+      },
+      falseWarnings = "getData will be removed in a future version of raster"
+    )
+  } else {
+    stop("dependency package 'geodata' is not installed.\n",
+         "Try `install.packages('geodata', repos = 'https://predictiveecology.r-universe.dev/')`")
+  }
 }
 
 milliseconds <- function(time = Sys.time()) {

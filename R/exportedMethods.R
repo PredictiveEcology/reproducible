@@ -647,7 +647,7 @@ setMethod(
 #' Remap file names
 #'
 #' Update file path metadata for file-backed objects (e.g., `SpatRasters`).
-#' Useful when moving saved objects between porjects or machines.
+#' Useful when moving saved objects between projects or machines.
 #'
 #' @param obj (optional) object whose file path metadata will be remapped
 #' @param tags cache tags `data.table` object

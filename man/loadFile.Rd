@@ -9,7 +9,7 @@ loadFile(file, format = NULL)
 \arguments{
 \item{file}{character specifying the path to the file}
 
-\item{format}{(optional) character string specifying file extension "qs" or "rds" of \code{file};
+\item{format}{(optional) character string specifying file extension ("qs" or "rds") of \code{file};
 if not specified (i.e., NULL), will be deduced from the file extension of \code{file}.}
 }
 \value{

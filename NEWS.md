@@ -1,4 +1,4 @@
-# reproducible (development version)
+# reproducible 2.1.0
 
 ## New
 * new family of functions that are called inside `postProcessTo` that use `sf::gdal_utils` directly. These are still experimental and will only be activated with `options("reproducible.gdalwarp" = TRUE)`
@@ -17,7 +17,7 @@
 * if a user is having troubles with `googledrive` for e.g., large files on spotting connections, instructions for using `gdown` are provided
 * `showCache`, `clearCache` now have extra arguments `fun`, `cacheId`, and `...` now can take any arbitrary `tag = value` pair. The `cacheId` argument will be very fast if a user is not using `useDBI()` is `FALSE`.
 * `.wrap` and `.unwrap` can now deal with `SpatVectorCollection` (a `terra` class that does not have a `wrap`/`unwrap` method in `terra`)
-* ALTREP digesting when using `spooky` or `fastdigest` were not stable for `integers` and `factors`. There is now a work around in `.robustDigest` that stabilizes these by expanding them from their ALTREP representation  first. Since they will be saved and recovered anyway, this will have little effect. 
+* ALTREP digesting when using `spooky` or `fastdigest` were not stable for `integers` and `factors`. There is now a work around in `.robustDigest` that stabilizes these by expanding them from their ALTREP representation first. Since they will be saved and recovered anyway, this will have little effect. 
 * `.wrap` and `.unwrap` are becoming more mature and can handle many more classes effectively. Methods can still be written, if needed.
 
 ## Testing

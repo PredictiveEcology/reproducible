@@ -314,12 +314,8 @@ urlTif1 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master
 urlShapefiles1Zip <- "https://drive.google.com/file/d/1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb/view?usp=sharing"
 urlShapefilesZip <- "https://drive.google.com/file/d/1z1x0oI5jUDJQosOXacI8xbzbR15HFi0W/view?usp=sharing"
 
-### Raster package function getData is failing for GADM objects because that site seems to have changed its url
-# targetFileLuxRDS <- "GADM_3.6_LUX_adm0.rds"
 targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
 
-
-## TODO: switch to `geodata` package (raster::getData() is deprecated) (#256)
 testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
                               type = c("Raster", "Stack", "Brick")) {
   .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
