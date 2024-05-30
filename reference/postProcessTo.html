@@ -374,7 +374,7 @@ call <code>sf::gdal_utils(...)</code> directly: <code><a href="gdalwarpFns.html"
 <span class="r-in"><span><span class="va">t1</span> <span class="op">&lt;-</span> <span class="fu">postProcessTo</span><span class="op">(</span><span class="va">elev1</span>, to <span class="op">=</span> <span class="va">vInUTM</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0502 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0542 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> projecting...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> </span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> projectTo is a Vector dataset, which does not define all metadata</span></span>
@@ -384,25 +384,25 @@ call <code>sf::gdal_utils(...)</code> directly: <code><a href="gdalwarpFns.html"
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> If this is not correct, create a template gridded object and pass</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">   that to `projectTo`...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0294 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0314 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0115 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0119 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.037 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.149 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0382 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.159 secs</span></span>
 <span class="r-in"><span><span class="co"># crop, reproject, mask a raster to a different projection, then mask</span></span></span>
 <span class="r-in"><span><span class="va">t2a</span> <span class="op">&lt;-</span> <span class="fu">postProcessTo</span><span class="op">(</span><span class="va">elev1</span>, to <span class="op">=</span> <span class="va">vAsRasInLongLat</span>, maskTo <span class="op">=</span> <span class="va">vInUTM</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0134 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0136 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0161 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0166 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0116 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0119 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0104 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.0843 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0111 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.0873 secs</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># using gdal directly --&gt; slightly different mask</span></span></span>
@@ -412,23 +412,23 @@ call <code>sf::gdal_utils(...)</code> directly: <code><a href="gdalwarpFns.html"
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> using sf::gdal_utils('warp') because</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">   options("reproducible.gdalwarp" = TRUE) ...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> running gdalProject ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0211 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.023 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> running gdalResample ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0176 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0192 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> running gdalMask ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0413 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.0822 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0431 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.0876 secs</span></span>
 <span class="r-in"><span><span class="va">t3b</span> <span class="op">&lt;-</span> <span class="fu">postProcessTo</span><span class="op">(</span><span class="va">elev1</span>, to <span class="op">=</span> <span class="va">rInUTM</span>, maskTo <span class="op">=</span> <span class="va">vInUTM</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> using sf::gdal_utils('warp') because</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">   options("reproducible.gdalwarp" = TRUE) ...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> running gdalProject ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0473 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0505 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> running gdalResample ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0316 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0324 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> running gdalMask ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.167 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.248 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.171 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.257 secs</span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">opts</span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>
