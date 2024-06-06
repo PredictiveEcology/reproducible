@@ -1,4 +1,4 @@
-# reproducible (development version)
+# reproducible 2.1.1
 
 * improved handling of symlinks in `remapFileNames()`;
 
