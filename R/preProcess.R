@@ -385,69 +385,79 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # Change the destinationPath to the reproducible.inputPaths temporarily, so
   #   download happens there. Later it will be linked to the user destinationPath
   if (!is.null(reproducible.inputPaths)) {
-    # may already have been changed above
-    outCheck <- if (!is.null(targetFilePath)) {
-      !file.exists(targetFilePath)
-    } else {
-      TRUE
-    } ## if NULL, it doesn't exist and we want to proceed
-    if (isTRUE(outCheck)) { # skip if it already existed locally
-      if (is.null(destinationPathUser)) {
-        destinationPathUser <- destinationPath
-      }
-      on.exit(
-        {
-          destinationPath <- destinationPathUser
-        },
-        add = TRUE
-      )
-
-      if (!identical(destinationPath, reproducible.inputPaths)) {
-        # CHANGE destinationPath FOR REMAINDER OF THIS FUNCTION
-        neededFilesNew <- makeRelative(neededFiles, destinationPath)
-        targetFilePathNew <- makeRelative(targetFilePath, destinationPath)
-        destinationPathNew <- reproducible.inputPaths[1]
-        archiveExistInDestDir <- if (!isNULLorNA(archive)) {
-          file.exists(archive)
-        } else {
-          FALSE
-        }
-        existInDestDir <- if (!isNULLorNA(neededFiles)) {
-          file.exists(neededFiles)
-        } else {
-          FALSE
-        }
-        if (any(existInDestDir)) {
-          from <- neededFiles[existInDestDir]
-          to <- makeAbsolute(neededFilesNew[existInDestDir],
-                             absoluteBase = destinationPathNew
-          )
-          linkOrCopyUpdateOnly(from, to, verbose = verbose)
-        }
-        if (any(archiveExistInDestDir)) {
-          from <- archive[archiveExistInDestDir]
-          to <- makeAbsolute(makeRelative(archive[archiveExistInDestDir], destinationPath),
-                             absoluteBase = destinationPathNew
-          )
-          linkOrCopyUpdateOnly(from, to, verbose = verbose - 1)
-        }
-        targetPath <- targetFilePathNew
-        destinationPath <- destinationPathNew
-        neededFiles <- neededFilesNew
-      }
-
-      if (isTRUE(any(grepl(archive, pattern = destinationPathUser)))) {
-        # might have a "." as destinationPath -- messes with grepl
-        patt <- if (grepl("^\\.", destinationPathUser)) {
-          gsub("^\\.", "^\\\\.", destinationPathUser)
-        } else {
-          destinationPathUser
-        }
-        archive <- gsub(archive, pattern = patt, replacement = destinationPath)
-      }
-      targetFilePath <- makeAbsolute(targetFilePath, destinationPath)
-      neededFiles <- makeAbsolute(neededFiles, destinationPath)
-    }
+    outs <- copyFromDPtoReproducibleIPs(targetFilePath, destinationPathUser, destinationPath,
+                                        reproducible.inputPaths, neededFiles, archive, checkSums,
+                                        checkSumFilePath = checkSumFilePath, verbose)
+    on.exit(
+      {
+        destinationPath <- destinationPathUser
+      },
+      add = TRUE
+    )
+    list2env(outs, environment()) # "neededFiles"     "targetFilePath"  "destinationPath" "archive"
+    # # may already have been changed above
+    # outCheck <- if (!is.null(targetFilePath)) {
+    #   !file.exists(targetFilePath)
+    # } else {
+    #   TRUE
+    # } ## if NULL, it doesn't exist and we want to proceed
+    # if (isTRUE(outCheck)) { # skip if it already existed locally
+    #   if (is.null(destinationPathUser)) {
+    #     destinationPathUser <- destinationPath
+    #   }
+    #   on.exit(
+    #     {
+    #       destinationPath <- destinationPathUser
+    #     },
+    #     add = TRUE
+    #   )
+    #
+    #   if (!identical(destinationPath, reproducible.inputPaths)) {
+    #     # CHANGE destinationPath FOR REMAINDER OF THIS FUNCTION
+    #     neededFilesNew <- makeRelative(neededFiles, destinationPath)
+    #     targetFilePathNew <- makeRelative(targetFilePath, destinationPath)
+    #     destinationPathNew <- reproducible.inputPaths[1]
+    #     archiveExistInDestDir <- if (!isNULLorNA(archive)) {
+    #       file.exists(archive)
+    #     } else {
+    #       FALSE
+    #     }
+    #     existInDestDir <- if (!isNULLorNA(neededFiles)) {
+    #       file.exists(neededFiles)
+    #     } else {
+    #       FALSE
+    #     }
+    #     if (any(existInDestDir)) {
+    #       from <- neededFiles[existInDestDir]
+    #       to <- makeAbsolute(neededFilesNew[existInDestDir],
+    #                          absoluteBase = destinationPathNew
+    #       )
+    #       linkOrCopyUpdateOnly(from, to, verbose = verbose)
+    #     }
+    #     if (any(archiveExistInDestDir)) {
+    #       from <- archive[archiveExistInDestDir]
+    #       to <- makeAbsolute(makeRelative(archive[archiveExistInDestDir], destinationPath),
+    #                          absoluteBase = destinationPathNew
+    #       )
+    #       linkOrCopyUpdateOnly(from, to, verbose = verbose)
+    #     }
+    #     targetPath <- targetFilePathNew
+    #     destinationPath <- destinationPathNew
+    #     neededFiles <- neededFilesNew
+    #   }
+    #
+    #   if (isTRUE(any(grepl(archive, pattern = destinationPathUser)))) {
+    #     # might have a "." as destinationPath -- messes with grepl
+    #     patt <- if (grepl("^\\.", destinationPathUser)) {
+    #       gsub("^\\.", "^\\\\.", destinationPathUser)
+    #     } else {
+    #       destinationPathUser
+    #     }
+    #     archive <- gsub(archive, pattern = patt, replacement = destinationPath)
+    #   }
+    #   targetFilePath <- makeAbsolute(targetFilePath, destinationPath)
+    #   neededFiles <- makeAbsolute(neededFiles, destinationPath)
+    # }
   }
 
   ###############################################################
@@ -581,7 +591,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             messagePreProcess("...using file(s) in getOption('reproducible.inputPaths')...",
                               verbose = verbose)
           }
-          outHLC <- hardLinkOrCopy(from, to, verbose = verbose - 1)
+          outHLC <- hardLinkOrCopy(from, to, verbose = verbose)
           filesExtr[foundInInputPaths] <- to
         }
       }
@@ -1868,3 +1878,85 @@ linkOrCopyUpdateOnly <- function(from, to, verbose) {
 
 messageChecksummingAllFiles <- "Checksumming all files in archive"
 
+
+
+# may already have been changed above
+copyFromDPtoReproducibleIPs <- function(targetFilePath, destinationPathUser, destinationPath,
+                            reproducible.inputPaths, neededFiles, archive, checkSums,
+                            checkSumFilePath, verbose) {
+  outCheck <- if (!is.null(targetFilePath)) {
+    !file.exists(targetFilePath)
+  } else {
+    TRUE
+  } ## if NULL, it doesn't exist and we want to proceed
+  if (isTRUE(outCheck)) { # skip if it already existed locally
+    if (is.null(destinationPathUser)) {
+      destinationPathUser <- destinationPath
+    }
+    on.exit(
+      {
+        destinationPath <- destinationPathUser
+      },
+      add = TRUE
+    )
+
+    if (!identical(destinationPath, reproducible.inputPaths)) {
+      # CHANGE destinationPath FOR REMAINDER OF THIS FUNCTION
+      neededFilesNew <- makeRelative(neededFiles, destinationPath)
+      targetFilePathNew <- makeRelative(targetFilePath, destinationPath)
+      destinationPathNew <- reproducible.inputPaths[1]
+      archiveExistInDestDir <- if (!isNULLorNA(archive)) {
+        file.exists(archive)
+      } else {
+        FALSE
+      }
+      existInDestDir <- if (!isNULLorNA(neededFiles)) {
+        file.exists(neededFiles)
+      } else {
+        FALSE
+      }
+      filesToAppendToChecksums <- character()
+      if (any(existInDestDir)) {
+        from <- neededFiles[existInDestDir]
+        to <- makeAbsolute(neededFilesNew[existInDestDir],
+                           absoluteBase = destinationPathNew
+        )
+        linkOrCopyUpdateOnly(from, to, verbose = verbose)
+        filesToAppendToChecksums <- c(filesToAppendToChecksums, to)
+      }
+      if (any(archiveExistInDestDir)) {
+        from <- archive[archiveExistInDestDir]
+        to <- makeAbsolute(makeRelative(archive[archiveExistInDestDir], destinationPath),
+                           absoluteBase = destinationPathNew
+        )
+        linkOrCopyUpdateOnly(from, to, verbose = verbose)
+        filesToAppendToChecksums <- c(filesToAppendToChecksums, to)
+      }
+      if (any(nzchar(filesToAppendToChecksums) %in% TRUE)) {
+        appendChecksumsTableWithCS(append = TRUE,
+                                   checkSumFilePath = file.path(destinationPathNew, basename(checkSumFilePath)),
+                                   destinationPathNew,
+                                   filesToChecksum = filesToAppendToChecksums, currentFiles = checkSums,
+                                   verbose)
+
+      }
+      targetPath <- targetFilePathNew
+      destinationPath <- destinationPathNew
+      neededFiles <- neededFilesNew
+    }
+
+    if (isTRUE(any(grepl(archive, pattern = destinationPathUser)))) {
+      # might have a "." as destinationPath -- messes with grepl
+      patt <- if (grepl("^\\.", destinationPathUser)) {
+        gsub("^\\.", "^\\\\.", destinationPathUser)
+      } else {
+        destinationPathUser
+      }
+      archive <- gsub(archive, pattern = patt, replacement = destinationPath)
+    }
+    targetFilePath <- makeAbsolute(targetFilePath, destinationPath)
+    neededFiles <- makeAbsolute(neededFiles, destinationPath)
+  }
+  list(neededFiles = neededFiles, targetFilePath = targetFilePath, destinationPath = destinationPath,
+       archive = archive)
+}

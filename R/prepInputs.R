@@ -1058,71 +1058,81 @@ extractFromArchive <- function(archive,
 appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  append = TRUE, verbose = getOption("reproducible.verbose", 1)) {
-  if (append) {
-    # a checksums file already existed, need to keep some of it
-    cs <- suppressWarnings(try(read.table(checkSumFilePath, header = TRUE), silent = TRUE))
-    if (is(cs, "try-error")) {
-      # meant that it was an empty CHECKSUMS.txt file -- rebuild it
-      append <- FALSE
-    } else {
-      setDT(cs)
-      nonCurrentFiles <- cs[!makeRelative(file, destinationPath) %in%
-                              makeRelative(filesToChecksum, destinationPath)]
-      setDF(cs)
-    }
-    messStart <- "Appending "
-  } else {
-    messStart <- "Writing "
-  }
-  csf <- if (append) tempfile(fileext = ".TXT") else checkSumFilePath
+  csf <- tempfile(fileext = ".TXT")
   areAbs <- isAbsolutePath(filesToChecksum)
   if (any(!areAbs)) {
     filesToChecksum[!areAbs] <- file.path(destinationPath, filesToChecksum[!areAbs])
   }
   capture.output(type = "message", {
     currentFiles <- Checksums(
-      path = destinationPath, write = TRUE, # write = !append || NROW(nonCurrentFiles) == 0,
+      path = destinationPath, write = TRUE,
       files = filesToChecksum,
       checksumFile = csf,
       verbose = verbose
     )
   })
-  if (append) { # a checksums file already existed, need to keep some of it
 
-    messagePreProcess(messStart, "checksums to CHECKSUMS.txt. If you see this message repeatedly, ",
-                      "you can specify targetFile (and optionally alsoExtract) so it knows ",
-                      "what to look for.", verbose = verbose)
+  rip <- getOption("reproducible.inputPaths")
+  checkSumFilePaths <- if (!is.null(rip)) {
+    unique(c(checkSumFilePath, file.path(rip, basename(checkSumFilePath))))
+  } else {
+    checkSumFilePath
+  }
 
-    currentFilesToRbind <- data.table::as.data.table(currentFiles)
-    keepCols <- c("expectedFile", "checksum.x", "algorithm.x", "filesize.x")
-    currentFilesToRbind <- currentFilesToRbind[, keepCols, with = FALSE]
-    data.table::setnames(currentFilesToRbind,
-      old = keepCols,
-      new = c("file", "checksum", "algorithm", "filesize")
-    )
-    currentFilesToRbind <- rbindlist(list(nonCurrentFiles, currentFilesToRbind), fill = TRUE)
-
-    # Attempt to not change CHECKSUMS.txt file if nothing new occurred
-    currentFilesToRbind <- unique(currentFilesToRbind)
-    anyDuplicates <- duplicated(currentFilesToRbind)
-    if (any(anyDuplicates)) {
-      messagePreProcess("The current targetFile is not the same as the expected targetFile in the ",
-        "CHECKSUMS.txt; appending new entry in CHECKSUMS.txt. If this is not ",
-        "desired, please check files for discrepancies",
-        verbose = verbose
-      )
-    }
-
-    # Sometimes a checksums file doesn't have filesize
-    if (!is.null(cs$filesize)) {
-      if (!is.character(cs$filesize)) {
-        cs$filesize <- as.character(cs$filesize)
-      }
-    }
-
-    if (!identical(cs, as.data.frame(currentFilesToRbind))) {
-      writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
-    }
+  for (checkSumFilePath in checkSumFilePaths) {
+    appendChecksumsTableWithCS(append, checkSumFilePath, destinationPath, filesToChecksum,
+                               currentFiles = currentFiles, verbose = verbose)
+    #
+    # if (append) {
+    #   cs <- readCheckSumFilePath(checkSumFilePath, destinationPath, filesToChecksum)
+    #   if (is.null(cs)) {
+    #     browser()
+    #     append <- FALSE
+    #   } else {
+    #     browser()
+    #     # a checksums file already existed, need to keep some of it
+    #     nonCurrentFiles <- extractFileNOTtoChecksum(cs, destinationPath, filesToChecksum)
+    #   }
+    # }
+    #
+    # browser()
+    # if (append) { # a checksums file already existed, need to keep some of it
+    #   messStart <- "Appending "
+    #   messagePreProcess(messStart, "checksums to CHECKSUMS.txt. If you see this message repeatedly, ",
+    #                     "you can specify targetFile (and optionally alsoExtract) so it knows ",
+    #                     "what to look for.", verbose = verbose)
+    #
+    #   currentFilesToRbind <- data.table::as.data.table(currentFiles)
+    #   keepCols <- c("expectedFile", "checksum.x", "algorithm.x", "filesize.x")
+    #   currentFilesToRbind <- currentFilesToRbind[, keepCols, with = FALSE]
+    #   data.table::setnames(currentFilesToRbind,
+    #                        old = keepCols,
+    #                        new = c("file", "checksum", "algorithm", "filesize")
+    #   )
+    #   currentFilesToRbind <- rbindlist(list(nonCurrentFiles, currentFilesToRbind), fill = TRUE)
+    #
+    #   # Attempt to not change CHECKSUMS.txt file if nothing new occurred
+    #   currentFilesToRbind <- unique(currentFilesToRbind)
+    #   anyDuplicates <- duplicated(currentFilesToRbind)
+    #   if (any(anyDuplicates)) {
+    #     messagePreProcess("The current targetFile is not the same as the expected targetFile in the ",
+    #                       "CHECKSUMS.txt; appending new entry in CHECKSUMS.txt. If this is not ",
+    #                       "desired, please check files for discrepancies",
+    #                       verbose = verbose
+    #     )
+    #   }
+    #
+    #   # Sometimes a checksums file doesn't have filesize
+    #   if (!is.null(cs$filesize)) {
+    #     if (!is.character(cs$filesize)) {
+    #       cs$filesize <- as.character(cs$filesize)
+    #     }
+    #   }
+    #
+    #   if (!identical(cs, as.data.frame(currentFilesToRbind))) {
+    #     writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
+    #   }
+    # }
   }
   return(currentFiles)
 }
@@ -1601,4 +1611,103 @@ reportTime <- function(stStart, mess, minSeconds) {
   dt1auto <- difftime(stNow, stStart)
   messagePreProcess(mess, format(dt1auto, units = "auto"), verbose = dt1sec > minSeconds)
   stNow
+}
+
+
+readCheckSumFilePath <- function(checkSumFilePath, destinationPath, filesToChecksum) {
+  # a checksums file already existed, need to keep some of it
+  cs <- suppressWarnings(try(read.table(checkSumFilePath, header = TRUE), silent = TRUE))
+  if (is(cs, "try-error")) {
+    # meant that it was an empty CHECKSUMS.txt file -- rebuild it
+    cs <- NULL # append <- FALSE
+  }
+  cs
+}
+
+extractFileNOTtoChecksum <- function(cs, destinationPath, filesToChecksum) {
+  setDT(cs)
+  cs[!makeRelative(file, destinationPath) %in%
+       makeRelative(filesToChecksum, destinationPath)]
+  setDF(cs)
+  cs
+}
+
+
+
+appendChecksumsTableWithCS <- function(append, checkSumFilePath, destinationPath,
+                                       filesToChecksum, currentFiles, verbose) {
+  if (append) {
+      cs <- readCheckSumFilePath(checkSumFilePath, destinationPath, filesToChecksum)
+    if (is.null(cs)) {
+      append <- FALSE
+    } else {
+      # a checksums file already existed, need to keep some of it
+      nonCurrentFiles <- extractFileNOTtoChecksum(cs, destinationPath, filesToChecksum)
+    }
+  }
+
+  if (append) { # a checksums file already existed, need to keep some of it
+    messStart <- "Appending "
+    messagePreProcess(messStart, "checksums to CHECKSUMS.txt. If you see this message repeatedly, ",
+                      "you can specify targetFile (and optionally alsoExtract) so it knows ",
+                      "what to look for.", verbose = verbose)
+
+    currentFilesToRbind <- currentFilesToChecksumsTable(currentFiles, nonCurrentFiles, verbose = verbose)
+    # currentFilesToRbind <- data.table::as.data.table(currentFiles)
+    # keepCols <- c("expectedFile", "checksum.x", "algorithm.x", "filesize.x")
+    # currentFilesToRbind <- currentFilesToRbind[, keepCols, with = FALSE]
+    # data.table::setnames(currentFilesToRbind,
+    #                      old = keepCols,
+    #                      new = c("file", "checksum", "algorithm", "filesize")
+    # )
+    # currentFilesToRbind <- rbindlist(list(nonCurrentFiles, currentFilesToRbind), fill = TRUE)
+    #
+    # # Attempt to not change CHECKSUMS.txt file if nothing new occurred
+    # currentFilesToRbind <- unique(currentFilesToRbind)
+    # anyDuplicates <- duplicated(currentFilesToRbind)
+    # if (any(anyDuplicates)) {
+    #   messagePreProcess("The current targetFile is not the same as the expected targetFile in the ",
+    #                     "CHECKSUMS.txt; appending new entry in CHECKSUMS.txt. If this is not ",
+    #                     "desired, please check files for discrepancies",
+    #                     verbose = verbose
+    #   )
+    # }
+
+    # Sometimes a checksums file doesn't have filesize
+    if (!is.null(cs$filesize)) {
+      if (!is.character(cs$filesize)) {
+        cs$filesize <- as.character(cs$filesize)
+      }
+    }
+  } else {
+    currentFilesToRbind <- currentFilesToChecksumsTable(currentFiles, verbose = verbose)
+  }
+
+  if (!identical(cs, as.data.frame(currentFilesToRbind))) {
+    writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
+  }
+}
+
+
+currentFilesToChecksumsTable <- function(currentFiles, nonCurrentFiles = NULL, verbose) {
+  currentFilesToRbind <- data.table::as.data.table(currentFiles)
+  keepCols <- c("expectedFile", "checksum.x", "algorithm.x", "filesize.x")
+  currentFilesToRbind <- currentFilesToRbind[, keepCols, with = FALSE]
+  data.table::setnames(currentFilesToRbind,
+                       old = keepCols,
+                       new = c("file", "checksum", "algorithm", "filesize")
+  )
+  currentFilesToRbind <- rbindlist(list(nonCurrentFiles, currentFilesToRbind), fill = TRUE)
+
+  # Attempt to not change CHECKSUMS.txt file if nothing new occurred
+  currentFilesToRbind <- unique(currentFilesToRbind)
+  anyDuplicates <- duplicated(currentFilesToRbind)
+  if (any(anyDuplicates)) {
+    messagePreProcess("The current targetFile is not the same as the expected targetFile in the ",
+                      "CHECKSUMS.txt; appending new entry in CHECKSUMS.txt. If this is not ",
+                      "desired, please check files for discrepancies",
+                      verbose = verbose
+    )
+  }
+  currentFilesToRbind
 }
