@@ -1410,7 +1410,6 @@ is.nulls <- function(x) lapply(x, is.null)
 
 
 
-
 #' @include messages.R
 process <- function(out, funCaptured,
                     useCache = getOption("reproducible.useCache"),
@@ -1646,6 +1645,7 @@ appendChecksumsTableWithCS <- function(append, checkSumFilePath, destinationPath
     }
   }
 
+  doWrite <- TRUE
   if (append) { # a checksums file already existed, need to keep some of it
     messStart <- "Appending "
     messagePreProcess(messStart, "checksums to CHECKSUMS.txt. If you see this message repeatedly, ",
@@ -1653,25 +1653,6 @@ appendChecksumsTableWithCS <- function(append, checkSumFilePath, destinationPath
                       "what to look for.", verbose = verbose)
 
     currentFilesToRbind <- currentFilesToChecksumsTable(currentFiles, nonCurrentFiles, verbose = verbose)
-    # currentFilesToRbind <- data.table::as.data.table(currentFiles)
-    # keepCols <- c("expectedFile", "checksum.x", "algorithm.x", "filesize.x")
-    # currentFilesToRbind <- currentFilesToRbind[, keepCols, with = FALSE]
-    # data.table::setnames(currentFilesToRbind,
-    #                      old = keepCols,
-    #                      new = c("file", "checksum", "algorithm", "filesize")
-    # )
-    # currentFilesToRbind <- rbindlist(list(nonCurrentFiles, currentFilesToRbind), fill = TRUE)
-    #
-    # # Attempt to not change CHECKSUMS.txt file if nothing new occurred
-    # currentFilesToRbind <- unique(currentFilesToRbind)
-    # anyDuplicates <- duplicated(currentFilesToRbind)
-    # if (any(anyDuplicates)) {
-    #   messagePreProcess("The current targetFile is not the same as the expected targetFile in the ",
-    #                     "CHECKSUMS.txt; appending new entry in CHECKSUMS.txt. If this is not ",
-    #                     "desired, please check files for discrepancies",
-    #                     verbose = verbose
-    #   )
-    # }
 
     # Sometimes a checksums file doesn't have filesize
     if (!is.null(cs$filesize)) {
@@ -1679,11 +1660,14 @@ appendChecksumsTableWithCS <- function(append, checkSumFilePath, destinationPath
         cs$filesize <- as.character(cs$filesize)
       }
     }
+    if (identical(cs, as.data.frame(currentFilesToRbind))) {
+      doWrite <- FALSE
+    }
   } else {
     currentFilesToRbind <- currentFilesToChecksumsTable(currentFiles, verbose = verbose)
   }
 
-  if (!identical(cs, as.data.frame(currentFilesToRbind))) {
+  if (doWrite) {
     writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
   }
 }
