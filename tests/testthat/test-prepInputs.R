@@ -1673,12 +1673,21 @@ test_that("options inputPaths", {
     })
   })
   expect_true(sum(grepl(paste0(hardlinkOrSymlinkMessagePrefixForGrep), mess1)) == 1)
-  expect_true(sum(grepl(paste0(tmpdir3), mess1)) == 1)
+  expect_true(sum(grepl(paste0(tmpdir3), mess1)) == 2)
 
   # THIS NEXT ONE DOESN"T PASS ON GA on WINDOWS, skip it
   #  should copy from 2nd directory (tmpCache) because it is removed in the lower
   #  tmpdir directory & has a CHECKSUMS.txt
   if (!isTRUE(as.logical(Sys.getenv("CI")))) { # (!testthat:::on_ci()) { # can't use the :::
+
+    url_2 = if (!useGADM) url2 else f$url
+    targetFile_2 = if (useGADM) theFile else f$targetFile
+    dlFun_2 = if (useGADM) getDataFn else NULL
+    name_2 = if (useGADM) "GADM" else NULL
+    country_2 = if (useGADM) "LUX" else NULL
+    level_2 = if (useGADM) 0 else NULL
+    path_2 = if (useGADM) tmpdir else NULL
+
     options("reproducible.inputPaths" = tmpdir)
     options("reproducible.inputPathsRecursive" = TRUE)
     file.remove(file.path(tmpCache, theFile))
@@ -1686,13 +1695,13 @@ test_that("options inputPaths", {
     noisyOutput <- capture.output({
       mess1 <- capture_messages({
         test1 <- prepInputs(
-          url = if (!useGADM) url2 else f$url,
-          targetFile = if (useGADM) theFile else f$targetFile,
-          dlFun = if (useGADM) getDataFn else NULL,
-          name = if (useGADM) "GADM" else NULL,
-          country = if (useGADM) "LUX" else NULL,
-          level = if (useGADM) 0 else NULL,
-          path = if (useGADM) tmpdir else NULL,
+          url = url_2,
+          targetFile = targetFile_2,
+          dlFun = dlFun_2,
+          name = name_2,
+          country = country_2,
+          level = level_2,
+          path = path_2,
           destinationPath = tmpdir1, verbose = 3
         )
       })
@@ -1711,19 +1720,28 @@ test_that("options inputPaths", {
       "reproducible.inputPathsRecursive" = FALSE
     )
   )
+
   options("reproducible.inputPaths" = tmpdir)
   tmpdir2 <- file.path(tmpdir, rndstr(1, 5))
+  url_2 = if (!useGADM) url2 else f$url
+  targetFile_2 = if (useGADM) theFile else f$targetFile
+  dlFun_2 = if (useGADM) getDataFn else NULL
+  name_2 = if (useGADM) "GADM" else NULL
+  country_2 = if (useGADM) "LUX" else NULL
+  level_2 = if (useGADM) 0 else NULL
+  path_2 = if (useGADM) tmpdir else NULL
+
   noisyOutput <- capture.output({
     noisyOutput <- capture.output(type = "message", {
       mess1 <- capture_messages({
         test1 <- prepInputs(
-          url = if (!useGADM) url2 else f$url,
-          targetFile = if (useGADM) theFile else f$targetFile,
-          dlFun = if (useGADM) getDataFn else NULL,
-          name = if (useGADM) "GADM" else NULL,
-          country = if (useGADM) "LUX" else NULL,
-          level = if (useGADM) 0 else NULL,
-          path = if (useGADM) tmpdir else NULL,
+          url = url_2,
+          targetFile = targetFile_2,
+          dlFun = dlFun_2,
+          name = name_2,
+          country = country_2,
+          level = level_2,
+          path = path_2,
           destinationPath = tmpdir2
         )
       })
@@ -1733,23 +1751,31 @@ test_that("options inputPaths", {
   # Must remove the link that happens during downloading to a .tempPath
   test10 <- grep(hardlinkOrSymlinkMessagePrefixForGrep, mess1, value = TRUE)
   test10 <- grep(tmpdir2, test10, invert = TRUE, value = TRUE)
-  expect_true(length(test10) == (1 - useGADM)) #
+  expect_true(length(test10) == (1)) #
 
   # Have file in inputPath, not in destinationPath
   unlink(file.path(tmpdir2, theFile))
   expect_false(file.exists(file.path(tmpdir2, theFile))) # FALSE -- confirm previous line
   expect_true(file.exists(file.path(tmpdir, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
   tmpdir2 <- file.path(tmpdir, rndstr(1, 5))
+  url_2 = if (!useGADM) url2 else f$url
+  targetFile_2 = if (useGADM) theFile else f$targetFile
+  dlFun_2 = if (useGADM) getDataFn else NULL
+  name_2 = if (useGADM) "GADM" else NULL
+  country_2 = if (useGADM) "LUX" else NULL
+  level_2 = if (useGADM) 0 else NULL
+  path_2 = if (useGADM) tmpdir else NULL
+
   noisyOutput <- capture.output({
     mess1 <- capture_messages({
       test1 <- prepInputs(
-        url = if (!useGADM) url2 else f$url,
-        targetFile = if (useGADM) theFile else f$targetFile,
-        dlFun = if (useGADM) getDataFn else NULL,
-        name = if (useGADM) "GADM" else NULL,
-        country = if (useGADM) "LUX" else NULL,
-        level = if (useGADM) 0 else NULL,
-        path = if (useGADM) tmpdir else NULL,
+        url = url_2,
+        targetFile = targetFile_2,
+        dlFun = dlFun_2,
+        name = name_2,
+        country = country_2,
+        level = level_2,
+        path = path_2,
         destinationPath = tmpdir2, verbose = 3
       )
     })
@@ -1762,16 +1788,23 @@ test_that("options inputPaths", {
   unlink(file.path(tmpdir, theFile))
   expect_false(file.exists(file.path(tmpdir, theFile))) # FALSE -- confirm previous line
   expect_true(file.exists(file.path(tmpdir2, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
+  url_2 = if (!useGADM) url2 else f$url
+  targetFile_2 = if (useGADM) theFile else f$targetFile
+  dlFun_2 = if (useGADM) getDataFn else NULL
+  name_2 = if (useGADM) "GADM" else NULL
+  country_2 = if (useGADM) "LUX" else NULL
+  level_2 = if (useGADM) 0 else NULL
+  path_2 = if (useGADM) tmpdir else NULL
   noisyOutput <- capture.output({
     mess1 <- capture_messages({
       test1 <- prepInputs(
-        url = if (!useGADM) url2 else f$url,
-        targetFile = if (useGADM) theFile else f$targetFile,
-        dlFun = if (useGADM) getDataFn else NULL,
-        name = if (useGADM) "GADM" else NULL,
-        country = if (useGADM) "LUX" else NULL,
-        level = if (useGADM) 0 else NULL,
-        path = if (useGADM) tmpdir else NULL,
+        url = url_2,
+        targetFile = targetFile_2,
+        dlFun = dlFun_2,
+        name = name_2,
+        country = country_2,
+        level = level_2,
+        path = path_2,
         destinationPath = tmpdir2, verbose = 2
       )
     })
@@ -1785,17 +1818,24 @@ test_that("options inputPaths", {
   expect_false(file.exists(file.path(tmpdir, theFile))) # FALSE -- confirm previous line
   expect_false(file.exists(file.path(tmpdir2, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
   options("reproducible.inputPaths" = tmpdir)
+  url_2 = if (!useGADM) url2 else f$url
+  targetFile_2 = if (useGADM) theFile else f$targetFile
+  dlFun_2 = if (useGADM) getDataFn else NULL
+  name_2 = if (useGADM) "GADM" else NULL
+  country_2 = if (useGADM) "LUX" else NULL
+  level_2 = if (useGADM) 0 else NULL
+  path_2 = if (useGADM) tmpdir else NULL
   noisyOutput <- capture.output({
     noisyOutput <- capture.output(type = "message", {
       mess1 <- capture_messages({
         test1 <- prepInputs(
-          url = if (!useGADM) url2 else f$url,
-          targetFile = if (useGADM) theFile else f$targetFile,
-          dlFun = if (useGADM) getDataFn else NULL,
-          name = if (useGADM) "GADM" else NULL,
-          country = if (useGADM) "LUX" else NULL,
-          level = if (useGADM) 0 else NULL,
-          path = if (useGADM) tmpdir else NULL,
+          url = url_2,
+          targetFile = targetFile_2,
+          dlFun = dlFun_2,
+          name = name_2,
+          country = country_2,
+          level = level_2,
+          path = path_2,
           destinationPath = tmpdir, verbose = 2
         )
       })
