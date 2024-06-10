@@ -1082,57 +1082,6 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   for (checkSumFilePath in checkSumFilePaths) {
     appendChecksumsTableWithCS(append, checkSumFilePath, destinationPath, filesToChecksum,
                                currentFiles = currentFiles, verbose = verbose)
-    #
-    # if (append) {
-    #   cs <- readCheckSumFilePath(checkSumFilePath, destinationPath, filesToChecksum)
-    #   if (is.null(cs)) {
-    #     browser()
-    #     append <- FALSE
-    #   } else {
-    #     browser()
-    #     # a checksums file already existed, need to keep some of it
-    #     nonCurrentFiles <- extractFileNOTtoChecksum(cs, destinationPath, filesToChecksum)
-    #   }
-    # }
-    #
-    # browser()
-    # if (append) { # a checksums file already existed, need to keep some of it
-    #   messStart <- "Appending "
-    #   messagePreProcess(messStart, "checksums to CHECKSUMS.txt. If you see this message repeatedly, ",
-    #                     "you can specify targetFile (and optionally alsoExtract) so it knows ",
-    #                     "what to look for.", verbose = verbose)
-    #
-    #   currentFilesToRbind <- data.table::as.data.table(currentFiles)
-    #   keepCols <- c("expectedFile", "checksum.x", "algorithm.x", "filesize.x")
-    #   currentFilesToRbind <- currentFilesToRbind[, keepCols, with = FALSE]
-    #   data.table::setnames(currentFilesToRbind,
-    #                        old = keepCols,
-    #                        new = c("file", "checksum", "algorithm", "filesize")
-    #   )
-    #   currentFilesToRbind <- rbindlist(list(nonCurrentFiles, currentFilesToRbind), fill = TRUE)
-    #
-    #   # Attempt to not change CHECKSUMS.txt file if nothing new occurred
-    #   currentFilesToRbind <- unique(currentFilesToRbind)
-    #   anyDuplicates <- duplicated(currentFilesToRbind)
-    #   if (any(anyDuplicates)) {
-    #     messagePreProcess("The current targetFile is not the same as the expected targetFile in the ",
-    #                       "CHECKSUMS.txt; appending new entry in CHECKSUMS.txt. If this is not ",
-    #                       "desired, please check files for discrepancies",
-    #                       verbose = verbose
-    #     )
-    #   }
-    #
-    #   # Sometimes a checksums file doesn't have filesize
-    #   if (!is.null(cs$filesize)) {
-    #     if (!is.character(cs$filesize)) {
-    #       cs$filesize <- as.character(cs$filesize)
-    #     }
-    #   }
-    #
-    #   if (!identical(cs, as.data.frame(currentFilesToRbind))) {
-    #     writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
-    #   }
-    # }
   }
   return(currentFiles)
 }
@@ -1443,8 +1392,11 @@ process <- function(out, funCaptured,
     .cacheExtra <- .robustDigest(sort(otherFiles$checksum.x))
   }
 
+  out[["targetFile"]] <- out[["targetFilePath"]] # handle both
+
   if (!(naFun || is.null(theFun))) {
-    x <- if (is.null(out$object)) {
+
+      x <- if (is.null(out$object)) {
       st <- Sys.time()
       messagePreProcess("Running `process` (i.e., loading file into R)", verbose = verbose, verboseLevel = 0)
       .message$IndentUpdate()
@@ -1504,7 +1456,7 @@ process <- function(out, funCaptured,
                   ),
                   args
                 )
-                out[["targetFile"]] <- out[["targetFilePath"]] # handle both
+                # out[["targetFile"]] <- out[["targetFilePath"]] # handle both
                 if (is.null(funChar)) funChar <- paste0(substr(format(theFun), start = 1, stop = 40), "...")
                 outProcess <- Cache(eval(theFun, envir = out),
                                     useCache = useCache2, .cacheExtra = .cacheExtra,
@@ -1547,14 +1499,14 @@ process <- function(out, funCaptured,
       outProcess
 
     } else {
-      # if (is.null(fun) || is.na(fun)) {
-      x <- out$object
-      # } else {
-      #  # x <- out$object
-      #  env1 <- new.env()
-      #  list2env(list(...), envir = env1)
-      #  eval(theFun, envir = env1)
-      # }
+      if (is.null(theFun) || !is.call(theFun) || naFun) {
+        x <- out$object
+      } else {
+        # x <- out$object
+        env1 <- new.env()
+        list2env(out, envir = env1)
+        eval(theFun, envir = env1)
+      }
     }
   } else {
     x <- if ((is.null(theFun) || is.na(theFun)) && !is.null(out$object)) {
