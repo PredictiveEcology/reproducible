@@ -173,6 +173,7 @@ test_that("prepInputs doesn't work (part 1)", {
   expect_error(prepInputs(destinationPath = dPath,
                           url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
                           archive = file.path(dPath, "ecozone_shp.zip"),
+                          studyArea = StudyArea,
                           filename2 = "use_writeTo_instead.shp"))
 
 })
