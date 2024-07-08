@@ -79,17 +79,17 @@ test_that("prepInputs doesn't work (part 3)", {
   expect_equal(s1[], b1[], ignore_attr = TRUE)
 
   b <- writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
-  b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
+  b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, writeTo = tmpfile[2], overwrite = TRUE)
   expect_true(inherits(b1, "SpatRaster"))
 
-  s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
+  s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, writeTo = tmpfile[2], overwrite = TRUE)
   expect_true(inherits(s1, "SpatRaster"))
 
   # Test datatype setting
   dt1 <- "INT2U"
   s <- writeRaster(s, filename = tmpfile[2], overwrite = TRUE)
   s1 <- postProcess(s,
-    studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
+    studyArea = ncSmall, useCache = FALSE, writeTo = tmpfile[1], overwrite = TRUE,
     datatype = dt1
   )
   expect_identical(terra::datatype(s1), rep(dt1, terra::nlyr(s)))
@@ -99,7 +99,7 @@ test_that("prepInputs doesn't work (part 3)", {
   s <- writeRaster(s, filename = tmpfile[1], overwrite = TRUE)
   warns <- capture_error({
     s1 <- postProcess(s,
-      studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE,
+      studyArea = ncSmall, useCache = FALSE, writeTo = tmpfile[2], overwrite = TRUE,
       datatype = dt1
     )
   })
@@ -108,7 +108,7 @@ test_that("prepInputs doesn't work (part 3)", {
   dt1 <- "INT4U"
   b <- writeRaster(b, filename = tmpfile[2], overwrite = TRUE)
   b1 <- postProcess(b,
-    studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
+    studyArea = ncSmall, useCache = FALSE, writeTo = tmpfile[1], overwrite = TRUE,
     datatype = dt1
   )
   expect_identical(terra::datatype(b1), rep(dt1, terra::nlyr(b1)))
@@ -203,16 +203,20 @@ test_that("prepInputs doesn't work (part 3)", {
   expect_false(terra::is.valid(p6))
   # projectInputs pass through
   expect_error(projectInputs(x = 1), "argument .+ is missing")
+
+  #using deprecated filename2 arg
+  expect_error(cropInputs(ncSmall, studyArea = ncSmallShifted, filename2 = "use_WriteTo_Instead.shp"))
+
 })
 
-test_that("writeOutputs with non-matching filename2", {
+test_that("writeOutputs with non-matching writeTo", {
   testInit(c("terra"), tmpFileExt = c(".grd", ".tif"))
 
   r <- terra::rast(terra::ext(0, 10, 0, 10), vals = rnorm(100))
   r <- terra::writeRaster(r, filename = tmpfile[1], overwrite = TRUE)
   r[] <- r[]
   warn <- capture_warnings({
-    r1 <- writeOutputs(r, filename2 = tmpfile[2])
+    r1 <- writeOutputs(r, writeTo = tmpfile[2])
   })
   r2 <- terra::rast(Filenames(r1))
   vals1 <- r2[]
@@ -304,7 +308,7 @@ test_that("maskInputs errors when x is Lat-Long", {
         useCache = FALSE,
         fun = "sf::st_read",
         destinationPath = tmpdir,
-        filename2 = "miniRoad.shp"
+        writeTo = "miniRoad.shp"
       )
     )
   )

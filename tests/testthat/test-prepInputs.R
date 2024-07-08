@@ -118,7 +118,7 @@ test_that("prepInputs doesn't work (part 1)", {
             alsoExtract = reproducible::asPath(ecozoneFiles),
             studyArea = StudyArea,
             destinationPath = dPath,
-            filename2 = "EcozoneFile.shp",
+            writeTo = "EcozoneFile.shp",
             useCache = TRUE # with useTerra = TRUE, this is only for loading, not postProcess
           ),
           quick = "destinationPath"
@@ -168,6 +168,13 @@ test_that("prepInputs doesn't work (part 1)", {
     )
   )
   expect_true(is(shpEcozone, vectorType()))
+
+  #stops if deprecated arguments used
+  expect_error(prepInputs(destinationPath = dPath,
+                          url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+                          archive = file.path(dPath, "ecozone_shp.zip"),
+                          filename2 = "use_writeTo_instead.shp"))
+
 })
 
 test_that("interactive prepInputs", {
