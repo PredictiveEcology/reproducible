@@ -1273,6 +1273,11 @@ remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.fr
                          verbose = getOption("reproducible.verbose")) {
   forms <- formals(fn)
   dots <- list(...)
+
+  if (!is.null(dots$filename2)) {
+    stop("filename2 arg is deprecated - please pass 'writeTo' instead (see `reproducible::writeTo`")
+  }
+
   dots <- dots[!vapply(dots, is.null, FUN.VALUE = logical(1))]
 
   ret <- list()

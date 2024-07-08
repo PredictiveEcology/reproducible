@@ -1045,7 +1045,7 @@ Cache <-
 #' @keywords internal
 .namesPostProcessFormals <- function() {
   c(
-    "x", "filename1", "filename2", "studyArea", "rasterToMatch",
+    "x", "filename1", "writeTo", "studyArea", "rasterToMatch",
     "overwrite", "useSAcrs", "useCache", "verbose"
   )
 }

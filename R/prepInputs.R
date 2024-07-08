@@ -45,8 +45,7 @@ utils::globalVariables(c(
 #'     \item Crop using [cropTo()];
 #'     \item Project using [projectTo()];
 #'     \item Mask using [maskTo()];
-#'     \item Determine file name [determineFilename()] via `filename2`;
-#'     \item Optionally, write that file name to disk via [writeTo()].
+#'     \item write the file to disk via [writeTo()].
 #'    }
 #'
 #'   NOTE: checksumming does not occur during the post-processing stage, as
@@ -311,7 +310,7 @@ utils::globalVariables(c(
 #'         studyArea = studyArea,
 #'         fun = "terra::vect",
 #'         destinationPath = dPath,
-#'         filename2 = "EcozoneFile.shp"
+#'         writeTo = "EcozoneFile.shp"
 #'       ) # passed to determineFilename
 #'
 #'       terra::plot(shpEcozone[, 1])
