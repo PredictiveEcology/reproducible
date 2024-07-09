@@ -95,7 +95,7 @@ test_that("prepInputs doesn't work (part 1)", {
               alsoExtract = reproducible::asPath(ecozoneFiles),
               studyArea = StudyArea,
               destinationPath = dPath,
-              filename2 = "EcozoneFile.shp",
+              writeTo = "EcozoneFile.shp",
               useCache = FALSE
             ),
             quick = "destinationPath"
@@ -118,7 +118,7 @@ test_that("prepInputs doesn't work (part 1)", {
             alsoExtract = reproducible::asPath(ecozoneFiles),
             studyArea = StudyArea,
             destinationPath = dPath,
-            filename2 = "EcozoneFile.shp",
+            writeTo = "EcozoneFile.shp",
             useCache = TRUE # with useTerra = TRUE, this is only for loading, not postProcess
           ),
           quick = "destinationPath"
@@ -168,6 +168,14 @@ test_that("prepInputs doesn't work (part 1)", {
     )
   )
   expect_true(is(shpEcozone, vectorType()))
+
+  #stops if deprecated arguments used
+  expect_error(prepInputs(destinationPath = dPath,
+                          url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+                          archive = file.path(dPath, "ecozone_shp.zip"),
+                          studyArea = StudyArea,
+                          filename2 = "use_writeTo_instead.shp"))
+
 })
 
 test_that("interactive prepInputs", {
@@ -1866,7 +1874,7 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
   tifTmp <- normPath(tifTmp)
 
   b1 <- suppressWarnings(terra::writeRaster(a, filename = tifTmp, overwrite = TRUE)) # the GDAL>6 issue
-  b1a <- writeOutputs(a, filename2 = tifTmp)
+  b1a <- writeOutputs(a, writeTo = tifTmp)
   expect_equivalent(b1, b1a)
   expect_equivalent(b1[], b1a[])
 
@@ -1903,7 +1911,7 @@ test_that("rasters aren't properly resampled", {
       targetFile = tiftemp1, rasterToMatch = terra::rast(tiftemp2),
       destinationPath = dirname(tiftemp1), method = "bilinear",
       datatype = "INT2S",
-      filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif")
+      writeTo = tempfile(tmpdir = tmpdir, fileext = ".tif")
     )
   }) # about "raster layer has integer values"
 
@@ -1919,7 +1927,7 @@ test_that("rasters aren't properly resampled", {
     out3 <- prepInputs(
       targetFile = tiftemp3, rasterToMatch = terra::rast(tiftemp2),
       destinationPath = dirname(tiftemp3),
-      filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif")
+      writeTo = tempfile(tmpdir = tmpdir, fileext = ".tif")
     )
     expect_true(dataType2(out3) == "FLT4S")
 
@@ -1934,7 +1942,7 @@ test_that("rasters aren't properly resampled", {
     out3 <- prepInputs(
       targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
       destinationPath = dirname(tiftemp3),
-      filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif")
+      writeTo = tempfile(tmpdir = tmpdir, fileext = ".tif")
     )
     expect_true(is(out3, rasterType()))
     expect_true(identical(length(Filenames(out3)), 1L))
@@ -1947,7 +1955,7 @@ test_that("rasters aren't properly resampled", {
           targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
           destinationPath = dirname(tiftemp3),
           fun = rasterStackFn,
-          filename2 = c(
+          writeTo = c(
             tempfile(tmpdir = tmpdir, fileext = ".grd"),
             tempfile(tmpdir = tmpdir, fileext = ".grd")
           )
@@ -1971,7 +1979,7 @@ test_that("rasters aren't properly resampled", {
           targetFile = tiftemp5, rasterToMatch = terra::rast(tiftemp2),
           destinationPath = dirname(tiftemp3),
           fun = rasterStackFn,
-          filename2 = c(
+          writeTo = c(
             tempfile(tmpdir = tmpdir, fileext = ".grd"),
             tempfile(tmpdir = tmpdir, fileext = ".grd"),
             tempfile(tmpdir = tmpdir, fileext = ".tif")
@@ -1987,7 +1995,7 @@ test_that("rasters aren't properly resampled", {
           targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
           destinationPath = dirname(tiftemp3),
           fun = rasterStackFn,
-          filename2 = c(
+          writeTo = c(
             tempfile(tmpdir = tmpdir, fileext = ".grd"),
             tempfile(tmpdir = tmpdir, fileext = ".grd")
           )

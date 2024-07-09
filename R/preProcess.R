@@ -1,5 +1,6 @@
 utils::globalVariables(c(
-  "reproducible.inputPaths", "successfulCheckSumFilePath", "successfulDir"
+  "reproducible.inputPaths", "successfulCheckSumFilePath", "successfulDir",
+  "destinationPathUser"
 ))
 
 #' @param n Number of non-null arguments passed to `preProcess`.

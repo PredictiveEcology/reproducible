@@ -1717,7 +1717,7 @@ test_that("Issue 316 - writeOutputs in a non getwd dir", {
   rasterToMatchLarge <- list()
   for (i in 1:2) {
     rasterToMatchLarge[[i]] <- Cache(writeOutputs, rasterToMatch,
-                                     filename2 = .suffix(
+                                     writeTo = .suffix(
                                        file.path(tmpdir, "rasterToMatchLarge.tif"),
                                        paste0("_", studyAreaName)
                                      ), datatype = "INT2U",

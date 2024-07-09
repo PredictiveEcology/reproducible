@@ -332,7 +332,7 @@ if (requireNamespace("terra", quietly = TRUE) &&
         studyArea = studyArea,
         fun = "terra::vect",
         destinationPath = dPath,
-        filename2 = "EcozoneFile.shp"
+        writeTo = "EcozoneFile.shp"
       ) # passed to determineFilename
 
       terra::plot(shpEcozone[, 1])
