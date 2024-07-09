@@ -5,7 +5,8 @@
 #' "post-projection-crop", "mask" and possibly "write".
 #' It uses primarily the `terra` package internally
 #' (with some minor functions from `sf`)
-#' in an attempt to be as efficient as possible. Currently, this function is tested
+#' in an attempt to be as efficient as possible, except if all inputs are `sf` objects.
+#' (in which case `sf` is used). Currently, this function is tested
 #' with `sf`, `SpatVector`, `SpatRaster`, `Raster*` and `Spatial*` objects passed
 #' to `from`, and the same plus `SpatExtent`, and `crs` passed to `to` or the
 #' relevant `*to` functions.
