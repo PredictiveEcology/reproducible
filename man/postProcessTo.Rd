@@ -145,7 +145,8 @@ This function provides a single step to achieve the GIS operations
 "post-projection-crop", "mask" and possibly "write".
 It uses primarily the \code{terra} package internally
 (with some minor functions from \code{sf})
-in an attempt to be as efficient as possible. Currently, this function is tested
+in an attempt to be as efficient as possible, except if all inputs are \code{sf} objects.
+(in which case \code{sf} is used). Currently, this function is tested
 with \code{sf}, \code{SpatVector}, \code{SpatRaster}, \verb{Raster*} and \verb{Spatial*} objects passed
 to \code{from}, and the same plus \code{SpatExtent}, and \code{crs} passed to \code{to} or the
 relevant \verb{*to} functions.
