@@ -1378,7 +1378,7 @@ writeRasterArgs <- c(
 projectArgs <- c("x", "y", "method", "mask", "align", "res", "origin", "threads", "filename",
                  "use_gdal", "by_util")
 
-maskArgs <- c("x", "inverse", "mask", "updatevalue", "touches", "filename")
+maskArgs <- c("x", "mask", "inverse", "maskvalues", "updatevalue", "touches", "filename")
 
 extntNA <- function(x) {
   out <- if (isSF(x)) {
