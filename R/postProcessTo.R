@@ -1370,10 +1370,16 @@ assessDataTypeOuter <- function(from, method) {
 
 ## TODO: don't hardcode these, use code to get them; formals() doesn't capture other args
 writeRasterArgs <- c(
-  "filename", "overwrite", "ncopies", "steps", "filetype", "progressbar", "tempdir",
-  "todisk", "memfrac", "progress", "verbose", "memmin", "filetype",
-  "verbose", "names", "tolerance", "overwrite", "datatype", "memmax"
-)
+  ## terra::writeRaster args
+  "x", "filename", "overwrite",
+  "datatype", "filetype", "gdal", "tempdir", "progress", "memfrac", "memmax", "names", "NAflag",
+  "scale", "offset", "verbose", "steps", "todisk", "wopt",
+
+  ## other args
+  "memmin", "ncopies", "progressbar", "tolerance" ## TODO: what/where are these for/from?
+
+
+) |> unique()
 
 projectArgs <- c("x", "y", "method", "mask", "align", "res", "origin", "threads", "filename",
                  "use_gdal", "by_util")
