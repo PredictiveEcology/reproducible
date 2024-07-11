@@ -1,6 +1,7 @@
 # reproducible 2.1.1
 
 * improved handling of symlinks in `remapFileNames()`;
+* pass `terra::project()` arguments `use_gdal` and `by_util` through `projectTo()` to `terra::project()`;
 
 # reproducible 2.1.0
 

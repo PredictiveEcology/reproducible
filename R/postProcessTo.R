@@ -1368,14 +1368,15 @@ assessDataTypeOuter <- function(from, method) {
   method
 }
 
-
+## TODO: don't hardcode these, use code to get them; formals() doesn't capture other args
 writeRasterArgs <- c(
   "filename", "overwrite", "ncopies", "steps", "filetype", "progressbar", "tempdir",
   "todisk", "memfrac", "progress", "verbose", "memmin", "filetype",
   "verbose", "names", "tolerance", "overwrite", "datatype", "memmax"
 )
 
-projectArgs <- c("x", "y", "method", "mask", "align", "gdal", "res", "origin", "threads", "filename")
+projectArgs <- c("x", "y", "method", "mask", "align", "res", "origin", "threads", "filename",
+                 "use_gdal", "by_util")
 
 maskArgs <- c("x", "inverse", "mask", "updatevalue", "touches", "filename")
 
