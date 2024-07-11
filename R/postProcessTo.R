@@ -1376,9 +1376,7 @@ writeRasterArgs <- c(
   "scale", "offset", "verbose", "steps", "todisk", "wopt",
 
   ## other args
-  "memmin", "ncopies", "progressbar", "tolerance" ## TODO: what/where are these for/from?
-
-
+  "memmin", "ncopies", "progressbar", "tolerance" ## TODO: where are these from? terra options?
 ) |> unique()
 
 projectArgs <- c("x", "y", "method", "mask", "align", "res", "origin", "threads", "filename",
