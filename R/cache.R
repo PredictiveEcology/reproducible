@@ -1556,9 +1556,9 @@ getFunctionName2 <- function(mc) {
       FUNcapturedArgs <- Map(
         ee = FUNcapturedList, nam = nams, function(ee, nam) {
           # if (is.call(ee) && length(ee) > 1 && !isDollarSqBrPkgColon(ee)) browser()
-          if (nam %in% omitArgs) {
-            out <- NULL
-          } else {
+          # if (nam %in% omitArgs) {
+          #   out <- NULL
+          # } else {
 
             out <- try(eval(ee, envir = callingEnv), silent = TRUE)
             if (is(out, "try-error")) {
@@ -1582,7 +1582,7 @@ getFunctionName2 <- function(mc) {
                 }
               }
             }
-          }
+          # }
 
           out
         }) # may be slow as it is evaluating the args

@@ -1854,3 +1854,21 @@ test_that("cacheId = 'previous'", {
   e <- rnorm(4) |> Cache(.functionName = fnName, cacheId = "previous")
   expect_false(unlist(attr(e, ".Cache")))
 })
+
+
+
+test_that("test omitArgs = 'x', #400", {
+  skip_if_not_installed("terra")
+  testInit("terra")
+
+  wkt <- c("MULTIPOLYGON ( ((40 40, 20 45, 45 30, 40 40)),
+((20 35, 10 30, 10 10, 30 5, 45 20, 20 35),(30 20, 20 15, 20 25, 30 20)))",
+           "POLYGON ((0 -5, 10 0, 10 -10, 0 -5))")
+  w <- terra::vect(wkt)
+
+  ## fails - ommitting x arg
+  testthat::expect_no_error(Cache(centroids,
+                                  x = w,
+                                  omitArgs = c("x")))
+
+})
