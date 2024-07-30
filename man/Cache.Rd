@@ -171,10 +171,10 @@ from disk, unless \code{options("reproducible.useMemoise" = TRUE)}, then the 2nd
 will recover the object from RAM and is normally much faster (at the expense of RAM use).
 }
 \details{
-There are other similar functions in the R universe. This version of Cache has
-been used as part of a robust continuous workflow approach. As a result, we have
-tested it with many "non-standard" R objects (e.g., RasterLayer, terra objects) and
-environments (which are always unique, so do not cache readily).
+There are other similar functions in the R universe.
+This version of Cache has been used as part of a robust continuous workflow approach.
+As a result, we have tested it with many "non-standard" R objects (e.g., \code{RasterLayer},
+\verb{Spat*} objects) and environments (which are always unique, so do not cache readily).
 
 This version of the \code{Cache} function accommodates those four special,
 though quite common, cases by:
@@ -182,17 +182,16 @@ though quite common, cases by:
 \item converting any environments into list equivalents;
 \item identifying the dispatched S4 method (including those made through
 inheritance) before hashing so the correct method is being cached;
-\item by hashing the linked file, rather than the Raster object.
-Currently, only file-backed \verb{Raster*} or \verb{terra*} objects are digested
+\item by hashing the linked file, rather than the raster object.
+Currently, only file-backed \verb{Raster*} or \verb{Spat*} objects are digested
 (e.g., not \code{ff} objects, or any other R object where the data
 are on disk instead of in RAM);
 \item Uses \code{\link[digest:digest]{digest::digest()}}
 This is used for file-backed objects as well.
 \item Cache will save arguments passed by user in a hidden environment. Any
-nested Cache functions will use arguments in this order 1) actual arguments
-passed at each Cache call, 2) any inherited arguments from an outer Cache
-call, 3) the default values of the Cache function. See section on \emph{Nested
-Caching}.
+nested Cache functions will use arguments in this order: 1) actual arguments
+passed at each Cache call; 2) any inherited arguments from an outer Cache
+call; 3) the default values of the Cache function. See section on \emph{Nested Caching}.
 }
 
 \code{Cache} will add a tag to the entry in the cache database called \code{accessed},
@@ -214,7 +213,7 @@ Commonly, Caching is nested, i.e., an outer function is wrapped in a \code{Cache
 function call, and one or more inner functions are also wrapped in a \code{Cache}
 function call. A user \emph{can} always specify arguments in every Cache function
 call, but this can get tedious and can be prone to errors. The normal way that
-\emph{R} handles arguments is it takes the user passed arguments if any, and
+\R handles arguments is it takes the user passed arguments if any, and
 default arguments for all those that have no user passed arguments. We have inserted
 a middle step. The order or precedence for any given \code{Cache} function call is
 \enumerate{

@@ -434,16 +434,13 @@ setMethod(
       if (NROW(objsDT) == 0) {
         return(invisible(.emptyCacheTable))
       }
-
     } else {
       if (is.null(conn)) {
         conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
         if (is.null(conn)) {
           return(invisible(.emptyCacheTable))
         }
-        on.exit({
-          DBI::dbDisconnect(conn)
-        })
+        on.exit(DBI::dbDisconnect(conn), add = TRUE)
       }
       if (!CacheIsACache(x, drv = drv, conn = conn)) {
         return(invisible(.emptyCacheTable))

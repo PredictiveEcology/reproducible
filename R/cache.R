@@ -21,10 +21,10 @@ utils::globalVariables(c(
 #'
 #' @details
 #'
-#' There are other similar functions in the R universe. This version of Cache has
-#' been used as part of a robust continuous workflow approach. As a result, we have
-#' tested it with many "non-standard" R objects (e.g., RasterLayer, terra objects) and
-#' environments (which are always unique, so do not cache readily).
+#' There are other similar functions in the R universe.
+#' This version of Cache has been used as part of a robust continuous workflow approach.
+#'  As a result, we have tested it with many "non-standard" R objects (e.g., `RasterLayer`,
+#' `Spat*` objects) and environments (which are always unique, so do not cache readily).
 #'
 #' This version of the `Cache` function accommodates those four special,
 #' though quite common, cases by:
@@ -32,17 +32,16 @@ utils::globalVariables(c(
 #'   \item converting any environments into list equivalents;
 #'   \item identifying the dispatched S4 method (including those made through
 #'         inheritance) before hashing so the correct method is being cached;
-#'   \item by hashing the linked file, rather than the Raster object.
-#'         Currently, only file-backed `Raster*` or `terra*` objects are digested
+#'   \item by hashing the linked file, rather than the raster object.
+#'         Currently, only file-backed `Raster*` or `Spat*` objects are digested
 #'         (e.g., not `ff` objects, or any other R object where the data
 #'         are on disk instead of in RAM);
 #'   \item Uses [digest::digest()]
 #'         This is used for file-backed objects as well.
 #'   \item Cache will save arguments passed by user in a hidden environment. Any
-#'         nested Cache functions will use arguments in this order 1) actual arguments
-#'         passed at each Cache call, 2) any inherited arguments from an outer Cache
-#'         call, 3) the default values of the Cache function. See section on *Nested
-#'         Caching*.
+#'         nested Cache functions will use arguments in this order: 1) actual arguments
+#'         passed at each Cache call; 2) any inherited arguments from an outer Cache
+#'         call; 3) the default values of the Cache function. See section on *Nested Caching*.
 #' }
 #'
 #' `Cache` will add a tag to the entry in the cache database called `accessed`,
@@ -56,7 +55,7 @@ utils::globalVariables(c(
 #' function call, and one or more inner functions are also wrapped in a `Cache`
 #' function call. A user *can* always specify arguments in every Cache function
 #' call, but this can get tedious and can be prone to errors. The normal way that
-#' *R* handles arguments is it takes the user passed arguments if any, and
+#' \R handles arguments is it takes the user passed arguments if any, and
 #' default arguments for all those that have no user passed arguments. We have inserted
 #' a middle step. The order or precedence for any given `Cache` function call is
 #' 1. user arguments, 2. inherited arguments, 3. default arguments. At this time,
