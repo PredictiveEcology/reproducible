@@ -1019,7 +1019,7 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
               )
               writeDone <- TRUE
             } else {
-              stop("File can't be unliked for overwrite")
+              stop("File can't be unlinked for overwrite.")
             }
           } else {
             if (isSF(from)) {
