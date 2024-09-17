@@ -1872,3 +1872,29 @@ test_that("test omitArgs = 'x', #400", {
                                   omitArgs = c("x")))
 
 })
+
+
+test_that("cacheId = 'customName'", {
+  testInit()
+  opts <- options(reproducible.cachePath = tmpdir)
+  on.exit(options(opts), add = TRUE)
+
+  fnName <- "rnorm_this_one"
+  d <- rnorm(2) |> Cache(.functionName = fnName, cacheId = "myCacheObj")
+  e <- rnorm(3) |> Cache(.functionName = fnName, cacheId = "myCacheObj")
+  expect_true(all.equalWONewCache(e, d))
+
+  rudbi <- getOption("reproducible.useDBI")
+
+
+  newDBI <- setdiff(c(TRUE, FALSE), rudbi)
+  opts <- options(reproducible.useDBI = newDBI)
+  on.exit(options(opts))
+
+  f <- rnorm(4) |> Cache(.functionName = fnName, cacheId = "myCacheObj")
+  g <- rnorm(5) |> Cache(.functionName = fnName, cacheId = "myCacheObj")
+  expect_true(all.equalWONewCache(e, d))
+  expect_true(all.equalWONewCache(e, f))
+  expect_true(all.equalWONewCache(e, g))
+})
+
