@@ -261,7 +261,6 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
         if (length(sameCacheID)) {
           # if (!identical(whereInStack("sim"), .GlobalEnv)) {
-          #   browser()
           #   format <- setdiff(c("rds", "qs"), format)
           #   message("User tried to change options('reproducible.cacheSaveFormat') for an ",
           #           "existing cache, while using a simList. ",
