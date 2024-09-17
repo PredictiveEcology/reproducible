@@ -706,7 +706,7 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
   }
 }
 
-useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose")) {
+useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose"), default = TRUE) {
   canSwitch <- TRUE
   if (!is.null(set)) {
     if (isTRUE(set)) {
@@ -717,7 +717,7 @@ useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose")) {
       options("reproducible.useDBI" = set)
     }
   }
-  ud <- getOption("reproducible.useDBI", TRUE)
+  ud <- getOption("reproducible.useDBI", default)
   if (isTRUE(ud)) {
     drv <- getOption("reproducible.drv")
     if (is.null(drv)) {
