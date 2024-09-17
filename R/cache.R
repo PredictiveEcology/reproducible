@@ -659,6 +659,9 @@ Cache <-
             messageCache("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId,
                          verbose = verbose
             )
+            sc <- showCacheFast(cacheId = outputHashManual)
+            if (NROW(sc))
+              inRepos$isInRepo <- sc[1,]
           }
           outputHash <- outputHashManual
         }
