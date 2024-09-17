@@ -3,6 +3,9 @@
 * improved handling of symlinks in `remapFileNames()`;
 * pass `terra::project()` arguments `use_gdal` and `by_util` through `projectTo()` to `terra::project()`;
 
+## Bugfix
+* When forcing `cacheId`, e.g., in `Cache(..., cacheId = "myCacheItem")`, `myCacheItem` was not used. Fixed.
+
 # reproducible 2.1.0
 
 ## New
