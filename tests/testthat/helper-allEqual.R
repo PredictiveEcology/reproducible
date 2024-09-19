@@ -94,8 +94,8 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
 
   out <- list()
 
-  # testthat::local_mocked_bindings(Cache = reproducible:::cache, .env = pf)
-  # withr::local_options("reproducible.useDBI" = FALSE, .local_envir = pf)
+  testthat::local_mocked_bindings(Cache = reproducible:::cache, .env = pf)
+  withr::local_options("reproducible.useDBI" = FALSE, .local_envir = pf)
 
 
 
