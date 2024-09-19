@@ -659,6 +659,9 @@ Cache <-
             messageCache("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId,
                          verbose = verbose
             )
+            sc <- showCacheFast(cacheId = outputHashManual)
+            if (NROW(sc))
+              inRepos$isInRepo <- sc[1,]
           }
           outputHash <- outputHashManual
         }
@@ -1545,7 +1548,6 @@ getFunctionName2 <- function(mc) {
       # The next line works for any object that is NOT in a ..., because the
       #   object never shows up in the environment; it is passed through
       # mced <- names(CacheMatchedCall)
-      # if (exists("aaaa")) browser()
 
       # if (!is.null(unlist(argsToKeep))) {
       FUNcapturedList <- as.list(FUNcaptured[-1])
