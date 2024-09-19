@@ -1524,7 +1524,6 @@ test_that("test cache with new approach to match.call", {
       a[[9]] <- eval(parse(text = "b$fun(1) |> Cache()"))
     }
 
-    browser()
     expect_identical(1L, length(unique(unlist(a))))
 
     # for (i in 2:NROW(a)) {
@@ -1543,7 +1542,7 @@ test_that("test cache with new approach to match.call", {
     a[[3]] <- Cache(do.call, terra::rast, list(m, digits = 4))
     a[[4]] <- Cache(do.call(terra::rast, list(m, digits = 4)))
     a[[5]] <- Cache(quote(terra::rast(m, digits = 4)))
-    expect_identical(1L, length(unique(unlist(a))))
+    expect_identical(1L, length(unique(unlist(.robustDigest(a)))))
     # expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
     # for (i in 2:NROW(a)) {
     #   test <- identical(attr(a[[i]], ".Cache")$newCache, FALSE)
@@ -1571,7 +1570,7 @@ test_that("test cache with new approach to match.call", {
     ff <- sf::st_make_valid
     a[[5]] <- Cache(ff(p1))
 
-    expect_identical(1L, length(unique(a)))
+    expect_identical(1L, length(unique(.robustDigest(a))))
 
     # expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
     # for (i in 2:length(a)) {
