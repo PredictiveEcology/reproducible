@@ -1287,6 +1287,9 @@ matchCall <- function(FUNcaptured, envir = parent.frame(), fnName) {
 #' @importFrom utils getFromNamespace
 getMethodAll <- function(FUNcaptured, callingEnv) {
   FUN <- FUNcaptured[[1]]
+  # if (!is.function(FUN))
+  #   FUN <- tryCatch(eval(FUN, envir = callingEnv),
+  #                   error = function(FALSE) eval(parse(text = FUN), envir = callingEnv))
   if (isS4(FUN)) {
     functionName <- FUN@generic
     # Not easy to selectMethod -- can't have trailing "ANY" -- see ?selectMethod last

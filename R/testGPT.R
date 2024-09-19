@@ -33,32 +33,39 @@ normalize_call <- function(call) {
 
     if (is.call(args) && as.character(args[[1]]) == "list") {
       args <- as.list(args[-1])
-      return(as.call(c(func, args)))
-    } else {
-      return(as.call(c(func, args)))
     }
-  }
-  if (is.call(call) &&
-      any(as.character(call[[1]]) %in% c("quote", "bquote", "alist", "enquote", "expr", "exprs"))) {
-    call <- call[[2]]
-  }
 
-  return(call)
+    return(as.call2(func, args))
+    # return(as.call(c(as.name(deparse(func)), args)))
+  } else {
+    func <- call[[1]]
+    args <- as.list(call[-1])
+  }
+  # call <- as.call2(call[[1]], as.list(call[-1]))
+  return(as.call2(func, args))
+  # return(call)
 }
 
 # Helper function to extract function from different types of inputs
 extract_function <- function(call, envir = parent.frame()) {
+
+  # eval(parse(text = call[[1]]), envir = parent.frame(2))
+
+  # call <- as.call(c(eval(call[[1]], envir = parent.frame(2)), as.list(call[-1])))
+
   if (is.call(call)) {
     func <- call[[1]]
 
     if (is.call(func)) {
-      return(eval(func))
+      return(eval(func, envir = envir))
     }
 
     # Handle function with or without package prefix
     if (is.symbol(func) || is.name(func)) {
       func_name <- as.character(func)
-      return(eval(parse(text = func_name), envir))
+      out <- tryCatch(eval(parse(text = func_name), envir),
+                      error = function(fn) eval(func, envir = envir))
+      return(out)
     } else if (is.call(func)) {
       func_name <- as.character(func[[1]])
       if (func_name == "do.call") {
@@ -102,12 +109,50 @@ reorder_arguments <- function(formals, args) {
   return(ordered_args)
 }
 
+match_call_primitive <- function(definition = sys.function(sys.parent()),
+                                 call = sys.call(sys.parent()),
+                                 expand.dots = TRUE,
+                                 envir = parent.frame()) {
+  # Check if the function is a primitive infix operator
+  if (is.primitive(definition)) {
+    # For infix operators like +, -, *, etc., they are not called in the standard way
+    infixes <- c(`+`, `-`, `*`, `/`, `==`, `!=`, `<`, `>`, `<=`, `>=`, `&&`, `||`)
+    areInfixes <- vapply(infixes, function(i) identical(i, definition), FUN.VALUE = logical(1))
+
+    if (isTRUE(any(areInfixes))) {
+      # Handle infix operators by keeping the call intact
+      return(call)
+    }
+
+    func_name <- deparse(substitute(definition))
+
+    # For other primitives, match as best as possible
+    args <- as.list(call)[-1]  # remove the function name
+    if (expand.dots) {
+      args <- lapply(args, eval, envir = envir)
+    }
+    # Construct the matched call manually for primitive
+    matched <- as.call(c(as.name(func_name), args))
+    return(matched)
+  } else {
+    # Non-primitive function: fall back to regular match.call
+    return(base::match.call(definition = definition,
+                            call = call,
+                            expand.dots = expand.dots,
+                            envir = envir))
+  }
+}
+
+
 
 # Helper function to normalize the call to handle `do.call` and quotes
 # Helper function to normalize the call to handle `do.call` and quotes
 
 # Generic caching function with omitArgs, .objects, and cachePath
-cache <- function(FUN, ..., omitArgs = NULL, .objects = NULL, algo = "xxhash64", cachePath = "cache",
+cache <- function(FUN, ...,
+                  .objects = NULL, algo = "xxhash64",
+                  cachePath = NULL,
+                  userTags = c(), omitArgs = NULL,
                   length = getOption("reproducible.length", Inf),
                   classOptions = list(),
                   quick = getOption("reproducible.quick", FALSE),
@@ -119,38 +164,51 @@ cache <- function(FUN, ..., omitArgs = NULL, .objects = NULL, algo = "xxhash64",
 
   dotsCaptured <- as.list(substitute(list(...))[-1])
 
-  if (length(dotsCaptured)) {
-    if ((length(FUNcaptured) > 1 && isDollarSqBrPkgColon(FUNcaptured)) || length(FUNcaptured) == 1) {
-      FUNcaptured <- as.call(c(as.name(deparse(substitute(FUNcaptured))), dotsCaptured))
-    } else {
-      FUNArgs <- append(as.list(FUNcaptured[-1]), dotsCaptured)
-      FUNcaptured <- as.call(c(as.name(deparse(FUNcaptured[[1]])), FUNArgs))
-    }
+  if (length(FUNcaptured) == 1 || (isDollarSqBrPkgColon(FUNcaptured) && (length(dotsCaptured)))) {
+    FUNcaptured <- as.call2(substitute(FUNcaptured), dotsCaptured)
+    # FUNcaptured <- as.call(c(as.name(deparse(substitute(FUNcaptured))), dotsCaptured))
+  } else {
+    dotsCaptured <- append(as.list(FUNcaptured[-1]), dotsCaptured)
+    FUNcaptured <- as.call2(FUNcaptured[[1]], dotsCaptured)
+    # FUNcaptured <- as.call(c(as.name(deparse(FUNcaptured[[1]])), dotsCaptured))
   }
+  # }
 
   # Normalize the FUNcaptured to handle `do.call` and `quote`, `bquote` etc.
   isSquiggly <- identical(quote(`{`), FUNcaptured[[1]])
   if (isTRUE(isSquiggly))
     FUNcaptured <- as.list(FUNcaptured[-1])[[1]]
 
-  normalized_FUN <- normalize_call(FUNcaptured)
+  if (is.call(FUNcaptured) &&
+      any(as.character(FUNcaptured[[1]]) %in% c("quote", "bquote", "alist", "enquote", "expr", "exprs"))) {
+    FUNcaptured <- FUNcaptured[[2]]
+  }
 
+  normalized_FUN <- normalize_call(FUNcaptured) # remove do.call
   # Extract the function from the normalized call and normalize its name
-  func <- extract_function(normalized_FUN, envir = parent.frame())
-
-  func_name <- as.character(normalized_FUN[[1]])
+  func <- extract_function(normalized_FUN, envir = callingEnv)
 
   # Create a call with the same function but with matched arguments
-  full_call <- match.call(func, normalized_FUN, expand.dots = FALSE)
+  full_call <- match_call_primitive(func, normalized_FUN, expand.dots = TRUE)
+
+  func_name <- getFunctionName2(full_call)# as.character(normalized_FUN[[1]])
 
   # Extract arguments as a named list
   arg_list <- as.list(full_call)[-1]
 
   # Get function defaults
-  defaults <- get_function_defaults(eval(func, parent.frame()))
+  FUN <- getMethodAll(full_call, callingEnv)
+
+  defaults <- get_function_defaults(eval(FUN, callingEnv))
 
   # Reorder arguments according to function defaults, combining user-supplied args and defaults
   combined_args <- reorder_arguments(defaults, arg_list)
+
+  empties <- vapply(combined_args, function(ca) if (is.symbol(ca)) capture.output(ca) else "Normal", character(1))
+  empties <- !nzchar(empties)
+  # empties <- vapply(combined_args, is.name, FUN.VALUE = logical(1))
+  if (isTRUE(any(empties)))
+    combined_args <- combined_args[!empties]
 
   normalized_FUN_w_defaults <- do.call(call, append(list(func_name), combined_args), quote = TRUE)
 
@@ -159,7 +217,7 @@ cache <- function(FUN, ..., omitArgs = NULL, .objects = NULL, algo = "xxhash64",
     FUNcaptured <- recursiveEvalNamesOnly(normalized_FUN_w_defaults, envir = callingEnv) # deals with e.g., stats::rnorm, b$fun, b[[fun]]
     evaluated_args <- as.list(FUNcaptured[-1])
   } else {
-    evaluated_args <- evaluate_arguments(combined_args, envir = parent.frame())
+    evaluated_args <- evaluate_arguments(combined_args, envir = callingEnv)
     FUNcaptured <- as.call(append(list(func), evaluated_args))
   }
 
@@ -199,14 +257,18 @@ cache <- function(FUN, ..., omitArgs = NULL, .objects = NULL, algo = "xxhash64",
     }
 
   # Construct the full file path for the cache
-  csd <- CacheStorageDir(cachePath)
-  dir.create(csd, showWarnings = FALSE, recursive = TRUE)
+  cachePaths <- getCacheRepos(cachePath, dotsCaptured, verbose = verbose)
+
+  csd <- CacheStorageDir(cachePaths)
+  lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
   cache_file <- file.path(csd, paste0(cache_key, ".rds"))
 
   # Check if the result is already cached
-  if (file.exists(cache_file)) {
+  cacheFileExists <- file.exists(cache_file) # could be length >1
+
+  if (any(cacheFileExists)) {
     messageColoured("Returning cached result for: ", cache_key, verbose = verbose)
-    output <- readRDS(cache_file)
+    output <- .unwrap(readRDS(cache_file[which(cacheFileExists)[1]]))
     if (getOption("reproducible.useMemoise"))
       assign(cache_key, output, envir = .memoCache)
     return(output)
@@ -214,46 +276,93 @@ cache <- function(FUN, ..., omitArgs = NULL, .objects = NULL, algo = "xxhash64",
 
   # Evaluate the original call
   preFUNTime <- Sys.time()
-  outputToSave <- eval(normalized_FUN, parent.frame())
+  outputToSave <- eval(FUNcaptured, envir = callingEnv)
   postFUNTime <- Sys.time()
   elapsedTimeFUN <- postFUNTime - preFUNTime
 
+  metadata <- metadata_define(detailed_key, outputToSave, func_name, userTags,
+                           .objects, length, algo, quick, classOptions,
+                           elapsedTimeCacheDigest, elapsedTimeFUN)
+
+  cacheIdIdentical <- cacheIdIdentical(metadata, cachePaths, cache_key)
   # Save the outputToSave to the cache
-  saveRDS(outputToSave, cache_file)
+
+  if (is.null(cacheIdIdentical)) {
+    saveRDS(.wrap(outputToSave), cache_file[1])
+  } else {
+    file.link(cacheIdIdentical, cache_file)
+    messageColoured("Result Hash was same as: ", cacheIdIdentical, "; creating link",
+                    verbose = verbose)
+  }
 
   # Memoize the output by saving it in RAM
   if (getOption("reproducible.useMemoise"))
     assign(cache_key, outputToSave, envir = .memoCache)
 
+  metadata_file <- file.path(csd[1], paste0(cache_key, ".dbFile.rds"))
+  saveRDS(metadata, metadata_file)
 
-  useCloud <- FALSE
+  messageColoured("Computed result for: ", cache_key, verbose = verbose)
+
+  return(outputToSave)
+}
+
+cacheIdIdentical <- function(metadata, cachePaths, cache_key) {
+  linkToCacheId <- NULL
+  if (isTRUE(as.numeric(metadata$tagValue[metadata$tagKey == "object.size"]) > 1e6)) {
+    orig <- getOption("reproducible.useDBI")
+    if (isTRUE(orig)) {
+      useDBI(FALSE, verbose = -2)
+      on.exit(useDBI(orig, verbose = -2), add = TRUE)
+    }
+    for (cachePath in cachePaths) {
+      allCache <- showCache(x = cachePath, verbose = -2)
+      if (NROW(allCache)) {
+        resultHash <- metadata$tagValue[metadata$tagKey == "resultHash"]
+        alreadyExists <- allCache[allCache$tagKey == "resultHash" &
+                                    allCache$tagValue %in% resultHash &
+                                    allCache$cacheId != cache_key]
+        if (NROW(alreadyExists)) {
+          linkToCacheId <- alreadyExists[["cacheId"]][[1]]
+        }
+      }
+    }
+  }
+  if (!is.null(linkToCacheId)) linkToCacheId <- CacheStoredFile(cachePath, linkToCacheId)
+  linkToCacheId
+}
+
+
+
+metadata_define <- function(detailed_key, outputToSave, func_name, userTags,
+                         .objects, length, algo, quick, classOptions,
+                         elapsedTimeCacheDigest, elapsedTimeFUN) {
+
   objSize <- if (getOption("reproducible.objSize", TRUE)) sum(objSize(outputToSave)) else NA
 
   resultHash <- ""
-  linkToCacheId <- NULL
   if (isTRUE(objSize > 1e6)) {
     resultHash <- CacheDigest(outputToSave,
                               .objects = .objects,
                               length = length, algo = algo, quick = quick,
                               classOptions = classOptions, calledFrom = "Cache"
     )$outputHash
-    allCache <- showCache(cachePath, verbose = -2)
-    if (NROW(allCache)) {
-      alreadyExists <- allCache[allCache$tagKey == "resultHash" & allCache$tagValue %in% resultHash]
-      if (NROW(alreadyExists)) {
-        linkToCacheId <- alreadyExists[["cacheId"]][[1]]
-      }
-    }
   }
+
+  useCloud <- FALSE
 
   df <- stack(detailed_key[-1], stringsAsFactor = FALSE)
   tagKey <- paste0(rownames(df), ":", as.character(df$values))
-  # tagValue <- as.character(df$ind)
-
-
   fns <- Filenames(outputToSave)
+  if (length(userTags)) {
+    ut <- strsplit(userTags, split = ":")
+    ll <- lapply(ut, tail, 1)
+    names(ll) <- lapply(ut, head, 1)
+    userTags <- ll
+  }
   userTags <- c(
-    # userTags,
+    list(FUN = func_name),
+    userTags,
     list(class = class(outputToSave)[1]),
     list(object.size = format(as.numeric(objSize))),
     list(accessed = format(Sys.time())),
@@ -267,20 +376,19 @@ cache <- function(FUN, ..., omitArgs = NULL, .objects = NULL, algo = "xxhash64",
     list(preDigest = tagKey)
   ) |> stack()
 
+
+  cache_key <- detailed_key$outputHash
+
   metadata <- data.table(
     cacheId = cache_key,
-    tagValue = userTags$ind,
-    tagKey = userTags$values,
+    tagKey = userTags$ind,
+    tagValue = userTags$values,
     createdDate = Sys.time(),
     stringsAsFactors = FALSE
   )
-  metadata_file <- file.path(csd, paste0(cache_key, ".dbFile.rds"))
-  saveRDS(metadata, metadata_file)
-
-  messageColoured("Computed result for: ", cache_key, verbose = verbose)
-
-  return(outputToSave)
+  return(metadata)
 }
+
 
 if (FALSE) {
 
@@ -343,4 +451,9 @@ if (FALSE) {
   a[[16]] <- cache(rnorm(sd = 1, 0, n = get("bbb", inherits = FALSE))) # change order
   a[[17]] <- cache(rnorm(1, sd = get("ee", inherits = FALSE)$qq), mean = 0)
 
+}
+
+
+as.call2 <- function(func, args) {
+  as.call(c(as.name(deparse(func)), args))
 }
