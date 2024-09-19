@@ -1,6 +1,7 @@
 # Load required libraries
 library(digest)
 dir.create("cache", showWarnings = FALSE)  # Create cache directory if it doesn't exist
+.memoCache <- new.env(parent = emptyenv())
 
 # Helper function to filter arguments based on .objects
 filter_objects <- function(evaluated_args, .objects) {
@@ -109,7 +110,8 @@ reorder_arguments <- function(formals, args) {
 cache <- function(FUN, ..., omitArgs = NULL, .objects = NULL, algo = "xxhash64", cachePath = "cache",
                   length = getOption("reproducible.length", Inf),
                   classOptions = list(),
-                  quick = getOption("reproducible.quick", FALSE)
+                  quick = getOption("reproducible.quick", FALSE),
+                  verbose = getOption("reproducible.verbose")
                   ) {
   callingEnv <- parent.frame(1)
   # Convert FUN to a standard call format if it is a function
@@ -190,14 +192,24 @@ cache <- function(FUN, ..., omitArgs = NULL, .objects = NULL, algo = "xxhash64",
   # Digest the detailed cache key to shorten it
   cache_key <- detailed_key$outputHash
 
+  if (getOption("reproducible.useMemoise"))
+    if (exists(cache_key, envir = .memoCache, inherits = FALSE)) {
+      messageColoured("Returning memoized result for: ", cache_key, verbose = verbose)
+      return(get(cache_key, envir = .memoCache))
+    }
+
   # Construct the full file path for the cache
   csd <- CacheStorageDir(cachePath)
+  dir.create(csd, showWarnings = FALSE, recursive = TRUE)
   cache_file <- file.path(csd, paste0(cache_key, ".rds"))
 
   # Check if the result is already cached
   if (file.exists(cache_file)) {
-    message("Returning cached result for: ", cache_key)
-    return(readRDS(cache_file))
+    messageColoured("Returning cached result for: ", cache_key, verbose = verbose)
+    output <- readRDS(cache_file)
+    if (getOption("reproducible.useMemoise"))
+      assign(cache_key, output, envir = .memoCache)
+    return(output)
   }
 
   # Evaluate the original call
@@ -208,6 +220,11 @@ cache <- function(FUN, ..., omitArgs = NULL, .objects = NULL, algo = "xxhash64",
 
   # Save the outputToSave to the cache
   saveRDS(outputToSave, cache_file)
+
+  # Memoize the output by saving it in RAM
+  if (getOption("reproducible.useMemoise"))
+    assign(cache_key, outputToSave, envir = .memoCache)
+
 
   useCloud <- FALSE
   objSize <- if (getOption("reproducible.objSize", TRUE)) sum(objSize(outputToSave)) else NA
@@ -229,7 +246,6 @@ cache <- function(FUN, ..., omitArgs = NULL, .objects = NULL, algo = "xxhash64",
     }
   }
 
-  browser()
   df <- stack(detailed_key[-1], stringsAsFactor = FALSE)
   tagKey <- paste0(rownames(df), ":", as.character(df$values))
   # tagValue <- as.character(df$ind)
@@ -261,7 +277,7 @@ cache <- function(FUN, ..., omitArgs = NULL, .objects = NULL, algo = "xxhash64",
   metadata_file <- file.path(csd, paste0(cache_key, ".dbFile.rds"))
   saveRDS(metadata, metadata_file)
 
-  message("Computed result for: ", cache_key)
+  messageColoured("Computed result for: ", cache_key, verbose = verbose)
 
   return(outputToSave)
 }
