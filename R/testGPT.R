@@ -282,12 +282,6 @@ cache <- function(FUN, ..., omitArgs = NULL, .objects = NULL, algo = "xxhash64",
   return(outputToSave)
 }
 
-# Example function to cache
-my_function <- function(x, y, params = list(a = 1, b = 2, c = 3)) {
-  Sys.sleep(2)  # Simulate a time-consuming computation
-  return(x + y + sum(unlist(params)))
-}
-
 if (FALSE) {
 
 
