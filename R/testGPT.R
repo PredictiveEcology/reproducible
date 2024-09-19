@@ -253,7 +253,9 @@ cache <- function(FUN, ...,
   if (getOption("reproducible.useMemoise"))
     if (exists(cache_key, envir = .memoCache, inherits = FALSE)) {
       messageColoured("Returning memoized result for: ", cache_key, verbose = verbose)
-      return(get(cache_key, envir = .memoCache))
+      output <- get(cache_key, envir = .memoCache)
+      attr(output, ".Cache")$newCache <- FALSE
+      return(output)
     }
 
   # Construct the full file path for the cache
@@ -268,9 +270,10 @@ cache <- function(FUN, ...,
 
   if (any(cacheFileExists)) {
     messageColoured("Returning cached result for: ", cache_key, verbose = verbose)
-    output <- .unwrap(readRDS(cache_file[which(cacheFileExists)[1]]))
+    output <- .unwrap(readRDS(cache_file[which(cacheFileExists)[1]]), cachePath = cachePath)
     if (getOption("reproducible.useMemoise"))
       assign(cache_key, output, envir = .memoCache)
+    attr(output, ".Cache")$newCache <- FALSE
     return(output)
   }
 
@@ -288,7 +291,17 @@ cache <- function(FUN, ...,
   # Save the outputToSave to the cache
 
   if (is.null(cacheIdIdentical)) {
-    saveRDS(.wrap(outputToSave), cache_file[1])
+    ots <- .wrap(outputToSave)
+    userTags <- attr(ots, "tags")
+    if (!is.null(userTags)) {
+      ut <- strsplit(userTags, split = ":")
+      ll <- lapply(ut, tail, 1)
+      names(ll) <- lapply(ut, head, 1)
+      userTagsList <- ll
+      metadata <- rbindlist(list(metadata, userTagsListToDT(cache_key, userTagsList)))
+    }
+    saveRDS(ots, cache_file[1])
+    attr(outputToSave, ".Cache")$newCache <- TRUE
   } else {
     file.link(cacheIdIdentical, cache_file)
     messageColoured("Result Hash was same as: ", cacheIdIdentical, "; creating link",
@@ -300,10 +313,14 @@ cache <- function(FUN, ...,
     assign(cache_key, outputToSave, envir = .memoCache)
 
   metadata_file <- file.path(csd[1], paste0(cache_key, ".dbFile.rds"))
+
+  dbfile <- CacheDBFile(cachePath, drv = NULL, conn = NULL)
+  if (!file.exists(dbfile))
+    file.create(dbfile)
+
   saveRDS(metadata, metadata_file)
 
   messageColoured("Computed result for: ", cache_key, verbose = verbose)
-
   return(outputToSave)
 }
 
@@ -360,7 +377,7 @@ metadata_define <- function(detailed_key, outputToSave, func_name, userTags,
     names(ll) <- lapply(ut, head, 1)
     userTags <- ll
   }
-  userTags <- c(
+  userTagsList <- c(
     list(FUN = func_name),
     userTags,
     list(class = class(outputToSave)[1]),
@@ -374,19 +391,24 @@ metadata_define <- function(detailed_key, outputToSave, func_name, userTags,
     # paste0(otherFns),
     # grep("cacheId", attr(outputToSave, "tags"), invert = TRUE, value = TRUE),
     list(preDigest = tagKey)
-  ) |> stack()
+  ) # |> stack()
 
 
   cache_key <- detailed_key$outputHash
+  metadata <- userTagsListToDT(cache_key, userTagsList)
+  return(metadata)
+}
 
+
+userTagsListToDT <- function(cache_key, userTagsList) {
+  userTagsList <- stack(userTagsList)
   metadata <- data.table(
     cacheId = cache_key,
-    tagKey = userTags$ind,
-    tagValue = userTags$values,
+    tagKey = userTagsList$ind,
+    tagValue = userTagsList$values,
     createdDate = Sys.time(),
     stringsAsFactors = FALSE
   )
-  return(metadata)
 }
 
 
