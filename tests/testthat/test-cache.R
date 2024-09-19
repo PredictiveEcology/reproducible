@@ -323,6 +323,7 @@ test_that("test 'quick' argument", {
   testInit("terra",
            tmpFileExt = c(".tif", ".tif", ".tif"),
            opts = list(
+             "reproducible.verbose" = 1,
              "reproducible.useMemoise" = TRUE,
              "reproducible.showSimilar" = FALSE
            )
