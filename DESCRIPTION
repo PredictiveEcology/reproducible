@@ -128,4 +128,5 @@ Collate:
     'showCacheEtc.R'
     'spatialObjects-class.R'
     'terra-migration.R'
+    'testGPT.R'
     'zzz.R'
