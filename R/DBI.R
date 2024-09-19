@@ -310,7 +310,10 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   loadFromMgs <- .cacheMessage(obj, .functionName, fromMemoise = fromMemoise, verbose = verbose)
 
   # # This allows for any class specific things
-  obj <- do.call(.prepareOutput, args = append(list(obj, cachePath), .dotsFromCache))
+  if ("object" %in% names(.dotsFromCache))
+    .dotsFromCache <- .dotsFromCache[setdiff(names(.dotsFromCache), "object")]
+
+  obj <- do.call(.prepareOutput, args = append(list(object = obj, cachePath), .dotsFromCache))
 
   if (isTRUE(useMemoise) && !isTRUE(isMemoised)) {
   # if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
