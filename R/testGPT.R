@@ -1,6 +1,7 @@
 # Generic caching function with omitArgs, .objects, and cachePath
 cache <- function(FUN, ...,
-                  .objects = NULL, algo = "xxhash64",
+                  .objects = NULL, .cacheExtra = NULL,
+                  .functionName = NULL, algo = "xxhash64",
                   cachePath = NULL,
                   userTags = c(), omitArgs = NULL,
                   length = getOption("reproducible.length", Inf),
@@ -8,6 +9,10 @@ cache <- function(FUN, ...,
                   quick = getOption("reproducible.quick", FALSE),
                   verbose = getOption("reproducible.verbose")
 ) {
+
+  opts <- options(reproducible.useDBI = FALSE)
+  on.exit(options(opts), add = TRUE)
+
   callingEnv <- parent.frame(1)
   # Convert FUN to a standard call format if it is a function
   FUNcaptured <- FUNcapturedOrig <- substitute(FUN)
@@ -87,6 +92,8 @@ cache <- function(FUN, ...,
   # Create a detailed cache key based on the filtered arguments
   evaluated_args$.FUN <- func
 
+  if (!is.null(.functionName))
+    func_name <- .functionName
   preCacheDigestTime <- Sys.time()
   detailed_key <- CacheDigest(evaluated_args,
                               .functionName = func_name,
@@ -164,9 +171,9 @@ cache <- function(FUN, ...,
 
   metadata_file <- file.path(csd[1], paste0(cache_key, ".dbFile.rds"))
 
-  dbfile <- CacheDBFile(cachePath, drv = NULL, conn = NULL)
-  if (!file.exists(dbfile))
-    file.create(dbfile)
+  dbfile <- CacheDBFile(cachePaths, drv = NULL, conn = NULL)
+  if (isTRUE(!file.exists(dbfile[1])))
+    file.create(dbfile[1])
 
   saveRDS(metadata, metadata_file)
 
