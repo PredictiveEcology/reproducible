@@ -7,8 +7,7 @@ cache <- function(FUN, ...,
                   length = getOption("reproducible.length", Inf),
                   classOptions = list(),
                   quick = getOption("reproducible.quick", FALSE),
-                  verbose = getOption("reproducible.verbose")
-) {
+                  verbose = getOption("reproducible.verbose")) {
 
   opts <- options(reproducible.useDBI = FALSE)
   on.exit(options(opts), add = TRUE)
