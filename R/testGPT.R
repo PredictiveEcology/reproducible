@@ -1,7 +1,179 @@
-# Load required libraries
-library(digest)
-dir.create("cache", showWarnings = FALSE)  # Create cache directory if it doesn't exist
-.memoCache <- new.env(parent = emptyenv())
+# Generic caching function with omitArgs, .objects, and cachePath
+cache <- function(FUN, ...,
+                  .objects = NULL, algo = "xxhash64",
+                  cachePath = NULL,
+                  userTags = c(), omitArgs = NULL,
+                  length = getOption("reproducible.length", Inf),
+                  classOptions = list(),
+                  quick = getOption("reproducible.quick", FALSE),
+                  verbose = getOption("reproducible.verbose")
+) {
+  callingEnv <- parent.frame(1)
+  # Convert FUN to a standard call format if it is a function
+  FUNcaptured <- FUNcapturedOrig <- substitute(FUN)
+
+  dotsCaptured <- as.list(substitute(list(...))[-1])
+
+  if (length(FUNcaptured) == 1 || (isDollarSqBrPkgColon(FUNcaptured) && (length(dotsCaptured)))) {
+    FUNcaptured <- as.call2(substitute(FUNcaptured), dotsCaptured)
+    # FUNcaptured <- as.call(c(as.name(deparse(substitute(FUNcaptured))), dotsCaptured))
+  } else {
+    dotsCaptured <- append(as.list(FUNcaptured[-1]), dotsCaptured)
+    FUNcaptured <- as.call2(FUNcaptured[[1]], dotsCaptured)
+    # FUNcaptured <- as.call(c(as.name(deparse(FUNcaptured[[1]])), dotsCaptured))
+  }
+  # }
+
+  # Normalize the FUNcaptured to handle `do.call` and `quote`, `bquote` etc.
+  isSquiggly <- identical(quote(`{`), FUNcaptured[[1]])
+  if (isTRUE(isSquiggly))
+    FUNcaptured <- as.list(FUNcaptured[-1])[[1]]
+
+  if (is.call(FUNcaptured) &&
+      any(as.character(FUNcaptured[[1]]) %in% c("quote", "bquote", "alist", "enquote", "expr", "exprs"))) {
+    FUNcaptured <- FUNcaptured[[2]]
+  }
+
+  normalized_FUN <- normalize_call(FUNcaptured) # remove do.call
+  # Extract the function from the normalized call and normalize its name
+  func <- extract_function(normalized_FUN, envir = callingEnv)
+
+  # Create a call with the same function but with matched arguments
+  full_call <- match_call_primitive(func, normalized_FUN, expand.dots = TRUE)
+
+  func_name <- getFunctionName2(full_call)# as.character(normalized_FUN[[1]])
+
+  # Extract arguments as a named list
+  arg_list <- as.list(full_call)[-1]
+
+  # Get function defaults
+  FUN <- getMethodAll(full_call, callingEnv)
+
+  defaults <- get_function_defaults(eval(FUN, callingEnv))
+
+  # Reorder arguments according to function defaults, combining user-supplied args and defaults
+  combined_args <- reorder_arguments(defaults, arg_list)
+
+  empties <- vapply(combined_args, function(ca) if (is.symbol(ca)) capture.output(ca) else "Normal", character(1))
+  empties <- !nzchar(empties)
+  # empties <- vapply(combined_args, is.name, FUN.VALUE = logical(1))
+  if (isTRUE(any(empties)))
+    combined_args <- combined_args[!empties]
+
+  normalized_FUN_w_defaults <- do.call(call, append(list(func_name), combined_args), quote = TRUE)
+
+  # Evaluate all arguments once and store them in a named list
+  if (isSquiggly) {
+    FUNcaptured <- recursiveEvalNamesOnly(normalized_FUN_w_defaults, envir = callingEnv) # deals with e.g., stats::rnorm, b$fun, b[[fun]]
+    evaluated_args <- as.list(FUNcaptured[-1])
+  } else {
+    evaluated_args <- evaluate_arguments(combined_args, envir = callingEnv)
+    FUNcaptured <- as.call(append(list(func), evaluated_args))
+  }
+
+  FUN <- getMethodAll(FUNcaptured, callingEnv)
+
+  # If omitArgs is provided, remove those arguments from arg_list and FUNcaptured
+  if (!is.null(omitArgs)) {
+    # combined_args <- combined_args[!names(combined_args) %in% omitArgs]
+    FUNcaptured <- FUNcaptured[!names(FUNcaptured) %in% omitArgs]
+  }
+
+  # Process the .objects argument using the helper function
+  if (!is.null(.objects)) {
+    evaluated_args <- filter_objects(evaluated_args, .objects)
+  }
+
+  # Create a detailed cache key based on the filtered arguments
+  evaluated_args$.FUN <- func
+
+  preCacheDigestTime <- Sys.time()
+  detailed_key <- CacheDigest(evaluated_args,
+                              .functionName = func_name,
+                              .objects = .objects,
+                              length = length, algo = algo, quick = quick,
+                              classOptions = classOptions, calledFrom = "Cache"
+  )
+  postCacheDigestTime <- Sys.time()
+  elapsedTimeCacheDigest <- postCacheDigestTime - preCacheDigestTime
+
+  # Digest the detailed cache key to shorten it
+  cache_key <- detailed_key$outputHash
+
+  if (getOption("reproducible.useMemoise"))
+    if (exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)) {
+      messageColoured("Returning memoized result for: ", cache_key, verbose = verbose)
+      output <- get(cache_key, envir = memoiseEnv(cachePath))
+      attr(output, ".Cache")$newCache <- FALSE
+      return(output)
+    }
+
+  # Construct the full file path for the cache
+  cachePaths <- getCacheRepos(cachePath, dotsCaptured, verbose = verbose)
+
+  csd <- CacheStorageDir(cachePaths)
+  lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
+  cache_file <- file.path(csd, paste0(cache_key, ".rds"))
+
+  # Check if the result is already cached
+  cacheFileExists <- file.exists(cache_file) # could be length >1
+
+  if (any(cacheFileExists)) {
+    messageColoured("Returning cached result for: ", cache_key, verbose = verbose)
+    output <- .unwrap(readRDS(cache_file[which(cacheFileExists)[1]]), cachePath = cachePath)
+    if (getOption("reproducible.useMemoise"))
+      assign(cache_key, output, envir = memoiseEnv(cachePath))
+    attr(output, ".Cache")$newCache <- FALSE
+    return(output)
+  }
+
+  # Evaluate the original call
+  preFUNTime <- Sys.time()
+  outputToSave <- eval(FUNcaptured, envir = callingEnv)
+  postFUNTime <- Sys.time()
+  elapsedTimeFUN <- postFUNTime - preFUNTime
+
+  metadata <- metadata_define(detailed_key, outputToSave, func_name, userTags,
+                              .objects, length, algo, quick, classOptions,
+                              elapsedTimeCacheDigest, elapsedTimeFUN)
+
+  cacheIdIdentical <- cacheIdIdentical(metadata, cachePaths, cache_key)
+  # Save the outputToSave to the cache
+
+  if (is.null(cacheIdIdentical)) {
+    ots <- .wrap(outputToSave)
+    userTags <- attr(ots, "tags")
+    if (!is.null(userTags)) {
+      ut <- strsplit(userTags, split = ":")
+      ll <- lapply(ut, tail, 1)
+      names(ll) <- lapply(ut, head, 1)
+      userTagsList <- ll
+      metadata <- rbindlist(list(metadata, userTagsListToDT(cache_key, userTagsList)))
+    }
+    saveRDS(ots, cache_file[1])
+    attr(outputToSave, ".Cache")$newCache <- TRUE
+  } else {
+    file.link(cacheIdIdentical, cache_file)
+    messageColoured("Result Hash was same as: ", cacheIdIdentical, "; creating link",
+                    verbose = verbose)
+  }
+
+  # Memoize the output by saving it in RAM
+  if (getOption("reproducible.useMemoise"))
+    assign(cache_key, outputToSave, envir = memoiseEnv(cachePath))
+
+  metadata_file <- file.path(csd[1], paste0(cache_key, ".dbFile.rds"))
+
+  dbfile <- CacheDBFile(cachePath, drv = NULL, conn = NULL)
+  if (!file.exists(dbfile))
+    file.create(dbfile)
+
+  saveRDS(metadata, metadata_file)
+
+  messageColoured("Computed result for: ", cache_key, verbose = verbose)
+  return(outputToSave)
+}
+
 
 # Helper function to filter arguments based on .objects
 filter_objects <- function(evaluated_args, .objects) {
@@ -144,186 +316,6 @@ match_call_primitive <- function(definition = sys.function(sys.parent()),
 }
 
 
-
-# Helper function to normalize the call to handle `do.call` and quotes
-# Helper function to normalize the call to handle `do.call` and quotes
-
-# Generic caching function with omitArgs, .objects, and cachePath
-cache <- function(FUN, ...,
-                  .objects = NULL, algo = "xxhash64",
-                  cachePath = NULL,
-                  userTags = c(), omitArgs = NULL,
-                  length = getOption("reproducible.length", Inf),
-                  classOptions = list(),
-                  quick = getOption("reproducible.quick", FALSE),
-                  verbose = getOption("reproducible.verbose")
-                  ) {
-  callingEnv <- parent.frame(1)
-  # Convert FUN to a standard call format if it is a function
-  FUNcaptured <- FUNcapturedOrig <- substitute(FUN)
-
-  dotsCaptured <- as.list(substitute(list(...))[-1])
-
-  if (length(FUNcaptured) == 1 || (isDollarSqBrPkgColon(FUNcaptured) && (length(dotsCaptured)))) {
-    FUNcaptured <- as.call2(substitute(FUNcaptured), dotsCaptured)
-    # FUNcaptured <- as.call(c(as.name(deparse(substitute(FUNcaptured))), dotsCaptured))
-  } else {
-    dotsCaptured <- append(as.list(FUNcaptured[-1]), dotsCaptured)
-    FUNcaptured <- as.call2(FUNcaptured[[1]], dotsCaptured)
-    # FUNcaptured <- as.call(c(as.name(deparse(FUNcaptured[[1]])), dotsCaptured))
-  }
-  # }
-
-  # Normalize the FUNcaptured to handle `do.call` and `quote`, `bquote` etc.
-  isSquiggly <- identical(quote(`{`), FUNcaptured[[1]])
-  if (isTRUE(isSquiggly))
-    FUNcaptured <- as.list(FUNcaptured[-1])[[1]]
-
-  if (is.call(FUNcaptured) &&
-      any(as.character(FUNcaptured[[1]]) %in% c("quote", "bquote", "alist", "enquote", "expr", "exprs"))) {
-    FUNcaptured <- FUNcaptured[[2]]
-  }
-
-  normalized_FUN <- normalize_call(FUNcaptured) # remove do.call
-  # Extract the function from the normalized call and normalize its name
-  func <- extract_function(normalized_FUN, envir = callingEnv)
-
-  # Create a call with the same function but with matched arguments
-  full_call <- match_call_primitive(func, normalized_FUN, expand.dots = TRUE)
-
-  func_name <- getFunctionName2(full_call)# as.character(normalized_FUN[[1]])
-
-  # Extract arguments as a named list
-  arg_list <- as.list(full_call)[-1]
-
-  # Get function defaults
-  FUN <- getMethodAll(full_call, callingEnv)
-
-  defaults <- get_function_defaults(eval(FUN, callingEnv))
-
-  # Reorder arguments according to function defaults, combining user-supplied args and defaults
-  combined_args <- reorder_arguments(defaults, arg_list)
-
-  empties <- vapply(combined_args, function(ca) if (is.symbol(ca)) capture.output(ca) else "Normal", character(1))
-  empties <- !nzchar(empties)
-  # empties <- vapply(combined_args, is.name, FUN.VALUE = logical(1))
-  if (isTRUE(any(empties)))
-    combined_args <- combined_args[!empties]
-
-  normalized_FUN_w_defaults <- do.call(call, append(list(func_name), combined_args), quote = TRUE)
-
-  # Evaluate all arguments once and store them in a named list
-  if (isSquiggly) {
-    FUNcaptured <- recursiveEvalNamesOnly(normalized_FUN_w_defaults, envir = callingEnv) # deals with e.g., stats::rnorm, b$fun, b[[fun]]
-    evaluated_args <- as.list(FUNcaptured[-1])
-  } else {
-    evaluated_args <- evaluate_arguments(combined_args, envir = callingEnv)
-    FUNcaptured <- as.call(append(list(func), evaluated_args))
-  }
-
-  FUN <- getMethodAll(FUNcaptured, callingEnv)
-
-  # If omitArgs is provided, remove those arguments from arg_list and FUNcaptured
-  if (!is.null(omitArgs)) {
-    # combined_args <- combined_args[!names(combined_args) %in% omitArgs]
-    FUNcaptured <- FUNcaptured[!names(FUNcaptured) %in% omitArgs]
-  }
-
-  # Process the .objects argument using the helper function
-  if (!is.null(.objects)) {
-    evaluated_args <- filter_objects(evaluated_args, .objects)
-  }
-
-  # Create a detailed cache key based on the filtered arguments
-  evaluated_args$.FUN <- func
-
-  preCacheDigestTime <- Sys.time()
-  detailed_key <- CacheDigest(evaluated_args,
-                              .functionName = func_name,
-                              .objects = .objects,
-                              length = length, algo = algo, quick = quick,
-                              classOptions = classOptions, calledFrom = "Cache"
-  )
-  postCacheDigestTime <- Sys.time()
-  elapsedTimeCacheDigest <- postCacheDigestTime - preCacheDigestTime
-
-  # Digest the detailed cache key to shorten it
-  cache_key <- detailed_key$outputHash
-
-  if (getOption("reproducible.useMemoise"))
-    if (exists(cache_key, envir = .memoCache, inherits = FALSE)) {
-      messageColoured("Returning memoized result for: ", cache_key, verbose = verbose)
-      output <- get(cache_key, envir = .memoCache)
-      attr(output, ".Cache")$newCache <- FALSE
-      return(output)
-    }
-
-  # Construct the full file path for the cache
-  cachePaths <- getCacheRepos(cachePath, dotsCaptured, verbose = verbose)
-
-  csd <- CacheStorageDir(cachePaths)
-  lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
-  cache_file <- file.path(csd, paste0(cache_key, ".rds"))
-
-  # Check if the result is already cached
-  cacheFileExists <- file.exists(cache_file) # could be length >1
-
-  if (any(cacheFileExists)) {
-    messageColoured("Returning cached result for: ", cache_key, verbose = verbose)
-    output <- .unwrap(readRDS(cache_file[which(cacheFileExists)[1]]), cachePath = cachePath)
-    if (getOption("reproducible.useMemoise"))
-      assign(cache_key, output, envir = .memoCache)
-    attr(output, ".Cache")$newCache <- FALSE
-    return(output)
-  }
-
-  # Evaluate the original call
-  preFUNTime <- Sys.time()
-  outputToSave <- eval(FUNcaptured, envir = callingEnv)
-  postFUNTime <- Sys.time()
-  elapsedTimeFUN <- postFUNTime - preFUNTime
-
-  metadata <- metadata_define(detailed_key, outputToSave, func_name, userTags,
-                           .objects, length, algo, quick, classOptions,
-                           elapsedTimeCacheDigest, elapsedTimeFUN)
-
-  cacheIdIdentical <- cacheIdIdentical(metadata, cachePaths, cache_key)
-  # Save the outputToSave to the cache
-
-  if (is.null(cacheIdIdentical)) {
-    ots <- .wrap(outputToSave)
-    userTags <- attr(ots, "tags")
-    if (!is.null(userTags)) {
-      ut <- strsplit(userTags, split = ":")
-      ll <- lapply(ut, tail, 1)
-      names(ll) <- lapply(ut, head, 1)
-      userTagsList <- ll
-      metadata <- rbindlist(list(metadata, userTagsListToDT(cache_key, userTagsList)))
-    }
-    saveRDS(ots, cache_file[1])
-    attr(outputToSave, ".Cache")$newCache <- TRUE
-  } else {
-    file.link(cacheIdIdentical, cache_file)
-    messageColoured("Result Hash was same as: ", cacheIdIdentical, "; creating link",
-                    verbose = verbose)
-  }
-
-  # Memoize the output by saving it in RAM
-  if (getOption("reproducible.useMemoise"))
-    assign(cache_key, outputToSave, envir = .memoCache)
-
-  metadata_file <- file.path(csd[1], paste0(cache_key, ".dbFile.rds"))
-
-  dbfile <- CacheDBFile(cachePath, drv = NULL, conn = NULL)
-  if (!file.exists(dbfile))
-    file.create(dbfile)
-
-  saveRDS(metadata, metadata_file)
-
-  messageColoured("Computed result for: ", cache_key, verbose = verbose)
-  return(outputToSave)
-}
-
 cacheIdIdentical <- function(metadata, cachePaths, cache_key) {
   linkToCacheId <- NULL
   if (isTRUE(as.numeric(metadata$tagValue[metadata$tagKey == "object.size"]) > 1e6)) {
@@ -348,8 +340,6 @@ cacheIdIdentical <- function(metadata, cachePaths, cache_key) {
   if (!is.null(linkToCacheId)) linkToCacheId <- CacheStoredFile(cachePath, linkToCacheId)
   linkToCacheId
 }
-
-
 
 metadata_define <- function(detailed_key, outputToSave, func_name, userTags,
                          .objects, length, algo, quick, classOptions,
@@ -410,71 +400,6 @@ userTagsListToDT <- function(cache_key, userTagsList) {
     stringsAsFactors = FALSE
   )
 }
-
-
-if (FALSE) {
-
-
-
-
-  # Example usage
-  bbb <- 1
-  result1 <- cache(rnorm(bbb), cachePath = "cache")  # Computes and caches
-
-  result2 <- cache(rnorm(get("bbb", inherits = FALSE)), cachePath = "cache")  # Should return cached result
-
-  result3 <- cache(my_function(1, 2, params = list(a = 1, b = 2, c = 3)),
-                   .objects = c("a", "b"),
-                   cachePath = "cache")  # Computes and caches
-
-  result4 <- cache(my_function(1, 2, params = list(a = 1, b = 2, c = 3)),
-                   .objects = c("a", "b"),
-                   cachePath = "cache")  # Returns cached result
-
-  # Changing 'c' should not affect the cache because only 'a' and 'b' are digested
-  result5 <- cache(my_function(1, 2, params = list(a = 1, b = 2, c = 4)),
-                   .objects = c("a", "b"),
-                   cachePath = "cache")  # Should return cached result because 'a' and 'b' haven't changed
-
-  # New usage examples
-  result6 <- cache(rnorm, 1, cachePath = "cache")  # Equivalent to rnorm(1)
-
-  result7 <- cache(stats::rnorm, 1, cachePath = "cache")  # Should be treated as equivalent to rnorm(1)
-
-  result8 <- cache(rnorm, 1, .objects = NULL, cachePath = "cache")  # Equivalent to rnorm(1) with default arguments
-
-
-  data.table::setDTthreads(2)
-  tmpDir <- file.path(tempdir())
-  opts <- options(reproducible.cachePath = tmpDir)
-
-  # Usage -- All below are equivalent; even where args are missing or provided,
-  #   Cache evaluates using default values, if these are specified in formals(FUN)
-  a <- list()
-  b <- list(fun = rnorm)
-  bbb <- 1
-  ee <- new.env(parent = emptyenv())
-  ee$qq <- bbb
-
-  a[[1]] <- cache(rnorm(1)) # no evaluation prior to cache
-  a[[2]] <- cache(rnorm, 1) # no evaluation prior to cache
-  a[[3]] <- cache(do.call, rnorm, list(1))
-  a[[4]] <- cache(do.call(rnorm, list(1)))
-  a[[5]] <- cache(do.call(b$fun, list(1)))
-  a[[6]] <- cache(do.call, b$fun, list(1))
-  a[[7]] <- cache(b$fun, 1)
-  a[[8]] <- cache(b$fun(1))
-  a[[10]] <- cache(quote(rnorm(1)))
-  a[[11]] <- cache(stats::rnorm(1))
-  a[[12]] <- cache(stats::rnorm, 1)
-  a[[13]] <- cache(rnorm(1, 0, get("bbb", inherits = FALSE)))
-  a[[14]] <- cache(rnorm(1, 0, get("qq", inherits = FALSE, envir = ee)))
-  a[[15]] <- cache(rnorm(1, bbb - bbb, get("bbb", inherits = FALSE)))
-  a[[16]] <- cache(rnorm(sd = 1, 0, n = get("bbb", inherits = FALSE))) # change order
-  a[[17]] <- cache(rnorm(1, sd = get("ee", inherits = FALSE)$qq), mean = 0)
-
-}
-
 
 as.call2 <- function(func, args) {
   as.call(c(as.name(deparse(func)), args))
