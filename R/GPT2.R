@@ -7,6 +7,11 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
                    quick = getOption("reproducible.quick", FALSE),
                    verbose = getOption("reproducible.verbose"),
                    .callingEnv = parent.frame()) {
+
+  # This makes this act like useDBI = FALSE --> creates correct dbFile
+  opts <- options(reproducible.useDBI = FALSE)
+  on.exit(options(opts), add = TRUE)
+
   call <- match.call(expand.dots = TRUE)
 
   # Check if FUN is a call and matches the expected structure
@@ -41,19 +46,21 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   postCacheDigestTime <- Sys.time()
   elapsedTimeCacheDigest <- postCacheDigestTime - preCacheDigestTime
 
-  # Digest the detailed cache key to shorten it
   cache_key <- detailed_key$outputHash
 
-  if (getOption("reproducible.useMemoise"))
-    if (exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)) {
+  # Construct the full file path for the cache
+  cachePaths <- getCacheRepos(cachePath, new_call[-1], verbose = verbose)
+  cachePath <- cachePaths[1]
+
+  if (getOption("reproducible.useMemoise")) {
+    cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
+    if (cache_key_in_memoiseEnv) {
       messageColoured("Returning memoized result for: ", cache_key, verbose = verbose)
       output <- get(cache_key, envir = memoiseEnv(cachePath))
       attr(output, ".Cache")$newCache <- FALSE
       return(output)
     }
-
-  # Construct the full file path for the cache
-  cachePaths <- getCacheRepos(cachePath, new_call[-1], verbose = verbose)
+  }
 
   csd <- CacheStorageDir(cachePaths)
   lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
@@ -66,7 +73,8 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
     messageColoured("Returning cached result for: ", cache_key, verbose = verbose)
     output <- .unwrap(readRDS(cache_file[which(cacheFileExists)[1]]), cachePath = cachePath)
     if (getOption("reproducible.useMemoise"))
-      assign(cache_key, output, envir = memoiseEnv(cachePath))
+      if (cache_key_in_memoiseEnv %in% FALSE)
+        assign(cache_key, output, envir = memoiseEnv(cachePath))
     attr(output, ".Cache")$newCache <- FALSE
     return(output)
   }
@@ -87,7 +95,7 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
                               .objects, length, algo, quick, classOptions,
                               elapsedTimeCacheDigest, elapsedTimeFUN)
 
-  cacheIdIdentical <- cacheIdIdentical(metadata, cachePaths, cache_key)
+  cacheIdIdentical <- cache_Id_Identical(metadata, cachePaths, cache_key)
   # Save the outputToSave to the cache
 
   if (is.null(cacheIdIdentical)) {
@@ -114,7 +122,7 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
 
   metadata_file <- file.path(csd[1], paste0(cache_key, ".dbFile.rds"))
 
-  dbfile <- CacheDBFile(cachePaths, drv = NULL, conn = NULL)
+  dbfile <- CacheDBFile(cachePath, drv = NULL, conn = NULL)
   if (isTRUE(!file.exists(dbfile[1])))
     file.create(dbfile[1])
 

@@ -143,7 +143,7 @@ cache <- function(FUN, ...,
                               .objects, length, algo, quick, classOptions,
                               elapsedTimeCacheDigest, elapsedTimeFUN)
 
-  cacheIdIdentical <- cacheIdIdentical(metadata, cachePaths, cache_key)
+  cacheIdIdentical <- cache_Id_Identical(metadata, cachePaths, cache_key)
   # Save the outputToSave to the cache
 
   if (is.null(cacheIdIdentical)) {
@@ -322,7 +322,7 @@ match_call_primitive <- function(definition = sys.function(sys.parent()),
 }
 
 
-cacheIdIdentical <- function(metadata, cachePaths, cache_key) {
+cache_Id_Identical <- function(metadata, cachePaths, cache_key) {
   linkToCacheId <- NULL
   if (isTRUE(as.numeric(metadata$tagValue[metadata$tagKey == "object.size"]) > 1e6)) {
     orig <- getOption("reproducible.useDBI")
