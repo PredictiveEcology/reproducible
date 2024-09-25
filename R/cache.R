@@ -1508,7 +1508,9 @@ getFunctionName2 <- function(mc) {
   }
   needRmList <- FALSE
   fnNameInit <- NULL
+  browser()
   if (isDoCall) {
+    browser()
     mc <- match.call(do.call, FUNcaptured)
     fnNameInit <- deparse(mc$what)
     if (length(mc$args) > 1) {

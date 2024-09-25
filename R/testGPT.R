@@ -38,11 +38,13 @@ cache <- function(FUN, ...,
     FUNcaptured <- FUNcaptured[[2]]
   }
 
+  browser()
   normalized_FUN <- normalize_call(FUNcaptured) # remove do.call
   # Extract the function from the normalized call and normalize its name
   func <- extract_function(normalized_FUN, envir = callingEnv)
 
   # Create a call with the same function but with matched arguments
+  browser()
   full_call <- match_call_primitive(func, normalized_FUN, expand.dots = TRUE)
 
   func_name <- getFunctionName2(full_call)# as.character(normalized_FUN[[1]])
@@ -106,6 +108,10 @@ cache <- function(FUN, ...,
   # Digest the detailed cache key to shorten it
   cache_key <- detailed_key$outputHash
 
+  # Construct the full file path for the cache
+  cachePaths <- getCacheRepos(cachePath, dotsCaptured, verbose = verbose)
+  cachePath <- cachePaths[1]
+
   if (getOption("reproducible.useMemoise"))
     if (exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)) {
       messageColoured("Returning memoized result for: ", cache_key, verbose = verbose)
@@ -113,9 +119,6 @@ cache <- function(FUN, ...,
       attr(output, ".Cache")$newCache <- FALSE
       return(output)
     }
-
-  # Construct the full file path for the cache
-  cachePaths <- getCacheRepos(cachePath, dotsCaptured, verbose = verbose)
 
   csd <- CacheStorageDir(cachePaths)
   lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
@@ -302,7 +305,7 @@ match_call_primitive <- function(definition = sys.function(sys.parent()),
       return(call)
     }
 
-    func_name <- deparse(substitute(definition))
+    # func_name <- deparse(substitute(definition))
 
     # For other primitives, match as best as possible
     args <- as.list(call)[-1]  # remove the function name
@@ -310,7 +313,7 @@ match_call_primitive <- function(definition = sys.function(sys.parent()),
       args <- lapply(args, eval, envir = envir)
     }
     # Construct the matched call manually for primitive
-    matched <- as.call(c(as.name(func_name), args))
+    matched <- as.call(c(definition, args))
     return(matched)
   } else {
     # Non-primitive function: fall back to regular match.call
@@ -324,7 +327,7 @@ match_call_primitive <- function(definition = sys.function(sys.parent()),
 
 cache_Id_Identical <- function(metadata, cachePaths, cache_key) {
   linkToCacheId <- NULL
-  if (isTRUE(as.numeric(metadata$tagValue[metadata$tagKey == "object.size"]) > 1e6)) {
+  if (isTRUE(as.numeric(metadata$tagValue[metadata$tagKey == "object.size"]) > .minObjSize)) {
     orig <- getOption("reproducible.useDBI")
     if (isTRUE(orig)) {
       useDBI(FALSE, verbose = -2)
@@ -354,7 +357,7 @@ metadata_define <- function(detailed_key, outputToSave, func_name, userTags,
   objSize <- if (getOption("reproducible.objSize", TRUE)) sum(objSize(outputToSave)) else NA
 
   resultHash <- ""
-  if (isTRUE(objSize > 1e6)) {
+  if (isTRUE(objSize > .minObjSize)) {
     resultHash <- CacheDigest(outputToSave,
                               .objects = .objects,
                               length = length, algo = algo, quick = quick,
