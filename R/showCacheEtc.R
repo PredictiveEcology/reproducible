@@ -782,11 +782,18 @@ isTRUEorForce <- function(cond) {
   isTRUE(cond) || identical(cond, "force")
 }
 
-showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath")) {
-  fileexists <- dir(CacheStorageDir(cachePath), full.names = TRUE,
-                    pattern = paste0(cacheId, "\\.dbFile"))
-  if (length(fileexists)) {
-    sc <- loadFile(fileexists)
+showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
+                          dtFile) {
+
+  if (missing(dtFile)) {
+    dtFilePoss <- CacheDBFileSingle(cachePath, cacheId)
+    fe <- file.exists(dtFilePoss)
+    dtFile <- if (any(fe)) dtFilePoss[fe][1] else character()
+    # dtFile <- dir(CacheStorageDir(cachePath), full.names = TRUE,
+    #               pattern = paste0(cacheId, "\\", suffixMultipleDBFiles()))
+  }
+  if (length(dtFile)) {
+    sc <- loadFile(dtFile)
   } else {
     sc <- showCache(userTags = cacheId, verbose = FALSE)[cacheId %in% cacheId]
   }
