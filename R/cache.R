@@ -2151,13 +2151,16 @@ determineNestedTags <- function(envir, mc, userTags) {
 
 getCacheRepos <- function(cachePath, modifiedDots, verbose = getOption("reproducible.verbose", 1)) {
   if (is.null(cachePath)) {
-    cachePaths <- .checkCacheRepo(modifiedDots, create = TRUE, verbose = verbose)
+    cachePath <- .checkCacheRepo(modifiedDots, create = TRUE, verbose = verbose)
   } else {
-    cachePaths <- lapply(cachePath, function(repo) {
-      repo <- checkPath(repo, create = TRUE)
-    })
+    if (any(!dir.exists(unlist(cachePath))))
+      cachePath <- lapply(cachePath, function(repo) {
+        if (!dir.exists(repo))
+          repo <- checkPath(repo, create = TRUE)
+        repo
+      })
   }
-  return(cachePaths)
+  return(cachePath)
 }
 
 devModeFn1 <- function(localTags, userTags, userTagsOrig, scalls, preDigestUnlistTrunc, useCache, verbose,
