@@ -66,7 +66,7 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   if (!any(dir.exists(csd)))
     lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
 
-  output <- check_and_get_memoised_copy(cache_key, cachePath, verbose)
+  output <- check_and_get_memoised_copy(cache_key, cachePath, .functionName, func, verbose)
   if (!identical(output, returnNothing))
     return(output)
 
@@ -82,7 +82,8 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
     add = TRUE
   )
 
-  output <- check_and_get_cached_copy(cache_key, cachePath, cache_file, verbose)
+  output <- check_and_get_cached_copy(cache_key, cachePath, cache_file, .functionName, func,
+                                      verbose)
   if (!identical(output, returnNothing))
     return(output)
 
@@ -99,6 +100,7 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   metadata <- metadata_define(detailed_key, output, .functionName, userTags,
                               .objects, length, algo, quick, classOptions,
                               elapsedTimeCacheDigest, elapsedTimeFUN)
+  objectSize <- attr(metadata, "tags")$objectSize
 
   cacheIdIdentical <- cache_Id_Identical(metadata, cachePaths, cache_key)
   # Save the output to the cache
@@ -107,35 +109,40 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   if (is.null(output)) output <- "NULL"
 
   if (is.null(cacheIdIdentical)) {
+    output <- addCacheAttr(output, .CacheIsNew = TRUE, outputHash = cache_key, func)
     outputToSave <- .wrap(output)
     metadata <- metadata_update(outputToSave, metadata, cache_key) # .wrap may have added tags
+
     fs <- saveFilesInCacheFolder(outputToSave, cache_file[1], cachePath, cache_key)
     # saveRDS(outputToSave, cache_file[1])
-    attr(output, ".Cache")$newCache <- TRUE
+    # attr(output, ".Cache")$newCache <- TRUE
   } else {
     file.link(cacheIdIdentical, cache_file)
-    messageColoured("Result Hash was same as: ", basename(cacheIdIdentical), "; creating link",
-                    verbose = verbose)
+    .message$FileLinkUsed(ftL = cacheIdIdentical, fts = cache_file, verbose)
+    # messageColoured("Result Hash was same as: ", basename(cacheIdIdentical), "; creating link",
+    #                 verbose = verbose)
   }
 
-  attr(output, ".Cache")$tags <- paste0("cacheId:", cache_key)
+  #  attr(output, ".Cache")$tags <- paste0("cacheId:", cache_key)
 
   # Memoize the output by saving it in RAM
   if (getOption("reproducible.useMemoise"))
     assign(cache_key, output, envir = memoiseEnv(cachePath))
 
   metadata_file <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key)
-  # metadata_file <- file.path(csd[1], paste0(cache_key, ".dbFile.rds"))
 
   dbfile <- CacheDBFile(cachePath, drv = NULL, conn = NULL)
   if (isTRUE(!file.exists(dbfile[1])))
     file.create(dbfile[1])
 
-  saveFilesInCacheFolder(metadata, metadata_file, cachePath = cachePath, cacheId = cacheId)
-  # saveDBFileSingle(metadata, cachePath, cache_key)
-  # saveDBFileSingle(metadata, cachePath, cache_key)
+  messageCache(
+    .message$SavingToCache(userTags = userTags, otsObjSize = objectSize,
+                           functionName = .functionName,
+                           cacheId = cache_key), verbose = verbose - 2)
+  saveFilesInCacheFolder(metadata, metadata_file, cachePath = cachePath, cacheId = cache_key)
+  .message$Saved(cachePath, cache_key, functionName = .functionName, verbose)
 
-  messageColoured("Computed result for: ", cache_key, verbose = verbose)
+  # messageColoured("Computed result for: ", cache_key, verbose = verbose)
   if (identical(output, "NULL")) output <- NULL
   return(output)
 
@@ -273,21 +280,33 @@ evaluate_args <- function(args, envir) {
   })
 }
 
-check_and_get_cached_copy <- function(cache_key, cachePath, cache_file, verbose) {
+check_and_get_cached_copy <- function(cache_key, cachePath, cache_file, functionName, func, verbose) {
 
   # Check if the result is already cached
   cacheFileExists <- file.exists(cache_file) # could be length >1
 
-  if (any(cacheFileExists)) {
-    messageColoured("Returning cached result for: ", cache_key, verbose = verbose)
+  if (sum(cacheFileExists)) {
+    fe <- CacheDBFileSingle(cachePath = cachePath[which(cacheFileExists)], cacheId = cache_key)
+    sc <- showCacheFast(cache_key, cachePath, dtFile = fe)
+
+    # messageCache(.message$LoadedCacheResult(), verbose = verbose)
+    .cacheMessageObjectToRetrieve(functionName, sc,
+                                  cachePath, cacheId = cache_key, verbose = verbose)
+    # messageColoured("Returning cached result for: ", cache_key, verbose = verbose)
 
     obj <- loadFile(cache_file[which(cacheFileExists)[1]])
+
+    .cacheMessage(obj, functionName, fromMemoise = FALSE, verbose = verbose)
     output <- .unwrap(obj, cachePath = cachePath)
     if (getOption("reproducible.useMemoise")) {
       cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
       if (cache_key_in_memoiseEnv %in% FALSE)
         assign(cache_key, output, envir = memoiseEnv(cachePath))
     }
+
+    if (!is.null(output))
+      output <- addCacheAttr(output, .CacheIsNew = FALSE, outputHash = cache_key, func)
+
     attr(output, ".Cache")$newCache <- FALSE
     return(output)
   }
@@ -316,7 +335,8 @@ combine_clean_args <- function(FUN, args, .objects, .callingEnv) {
 
 metadata_update <- function(outputToSave, metadata, cache_key) {
   userTagsExtra <- attr(outputToSave, "tags") # .wrap may have added tags
-  if (!is.null(userTagsExtra)) {
+  userTagsExtra <- grep("cacheId:", userTagsExtra, invert = TRUE, value = TRUE) # don't add cacheId to tagKey
+  if (!is.null(userTagsExtra) && length(userTagsExtra) > 0) {
     ut <- strsplit(userTagsExtra, split = ":")
     ll <- lapply(ut, tail, 1)
     names(ll) <- lapply(ut, head, 1)
@@ -326,15 +346,23 @@ metadata_update <- function(outputToSave, metadata, cache_key) {
   metadata
 }
 
-.minObjSize <- 1
-
-check_and_get_memoised_copy <- function(cache_key, cachePath, verbose) {
+check_and_get_memoised_copy <- function(cache_key, cachePath, functionName, func, verbose) {
   if (getOption("reproducible.useMemoise")) {
     cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
     if (cache_key_in_memoiseEnv) {
-      messageColoured("Returning memoized result for: ", cache_key, verbose = verbose)
+
+      fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key)
+      sc <- showCacheFast(cache_key, cachePath, dtFile = fe)
+      .cacheMessageObjectToRetrieve(functionName, sc,
+                                    cachePath, cacheId = cache_key, verbose = verbose)
+
       output <- get(cache_key, envir = memoiseEnv(cachePath))
-      attr(output, ".Cache")$newCache <- FALSE
+      .cacheMessage(functionName = functionName, fromMemoise = TRUE, verbose = verbose)
+
+      if (!is.null(output))
+        output <- addCacheAttr(output, .CacheIsNew = FALSE, outputHash = cache_key, func)
+
+      # attr(output, ".Cache")$newCache <- FALSE
       return(output)
     }
   }

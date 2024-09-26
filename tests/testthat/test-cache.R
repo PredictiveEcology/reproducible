@@ -541,7 +541,7 @@ test_that("test asPath", {
 
   expect_equal(length(a1), 1)
   expect_equal(length(a2), 1)
-  expect_true(sum(grepl(paste(
+  expect_true(sum(grepl(paste0(
     .message$LoadedCacheResult("Memoised"), "|",
     .message$LoadedCacheResult()
   ), a3)) == 1)
@@ -561,10 +561,11 @@ test_that("test asPath", {
                                quick = TRUE, cachePath = tmpdir
   ))
   expect_equal(length(a1), 1)
-  expect_true(sum(grepl(paste(
+  expect_true(sum(grepl(paste0(
     .message$LoadedCacheResult("Memoised"), "|",
     .message$LoadedCacheResult()
   ), a2)) == 1)
+
   expect_true(sum(grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
 
   unlink("filename.RData")
@@ -597,18 +598,18 @@ test_that("test wrong ways of calling Cache", {
   expect_true(1 == Cache(sample, 1, cachePath = tmpdir))
 })
 
-# test_that("test quoted FUN in Cache", {
-#   testInit()
-#
-#   A <- Cache(rnorm, 10, 16, cachePath = tmpdir) # nolint
-#
-#   ## recover cached copies:
-#   B <- Cache(rnorm, 10, 16, cachePath = tmpdir) # nolint
-#   C <- Cache(quote(rnorm(n = 10, 16)), cachePath = tmpdir) # nolint
-#
-#   expect_true(all.equalWONewCache(A, B))
-#   expect_true(all.equalWONewCache(A, C))
-# })
+test_that("test quoted FUN in Cache", {
+  testInit()
+
+  A <- Cache(rnorm, 10, 16, cachePath = tmpdir) # nolint
+
+  ## recover cached copies:
+  B <- Cache(rnorm, 10, 16, cachePath = tmpdir) # nolint
+  C <- Cache(quote(rnorm(n = 10, 16)), cachePath = tmpdir) # nolint
+
+  expect_true(all.equalWONewCache(A, B))
+  expect_true(all.equalWONewCache(A, C))
+})
 #
 # test_that("test Cache argument inheritance to inner functions", {
 #   testInit("terra",

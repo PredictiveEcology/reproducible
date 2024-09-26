@@ -325,7 +325,7 @@ match_call_primitive <- function(definition = sys.function(sys.parent()),
 
 cache_Id_Identical <- function(metadata, cachePaths, cache_key) {
   linkToCacheId <- NULL
-  if (isTRUE(as.numeric(metadata$tagValue[metadata$tagKey == "object.size"]) > .minObjSize)) {
+  if (isTRUE(as.numeric(metadata$tagValue[metadata$tagKey == "object.size"]) > .objectSizeMinForBig)) {
     orig <- getOption("reproducible.useDBI")
     if (isTRUE(orig)) {
       useDBI(FALSE, verbose = -2)
@@ -355,7 +355,7 @@ metadata_define <- function(detailed_key, outputToSave, func_name, userTags,
   objSize <- if (getOption("reproducible.objSize", TRUE)) sum(objSize(outputToSave)) else NA
 
   resultHash <- ""
-  if (isTRUE(objSize > .minObjSize)) {
+  if (isTRUE(objSize > .objectSizeMinForBig)) {
     resultHash <- CacheDigest(outputToSave,
                               .objects = .objects,
                               length = length, algo = algo, quick = quick,
@@ -396,6 +396,7 @@ metadata_define <- function(detailed_key, outputToSave, func_name, userTags,
 
   cache_key <- detailed_key$outputHash
   metadata <- userTagsListToDT(cache_key, userTagsList)
+  attr(metadata, "tags")$objectSize <- objSize
   return(metadata)
 }
 
