@@ -38,13 +38,11 @@ cache <- function(FUN, ...,
     FUNcaptured <- FUNcaptured[[2]]
   }
 
-  browser()
   normalized_FUN <- normalize_call(FUNcaptured) # remove do.call
   # Extract the function from the normalized call and normalize its name
   func <- extract_function(normalized_FUN, envir = callingEnv)
 
   # Create a call with the same function but with matched arguments
-  browser()
   full_call <- match_call_primitive(func, normalized_FUN, expand.dots = TRUE)
 
   func_name <- getFunctionName2(full_call)# as.character(normalized_FUN[[1]])
@@ -285,7 +283,7 @@ reorder_arguments <- function(formals, args) {
   combined_args <- modifyList(formals, args)
 
   # Preserve the order of the formals
-  ordered_args <- combined_args[names(formals)]
+  ordered_args <- combined_args[union(names(formals), names(combined_args))]
 
   return(ordered_args)
 }
@@ -367,8 +365,11 @@ metadata_define <- function(detailed_key, outputToSave, func_name, userTags,
 
   useCloud <- FALSE
 
-  df <- stack(detailed_key[-1], stringsAsFactor = FALSE)
-  tagKey <- paste0(rownames(df), ":", as.character(df$values))
+  df <- unlist(
+    .unlistToCharacter(unname(detailed_key[-1]), getOption("reproducible.showSimilarDepth", 3))
+  )
+  # df <- stack(detailed_key[-1], stringsAsFactor = FALSE)
+  tagKey <- paste0(names(df), ":", as.character(df))
   fns <- Filenames(outputToSave)
   if (length(userTags)) {
     ut <- strsplit(userTags, split = ":")

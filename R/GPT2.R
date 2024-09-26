@@ -15,25 +15,32 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   call <- match.call(expand.dots = TRUE)
 
   # Check if FUN is a call and matches the expected structure
-  # if (length(call) == (2 + usesDots)) { # means it might have "quote" around it
-  if (identical(call$FUN[[1]], quote(quote))) {
-    # if (identical(call[[2]][[1]], quote(quote)))
+  if (length(call$FUN) > 1) # just a function
+    if (identical(call$FUN[[1]], quote(quote))) {
       call$FUN <- as.list(call$FUN)[[-1]] # unquote it
+    }
+
+  usesDots <- sum(!nzchar(names(call))) > 1
+
+  isSquiggly <- is(call$FUN, "{")
+  if (isTRUE(isSquiggly)) {
+    call <- as.call(c(call[[1]], call[[-1]][[-1]]))
   }
 
-  usesDots <- sum(nzchar(names(call))) > 2
-  new_call <- harmonize_call(call, usesDots, .callingEnv) # evaluated arguments
+  new_call <- harmonize_call(call, usesDots, isSquiggly, .callingEnv) # evaluated arguments
   func_call <- attr(new_call, ".Cache")$func_call         # not evaluated arguments
   func <- as.list(new_call)[[1]]
   args <- as.list(new_call)[-1]
+  combined_args <- attr(new_call, ".Cache")$args_w_defaults         # not evaluated arguments
+
+  combined_args$.FUN <- attr(new_call, ".Cache")$method # getMethodAll(func_call, .callingEnv)
 
   # full_call <- match_call_primitive(func, new_call, expand.dots = TRUE)
-  FUN <- getMethodAll(func_call, .callingEnv)
 
   if (is.null(.functionName))
     .functionName <- getFunctionName2(func_call)# as.character(normalized_FUN[[1]])
 
-  combined_args <- combine_clean_args(FUN, args, .objects, .callingEnv)
+  # combined_args <- combine_clean_args(FUN, args, .objects, .callingEnv)
 
   preCacheDigestTime <- Sys.time()
   detailed_key <- CacheDigest(combined_args,
@@ -50,32 +57,34 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
 
   # Construct the full file path for the cache
   cachePaths <- getCacheRepos(cachePath, new_call[-1], verbose = verbose)
-  cachePath <- cachePaths[1]
-  csd <- CacheStorageDir(cachePaths)
+  cachePath <- cachePaths[[1]]
+  # csd <- CacheStorageDir(cachePaths)
   cache_file <- CacheStoredFile(cachePath, cache_key)
+  csd <- dirname(cache_file)
   # cache_file <- file.path(csd, paste0(cache_key, ".rds"))
 
-  if (!useDBI()) {
-    dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key)
-    lockFile <- file.path(CacheStorageDir(cachePath = cachePath), paste0(cache_key, suffixLockFile()))
-    locked <- filelock::lock(lockFile)
-    on.exit(
-      {
-        filelock::unlock(locked)
-        if (file.exists(lockFile)) {
-          unlink(lockFile)
-        }
-      },
-      add = TRUE
-    )
-  }
+  if (!any(dir.exists(csd)))
+    lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
+
+  output <- check_and_get_memoised_copy(cache_key, cachePath, verbose)
+  if (!identical(output, returnNothing))
+    return(output)
+
+  lockFile <- file.path(csd, paste0(cache_key, suffixLockFile()))
+  locked <- filelock::lock(lockFile)
+  on.exit(
+    {
+      filelock::unlock(locked)
+      if (file.exists(lockFile)) {
+        unlink(lockFile)
+      }
+    },
+    add = TRUE
+  )
 
   output <- check_and_get_cached_copy(cache_key, cachePath, cache_file, verbose)
   if (!identical(output, returnNothing))
     return(output)
-
-  if (!any(dir.exists(csd)))
-    lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
 
   preFUNTime <- Sys.time()
 
@@ -126,24 +135,40 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
 
 }
 
-harmonize_call <- function(call, usesDots, .callingEnv) {
+harmonize_call <- function(call, usesDots, isSquiggly, .callingEnv) {
   # Capture the unevaluated call
 
   # Check if the first argument is a function call
   func_full <- NULL
+  func_call <- NULL
   if (is.call(call[[2]])) {
 
     func_call <- call[[2]]  # This is the actual function call (e.g., stats::rnorm)
     # Extract the function without the package prefix
     if (is.call(func_call[[1]]) && func_call[[1]][[1]] == quote(`::`)) {
-      func_full <- func_call[[1]]
-      func <- func_call[[1]][[3]]  # Get the actual function name (e.g., rnorm)
-      args <- as.list(func_call)[-1]  # Drop the function part
+      func <- func_full <- func_call[[1]]
+      if (length(func_call) == 2)
+        args <- func_call[[-1]]
+      else
+        args <- as.list(func_call)[-1]
+      func_call <- as.call(c(func_call[[1]][[3]], args))
+      # if (is.name(func_call[[1]])) {
+      #   func <- as.list(func_call)[[3]]  # Get the actual function name (e.g., rnorm)
+      #  args <- as.list(func_full)[-1]  # Drop the function part
+      # } else {
+      #   func <- func_call[[1]][[3]]  # Get the actual function name (e.g., rnorm)
+      #  args <- as.list(func_call)[-1]  # Drop the function part
+      # }
+      # func_call
+
     } else {
       if (func_call[[1]] == quote(`::`)) {
         func_full <- func_call
-        func <- func_call[[3]]  # Package prefix, using FUN as name only
+        # func_call <- as.call(append(list(func), args)) # func_call[[3]]
+        func <- func_call  # Package prefix, using FUN as name only
         args <- as.list(call[-(1:2)])
+        func_call <- as.call(c(func_call[[3]], args))
+
       } else {
 
         if (isDollarOnlySqBr(func_call)) {
@@ -164,14 +189,14 @@ harmonize_call <- function(call, usesDots, .callingEnv) {
       }
     }
   } else if (identical(call[[2]], quote(do.call))) {
-    browser() # need to use normalize_call
     # Special handling for do.call to return the function unevaluated
     func <- call[[3]]  # Extract the function for do.call (e.g., rnorm)
     args <- eval(call[[4]], envir = .callingEnv)  # Evaluate the argument list
+    # func_call <- as.call(c(func, args)) #
   } else {
     func <- call[[2]]  # This is the function (e.g., rnorm)
     args <- as.list(call[-(1:2)])  # These are the arguments (e.g., 1)
-
+    func_call <- as.call(append(list(func), args))
     # Check for package prefix
     if (is.call(func) && func[[1]] == quote(`::`)) {
       func <- func[[3]]  # Get the actual function name (e.g., rnorm)
@@ -187,18 +212,44 @@ harmonize_call <- function(call, usesDots, .callingEnv) {
     })
   }
 
-  args <- evaluate_args(args, envir = .callingEnv)
+  # combined_args <- combine_clean_args(func, args, .objects = NULL, .callingEnv)
+
   if (is.call(func) || is.name(func)) {
     fun <- if (is.null(func_full)) func else func_full
+    if (is.name(fun)) {
+      fun <- parse(text = fun)
+    }
     func <- eval(fun, envir = .callingEnv)
   }
-  new_call <- as.call(c(func, args))
-  full_call <- match_call_primitive(func, new_call, expand.dots = TRUE)
-  func_call2 <- as.call(c(func_call[[1]], args))
-  attr(full_call, ".Cache")$func_call <- func_call2
-  # attr(new_call, ".Cache")$full_call <- full_call
 
-  return(full_call)
+  argsRm <- names(args) %in% names(.formalsCache)
+  if (any(argsRm %in% TRUE))
+    args <- args[!argsRm %in% TRUE]
+  new_call <- as.call(c(func, args))
+  matched_call <- match_call_primitive(func, new_call, expand.dots = TRUE)
+
+  if (isSquiggly) {
+    FUNcaptured <- recursiveEvalNamesOnly(matched_call, envir = .callingEnv) # deals with e.g., stats::rnorm, b$fun, b[[fun]]
+    args <- as.list(FUNcaptured[-1])
+  } else {
+    args <- as.list(matched_call)[-1]
+    args <- evaluate_args(args, envir = .callingEnv)
+    #  args <- evaluate_args(combined_args, envir = callingEnv)
+    # FUNcaptured <- as.call(append(list(func), evaluated_args))
+  }
+
+  func <- getMethodAll(as.call(c(matched_call[[1]], args)), .callingEnv)
+
+  combined_args <- combine_clean_args(func, args, .objects = NULL, .callingEnv)
+
+  if (is.null(func_call)) func_call <- new_call
+  func_call2 <- as.call(c(func_call[[1]], args))
+  attr(matched_call, ".Cache")$func_call <- func_call2
+  attr(matched_call, ".Cache")$args_w_defaults <- combined_args
+  attr(matched_call, ".Cache")$method <- func
+  # attr(new_call, ".Cache")$matched_call <- matched_call
+
+  return(matched_call)
 }
 
 evaluate_args <- function(args, envir) {
@@ -217,25 +268,20 @@ evaluate_args <- function(args, envir) {
 }
 
 check_and_get_cached_copy <- function(cache_key, cachePath, cache_file, verbose) {
-  if (getOption("reproducible.useMemoise")) {
-    cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
-    if (cache_key_in_memoiseEnv) {
-      messageColoured("Returning memoized result for: ", cache_key, verbose = verbose)
-      output <- get(cache_key, envir = memoiseEnv(cachePath))
-      attr(output, ".Cache")$newCache <- FALSE
-      return(output)
-    }
-  }
 
   # Check if the result is already cached
   cacheFileExists <- file.exists(cache_file) # could be length >1
 
   if (any(cacheFileExists)) {
     messageColoured("Returning cached result for: ", cache_key, verbose = verbose)
-    output <- .unwrap(loadFile(cache_file[which(cacheFileExists)[1]]), cachePath = cachePath)
-    if (getOption("reproducible.useMemoise"))
+
+    obj <- loadFile(cache_file[which(cacheFileExists)[1]])
+    output <- .unwrap(obj, cachePath = cachePath)
+    if (getOption("reproducible.useMemoise")) {
+      cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
       if (cache_key_in_memoiseEnv %in% FALSE)
         assign(cache_key, output, envir = memoiseEnv(cachePath))
+    }
     attr(output, ".Cache")$newCache <- FALSE
     return(output)
   }
@@ -245,6 +291,7 @@ check_and_get_cached_copy <- function(cache_key, cachePath, cache_file, verbose)
 returnNothing <- ".nothing"
 
 combine_clean_args <- function(FUN, args, .objects, .callingEnv) {
+  # has to be after match.call --> relies on name matched arguments
   defaults <- get_function_defaults(eval(FUN, .callingEnv))
   combined_args <- reorder_arguments(defaults, args)
   empties <- vapply(combined_args, function(ca) if (is.symbol(ca)) capture.output(ca) else "Normal", character(1))
@@ -258,7 +305,6 @@ combine_clean_args <- function(FUN, args, .objects, .callingEnv) {
     combined_args <- filter_objects(combined_args, .objects)
   }
 
-  combined_args$.FUN <- FUN
   combined_args
 }
 
@@ -275,3 +321,16 @@ metadata_update <- function(outputToSave, metadata, cache_key) {
 }
 
 .minObjSize <- 1
+
+check_and_get_memoised_copy <- function(cache_key, cachePath, verbose) {
+  if (getOption("reproducible.useMemoise")) {
+    cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
+    if (cache_key_in_memoiseEnv) {
+      messageColoured("Returning memoized result for: ", cache_key, verbose = verbose)
+      output <- get(cache_key, envir = memoiseEnv(cachePath))
+      attr(output, ".Cache")$newCache <- FALSE
+      return(output)
+    }
+  }
+  return(invisible(returnNothing))
+}
