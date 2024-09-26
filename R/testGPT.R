@@ -43,7 +43,7 @@ cache <- function(FUN, ...,
   func <- extract_function(normalized_FUN, envir = callingEnv)
 
   # Create a call with the same function but with matched arguments
-  full_call <- match_call_primitive(func, normalized_FUN, expand.dots = TRUE)
+  full_call <- match_call_primitive(func, normalized_FUN, expand.dots = TRUE, envir = callingEnv)
 
   func_name <- getFunctionName2(full_call)# as.character(normalized_FUN[[1]])
 

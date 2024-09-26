@@ -455,149 +455,148 @@ test_that("test keepCache", {
 
   # This is from changes to round by luke tierney
   aa <- Sys.time()
-  browser()
   Cache(round, aa, units = "mins", cachePath = tmpdir)
 })
-#
-# test_that("test environments", {
-#   testInit("terra", tmpFileExt = ".pdf")
-#
-#   # make several unique environments
-#   a <- new.env(parent = emptyenv())
-#   b <- new.env(parent = emptyenv())
-#   g <- new.env(parent = emptyenv())
-#   d <- new.env(parent = emptyenv())
-#   f <- new.env(parent = emptyenv())
-#   h <- new.env(parent = emptyenv())
-#   # give the same value to a in each
-#   a$a <- runif(10)
-#   b$a <- a$a
-#   g$a <- a$a
-#   # put an environment in a
-#   a$d <- d
-#   b$d <- f
-#   g$d <- h
-#
-#   # Upper level -- all are same, because values are same, even though all are enviros
-#   shortFn <- function(a) sample(a$a)
-#   out <- Cache(shortFn, a = a, cachePath = tmpdir)
-#   out2 <- Cache(shortFn, a = b, cachePath = tmpdir)
-#   out3 <- Cache(shortFn, a = g, cachePath = tmpdir)
-#   attr(out2, ".Cache")$newCache <- TRUE
-#   expect_true(identical(attributes(out)["tags"], attributes(out2)["tags"]))
-#   expect_true(identical(attributes(out)["tags"], attributes(out3)["tags"]))
-#
-#   # put 2 different values, 1 and 2 ... a's and g's envirs are same value, but
-#   #    different environment .. b's envir is different value
-#   a$d$a <- 1
-#   b$d$a <- 2
-#   g$d$a <- 1
-#   i <- as.list(a)
-#   i2 <- i
-#   i2$d <- as.list(i2$d)
-#
-#   out <- Cache(shortFn, a = a, cachePath = tmpdir)
-#   out2 <- Cache(shortFn, a = b, cachePath = tmpdir)
-#   out3 <- Cache(shortFn, a = g, cachePath = tmpdir)
-#   out4 <- Cache(shortFn, a = i, cachePath = tmpdir)
-#   out5 <- Cache(shortFn, a = i2, cachePath = tmpdir)
-#
-#   # test different values are different
-#   expect_false(identical(attributes(out), attributes(out2)))
-#
-#   # test same values but different enviros are same
-#   expect_true(identical(attributes(out)["tags"], attributes(out3)["tags"]))
-#
-#   # test environment is same as a list -- not sure what they should be
-#   expect_true(identical(attributes(out)["tags"], attributes(out4)["tags"]))
-#
-#   # test environment is same as recursive list - they shouldn't be
-#   expect_true(identical(attributes(out)["tags"], attributes(out5)["tags"]))
-#
-#   df <- data.frame(a = a$a, b = LETTERS[1:10])
-#   out6 <- Cache(shortFn, a = df, cachePath = tmpdir)
-#   out7 <- Cache(shortFn, a = df, cachePath = tmpdir)
-#   expect_true(identical(attributes(out6)["tags"], attributes(out7)["tags"])) # test data.frame
-# })
-#
-# test_that("test asPath", {
-#   testInit("terra",
-#            tmpFileExt = "pdf",
-#            verbose = TRUE,
-#            opts = list(
-#              "reproducible.useMemoise" = TRUE,
-#              "reproducible.showSimilar" = FALSE
-#            )
-#   )
-#   unlink(dir(tmpdir, full.names = TRUE))
-#
-#   obj <- sample(1e5, 10)
-#   # First -- has no filename.RData
-#   a1 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
-#   # Second -- has a filename.RData, and passing a character string,
-#   #           it tries to see if it is a file, if yes, it digests it
-#   a2 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
-#   # Third -- finally has all same as second time
-#   a3 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
-#
-#   expect_equal(length(a1), 1)
-#   expect_equal(length(a2), 1)
-#   expect_true(sum(grepl(paste(
-#     .message$LoadedCacheResult("Memoised"), "|",
-#     .message$LoadedCacheResult()
-#   ), a3)) == 1)
-#
-#   unlink("filename.RData")
-#   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
-#   a1 <- capture_messages(Cache(saveRDS, obj,
-#                                file = asPath("filename.RData"),
-#                                quick = TRUE, cachePath = tmpdir
-#   ))
-#   a2 <- capture_messages(Cache(saveRDS, obj,
-#                                file = asPath("filename.RData"),
-#                                quick = TRUE, cachePath = tmpdir
-#   ))
-#   a3 <- capture_messages(Cache(saveRDS, obj,
-#                                file = asPath("filename.RData"),
-#                                quick = TRUE, cachePath = tmpdir
-#   ))
-#   expect_equal(length(a1), 1)
-#   expect_true(sum(grepl(paste(
-#     .message$LoadedCacheResult("Memoised"), "|",
-#     .message$LoadedCacheResult()
-#   ), a2)) == 1)
-#   expect_true(sum(grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
-#
-#   unlink("filename.RData")
-#   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
-#   a1 <- capture_messages(Cache(saveRDS, obj,
-#                                file = as("filename.RData", "Path"),
-#                                quick = TRUE, cachePath = tmpdir
-#   ))
-#   a2 <- capture_messages(Cache(saveRDS, obj,
-#                                file = as("filename.RData", "Path"),
-#                                quick = TRUE, cachePath = tmpdir
-#   ))
-#   a3 <- capture_messages(Cache(saveRDS, obj,
-#                                file = as("filename.RData", "Path"),
-#                                quick = TRUE, cachePath = tmpdir
-#   ))
-#   expect_equal(length(a1), 1)
-#   expect_true(sum(grepl(paste(
-#     .message$LoadedCacheResult("Memoised"), "|",
-#     .message$LoadedCacheResult()
-#   ), a2)) == 1)
-#   expect_true(sum(grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
-# })
-#
-# test_that("test wrong ways of calling Cache", {
-#   try(testInit(tmpFileExt = ".pdf"))
-#
-#   # expect_error(Cache(sample(1), cachePath = tmpdir), "Can't understand")
-#   # expect_error(Cache(a <- sample(1), cachePath = tmpdir), "Can't understand")
-#   expect_true(1 == Cache(sample, 1, cachePath = tmpdir))
-# })
-#
+
+test_that("test environments", {
+  testInit("terra", tmpFileExt = ".pdf")
+
+  # make several unique environments
+  a <- new.env(parent = emptyenv())
+  b <- new.env(parent = emptyenv())
+  g <- new.env(parent = emptyenv())
+  d <- new.env(parent = emptyenv())
+  f <- new.env(parent = emptyenv())
+  h <- new.env(parent = emptyenv())
+  # give the same value to a in each
+  a$a <- runif(10)
+  b$a <- a$a
+  g$a <- a$a
+  # put an environment in a
+  a$d <- d
+  b$d <- f
+  g$d <- h
+
+  # Upper level -- all are same, because values are same, even though all are enviros
+  shortFn <- function(a) sample(a$a)
+  out <- Cache(shortFn, a = a, cachePath = tmpdir)
+  out2 <- Cache(shortFn, a = b, cachePath = tmpdir)
+  out3 <- Cache(shortFn, a = g, cachePath = tmpdir)
+  attr(out2, ".Cache")$newCache <- TRUE
+  expect_true(identical(attributes(out)["tags"], attributes(out2)["tags"]))
+  expect_true(identical(attributes(out)["tags"], attributes(out3)["tags"]))
+
+  # put 2 different values, 1 and 2 ... a's and g's envirs are same value, but
+  #    different environment .. b's envir is different value
+  a$d$a <- 1
+  b$d$a <- 2
+  g$d$a <- 1
+  i <- as.list(a)
+  i2 <- i
+  i2$d <- as.list(i2$d)
+
+  out <- Cache(shortFn, a = a, cachePath = tmpdir)
+  out2 <- Cache(shortFn, a = b, cachePath = tmpdir)
+  out3 <- Cache(shortFn, a = g, cachePath = tmpdir)
+  out4 <- Cache(shortFn, a = i, cachePath = tmpdir)
+  out5 <- Cache(shortFn, a = i2, cachePath = tmpdir)
+
+  # test different values are different
+  expect_false(identical(attributes(out), attributes(out2)))
+
+  # test same values but different enviros are same
+  expect_true(identical(attributes(out)["tags"], attributes(out3)["tags"]))
+
+  # test environment is same as a list -- not sure what they should be
+  expect_true(identical(attributes(out)["tags"], attributes(out4)["tags"]))
+
+  # test environment is same as recursive list - they shouldn't be
+  expect_true(identical(attributes(out)["tags"], attributes(out5)["tags"]))
+
+  df <- data.frame(a = a$a, b = LETTERS[1:10])
+  out6 <- Cache(shortFn, a = df, cachePath = tmpdir)
+  out7 <- Cache(shortFn, a = df, cachePath = tmpdir)
+  expect_true(identical(attributes(out6)["tags"], attributes(out7)["tags"])) # test data.frame
+})
+
+test_that("test asPath", {
+  testInit("terra",
+           tmpFileExt = "pdf",
+           verbose = TRUE,
+           opts = list(
+             "reproducible.useMemoise" = TRUE,
+             "reproducible.showSimilar" = FALSE
+           )
+  )
+  unlink(dir(tmpdir, full.names = TRUE))
+
+  obj <- sample(1e5, 10)
+  # First -- has no filename.RData
+  a1 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
+  # Second -- has a filename.RData, and passing a character string,
+  #           it tries to see if it is a file, if yes, it digests it
+  a2 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
+  # Third -- finally has all same as second time
+  a3 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
+
+  expect_equal(length(a1), 1)
+  expect_equal(length(a2), 1)
+  expect_true(sum(grepl(paste(
+    .message$LoadedCacheResult("Memoised"), "|",
+    .message$LoadedCacheResult()
+  ), a3)) == 1)
+
+  unlink("filename.RData")
+  try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
+  a1 <- capture_messages(Cache(saveRDS, obj,
+                               file = asPath("filename.RData"),
+                               quick = TRUE, cachePath = tmpdir
+  ))
+  a2 <- capture_messages(Cache(saveRDS, obj,
+                               file = asPath("filename.RData"),
+                               quick = TRUE, cachePath = tmpdir
+  ))
+  a3 <- capture_messages(Cache(saveRDS, obj,
+                               file = asPath("filename.RData"),
+                               quick = TRUE, cachePath = tmpdir
+  ))
+  expect_equal(length(a1), 1)
+  expect_true(sum(grepl(paste(
+    .message$LoadedCacheResult("Memoised"), "|",
+    .message$LoadedCacheResult()
+  ), a2)) == 1)
+  expect_true(sum(grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
+
+  unlink("filename.RData")
+  try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
+  a1 <- capture_messages(Cache(saveRDS, obj,
+                               file = as("filename.RData", "Path"),
+                               quick = TRUE, cachePath = tmpdir
+  ))
+  a2 <- capture_messages(Cache(saveRDS, obj,
+                               file = as("filename.RData", "Path"),
+                               quick = TRUE, cachePath = tmpdir
+  ))
+  a3 <- capture_messages(Cache(saveRDS, obj,
+                               file = as("filename.RData", "Path"),
+                               quick = TRUE, cachePath = tmpdir
+  ))
+  expect_equal(length(a1), 1)
+  expect_true(sum(grepl(paste(
+    .message$LoadedCacheResult("Memoised"), "|",
+    .message$LoadedCacheResult()
+  ), a2)) == 1)
+  expect_true(sum(grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
+})
+
+test_that("test wrong ways of calling Cache", {
+  try(testInit(tmpFileExt = ".pdf"))
+
+  # expect_error(Cache(sample(1), cachePath = tmpdir), "Can't understand")
+  # expect_error(Cache(a <- sample(1), cachePath = tmpdir), "Can't understand")
+  expect_true(1 == Cache(sample, 1, cachePath = tmpdir))
+})
+
 # test_that("test quoted FUN in Cache", {
 #   testInit()
 #

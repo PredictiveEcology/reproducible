@@ -103,6 +103,9 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   cacheIdIdentical <- cache_Id_Identical(metadata, cachePaths, cache_key)
   # Save the output to the cache
 
+  # Can't save NULL with attributes
+  if (is.null(output)) output <- "NULL"
+
   if (is.null(cacheIdIdentical)) {
     outputToSave <- .wrap(output)
     metadata <- metadata_update(outputToSave, metadata, cache_key) # .wrap may have added tags
@@ -114,6 +117,8 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
     messageColoured("Result Hash was same as: ", basename(cacheIdIdentical), "; creating link",
                     verbose = verbose)
   }
+
+  attr(output, ".Cache")$tags <- paste0("cacheId:", cache_key)
 
   # Memoize the output by saving it in RAM
   if (getOption("reproducible.useMemoise"))
@@ -131,6 +136,7 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   # saveDBFileSingle(metadata, cachePath, cache_key)
 
   messageColoured("Computed result for: ", cache_key, verbose = verbose)
+  if (identical(output, "NULL")) output <- NULL
   return(output)
 
 }
@@ -226,7 +232,7 @@ harmonize_call <- function(call, usesDots, isSquiggly, .callingEnv) {
   if (any(argsRm %in% TRUE))
     args <- args[!argsRm %in% TRUE]
   new_call <- as.call(c(func, args))
-  matched_call <- match_call_primitive(func, new_call, expand.dots = TRUE)
+  matched_call <- match_call_primitive(func, new_call, expand.dots = TRUE, envir = .callingEnv)
 
   if (isSquiggly) {
     FUNcaptured <- recursiveEvalNamesOnly(matched_call, envir = .callingEnv) # deals with e.g., stats::rnorm, b$fun, b[[fun]]
