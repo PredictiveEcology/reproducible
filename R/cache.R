@@ -979,17 +979,21 @@ Cache <-
           .reproEnv$alreadyMsgFuture <- TRUE
         }
       } else {
-        otsObjSize <- gsub(grep("object\\.size:", userTags, value = TRUE),
-                           pattern = "object.size:", replacement = ""
-        )
-        otsObjSize <- if (identical(unname(otsObjSize), "NA")) NA else as.numeric(otsObjSize)
-        isBig <- isTRUE(otsObjSize > 1e7)
-        if (!anyNA(otsObjSize)) {
-          class(otsObjSize) <- "object_size"
-          osMess <- format(otsObjSize, units = "auto")[isBig]
-        } else {
-          osMess <- ""
-        }
+        otsObjSize <- objectSizeGetFromUserTags(userTags)
+        # otsObjSize <- gsub(grep("object\\.size:", userTags, value = TRUE),
+        #                    pattern = "object.size:", replacement = ""
+        # )
+        # otsObjSize <- if (identical(unname(otsObjSize), "NA")) NA else as.numeric(otsObjSize)
+        isBig <- isTRUE(otsObjSize > .objectSizeMinForBig)
+        osMess <- .cacheMessageObjectSize(otsObjSize, isBig)
+        # if (!anyNA(otsObjSize)) {
+        #   class(otsObjSize) <- "object_size"
+        #   osMess <- format(otsObjSize, units = "auto")[isBig]
+        # } else {
+        #   osMess <- ""
+        # }
+
+        m <- .message$SavingToCache(isBig, userTags, fnDetails$functionName, cacheId, otsObjSize, osMess)
 
         outputToSave <- progressBarCode(
           saveToCache(
@@ -998,19 +1002,21 @@ Cache <-
             linkToCacheId = linkToCacheId
           ),
           doProgress = isBig,
-          message = c(
-            "Saving ", "large "[isBig], "object (fn: ", .messageFunctionFn(fnDetails$functionName),
-            ", cacheId: ", outputHash, ") to Cache", ": "[isBig],
-            osMess
-          ),
+          message = m, # messageCache(m, verbose = verbose),
+          # message = c(
+          #   "Saving ", "large "[isBig], "object (fn: ", .messageFunctionFn(fnDetails$functionName),
+          #   ", cacheId: ", outputHash, ") to Cache", ": "[isBig],
+          #   osMess
+          # ),
           verboseLevel = 2 - isBig, verbose = verbose,
           colour = getOption("reproducible.messageColourCache")
         )
         # .message$IndentRevert() # revert the indent of 2 spaces
-        messageCache("Saved! Cache file: ",
-                     basename2(CacheStoredFile(cachePath = cachePath, cacheId = outputHash)),
-                     "; fn: ", .messageFunctionFn(fnDetails$functionName),
-                     verbose = verbose)
+        .message$Saved(cachePath, outputHash, functionName = fnDetails$functionName, verbose)
+        # messageCache("Saved! Cache file: ",
+        #              basename2(CacheStoredFile(cachePath = cachePath, cacheId = outputHash)),
+        #              "; fn: ", .messageFunctionFn(fnDetails$functionName),
+        #              verbose = verbose)
       }
 
       if (useCloud && .CacheIsNew) {
@@ -2462,4 +2468,15 @@ nullifyByArgName <- function(a, name) {
   }
   a
 }
+
+
+objectSizeGetFromUserTags <- function(userTags) {
+  otsObjSize <- gsub(grep("object\\.size:", userTags, value = TRUE),
+                     pattern = "object.size:", replacement = ""
+  )
+  otsObjSize <- if (identical(unname(otsObjSize), "NA")) NA else as.numeric(otsObjSize)
+  otsObjSize
+}
+
+.objectSizeMinForBig <- 1e7
 

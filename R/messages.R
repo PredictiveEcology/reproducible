@@ -315,6 +315,47 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
 .message$IndentDefault <- 1
 
+.message$FileLinkUsed <- function(ftL, fts, verbose) {
+  messageCache("  (A file with identical properties already exists in the Cache: ", basename(ftL), "; ")
+  messageCache("    The newly added (", basename(fts), ") is a file.link to that file)",
+               verbose = verbose
+  )
+}
+
+
+.cacheMessageObjectSize <- function(otsObjSize, isBig) {
+  if (!anyNA(otsObjSize)) {
+    class(otsObjSize) <- "object_size"
+    osMess <- format(otsObjSize, units = "auto")[isBig]
+  } else {
+    osMess <- ""
+  }
+  osMess
+}
+
+
+.message$Saved <- function(cachePath, outputHash, functionName, verbose) {
+  messageCache("Saved! Cache file: ",
+               basename2(CacheStoredFile(cachePath = cachePath, cacheId = outputHash)),
+               "; fn: ", .messageFunctionFn(functionName),
+               verbose = verbose)
+}
+
+.message$SavingToCache <- function(isBig, userTags, functionName, cacheId, otsObjSize, osMess) {
+  if (missing(otsObjSize))
+    otsObjSize <- objectSizeGetFromUserTags(userTags)
+  if (missing(isBig))
+    isBig <- isTRUE(otsObjSize > .objectSizeMinForBig)
+  if (missing(osMess))
+    osMess <- .cacheMessageObjectSize(otsObjSize, isBig)
+
+  c(
+    "Saving ", "large "[isBig], "object (fn: ", .messageFunctionFn(functionName),
+    ", cacheId: ", cacheId, ") to Cache", ": "[isBig],
+    osMess
+  )
+}
+
 .message$IndentUpdate <- function(nchar = .message$IndentDefault, envir = parent.frame(), ns = "reproducible") {
   val <- paste0(rep(" ", nchar), collapse = "")
   .message$PreProcessIndent <- paste0(.message$PreProcessIndent, val)
