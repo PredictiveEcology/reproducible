@@ -610,162 +610,163 @@ test_that("test quoted FUN in Cache", {
   expect_true(all.equalWONewCache(A, B))
   expect_true(all.equalWONewCache(A, C))
 })
-#
-# test_that("test Cache argument inheritance to inner functions", {
-#   testInit("terra",
-#            verbose = TRUE,
-#            opts = list(
-#              "reproducible.showSimilar" = FALSE,
-#              "reproducible.useMemoise" = FALSE
-#            )
-#   )
-#   opts <- options(reproducible.cachePath = tmpdir)
-#   on.exit(options(opts), add = TRUE)
-#   tmpDirFiles <- dir(tempdir())
-#   on.exit(
-#     {
-#       newOnes <- setdiff(tmpDirFiles, dir(tempdir()))
-#       unlink(newOnes, recursive = TRUE)
-#     },
-#     add = TRUE
-#   )
-#
-#   outer <- function(n, not = NULL) {
-#     Cache(rnorm, n, notOlderThan = not)
-#   }
-#
-#   mess <- capture_messages(Cache(outer, n = 2))
-#   expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, mess)), 2)
-#   clearCache(ask = FALSE, x = tmpdir)
-#
-#   # options(reproducible.cachePath = tmpCache)
-#   out <- capture_messages(Cache(outer, n = 2))
-#   expect_true(all(unlist(lapply(
-#     c(.message$NoCacheRepoSuppliedGrep, .message$NoCacheRepoSuppliedGrep),
-#     function(mess) any(grepl(mess, out))
-#   ))))
-#
-#   # does Sys.time() propagate to outer ones
-#   out <- capture_messages(Cache(outer(n = 2, not = Sys.time() + 1), notOlderThan = Sys.time() + 1))
-#   expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, out)), 2)
-#
-#   # does Sys.time() propagate to outer ones -- no message about cachePath being tempdir()
-#   mess <- capture_messages(Cache(outer(n = 2, not = Sys.time()), notOlderThan = Sys.time(), cachePath = tmpdir))
-#   expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, mess)), 1)
-#
-#   # does cachePath propagate to outer ones -- no message about cachePath being tempdir()
-#   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-#   expect_true(length(out) == 2)
-#   expect_true(sum(grepl(paste(.message$LoadedCacheResult(), "outer call"), out)) == 1)
-#
-#   # check that the rnorm inside "outer" returns cached value even if outer "outer" function is changed
-#   outer <- function(n) {
-#     a <- 1
-#     Cache(rnorm, n)
-#   }
-#   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-#   expect_true(length(out) == 4)
-#   msgGrep <- paste(paste(.message$LoadedCacheResult(), "rnorm call"),
-#                    "There is no similar item in the cachePath",
-#                    sep = "|"
-#   )
-#   expect_true(sum(grepl(msgGrep, out)) == 1)
-#
-#   # Override with explicit argument
-#   outer <- function(n) {
-#     a <- 1
-#     Cache(rnorm, n, notOlderThan = Sys.time() + 1)
-#   }
-#   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-#   expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, out)), 1)
-#
-#   # change the outer function, so no cache on that, & have notOlderThan on rnorm,
-#   #    so no Cache on that
-#   outer <- function(n) {
-#     b <- 1
-#     Cache(rnorm, n, notOlderThan = Sys.time() + 1)
-#   }
-#   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-#   expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, out)), 1)
-#
-#   # expect_true(all(grepl("There is no similar item in the cachePath", out)))
-#   # Second time will get a cache on outer
-#   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-#   expect_true(length(out) == 2)
-#   expect_true(sum(grepl(paste(.message$LoadedCacheResult(), "outer call"), out)) == 1)
-#
-#   # doubly nested
-#   inner <- function(mean, useCache = TRUE) {
-#     d <- 1
-#     Cache(rnorm, n = 3, mean = mean, useCache = useCache)
-#   }
-#   outer <- function(n, useCache = TRUE, ...) {
-#     Cache(inner, 0.1, useCache = useCache, ...)
-#   }
-#   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
-#
-#   outer <- function(n) {
-#     Cache(inner, 0.1, notOlderThan = Sys.time() - 1e4)
-#   }
-#
-#   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir, notOlderThan = Sys.time()))
-#   msgGrep <- paste(paste(.message$LoadedCacheResult(), "inner call"),
-#                    "There is no similar item in the cachePath",
-#                    sep = "|"
-#   )
-#   expect_true(sum(grepl(.message$NoCacheRepoSuppliedGrep, out)) == 1)
-#
-#   # expect_true(sum(grepl(msgGrep, out)) == 1)
-#
-#   outer <- function(n) {
-#     Cache(inner, 0.1, notOlderThan = Sys.time())
-#   }
-#   inner <- function(mean) {
-#     d <- 1
-#     Cache(rnorm, n = 3, mean = mean, notOlderThan = Sys.time() - 1e5)
-#   }
-#
-#   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir, notOlderThan = Sys.time()))
-#   msgGrep <- paste(paste(.message$LoadedCacheResult(), "rnorm call"),
-#                    "There is no similar item in the cachePath",
-#                    sep = "|"
-#   )
-#   expect_true(sum(grepl(msgGrep, out)) == 1)
-#
-#   # Check userTags -- all items have it
-#   clearCache(tmpdir, ask = FALSE)
-#   outerTag <- "howdie"
-#   aa <- Cache(outer, n = 2, cachePath = tmpdir, userTags = outerTag)
-#   bb <- showCache(tmpdir, userTags = outerTag)
-#   cc <- showCache(tmpdir)
-#   data.table::setorderv(bb, c(.cacheTableHashColName(), "tagKey", "tagValue"))
-#   data.table::setorderv(cc, c(.cacheTableHashColName(), "tagKey", "tagValue"))
-#   expect_true(identical(bb, cc))
-#
-#   # Check userTags -- all items have the outer tag propagate, plus inner ones only have inner ones
-#   innerTag <- "notHowdie"
-#   inner <- function(mean) {
-#     d <- 1
-#     Cache(rnorm, n = 3, mean = mean, notOlderThan = Sys.time() - 1e5, userTags = innerTag)
-#   }
-#
-#   clearCache(tmpdir, ask = FALSE)
-#   aa <- Cache(outer, n = 2, cachePath = tmpdir, userTags = outerTag)
-#   bb <- showCache(tmpdir, userTags = outerTag)
-#   cc <- showCache(tmpdir)
-#   data.table::setorderv(cc)
-#   data.table::setorderv(bb)
-#   expect_true(identical(bb, cc))
-#
-#   #
-#   bb <- showCache(tmpdir, userTags = "notHowdie")
-#   cc <- showCache(tmpdir)
-#   data.table::setorderv(cc)
-#   data.table::setorderv(bb)
-#   expect_false(identical(bb, cc))
-#   expect_true(length(unique(bb[[.cacheTableHashColName()]])) == 1)
-#   expect_true(length(unique(cc[[.cacheTableHashColName()]])) == 3)
-# })
+
+test_that("test Cache argument inheritance to inner functions", {
+  testInit("terra",
+           verbose = TRUE,
+           opts = list(
+             "reproducible.showSimilar" = FALSE,
+             "reproducible.useMemoise" = FALSE
+           )
+  )
+  opts <- options(reproducible.cachePath = tmpdir)
+  on.exit(options(opts), add = TRUE)
+  tmpDirFiles <- dir(tempdir())
+  on.exit(
+    {
+      newOnes <- setdiff(tmpDirFiles, dir(tempdir()))
+      unlink(newOnes, recursive = TRUE)
+    },
+    add = TRUE
+  )
+
+  outer <- function(n, not = NULL) {
+    Cache(rnorm, n, notOlderThan = not)
+  }
+
+  mess <- capture_messages(Cache(outer, n = 2))
+  expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, mess)), 2)
+  clearCache(ask = FALSE, x = tmpdir)
+
+  # options(reproducible.cachePath = tmpCache)
+  out <- capture_messages(Cache(outer, n = 2))
+  expect_true(all(unlist(lapply(
+    c(.message$NoCacheRepoSuppliedGrep, .message$NoCacheRepoSuppliedGrep),
+    function(mess) any(grepl(mess, out))
+  ))))
+
+  # does Sys.time() propagate to outer ones
+  out <- capture_messages(Cache(outer(n = 2, not = Sys.time() + 1), notOlderThan = Sys.time() + 1))
+  expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, out)), 2)
+
+  # does Sys.time() propagate to outer ones -- no message about cachePath being tempdir()
+  mess <- capture_messages(Cache(outer(n = 2, not = Sys.time()), notOlderThan = Sys.time(), cachePath = tmpdir))
+  expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, mess)), 1)
+
+  # does cachePath propagate to outer ones -- no message about cachePath being tempdir()
+  out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
+  expect_true(length(out) == 2)
+  expect_true(sum(grepl(paste(.message$LoadedCacheResult(), "outer call"), out)) == 1)
+
+  # check that the rnorm inside "outer" returns cached value even if outer "outer" function is changed
+  outer <- function(n) {
+    a <- 1
+    Cache(rnorm, n)
+  }
+  out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
+  expect_true(length(out) == 4)
+  msgGrep <- paste(paste(.message$LoadedCacheResult(), "rnorm call"),
+                   "There is no similar item in the cachePath",
+                   sep = "|"
+  )
+  expect_true(sum(grepl(msgGrep, out)) == 1)
+
+  # Override with explicit argument
+  outer <- function(n) {
+    a <- 1
+    Cache(rnorm, n, notOlderThan = Sys.time() + 1)
+  }
+  out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
+  expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, out)), 1)
+
+  # change the outer function, so no cache on that, & have notOlderThan on rnorm,
+  #    so no Cache on that
+  outer <- function(n) {
+    b <- 1
+    Cache(rnorm, n, notOlderThan = Sys.time() + 1)
+  }
+  out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
+  expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, out)), 1)
+
+  # expect_true(all(grepl("There is no similar item in the cachePath", out)))
+  # Second time will get a cache on outer
+  out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
+  expect_true(length(out) == 2)
+  expect_true(sum(grepl(paste(.message$LoadedCacheResult(), "outer call"), out)) == 1)
+
+  # doubly nested
+  inner <- function(mean, useCache = TRUE) {
+    d <- 1
+    Cache(rnorm, n = 3, mean = mean, useCache = useCache)
+  }
+  outer <- function(n, useCache = TRUE, ...) {
+    Cache(inner, 0.1, useCache = useCache, ...)
+  }
+  out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
+
+  outer <- function(n) {
+    Cache(inner, 0.1, notOlderThan = Sys.time() - 1e4)
+  }
+
+  out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir, notOlderThan = Sys.time()))
+  msgGrep <- paste(paste(.message$LoadedCacheResult(), "inner call"),
+                   "There is no similar item in the cachePath",
+                   sep = "|"
+  )
+  expect_true(sum(grepl(.message$NoCacheRepoSuppliedGrep, out)) == 1)
+
+  # expect_true(sum(grepl(msgGrep, out)) == 1)
+
+  outer <- function(n) {
+    Cache(inner, 0.1, notOlderThan = Sys.time())
+  }
+  inner <- function(mean) {
+    d <- 1
+    Cache(rnorm, n = 3, mean = mean, notOlderThan = Sys.time() - 1e5)
+  }
+
+  out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir, notOlderThan = Sys.time()))
+  msgGrep <- paste(paste(.message$LoadedCacheResult(), "rnorm call"),
+                   "There is no similar item in the cachePath",
+                   sep = "|"
+  )
+  expect_true(sum(grepl(msgGrep, out)) == 1)
+
+  # Check userTags -- all items have it
+  clearCache(tmpdir, ask = FALSE)
+  outerTag <- "howdie"
+  aa <- Cache(outer, n = 2, cachePath = tmpdir, userTags = outerTag)
+  bb <- showCache(tmpdir, userTags = outerTag)
+  cc <- showCache(tmpdir)
+  data.table::setorderv(bb, c(.cacheTableHashColName(), "tagKey", "tagValue"))
+  data.table::setorderv(cc, c(.cacheTableHashColName(), "tagKey", "tagValue"))
+  browser()
+  expect_true(identical(bb, cc))
+
+  # Check userTags -- all items have the outer tag propagate, plus inner ones only have inner ones
+  innerTag <- "notHowdie"
+  inner <- function(mean) {
+    d <- 1
+    Cache(rnorm, n = 3, mean = mean, notOlderThan = Sys.time() - 1e5, userTags = innerTag)
+  }
+
+  clearCache(tmpdir, ask = FALSE)
+  aa <- Cache(outer, n = 2, cachePath = tmpdir, userTags = outerTag)
+  bb <- showCache(tmpdir, userTags = outerTag)
+  cc <- showCache(tmpdir)
+  data.table::setorderv(cc)
+  data.table::setorderv(bb)
+  expect_true(identical(bb, cc))
+
+  #
+  bb <- showCache(tmpdir, userTags = "notHowdie")
+  cc <- showCache(tmpdir)
+  data.table::setorderv(cc)
+  data.table::setorderv(bb)
+  expect_false(identical(bb, cc))
+  expect_true(length(unique(bb[[.cacheTableHashColName()]])) == 1)
+  expect_true(length(unique(cc[[.cacheTableHashColName()]])) == 3)
+})
 #
 # test_that("test future", {
 #   skip_on_cran()
