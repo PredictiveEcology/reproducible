@@ -89,6 +89,16 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
 
   preFUNTime <- Sys.time()
 
+  # if (exists("aaaa")) browser()
+  if (!exists(".reproEnv2", envir = .pkgEnv)) {
+    .pkgEnv$.reproEnv2 <- new.env(parent = asNamespace("reproducible"))
+    .pkgEnv$.reproEnv2$userTags <- userTags
+    on.exit(rm(.reproEnv2, envir = .pkgEnv))
+  } else {
+    userTags <- c(.pkgEnv$.reproEnv2$userTags, userTags)
+  }
+
+
   output <- eval(new_call, envir = .callingEnv)
   if (is.function(output)) { # if is wasn't "captured", then it is just a function, so now use it on the ...
     output <- output(...)
