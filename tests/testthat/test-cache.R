@@ -819,7 +819,6 @@ test_that("test mergeCache", {
   aCache <- showCache(tmpdir)
   bCache <- showCache(tmpCache)
 
-  browser()
   d <- mergeCache(tmpCache, tmpdir)
 
   dCache <- showCache(d)
@@ -850,104 +849,104 @@ test_that("test mergeCache", {
   expect_true(identical(showCache(d), showCache(d1)))
 })
 
-# test_that("test cache-helpers", {
-#   testInit(c("raster"), tmpFileExt = c(rep(".grd", 3), rep(".tif", 3)))
-#   # out <- reproducible::createCache(tmpCache)
-#
-#   r1 <- raster::raster(raster::extent(0, 3, 0, 3), vals = 1)
-#   r2 <- raster::raster(raster::extent(0, 3, 0, 3), vals = 2)
-#   r3 <- raster::raster(raster::extent(0, 3, 0, 3), vals = 3)
-#   r2 <- writeRaster(r1, filename = tmpfile[2], overwrite = TRUE)
-#   r3 <- writeRaster(r1, filename = tmpfile[3], overwrite = TRUE)
-#   r2tif <- suppressWarningsSpecific(
-#     falseWarnings = proj6Warn,
-#     writeRaster(r1, filename = tmpfile[5], overwrite = TRUE)
-#   )
-#   r3tif <- suppressWarningsSpecific(
-#     falseWarnings = proj6Warn,
-#     writeRaster(r1, filename = tmpfile[6], overwrite = TRUE)
-#   )
-#
-#   s1 <- raster::stack(r1, r1)
-#   s2 <- raster::stack(r1, r2)
-#   s3 <- raster::stack(r3, r2)
-#   s1 <- raster::stack(r1, r1)
-#   s2tif <- raster::stack(r1, r2tif)
-#   s3tif <- raster::stack(r3tif, r2tif)
-#
-#   i <- 1
-#   for (rr in list(r1, r2, r3, r2tif, r3tif, s1, s2, s3, s2tif, s3tif)) {
-#     message(i)
-#     i <- i + 1
-#
-#     out2 <- .prepareFileBackedRaster(rr, repoDir = tmpCache)
-#     test1 <- identical(out2, rr)
-#     test2 <- identical(Filenames(out2), Filenames(rr))
-#     test3 <- identical(
-#       Filenames(out2, allowMultiple = FALSE),
-#       Filenames(rr, allowMultiple = FALSE)
-#     )
-#     test4 <- identical(
-#       basename(Filenames(out2, allowMultiple = TRUE)),
-#       basename(Filenames(rr, allowMultiple = TRUE))
-#     )
-#     test5 <- identical(length(Filenames(out2)), length(Filenames(rr)))
-#     if (any(nchar(Filenames(out2)) > 0)) {
-#       expect_false(test1 && test2 && test3)
-#       expect_true(test4 && test5)
-#     } else {
-#       expect_true(test1 && test2 && test3 && test4 && test5)
-#     }
-#     unlink(Filenames(out2))
-#   }
-#
-#   out2 <- .prepareFileBackedRaster(s2, repoDir = tmpCache)
-#   out3 <- .prepareFileBackedRaster(s2, repoDir = tmpCache)
-#   fn2 <- Filenames(out2)
-#   fn3 <- Filenames(out3)
-#   actualFiles <- nchar(fn2) > 0
-#   bnfn2 <- basename(fn2[actualFiles])
-#   bnfn3 <- basename(fn3[actualFiles])
-#   bnfn2 <- unique(filePathSansExt(bnfn2))
-#   bnfn3 <- unique(filePathSansExt(bnfn3))
-#   sameFileBase <- grepl(pattern = bnfn2, x = bnfn3)
-#   expect_true(sameFileBase)
-#
-#   unlink(Filenames(s2))
-#   expect_error(
-#     {
-#       out2 <- .prepareFileBackedRaster(s2, repoDir = tmpCache)
-#     },
-#     "most likely"
-#   )
-# })
-#
-# test_that("test useCache = 'overwrite'", {
-#   testInit(verbose = TRUE)
-#
-#   a <- Cache(rnorm, 1, useCache = "overwrite", cachePath = tmpCache)
-#   mess <- capture_messages({
-#     b <- Cache(rnorm, 1, useCache = "overwrite", cachePath = tmpCache)
-#   })
-#   expect_true(!identical(a, b))
-#   expect_true(any(grepl(pattern = "Overwriting", mess)))
-#
-#   clearCache(x = tmpCache, ask = FALSE)
-#
-#   withr::deferred_clear()
-#   testInit(
-#     ask = FALSE, verbose = TRUE,
-#     opts = list("reproducible.useCache" = "overwrite")
-#   )
-#
-#   a <- Cache(rnorm, 1, cachePath = tmpCache)
-#   mess <- capture_messages({
-#     b <- Cache(rnorm, 1, cachePath = tmpCache)
-#   })
-#   expect_true(!identical(a, b))
-#   expect_true(any(grepl(pattern = "Overwriting", mess)))
-# })
-#
+test_that("test cache-helpers", {
+  testInit(c("raster"), tmpFileExt = c(rep(".grd", 3), rep(".tif", 3)))
+  # out <- reproducible::createCache(tmpCache)
+
+  r1 <- raster::raster(raster::extent(0, 3, 0, 3), vals = 1)
+  r2 <- raster::raster(raster::extent(0, 3, 0, 3), vals = 2)
+  r3 <- raster::raster(raster::extent(0, 3, 0, 3), vals = 3)
+  r2 <- writeRaster(r1, filename = tmpfile[2], overwrite = TRUE)
+  r3 <- writeRaster(r1, filename = tmpfile[3], overwrite = TRUE)
+  r2tif <- suppressWarningsSpecific(
+    falseWarnings = proj6Warn,
+    writeRaster(r1, filename = tmpfile[5], overwrite = TRUE)
+  )
+  r3tif <- suppressWarningsSpecific(
+    falseWarnings = proj6Warn,
+    writeRaster(r1, filename = tmpfile[6], overwrite = TRUE)
+  )
+
+  s1 <- raster::stack(r1, r1)
+  s2 <- raster::stack(r1, r2)
+  s3 <- raster::stack(r3, r2)
+  s1 <- raster::stack(r1, r1)
+  s2tif <- raster::stack(r1, r2tif)
+  s3tif <- raster::stack(r3tif, r2tif)
+
+  i <- 1
+  for (rr in list(r1, r2, r3, r2tif, r3tif, s1, s2, s3, s2tif, s3tif)) {
+    message(i)
+    i <- i + 1
+
+    out2 <- .prepareFileBackedRaster(rr, repoDir = tmpCache)
+    test1 <- identical(out2, rr)
+    test2 <- identical(Filenames(out2), Filenames(rr))
+    test3 <- identical(
+      Filenames(out2, allowMultiple = FALSE),
+      Filenames(rr, allowMultiple = FALSE)
+    )
+    test4 <- identical(
+      basename(Filenames(out2, allowMultiple = TRUE)),
+      basename(Filenames(rr, allowMultiple = TRUE))
+    )
+    test5 <- identical(length(Filenames(out2)), length(Filenames(rr)))
+    if (any(nchar(Filenames(out2)) > 0)) {
+      expect_false(test1 && test2 && test3)
+      expect_true(test4 && test5)
+    } else {
+      expect_true(test1 && test2 && test3 && test4 && test5)
+    }
+    unlink(Filenames(out2))
+  }
+
+  out2 <- .prepareFileBackedRaster(s2, repoDir = tmpCache)
+  out3 <- .prepareFileBackedRaster(s2, repoDir = tmpCache)
+  fn2 <- Filenames(out2)
+  fn3 <- Filenames(out3)
+  actualFiles <- nchar(fn2) > 0
+  bnfn2 <- basename(fn2[actualFiles])
+  bnfn3 <- basename(fn3[actualFiles])
+  bnfn2 <- unique(filePathSansExt(bnfn2))
+  bnfn3 <- unique(filePathSansExt(bnfn3))
+  sameFileBase <- grepl(pattern = bnfn2, x = bnfn3)
+  expect_true(sameFileBase)
+
+  unlink(Filenames(s2))
+  expect_error(
+    {
+      out2 <- .prepareFileBackedRaster(s2, repoDir = tmpCache)
+    },
+    "most likely"
+  )
+})
+
+test_that("test useCache = 'overwrite'", {
+  testInit(verbose = TRUE)
+
+  a <- Cache(rnorm, 1, useCache = "overwrite", cachePath = tmpCache)
+  mess <- capture_messages({
+    b <- Cache(rnorm, 1, useCache = "overwrite", cachePath = tmpCache)
+  })
+  expect_true(!identical(a, b))
+  expect_true(any(grepl(pattern = "Overwriting", mess)))
+
+  clearCache(x = tmpCache, ask = FALSE)
+
+  withr::deferred_clear()
+  testInit(
+    ask = FALSE, verbose = TRUE,
+    opts = list("reproducible.useCache" = "overwrite")
+  )
+
+  a <- Cache(rnorm, 1, cachePath = tmpCache)
+  mess <- capture_messages({
+    b <- Cache(rnorm, 1, cachePath = tmpCache)
+  })
+  expect_true(!identical(a, b))
+  expect_true(any(grepl(pattern = "Overwriting", mess)))
+})
+
 # test_that("test rm large non-file-backed rasters", {
 #   ## This is a large object test!
 #   skip_on_cran()
