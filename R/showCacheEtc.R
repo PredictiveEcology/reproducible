@@ -154,7 +154,7 @@ setMethod(
 
       args <- append(
         list(x = x, after = after, before = before, userTags = userTags,
-             fun = fun, cacheId = cacheId, sorted = FALSE),
+             fun = fun, cacheId = cacheId, sorted = FALSE, verbose = verbose),
         list(...)
       )
 

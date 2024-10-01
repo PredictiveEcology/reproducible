@@ -737,18 +737,20 @@ Cache <-
           userTagsSimple <- gsub(".*:(.*)", "\\1", userTags)
           isInRepo <- isInRepo[!isInRepo[[.cacheTableTagColName()]] %in% userTagsSimple, , drop = FALSE]
           outputHash <- outputHashNew
-          messageCache("Overwriting Cache entry with userTags: '", paste(userTagsSimple, collapse = ", "), "'",
-            verbose = verbose
-          )
+          .message$overwriting(userTagsSimple, type = c("userTags"), verbose)
+          # messageCache("Overwriting Cache entry with userTags: '", paste(userTagsSimple, collapse = ", "), "'",
+          #   verbose = verbose
+          # )
         } else {
           # remove entries from the 2 data.frames of isInRep & gdriveLs
           if (useCloud) {
             gdriveLs <- gdriveLs[!gdriveLs$name %in% basename2(CacheStoredFile(cachePath, outputHash)), ]
           }
           isInRepo <- isInRepo[isInRepo[[.cacheTableHashColName()]] != outputHash, , drop = FALSE]
-          messageCache("Overwriting Cache entry with function '", fnDetails$functionName, "'",
-            verbose = verbose
-          )
+          .message$overwriting(fnDetails$functionName, type = c("function"), verbose)
+          # messageCache("Overwriting Cache entry with function '", fnDetails$functionName, "'",
+          #   verbose = verbose
+          # )
         }
       }
 

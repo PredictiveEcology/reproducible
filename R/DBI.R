@@ -376,7 +376,7 @@ extractFromCache <- function(sc, elem, ifNot = NULL) {
 rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                         cacheId, drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL),
-                        format = getOption("reproducible.cacheSaveFormat", "rds")) {
+                        format = getOption("reproducible.cacheSaveFormat", "rds"), verbose) {
   if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
