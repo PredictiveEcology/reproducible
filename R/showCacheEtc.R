@@ -154,7 +154,7 @@ setMethod(
 
       args <- append(
         list(x = x, after = after, before = before, userTags = userTags,
-             fun = fun, cacheId = cacheId, sorted = FALSE),
+             fun = fun, cacheId = cacheId, sorted = FALSE, verbose = verbose),
         list(...)
       )
 
@@ -271,17 +271,14 @@ setMethod(
           })
         }
       }
-      rmFromCache(x, objToGet, conn = conn, drv = drv) # many = TRUE)
+      rmFromCache(x, objToGet, conn = conn, drv = drv, verbose = verbose) # many = TRUE)
       if (isTRUE(getOption("reproducible.useMemoise"))) {
-        if (exists(x, envir = .pkgEnv)) {
-          suppressWarnings(rm(list = objToGet, envir = .pkgEnv[[x]]))
+        exist <- vapply(objToGet, exists, envir = memoiseEnv(x), FUN.VALUE = logical(1))
+        if (isTRUE(any(exist))) {
+          suppressWarnings(rm(list = objToGet[exist], envir = memoiseEnv(x)))#.pkgEnv[[x]]))
         }
       }
-
-      # browser(expr = exists("rmFC"))
-      # }
     }
-    # memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
     return(invisible(objsDT))
   }
@@ -616,6 +613,7 @@ setMethod(
   "mergeCache",
   definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom,
                         verbose = getOption("reproducible.verbose")) {
+
     if (useDBI()) {
       if (is.null(connTo)) {
         connTo <- dbConnectAll(drvTo, cachePath = cacheTo)
@@ -638,6 +636,7 @@ setMethod(
     artifacts <- unique(cacheFromList[[.cacheTableHashColName()]])
     objectList <- lapply(artifacts, function(artifact) {
       # browser(expr = exists("gggg"))
+
       if (!(artifact %in% cacheToList[[.cacheTableHashColName()]])) {
         outputToSave <- # if (useDBI()) {
           try(loadFromCache(

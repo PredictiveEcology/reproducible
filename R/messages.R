@@ -32,6 +32,12 @@
   paste0("Loaded! ", src, " result from previous")
 }
 
+.message$overwriting <- function(names, type = c("function", "userTags"), verbose) {
+  messageCache("Overwriting Cache entry with ", type[1],": '", paste(names, collapse = ", "), "'",
+               verbose = verbose
+  )
+}
+
 .message$AddingToMemoised <- "(and added a memoised copy)"
 
 .message$LoadedCache <- function(root, functionName) {
