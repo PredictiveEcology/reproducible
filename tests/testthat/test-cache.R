@@ -319,92 +319,92 @@ test_that("test memory backed raster robustDigest", {
   expect_identical(dig, dig1)
 })
 
-# test_that("test 'quick' argument", {
-#   testInit("terra",
-#            tmpFileExt = c(".tif", ".tif", ".tif"),
-#            opts = list(
-#              "reproducible.verbose" = 1,
-#              "reproducible.useMemoise" = TRUE,
-#              "reproducible.showSimilar" = FALSE
-#            )
-#   )
-#
-#   ### Make raster using Cache
-#   set.seed(123)
-#   # unlink(tmpfile[1])
-#   r1 <- terra::rast(terra::ext(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
-#   r1 <- .writeRaster(r1, filename = tmpfile[1], overwrite = TRUE)
-#   quickFun <- function(rasFile) {
-#     ras <- terra::rast(rasFile)
-#     ras[sample(ncell(ras), size = 1)]
-#   }
-#   fn <- Filenames(r1)
-#   thePath1 <- asPath(Filenames(r1))
-#
-#   out1a <- Cache(quickFun, thePath1, cachePath = tmpdir)
-#   out1b <- Cache(quickFun, thePath1, cachePath = tmpdir, quick = TRUE)
-#   r1[4] <- r1[4] + 1 # brings to memory
-#   r1 <- .writeRaster(r1, filename = tmpfile[2], overwrite = TRUE)
-#   thePath <- asPath(Filenames(r1))
-#   mess1 <- capture_messages({
-#     out1c <- Cache(quickFun, thePath, cachePath = tmpdir, quick = TRUE)
-#   })
-#
-#   expect_true(sum(grepl(
-#     paste0(
-#       paste(.message$LoadedCache(.message$LoadedCacheResult(), "quickFun"), .message$AddingToMemoised), "|",
-#       .message$LoadedCache(.message$LoadedCacheResult("Memoised"), "quickFun")
-#     ),
-#     mess1
-#   )) == 0)
-#   mess2 <- capture_messages({
-#     out1c <- Cache(quickFun, thePath, cachePath = tmpdir, quick = FALSE)
-#   })
-#   expect_true(length(mess2) == 1) # because it is looking at the file contents
-#
-#   # Using Raster directly -- not file
-#   quickFun <- function(ras) {
-#     ras[sample(ncell(ras), size = 1)]
-#   }
-#
-#   out1a <- Cache(quickFun, r1, cachePath = tmpdir)
-#   out1b <- Cache(quickFun, r1, cachePath = tmpdir, quick = TRUE)
-#   r1[4] <- r1[4] + 1
-#   r1 <- .writeRaster(r1, filename = tmpfile[3], overwrite = TRUE)
-#   # bbbb <<- 1
-#   # on.exit(rm(bbbb, envir = .GlobalEnv), add = TRUE)
-#   mess1 <- capture_messages({
-#     out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = TRUE)
-#   })
-#   expect_true(sum(grepl(
-#     paste0(
-#       paste(.message$LoadedCache(.message$LoadedCacheResult(), "quickFun"), .message$AddingToMemoised), "|",
-#       paste(.message$LoadedCacheResult("Memoised"), "quickFun call")
-#     ),
-#     mess1
-#   )) == 0)
-#
-#   # mess3 <- capture_messages({ out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = FALSE) })
-#   mess <- capture_messages({
-#     out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = FALSE)
-#   })
-#   expect_true(length(mess) == 1)
-# })
-#
-# test_that("test date-based cache removal", {
-#   testInit("terra", tmpFileExt = ".pdf")
-#
-#   a <- Cache(runif, 1, cachePath = tmpdir)
-#   a1 <- showCache(tmpdir)
-#   expect_true(NROW(a1) > 0)
-#   b <- clearCache(tmpdir, before = Sys.Date() - 1, ask = FALSE)
-#   expect_true(NROW(b) == 0)
-#   expect_identical(a1, showCache(tmpdir))
-#
-#   b <- clearCache(tmpdir, before = Sys.Date() + 1, ask = FALSE)
-#   expect_identical(data.table::setindex(b, NULL), data.table::setindex(a1, NULL))
-# })
-#
+test_that("test 'quick' argument", {
+  testInit("terra",
+           tmpFileExt = c(".tif", ".tif", ".tif"),
+           opts = list(
+             "reproducible.verbose" = 1,
+             "reproducible.useMemoise" = TRUE,
+             "reproducible.showSimilar" = FALSE
+           )
+  )
+
+  ### Make raster using Cache
+  set.seed(123)
+  # unlink(tmpfile[1])
+  r1 <- terra::rast(terra::ext(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+  r1 <- .writeRaster(r1, filename = tmpfile[1], overwrite = TRUE)
+  quickFun <- function(rasFile) {
+    ras <- terra::rast(rasFile)
+    ras[sample(ncell(ras), size = 1)]
+  }
+  fn <- Filenames(r1)
+  thePath1 <- asPath(Filenames(r1))
+
+  out1a <- Cache(quickFun, thePath1, cachePath = tmpdir)
+  out1b <- Cache(quickFun, thePath1, cachePath = tmpdir, quick = TRUE)
+  r1[4] <- r1[4] + 1 # brings to memory
+  r1 <- .writeRaster(r1, filename = tmpfile[2], overwrite = TRUE)
+  thePath <- asPath(Filenames(r1))
+  mess1 <- capture_messages({
+    out1c <- Cache(quickFun, thePath, cachePath = tmpdir, quick = TRUE)
+  })
+
+  expect_true(sum(grepl(
+    paste0(
+      paste(.message$LoadedCache(.message$LoadedCacheResult(), "quickFun"), .message$AddingToMemoised), "|",
+      .message$LoadedCache(.message$LoadedCacheResult("Memoised"), "quickFun")
+    ),
+    mess1
+  )) == 0)
+  mess2 <- capture_messages({
+    out1c <- Cache(quickFun, thePath, cachePath = tmpdir, quick = FALSE)
+  })
+  expect_true(length(mess2) == 1) # because it is looking at the file contents
+
+  # Using Raster directly -- not file
+  quickFun <- function(ras) {
+    ras[sample(ncell(ras), size = 1)]
+  }
+
+  out1a <- Cache(quickFun, r1, cachePath = tmpdir)
+  out1b <- Cache(quickFun, r1, cachePath = tmpdir, quick = TRUE)
+  r1[4] <- r1[4] + 1
+  r1 <- .writeRaster(r1, filename = tmpfile[3], overwrite = TRUE)
+  # bbbb <<- 1
+  # on.exit(rm(bbbb, envir = .GlobalEnv), add = TRUE)
+  mess1 <- capture_messages({
+    out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = TRUE)
+  })
+  expect_true(sum(grepl(
+    paste0(
+      paste(.message$LoadedCache(.message$LoadedCacheResult(), "quickFun"), .message$AddingToMemoised), "|",
+      paste(.message$LoadedCacheResult("Memoised"), "quickFun call")
+    ),
+    mess1
+  )) == 0)
+
+  # mess3 <- capture_messages({ out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = FALSE) })
+  mess <- capture_messages({
+    out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = FALSE)
+  })
+  expect_true(length(mess) == 1)
+})
+
+test_that("test date-based cache removal", {
+  testInit("terra", tmpFileExt = ".pdf")
+
+  a <- Cache(runif, 1, cachePath = tmpdir)
+  a1 <- showCache(tmpdir)
+  expect_true(NROW(a1) > 0)
+  b <- clearCache(tmpdir, before = Sys.Date() - 1, ask = FALSE)
+  expect_true(NROW(b) == 0)
+  expect_identical(a1, showCache(tmpdir))
+
+  b <- clearCache(tmpdir, before = Sys.Date() + 1, ask = FALSE)
+  expect_identical(data.table::setindex(b, NULL), data.table::setindex(a1, NULL))
+})
+
 test_that("test keepCache", {
   testInit("terra")
   Cache(rnorm, 10, cachePath = tmpdir)
@@ -740,7 +740,6 @@ test_that("test Cache argument inheritance to inner functions", {
   cc <- showCache(tmpdir)
   data.table::setorderv(bb, c(.cacheTableHashColName(), "tagKey", "tagValue"))
   data.table::setorderv(cc, c(.cacheTableHashColName(), "tagKey", "tagValue"))
-  browser()
   expect_true(identical(bb, cc))
 
   # Check userTags -- all items have the outer tag propagate, plus inner ones only have inner ones
@@ -767,7 +766,7 @@ test_that("test Cache argument inheritance to inner functions", {
   expect_true(length(unique(bb[[.cacheTableHashColName()]])) == 1)
   expect_true(length(unique(cc[[.cacheTableHashColName()]])) == 3)
 })
-#
+
 # test_that("test future", {
 #   skip_on_cran()
 #   skip_on_ci()
@@ -810,46 +809,47 @@ test_that("test Cache argument inheritance to inner functions", {
 #   }
 #   # }
 # })
-#
-# test_that("test mergeCache", {
-#   testInit("data.table", verbose = TRUE)
-#
-#   a <- Cache(rnorm, 1, cachePath = tmpdir)
-#   b <- Cache(rnorm, 2, cachePath = tmpCache)
-#
-#   aCache <- showCache(tmpdir)
-#   bCache <- showCache(tmpCache)
-#
-#   d <- mergeCache(tmpCache, tmpdir)
-#
-#   dCache <- showCache(d)
-#   abCache <- rbindlist(list(aCache, bCache))
-#
-#   # Remove date and accessed time stamps
-#   dCache <- dCache[!tagKey %in% c("date", "accessed")]
-#   abCache <- abCache[!tagKey %in% c("date", "accessed")]
-#
-#   # remove keys
-#   setkeyv(dCache, .cacheTableHashColName())
-#   setkeyv(abCache, .cacheTableHashColName())
-#
-#   expect_true(all.equal(
-#     abCache[, list(
-#       get(.cacheTableHashColName()),
-#       tagKey, get(.cacheTableTagColName())
-#     )],
-#     dCache[, list(
-#       get(.cacheTableHashColName()),
-#       tagKey, get(.cacheTableTagColName())
-#     )]
-#   ))
-#   mess <- capture_messages({
-#     d1 <- mergeCache(tmpCache, tmpdir)
-#   })
-#   expect_true(any(grepl("Skipping", mess)))
-#   expect_true(identical(showCache(d), showCache(d1)))
-# })
-#
+
+test_that("test mergeCache", {
+  testInit("data.table", verbose = TRUE)
+
+  a <- Cache(rnorm, 1, cachePath = tmpdir)
+  b <- Cache(rnorm, 2, cachePath = tmpCache)
+
+  aCache <- showCache(tmpdir)
+  bCache <- showCache(tmpCache)
+
+  browser()
+  d <- mergeCache(tmpCache, tmpdir)
+
+  dCache <- showCache(d)
+  abCache <- rbindlist(list(aCache, bCache))
+
+  # Remove date and accessed time stamps
+  dCache <- dCache[!tagKey %in% c("date", "accessed")]
+  abCache <- abCache[!tagKey %in% c("date", "accessed")]
+
+  # remove keys
+  setkeyv(dCache, .cacheTableHashColName())
+  setkeyv(abCache, .cacheTableHashColName())
+
+  expect_true(all.equal(
+    abCache[, list(
+      get(.cacheTableHashColName()),
+      tagKey, get(.cacheTableTagColName())
+    )],
+    dCache[, list(
+      get(.cacheTableHashColName()),
+      tagKey, get(.cacheTableTagColName())
+    )]
+  ))
+  mess <- capture_messages({
+    d1 <- mergeCache(tmpCache, tmpdir)
+  })
+  expect_true(any(grepl("Skipping", mess)))
+  expect_true(identical(showCache(d), showCache(d1)))
+})
+
 # test_that("test cache-helpers", {
 #   testInit(c("raster"), tmpFileExt = c(rep(".grd", 3), rep(".tif", 3)))
 #   # out <- reproducible::createCache(tmpCache)
