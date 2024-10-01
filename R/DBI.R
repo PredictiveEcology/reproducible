@@ -109,6 +109,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                         conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId,
                         linkToCacheId = NULL,
                         verbose = getOption("reproducible.verbose")) {
+
   if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
@@ -147,10 +148,11 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   }
 
   # Save to db file first, then storage file
-  dt <- data.table(
-    "cacheId" = cacheId, "tagKey" = tagKey,
-    "tagValue" = tagValue, "createdDate" = as.character(Sys.time())
-  )
+  dt <- metadataDT(cacheId, tagKey, tagValue)
+  # dt <- data.table(
+  #   "cacheId" = cacheId, "tagKey" = tagKey,
+  #   "tagValue" = tagValue, "createdDate" = as.character(Sys.time())
+  # )
   if (!useDBI()) {
     dtFile <- saveDBFileSingle(dt = dt, cachePath, cacheId)
   } else {
@@ -1078,4 +1080,12 @@ otherFunctions <- "otherFunctions"
     isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
   }
   isMemoised
+}
+
+
+metadataDT <- function(cacheId, tagKey, tagValue) {
+  data.table(
+    "cacheId" = cacheId, "tagKey" = tagKey,
+    "tagValue" = tagValue, "createdDate" = as.character(Sys.time())
+  )
 }
