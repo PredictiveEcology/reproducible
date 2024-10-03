@@ -1,11 +1,11 @@
-.CacheVerboseFn1 <- function(preDigest, fnDetails,
+.CacheVerboseFn1 <- function(preDigest, functionName,
                              startHashTime, modifiedDots, quick,
                              verbose = getOption("reproducible.verbose", 1),
                              verboseLevel = 1) {
   preDigestUnlist <- .unlistToCharacter(preDigest, 4)
   endHashTime <- Sys.time()
   verboseDF <- data.frame(
-    functionName = fnDetails$functionName,
+    functionName = functionName,
     component = "Hashing",
     elapsedTime = as.numeric(difftime(endHashTime, startHashTime, units = "secs")),
     units = "secs",

@@ -706,6 +706,10 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
 }
 
 useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose"), default = TRUE) {
+  if  (isTRUE(getOption("reproducible.cache2"))) {
+    options("reproducible.useDBI" = FALSE)
+    return(FALSE)
+  }
   canSwitch <- TRUE
   if (!is.null(set)) {
     if (isTRUE(set)) {

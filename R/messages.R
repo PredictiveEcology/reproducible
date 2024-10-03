@@ -38,6 +38,14 @@
   )
 }
 
+.message$changingFormatTxt <- "Changing format of Cache entry from "
+
+.message$changingFormat <- function(prevFile, newFile) {
+  paste0("     (", .message$changingFormatTxt, fileExt(prevFile), " to ",
+  fileExt(newFile), ")")
+}
+
+
 .message$AddingToMemoised <- "(and added a memoised copy)"
 
 .message$LoadedCache <- function(root, functionName) {
@@ -340,8 +348,10 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 }
 
 
+.message$SavedTxt <- "Saved! Cache file: "
+
 .message$Saved <- function(cachePath, outputHash, functionName, verbose) {
-  messageCache("Saved! Cache file: ",
+  messageCache(.message$SavedTxt,
                basename2(CacheStoredFile(cachePath = cachePath, cacheId = outputHash)),
                "; fn: ", .messageFunctionFn(functionName),
                verbose = verbose)

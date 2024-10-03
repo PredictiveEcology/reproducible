@@ -19,6 +19,7 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
 
   pf <- parent.frame()
 
+
   if (isTRUE(needGoogleDriveAuth)) {
     libraries <- c(libraries, "googledrive")
     needInternet <- TRUE

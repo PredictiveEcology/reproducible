@@ -28,7 +28,11 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
 
   isSquiggly <- is(call$FUN, "{")
   if (isTRUE(isSquiggly)) {
-    call <- as.call(c(call[[1]], call[[-1]][[-1]]))
+    if (length(call) == 2) {
+      call <- as.call(c(call[[1]], call[[-1]][[-1]]))
+    } else if ((length(call) > 2) && isFALSE(usesDots)) {
+      call <- as.call(c(call[[1]], FUN = as.list(call[-1])[[1]][[-1]], as.list(call[-1])[-1]))
+    }
   }
 
   new_call <- harmonize_call(call, usesDots, isSquiggly, .callingEnv) # evaluated arguments
@@ -58,6 +62,9 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   postCacheDigestTime <- Sys.time()
   elapsedTimeCacheDigest <- postCacheDigestTime - preCacheDigestTime
 
+  .CacheVerboseFn1(detailed_key$preDigest, .functionName, preCacheDigestTime,
+                   modifiedDots = combined_args, verbose = verbose, verboseLevel = 3)
+
   cache_key <- detailed_key$outputHash
 
   # Construct the full file path for the cache
@@ -86,7 +93,7 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   )
 
   output <- check_and_get_cached_copy(cache_key, cachePath, cache_file, .functionName, func,
-                                      useCache, verbose)
+                                      useCache, verbose = verbose)
   if (!identical(output, returnNothing))
     return(output)
 
@@ -96,7 +103,7 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
     .pkgEnv$.reproEnv2 <- new.env(parent = asNamespace("reproducible"))
     .pkgEnv$.reproEnv2$userTags <- userTags
     .pkgEnv$.reproEnv2$nestLevel <- 1
-    on.exit(rm(.reproEnv2, envir = .pkgEnv))
+    on.exit(rm(.reproEnv2, envir = .pkgEnv), add = TRUE)
   } else {
     userTags <- .pkgEnv$.reproEnv2$userTags <- c(.pkgEnv$.reproEnv2$userTags, userTags)
     .pkgEnv$.reproEnv2$nestLevel <- .pkgEnv$.reproEnv2$nestLevel + 1
@@ -126,7 +133,10 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
     outputToSave <- .wrap(output)
     metadata <- metadata_update(outputToSave, metadata, cache_key) # .wrap may have added tags
 
-    fs <- saveFilesInCacheFolder(outputToSave, cache_file[1], cachePath, cache_key)
+    # fs <- saveFilesInCacheFolder(outputToSave, cache_file[1], cachePath, cache_key)
+    fs <- saveToCache(cachePath = cachePath, drv = NULL, conn = NULL,
+                      obj = outputToSave, verbose = verbose, # cache_file[1],
+                      cacheId = cache_key)
   } else {
     file.link(cacheIdIdentical, cache_file)
     .message$FileLinkUsed(ftL = cacheIdIdentical, fts = cache_file, verbose)
@@ -277,11 +287,25 @@ check_and_get_cached_copy <- function(cache_key, cachePath, cache_file, function
   # Check if the result is already cached
   cacheFileExists <- file.exists(cache_file) # could be length >1
 
+  # Check if it was saved with other CacheSaveFormat
+  changedSaveFormat <- FALSE
+  if (sum(cacheFileExists) == 0) { # if it doesn't exist; could be changed backend or not in Cache
+    sameCacheID <- checkSameCacheId(cache_file)
+    if (length(sameCacheID) > 0) {
+      changedSaveFormat <- TRUE
+      cacheFileExists <- TRUE
+      cache_file_orig <- cache_file
+      cache_file <- file.path(dirname(cache_file), sameCacheID)
+    }
+  }
+
   if (sum(cacheFileExists)) {
     if (identical(useCache, "overwrite")) {
       clearCacheOverwrite(cachePath, cache_key, functionName, verbose)
     } else {
-      fe <- CacheDBFileSingle(cachePath = cachePath[which(cacheFileExists)], cacheId = cache_key)
+      format <- fileExt(cache_file)
+
+      fe <- CacheDBFileSingle(cachePath = cachePath[which(cacheFileExists)], cacheId = cache_key, format = format)
       sc <- showCacheFast(cache_key, cachePath, dtFile = fe)
 
       .cacheMessageObjectToRetrieve(functionName, sc,
@@ -291,6 +315,12 @@ check_and_get_cached_copy <- function(cache_key, cachePath, cache_file, function
 
       .cacheMessage(obj, functionName, fromMemoise = FALSE, verbose = verbose)
       output <- .unwrap(obj, cachePath = cachePath)
+      if (isTRUE(changedSaveFormat)) {
+        swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
+                            cacheId = cache_key, sameCacheID = sameCacheID,
+                            newFile = cache_file_orig, verbose = verbose)
+      }
+
       if (getOption("reproducible.useMemoise")) {
         cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
         if (cache_key_in_memoiseEnv %in% FALSE)
@@ -521,6 +551,7 @@ metadata_define <- function(detailed_key, outputToSave, func_name, userTags,
     list(elapsedTimeFirstRun = format(elapsedTimeFUN, units = "secs")),
     list(preDigest = tagKey)
   )
+  names(userTagsList)[1] <- "function"
 
 
   cache_key <- detailed_key$outputHash

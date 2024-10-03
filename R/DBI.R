@@ -256,47 +256,51 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
       f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
 
       # First test if it is correct format
-      if (!all(file.exists(f))) {
-        sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
-        if (!useDBI() || length(sameCacheID) > 1) {
-          sameCacheID <- onlyStorageFiles(sameCacheID)
-        }
-
-        if (length(sameCacheID)) {
-          # if (!identical(whereInStack("sim"), .GlobalEnv)) {
-          #   format <- setdiff(c("rds", "qs"), format)
-          #   message("User tried to change options('reproducible.cacheSaveFormat') for an ",
-          #           "existing cache, while using a simList. ",
-          #           "This currently does not work. Keeping the ",
-          #           "option at: ", format)
-          #   next
-          # }
-
-          messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
-                       fileExt(f), ")",
-                       verbose = verbose
-          )
-          obj <- loadFromCache(
-            cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
-            cacheId = cacheId,
-            format = fileExt(sameCacheID),
-            preDigest = preDigest,
-            verbose = verbose
-          )
-
-          obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
-          fs <- saveToCache(
-            obj = obj2, cachePath = cachePath, drv = drv, conn = conn,
-            cacheId = cacheId
-          )
-          rmFromCache(
-            cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
-            format = fileExt(sameCacheID)
-          )
-          return(obj)
-        }
-      }
+      obj <- loadFromCacheSwitchFormat(f, verbose, cachePath, fullCacheTableForObj, cacheId, preDigest, drv, conn)
+      if (!is.null(obj))
+        return(obj)
+      # if (!all(file.exists(f))) {
+      #   sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
+      #   if (!useDBI() || length(sameCacheID) > 1) {
+      #     sameCacheID <- onlyStorageFiles(sameCacheID)
+      #   }
+      #
+      #   if (length(sameCacheID)) {
+      #     # if (!identical(whereInStack("sim"), .GlobalEnv)) {
+      #     #   format <- setdiff(c("rds", "qs"), format)
+      #     #   message("User tried to change options('reproducible.cacheSaveFormat') for an ",
+      #     #           "existing cache, while using a simList. ",
+      #     #           "This currently does not work. Keeping the ",
+      #     #           "option at: ", format)
+      #     #   next
+      #     # }
+      #
+      #     messageCache(.message$changingFormat(prevFile = sameCacheID, newFile = f),
+      #                  verbose = verbose)
+      #     #messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
+      #     #             fileExt(f), ")",
+      #     obj <- loadFromCache(
+      #       cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
+      #       cacheId = cacheId,
+      #       format = fileExt(sameCacheID),
+      #       preDigest = preDigest,
+      #       verbose = verbose
+      #     )
+      #
+      #     obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
+      #     fs <- saveToCache(
+      #       obj = obj2, cachePath = cachePath, drv = drv, conn = conn,
+      #       cacheId = cacheId
+      #     )
+      #     rmFromCache(
+      #       cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+      #       format = fileExt(sameCacheID)
+      #     )
+      #     return(obj)
+      #   }
+      # }
       # Need exclusive lock
+
       obj <- loadFile(f)
       obj <- .unwrap(obj,
                      cachePath = cachePath,
@@ -1089,3 +1093,75 @@ metadataDT <- function(cacheId, tagKey, tagValue) {
     "tagValue" = tagValue, "createdDate" = as.character(Sys.time())
   )
 }
+
+
+loadFromCacheSwitchFormat <- function(f, verbose, cachePath, fullCacheTableForObj, cacheId, preDigest, drv, conn) {
+  obj <- NULL
+  if (!all(file.exists(f))) {
+    sameCacheID <- checkSameCacheId(f)
+    # sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
+    # if (!useDBI() || length(sameCacheID) > 1) {
+    #   sameCacheID <- onlyStorageFiles(sameCacheID)
+    # }
+
+    if (length(sameCacheID)) {
+      # if (!identical(whereInStack("sim"), .GlobalEnv)) {
+      #   format <- setdiff(c("rds", "qs"), format)
+      #   message("User tried to change options('reproducible.cacheSaveFormat') for an ",
+      #           "existing cache, while using a simList. ",
+      #           "This currently does not work. Keeping the ",
+      #           "option at: ", format)
+      #   next
+      # }
+
+      # messageCache(.message$changingFormat(prevFile = sameCacheID, newFile = f),
+      #              verbose = verbose)
+      # #messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
+      #             fileExt(f), ")",
+      obj <- loadFromCache(
+        cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
+        cacheId = cacheId,
+        format = fileExt(sameCacheID),
+        preDigest = preDigest,
+        verbose = verbose
+      )
+
+      obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
+      swapCacheFileFormat(wrappedObj = obj2, cachePath = cachePath, drv = drv, conn = conn,
+                          cacheId = cacheId, sameCacheID = sameCacheID, newFile = f, verbose = verbose)
+      # fs <- saveToCache(
+      #   obj = obj2, cachePath = cachePath, drv = drv, conn = conn,
+      #   cacheId = cacheId
+      # )
+      # rmFromCache(
+      #   cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+      #   format = fileExt(sameCacheID)
+      # )
+    }
+  }
+  return(obj)
+}
+
+checkSameCacheId <- function(f) {
+  sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
+  if (!useDBI() || length(sameCacheID) > 1) {
+    sameCacheID <- onlyStorageFiles(sameCacheID)
+  }
+  sameCacheID
+}
+
+swapCacheFileFormat <- function(wrappedObj, cachePath, drv, conn, cacheId, sameCacheID, newFile, verbose) {
+  #   swapCacheFileFormat <- function(sameCacheID, f, verbose, wrappedObj, cachePath, drv, conn, cacheId) {
+  messageCache(.message$changingFormat(prevFile = sameCacheID, newFile = newFile),
+               verbose = verbose)
+
+  fs <- saveToCache(
+    obj = wrappedObj, cachePath = cachePath, drv = drv, conn = conn,
+    cacheId = cacheId
+  )
+  rmFromCache(
+    cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+    format = fileExt(sameCacheID)
+  )
+}
+# }

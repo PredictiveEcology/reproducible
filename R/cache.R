@@ -535,7 +535,7 @@ Cache <-
         .unlistToCharacter(preDigest, getOption("reproducible.showSimilarDepth", 3))
       )
       if (verbose > 3) {
-        a <- .CacheVerboseFn1(preDigest, fnDetails,
+        a <- .CacheVerboseFn1(preDigest, functionName = fnDetails$functionName,
           startHashTime, modifiedDots,
           quick = quick,
           verbose = verbose, verboseLevel = 3
@@ -2483,5 +2483,5 @@ objectSizeGetFromUserTags <- function(userTags) {
   otsObjSize
 }
 
-.objectSizeMinForBig <- 1e7
+.objectSizeMinForBig <- 5e6
 
