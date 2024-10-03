@@ -12,10 +12,10 @@ test_that("test reproducible.verbose", {
 
   saveRDS(a, file = tmpfile)
   out1 <- Cache(readRDS, tmpfile, cachePath = tmpdir)
-  out1Details <- .reproEnv$hashDetailsAll
+  out1Details <- .reproEnv$hashDetails
   ap <- asPath(tmpfile)
   out2 <- Cache(readRDS, ap, cachePath = tmpdir)
-  out2Details <- .reproEnv$hashDetailsAll
+  out2Details <- .reproEnv$hashDetails
 
   # should be vastly larger when actual file, rather than just filename
   expect_true((20 * out1Details$objSize[1]) < out2Details$objSize[1]) ##

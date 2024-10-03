@@ -357,6 +357,9 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
                verbose = verbose)
 }
 
+.message$cacheIdNotSame <- function(cacheId)
+  paste0("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId)
+
 .message$SavingToCache <- function(isBig, userTags, functionName, cacheId, otsObjSize, osMess) {
   if (missing(otsObjSize))
     otsObjSize <- objectSizeGetFromUserTags(userTags)

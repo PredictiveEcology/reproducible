@@ -636,37 +636,43 @@ Cache <-
         add = TRUE
       )
 
-      if (!is.null(cacheId)) {
-        if  (identical(cacheId, "previous")) {
-          sc <- showCache(fun = .functionName, verbose = -2)
-          if (NROW(sc)) {
-            messageCache("cacheId is 'previous' meaning it will recover the most recent ",
-                         "cache item (accessed) that matches on .functionName: ",
-                         .messageFunctionFn(.functionName), "\nPlease ensure ",
-                         "the function name is precise enough for this behaviour", verbose = verbose)
-            outputHashNew <- data.table::setorderv(sc[tagKey == "accessed"], "tagValue", order = -1L)
-            outputHash <- outputHashNew$cacheId[1]
-            inRepos$isInRepo <- outputHashNew[1, ]
-            inRepos$fullCacheTableForObj <- showCacheFast(cacheId = outputHash)
-          }
-        } else {
-          outputHashManual <- cacheId
-          if (identical(outputHashManual, outputHash)) {
-            messageCache("cacheId is same as calculated hash",
-                         verbose = verbose
-            )
-          } else {
-            messageCache("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId,
-                         verbose = verbose
-            )
-            sc <- showCacheFast(cacheId = outputHashManual)
-            if (NROW(sc))
-              inRepos$isInRepo <- sc[1,]
-          }
-          outputHash <- outputHashManual
-        }
-
+      # If user passes cacheId, including cacheId = "previous"
+      sc <- cacheIdCheckInCache(cacheId, .functionName, verbose)
+      if (!is.null(sc)) {
+        inRepos$fullCacheTableForObj <- sc
+        inRepos$isInRepo <- sc[1, ]
+        outputHash <- sc[["cacheId"]][1]
       }
+
+      # if (!is.null(cacheId)) {
+      #   if  (identical(cacheId, "previous")) {
+      #     sc <- showCache(fun = .functionName, verbose = -2)
+      #     if (NROW(sc)) {
+      #       messageCache("cacheId is 'previous' meaning it will recover the most recent ",
+      #                    "cache item (accessed) that matches on .functionName: ",
+      #                    .messageFunctionFn(.functionName), "\nPlease ensure ",
+      #                    "the function name is precise enough for this behaviour", verbose = verbose)
+      #       outputHashNew <- data.table::setorderv(sc[tagKey == "accessed"], "tagValue", order = -1L)
+      #       outputHash <- outputHashNew$cacheId[1]
+      #       inRepos$isInRepo <- outputHashNew[1, ]
+      #       inRepos$fullCacheTableForObj <- showCacheFast(cacheId = outputHash)
+      #     }
+      #   } else {
+      #     outputHashManual <- cacheId
+      #     if (identical(outputHashManual, outputHash)) {
+      #       messageCache("cacheId is same as calculated hash",
+      #                    verbose = verbose
+      #       )
+      #     } else {
+      #       messageCache(.message$cacheIdNotSame(cacheId), verbose = verbose)
+      #       sc <- showCacheFast(cacheId = outputHashManual)
+      #       if (NROW(sc))
+      #         inRepos$isInRepo <- sc[1,]
+      #     }
+      #     outputHash <- outputHashManual
+      #   }
+      #
+      # }
 
       isInRepo <- inRepos$isInRepo
       # dbTabNam <- inRepos$dbTabName
@@ -2485,3 +2491,53 @@ objectSizeGetFromUserTags <- function(userTags) {
 
 .objectSizeMinForBig <- 5e6
 
+getFromCacheWithCacheIdPrevious <- function(.functionName, verbose, tagKey, inRepos) {
+  sc <- showCache(fun = .functionName, verbose = -2)
+  if (NROW(sc)) {
+    messageCache("cacheId is 'previous' meaning it will recover the most recent ",
+                 "cache item (accessed) that matches on .functionName: ",
+                 .messageFunctionFn(.functionName), "\nPlease ensure ",
+                 "the function name is precise enough for this behaviour", verbose = verbose)
+    outputHashNew <- data.table::setorderv(sc[tagKey == "accessed"], "tagValue", order = -1L)
+    outputHash <- outputHashNew$cacheId[1]
+    inRepos$isInRepo <- outputHashNew[1, ]
+    inRepos$fullCacheTableForObj <- showCacheFast(cacheId = outputHash)
+  }
+}
+
+cacheIdCheckInCache <- function(cacheId, .functionName, verbose) {
+  sc <- NULL
+  if (!is.null(cacheId)) {
+    if  (identical(cacheId, "previous")) {
+      sc <- showCache(fun = .functionName, verbose = -2)
+      if (NROW(sc)) {
+        messageCache("cacheId is 'previous' meaning it will recover the most recent ",
+                     "cache item (accessed) that matches on .functionName: ",
+                     .messageFunctionFn(.functionName), "\nPlease ensure ",
+                     "the function name is precise enough for this behaviour", verbose = verbose)
+        outputHashNew <- data.table::setorderv(sc[tagKey == "accessed"], "tagValue", order = -1L)
+        outputHash <- outputHashNew$cacheId[1]
+        isInRepo <- outputHashNew[1, ]
+        sc <- showCacheFast(cacheId = outputHash)
+      } else {
+        sc <- NULL
+      }
+    } else {
+      outputHashManual <- cacheId
+      if (identical(outputHashManual, cacheId)) {
+        messageCache("cacheId is same as calculated hash",
+                     verbose = verbose
+        )
+      } else {
+        messageCache(.message$cacheIdNotSame(cacheId), verbose = verbose)
+        sc <- showCacheFast(cacheId = outputHashManual)
+        # if (NROW(sc))
+          # isInRepo <- sc[1,]
+      }
+      # outputHash <- outputHashManual
+    }
+
+    # sc <- inRepos$fullCacheTableForObj
+  }
+  sc
+}

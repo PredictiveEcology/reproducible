@@ -6,6 +6,7 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
                    classOptions = list(),
                    quick = getOption("reproducible.quick", FALSE),
                    verbose = getOption("reproducible.verbose"),
+                   cacheId = NULL,
                    useCache = getOption("reproducible.useCache", TRUE),
                    .callingEnv = parent.frame()) {
 
@@ -40,38 +41,50 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   func_call <- attr(new_call, ".Cache")$func_call         # not evaluated arguments
   func <- as.list(new_call)[[1]]
   args <- as.list(new_call)[-1]
-  combined_args <- attr(new_call, ".Cache")$args_w_defaults         # not evaluated arguments
+  toDigest <- attr(new_call, ".Cache")$args_w_defaults         # not evaluated arguments
 
-  combined_args$.FUN <- attr(new_call, ".Cache")$method # getMethodAll(func_call, .callingEnv)
+  toDigest$.FUN <- attr(new_call, ".Cache")$method # getMethodAll(func_call, .callingEnv)
 
-  # full_call <- match_call_primitive(func, new_call, expand.dots = TRUE)
+  if (!is.null(omitArgs))
+    toDigest[omitArgs] <- NULL
 
   if (is.null(.functionName))
     .functionName <- getFunctionName2(func_call)# as.character(normalized_FUN[[1]])
 
-  # combined_args <- combine_clean_args(FUN, args, .objects, .callingEnv)
+
+
+  if (!is.null(.cacheExtra)) toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
 
   preCacheDigestTime <- Sys.time()
-  detailed_key <- CacheDigest(combined_args,
+  detailed_key <- CacheDigest(toDigest,
                               .functionName = .functionName,
                               .objects = .objects,
                               length = length, algo = algo, quick = quick,
                               classOptions = classOptions,
                               calledFrom = "Cache"
   )
-  postCacheDigestTime <- Sys.time()
-  elapsedTimeCacheDigest <- postCacheDigestTime - preCacheDigestTime
-
+  elapsedTimeCacheDigest <- difftime(Sys.time(), preCacheDigestTime, units = "secs")
   .CacheVerboseFn1(detailed_key$preDigest, .functionName, preCacheDigestTime,
-                   modifiedDots = combined_args, verbose = verbose, verboseLevel = 3)
+                   modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
 
   cache_key <- detailed_key$outputHash
+
+  # If user overrides cacheId
+  if (!is.null(cacheId)) {
+    sc <- cacheIdCheckInCache(cacheId, .functionName, verbose)
+    if (!is.null(sc)) {
+      cacheId <- sc$cacheId[1]
+      if (!identical(cacheId, cache_key))
+        messageCache(.message$cacheIdNotSame(cacheId), verbose = verbose)
+    }
+    detailed_key$outputHash <- cache_key <- cacheId
+  }
 
   # Construct the full file path for the cache
   cachePaths <- getCacheRepos(cachePath, new_call[-1], verbose = verbose)
   cachePath <- cachePaths[[1]]
   cache_file <- CacheStoredFile(cachePath, cache_key)
-  csd <- dirname(cache_file)
+  csd <- CacheStorageDir(cachePath)
 
   if (!any(dir.exists(csd)))
     lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
@@ -99,6 +112,7 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
 
   preFUNTime <- Sys.time()
 
+  # Nested userTags
   if (!exists(".reproEnv2", envir = .pkgEnv)) {
     .pkgEnv$.reproEnv2 <- new.env(parent = asNamespace("reproducible"))
     .pkgEnv$.reproEnv2$userTags <- userTags
@@ -109,13 +123,13 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
     .pkgEnv$.reproEnv2$nestLevel <- .pkgEnv$.reproEnv2$nestLevel + 1
   }
 
+  # evaluate the call
   output <- eval(new_call, envir = .callingEnv)
   if (is.function(output)) { # if is wasn't "captured", then it is just a function, so now use it on the ...
     output <- output(...)
   }
 
-  postFUNTime <- Sys.time()
-  elapsedTimeFUN <- postFUNTime - preFUNTime
+  elapsedTimeFUN <- difftime(Sys.time(), preFUNTime, units = "secs")
 
   metadata <- metadata_define(detailed_key, output, .functionName, userTags,
                               .objects, length, algo, quick, classOptions,
@@ -543,7 +557,7 @@ metadata_define <- function(detailed_key, outputToSave, func_name, userTags,
     userTags,
     list(class = class(outputToSave)[1]),
     list(object.size = format(as.numeric(objSize))),
-    list(accessed = format(Sys.time())),
+    list(accessed = sysTimeForCacheToChar()),
     list(inCloud = isTRUE(useCloud)),
     list(fromDisk = isTRUE(any(nchar(fns) > 0))),
     list(resultHash = resultHash),
@@ -582,3 +596,6 @@ clearCacheOverwrite <- function(cachePath, cache_key, functionName, verbose) {
   clearCache(x = cachePath, cacheId = cache_key, ask = FALSE, conn = NULL, drv = NULL, verbose = verbose - 1)
   .message$overwriting(functionName, type = "function", verbose)
 }
+
+sysTimeForCacheToChar <- function(digits = 5)
+  format(Sys.time(), digits = digits)

@@ -14,8 +14,8 @@ opts <- options(
   warnPartialMatchArgs = TRUE, # This gives false positives for `raster::stack`
   warnPartialMatchAttr = TRUE,
   warnPartialMatchDollar = TRUE,
-  reproducible.cache2 = FALSE,
-  reproducible.useDBI = TRUE
+  reproducible.cache2 = TRUE,
+  reproducible.useDBI = FALSE
 )
 
 if (Sys.info()["nodename"] %in% "W-VIC-A127585") {

@@ -2,66 +2,68 @@
                              startHashTime, modifiedDots, quick,
                              verbose = getOption("reproducible.verbose", 1),
                              verboseLevel = 1) {
-  preDigestUnlist <- .unlistToCharacter(preDigest, 4)
-  endHashTime <- Sys.time()
-  verboseDF <- data.frame(
-    functionName = functionName,
-    component = "Hashing",
-    elapsedTime = as.numeric(difftime(endHashTime, startHashTime, units = "secs")),
-    units = "secs",
-    stringsAsFactors = FALSE
-  )
-
-  hashObjectSize <- unlist(lapply(modifiedDots, function(x) {
-    if (getOption("reproducible.objSize", TRUE)) unname(attr(objSize(x), "objSize")) else NA
-  }))
-
-  lengths <- unlist(lapply(preDigestUnlist, function(x) length(unlist(x))))
-  hashDetails <- data.frame(
-    objectNames = rep(names(preDigestUnlist), lengths),
-    hashElements = names(unlist(preDigestUnlist)),
-    hash = unname(unlist(preDigestUnlist)),
-    stringsAsFactors = FALSE
-  )
-  preDigestUnlistNames <- unlist(lapply(
-    strsplit(names(unlist(preDigestUnlist)), split = "\\."), # nolint
-    function(x) paste0(tail(x, 2), collapse = ".")
-  ))
-  hashObjectSizeNames <- unlist(lapply(
-    strsplit(names(hashObjectSize), split = "\\$"),
-    function(x) paste0(tail(x, 2), collapse = ".")
-  ))
-  hashObjectSizeNames <- gsub("\\.y", replacement = "", hashObjectSizeNames)
-  hashObjectSizeNames <- unlist(lapply(
-    strsplit(hashObjectSizeNames, split = "\\."),
-    function(x) paste0(tail(x, 2), collapse = ".")
-  ))
-  hashDetails$objSize <- NA
-  hashDetails$objSize[preDigestUnlistNames %in% hashObjectSizeNames] <-
-    hashObjectSize[hashObjectSizeNames %in% preDigestUnlistNames]
-
-  if (exists("hashDetails", envir = .reproEnv)) {
-    .reproEnv$hashDetails <- rbind(.reproEnv$hashDetails, hashDetails)
-  } else {
-    .reproEnv$hashDetails <- hashDetails
-    on.exit(
-      {
-        assign("hashDetailsAll", .reproEnv$hashDetails, envir = .reproEnv)
-        messageDF(.reproEnv$hashDetails, colour = "blue", verbose = verbose, verboseLevel = verboseLevel)
-        messageCache("The hashing details are available from .reproEnv$hashDetails",
-          verbose = verbose, verboseLevel = verboseLevel
-        )
-        rm("hashDetails", envir = .reproEnv)
-      },
-      add = TRUE
+  if (verbose >= verboseLevel) {
+    preDigestUnlist <- .unlistToCharacter(preDigest, 4)
+    endHashTime <- Sys.time()
+    verboseDF <- data.frame(
+      functionName = functionName,
+      component = "Hashing",
+      elapsedTime = as.numeric(difftime(endHashTime, startHashTime, units = "secs")),
+      units = "secs",
+      stringsAsFactors = FALSE
     )
-  }
 
-  if (exists("verboseTiming", envir = .reproEnv)) {
-    verboseDF$functionName <- paste0("  ", verboseDF$functionName)
-    .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
-  } else {
-    .reproEnv$verboseTiming <- verboseDF
+    hashObjectSize <- unlist(lapply(modifiedDots, function(x) {
+      if (getOption("reproducible.objSize", TRUE)) unname(attr(objSize(x), "objSize")) else NA
+    }))
+
+    lengths <- unlist(lapply(preDigestUnlist, function(x) length(unlist(x))))
+    hashDetails <- data.frame(
+      objectNames = rep(names(preDigestUnlist), lengths),
+      hashElements = names(unlist(preDigestUnlist)),
+      hash = unname(unlist(preDigestUnlist)),
+      stringsAsFactors = FALSE
+    )
+    preDigestUnlistNames <- unlist(lapply(
+      strsplit(names(unlist(preDigestUnlist)), split = "\\."), # nolint
+      function(x) paste0(tail(x, 2), collapse = ".")
+    ))
+    hashObjectSizeNames <- unlist(lapply(
+      strsplit(names(hashObjectSize), split = "\\$"),
+      function(x) paste0(tail(x, 2), collapse = ".")
+    ))
+    hashObjectSizeNames <- gsub("\\.y", replacement = "", hashObjectSizeNames)
+    hashObjectSizeNames <- unlist(lapply(
+      strsplit(hashObjectSizeNames, split = "\\."),
+      function(x) paste0(tail(x, 2), collapse = ".")
+    ))
+    hashDetails$objSize <- NA
+    hashDetails$objSize[preDigestUnlistNames %in% hashObjectSizeNames] <-
+      hashObjectSize[hashObjectSizeNames %in% preDigestUnlistNames]
+
+    if (exists("hashDetails", envir = .reproEnv, inherits = FALSE)) {
+      .reproEnv$hashDetails <- rbind(.reproEnv$hashDetails, hashDetails)
+    } else {
+      .reproEnv$hashDetails <- hashDetails
+      on.exit(
+        {
+          # assign("hashDetails", .reproEnv$hashDetails, envir = .reproEnv)
+          messageDF(.reproEnv$hashDetails, colour = "blue", verbose = verbose, verboseLevel = verboseLevel)
+          messageCache("The hashing details are available from .reproEnv$hashDetails",
+                       verbose = verbose, verboseLevel = verboseLevel
+          )
+          # rm("hashDetails", envir = .reproEnv)
+        },
+        add = TRUE
+      )
+    }
+
+    if (exists("verboseTiming", envir = .reproEnv, inherits = FALSE)) {
+      verboseDF$functionName <- paste0("  ", verboseDF$functionName)
+      .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+    } else {
+      .reproEnv$verboseTiming <- verboseDF
+    }
   }
 }
 
@@ -144,7 +146,7 @@
       stringsAsFactors = FALSE
     )
 
-    if (exists("verboseTiming", envir = .reproEnv)) {
+    if (exists("verboseTiming", envir = .reproEnv, inherits = FALSE)) {
       .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
     }
   }
