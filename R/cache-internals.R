@@ -47,12 +47,12 @@
       .reproEnv$hashDetails <- hashDetails
       on.exit(
         {
-          # assign("hashDetails", .reproEnv$hashDetails, envir = .reproEnv)
+          assign("hashDetailsAll", .reproEnv$hashDetails, envir = .reproEnv)
           messageDF(.reproEnv$hashDetails, colour = "blue", verbose = verbose, verboseLevel = verboseLevel)
-          messageCache("The hashing details are available from .reproEnv$hashDetails",
+          messageCache("The hashing details are available from .reproEnv$hashDetailsAll",
                        verbose = verbose, verboseLevel = verboseLevel
           )
-          # rm("hashDetails", envir = .reproEnv)
+          rm("hashDetails", envir = .reproEnv)
         },
         add = TRUE
       )

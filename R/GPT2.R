@@ -21,6 +21,7 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
     if (identical(call$FUN[[1]], quote(quote))) {
       call$FUN <- as.list(call$FUN)[[-1]] # unquote it
     }
+  FUNorig <- call$FUN
 
   usesDots <- sum(!nzchar(names(call))) > 1
 
@@ -41,20 +42,24 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   func_call <- attr(new_call, ".Cache")$func_call         # not evaluated arguments
   func <- as.list(new_call)[[1]]
   args <- as.list(new_call)[-1]
-  toDigest <- attr(new_call, ".Cache")$args_w_defaults         # not evaluated arguments
 
-  toDigest$.FUN <- attr(new_call, ".Cache")$method # getMethodAll(func_call, .callingEnv)
-
+  # Compile a list of elements to digest
+  toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
+  toDigest$.FUN <- attr(new_call, ".Cache")$method
+  # Deal with omitArgs by removing elements from the toDigest list of objects to digest
   if (!is.null(omitArgs))
     toDigest[omitArgs] <- NULL
+  # Deal with .cacheExtra by adding it to the list of objects to digest
+  if (!is.null(.cacheExtra))
+    toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
 
+  # Try to identify the .functionName; if can't just use the matched call FUNorig
   if (is.null(.functionName))
     .functionName <- getFunctionName2(func_call)# as.character(normalized_FUN[[1]])
+  if (!nzchar(.functionName))
+    .functionName <- FUNorig
 
-
-
-  if (!is.null(.cacheExtra)) toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
-
+  # Do Digest
   preCacheDigestTime <- Sys.time()
   detailed_key <- CacheDigest(toDigest,
                               .functionName = .functionName,
@@ -64,12 +69,11 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
                               calledFrom = "Cache"
   )
   elapsedTimeCacheDigest <- difftime(Sys.time(), preCacheDigestTime, units = "secs")
-  .CacheVerboseFn1(detailed_key$preDigest, .functionName, preCacheDigestTime,
+  .CacheVerboseFn1(detailed_key$preDigest, .functionName, preCacheDigestTime, quick = quick,
                    modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
-
   cache_key <- detailed_key$outputHash
 
-  # If user overrides cacheId
+  # Override cacheId if user specified with cacheId
   if (!is.null(cacheId)) {
     sc <- cacheIdCheckInCache(cacheId, .functionName, verbose)
     if (!is.null(sc)) {
@@ -80,19 +84,20 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
     detailed_key$outputHash <- cache_key <- cacheId
   }
 
-  # Construct the full file path for the cache
+  # Construct the full file path for the cache directory and possible file
   cachePaths <- getCacheRepos(cachePath, new_call[-1], verbose = verbose)
   cachePath <- cachePaths[[1]]
   cache_file <- CacheStoredFile(cachePath, cache_key)
   csd <- CacheStorageDir(cachePath)
-
   if (!any(dir.exists(csd)))
     lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
 
+  # Check if cache_key is memoised available
   output <- check_and_get_memoised_copy(cache_key, cachePath, .functionName, func, useCache, verbose)
   if (!identical(output, returnNothing))
     return(output)
 
+  # After memoising, move to files; need to set lockfile
   lockFile <- file.path(csd, paste0(cache_key, suffixLockFile()))
   locked <- filelock::lock(lockFile)
   on.exit(
@@ -105,14 +110,13 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
     add = TRUE
   )
 
+  # Check if cache_key is on disk
   output <- check_and_get_cached_copy(cache_key, cachePath, cache_file, .functionName, func,
                                       useCache, verbose = verbose)
   if (!identical(output, returnNothing))
     return(output)
 
-  preFUNTime <- Sys.time()
-
-  # Nested userTags
+  # Nested userTags -- checks in an object in the reproducible namespace
   if (!exists(".reproEnv2", envir = .pkgEnv)) {
     .pkgEnv$.reproEnv2 <- new.env(parent = asNamespace("reproducible"))
     .pkgEnv$.reproEnv2$userTags <- userTags
@@ -124,12 +128,13 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   }
 
   # evaluate the call
+  preFUNTime <- Sys.time()
   output <- eval(new_call, envir = .callingEnv)
   if (is.function(output)) { # if is wasn't "captured", then it is just a function, so now use it on the ...
     output <- output(...)
   }
-
   elapsedTimeFUN <- difftime(Sys.time(), preFUNTime, units = "secs")
+
 
   metadata <- metadata_define(detailed_key, output, .functionName, userTags,
                               .objects, length, algo, quick, classOptions,
@@ -249,7 +254,11 @@ harmonize_call <- function(call, usesDots, isSquiggly, .callingEnv) {
   if (is.call(func) || is.name(func)) {
     fun <- if (is.null(func_full)) func else func_full
     if (is.name(fun)) {
-      fun <- parse(text = fun)
+      infixes <- c("+", "-", "*", "/", "==", "!=", "<", ">", "<=", ">=", "&&", "||")
+      areInfixes <- try(any(fun == infixes), silent = TRUE)
+      if (!any(areInfixes)) {
+        fun <- parse(text = fun)
+      }
     }
     func <- eval(fun, envir = .callingEnv)
   }

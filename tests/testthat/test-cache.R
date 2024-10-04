@@ -1844,6 +1844,39 @@ test_that("cacheId = 'customName'", {
   expect_true(all.equalWONewCache(e, g))
 })
 
+test_that("simple userTags", {
+  testInit()
+  opts <- options(reproducible.cachePath = tmpdir)
+  on.exit(options(opts), add = TRUE)
+  ut1 <- c("b:d", "a", "free")
+  ut2 <- c("b:d", "q", "free2")
+  ut3 <- "a"
+  ut4 <- c("b:d", "rr", "Free2")
+  ut5 <- c("b:d", "ss", "free2")
+  ut6 <- c("b:d", "ttt", "free")
+
+  funs <- list(rnorm, runif, sample, `+`, `+`, rnorm)
+  ab <- Cache(funs[[1]], 2, userTags = ut1)
+  ac <- Cache(runif(2e6), userTags = ut2)
+  ad <- Cache(sample(1), userTags = ut3)
+  a <- sample(1e5)
+  aa <- Cache(a + 1, userTags = ut4)
+  bb <- Cache(a + 2 - 1, userTags = ut5)
+  expect_equivalent(aa, bb)
+
+  bbb <- Cache(rnorm(2), userTags = ut6, cachePath = c(tmpdir, tempdir()))
+  expect_equivalent(ab, bbb)
+  sc <- showCache(userTags = "rnorm") # it was "funs[[1]]" not "rnorm"
+  expect_identical(0L, length(unique(showCache(userTags = "rnorm")$cacheId)))
+  sc1 <- showCache(userTags = "runif")
+  expect_in(vapply(strsplit(ut2, split = ":"), tail, 1, FUN.VALUE = character(1)), sc1$tagValue)
+
+  sc1 <- showCache(userTags = "sample")
+  expect_in(vapply(strsplit(ut3, split = ":"), tail, 1, FUN.VALUE = character(1)), sc1$tagValue)
+
+
+})
+
 # test_that("lightweight tests for code coverage", {
 #   skip_on_cran()
 #   out <- testInit(verbose = TRUE)
@@ -1865,39 +1898,6 @@ test_that("cacheId = 'customName'", {
 #   )
 # })
 
-
-# test_that("simple userTags", {
-#   testInit()
-#   opts <- options(reproducible.cachePath = tmpdir)
-#   on.exit(options(opts), add = TRUE)
-#   ut1 <- c("b:d", "a", "free")
-#   ut2 <- c("b:d", "q", "free2")
-#   ut3 <- "a"
-#   ut4 <- c("b:d", "rr", "Free2")
-#   ut5 <- c("b:d", "ss", "free2")
-#   ut6 <- c("b:d", "ttt", "free")
-#
-#   funs <- list(rnorm, runif, sample, `+`, `+`, rnorm)
-#   ab <- Cache(funs[[1]], 2, userTags = ut1)
-#   ac <- Cache(runif(2e6), userTags = ut2)
-#   ad <- Cache(sample(1), userTags = ut3)
-#   a <- sample(1e5)
-#   aa <- Cache(a + 1, userTags = ut4)
-#   bb <- Cache(a + 2 - 1, userTags = ut5)
-#   expect_equivalent(aa, bb)
-#
-#   bbb <- Cache(rnorm(2), userTags = ut6, cachePath = c(tmpdir, tempdir()))
-#   expect_identical(ab, bbb)
-#   sc <- showCache()
-#   expect_identical(1L, length(unique(showCache(FUN = "rnorm")$cacheId)))
-#   sc1 <- showCache(FUN = "runif")
-#   expect_in(vapply(strsplit(ut2, split = ":"), tail, 1, FUN.VALUE = character(1)), sc1$tagValue)
-#
-#   sc1 <- showCache(FUN = "sample")
-#   expect_in(vapply(strsplit(ut3, split = ":"), tail, 1, FUN.VALUE = character(1)), sc1$tagValue)
-#
-#
-# })
 
 # test_that("test future", {
 #   skip_on_cran()
