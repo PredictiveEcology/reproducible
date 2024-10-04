@@ -958,27 +958,6 @@ test_that("test cc", {
   expect_true(any(grepl("Cache already empty", mess)))
 })
 
-test_that("test pre-creating conn", {
-  if (!useDBI()) skip("Only relevant for DBI backend")
-  testInit("terra", ask = FALSE, tmpFileExt = c(".tif", ".tif"))
-  on.exit({
-    DBI::dbDisconnect(conn)
-  })
-
-  conn <- dbConnectAll(cachePath = tmpdir, conn = NULL)
-  ra <- terra::rast(terra::ext(0, 10, 0, 10), vals = sample(1:100))
-  rb <- terra::rast(terra::ext(0, 10, 0, 10), vals = sample(1:100))
-  r1 <- Cache(.writeRaster, ra, filename = tmpfile[1], overwrite = TRUE, cachePath = tmpCache)
-  r2 <- Cache(.writeRaster, rb,
-              filename = tmpfile[2], overwrite = TRUE, cachePath = tmpdir,
-              conn = conn
-  )
-  expect_true(file.exists(Filenames(r1)))
-  expect_true(file.exists(Filenames(r2)))
-  expect_false(grepl(basename(dirname(Filenames(r1))), "rasters")) # changed behaviour as of reproducible 1.2.0.9020
-  expect_false(grepl(basename(dirname(Filenames(r2))), "rasters")) # changed behaviour as of reproducible 1.2.0.9020
-})
-
 test_that("test .defaultUserTags", {
   testInit()
 
@@ -988,30 +967,6 @@ test_that("test .defaultUserTags", {
   anyNewTags <- any(!actualTags)
   if (isTRUE(anyNewTags)) stop("A new default userTag was added; please update .defaultUserTags")
   expect_false(anyNewTags)
-})
-
-test_that("test failed Cache recovery -- message to delete cacheId", {
-  if (!useDBI()) skip("Not relevant for multipleDBfiles")
-  testInit(opts = list("reproducible.useMemoise" = FALSE))
-
-  b <- Cache(rnorm, 1, cachePath = tmpdir)
-  sc <- showCache(tmpdir)
-  ci <- unique(sc[[.cacheTableHashColName()]])
-  unlink(CacheStoredFile(tmpdir, ci))
-
-
-  rm(b)
-  mess <- capture_messages({
-    warn <- capture_warnings({
-      err <- capture_error({
-        d <- Cache(rnorm, 1, cachePath = tmpdir)
-      })
-    })
-  })
-  expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), mess)) == 1)
-  expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), err)) == 0)
-  expect_true(any(grepl(paste0("[cannot|failed to] open"), paste(warn, err, mess))))
-  expect_true(is.numeric(d))
 })
 
 test_that("test changing reproducible.cacheSaveFormat midstream", {
@@ -1779,6 +1734,22 @@ test_that("multifile cache saving", {
 
 })
 
+test_that("test omitArgs = 'x', #400", {
+  skip_if_not_installed("terra")
+  testInit("terra")
+
+  wkt <- c("MULTIPOLYGON ( ((40 40, 20 45, 45 30, 40 40)),
+((20 35, 10 30, 10 10, 30 5, 45 20, 20 35),(30 20, 20 15, 20 25, 30 20)))",
+           "POLYGON ((0 -5, 10 0, 10 -10, 0 -5))")
+  w <- terra::vect(wkt)
+
+  ## fails - ommitting x arg
+  testthat::expect_no_error(Cache(centroids,
+                                  x = w,
+                                  omitArgs = c("x")))
+
+})
+
 test_that("cacheId = 'previous'", {
   testInit()
   opts <- options(reproducible.cachePath = tmpdir)
@@ -1802,22 +1773,6 @@ test_that("cacheId = 'previous'", {
   expect_true(unlist(attr(d, ".Cache")))
   e <- rnorm(4) |> Cache(.functionName = fnName, cacheId = "previous")
   expect_false(unlist(attr(e, ".Cache")))
-})
-
-test_that("test omitArgs = 'x', #400", {
-  skip_if_not_installed("terra")
-  testInit("terra")
-
-  wkt <- c("MULTIPOLYGON ( ((40 40, 20 45, 45 30, 40 40)),
-((20 35, 10 30, 10 10, 30 5, 45 20, 20 35),(30 20, 20 15, 20 25, 30 20)))",
-           "POLYGON ((0 -5, 10 0, 10 -10, 0 -5))")
-  w <- terra::vect(wkt)
-
-  ## fails - ommitting x arg
-  testthat::expect_no_error(Cache(centroids,
-                                  x = w,
-                                  omitArgs = c("x")))
-
 })
 
 test_that("cacheId = 'customName'", {
@@ -1941,4 +1896,49 @@ test_that("simple userTags", {
 #   }
 #   # }
 # })
+
+test_that("test failed Cache recovery -- message to delete cacheId", {
+  if (!useDBI()) skip("Not relevant for multipleDBfiles")
+  testInit(opts = list("reproducible.useMemoise" = FALSE))
+
+  b <- Cache(rnorm, 1, cachePath = tmpdir)
+  sc <- showCache(tmpdir)
+  ci <- unique(sc[[.cacheTableHashColName()]])
+  unlink(CacheStoredFile(tmpdir, ci))
+
+
+  rm(b)
+  mess <- capture_messages({
+    warn <- capture_warnings({
+      err <- capture_error({
+        d <- Cache(rnorm, 1, cachePath = tmpdir)
+      })
+    })
+  })
+  expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), mess)) == 1)
+  expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), err)) == 0)
+  expect_true(any(grepl(paste0("[cannot|failed to] open"), paste(warn, err, mess))))
+  expect_true(is.numeric(d))
+})
+
+test_that("test pre-creating conn", {
+  if (!useDBI()) skip("Only relevant for DBI backend")
+  testInit("terra", ask = FALSE, tmpFileExt = c(".tif", ".tif"))
+  on.exit({
+    DBI::dbDisconnect(conn)
+  })
+
+  conn <- dbConnectAll(cachePath = tmpdir, conn = NULL)
+  ra <- terra::rast(terra::ext(0, 10, 0, 10), vals = sample(1:100))
+  rb <- terra::rast(terra::ext(0, 10, 0, 10), vals = sample(1:100))
+  r1 <- Cache(.writeRaster, ra, filename = tmpfile[1], overwrite = TRUE, cachePath = tmpCache)
+  r2 <- Cache(.writeRaster, rb,
+              filename = tmpfile[2], overwrite = TRUE, cachePath = tmpdir,
+              conn = conn
+  )
+  expect_true(file.exists(Filenames(r1)))
+  expect_true(file.exists(Filenames(r2)))
+  expect_false(grepl(basename(dirname(Filenames(r1))), "rasters")) # changed behaviour as of reproducible 1.2.0.9020
+  expect_false(grepl(basename(dirname(Filenames(r2))), "rasters")) # changed behaviour as of reproducible 1.2.0.9020
+})
 

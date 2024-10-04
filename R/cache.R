@@ -637,11 +637,16 @@ Cache <-
       )
 
       # If user passes cacheId, including cacheId = "previous"
-      sc <- cacheIdCheckInCache(cacheId, .functionName, verbose)
-      if (!is.null(sc)) {
-        inRepos$fullCacheTableForObj <- sc
-        inRepos$isInRepo <- sc[1, ]
-        outputHash <- sc[["cacheId"]][1]
+      if (!is.null(cacheId)) {
+        sc <- cacheIdCheckInCache(cacheId, calculatedCacheId = outputHash, .functionName, verbose)
+        outputHashPossible <- attr(sc, "cacheId")
+        if (!is.null(outputHashPossible)) outputHash <- outputHashPossible
+        if (NROW(sc) > 0) {
+          # outputHash <- unique(sc$cacheId) # cacheId
+          inRepos$fullCacheTableForObj <- sc
+          inRepos$isInRepo <- sc[1, ]
+          # outputHash <- sc[["cacheId"]][1]
+        }
       }
 
       # if (!is.null(cacheId)) {
@@ -678,7 +683,6 @@ Cache <-
       # dbTabNam <- inRepos$dbTabName
       fullCacheTableForObj <- inRepos$fullCacheTableForObj
       cachePath <- inRepos$cachePath # i.e., if there was > 1, then we now know which one
-
 
       # compare outputHash to existing Cache record
       if (useCloud) {
@@ -1001,7 +1005,7 @@ Cache <-
         #   osMess <- ""
         # }
 
-        m <- .message$SavingToCache(isBig, userTags, fnDetails$functionName, cacheId, otsObjSize, osMess)
+        m <- .message$SavingToCacheTxt(isBig, userTags, fnDetails$functionName, cacheId, otsObjSize, osMess)
 
         outputToSave <- progressBarCode(
           saveToCache(
@@ -1573,10 +1577,6 @@ getFunctionName2 <- function(mc) {
         nams <- sapply(seq_along(FUNcapturedList), function(x) paste0(sample(LETTERS, 14), collapse = ""))
       FUNcapturedArgs <- Map(
         ee = FUNcapturedList, nam = nams, function(ee, nam) {
-          # if (is.call(ee) && length(ee) > 1 && !isDollarSqBrPkgColon(ee)) browser()
-          # if (nam %in% omitArgs) {
-          #   out <- NULL
-          # } else {
 
             out <- try(eval(ee, envir = callingEnv), silent = TRUE)
             if (is(out, "try-error")) {
@@ -2505,7 +2505,7 @@ getFromCacheWithCacheIdPrevious <- function(.functionName, verbose, tagKey, inRe
   }
 }
 
-cacheIdCheckInCache <- function(cacheId, .functionName, verbose) {
+cacheIdCheckInCache <- function(cacheId, calculatedCacheId, .functionName, verbose) {
   sc <- NULL
   if (!is.null(cacheId)) {
     if  (identical(cacheId, "previous")) {
@@ -2517,23 +2517,25 @@ cacheIdCheckInCache <- function(cacheId, .functionName, verbose) {
                      "the function name is precise enough for this behaviour", verbose = verbose)
         outputHashNew <- data.table::setorderv(sc[tagKey == "accessed"], "tagValue", order = -1L)
         outputHash <- outputHashNew$cacheId[1]
-        isInRepo <- outputHashNew[1, ]
-        sc <- showCacheFast(cacheId = outputHash)
+        sc <- sc[cacheId %in% outputHash, ]
+        attr(sc, "cacheId") <- outputHash
+        # sc <- showCacheFast(cacheId = outputHash)
       } else {
         sc <- NULL
       }
     } else {
       outputHashManual <- cacheId
-      if (identical(outputHashManual, cacheId)) {
+      if (identical(outputHashManual, calculatedCacheId)) {
         messageCache("cacheId is same as calculated hash",
                      verbose = verbose
         )
       } else {
         messageCache(.message$cacheIdNotSame(cacheId), verbose = verbose)
-        sc <- showCacheFast(cacheId = outputHashManual)
+        sc <- showCache(userTags = outputHashManual)
         # if (NROW(sc))
           # isInRepo <- sc[1,]
       }
+      attr(sc, "cacheId") <- cacheId
       # outputHash <- outputHashManual
     }
 

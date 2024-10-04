@@ -25,6 +25,7 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
 
   usesDots <- sum(!nzchar(names(call))) > 1
 
+  skipCacheDueToNumeric <- is.numeric(useCache) && isTRUE(useCache <= .pkgEnv$.reproEnv2$nestLevel)
   if (isFALSE(useCache) || useCache == 0)
     return(skipCache(FUN, ..., usesDots = usesDots, .callingEnv = .callingEnv))
 
@@ -41,6 +42,9 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
 
   func_call <- attr(new_call, ".Cache")$func_call         # not evaluated arguments
   func <- as.list(new_call)[[1]]
+  # if (!usesDots)
+  #   FUN <- func
+  # commonArgs <- formalArgs(FUN)
   args <- as.list(new_call)[-1]
 
   # Compile a list of elements to digest
@@ -57,7 +61,7 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   if (is.null(.functionName))
     .functionName <- getFunctionName2(func_call)# as.character(normalized_FUN[[1]])
   if (!nzchar(.functionName))
-    .functionName <- FUNorig
+    .functionName <- format(FUNorig)
 
   # Do Digest
   preCacheDigestTime <- Sys.time()
@@ -75,12 +79,8 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
 
   # Override cacheId if user specified with cacheId
   if (!is.null(cacheId)) {
-    sc <- cacheIdCheckInCache(cacheId, .functionName, verbose)
-    if (!is.null(sc)) {
-      cacheId <- sc$cacheId[1]
-      if (!identical(cacheId, cache_key))
-        messageCache(.message$cacheIdNotSame(cacheId), verbose = verbose)
-    }
+    sc <- cacheIdCheckInCache(cacheId, calculatedCacheId = cache_key, .functionName, verbose)
+    if (!is.null(sc)) cacheId <- sc$cacheId[1]
     detailed_key$outputHash <- cache_key <- cacheId
   }
 
@@ -135,7 +135,6 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   }
   elapsedTimeFUN <- difftime(Sys.time(), preFUNTime, units = "secs")
 
-
   metadata <- metadata_define(detailed_key, output, .functionName, userTags,
                               .objects, length, algo, quick, classOptions,
                               elapsedTimeCacheDigest, elapsedTimeFUN)
@@ -152,7 +151,6 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
     outputToSave <- .wrap(output)
     metadata <- metadata_update(outputToSave, metadata, cache_key) # .wrap may have added tags
 
-    # fs <- saveFilesInCacheFolder(outputToSave, cache_file[1], cachePath, cache_key)
     fs <- saveToCache(cachePath = cachePath, drv = NULL, conn = NULL,
                       obj = outputToSave, verbose = verbose, # cache_file[1],
                       cacheId = cache_key)
@@ -172,7 +170,7 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
     file.create(dbfile[1])
 
   messageCache(
-    .message$SavingToCache(userTags = userTags, otsObjSize = objectSize,
+    .message$SavingToCacheTxt(userTags = userTags, otsObjSize = objectSize,
                            functionName = .functionName,
                            cacheId = cache_key), verbose = verbose - 2)
   saveFilesInCacheFolder(metadata, metadata_file, cachePath = cachePath, cacheId = cache_key)
@@ -585,6 +583,11 @@ metadata_define <- function(detailed_key, outputToSave, func_name, userTags,
 
 
 userTagsListToDT <- function(cache_key, userTagsList) {
+  theChars <- vapply(userTagsList, function(x) is.character(x) | is.logical(x), logical(1))
+  if (any(!theChars)) {
+    for (tc in which(!theChars))
+      userTagsList[[tc]] <- tryCatch(format(userTagsList[[tc]]), error = function(u) as.character())
+  }
   userTagsList <- stack(userTagsList)
   metadataDT(cacheId = cache_key, tagKey = userTagsList$ind, tagValue = userTagsList$values)
 }

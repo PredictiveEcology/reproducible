@@ -26,17 +26,17 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     add = TRUE
   )
 
-  #######################################
+  #
   # local absent, cloud absent
-  #######################################
+  #
   mess1 <- capture_messages({
     a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
   })
   expect_true(any(grepl("Uploading", mess1)))
 
-  #######################################
+  #
   # local present, cloud present
-  #######################################
+  #
   mess2 <- capture_messages({
     a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
   })
@@ -45,9 +45,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   expect_false(all(grepl("uploaded", ignore.case = TRUE, mess2)))
   expect_false(all(grepl("download", mess2)))
 
-  #######################################
+  #
   # local absent, cloud present
-  #######################################
+  #
   # kkkk <<- 1
 
   clearCache(userTags = .robustDigest(1), x = tmpCache, useCloud = FALSE)
@@ -58,9 +58,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   expect_false(any(grepl("Uploaded", mess3)))
   expect_true(any(grepl("Downloading", mess3)))
 
-  #######################################
+  #
   # local present, cloud absent
-  #######################################
+  #
   clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
   a1 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID, cachePath = tmpCache)
   mess4 <- capture_messages({
@@ -71,9 +71,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   expect_true(any(grepl("Uploading", mess4)))
   expect_false(any(grepl("Download", mess4)))
 
-  #######################################
+  #
   # cloudFolderID missing
-  #######################################
+  #
   reproducible::clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
 
   opts <- options("reproducible.cloudFolderID" = NULL)
@@ -99,7 +99,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   expect_false(any(grepl(.message$LoadedCacheResult(), mess6)))
   expect_true(isTRUE(all.equal(length(warn6), 0)))
 
-  ########
+
   try(googledrive::drive_rm(newDir), silent = TRUE) # clear the original one
   cloudFolderID <- getOption("reproducible.cloudFolderID")
   clearCache(x = tmpCache, useCloud = TRUE) # , cloudFolderID = cloudFolderID)
