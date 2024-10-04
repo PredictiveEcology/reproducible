@@ -23,11 +23,30 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
     }
   FUNorig <- call$FUN
 
-  usesDots <- sum(!nzchar(names(call))) > 1
+  usesDots <- sum(!nzchar(names(call))) > 1 || sum(!names(call) %in% .namesCacheFormals) > 2
 
-  skipCacheDueToNumeric <- is.numeric(useCache) && isTRUE(useCache <= .pkgEnv$.reproEnv2$nestLevel)
-  if (isFALSE(useCache) || useCache == 0)
-    return(skipCache(FUN, ..., usesDots = usesDots, .callingEnv = .callingEnv))
+  isNested <- !is.null(.pkgEnv$.reproEnv2$nestLevel)
+  if (isNested) {
+    useCache <- .pkgEnv$.reproEnv2$useCache
+  }
+
+  # Nested userTags -- checks in an object in the reproducible namespace
+  if (!exists(".reproEnv2", envir = .pkgEnv)) {
+    .pkgEnv$.reproEnv2 <- new.env(parent = asNamespace("reproducible"))
+    .pkgEnv$.reproEnv2$userTags <- userTags
+    .pkgEnv$.reproEnv2$nestLevel <- 1
+    .pkgEnv$.reproEnv2$useCache <- useCache
+    on.exit(rm(.reproEnv2, envir = .pkgEnv), add = TRUE)
+  } else {
+    userTags <- .pkgEnv$.reproEnv2$userTags <- c(.pkgEnv$.reproEnv2$userTags, userTags)
+    .pkgEnv$.reproEnv2$nestLevel <- .pkgEnv$.reproEnv2$nestLevel + 1
+  }
+
+  useCacheDueToNumeric <- (is.numeric(useCache) && isTRUE(useCache < .pkgEnv$.reproEnv2$nestLevel))
+
+  if (isFALSE(useCache) || useCache == 0 || isTRUE(useCacheDueToNumeric))
+    return(skipCache(FUN, ..., usesDots = usesDots, useCache = useCache,
+                     functionName = format(call$FUN), verbose = verbose, .callingEnv = .callingEnv))
 
   isSquiggly <- is(call$FUN, "{")
   if (isTRUE(isSquiggly)) {
@@ -42,9 +61,6 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
 
   func_call <- attr(new_call, ".Cache")$func_call         # not evaluated arguments
   func <- as.list(new_call)[[1]]
-  # if (!usesDots)
-  #   FUN <- func
-  # commonArgs <- formalArgs(FUN)
   args <- as.list(new_call)[-1]
 
   # Compile a list of elements to digest
@@ -115,17 +131,6 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
                                       useCache, verbose = verbose)
   if (!identical(output, returnNothing))
     return(output)
-
-  # Nested userTags -- checks in an object in the reproducible namespace
-  if (!exists(".reproEnv2", envir = .pkgEnv)) {
-    .pkgEnv$.reproEnv2 <- new.env(parent = asNamespace("reproducible"))
-    .pkgEnv$.reproEnv2$userTags <- userTags
-    .pkgEnv$.reproEnv2$nestLevel <- 1
-    on.exit(rm(.reproEnv2, envir = .pkgEnv), add = TRUE)
-  } else {
-    userTags <- .pkgEnv$.reproEnv2$userTags <- c(.pkgEnv$.reproEnv2$userTags, userTags)
-    .pkgEnv$.reproEnv2$nestLevel <- .pkgEnv$.reproEnv2$nestLevel + 1
-  }
 
   # evaluate the call
   preFUNTime <- Sys.time()
@@ -278,6 +283,10 @@ harmonize_call <- function(call, usesDots, isSquiggly, .callingEnv) {
   func <- getMethodAll(as.call(c(matched_call[[1]], args)), .callingEnv)
 
   combined_args <- combine_clean_args(func, args, .objects = NULL, .callingEnv)
+
+  # Check for arguments that are in both Cache and the FUN
+  matched_call <- checkOverlappingArgs(call, combined_args, dotsCaptured = args,
+                                                 functionName = "outer", matched_call)
 
   if (is.null(func_call)) func_call <- new_call
   func_call2 <- as.call(c(func_call[[1]], args))
@@ -596,7 +605,9 @@ as.call2 <- function(func, args) {
   as.call(c(as.name(deparse(func)), args))
 }
 
-skipCache <- function(FUN, ..., usesDots, .callingEnv) {
+skipCache <- function(FUN, ..., usesDots, functionName, useCache, verbose, .callingEnv) {
+  .message$useCacheIsFALSE(.pkgEnv$.reproEnv2$nestLevel - 1, # original Cache counted differently; use -1 here
+                           functionName = functionName, useCache = useCache, verbose = verbose)
   if (isTRUE(usesDots)) {
     FUN(...)
   } else {

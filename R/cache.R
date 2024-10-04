@@ -420,13 +420,15 @@ Cache <-
     # originalDots <- fnDetails$originalDots
     skipCacheDueToNumeric <- is.numeric(useCache) && useCache <= (fnDetails$nestLevel)
     if (isFALSE(useCache) || isTRUE(0 == useCache) || skipCacheDueToNumeric) {
-      nestedLev <- max(0, as.numeric(fnDetails$nestLevel)) ## nestedLev >= 0
-      spacing <- paste(collapse = "", rep("  ", nestedLev))
-      messageCache(spacing, "useCache is ", useCache,
-        "; skipping Cache on function ", fnDetails$functionName,
-        if (nestedLev > 0) paste0(" (currently running nested Cache level ", nestedLev + 1, ")"),
-        verbose = verbose
-      )
+      .message$useCacheIsFALSE(nestLevel = fnDetails$nestLevel, functionName = fnDetails$functionName,
+                               useCache, verbose)
+      # nestedLev <- max(0, as.numeric(fnDetails$nestLevel)) ## nestedLev >= 0
+      # spacing <- paste(collapse = "", rep("  ", nestedLev))
+      # messageCache(spacing, "useCache is ", useCache,
+      #   "; skipping Cache on function ", fnDetails$functionName,
+      #   if (nestedLev > 0) paste0(" (currently running nested Cache level ", nestedLev + 1, ")"),
+      #   verbose = verbose
+      # )
       output <- evalTheFun(FUNcaptured, isCapturedFUN, isSquiggly, FUNbackup,
         envir = parent.frame(),
         verbose, ...
@@ -1649,20 +1651,24 @@ getFunctionName2 <- function(mc) {
     forms <- names(FUNcapturedNamesEvaled[-1])
   }
 
-  # Check for args that are passed to both Cache and the FUN -- if any overlap; pass to both
-  possibleOverlap <- names(formals(args(Cache)))
-  possibleOverlap <- intersect(names(CacheMatchedCall), possibleOverlap)
-  actualOverlap <- intersect(names(forms), possibleOverlap)
-  if (length(actualOverlap) && !identical(list(), dotsCaptured)) { # e.g., useCache, verbose; but if not in dots, then OK because were separate already
-    message(
-      "The following arguments are arguments for both Cache and ", fnDetails$functionName, ":\n",
-      paste0(actualOverlap, collapse = ", "),
-      "\n...passing to both. If more control is needed, pass as a call, e.g., ",
-      "Cache(", fnDetails$functionName, "(...))"
-    )
-    overlappingArgsAsList <- as.list(CacheMatchedCall)[actualOverlap]
-    FUNcapturedNamesEvaled <- as.call(append(as.list(FUNcapturedNamesEvaled), overlappingArgsAsList))
-  }
+  browser()
+  FUNcapturedNamesEvaled <- checkOverlappingArgs(CacheMatchedCall, forms, dotsCaptured,
+                                                 functionName = fnDetails$functionName, FUNcapturedNamesEvaled)
+
+  # # Check for args that are passed to both Cache and the FUN -- if any overlap; pass to both
+  # possibleOverlap <- names(formals(args(Cache)))
+  # possibleOverlap <- intersect(names(CacheMatchedCall), possibleOverlap)
+  # actualOverlap <- intersect(names(forms), possibleOverlap)
+  # if (length(actualOverlap) && !identical(list(), dotsCaptured)) { # e.g., useCache, verbose; but if not in dots, then OK because were separate already
+  #   message(
+  #     "The following arguments are arguments for both Cache and ", fnDetails$functionName, ":\n",
+  #     paste0(actualOverlap, collapse = ", "),
+  #     "\n...passing to both. If more control is needed, pass as a call, e.g., ",
+  #     "Cache(", fnDetails$functionName, "(...))"
+  #   )
+  #   overlappingArgsAsList <- as.list(CacheMatchedCall)[actualOverlap]
+  #   FUNcapturedNamesEvaled <- as.call(append(as.list(FUNcapturedNamesEvaled), overlappingArgsAsList))
+  # }
 
   if (!is.null(.functionName)) {
     fnDetails$functionName <- .functionName
@@ -2542,4 +2548,23 @@ cacheIdCheckInCache <- function(cacheId, calculatedCacheId, .functionName, verbo
     # sc <- inRepos$fullCacheTableForObj
   }
   sc
+}
+
+
+checkOverlappingArgs <- function(CacheMatchedCall, forms, dotsCaptured, functionName, FUNcapturedNamesEvaled) {
+  # Check for args that are passed to both Cache and the FUN -- if any overlap; pass to both
+  possibleOverlap <- .namesCacheFormals # names(formals(args(Cache)))
+  possibleOverlap <- intersect(names(CacheMatchedCall), possibleOverlap)
+  actualOverlap <- intersect(names(forms), possibleOverlap)
+  if (length(actualOverlap) && !identical(list(), dotsCaptured)) { # e.g., useCache, verbose; but if not in dots, then OK because were separate already
+    message(
+      "The following arguments are arguments for both Cache and ", functionName, ":\n",
+      paste0(actualOverlap, collapse = ", "),
+      "\n...passing to both. If more control is needed, pass as a call, e.g., ",
+      "Cache(", functionName, "(...))"
+    )
+    overlappingArgsAsList <- as.list(CacheMatchedCall)[actualOverlap]
+    FUNcapturedNamesEvaled <- as.call(append(as.list(FUNcapturedNamesEvaled), overlappingArgsAsList))
+  }
+  FUNcapturedNamesEvaled
 }

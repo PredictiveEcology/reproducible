@@ -357,6 +357,17 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
                verbose = verbose)
 }
 
+
+.message$useCacheIsFALSE <- function(nestLevel, functionName, useCache, verbose) {
+  nestedLev <- max(0, as.numeric(nestLevel)) ## nestedLev >= 0
+  spacing <- paste(collapse = "", rep("  ", nestedLev))
+  messageCache(spacing, "useCache is ", useCache,
+               "; skipping Cache on function ", functionName,
+               if (nestedLev > -1) paste0(" (currently running nested Cache level ", nestedLev + 1, ")"),
+               verbose = verbose
+  )
+}
+
 .message$cacheIdNotSame <- function(cacheId)
   paste0("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId)
 
