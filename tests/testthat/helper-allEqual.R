@@ -119,7 +119,7 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
   withr::local_dir(tmpdir, .local_envir = pf)
   withr::defer({
     try(reproducible::clearCache(cachePath = tmpCache, ask = FALSE, verbose = -1))
-    try(reproducible::clearCache(ask = FALSE, verbose = -1))
+    try(reproducible::clearCache(ask = FALSE, verbose = -1), silent = TRUE)
     try(unlink(tmpCache, recursive = TRUE))
   }, envir = pf)
 

@@ -15,7 +15,7 @@ opts <- options(
   warnPartialMatchAttr = TRUE,
   warnPartialMatchDollar = TRUE,
   reproducible.cache2 = TRUE,
-  reproducible.useDBI = TRUE
+  reproducible.useDBI = FALSE
 )
 
 if (Sys.info()["nodename"] %in% "W-VIC-A127585") {

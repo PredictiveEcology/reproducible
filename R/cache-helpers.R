@@ -348,8 +348,11 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #'
 #' @author Eliot McIntire
 #' @rdname debugCache
-.debugCache <- function(obj, preDigest, ...) {
-  attr(obj, "debugCache1") <- list(...)
+.debugCache <- function(obj, preDigest, ..., fullCall) {
+  if (missing(fullCall))
+    attr(obj, "debugCache1") <- list(...)
+  else
+    attr(obj, "debugCache1") <- fullCall
   attr(obj, "debugCache2") <- preDigest
   obj
 }

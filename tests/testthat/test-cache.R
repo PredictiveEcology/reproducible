@@ -291,7 +291,7 @@ test_that("test file-backed raster caching", {
   )
   try(movedCache(tmpdir, tmpCache), silent = TRUE)
 
-  ######
+  #
   bbS <- c(bb, cc)
   fn2 <- function(stk) {
     stk
