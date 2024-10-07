@@ -128,6 +128,11 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL, indent = NULL,
       }
     }
     outMess <- capture.output(df)
+    if (isTRUE(grepl(" +", outMess[2]))) {
+      numInitialSpaces <- length(gregexpr(" ", strsplit(outMess[2], split = "\\S")[[1]][1])[[1]])
+      # Has the "class" 2nd row
+      outMess[2] <- gsub("^ +", paste(rep(.spaceTmpChar, numInitialSpaces), collapse = ""), outMess[2])
+    }
     if (skipColNames) outMess <- outMess[-1]
     outMess <- .addSlashNToAllButFinalElement(outMess)
     messageColoured(outMess, indent = indent, hangingIndent = FALSE,
@@ -264,6 +269,10 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
     hi <- if (isTRUE(hangingIndent)) paste0(indent, .message$BecauseOfA) else indent
     if (any(grepl("\n", mess))) {
       mess <- gsub("\n *", paste0("\n", hi), mess)
+      hasSpaceChar <- grep(.spaceTmpChar, mess)
+      if (length(hasSpaceChar))
+        mess[hasSpaceChar] <- gsub(.spaceTmpChar, " ", mess[hasSpaceChar])
+
     }
 
     if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
@@ -402,4 +411,12 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
   val <- paste0(rep(" ", nchar), collapse = "")
   .message$PreProcessIndent <- gsub(paste0(val, "$"), "", .message$PreProcessIndent)
   withr::deferred_clear(envir = envir)
+}
+
+.spaceTmpChar <- "spAcE"
+
+.message$noSimilarCacheTxt <- function(functionName) {
+  paste0("There is no similar item in the cachePath ",
+         if (!is.null(functionName))
+           paste0("of '",  .messageFunctionFn(functionName), "' ") else "")
 }

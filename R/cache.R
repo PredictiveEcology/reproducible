@@ -1651,7 +1651,6 @@ getFunctionName2 <- function(mc) {
     forms <- names(FUNcapturedNamesEvaled[-1])
   }
 
-  browser()
   FUNcapturedNamesEvaled <- checkOverlappingArgs(CacheMatchedCall, forms, dotsCaptured,
                                                  functionName = fnDetails$functionName, FUNcapturedNamesEvaled)
 
@@ -1980,9 +1979,10 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     }
   } else {
     if (!identical("devMode", useCache)) {
-      messageCache("There is no similar item in the cachePath ",
-        if (!is.null(functionName)) paste0("of '", functionName, "' ") else "",
-        verbose = verbose)
+      messageCache(.message$noSimilarCacheTxt(functionName), verbose = verbose)
+      #messageCache("There is no similar item in the cachePath ",
+      #  if (!is.null(functionName)) paste0("of '", functionName, "' ") else "",
+      # verbose = verbose)
       if (!is.null(userTagsMess)) {
         messageCache("  ", userTagsMess, "\n", verbose = verbose)
       }
@@ -2568,3 +2568,5 @@ checkOverlappingArgs <- function(CacheMatchedCall, forms, dotsCaptured, function
   }
   FUNcapturedNamesEvaled
 }
+
+

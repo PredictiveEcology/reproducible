@@ -8,19 +8,22 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
                    verbose = getOption("reproducible.verbose"),
                    cacheId = NULL,
                    useCache = getOption("reproducible.useCache", TRUE),
+                   showSimilar = getOption("reproducible.showSimilar", FALSE),
                    .callingEnv = parent.frame()) {
 
   # This makes this act like useDBI = FALSE --> creates correct dbFile
   opts <- options(reproducible.useDBI = FALSE)
   on.exit(options(opts), add = TRUE)
 
+  # Capture call so it can be manipulated
   call <- match.call(expand.dots = TRUE)
 
   # Check if FUN is a call and matches the expected structure
-  if (length(call$FUN) > 1) # just a function
-    if (identical(call$FUN[[1]], quote(quote))) {
-      call$FUN <- as.list(call$FUN)[[-1]] # unquote it
-    }
+  call <- callIsQuote(call)
+  # if (length(call$FUN) > 1) # just a function
+  #   if (identical(call$FUN[[1]], quote(quote))) {
+  #     call$FUN <- as.list(call$FUN)[[-1]] # unquote it
+  #   }
   FUNorig <- call$FUN
 
   usesDots <- sum(!nzchar(names(call))) > 1 || sum(!names(call) %in% .namesCacheFormals) > 2
@@ -32,15 +35,20 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
 
   # Nested userTags -- checks in an object in the reproducible namespace
   if (!exists(".reproEnv2", envir = .pkgEnv)) {
-    .pkgEnv$.reproEnv2 <- new.env(parent = asNamespace("reproducible"))
-    .pkgEnv$.reproEnv2$userTags <- userTags
-    .pkgEnv$.reproEnv2$nestLevel <- 1
-    .pkgEnv$.reproEnv2$useCache <- useCache
     on.exit(rm(.reproEnv2, envir = .pkgEnv), add = TRUE)
-  } else {
-    userTags <- .pkgEnv$.reproEnv2$userTags <- c(.pkgEnv$.reproEnv2$userTags, userTags)
-    .pkgEnv$.reproEnv2$nestLevel <- .pkgEnv$.reproEnv2$nestLevel + 1
   }
+  userTags <- nestedTags(userTags, useCache)
+
+  # if (!exists(".reproEnv2", envir = .pkgEnv)) {
+  #   .pkgEnv$.reproEnv2 <- new.env(parent = asNamespace("reproducible"))
+  #   .pkgEnv$.reproEnv2$userTags <- userTags
+  #   .pkgEnv$.reproEnv2$nestLevel <- 1
+  #   .pkgEnv$.reproEnv2$useCache <- useCache
+  #   on.exit(rm(.reproEnv2, envir = .pkgEnv), add = TRUE)
+  # } else {
+  #   userTags <- .pkgEnv$.reproEnv2$userTags <- c(.pkgEnv$.reproEnv2$userTags, userTags)
+  #   .pkgEnv$.reproEnv2$nestLevel <- .pkgEnv$.reproEnv2$nestLevel + 1
+  # }
 
   useCacheDueToNumeric <- (is.numeric(useCache) && isTRUE(useCache < .pkgEnv$.reproEnv2$nestLevel))
 
@@ -109,51 +117,52 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
     lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
 
   # Check if cache_key is memoised available
-  output <- check_and_get_memoised_copy(cache_key, cachePath, .functionName, func, useCache, verbose)
-  if (!identical(output, returnNothing))
-    return(output)
+  outputFromMemoise <- check_and_get_memoised_copy(cache_key, cachePath, .functionName, func, useCache, verbose)
+  if (!identical(outputFromMemoise, returnNothing))
+    return(outputFromMemoise)
 
   # After memoising, move to files; need to set lockfile
   lockFile <- file.path(csd, paste0(cache_key, suffixLockFile()))
   locked <- filelock::lock(lockFile)
-  on.exit(
-    {
-      filelock::unlock(locked)
-      if (file.exists(lockFile)) {
-        unlink(lockFile)
-      }
-    },
-    add = TRUE
-  )
+  on.exit(releaseLockFile(locked), add = TRUE)
 
   # Check if cache_key is on disk
-  output <- check_and_get_cached_copy(cache_key, cachePath, cache_file, .functionName, func,
+  outputFromDisk <- check_and_get_cached_copy(cache_key, cachePath, cache_file, .functionName, func,
                                       useCache, verbose = verbose)
-  if (!identical(output, returnNothing))
-    return(output)
+
+  # Add .functionName to .pkgEnv userTags
+  appendNestedTags(otherFunction = .functionName)
+
+  if (!identical(outputFromDisk, returnNothing))
+    return(outputFromDisk)
+
+  metadataPre <- metadata_define_preEval(detailed_key, .functionName, userTags,
+                          .objects, length, algo, quick, classOptions,
+                          elapsedTimeCacheDigest)
+  if (isTRUE(showSimilar)) showSimilar(cachePath, metadataPre, .functionName, verbose)
 
   # evaluate the call
   preFUNTime <- Sys.time()
-  output <- eval(new_call, envir = .callingEnv)
-  if (is.function(output)) { # if is wasn't "captured", then it is just a function, so now use it on the ...
-    output <- output(...)
+  outputFromEvaluate <- eval(new_call, envir = .callingEnv)
+  if (is.function(outputFromEvaluate)) { # if is wasn't "captured", then it is just a function, so now use it on the ...
+    outputFromEvaluate <- outputFromEvaluate(...)
   }
   elapsedTimeFUN <- difftime(Sys.time(), preFUNTime, units = "secs")
 
-  metadata <- metadata_define(detailed_key, output, .functionName, userTags,
-                              .objects, length, algo, quick, classOptions,
-                              elapsedTimeCacheDigest, elapsedTimeFUN)
+  metadata <- metadata_define_postEval(metadataPre, cache_key, outputFromEvaluate,
+                                       .objects, length, algo, quick, classOptions,
+                                       elapsedTimeFUN)
   objectSize <- attr(metadata, "tags")$objectSize
 
   cacheIdIdentical <- cache_Id_Identical(metadata, cachePaths, cache_key)
-  # Save the output to the cache
+  # Save the outputFromEvaluate to the cache
 
   # Can't save NULL with attributes
-  if (is.null(output)) output <- "NULL"
+  if (is.null(outputFromEvaluate)) outputFromEvaluate <- "NULL"
 
   if (is.null(cacheIdIdentical)) {
-    output <- addCacheAttr(output, .CacheIsNew = TRUE, outputHash = cache_key, func)
-    outputToSave <- .wrap(output)
+    outputFromEvaluate <- addCacheAttr(outputFromEvaluate, .CacheIsNew = TRUE, outputHash = cache_key, func)
+    outputToSave <- .wrap(outputFromEvaluate)
     metadata <- metadata_update(outputToSave, metadata, cache_key) # .wrap may have added tags
 
     fs <- saveToCache(cachePath = cachePath, drv = NULL, conn = NULL,
@@ -164,9 +173,9 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
     .message$FileLinkUsed(ftL = cacheIdIdentical, fts = cache_file, verbose)
   }
 
-  # Memoize the output by saving it in RAM
+  # Memoize the outputFromEvaluate by saving it in RAM
   if (getOption("reproducible.useMemoise"))
-    assign(cache_key, output, envir = memoiseEnv(cachePath))
+    assign(cache_key, outputFromEvaluate, envir = memoiseEnv(cachePath))
 
   metadata_file <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key)
 
@@ -181,9 +190,10 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   saveFilesInCacheFolder(metadata, metadata_file, cachePath = cachePath, cacheId = cache_key)
   .message$Saved(cachePath, cache_key, functionName = .functionName, verbose)
 
-  # messageColoured("Computed result for: ", cache_key, verbose = verbose)
-  if (identical(output, "NULL")) output <- NULL
-  return(output)
+  # messageCache("Computed result for: ", cache_key, verbose = verbose)
+  if (identical(outputFromEvaluate, "NULL")) outputFromEvaluate <- NULL
+
+  return(outputFromEvaluate)
 
 }
 
@@ -360,6 +370,7 @@ check_and_get_cached_copy <- function(cache_key, cachePath, cache_file, function
       if (!is.null(output))
         output <- addCacheAttr(output, .CacheIsNew = FALSE, outputHash = cache_key, func)
 
+      .addTagsRepoAccessedTime(cache_key, cachePath = cachePath)
       attr(output, ".Cache")$newCache <- FALSE
       return(output)
     }
@@ -418,7 +429,7 @@ check_and_get_memoised_copy <- function(cache_key, cachePath, functionName, func
 
         if (!is.null(output))
           output <- addCacheAttr(output, .CacheIsNew = FALSE, outputHash = cache_key, func)
-
+        .addTagsRepoAccessedTime(cache_key, cachePath = cachePath)
         return(output)
       }
     }
@@ -540,9 +551,58 @@ cache_Id_Identical <- function(metadata, cachePaths, cache_key) {
   linkToCacheId
 }
 
-metadata_define <- function(detailed_key, outputToSave, func_name, userTags,
+metadata_define_preEval <- function(detailed_key, func_name, userTags,
                             .objects, length, algo, quick, classOptions,
-                            elapsedTimeCacheDigest, elapsedTimeFUN) {
+                            elapsedTimeCacheDigest) {
+
+  # objSize <- if (getOption("reproducible.objSize", TRUE)) sum(objSize(outputToSave)) else NA
+  #
+  # resultHash <- ""
+  # if (isTRUE(objSize > .objectSizeMinForBig)) {
+  #   resultHash <- CacheDigest(outputToSave,
+  #                             .objects = .objects,
+  #                             length = length, algo = algo, quick = quick,
+  #                             classOptions = classOptions, calledFrom = "Cache"
+  #   )$outputHash
+  # }
+  # fns <- Filenames(outputToSave)
+
+  useCloud <- FALSE
+
+  df <- unlist(
+    .unlistToCharacter(unname(detailed_key[-1]), getOption("reproducible.showSimilarDepth", 3))
+  )
+  tagKey <- paste0(names(df), ":", as.character(df))
+  if (length(userTags)) {
+    ut <- strsplit(userTags, split = ":")
+    ll <- lapply(ut, tail, 1)
+    names(ll) <- lapply(ut, head, 1)
+    userTags <- ll
+  }
+  userTagsList <- c(
+    list(FUN = func_name),
+    userTags,
+    # list(class = class(outputToSave)[1]),
+    # list(object.size = format(as.numeric(objSize))),
+    list(accessed = sysTimeForCacheToChar()),
+    list(inCloud = isTRUE(useCloud)),
+    # list(fromDisk = isTRUE(any(nchar(fns) > 0))),
+    # list(resultHash = resultHash),
+    list(elapsedTimeDigest = format(elapsedTimeCacheDigest, units = "secs")),
+    # list(elapsedTimeFirstRun = format(elapsedTimeFUN, units = "secs")),
+    list(preDigest = tagKey)
+  )
+  names(userTagsList)[1] <- "function"
+
+  cache_key <- detailed_key$outputHash
+  metadata <- userTagsListToDT(cache_key, userTagsList)
+  # attr(metadata, "tags")$objectSize <- objSize
+  return(metadata)
+}
+
+metadata_define_postEval <- function(metadata, cacheId, outputToSave,
+                                     .objects, length, algo, quick, classOptions,
+                                     elapsedTimeFUN) {
 
   objSize <- if (getOption("reproducible.objSize", TRUE)) sum(objSize(outputToSave)) else NA
 
@@ -554,42 +614,26 @@ metadata_define <- function(detailed_key, outputToSave, func_name, userTags,
                               classOptions = classOptions, calledFrom = "Cache"
     )$outputHash
   }
-
-  useCloud <- FALSE
-
-  df <- unlist(
-    .unlistToCharacter(unname(detailed_key[-1]), getOption("reproducible.showSimilarDepth", 3))
-  )
-  tagKey <- paste0(names(df), ":", as.character(df))
   fns <- Filenames(outputToSave)
-  if (length(userTags)) {
-    ut <- strsplit(userTags, split = ":")
-    ll <- lapply(ut, tail, 1)
-    names(ll) <- lapply(ut, head, 1)
-    userTags <- ll
-  }
   userTagsList <- c(
-    list(FUN = func_name),
-    userTags,
+    # list(FUN = func_name),
+    # userTags,
     list(class = class(outputToSave)[1]),
     list(object.size = format(as.numeric(objSize))),
-    list(accessed = sysTimeForCacheToChar()),
-    list(inCloud = isTRUE(useCloud)),
+    # list(accessed = sysTimeForCacheToChar()),
+    # list(inCloud = isTRUE(useCloud)),
     list(fromDisk = isTRUE(any(nchar(fns) > 0))),
     list(resultHash = resultHash),
-    list(elapsedTimeDigest = format(elapsedTimeCacheDigest, units = "secs")),
-    list(elapsedTimeFirstRun = format(elapsedTimeFUN, units = "secs")),
-    list(preDigest = tagKey)
+    # list(elapsedTimeDigest = format(elapsedTimeCacheDigest, units = "secs")),
+    list(elapsedTimeFirstRun = format(elapsedTimeFUN, units = "secs"))
+    # list(preDigest = tagKey)
   )
-  names(userTagsList)[1] <- "function"
-
-
-  cache_key <- detailed_key$outputHash
-  metadata <- userTagsListToDT(cache_key, userTagsList)
+  cache_key <- cacheId
+  metadataNew <- userTagsListToDT(cache_key, userTagsList)
+  metadata <- rbindlist(list(metadata, metadataNew))
   attr(metadata, "tags")$objectSize <- objSize
-  return(metadata)
+  metadata
 }
-
 
 userTagsListToDT <- function(cache_key, userTagsList) {
   theChars <- vapply(userTagsList, function(x) is.character(x) | is.logical(x), logical(1))
@@ -622,3 +666,76 @@ clearCacheOverwrite <- function(cachePath, cache_key, functionName, verbose) {
 
 sysTimeForCacheToChar <- function(digits = 5)
   format(Sys.time(), digits = digits)
+
+
+nestedTags <- function(userTags, useCache) {
+  if (!exists(".reproEnv2", envir = .pkgEnv)) {
+    .pkgEnv$.reproEnv2 <- new.env(parent = asNamespace("reproducible"))
+    .pkgEnv$.reproEnv2$userTags <- userTags
+    .pkgEnv$.reproEnv2$nestLevel <- 1
+    .pkgEnv$.reproEnv2$useCache <- useCache
+  } else {
+    userTags <- .pkgEnv$.reproEnv2$userTags <- c(.pkgEnv$.reproEnv2$userTags, userTags)
+    .pkgEnv$.reproEnv2$nestLevel <- .pkgEnv$.reproEnv2$nestLevel + 1
+  }
+  userTags
+}
+
+appendNestedTags <- function(...) {
+  nams <- ...names()
+  vals <- list(...)
+  tags <- paste0(nams, ":", as.character(vals))
+  .pkgEnv$.reproEnv2$userTags <- c(.pkgEnv$.reproEnv2$userTags, tags)
+  return(invisible(NULL))
+}
+
+.addTagsRepoAccessedTime <- function(cache_key, cachePath = cachePath) {
+  .addTagsRepo(cacheId = cache_key, tagKey = "accessed", tagValue = sysTimeForCacheToChar(),
+               , cachePath = cachePath)
+}
+
+callIsQuote <- function(call) {
+  if (length(call$FUN) > 1) # just a function
+    if (identical(call$FUN[[1]], quote(quote))) {
+      call$FUN <- as.list(call$FUN)[[-1]] # unquote it
+    }
+  call
+}
+
+releaseLockFile <- function(locked) {
+  lockFile <- locked[[2]]
+  filelock::unlock(locked)
+  if (file.exists(lockFile)) {
+    unlink(lockFile)
+  }
+}
+
+showSimilar <- function(cachePath, metadataPre, .functionName, verbose) {
+  sc <- showCache(cachePath, Function = .functionName, verbose = verbose - 2)
+  if (NROW(sc)) {
+    sc <- sc[tagKey %in% c(metadataPre$tagKey)][grep(x = tagKey, "elapsedTime|accessed", invert = TRUE)]
+    similar <- sc[tagKey %in% c(metadataPre$tagKey)][!metadataPre, on = c("tagKey", "tagValue")]
+    if (NROW(similar)) {
+      sim <- similar[, .N, by = "cacheId"][similar, on = "cacheId"] |> setorderv(c("N", "createdDate"))
+      messageCache("There are ", NROW(unique(similar$cacheId)),
+                   " similar calls (same fn: ", .messageFunctionFn(.functionName), ") in the Cache repository.",
+                   verbose = verbose)
+      sim <- split(sim, by = "N") # take first element in split list
+      sim <- sim[[1]]
+      messageCache("With fewest differences (", sim$N[[1]], "), there are ",
+                   NROW(unique(sim$cacheId)),
+                   " similar calls in the Cache repository.", verbose = verbose)
+      twoCols <- strsplit(sim[["tagValue"]], ":")
+      set(sim, NULL, c("N", "tagKey", "tagValue"), NULL)
+      args <- vapply(twoCols, function(x) x[[1]], FUN.VALUE = character(1))
+      vals <- vapply(twoCols, function(x) x[[2]], FUN.VALUE = character(1))
+      set(sim, NULL, "arg", args)
+      set(sim, NULL, "value", vals)
+      setcolorder(sim, c("cacheId", "arg", "value"))
+      messageCache("They differ becaues of the following tags (most recent at top):", verbose = verbose)
+      messageDF(sim, verbose = verbose)
+    }
+  } else {
+    messageCache(.message$noSimilarCacheTxt(.functionName), verbose = verbose)
+  }
+}

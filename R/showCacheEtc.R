@@ -472,6 +472,7 @@ setMethod(
 
     dots <- dots[!names(dots) %in% sortedOrRegexp]
     if (length(dots)) {
+      names(dots) <- gsub("^Function$", "function", names(dots)) # in case user uses Function instead of "function"
       Map(nam = names(dots), val = dots, function(nam, val) {
         objsDT <<- objsDT[objsDT[tagKey %in% nam & tagValue %in% val, ..onCol], on = onCol]
       })
@@ -484,7 +485,6 @@ setMethod(
     # }
 
     if (NROW(objsDT) > 0) {
-      # if (useDBI()) {
       if (!afterNA || !beforeNA) {
         objsDT3 <- objsDT[tagKey == "accessed"]
         if (!beforeNA) {
@@ -493,13 +493,9 @@ setMethod(
         if (!afterNA) {
           objsDT3 <- objsDT3[(tagValue >= after)]
         }
-        # objsDT3 <- objsDT3[!duplicated(cacheId)]
-        # browser(expr = exists("zzzz"))
-        # objsDT <- objsDT[cacheId %in% objsDT3$cacheId]
         objsDT <- objsDT[objsDT[[.cacheTableHashColName()]] %in%
           unique(objsDT3[[.cacheTableHashColName()]])] # faster than data.table join
       }
-      # }
       if (length(userTags) > 0) {
         if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
           objsDTs <- list()
