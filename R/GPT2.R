@@ -18,158 +18,81 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
 
   # Capture call so it can be manipulated; strip `quote`
   call <- match.call(expand.dots = TRUE)
-  call <- callIsQuote(call) # stip `quote`
-  FUNorig <- call$FUN
-  usesDots <- sum(!nzchar(names(call))) > 1 || sum(!names(call) %in% .namesCacheFormals) > 2
+  callDetails <- getCallDetailsStart(call)
 
-  # Check if this is a nested Cache call
+  # Check if this is a nested Cache call; this must be before skipCache because useCache may be numeric
   isNested <- !is.null(.pkgEnv$.reproEnv2$nestLevel)
   if (isNested)
     useCache <- .pkgEnv$.reproEnv2$useCache
-  # Nested userTags -- checks in an object in the reproducible namespace
-  if (!exists(".reproEnv2", envir = .pkgEnv)) {
+  if (!exists(".reproEnv2", envir = .pkgEnv))
     on.exit(rm(.reproEnv2, envir = .pkgEnv), add = TRUE)
-  }
   userTags <- nestedTags(userTags, useCache) # get nested userTags
 
   # Skip Cache if user passes useCache = FALSE or 0 or nesting level is deeper than useCache
   useCacheDueToNumeric <- (is.numeric(useCache) && isTRUE(useCache < .pkgEnv$.reproEnv2$nestLevel))
   if (isFALSE(useCache) || useCache == 0 || isTRUE(useCacheDueToNumeric))
-    return(skipCache(FUN, ..., usesDots = usesDots, useCache = useCache,
-                     functionName = format(FUNorig), verbose = verbose, .callingEnv = .callingEnv))
+    return(skipCache(FUN, ..., usesDots = callDetails$usesDots, useCache = useCache,
+                     functionName = format(callDetails$FUNorig), verbose = verbose, .callingEnv = .callingEnv))
 
-  isSquiggly <- is(FUNorig, "{")
-  if (isTRUE(isSquiggly))
-    call <- convertCallWithSquigglyBraces(call, usesDots)
+  # Do secondary harmonizing of the function now that useCache = FALSE is past
+  callDetails <- getCallDetailsSecond(callDetails, .callingEnv, .functionName)
+  # Add .functionName to .pkgEnv userTags in case this becomes part of a nested Cache
+  appendNestedTags(otherFunction = callDetails$.functionName)
 
-  new_call <- convertCallToCommonFormat(call, usesDots, isSquiggly, .callingEnv) # evaluated arguments
-
-  func_call <- attr(new_call, ".Cache")$func_call         # not evaluated arguments
-  func <- as.list(new_call)[[1]]
-  args <- as.list(new_call)[-1]
-
-  # Compile a list of elements to digest
-  toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
-  toDigest$.FUN <- attr(new_call, ".Cache")$method
-  # Deal with omitArgs by removing elements from the toDigest list of objects to digest
-  if (!is.null(omitArgs))
-    toDigest[omitArgs] <- NULL
-  # Deal with .cacheExtra by adding it to the list of objects to digest
-  if (!is.null(.cacheExtra))
-    toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
-
-  # Try to identify the .functionName; if can't just use the matched call FUNorig
-  if (is.null(.functionName))
-    .functionName <- getFunctionName2(func_call)# as.character(normalized_FUN[[1]])
-  if (!nzchar(.functionName))
-    .functionName <- format(FUNorig)
-
-  # Do Digest
+  # do the Digest
   preCacheDigestTime <- Sys.time()
-  detailed_key <- CacheDigest(toDigest,
-                              .functionName = .functionName,
-                              .objects = .objects,
-                              length = length, algo = algo, quick = quick,
-                              classOptions = classOptions,
-                              calledFrom = "Cache"
-  )
+  keyFull <- doDigest(callDetails$new_call, omitArgs, .cacheExtra, callDetails$.functionName, .objects,
+                           length, algo, quick, classOptions, preCacheDigestTime, verbose)
   elapsedTimeCacheDigest <- difftime(Sys.time(), preCacheDigestTime, units = "secs")
-  .CacheVerboseFn1(detailed_key$preDigest, .functionName, preCacheDigestTime, quick = quick,
-                   modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
-  cache_key <- detailed_key$outputHash
 
   # If debugCache is "quick", short circuit after Digest
-  if (isTRUE(!is.na(pmatch(debugCache, "quick")))) {
-    return(list(hash = detailed_key$preDigest, content = func_call))
-  }
+  if (isTRUE(!is.na(pmatch(debugCache, "quick"))))
+    return(list(hash = keyFull$preDigest, content = callDetails$func_call))
 
-  # Override cacheId if user has specified with cacheId
-  if (!is.null(cacheId)) {
-    sc <- cacheIdCheckInCache(cacheId, calculatedCacheId = cache_key, .functionName, verbose)
-    if (!is.null(sc)) cacheId <- sc$cacheId[1]
-    detailed_key$outputHash <- cache_key <- cacheId
-  }
+  # Override keyFull$key if user has specified with cacheId
+  if (!is.null(cacheId))
+    keyFull$key <- cacheIdOverride(cacheId, keyFull$key, callDetails$.functionName, verbose)
 
   # Construct the full file path for the cache directory and possible file
-  cachePaths <- getCacheRepos(cachePath, new_call[-1], verbose = verbose)
+  cachePaths <- getCacheRepos(cachePath, callDetails$new_call[-1], verbose = verbose)
   cachePath <- cachePaths[[1]]
 
-  # Check if cache_key is memoised available
-  outputFromMemoise <- check_and_get_memoised_copy(cache_key, cachePath, .functionName, func, useCache, verbose)
+  # Memoise and return if it is there #
+  outputFromMemoise <- check_and_get_memoised_copy(keyFull$key, cachePath, callDetails$.functionName,
+                                                   callDetails$func, useCache, verbose)
   if (!identical(outputFromMemoise, .returnNothing))
     return(outputFromMemoise)
 
-  # After memoising, try files; need to check Cache dir and set lockfile
-  csd <- CacheStorageDir(cachePath)
-  if (!any(dir.exists(csd)))
-    lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
-  lockFile <- file.path(csd, paste0(cache_key, suffixLockFile()))
-  locked <- filelock::lock(lockFile)
+  # After memoising fail, try files; need to check Cache dir and set lockfile
+  locked <- lockFile(cachePath, keyFull$key)
   on.exit(releaseLockFile(locked), add = TRUE)
 
-  # Check if cache_key is on disk
-  cache_file <- CacheStoredFile(cachePath, cache_key)
-  outputFromDisk <- check_and_get_cached_copy(cache_key, cachePath, cache_file, .functionName, func,
-                                      useCache, verbose = verbose)
-
-  # Add .functionName to .pkgEnv userTags in case this becomes part of a nested Cache
-  appendNestedTags(otherFunction = .functionName)
-
-  # Return if retrieved from Cache
+  # Check if keyFull$key is on disk and return if it is there
+  cache_file <- CacheStoredFile(cachePath, keyFull$key)
+  outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePath, cache_file, callDetails$.functionName, callDetails$func,
+                                              useCache, verbose = verbose)
   if (!identical(outputFromDisk, .returnNothing))
     return(outputFromDisk)
 
-  metadataPre <- metadata_define_preEval(detailed_key, .functionName, userTags,
-                          .objects, length, algo, quick, classOptions,
-                          elapsedTimeCacheDigest)
-  if (isTRUE(showSimilar)) showSimilar(cachePath, metadataPre, .functionName, userTags, verbose)
+  # Derive some metadata prior to evaluation so "showSimilar" can have something to compare with
+  metadata <- metadata_define_preEval(keyFull, callDetails$.functionName, userTags,
+                                         .objects, length, algo, quick, classOptions,
+                                         elapsedTimeCacheDigest)
+  if (isTRUE(showSimilar)) showSimilar(cachePath, metadata, callDetails$.functionName,
+                                       userTags, verbose)
 
-  # evaluate the call
+  # ## evaluate the call ## #
   preFUNTime <- Sys.time()
-  outputFromEvaluate <- evalTheFun(new_call, !usesDots, isSquiggly, call, envir = .callingEnv,
-                         verbose = getOption("reproducible.verbose"), ...)
-  # outputFromEvaluate <- eval(new_call, envir = .callingEnv)
-  if (is.function(outputFromEvaluate))  # if is wasn't "captured", then it is just a function, so now use it on the ...
-    outputFromEvaluate <- outputFromEvaluate(...)
+  outputFromEvaluate <- evalTheFun(callDetails$new_call, !callDetails$usesDots, call, envir = .callingEnv,
+                                   verbose = getOption("reproducible.verbose"), ...)
   elapsedTimeFUN <- difftime(Sys.time(), preFUNTime, units = "secs")
 
-  # update metadata with other elements including elapsedTime for evaluation
-  metadata <- metadata_define_postEval(metadataPre, cache_key, outputFromEvaluate,
-                                       .objects, length, algo, quick, classOptions,
-                                       elapsedTimeFUN)
-  objectSize <- attr(metadata, "tags")$objectSize
-
-  # Can't save NULL with attributes
-  if (is.null(outputFromEvaluate)) outputFromEvaluate <- "NULL"
-
-  # Save the outputFromEvaluate or linkTo an identical object to the cache
-  cacheIdIdentical <- cache_Id_Identical(metadata, cachePaths, cache_key)
-  if (is.null(cacheIdIdentical)) {
-    outputFromEvaluate <- addCacheAttr(outputFromEvaluate, .CacheIsNew = TRUE, outputHash = cache_key, func)
-    outputToSave <- .wrap(outputFromEvaluate)
-    metadata <- metadata_update(outputToSave, metadata, cache_key) # .wrap may have added tags
-    fs <- saveToCache(cachePath = cachePath, drv = NULL, conn = NULL,
-                      obj = outputToSave, verbose = verbose, # cache_file[1],
-                      cacheId = cache_key)
-  } else {
-    file.link(cacheIdIdentical, cache_file)
-    .message$FileLinkUsed(ftL = cacheIdIdentical, fts = cache_file, verbose)
-  }
-
-  # Memoize the outputFromEvaluate by saving it in RAM
-  if (getOption("reproducible.useMemoise"))
-    assign(cache_key, outputFromEvaluate, envir = memoiseEnv(cachePath))
-
-  # Save metadata file
-  saveMetadataFile(metadata, cache_key, userTags, cachePath, objectSize, .functionName, verbose)
-
-  if (identical(outputFromEvaluate, "NULL")) outputFromEvaluate <- NULL
-
-  if (isTRUE(!is.na(pmatch(debugCache, "complete"))))
-    outputFromEvaluate <- .debugCache(outputFromEvaluate, detailed_key$preDigest, fullCall = func_call)
-
+  # ## Save to Cache; including to Memoise location; including metadata ## #
+  outputFromEvaluate <- doSaveToCache(outputFromEvaluate, metadata, cachePaths, callDetails$func,
+                                      .objects, length, algo, quick, classOptions, elapsedTimeFUN,
+                                      cache_file, userTags, objectSize, callDetails$.functionName, debugCache,
+                                      keyFull, func_call = callDetails$func_call, verbose)
   return(outputFromEvaluate)
-
 }
 
 #' Convert all ways of calling a function into canonical form, including defaults
@@ -271,7 +194,7 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
 
   # Check for arguments that are in both Cache and the FUN
   matched_call <- checkOverlappingArgs(call, combined_args, dotsCaptured = args,
-                                                 functionName = "outer", matched_call)
+                                       functionName = "outer", matched_call)
 
   if (is.null(func_call)) func_call <- new_call
   func_call2 <- as.call(c(func_call[[1]], args))
@@ -386,14 +309,14 @@ metadata_update <- function(outputToSave, metadata, cache_key) {
   metadata
 }
 
-check_and_get_memoised_copy <- function(cache_key, cachePath, functionName, func, useCache, verbose) {
+check_and_get_memoised_copy <- function(cache_key, cachePath, functionName, func,
+                                        useCache, verbose) {
   if (getOption("reproducible.useMemoise")) {
     cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
     if (cache_key_in_memoiseEnv) {
       if (identical(useCache, "overwrite")) {
         clearCacheOverwrite(cachePath, cache_key, functionName, verbose)
       } else {
-
         fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key)
         sc <- showCacheFast(cache_key, cachePath, dtFile = fe)
         .cacheMessageObjectToRetrieve(functionName, sc,
@@ -527,20 +450,8 @@ cache_Id_Identical <- function(metadata, cachePaths, cache_key) {
 }
 
 metadata_define_preEval <- function(detailed_key, func_name, userTags,
-                            .objects, length, algo, quick, classOptions,
-                            elapsedTimeCacheDigest) {
-
-  # objSize <- if (getOption("reproducible.objSize", TRUE)) sum(objSize(outputToSave)) else NA
-  #
-  # resultHash <- ""
-  # if (isTRUE(objSize > .objectSizeMinForBig)) {
-  #   resultHash <- CacheDigest(outputToSave,
-  #                             .objects = .objects,
-  #                             length = length, algo = algo, quick = quick,
-  #                             classOptions = classOptions, calledFrom = "Cache"
-  #   )$outputHash
-  # }
-  # fns <- Filenames(outputToSave)
+                                    .objects, length, algo, quick, classOptions,
+                                    elapsedTimeCacheDigest) {
 
   useCloud <- FALSE
 
@@ -569,7 +480,7 @@ metadata_define_preEval <- function(detailed_key, func_name, userTags,
   )
   names(userTagsList)[1] <- "function"
 
-  cache_key <- detailed_key$outputHash
+  cache_key <- detailed_key$key
   metadata <- userTagsListToDT(cache_key, userTagsList)
   # attr(metadata, "tags")$objectSize <- objSize
   return(metadata)
@@ -685,15 +596,24 @@ releaseLockFile <- function(locked) {
   }
 }
 
-showSimilar <- function(cachePath, metadataPre, .functionName, userTags, verbose) {
+lockFile <- function(cachePath, cache_key) {
+  csd <- CacheStorageDir(cachePath)
+  if (!any(dir.exists(csd)))
+    lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
+  lockFile <- file.path(csd, paste0(cache_key, suffixLockFile()))
+  locked <- filelock::lock(lockFile)
+  locked
+}
+
+showSimilar <- function(cachePath, metadata, .functionName, userTags, verbose) {
   sc <- showCache(cachePath, Function = .functionName, verbose = verbose - 2)
   if (!is.null(userTags)) # userTags are as "strong as" functionName
     sc <- sc[tagValue %in% userTags]
 
   if (NROW(sc)) {
-    sc <- sc[tagKey %in% c(metadataPre$tagKey)][grep(x = tagKey, "elapsedTime|accessed", invert = TRUE)]
+    sc <- sc[tagKey %in% c(metadata$tagKey)][grep(x = tagKey, "elapsedTime|accessed", invert = TRUE)]
 
-    similar <- sc[tagKey %in% c(metadataPre$tagKey)][!metadataPre, on = c("tagKey", "tagValue")]
+    similar <- sc[tagKey %in% c(metadata$tagKey)][!metadata, on = c("tagKey", "tagValue")]
     if (NROW(similar)) {
       sim <- similar[, .N, by = "cacheId"][similar, on = "cacheId"] |> setorderv(c("N", "createdDate"))
       messageCache("There are ", NROW(unique(similar$cacheId)),
@@ -726,7 +646,6 @@ CacheDBFileCheckAndCreate <- function(cachePath) {
   dbfile
 }
 
-
 saveMetadataFile <- function(metadata, cache_key, userTags, cachePath, objectSize, .functionName, verbose) {
   metadata_file <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key)
   dbfile <- CacheDBFileCheckAndCreate(cachePath)
@@ -738,7 +657,6 @@ saveMetadataFile <- function(metadata, cache_key, userTags, cachePath, objectSiz
   .message$Saved(cachePath, cache_key, functionName = .functionName, verbose)
 }
 
-
 convertCallWithSquigglyBraces <- function(call, usesDots) {
   if (length(call) == 2) {
     call <- as.call(c(call[[1]], call[[-1]][[-1]]))
@@ -746,4 +664,106 @@ convertCallWithSquigglyBraces <- function(call, usesDots) {
     call <- as.call(c(call[[1]], FUN = as.list(call[-1])[[1]][[-1]], as.list(call[-1])[-1]))
   }
   call
+}
+
+wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, verbose) {
+  outputToSave <- .wrap(outputFromEvaluate)
+  metadata <- metadata_update(outputToSave, metadata, cache_key) # .wrap may have added tags
+  fs <- saveToCache(cachePath = cachePath, drv = NULL, conn = NULL,
+                    obj = outputToSave, verbose = verbose, # cache_file[1],
+                    cacheId = cache_key)
+  return(metadata)
+}
+
+doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
+                          .objects, length, algo, quick, classOptions, elapsedTimeFUN,
+                          cache_file, userTags, objectSize, .functionName, debugCache,
+                          detailed_key, func_call, verbose) {
+
+  # update metadata with other elements including elapsedTime for evaluation
+  metadata <- metadata_define_postEval(metadata, detailed_key$key, outputFromEvaluate,
+                                       .objects, length, algo, quick, classOptions,
+                                       elapsedTimeFUN)
+  objectSize <- attr(metadata, "tags")$objectSize
+
+  # Can't save NULL with attributes
+  if (is.null(outputFromEvaluate)) outputFromEvaluate <- "NULL"
+
+  cacheIdIdentical <- cache_Id_Identical(metadata, cachePaths, detailed_key$key)
+  if (is.null(cacheIdIdentical)) {
+    outputFromEvaluate <- addCacheAttr(outputFromEvaluate, .CacheIsNew = TRUE, detailed_key$key, func)
+    metadata <- wrapSaveToCache(outputFromEvaluate, metadata, detailed_key$key, cachePaths[[1]], verbose)
+  } else {
+    file.link(cacheIdIdentical, cache_file)
+    .message$FileLinkUsed(ftL = cacheIdIdentical, fts = cache_file, verbose)
+  }
+
+  # Memoize the outputFromEvaluate by saving it in RAM
+  if (getOption("reproducible.useMemoise"))
+    assign(detailed_key$key, outputFromEvaluate, envir = memoiseEnv(cachePaths[[1]]))
+
+  # Save metadata file
+  saveMetadataFile(metadata, detailed_key$key, userTags, cachePaths[[1]], objectSize, .functionName, verbose)
+
+  if (identical(outputFromEvaluate, "NULL")) outputFromEvaluate <- NULL
+
+  if (isTRUE(!is.na(pmatch(debugCache, "complete"))))
+    outputFromEvaluate <- .debugCache(outputFromEvaluate, detailed_key$preDigest, fullCall = func_call)
+
+  outputFromEvaluate
+
+}
+
+
+doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
+                     length, algo, quick, classOptions, preCacheDigestTime, verbose) {
+  # Compile a list of elements to digest
+  toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
+  toDigest$.FUN <- attr(new_call, ".Cache")$method
+  # Deal with omitArgs by removing elements from the toDigest list of objects to digest
+  if (!is.null(omitArgs))
+    toDigest[omitArgs] <- NULL
+  # Deal with .cacheExtra by adding it to the list of objects to digest
+  if (!is.null(.cacheExtra))
+    toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
+  detailed_key <- CacheDigest(toDigest,
+                              .functionName = .functionName,
+                              .objects = .objects,
+                              length = length, algo = algo, quick = quick,
+                              classOptions = classOptions,
+                              calledFrom = "Cache"
+  )
+  .CacheVerboseFn1(detailed_key$preDigest, .functionName, preCacheDigestTime, quick = quick,
+                   modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
+  names(detailed_key)[[1]] <- "key"
+  detailed_key
+}
+
+getCallDetailsStart <- function(call) {
+  call <- callIsQuote(call) # stip `quote`
+  FUNorig <- call$FUN
+  usesDots <- sum(!nzchar(names(call))) > 1 || sum(!names(call) %in% .namesCacheFormals) > 2
+  list(call = call, FUNorig = FUNorig, usesDots = usesDots)
+}
+
+getCallDetailsSecond <- function(callDetails, .callingEnv, .functionName) {
+  isSquiggly <- is(callDetails$FUNorig, "{")
+  if (isTRUE(isSquiggly))
+    callDetails$call <- convertCallWithSquigglyBraces(callDetails$call, callDetails$usesDots)
+  new_call <- convertCallToCommonFormat(callDetails$call, callDetails$usesDots, isSquiggly, .callingEnv) # evaluated arguments
+  func_call <- attr(new_call, ".Cache")$func_call         # not evaluated arguments
+  func <- as.list(new_call)[[1]]
+  # Try to identify the .functionName; if can't just use the matched call callDetails$FUNorig
+  if (is.null(.functionName))
+    .functionName <- getFunctionName2(func_call)# as.character(normalized_FUN[[1]])
+  if (!nzchar(.functionName))
+    .functionName <- format(callDetails$FUNorig)
+  append(callDetails, list(new_call = new_call, func_call = func_call,
+                           func = func, .functionName = .functionName))
+}
+
+cacheIdOverride <- function(cacheId, key, .functionName, verbose) {
+  sc <- cacheIdCheckInCache(cacheId, calculatedCacheId = key, .functionName, verbose)
+  if (!is.null(sc)) cacheId <- sc$cacheId[1]
+  cacheId
 }

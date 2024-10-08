@@ -429,7 +429,7 @@ Cache <-
       #   if (nestedLev > 0) paste0(" (currently running nested Cache level ", nestedLev + 1, ")"),
       #   verbose = verbose
       # )
-      output <- evalTheFun(FUNcaptured, isCapturedFUN, isSquiggly, FUNbackup,
+      output <- evalTheFun(FUNcaptured, isCapturedFUN, FUNbackup,
         envir = parent.frame(),
         verbose, ...
       )
@@ -833,7 +833,7 @@ Cache <-
       if (!exists("output", inherits = FALSE) || is.null(output)) {
         # Run the FUN
         preRunFUNTime <- Sys.time()
-        output <- evalTheFun(FUNcaptured, isCapturedFUN, isSquiggly, FUNbackup,
+        output <- evalTheFun(FUNcaptured, isCapturedFUN, FUNbackup,
                              envir = parent.frame(),
                              verbose, ...
         )
@@ -2261,7 +2261,7 @@ isPkgColonFn <- function(x) {
   identical(x[[1]], quote(`::`))
 }
 
-evalTheFun <- function(FUNcaptured, isCapturedFUN, isSquiggly, matchedCall, envir = parent.frame(),
+evalTheFun <- function(FUNcaptured, isCapturedFUN, matchedCall, envir = parent.frame(),
                        verbose = getOption("reproducible.verbose"), ...) {
   .message$IndentUpdate()
   withCallingHandlers(
