@@ -1,6 +1,7 @@
 test_that("test Cache(useCloud=TRUE, ...)", {
   skip_on_cran()
   skip_on_ci()
+  skip_if(getOption("reproducible.cache2"))
 
   testInit(
     c("googledrive", "terra"),

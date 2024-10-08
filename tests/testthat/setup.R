@@ -15,6 +15,7 @@ opts <- options(
   warnPartialMatchAttr = TRUE,
   warnPartialMatchDollar = TRUE,
   reproducible.cache2 = TRUE,
+  reproducible.useMemoise = TRUE,
   reproducible.useDBI = FALSE
 )
 
@@ -37,6 +38,7 @@ withr::defer(
       print(paste0("getOption('reproducible.rasterRead') = ", getOption("reproducible.rasterRead")))
       print(paste0("getOption('reproducible.runLargeFileTests') = ", getOption("reproducible.runLargeFileTests")))
       print(paste0("getOption('reproducible.useDBI') = ", getOption("reproducible.useDBI")))
+      print(paste0("getOption('reproducible.useMemoise') = ", getOption("reproducible.useMemoise")))
       Sys.setenv(NOT_CRAN = "")
       Sys.setenv(SKIP_GAUTH = "")
     }
@@ -53,4 +55,5 @@ if (wantMoreTests) {
   print(paste0("getOption('reproducible.rasterRead') = ", getOption("reproducible.rasterRead")))
   print(paste0("getOption('reproducible.runLargeFileTests') = ", getOption("reproducible.runLargeFileTests")))
   print(paste0("getOption('reproducible.useDBI') = ", getOption("reproducible.useDBI")))
+  print(paste0("getOption('reproducible.useMemoise') = ", getOption("reproducible.useMemoise")))
 }

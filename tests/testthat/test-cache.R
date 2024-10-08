@@ -984,8 +984,6 @@ test_that("test changing reproducible.cacheSaveFormat midstream", {
   ci <- unique(sc[[.cacheTableHashColName()]])
   opts <- options(reproducible.cacheSaveFormat = "qs")
   on.exit(options(opts), add = TRUE)
-  aaaa <<- 1
-  on.exit(rm(aaaa, envir = .GlobalEnv))
   mess <- capture_messages({
     b <- Cache(rnorm, 1, cachePath = tmpdir)
   })

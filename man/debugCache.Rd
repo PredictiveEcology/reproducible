@@ -4,7 +4,7 @@
 \alias{.debugCache}
 \title{Attach debug info to return for Cache}
 \usage{
-.debugCache(obj, preDigest, ...)
+.debugCache(obj, preDigest, ..., fullCall)
 }
 \arguments{
 \item{obj}{An arbitrary R object.}
