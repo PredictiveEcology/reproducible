@@ -1954,3 +1954,32 @@ test_that("test pre-creating conn", {
   expect_false(grepl(basename(dirname(Filenames(r2))), "rasters")) # changed behaviour as of reproducible 1.2.0.9020
 })
 
+
+test_that("test defunct arguments", {
+  browser()
+  skip_if_not(getOption("reproducible.cache2"))
+  testInit()
+  outr <- function(makeCopy = TRUE)
+    rnorm(1)
+
+  a <- cache2(outr, makeCopy = FALSE)
+  expect_is(a, "numeric")
+  expect_error(cache2(rnorm, 1, makeCopy = FALSE)) # defunct argument
+  expect_error(cache2(rnorm, 1, sideEffects = FALSE)) # defunct argument
+
+  for (d in .defunctCacheArgs) {
+    fn <- eval(parse(text = paste0("function(a, ", d," = TRUE) rnorm(1)")))
+    nn <- list(1, TRUE)
+    names(nn) <- c("a", d)
+    bb <- cache2(do.call, fn, nn)
+    expect_is(bb, "numeric")
+
+    fn <- eval(parse(text = paste0("function(a) rnorm(1)")))
+    bb <- parse(text = paste0("list(cache2, fn, ", d," = TRUE, a = 2)"))
+    fn <- eval(bb)
+    b <- as.call(fn)
+    expect_error(eval(b))
+  }
+
+})
+

@@ -420,3 +420,6 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
          if (!is.null(functionName))
            paste0("of '",  .messageFunctionFn(functionName), "' ") else "")
 }
+
+.message$defunct <- function(arg)
+  paste0(arg, " is a defunct argument; please remove it from this Cache call")

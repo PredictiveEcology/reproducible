@@ -1,15 +1,23 @@
-cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
-                   .functionName = NULL, algo = "xxhash64",
+cache2 <- function(FUN, ..., notOlderThan = NULL,
+                   .objects = NULL, .cacheExtra = NULL, .functionName = NULL,
+                   outputObjects = NULL, # nolint
+                   algo = "xxhash64", # cacheRepo = NULL,
                    cachePath = NULL,
-                   userTags = c(), omitArgs = NULL,
-                   debugCache = character(),
                    length = getOption("reproducible.length", Inf),
-                   classOptions = list(),
+                   # compareRasterFileLength,
+                   userTags = c(),
+                   omitArgs = NULL,
+                   classOptions = list(), debugCache = character(),
+                   # sideEffect = FALSE,
+                   # makeCopy = FALSE,
                    quick = getOption("reproducible.quick", FALSE),
-                   verbose = getOption("reproducible.verbose"),
-                   cacheId = NULL,
+                   verbose = getOption("reproducible.verbose", 1), cacheId = NULL,
                    useCache = getOption("reproducible.useCache", TRUE),
+                   useCloud = FALSE,
+                   cloudFolderID = NULL,
                    showSimilar = getOption("reproducible.showSimilar", FALSE),
+                   drv = getDrv(getOption("reproducible.drv", NULL)),
+                   conn = getOption("reproducible.conn", NULL),
                    .callingEnv = parent.frame()) {
 
   # This makes this act like useDBI = FALSE --> creates correct dbFile
@@ -17,7 +25,8 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   on.exit(options(opts), add = TRUE)
 
   # Capture and match call so it can be manipulated
-  callList <- matchCall2(sys.function(0), sys.call(0), .callingEnv)
+  # FUNcaptured <- substitute(FUN)
+  callList <- matchCall2(sys.function(0), sys.call(0), envir = .callingEnv, FUN = FUN)
 
   # Check if this is a nested Cache call; this must be before skipCache because useCache may be numeric
   if (!exists(".reproEnv2", envir = .pkgEnv))
@@ -38,7 +47,7 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
   # do the Digest
   preCacheDigestTime <- Sys.time()
   keyFull <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
-                           length, algo, quick, classOptions, preCacheDigestTime, verbose)
+                      length, algo, quick, classOptions, preCacheDigestTime, verbose)
   elapsedTimeCacheDigest <- difftime(Sys.time(), preCacheDigestTime, units = "secs")
 
   # If debugCache is "quick", short circuit after Digest
@@ -72,14 +81,14 @@ cache2 <- function(FUN, ..., .objects = NULL, .cacheExtra = NULL,
 
   # Derive some metadata prior to evaluation so "showSimilar" can have something to compare with
   metadata <- metadata_define_preEval(keyFull, callList$.functionName, userTags,
-                                         .objects, length, algo, quick, classOptions,
-                                         elapsedTimeCacheDigest)
-  if (isTRUE(showSimilar)) showSimilar(cachePath, metadata, callList$.functionName,
-                                       userTags, verbose)
+                                      .objects, length, algo, quick, classOptions,
+                                      elapsedTimeCacheDigest)
+  if (isTRUE(showSimilar))
+    showSimilar(cachePath, metadata, callList$.functionName, userTags, verbose)
 
   # ## evaluate the call ## #
   preFUNTime <- Sys.time()
-  outputFromEvaluate <- evalTheFun(callList$new_call, !callList$usesDots,
+  outputFromEvaluate <- evalTheFun(callList$FUNcaptured, !callList$usesDots,
                                    matchedCall = callList$call, envir = .callingEnv,
                                    verbose = getOption("reproducible.verbose"), ...)
   elapsedTimeFUN <- difftime(Sys.time(), preFUNTime, units = "secs")
@@ -171,10 +180,12 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
     func <- eval(fun, envir = .callingEnv)
   }
 
-  argsRm <- names(args) %in% names(.formalsCache)
+  argsRm <- names(args) %in% setdiff(names(.formalsCache), names(formals(func)))
   if (any(argsRm %in% TRUE))
     args <- args[!argsRm %in% TRUE]
   new_call <- as.call(c(func, args))
+  # This matches call on the FUN, not a duplicate of matchCall2
+  defunct(setdiff(names(args), formalArgs(func))) # pull the plug if args are defunct, and not used in FUN
   matched_call <- match_call_primitive(func, new_call, expand.dots = TRUE, envir = .callingEnv)
 
   if (isSquiggly) {
@@ -191,7 +202,7 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
 
   # Check for arguments that are in both Cache and the FUN
   matched_call <- checkOverlappingArgs(call, combined_args, dotsCaptured = args,
-                                       functionName = "outer", matched_call)
+                                       functionName = "outer", matched_call, whichCache = "cache2")
 
   if (is.null(func_call)) func_call <- new_call
   func_call2 <- as.call(c(func_call[[1]], args))
@@ -703,12 +714,15 @@ doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
 #' @return A named list with `call` (the original call, without `quote`),
 #' `FUNorig`, the original value passed by user to `FUN`, and `usesDots` which
 #' is a logical indicating whether the `...` are used.
-matchCall2 <- function(definition, call, envir) {
+matchCall2 <- function(definition, call, envir, envir2 = parent.frame(), FUN) {
+  FUNcaptured <- substitute(FUN, env = envir2)
+  # This matches call for Cache
   call <- match.call(definition, call = call, expand.dots = TRUE, envir = envir)
   # call <- callIsQuote(call) # stip `quote`
   FUNorig <- call$FUN
+
   usesDots <- sum(!nzchar(names(call))) > 1 || sum(!names(call) %in% .namesCacheFormals) > 2
-  list(call = call, FUNorig = FUNorig, usesDots = usesDots)
+  list(call = call, FUNorig = FUNorig, usesDots = usesDots, FUNcaptured = FUNcaptured)
 }
 
 #' Harmonize all forms of call
@@ -769,7 +783,6 @@ useCacheFromNested <- function(useCache) {
   !(isFALSE(useCache) || useCache == 0 || isTRUE(useCacheDueToNumeric))
 }
 
-
 loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache, cachePath, cache_key,
                                   functionName, verbose,
                                   cache_file = NULL, changedSaveFormat, sameCacheID,
@@ -813,3 +826,16 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache, cachePath, cach
     return(output)
   }
 }
+
+defunct <- function(argNames) {
+  # argNames <- call)
+  deps <- .defunctCacheArgs
+  for (d in deps)
+    if (d %in% argNames) {
+      stop(.message$defunct(d), call. = FALSE)
+    }
+}
+
+
+.defunctCacheArgs <- c("sideEffects", "makeCopy", "compareRasterFileLength",
+                       "cacheRepo", "digestPathContent")

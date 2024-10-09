@@ -1059,10 +1059,16 @@ Cache <-
 .formalsCache <- formals(Cache)[-(1:2)]
 
 #' @keywords internal
+.formalscache2 <- formals(cache2)[-(1:2)]
+
+#' @keywords internal
 .formalsCache[c("compareRasterFileLength", "digestPathContent")] <- NULL
 
 #' @keywords internal
 .namesCacheFormals <- names(.formalsCache)[]
+
+#' @keywords internal
+.namescache2Formals <- names(.formalscache2)[]
 
 #' @keywords internal
 .namesPostProcessFormals <- function() {
@@ -2551,9 +2557,10 @@ cacheIdCheckInCache <- function(cacheId, calculatedCacheId, .functionName, verbo
 }
 
 
-checkOverlappingArgs <- function(CacheMatchedCall, forms, dotsCaptured, functionName, FUNcapturedNamesEvaled) {
+checkOverlappingArgs <- function(CacheMatchedCall, forms, dotsCaptured, functionName,
+                                 FUNcapturedNamesEvaled, whichCache = "Cache") {
   # Check for args that are passed to both Cache and the FUN -- if any overlap; pass to both
-  possibleOverlap <- .namesCacheFormals # names(formals(args(Cache)))
+  possibleOverlap <- if (identical(whichCache, "Cache")) .namesCacheFormals else .namescache2Formals # names(formals(args(Cache)))
   possibleOverlap <- intersect(names(CacheMatchedCall), possibleOverlap)
   actualOverlap <- intersect(names(forms), possibleOverlap)
   if (length(actualOverlap) && !identical(list(), dotsCaptured)) { # e.g., useCache, verbose; but if not in dots, then OK because were separate already
