@@ -25,7 +25,6 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
   on.exit(options(opts), add = TRUE)
 
   # Capture and match call so it can be manipulated
-  # FUNcaptured <- substitute(FUN)
   callList <- matchCall2(sys.function(0), sys.call(0), envir = .callingEnv, FUN = FUN)
 
   # Check if this is a nested Cache call; this must be before skipCache because useCache may be numeric
@@ -180,12 +179,12 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
     func <- eval(fun, envir = .callingEnv)
   }
 
+  defunct(setdiff(names(args), formalArgs(func))) # pull the plug if args are defunct, and not used in FUN
   argsRm <- names(args) %in% setdiff(names(.formalsCache), names(formals(func)))
   if (any(argsRm %in% TRUE))
     args <- args[!argsRm %in% TRUE]
   new_call <- as.call(c(func, args))
   # This matches call on the FUN, not a duplicate of matchCall2
-  defunct(setdiff(names(args), formalArgs(func))) # pull the plug if args are defunct, and not used in FUN
   matched_call <- match_call_primitive(func, new_call, expand.dots = TRUE, envir = .callingEnv)
 
   if (isSquiggly) {
@@ -434,21 +433,15 @@ metadata_define_preEval <- function(detailed_key, func_name, userTags,
   userTagsList <- c(
     list(FUN = func_name),
     userTags,
-    # list(class = class(outputToSave)[1]),
-    # list(object.size = format(as.numeric(objSize))),
     list(accessed = sysTimeForCacheToChar()),
     list(inCloud = isTRUE(useCloud)),
-    # list(fromDisk = isTRUE(any(nchar(fns) > 0))),
-    # list(resultHash = resultHash),
     list(elapsedTimeDigest = format(elapsedTimeCacheDigest, units = "secs")),
-    # list(elapsedTimeFirstRun = format(elapsedTimeFUN, units = "secs")),
     list(preDigest = tagKey)
   )
   names(userTagsList)[1] <- "function"
 
   cache_key <- detailed_key$key
   metadata <- userTagsListToDT(cache_key, userTagsList)
-  # attr(metadata, "tags")$objectSize <- objSize
   return(metadata)
 }
 
@@ -468,17 +461,11 @@ metadata_define_postEval <- function(metadata, cacheId, outputToSave,
   }
   fns <- Filenames(outputToSave)
   userTagsList <- c(
-    # list(FUN = func_name),
-    # userTags,
     list(class = class(outputToSave)[1]),
     list(object.size = format(as.numeric(objSize))),
-    # list(accessed = sysTimeForCacheToChar()),
-    # list(inCloud = isTRUE(useCloud)),
     list(fromDisk = isTRUE(any(nchar(fns) > 0))),
     list(resultHash = resultHash),
-    # list(elapsedTimeDigest = format(elapsedTimeCacheDigest, units = "secs")),
     list(elapsedTimeFirstRun = format(elapsedTimeFUN, units = "secs"))
-    # list(preDigest = tagKey)
   )
   cache_key <- cacheId
   metadataNew <- userTagsListToDT(cache_key, userTagsList)

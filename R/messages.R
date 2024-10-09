@@ -174,13 +174,16 @@ messagePreProcess <- function(..., appendLF = TRUE,
 messageCache <- function(..., colour = getOption("reproducible.messageColourCache"),
                          verbose = getOption("reproducible.verbose"), verboseLevel = 1,
                          appendLF = TRUE) {
-  needIndent <- try(any(grepl("\b", unlist(list(...)))))
-  if (is(needIndent, "try-error")) browser()
-  indent <- if (isTRUE(!needIndent)) .message$PreProcessIndent else ""
-  messageColoured(..., indent = indent, # .message$CacheIndent,
-                  colour = colour, appendLF = appendLF,
-                  verboseLevel = verboseLevel, verbose = verbose
-  )
+  if (isTRUE(verboseLevel <= verbose)) { # this is duplicate of messageColoured; but will be faster
+    needIndent <- any(grepl("\b", unlist(list(...))))
+    # needIndent <- try(any(grepl("\b", unlist(list(...)))))
+    # if (is(needIndent, "try-error")) browser()
+    indent <- if (isTRUE(!needIndent)) .message$PreProcessIndent else ""
+    messageColoured(..., indent = indent, # .message$CacheIndent,
+                    colour = colour, appendLF = appendLF,
+                    verboseLevel = verboseLevel, verbose = verbose
+    )
+  }
 }
 
 #' @export
