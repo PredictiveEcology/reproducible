@@ -671,7 +671,7 @@ Cache <-
       #                    verbose = verbose
       #       )
       #     } else {
-      #       messageCache(.message$cacheIdNotSame(cacheId), verbose = verbose)
+      #       messageCache(.message$cacheIdNotSameTxt(cacheId), verbose = verbose)
       #       sc <- showCacheFast(cacheId = outputHashManual)
       #       if (NROW(sc))
       #         inRepos$isInRepo <- sc[1,]
@@ -2542,7 +2542,7 @@ cacheIdCheckInCache <- function(cacheId, calculatedCacheId, .functionName, verbo
                      verbose = verbose
         )
       } else {
-        messageCache(.message$cacheIdNotSame(cacheId), verbose = verbose)
+        messageCache(.message$cacheIdNotSameTxt(cacheId), verbose = verbose)
         sc <- showCache(userTags = outputHashManual)
         # if (NROW(sc))
           # isInRepo <- sc[1,]
