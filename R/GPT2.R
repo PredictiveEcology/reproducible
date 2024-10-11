@@ -21,7 +21,7 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
                    .callingEnv = parent.frame()) {
 
   # This makes this act like useDBI = FALSE --> creates correct dbFile
-  opts <- options(reproducible.useDBI = FALSE)
+  opts <- options(reproducible.useDBI = FALSE, reproducible.cache2 = TRUE)
   on.exit(options(opts), add = TRUE)
 
   # Capture and match call so it can be manipulated
@@ -60,10 +60,15 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
   # Construct the full file path for the cache directory and possible file
   cachePaths <- getCacheRepos(cachePath, callList$new_call[-1], verbose = verbose)
   cachePath <- cachePaths[[1]]
+  CacheDBFileCheckAndCreate(cachePath) # checks that we are using multiDBfile backend
+
+  if (cloudWrite(useCloud))
+    gdriveLs <- retry(quote(driveLs(cloudFolderID, keyFull$key, verbose = verbose)))
 
   # Memoise and return if it is there #
   outputFromMemoise <- check_and_get_memoised_copy(keyFull$key, cachePath, callList$.functionName,
-                                                   callList$func, useCache, verbose)
+                                                   callList$func, useCache, useCloud,
+                                                   cloudFolderID, gdriveLs, verbose)
   if (!identical(outputFromMemoise, .returnNothing))
     return(outputFromMemoise)
 
@@ -74,16 +79,25 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
   # Check if keyFull$key is on disk and return if it is there
   cache_file <- CacheStoredFile(cachePath, keyFull$key)
   outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePath, cache_file, callList$.functionName, callList$func,
-                                              useCache, verbose = verbose)
+                                              useCache, useCloud, cloudFolderID, gdriveLs, verbose = verbose)
   if (!identical(outputFromDisk, .returnNothing))
     return(outputFromDisk)
 
-  # Derive some metadata prior to evaluation so "showSimilar" can have something to compare with
+  if (cloudReadOnly(useCloud)) # now that it is established it isn't in cache locally
+    gdriveLs <- retry(quote(driveLs(cloudFolderID, keyFull$key, verbose = verbose)))
+
+  if (cloudWriteOrRead(useCloud) && keyInGdriveLs(keyFull$key, gdriveLs)) {
+    newFileName <- gdriveLs$name[keyInGdriveLs(keyFull$key, gdriveLs)] # paste0(outputHash,".rda")
+    sc <- cloudDownload(keyFull$key, newFileName, gdriveLs, cachePath, cloudFolderID, verbose = verbose)
+    outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePath, cache_file, callList$.functionName, callList$func,
+                                                useCache, useCloud = FALSE, cloudFolderID, gdriveLs, verbose = verbose)
+    return(outputFromDisk)
+  } # Derive some metadata prior to evaluation so "showSimilar" can have something to compare with
   metadata <- metadata_define_preEval(keyFull, callList$.functionName, userTags,
                                       .objects, length, algo, quick, classOptions,
                                       elapsedTimeCacheDigest)
-  if (isTRUE(showSimilar))
-    showSimilar(cachePath, metadata, callList$.functionName, userTags, verbose)
+  if (isTRUE(showSimilar) || isDevMode(useCache, userTags))
+    showSimilar(cachePath, metadata, callList$.functionName, userTags, useCache, verbose)
 
   # ## evaluate the call ## #
   preFUNTime <- Sys.time()
@@ -96,7 +110,9 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
   outputFromEvaluate <- doSaveToCache(outputFromEvaluate, metadata, cachePaths, callList$func,
                                       .objects, length, algo, quick, classOptions, elapsedTimeFUN,
                                       cache_file, userTags, objectSize, callList$.functionName, debugCache,
-                                      keyFull, func_call = callList$func_call, verbose)
+                                      keyFull,
+                                      useCloud, cloudFolderID, gdriveLs,
+                                      func_call = callList$func_call, verbose)
   return(outputFromEvaluate)
 }
 
@@ -227,7 +243,8 @@ evaluate_args <- function(args, envir) {
   })
 }
 
-check_and_get_cached_copy <- function(cache_key, cachePath, cache_file, functionName, func, useCache, verbose) {
+check_and_get_cached_copy <- function(cache_key, cachePath, cache_file, functionName,
+                                      func, useCache, useCloud, cloudFolderID, gdriveLs, verbose) {
 
   # Check if the result is already cached
   cacheFileExists <- file.exists(cache_file) # could be length >1
@@ -245,7 +262,8 @@ check_and_get_cached_copy <- function(cache_key, cachePath, cache_file, function
   }
 
   if (sum(cacheFileExists)) {
-    output <- loadFromDiskOrMemoise(fromMemoise = FALSE, useCache,
+    output <- loadFromDiskOrMemoise(fromMemoise = FALSE, useCache, useCloud,
+                                    cloudFolderID = cloudFolderID, gdriveLs = gdriveLs,
                                     cachePath = cachePath[which(cacheFileExists)],
                                     cache_key,
                                     functionName,
@@ -291,11 +309,12 @@ metadata_update <- function(outputToSave, metadata, cache_key) {
 }
 
 check_and_get_memoised_copy <- function(cache_key, cachePath, functionName, func,
-                                        useCache, verbose) {
+                                        useCache, useCloud, cloudFolderID, gdriveLs, verbose) {
   if (getOption("reproducible.useMemoise")) {
     cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
     if (cache_key_in_memoiseEnv) {
-      output <- loadFromDiskOrMemoise(fromMemoise = TRUE, useCache = useCache,
+      output <- loadFromDiskOrMemoise(fromMemoise = TRUE, useCache = useCache, useCloud = useCloud,
+                                      cloudFolderID = cloudFolderID, gdriveLs = gdriveLs,
                                       cachePath = cachePath, cache_key = cache_key,
                                       functionName = functionName, verbose = verbose,
                                       func = func)
@@ -427,7 +446,7 @@ metadata_define_preEval <- function(detailed_key, func_name, userTags,
   if (length(userTags)) {
     ut <- strsplit(userTags, split = ":")
     ll <- lapply(ut, tail, 1)
-    names(ll) <- lapply(ut, head, 1)
+    names(ll) <- rep("userTags", length(ll))#lapply(ut, head, 1)
     userTags <- ll
   }
   userTagsList <- c(
@@ -558,25 +577,37 @@ lockFile <- function(cachePath, cache_key) {
   locked
 }
 
-showSimilar <- function(cachePath, metadata, .functionName, userTags, verbose) {
+#' @importFrom data.table setorderv setcolorder
+showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, verbose) {
+  devMode <- isDevMode(useCache, userTags)  # don't use devMode if no userTags
   sc <- showCache(cachePath, Function = .functionName, verbose = verbose - 2)
-  if (!is.null(userTags)) # userTags are as "strong as" functionName
-    sc <- sc[tagValue %in% userTags]
+  if (!is.null(userTags)) { # userTags are as "strong as" functionName
+    if (!devMode) {  # This has to be exact match for devMode i.e., number of and exact tags;
+      #  not exact match for showSimilar
+      sc <- sc[tagValue %in% userTags]
+    } else {
+      scTmp <- sc[tagKey == "userTags"] # [tagValue %in% userTags, c("cacheId")]
+      scTmp2 <- scTmp[, .N, by = "cacheId"][N == length(userTags)] # Has to be exact
+      scTmp <- scTmp[scTmp2, on = "cacheId"]
+      scTmp <- scTmp[tagValue %in% userTags, c("cacheId")]
+      dups <- duplicated(scTmp)
+      sc <- sc[scTmp[which(dups %in% FALSE)], on = "cacheId"]
+    }
+  }
 
   if (NROW(sc)) {
     sc <- sc[tagKey %in% c(metadata$tagKey)][grep(x = tagKey, "elapsedTime|accessed", invert = TRUE)]
-
     similar <- sc[tagKey %in% c(metadata$tagKey)][!metadata, on = c("tagKey", "tagValue")]
     if (NROW(similar)) {
       sim <- similar[, .N, by = "cacheId"][similar, on = "cacheId"] |> setorderv(c("N", "createdDate"))
       messageCache("There are ", NROW(unique(similar$cacheId)),
                    " similar calls (same fn: ", .messageFunctionFn(.functionName), ") in the Cache repository.",
-                   verbose = verbose)
+                   verbose = verbose * !devMode)
       sim <- split(sim, by = "N") # take first element in split list
       sim <- sim[[1]]
       messageCache("With fewest differences (", sim$N[[1]], "), there are ",
                    NROW(unique(sim$cacheId)),
-                   " similar calls in the Cache repository.", verbose = verbose)
+                   " similar calls in the Cache repository.", verbose = verbose * !devMode)
       twoCols <- strsplit(sim[["tagValue"]], ":")
       set(sim, NULL, c("N", "tagKey", "tagValue"), NULL)
       args <- vapply(twoCols, function(x) x[[1]], FUN.VALUE = character(1))
@@ -584,8 +615,18 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, verbose) {
       set(sim, NULL, "arg", args)
       set(sim, NULL, "value", vals)
       setcolorder(sim, c("cacheId", "arg", "value"))
-      messageCache("They differ becaues of the following tags (most recent at top):", verbose = verbose)
+      if (isDevMode(useCache, userTags)) {
+        messageCache("------ devMode -------", verbose = verbose)
+        messageCache("Previous call(s) exist in the cache with identical userTags (",
+                     paste0(userTags, collapse = ", "), ")", verbose = verbose)
+        messageCache("This call to cache will replace entry with cacheId(s): ",
+                     paste0(sim[["cacheId"]], collapse = ", "), verbose = verbose)
+        cacheIdsToClear <- paste0("^", sim[["cacheId"]], "$", collapse = "|")
+        clearCache(cachePath, userTags = cacheIdsToClear, ask = FALSE, conn = NULL, drv = NULL, verbose = verbose - 2)
+      }
+      messageCache("with different elements (most recent at top):", verbose = verbose)
       messageDF(sim, verbose = verbose)
+      messageCache("------ devMode -------", verbose = verbose * devMode)
     }
   } else {
     messageCache(.message$noSimilarCacheTxt(.functionName), verbose = verbose)
@@ -596,6 +637,9 @@ CacheDBFileCheckAndCreate <- function(cachePath) {
   dbfile <- CacheDBFile(cachePath, drv = NULL, conn = NULL)
   if (isTRUE(!file.exists(dbfile[1])))
     file.create(dbfile[1])
+  oldDBFile <- file.path(cachePath, "cache.db")
+  if (isTRUE(file.exists(oldDBFile)))
+    file.remove(oldDBFile)
   dbfile
 }
 
@@ -631,7 +675,9 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
 doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
                           .objects, length, algo, quick, classOptions, elapsedTimeFUN,
                           cache_file, userTags, objectSize, .functionName, debugCache,
-                          detailed_key, func_call, verbose) {
+                          detailed_key, func_call,
+                          useCloud = useCloud, cloudFolderID = cloudFolderID, gdriveLs = gdriveLs,
+                          verbose) {
 
   # update metadata with other elements including elapsedTime for evaluation
   metadata <- metadata_define_postEval(metadata, detailed_key$key, outputFromEvaluate,
@@ -662,6 +708,11 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
 
   if (isTRUE(!is.na(pmatch(debugCache, "complete"))))
     outputFromEvaluate <- .debugCache(outputFromEvaluate, detailed_key$preDigest, fullCall = func_call)
+
+  if (cloudWrite(useCloud)) {
+    cloudUploadFromCache(detailed_key$key %in% filePathSansExt(gdriveLs[["name"]]), detailed_key$key,
+                         cachePaths[[1]], cloudFolderID = NULL, outputFromEvaluate, verbose = verbose)
+  }
 
   outputFromEvaluate
 
@@ -770,7 +821,9 @@ useCacheFromNested <- function(useCache) {
   !(isFALSE(useCache) || useCache == 0 || isTRUE(useCacheDueToNumeric))
 }
 
-loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache, cachePath, cache_key,
+loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
+                                  useCloud, cloudFolderID = NULL, gdriveLs,
+                                  cachePath, cache_key,
                                   functionName, verbose,
                                   cache_file = NULL, changedSaveFormat, sameCacheID,
                                   cache_file_orig, func) {
@@ -796,6 +849,12 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache, cachePath, cach
                             newFile = cache_file_orig, verbose = verbose)
       }
     }
+
+    if (cloudWrite(useCloud)) {
+      cloudUploadFromCache(cache_key %in% filePathSansExt(gdriveLs[["name"]]), cache_key,
+                           cachePath, cloudFolderID = NULL, output, verbose = verbose)
+    }
+
     .cacheMessage(object = output, functionName = functionName, fromMemoise = fromMemoise, verbose = verbose)
 
 
@@ -826,3 +885,28 @@ defunct <- function(argNames) {
 
 .defunctCacheArgs <- c("sideEffects", "makeCopy", "compareRasterFileLength",
                        "cacheRepo", "digestPathContent")
+
+
+isDevMode <- function(useCache, userTags) {
+  isTRUE(any(pmatch(table = useCache, "dev") %in% 1)) && !is.null(userTags)
+}
+
+cloudWrite <- function(useCloud) {
+  isTRUE(any(grepl("w", useCloud) %in% 1)) || isTRUE(useCloud)
+}
+
+cloudWriteOrRead <- function(useCloud) {
+  cloudWrite(useCloud) || cloudRead(useCloud)
+}
+
+cloudReadOnly <- function(useCloud) {
+  isTRUE(any(grepl("r", useCloud) %in% 1))
+}
+
+cloudRead <- function(useCloud) {
+  cloudReadOnly(useCloud) || isTRUE(useCloud)
+}
+
+keyInGdriveLs <- function(cache_key, gdriveLs) {
+  cache_key %in% filePathSansExt(gdriveLs[["name"]])
+}

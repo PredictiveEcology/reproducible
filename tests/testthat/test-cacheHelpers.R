@@ -18,8 +18,8 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   # studyAreaName with sf and sfc
   if (requireNamespace("sf", quietly = TRUE)) {
-    pol <- st_sfc(st_polygon(list(cbind(c(0, 3, 3, 0, 0), c(0, 0, 3, 3, 0)))))
-    h <- st_sf(r = 5, pol)
+    pol <- sf::st_sfc(sf::st_polygon(list(cbind(c(0, 3, 3, 0, 0), c(0, 0, 3, 3, 0)))))
+    h <- sf::st_sf(r = 5, pol)
     expect_true(is(studyAreaName(pol), "character"))
     expect_true(is(studyAreaName(h), "character"))
   }

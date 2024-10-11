@@ -719,6 +719,7 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
 CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), create = FALSE,
                           drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL)) {
+
   checkPath(cachePath, create = TRUE)
   if (useDBI()) {
     if (is.null(conn)) {

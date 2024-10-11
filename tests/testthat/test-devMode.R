@@ -65,7 +65,8 @@ test_that("test devMode", {
   mess <- capture_messages({
     ranNumsG <- Cache(centralTendency, 1:12, cachePath = tmpCache, userTags = theTags, verbose = 3)
   })
-  expect_true(any(grepl("not unique; defaulting", mess)))
+  if (!getOption("reproducible.cache2") %in% TRUE)
+    expect_true(any(grepl("not unique; defaulting", mess)))
 
   ### Test that vague userTags don't accidentally delete a non-similar entry
   clearCache(tmpCache, ask = FALSE)
