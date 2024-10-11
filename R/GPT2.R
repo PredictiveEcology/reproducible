@@ -711,7 +711,7 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
 
   if (cloudWrite(useCloud)) {
     cloudUploadFromCache(detailed_key$key %in% filePathSansExt(gdriveLs[["name"]]), detailed_key$key,
-                         cachePaths[[1]], cloudFolderID = NULL, outputFromEvaluate, verbose = verbose)
+                         cachePaths[[1]], cloudFolderID = cloudFolderID, outputFromEvaluate, verbose = verbose)
   }
 
   outputFromEvaluate

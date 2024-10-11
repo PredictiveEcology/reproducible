@@ -1,7 +1,7 @@
 test_that("test Cache(useCloud=TRUE, ...)", {
   skip_on_cran()
   skip_on_ci()
-  skip_if(getOption("reproducible.cache2"))
+  # skip_if(getOption("reproducible.cache2"))
 
   testInit(
     c("googledrive", "terra"),
@@ -9,7 +9,8 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     needGoogleDriveAuth = TRUE,
     opts = list(
       "reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
-      "reproducible.ask" = FALSE
+      "reproducible.ask" = FALSE,
+      "reproducible.useMemoise" = FALSE
     )
   )
 
@@ -95,6 +96,8 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   })
 
   # expect_false(any(grepl("Folder created", mess6)))
+  browser() # THIS IS DOWNLOADING -- THE EXPECTATION IS FOR UPLOADING -- DIFFERENT cachePaths
+  #    NOT SURE
   expect_true(any(grepl("Uploading", mess6)))
   expect_false(any(grepl("Download", mess6)))
   expect_false(any(grepl(.message$LoadedCacheResult(), mess6)))
