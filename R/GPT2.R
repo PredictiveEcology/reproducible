@@ -62,11 +62,13 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
   cachePath <- cachePaths[[1]]
   CacheDBFileCheckAndCreate(cachePath) # checks that we are using multiDBfile backend
 
-  if (cloudWrite(useCloud))
-    gdriveLs <- retry(quote(driveLs(cloudFolderID, keyFull$key, verbose = verbose)))
+  if (cloudWrite(useCloud)) {
+    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cachePath, create = TRUE, verbose = verbose)
+    gdriveLs <- retry(quote(driveLs(cloudFolderID, keyFull$key, cachePath = cachePath, verbose = verbose)))
+  }
 
   # Memoise and return if it is there #
-  outputFromMemoise <- check_and_get_memoised_copy(keyFull$key, cachePath, callList$.functionName,
+  outputFromMemoise <- check_and_get_memoised_copy(keyFull$key, cachePaths, callList$.functionName,
                                                    callList$func, useCache, useCloud,
                                                    cloudFolderID, gdriveLs, verbose)
   if (!identical(outputFromMemoise, .returnNothing))
@@ -77,19 +79,21 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
   on.exit(releaseLockFile(locked), add = TRUE)
 
   # Check if keyFull$key is on disk and return if it is there
-  cache_file <- CacheStoredFile(cachePath, keyFull$key)
-  outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePath, cache_file, callList$.functionName, callList$func,
+  outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePaths, cache_file, callList$.functionName, callList$func,
                                               useCache, useCloud, cloudFolderID, gdriveLs, verbose = verbose)
   if (!identical(outputFromDisk, .returnNothing))
     return(outputFromDisk)
 
-  if (cloudReadOnly(useCloud)) # now that it is established it isn't in cache locally
-    gdriveLs <- retry(quote(driveLs(cloudFolderID, keyFull$key, verbose = verbose)))
+  cache_file <- CacheStoredFile(cachePath, keyFull$key) # now we know it is not in Cache; use 1st cachePath
+  if (cloudReadOnly(useCloud)) {# now that it is established it isn't in cache locally
+    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cachePath, create = TRUE, verbose = verbose)
+    gdriveLs <- retry(quote(driveLs(cloudFolderID, keyFull$key, cachePath = cachePath, verbose = verbose)))
+  }
 
-  if (cloudWriteOrRead(useCloud) && keyInGdriveLs(keyFull$key, gdriveLs)) {
-    newFileName <- gdriveLs$name[keyInGdriveLs(keyFull$key, gdriveLs)] # paste0(outputHash,".rda")
+  if (cloudWriteOrRead(useCloud) && isTRUE(any(keyInGdriveLs(keyFull$key, gdriveLs)))) {
+    newFileName <- gdriveLs$name[which(keyInGdriveLs(keyFull$key, gdriveLs))] # paste0(outputHash,".rda")
     sc <- cloudDownload(keyFull$key, newFileName, gdriveLs, cachePath, cloudFolderID, verbose = verbose)
-    outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePath, cache_file, callList$.functionName, callList$func,
+    outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePaths, cache_file, callList$.functionName, callList$func,
                                                 useCache, useCloud = FALSE, cloudFolderID, gdriveLs, verbose = verbose)
     return(outputFromDisk)
   } # Derive some metadata prior to evaluation so "showSimilar" can have something to compare with
@@ -243,11 +247,16 @@ evaluate_args <- function(args, envir) {
   })
 }
 
-check_and_get_cached_copy <- function(cache_key, cachePath, cache_file, functionName,
+check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functionName,
                                       func, useCache, useCloud, cloudFolderID, gdriveLs, verbose) {
 
   # Check if the result is already cached
-  cacheFileExists <- file.exists(cache_file) # could be length >1
+  for (cachePath in cachePaths) {
+    cache_file <- CacheStoredFile(cachePath, cache_key)
+    cacheFileExists <- file.exists(cache_file) # could be length >1
+    if (isTRUE(cacheFileExists))
+      break
+  }
 
   # Check if it was saved with other CacheSaveFormat
   changedSaveFormat <- FALSE
@@ -264,11 +273,11 @@ check_and_get_cached_copy <- function(cache_key, cachePath, cache_file, function
   if (sum(cacheFileExists)) {
     output <- loadFromDiskOrMemoise(fromMemoise = FALSE, useCache, useCloud,
                                     cloudFolderID = cloudFolderID, gdriveLs = gdriveLs,
-                                    cachePath = cachePath[which(cacheFileExists)],
+                                    cachePath = cachePath,
                                     cache_key,
                                     functionName,
                                     verbose,
-                                    cache_file = cache_file[which(cacheFileExists)[1]],
+                                    cache_file = cache_file,
                                     changedSaveFormat = changedSaveFormat, sameCacheID,
                                     cache_file_orig, func)
     return(output)
@@ -308,10 +317,15 @@ metadata_update <- function(outputToSave, metadata, cache_key) {
   metadata
 }
 
-check_and_get_memoised_copy <- function(cache_key, cachePath, functionName, func,
+check_and_get_memoised_copy <- function(cache_key, cachePaths, functionName, func,
                                         useCache, useCloud, cloudFolderID, gdriveLs, verbose) {
   if (getOption("reproducible.useMemoise")) {
-    cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
+    for (cachePath in cachePaths) {
+      cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
+      if (isTRUE(cache_key_in_memoiseEnv))
+        break
+    }
+
     if (cache_key_in_memoiseEnv) {
       output <- loadFromDiskOrMemoise(fromMemoise = TRUE, useCache = useCache, useCloud = useCloud,
                                       cloudFolderID = cloudFolderID, gdriveLs = gdriveLs,
@@ -830,7 +844,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
   if (identical(useCache, "overwrite")) {
     clearCacheOverwrite(cachePath, cache_key, functionName, verbose)
   } else {
-    format <- if (missing(cache_file)) getOption("reproducible.cacheSaveFormat") else
+    format <- if (missing(cache_file) || is.null(cache_file)) getOption("reproducible.cacheSaveFormat") else
       fileExt(cache_file)
 
     fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key, format = format)
@@ -908,5 +922,6 @@ cloudRead <- function(useCloud) {
 }
 
 keyInGdriveLs <- function(cache_key, gdriveLs) {
-  cache_key %in% filePathSansExt(gdriveLs[["name"]])
+  filePathSansExt(filePathSansExt(gdriveLs[["name"]])) %in%  # double filePathSansExt because of the .dbFile.rds
+    cache_key
 }

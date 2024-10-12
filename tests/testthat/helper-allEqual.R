@@ -348,7 +348,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
     message("Brick is deprecated; not tested any more")
   }
 
-  # r1End <- Cache(fn, r1Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
+  r1End <- Cache(fn, r1Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
 
   cloudFolderID1 <- cloudFolderID
   on.exit({

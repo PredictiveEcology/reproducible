@@ -88,7 +88,7 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
   return(cloudFolderID)
 }
 
-driveLs <- function(cloudFolderID = NULL, pattern = NULL,
+driveLs <- function(cloudFolderID = NULL, pattern = NULL, cachePath = getOption("reproducible.cachePath"),
                     verbose = getOption("reproducible.verbose", 1),
                     team_drive = NULL) {
   .requireNamespace("googledrive",
@@ -98,7 +98,7 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL,
 
   if (!is(cloudFolderID, "tbl")) {
     cloudFolderID <- checkAndMakeCloudFolderID(
-      cloudFolderID = cloudFolderID, create = FALSE,
+      cloudFolderID = cloudFolderID, cachePath = cachePath, create = FALSE,
       team_drive = team_drive
     ) # only deals with NULL case
   }
@@ -181,7 +181,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
   }
   objFiles <- grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE, invert = TRUE)
   # objFiles <- grep(paste0(".", formatCheck(cachePath, outputHash)), objFiles, value = TRUE)
-  filenamesInCache <- file.path(CacheStorageDir(), basename2(objFiles))
+  filenamesInCache <- file.path(CacheStorageDir(cachePath = cachePath), basename2(objFiles))
   hardLinkOrCopy(objFiles, to = filenamesInCache)
 
   if (useDBI()) { # with useDBI = FALSE, the dbFile is already there.
@@ -238,7 +238,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
     if (all(file.exists(cacheIdFileName))) {
       newFileName <- basename2(cacheIdFileName)
 
-      cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
+      cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, cachePath = cachePath, create = TRUE)
 
       messageCache("Uploading new cached object -- file(s):\n", paste(newFileName, collapse = "\n"),
                    "\n ... with cacheId: ",

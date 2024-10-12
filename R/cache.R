@@ -698,9 +698,8 @@ Cache <-
           cloudFolderID <- cloudFolderFromCacheRepo(cachePath)
         }
         if (is.character(cloudFolderID)) {
-          cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID,
-            create = TRUE,
-            overwrite = FALSE
+          cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cachePath = cachePath,
+            create = TRUE, overwrite = FALSE
           )
         }
         gdriveLs <- retry(quote(driveLs(cloudFolderID,

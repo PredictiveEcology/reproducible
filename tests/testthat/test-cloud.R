@@ -56,7 +56,11 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   mess3 <- capture_messages({
     a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
   })
-  expect_false(any(grepl(.message$LoadedCacheResult(), mess3)))
+  if (getOption("reproducible.cache2")) {
+    expect_true(any(grepl(.message$LoadedCacheResult(), mess3)))
+  } else {
+    expect_false(any(grepl(.message$LoadedCacheResult(), mess3)))
+  }
   expect_false(any(grepl("Uploaded", mess3)))
   expect_true(any(grepl("Downloading", mess3)))
 
@@ -95,16 +99,14 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     })
   })
 
-  # expect_false(any(grepl("Folder created", mess6)))
-  browser() # THIS IS DOWNLOADING -- THE EXPECTATION IS FOR UPLOADING -- DIFFERENT cachePaths
-  #    NOT SURE
   expect_true(any(grepl("Uploading", mess6)))
   expect_false(any(grepl("Download", mess6)))
   expect_false(any(grepl(.message$LoadedCacheResult(), mess6)))
   expect_true(isTRUE(all.equal(length(warn6), 0)))
 
 
-  try(googledrive::drive_rm(newDir), silent = TRUE) # clear the original one
+  try(drive_rm(drive_ls(getOption("reproducible.cloudFolderID"))), silent = TRUE)
+  # try(googledrive::drive_rm(newDir), silent = TRUE) # clear the original one
   cloudFolderID <- getOption("reproducible.cloudFolderID")
   clearCache(x = tmpCache, useCloud = TRUE) # , cloudFolderID = cloudFolderID)
   # Add 3 things to cloud and local -- then clear them all
