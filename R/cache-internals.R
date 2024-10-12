@@ -4,14 +4,14 @@
                              verboseLevel = 1) {
   if (verbose >= verboseLevel) {
     preDigestUnlist <- .unlistToCharacter(preDigest, 4)
-    endHashTime <- Sys.time()
-    verboseDF <- data.frame(
-      functionName = functionName,
-      component = "Hashing",
-      elapsedTime = as.numeric(difftime(endHashTime, startHashTime, units = "secs")),
-      units = "secs",
-      stringsAsFactors = FALSE
-    )
+    verboseDF0(verbose, functionName, startHashTime)
+    # verboseDF <- data.frame(
+    #   functionName = functionName,
+    #   component = "Hashing",
+    #   elapsedTime = as.numeric(difftime(endHashTime, startHashTime, units = "secs")),
+    #   units = "secs",
+    #   stringsAsFactors = FALSE
+    # )
 
     hashObjectSize <- unlist(lapply(modifiedDots, function(x) {
       if (getOption("reproducible.objSize", TRUE)) unname(attr(objSize(x), "objSize")) else NA
@@ -58,12 +58,12 @@
       )
     }
 
-    if (exists("verboseTiming", envir = .reproEnv, inherits = FALSE)) {
-      verboseDF$functionName <- paste0("  ", verboseDF$functionName)
-      .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
-    } else {
-      .reproEnv$verboseTiming <- verboseDF
-    }
+    # if (exists("verboseTiming", envir = .reproEnv, inherits = FALSE)) {
+    #   verboseDF$functionName <- paste0("  ", verboseDF$functionName)
+    #   .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+    # } else {
+    #   .reproEnv$verboseTiming <- verboseDF
+    # }
   }
 }
 
@@ -136,20 +136,7 @@
   # attr(output, ".Cache")$newCache <- FALSE
   if (!identical(attr(output, ".Cache")$newCache, FALSE)) stop("attributes are not correct 2")
 
-  if (verbose > 3) {
-    endCacheTime <- Sys.time()
-    verboseDF <- data.frame(
-      functionName = fnDetails$functionName,
-      component = "Whole Cache call",
-      elapsedTime = as.numeric(difftime(endCacheTime, startCacheTime, units = "secs")),
-      units = "secs",
-      stringsAsFactors = FALSE
-    )
-
-    if (exists("verboseTiming", envir = .reproEnv, inherits = FALSE)) {
-      .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
-    }
-  }
+  # verboseDF3(verbose, fnDetails$functionName, startCacheTime)
 
   # If it was a NULL, the cachePath stored it as "NULL" ... return it as NULL
   if (is.character(output)) {

@@ -2045,14 +2045,37 @@ verboseMessage3 <- function(verbose, artifact) {
   }
 }
 
-#' @keywords internal
-verboseDF1 <- function(verbose, functionName, startRunTime) {
+
+verboseDF0 <- function(verbose, functionName, startHashTime, endTime) {
   if (verbose > 3) {
-    endRunTime <- Sys.time()
+    if (missing(endTime))
+      endTime <- Sys.time()
+    verboseDF <- data.frame(
+      functionName = functionName,
+      component = "Hashing",
+      elapsedTime = as.numeric(difftime(endTime, startHashTime, units = "secs")),
+      units = "secs",
+      stringsAsFactors = FALSE
+    )
+    verboseAppendOrCreateDF(verboseDF)
+  }
+  # if (exists("verboseTiming", envir = .reproEnv, inherits = FALSE)) {
+  #   verboseDF$functionName <- paste0("  ", verboseDF$functionName)
+  #   .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+  # } else {
+  #   .reproEnv$verboseTiming <- verboseDF
+  # }
+}
+
+#' @keywords internal
+verboseDF1 <- function(verbose, functionName, startRunTime, endTime) {
+  if (verbose > 3) {
+    if (missing(endTime))
+      endTime <- Sys.time()
     verboseDF <- data.frame(
       functionName = functionName,
       component = paste("Running", functionName),
-      elapsedTime = as.numeric(difftime(endRunTime, startRunTime, units = "secs")),
+      elapsedTime = as.numeric(difftime(endTime, startRunTime, units = "secs")),
       units = "secs",
       stringsAsFactors = FALSE
     )
@@ -2064,14 +2087,15 @@ verboseDF1 <- function(verbose, functionName, startRunTime) {
 }
 
 #' @keywords internal
-verboseDF2 <- function(verbose, functionName, startSaveTime) {
+verboseDF2 <- function(verbose, functionName, startSaveTime, endTime) {
   if (verbose > 3) {
-    endSaveTime <- Sys.time()
+    if (missing(endTime))
+      endTime <- Sys.time()
     verboseDF <-
       data.frame(
         functionName = functionName,
         component = "Saving to cachePath",
-        elapsedTime = as.numeric(difftime(endSaveTime, startSaveTime, units = "secs")),
+        elapsedTime = as.numeric(difftime(endTime, startSaveTime, units = "secs")),
         units = "secs",
         stringsAsFactors = FALSE
       )
@@ -2082,14 +2106,16 @@ verboseDF2 <- function(verbose, functionName, startSaveTime) {
   }
 }
 
+
 #' @keywords internal
-verboseDF3 <- function(verbose, functionName, startCacheTime) {
+verboseDF3 <- function(verbose, functionName, startCacheTime, endTime) {
   if (verbose > 3) {
-    endCacheTime <- Sys.time()
+    if (missing(endTime))
+      endTime <- Sys.time()
     verboseDF <- data.frame(
       functionName = functionName,
       component = "Whole Cache call",
-      elapsedTime = as.numeric(difftime(endCacheTime, startCacheTime,
+      elapsedTime = as.numeric(difftime(endTime, startCacheTime,
         units = "secs"
       )),
       units = "secs",
@@ -2576,4 +2602,14 @@ checkOverlappingArgs <- function(CacheMatchedCall, forms, dotsCaptured, function
 }
 
 
+
+verboseAppendOrCreateDF <- function(verboseDF) {
+  browser()
+  if (exists("verboseTiming", envir = .reproEnv, inherits = FALSE)) {
+    verboseDF$functionName <- paste0("  ", verboseDF$functionName)
+    .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+  } else {
+    .reproEnv$verboseTiming <- verboseDF
+  }
+}
 

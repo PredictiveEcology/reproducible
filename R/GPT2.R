@@ -44,10 +44,17 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
   appendNestedTags(otherFunction = callList$.functionName)
 
   # do the Digest
-  preCacheDigestTime <- Sys.time()
+  if (verbose > 3) {
+    on.exit({
+      assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
+    }, add = TRUE)
+  }
+
+  timeCacheDigestStart <- Sys.time()
   keyFull <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
-                      length, algo, quick, classOptions, preCacheDigestTime, verbose)
-  elapsedTimeCacheDigest <- difftime(Sys.time(), preCacheDigestTime, units = "secs")
+                      length, algo, quick, classOptions, timeCacheDigestStart, verbose)
+  timeCacheDigestEnd <- Sys.time()
+  elapsedTimeCacheDigest <- difftime(timeCacheDigestEnd, timeCacheDigestStart, units = "secs")
 
   # If debugCache is "quick", short circuit after Digest
   if (isTRUE(!is.na(pmatch(debugCache, "quick"))))
@@ -104,11 +111,12 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
     showSimilar(cachePath, metadata, callList$.functionName, userTags, useCache, verbose)
 
   # ## evaluate the call ## #
-  preFUNTime <- Sys.time()
+  timeEvaluateStart <- Sys.time()
   outputFromEvaluate <- evalTheFun(callList$FUNcaptured, !callList$usesDots,
                                    matchedCall = callList$call, envir = .callingEnv,
                                    verbose = getOption("reproducible.verbose"), ...)
-  elapsedTimeFUN <- difftime(Sys.time(), preFUNTime, units = "secs")
+  timeSaveStart <- Sys.time()
+  elapsedTimeFUN <- difftime(timeSaveStart, timeEvaluateStart, units = "secs")
 
   # ## Save to Cache; including to Memoise location; including metadata ## #
   outputFromEvaluate <- doSaveToCache(outputFromEvaluate, metadata, cachePaths, callList$func,
@@ -117,6 +125,9 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
                                       keyFull,
                                       useCloud, cloudFolderID, gdriveLs,
                                       func_call = callList$func_call, verbose)
+  timeSaveEnd <- Sys.time()
+  verboseDFAll(verbose, callList$.functionName, timeCacheDigestStart, timeEvaluateStart, timeSaveStart, timeSaveEnd)
+
   return(outputFromEvaluate)
 }
 
@@ -727,14 +738,13 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
     cloudUploadFromCache(detailed_key$key %in% filePathSansExt(gdriveLs[["name"]]), detailed_key$key,
                          cachePaths[[1]], cloudFolderID = cloudFolderID, outputFromEvaluate, verbose = verbose)
   }
-
   outputFromEvaluate
 
 }
 
 
 doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
-                     length, algo, quick, classOptions, preCacheDigestTime, verbose) {
+                     length, algo, quick, classOptions, timeCacheDigestStart, verbose) {
   # Compile a list of elements to digest
   toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
   toDigest$.FUN <- attr(new_call, ".Cache")$method
@@ -751,8 +761,10 @@ doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
                               classOptions = classOptions,
                               calledFrom = "Cache"
   )
-  .CacheVerboseFn1(detailed_key$preDigest, .functionName, preCacheDigestTime, quick = quick,
+  browser()
+  .CacheVerboseFn1(detailed_key$preDigest, .functionName, timeCacheDigestStart, quick = quick,
                    modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
+
   names(detailed_key)[[1]] <- "key"
   detailed_key
 }
@@ -924,4 +936,10 @@ cloudRead <- function(useCloud) {
 keyInGdriveLs <- function(cache_key, gdriveLs) {
   filePathSansExt(filePathSansExt(gdriveLs[["name"]])) %in%  # double filePathSansExt because of the .dbFile.rds
     cache_key
+}
+
+verboseDFAll <- function(verbose, functionName, timeCacheDigestStart, timeEvaluateStart, timeSaveStart, timeSaveEnd) {
+  verboseDF1(verbose, functionName, timeCacheDigestStart, timeEvaluateStart)
+  verboseDF2(verbose, functionName, timeEvaluateStart, timeSaveStart)
+  verboseDF3(verbose, functionName, timeCacheDigestStart, timeSaveEnd)
 }
