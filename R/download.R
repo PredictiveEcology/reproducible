@@ -204,7 +204,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
               )
             }
           } else {
-            Sys.sleep(0.5)
+            if (failed > 1) Sys.sleep(0.5) else SSL_REVOKE_BEST_EFFORT() # uses withr::defer to remove it after this test
           }
           failed <- failed + 1
         } else {
@@ -815,4 +815,16 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     }
   }
   isRstudioServer
+}
+
+
+SSL_REVOKE_BEST_EFFORT <- function(envir = parent.frame(1)) {
+  prevCurlVal <- Sys.getenv("R_LIBCURL_SSL_REVOKE_BEST_EFFORT")
+  Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT=TRUE)
+  withr::defer({
+    if (nzchar(prevCurlVal))
+      Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = prevCurlVal)
+    else
+      Sys.unsetenv("R_LIBCURL_SSL_REVOKE_BEST_EFFORT")
+  }, envir = envir)
 }

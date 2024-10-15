@@ -15,7 +15,6 @@ opts <- options(
   warnPartialMatchAttr = TRUE,
   warnPartialMatchDollar = TRUE,
   reproducible.cache2 = FALSE,
-  reproducible.useMemoise = TRUE,
   reproducible.useDBI = FALSE
 )
 

@@ -14,7 +14,8 @@ skip_if_no_token <- function() {
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
 # if `needInternet = TRUE`, it will only re-try every 30 seconds
 testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt = "",
-                     opts = NULL, needGoogleDriveAuth = FALSE, needInternet = FALSE) {
+                     opts = NULL, needGoogleDriveAuth = FALSE, needInternet = FALSE,
+                     envir = parent.frame(1)) {
   set.randomseed()
 
   pf <- parent.frame()
@@ -33,7 +34,13 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
       }
     }
     if (is.null(.pkgEnv$.internetExists)) {
-      .pkgEnv$.internetExists <- internetExists()
+      for (i in 1:2) {
+        .pkgEnv$.internetExists <- internetExists()
+        browser()
+        if (isTRUE(.pkgEnv$.internetExists))
+          break
+        SSL_REVOKE_BEST_EFFORT(envir)
+      }
       .pkgEnv$.internetExistsLastCheck <- Sys.time()
     }
     intExists <- .pkgEnv$.internetExists
@@ -547,3 +554,4 @@ runTestsWithTimings <- function(nameOfOuterList = "ff", envir = parent.frame(), 
   gg[, TestFile := basename(TestFile)]
   gg
 }
+

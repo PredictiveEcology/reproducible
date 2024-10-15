@@ -6,6 +6,7 @@ test_that("prepInputs doesn't work (part 1)", {
     "rasterTmpDir" = tempdir2(rndstr(1, 6)),
     "reproducible.inputPaths" = NULL,
     "reproducible.overwrite" = TRUE,
+    reproducible.useMemoise = FALSE,
     reproducible.showSimilar = TRUE
   ), needInternet = TRUE)
 
@@ -1581,7 +1582,7 @@ test_that("options inputPaths", {
     ),
     needInternet = TRUE
   )
-
+  # SSL_REVOKE_BEST_EFFORT() # uses withr::defer to remove it after this test
   f <- formals3(prepInputs)
   getDataFn <- getDataFn # not exported from reproducible; can access here, not in the dlFun
 

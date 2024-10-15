@@ -95,6 +95,8 @@ test_that("setting options works correctly", {
   b1 <- b[names(a1)]
   # b1 <- b1[!names(b1) %in% omit]
   a2 <- a1 # [!names(a1) %in% omit]
+  #a1[names(a1) %in% "reproducible.useMemoise"] <- NULL # useMemoise may be TRUE during some tests
+  #browser()
   expect_identical(b1, a2)
 })
 
