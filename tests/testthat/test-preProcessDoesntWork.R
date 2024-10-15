@@ -24,14 +24,17 @@ test_that("preProcess fails if user provides non-existing file", {
   expect_true(grepl("appendChecksumsTable", errMsg))
 
   optsOrig <- options(reproducible.interactiveOnDownloadFail = FALSE)
-  co <- capture.output({
-    errMsg <- testthat::capture_error({
-      reproducible::preProcess(
-        url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
-        destinationPath = tmpdir
-      )
+  co <- capture.output(type = "message", {
+    co2 <- capture.output({
+      errMsg <- testthat::capture_error({
+        reproducible::preProcess(
+          url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+          destinationPath = tmpdir
+        )
+      })
     })
   })
+
   expect_true(grepl("manual download", errMsg))
   expect_true(grepl("appendChecksumsTable", errMsg))
   options(optsOrig)
@@ -78,13 +81,15 @@ test_that("preProcess fails if user provides non-existing file", {
       "y"
     },
     {
-      co <- capture.output({
-        mess <- testthat::capture_messages({
-          errMsg <- testthat::capture_error({
-            reproducible::preProcess(
-              url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
-              destinationPath = tmpdir
-            )
+      co <- capture.output(type = "message", {
+        co <- capture.output({
+          mess <- testthat::capture_messages({
+            errMsg <- testthat::capture_error({
+              reproducible::preProcess(
+                url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+                destinationPath = tmpdir
+              )
+            })
           })
         })
       })
