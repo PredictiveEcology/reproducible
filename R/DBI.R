@@ -329,7 +329,6 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   }
 
   if (verbose > 3) {
-    browser()
     endLoadTime <- Sys.time()
     verboseDF <- data.frame(
       functionName = .functionName,
@@ -340,7 +339,6 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     )
 
     if (exists("verboseTiming", envir = .reproEnv)) {
-      browser()
       .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
     }
   }
