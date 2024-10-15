@@ -46,9 +46,9 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
 
   # do the Digest
   times <- list()
-  timesCacheDigestStart <- Sys.time()
+  times$CacheDigestStart <- Sys.time()
   keyFull <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
-                      length, algo, quick, classOptions, timeCacheDigestStart, verbose)
+                      length, algo, quick, classOptions, times$CacheDigestStart, verbose)
 
   # If debugCache is "quick", short circuit after Digest
   if (isTRUE(!is.na(pmatch(debugCache, "quick"))))
