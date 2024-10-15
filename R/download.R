@@ -819,12 +819,18 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
 
 
 SSL_REVOKE_BEST_EFFORT <- function(envir = parent.frame(1)) {
+  # Take from https://github.com/rstudio/rstudio/issues/10163#issuecomment-1193316767 #
   prevCurlVal <- Sys.getenv("R_LIBCURL_SSL_REVOKE_BEST_EFFORT")
   Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT=TRUE)
-  withr::defer({
+  on.exit2({#withr::defer({
     if (nzchar(prevCurlVal))
       Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = prevCurlVal)
     else
       Sys.unsetenv("R_LIBCURL_SSL_REVOKE_BEST_EFFORT")
   }, envir = envir)
+}
+
+on.exit2 <- function(expr, envir = parent.frame()) {
+  funExpr <- as.call(list(function() expr))
+  do.call(base::on.exit, list(funExpr, TRUE, TRUE), envir = envir)
 }

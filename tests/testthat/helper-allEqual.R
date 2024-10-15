@@ -36,7 +36,6 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
     if (is.null(.pkgEnv$.internetExists)) {
       for (i in 1:2) {
         .pkgEnv$.internetExists <- internetExists()
-        browser()
         if (isTRUE(.pkgEnv$.internetExists))
           break
         SSL_REVOKE_BEST_EFFORT(envir)

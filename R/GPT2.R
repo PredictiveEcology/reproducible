@@ -22,15 +22,12 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
                    .callingEnv = parent.frame()) {
 
   # This makes this act like useDBI = FALSE --> creates correct dbFile
-  opts <- options(reproducible.useDBI = FALSE, reproducible.cache2 = TRUE)
-  on.exit(options(opts), add = TRUE)
+  optionsSetForCache2()
 
   # Capture and match call so it can be manipulated
   callList <- matchCall2(sys.function(0), sys.call(0), envir = .callingEnv, FUN = FUN)
 
   # Check if this is a nested Cache call; this must be before skipCache because useCache may be numeric
-  if (!exists(".reproEnv2", envir = .pkgEnv))
-    on.exit(rm(.reproEnv2, envir = .pkgEnv), add = TRUE)
   userTags <- setupCacheNesting(userTags, useCache) # get nested userTags
 
   # Skip Cache if user passes useCache = FALSE or 0 or nesting level is deeper than useCache
@@ -50,7 +47,7 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
   keyFull <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
                       length, algo, quick, classOptions, times$CacheDigestStart, verbose)
 
-  # If debugCache is "quick", short circuit after Digest
+  # If debugCache is "quick", short circuit after doDigest
   if (isTRUE(!is.na(pmatch(debugCache, "quick"))))
     return(list(hash = keyFull$preDigest, content = callList$func_call))
 
@@ -77,7 +74,7 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
 
   # After memoising fail, try files; need to check Cache dir and set lockfile
   locked <- lockFile(cachePath, keyFull$key)
-  on.exit(releaseLockFile(locked), add = TRUE)
+  # on.exit(releaseLockFile(locked), add = TRU)
 
   # Check if keyFull$key is on disk and return if it is there
   outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePaths, cache_file, callList$.functionName, callList$func,
@@ -282,12 +279,9 @@ check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functio
     output <- loadFromDiskOrMemoise(fromMemoise = FALSE, useCache, useCloud,
                                     cloudFolderID = cloudFolderID, gdriveLs = gdriveLs,
                                     cachePath = cachePath,
-                                    cache_key,
-                                    functionName,
-                                    verbose,
-                                    cache_file = cache_file,
+                                    cache_key, functionName, cache_file = cache_file,
                                     changedSaveFormat = changedSaveFormat, sameCacheID,
-                                    cache_file_orig, func)
+                                    cache_file_orig, func, verbose = verbose)
     return(output)
   }
   invisible(.returnNothing)
@@ -548,12 +542,13 @@ sysTimeForCacheToChar <- function(digits = 5)
   format(Sys.time(), digits = digits)
 
 
-setupCacheNesting <- function(userTags, useCache) {
+setupCacheNesting <- function(userTags, useCache, envir = parent.frame(1)) {
   if (!exists(".reproEnv2", envir = .pkgEnv)) {
     .pkgEnv$.reproEnv2 <- new.env(parent = asNamespace("reproducible"))
     .pkgEnv$.reproEnv2$userTags <- userTags
     .pkgEnv$.reproEnv2$nestLevel <- 1
     .pkgEnv$.reproEnv2$useCache <- useCache
+    on.exit2(rm(.reproEnv2, envir = .pkgEnv), envir = envir)
   } else {
     userTags <- .pkgEnv$.reproEnv2$userTags <- c(.pkgEnv$.reproEnv2$userTags, userTags)
     .pkgEnv$.reproEnv2$nestLevel <- .pkgEnv$.reproEnv2$nestLevel + 1
@@ -590,12 +585,13 @@ releaseLockFile <- function(locked) {
   }
 }
 
-lockFile <- function(cachePath, cache_key) {
+lockFile <- function(cachePath, cache_key, envir = parent.frame()) {
   csd <- CacheStorageDir(cachePath)
   if (!any(dir.exists(csd)))
     lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
   lockFile <- file.path(csd, paste0(cache_key, suffixLockFile()))
   locked <- filelock::lock(lockFile)
+  on.exit2(releaseLockFile(locked), envir = envir)
   locked
 }
 
@@ -685,8 +681,8 @@ convertCallWithSquigglyBraces <- function(call, usesDots) {
   call
 }
 
-wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, verbose) {
-  outputToSave <- .wrap(outputFromEvaluate)
+wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, preDigest, verbose) {
+  outputToSave <- .wrap(outputFromEvaluate, cachePath = cachePath, preDigest = preDigest, verbose = verbose)
   metadata <- metadata_update(outputToSave, metadata, cache_key) # .wrap may have added tags
   fs <- saveToCache(cachePath = cachePath, drv = NULL, conn = NULL,
                     obj = outputToSave, verbose = verbose, # cache_file[1],
@@ -713,7 +709,8 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
   cacheIdIdentical <- cache_Id_Identical(metadata, cachePaths, detailed_key$key)
   if (is.null(cacheIdIdentical)) {
     outputFromEvaluate <- addCacheAttr(outputFromEvaluate, .CacheIsNew = TRUE, detailed_key$key, func)
-    metadata <- wrapSaveToCache(outputFromEvaluate, metadata, detailed_key$key, cachePaths[[1]], verbose)
+    metadata <- wrapSaveToCache(outputFromEvaluate, metadata, detailed_key$key, cachePaths[[1]],
+                                preDigest = detailed_key$preDigest, verbose)
   } else {
     file.link(cacheIdIdentical, cache_file)
     .message$FileLinkUsed(ftL = cacheIdIdentical, fts = cache_file, verbose)
@@ -940,3 +937,7 @@ verboseCacheDFAll <- function(verbose, functionName, times) {
   verboseDF3(verbose, functionName, times$CacheDigestStart, times$SaveEnd)
 }
 
+optionsSetForCache2 <- function(envir = parent.frame(1)) {
+  opts <- options(reproducible.useDBI = FALSE, reproducible.cache2 = TRUE)
+  on.exit2(options(opts), envir = envir)
+}
