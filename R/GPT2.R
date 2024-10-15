@@ -761,7 +761,6 @@ doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
                               classOptions = classOptions,
                               calledFrom = "Cache"
   )
-  browser()
   .CacheVerboseFn1(detailed_key$preDigest, .functionName, timeCacheDigestStart, quick = quick,
                    modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
 
