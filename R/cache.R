@@ -537,7 +537,7 @@ Cache <-
         .unlistToCharacter(preDigest, getOption("reproducible.showSimilarDepth", 3))
       )
       if (verbose > 3) {
-        a <- .CacheVerboseFn1(preDigest, functionName = fnDetails$functionName,
+        a <- verboseCacheMessage(preDigest, functionName = fnDetails$functionName,
           startHashTime, modifiedDots,
           quick = quick,
           verbose = verbose, verboseLevel = 3
@@ -2604,7 +2604,6 @@ checkOverlappingArgs <- function(CacheMatchedCall, forms, dotsCaptured, function
 
 
 verboseAppendOrCreateDF <- function(verboseDF) {
-  browser()
   if (exists("verboseTiming", envir = .reproEnv, inherits = FALSE)) {
     verboseDF$functionName <- paste0("  ", verboseDF$functionName)
     .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)

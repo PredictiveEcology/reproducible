@@ -426,3 +426,18 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
 .message$defunct <- function(arg)
   paste0(arg, " is a defunct argument; please remove it from this Cache call")
+
+
+
+.message$CacheTimings <- function(verbose) {
+  if (verbose > 3) {
+    assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
+    messageDF(.reproEnv$verboseTiming, colour = "blue", verbose = verbose, verboseLevel = 3)
+    messageCache("This object is also available from .reproEnv$cacheTimings",
+                 verbose = verbose, verboseLevel = 3
+    )
+    if (exists("verboseTiming", envir = .reproEnv)) {
+      rm("verboseTiming", envir = .reproEnv)
+    }
+  }
+}

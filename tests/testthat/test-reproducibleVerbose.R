@@ -3,7 +3,6 @@ test_that("test reproducible.verbose", {
   testInit(verbose = 4, tmpFileExt = ".rds")
 
   warn <- capture_warnings(Cache(rnorm, 1, cachePath = tmpdir))
-  browser()
   expect_is(.reproEnv$cacheTimings, "data.frame") ##
   expect_true(NROW(.reproEnv$cacheTimings) == 4) ##
   expect_true(NCOL(.reproEnv$cacheTimings) == 4) ##

@@ -1,3 +1,4 @@
+#' @include messages.R
 cache2 <- function(FUN, ..., notOlderThan = NULL,
                    .objects = NULL, .cacheExtra = NULL, .functionName = NULL,
                    outputObjects = NULL, # nolint
@@ -44,17 +45,10 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
   appendNestedTags(otherFunction = callList$.functionName)
 
   # do the Digest
-  if (verbose > 3) {
-    on.exit({
-      assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
-    }, add = TRUE)
-  }
-
-  timeCacheDigestStart <- Sys.time()
+  times <- list()
+  timesCacheDigestStart <- Sys.time()
   keyFull <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
                       length, algo, quick, classOptions, timeCacheDigestStart, verbose)
-  timeCacheDigestEnd <- Sys.time()
-  elapsedTimeCacheDigest <- difftime(timeCacheDigestEnd, timeCacheDigestStart, units = "secs")
 
   # If debugCache is "quick", short circuit after Digest
   if (isTRUE(!is.na(pmatch(debugCache, "quick"))))
@@ -104,6 +98,9 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
                                                 useCache, useCloud = FALSE, cloudFolderID, gdriveLs, verbose = verbose)
     return(outputFromDisk)
   } # Derive some metadata prior to evaluation so "showSimilar" can have something to compare with
+
+  times$EvaluateStart <- Sys.time()
+  elapsedTimeCacheDigest <- difftime(times$EvaluateStart, times$CacheDigestStart, units = "secs")
   metadata <- metadata_define_preEval(keyFull, callList$.functionName, userTags,
                                       .objects, length, algo, quick, classOptions,
                                       elapsedTimeCacheDigest)
@@ -111,12 +108,11 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
     showSimilar(cachePath, metadata, callList$.functionName, userTags, useCache, verbose)
 
   # ## evaluate the call ## #
-  timeEvaluateStart <- Sys.time()
   outputFromEvaluate <- evalTheFun(callList$FUNcaptured, !callList$usesDots,
                                    matchedCall = callList$call, envir = .callingEnv,
                                    verbose = getOption("reproducible.verbose"), ...)
-  timeSaveStart <- Sys.time()
-  elapsedTimeFUN <- difftime(timeSaveStart, timeEvaluateStart, units = "secs")
+  times$SaveStart <- Sys.time()
+  elapsedTimeFUN <- difftime(times$SaveStart, times$EvaluateStart, units = "secs")
 
   # ## Save to Cache; including to Memoise location; including metadata ## #
   outputFromEvaluate <- doSaveToCache(outputFromEvaluate, metadata, cachePaths, callList$func,
@@ -125,8 +121,9 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
                                       keyFull,
                                       useCloud, cloudFolderID, gdriveLs,
                                       func_call = callList$func_call, verbose)
-  timeSaveEnd <- Sys.time()
-  verboseDFAll(verbose, callList$.functionName, timeCacheDigestStart, timeEvaluateStart, timeSaveStart, timeSaveEnd)
+  times$SaveEnd <- Sys.time()
+  verboseCacheDFAll(verbose, callList$.functionName, times)
+  .message$CacheTimings(verbose)
 
   return(outputFromEvaluate)
 }
@@ -761,7 +758,7 @@ doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
                               classOptions = classOptions,
                               calledFrom = "Cache"
   )
-  .CacheVerboseFn1(detailed_key$preDigest, .functionName, timeCacheDigestStart, quick = quick,
+  verboseCacheMessage(detailed_key$preDigest, .functionName, timeCacheDigestStart, quick = quick,
                    modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
 
   names(detailed_key)[[1]] <- "key"
@@ -937,8 +934,9 @@ keyInGdriveLs <- function(cache_key, gdriveLs) {
     cache_key
 }
 
-verboseDFAll <- function(verbose, functionName, timeCacheDigestStart, timeEvaluateStart, timeSaveStart, timeSaveEnd) {
-  verboseDF1(verbose, functionName, timeCacheDigestStart, timeEvaluateStart)
-  verboseDF2(verbose, functionName, timeEvaluateStart, timeSaveStart)
-  verboseDF3(verbose, functionName, timeCacheDigestStart, timeSaveEnd)
+verboseCacheDFAll <- function(verbose, functionName, times) {
+  verboseDF1(verbose, functionName, times$CacheDigestStart, times$EvaluateStart)
+  verboseDF2(verbose, functionName, times$EvaluateStart, times$SaveStart)
+  verboseDF3(verbose, functionName, times$CacheDigestStart, times$SaveEnd)
 }
+

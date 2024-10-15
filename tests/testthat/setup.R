@@ -14,7 +14,7 @@ opts <- options(
   warnPartialMatchArgs = TRUE, # This gives false positives for `raster::stack`
   warnPartialMatchAttr = TRUE,
   warnPartialMatchDollar = TRUE,
-  reproducible.cache2 = TRUE,
+  reproducible.cache2 = FALSE,
   reproducible.useMemoise = TRUE,
   reproducible.useDBI = FALSE
 )

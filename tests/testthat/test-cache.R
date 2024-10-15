@@ -191,6 +191,7 @@ test_that("test file-backed raster caching", {
   aa <- Cache(randomPolyToDisk, tmpfile[1], cachePath = tmpCache, userTags = "something2")
   # Test clearCache by tags
 
+  browser()
   expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
   clearCache(tmpCache, userTags = "something$", ask = FALSE)
   expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
