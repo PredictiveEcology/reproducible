@@ -98,6 +98,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Collate: 
     'DBI.R'
+    'messages.R'
     'GPT2.R'
     'cache-helpers.R'
     'cache-internals.R'
@@ -109,7 +110,6 @@ Collate:
     'convertPaths.R'
     'copy.R'
     'download.R'
-    'messages.R'
     'exportedMethods.R'
     'gis.R'
     'helpers.R'

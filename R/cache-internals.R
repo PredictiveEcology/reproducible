@@ -1,4 +1,4 @@
-.CacheVerboseFn1 <- function(preDigest, functionName,
+verboseCacheMessage <- function(preDigest, functionName,
                              startHashTime, modifiedDots, quick,
                              verbose = getOption("reproducible.verbose", 1),
                              verboseLevel = 1) {

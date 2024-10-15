@@ -1,3 +1,4 @@
+#' @include messages.R
 cache2 <- function(FUN, ..., notOlderThan = NULL,
                    .objects = NULL, .cacheExtra = NULL, .functionName = NULL,
                    outputObjects = NULL, # nolint
@@ -761,7 +762,7 @@ doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
                               classOptions = classOptions,
                               calledFrom = "Cache"
   )
-  .CacheVerboseFn1(detailed_key$preDigest, .functionName, timeCacheDigestStart, quick = quick,
+  verboseCacheMessage(detailed_key$preDigest, .functionName, timeCacheDigestStart, quick = quick,
                    modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
 
   names(detailed_key)[[1]] <- "key"
