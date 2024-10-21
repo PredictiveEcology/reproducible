@@ -370,7 +370,7 @@ Cache <-
            compareRasterFileLength, userTags = c(),
            omitArgs = NULL,
            classOptions = list(), debugCache = character(),
-           sideEffect = FALSE,
+           # sideEffect = FALSE,
            makeCopy = FALSE,
            quick = getOption("reproducible.quick", FALSE),
            verbose = getOption("reproducible.verbose", 1), cacheId = NULL,
@@ -394,7 +394,7 @@ Cache <-
     # Capture everything -- so not evaluated
     FUNcaptured <- substitute(FUN)
     dotsCaptured <- as.list(substitute(list(...))[-1])
-    if (missing(FUNcaptured)) stop("Cache requires the FUN argument")
+    if (missing(FUNcaptured)) stop(.message$CacheRequiresFUNtxt())
     FUNbackup <- as.call(append(list(FUNcaptured), dotsCaptured))
 
 
@@ -486,7 +486,7 @@ Cache <-
       # userTags added based on object class
       userTags <- c(userTags, unlist(lapply(modifiedDots, .tagsByClass)))
 
-      if (sideEffect != FALSE) {
+      if (isTRUE("sideEffect" %in% ...names())) {
         messageCache("sideEffect is deprecated; being ignored",
           verbose = verbose, verboseLevel = 0
         )
@@ -1459,8 +1459,12 @@ getFunctionName2 <- function(mc) {
     if (identical(as.name("<-"), mc[[1]])) {
       mc <- mc[-(1:2)]
     }
-    if (any(grepl("^\\$|\\[|\\:\\:", mc)[1])) { # stats::runif -- has to be first one, not some argument in middle
-      if (any(grepl("^\\$|\\[|\\:\\:", mc[[1]])) && length(mc) != 3) { # stats::runif
+    coloncolon <- .grepSysCalls(list(mc), "^\\$|\\[|\\:\\:")
+    if (length(coloncolon)) { # stats::runif -- has to be first one, not some argument in middle
+      if (length(coloncolon) && length(mc) != 3) { # stats::runif
+
+    #if (any(grepl("^\\$|\\[|\\:\\:", mc)[1])) { # stats::runif -- has to be first one, not some argument in middle
+    #  if (any(grepl("^\\$|\\[|\\:\\:", mc[[1]])) && length(mc) != 3) { # stats::runif
         fnNameInit <- deparse(mc[[1]])
       } else {
         fnNameInit <- deparse(mc)

@@ -45,7 +45,7 @@ test_that("test Cache argument inheritance to inner functions", {
   # does cachePath propagate to outer ones -- no message about cachePath being tempdir()
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
   expect_true(length(out) == 2)
-  expect_true(sum(grepl(paste(.message$LoadedCacheResult(), "outer call"), out)) == 1)
+  expect_true(sum(grepl(paste0(.message$LoadedCacheResult(), ".+outer call"), out)) == 1)
 
   # check that the rnorm inside "outer" returns cached value even if outer "outer" function is changed
   outer <- function(n) {
@@ -54,7 +54,7 @@ test_that("test Cache argument inheritance to inner functions", {
   }
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
   expect_true(length(out) == 4)
-  msgGrep <- paste(paste(.message$LoadedCacheResult(), "rnorm call"),
+  msgGrep <- paste(paste0(.message$LoadedCacheResult(), ".+rnorm call"),
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
@@ -81,7 +81,7 @@ test_that("test Cache argument inheritance to inner functions", {
   # Second time will get a cache on outer
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
   expect_true(length(out) == 2)
-  expect_true(sum(grepl(paste(.message$LoadedCacheResult(), "outer call"), out)) == 1)
+  expect_true(sum(grepl(paste0(.message$LoadedCacheResult(), ".+outer call"), out)) == 1)
 
   # doubly nested
   inner <- function(mean, useCache = TRUE) {
@@ -98,7 +98,7 @@ test_that("test Cache argument inheritance to inner functions", {
   }
 
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir, notOlderThan = Sys.time()))
-  msgGrep <- paste(paste(.message$LoadedCacheResult(), "inner call"),
+  msgGrep <- paste0(paste(.message$LoadedCacheResult(), ".+inner call"),
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
@@ -115,7 +115,7 @@ test_that("test Cache argument inheritance to inner functions", {
   }
 
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir, notOlderThan = Sys.time()))
-  msgGrep <- paste(paste(.message$LoadedCacheResult(), "rnorm call"),
+  msgGrep <- paste(paste0(.message$LoadedCacheResult(), ".+rnorm call"),
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
@@ -724,7 +724,7 @@ test_that("test asPath", {
     .message$LoadedCacheResult()
   ), a2)) == 1)
 
-  expect_true(sum(grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
+  expect_true(sum(grepl(paste0(.message$LoadedCacheResult("Memoised"), ".+saveRDS call"), a3)) == 1)
 
   unlink("filename.RData")
   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
@@ -741,11 +741,11 @@ test_that("test asPath", {
                                quick = TRUE, cachePath = tmpdir
   ))
   expect_equal(length(a1), 1)
-  expect_true(sum(grepl(paste(
+  expect_true(sum(grepl(paste0(
     .message$LoadedCacheResult("Memoised"), "|",
     .message$LoadedCacheResult()
   ), a2)) == 1)
-  expect_true(sum(grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
+  expect_true(sum(grepl(paste0(.message$LoadedCacheResult("Memoised"), ".+saveRDS call"), a3)) == 1)
 })
 
 test_that("test wrong ways of calling Cache", {
@@ -988,14 +988,14 @@ test_that("test changing reproducible.cacheSaveFormat midstream", {
     b <- Cache(rnorm, 1, cachePath = tmpdir)
   })
   expect_false(attr(b, ".Cache")$newCache)
-  expect_true(sum(grepl(paste0(.message$changingFormatTxt, "rds to qs"), mess)) == 1)
+  expect_true(sum(grepl(paste0(.message$changingFormatTxt, ".+rds to qs"), mess)) == 1)
 
   opts <- options(reproducible.cacheSaveFormat = "rds")
   mess <- capture_messages({
     b <- Cache(rnorm, 1, cachePath = tmpdir)
   })
   expect_false(attr(b, ".Cache")$newCache)
-  expect_true(sum(grepl(paste0(.message$changingFormatTxt, "qs to rds"), mess)) == 1)
+  expect_true(sum(grepl(paste0(.message$changingFormatTxt, ".+qs to rds"), mess)) == 1)
 })
 
 test_that("test file link with duplicate Cache", {
@@ -1606,10 +1606,10 @@ test_that("test cache; SpatRaster attributes", {
     ras
   }
 
-  ras <- Cache(testFun,
+  (ras <- Cache(testFun,
                url = url,
                targetFile = targetFile
-  )
+  )) |> capture.output() -> co
   expect_true(is.integer(attr(x = ras, "pixIDs")))
 
   ## re-run. attributes still there?
@@ -1833,81 +1833,76 @@ test_that("simple userTags", {
 })
 
 
+test_that("lightweight tests for code coverage", {
+  skip_on_cran()
+  out <- testInit(verbose = TRUE)
+
+  opts <- options(reproducible.cachePath = tmpdir)
+
+  on.exit(
+    {
+      options(opts)
+    },
+    add = TRUE
+  )
+  expect_error(Cache(), "requires")
+  if (getOption("reproducible.cache2")) {
+    fn <- expect_error
+  } else {
+      fn <- expect_message
+      expect_error(
+        Cache(cachePath = tmpCache, conn = list(tmpCache, tmpdir), rnorm(1)),
+        "different lengths"
+      )
+  }
+  fn(Cache(compareRasterFileLength = TRUE, rnorm(1)), regexp = "compareRasterFileLength")
+  fn(Cache(sideEffect = TRUE, rnorm(1)), regexp = "sideEffect")
+
+})
 
 
+test_that("test future", {
+  skip_on_cran()
+  skip_on_ci()
+  # skip_if_not_installed("future")
 
+  .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
+  # if (.onLinux) {
+  testInit(c("terra", "future"),
+           verbose = TRUE, tmpFileExt = ".rds",
+           opts = list(
+             "future.supportsMulticore.unstable" = "quiet",
+             "reproducible.futurePlan" = "multicore"
+           )
+  )
 
+  # There is now a warning with future package
+  a <- list()
+  (aa <- system.time({
+    for (i in c(1:3)) a[[i]] <- Cache(cachePath = tmpCache, rnorm, 1e6 + i)
+  }))
+  sca <- showCache(tmpCache)
+  expect_true(length(unique(sca[[.cacheTableHashColName()]])) == 3)
 
+  try(unlink(tmpCache, recursive = TRUE))
+  b <- list()
+  (bb <- system.time({
+    for (i in 1:3) b[[i]] <- Cache(cachePath = tmpCache, rnorm(1e6 + i))
+  }))
+  bb <- showCache(tmpCache)
+  expect_true(length(unique(bb[[.cacheTableHashColName()]])) == 3)
 
-
-
-
-
-
-# test_that("lightweight tests for code coverage", {
-#   skip_on_cran()
-#   out <- testInit(verbose = TRUE)
-#
-#   opts <- options(reproducible.cachePath = tmpdir)
-#
-#   on.exit(
-#     {
-#       options(opts)
-#     },
-#     add = TRUE
-#   )
-#   expect_error(Cache(), "requires")
-#   expect_message(Cache(compareRasterFileLength = TRUE, rnorm(1)), regexp = "compareRasterFileLength")
-#   expect_message(Cache(sideEffect = TRUE, rnorm(1)), regexp = "sideEffect")
-#   expect_error(
-#     Cache(cachePath = tmpCache, conn = list(tmpCache, tmpdir), rnorm(1)),
-#     "different lengths"
-#   )
-# })
-
-
-# test_that("test future", {
-#   skip_on_cran()
-#   skip_on_ci()
-#   # skip_if_not_installed("future")
-#
-#   .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
-#   # if (.onLinux) {
-#   testInit(c("terra", "future"),
-#            verbose = TRUE, tmpFileExt = ".rds",
-#            opts = list(
-#              "future.supportsMulticore.unstable" = "quiet",
-#              "reproducible.futurePlan" = "multicore"
-#            )
-#   )
-#
-#   # There is now a warning with future package
-#   a <- list()
-#   (aa <- system.time({
-#     for (i in c(1:3)) a[[i]] <- Cache(cachePath = tmpCache, rnorm, 1e6 + i)
-#   }))
-#   sca <- showCache(tmpCache)
-#   expect_true(length(unique(sca[[.cacheTableHashColName()]])) == 3)
-#
-#   try(unlink(tmpCache, recursive = TRUE))
-#   b <- list()
-#   (bb <- system.time({
-#     for (i in 1:3) b[[i]] <- Cache(cachePath = tmpCache, rnorm(1e6 + i))
-#   }))
-#   bb <- showCache(tmpCache)
-#   expect_true(length(unique(bb[[.cacheTableHashColName()]])) == 3)
-#
-#   # Test the speed of rerunning same line
-#   d <- list()
-#   (dd <- system.time({
-#     for (i in 1:3) d[[i]] <- Cache(cachePath = tmpCache, rnorm(1e6 + i))
-#   }))
-#   expect_true((dd[[3]] * 3) < aa[[3]])
-#   for (i in 1:3) {
-#     expect_true(identical(attr(d[[i]], ".Cache")$newCache, FALSE))
-#   }
-#   # }
-# })
+  # Test the speed of rerunning same line
+  d <- list()
+  (dd <- system.time({
+    for (i in 1:3) d[[i]] <- Cache(cachePath = tmpCache, rnorm(1e6 + i))
+  }))
+  expect_true((dd[[3]] * 3) < aa[[3]])
+  for (i in 1:3) {
+    expect_true(identical(attr(d[[i]], ".Cache")$newCache, FALSE))
+  }
+  # }
+})
 
 test_that("test failed Cache recovery -- message to delete cacheId", {
   if (!useDBI()) skip("Not relevant for multipleDBfiles")

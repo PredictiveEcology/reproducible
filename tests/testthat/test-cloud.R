@@ -56,11 +56,13 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   mess3 <- capture_messages({
     a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
   })
-  #if (getOption("reproducible.cache2")) {
+
+  # it is actually both loaded & saved locally; so should be loadedCachedResult and saved
+  if (!useDBI()) {
     expect_true(any(grepl(.message$LoadedCacheResult(), mess3)))
-  #} else {
-  #  expect_false(any(grepl(.message$LoadedCacheResult(), mess3)))
-  #}
+  } else {
+    expect_false(any(grepl(.message$LoadedCacheResult(), mess3)))
+  }
   expect_false(any(grepl("Uploaded", mess3)))
   expect_true(any(grepl("Downloading", mess3)))
 

@@ -97,10 +97,10 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
   } # Derive some metadata prior to evaluation so "showSimilar" can have something to compare with
 
   times$EvaluateStart <- Sys.time()
-  elapsedTimeCacheDigest <- difftime(times$EvaluateStart, times$CacheDigestStart, units = "secs")
   metadata <- metadata_define_preEval(keyFull, callList$.functionName, userTags,
                                       .objects, length, algo, quick, classOptions,
-                                      elapsedTimeCacheDigest)
+                                      times$EvaluateStart, times$CacheDigestStart)
+
   if (isTRUE(showSimilar) || isDevMode(useCache, userTags))
     showSimilar(cachePath, metadata, callList$.functionName, userTags, useCache, verbose)
 
@@ -108,19 +108,18 @@ cache2 <- function(FUN, ..., notOlderThan = NULL,
   outputFromEvaluate <- evalTheFun(callList$FUNcaptured, !callList$usesDots,
                                    matchedCall = callList$call, envir = .callingEnv,
                                    verbose = getOption("reproducible.verbose"), ...)
-  times$SaveStart <- Sys.time()
-  elapsedTimeFUN <- difftime(times$SaveStart, times$EvaluateStart, units = "secs")
 
   # ## Save to Cache; including to Memoise location; including metadata ## #
+  times$SaveStart <- Sys.time()
   outputFromEvaluate <- doSaveToCache(outputFromEvaluate, metadata, cachePaths, callList$func,
-                                      .objects, length, algo, quick, classOptions, elapsedTimeFUN,
+                                      .objects, length, algo, quick, classOptions,
                                       cache_file, userTags, objectSize, callList$.functionName, debugCache,
                                       keyFull,
                                       useCloud, cloudFolderID, gdriveLs,
-                                      func_call = callList$func_call, verbose)
+                                      func_call = callList$func_call, verbose,
+                                      times$SaveStart, times$EvaluateStart)
   times$SaveEnd <- Sys.time()
   verboseCacheDFAll(verbose, callList$.functionName, times)
-  .message$CacheTimings(verbose)
 
   return(outputFromEvaluate)
 }
@@ -157,6 +156,7 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
           if (usesDots)
             func_call <- as.call(append(list(func), as.list(call[-(1:2)])))
         } else {
+          # It is a complete call e.g., FUN = rnorm(1)
           func <- func_call[[1]]  # No package prefix
           if (isDollarOnlySqBr(func)) {
             func <- eval(func, envir = .callingEnv)  # No package prefix
@@ -204,10 +204,18 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
     func <- eval(fun, envir = .callingEnv)
   }
 
-  defunct(setdiff(names(args), formalArgs(func))) # pull the plug if args are defunct, and not used in FUN
+  # deal with defunct arguments
+  if (usesDots) { # any defunct argument will show up in the usesDots; need to keep them for defunct fn
+    argsSupplied <- unique(names(call))[-1]
+  } else {
+    argsSupplied <- names(args)
+  }
+  defunct(setdiff(argsSupplied, formalArgs(func))) # pull the plug if args are defunct, and not used in FUN
   argsRm <- names(args) %in% setdiff(names(.formalsCache), names(formals(func)))
   if (any(argsRm %in% TRUE))
     args <- args[!argsRm %in% TRUE]
+
+  # build new call from func and args; both must be correct by here
   new_call <- as.call(c(func, args))
   # This matches call on the FUN, not a duplicate of matchCall2
   matched_call <- match_call_primitive(func, new_call, expand.dots = TRUE, envir = .callingEnv)
@@ -451,7 +459,9 @@ cache_Id_Identical <- function(metadata, cachePaths, cache_key) {
 
 metadata_define_preEval <- function(detailed_key, func_name, userTags,
                                     .objects, length, algo, quick, classOptions,
-                                    elapsedTimeCacheDigest) {
+                                    timeEvaluateStart, timeCacheDigestStart) {
+
+  elapsedTimeCacheDigest <- difftime(timeEvaluateStart, timeCacheDigestStart, units = "secs")
 
   useCloud <- FALSE
 
@@ -691,11 +701,13 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
 }
 
 doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
-                          .objects, length, algo, quick, classOptions, elapsedTimeFUN,
+                          .objects, length, algo, quick, classOptions,
                           cache_file, userTags, objectSize, .functionName, debugCache,
                           detailed_key, func_call,
                           useCloud = useCloud, cloudFolderID = cloudFolderID, gdriveLs = gdriveLs,
-                          verbose) {
+                          verbose, timeSaveStart, timeEvaluateStart) {
+
+  elapsedTimeFUN <- difftime(timeSaveStart, timeEvaluateStart, units = "secs")
 
   # update metadata with other elements including elapsedTime for evaluation
   metadata <- metadata_define_postEval(metadata, detailed_key$key, outputFromEvaluate,
@@ -772,13 +784,17 @@ doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
 #' `FUNorig`, the original value passed by user to `FUN`, and `usesDots` which
 #' is a logical indicating whether the `...` are used.
 matchCall2 <- function(definition, call, envir, envir2 = parent.frame(), FUN) {
-  FUNcaptured <- substitute(FUN, env = envir2)
-  # This matches call for Cache
-  call <- match.call(definition, call = call, expand.dots = TRUE, envir = envir)
-  # call <- callIsQuote(call) # stip `quote`
-  FUNorig <- call$FUN
+  if (missing(FUN)) {
+    stop(.message$CacheRequiresFUNtxt())
+  } else {
+    FUNcaptured <- substitute(FUN, env = envir2)
+    # This matches call for Cache
+    call <- match.call(definition, call = call, expand.dots = TRUE, envir = envir)
+    # call <- callIsQuote(call) # stip `quote`
+    FUNorig <- call$FUN
 
-  usesDots <- sum(!nzchar(names(call))) > 1 || sum(!names(call) %in% .namesCacheFormals) > 2
+    usesDots <- sum(!nzchar(names(call))) > 1 || sum(!names(call) %in% .namesCacheFormals) > 2
+  }
   list(call = call, FUNorig = FUNorig, usesDots = usesDots, FUNcaptured = FUNcaptured)
 }
 
@@ -902,7 +918,7 @@ defunct <- function(argNames) {
 }
 
 
-.defunctCacheArgs <- c("sideEffects", "makeCopy", "compareRasterFileLength",
+.defunctCacheArgs <- c("sideEffect", "makeCopy", "compareRasterFileLength",
                        "cacheRepo", "digestPathContent")
 
 
@@ -935,6 +951,7 @@ verboseCacheDFAll <- function(verbose, functionName, times) {
   verboseDF1(verbose, functionName, times$CacheDigestStart, times$EvaluateStart)
   verboseDF2(verbose, functionName, times$EvaluateStart, times$SaveStart)
   verboseDF3(verbose, functionName, times$CacheDigestStart, times$SaveEnd)
+  .message$CacheTimings(verbose)
 }
 
 optionsSetForCache2 <- function(envir = parent.frame(1)) {

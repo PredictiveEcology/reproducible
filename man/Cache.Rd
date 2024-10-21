@@ -21,7 +21,6 @@ Cache(
   omitArgs = NULL,
   classOptions = list(),
   debugCache = character(),
-  sideEffect = FALSE,
   makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", 1),
@@ -105,10 +104,6 @@ the object \code{attr(mySimOut, "debugCache1")} can be compared.
 If \code{"quick"}, then it will return the same two objects directly,
 without evalutating the \code{FUN(...)}.}
 
-\item{sideEffect}{Now deprecated. Logical or path. Determines where the function will look for
-new files following function completion. See Details.
-\emph{NOTE: this argument is experimental and may change in future releases.}}
-
 \item{makeCopy}{Now deprecated. Ignored if used.}
 
 \item{quick}{Logical or character. If \code{TRUE},
@@ -152,6 +147,10 @@ objects.}
 inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}
 
 \item{conn}{an optional DBIConnection object, as returned by dbConnect().}
+
+\item{sideEffect}{Now deprecated. Logical or path. Determines where the function will look for
+new files following function completion. See Details.
+\emph{NOTE: this argument is experimental and may change in future releases.}}
 }
 \value{
 Returns the value of the

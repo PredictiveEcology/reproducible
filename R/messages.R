@@ -38,10 +38,10 @@
   )
 }
 
-.message$changingFormatTxt <- "Changing format of Cache entry from "
+.message$changingFormatTxt <- "Changing format of Cache entry from"
 
 .message$changingFormat <- function(prevFile, newFile) {
-  paste0("     (", .message$changingFormatTxt, fileExt(prevFile), " to ",
+  paste0("     (", .message$changingFormatTxt, " ", fileExt(prevFile), " to ",
   fileExt(newFile), ")")
 }
 
@@ -440,4 +440,8 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
       rm("verboseTiming", envir = .reproEnv)
     }
   }
+}
+
+.message$CacheRequiresFUNtxt <- function() {
+  "Cache requires the FUN argument"
 }
