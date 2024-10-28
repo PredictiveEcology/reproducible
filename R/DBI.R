@@ -183,21 +183,24 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   # Compare the file size with the object size -- to test for "captured environments"
   #  There is a buffer of 4x, plus file sizes are smaller than binary size with qs defaults
   #  So effectively, it is like 6x buffer to try to avoid false positives.
-  whichOS <- which(tagKey == "object.size")
-  if (length(whichOS)) {
-    objSize <- if (identical(unname(tagValue[whichOS]), "NA")) NA else as.numeric(tagValue[whichOS])
-    fsBig <- (objSize * 4) < fs
-    if (isTRUE(fsBig)) {
-      messageCache("Object with cacheId ", cacheId, " appears to have a much larger size ",
-        "on disk than in memory. ",
-        "This usually means that the object has captured an environment with ",
-        "many objects due to how a function or a formula is defined. ",
-        "Usually, a solution involves using quote and eval around the formulas ",
-        "and defining functions in a package or otherwise clean space, ",
-        "i.e., not inside another function.\n",
-        "See http://adv-r.had.co.nz/memory.html#gc and 'capturing environments'.",
-        verbose = verbose
-      )
+  if (fs > 1e4) {
+    whichOS <- which(tagKey == "object.size")
+    if (length(whichOS)) {
+      objSize <- if (identical(unname(tagValue[whichOS]), "NA")) NA else as.numeric(tagValue[whichOS])
+      fsBig <- (objSize * 4) < fs
+
+      if (isTRUE(fsBig)) {
+        messageCache("Object with cacheId ", cacheId, " appears to have a much larger size ",
+                     "on disk than in memory. ",
+                     "This usually means that the object has captured an environment with ",
+                     "many objects due to how a function or a formula is defined. ",
+                     "Usually, a solution involves using quote and eval around the formulas ",
+                     "and defining functions in a package or otherwise clean space, ",
+                     "i.e., not inside another function.\n",
+                     "See http://adv-r.had.co.nz/memory.html#gc and 'capturing environments'.",
+                     verbose = verbose
+        )
+      }
     }
   }
 
@@ -1001,6 +1004,7 @@ saveDBFileSingle <- function(dt, cachePath, cacheId) {
 
 convertDBbackendIfIncorrect <- function(cachePath, drv, conn,
                                         verbose = getOption("reproducible.verbose")) {
+  origDrv <- getDrv(drv)
   origDBI <- useDBI()
   newDBI <- suppressMessages(useDBI(!origDBI)) # switch to the other
   if (!identical(newDBI, origDBI)) { # if they are same, then DBI is not installed; not point proceeding
@@ -1018,11 +1022,11 @@ convertDBbackendIfIncorrect <- function(cachePath, drv, conn,
         )
         if (isTRUE(origDBI)) { # using DBI --> convert all data to a DBI database
           suppressMessages(useDBI(origDBI))
-          .createCache(cachePath, drv = drv, conn = conn)
+          .createCache(cachePath, drv = origDrv, conn = conn)
           Map(tv = sc$tagValue, tk = sc$tagKey, oh = sc$cacheId, function(tv, tk, oh) {
             .addTagsRepo(
               cacheId = oh, cachePath = cachePath,
-              tagKey = tk, tagValue = tv, drv = drv, conn = conn
+              tagKey = tk, tagValue = tv, drv = origDrv, conn = conn
             )
           })
           unlink(CacheDBFiles(cachePath))
@@ -1152,7 +1156,6 @@ checkSameCacheId <- function(f) {
 }
 
 swapCacheFileFormat <- function(wrappedObj, cachePath, drv, conn, cacheId, sameCacheID, newFile, verbose) {
-  #   swapCacheFileFormat <- function(sameCacheID, f, verbose, wrappedObj, cachePath, drv, conn, cacheId) {
   messageCache(.message$changingFormat(prevFile = sameCacheID, newFile = newFile),
                verbose = verbose)
 
@@ -1165,4 +1168,4 @@ swapCacheFileFormat <- function(wrappedObj, cachePath, drv, conn, cacheId, sameC
     format = fileExt(sameCacheID)
   )
 }
-# }
+

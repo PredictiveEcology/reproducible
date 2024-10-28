@@ -190,8 +190,8 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
     })
   }
   inReposPoss <- searchInRepos(
-    cachePaths = cachePath, drv = drv,
-    outputHash = outputHash, conn = conn
+    cachePaths = cachePath, outputHash = outputHash,
+    drv = drv, conn = conn
   )
   inReposPoss
 }

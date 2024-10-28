@@ -351,16 +351,16 @@ utils::globalVariables(c(
 #'   e.g., [rmFromCache()], [CacheStorageDir()]
 #'
 #' @author Eliot McIntire
-#' @export
 #' @importFrom digest digest
 #' @importFrom data.table setDT := setkeyv .N .SD
 #' @importFrom utils object.size tail
 #' @importFrom methods formalArgs
+#' @export
 #' @rdname Cache
 #'
 #' @example inst/examples/example_Cache.R
 #'
-Cache <-
+Cache2 <-
   function(FUN, ..., notOlderThan = NULL,
            .objects = NULL, .cacheExtra = NULL, .functionName = NULL,
            outputObjects = NULL, # nolint
@@ -381,6 +381,8 @@ Cache <-
            drv = getDrv(getOption("reproducible.drv", NULL)),
            conn = getOption("reproducible.conn", NULL)) {
 
+    if (!exists("bbbb")) bbbb <<- 1
+    bbbb <<- bbbb + 1
     if (is.null(cachePath)) {
       if (!is.null(cacheRepo)) {
         messageCache("The cacheRepo argument is being deprecated. Please use cachePath", verbose = verbose)
@@ -562,38 +564,41 @@ Cache <-
           return(list(hash = preDigest, content = list(...)))
         }
       }
-      conns <- list()
       userConn <- !is.null(conn)
-      if (!is.null(conn)) { # if the conn was passed by user
-        if (!is.list(conn)) {
-          conn <- list(conn)
-        }
-        if (!identical(length(cachePaths), length(conn))) {
-          stop("conn and cachePath are both provided, but are different lengths which is not allowed")
-        }
-        names(conn) <- cachePaths
-        conns <- conn
-      }
+
+      conns <- checkConns(cachePaths, conn)
+      # conns <- list()
+      # if (!is.null(conn)) { # if the conn was passed by user
+      #   if (!is.list(conn)) {
+      #     conn <- list(conn)
+      #   }
+      #   if (!identical(length(cachePaths), length(conn))) {
+      #     stop("conn and cachePath are both provided, but are different lengths which is not allowed")
+      #   }
+      #   names(conn) <- cachePaths
+      #   conns <- conn
+      # }
       for (cachePath in cachePaths) {
         # Need conn --> also need exclusive lock
         if (useDBI()) {
-          if (is.null(conns[[cachePath]])) {
-            conns[[cachePath]] <- dbConnectAll(drv, cachePath = cachePath)
-            RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA busy_timeout=5000;"))
-            RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA journal_mode=WAL;"))
-          }
+          conns <- createConns(cachePath, conns, drv)
+          # if (is.null(conns[[cachePath]])) {
+          #   conns[[cachePath]] <- dbConnectAll(drv, cachePath = cachePath)
+          #   RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA busy_timeout=5000;"))
+          #   RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA journal_mode=WAL;"))
+          # }
         }
 
-        isIntactRepo <- CacheIsACache(
-          cachePath = cachePath, drv = drv, create = TRUE,
-          conn = conns[[cachePath]]
-        )
-        if (any(!isIntactRepo)) {
-          ret <- createCache(cachePath,
-            drv = drv, conn = conns[[cachePath]],
-            force = isIntactRepo
-          )
-        }
+        # isIntactRepo <- CacheIsACache(
+        #   cachePath = cachePath, drv = drv, create = TRUE,
+        #   conn = conns[[cachePath]]
+        # )
+        # if (any(!isIntactRepo)) {
+        #   ret <- createCache(cachePath,
+        #     drv = drv, conn = conns[[cachePath]],
+        #     force = isIntactRepo
+        #   )
+        # }
 
         # Need exclusive lock
         if (!useDBI()) {
@@ -2317,7 +2322,7 @@ evalTheFun <- function(FUNcaptured, isCapturedFUN, matchedCall, envir = parent.f
   out
 }
 
-searchInRepos <- function(cachePaths, drv, outputHash, conn) {
+searchInRepos <- function(cachePaths, outputHash, drv, conn) {
   dbTabNam <- NULL
   tries <- 1
   while (tries <= length(cachePaths)) {
@@ -2325,21 +2330,22 @@ searchInRepos <- function(cachePaths, drv, outputHash, conn) {
     if (useDBI()) {
       dbTabNam <- CacheDBTableName(repo, drv = drv)
 
-      if (tries > 1) {
-        DBI::dbDisconnect(conn)
-        conn <- dbConnectAll(drv, cachePath = repo)
-      }
-      qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(glue::double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
-        dbTabName = dbTabNam,
-        outputHash = outputHash,
-        .con = conn
-      )
-      res <- retry(
-        retries = 15, exponentialDecayBase = 1.01,
-        quote(DBI::dbSendQuery(conn, qry))
-      )
-      isInRepo <- setDT(DBI::dbFetch(res))
-      DBI::dbClearResult(res)
+      isInRepo <- getHashFromDB(tries, conn, drv, repo, dbTabNam, outputHash)
+      # if (tries > 1) {
+      #   DBI::dbDisconnect(conn)
+      #   conn <- dbConnectAll(drv, cachePath = repo)
+      # }
+      # qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(glue::double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
+      #   dbTabName = dbTabNam,
+      #   outputHash = outputHash,
+      #   .con = conn
+      # )
+      # res <- retry(
+      #   retries = 15, exponentialDecayBase = 1.01,
+      #   quote(DBI::dbSendQuery(conn, qry))
+      # )
+      # isInRepo <- setDT(DBI::dbFetch(res))
+      # DBI::dbClearResult(res)
     } else {
       # The next line will find it whether it is qs, rds or other; this is necessary for "change cacheSaveFormat"
       csf <- CacheStoredFile(cachePath = repo, cacheId = outputHash, format = "check")
@@ -2616,3 +2622,61 @@ verboseAppendOrCreateDF <- function(verboseDF) {
   }
 }
 
+
+
+checkConns <- function(cachePaths, conn) {
+  conns <- list()
+  if (!is.null(conn)) { # if the conn was passed by user
+    if (!is.list(conn)) {
+      conn <- list(conn)
+    }
+    if (!identical(length(cachePaths), length(conn))) {
+      stop("conn and cachePath are both provided, but are different lengths which is not allowed")
+    }
+    names(conn) <- cachePaths
+    conns <- conn
+  }
+}
+
+
+createConns <- function(cachePath, conns, drv) {
+  if (useDBI()) {
+    if (is.null(conns[[cachePath]])) {
+      conns[[cachePath]] <- dbConnectAll(drv, cachePath = cachePath)
+      RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA busy_timeout=5000;"))
+      RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA journal_mode=WAL;"))
+    }
+
+    isIntactRepo <- CacheIsACache(
+      cachePath = cachePath, drv = drv, create = TRUE,
+      conn = conns[[cachePath]]
+    )
+    if (any(!isIntactRepo)) {
+      ret <- createCache(cachePath,
+                         drv = drv, conn = conns[[cachePath]],
+                         force = isIntactRepo
+      )
+    }
+  }
+
+  conns
+}
+
+getHashFromDB <- function(tries, conn, drv, repo, dbTabNam, outputHash) {
+  if (tries > 1) {
+    DBI::dbDisconnect(conn)
+    conn <- dbConnectAll(drv, cachePath = repo)
+  }
+  qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(glue::double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
+                        dbTabName = dbTabNam,
+                        outputHash = outputHash,
+                        .con = conn
+  )
+  res <- retry(
+    retries = 15, exponentialDecayBase = 1.01,
+    quote(DBI::dbSendQuery(conn, qry))
+  )
+  isInRepo <- setDT(DBI::dbFetch(res))
+  DBI::dbClearResult(res)
+  isInRepo
+}

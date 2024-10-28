@@ -418,7 +418,7 @@ setMethod(
 
     if (!useDBI()) {
       if (!is.null(cacheId)) {
-        objsDT <- rbindlist(lapply(cacheId, showCacheFast, cachePath = x))
+        objsDT <- rbindlist(lapply(cacheId, showCacheFast, cachePath = x, drv = drv, conn = conn))
       } else {
         objsDT <- rbindlist(lapply(
           dir(CacheStorageDir(x),
@@ -703,8 +703,9 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
 
 useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose"), default = TRUE) {
   if  (isTRUE(getOption("reproducible.cache2"))) {
-    options("reproducible.useDBI" = FALSE)
-    return(FALSE)
+    # browser()
+    # options("reproducible.useDBI" = FALSE)
+    # return(FALSE)
   }
   canSwitch <- TRUE
   if (!is.null(set)) {
@@ -782,19 +783,19 @@ isTRUEorForce <- function(cond) {
 }
 
 showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
-                          dtFile) {
+                          dtFile, drv, conn) {
 
   if (missing(dtFile)) {
-    dtFilePoss <- CacheDBFileSingle(cachePath, cacheId)
-    fe <- file.exists(dtFilePoss)
-    dtFile <- if (any(fe)) dtFilePoss[fe][1] else character()
+    dtFile <- CacheDBFileSingle(cachePath, cacheId)
     # dtFile <- dir(CacheStorageDir(cachePath), full.names = TRUE,
     #               pattern = paste0(cacheId, "\\", suffixMultipleDBFiles()))
   }
+  fe <- file.exists(dtFile)
+  dtFile <- if (any(fe)) dtFile[fe][1] else character()
   if (length(dtFile)) {
     sc <- loadFile(dtFile)
   } else {
-    sc <- showCache(userTags = cacheId, verbose = FALSE)[cacheId %in% cacheId]
+    sc <- showCache(cachePath, userTags = cacheId, drv = drv, conn = conn, verbose = FALSE)[cacheId %in% cacheId]
   }
   sc[]
 }
