@@ -580,14 +580,14 @@ Cache2 <-
       # }
       for (cachePath in cachePaths) {
         # Need conn --> also need exclusive lock
-        if (useDBI()) {
+        #if (useDBI()) {
           conns <- createConns(cachePath, conns, drv)
           # if (is.null(conns[[cachePath]])) {
           #   conns[[cachePath]] <- dbConnectAll(drv, cachePath = cachePath)
           #   RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA busy_timeout=5000;"))
           #   RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA journal_mode=WAL;"))
           # }
-        }
+        #}
 
         # isIntactRepo <- CacheIsACache(
         #   cachePath = cachePath, drv = drv, create = TRUE,
@@ -2646,19 +2646,18 @@ createConns <- function(cachePath, conns, drv) {
       RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA busy_timeout=5000;"))
       RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA journal_mode=WAL;"))
     }
-
-    isIntactRepo <- CacheIsACache(
-      cachePath = cachePath, drv = drv, create = TRUE,
-      conn = conns[[cachePath]]
-    )
-    if (any(!isIntactRepo)) {
-      ret <- createCache(cachePath,
-                         drv = drv, conn = conns[[cachePath]],
-                         force = isIntactRepo
-      )
-    }
   }
 
+  isIntactRepo <- CacheIsACache(
+    cachePath = cachePath, drv = drv, create = TRUE,
+    conn = conns[[cachePath]]
+  )
+  if (any(!isIntactRepo)) {
+    ret <- createCache(cachePath,
+                       drv = drv, conn = conns[[cachePath]],
+                       force = isIntactRepo
+    )
+  }
   conns
 }
 
