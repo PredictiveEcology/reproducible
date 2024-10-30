@@ -94,7 +94,8 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
 
   if (cloudWriteOrRead(useCloud) && isTRUE(any(keyInGdriveLs(keyFull$key, gdriveLs)))) {
     newFileName <- gdriveLs$name[which(keyInGdriveLs(keyFull$key, gdriveLs))] # paste0(outputHash,".rda")
-    shownCache <- cloudDownload(keyFull$key, newFileName, gdriveLs, cachePaths[[1]], cloudFolderID, verbose = verbose)
+    shownCache <- cloudDownload(keyFull$key, newFileName, gdriveLs, cachePaths[[1]], cloudFolderID,
+                                drv = drv, conn = conn, verbose = verbose)
     outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePaths, cache_file, callList$.functionName, callList$func,
                                                 useCache, useCloud = FALSE, cloudFolderID, gdriveLs, drv, conn, verbose = verbose)
     return(outputFromDisk)
