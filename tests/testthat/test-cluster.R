@@ -20,7 +20,7 @@ test_that("test parallel collisions", {
   # make function that will write to cache repository from with clusters
   numNew <- 20
   fun <- function(x, cachePath, numNew, keepLog) {
-    library(reproducible)
+    require("reproducible")
     if (keepLog) {
       fn <- file.path("c:/Eliot/tmpCache/log", Sys.getpid())
       checkPath(dirname(fn), create = TRUE)
@@ -48,7 +48,7 @@ test_that("test parallel collisions", {
 
   clusterSetRNGStream(cl)
   parallel::clusterEvalQ(cl, {
-    library(reproducible)
+    require("reproducible")
   })
   numToRun <- 140
   # if (interactive()) {
