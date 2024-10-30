@@ -155,146 +155,146 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   expect_true(all(grepl(unique(showCache(tmpCache)[[.cacheTableHashColName()]]), gdriveLs$name)))
 })
 
-# test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd", {
-#   skip_on_cran()
-#   skip_on_ci()
-#   testInit(c("googledrive", "terra"),
-#     # tmpFileExt = c(".tif", ".grd"),
-#     needGoogleDriveAuth = TRUE,
-#     opts = list("reproducible.ask" = FALSE)
-#   )
-#
-#   opts <- options("reproducible.cachePath" = tmpdir)
-#   suppressWarnings(rm(list = "aaa", envir = .GlobalEnv))
-#
-#   on.exit(
-#     {
-#       retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
-#       options(opts)
-#     },
-#     add = TRUE
-#   )
-#   clearCache(x = tmpCache)
-#   clearCache(x = tmpdir)
-#   newDir <- retry(quote(googledrive::drive_mkdir(name = basename2(tmpdir), path = "testsForPkgs")))
-#   cloudFolderID <- newDir
-#
-#   testRasterInCloud(".tif",
-#     cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
-#     type = "Raster"
-#   )
-#
-#   retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
-#   clearCache(x = tmpdir)
-#   newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
-#   cloudFolderID <- newDir
-#
-#   # the 3 raster files include the .grd, .gri, and .grd.aux.xml
-#   testRasterInCloud(".grd",
-#     cloudFolderID = cloudFolderID, numRasterFiles = 3, tmpdir = tmpdir,
-#     type = "Raster"
-#   )
-# })
-#
-# test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
-#   skip_on_cran()
-#   skip_on_ci()
-#   testInit(c("googledrive", "terra"),
-#     # tmpFileExt = c(".tif", ".grd"),
-#     needGoogleDriveAuth = TRUE,
-#     opts = list("reproducible.ask" = FALSE)
-#   )
-#
-#
-#   # googledrive::drive_auth("predictiveecology@gmail.com")
-#   on.exit(
-#     {
-#       retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
-#       options(opts)
-#     },
-#     add = TRUE
-#   )
-#   opts <- options("reproducible.cachePath" = tmpdir)
-#   on.exit(options(opts), add = TRUE)
-#   clearCache(x = tmpCache)
-#   clearCache(x = tmpdir)
-#   newDir <- retry(quote(googledrive::drive_mkdir(name = basename2(tmpdir), path = "testsForPkgs")))
-#   cloudFolderID <- newDir
-#
-#   testRasterInCloud(".tif",
-#     cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
-#     type = "Stack"
-#   )
-# })
-#
-# test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
-#   skip_on_cran()
-#   skip_on_ci()
-#   testInit(c("googledrive", "terra"),
-#     needGoogleDriveAuth = TRUE,
-#     opts = list("reproducible.ask" = FALSE)
-#   )
-#
-#   opts <- options("reproducible.cachePath" = tmpdir)
-#   # googledrive::drive_auth("predictiveecology@gmail.com")
-#   on.exit(
-#     {
-#       retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
-#       options(opts)
-#     },
-#     add = TRUE
-#   )
-#   clearCache(x = tmpCache)
-#   clearCache(x = tmpdir)
-#   newDir <- retry(quote(googledrive::drive_mkdir(name = tempdir2(), path = "testsForPkgs")))
-#   cloudFolderID <- newDir
-#
-#   testRasterInCloud(".tif",
-#     cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
-#     type = "Brick"
-#   )
-# })
-#
-# test_that("prepInputs works with team drives", {
-#   skip_on_cran()
-#   skip_on_ci()
-#
-#   testInit(
-#     needGoogleDriveAuth = TRUE,
-#     "googledrive",
-#     opts = list(
-#       "reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
-#       "reproducible.ask" = FALSE
-#     )
-#   )
-#
-#   # zipUrl <- "https://drive.google.com/file/d/1zRX2c55ebJbQtjijCErEfGxhsa7Ieph2" # Orig
-#   zipUrl <- "https://drive.google.com/file/d/1JpdvM8QiyCyNyQAvSaFU0rAY-1I3mcbp"
-#
-#   # This will fail if it is hit too many times -- we don't want the test to report
-#   #  fail because of this
-#   opts <- options("reproducible.interactiveOnDownloadFail" = FALSE)
-#   on.exit(options(opts), add = TRUE)
-#   if (packageVersion("googledrive") < "2.0.0") {
-#     wb <- prepInputs(
-#       targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
-#       alsoExtract = "similar",
-#       team_drive = TRUE
-#     )
-#   } else {
-#     err <- capture_error(
-#       noisy <- capture.output(
-#         wb <- prepInputs(
-#           targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
-#           alsoExtract = "similar",
-#           shared_drive = TRUE
-#         )
-#       )
-#     )
-#     if (is.null(err)) {
-#       if (.requireNamespace("sf")) {
-#         expect_true(is(wb, "sf"))
-#       }
-#     }
-#   }
-# })
+test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd", {
+  skip_on_cran()
+  skip_on_ci()
+  testInit(c("googledrive", "terra"),
+    # tmpFileExt = c(".tif", ".grd"),
+    needGoogleDriveAuth = TRUE,
+    opts = list("reproducible.ask" = FALSE)
+  )
+
+  opts <- options("reproducible.cachePath" = tmpdir)
+  suppressWarnings(rm(list = "aaa", envir = .GlobalEnv))
+
+  on.exit(
+    {
+      retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
+      options(opts)
+    },
+    add = TRUE
+  )
+  clearCache(x = tmpCache)
+  clearCache(x = tmpdir)
+  newDir <- retry(quote(googledrive::drive_mkdir(name = basename2(tmpdir), path = "testsForPkgs")))
+  cloudFolderID <- newDir
+
+  testRasterInCloud(".tif",
+    cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
+    type = "Raster"
+  )
+
+  retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
+  clearCache(x = tmpdir)
+  newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
+  cloudFolderID <- newDir
+
+  # the 3 raster files include the .grd, .gri, and .grd.aux.xml
+  testRasterInCloud(".grd",
+    cloudFolderID = cloudFolderID, numRasterFiles = 3, tmpdir = tmpdir,
+    type = "Raster"
+  )
+})
+
+test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
+  skip_on_cran()
+  skip_on_ci()
+  testInit(c("googledrive", "terra"),
+    # tmpFileExt = c(".tif", ".grd"),
+    needGoogleDriveAuth = TRUE,
+    opts = list("reproducible.ask" = FALSE)
+  )
+
+
+  # googledrive::drive_auth("predictiveecology@gmail.com")
+  on.exit(
+    {
+      retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
+      options(opts)
+    },
+    add = TRUE
+  )
+  opts <- options("reproducible.cachePath" = tmpdir)
+  on.exit(options(opts), add = TRUE)
+  clearCache(x = tmpCache)
+  clearCache(x = tmpdir)
+  newDir <- retry(quote(googledrive::drive_mkdir(name = basename2(tmpdir), path = "testsForPkgs")))
+  cloudFolderID <- newDir
+
+  testRasterInCloud(".tif",
+    cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
+    type = "Stack"
+  )
+})
+
+test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
+  skip_on_cran()
+  skip_on_ci()
+  testInit(c("googledrive", "terra"),
+    needGoogleDriveAuth = TRUE,
+    opts = list("reproducible.ask" = FALSE)
+  )
+
+  opts <- options("reproducible.cachePath" = tmpdir)
+  # googledrive::drive_auth("predictiveecology@gmail.com")
+  on.exit(
+    {
+      retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
+      options(opts)
+    },
+    add = TRUE
+  )
+  clearCache(x = tmpCache)
+  clearCache(x = tmpdir)
+  newDir <- retry(quote(googledrive::drive_mkdir(name = tempdir2(), path = "testsForPkgs")))
+  cloudFolderID <- newDir
+
+  testRasterInCloud(".tif",
+    cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
+    type = "Brick"
+  )
+})
+
+test_that("prepInputs works with team drives", {
+  skip_on_cran()
+  skip_on_ci()
+
+  testInit(
+    needGoogleDriveAuth = TRUE,
+    "googledrive",
+    opts = list(
+      "reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
+      "reproducible.ask" = FALSE
+    )
+  )
+
+  # zipUrl <- "https://drive.google.com/file/d/1zRX2c55ebJbQtjijCErEfGxhsa7Ieph2" # Orig
+  zipUrl <- "https://drive.google.com/file/d/1JpdvM8QiyCyNyQAvSaFU0rAY-1I3mcbp"
+
+  # This will fail if it is hit too many times -- we don't want the test to report
+  #  fail because of this
+  opts <- options("reproducible.interactiveOnDownloadFail" = FALSE)
+  on.exit(options(opts), add = TRUE)
+  if (packageVersion("googledrive") < "2.0.0") {
+    wb <- prepInputs(
+      targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
+      alsoExtract = "similar",
+      team_drive = TRUE
+    )
+  } else {
+    err <- capture_error(
+      noisy <- capture.output(
+        wb <- prepInputs(
+          targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
+          alsoExtract = "similar",
+          shared_drive = TRUE
+        )
+      )
+    )
+    if (is.null(err)) {
+      if (.requireNamespace("sf")) {
+        expect_true(is(wb, "sf"))
+      }
+    }
+  }
+})
