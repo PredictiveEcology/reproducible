@@ -5,6 +5,7 @@
 
 ## Bugfix
 * When forcing `cacheId`, e.g., in `Cache(..., cacheId = "myCacheItem")`, `myCacheItem` was not used. Fixed.
+* `prepInputs(..., fun = sf::st_read)` now works as expected ... like `prepInputs(..., fun = "sf::st_read")`
 
 # reproducible 2.1.0
 
