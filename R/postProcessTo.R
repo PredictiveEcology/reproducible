@@ -870,11 +870,11 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
             terra::crs(ext) <- terra::crs(from)
           }
           extTmp <- terra::ext(ext)
+          extFrom <- terra::ext(from)
+          extOrder <- c("xmin", "ymin", "xmax", "ymax")
+          extNum <- extFrom[][extOrder]
           if (isTRUE(suppressWarnings(terra::is.lonlat(ext)))) { # warning is about "crs not defined"
             extTmp2 <- terra::extend(extTmp, 0.1) # hard code 0.1 lat/long, as long as it isn't past the from extent
-            extFrom <- terra::ext(from)
-            extOrder <- c("xmin", "ymin", "xmax", "ymax")
-            extNum <- extFrom[][extOrder]
             exts <- c(
               xmin = max(terra::xmin(extTmp2), terra::xmin(extFrom)),
               ymin = max(terra::ymin(extTmp2), terra::ymin(extFrom)),
@@ -890,6 +890,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
             ext <- terra::extend(extTmp, res[1] * 2)
           }
 
+          exts <- ext[][extOrder]
           # This won't work if the the ext is tight with the from i.e., if they are the same;
           #   test and skip cropping with needBuffer =TRUE if it is too tight
           if (isTRUE(any(extNum == exts)))
