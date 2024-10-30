@@ -900,12 +900,12 @@ extractFromArchive <- function(archive,
           if (nchar(sZip) > 0) {
             messagePreProcess(messPart1, verbose = verbose)
           } else {
-            messagePreProcess(
+            stop(
               paste(
                 messPart1,
-                "Install 7zip and add it to your PATH (see https://www.7-zip.org/)."
-              ),
-              verbose = verbose
+                # "Install 7zip and add it to your PATH (see https://www.7-zip.org/)."
+                "Try installing the archive package then rerunning: \ninstall.packages('archive')"
+              )
             )
           }
         }
