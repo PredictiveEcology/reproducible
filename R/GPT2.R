@@ -755,7 +755,7 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
                     userTags = userTags, linkToCacheId = linkToCacheId,
                     drv = drv, conn = conn,
                     cacheId = cache_key)
-  .message$Saved(cachePath, cache_key, functionName = .functionName, verbose)
+  .message$Saved(cachePath, cache_key, functionName = .functionName, verbose = verbose)
   return(metadata)
 }
 

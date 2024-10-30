@@ -362,10 +362,14 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
 .message$SavedTxt <- "Saved! Cache file: "
 
-.message$Saved <- function(cachePath, outputHash, functionName, verbose) {
+.message$Saved <- function(cachePath, outputHash, functionName,
+                           toMemoise = getOption("reproducible.useMemoise", FALSE), verbose) {
+  postMess <- ""
+  if (isTRUE(getOption("reproducible.useMemoise")))
+    postMess <- paste0(" ", .message$AddingToMemoised)
   messageCache(.message$SavedTxt,
                basename2(CacheStoredFile(cachePath = cachePath, cacheId = outputHash)),
-               "; fn: ", .messageFunctionFn(functionName),
+               "; fn: ", .messageFunctionFn(functionName), postMess,
                verbose = verbose)
 }
 

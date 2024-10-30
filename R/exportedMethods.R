@@ -389,7 +389,8 @@ setMethod(
     if (isTRUE(fromMemoise)) {
       whMessage <- .message$LoadedCacheResult(2)
     } else if (fromMemoise %in% FALSE) {
-      postMess <- paste0(" ", .message$AddingToMemoised)
+      if (isTRUE(getOption("reproducible.useMemoise")))
+        postMess <- paste0(" ", .message$AddingToMemoised)
     }
     baseMess <- .message$LoadedCache(whMessage, functionName)
     if (!is.null(postMess))

@@ -1976,3 +1976,30 @@ test_that("test defunct arguments", {
 
 })
 
+test_that("test messaging for useMemoise = TRUE", {
+  testInit()
+  withr::local_options(reproducible.cachePath = tmpCache,
+                       reproducible.useMemoise = TRUE)
+
+  mess1 <- capture_messages(
+    Cache(rnorm(1))
+  )
+  # should add to memoise on first save
+  expect_match(object = mess1, .message$AddingToMemoised, all = FALSE)
+
+  # should recover from memoised
+  mess2 <- capture_messages(
+    Cache(rnorm(1))
+  )
+  expect_match(object = mess2, .message$LoadedCacheResult("Memoised"), all = FALSE)
+  # and not add to memoised
+  expect_false(any(grepl(mess2, pattern = gsub("\\)", "", gsub("\\(", "", .message$AddingToMemoised)))))
+  rm(list = ls(memoiseEnv(tmpCache)), envir = memoiseEnv(tmpCache))
+  mess3 <- capture_messages(
+    Cache(rnorm(1))
+  )
+  # should add to memoise on first load if it isn't there from the first save
+  expect_match(object = mess3, .message$AddingToMemoised, all = FALSE)
+
+})
+
