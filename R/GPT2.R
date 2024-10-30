@@ -289,18 +289,22 @@ check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functio
         # keep important parts if it is first one, or if it has the object in the cacheRepo
         # inRepos <- inReposPoss
         conn <- conns[[cachePath]]
-        if (is.null(connOrig))
-          on.exit2(DBI::dbDisconnect(conn), envir = envir)
+        if (is.null(connOrig)) # don't disconnect if conn was user passed
+          # if this is >1st cachePath, then the db will already be disconnected; suppressWarnings
+          on.exit2(suppressWarnings(DBI::dbDisconnect(conn)), envir = envir)
+
         shownCache <- inReposPoss$fullCacheTableForObj
         if (NROW(inReposPoss$isInRepo)) {
           break
         }
-        if (cachePath == tail(cachePaths, 1)) {
+        if (cachePath == tail(cachePaths, 1)) { # if it is the last or only cachePath, then end
           ret <- .returnNothing
           attr(ret, ".Cache")$conn <- conn
           return(invisible(ret))
         }
-        DBI::dbDisconnect(conn) # try next cachePath -- disconnect previous
+
+        # this disconnect won't happen if user passed just one conn because already returned/break from this loop
+        DBI::dbDisconnect(conn) # try next cachePath -- disconnect previous;
       }
     } else {
       shownCache <- NULL
