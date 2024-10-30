@@ -45,6 +45,11 @@ test_that("all exported functions have examples", {
     }
     # for debugging only
     # print(file)
-    test_example(file)
+      co3 <- capture.output(type = "output",
+        co2 <- capture_messages(
+          co <- capture.output(type = "message",
+            test_example(file)
+          ))
+      )
   }
 })
