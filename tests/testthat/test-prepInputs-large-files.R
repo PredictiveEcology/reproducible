@@ -17,7 +17,7 @@ test_that("prepInputs correctly unzips large files", {
   )
 
   url <- "https://opendata.nfis.org/downloads/forest_change/CA_forest_harvest_mask_year_1985_2015.zip"
-  options(reproducible.tempPath = file.path(tmpdir, "ttt"))
+  withr::local_options(reproducible.tempPath = file.path(tmpdir, "ttt"))
   ff <- prepInputs(
     url = url,
     targetFile = targFile,

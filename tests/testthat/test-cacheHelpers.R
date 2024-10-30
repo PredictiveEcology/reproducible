@@ -53,17 +53,14 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_error(studyAreaName(integer(0)))
 
   # .checkCacheRepo
-  options(reproducible.cachePath = .reproducibleTempCacheDir())
+  withr::local_options(reproducible.cachePath = .reproducibleTempCacheDir())
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl(.message$NoCacheRepoSuppliedGrep, mess)))
 
-  opt11 <- options("reproducible.cachePath" = NULL)
-  on.exit(
-    {
-      options(opt11)
-    },
-    add = TRUE
-  )
+  withr::local_options(reproducible.cachePath = NULL,
+                       "rasterTmpDir" = tempdir2(rndstr(1, 6)),
+                       "reproducible.inputPaths" = NULL,
+                       "reproducible.overwrite" = TRUE)
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl(paste0(.message$NoCachePathSupplied, ". Using"), mess)))
 

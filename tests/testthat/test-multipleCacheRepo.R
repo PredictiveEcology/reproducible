@@ -2,8 +2,9 @@
 test_that("test multiple cachePath", {
   testInit()
 
-  opt <- options("reproducible.cachePath" = c(tmpdir, tmpCache),
-                 reproducible.useMemoise = TRUE)
+  withr::local_options(
+    "reproducible.cachePath" = c(tmpdir, tmpCache),
+    reproducible.useMemoise = TRUE)
 
   for (memoise in c(TRUE, FALSE)) {
     options(reproducible.useMemoise = memoise)
@@ -36,7 +37,7 @@ test_that("test multiple cachePath", {
     clearCache(tmpdir)
     clearCache(tmpCache)
   }
-  on.exit(options(opt), add = TRUE)
+
 })
 
 ##########################
@@ -55,13 +56,7 @@ test_that("test multiple cachePath with 1 of them a cloudCache", {
     cloudFolderID = newDir$id,
     cachePath = tmpCache
   ))
-  # for (i in 1:4) cloudCache(rnorm, 1e4 + i, cloudFolderID = newDir$id)
   expect_true(all(grepl("local and cloud|loading cached result", mess)))
 
-  # cloudCache(rnorm, 1, cloudFolderID = "1JZoXm68NdegrkhKN3THXdXf2ZKeYJ34N")
-
-  opt <- options("reproducible.cachePath" = list(tmpdir, googledrive::as_id(newDir$id)))
-  # a1 <- Cache(rnorm, 1)
-
-  on.exit(options(opt), add = TRUE)
+  withr::local_options("reproducible.cachePath" = list(tmpdir, googledrive::as_id(newDir$id)))
 })

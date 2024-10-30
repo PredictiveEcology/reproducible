@@ -12,7 +12,7 @@ test_that("prepInputs doesn't work (part 3)", {
     ) # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
   )
 
-  options("reproducible.cachePath" = tmpdir)
+  withr::local_options("reproducible.cachePath" = tmpdir)
 
   # Add a study area to Crop and Mask to
   # Create a "study area"

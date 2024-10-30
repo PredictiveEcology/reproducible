@@ -23,7 +23,7 @@ test_that("preProcess fails if user provides non-existing file", {
   expect_true(grepl("manual download", errMsg))
   expect_true(grepl("appendChecksumsTable", errMsg))
 
-  optsOrig <- options(reproducible.interactiveOnDownloadFail = FALSE)
+  withr::local_options(reproducible.interactiveOnDownloadFail = FALSE)
   co <- capture.output(type = "message", {
     co2 <- capture.output({
       errMsg <- testthat::capture_error({
@@ -37,7 +37,7 @@ test_that("preProcess fails if user provides non-existing file", {
 
   expect_true(grepl("manual download", errMsg))
   expect_true(grepl("appendChecksumsTable", errMsg))
-  options(optsOrig)
+  withr::deferred_run()
 
   testthat::with_mock(
     `isInteractive` = function() {
@@ -64,7 +64,7 @@ test_that("preProcess fails if user provides non-existing file", {
   )
   expect_true(sum(grepl("Download failed", errMsg)) == 1)
 
-  optsOrig <- options("reproducible.interactiveOnDownloadFail" = TRUE)
+  withr::local_options("reproducible.interactiveOnDownloadFail" = TRUE)
   testthat::with_mock(
     `isInteractive` = function() {
       TRUE
@@ -102,7 +102,7 @@ test_that("preProcess fails if user provides non-existing file", {
   cs <- read.table(file.path(tmpdir, "CHECKSUMS.txt"), header = TRUE)
   expect_true(NROW(cs) == 2 || NROW(cs) == 3) # TODO this may be detecting a bug == on GA it is 2, locally it is 3
   expect_true(all(grepl("rasterTest", cs$file)))
-  options(optsOrig)
+  withr::deferred_run()
 })
 
 test_that("preProcess fails if user provides a non .zip/.tar as archive", {

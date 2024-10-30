@@ -23,8 +23,8 @@ test_that("test ALTREP integers", {
 
   for (i in c("rds", "qs")) {
     for (s in c("slow", "fast")) {
-      options(reproducible.cacheSaveFormat = i,
-              reproducible.cacheSpeed = s)
+      withr::local_options(reproducible.cacheSaveFormat = i,
+                           reproducible.cacheSpeed = s)
 
       a <- 1991:20200
       aDig <- .robustDigest(a)
@@ -38,6 +38,7 @@ test_that("test ALTREP integers", {
       }
       bDig <- .robustDigest(b)
       expect_true(identical(aDig, bDig))
+      withr::deferred_run()
     }}
 
 })

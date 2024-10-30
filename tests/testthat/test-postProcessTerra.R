@@ -7,13 +7,7 @@ test_that("testing terra", {
       "rgdal_show_exportToProj4_warnings" = "none"
     )
   )
-  opts <- options(reproducible.cachePath = tmpCache)
-  on.exit(
-    {
-      options(opts)
-    },
-    add = TRUE
-  )
+  withr::local_options(reproducible.cachePath = tmpCache)
 
   skip_if_not_installed("terra")
   f <- system.file("ex/elev.tif", package = "terra")

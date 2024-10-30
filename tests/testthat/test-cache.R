@@ -7,8 +7,7 @@ test_that("test Cache argument inheritance to inner functions", {
              "reproducible.useMemoise" = FALSE
            )
   )
-  opts <- options(reproducible.cachePath = tmpdir)
-  on.exit(options(opts), add = TRUE)
+  withr::local_options(reproducible.cachePath = tmpdir)
   tmpDirFiles <- dir(tempdir())
   on.exit(
     {
@@ -27,7 +26,6 @@ test_that("test Cache argument inheritance to inner functions", {
   expect_equal(sum(grepl(.message$NoCacheRepoSuppliedGrep, mess)), 2)
   clearCache(ask = FALSE, x = tmpdir)
 
-  # options(reproducible.cachePath = tmpCache)
   out <- capture_messages(Cache(outer, n = 2))
   expect_true(all(unlist(lapply(
     c(.message$NoCacheRepoSuppliedGrep, .message$NoCacheRepoSuppliedGrep),
@@ -982,15 +980,14 @@ test_that("test changing reproducible.cacheSaveFormat midstream", {
   b <- Cache(rnorm, 1, cachePath = tmpdir)
   sc <- showCache(tmpdir)
   ci <- unique(sc[[.cacheTableHashColName()]])
-  opts <- options(reproducible.cacheSaveFormat = "qs")
-  on.exit(options(opts), add = TRUE)
+  withr::local_options(reproducible.cacheSaveFormat = "qs")
   mess <- capture_messages({
     b <- Cache(rnorm, 1, cachePath = tmpdir)
   })
   expect_false(attr(b, ".Cache")$newCache)
   expect_true(sum(grepl(paste0(.message$changingFormatTxt, ".+rds to qs"), mess)) == 1)
 
-  opts <- options(reproducible.cacheSaveFormat = "rds")
+  withr::local_options(reproducible.cacheSaveFormat = "rds")
   mess <- capture_messages({
     b <- Cache(rnorm, 1, cachePath = tmpdir)
   })
@@ -1094,13 +1091,7 @@ test_that("test file link with duplicate Cache", {
 
 test_that("test .object arg for list in Cache", {
   testInit()
-  opts <- options(reproducible.cachePath = tmpdir)
-  on.exit(
-    {
-      options(opts)
-    },
-    add = TRUE
-  )
+  withr::local_options(reproducible.cachePath = tmpdir)
   l <- list(a = 1, b = 2, f = 3)
   out1 <- Cache(unlist, l, .objects = "a")
   out2 <- Cache(unlist, l, .objects = "b")
@@ -1378,13 +1369,7 @@ test_that("change to new capturing of FUN & base pipe", {
 
 test_that("test cache with new approach to match.call", {
   testInit(opts = list("reproducible.verbose" = -2))
-  opts <- options(reproducible.cachePath = tmpdir)
-  on.exit(
-    {
-      options(opts)
-    },
-    add = TRUE
-  )
+  withr::local_options(reproducible.cachePath = tmpdir)
 
   b <- list(fun = rnorm)
   a <- list()
@@ -1484,13 +1469,15 @@ test_that("test cache with new approach to match.call", {
     a[[3]] <- Cache(quote(sf::st_make_valid(p1))) # not
 
     # The warning is intermittent and related to whether sf was built for exactly this R version
-    warns <- capture_warnings(library(sf))
-    a[[4]] <- Cache(st_make_valid(p1)) # not
-    ff <- sf::st_make_valid
-    a[[5]] <- Cache(ff(p1))
+    if (requireNamespace("sf", quietly = TRUE)) {
+      warns <- capture_warnings(library(sf))
+      a[[4]] <- Cache(st_make_valid(p1)) # not
+      ff <- sf::st_make_valid
+      a[[5]] <- Cache(ff(p1))
 
-    expect_identical(1L, length(unique(.robustDigest(a))))
+      expect_identical(1L, length(unique(.robustDigest(a))))
 
+    }
     # expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
     # for (i in 2:length(a)) {
     #   test <- identical(attr(a[[i]], ".Cache")$newCache, FALSE)
@@ -1504,20 +1491,11 @@ test_that("test cache; new approach to match.call, postProcess", {
   skip_if_not_installed("DBI") # sf needs DBI
   testInit(c("terra", "sf"),
            tmpFileExt = c(".tif", ".tif"),
-           opts = list(
-             "rasterTmpDir" = tempdir2(rndstr(1, 6)),
-             "reproducible.inputPaths" = NULL,
-             "reproducible.overwrite" = TRUE
-           )
   )
-  on.exit(
-    {
-      options(opts)
-    },
-    add = TRUE
-  )
-
-  opts <- options("reproducible.cachePath" = tmpdir)
+  withr::local_options(reproducible.cachePath = tmpdir,
+                       "rasterTmpDir" = tempdir2(rndstr(1, 6)),
+                       "reproducible.inputPaths" = NULL,
+                       "reproducible.overwrite" = TRUE)
 
   # Add a study area to Crop and Mask to
   # Create a "study area"
@@ -1584,15 +1562,13 @@ test_that("test cache; new approach to match.call, postProcess", {
 
 test_that("test cache; SpatRaster attributes", {
   testInit(c("terra", "sf"),
-           tmpFileExt = c(".tif", ".tif"),
-           opts = list(
-             "rasterTmpDir" = tempdir2(rndstr(1, 6)),
-             "reproducible.inputPaths" = NULL,
-             "reproducible.overwrite" = TRUE
-           ), needInternet = TRUE
+           tmpFileExt = c(".tif", ".tif"), needInternet = TRUE
   )
+  withr::local_options(reproducible.cachePath = tmpdir,
+                       "rasterTmpDir" = tempdir2(rndstr(1, 6)),
+                       "reproducible.inputPaths" = NULL,
+                       "reproducible.overwrite" = TRUE)
 
-  options("reproducible.cachePath" = tmpdir)
   dPath <- file.path(tmpdir, "inputs")
 
   targetFile <- "rasterTest.tif"
@@ -1665,7 +1641,7 @@ test_that("test useDBI TRUE <--> FALSE", {
     },
     add = TRUE
   )
-  options(reproducible.cachePath = tmpdir)
+  withr::local_options(reproducible.cachePath = tmpdir)
   orig <- useDBI()
   useDBI(TRUE)
   d <- b <- a <- list()
@@ -1754,8 +1730,7 @@ test_that("test omitArgs = 'x', #400", {
 
 test_that("cacheId = 'previous'", {
   testInit()
-  opts <- options(reproducible.cachePath = tmpdir)
-  on.exit(options(opts), add = TRUE)
+  withr::local_options(reproducible.cachePath = tmpdir)
 
   fnName <- "rnorm_this_one"
   a <- rnorm(1) |> Cache(.functionName = fnName)
@@ -1779,8 +1754,7 @@ test_that("cacheId = 'previous'", {
 
 test_that("cacheId = 'customName'", {
   testInit()
-  opts <- options(reproducible.cachePath = tmpdir)
-  on.exit(options(opts), add = TRUE)
+  withr::local_options(reproducible.cachePath = tmpdir)
 
   fnName <- "rnorm_this_one"
   d <- rnorm(2) |> Cache(.functionName = fnName, cacheId = "myCacheObj")
@@ -1791,8 +1765,7 @@ test_that("cacheId = 'customName'", {
 
 
   newDBI <- setdiff(c(TRUE, FALSE), rudbi)
-  opts <- options(reproducible.useDBI = newDBI)
-  on.exit(options(opts))
+  withr::local_options(reproducible.useDBI = newDBI)
 
   f <- rnorm(4) |> Cache(.functionName = fnName, cacheId = "myCacheObj")
   g <- rnorm(5) |> Cache(.functionName = fnName, cacheId = "myCacheObj")
@@ -1803,8 +1776,7 @@ test_that("cacheId = 'customName'", {
 
 test_that("simple userTags", {
   testInit()
-  opts <- options(reproducible.cachePath = tmpdir)
-  on.exit(options(opts), add = TRUE)
+  withr::local_options(reproducible.cachePath = tmpdir)
   ut1 <- c("b:d", "a", "free")
   ut2 <- c("b:d", "q", "free2")
   ut3 <- "a"
@@ -1837,15 +1809,8 @@ test_that("simple userTags", {
 test_that("lightweight tests for code coverage", {
   skip_on_cran()
   out <- testInit(verbose = TRUE)
+  withr::local_options(reproducible.cachePath = tmpdir)
 
-  opts <- options(reproducible.cachePath = tmpdir)
-
-  on.exit(
-    {
-      options(opts)
-    },
-    add = TRUE
-  )
   expect_error(Cache(), "requires")
   if (getOption("reproducible.cache2")) {
     fn <- expect_error

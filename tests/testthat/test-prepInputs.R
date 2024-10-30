@@ -10,7 +10,7 @@ test_that("prepInputs doesn't work (part 1)", {
     reproducible.showSimilar = TRUE
   ), needInternet = TRUE)
 
-  options(reproducible.cachePath = tmpdir)
+  withr::local_options(reproducible.cachePath = tmpdir)
 
   # Add a study area to Crop and Mask to
   # Create a "study area"
@@ -1596,8 +1596,8 @@ test_that("options inputPaths", {
   getDataFn <- getDataFn # not exported from reproducible; can access here, not in the dlFun
 
   if (getRversion() <= "3.3.0") skip("Doesn't work on R 3.3.0") # Not sure why this fails on 3.3.0
-  options("reproducible.inputPaths" = NULL)
-  options("reproducible.inputPathsRecursive" = FALSE)
+  withr::local_options("reproducible.inputPaths" = NULL)
+  withr::local_options("reproducible.inputPathsRecursive" = FALSE)
 
   noisyOutput <- capture.output({
     noisyOutput <- capture.output(type = "message", {
@@ -1651,8 +1651,8 @@ test_that("options inputPaths", {
     })
   })
   # Use inputPaths -- should do a link to tmpCache (the destinationPath)
-  options("reproducible.inputPaths" = tmpdir)
-  options("reproducible.inputPathsRecursive" = FALSE)
+  withr::local_options("reproducible.inputPaths" = tmpdir)
+  withr::local_options("reproducible.inputPathsRecursive" = FALSE)
   dlFun1 <- if (useGADM) getDataFn else NULL
   noisyOutput <- capture.output({
     mess1 <- capture_messages({
@@ -1673,7 +1673,7 @@ test_that("options inputPaths", {
 
   # Now two folders - file not in destinationPath, not in 1st inputPaths, but yes 2nd
   #   should hardlink from 2nd IP to destinationPath, make sure CHECKSUMS.txt is correct in both
-  options("reproducible.inputPaths" = c(tmpdir, tmpCache))
+  withr::local_options("reproducible.inputPaths" = c(tmpdir, tmpCache))
   file.remove(file.path(tmpdir, theFile))
   tmpdir3 <- file.path(tmpCache, "test")
   noisyOutput <- capture.output({
@@ -1706,8 +1706,8 @@ test_that("options inputPaths", {
     level_2 = if (useGADM) 0 else NULL
     path_2 = if (useGADM) tmpdir else NULL
 
-    options("reproducible.inputPaths" = tmpdir)
-    options("reproducible.inputPathsRecursive" = TRUE)
+    withr::local_options("reproducible.inputPaths" = tmpdir)
+    withr::local_options("reproducible.inputPathsRecursive" = TRUE)
     file.remove(file.path(tmpCache, theFile))
     tmpdir1 <- file.path(tmpCache, "test1")
     noisyOutput <- capture.output({
@@ -1739,7 +1739,7 @@ test_that("options inputPaths", {
     )
   )
 
-  options("reproducible.inputPaths" = tmpdir)
+  withr::local_options("reproducible.inputPaths" = tmpdir)
   tmpdir2 <- file.path(tmpdir, rndstr(1, 5))
   url_2 = if (!useGADM) url2 else f$url
   targetFile_2 = if (useGADM) theFile else f$targetFile
@@ -1835,7 +1835,7 @@ test_that("options inputPaths", {
   unlink(file.path(tmpdir2, theFile))
   expect_false(file.exists(file.path(tmpdir, theFile))) # FALSE -- confirm previous line
   expect_false(file.exists(file.path(tmpdir2, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
-  options("reproducible.inputPaths" = tmpdir)
+  withr::local_options("reproducible.inputPaths" = tmpdir)
   url_2 = if (!useGADM) url2 else f$url
   targetFile_2 = if (useGADM) theFile else f$targetFile
   dlFun_2 = if (useGADM) getDataFn else NULL

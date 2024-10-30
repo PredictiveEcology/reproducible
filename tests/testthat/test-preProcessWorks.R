@@ -142,13 +142,7 @@ test_that("preProcess works when provides url, archive, and destinationPath", {
 test_that("preProcess works when provides url, archive, and destinationPath and reproducible.inputPaths", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  opts <- options("reproducible.inputPaths" = tmpdir)
-  on.exit(
-    {
-      options(opts)
-    },
-    add = TRUE
-  )
+  withr::local_options("reproducible.inputPaths" = tmpdir)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(
