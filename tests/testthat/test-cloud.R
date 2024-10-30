@@ -86,6 +86,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
   opts <- options("reproducible.cloudFolderID" = NULL)
 
+  # Try two different cloud folders -- based on tmpdir and tmpCache
   warn5 <- capture_warnings({
     mess5 <- capture_messages({
       a2 <- Cache(rnorm, 3, cachePath = tmpdir, useCloud = TRUE)
@@ -106,11 +107,16 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   expect_false(any(grepl(.message$LoadedCacheResult(), mess6)))
   expect_true(isTRUE(all.equal(length(warn6), 0)))
 
-
+  # Clear all
   try(drive_rm(drive_ls(getOption("reproducible.cloudFolderID"))), silent = TRUE)
-  # try(googledrive::drive_rm(newDir), silent = TRUE) # clear the original one
-  cloudFolderID <- getOption("reproducible.cloudFolderID")
-  clearCache(x = tmpCache, useCloud = TRUE) # , cloudFolderID = cloudFolderID)
+  try(drive_rm(drive_ls(cloudFolderFromCacheRepo(tmpCache))), silent = TRUE)
+
+  # will use getOption("reproducible.cloudFolderID") b/c not specified, which is not cloudFolderFromCacheRepo(tmpCache)
+  # clearCache(x = tmpCache, useCloud = TRUE)
+  # Switch to tmpCache only
+  options(reproducible.cloudFolderID = tmpCache)
+  cloudFolderID <- getOption("reproducible.cloudFolderID") # currently based on tmpCache
+
   # Add 3 things to cloud and local -- then clear them all
   for (i in 1:3) {
     a1 <- Cache(rnorm, i, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)

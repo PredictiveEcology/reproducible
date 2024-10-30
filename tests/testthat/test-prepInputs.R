@@ -35,6 +35,15 @@ test_that("prepInputs doesn't work (part 1)", {
   # expect_true(any(grepl(mess, pattern = "Finished")))
   expect_true(is(shpEcozone, vectorType()))
 
+
+  # test sf::st_read vs "sf::st_read" -- sf::st_read didn't work before Oc 29, 2024
+  noisyOutput <- capture.output(
+    out <- prepInputs(targetFile = "Ecozones/ecozones.shp",
+                    destinationPath = dPath,
+                    fun = sf::st_read)
+  )
+  expect_is(out, "sf")
+
   # Robust to partial file deletions:
   unlink(dir(dPath, full.names = TRUE)[1:3])
   expect_error(terra::vect(file.path(dPath, "ecozone_shp.zip")))

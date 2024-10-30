@@ -44,7 +44,13 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
       args <- list(shared_drive = team_drive)
     }
     for (attempt in 1:2) {
-      cfidTmp <- if (isID) googledrive::as_id(cloudFolderID) else cloudFolderID
+      cfidTmp <- if (isID) googledrive::as_id(cloudFolderID) else {
+        if (fs::is_absolute_path(cloudFolderID)) {
+          cloudFolderID <- cloudFolderFromCacheRepo(cloudFolderID)
+        }
+        cloudFolderID
+      }
+
       driveLs <- tryCatch(suppressMessages(do.call(googledrive::drive_get, append(list(cfidTmp), args))),
         error = function(e) {
           if (!is.null(e$parent)) {
@@ -61,9 +67,9 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
         isID <- !isID
       }
     }
-    # if (attempt == 2 && !is(driveLs, "dribble")) browser()
 
     if (NROW(driveLs) == 0) {
+      newcfid <- cloudFolderID
       if (isTRUE(create)) {
         if (isID) {
           if (is.null(cachePath)) {
@@ -71,9 +77,24 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
           }
           cloudFolderID <- cloudFolderFromCacheRepo(cachePath)
         }
-        newDir <- googledrive::drive_mkdir(cloudFolderID, path = NULL, overwrite = overwrite)
-        cloudFolderID <- newDir
+
+        if (fs::is_absolute_path(cloudFolderID)) {
+          cloudFolderID <- cloudFolderFromCacheRepo(cloudFolderID)
+        }
+
+        newcfid <- try(googledrive::drive_mkdir(cloudFolderID, path = NULL, overwrite = overwrite), silent = TRUE) # can handle a single string
       }
+      if (is(newcfid, "try-error")) { # this happens if the folder exists
+        a <- newcfid
+        if (fs::is_absolute_path(cloudFolderID)) {
+          cloudFolderID <- cloudFolderFromCacheRepo(cloudFolderID)
+        }
+        newcfid <- try(drive_get(cloudFolderID))
+        if (is(newcfid, "try-error"))
+          browser()
+      }
+      cloudFolderID <- newcfid
+
     } else {
       cloudFolderID <- driveLs
     }
