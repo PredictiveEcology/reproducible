@@ -25,10 +25,11 @@ if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly 
     studyArea2 <- terra::vect(localFileLuxSm)
     if (!all(terra::is.valid(studyArea2))) studyArea2 <- terra::makeValid(studyArea2)
     tf <- tempfile(fileext = ".tif")
-    download.file(url = remoteTifUrl, destfile = tf, mode = "wb")
+    download.file(url = remoteTifUrl, destfile = tf, mode = "wb", quiet = TRUE)
     Checksums(dPath, write = TRUE, files = tf)
     elevOrig <- terra::rast(tf)
-    elevForStudy2 <- terra::project(elevOrig, terra::crs(studyArea2), res = 250) |>
+    studyAreaCrs <- terra::crs(studyArea)
+    elevForStudy2 <- terra::project(elevOrig, studyAreaCrs, res = 250) |>
       terra::mask(studyArea2) |>
       terra::crop(studyArea2)
 
