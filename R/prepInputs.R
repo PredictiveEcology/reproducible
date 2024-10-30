@@ -1378,6 +1378,10 @@ process <- function(out, funCaptured,
   ))
   args <- NULL
   # keep the ones for theFun
+  # need to differentiate sf::st_read from sf::st_read(targetFile, TRUE) -- both are calls, both length 3; both have pkgColon
+  if (length(theFun) == 3 && isDollarSqBrPkgColon(theFun) && all(lengths(as.list(theFun)) == 1)) {
+    theFun <- eval(theFun, envir = out)
+  }
   if (naFun %in% FALSE && !is.call(theFun)) {
     formsForTheFun <- names(formals3(theFun))
     argsFromPrepInputsFamily <- setdiff(argsFromPrepInputsFamily, names(formals3(theFun)))
