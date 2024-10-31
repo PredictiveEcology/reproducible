@@ -176,8 +176,6 @@ messageCache <- function(..., colour = getOption("reproducible.messageColourCach
                          appendLF = TRUE) {
   if (isTRUE(verboseLevel <= verbose)) { # this is duplicate of messageColoured; but will be faster
     needIndent <- any(grepl("\b", unlist(list(...))))
-    # needIndent <- try(any(grepl("\b", unlist(list(...)))))
-    # if (is(needIndent, "try-error")) browser()
     indent <- if (isTRUE(!needIndent)) .message$PreProcessIndent else ""
     messageColoured(..., indent = indent, # .message$CacheIndent,
                     colour = colour, appendLF = appendLF,
@@ -231,19 +229,21 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
     chars <- nchar(mess)
     if (chars > maxLineLngth) {
       splitOnSlashN <- strsplit(mess, "\n")
+      # splitOnSlashN <- splitOnSlashN[sapply(splitOnSlashN, nzchar)]
       newMess <- lapply(splitOnSlashN, function(m) {
+
         anyOneLine <- any(nchar(m) > maxLineLngth)
         if (anyOneLine) {
-          messSplit <- strsplit(mess, split = " ")
+          messSplit <- strsplit(mess, split = "\n| ")[[1]]
           remainingChars <- chars
           messBuild <- character()
           while (remainingChars > maxLineLngth) {
-            whNewLine <- which(cumsum(nchar(messSplit[[1]]) + 1) >= maxLineLngth)[1] - 1
+            whNewLine <- which(cumsum(nchar(messSplit) + 1) >= maxLineLngth)[1] - 1
             # if (isTRUE(any(grepl("...because of", mess)))) browser()
             if (anyNA(whNewLine)) browser()
 
             keepInd <- 1:whNewLine
-            newMess <- paste(messSplit[[1]][keepInd], collapse = " ")
+            newMess <- paste(messSplit[keepInd], collapse = " ")
             messBuild <- c(messBuild, newMess)
             if (is.null(indent)) {
               # if it starts with a space -- that is the indent that is needed
@@ -257,14 +257,14 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
               }
 
             }
-            messSplit[[1]] <- messSplit[[1]][-keepInd]
+            messSplit <- messSplit[-keepInd]
             remainingChars <- remainingChars - nchar(newMess) - 1
             hangingIndent <<- TRUE
           }
-          newMess <- paste(messSplit[[1]], collapse = " ")
+          newMess <- paste(messSplit, collapse = " ")
           m <- c(messBuild, newMess)
         }
-        m
+        m[nzchar(m)]
       })
       mess <- unlist(newMess)
       mess <- paste0(.addSlashNToAllButFinalElement(mess), collapse = "")
@@ -362,8 +362,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
 .message$SavedTxt <- "Saved! Cache file: "
 
-.message$Saved <- function(cachePath, outputHash, functionName,
-                           toMemoise = getOption("reproducible.useMemoise", FALSE), verbose) {
+.message$Saved <- function(cachePath, outputHash, functionName, verbose) {
   postMess <- ""
   if (isTRUE(getOption("reproducible.useMemoise")))
     postMess <- paste0(" ", .message$AddingToMemoised)
