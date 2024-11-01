@@ -121,7 +121,7 @@ test_that("unrar is working as expected", {
   testInit("terra", tmpFileExt = c(".tif", ".grd"))
 
   rarPath <- file.path(tmpdir, "tmp.rar")
-  out <- try(utils::zip(zipfile = rarPath, files = tmpfile)) # this should only be relevant if system can unrar
+  file.create(tmpfile)
   out <- try(utils::zip(zipfile = rarPath, files = tmpfile, flags = "-q")) # this should only be relevant if system can unrar
   if (!is(out, "try-error")) {
     unrar <- .whichExtractFn(archive = rarPath, args = "")
