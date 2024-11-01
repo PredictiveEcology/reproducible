@@ -343,6 +343,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        .tempPath,
                        verbose = getOption("reproducible.verbose", 1),
                        ...) {
+  .callingEnv <- parent.frame()
   messagePreProcess("Running `prepInputs`", verbose = verbose, verboseLevel = 0)
   .message$IndentUpdate()
   stStart <- Sys.time()
@@ -374,6 +375,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     useCache = useCache,
     .tempPath = .tempPath,
     verbose = verbose,
+    .callingEnv = .callingEnv,
     ...
   )
 
@@ -382,7 +384,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ##################################################################
   x <- process(out,
     funCaptured = funCaptured,
-    useCache = useCache, verbose = verbose, ...
+    useCache = useCache, verbose = verbose, .callingEnv = .callingEnv, ...
   )
 
   ##################################################################
@@ -1362,6 +1364,7 @@ is.nulls <- function(x) lapply(x, is.null)
 process <- function(out, funCaptured,
                     useCache = getOption("reproducible.useCache"),
                     verbose = getOption("reproducible.verbose"),
+                    .callingEnv = parent.frame(),
                     ...) {
   theFun <- out$fun
   suppressWarnings({
@@ -1394,7 +1397,6 @@ process <- function(out, funCaptured,
   if (NROW(otherFiles)) {
     .cacheExtra <- .robustDigest(sort(otherFiles$checksum.x))
   }
-
   out[["targetFile"]] <- out[["targetFilePath"]] # handle both
 
   if (!(naFun || is.null(theFun))) {
@@ -1461,7 +1463,7 @@ process <- function(out, funCaptured,
                 )
                 # out[["targetFile"]] <- out[["targetFilePath"]] # handle both
                 if (is.null(funChar)) funChar <- paste0(substr(format(theFun), start = 1, stop = 40), "...")
-                outProcess <- Cache(eval(theFun, envir = out),
+                outProcess <- Cache(eval(theFun, envir = out, enclos = .callingEnv),
                                     useCache = useCache2, .cacheExtra = .cacheExtra,
                                     .functionName = funChar
                 )
@@ -1476,7 +1478,7 @@ process <- function(out, funCaptured,
               #  If this was the case, then the above will have just evaluated that
               if (identical(1L, length(outProcess))) {
                 if (isTRUE(is.character(outProcess))) {
-                  possTheFun <- eval(parse(text = outProcess), envir = out)
+                  possTheFun <- eval(parse(text = outProcess), envir = out, enclos = .callingEnv)
                   if (isTRUE(is.function(possTheFun))) {
                     theFun <- possTheFun
                     next

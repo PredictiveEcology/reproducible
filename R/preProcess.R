@@ -169,7 +169,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        overwrite = getOption("reproducible.overwrite", FALSE),
                        purge = FALSE,
                        verbose = getOption("reproducible.verbose", 1),
-                       .tempPath, ...) {
+                       .tempPath, # .callingEnv = parent.frame(),
+                       ...) {
   st <- Sys.time()
   messagePreProcess("Running `preProcess`", verbose = verbose, verboseLevel = 0)
   .message$IndentUpdate()
@@ -191,6 +192,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   dots <- list(...)
+  if (is.null(dots$.callingEnv)) {
+    .callingEnv <- parent.frame()
+  } else {
+    .callingEnv <- dots$.callingEnv
+    dots$.callingEnv <- NULL
+  }
 
   fun <- .checkFunInDots(fun = fun, dots = dots)
   dots <- .checkDeprecated(dots, verbose = verbose)
@@ -410,7 +417,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     overwrite = overwrite, purge = purge, # may need to try purging again if no target,
     alsoExtract = alsoExtract,
     #    archive or alsoExtract were known yet
-    verbose = verbose, .tempPath = .tempPath, ...
+    verbose = verbose, .tempPath = .tempPath, # .callingEnv = .callingEnv,
+    ...
   )
 
   downloadFileResult <- .fixNoFileExtension(

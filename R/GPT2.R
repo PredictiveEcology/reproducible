@@ -868,7 +868,7 @@ matchCall2 <- function(definition, call, envir, envir2 = parent.frame(), FUN) {
 #' format i.e., `rnorm(n = 1, mean = 0, sd = 1)`
 #'
 #' @param callList A named list with elements `call`, `usesDots` and `FUNorig`
-#' @param .callingEnv The calling environment where `cache2` was called from
+#' @param .callingEnv The calling environment where `Cache` was called from
 #' @param .functionName A possible function name. If omitted, then it will be deduced
 #'   from the `callList` and may be inaccurate.
 #' @return A named list. We illustrate with the example `rnorm(1)`. The named

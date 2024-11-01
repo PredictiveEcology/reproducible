@@ -32,7 +32,17 @@ downloadFile <- function(archive, targetFile, neededFiles,
                          overwrite = getOption("reproducible.overwrite", TRUE),
                          alsoExtract = "similar",
                          verbose = getOption("reproducible.verbose", 1),
-                         purge = FALSE, .tempPath, ...) {
+                         purge = FALSE, .tempPath, # .callingEnv,
+                         ...) {
+
+  dots <- list(...)
+  if (is.null(dots$.callingEnv)) {
+    .callingEnv <- parent.frame()
+  } else {
+    .callingEnv <- dots$.callingEnv
+    dots$.callingEnv <- NULL
+  }
+
   # browser(expr = exists("._downloadFile_1"))
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
@@ -129,6 +139,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
                 alsoExtract = alsoExtract,
                 verbose = verbose,
                 .tempPath = .tempPath,
+                # .callingEnv = .callingEnv,
                 ...
             )
           )
@@ -572,7 +583,16 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, messSkipDownload,
                            destinationPath, overwrite, needChecksums, .tempPath, preDigest,
                            alsoExtract = "similar",
-                           verbose = getOption("reproducible.verbose", 1), ...) {
+                           verbose = getOption("reproducible.verbose", 1), # .callingEnv = parent.frame(),
+                           ...) {
+  dots <- list(...)
+  if (is.null(dots$.callingEnv)) {
+    .callingEnv <- parent.frame()
+  } else {
+    .callingEnv <- dots$.callingEnv
+    dots$.callingEnv <- NULL
+  }
+
   noTargetFile <- is.null(targetFile) || length(targetFile) == 0
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
@@ -584,7 +604,6 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
     )
   }
 
-  dots <- list(...)
   if (!is.null(url) || !is.null(dlFun)) { # if no url, no download
     # if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
     if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE))) {
@@ -618,16 +637,19 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         }
 
         if (is.call(dlFun)) {
+          out <- try(eval(dlFun, envir = .callingEnv))
+          if (is(out, "try-error")) {
           sfs <- sys.frames()
           for (i in seq_along(sfs)) {
             env1 <- new.env(parent = sys.frame(-i))
             list2env(args, env1)
-            out <- try(eval(dlFun, envir = env1))
+              out <- try(eval(dlFun, envir = env1), silent = TRUE)
             if (is.function(out)) { # in the previous "call", it may have just returned an unevaluated function
               dlFun <- out
-            }
-            if (!is(out, "try-error")) {
-              break
+              }
+              if (!is(out, "try-error")) {
+                break
+              }
             }
           }
         }
