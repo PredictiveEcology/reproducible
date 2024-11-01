@@ -859,7 +859,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   } else {
     NULL
   }
-  normPath(guessedFile)
+  if (!is.null(guessedFile))
+    guessedFile <- normPath(guessedFile)
+  guessedFile
 }
 
 
