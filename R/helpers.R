@@ -397,16 +397,20 @@ fileExt <- function(x) {
   ifelse(pos > -1L, substring(x, pos + 1L), "")
 }
 
-isDirectory <- function(pathnames) {
+isDirectory <- function(pathnames, mustExist = TRUE) {
   keep <- is.character(pathnames)
   if (length(pathnames) == 0) {
     return(logical())
   }
   if (isFALSE(keep)) stop("pathnames must be character")
   origPn <- pathnames
-  pathnames <- normPath(pathnames[keep])
-  id <- dir.exists(pathnames)
-  id[id] <- file.info(pathnames[id])$isdir
+  if (isTRUE(mustExist)) {
+    pathnames <- normPath(pathnames[keep])
+    id <- dir.exists(pathnames)
+    id[id] <- file.info(pathnames[id])$isdir
+  } else {
+    id <- grepl("/$|\\\\$", pathnames)
+  }
   names(id) <- origPn
   id
 }

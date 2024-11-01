@@ -408,6 +408,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     quick = quick, checkSums = checkSums, dlFun = dlFunCaptured, url = url,
     checksumFile = asPath(checkSumFilePath), needChecksums = needChecksums,
     overwrite = overwrite, purge = purge, # may need to try purging again if no target,
+    alsoExtract = alsoExtract,
     #    archive or alsoExtract were known yet
     verbose = verbose, .tempPath = .tempPath, ...
   )
@@ -515,6 +516,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # link back to destinationPath if options("reproducible.inputPaths") was used.
   #  destinationPath had been overwritten to be options("reproducible.inputPaths")
+
   if (!is.null(reproducible.inputPaths)) {
     if (!is.null(destinationPathUser)) { # retrieved file locally
       foundInInputPaths <- grepl(normPath(destinationPath), normPath(filesExtr))
@@ -821,7 +823,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                          verbose = getOption("reproducible.verbose", 1), team_drive = NULL) {
   # if (is.null(targetFile)) {
   guessedFile <- if (!is.null(url)) {
-    gf <- file.path(destinationPath, basename2(url))
+    if (isDirectory(url, FALSE)) {
+      gf <- NULL
+    } else {
+      gf <- file.path(destinationPath, basename2(url))
+    }
 
     # Test for just Google ID supplied
     isGID <- isGoogleID(url)

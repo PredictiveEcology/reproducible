@@ -30,6 +30,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
                          checksumFile, dlFun = NULL,
                          checkSums, url, needChecksums, preDigest,
                          overwrite = getOption("reproducible.overwrite", TRUE),
+                         alsoExtract = "similar",
                          verbose = getOption("reproducible.verbose", 1),
                          purge = FALSE, .tempPath, ...) {
   # browser(expr = exists("._downloadFile_1"))
@@ -125,6 +126,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
                 overwrite = overwrite,
                 needChecksums = needChecksums,
                 preDigest = preDigest,
+                alsoExtract = alsoExtract,
                 verbose = verbose,
                 .tempPath = .tempPath,
                 ...
@@ -134,6 +136,11 @@ downloadFile <- function(archive, targetFile, neededFiles,
         message = function(m) {
           messOrig <<- c(messOrig, m$message)
         })
+        if (isTRUE(isDirectory(url, mustExist = FALSE))) {
+          fileToDownload <- downloadResults$destFile
+          neededFiles <- downloadResults$destFile
+        }
+
 
         if (is(downloadResults, "try-error")) {
           if (isTRUE(grepl("already exists", downloadResults))) {
@@ -215,6 +222,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
           failed <- 0
         }
       }
+
       if (file.exists(checksumFile)) {
         # This is case where we didn't know what file to download, and only now
         if (is.null(fileToDownload) ||
@@ -530,7 +538,6 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 
   messagePreProcess("Downloading ", url, " ...", verbose = verbose)
 
-
   if (.requireNamespace("httr") && .requireNamespace("curl")) {
     ua <- httr::user_agent(getOption("reproducible.useragent"))
     request <- suppressWarnings(
@@ -564,6 +571,7 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, messSkipDownload,
                            destinationPath, overwrite, needChecksums, .tempPath, preDigest,
+                           alsoExtract = "similar",
                            verbose = getOption("reproducible.verbose", 1), ...) {
   noTargetFile <- is.null(targetFile) || length(targetFile) == 0
   if (missing(.tempPath)) {
@@ -678,7 +686,40 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         } else if (grepl("onedrive.live.com", url)) {
           stop("Onedrive downloading is currently not supported")
         } else {
-          downloadResults <- dlGeneric(url = url, destinationPath = .tempPath)
+          if (isTRUE(isDirectory(url, mustExist = FALSE))) { # a folder
+            if (.requireNamespace("httr") && .requireNamespace("curl")) {
+              list_files <- curl::new_handle()
+              curl::handle_setopt(list_files, ftp_use_epsv = TRUE, dirlistonly = TRUE)
+              con <- curl::curl(url = url, "r", handle = list_files)
+              on.exit(close(con), add = TRUE)
+              filenames <- readLines(con)
+              filenames <- gsub(".+<a.+\">(.+)</a>.+", "\\1", filenames)
+              # rm http tags, plus the two files Description and Parent Directory that are in a directory
+              filenames <- grep("<|>|Description|Parent Directory", filenames, value = TRUE, invert = TRUE)
+              if (isTRUE(nzchar(alsoExtract))) {
+                if (grepl("^sim", alsoExtract)) {
+                  theGrep <- filePathSansExt(targetFile)
+                } else if (grepl("none", alsoExtract)) {
+                  theGrep <- paste0("^", targetFile, "$")
+                } else {
+                  theGrep <- paste(alsoExtract, collapse = "|")
+                }
+                filenames <- grep(theGrep, filenames, value = TRUE)
+              }
+              urls <- file.path(url, filenames)
+              messagePrepInputs("url was supplied as a directory; downloading all files ",
+                                "with similar name as targetFile (", filePathSansExt(targetFile), ")",
+                                verbose = verbose)
+              downloadResults <- vapply(urls, function(url)
+                dlGeneric(url, destinationPath = .tempPath) |> unlist(),
+                                        FUN.VALUE = character(1))
+              downloadResults <- list(destFile = downloadResults)
+            } else {
+              stop("url is a directory; need to install.packages(c('httr', 'curl'))")
+            }
+          } else {
+            downloadResults <- dlGeneric(url = url, destinationPath = .tempPath)
+          }
           downloadResults$needChecksums <- needChecksums
         }
       }
@@ -688,6 +729,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
       if (isTRUE(testFTD)) testFTD <- isTRUE(all(downloadResults$destFile != fileToDownload))
 
       # Don't use .tempPath directly because of non-google approaches too
+
       if (!(identical(
         unique(dirname(normPath(downloadResults$destFile))),
         normPath(as.character(destinationPath))
@@ -695,7 +737,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         # basename2 is OK because the destFile will be flat; it is just archive extraction that needs to allow nesting
         desiredPath <- makeAbsolute(basename2(downloadResults$destFile), destinationPath)
         desiredPathExists <- file.exists(desiredPath)
-        if (desiredPathExists && !isTRUE(overwrite)) {
+        if (any(desiredPathExists) && !isTRUE(overwrite)) {
           stopMess <- paste(desiredPath, " already exists and overwrite = FALSE; would you like to overwrite anyway? Y or N:  ")
           if (interactive()) {
             interactiveRes <- readline(stopMess)
