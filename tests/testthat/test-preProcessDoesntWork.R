@@ -65,6 +65,7 @@ test_that("preProcess fails if user provides non-existing file", {
   expect_true(sum(grepl("Download failed", errMsg)) == 1)
 
   withr::local_options("reproducible.interactiveOnDownloadFail" = TRUE)
+  zipFilename <- file.path(tmpdir, "rasterTest")
   testthat::with_mock(
     `isInteractive` = function() {
       TRUE
@@ -72,7 +73,6 @@ test_that("preProcess fails if user provides non-existing file", {
     `.readline` = function(prompt) {
       theFile <- file.path(tmpdir, "rasterTestAA")
       write.table(theFile, file = theFile)
-      zipFilename <- file.path(tmpdir, "rasterTest")
       origDir <- setwd(dirname(theFile))
       on.exit(setwd(origDir), add = TRUE)
       zip(zipfile = zipFilename, files = basename2(theFile), flags = "-q")
@@ -96,9 +96,9 @@ test_that("preProcess fails if user provides non-existing file", {
     },
     .env = "reproducible"
   )
-  expect_true(sum(grepl("manual download", mess)) == 1)
+  expect_true(sum(grepl("manual.+download", mess)) == 1) # manual download may be broken by \n
   expect_true(sum(grepl("To prevent", mess)) == 1)
-  expect_true(file.exists(file.path(tmpdir, "rasterTest.zip")))
+  expect_true(file.exists(filePathSansExt(zipFilename)))
   cs <- read.table(file.path(tmpdir, "CHECKSUMS.txt"), header = TRUE)
   expect_true(NROW(cs) == 2 || NROW(cs) == 3) # TODO this may be detecting a bug == on GA it is 2, locally it is 3
   expect_true(all(grepl("rasterTest", cs$file)))

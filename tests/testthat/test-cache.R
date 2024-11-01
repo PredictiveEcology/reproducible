@@ -1862,7 +1862,8 @@ test_that("test future", {
   (dd <- system.time({
     for (i in 1:3) d[[i]] <- Cache(cachePath = tmpCache, rnorm(1e6 + i))
   }))
-  expect_true((dd[[3]] * 3) < aa[[3]])
+  # windows is slower to spawn -- reduced this multiplier to *2
+  expect_true((dd[[3]] * 2) < aa[[3]])
   for (i in 1:3) {
     expect_true(identical(attr(d[[i]], ".Cache")$newCache, FALSE))
   }

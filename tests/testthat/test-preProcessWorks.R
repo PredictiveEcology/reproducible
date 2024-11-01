@@ -454,7 +454,9 @@ test_that("just google id not url", {
   skip_on_ci()
 
   testInit("terra", needGoogleDriveAuth = TRUE, needInternet = TRUE)
-  smallObj <- prepInputs(url = "1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb")
+  co <- capture.output(
+    smallObj <- prepInputs(url = "1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb")
+  )
   expect_is(smallObj, "sf")
 })
 
@@ -579,7 +581,7 @@ test_that("more nested file structures in zip; alsoExtract NA", {
         terra::writeRaster(filename = file.path(basename(tempfile(fileext = ".tif"))))
     })
     fns2 <- Filenames(ras)
-    zip(zipName, files = c(file.path(basename(dirname(fns1)), basename(fns1)), basename(fns2)))
+    zip(zipName, files = c(file.path(basename(dirname(fns1)), basename(fns1)), basename(fns2)), flags = "-q")
   })
   zipName2 <- file.path(tmpdir, zipName)
 

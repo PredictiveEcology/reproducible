@@ -1143,12 +1143,12 @@ test_that("prepInputs when fun = NA", {
       expect_true(is(test1, "SpatVector"))
       # test quoted version of `dlFun`
         mess3 <- capture_messages({
-          test3 <- prepInputs(
-            fun = NA,
-            dlFun = quote(getDataFn(name = "GADM", country = "LUX", level = 0, path = tmpdir)),
-            destinationPath = tmpdir,
-          )
-        })
+        test3 <- prepInputs(
+          fun = NA,
+          dlFun = quote(getDataFn(name = "GADM", country = "LUX", level = 0, path = tmpdir)),
+          destinationPath = tmpdir
+        )
+      })
       expect_true(is(test3, "SpatVector"))
 
       if (.requireNamespace("sf")) {
@@ -1594,10 +1594,9 @@ test_that("options inputPaths", {
   }
   url2 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
 
-  # noisyOutput <- capture.output(type = "message", {
-    mess1 <- capture_messages({
-      test1 <- try(prepInputs(
-        destinationPath = tmpdir,
+  mess1 <- capture_messages({
+    test1 <- try(prepInputs(
+      destinationPath = tmpdir,
         url = if (!useGADM) url2 else f$url,
         targetFile = if (useGADM) theFile else f$targetFile,
         dlFun = if (useGADM) getDataFn else NULL,
@@ -1607,7 +1606,6 @@ test_that("options inputPaths", {
         path = if (useGADM) tmpdir else NULL
       ))
     })
-  # })
 
   # Use inputPaths -- should do a link to tmpCache (the destinationPath)
   withr::local_options("reproducible.inputPaths" = tmpdir)
@@ -1964,3 +1962,48 @@ test_that("rasters aren't properly resampled", {
     }
   }
 })
+
+test_that("test prepInputs url when a directory", {
+  skip_on_cran()
+
+  testInit("terra",
+           opts = list(
+             "reproducible.overwrite" = TRUE,
+             "reproducible.inputPaths" = NULL
+           )
+  )
+  withr::local_options(destinationPath = tmpdir)
+
+  globalOutput <- capture.output({
+    url <- "http://forestales.ujed.mx/incendios2/cartografia/tematicos/combustibles_y_vegetacion/tipo_combustibles_serie_VI/"
+
+    if (!urlExists(url))
+      skip("Mexico url doesn't exist; skipping")
+    # Nothing specified
+    a <- prepInputs(url = url)
+    expect_is(a, "SpatRaster")
+    files <- dir(tmpdir, pattern = "comb")
+    expect_true(length(files) == 8)
+
+    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
+    a <- prepInputs(url = url, targetFile = "comb_290719.tif")
+    expect_is(a, "SpatRaster")
+    files <- dir(tmpdir, pattern = "comb")
+    expect_true(length(files) == 8)
+
+    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
+    a <- prepInputs(url = url, targetFile = "comb_290719.tif", alsoExtract = FALSE)
+    expect_is(a, "SpatRaster")
+    files <- dir(tmpdir, pattern = "comb")
+    expect_true(length(files) == 1)
+
+
+    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
+    a <- prepInputs(url = url)
+    expect_is(a, "SpatRaster")
+    files <- dir(tmpdir, pattern = "comb_290719")
+    expect_true(length(files) == 7)
+
+  })
+})
+
