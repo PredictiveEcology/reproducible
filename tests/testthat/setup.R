@@ -15,7 +15,7 @@ opts <- options(
   warnPartialMatchAttr = TRUE,
   warnPartialMatchDollar = TRUE,
   reproducible.cache2 = FALSE,
-  reproducible.useDBI = FALSE  # done TF 531s, doing FF 566s,
+  reproducible.useDBI = TRUE  # done TF  = c(691, 764.1), TT c(793,874), FF = c(875.5s, 876s), FT = c(1024.8,934)
 )
 
 if (Sys.info()["nodename"] %in% "W-VIC-A127585") {
