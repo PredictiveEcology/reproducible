@@ -371,8 +371,13 @@ makeRelative <- function(files, absoluteBase) {
     areAbs <- isAbsolutePath(files)
     if (any(areAbs)) {
       absoluteBase <- normPath(absoluteBase) # can be "." which means 'any character' in a grep
-      if (length(absoluteBase) > 1) browser()
-      files[areAbs] <- gsub(paste0("^", absoluteBase, "/{0,1}"), "", files[areAbs])
+      if (length(absoluteBase) < length(files))
+        absoluteBase <- rep(absoluteBase, length.out = length(files))
+      # if (length(absoluteBase) > 1) browser()
+      files[areAbs] <- unlist(Map(ab = absoluteBase[areAbs], file = files[areAbs], function(ab, file)
+        gsub(paste0("^", ab, "/{0,1}"), "", file)
+      ))
+      # files[areAbs] <- gsub(paste0("^", absoluteBase, "/{0,1}"), "", files[areAbs])
 
       # this does dumb things when it is not relative ... i.e., with prepend ../../../../../..
       # files[areAbs] <- fs::path_rel(start = absoluteBase, files[areAbs])
