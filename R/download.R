@@ -644,8 +644,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             env1 <- new.env(parent = sys.frame(-i))
             list2env(args, env1)
               out <- try(eval(dlFun, envir = env1), silent = TRUE)
-            if (is.function(out)) { # in the previous "call", it may have just returned an unevaluated function
-              dlFun <- out
+              if (is.function(out)) { # in the previous "call", it may have just returned an unevaluated function
+                dlFun <- out
               }
               if (!is(out, "try-error")) {
                 break
@@ -660,7 +660,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
         needSave <- !is.null(out) # TRUE
         if (noTargetFile) {
-          fileInfoAfter <- file.info(dir(destinationPath, full.names = TRUE))
+          # recursive gets rid of directories
+          fileInfoAfter <- file.info(dir(destinationPath, recursive = TRUE, full.names = TRUE))
           possibleTargetFile <- setdiff(rownames(fileInfoAfter), rownames(fileInfo))
 
           possibleTargetFile <- makeAbsolute(possibleTargetFile, destinationPath)
