@@ -1951,7 +1951,7 @@ test_that("test messaging for useMemoise = TRUE", {
     Cache(rnorm(1))
   )
   # should add to memoise on first save
-  expect_match(object = mess1, .message$AddingToMemoised, all = FALSE)
+  expect_match2(object = mess1, .message$AddingToMemoised, all = FALSE)
 
   # should recover from memoised
   mess2 <- capture_messages(
@@ -1965,7 +1965,7 @@ test_that("test messaging for useMemoise = TRUE", {
     Cache(rnorm(1))
   )
   # should add to memoise on first load if it isn't there from the first save
-  expect_match(object = mess3, .message$AddingToMemoised, all = FALSE)
+  expect_match2(object = mess3, .message$AddingToMemoised, all = FALSE)
 
 })
 
