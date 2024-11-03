@@ -554,8 +554,8 @@ runTestsWithTimings <- function(nameOfOuterList = "ff", envir = parent.frame(), 
   gg
 }
 
-expect_match2 <- function(object, regexp, ...) {
-  regexp <- gsub("  ", " ", gsub("\\\\n", "", regexp))
+expect_match_noSlashN <- function(object, regexp, ...) {
+  object <- gsub("  ", " ", gsub("\\n", "", object))
   expect_match(object, regexp, ...)
 
 }
