@@ -23,8 +23,8 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                    conn = getOption("reproducible.conn", NULL),
                    .callingEnv = parent.frame()) {
 
-  # This makes this act like useDBI = FALSE --> creates correct dbFile
-  optionsSetForCache2()
+  # Sets useDBI(TRUE) if a user has supplied a drv or conn
+  optionsSetForCache2(drv = drv, conn = conn)
 
   # Capture and match call so it can be manipulated
   callList <- matchCall2(sys.function(0), sys.call(0), envir = .callingEnv, FUN = FUN)
@@ -1020,7 +1020,9 @@ verboseCacheDFAll <- function(verbose, functionName, times) {
   .message$CacheTimings(verbose)
 }
 
-optionsSetForCache2 <- function(envir = parent.frame(1)) {
+optionsSetForCache2 <- function(drv = NULL, conn = NULL, envir = parent.frame(1)) {
+  if (!is.null(drv) || !is.null(conn))
+    useDBI(TRUE)
   opts <- options(# reproducible.useDBI = FALSE,
                   #reproducible.cache2 = TRUE
                   )

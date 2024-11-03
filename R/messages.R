@@ -383,6 +383,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
   )
 }
 
+.message$cacheIdSameTxt <- "cacheId is same as calculated hash"
 .message$cacheIdNotSameTxt <- function(cacheId)
   paste0("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId)
 

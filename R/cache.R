@@ -2573,12 +2573,11 @@ cacheIdCheckInCache <- function(cacheId, calculatedCacheId, .functionName, verbo
     } else {
       outputHashManual <- cacheId
       if (identical(outputHashManual, calculatedCacheId)) {
-        messageCache("cacheId is same as calculated hash",
-                     verbose = verbose
-        )
+        messageCache(.message$cacheIdSameTxt, verbose = verbose)
+        sc <- showCache(userTags = cacheId, verbose = verbose -1)
       } else {
+        sc <- showCache(userTags = sc, verbose = verbose -1)
         messageCache(.message$cacheIdNotSameTxt(cacheId), verbose = verbose)
-        sc <- showCache(userTags = outputHashManual)
         # if (NROW(sc))
           # isInRepo <- sc[1,]
       }

@@ -1969,3 +1969,12 @@ test_that("test messaging for useMemoise = TRUE", {
 
 })
 
+test_that("cacheId is same as calculated", {
+  testInit()
+  withr::local_options(reproducible.cachePath = tmpCache)
+  mess1 <- capture_messages(a <- Cache(rnorm, 1))
+  # manually look at output attribute which shows cacheId: 7072c305d8c69df0
+  mess2 <- capture_messages(b <- Cache(rnorm, 1, cacheId = "422bae4ed2f770cc"))
+  expect_match(mess2, .message$cacheIdSameTxt, all = FALSE)
+  expect_equivalent(a, b)
+})
