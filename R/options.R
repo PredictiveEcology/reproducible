@@ -259,7 +259,7 @@ reproducibleOptions <- function() {
       getEnv("R_REPRODUCIBLE_USE_DBI",
       default = {
         useDBI(getOption("reproducible.useDBI", NULL),  # a user may have set it before this runs; keep setting
-                       verbose = interactive() - (useDBI() + 1), default = TRUE)
+                       verbose = interactive() - (useDBI() + 1), default = FALSE)
         }, # `FALSE` is useMultipleDBFiles now
       allowed = c("true", "false")
     ) |> as.logical()},
