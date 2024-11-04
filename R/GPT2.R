@@ -123,9 +123,11 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                 drv = drv, conn = conn, verbose)
 
   # ## evaluate the call ## #
-  outputFromEvaluate <- evalTheFunAndAddChanged(callList, keyFull, outputObjects, length,
-                                                algo, quick, classOptions, .callingEnv = .callingEnv,
-                                                verbose, ...)
+  outputFromEvaluate <- evalTheFunAndAddChanged(callList = callList, keyFull = keyFull,
+                                                outputObjects = outputObjects, length = length,
+                                                algo = algo, quick = quick, classOptions = classOptions,
+                                                .callingEnv = .callingEnv,
+                                                verbose = verbose, ...)
 
   # ## Save to Cache; including to Memoise location; including metadata ## #
   times$SaveStart <- Sys.time()
@@ -1113,7 +1115,6 @@ identical2 <- function(a, b) {
 
 evalTheFunAndAddChanged <- function(callList, keyFull, outputObjects, length, algo, quick,
                                     classOptions, .callingEnv, verbose, ...) {
-  browser()
   outputFromEvaluate <- evalTheFun(callList$FUNcaptured, !callList$usesDots,
                                    matchedCall = callList$call, envir = .callingEnv,
                                    verbose = verbose, ...)
