@@ -91,7 +91,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                                               full_call = callList$new_call,
                                               drv, conn, verbose = verbose)
 
-  if (exists("aaaa", envir = .GlobalEnv)) browser()
+  # if (exists("aaaa", envir = .GlobalEnv)) browser()
   if (!identical2(.returnNothing, outputFromDisk))
     return(outputFromDisk)
 
@@ -124,9 +124,9 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                 drv = drv, conn = conn, verbose)
 
   # ## evaluate the call ## #
-  outputFromEvaluate <- evalTheFun(callList$FUNcaptured, !callList$usesDots,
-                                   matchedCall = callList$call, envir = .callingEnv,
-                                   verbose = verbose, ...)
+  outputFromEvaluate <- evalTheFunAndAddChanged(callList, keyFull, outputObjects, length,
+                                                algo, quick, classOptions, .callingEnv,
+                                                verbose, ...)
 
   # ## Save to Cache; including to Memoise location; including metadata ## #
   times$SaveStart <- Sys.time()
@@ -1067,4 +1067,20 @@ identical2 <- function(a, b) {
   if (isTRUE(id))
     return(TRUE)
   isTRUE(all.equal(a, b, check.attributes = FALSE))
+}
+
+
+
+evalTheFunAndAddChanged <- function(callList, keyFull, outputObjects, length, algo, quick, classOptions, .callingEnv, verbose, ...) {
+  outputFromEvaluate <- evalTheFun(callList$FUNcaptured, !callList$usesDots,
+                                   matchedCall = callList$call, envir = .callingEnv,
+                                   verbose = verbose, ...)
+
+  # Because this has be run, it means that it has changed; add an attribute to say that
+  outputFromEvaluate <- .addChangedAttr(outputFromEvaluate, keyFull$preDigest,
+                                        origArguments = attr(callList$new_call, ".Cache")$args_w_defaults,
+                                        .objects = outputObjects, length = length,
+                                        algo = algo, quick = quick, classOptions = classOptions, ...
+  )
+  outputFromEvaluate
 }
