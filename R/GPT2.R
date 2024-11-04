@@ -124,7 +124,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
 
   # ## evaluate the call ## #
   outputFromEvaluate <- evalTheFunAndAddChanged(callList, keyFull, outputObjects, length,
-                                                algo, quick, classOptions, .callingEnv,
+                                                algo, quick, classOptions, .callingEnv = .callingEnv,
                                                 verbose, ...)
 
   # ## Save to Cache; including to Memoise location; including metadata ## #
@@ -134,7 +134,8 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                                       cache_file, userTags, callList$.functionName, debugCache,
                                       keyFull,
                                       useCloud, cloudFolderID, gdriveLs,
-                                      func_call = callList$func_call, drv, conn, verbose,
+                                      func_call = callList$func_call, drv = drv, conn = conn,
+                                      verbose = verbose,
                                       times$SaveStart, times$EvaluateStart)
   times$SaveEnd <- Sys.time()
   verboseCacheDFAll(verbose, callList$.functionName, times)
@@ -1110,7 +1111,9 @@ identical2 <- function(a, b) {
 
 
 
-evalTheFunAndAddChanged <- function(callList, keyFull, outputObjects, length, algo, quick, classOptions, .callingEnv, verbose, ...) {
+evalTheFunAndAddChanged <- function(callList, keyFull, outputObjects, length, algo, quick,
+                                    classOptions, .callingEnv, verbose, ...) {
+  browser()
   outputFromEvaluate <- evalTheFun(callList$FUNcaptured, !callList$usesDots,
                                    matchedCall = callList$call, envir = .callingEnv,
                                    verbose = verbose, ...)
