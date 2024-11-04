@@ -902,8 +902,9 @@ harmonizeCall <- function(callList, .callingEnv, .functionName = NULL) {
   # Try to identify the .functionName; if can't just use the matched call callList$FUNorig
   if (is.null(.functionName))
     .functionName <- getFunctionName2(func_call)# as.character(normalized_FUN[[1]])
-  if (!nzchar(.functionName))
+  if (!isTRUE(any(nzchar(.functionName)))) {
     .functionName <- format(callList$FUNorig)
+  }
   append(callList, list(new_call = new_call, func_call = func_call,
                            func = func, .functionName = .functionName))
 }
