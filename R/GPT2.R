@@ -33,7 +33,6 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   if (isFALSE(getOption("reproducible.cache2"))) {
     callList$call[[1]] <- substitute(Cache2)
     return(eval(callList$call, envir = .callingEnv))
-    # return(Cache2(FUN = FUN, ..., .objects = .objects))
   }
 
   # Check if this is a nested Cache call; this must be before skipCache because useCache may be numeric
@@ -691,8 +690,48 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
   }
 
   if (NROW(shownCache)) {
+    userTagsMess <- if (!is.null(userTags)) {
+      paste0(.message$BecauseOfA,
+             "with user supplied tags: '",
+             paste(userTags, collapse = ", "), "' "
+      )
+    }
+
     shownCache <- shownCache[tagKey %in% c(metadata$tagKey)][grep(x = tagKey, "elapsedTime|accessed", invert = TRUE)]
-    similar <- shownCache[tagKey %in% c(metadata$tagKey)][!metadata, on = c("tagKey", "tagValue")]
+    # cacheIdOfSimilar
+    similarFull <- shownCache[tagKey %in% c(metadata$tagKey)]
+    similar <- similarFull[!metadata, on = c("tagKey", "tagValue")]
+    other <- logical()
+    if (NROW(similar) == 0) {
+      other <- vapply(strsplit(similarFull$tagValue, split = "\\:"),
+                      function(x) ifelse(length(x) == 2, x[[2]], NA_character_), FUN.VALUE = character(1))
+      otherLabels <- vapply(strsplit(similarFull$tagValue, split = "\\:"),
+                      function(x) ifelse(length(x) == 2, x[[1]], NA_character_), FUN.VALUE = character(1))
+      whOther <- other == "other"
+      # similar <- similarFull[whOther %in% TRUE]
+      cacheIdOfSimilar <- unique(similarFull$cacheId)
+      simFun <- list(funName = shownCache$tagValue[shownCache$tagKey == "function"])
+      messageCache("Cache of ", .messageFunctionFn(simFun), " differs from", verbose = verbose)
+      sameNames <- simFun$funName %in% .functionName
+      fnTxt <- paste0(if (!is.null(.functionName))
+        paste0("of '", .messageFunctionFn(.functionName), "' ") else "call ")
+
+      if (!all(sameNames)) {
+        fnTxt <- paste0("(whose function name(s) was/were '", .messageFunctionFn(paste(simFun$funName, collapse = "', '")), "')")
+      }
+      messageCache(paste0(.message$BecauseOfA, "the next closest cacheId(s) ",
+                          paste(cacheIdOfSimilar, collapse = ", "), " ",
+                          fnTxt, userTagsMess,
+                          collapse = "\n"
+      ), appendLF = TRUE, verbose = verbose)
+      messageCache("...possible, unknown, differences in a nested list ",
+                   "that is deeper than ", getOption("reproducible.showSimilarDepth", 3), " in ",
+                   paste(collapse = ", ", as.character(otherLabels[whOther %in% TRUE])),
+                   verbose = verbose
+      )
+      # lapply(strsplit(shownCache$tagValue, split = "\\:"), function(x) x[[3]])
+
+    }
     if (NROW(similar)) {
       sim <- similar[, .N, by = "cacheId"][similar, on = "cacheId"] |> setorderv(c("N", "createdDate"))
       messageCache("There are ", NROW(unique(similar$cacheId)),
