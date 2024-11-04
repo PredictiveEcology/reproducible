@@ -89,7 +89,7 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
         if (fs::is_absolute_path(cloudFolderID)) {
           cloudFolderID <- cloudFolderFromCacheRepo(cloudFolderID)
         }
-        newcfid <- try(drive_get(cloudFolderID))
+        newcfid <- try(googledrive::drive_get(cloudFolderID))
         if (is(newcfid, "try-error"))
           browser()
       }

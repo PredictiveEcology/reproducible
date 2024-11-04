@@ -9,7 +9,7 @@ harmonizeCall(callList, .callingEnv, .functionName = NULL)
 \arguments{
 \item{callList}{A named list with elements \code{call}, \code{usesDots} and \code{FUNorig}}
 
-\item{.callingEnv}{The calling environment where \code{cache2} was called from}
+\item{.callingEnv}{The calling environment where \code{Cache} was called from}
 
 \item{.functionName}{A possible function name. If omitted, then it will be deduced
 from the \code{callList} and may be inaccurate.}

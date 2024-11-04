@@ -286,10 +286,6 @@ utils::globalVariables(c(
 #'        If `"quick"`, then it will return the same two objects directly,
 #'        without evalutating the `FUN(...)`.
 #'
-#' @param sideEffect Now deprecated. Logical or path. Determines where the function will look for
-#'        new files following function completion. See Details.
-#'        *NOTE: this argument is experimental and may change in future releases.*
-#'
 #' @param makeCopy Now deprecated. Ignored if used.
 #'
 #' @param userTags A character vector with descriptions of the Cache function call. These
@@ -381,8 +377,6 @@ Cache2 <-
            drv = getDrv(getOption("reproducible.drv", NULL)),
            conn = getOption("reproducible.conn", NULL)) {
 
-    if (!exists("bbbb")) bbbb <<- 1
-    bbbb <<- bbbb + 1
     if (is.null(cachePath)) {
       if (!is.null(cacheRepo)) {
         messageCache("The cacheRepo argument is being deprecated. Please use cachePath", verbose = verbose)

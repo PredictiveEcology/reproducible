@@ -342,7 +342,8 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #'
 #' @param obj  An arbitrary R object.
 #' @param preDigest  A list of hashes.
-#' @param ...  Dots passed from Cache
+#' @param ...  Dots passed from `Cache`
+#' @param fullCall The original call to `Cache`
 #'
 #' @return The same object as `obj`, but with 2 attributes set.
 #'

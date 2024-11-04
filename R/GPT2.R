@@ -119,7 +119,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   times$SaveStart <- Sys.time()
   outputFromEvaluate <- doSaveToCache(outputFromEvaluate, metadata, cachePaths, callList$func,
                                       .objects, length, algo, quick, classOptions,
-                                      cache_file, userTags, objectSize, callList$.functionName, debugCache,
+                                      cache_file, userTags, callList$.functionName, debugCache,
                                       keyFull,
                                       useCloud, cloudFolderID, gdriveLs,
                                       func_call = callList$func_call, drv, conn, verbose,
@@ -560,7 +560,7 @@ metadata_define_postEval <- function(metadata, cacheId, outputToSave,
   cache_key <- cacheId
   metadataNew <- userTagsListToDT(cache_key, userTagsList)
   metadata <- rbindlist(list(metadata, metadataNew))
-  attr(metadata, "tags")$objectSize <- objSize
+  # attr(metadata, "tags")$objectSize <- objSize
   metadata
 }
 
@@ -603,7 +603,7 @@ setupCacheNesting <- function(userTags, useCache, envir = parent.frame(1)) {
     .pkgEnv$.reproEnv2$userTags <- userTags
     .pkgEnv$.reproEnv2$nestLevel <- 1
     .pkgEnv$.reproEnv2$useCache <- useCache
-    on.exit2(rm(.reproEnv2, envir = .pkgEnv), envir = envir)
+    on.exit2(rm(list = ".reproEnv2", envir = .pkgEnv), envir = envir)
   } else {
     userTags <- .pkgEnv$.reproEnv2$userTags <- c(.pkgEnv$.reproEnv2$userTags, userTags)
     .pkgEnv$.reproEnv2$nestLevel <- .pkgEnv$.reproEnv2$nestLevel + 1
@@ -761,7 +761,7 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
 
 doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
                           .objects, length, algo, quick, classOptions,
-                          cache_file, userTags, objectSize, .functionName, debugCache,
+                          cache_file, userTags, .functionName, debugCache,
                           detailed_key, func_call,
                           useCloud = useCloud, cloudFolderID = cloudFolderID, gdriveLs = gdriveLs,
                           drv, conn,
@@ -773,7 +773,7 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
   metadata <- metadata_define_postEval(metadata, detailed_key$key, outputFromEvaluate,
                                        .objects, length, algo, quick, classOptions,
                                        elapsedTimeFUN)
-  objectSize <- attr(metadata, "tags")$objectSize
+  # objectSize <- attr(metadata, "tags")$objectSize
 
   # Can't save NULL with attributes
   if (is.null(outputFromEvaluate)) outputFromEvaluate <- "NULL"
@@ -843,7 +843,8 @@ doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
 #' Minor cleaning up of the `FUN` and `...` to be used subsequently. This does only very minor
 #' things as it is run even if `useCache = FALSE`, i.e., even if the `Cache` is skipped.
 #'
-#' @param call The matched call from `cache2`
+#' @inheritParams Cache
+#' @inheritParams base::match.call
 #' @return A named list with `call` (the original call, without `quote`),
 #' `FUNorig`, the original value passed by user to `FUN`, and `usesDots` which
 #' is a logical indicating whether the `...` are used.

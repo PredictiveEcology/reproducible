@@ -449,3 +449,6 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 .message$CacheRequiresFUNtxt <- function() {
   "Cache requires the FUN argument"
 }
+
+messageStripColor <- function(o)
+  gsub("\033.[[:digit:]]{2}[[:alpha:]]", "", o)

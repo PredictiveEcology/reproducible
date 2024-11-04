@@ -9,6 +9,8 @@ utils::globalVariables(c(
 #' user.
 #'
 #' @inheritParams prepInputs
+#' @inheritParams preProcess
+#' @inheritParams prepInputs
 #' @inheritParams extractFromArchive
 #' @param dlFun Optional "download function" name, such as `"raster::getData"`, which does
 #'              custom downloading, in addition to loading into R. Still experimental.

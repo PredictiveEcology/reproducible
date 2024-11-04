@@ -11,7 +11,9 @@
 
 \item{preDigest}{A list of hashes.}
 
-\item{...}{Dots passed from Cache}
+\item{...}{Dots passed from \code{Cache}}
+
+\item{fullCall}{The original call to \code{Cache}}
 }
 \value{
 The same object as \code{obj}, but with 2 attributes set.
