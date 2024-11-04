@@ -16,6 +16,8 @@ matchCall2(definition, call, envir, envir2 = parent.frame(), FUN)
 \item{envir}{an environment, from which the \code{\dots} in \code{call}
     are retrieved, if any.}
 
+\item{envir2}{Environment. The environment where \code{matchCall2} was called.}
+
 \item{FUN}{Either a function (e.g., \code{rnorm}), a function call (e.g., \code{rnorm(1)}),
 or an unevaluated function call (e.g., using
 \code{quote}).}

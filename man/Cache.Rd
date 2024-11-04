@@ -29,8 +29,7 @@ Cache(
   cloudFolderID = NULL,
   showSimilar = getOption("reproducible.showSimilar", FALSE),
   drv = getDrv(getOption("reproducible.drv", NULL)),
-  conn = getOption("reproducible.conn", NULL),
-  .callingEnv = parent.frame()
+  conn = getOption("reproducible.conn", NULL)
 )
 
 cache2(
@@ -56,8 +55,7 @@ cache2(
   cloudFolderID = NULL,
   showSimilar = getOption("reproducible.showSimilar", FALSE),
   drv = getDrv(getOption("reproducible.drv", NULL)),
-  conn = getOption("reproducible.conn", NULL),
-  .callingEnv = parent.frame()
+  conn = getOption("reproducible.conn", NULL)
 )
 
 Cache2(

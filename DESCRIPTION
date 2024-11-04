@@ -65,6 +65,7 @@ Suggests:
     archive,
     covr,
     crayon,
+    curl,
     DBI,
     future,
     geodata,

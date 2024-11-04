@@ -20,8 +20,9 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                    cloudFolderID = NULL,
                    showSimilar = getOption("reproducible.showSimilar", FALSE),
                    drv = getDrv(getOption("reproducible.drv", NULL)),
-                   conn = getOption("reproducible.conn", NULL),
-                   .callingEnv = parent.frame()) {
+                   conn = getOption("reproducible.conn", NULL)) {
+
+  .callingEnv <- parent.frame()
 
   # Sets useDBI(TRUE) if a user has supplied a drv or conn
   optionsSetForCache2(drv = drv, conn = conn)
@@ -136,6 +137,10 @@ cache2 <- Cache
 #' Convert all ways of calling a function into canonical form, including defaults
 #'
 #' e.g., stats::rnorm(1) --> rnorm(n = 1, mean = 0, sd = 1)
+#' @param call The full captured call as it was passed by user.
+#' @param usesDots Logical. Whether the original `Cache` call used `...`
+#' @param isSquiggly Logical. Whether there are curly braces e.g., as in a pipe sequence.
+#' @param .callingEnv Environment. The environment from which `Cache` was called.
 convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
   # Capture the unevaluated call
 
@@ -570,7 +575,7 @@ userTagsListToDT <- function(cache_key, userTagsList) {
     for (tc in which(!theChars))
       userTagsList[[tc]] <- tryCatch(format(userTagsList[[tc]]), error = function(u) as.character())
   }
-  userTagsList <- stack(userTagsList)
+  userTagsList <- utils::stack(userTagsList)
   metadataDT(cacheId = cache_key, tagKey = userTagsList$ind, tagValue = userTagsList$values)
 }
 
@@ -845,6 +850,7 @@ doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
 #'
 #' @inheritParams Cache
 #' @inheritParams base::match.call
+#' @param envir2 Environment. The environment where `matchCall2` was called.
 #' @return A named list with `call` (the original call, without `quote`),
 #' `FUNorig`, the original value passed by user to `FUN`, and `usesDots` which
 #' is a logical indicating whether the `...` are used.

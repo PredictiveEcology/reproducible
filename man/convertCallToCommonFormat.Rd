@@ -6,6 +6,15 @@
 \usage{
 convertCallToCommonFormat(call, usesDots, isSquiggly, .callingEnv)
 }
+\arguments{
+\item{call}{The full captured call as it was passed by user.}
+
+\item{usesDots}{Logical. Whether the original \code{Cache} call used \code{...}}
+
+\item{isSquiggly}{Logical. Whether there are curly braces e.g., as in a pipe sequence.}
+
+\item{.callingEnv}{Environment. The environment from which \code{Cache} was called.}
+}
 \description{
 e.g., stats::rnorm(1) --> rnorm(n = 1, mean = 0, sd = 1)
 }
