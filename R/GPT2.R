@@ -73,6 +73,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                                                    callList$func, useCache, useCloud,
                                                    cloudFolderID, gdriveLs, full_call = callList$new_call,
                                                    drv = drv, conn = conn, verbose)
+  if (!identical2(.returnNothing, outputFromMemoise))
     return(outputFromMemoise)
 
   # After memoising fail, try files; need to check Cache dir and set lockfile
@@ -84,7 +85,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                                               full_call = callList$new_call,
                                               drv, conn, verbose = verbose)
 
-  if (!identical2(outputFromDisk, .returnNothing))
+  if (!identical2(.returnNothing, outputFromDisk))
     return(outputFromDisk)
 
   if (useDBI()) conn <- attr(outputFromDisk, ".Cache")$conn
