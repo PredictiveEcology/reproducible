@@ -71,8 +71,8 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   # Memoise and return if it is there #
   outputFromMemoise <- check_and_get_memoised_copy(keyFull$key, cachePaths, callList$.functionName,
                                                    callList$func, useCache, useCloud,
-                                                   cloudFolderID, gdriveLs, drv = drv, conn = conn, verbose)
-  if (!identical2(outputFromMemoise, .returnNothing))
+                                                   cloudFolderID, gdriveLs, full_call = callList$new_call,
+                                                   drv = drv, conn = conn, verbose)
     return(outputFromMemoise)
 
   # After memoising fail, try files; need to check Cache dir and set lockfile
@@ -80,7 +80,9 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
 
   # Check if keyFull$key is on disk and return if it is there
   outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePaths, cache_file, callList$.functionName, callList$func,
-                                              useCache, useCloud, cloudFolderID, gdriveLs, drv, conn, verbose = verbose)
+                                              useCache, useCloud, cloudFolderID, gdriveLs,
+                                              full_call = callList$new_call,
+                                              drv, conn, verbose = verbose)
 
   if (!identical2(outputFromDisk, .returnNothing))
     return(outputFromDisk)
@@ -98,7 +100,9 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
     shownCache <- cloudDownload(keyFull$key, newFileName, gdriveLs, cachePaths[[1]], cloudFolderID,
                                 drv = drv, conn = conn, verbose = verbose)
     outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePaths, cache_file, callList$.functionName, callList$func,
-                                                useCache, useCloud = FALSE, cloudFolderID, gdriveLs, drv, conn, verbose = verbose)
+                                                useCache, useCloud = FALSE, cloudFolderID, gdriveLs,
+                                                full_call = callList$new_call,
+                                                drv, conn, verbose = verbose)
     return(outputFromDisk)
   } # Derive some metadata prior to evaluation so "showSimilar" can have something to compare with
 
@@ -276,7 +280,7 @@ evaluate_args <- function(args, envir) {
 
 check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functionName,
                                       func, useCache, useCloud, cloudFolderID, gdriveLs,
-                                      drv, conn, envir = parent.frame(), verbose) {
+                                      full_call, drv, conn, envir = parent.frame(), verbose) {
 
   # Check if the result is already cached
   connOrig <- conn
@@ -338,6 +342,7 @@ check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functio
                                     cache_key, functionName, cache_file = cache_file,
                                     changedSaveFormat = changedSaveFormat, sameCacheID,
                                     cache_file_orig, func, shownCache = shownCache,
+                                    full_call = full_call,
                                     drv = drv, conn = conn, verbose = verbose)
     return(output)
   }
@@ -377,7 +382,8 @@ metadata_update <- function(outputToSave, metadata, cache_key) {
 }
 
 check_and_get_memoised_copy <- function(cache_key, cachePaths, functionName, func,
-                                        useCache, useCloud, cloudFolderID, gdriveLs, drv, conn, verbose) {
+                                        useCache, useCloud, cloudFolderID, gdriveLs,
+                                        full_call, drv, conn, verbose) {
   if (getOption("reproducible.useMemoise")) {
     for (cachePath in cachePaths) {
       cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
@@ -390,6 +396,7 @@ check_and_get_memoised_copy <- function(cache_key, cachePaths, functionName, fun
                                       cloudFolderID = cloudFolderID, gdriveLs = gdriveLs,
                                       cachePath = cachePath, cache_key = cache_key,
                                       functionName = functionName, func = func,
+                                      full_call = full_call,
                                       drv = drv, conn = conn, verbose = verbose,
                                       )
       return(output)
@@ -933,7 +940,8 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
                                   cachePath, cache_key,
                                   functionName,
                                   cache_file = NULL, changedSaveFormat, sameCacheID,
-                                  cache_file_orig, func, shownCache = NULL, drv, conn, verbose) {
+                                  cache_file_orig, func, shownCache = NULL,
+                                  full_call, drv, conn, verbose) {
   if (identical(useCache, "overwrite")) {
     clearCacheOverwrite(cachePath, cache_key, functionName, drv, conn, verbose)
     return(invisible(.returnNothing))
@@ -978,6 +986,15 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
 
     .addTagsRepoAccessedTime(cache_key, cachePath = cachePath)
     attr(output, ".Cache")$newCache <- FALSE
+
+    .dotsFromCache <- as.list(attr(full_call, ".Cache")$func_call)[-1]
+    # # This allows for any class specific things
+    if ("object" %in% names(.dotsFromCache))
+      .dotsFromCache <- .dotsFromCache[setdiff(names(.dotsFromCache), "object")]
+
+    output <- do.call(.prepareOutput, args = append(list(object = output, cachePath), .dotsFromCache))
+
+
     return(output)
   }
 }
