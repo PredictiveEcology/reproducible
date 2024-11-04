@@ -522,6 +522,7 @@ Cache2 <-
           messageCache("Error occurred during Cache call of: ", .messageFunctionFn(fnDetails$functionName),
                        ". Call was:\n", paste0(head(format(FUNcaptured)), collapse = "\n"))
         })
+      if (exists("aaaa", envir = .GlobalEnv)) browser()
       postCacheDigestTime <- Sys.time()
       elapsedTimeCacheDigest <- postCacheDigestTime - preCacheDigestTime
 
@@ -611,6 +612,8 @@ Cache2 <-
         }
 
         # Check if it is in repository
+          if (exists("aaaa", envir = .GlobalEnv)) browser()
+
         inReposPoss <- searchInRepos(cachePath,
           outputHash = outputHash,
           drv = drv, conn = conns[[cachePath]]

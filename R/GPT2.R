@@ -22,9 +22,6 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                    drv = getDrv(getOption("reproducible.drv", NULL)),
                    conn = getOption("reproducible.conn", NULL)) {
 
-  if (isFALSE(getOption("reproducible.cache2")))
-    return(Cache2(FUN = FUN, ...))
-
   .callingEnv <- parent.frame()
 
   # Sets useDBI(TRUE) if a user has supplied a drv or conn
@@ -32,6 +29,12 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
 
   # Capture and match call so it can be manipulated
   callList <- matchCall2(sys.function(0), sys.call(0), envir = .callingEnv, FUN = FUN)
+
+  if (isFALSE(getOption("reproducible.cache2"))) {
+    callList$call[[1]] <- substitute(Cache2)
+    return(eval(callList$call, envir = .callingEnv))
+    # return(Cache2(FUN = FUN, ..., .objects = .objects))
+  }
 
   # Check if this is a nested Cache call; this must be before skipCache because useCache may be numeric
   userTags <- setupCacheNesting(userTags, useCache) # get nested userTags
@@ -88,6 +91,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                                               full_call = callList$new_call,
                                               drv, conn, verbose = verbose)
 
+  if (exists("aaaa", envir = .GlobalEnv)) browser()
   if (!identical2(.returnNothing, outputFromDisk))
     return(outputFromDisk)
 
