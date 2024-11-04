@@ -1798,10 +1798,17 @@ test_that("simple userTags", {
   sc <- showCache(userTags = "rnorm") # it was "funs[[1]]" not "rnorm"
   expect_identical(0L, length(unique(showCache(userTags = "rnorm")$cacheId)))
   sc1 <- showCache(userTags = "runif")
-  expect_in(vapply(strsplit(ut2, split = ":"), tail, 1, FUN.VALUE = character(1)), sc1$tagValue)
+  sc2 <- showCache(userTags = "sample")
+  sc1Tags <- vapply(strsplit(ut2, split = ":"), tail, 1, FUN.VALUE = character(1))
+  sc2Tags <- vapply(strsplit(ut3, split = ":"), tail, 1, FUN.VALUE = character(1))
+  if (getRversion() < "4.2") { # apparently expect_in was not available in testthat in R <= 4.1.3
+    expect_true(all(sc1Tags %in% sc1$tagValue))
+    expect_true(all(sc2Tags %in% sc2$tagValue))
+  } else {
+    expect_in(sc1Tags, sc1$tagValue)
+    expect_in(sc2Tags, sc2$tagValue)
+  }
 
-  sc1 <- showCache(userTags = "sample")
-  expect_in(vapply(strsplit(ut3, split = ":"), tail, 1, FUN.VALUE = character(1)), sc1$tagValue)
 
 
 })
