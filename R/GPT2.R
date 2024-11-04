@@ -22,6 +22,9 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                    drv = getDrv(getOption("reproducible.drv", NULL)),
                    conn = getOption("reproducible.conn", NULL)) {
 
+  if (isFALSE(getOption("reproducible.cache2")))
+    return(Cache2(FUN = FUN, ...))
+
   .callingEnv <- parent.frame()
 
   # Sets useDBI(TRUE) if a user has supplied a drv or conn
