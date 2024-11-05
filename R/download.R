@@ -556,7 +556,7 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
     request <- suppressWarnings(
       ## TODO: GET is throwing warnings
       httr::GET(
-        url, ua, httr::progress(),
+        url, ua, if (verbose > 0) httr::progress(),
         httr::write_disk(destFile, overwrite = TRUE)
       ) ## TODO: overwrite?
     )
@@ -736,14 +736,14 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                                 "with similar name as targetFile (", filePathSansExt(targetFile), ")",
                                 verbose = verbose)
               downloadResults <- vapply(urls, function(url)
-                dlGeneric(url, destinationPath = .tempPath) |> unlist(),
+                dlGeneric(url, destinationPath = .tempPath, verbose = verbose) |> unlist(),
                                         FUN.VALUE = character(1))
               downloadResults <- list(destFile = downloadResults)
             } else {
               stop("url is a directory; need to install.packages(c('httr', 'curl'))")
             }
           } else {
-            downloadResults <- dlGeneric(url = url, destinationPath = .tempPath)
+            downloadResults <- dlGeneric(url = url, destinationPath = .tempPath, verbose = verbose)
           }
           downloadResults$needChecksums <- needChecksums
         }
