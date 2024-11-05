@@ -506,16 +506,19 @@ match_call_primitive <- function(definition = sys.function(sys.parent()),
 
 cache_Id_Identical <- function(metadata, cachePaths, cache_key) {
   linkToCacheId <- NULL
-  if (isTRUE(as.numeric(metadata$tagValue[metadata$tagKey == "object.size"]) > .objectSizeMinForBig)) {
-    for (cachePath in cachePaths) {
-      allCache <- showCache(x = cachePath, verbose = -2)
-      if (NROW(allCache)) {
-        resultHash <- metadata$tagValue[metadata$tagKey == "resultHash"]
-        alreadyExists <- allCache[allCache$tagKey == "resultHash" &
-                                    allCache[[.cacheTableTagColName()]] %in% resultHash &
-                                    allCache[[.cacheTableHashColName()]] != cache_key]
-        if (NROW(alreadyExists)) {
-          linkToCacheId <- alreadyExists[["cacheId"]][[1]]
+  os <- metadata$tagValue[metadata$tagKey == "object.size"]
+  if (!identical(os, "NA")) {
+    if (isTRUE(as.numeric(os) > .objectSizeMinForBig)) {
+      for (cachePath in cachePaths) {
+        allCache <- showCache(x = cachePath, verbose = -2)
+        if (NROW(allCache)) {
+          resultHash <- metadata$tagValue[metadata$tagKey == "resultHash"]
+          alreadyExists <- allCache[allCache$tagKey == "resultHash" &
+                                      allCache[[.cacheTableTagColName()]] %in% resultHash &
+                                      allCache[[.cacheTableHashColName()]] != cache_key]
+          if (NROW(alreadyExists)) {
+            linkToCacheId <- alreadyExists[["cacheId"]][[1]]
+          }
         }
       }
     }
