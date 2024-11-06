@@ -1022,7 +1022,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
 
     if (cloudWrite(useCloud)) {
       cloudUploadFromCache(cache_key %in% filePathSansExt(gdriveLs[["name"]]), cache_key,
-                           cachePath, cloudFolderID = NULL, output, verbose = verbose)
+                           cachePath, cloudFolderID = cloudFolderID, output, verbose = verbose)
     }
 
     .cacheMessage(object = output, functionName = functionName, fromMemoise = fromMemoise, verbose = verbose)
