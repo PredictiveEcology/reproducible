@@ -893,7 +893,9 @@ loadFile <- function(file, format = NULL) {
     .requireNamespace("qs", stopOnFALSE = TRUE)
     obj <- qs::qread(file = file[isQs], nthreads = getOption("reproducible.nThreads", 1))
   } else {
-    obj <- readRDS(file = file[!isQs])
+    suppressWarningsSpecific(falseWarnings = "\\'package:stats\\' may not be available when loading",
+                             obj <- readRDS(file = file[!isQs])
+    )
   }
 
   obj
@@ -932,7 +934,9 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
       }
     }
   } else {
-    saveRDS(obj, file = fts)
+    suppressWarningsSpecific(falseWarnings = "\\'package:stats\\' may not be available when loading",
+                             saveRDS(obj, file = fts)
+    )
     fs <- sum(file.size(fts))
   }
   fs <- sum(fs, fsOther)
