@@ -56,10 +56,10 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   # If debugCache is "quick", short circuit after doDigest
   if (isTRUE(!is.na(pmatch(debugCache, "quick"))))
     return(list(hash = keyFull$preDigest, content = callList$func_call))
-
   # Override keyFull$key if user has specified with cacheId
   if (!is.null(cacheId))
     keyFull$key <- cacheIdOverride(cacheId, keyFull$key, callList$.functionName, verbose)
+
 
   # Construct the full file path for the cache directory and possible file
   cachePaths <- getCacheRepos(cachePath, callList$new_call[-1], verbose = verbose)
@@ -88,7 +88,6 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                                               full_call = callList$new_call,
                                               drv, conn, verbose = verbose)
 
-  # if (exists("aaaa", envir = .GlobalEnv)) browser()
   if (!identical2(.returnNothing, outputFromDisk))
     return(outputFromDisk)
 
@@ -129,6 +128,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
 
   # ## Save to Cache; including to Memoise location; including metadata ## #
   times$SaveStart <- Sys.time()
+  if (exists("aaaa", envir = .GlobalEnv)) browser()
   outputFromEvaluate <- doSaveToCache(outputFromEvaluate, metadata, cachePaths, callList$func,
                                       .objects, length, algo, quick, classOptions,
                                       cache_file, userTags, callList$.functionName, debugCache,
@@ -826,9 +826,10 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
                           .objects, length, algo, quick, classOptions,
                           cache_file, userTags, .functionName, debugCache,
                           detailed_key, func_call,
-                          useCloud = useCloud, cloudFolderID = cloudFolderID, gdriveLs = gdriveLs,
+                          useCloud, cloudFolderID, gdriveLs,
                           drv, conn,
                           verbose, timeSaveStart, timeEvaluateStart) {
+  if (exists("aaaa", envir = .GlobalEnv)) browser()
 
   elapsedTimeFUN <- difftime(timeSaveStart, timeEvaluateStart, units = "secs")
 
