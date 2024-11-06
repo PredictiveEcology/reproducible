@@ -539,16 +539,16 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
         "createdDate" = as.character(Sys.time())
       )
       dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
-      dt2 <- loadFile(dtFile)
+      dt3 <- loadFile(dtFile)
       tk <- tagKey
-      alreadyThere <- sum(dt2$tagKey == tk & dt2$cacheId == cacheId)
+      alreadyThere <- sum(dt3$tagKey == tk & dt3$cacheId == cacheId)
       if (add && alreadyThere == 0) {
-        dt2 <- rbindlist(list(dt2, dt))
+        dt3 <- rbindlist(list(dt3, dt))
       } else {
-        set(dt2, which(dt2$tagKey == tk & dt2$cacheId == cacheId), "tagValue", dt$tagValue)
-        # dt2[tagKey == tk & cacheId == cacheId, tagValue := dt$tagValue]
+        set(dt3, which(dt3$tagKey == tk & dt3$cacheId == cacheId), "tagValue", dt$tagValue)
+        # dt3[tagKey == tk & cacheId == cacheId, tagValue := dt$tagValue]
       }
-      saveFilesInCacheFolder(dt2, dtFile, cachePath = cachePath, cacheId = cacheId)
+      saveFilesInCacheFolder(dt3, dtFile, cachePath = cachePath, cacheId = cacheId)
     }
   }
 }
