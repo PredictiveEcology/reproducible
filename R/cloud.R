@@ -54,7 +54,10 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
         cloudFolderID
       }
 
-      driveLs <- tryCatch(suppressMessages(do.call(googledrive::drive_get, append(list(cfidTmp), args))),
+      driveLs <- tryCatch(# suppressMessages( # will show: "The googledrive package is requesting access to your Google account."
+        do.call(googledrive::drive_get, append(list(cfidTmp), args)
+        #        )
+        ),
         error = function(e) {
           if (!is.null(e$parent)) {
             if (grepl("File not found", as.character(e$parent)) && attempt == 2) {
