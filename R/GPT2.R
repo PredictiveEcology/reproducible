@@ -2,25 +2,23 @@
 #' @export
 #' @rdname Cache
 Cache <- function(FUN, ..., notOlderThan = NULL,
-                   .objects = NULL, .cacheExtra = NULL, .functionName = NULL,
-                   outputObjects = NULL, # nolint
-                   algo = "xxhash64", # cacheRepo = NULL,
-                   cachePath = NULL,
-                   length = getOption("reproducible.length", Inf),
-                   # compareRasterFileLength,
-                   userTags = c(),
-                   omitArgs = NULL,
-                   classOptions = list(), debugCache = character(),
-                   # sideEffect = FALSE,
-                   # makeCopy = FALSE,
-                   quick = getOption("reproducible.quick", FALSE),
-                   verbose = getOption("reproducible.verbose", 1), cacheId = NULL,
-                   useCache = getOption("reproducible.useCache", TRUE),
-                   useCloud = FALSE,
-                   cloudFolderID = NULL,
-                   showSimilar = getOption("reproducible.showSimilar", FALSE),
-                   drv = getDrv(getOption("reproducible.drv", NULL)),
-                   conn = getOption("reproducible.conn", NULL)) {
+                  .objects = NULL, .cacheExtra = NULL, .functionName = NULL,
+                  outputObjects = NULL, # nolint
+                  algo = "xxhash64",
+                  cachePath = NULL,
+                  length = getOption("reproducible.length", Inf),
+                  userTags = c(),
+                  omitArgs = NULL,
+                  classOptions = list(), debugCache = character(),
+                  quick = getOption("reproducible.quick", FALSE),
+                  verbose = getOption("reproducible.verbose", 1),
+                  cacheId = NULL,
+                  useCache = getOption("reproducible.useCache", TRUE),
+                  useCloud = getOption("reproducible.useCloud", FALSE),
+                  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+                  showSimilar = getOption("reproducible.showSimilar", FALSE),
+                  drv = getDrv(getOption("reproducible.drv", NULL)),
+                  conn = getOption("reproducible.conn", NULL)) {
 
   .callingEnv <- parent.frame()
 
