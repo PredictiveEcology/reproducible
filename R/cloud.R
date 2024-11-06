@@ -37,6 +37,9 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
 
     # This is an imperfect test for a google drive ID ... because of this, we try 2x,
     #   first with best guess, then if wrong, try the other branch of "if (isID)"
+    stripHTTP <- gsub("http.+drive.google.com.+folders/(.{32,33})\\?*.+$", "\\1", cloudFolderID)
+    if (isID(stripHTTP))
+      cloudFolderID <- stripHTTP
     isID <- isTRUE(32 <= nchar(cloudFolderID) && nchar(cloudFolderID) <= 33)
     if (packageVersion("googledrive") < "2.0.0") {
       args <- list(temp_drive = team_drive)
@@ -380,4 +383,8 @@ isOrHasRaster <- function(obj) {
     is(obj, "Raster") || is(obj, "SpatRaster")
   }
   return(rasters)
+}
+
+isID <- function(x) {
+  isTRUE(32 <= nchar(x) && nchar(x) <= 33)
 }
