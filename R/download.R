@@ -718,9 +718,14 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
               con <- curl::curl(url = url, "r", handle = list_files)
               on.exit(close(con), add = TRUE)
               filenames <- readLines(con)
-              filenames <- gsub(".+<a.+\">(.+)</a>.+", "\\1", filenames)
+              # This is from NFI example
+              filenames <- grep("href", filenames, value = TRUE)
+              filenames <- grep("\\[PARENTDIR\\]|\\[ICO\\]", filenames, value = TRUE, invert = TRUE)
+              filenames2 <- gsub(".+<a href=\"(.+)\">.+/a>.+", "\\1", filenames)
+              # This was from mexico example from Steve
+              # filenames3 <- gsub(".+<a.+\">(.+)</a>.+", "\\1", filenames)
               # rm http tags, plus the two files Description and Parent Directory that are in a directory
-              filenames <- grep("<|>|Description|Parent Directory", filenames, value = TRUE, invert = TRUE)
+              filenames <- grep("<|>|Description|Parent Directory", filenames2, value = TRUE, invert = TRUE)
               if (isTRUE(nzchar(alsoExtract))) {
                 if (grepl("^sim", alsoExtract)) {
                   theGrep <- filePathSansExt(targetFile)
