@@ -340,15 +340,16 @@ setMethod(
   signature = "list",
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
-    # browser(expr = exists("._robustDigest_2"))
     if (!is.null(.objects)) object <- object[.objects]
-    lapply(.sortDotsUnderscoreFirst(object), function(x) {
+    inner <- lapply(.sortDotsUnderscoreFirst(object), function(x) {
       .robustDigest(
         object = x, .objects = .objects,
         length = length,
         algo = algo, quick = quick, classOptions = classOptions
       )
     })
+    # have to disginguish a list from an object not in a list
+    append(list(list = .doDigest(inner)), inner)
   }
 )
 
