@@ -128,7 +128,6 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
 
   # ## Save to Cache; including to Memoise location; including metadata ## #
   times$SaveStart <- Sys.time()
-  if (exists("aaaa", envir = .GlobalEnv)) browser()
   outputFromEvaluate <- doSaveToCache(outputFromEvaluate, metadata, cachePaths, callList$func,
                                       .objects, length, algo, quick, classOptions,
                                       cache_file, userTags, callList$.functionName, debugCache,
@@ -829,7 +828,6 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
                           useCloud, cloudFolderID, gdriveLs,
                           drv, conn,
                           verbose, timeSaveStart, timeEvaluateStart) {
-  if (exists("aaaa", envir = .GlobalEnv)) browser()
 
   elapsedTimeFUN <- difftime(timeSaveStart, timeEvaluateStart, units = "secs")
 

@@ -969,7 +969,6 @@ unmakeMemoisable.default <- function(x) {
   rasters <- is(obj, "Raster")
   atts <- attributes(obj)
   reassignAtts <- TRUE
-
   if (any(rasters)) {
     .requireNamespace("raster", stopOnFALSE = TRUE)
     objOrig <- obj
