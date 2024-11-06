@@ -913,14 +913,14 @@ unmakeMemoisable.default <- function(x) {
   obj <- lapply(obj, .wrap, preDigest = preDigest, cachePath = cachePath, drv = drv,
                 conn = conn, verbose = verbose, ...)
   hasTagAttr <- lapply(obj, function(x) attr(x, "tags"))
-  tagAttr <- list(unlist(hasTagAttr))
+  tagAttr <- unname(unlist(hasTagAttr)) # this removed name
   if (length(tagAttr)) {
     if (is.null(attrsOrig[["tags"]])) {
       newList <- tagAttr
     } else {
-      newList <- try(modifyList(attrsOrig["tags"], tagAttr))
+      newList <- try(c(attrsOrig[["tags"]], tagAttr))
     }
-    attrsOrig["tags"] <- newList
+    attrsOrig[["tags"]] <- newList
   }
   if (!is.null(attrsOrig)) {
     for (tt in intersect(names(attrsOrig), c(".Cache", "tags", "call")))
