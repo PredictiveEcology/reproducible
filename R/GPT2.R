@@ -170,7 +170,7 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
         args <- as.list(func_call)[-1]
       func_call <- as.call(c(func_call[[1]][[3]], args))
     } else {
-      if (func_call[[1]] == quote(`::`)) {
+      if (func_call[[1]] == quote(`::`) || func_call[[1]] == quote(`:::`)) {
         func_full <- func_call
         func <- func_call  # Package prefix, using FUN as name only
         args <- as.list(call[-(1:2)])
