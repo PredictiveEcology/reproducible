@@ -17,13 +17,13 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                   useCloud = getOption("reproducible.useCloud", FALSE),
                   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
                   showSimilar = getOption("reproducible.showSimilar", FALSE),
-                  drv = getDrv(getOption("reproducible.drv", NULL)),
+                  drv = getOption("reproducible.drv", NULL),
                   conn = getOption("reproducible.conn", NULL)) {
 
   .callingEnv <- parent.frame()
 
   # Sets useDBI(TRUE) if a user has supplied a drv or conn
-  optionsSetForCache2(drv = drv, conn = conn)
+  optionsSetForCache(drv = drv, conn = conn)
 
   # Capture and match call so it can be manipulated
   callList <- matchCall2(sys.function(0), sys.call(0), envir = .callingEnv, FUN = FUN)
@@ -1096,13 +1096,20 @@ verboseCacheDFAll <- function(verbose, functionName, times) {
   .message$CacheTimings(verbose)
 }
 
-optionsSetForCache2 <- function(drv = NULL, conn = NULL, envir = parent.frame(1)) {
-  if (!is.null(drv) || !is.null(conn))
-    useDBI(TRUE)
-  opts <- options(# reproducible.useDBI = FALSE,
-                  #reproducible.cache2 = TRUE
-                  )
-  on.exit2(options(opts), envir = envir)
+optionsSetForCache <- function(drv = NULL, conn = NULL, envir = parent.frame(1),
+                                verbose = getOption("reproducible.verbose")) {
+  if (!is.null(drv) || !is.null(conn)) {
+    useDBI(TRUE, verbose = verbose)
+  }
+  if (isFALSE(useDBI())) {
+    opts <- options(
+      reproducible.useDBI = FALSE
+    )
+  }
+  if (!isFALSE(getOption("reproducible.cache2")))
+    opt2 <- options(
+      reproducible.cache2 = TRUE
+    )
 }
 
 identical2 <- function(a, b) {
