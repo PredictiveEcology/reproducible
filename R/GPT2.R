@@ -1071,7 +1071,7 @@ isDevMode <- function(useCache, userTags) {
 }
 
 cloudWrite <- function(useCloud) {
-  isTRUE(any(grepl("w", useCloud) %in% 1)) || isTRUE(useCloud)
+  isTRUE(any(grepl("^w", useCloud) %in% 1)) || isTRUE(useCloud)
 }
 
 cloudWriteOrRead <- function(useCloud) {
@@ -1079,7 +1079,7 @@ cloudWriteOrRead <- function(useCloud) {
 }
 
 cloudReadOnly <- function(useCloud) {
-  isTRUE(any(grepl("r", useCloud) %in% 1))
+  isTRUE(any(grepl("^r", useCloud) %in% 1))
 }
 
 cloudRead <- function(useCloud) {
