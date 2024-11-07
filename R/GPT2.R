@@ -686,7 +686,8 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
       scTmp <- shownCache[tagKey == "userTags"] # [tagValue %in% userTags, c("cacheId")]
       scTmp2 <- scTmp[, .N, by = "cacheId"][N == length(userTags)] # Has to be exact
       scTmp <- scTmp[scTmp2, on = "cacheId"]
-      scTmp <- scTmp[tagValue %in% userTags, c("cacheId")]
+      userTags2 <- gsub("^.*:", "", userTags)
+      scTmp <- scTmp[tagValue %in% userTags2, c("cacheId")]
       dups <- duplicated(scTmp)
       shownCache <- shownCache[scTmp[which(dups %in% FALSE)], on = "cacheId"]
     }
