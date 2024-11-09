@@ -349,7 +349,7 @@ setMethod(
       )
     })
     # have to disginguish a list from an object not in a list
-    append(list(list = .doDigest(inner)), inner)
+    append(list(._list = .doDigest(inner)), inner)
   }
 )
 
