@@ -409,10 +409,18 @@ isDirectory <- function(pathnames, mustExist = TRUE) {
     id <- dir.exists(pathnames)
     id[id] <- file.info(pathnames[id])$isdir
   } else {
-    id <- grepl("/$|\\\\$", pathnames)
+    if (isGoogleID(pathnames)) {
+      id <- isGoogleDriveDirectory(pathnames)
+    } else {
+      id <- grepl("/$|\\\\$", pathnames)
+    }
   }
   names(id) <- origPn
   id
+}
+
+isGoogleDriveDirectory <- function(url) {
+  grepl("folders", url)
 }
 
 isFile <- function(pathnames) {

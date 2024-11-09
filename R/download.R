@@ -700,12 +700,32 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
           teamDrive <- getTeamDrive(dots)
 
-          downloadResults <- dlGoogle(
-            url = url, archive = archive, targetFile = targetFile,
-            checkSums = checkSums, messSkipDownload = messSkipDownload, destinationPath = .tempPath,
-            overwrite = overwrite, needChecksums = needChecksums, verbose = verbose,
-            team_drive = teamDrive, ...
-          )
+          if (isGoogleDriveDirectory(url)) {
+            drive_files <- googledrive::drive_ls(googledrive::as_id(url))
+            if (length(alsoExtract) > 1)
+              fileIndex <- sapply(alsoExtract, function(ae) grep(pattern = ae, drive_files$name))
+            else
+              fileIndex <- grep(pattern = alsoExtract, drive_files$name)
+            ids <- drive_files$id[fileIndex]
+            downloadResults <- lapply(ids, function(ids)
+              dlGoogle(
+                url = ids, archive = archive, # targetFile = targetFile,
+                checkSums = checkSums, messSkipDownload = messSkipDownload, destinationPath = .tempPath,
+                overwrite = overwrite, needChecksums = needChecksums, verbose = verbose,
+                team_drive = teamDrive, ...
+              )
+            )
+            downloadResults <- list(destFile = vapply(downloadResults, function(x) x$destFile, FUN.VALUE = character(1)),
+                                    needChecksums = max(vapply(downloadResults, function(x) x$needChecksums, FUN.VALUE = numeric(1))))
+
+          } else {
+            downloadResults <- dlGoogle(
+              url = url, archive = archive, targetFile = targetFile,
+              checkSums = checkSums, messSkipDownload = messSkipDownload, destinationPath = .tempPath,
+              overwrite = overwrite, needChecksums = needChecksums, verbose = verbose,
+              team_drive = teamDrive, ...
+            )
+          }
         } else if (grepl("dl.dropbox.com", url)) {
           stop("Dropbox downloading is currently not supported")
         } else if (grepl("onedrive.live.com", url)) {
@@ -756,7 +776,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
       # if destinationPath is tempdir, then don't copy and remove
 
       testFTD <- length(fileToDownload) > 0
-      if (isTRUE(testFTD)) testFTD <- isTRUE(all(downloadResults$destFile != fileToDownload))
+      if (isTRUE(testFTD)) testFTD <- isTRUE(all(!downloadResults$destFile %in% fileToDownload))
 
       # Don't use .tempPath directly because of non-google approaches too
 

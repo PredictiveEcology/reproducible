@@ -719,13 +719,18 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   failStop <- FALSE
+  if (isDirectory(url, mustExist = FALSE)) {
+    messagePrepInputs("url pointed to a directory; using targetFilePath:\n",
+                      paste0(downloadFileResult$downloaded, collapse = "\n"))
+    targetFilePath <- downloadFileResult$downloaded
+  }
   if (is.null(targetFilePath)) {
     failStop <- TRUE
   } else if (isTRUE(all(is.na(targetFilePath)))) { # this must come before next; but no need to change failStop
     if (length(targetFilePath) > 1)
       targetFilePath <- NA
     # failStop <- FALSE
-  } else if (!isTRUE(file.exists(targetFilePath))) {
+  } else if (!isTRUE(all(file.exists(targetFilePath)))) {
     failStop <- TRUE
   }
   if (isTRUE(failStop)) {
