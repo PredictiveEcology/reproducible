@@ -703,7 +703,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           if (isGoogleDriveDirectory(url)) {
             drive_files <- googledrive::drive_ls(googledrive::as_id(url))
             if (length(alsoExtract) > 1)
-              fileIndex <- sapply(alsoExtract, function(ae) grep(pattern = ae, drive_files$name))
+              fileIndex <- sapply(alsoExtract, function(ae) grep(pattern = ae, drive_files$name)) |>
+                as.vector()
             else
               fileIndex <- grep(pattern = alsoExtract, drive_files$name)
             ids <- drive_files$id[fileIndex]

@@ -1407,7 +1407,7 @@ process <- function(out, funCaptured,
       .message$IndentUpdate()
       if (!is.null(out$targetFilePath)) {
         if (!all(is.na(out$targetFilePath)))
-          messagePreProcess("targetFile located at ", out$targetFilePath, verbose = verbose)
+          messagePreProcess("targetFile located at:\n", paste(out$targetFilePath, collapse = "\n"), verbose = verbose)
       }
 
       if (!isTRUE(is.na(out$targetFilePath)))
