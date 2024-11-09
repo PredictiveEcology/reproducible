@@ -352,6 +352,7 @@ check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functio
                                     full_call = full_call,
                                     drv = drv, conn = conn, verbose = verbose)
     return(output)
+
   }
   invisible(.returnNothing)
 }
@@ -679,20 +680,32 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
   devMode <- isDevMode(useCache, userTags)  # don't use devMode if no userTags
   shownCache <- showCache(cachePath, Function = .functionName, verbose = verbose - 2)
   if (!is.null(userTags)) { # userTags are as "strong as" functionName
-    if (!devMode) {  # This has to be exact match for devMode i.e., number of and exact tags;
-      #  not exact match for showSimilar
-      shownCache <- shownCache[tagValue %in% userTags]
-    } else {
-      scTmp <- shownCache[tagKey == "userTags"] # [tagValue %in% userTags, c("cacheId")]
-      scTmp2 <- scTmp[, .N, by = "cacheId"][N == length(userTags)] # Has to be exact
-      scTmp <- scTmp[scTmp2, on = "cacheId"]
-      userTags2 <- gsub("^.*:", "", userTags)
-      userTags3 <- data.table(tagKey = "userTags", tagValue = userTags2)
-      rmCacheId <- scTmp[!userTags3, on = c("tagKey", "tagValue")]
-      scTmp <- scTmp[which(!scTmp$cacheId %in% rmCacheId)]
-      dups <- duplicated(scTmp)
-      shownCache <- shownCache[scTmp[which(dups %in% FALSE)], on = "cacheId"]
-    }
+    userTags2a <- gsub("^.*:", "", userTags)
+    userTags2b <- gsub(":.*$", "", userTags)
+    userTags2b <- ifelse(!nzchar(userTags2b), "userTags", userTags2b)
+    userTagsAsDT <- data.table(tagKey = userTags2b, tagValue = userTags2a)
+    # identify only those items that match the userTags
+    scMatch <- shownCache[userTagsAsDT, .(length(unique(tagKey)) == length(userTags)),
+               on = c("tagKey", "tagValue"), by = "cacheId"][V1 %in% TRUE]
+    shownCache <- shownCache[scMatch, on = "cacheId"]
+    set(shownCache, NULL, "V1", NULL)
+    #
+    #
+    # if (!devMode) {  # This has to be exact match for devMode i.e., number of and exact tags;
+    #   #  not exact match for showSimilar
+    #   shownCache <- shownCache[tagValue %in% userTags2a]
+    # } else {
+    #   scTmp <- shownCache[tagKey == "userTags"] # [tagValue %in% userTags, c("cacheId")]
+    #   scTmp2 <- scTmp[, .N, by = "cacheId"][N == length(userTags)] # Has to be exact
+    #   scTmp <- scTmp[scTmp2, on = "cacheId"]
+    #   userTags3 <- data.table(tagKey = "userTags", tagValue = userTags2a)
+    #   rmCacheId <- scTmp[!userTags3, on = c("tagKey", "tagValue")]
+    #   scTmp <- scTmp[which(!scTmp$cacheId %in% rmCacheId)]
+    #   dups <- duplicated(scTmp$cacheId)
+    #   shownCache <- shownCache[cacheId %in% unique(scTmp$cacheId)]
+    #   # if (is(shownCache2, "try-error"))
+    #   #   browser()
+    # }
   }
 
   if (NROW(shownCache)) {
@@ -739,33 +752,34 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
 
     }
     if (NROW(similar)) {
-      sim <- similar[, .N, by = "cacheId"][similar, on = "cacheId"] |> setorderv(c("N", "createdDate"))
+      simi <- similar[, .N, by = "cacheId"][similar, on = "cacheId"]
+      data.table::setorderv(simi, c("N", "createdDate"))
       messageCache("There are ", NROW(unique(similar$cacheId)),
                    " similar calls (same fn: ", .messageFunctionFn(.functionName), ") in the Cache repository.",
                    verbose = verbose * !devMode)
-      sim <- split(sim, by = "N") # take first element in split list
-      sim <- sim[[1]]
-      messageCache("With fewest differences (", sim$N[[1]], "), there are ",
-                   NROW(unique(sim$cacheId)),
+      simi <- split(simi, by = "N") # take first element in split list
+      simi <- simi[[1]]
+      messageCache("With fewest differences (", simi$N[[1]], "), there are ",
+                   NROW(unique(simi$cacheId)),
                    " similar calls in the Cache repository.", verbose = verbose * !devMode)
-      twoCols <- strsplit(sim[["tagValue"]], ":")
-      set(sim, NULL, c("N", "tagKey", "tagValue"), NULL)
+      twoCols <- strsplit(simi[["tagValue"]], ":")
+      set(simi, NULL, c("N", "tagKey", "tagValue"), NULL)
       args <- vapply(twoCols, function(x) x[[1]], FUN.VALUE = character(1))
       vals <- vapply(twoCols, function(x) x[[2]], FUN.VALUE = character(1))
-      set(sim, NULL, "arg", args)
-      set(sim, NULL, "value", vals)
-      setcolorder(sim, c("cacheId", "arg", "value"))
+      set(simi, NULL, "arg", args)
+      set(simi, NULL, "value", vals)
+      setcolorder(simi, c("cacheId", "arg", "value"))
       if (isDevMode(useCache, userTags)) {
         messageCache("------ devMode -------", verbose = verbose)
         messageCache("Previous call(s) exist in the cache with identical userTags (",
                      paste0(userTags, collapse = ", "), ")", verbose = verbose)
         messageCache("This call to cache will replace entry with cacheId(s): ",
-                     paste0(sim[["cacheId"]], collapse = ", "), verbose = verbose)
-        cacheIdsToClear <- paste0("^", sim[["cacheId"]], "$", collapse = "|")
+                     paste0(simi[["cacheId"]], collapse = ", "), verbose = verbose)
+        cacheIdsToClear <- paste0("^", simi[["cacheId"]], "$", collapse = "|")
         clearCache(cachePath, userTags = cacheIdsToClear, ask = FALSE, drv = drv, conn = conn, verbose = verbose - 2)
       }
       messageCache("with different elements (most recent at top):", verbose = verbose)
-      messageDF(sim, verbose = verbose)
+      messageDF(simi, verbose = verbose)
       messageCache("------ devMode -------", verbose = verbose * devMode)
     }
   } else {
@@ -1011,7 +1025,16 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     if (fromMemoise) {
       output <- get(cache_key, envir = memoiseEnv(cachePath))
     } else {
-      obj <- loadFile(cache_file)
+      obj <- try(loadFile(cache_file))
+      if (is(obj, "try-error")) {
+        messageCache("It looks like the cache file is corrupt; deleting and recalculating")
+        otherFiles <- normPath(file.path(CacheStorageDir(), shownCache[tagKey == "filesToLoad"]$tagValue))
+        rmFiles <- c(cache_file, otherFiles)
+        unlink(rmFiles)
+        return(.returnNothing)
+      }
+
+
       output <- .unwrap(obj, cachePath = cachePath)
       if (isTRUE(changedSaveFormat)) {
         swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
