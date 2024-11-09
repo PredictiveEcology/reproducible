@@ -1442,7 +1442,7 @@ process <- function(out, funCaptured,
           }
         } else {
           useCache2 <- useCache
-          if (fileExt(out$targetFilePath) %in% c("qs", "rds") &&
+          if (any(fileExt(out$targetFilePath) %in% c("qs", "rds")) &&
             !isTRUE(getOption("reproducible.useMemoise"))) {
             useCache2 <- FALSE
             messagePreProcess("targetFile is already a binary; skipping Cache while loading")
