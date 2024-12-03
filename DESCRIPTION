@@ -70,7 +70,7 @@ Suggests:
     geodata,
     glue,
     googledrive,
-    httr,
+    httr2,
     knitr,
     parallel,
     qs,

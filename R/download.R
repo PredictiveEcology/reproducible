@@ -530,18 +530,27 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 
   messagePreProcess("Downloading ", url, " ...", verbose = verbose)
 
+  needDwnFl <- TRUE # this will try download.file if no httr2 or httr2 fails
+  if (.requireNamespace("httr2") && .requireNamespace("curl")) {
+    for (i in 1:2) {
+      req <- request(url)
+      if (i == 1)
+        req <- req |> req_user_agent(getOption("reproducible.useragent"))
+      if (verbose > 0)
+        req <- req |> req_progress()
 
-  if (.requireNamespace("httr") && .requireNamespace("curl")) {
-    ua <- httr::user_agent(getOption("reproducible.useragent"))
-    request <- suppressWarnings(
-      ## TODO: GET is throwing warnings
-      httr::GET(
-        url, ua, httr::progress(),
-        httr::write_disk(destFile, overwrite = TRUE)
-      ) ## TODO: overwrite?
-    )
-    httr::stop_for_status(request)
-  } else {
+      resp <- req |> req_url_query() |>
+        req_perform(path = destFile)
+      a <- resp_body_string(resp)
+      isRjcted <- grepl("Request Rejected", a)
+      if (!isTRUE(any(isRjcted)) && !resp_is_error(resp)) {
+        needDwnFl <- FALSE
+        break
+      }
+    }
+  }
+
+  if (needDwnFl) {
     out <- try(download.file(url, destfile = destFile))
     if (is(out, "try-error")) {
       stop("Download failed; try rerunning after: install.packages(c('curl', 'httr'))")
