@@ -27,11 +27,11 @@ jobs:
           - {os: windows-latest, r: 'oldrel-1'}
           - {os: windows-latest, r: 'oldrel-2'}
           - {os: windows-latest, r: 'oldrel-3'}
-          - {os: ubuntu-20.04,   r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-20.04,   r: 'release'}
-          - {os: ubuntu-20.04,   r: 'oldrel-1'}
-          - {os: ubuntu-20.04,   r: 'oldrel-2'}
-          - {os: ubuntu-20.04,   r: 'oldrel-3'}
+          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
+          - {os: ubuntu-latest,   r: 'release'}
+          - {os: ubuntu-latest,   r: 'oldrel-1'}
+          - {os: ubuntu-latest,   r: 'oldrel-2'}
+          - {os: ubuntu-latest,   r: 'oldrel-3'}
 
     env:
       _SP_EVOLUTION_STATUS_: 2
