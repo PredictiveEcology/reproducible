@@ -204,7 +204,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
       indentNum <- indent
       if (!is.null(indent))
         if (is.character(indent))
-          indentNum <- ansi_nchar(indent)
+          indentNum <- cli::ansi_nchar(indent)
       if (is.null(indent)) indentNum <- 0
 
       mess <- ansi_trimws(mess, which = c("both"))
