@@ -871,7 +871,7 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
     messHere <- cli::ansi_strwrap(simplify = TRUE,
                                   paste0("Temporarily setting Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = TRUE) because ",
                                          "it looks like there may be an SSL certificate problem"))
-    message(paste0(messHere, "\n"))
+    message(gsub("\n$", "", paste(paste0(messHere, "\n"), collapse = " ")))
 
     # https://stackoverflow.com/a/76684292/3890027
     prevCurlVal <- Sys.getenv("R_LIBCURL_SSL_REVOKE_BEST_EFFORT")
