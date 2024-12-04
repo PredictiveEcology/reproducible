@@ -868,10 +868,9 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
   SSLwarns <- grepl(.txtUnableToAccessIndex, warns)
   SSLwarns2 <- grepl("SSL peer certificate or SSH remote key was not OK", messOrig)
   if (any(SSLwarns) || any(SSLwarns2)) {
-    messHere <- cli::ansi_strwrap(simplify = TRUE,
-                                  paste0("Temporarily setting Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = TRUE) because ",
-                                         "it looks like there may be an SSL certificate problem"))
-    message(paste0(messHere, "\n"))
+    messHere <- c("Temporarily setting Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = TRUE) because ",
+                       "it looks like there may be an SSL certificate problem")
+    message(gsub("\n$", "", paste(paste0(messHere, "\n"), collapse = " ")))
 
     # https://stackoverflow.com/a/76684292/3890027
     prevCurlVal <- Sys.getenv("R_LIBCURL_SSL_REVOKE_BEST_EFFORT")
