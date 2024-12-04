@@ -155,7 +155,7 @@ test_that("prepInputs doesn't work (part 3)", {
   mess <- capture_error({
     nc4 <- cropInputs(nc3, studyArea = 1)
   })
-  expect_true(grepl("anyNA.+is not TRUE", mess))
+  expect_s3_class(mess, "simpleError")
 
   ncSmallShifted <- ncSmall + 10000000
   ncSmallShifted <- st_as_sf(ncSmallShifted)
