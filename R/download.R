@@ -533,17 +533,17 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
   needDwnFl <- TRUE # this will try download.file if no httr2 or httr2 fails
   if (.requireNamespace("httr2") && .requireNamespace("curl")) {
     for (i in 1:2) {
-      req <- request(url)
+      req <- httr2::request(url)
       if (i == 1)
-        req <- req |> req_user_agent(getOption("reproducible.useragent"))
+        req <- req |> httr2::req_user_agent(getOption("reproducible.useragent"))
       if (verbose > 0)
-        req <- req |> req_progress()
+        req <- req |> httr2::req_progress()
 
-      resp <- req |> req_url_query() |>
-        req_perform(path = destFile)
-      a <- resp_body_string(resp)
+      resp <- req |> httr2::req_url_query() |>
+        httr2::req_perform(path = destFile)
+      a <- httr2::resp_body_string(resp)
       isRjcted <- grepl("Request Rejected", a)
-      if (!isTRUE(any(isRjcted)) && !resp_is_error(resp)) {
+      if (!isTRUE(any(isRjcted)) && !httr2::resp_is_error(resp)) {
         needDwnFl <- FALSE
         break
       }
