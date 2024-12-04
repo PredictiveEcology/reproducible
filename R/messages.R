@@ -332,3 +332,5 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
   .message$PreProcessIndent <- gsub(paste0(val, "$"), "", .message$PreProcessIndent)
   withr::deferred_clear(envir = envir)
 }
+
+.txtUnableToAccessIndex <- "unable to access index"
