@@ -561,7 +561,8 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
   messagePreProcess("Downloading ", url, " ...", verbose = verbose)
 
   needDwnFl <- TRUE # this will try download.file if no httr2 or httr2 fails
-  if (.requireNamespace("httr2") && .requireNamespace("curl")) {
+  # R version 4.1.3 doesn't have httr2 that can do these steps; httr2 is too old, I believe
+  if (.requireNamespace("httr2") && .requireNamespace("curl") && getRversion() >= "4.2") {
     for (i in 1:2) {
       req <- httr2::request(url)
       if (i == 1)
