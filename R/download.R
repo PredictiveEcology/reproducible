@@ -562,21 +562,37 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 
   needDwnFl <- TRUE # this will try download.file if no httr2 or httr2 fails
   # R version 4.1.3 doesn't have httr2 that can do these steps; httr2 is too old, I believe
-  if (.requireNamespace("httr2") && .requireNamespace("curl") && getRversion() >= "4.2") {
-    for (i in 1:2) {
-      req <- httr2::request(url)
-      if (i == 1)
-        req <- req |> httr2::req_user_agent(getOption("reproducible.useragent"))
-      if (verbose > 0)
-        req <- req |> httr2::req_progress()
 
-      resp <- req |> httr2::req_url_query() |>
-        httr2::req_perform(path = destFile)
-      a <- httr2::resp_body_string(resp)
-      isRjcted <- grepl("Request Rejected", a)
-      if (!isTRUE(any(isRjcted)) && !httr2::resp_is_error(resp)) {
-        needDwnFl <- FALSE
-        break
+  if (.requireNamespace("httr") && .requireNamespace("curl") && getRversion() < "4.2") {
+    ua <- httr::user_agent(getOption("reproducible.useragent"))
+    request <- suppressWarnings(
+      ## TODO: GET is throwing warnings
+      httr::GET(
+        url, ua, httr::progress(),
+        httr::write_disk(destFile, overwrite = TRUE)
+      ) ## TODO: overwrite?
+    )
+    httr::stop_for_status(request)
+    needDwnFl <- FALSE
+  } else {
+
+
+    if (.requireNamespace("httr2") && .requireNamespace("curl") && getRversion() >= "4.2") {
+      for (i in 1:2) {
+        req <- httr2::request(url)
+        if (i == 1)
+          req <- req |> httr2::req_user_agent(getOption("reproducible.useragent"))
+        if (verbose > 0)
+          req <- req |> httr2::req_progress()
+
+        resp <- req |> httr2::req_url_query() |>
+          httr2::req_perform(path = destFile)
+        a <- httr2::resp_body_string(resp)
+        isRjcted <- grepl("Request Rejected", a)
+        if (!isTRUE(any(isRjcted)) && !httr2::resp_is_error(resp)) {
+          needDwnFl <- FALSE
+          break
+        }
       }
     }
   }
