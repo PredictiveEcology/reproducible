@@ -540,7 +540,7 @@ withoutFinalNumeric <- function(string) {
   paste0(woNumeric, ".", ext)
 }
 
-setClass("PackedSpatExtent")
+setClass("PackedSpatExtent2")
 
 wrapSpatVector <- function(obj) {
   obj <- terra::wrap(obj)
