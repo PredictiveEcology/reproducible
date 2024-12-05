@@ -71,8 +71,8 @@
 #'
 #' @param df A data.frame, data.table, matrix
 #' @param round An optional numeric to pass to `round`
-#' @param colour Passed to `getFromNamespace(colour, ns = "crayon")`,
-#'   so any colour that `crayon` can use
+#' @param colour Passed to `getFromNamespace(colour, ns = "cli")`,
+#'   so any colour that `cli` can use
 #' @param colnames Logical or `NULL`. If `TRUE`, then it will print
 #'   column names even if there aren't any in the `df` (i.e., they will)
 #'   be `V1` etc., `NULL` will print them if they exist, and `FALSE`
@@ -177,11 +177,11 @@ messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
 #' @rdname messageColoured
 .messageFunctionFn <- function(..., appendLF = TRUE, verbose = getOption("reproducible.verbose"),
                                verboseLevel = 1) {
-  fn <- getFromNamespace(getOption("reproducible.messageColourFunction"), asNamespace("crayon"))
+  fn <- cliCol(getOption("reproducible.messageColourFunction"))
   fn(...)
 }
 
-#' @param colour Any colour that can be understood by `crayon`
+#' @param colour Any colour that can be understood by `cli`
 #' @param hangingIndent Logical. If there are `\n`, should there be a handing indent of 2 spaces.
 #'   Default is `TRUE`
 #' @param ... Any character vector, passed to `paste0(...)`
@@ -195,10 +195,11 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
   if (isTRUE(verboseLevel <= verbose)) {
 
-    if (getOption("reproducible.useCli", FALSE)) {
-      mess <- paste(..., collapse = " ")
+    if (getOption("reproducible.useCli", TRUE)) {
+      mess <- paste0(..., collapse = " ")
       if (!is.null(colour)) {
-        fn <- get(paste0("col_", colour), envir = asNamespace('cli'))
+        fn <- cliCol(colour)
+        # fn <- get(paste0("col_", colour), envir = asNamespace('cli'))
         mess <- fn(mess)
       }
       indentNum <- indent
@@ -282,14 +283,14 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
       }
       if (any(grepl(.spaceTmpChar, mess)))
         mess <- gsub(.spaceTmpChar, " ", mess)
-      if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
-        mess <- lapply(strsplit(mess, "\n"), function(m) paste0(getFromNamespace(colour, "crayon")(m)))[[1]]
+      if (needCrayon && requireNamespace("cli", quietly = TRUE)) {
+        mess <- lapply(strsplit(mess, "\n"), function(m)
+          paste0(cliCol(colour)(m)))[[1]]
         mess <- .addSlashNToAllButFinalElement(mess)
         message(mess, appendLF = appendLF)
-        # message(getFromNamespace(colour, "crayon")(mess), appendLF = appendLF)
       } else {
-        if (needCrayon && !isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("crayon")) {
-          message("To add colours to messages, install.packages('crayon')", appendLF = appendLF)
+        if (needCrayon && !isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("cli")) {
+          message("To add colours to messages, install.packages('cli')", appendLF = appendLF)
           .pkgEnv$.checkedCrayon <- TRUE
         }
         message(mess, appendLF = appendLF)
@@ -365,4 +366,12 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
   withr::deferred_clear(envir = envir)
 }
 
+.spaceTmpChar <- "spAcE"
+
 .txtUnableToAccessIndex <- "unable to access index"
+
+cliCol <- function(col) {
+  if (!startsWith(col, "col_"))
+    col <- paste0("col_", col)
+  getFromNamespace(col, asNamespace("cli"))
+}
