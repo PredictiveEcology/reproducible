@@ -575,15 +575,16 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
     httr::stop_for_status(request)
     needDwnFl <- FALSE
   } else {
-
-
     if (.requireNamespace("httr2") && .requireNamespace("curl") && getRversion() >= "4.2") {
       for (i in 1:2) {
         req <- httr2::request(url)
-        if (i == 1)
+        if (i == 1) # only try on first run through, in case this is the cause of failure; which it is on some sites
           req <- req |> httr2::req_user_agent(getOption("reproducible.useragent"))
-        if (verbose > 0)
-          req <- req |> httr2::req_progress()
+        if (verbose > 0) {
+          # req_progress is not in the binary httr2 available for R version 4.1.3; fails on CRAN checks
+          reqProgress <- get("req_progress", envir = asNamespace("httr2"))
+          req <- req |> reqProgress
+        }
 
         resp <- req |> httr2::req_url_query() |>
           httr2::req_perform(path = destFile)
