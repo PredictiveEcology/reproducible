@@ -1045,7 +1045,7 @@ unmakeMemoisable.default <- function(x) {
         xmin = terra::xmin(obj), xmax = terra::xmax(obj),
         ymin = terra::ymin(obj), ymax = terra::ymax(obj)
       )
-      attr(obj, "class") <- "PackedSpatExtent"
+      attr(obj, "class") <- "PackedSpatExtent2"
       useWrap <- FALSE
       reassignAtts <- FALSE
     }
@@ -1080,13 +1080,13 @@ unmakeMemoisable.default <- function(x) {
     obj <- lapply(obj, .unwrap)
     obj <- terra::svc(obj)
   }
-  if (any(inherits(obj, c("PackedSpatVector", "PackedSpatRaster", "PackedSpatExtent")))) {
+  if (any(inherits(obj, c("PackedSpatVector", "PackedSpatRaster", "PackedSpatExtent2")))) {
     if (!requireNamespace("terra")) stop("Please install.packages('terra')")
     if (any(inherits(obj, "PackedSpatVector"))) {
       obj <- terra::vect(obj)
     } else if (any(inherits(obj, "PackedSpatRaster"))) {
       obj <- terra::rast(obj)
-    } else if (any(inherits(obj, "PackedSpatExtent"))) {
+    } else if (any(inherits(obj, "PackedSpatExtent2"))) {
       obj <- terra::ext(unlist(obj))
     }
   } else if (any(inherits(obj, "data.table"))) {
