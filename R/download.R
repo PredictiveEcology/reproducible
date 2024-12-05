@@ -158,77 +158,83 @@ downloadFile <- function(archive, targetFile, neededFiles,
           neededFiles <- downloadResults$destFile
         }
 
-
         if (is(downloadResults, "try-error")) {
           if (any(grepl("is required but not yet installed", messOrig)))
             failed <- numTries + 2
 
-          if (any(grepl("SSL peer certificate or SSH remote key was not OK", messOrig))) {
-            # THIS IS A MAJOR WORK AROUND FOR SSL ISSUES IN SOME WORK ENVIRONMENTS. NOT ADVERTISED.
-            # https://stackoverflow.com/questions/46331066/quantmod-ssl-unable-to-get-local-issuer-certificate-in-r
-            if (isFALSE(as.logical(Sys.getenv("REPRODUCIBLE_SSL_VERIFYPEER")))) {
-              .requireNamespace("httr", stopOnFALSE = TRUE)
-              message(
-                "Temporarily setting ssl_verifypeer to FALSE because ",
-                "'SSL peer certificate or SSH remote key was not OK'"
-              )
-              sslOrig <- httr::set_config(httr::config(ssl_verifypeer = FALSE))
-              on.exit(httr::set_config(sslOrig), add = TRUE)
-            }
-          }
+          downloadResults <- dlErrorHandling(failed, downloadResults, warns, messOrig, numTries, url,
+                                      fileToDownload, destinationPath, targetFile, checksumFile,
+                                      verbose)
 
-          if (any(grepl("is required but not yet installed", messOrig))) {
-            failed <- numTries + 2
-          }
-          if (failed >= numTries) {
-            isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
-                         !grepl("\\.[^\\.]+$", url)) # doesn't have an extension
-            if (isGID) {
-              urlMessage <- paste0("https://drive.google.com/file/d/", url)
-            } else {
-              urlMessage <- url
-            }
-            messCommon <- paste0(
-              "Download of ", url, " failed. This may be a permissions issue. ",
-              "Please check the url and permissions are correct.\n",
-              "If the url is correct, it is possible that manually downloading it will work. ",
-              "To try this, with your browser, go to\n",
-              urlMessage, ",\n ... then download it manually, give it this name: '", fileToDownload,
-              "', and place file here: ", destinationPath
-            )
-            if (isInteractive() && getOption("reproducible.interactiveOnDownloadFail", TRUE)) {
-              mess <- paste0(
-                messCommon,
-                ".\n ------- \nIf you have completed a manual download, press 'y' to continue; otherwise press any other key to stop now. ",
-                "\n(To prevent this behaviour in the future, set options('reproducible.interactiveOnDownloadFail' = FALSE)  )"
-              )
-              if (failed == numTries + 2) {
-                stop(paste(messOrig, collapse = "\n"))
-              } else {
-                messagePreProcess(mess, verbose = verbose + 1)
-              }
-              resultOfPrompt <- .readline("Type y if you have attempted a manual download and put it in the correct place: ")
-              resultOfPrompt <- tolower(resultOfPrompt)
-              if (!identical(resultOfPrompt, "y")) {
-                stop(downloadResults, "\n", messOrig, "\nDownload failed")
-              }
-              downloadResults <- list(
-                destFile = file.path(destinationPath, targetFile),
-                needChecksums = 2
-              )
-            } else {
-              message(downloadResults)
-              stop(
-                downloadResults, "\n", messOrig, "\n", messCommon, ".\n-------------------\n",
-                "If manual download was successful, you will likely also need to run Checksums",
-                " manually after you download the file with this command: ",
-                "reproducible:::appendChecksumsTable(checkSumFilePath = '", checksumFile, "', filesToChecksum = '", targetFile,
-                "', destinationPath = '", dirname(checksumFile), "', append = TRUE)"
-              )
-            }
-          } else {
-            if (failed > 1) Sys.sleep(0.5) else SSL_REVOKE_BEST_EFFORT() # uses withr::defer to remove it after this test
-          }
+          # if (any(grepl("is required but not yet installed", messOrig)))
+          #   failed <- numTries + 2
+          #
+          # if (any(grepl("SSL peer certificate or SSH remote key was not OK", messOrig))) {
+          #   # THIS IS A MAJOR WORK AROUND FOR SSL ISSUES IN SOME WORK ENVIRONMENTS. NOT ADVERTISED.
+          #   # https://stackoverflow.com/questions/46331066/quantmod-ssl-unable-to-get-local-issuer-certificate-in-r
+          #   if (isFALSE(as.logical(Sys.getenv("REPRODUCIBLE_SSL_VERIFYPEER")))) {
+          #     .requireNamespace("httr", stopOnFALSE = TRUE)
+          #     message(
+          #       "Temporarily setting ssl_verifypeer to FALSE because ",
+          #       "'SSL peer certificate or SSH remote key was not OK'"
+          #     )
+          #     sslOrig <- httr::set_config(httr::config(ssl_verifypeer = FALSE))
+          #     on.exit(httr::set_config(sslOrig), add = TRUE)
+          #   }
+          # }
+          #
+          # if (any(grepl("is required but not yet installed", messOrig))) {
+          #   failed <- numTries + 2
+          # }
+          # if (failed >= numTries) {
+          #   isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
+          #                !grepl("\\.[^\\.]+$", url)) # doesn't have an extension
+          #   if (isGID) {
+          #     urlMessage <- paste0("https://drive.google.com/file/d/", url)
+          #   } else {
+          #     urlMessage <- url
+          #   }
+          #   messCommon <- paste0(
+          #     "Download of ", url, " failed. This may be a permissions issue. ",
+          #     "Please check the url and permissions are correct.\n",
+          #     "If the url is correct, it is possible that manually downloading it will work. ",
+          #     "To try this, with your browser, go to\n",
+          #     urlMessage, ",\n ... then download it manually, give it this name: '", fileToDownload,
+          #     "', and place file here: ", destinationPath
+          #   )
+          #   if (isInteractive() && getOption("reproducible.interactiveOnDownloadFail", TRUE)) {
+          #     mess <- paste0(
+          #       messCommon,
+          #       ".\n ------- \nIf you have completed a manual download, press 'y' to continue; otherwise press any other key to stop now. ",
+          #       "\n(To prevent this behaviour in the future, set options('reproducible.interactiveOnDownloadFail' = FALSE)  )"
+          #     )
+          #     if (failed == numTries + 2) {
+          #       stop(paste(messOrig, collapse = "\n"))
+          #     } else {
+          #       messagePreProcess(mess, verbose = verbose + 1)
+          #     }
+          #     resultOfPrompt <- .readline("Type y if you have attempted a manual download and put it in the correct place: ")
+          #     resultOfPrompt <- tolower(resultOfPrompt)
+          #     if (!identical(resultOfPrompt, "y")) {
+          #       stop(downloadResults, "\n", messOrig, "\nDownload failed")
+          #     }
+          #     downloadResults <- list(
+          #       destFile = file.path(destinationPath, targetFile),
+          #       needChecksums = 2
+          #     )
+          #   } else {
+          #     message(downloadResults)
+          #     stop(
+          #       downloadResults, "\n", messOrig, "\n", messCommon, ".\n-------------------\n",
+          #       "If manual download was successful, you will likely also need to run Checksums",
+          #       " manually after you download the file with this command: ",
+          #       "reproducible:::appendChecksumsTable(checkSumFilePath = '", checksumFile, "', filesToChecksum = '", targetFile,
+          #       "', destinationPath = '", dirname(checksumFile), "', append = TRUE)"
+          #     )
+          #   }
+          # } else {
+          #   if (failed > 1) Sys.sleep(0.5) else SSL_REVOKE_BEST_EFFORT() # uses withr::defer to remove it after this test
+          # }
           failed <- failed + 1
         } else {
           # This is so that we essentially treat it as a file, not an object, which means
@@ -559,15 +565,26 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 
   if (.requireNamespace("httr") && .requireNamespace("curl") && getRversion() < "4.2") {
     ua <- httr::user_agent(getOption("reproducible.useragent"))
-    request <- suppressWarnings(
-      ## TODO: GET is throwing warnings
-      httr::GET(
-        url, ua, httr::progress(),
-        httr::write_disk(destFile, overwrite = TRUE)
-      ) ## TODO: overwrite?
-    )
-    httr::stop_for_status(request)
-    needDwnFl <- FALSE
+    filesize <- as.numeric(httr::HEAD(url)$headers$`content-length`)
+    for (i in 1:2) {
+      request <- suppressWarnings(
+        ## TODO: GET is throwing warnings
+        httr::GET(
+          url, ua, httr::progress(),
+          httr::write_disk(destFile, overwrite = TRUE)
+        ) ## TODO: overwrite?
+      )
+      filesizeDownloaded <- file.size(destFile)
+      if ( (abs(filesize - filesizeDownloaded))/filesize > 0.2) {
+        # There is only one example where this fails -- the presence of user_agent is the cause
+        #   prepInputs(url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
+        ua <- NULL
+      } else {
+        httr::stop_for_status(request)
+        needDwnFl <- FALSE
+        break
+      }
+    }
   } else {
     if (.requireNamespace("httr2") && .requireNamespace("curl") && getRversion() >= "4.2") {
       for (i in 1:2) {
@@ -971,23 +988,23 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
   SSLwarns <- grepl(.txtUnableToAccessIndex, warns)
   SSLwarns2 <- grepl("SSL peer certificate or SSH remote key was not OK", messOrig)
   if (any(SSLwarns) || any(SSLwarns2)) {
-    messHere <- c("Temporarily setting Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = TRUE) because ",
-                       "it looks like there may be an SSL certificate problem")
-    message(gsub("\n$", "", paste(paste0(messHere, "\n"), collapse = " ")))
-
-    # https://stackoverflow.com/a/76684292/3890027
-    prevCurlVal <- Sys.getenv("R_LIBCURL_SSL_REVOKE_BEST_EFFORT")
-    Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT=TRUE)
-    ignore_repo_cache <- TRUE
-    on.exit({
-      if (nzchar(prevCurlVal))
-        Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = prevCurlVal)
-      else
-        Sys.unsetenv("R_LIBCURL_SSL_REVOKE_BEST_EFFORT")
-    }, add = TRUE)
+    SSL_REVOKE_BEST_EFFORT()
+    # messHere <- c("Temporarily setting Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = TRUE) because ",
+    #                    "it looks like there may be an SSL certificate problem")
+    # message(gsub("\n$", "", paste(paste0(messHere, "\n"), collapse = " ")))
+    #
+    # # https://stackoverflow.com/a/76684292/3890027
+    # prevCurlVal <- Sys.getenv("R_LIBCURL_SSL_REVOKE_BEST_EFFORT")
+    # Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT=TRUE)
+    # ignore_repo_cache <- TRUE
+    # on.exit({
+    #   if (nzchar(prevCurlVal))
+    #     Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = prevCurlVal)
+    #   else
+    #     Sys.unsetenv("R_LIBCURL_SSL_REVOKE_BEST_EFFORT")
+    # }, add = TRUE)
   }
 
-  # ELIOT removed this as httr is being deprecated --> the above chunk should work
   # if (any(grepl("SSL peer certificate or SSH remote key was not OK", messOrig))) {
   #   # THIS IS A MAJOR WORK AROUND FOR SSL ISSUES IN SOME WORK ENVIRONMENTS. NOT ADVERTISED.
   #   # https://stackoverflow.com/questions/46331066/quantmod-ssl-unable-to-get-local-issuer-certificate-in-r
@@ -1052,7 +1069,77 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
       )
     }
   } else {
-    Sys.sleep(0.5)
+    if (failed > 1) Sys.sleep(0.5) else SSL_REVOKE_BEST_EFFORT() # uses withr::defer to remove it after this test
   }
+
+  #
+  #
+  # # ELIOT removed this as httr is being deprecated --> the above chunk should work
+  # # if (any(grepl("SSL peer certificate or SSH remote key was not OK", messOrig))) {
+  # #   # THIS IS A MAJOR WORK AROUND FOR SSL ISSUES IN SOME WORK ENVIRONMENTS. NOT ADVERTISED.
+  # #   # https://stackoverflow.com/questions/46331066/quantmod-ssl-unable-to-get-local-issuer-certificate-in-r
+  # #   if (isFALSE(as.logical(Sys.getenv("REPRODUCIBLE_SSL_VERIFYPEER")))) {
+  # #     .requireNamespace("httr", stopOnFALSE = TRUE)
+  # #     message(
+  # #       "Temporarily setting ssl_verifypeer to FALSE because ",
+  # #       "'SSL peer certificate or SSH remote key was not OK'"
+  # #     )
+  # #     sslOrig <- httr::set_config(httr::config(ssl_verifypeer = FALSE))
+  # #     on.exit(httr::set_config(sslOrig), add = TRUE)
+  # #   }
+  # # }
+  #
+  # # if (any(grepl("is required but not yet installed", messOrig))) {
+  # #   failed <- numTries + 2
+  # # }
+  # if (failed >= numTries) {
+  #   isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
+  #                !grepl("\\.[^\\.]+$", url)) # doesn't have an extension
+  #   if (isGID) {
+  #     urlMessage <- paste0("https://drive.google.com/file/d/", url)
+  #   } else {
+  #     urlMessage <- url
+  #   }
+  #   messCommon <- paste0(
+  #     "Download of ", url, " failed. This may be a permissions issue. ",
+  #     "Please check the url and permissions are correct.\n",
+  #     "If the url is correct, it is possible that manually downloading it will work. ",
+  #     "To try this, with your browser, go to\n",
+  #     urlMessage, ",\n ... then download it manually, give it this name: '", fileToDownload,
+  #     "', and place file here: ", destinationPath
+  #   )
+  #   if (isInteractive() && getOption("reproducible.interactiveOnDownloadFail", TRUE)) {
+  #     mess <- paste0(
+  #       messCommon,
+  #       ".\n ------- \nIf you have completed a manual download, press 'y' to continue; otherwise press any other key to stop now. ",
+  #       "\n(To prevent this behaviour in the future, set options('reproducible.interactiveOnDownloadFail' = FALSE)  )"
+  #     )
+  #     if (failed == numTries + 2) {
+  #       stop(paste(messOrig, collapse = "\n"))
+  #     } else {
+  #       messagePreProcess(mess, verbose = verbose + 1)
+  #     }
+  #     resultOfPrompt <- .readline("Type y if you have attempted a manual download and put it in the correct place: ")
+  #     resultOfPrompt <- tolower(resultOfPrompt)
+  #     if (!identical(resultOfPrompt, "y")) {
+  #       stop(downloadResults, "\n", messOrig, "\nDownload failed")
+  #     }
+  #     downloadResults <- list(
+  #       destFile = file.path(destinationPath, targetFile),
+  #       needChecksums = 2
+  #     )
+  #   } else {
+  #     message(downloadResults)
+  #     stop(
+  #       downloadResults, "\n", messOrig, "\n", messCommon, ".\n-------------------\n",
+  #       "If manual download was successful, you will likely also need to run Checksums",
+  #       " manually after you download the file with this command: ",
+  #       "reproducible:::appendChecksumsTable(checkSumFilePath = '", checksumFile, "', filesToChecksum = '", targetFile,
+  #       "', destinationPath = '", dirname(checksumFile), "', append = TRUE)"
+  #     )
+  #   }
+  # } else {
+  #   Sys.sleep(0.5)
+  # }
   downloadResults
 }

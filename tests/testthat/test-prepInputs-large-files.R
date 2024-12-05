@@ -60,7 +60,7 @@ test_that("Issue 181 geodatabase file", {
 test_that("Issue 242 masking fail", {
   skip_on_cran()
   skip_on_ci()
-  testInit("terra", needInternet = TRUE)
+  testInit("terra", needInternet = TRUE, verbose = FALSE)
   # skip_if_not(isInteractive(), "test #3: extracting large files should be run manually with devtools::test()")
   testInit(c("terra", "googledrive"), needGoogleDriveAuth = FALSE)
   studyArea <- vect(structure(

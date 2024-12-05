@@ -60,12 +60,12 @@ test_that("prepInputs doesn't work (part 1)", {
       "ecozones.shp",
       "ecozones.shx"
     )
-      shpEcozone2 <- prepInputs(
-        targetFile = ecozoneFilename,
-        url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-        alsoExtract = ecozoneFiles,
-        destinationPath = dPath
-      )
+    shpEcozone2 <- prepInputs(
+      targetFile = ecozoneFilename,
+      url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+      alsoExtract = ecozoneFiles,
+      destinationPath = dPath
+    )
 
     if (.requireNamespace("sf")) {
       expect_true(is(shpEcozone2, "sf"))
