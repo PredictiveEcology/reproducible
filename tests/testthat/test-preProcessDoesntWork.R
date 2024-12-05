@@ -1,6 +1,7 @@
 test_that("preProcess fails if user provides non-existing file", {
   skip_on_cran()
-  testInit("terra", opts = list(reproducible.inputPaths = NULL), verbose = 2)
+  testInit("terra", opts = list(reproducible.inputPaths = NULL,
+                                reproducible.interactiveOnDownloadFail = TRUE), verbose = 2)
   testthat::with_mock(
     `isInteractive` = function() {
       FALSE
