@@ -1361,6 +1361,7 @@ test_that("change to new capturing of FUN & base pipe", {
         # (function(xx) rnorm(1, 2, sd = xx))() |>
         Cache(cachePath = tmpCache)
     ")
+  browser()
   mess3 <- capture_messages(
     eval(parse(text = f2))
   )

@@ -195,7 +195,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
   if (isTRUE(verboseLevel <= verbose)) {
 
-    if (TRUE) {
+    if (getOption("reproducible.useCli", FALSE)) {
       mess <- paste(..., collapse = " ")
       if (!is.null(colour)) {
         fn <- get(paste0("col_", colour), envir = asNamespace('cli'))
@@ -208,87 +208,92 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
       if (is.null(indent)) indentNum <- 0
 
       mess <- cli::ansi_trimws(mess, which = c("both"))
-      mess <- cli::ansi_strwrap(x = mess,
-                                indent = indentNum,
-                                exdent = indentNum + hangingIndent * 2,
-                                simplify = TRUE)
+      hasSlashN <- any(grepl("\n", mess))
+      if (!hasSlashN && cli::ansi_nchar(mess) > cli::console_width())
+        mess <- cli::ansi_strwrap(x = mess,
+                                  indent = indentNum,
+                                  exdent = indentNum + hangingIndent * 2,
+                                  simplify = TRUE)
       mess <- .addSlashNToAllButFinalElement(mess)
+      if (any(grepl(.spaceTmpChar, mess)))
+        mess <- gsub(.spaceTmpChar, " ", mess)
 
       message(mess)
 
     } else {
-#
-#
-#       needCrayon <- FALSE
-#       if (!is.null(colour)) {
-#         if (is.character(colour)) {
-#           needCrayon <- TRUE
-#         }
-#       }
-#       mess <- paste0(..., collapse = "")
-#       if (!is.null(indent)) {
-#         mess <- paste0(indent, mess)
-#       }
-#
-#       # do line wrap with hanging indent
-#       maxLineLngth <- getOption("width") - 10 # 10 is a "buffer" for Rstudio miscalculations
-#       chars <- nchar(mess)
-#       if (chars > maxLineLngth) {
-#         splitOnSlashN <- strsplit(mess, "\n")
-#         newMess <- lapply(splitOnSlashN, function(m) {
-#           anyOneLine <- any(nchar(m) > maxLineLngth)
-#           if (anyOneLine) {
-#             messSplit <- strsplit(mess, split = " ")
-#             remainingChars <- chars
-#             messBuild <- character()
-#             while (remainingChars > maxLineLngth) {
-#               whNewLine <- which(cumsum(nchar(messSplit[[1]]) + 1) >= maxLineLngth)[1] - 1
-#               # if (isTRUE(any(grepl("...because of", mess)))) browser()
-#               if (anyNA(whNewLine)) browser()
-#
-#               keepInd <- 1:whNewLine
-#               newMess <- paste(messSplit[[1]][keepInd], collapse = " ")
-#               messBuild <- c(messBuild, newMess)
-#               if (is.null(indent)) {
-#                 # if it starts with a space -- that is the indent that is needed
-#                 if (startsWith(newMess, " ")) {
-#                   indent <<- sub("^( +).+", "\\1", newMess)
-#                   if (grepl("^ +\\.\\.\\.", newMess)) {
-#                     indent <<- paste0(indent, " ")
-#                   }
-#                 } else {
-#                   indent <<- ""
-#                 }
-#
-#               }
-#               messSplit[[1]] <- messSplit[[1]][-keepInd]
-#               remainingChars <- remainingChars - nchar(newMess) - 1
-#               hangingIndent <<- TRUE
-#             }
-#             newMess <- paste(messSplit[[1]], collapse = " ")
-#             m <- c(messBuild, newMess)
-#           }
-#           m
-#         })
-#         mess <- unlist(newMess)
-#         mess <- paste0(.addSlashNToAllButFinalElement(mess), collapse = "")
-#       }
-#       hi <- if (isTRUE(hangingIndent)) paste0(indent, .message$BecauseOfA) else indent
-#       if (any(grepl("\n", mess))) {
-#         mess <- gsub("\n *", paste0("\n", hi), mess)
-#       }
-#       if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
-#         mess <- lapply(strsplit(mess, "\n"), function(m) paste0(getFromNamespace(colour, "crayon")(m)))[[1]]
-#         mess <- .addSlashNToAllButFinalElement(mess)
-#         message(mess, appendLF = appendLF)
-#         # message(getFromNamespace(colour, "crayon")(mess), appendLF = appendLF)
-#       } else {
-#         if (needCrayon && !isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("crayon")) {
-#           message("To add colours to messages, install.packages('crayon')", appendLF = appendLF)
-#           .pkgEnv$.checkedCrayon <- TRUE
-#         }
-#         message(mess, appendLF = appendLF)
-#       }
+
+      needCrayon <- FALSE
+      if (!is.null(colour)) {
+        if (is.character(colour)) {
+          needCrayon <- TRUE
+        }
+      }
+      mess <- paste0(..., collapse = "")
+      if (!is.null(indent)) {
+        mess <- paste0(indent, mess)
+      }
+
+      # do line wrap with hanging indent
+      maxLineLngth <- getOption("width") - 10 # 10 is a "buffer" for Rstudio miscalculations
+      chars <- nchar(mess)
+      if (chars > maxLineLngth) {
+        splitOnSlashN <- strsplit(mess, "\n")
+        newMess <- lapply(splitOnSlashN, function(m) {
+          anyOneLine <- any(nchar(m) > maxLineLngth)
+          if (anyOneLine) {
+            messSplit <- strsplit(mess, split = " ")
+            remainingChars <- chars
+            messBuild <- character()
+            while (remainingChars > maxLineLngth) {
+              whNewLine <- which(cumsum(nchar(messSplit[[1]]) + 1) >= maxLineLngth)[1] - 1
+              # if (isTRUE(any(grepl("...because of", mess)))) browser()
+              if (anyNA(whNewLine)) browser()
+
+              keepInd <- 1:whNewLine
+              newMess <- paste(messSplit[[1]][keepInd], collapse = " ")
+              messBuild <- c(messBuild, newMess)
+              if (is.null(indent)) {
+                # if it starts with a space -- that is the indent that is needed
+                if (startsWith(newMess, " ")) {
+                  indent <<- sub("^( +).+", "\\1", newMess)
+                  if (grepl("^ +\\.\\.\\.", newMess)) {
+                    indent <<- paste0(indent, " ")
+                  }
+                } else {
+                  indent <<- ""
+                }
+
+              }
+              messSplit[[1]] <- messSplit[[1]][-keepInd]
+              remainingChars <- remainingChars - nchar(newMess) - 1
+              hangingIndent <<- TRUE
+            }
+            newMess <- paste(messSplit[[1]], collapse = " ")
+            m <- c(messBuild, newMess)
+          }
+          m
+        })
+        mess <- unlist(newMess)
+        mess <- paste0(.addSlashNToAllButFinalElement(mess), collapse = "")
+      }
+      hi <- if (isTRUE(hangingIndent)) paste0(indent, .message$BecauseOfA) else indent
+      if (any(grepl("\n", mess))) {
+        mess <- gsub("\n *", paste0("\n", hi), mess)
+      }
+      if (any(grepl(.spaceTmpChar, mess)))
+        mess <- gsub(.spaceTmpChar, " ", mess)
+      if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
+        mess <- lapply(strsplit(mess, "\n"), function(m) paste0(getFromNamespace(colour, "crayon")(m)))[[1]]
+        mess <- .addSlashNToAllButFinalElement(mess)
+        message(mess, appendLF = appendLF)
+        # message(getFromNamespace(colour, "crayon")(mess), appendLF = appendLF)
+      } else {
+        if (needCrayon && !isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("crayon")) {
+          message("To add colours to messages, install.packages('crayon')", appendLF = appendLF)
+          .pkgEnv$.checkedCrayon <- TRUE
+        }
+        message(mess, appendLF = appendLF)
+      }
     }
   }
 
