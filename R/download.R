@@ -575,7 +575,7 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
         ) ## TODO: overwrite?
       )
       filesizeDownloaded <- file.size(destFile)
-      if ( (abs(filesize - filesizeDownloaded))/filesize > 0.2) {
+      if ( (abs(filesize - filesizeDownloaded))/filesize > 0.2) { # if it is <20% the size; consider it a fail
         # There is only one example where this fails -- the presence of user_agent is the cause
         #   prepInputs(url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
         ua <- NULL
