@@ -452,3 +452,5 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
 messageStripColor <- function(o)
   gsub("\033.[[:digit:]]{2}[[:alpha:]]", "", o)
+
+.txtUnableToAccessIndex <- "unable to access index"

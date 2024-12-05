@@ -124,6 +124,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
 
       while (failed > 0 && failed <= numTries) {
         messOrig <- character()
+        warns <- character()
         withCallingHandlers({
             downloadResults <- try(
               downloadRemote(
@@ -146,6 +147,9 @@ downloadFile <- function(archive, targetFile, neededFiles,
             )
           )
         },
+        warnings = function(w) {
+          warns <<- w$message
+        },
         message = function(m) {
           messOrig <<- c(messOrig, m$message)
         })
@@ -156,9 +160,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
 
 
         if (is(downloadResults, "try-error")) {
-          if (isTRUE(grepl("already exists", downloadResults))) {
-            stop(downloadResults)
-          }
+          if (any(grepl("is required but not yet installed", messOrig)))
+            failed <- numTries + 2
 
           if (any(grepl("SSL peer certificate or SSH remote key was not OK", messOrig))) {
             # THIS IS A MAJOR WORK AROUND FOR SSL ISSUES IN SOME WORK ENVIRONMENTS. NOT ADVERTISED.
@@ -552,21 +555,39 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
   messagePreProcess("Downloading ", url, " ...", verbose = verbose)
 
   needDwnFl <- TRUE # this will try download.file if no httr2 or httr2 fails
-  if (.requireNamespace("httr2") && .requireNamespace("curl")) {
-    for (i in 1:2) {
-      req <- httr2::request(url)
-      if (i == 1)
-        req <- req |> httr2::req_user_agent(getOption("reproducible.useragent"))
-      if (verbose > 0)
-        req <- req |> httr2::req_progress()
+  # R version 4.1.3 doesn't have httr2 that can do these steps; httr2 is too old, I believe
 
-      resp <- req |> httr2::req_url_query() |>
-        httr2::req_perform(path = destFile)
-      a <- httr2::resp_body_string(resp)
-      isRjcted <- grepl("Request Rejected", a)
-      if (!isTRUE(any(isRjcted)) && !httr2::resp_is_error(resp)) {
-        needDwnFl <- FALSE
-        break
+  if (.requireNamespace("httr") && .requireNamespace("curl") && getRversion() < "4.2") {
+    ua <- httr::user_agent(getOption("reproducible.useragent"))
+    request <- suppressWarnings(
+      ## TODO: GET is throwing warnings
+      httr::GET(
+        url, ua, httr::progress(),
+        httr::write_disk(destFile, overwrite = TRUE)
+      ) ## TODO: overwrite?
+    )
+    httr::stop_for_status(request)
+    needDwnFl <- FALSE
+  } else {
+    if (.requireNamespace("httr2") && .requireNamespace("curl") && getRversion() >= "4.2") {
+      for (i in 1:2) {
+        req <- httr2::request(url)
+        if (i == 1) # only try on first run through, in case this is the cause of failure; which it is on some sites
+          req <- req |> httr2::req_user_agent(getOption("reproducible.useragent"))
+        if (verbose > 0) {
+          # req_progress is not in the binary httr2 available for R version 4.1.3; fails on CRAN checks
+          reqProgress <- get("req_progress", envir = asNamespace("httr2"))
+          req <- req |> reqProgress()
+        }
+
+        resp <- req |> httr2::req_url_query() |>
+          httr2::req_perform(path = destFile)
+        a <- httr2::resp_body_string(resp)
+        isRjcted <- grepl("Request Rejected", a)
+        if (!isTRUE(any(isRjcted)) && !httr2::resp_is_error(resp)) {
+          needDwnFl <- FALSE
+          break
+        }
       }
     }
   }
@@ -936,4 +957,102 @@ SSL_REVOKE_BEST_EFFORT <- function(envir = parent.frame(1)) {
 on.exit2 <- function(expr, envir = parent.frame()) {
   funExpr <- as.call(list(function() expr))
   do.call(base::on.exit, list(funExpr, TRUE, TRUE), envir = envir)
+}
+
+
+
+dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, url,
+                            fileToDownload, destinationPath, targetFile, checksumFile,
+                            verbose) {
+  if (isTRUE(grepl("already exists", downloadResults))) {
+    stop(downloadResults)
+  }
+
+  SSLwarns <- grepl(.txtUnableToAccessIndex, warns)
+  SSLwarns2 <- grepl("SSL peer certificate or SSH remote key was not OK", messOrig)
+  if (any(SSLwarns) || any(SSLwarns2)) {
+    messHere <- c("Temporarily setting Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = TRUE) because ",
+                       "it looks like there may be an SSL certificate problem")
+    message(gsub("\n$", "", paste(paste0(messHere, "\n"), collapse = " ")))
+
+    # https://stackoverflow.com/a/76684292/3890027
+    prevCurlVal <- Sys.getenv("R_LIBCURL_SSL_REVOKE_BEST_EFFORT")
+    Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT=TRUE)
+    ignore_repo_cache <- TRUE
+    on.exit({
+      if (nzchar(prevCurlVal))
+        Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = prevCurlVal)
+      else
+        Sys.unsetenv("R_LIBCURL_SSL_REVOKE_BEST_EFFORT")
+    }, add = TRUE)
+  }
+
+  # ELIOT removed this as httr is being deprecated --> the above chunk should work
+  # if (any(grepl("SSL peer certificate or SSH remote key was not OK", messOrig))) {
+  #   # THIS IS A MAJOR WORK AROUND FOR SSL ISSUES IN SOME WORK ENVIRONMENTS. NOT ADVERTISED.
+  #   # https://stackoverflow.com/questions/46331066/quantmod-ssl-unable-to-get-local-issuer-certificate-in-r
+  #   if (isFALSE(as.logical(Sys.getenv("REPRODUCIBLE_SSL_VERIFYPEER")))) {
+  #     .requireNamespace("httr", stopOnFALSE = TRUE)
+  #     message(
+  #       "Temporarily setting ssl_verifypeer to FALSE because ",
+  #       "'SSL peer certificate or SSH remote key was not OK'"
+  #     )
+  #     sslOrig <- httr::set_config(httr::config(ssl_verifypeer = FALSE))
+  #     on.exit(httr::set_config(sslOrig), add = TRUE)
+  #   }
+  # }
+
+  # if (any(grepl("is required but not yet installed", messOrig))) {
+  #   failed <- numTries + 2
+  # }
+  if (failed >= numTries) {
+    isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
+                 !grepl("\\.[^\\.]+$", url)) # doesn't have an extension
+    if (isGID) {
+      urlMessage <- paste0("https://drive.google.com/file/d/", url)
+    } else {
+      urlMessage <- url
+    }
+    messCommon <- paste0(
+      "Download of ", url, " failed. This may be a permissions issue. ",
+      "Please check the url and permissions are correct.\n",
+      "If the url is correct, it is possible that manually downloading it will work. ",
+      "To try this, with your browser, go to\n",
+      urlMessage, ",\n ... then download it manually, give it this name: '", fileToDownload,
+      "', and place file here: ", destinationPath
+    )
+    if (isInteractive() && getOption("reproducible.interactiveOnDownloadFail", TRUE)) {
+      mess <- paste0(
+        messCommon,
+        ".\n ------- \nIf you have completed a manual download, press 'y' to continue; otherwise press any other key to stop now. ",
+        "\n(To prevent this behaviour in the future, set options('reproducible.interactiveOnDownloadFail' = FALSE)  )"
+      )
+      if (failed == numTries + 2) {
+        stop(paste(messOrig, collapse = "\n"))
+      } else {
+        messagePreProcess(mess, verbose = verbose + 1)
+      }
+      resultOfPrompt <- .readline("Type y if you have attempted a manual download and put it in the correct place: ")
+      resultOfPrompt <- tolower(resultOfPrompt)
+      if (!identical(resultOfPrompt, "y")) {
+        stop(downloadResults, "\n", messOrig, "\nDownload failed")
+      }
+      downloadResults <- list(
+        destFile = file.path(destinationPath, targetFile),
+        needChecksums = 2
+      )
+    } else {
+      message(downloadResults)
+      stop(
+        downloadResults, "\n", messOrig, "\n", messCommon, ".\n-------------------\n",
+        "If manual download was successful, you will likely also need to run Checksums",
+        " manually after you download the file with this command: ",
+        "reproducible:::appendChecksumsTable(checkSumFilePath = '", checksumFile, "', filesToChecksum = '", targetFile,
+        "', destinationPath = '", dirname(checksumFile), "', append = TRUE)"
+      )
+    }
+  } else {
+    Sys.sleep(0.5)
+  }
+  downloadResults
 }
