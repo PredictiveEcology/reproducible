@@ -583,7 +583,7 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
         if (verbose > 0) {
           # req_progress is not in the binary httr2 available for R version 4.1.3; fails on CRAN checks
           reqProgress <- get("req_progress", envir = asNamespace("httr2"))
-          req <- req |> reqProgress
+          req <- req |> reqProgress()
         }
 
         resp <- req |> httr2::req_url_query() |>
