@@ -223,10 +223,10 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
     } else {
 
-      needCrayon <- FALSE
+      needCli <- FALSE
       if (!is.null(colour)) {
         if (is.character(colour)) {
-          needCrayon <- TRUE
+          needCli <- TRUE
         }
       }
       mess <- paste0(..., collapse = "")
@@ -283,15 +283,15 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
       }
       if (any(grepl(.spaceTmpChar, mess)))
         mess <- gsub(.spaceTmpChar, " ", mess)
-      if (needCrayon && requireNamespace("cli", quietly = TRUE)) {
+      if (needCli && requireNamespace("cli", quietly = TRUE)) {
         mess <- lapply(strsplit(mess, "\n"), function(m)
           paste0(cliCol(colour)(m)))[[1]]
         mess <- .addSlashNToAllButFinalElement(mess)
         message(mess, appendLF = appendLF)
       } else {
-        if (needCrayon && !isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("cli")) {
+        if (needCli && !isTRUE(.pkgEnv$.checkedCli) && !.requireNamespace("cli")) {
           message("To add colours to messages, install.packages('cli')", appendLF = appendLF)
-          .pkgEnv$.checkedCrayon <- TRUE
+          .pkgEnv$.checkedCli <- TRUE
         }
         message(mess, appendLF = appendLF)
       }

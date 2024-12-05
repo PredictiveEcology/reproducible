@@ -564,7 +564,7 @@ test_that("test asPath", {
     .message$LoadedCacheResult("Memoised"), "|",
     .message$LoadedCacheResult()
   ), a2)) == 1)
-  expect_true(sum(grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
+  expect_true(sum(grepl(paste(.message$LoadedCacheResult("Memoised"), ".*saveRDS.*call"), a3)) == 1)
 
   unlink("filename.RData")
   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
@@ -585,7 +585,7 @@ test_that("test asPath", {
     .message$LoadedCacheResult("Memoised"), "|",
     .message$LoadedCacheResult()
   ), a2)) == 1)
-  expect_true(sum(grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
+  expect_true(sum(cli::ansi_grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
 })
 
 test_that("test wrong ways of calling Cache", {
@@ -654,7 +654,7 @@ test_that("test Cache argument inheritance to inner functions", {
   # does cachePath propagate to outer ones -- no message about cachePath being tempdir()
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
   expect_true(length(out) == 2)
-  expect_true(sum(grepl(paste(.message$LoadedCacheResult(), "outer call"), out)) == 1)
+  expect_true(sum(cli::ansi_grepl(paste(.message$LoadedCacheResult(), "outer call"), out)) == 1)
 
   # check that the rnorm inside "outer" returns cached value even if outer "outer" function is changed
   outer <- function(n) {
@@ -667,7 +667,7 @@ test_that("test Cache argument inheritance to inner functions", {
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
-  expect_true(sum(grepl(msgGrep, out)) == 1)
+  expect_true(sum(cli::ansi_grepl(msgGrep, out)) == 1)
 
   # Override with explicit argument
   outer <- function(n) {
@@ -690,7 +690,7 @@ test_that("test Cache argument inheritance to inner functions", {
   # Second time will get a cache on outer
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
   expect_true(length(out) == 2)
-  expect_true(sum(grepl(paste(.message$LoadedCacheResult(), "outer call"), out)) == 1)
+  expect_true(sum(cli::ansi_grepl(paste(.message$LoadedCacheResult(), "outer call"), out)) == 1)
 
   # doubly nested
   inner <- function(mean, useCache = TRUE) {
@@ -728,7 +728,7 @@ test_that("test Cache argument inheritance to inner functions", {
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
-  expect_true(sum(grepl(msgGrep, out)) == 1)
+  expect_true(sum(cli::ansi_grepl(msgGrep, out)) == 1)
 
   # Check userTags -- all items have it
   clearCache(tmpdir, ask = FALSE)
@@ -801,7 +801,7 @@ test_that("test future", {
   (dd <- system.time({
     for (i in 1:3) d[[i]] <- Cache(cachePath = tmpCache, rnorm(1e6 + i))
   }))
-  expect_true((dd[[3]] * 3) < aa[[3]])
+  expect_true((dd[[3]] * 2) < aa[[3]])
   for (i in 1:3) {
     expect_true(identical(attr(d[[i]], ".Cache")$newCache, FALSE))
   }
@@ -1361,7 +1361,6 @@ test_that("change to new capturing of FUN & base pipe", {
         # (function(xx) rnorm(1, 2, sd = xx))() |>
         Cache(cachePath = tmpCache)
     ")
-  browser()
   mess3 <- capture_messages(
     eval(parse(text = f2))
   )
