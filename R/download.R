@@ -750,12 +750,27 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
           if (isGoogleDriveDirectory(url)) {
             drive_files <- googledrive::drive_ls(googledrive::as_id(url))
-            if (length(alsoExtract) > 1)
-              fileIndex <- sapply(alsoExtract, function(ae) grep(pattern = ae, drive_files$name)) |>
-                as.vector()
-            else
-              fileIndex <- grep(pattern = alsoExtract, drive_files$name)
-            ids <- drive_files$id[fileIndex]
+            if (!is.null(alsoExtract) && length(alsoExtract) > 0) {
+              if (length(alsoExtract) > 1)
+                fileIndex <- sapply(alsoExtract, function(ae) grep(pattern = ae, drive_files$name)) |>
+                  as.vector()
+              else
+                fileIndex <- grep(pattern = alsoExtract, drive_files$name)
+              drive_files <- drive_files[fileIndex, ]
+            }
+
+            existingFiles <- drive_files$name %in% dir(destinationPath)
+            if (any(existingFiles)) {
+              messagePreProcess("Local version of files exists")
+              if (isFALSE(overwrite)) {
+                drive_files <- drive_files[!existingFiles, ]
+                messagePreProcess("Overwrite is FALSE; only getting new ones:\n",
+                                  paste0(drive_files$name, collapse = "\n"))
+
+              }
+            }
+
+            ids <- drive_files$id
             downloadResults <- lapply(ids, function(ids)
               dlGoogle(
                 url = ids, archive = archive, # targetFile = targetFile,
