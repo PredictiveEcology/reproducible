@@ -131,7 +131,7 @@ setMethod(
       studyArea <- as(studyArea, "SpatialPolygons")
       studyAreaName(studyArea, ...)
     } else if (!(inherits(studyArea, "Spatial") || inherits(studyArea, "sfc") ||
-      inherits(studyArea, "SpatVector") || is.character(studyArea))) {
+                 inherits(studyArea, "SpatVector") || is.character(studyArea))) {
       stop("studyAreaName expects a spatialClasses object (or character vector)")
     }
     .robustDigest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
@@ -179,8 +179,8 @@ setMethod(
 rndstr <- function(n = 1, len = 8) {
   unlist(lapply(character(n), function(x) {
     x <- paste0(sample(c(0:9, letters, LETTERS),
-      size = len,
-      replace = TRUE
+                       size = len,
+                       replace = TRUE
     ), collapse = "")
   }))
 }
@@ -256,7 +256,7 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
     if ( hasRutils) {
       # wrap the expr with R.utils::withTimeout
       expr2 <- append(append(list(R.utils::withTimeout), exprSub),
-                             list(timeout = getOption("reproducible.timeout", 1200), onTimeout = "error"))
+                      list(timeout = getOption("reproducible.timeout", 1200), onTimeout = "error"))
       exprSub <- as.call(expr2)
     }
 
@@ -267,15 +267,15 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
                       if (is.call(expr))
                         res <- eval(res, envir = envir)
                     res
-                    },
-                    error = function(e) {
-                      if (!hasRutils) {
-                        message("If the download stalls/stalled, please interrupt this function ",
-                                "then install R.utils, then rerun this prepInputs/preProcess. This ",
-                                "function will then use `R.utils::withTimeout`, which will cause an error ",
-                                "sooner")
-                      }
-                    })
+                  },
+                  error = function(e) {
+                    if (!hasRutils) {
+                      message("If the download stalls/stalled, please interrupt this function ",
+                              "then install R.utils, then rerun this prepInputs/preProcess. This ",
+                              "function will then use `R.utils::withTimeout`, which will cause an error ",
+                              "sooner")
+                    }
+                  })
     )
 
     if (inherits(result, "try-error")) {

@@ -76,11 +76,11 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
               TRUE
             }
             switch(Sys.info()["user"],
-              emcintir = {
-                options(gargle_oauth_email = "predictiveecology@gmail.com")
-              }, # ,
-              # gargle_oauth_cache = cache)},
-              NULL
+                   emcintir = {
+                     options(gargle_oauth_email = "predictiveecology@gmail.com")
+                   }, # ,
+                   # gargle_oauth_cache = cache)},
+                   NULL
             )
           }
           if (is.null(getOption("gargle_oauth_email"))) {
@@ -396,12 +396,12 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   expect_true(attr(r2End, ".Cache")$newCache == FALSE)
   filnames2End <- unique(
     dir(dirname(Filenames(r2End)),
-      pattern = paste(collapse = "|", basename(filePathSansExt(Filenames(r2End))))
+        pattern = paste(collapse = "|", basename(filePathSansExt(Filenames(r2End))))
     )
   )
   filnames1End <- unique(
     dir(dirname(r1EndFilename),
-      pattern = paste(collapse = "|", basename(filePathSansExt(r1EndFilename)))
+        pattern = paste(collapse = "|", basename(filePathSansExt(r1EndFilename)))
     )
   )
   expect_true(NROW(filnames1End) == numRasterFiles) # both sets because of the _1 -- a bit of an artifact due to same folder
@@ -440,7 +440,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   # expect_true(sum(filePathSansExt(driveLs$name) %in% filePathSansExt(basename(Filenames(r4End)))) == numRasterFiles)
   # should have 1 file that matches in local and in cloud, based on cacheId
   suppressMessages(expect_true(NROW(unique(showCache(userTags = filePathSansExt(driveLs[endsWith(name, "rda")]$name)),
-    by = .cacheTableHashColName()
+                                           by = .cacheTableHashColName()
   )) == 1))
 
   ####################################################
@@ -548,7 +548,7 @@ runTestsWithTimings <- function(nameOfOuterList = "ff", envir = parent.frame(), 
   }
 
   gg <- data.table::rbindlist(get(nameOfOuterList, envir = envir),
-    idcol = "TestFile"
+                              idcol = "TestFile"
   )
   gg[, TestFile := basename(TestFile)]
   gg

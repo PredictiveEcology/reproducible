@@ -420,7 +420,7 @@ setMethod(
   fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
 
   messageCache(.message$ObjToRetrieveFn(functionName), ", ",
-  #             messageCache("...(Object to retrieve (fn: ", .messageFunctionFn(functionName), ", ",
+               #             messageCache("...(Object to retrieve (fn: ", .messageFunctionFn(functionName), ", ",
                basename2(CacheStoredFile(cachePath, cacheId, format = fileFormat)),
                ")",
                if (bigFile) " is large: ",
@@ -942,9 +942,9 @@ unmakeMemoisable.default <- function(x) {
   }
 
   if (length(ls(obj, all.names = T)) > 0) {
-  obj2 <- as.list(obj, all.names = TRUE)
-  out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
-               conn = conn, verbose = verbose, outputObjects = outputObjects, ...)
+    obj2 <- as.list(obj, all.names = TRUE)
+    out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
+                 conn = conn, verbose = verbose, outputObjects = outputObjects, ...)
     # obj <- Copy(obj)
     obj2 <- list2envAttempts(out, obj)
     if (!is.null(obj2)) obj <- obj2
