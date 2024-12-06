@@ -52,6 +52,7 @@ Authors@R:
 Depends:
     R (>= 4.1)
 Imports:
+    cli,
     data.table (>= 1.10.4),
     digest,
     filelock,
@@ -64,7 +65,6 @@ Imports:
 Suggests:
     archive,
     covr,
-    crayon,
     DBI,
     future,
     geodata,

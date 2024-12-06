@@ -565,15 +565,26 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 
   if (.requireNamespace("httr") && .requireNamespace("curl") && getRversion() < "4.2") {
     ua <- httr::user_agent(getOption("reproducible.useragent"))
-    request <- suppressWarnings(
-      ## TODO: GET is throwing warnings
-      httr::GET(
-        url, ua, httr::progress(),
-        httr::write_disk(destFile, overwrite = TRUE)
-      ) ## TODO: overwrite?
-    )
-    httr::stop_for_status(request)
-    needDwnFl <- FALSE
+    filesize <- as.numeric(httr::HEAD(url)$headers$`content-length`)
+    for (i in 1:2) {
+      request <- suppressWarnings(
+        ## TODO: GET is throwing warnings
+        httr::GET(
+          url, ua, httr::progress(),
+          httr::write_disk(destFile, overwrite = TRUE)
+        ) ## TODO: overwrite?
+      )
+      filesizeDownloaded <- file.size(destFile)
+      if ( (abs(filesize - filesizeDownloaded))/filesize > 0.2) { # if it is <20% the size; consider it a fail
+        # There is only one example where this fails -- the presence of user_agent is the cause
+        #   prepInputs(url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
+        ua <- NULL
+      } else {
+        httr::stop_for_status(request)
+        needDwnFl <- FALSE
+        break
+      }
+    }
   } else {
     if (.requireNamespace("httr2") && .requireNamespace("curl") && getRversion() >= "4.2") {
       for (i in 1:2) {
@@ -886,8 +897,9 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
   SSLwarns <- grepl(.txtUnableToAccessIndex, warns)
   SSLwarns2 <- grepl("SSL peer certificate or SSH remote key was not OK", messOrig)
   if (any(SSLwarns) || any(SSLwarns2)) {
-    messHere <- c("Temporarily setting Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = TRUE) because ",
-                       "it looks like there may be an SSL certificate problem")
+    messHere <- cli::ansi_strwrap(simplify = TRUE,
+                                  paste0("Temporarily setting Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = TRUE) because ",
+                                         "it looks like there may be an SSL certificate problem"))
     message(gsub("\n$", "", paste(paste0(messHere, "\n"), collapse = " ")))
 
     # https://stackoverflow.com/a/76684292/3890027

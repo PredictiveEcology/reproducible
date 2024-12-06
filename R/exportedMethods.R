@@ -391,7 +391,7 @@ setMethod(
     } else if (fromMemoise %in% FALSE) {
       postMess <- paste0(" ", .message$AddingToMemoised)
     }
-    baseMess <- .message$LoadedCache(whMessage, functionName)
+    baseMess <- .message$LoadedCache(whMessage, .messageFunctionFn(functionName)) # ELIOT HERE
     if (!is.null(postMess))
       baseMess <- paste0(baseMess, postMess)
     messageCache(baseMess, verbose = verbose)
