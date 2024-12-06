@@ -870,9 +870,11 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
             terra::crs(ext) <- terra::crs(from)
           }
           extTmp <- terra::ext(ext)
+          extFrom <- terra::ext(from)
+          extOrder <- c("xmin", "ymin", "xmax", "ymax")
+          extNum <- extFrom[][extOrder]
           if (isTRUE(suppressWarnings(terra::is.lonlat(ext)))) { # warning is about "crs not defined"
             extTmp2 <- terra::extend(extTmp, 0.1) # hard code 0.1 lat/long, as long as it isn't past the from extent
-            extFrom <- terra::ext(from)
             exts <- c(
               xmin = max(terra::xmin(extTmp2), terra::xmin(extFrom)),
               ymin = max(terra::ymin(extTmp2), terra::ymin(extFrom)),
@@ -887,6 +889,12 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
           } else {
             ext <- terra::extend(extTmp, res[1] * 2)
           }
+
+          exts <- ext[][extOrder]
+          # This won't work if the the ext is tight with the from i.e., if they are the same;
+          #   test and skip cropping with needBuffer =TRUE if it is too tight
+          if (isTRUE(any(extNum == exts)))
+            return(from)
         }
       }
 
@@ -1715,7 +1723,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
                  sf::gdal_utils(
                    util = "warp",
                    source = fnSource,
-    destination = writeTo,
+                   destination = writeTo,
                    options = opts))
 
   out <- terra::rast(writeTo)
@@ -1841,10 +1849,10 @@ gdalTransform <- function(from, cropTo, projectTo, maskTo, writeTo, verbose) {
   #
   terra::writeVector(maskTo, filename = tf2)
   system.time(sf::gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
-                         destination = tf, options =
-                           c("-t_srs", tf4,
-                             "-clipdst", tf2, "-overwrite"
-                           )))
+                             destination = tf, options =
+                               c("-t_srs", tf4,
+                                 "-clipdst", tf2, "-overwrite"
+                               )))
   messagePreProcess(messagePrefixDoneIn,
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)
