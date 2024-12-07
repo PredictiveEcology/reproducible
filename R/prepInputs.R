@@ -1465,7 +1465,7 @@ process <- function(out, funCaptured,
                 if (is.null(funChar)) funChar <- paste0(substr(format(theFun), start = 1, stop = 40), "...")
                 outProcess <- Cache(eval(theFun, envir = out, enclos = .callingEnv),
                                     useCache = useCache2, .cacheExtra = .cacheExtra,
-                                    .functionName = funChar
+                                    .functionName = funChar, omitArgs = "enclos"
                 )
               } else {
                 args2 <- append(list(asPath(out$targetFilePath)), args)
