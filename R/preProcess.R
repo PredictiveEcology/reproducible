@@ -719,7 +719,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   failStop <- FALSE
-  if (isDirectory(url, mustExist = FALSE)) {
+  if (isTRUE(isDirectory(url, mustExist = FALSE))) {
     messagePrepInputs("url pointed to a directory; using targetFilePath:\n",
                       paste0(downloadFileResult$downloaded, collapse = "\n"))
     targetFilePath <- downloadFileResult$downloaded
@@ -836,7 +836,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                          verbose = getOption("reproducible.verbose", 1), team_drive = NULL) {
   # if (is.null(targetFile)) {
   guessedFile <- if (!is.null(url)) {
-    if (isDirectory(url, FALSE)) {
+    if (isTRUE(isDirectory(url, FALSE))) {
       gf <- NULL
     } else {
       gf <- file.path(destinationPath, basename2(url))
