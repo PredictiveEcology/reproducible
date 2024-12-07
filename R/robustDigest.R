@@ -366,10 +366,22 @@ setMethod(
     dig <- character(length(object))
     whNotPaths <- which(!Paths)
     whPaths <- which(Paths)
-    if (any(!Paths))
-      dig[whNotPaths] <- lapply(object[whNotPaths], .robustDigest, algo = algo, quick = TRUE, classOptions = classOptions)
-    if (any(Paths))
-      dig[whPaths] <- lapply(object[which(Paths)], .robustDigest, algo = algo, quick = quick, classOptions = classOptions)
+    # Can't use whNotPaths because data.table wouyld need ..whNotPaths ... so calculate it in the data.table
+    cn <- colnames(object)
+    cnNotPaths <- cn[whNotPaths]
+    cnPaths <- cn[whPaths]
+    if (any(!Paths)) {
+      if (is.data.table(object))
+        dig[whNotPaths] <- lapply(object[, ..cnNotPaths], .robustDigest, algo = algo, quick = TRUE, classOptions = classOptions)
+      else
+        dig[whNotPaths] <- lapply(object[, cnNotPaths], .robustDigest, algo = algo, quick = TRUE, classOptions = classOptions)
+    }
+    if (any(Paths)) {
+      if (is.data.table(object))
+        dig[whPaths] <- lapply(object[, ..cnPaths], .robustDigest, algo = algo, quick = TRUE, classOptions = classOptions)
+      else
+        dig[whPaths] <- lapply(object[, cnPaths], .robustDigest, algo = algo, quick = TRUE, classOptions = classOptions)
+    }
     .robustDigest(unlist(dig), quick = TRUE, algo = algo, classOptions = classOptions)
   }
 )
