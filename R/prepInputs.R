@@ -1382,7 +1382,8 @@ process <- function(out, funCaptured,
   args <- NULL
   # keep the ones for theFun
   # need to differentiate sf::st_read from sf::st_read(targetFile, TRUE) -- both are calls, both length 3; both have pkgColon
-  isAlreadyQuoted <- any(grepl("quote", theFun))
+  isAlreadyQuoted <- tryCatch(any(grepl("quote", theFun)), silent = TRUE,
+                              error = function(e) FALSE)
   if (isAlreadyQuoted) {
     theFun <- eval(theFun)
   }
