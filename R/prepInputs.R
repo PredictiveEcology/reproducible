@@ -1382,6 +1382,11 @@ process <- function(out, funCaptured,
   args <- NULL
   # keep the ones for theFun
   # need to differentiate sf::st_read from sf::st_read(targetFile, TRUE) -- both are calls, both length 3; both have pkgColon
+  isAlreadyQuoted <- any(grepl("quote", theFun))
+  if (isAlreadyQuoted) {
+    theFun <- eval(theFun)
+  }
+
   if (length(theFun) == 3 && isDollarSqBrPkgColon(theFun) && all(lengths(as.list(theFun)) == 1)) {
     theFun <- eval(theFun, envir = out)
   }
@@ -1465,7 +1470,7 @@ process <- function(out, funCaptured,
                 if (is.null(funChar)) funChar <- paste0(substr(format(theFun), start = 1, stop = 40), "...")
                 outProcess <- Cache(eval(theFun, envir = out, enclos = .callingEnv),
                                     useCache = useCache2, .cacheExtra = .cacheExtra,
-                                    .functionName = funChar
+                                    .functionName = funChar, omitArgs = "enclos"
                 )
               } else {
                 args2 <- append(list(asPath(out$targetFilePath)), args)

@@ -361,7 +361,16 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    dig <- lapply(object, .robustDigest, algo = algo, quick = quick, classOptions = classOptions)
+    # This is forcing `quick` TRUE because if a column is a character of file names,
+    #   it will evaluate every file; a user should specify with asPath()
+    Paths <- vapply(object, is, "Path", FUN.VALUE = logical(1))
+    dig <- character(length(object))
+    whNotPaths <- which(!Paths)
+    whPaths <- which(Paths)
+    if (any(!Paths))
+      dig[whNotPaths] <- lapply(object[whNotPaths], .robustDigest, algo = algo, quick = TRUE, classOptions = classOptions)
+    if (any(Paths))
+      dig[whPaths] <- lapply(object[which(Paths)], .robustDigest, algo = algo, quick = quick, classOptions = classOptions)
     .robustDigest(unlist(dig), quick = TRUE, algo = algo, classOptions = classOptions)
   }
 )
