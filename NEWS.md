@@ -1,6 +1,7 @@
 # reproducible 2.1.1
 
-* replace `httr` --> convert to use `httr2`
+* replace `httr` --> convert to use `httr2`;
+* `url` in `prepInputs` can now point to a directory; use `alsoExtract` to pick files by regular expression;
 * improved handling of symlinks in `remapFileNames()`;
 * pass `terra::project()` arguments `use_gdal` and `by_util` through `projectTo()` to `terra::project()`;
 

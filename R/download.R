@@ -606,6 +606,8 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
           break
         }
       }
+    } else {
+      messagePreProcess("If downloads fail; please install httr2 and try again")
     }
   }
 
