@@ -606,6 +606,8 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
           break
         }
       }
+    } else {
+      messagePreProcess("If downloads fail; please install httr2 and try again")
     }
   }
 
@@ -628,6 +630,8 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 #' @param checkSums TODO
 #' @param fileToDownload TODO
 #' @inheritParams loadFromCache
+#' @inheritParams prepInputs
+#' @inheritParams preProcess
 #'
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, messSkipDownload,
