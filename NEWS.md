@@ -1,6 +1,12 @@
 # reproducible 2.1.1
 
-* replace `httr` --> convert to use `httr2`;
+* `.robustDigest` method for `"character"` no longer tests for whether the string/vector
+is files (a user can force the old behaviour with `options(reproducible.testCharacterAsFile = TRUE)`. 
+This created unwanted, and inexplicable hanging of a computer, e.g., 
+in a `data.frame` with thousands of rows of a character vector that did represent files, 
+it would take possibly hours to digest. To digest files, user must explicitly coerce to 
+`"Path"` with `asPath(x)`, as the previous hanging behaviour was surprising;
+* replace `httr` --> convert to use `httr2` for some pieces; transition not complete;
 * `url` in `prepInputs` can now point to a directory; use `alsoExtract` to pick files by regular expression;
 * improved handling of symlinks in `remapFileNames()`;
 * pass `terra::project()` arguments `use_gdal` and `by_util` through `projectTo()` to `terra::project()`;

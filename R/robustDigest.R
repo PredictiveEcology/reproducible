@@ -238,25 +238,29 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
 
-    simpleDigest <- TRUE
-    if (!quick) {
-      # If a character string has nonASCII characters e.g., from french
-      #  "Cordill\xe8re arctique", file.exists fails with "file name conversion problem" error
-      howMany <- min(10, NROW(object))
-      whCheck <- object[1:howMany]
-      asc <- iconv(whCheck, "latin1", "ASCII")
-      if (anyNA(asc)) {
-        whCheck <- whCheck[!is.na(asc)]
-      }
+    simpleDigest <- TRUE # default -- only as character vector
+    if (inherits(object, "fs_path")) {
+      return(.robustDigest(asPath(object)))
+    }
+    if (getOption("reproducible.testCharacterAsFile", FALSE)) {
+      if (!quick) {
+        # If a character string has nonASCII characters e.g., from french
+        #  "Cordill\xe8re arctique", file.exists fails with "file name conversion problem" error
+        howMany <- min(10, NROW(object))
+        whCheck <- object[1:howMany]
+        asc <- iconv(whCheck, "latin1", "ASCII")
+        if (anyNA(asc)) {
+          whCheck <- whCheck[!is.na(asc)]
+        }
 
-      if (any(unlist(lapply(whCheck, file.exists)))) { # only try first 10 elements
-        simpleDigest <- FALSE
+        if (any(unlist(lapply(whCheck, file.exists)))) { # only try first 10 elements
+          simpleDigest <- FALSE
+        }
       }
     }
     if (!simpleDigest) {
-      # browser(expr = exists("hhhh"))
+      # object <- asPath(object)
       unlist(lapply(object, function(x) {
-        # browser(expr = exists("hhhh"))
         if (dir.exists(x)) {
           .doDigest(basename(x), algo)
         } else if (file.exists(x)) {
@@ -265,9 +269,6 @@ setMethod(
           .doDigest(x, algo)
         }
       }))
-      # } else {
-      # .doDigest(object, algo = algo)
-      # }
     } else {
       .doDigest(object, algo = algo)
     }
@@ -364,28 +365,30 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    # This is forcing `quick` TRUE because if a column is a character of file names,
-    #   it will evaluate every file; a user should specify with asPath()
-    Paths <- vapply(object, is, "Path", FUN.VALUE = logical(1))
-    dig <- character(length(object))
-    whNotPaths <- which(!Paths)
-    whPaths <- which(Paths)
-    # Can't use whNotPaths because data.table wouyld need ..whNotPaths ... so calculate it in the data.table
-    cn <- colnames(object)
-    cnNotPaths <- cn[whNotPaths]
-    cnPaths <- cn[whPaths]
-    if (any(!Paths)) {
-      if (is.data.table(object))
-        dig[whNotPaths] <- lapply(object[, ..cnNotPaths], .robustDigest, algo = algo, quick = TRUE, classOptions = classOptions)
-      else
-        dig[whNotPaths] <- lapply(object[, cnNotPaths], .robustDigest, algo = algo, quick = TRUE, classOptions = classOptions)
-    }
-    if (any(Paths)) {
-      if (is.data.table(object))
-        dig[whPaths] <- lapply(object[, ..cnPaths], .robustDigest, algo = algo, quick = TRUE, classOptions = classOptions)
-      else
-        dig[whPaths] <- lapply(object[, cnPaths], .robustDigest, algo = algo, quick = TRUE, classOptions = classOptions)
-    }
+    dig <- lapply(object, .robustDigest, algo = algo, quick = quick, classOptions = classOptions)
+
+    # # This is forcing `quick` TRUE because if a column is a character of file names,
+    # #   it will evaluate every file; a user should specify with asPath()
+    # Paths <- vapply(object, is, "Path", FUN.VALUE = logical(1))
+    # dig <- character(length(object))
+    # whNotPaths <- which(!Paths)
+    # whPaths <- which(Paths)
+    # # Can't use whNotPaths because data.table wouyld need ..whNotPaths ... so calculate it in the data.table
+    # cn <- colnames(object)
+    # cnNotPaths <- cn[whNotPaths]
+    # cnPaths <- cn[whPaths]
+    # if (any(!Paths)) {
+    #   if (is.data.table(object))
+    #     dig[whNotPaths] <- lapply(object[, ..cnNotPaths], .robustDigest, algo = algo, quick = TRUE, classOptions = classOptions)
+    #   else
+    #     dig[whNotPaths] <- lapply(object[, cnNotPaths], .robustDigest, algo = algo, quick = TRUE, classOptions = classOptions)
+    # }
+    # if (any(Paths)) {
+    #   if (is.data.table(object))
+    #     dig[whPaths] <- lapply(object[, ..cnPaths], .robustDigest, algo = algo, quick = TRUE, classOptions = classOptions)
+    #   else
+    #     dig[whPaths] <- lapply(object[, cnPaths], .robustDigest, algo = algo, quick = TRUE, classOptions = classOptions)
+    # }
     .robustDigest(unlist(dig), quick = TRUE, algo = algo, classOptions = classOptions)
   }
 )
