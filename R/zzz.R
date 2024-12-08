@@ -18,6 +18,10 @@
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
   .pkgEnv$SysInfo <- Sys.info() # record once at loading; repeatedly calling Sys.info is a waste
+
+  packageStartupMessage("With reproducible >=2.1.2, character vectors (including ",
+               "inside data.frames)\n  will not be treated as file paths by `Cache`; convert to 'Path'",
+               "or `fs_path` first if needed.")
   invisible()
 }
 
