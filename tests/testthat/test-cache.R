@@ -384,6 +384,7 @@ test_that("test 'quick' argument", {
   )) == 0)
 
   # mess3 <- capture_messages({ out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = FALSE) })
+  # Should be "\033[34mSaved! Cache file: d3d8d40b1aeba01e.rds; fn: \033[31mquickFun\033[34m\033[39m\n"
   mess <- capture_messages({
     out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = FALSE)
   })
@@ -534,9 +535,9 @@ test_that("test asPath", {
   a1 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
   # Second -- has a filename.RData, and passing a character string,
   #           it tries to see if it is a file, if yes, it digests it
-  a2 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
+  a2 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"), cachePath = tmpdir))
   # Third -- finally has all same as second time
-  a3 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
+  a3 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"), cachePath = tmpdir))
 
   expect_equal(length(a1), 1)
   expect_equal(length(a2), 1)
@@ -990,14 +991,14 @@ test_that("quick arg in Cache as character", {
     ranRas <- terra::rast(terra::ext(0, 10, 0, 10), vals = vals)
     ranRas <- suppressWarningsSpecific(
       falseWarnings = proj6Warn,
-      writeRaster(ranRas, filename = tf2, overwrite = TRUE)
+      writeRaster(ranRas, filename = asPath(tf2), overwrite = TRUE)
     )
     a <- sample(1e7, 1)
     saveRDS(a, file = tf)
 
     # new copy
     messes[[i]] <- capture_messages(Cache(saveRDS, ranRas,
-                                          file = tf, cachePath = tmpCache,
+                                          file = asPath(tf), cachePath = tmpCache,
                                           quick = quicks[[i]]
     ))
   }
