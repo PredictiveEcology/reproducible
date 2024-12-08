@@ -1,3 +1,7 @@
+utils::globalVariables(c(
+  "..cnNotPaths", "..cnPaths"
+))
+
 ################################################################################
 #' Create reproducible digests of objects in R
 #'
