@@ -157,8 +157,8 @@ test_that("test miscellaneous fns (part 2)", {
   expect_true(is(checkAndMakeCloudFolderID("testy"), "dribble") ||
     is(checkAndMakeCloudFolderID("testy"), "character"))
   cloudFolderID <- checkAndMakeCloudFolderID("testy", create = TRUE)
-  testthat::with_mock(
-    "reproducible::retry" = function(..., retries = 1) TRUE,
+  testthat::with_mocked_bindings(
+    retry = function(..., retries = 1) TRUE,
     {
       if (useDBI()) {
         # Need to convert to cloudUpload from Cache
@@ -186,8 +186,8 @@ test_that("test miscellaneous fns (part 2)", {
     )
   })))
   expect_true(sum(grepl("Downloading cloud copy of test\\.tif", mess1)) == 1)
-  testthat::with_mock(
-    "reproducible::retry" = function(..., retries = 1) TRUE,
+  testthat::with_mocked_bindings(
+    retry = function(..., retries = 1) TRUE,
     {
       # cloudFolderID can't be meaningless "character", but retry is TRUE
       warns <- capture_warnings({
@@ -198,19 +198,6 @@ test_that("test miscellaneous fns (part 2)", {
       expect_true(is.null(err))
     }
   )
-
-  # testthat::with_mock(
-  #   "reproducible::retry" = function(..., retries = 1) TRUE,
-  #   {
-  #     mess1 <- capture_messages({
-  #       warn <- capture_warnings(
-  #       err <- capture_error({
-  #         cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs", # saved = "life",
-  #                              cachePath = tmpCache)
-  #       }))
-  #     })
-  #     expect_true(all(grepl("cloudFolderID.*is missing, with no default", err)))
-  #   })
 
   a <- new.env(parent = emptyenv())
   a$a <- list(ras, ras)

@@ -3,7 +3,7 @@ test_that("preProcess fails if user provides non-existing file", {
   testInit("terra", opts = list(reproducible.inputPaths = NULL,
                                 reproducible.interactiveOnDownloadFail = TRUE), verbose = 2)
   testthat::with_mocked_bindings(
-    `isInteractive` = function() {
+    isInteractive = function() {
       FALSE
     },
     {
@@ -46,10 +46,10 @@ test_that("preProcess fails if user provides non-existing file", {
   options(optsOrig)
 
   testthat::with_mocked_bindings(
-    `isInteractive` = function() {
+    isInteractive = function() {
       TRUE
     },
-    `.readline` = function(prompt) {
+    .readline = function(prompt) {
       "n"
     },
     {
@@ -76,10 +76,10 @@ test_that("preProcess fails if user provides non-existing file", {
       tryCatch(stop(xxxx), httr2_http_404 = function(cnd) NULL) # httr2 has a unique error; need to silence it
       try(stop(xxxx), silent = TRUE)
     },
-    `isInteractive` = function() {
+    isInteractive = function() {
       TRUE
     },
-    `.readline` = function(prompt) {
+    .readline = function(prompt) {
       theFile <- file.path(tmpdir, "rasterTestAA")
       write.table(theFile, file = theFile)
       zipFilename <- file.path(tmpdir, "rasterTest")

@@ -27,11 +27,7 @@ test_that("test file-backed raster caching", {
   #   solves the error about not being in the testthat package
   val1 <- .cacheNumDefaultTags() + length(tagsSpatRaster()) # adding a userTag here... the +8 is the SpatRaster extras
   ik <- .ignoreTagKeys()
-  # with_mock(
-  #   "reproducible::isInteractive" = function() TRUE,
-  #   {
   aa <- Cache(randomPolyToDisk, tmpfile[1], cachePath = tmpCache, userTags = "something2")
-  # Test clearCache by tags
 
   expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
   clearCache(tmpCache, userTags = "something$", ask = FALSE)
