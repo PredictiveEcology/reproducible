@@ -133,7 +133,7 @@ filenames by using \code{file.exists}. If it was a filename, then it would diges
 the file content. In cases of a character vector or a data.frame of "filenames",
 this could cause long hanging of the R system as it tries to digest the file
 contents of potentially many files. This behaviour is not transparent to a user.
-Now the default is to not digest the file content of a \code{character} vector
+Now the default is to \strong{not} digest the file content of a \code{character} vector
 even if they are filenames. To force file content digesting, then convert to
 either \code{asPath} or \code{fs::as_fs_path}. Or set this option to \code{TRUE} and the previous
 behaviour will return, where it tries to guess whether a character vector

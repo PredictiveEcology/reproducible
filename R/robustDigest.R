@@ -258,7 +258,7 @@ setMethod(
         }
       }
     }
-    if (!simpleDigest) {
+    if (!simpleDigest) { # Old behaviour -- digest as file
       # object <- asPath(object)
       unlist(lapply(object, function(x) {
         if (dir.exists(x)) {
