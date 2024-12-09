@@ -26,10 +26,17 @@ test_that("preProcess fails if user provides non-existing file", {
 
   optsOrig <- options(reproducible.interactiveOnDownloadFail = FALSE)
 
+  .downloadErrorFn = function(xxxx) {
+    tryCatch(stop(xxxx), httr2_http_404 = function(cnd) NULL,
+             error = function(xxxx) xxxx,
+             silent = TRUE) # httr2 has a unique error; need to silence it
+    try(stop(xxxx), silent = TRUE)
+  }
+
   testthat::with_mocked_bindings(
-      .downloadErrorFn = function(xxxx) {
-        tryCatch(stop(xxxx), httr2_http_404 = function(cnd) NULL) # httr2 has a unique error; need to silence it
-        try(stop(xxxx), silent = TRUE)
+      .downloadErrorFn = .downloadErrorFn,
+      isInteractive = function() {
+        FALSE
       },
       {
       errMsg <- testthat::capture_error({
@@ -70,12 +77,9 @@ test_that("preProcess fails if user provides non-existing file", {
   )
   expect_true(sum(grepl("Download failed", errMsg)) == 1)
 
-  optsOrig <- options("reproducible.interactiveOnDownloadFail" = TRUE)
+  # optsOrig <- options("reproducible.interactiveOnDownloadFail" = TRUE)
   testthat::with_mocked_bindings(
-    .downloadErrorFn = function(xxxx) {
-      tryCatch(stop(xxxx), httr2_http_404 = function(cnd) NULL) # httr2 has a unique error; need to silence it
-      try(stop(xxxx), silent = TRUE)
-    },
+    .downloadErrorFn = .downloadErrorFn,
     isInteractive = function() {
       TRUE
     },
