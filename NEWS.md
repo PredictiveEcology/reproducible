@@ -1,14 +1,19 @@
-# reproducible 2.1.1
+# reproducible 2.1.2
 
-* `.robustDigest` method for `"character"` no longer tests for whether the string/vector
-is files (a user can force the old behaviour with `options(reproducible.testCharacterAsFile = TRUE)`. 
+* remove `PackedStatExtent` class, releasing it for `terra`; `reproducible`
+now uses a `PackedStatExtent2`; this will eventually be replaced by the `terra` 
+`PackedStatExtent` when this conflict is removed;
+* `.robustDigest` method for `"character"` no longer will evaluate character strings as files, by 
+default. A user can force the old behaviour with `options(reproducible.testCharacterAsFile = TRUE)`). 
 This created unwanted, and inexplicable hanging of a computer, e.g., 
-in a `data.frame` with thousands of rows of a character vector that did represent files, 
+in a `data.frame` with thousands of rows of a character vector that represent filenames that
+existed, but their content was not expected to be digested; 
 it would take possibly hours to digest. To digest files, user must explicitly coerce to 
-`"Path"` with `asPath(x)`, as the previous hanging behaviour was surprising;
-* replace `httr` --> convert to use `httr2` for some pieces; transition not complete;
+`"Path"` with `asPath(x)`, or `fs::as_fs_path` as the previous hanging behaviour was surprising
+and could not be easily diagnosed;
+* begin to replace `httr` --> convert to use `httr2` for some pieces; transition not complete;
 * `url` in `prepInputs` can now point to a directory; use `alsoExtract` to pick files by regular expression;
-* improved handling of symlinks in `remapFileNames()`;
+# * improved handling of symlinks in `remapFileNames()`;
 * pass `terra::project()` arguments `use_gdal` and `by_util` through `projectTo()` to `terra::project()`;
 
 ## Bugfix

@@ -159,7 +159,7 @@ setMethod(
             x <- sub("^NETCDF:\"", "", x)
             x <- sub("\":.*$", "", x)
           }
-          .robustDigest(object = x, length = length, algo = algo, quick = quick)
+          .robustDigest(object = asPath(x), length = length, algo = algo, quick = quick)
         })
 
         dig <- .robustDigest(
@@ -258,7 +258,7 @@ setMethod(
         }
       }
     }
-    if (!simpleDigest) {
+    if (!simpleDigest) { # Old behaviour -- digest as file
       # object <- asPath(object)
       unlist(lapply(object, function(x) {
         if (dir.exists(x)) {

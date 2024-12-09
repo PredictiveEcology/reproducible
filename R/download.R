@@ -126,7 +126,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
         messOrig <- character()
         warns <- character()
         withCallingHandlers({
-          downloadResults <- try(
+          downloadResults <- tryCatch(
             downloadRemote(
               url = url,
               archive = archive, # both url and fileToDownload must be NULL to skip downloading
@@ -145,6 +145,10 @@ downloadFile <- function(archive, targetFile, neededFiles,
               # .callingEnv = .callingEnv,
               ...
             )
+            , error = function(e) {
+              .downloadErrorFn(e)
+            }
+
           )
         },
         warnings = function(w) {
@@ -1161,4 +1165,8 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
   #   Sys.sleep(0.5)
   # }
   downloadResults
+}
+
+.downloadErrorFn <- function(xxxx) {
+  try(stop(xxxx))
 }
