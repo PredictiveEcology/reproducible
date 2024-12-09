@@ -2,7 +2,7 @@ test_that("preProcess fails if user provides non-existing file", {
   skip_on_cran()
   testInit("terra", opts = list(reproducible.inputPaths = NULL,
                                 reproducible.interactiveOnDownloadFail = TRUE), verbose = 2)
-  testthat::with_mock(
+  testthat::with_mocked_bindings(
     `isInteractive` = function() {
       FALSE
     },
@@ -18,26 +18,34 @@ test_that("preProcess fails if user provides non-existing file", {
           })
         })
       })
-    },
-    .env = "reproducible"
+    }#,
+    #.env = "reproducible"
   )
   expect_true(grepl("manual download", errMsg))
   expect_true(grepl("appendChecksumsTable", errMsg))
 
   optsOrig <- options(reproducible.interactiveOnDownloadFail = FALSE)
-  co <- capture.output({
-    errMsg <- testthat::capture_error({
-      reproducible::preProcess(
-        url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
-        destinationPath = tmpdir
-      )
-    })
-  })
+
+  testthat::with_mocked_bindings(
+      .downloadErrorFn = function(xxxx) {
+        tryCatch(stop(xxxx), httr2_http_404 = function(cnd) NULL) # httr2 has a unique error; need to silence it
+        try(stop(xxxx), silent = TRUE)
+      },
+      {
+      errMsg <- testthat::capture_error({
+        preProcess(
+          url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+          destinationPath = tmpdir
+        )
+      })
+    }
+    #.env = "reproducible"
+  )
   expect_true(grepl("manual download", errMsg))
   expect_true(grepl("appendChecksumsTable", errMsg))
   options(optsOrig)
 
-  testthat::with_mock(
+  testthat::with_mocked_bindings(
     `isInteractive` = function() {
       TRUE
     },
@@ -57,13 +65,17 @@ test_that("preProcess fails if user provides non-existing file", {
           })
         })
       })
-    },
-    .env = "reproducible"
+    }#,
+    #.env = "reproducible"
   )
   expect_true(sum(grepl("Download failed", errMsg)) == 1)
 
   optsOrig <- options("reproducible.interactiveOnDownloadFail" = TRUE)
-  testthat::with_mock(
+  testthat::with_mocked_bindings(
+    .downloadErrorFn = function(xxxx) {
+      tryCatch(stop(xxxx), httr2_http_404 = function(cnd) NULL) # httr2 has a unique error; need to silence it
+      try(stop(xxxx), silent = TRUE)
+    },
     `isInteractive` = function() {
       TRUE
     },
@@ -89,8 +101,8 @@ test_that("preProcess fails if user provides non-existing file", {
           })
         })
       })
-    },
-    .env = "reproducible"
+    }#,
+    # .env = "reproducible"
   )
   expect_true(sum(grepl("manual download", mess)) == 1)
   expect_true(sum(grepl("To prevent", mess)) == 1)

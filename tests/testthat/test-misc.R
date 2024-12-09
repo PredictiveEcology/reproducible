@@ -119,8 +119,11 @@ test_that("guessAtTargetAndFun works correctly", {
 test_that("unrar is working as expected", {
   testInit("terra", tmpFileExt = c(".tif", ".grd"))
 
+  cat("hi", file = tmpfile[1])
+  cat("hi", file = tmpfile[2])
   rarPath <- file.path(tmpdir, "tmp.rar")
-  out <- try(utils::zip(zipfile = rarPath, files = tmpfile)) # this should only be relevant if system can unrar
+  oo <- capture.output(out <- try(utils::zip(zipfile = rarPath, files = tmpfile, flags = "-q"),
+                            silent = TRUE)) # this should only be relevant if system can unrar
   if (!is(out, "try-error")) {
     unrar <- .whichExtractFn(archive = rarPath, args = "")
     expect_true(identical(unrar$fun, "unrar"))
