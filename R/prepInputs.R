@@ -1109,11 +1109,11 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   if (needSystemCall) {
     extractSystemCallPath <- .testForArchiveExtract()
     funWArgs <- list(fun = extractSystemCallPath)
-  } else {
-    funWArgs <- .whichExtractFn(archive[1], NULL)
-  }
+    } else {
+      funWArgs <- .whichExtractFn(archive[1], NULL)
+    }
 
-  filesInArchive <- NULL
+    filesInArchive <- NULL
   if (!is.null(funWArgs$fun)) {
     if (file.exists(archive[1])) {
       if (!needSystemCall) {
@@ -1129,46 +1129,46 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         if (grepl(x = extractSystemCallPath, pattern = "7z")) {
           extractSystemCall <- paste0("\"", extractSystemCallPath, "\"", " l \"", path.expand(archive[1]), "\"")
           if (isWindows()) {
-            filesOutput <- captureWarningsToAttr(
-              system(extractSystemCall, show.output.on.console = FALSE, intern = TRUE)
-            )
-            warn <- attr(filesOutput, "warning")
-            attr(filesOutput, "warning") <- NULL
+              filesOutput <- captureWarningsToAttr(
+                system(extractSystemCall, show.output.on.console = FALSE, intern = TRUE)
+              )
+              warn <- attr(filesOutput, "warning")
+              attr(filesOutput, "warning") <- NULL
+            } else {
+              # On Linux/MacOS
+              filesOutput <- captureWarningsToAttr(
+                system(extractSystemCall, intern = TRUE, ignore.stderr = TRUE)
+              )
+              warn <- attr(filesOutput, "warning")
+              attr(filesOutput, "warning") <- NULL
+            }
           } else {
-            # On Linux/MacOS
-            filesOutput <- captureWarningsToAttr(
-              system(extractSystemCall, intern = TRUE, ignore.stderr = TRUE)
-            )
-            warn <- attr(filesOutput, "warning")
-            attr(filesOutput, "warning") <- NULL
+            archiveExtractBinary <- .archiveExtractBinary()
+            if (is.null(archiveExtractBinary)) {
+              stop("unrar is not on this system; please install it")
+            }
+            filesOutput <- system(paste0("unrar l ", archive[1]), intern = TRUE)
           }
-        } else {
-          archiveExtractBinary <- .archiveExtractBinary()
-          if (is.null(archiveExtractBinary)) {
-            stop("unrar is not on this system; please install it")
+          if (exists("warn", inherits = FALSE) && isTRUE(any(grepl("had status 2", warn)))) {
+            stop(warn)
           }
-          filesOutput <- system(paste0("unrar l ", archive[1]), intern = TRUE)
-        }
-        if (exists("warn", inherits = FALSE) && isTRUE(any(grepl("had status 2", warn)))) {
-          stop(warn)
-        }
-        if (isTRUE(any(grepl("(Can not open the file as archive)|(Errors: 1)", filesOutput)))) {
-          stop("archive appears defective")
-        }
-        # filesInBetween <- grep(pattern = "----", filesOutput)
-        # filesLines <- filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
-        filesInArchive <- filenamesFromArchiveLst(filesOutput)
-        # filenamesFromArchiveLst <- function(filesLines) {
-        #   filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line) {
-        #     first5trimmed <- unlist(strsplit(filesLines[[line]], split = " +"))[-(1:5)]
-        #     if (length(first5trimmed) > 1)
-        #       first5trimmed <- paste(first5trimmed, collapse = " ")
-        #     # first5trimmed <- unlist(strsplit(filesLines[[line]], split = "  "))
-        #     return(first5trimmed)
-        #   }))
-        # }
-        if (length(filesInArchive) == 0) {
-          stop("preProcess could not find any files in the archive ", archive)
+          if (isTRUE(any(grepl("(Can not open the file as archive)|(Errors: 1)", filesOutput)))) {
+            stop("archive appears defective")
+          }
+          # filesInBetween <- grep(pattern = "----", filesOutput)
+          # filesLines <- filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
+          filesInArchive <- filenamesFromArchiveLst(filesOutput)
+          # filenamesFromArchiveLst <- function(filesLines) {
+          #   filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line) {
+          #     first5trimmed <- unlist(strsplit(filesLines[[line]], split = " +"))[-(1:5)]
+          #     if (length(first5trimmed) > 1)
+          #       first5trimmed <- paste(first5trimmed, collapse = " ")
+          #     # first5trimmed <- unlist(strsplit(filesLines[[line]], split = "  "))
+          #     return(first5trimmed)
+          #   }))
+          # }
+          if (length(filesInArchive) == 0) {
+            stop("preProcess could not find any files in the archive ", archive)
         }
       }
     }
