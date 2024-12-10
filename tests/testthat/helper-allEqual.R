@@ -14,10 +14,12 @@ skip_if_no_token <- function() {
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
 # if `needInternet = TRUE`, it will only re-try every 30 seconds
 testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt = "",
-                     opts = NULL, needGoogleDriveAuth = FALSE, needInternet = FALSE) {
+                     opts = NULL, needGoogleDriveAuth = FALSE, needInternet = FALSE,
+                     envir = parent.frame(1)) {
   set.randomseed()
 
   pf <- parent.frame()
+
 
   if (isTRUE(needGoogleDriveAuth)) {
     libraries <- c(libraries, "googledrive")
@@ -32,7 +34,12 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
       }
     }
     if (is.null(.pkgEnv$.internetExists)) {
-      .pkgEnv$.internetExists <- internetExists()
+      for (i in 1:2) {
+        .pkgEnv$.internetExists <- internetExists()
+        if (isTRUE(.pkgEnv$.internetExists))
+          break
+        SSL_REVOKE_BEST_EFFORT(envir)
+      }
       .pkgEnv$.internetExistsLastCheck <- Sys.time()
     }
     intExists <- .pkgEnv$.internetExists
@@ -69,11 +76,11 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
               TRUE
             }
             switch(Sys.info()["user"],
-              emcintir = {
-                options(gargle_oauth_email = "predictiveecology@gmail.com")
-              }, # ,
-              # gargle_oauth_cache = cache)},
-              NULL
+                   emcintir = {
+                     options(gargle_oauth_email = "predictiveecology@gmail.com")
+                   }, # ,
+                   # gargle_oauth_cache = cache)},
+                   NULL
             )
           }
           if (is.null(getOption("gargle_oauth_email"))) {
@@ -93,6 +100,12 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
   }
 
   out <- list()
+
+  if (isFALSE(getOption("reproducible.cache2"))) {
+    testthat::local_mocked_bindings(Cache = reproducible:::Cache2, .env = pf)
+    # withr::local_options("reproducible.useDBI" = FALSE, .local_envir = pf)
+  }
+
   withr::local_options("reproducible.ask" = ask, .local_envir = pf)
   if (!missing(verbose)) {
     withr::local_options("reproducible.verbose" = verbose, .local_envir = pf)
@@ -112,7 +125,7 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
   withr::local_dir(tmpdir, .local_envir = pf)
   withr::defer({
     try(reproducible::clearCache(cachePath = tmpCache, ask = FALSE, verbose = -1))
-    try(reproducible::clearCache(ask = FALSE, verbose = -1))
+    try(reproducible::clearCache(ask = FALSE, verbose = -1), silent = TRUE)
     try(unlink(tmpCache, recursive = TRUE))
   }, envir = pf)
 
@@ -383,12 +396,12 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   expect_true(attr(r2End, ".Cache")$newCache == FALSE)
   filnames2End <- unique(
     dir(dirname(Filenames(r2End)),
-      pattern = paste(collapse = "|", basename(filePathSansExt(Filenames(r2End))))
+        pattern = paste(collapse = "|", basename(filePathSansExt(Filenames(r2End))))
     )
   )
   filnames1End <- unique(
     dir(dirname(r1EndFilename),
-      pattern = paste(collapse = "|", basename(filePathSansExt(r1EndFilename)))
+        pattern = paste(collapse = "|", basename(filePathSansExt(r1EndFilename)))
     )
   )
   expect_true(NROW(filnames1End) == numRasterFiles) # both sets because of the _1 -- a bit of an artifact due to same folder
@@ -427,7 +440,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir,
   # expect_true(sum(filePathSansExt(driveLs$name) %in% filePathSansExt(basename(Filenames(r4End)))) == numRasterFiles)
   # should have 1 file that matches in local and in cloud, based on cacheId
   suppressMessages(expect_true(NROW(unique(showCache(userTags = filePathSansExt(driveLs[endsWith(name, "rda")]$name)),
-    by = .cacheTableHashColName()
+                                           by = .cacheTableHashColName()
   )) == 1))
 
   ####################################################
@@ -535,8 +548,14 @@ runTestsWithTimings <- function(nameOfOuterList = "ff", envir = parent.frame(), 
   }
 
   gg <- data.table::rbindlist(get(nameOfOuterList, envir = envir),
-    idcol = "TestFile"
+                              idcol = "TestFile"
   )
   gg[, TestFile := basename(TestFile)]
   gg
+}
+
+expect_match_noSlashN <- function(object, regexp, ...) {
+  object <- gsub("  ", " ", gsub("\\n", "", messageStripColor(object)))
+  expect_match(object, regexp, ...)
+
 }

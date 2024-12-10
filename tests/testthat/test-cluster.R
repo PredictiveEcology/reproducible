@@ -51,9 +51,9 @@ test_that("test parallel collisions", {
     library(reproducible)
   })
   numToRun <- 140
-  if (interactive()) {
-    print(tmpdir)
-  }
+  # if (interactive()) {
+  #   print(tmpdir)
+  # }
 
   # There is a 'creating Cache at the same time' problem -- haven't resolved
   #  Just make cache first and it seems fine
@@ -73,7 +73,7 @@ test_that("test parallel collisions", {
     expect_equal(sum(news), numNew)
   }
   endTime <- Sys.time()
-  if (interactive()) {
-    print(endTime - startTime)
-  }
+  # if (interactive()) {
+  #   print(endTime - startTime)
+  # }
 })
