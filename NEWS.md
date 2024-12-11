@@ -13,7 +13,7 @@ it would take possibly hours to digest. To digest files, user must explicitly co
 and could not be easily diagnosed;
 * begin to replace `httr` --> convert to use `httr2` for some pieces; transition not complete;
 * `url` in `prepInputs` can now point to a directory; use `alsoExtract` to pick files by regular expression;
-# * improved handling of symlinks in `remapFileNames()`;
+* improved handling of symlinks in `remapFileNames()`;
 * pass `terra::project()` arguments `use_gdal` and `by_util` through `projectTo()` to `terra::project()`;
 
 ## Bugfix

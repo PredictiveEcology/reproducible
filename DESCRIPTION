@@ -87,8 +87,6 @@ Suggests:
     terra (>= 1.7-20),
     testthat,
     withr
-Remotes:
-    rspatial/geodata
 Additional_repositories: https://predictiveecology.r-universe.dev/
 Encoding: UTF-8
 Language: en-CA
