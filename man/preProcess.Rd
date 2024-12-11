@@ -3,7 +3,7 @@
 \name{preProcessParams}
 \alias{preProcessParams}
 \alias{preProcess}
-\title{Download, Checksum, Extract files}
+\title{Download, checksum, extract files}
 \usage{
 preProcessParams(n = NULL)
 

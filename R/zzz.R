@@ -29,13 +29,11 @@
       "Using reproducible version ",
       utils::packageVersion("reproducible"), ".",
       # "\n  'reproducible' has changed the default database backend.", # Not true yet
-      " See ?reproducibleOptions for details.\n",
-    # )
-    # packageStartupMessage(
-      "As of reproducible >=2.1.2, character vectors (including ",
-                          "inside data.frames)\n  will not be treated as file paths by `Cache`; ",
-                          "convert to 'Path' or `fs_path` first if needed.\n",
-                          "  Set `options(reproducible.testCharacterAsFile = TRUE)` for old behaviour")
+      " As of reproducible >=2.1.2, character vectors (including ",
+      "inside data.frames)\n  will not be treated as file paths by `Cache`; ",
+      "convert to 'Path' or `fs_path` first if needed.\n",
+      "  Set `options(reproducible.testCharacterAsFile = TRUE)` for old behaviour;\n",
+      "  See ?reproducibleOptions for details.")
   }
 }
 
