@@ -31,12 +31,14 @@ test_that("testing prepInputs with deauthorized googledrive", {
     # }
 
     if (.requireNamespace("sf", stopOnFALSE = FALSE)) {
-      NFDB_PT <- # Cache(
+      theQuietVar <- TRUE # test for finding this
+      co <- capture.output(NFDB_PT <- # Cache(
         prepInputs(
           url = "http://cwfis.cfs.nrcan.gc.ca/downloads/nfdb/fire_pnt/current_version/NFDB_point.zip",
           overwrite = TRUE,
-          fun = sf::st_read(targetFile, quiet = TRUE)
+          fun = sf::st_read(targetFile, quiet = theQuietVar)
         )
+      )
       expect_is(NFDB_PT, "sf")
       expect_true(all(c("zip", "sbx", "shp", "xml", "shx", "sbn") %in%
         fileExt(dir(pattern = "NFDB_point"))))

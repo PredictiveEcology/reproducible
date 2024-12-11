@@ -109,6 +109,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                         conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId,
                         linkToCacheId = NULL,
                         verbose = getOption("reproducible.verbose")) {
+
   if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
@@ -137,19 +138,21 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     if (is(out, "try-error") || !all((out %in% TRUE))) {
       linkToCacheId <- NULL
     } else {
-      messageCache("  (A file with identical properties already exists in the Cache: ", basename(ftL), "; ")
-      messageCache("    The newly added (", basename(fts), ") is a file.link to that file)",
-        verbose = verbose
-      )
+      .message$FileLinkUsed(ftL, fts, verbose)
+      # messageCache("  (A file with identical properties already exists in the Cache: ", basename(ftL), "; ")
+      # messageCache("    The newly added (", basename(fts), ") is a file.link to that file)",
+      #   verbose = verbose
+      # )
     }
     fs <- file.size(fts)
   }
 
   # Save to db file first, then storage file
-  dt <- data.table(
-    "cacheId" = cacheId, "tagKey" = tagKey,
-    "tagValue" = tagValue, "createdDate" = as.character(Sys.time())
-  )
+  dt <- metadataDT(cacheId, tagKey, tagValue)
+  # dt <- data.table(
+  #   "cacheId" = cacheId, "tagKey" = tagKey,
+  #   "tagValue" = tagValue, "createdDate" = as.character(Sys.time())
+  # )
   if (!useDBI()) {
     dtFile <- saveDBFileSingle(dt = dt, cachePath, cacheId)
   } else {
@@ -180,21 +183,24 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   # Compare the file size with the object size -- to test for "captured environments"
   #  There is a buffer of 4x, plus file sizes are smaller than binary size with qs defaults
   #  So effectively, it is like 6x buffer to try to avoid false positives.
-  whichOS <- which(tagKey == "object.size")
-  if (length(whichOS)) {
-    objSize <- if (identical(unname(tagValue[whichOS]), "NA")) NA else as.numeric(tagValue[whichOS])
-    fsBig <- (objSize * 4) < fs
-    if (isTRUE(fsBig)) {
-      messageCache("Object with cacheId ", cacheId, " appears to have a much larger size ",
-        "on disk than in memory. ",
-        "This usually means that the object has captured an environment with ",
-        "many objects due to how a function or a formula is defined. ",
-        "Usually, a solution involves using quote and eval around the formulas ",
-        "and defining functions in a package or otherwise clean space, ",
-        "i.e., not inside another function.\n",
-        "See http://adv-r.had.co.nz/memory.html#gc and 'capturing environments'.",
-        verbose = verbose
-      )
+  if (fs > 1e4) {
+    whichOS <- which(tagKey == "object.size")
+    if (length(whichOS)) {
+      objSize <- if (identical(unname(tagValue[whichOS]), "NA")) NA else as.numeric(tagValue[whichOS])
+      fsBig <- (objSize * 4) < fs
+
+      if (isTRUE(fsBig)) {
+        messageCache("Object with cacheId ", cacheId, " appears to have a much larger size ",
+                     "on disk than in memory. ",
+                     "This usually means that the object has captured an environment with ",
+                     "many objects due to how a function or a formula is defined. ",
+                     "Usually, a solution involves using quote and eval around the formulas ",
+                     "and defining functions in a package or otherwise clean space, ",
+                     "i.e., not inside another function.\n",
+                     "See http://adv-r.had.co.nz/memory.html#gc and 'capturing environments'.",
+                     verbose = verbose
+        )
+      }
     }
   }
 
@@ -253,47 +259,51 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
       f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
 
       # First test if it is correct format
-      if (!all(file.exists(f))) {
-        sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
-        if (!useDBI() || length(sameCacheID) > 1) {
-          sameCacheID <- onlyStorageFiles(sameCacheID)
-        }
-
-        if (length(sameCacheID)) {
-          # if (!identical(whereInStack("sim"), .GlobalEnv)) {
-          #   format <- setdiff(c("rds", "qs"), format)
-          #   message("User tried to change options('reproducible.cacheSaveFormat') for an ",
-          #           "existing cache, while using a simList. ",
-          #           "This currently does not work. Keeping the ",
-          #           "option at: ", format)
-          #   next
-          # }
-
-          messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
-                       fileExt(f), ")",
-                       verbose = verbose
-          )
-          obj <- loadFromCache(
-            cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
-            cacheId = cacheId,
-            format = fileExt(sameCacheID),
-            preDigest = preDigest,
-            verbose = verbose
-          )
-
-          obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
-          fs <- saveToCache(
-            obj = obj2, cachePath = cachePath, drv = drv, conn = conn,
-            cacheId = cacheId
-          )
-          rmFromCache(
-            cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
-            format = fileExt(sameCacheID)
-          )
-          return(obj)
-        }
-      }
+      obj <- loadFromCacheSwitchFormat(f, verbose, cachePath, fullCacheTableForObj, cacheId, preDigest, drv, conn)
+      if (!is.null(obj))
+        return(obj)
+      # if (!all(file.exists(f))) {
+      #   sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
+      #   if (!useDBI() || length(sameCacheID) > 1) {
+      #     sameCacheID <- onlyStorageFiles(sameCacheID)
+      #   }
+      #
+      #   if (length(sameCacheID)) {
+      #     # if (!identical(whereInStack("sim"), .GlobalEnv)) {
+      #     #   format <- setdiff(c("rds", "qs"), format)
+      #     #   message("User tried to change options('reproducible.cacheSaveFormat') for an ",
+      #     #           "existing cache, while using a simList. ",
+      #     #           "This currently does not work. Keeping the ",
+      #     #           "option at: ", format)
+      #     #   next
+      #     # }
+      #
+      #     messageCache(.message$changingFormat(prevFile = sameCacheID, newFile = f),
+      #                  verbose = verbose)
+      #     #messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
+      #     #             fileExt(f), ")",
+      #     obj <- loadFromCache(
+      #       cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
+      #       cacheId = cacheId,
+      #       format = fileExt(sameCacheID),
+      #       preDigest = preDigest,
+      #       verbose = verbose
+      #     )
+      #
+      #     obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
+      #     fs <- saveToCache(
+      #       obj = obj2, cachePath = cachePath, drv = drv, conn = conn,
+      #       cacheId = cacheId
+      #     )
+      #     rmFromCache(
+      #       cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+      #       format = fileExt(sameCacheID)
+      #     )
+      #     return(obj)
+      #   }
+      # }
       # Need exclusive lock
+
       obj <- loadFile(f)
       obj <- .unwrap(obj,
                      cachePath = cachePath,
@@ -310,7 +320,10 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   loadFromMgs <- .cacheMessage(obj, .functionName, fromMemoise = fromMemoise, verbose = verbose)
 
   # # This allows for any class specific things
-  obj <- do.call(.prepareOutput, args = append(list(obj, cachePath), .dotsFromCache))
+  if ("object" %in% names(.dotsFromCache))
+    .dotsFromCache <- .dotsFromCache[setdiff(names(.dotsFromCache), "object")]
+
+  obj <- do.call(.prepareOutput, args = append(list(object = obj, cachePath), .dotsFromCache))
 
   if (isTRUE(useMemoise) && !isTRUE(isMemoised)) {
   # if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
@@ -372,7 +385,7 @@ extractFromCache <- function(sc, elem, ifNot = NULL) {
 rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                         cacheId, drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL),
-                        format = getOption("reproducible.cacheSaveFormat", "rds")) {
+                        format = getOption("reproducible.cacheSaveFormat", "rds"), verbose) {
   if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
@@ -526,16 +539,16 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
         "createdDate" = as.character(Sys.time())
       )
       dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
-      dt2 <- loadFile(dtFile)
+      dt3 <- loadFile(dtFile)
       tk <- tagKey
-      alreadyThere <- sum(dt2$tagKey == tk & dt2$cacheId == cacheId)
+      alreadyThere <- sum(dt3$tagKey == tk & dt3$cacheId == cacheId)
       if (add && alreadyThere == 0) {
-        dt2 <- rbindlist(list(dt2, dt))
+        dt3 <- rbindlist(list(dt3, dt))
       } else {
-        set(dt2, which(dt2$tagKey == tk & dt2$cacheId == cacheId), "tagValue", dt$tagValue)
-        # dt2[tagKey == tk & cacheId == cacheId, tagValue := dt$tagValue]
+        set(dt3, which(dt3$tagKey == tk & dt3$cacheId == cacheId), "tagValue", dt$tagValue)
+        # dt3[tagKey == tk & cacheId == cacheId, tagValue := dt$tagValue]
       }
-      saveFilesInCacheFolder(dt2, dtFile, cachePath = cachePath, cacheId = cacheId)
+      saveFilesInCacheFolder(dt3, dtFile, cachePath = cachePath, cacheId = cacheId)
     }
   }
 }
@@ -709,6 +722,7 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
 CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), create = FALSE,
                           drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL)) {
+
   checkPath(cachePath, create = TRUE)
   if (useDBI()) {
     if (is.null(conn)) {
@@ -879,7 +893,9 @@ loadFile <- function(file, format = NULL) {
     .requireNamespace("qs", stopOnFALSE = TRUE)
     obj <- qs::qread(file = file[isQs], nthreads = getOption("reproducible.nThreads", 1))
   } else {
-    obj <- readRDS(file = file[!isQs])
+    suppressWarningsSpecific(falseWarnings = "\\'package:stats\\' may not be available when loading",
+                             obj <- readRDS(file = file[!isQs])
+    )
   }
 
   obj
@@ -918,7 +934,9 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
       }
     }
   } else {
-    saveRDS(obj, file = fts)
+    suppressWarningsSpecific(falseWarnings = "\\'package:stats\\' may not be available when loading",
+                             saveRDS(obj, file = fts)
+    )
     fs <- sum(file.size(fts))
   }
   fs <- sum(fs, fsOther)
@@ -990,6 +1008,7 @@ saveDBFileSingle <- function(dt, cachePath, cacheId) {
 
 convertDBbackendIfIncorrect <- function(cachePath, drv, conn,
                                         verbose = getOption("reproducible.verbose")) {
+  origDrv <- getDrv(drv)
   origDBI <- useDBI()
   newDBI <- suppressMessages(useDBI(!origDBI)) # switch to the other
   if (!identical(newDBI, origDBI)) { # if they are same, then DBI is not installed; not point proceeding
@@ -1007,11 +1026,11 @@ convertDBbackendIfIncorrect <- function(cachePath, drv, conn,
         )
         if (isTRUE(origDBI)) { # using DBI --> convert all data to a DBI database
           suppressMessages(useDBI(origDBI))
-          .createCache(cachePath, drv = drv, conn = conn)
+          .createCache(cachePath, drv = origDrv, conn = conn)
           Map(tv = sc$tagValue, tk = sc$tagKey, oh = sc$cacheId, function(tv, tk, oh) {
             .addTagsRepo(
               cacheId = oh, cachePath = cachePath,
-              tagKey = tk, tagValue = tv, drv = drv, conn = conn
+              tagKey = tk, tagValue = tv, drv = origDrv, conn = conn
             )
           })
           unlink(CacheDBFiles(cachePath))
@@ -1075,3 +1094,82 @@ otherFunctions <- "otherFunctions"
   }
   isMemoised
 }
+
+
+metadataDT <- function(cacheId, tagKey, tagValue) {
+  data.table(
+    "cacheId" = cacheId, "tagKey" = as.character(tagKey),
+    "tagValue" = tagValue, "createdDate" = as.character(Sys.time())
+  )
+}
+
+
+loadFromCacheSwitchFormat <- function(f, verbose, cachePath, fullCacheTableForObj, cacheId, preDigest, drv, conn) {
+  obj <- NULL
+  if (!all(file.exists(f))) {
+    sameCacheID <- checkSameCacheId(f)
+    # sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
+    # if (!useDBI() || length(sameCacheID) > 1) {
+    #   sameCacheID <- onlyStorageFiles(sameCacheID)
+    # }
+
+    if (length(sameCacheID)) {
+      # if (!identical(whereInStack("sim"), .GlobalEnv)) {
+      #   format <- setdiff(c("rds", "qs"), format)
+      #   message("User tried to change options('reproducible.cacheSaveFormat') for an ",
+      #           "existing cache, while using a simList. ",
+      #           "This currently does not work. Keeping the ",
+      #           "option at: ", format)
+      #   next
+      # }
+
+      # messageCache(.message$changingFormat(prevFile = sameCacheID, newFile = f),
+      #              verbose = verbose)
+      # #messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
+      #             fileExt(f), ")",
+      obj <- loadFromCache(
+        cachePath = cachePath, fullCacheTableForObj = fullCacheTableForObj,
+        cacheId = cacheId,
+        format = fileExt(sameCacheID),
+        preDigest = preDigest,
+        verbose = verbose
+      )
+
+      obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
+      swapCacheFileFormat(wrappedObj = obj2, cachePath = cachePath, drv = drv, conn = conn,
+                          cacheId = cacheId, sameCacheID = sameCacheID, newFile = f, verbose = verbose)
+      # fs <- saveToCache(
+      #   obj = obj2, cachePath = cachePath, drv = drv, conn = conn,
+      #   cacheId = cacheId
+      # )
+      # rmFromCache(
+      #   cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+      #   format = fileExt(sameCacheID)
+      # )
+    }
+  }
+  return(obj)
+}
+
+checkSameCacheId <- function(f) {
+  sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
+  if (!useDBI() || length(sameCacheID) > 1) {
+    sameCacheID <- onlyStorageFiles(sameCacheID)
+  }
+  sameCacheID
+}
+
+swapCacheFileFormat <- function(wrappedObj, cachePath, drv, conn, cacheId, sameCacheID, newFile, verbose) {
+  messageCache(.message$changingFormat(prevFile = sameCacheID, newFile = newFile),
+               verbose = verbose)
+
+  fs <- saveToCache(
+    obj = wrappedObj, cachePath = cachePath, drv = drv, conn = conn,
+    cacheId = cacheId
+  )
+  rmFromCache(
+    cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+    format = fileExt(sameCacheID)
+  )
+}
+
