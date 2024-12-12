@@ -133,7 +133,7 @@ preProcessParams <- function(n = NULL) {
   }
 }
 
-#' Download, Checksum, Extract files
+#' Download, checksum, extract files
 #'
 #' This does downloading (via `downloadFile`), checksumming (`Checksums`),
 #' and extracting from archives (`extractFromArchive`), plus cleaning up of input

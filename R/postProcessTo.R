@@ -1637,12 +1637,14 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
   opts <- addDataType(opts, fromRas[[1]], ...)
   opts <- updateDstNoData(opts, fromRas)
 
+  if (exists("aaaa", envir = .GlobalEnv)) browser()
   tried <- retry(retries = 2, # exprBetween = browser(),
                  sf::gdal_utils(
                    util = "warp",
                    source = fnSource,
                    destination = filenameDest,
-                   options = opts))
+                   options = opts)
+  )
 
   out <- terra::rast(filenameDest)
   messagePreProcess(messagePrefixDoneIn,

@@ -44,8 +44,8 @@ test_that("all exported functions have examples", {
       cat(paste(file, " -- ", "\n"), file = tmpExFile, append = TRUE)
     }
     # for debugging only
-    #if (interactive())
-    #  print(file)
+    if (interactive())
+      print(file)
     loud <- capture.output(
       test_example(file)
     )

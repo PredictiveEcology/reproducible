@@ -16,7 +16,7 @@ utm <- terra::crs("epsg:23028") # $wkt
 vInUTM <- terra::project(vOrig, utm)
 vAsRasInLongLat <- terra::rast(vOrig, resolution = 0.008333333)
 res100 <- 100
-rInUTM <- terra::rast(vInUTM, resolution = res100)
+rInUTM <- terra::rast(vInUTM, resolution = res100, vals = 1)
 # crop, reproject, mask, crop a raster with a vector in a different projection
 #  --> gives message about not enough information
 t1 <- postProcessTo(elev1, to = vInUTM)

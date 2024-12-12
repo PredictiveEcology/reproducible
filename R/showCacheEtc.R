@@ -54,8 +54,7 @@ utils::globalVariables(c(
 #' If `userTags` is used, this will override `after` or `before`.
 #'
 #' @return Will clear all objects (or those that match `userTags`, or those
-#' between `after` or `before`) from the repository located at
-#' `cachePath` of the sim object, if `sim` is provided, or located in
+#' between `after` or `before`) from the repository located in
 #' `cachePath`.
 #' Invisibly returns a `data.table` of the removed items.
 #'
