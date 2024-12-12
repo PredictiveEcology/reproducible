@@ -244,7 +244,6 @@ basename2 <- function(x) {
 retry <- function(expr, envir = parent.frame(), retries = 5,
                   exponentialDecayBase = 1.3, silent = TRUE,
                   exprBetween = NULL, messageFn = message) {
-  if (exists("aaaa", envir = .GlobalEnv)) browser()
   if (exponentialDecayBase < 1) {
     stop("exponentialDecayBase must be equal to or greater than 1")
   }

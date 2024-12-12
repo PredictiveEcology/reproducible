@@ -145,13 +145,11 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
   skip_on_cran()
   skip_on_ci()
   testInit(c("googledrive", "terra"),
-    # tmpFileExt = c(".tif", ".grd"),
     needGoogleDriveAuth = TRUE,
     opts = list("reproducible.ask" = FALSE)
   )
 
   opts <- options("reproducible.cachePath" = tmpdir)
-  suppressWarnings(rm(list = "aaa", envir = .GlobalEnv))
 
   on.exit(
     {
@@ -186,13 +184,10 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
   skip_on_cran()
   skip_on_ci()
   testInit(c("googledrive", "terra"),
-    # tmpFileExt = c(".tif", ".grd"),
     needGoogleDriveAuth = TRUE,
     opts = list("reproducible.ask" = FALSE)
   )
 
-
-  # googledrive::drive_auth("predictiveecology@gmail.com")
   on.exit(
     {
       retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
@@ -222,7 +217,6 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
   )
 
   opts <- options("reproducible.cachePath" = tmpdir)
-  # googledrive::drive_auth("predictiveecology@gmail.com")
   on.exit(
     {
       retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
