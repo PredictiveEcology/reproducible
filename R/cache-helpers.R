@@ -255,7 +255,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     sn <- slotNames(object@file)
     sn <- sn[!(sn %in% c("name"))]
     fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
-    digFile <- .robustDigest(fileSlotsToDigest,
+    digFile <- .robustDigest(asPath(fileSlotsToDigest),
       length = length, quick = quick,
       algo = algo
     ) # don't include object@file -- these are volatile
@@ -540,7 +540,7 @@ withoutFinalNumeric <- function(string) {
   paste0(woNumeric, ".", ext)
 }
 
-setClass("PackedSpatExtent")
+setClass("PackedSpatExtent2")
 
 wrapSpatVector <- function(obj) {
   obj <- terra::wrap(obj)

@@ -40,6 +40,14 @@ then it will \emph{not} attempt to see it as an archive, even if it has archive-
 file extension (e.g., \code{.zip}). This may be useful when an R function
 is expecting an archive directly.}
 
+\item{alsoExtract}{Optional character string naming files other than
+\code{targetFile} that must be extracted from the \code{archive}. If
+\code{NULL}, the default, then it will extract all files. Other options:
+\code{"similar"} will extract all files with the same filename without
+file extension as \code{targetFile}. \code{NA} will extract nothing other
+than \code{targetFile}. A character string of specific file names will cause
+only those to be extracted. See table in \code{\link[=preProcess]{preProcess()}}.}
+
 \item{url}{Optional character string indicating the URL to download from.
 If not specified, then no download will be attempted. If not entry
 exists in the \code{CHECKSUMS.txt} (in \code{destinationPath}), an entry

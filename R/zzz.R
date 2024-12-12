@@ -18,6 +18,7 @@
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
   .pkgEnv$SysInfo <- Sys.info() # record once at loading; repeatedly calling Sys.info is a waste
+
   invisible()
 }
 
@@ -28,8 +29,11 @@
       "Using reproducible version ",
       utils::packageVersion("reproducible"), ".",
       # "\n  'reproducible' has changed the default database backend.", # Not true yet
-      "\n  See ?reproducibleOptions for details."
-    )
+      " As of reproducible >=2.1.2, character vectors (including ",
+      "inside data.frames)\n  will not be treated as file paths by `Cache`; ",
+      "convert to 'Path' or `fs_path` first if needed.\n",
+      "  Set `options(reproducible.testCharacterAsFile = TRUE)` for old behaviour;\n",
+      "  See ?reproducibleOptions for details.")
   }
 }
 

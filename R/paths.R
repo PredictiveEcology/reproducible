@@ -53,7 +53,7 @@ setMethod(
             #    normalizePaths does this, can't find equivalent in fs
             path[!nas] <-
               normalizePath(path[!nas], winslash = "/", mustWork = FALSE)
-              # fs::path_expand_r(fs::path_abs(path[!nas])) # faster than normalizePath on some machines
+            # fs::path_expand_r(fs::path_abs(path[!nas])) # faster than normalizePath on some machines
           }
           if (any(nas)) {
             path[nas] <- NA_character_
@@ -80,7 +80,7 @@ setMethod(
               if (any(areAbs %in% FALSE)) {
                 nonNApath[!hasDotStart][areAbs %in% FALSE] <-
                   normalizePath(file.path(getwd(), nonNApath[!hasDotStart][areAbs %in% FALSE]),
-                    winslash = "/", mustWork = FALSE
+                                winslash = "/", mustWork = FALSE
                   )
               }
             }
@@ -150,7 +150,7 @@ normPathRel <- function(path) {
   path[nzchar(path)] <- path[nzchar(path)] |>
     fs::path_norm() |>
     fs::path_expand() # |>
-    # normalizePath(winslash = "/", mustWork = FALSE)
+  # normalizePath(winslash = "/", mustWork = FALSE)
 
   path
 }
@@ -206,8 +206,8 @@ setMethod(
           if (create == TRUE) {
             lapply(path[!dirsThatExist[!isExistingFile]], function(pth) {
               dir.create(file.path(pth),
-                recursive = TRUE,
-                showWarnings = FALSE
+                         recursive = TRUE,
+                         showWarnings = FALSE
               )
             })
           } else {
@@ -371,8 +371,13 @@ makeRelative <- function(files, absoluteBase) {
     areAbs <- isAbsolutePath(files)
     if (any(areAbs)) {
       absoluteBase <- normPath(absoluteBase) # can be "." which means 'any character' in a grep
-      if (length(absoluteBase) > 1) browser()
-      files[areAbs] <- gsub(paste0("^", absoluteBase, "/{0,1}"), "", files[areAbs])
+      if (length(absoluteBase) < length(files))
+        absoluteBase <- rep(absoluteBase, length.out = length(files))
+      # if (length(absoluteBase) > 1) browser()
+      files[areAbs] <- unlist(Map(ab = absoluteBase[areAbs], file = files[areAbs], function(ab, file)
+        gsub(paste0("^", ab, "/{0,1}"), "", file)
+      ))
+      # files[areAbs] <- gsub(paste0("^", absoluteBase, "/{0,1}"), "", files[areAbs])
 
       # this does dumb things when it is not relative ... i.e., with prepend ../../../../../..
       # files[areAbs] <- fs::path_rel(start = absoluteBase, files[areAbs])

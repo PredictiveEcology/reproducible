@@ -261,7 +261,6 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
         if (length(sameCacheID)) {
           # if (!identical(whereInStack("sim"), .GlobalEnv)) {
-          #   browser()
           #   format <- setdiff(c("rds", "qs"), format)
           #   message("User tried to change options('reproducible.cacheSaveFormat') for an ",
           #           "existing cache, while using a simList. ",
@@ -310,7 +309,11 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   fromMemoise <- isMemoised && useMemoise
   loadFromMgs <- .cacheMessage(obj, .functionName, fromMemoise = fromMemoise, verbose = verbose)
 
-  # # This allows for any class specific things
+  # bug that affects Caching of functions that have an argument called "objects": PR#403
+  if ("object" %in% names(.dotsFromCache))
+    .dotsFromCache <- .dotsFromCache[setdiff(names(.dotsFromCache), "object")]
+
+  # This allows for any class specific things
   obj <- do.call(.prepareOutput, args = append(list(obj, cachePath), .dotsFromCache))
 
   if (isTRUE(useMemoise) && !isTRUE(isMemoised)) {

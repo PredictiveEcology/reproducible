@@ -163,8 +163,7 @@ using \code{buffer(..., width = 0)};
 \item Crop using \code{\link[=cropTo]{cropTo()}};
 \item Project using \code{\link[=projectTo]{projectTo()}};
 \item Mask using \code{\link[=maskTo]{maskTo()}};
-\item Determine file name \code{\link[=determineFilename]{determineFilename()}} via \code{filename2};
-\item Optionally, write that file name to disk via \code{\link[=writeTo]{writeTo()}}.
+\item write the file to disk via \code{\link[=writeTo]{writeTo()}}.
 }
 
 NOTE: checksumming does not occur during the post-processing stage, as
@@ -332,7 +331,7 @@ if (requireNamespace("terra", quietly = TRUE) &&
         studyArea = studyArea,
         fun = "terra::vect",
         destinationPath = dPath,
-        filename2 = "EcozoneFile.shp"
+        writeTo = "EcozoneFile.shp"
       ) # passed to determineFilename
 
       terra::plot(shpEcozone[, 1])

@@ -145,7 +145,8 @@ This function provides a single step to achieve the GIS operations
 "post-projection-crop", "mask" and possibly "write".
 It uses primarily the \code{terra} package internally
 (with some minor functions from \code{sf})
-in an attempt to be as efficient as possible. Currently, this function is tested
+in an attempt to be as efficient as possible, except if all inputs are \code{sf} objects.
+(in which case \code{sf} is used). Currently, this function is tested
 with \code{sf}, \code{SpatVector}, \code{SpatRaster}, \verb{Raster*} and \verb{Spatial*} objects passed
 to \code{from}, and the same plus \code{SpatExtent}, and \code{crs} passed to \code{to} or the
 relevant \verb{*to} functions.
@@ -265,7 +266,7 @@ utm <- terra::crs("epsg:23028") # $wkt
 vInUTM <- terra::project(vOrig, utm)
 vAsRasInLongLat <- terra::rast(vOrig, resolution = 0.008333333)
 res100 <- 100
-rInUTM <- terra::rast(vInUTM, resolution = res100)
+rInUTM <- terra::rast(vInUTM, resolution = res100, vals = 1)
 # crop, reproject, mask, crop a raster with a vector in a different projection
 #  --> gives message about not enough information
 t1 <- postProcessTo(elev1, to = vInUTM)

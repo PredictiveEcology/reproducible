@@ -5,7 +5,8 @@
 #' "post-projection-crop", "mask" and possibly "write".
 #' It uses primarily the `terra` package internally
 #' (with some minor functions from `sf`)
-#' in an attempt to be as efficient as possible. Currently, this function is tested
+#' in an attempt to be as efficient as possible, except if all inputs are `sf` objects.
+#' (in which case `sf` is used). Currently, this function is tested
 #' with `sf`, `SpatVector`, `SpatRaster`, `Raster*` and `Spatial*` objects passed
 #' to `from`, and the same plus `SpatExtent`, and `crs` passed to `to` or the
 #' relevant `*to` functions.
@@ -869,9 +870,11 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
             terra::crs(ext) <- terra::crs(from)
           }
           extTmp <- terra::ext(ext)
+          extFrom <- terra::ext(from)
+          extOrder <- c("xmin", "ymin", "xmax", "ymax")
+          extNum <- extFrom[][extOrder]
           if (isTRUE(suppressWarnings(terra::is.lonlat(ext)))) { # warning is about "crs not defined"
             extTmp2 <- terra::extend(extTmp, 0.1) # hard code 0.1 lat/long, as long as it isn't past the from extent
-            extFrom <- terra::ext(from)
             exts <- c(
               xmin = max(terra::xmin(extTmp2), terra::xmin(extFrom)),
               ymin = max(terra::ymin(extTmp2), terra::ymin(extFrom)),
@@ -886,6 +889,12 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
           } else {
             ext <- terra::extend(extTmp, res[1] * 2)
           }
+
+          exts <- ext[][extOrder]
+          # This won't work if the the ext is tight with the from i.e., if they are the same;
+          #   test and skip cropping with needBuffer =TRUE if it is too tight
+          if (isTRUE(any(extNum == exts)))
+            return(from)
         }
       }
 
@@ -1018,7 +1027,7 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
               )
               writeDone <- TRUE
             } else {
-              stop("File can't be unliked for overwrite")
+              stop("File can't be unlinked for overwrite.")
             }
           } else {
             if (isSF(from)) {
@@ -1273,6 +1282,11 @@ remapOldArgs <- function(..., fn = sys.function(sys.parent()), envir = parent.fr
                          verbose = getOption("reproducible.verbose")) {
   forms <- formals(fn)
   dots <- list(...)
+
+  if (!is.null(dots$filename2)) {
+    stop("filename2 arg is deprecated - please pass 'writeTo' instead (see `reproducible::writeTo`")
+  }
+
   dots <- dots[!vapply(dots, is.null, FUN.VALUE = logical(1))]
 
   ret <- list()
@@ -1362,16 +1376,21 @@ assessDataTypeOuter <- function(from, method) {
   method
 }
 
-
+## TODO: don't hardcode these, use code to get them; formals() doesn't capture other args
 writeRasterArgs <- c(
-  "filename", "overwrite", "ncopies", "steps", "filetype", "progressbar", "tempdir",
-  "todisk", "memfrac", "progress", "verbose", "memmin", "filetype",
-  "verbose", "names", "tolerance", "overwrite", "datatype", "memmax"
-)
+  ## terra::writeRaster args
+  "x", "filename", "overwrite",
+  "datatype", "filetype", "gdal", "tempdir", "progress", "memfrac", "memmax", "names", "NAflag",
+  "scale", "offset", "verbose", "steps", "todisk", "wopt",
 
-projectArgs <- c("x", "y", "method", "mask", "align", "gdal", "res", "origin", "threads", "filename")
+  ## other args
+  "memmin", "ncopies", "progressbar", "tolerance" ## TODO: where are these from? terra options?
+) |> unique()
 
-maskArgs <- c("x", "inverse", "mask", "updatevalue", "touches", "filename")
+projectArgs <- c("x", "y", "method", "mask", "align", "res", "origin", "threads", "filename",
+                 "use_gdal", "by_util")
+
+maskArgs <- c("x", "mask", "inverse", "maskvalues", "updatevalue", "touches", "filename")
 
 extntNA <- function(x) {
   out <- if (isSF(x)) {
@@ -1623,7 +1642,8 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
                    util = "warp",
                    source = fnSource,
                    destination = filenameDest,
-                   options = opts))
+                   options = opts)
+  )
 
   out <- terra::rast(filenameDest)
   messagePreProcess(messagePrefixDoneIn,
@@ -1704,7 +1724,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
                  sf::gdal_utils(
                    util = "warp",
                    source = fnSource,
-    destination = writeTo,
+                   destination = writeTo,
                    options = opts))
 
   out <- terra::rast(writeTo)
@@ -1828,13 +1848,12 @@ gdalTransform <- function(from, cropTo, projectTo, maskTo, writeTo, verbose) {
   #                            "-overwrite"
   #                          )))
   #
-  # browser()
   terra::writeVector(maskTo, filename = tf2)
   system.time(sf::gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
-                         destination = tf, options =
-                           c("-t_srs", tf4,
-                             "-clipdst", tf2, "-overwrite"
-                           )))
+                             destination = tf, options =
+                               c("-t_srs", tf4,
+                                 "-clipdst", tf2, "-overwrite"
+                               )))
   messagePreProcess(messagePrefixDoneIn,
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)

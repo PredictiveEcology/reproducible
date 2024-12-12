@@ -54,8 +54,7 @@ utils::globalVariables(c(
 #' If `userTags` is used, this will override `after` or `before`.
 #'
 #' @return Will clear all objects (or those that match `userTags`, or those
-#' between `after` or `before`) from the repository located at
-#' `cachePath` of the sim object, if `sim` is provided, or located in
+#' between `after` or `before`) from the repository located in
 #' `cachePath`.
 #' Invisibly returns a `data.table` of the removed items.
 #'
@@ -434,16 +433,13 @@ setMethod(
       if (NROW(objsDT) == 0) {
         return(invisible(.emptyCacheTable))
       }
-
     } else {
       if (is.null(conn)) {
         conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
         if (is.null(conn)) {
           return(invisible(.emptyCacheTable))
         }
-        on.exit({
-          DBI::dbDisconnect(conn)
-        })
+        on.exit(DBI::dbDisconnect(conn), add = TRUE)
       }
       if (!CacheIsACache(x, drv = drv, conn = conn)) {
         return(invisible(.emptyCacheTable))
@@ -709,7 +705,7 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
   }
 }
 
-useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose")) {
+useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose"), default = TRUE) {
   canSwitch <- TRUE
   if (!is.null(set)) {
     if (isTRUE(set)) {
@@ -720,7 +716,7 @@ useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose")) {
       options("reproducible.useDBI" = set)
     }
   }
-  ud <- getOption("reproducible.useDBI", TRUE)
+  ud <- getOption("reproducible.useDBI", default)
   if (isTRUE(ud)) {
     drv <- getOption("reproducible.drv")
     if (is.null(drv)) {

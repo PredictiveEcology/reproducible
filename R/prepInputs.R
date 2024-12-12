@@ -45,8 +45,7 @@ utils::globalVariables(c(
 #'     \item Crop using [cropTo()];
 #'     \item Project using [projectTo()];
 #'     \item Mask using [maskTo()];
-#'     \item Determine file name [determineFilename()] via `filename2`;
-#'     \item Optionally, write that file name to disk via [writeTo()].
+#'     \item write the file to disk via [writeTo()].
 #'    }
 #'
 #'   NOTE: checksumming does not occur during the post-processing stage, as
@@ -311,7 +310,7 @@ utils::globalVariables(c(
 #'         studyArea = studyArea,
 #'         fun = "terra::vect",
 #'         destinationPath = dPath,
-#'         filename2 = "EcozoneFile.shp"
+#'         writeTo = "EcozoneFile.shp"
 #'       ) # passed to determineFilename
 #'
 #'       terra::plot(shpEcozone[, 1])
@@ -344,6 +343,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        .tempPath,
                        verbose = getOption("reproducible.verbose", 1),
                        ...) {
+  .callingEnv <- parent.frame()
   messagePreProcess("Running `prepInputs`", verbose = verbose, verboseLevel = 0)
   .message$IndentUpdate()
   stStart <- Sys.time()
@@ -375,6 +375,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     useCache = useCache,
     .tempPath = .tempPath,
     verbose = verbose,
+    .callingEnv = .callingEnv,
     ...
   )
 
@@ -382,8 +383,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # Load object to R
   ##################################################################
   x <- process(out,
-    funCaptured = funCaptured,
-    useCache = useCache, verbose = verbose, ...
+               funCaptured = funCaptured,
+               useCache = useCache, verbose = verbose, .callingEnv = .callingEnv, ...
   )
 
   ##################################################################
@@ -522,8 +523,8 @@ extractFromArchive <- function(archive,
           filesExtracted <- c(
             filesExtracted,
             .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
-              absolutePrefix = destinationPath,
-              files = basename2(archive[2]), .tempPath = .tempPath
+                                  absolutePrefix = destinationPath,
+                                  files = basename2(archive[2]), .tempPath = .tempPath
             )
           )
           # recursion, removing one archive
@@ -567,17 +568,17 @@ extractFromArchive <- function(archive,
           filesExtracted <- c(
             filesExtracted,
             .callArchiveExtractFn(funWArgs$fun,
-              funWArgs$args,
-              absolutePrefix = destinationPath,
-              files = filesToExtractNow,
-              .tempPath = .tempPath
+                                  funWArgs$args,
+                                  absolutePrefix = destinationPath,
+                                  files = filesToExtractNow,
+                                  .tempPath = .tempPath
             )
           )
         } else {
           # don't have a 2nd archive, and don't have our neededFiles file
           # isArchive <- grepl(fileExt(filesInArchive), pattern = "(zip|tar|rar)", ignore.case = TRUE)
           isArchive <- grepl(fileExt(filesInArchive),
-            pattern = paste0("(", paste(knownArchiveExtensions, collapse = "|"), ")"), ignore.case = TRUE
+                             pattern = paste0("(", paste(knownArchiveExtensions, collapse = "|"), ")"), ignore.case = TRUE
           )
 
           if (any(isArchive)) {
@@ -585,9 +586,9 @@ extractFromArchive <- function(archive,
             filesExtracted <- c(
               filesExtracted,
               .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
-                files = arch,
-                absolutePrefix = destinationPath,
-                .tempPath = .tempPath
+                                    files = arch,
+                                    absolutePrefix = destinationPath,
+                                    .tempPath = .tempPath
               )
             )
             filesExtracted <- unique(filesExtracted) # maybe unnecessary
@@ -613,15 +614,15 @@ extractFromArchive <- function(archive,
       } else {
         messagePreProcess("Skipping extractFromArchive: all files already present", verbose = verbose)
         filesExtracted <- checkSums[checkSums$expectedFile %in%
-          makeRelative(filesInArchive, destinationPath), ]$expectedFile
+                                      makeRelative(filesInArchive, destinationPath), ]$expectedFile
         filesExtracted <- makeAbsolute(filesInArchive, destinationPath)
       }
     }
   } else {
     if (!is.null(archive)) { # if archive is null, it means there was no archive passed
       messagePreProcess("Skipping extractFromArchive: all needed ",
-        "files now present",
-        verbose = verbose
+                        "files now present",
+                        verbose = verbose
       )
     }
     filesExtracted <- setdiff(neededFiles, if (!is.null(archive)) makeRelative(archive, destinationPath))
@@ -820,11 +821,11 @@ extractFromArchive <- function(archive,
       suppressMessages({
         output <- system(paste0(prependPath, " x -aoa -o\"", .tempPath, "\" \"",
                                 args[[1]], "\""),
-          wait = TRUE,
-          ignore.stdout = FALSE,
-          ignore.stderr = FALSE,
-          invisible = TRUE,
-          show.output.on.console = FALSE, intern = TRUE
+                         wait = TRUE,
+                         ignore.stdout = FALSE,
+                         ignore.stderr = FALSE,
+                         invisible = TRUE,
+                         show.output.on.console = FALSE, intern = TRUE
         )
       })
     } else {
@@ -901,12 +902,12 @@ extractFromArchive <- function(archive,
           if (nchar(sZip) > 0) {
             messagePreProcess(messPart1, verbose = verbose)
           } else {
-            messagePreProcess(
+            stop(
               paste(
                 messPart1,
-                "Install 7zip and add it to your PATH (see https://www.7-zip.org/)."
-              ),
-              verbose = verbose
+                # "Install 7zip and add it to your PATH (see https://www.7-zip.org/)."
+                "Try installing the archive package then rerunning: \ninstall.packages('archive')"
+              )
             )
           }
         }
@@ -990,12 +991,12 @@ extractFromArchive <- function(archive,
   }
 
   if (!exists("listOfFilesExtracted", inherits = FALSE))
-  listOfFilesExtracted <- list.files(
-    path = .tempPath,
-    # list of full paths of all extracted files!
-    recursive = TRUE,
-    include.dirs = TRUE
-  )
+    listOfFilesExtracted <- list.files(
+      path = .tempPath,
+      # list of full paths of all extracted files!
+      recursive = TRUE,
+      include.dirs = TRUE
+    )
 
   mess <- paste0("       ... Done extracting ", length(listOfFilesExtracted), " files")
   if (exists("stExtract", inherits = FALSE))
@@ -1058,71 +1059,30 @@ extractFromArchive <- function(archive,
 appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  append = TRUE, verbose = getOption("reproducible.verbose", 1)) {
-  if (append) {
-    # a checksums file already existed, need to keep some of it
-    cs <- suppressWarnings(try(read.table(checkSumFilePath, header = TRUE), silent = TRUE))
-    if (is(cs, "try-error")) {
-      # meant that it was an empty CHECKSUMS.txt file -- rebuild it
-      append <- FALSE
-    } else {
-      setDT(cs)
-      nonCurrentFiles <- cs[!makeRelative(file, destinationPath) %in%
-                              makeRelative(filesToChecksum, destinationPath)]
-      setDF(cs)
-    }
-    messStart <- "Appending "
-  } else {
-    messStart <- "Writing "
-  }
-  csf <- if (append) tempfile(fileext = ".TXT") else checkSumFilePath
+  csf <- tempfile(fileext = ".TXT")
   areAbs <- isAbsolutePath(filesToChecksum)
   if (any(!areAbs)) {
     filesToChecksum[!areAbs] <- file.path(destinationPath, filesToChecksum[!areAbs])
   }
   capture.output(type = "message", {
     currentFiles <- Checksums(
-      path = destinationPath, write = TRUE, # write = !append || NROW(nonCurrentFiles) == 0,
+      path = destinationPath, write = TRUE,
       files = filesToChecksum,
       checksumFile = csf,
       verbose = verbose
     )
   })
-  if (append) { # a checksums file already existed, need to keep some of it
 
-    messagePreProcess(messStart, "checksums to CHECKSUMS.txt. If you see this message repeatedly, ",
-                      "you can specify targetFile (and optionally alsoExtract) so it knows ",
-                      "what to look for.", verbose = verbose)
+  rip <- getOption("reproducible.inputPaths")
+  checkSumFilePaths <- if (!is.null(rip)) {
+    unique(c(checkSumFilePath, file.path(rip, basename(checkSumFilePath))))
+  } else {
+    checkSumFilePath
+  }
 
-    currentFilesToRbind <- data.table::as.data.table(currentFiles)
-    keepCols <- c("expectedFile", "checksum.x", "algorithm.x", "filesize.x")
-    currentFilesToRbind <- currentFilesToRbind[, keepCols, with = FALSE]
-    data.table::setnames(currentFilesToRbind,
-      old = keepCols,
-      new = c("file", "checksum", "algorithm", "filesize")
-    )
-    currentFilesToRbind <- rbindlist(list(nonCurrentFiles, currentFilesToRbind), fill = TRUE)
-
-    # Attempt to not change CHECKSUMS.txt file if nothing new occurred
-    currentFilesToRbind <- unique(currentFilesToRbind)
-    anyDuplicates <- duplicated(currentFilesToRbind)
-    if (any(anyDuplicates)) {
-      messagePreProcess("The current targetFile is not the same as the expected targetFile in the ",
-        "CHECKSUMS.txt; appending new entry in CHECKSUMS.txt. If this is not ",
-        "desired, please check files for discrepancies",
-        verbose = verbose
-      )
-    }
-
-    # Sometimes a checksums file doesn't have filesize
-    if (!is.null(cs$filesize)) {
-      if (!is.character(cs$filesize)) {
-        cs$filesize <- as.character(cs$filesize)
-      }
-    }
-
-    if (!identical(cs, as.data.frame(currentFilesToRbind))) {
-      writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
-    }
+  for (checkSumFilePath in checkSumFilePaths) {
+    appendChecksumsTableWithCS(append, checkSumFilePath, destinationPath, filesToChecksum,
+                               currentFiles = currentFiles, verbose = verbose)
   }
   return(currentFiles)
 }
@@ -1149,11 +1109,11 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   if (needSystemCall) {
     extractSystemCallPath <- .testForArchiveExtract()
     funWArgs <- list(fun = extractSystemCallPath)
-  } else {
-    funWArgs <- .whichExtractFn(archive[1], NULL)
-  }
+    } else {
+      funWArgs <- .whichExtractFn(archive[1], NULL)
+    }
 
-  filesInArchive <- NULL
+    filesInArchive <- NULL
   if (!is.null(funWArgs$fun)) {
     if (file.exists(archive[1])) {
       if (!needSystemCall) {
@@ -1169,46 +1129,46 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         if (grepl(x = extractSystemCallPath, pattern = "7z")) {
           extractSystemCall <- paste0("\"", extractSystemCallPath, "\"", " l \"", path.expand(archive[1]), "\"")
           if (isWindows()) {
-            filesOutput <- captureWarningsToAttr(
-              system(extractSystemCall, show.output.on.console = FALSE, intern = TRUE)
-            )
-            warn <- attr(filesOutput, "warning")
-            attr(filesOutput, "warning") <- NULL
+              filesOutput <- captureWarningsToAttr(
+                system(extractSystemCall, show.output.on.console = FALSE, intern = TRUE)
+              )
+              warn <- attr(filesOutput, "warning")
+              attr(filesOutput, "warning") <- NULL
+            } else {
+              # On Linux/MacOS
+              filesOutput <- captureWarningsToAttr(
+                system(extractSystemCall, intern = TRUE, ignore.stderr = TRUE)
+              )
+              warn <- attr(filesOutput, "warning")
+              attr(filesOutput, "warning") <- NULL
+            }
           } else {
-            # On Linux/MacOS
-            filesOutput <- captureWarningsToAttr(
-              system(extractSystemCall, intern = TRUE, ignore.stderr = TRUE)
-            )
-            warn <- attr(filesOutput, "warning")
-            attr(filesOutput, "warning") <- NULL
+            archiveExtractBinary <- .archiveExtractBinary()
+            if (is.null(archiveExtractBinary)) {
+              stop("unrar is not on this system; please install it")
+            }
+            filesOutput <- system(paste0("unrar l ", archive[1]), intern = TRUE)
           }
-        } else {
-          archiveExtractBinary <- .archiveExtractBinary()
-          if (is.null(archiveExtractBinary)) {
-            stop("unrar is not on this system; please install it")
+          if (exists("warn", inherits = FALSE) && isTRUE(any(grepl("had status 2", warn)))) {
+            stop(warn)
           }
-          filesOutput <- system(paste0("unrar l ", archive[1]), intern = TRUE)
-        }
-        if (exists("warn", inherits = FALSE) && isTRUE(any(grepl("had status 2", warn)))) {
-          stop(warn)
-        }
-        if (isTRUE(any(grepl("(Can not open the file as archive)|(Errors: 1)", filesOutput)))) {
-          stop("archive appears defective")
-        }
-        # filesInBetween <- grep(pattern = "----", filesOutput)
-        # filesLines <- filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
-        filesInArchive <- filenamesFromArchiveLst(filesOutput)
-        # filenamesFromArchiveLst <- function(filesLines) {
-        #   filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line) {
-        #     first5trimmed <- unlist(strsplit(filesLines[[line]], split = " +"))[-(1:5)]
-        #     if (length(first5trimmed) > 1)
-        #       first5trimmed <- paste(first5trimmed, collapse = " ")
-        #     # first5trimmed <- unlist(strsplit(filesLines[[line]], split = "  "))
-        #     return(first5trimmed)
-        #   }))
-        # }
-        if (length(filesInArchive) == 0) {
-          stop("preProcess could not find any files in the archive ", archive)
+          if (isTRUE(any(grepl("(Can not open the file as archive)|(Errors: 1)", filesOutput)))) {
+            stop("archive appears defective")
+          }
+          # filesInBetween <- grep(pattern = "----", filesOutput)
+          # filesLines <- filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
+          filesInArchive <- filenamesFromArchiveLst(filesOutput)
+          # filenamesFromArchiveLst <- function(filesLines) {
+          #   filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line) {
+          #     first5trimmed <- unlist(strsplit(filesLines[[line]], split = " +"))[-(1:5)]
+          #     if (length(first5trimmed) > 1)
+          #       first5trimmed <- paste(first5trimmed, collapse = " ")
+          #     # first5trimmed <- unlist(strsplit(filesLines[[line]], split = "  "))
+          #     return(first5trimmed)
+          #   }))
+          # }
+          if (length(filesInArchive) == 0) {
+            stop("preProcess could not find any files in the archive ", archive)
         }
       }
     }
@@ -1265,10 +1225,10 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       SevenZrarExists <- grepl(SevenZrarExists, pattern = "installed")
       if (isFALSE(SevenZrarExists)) {
         messagePreProcess("To extract .rar files, you will need p7zip-rar, not just p7zip-full. Try: \n",
-          "--------------------------\n",
-          "apt install p7zip-rar\n",
-          "--------------------------\n",
-          verbose = verbose
+                          "--------------------------\n",
+                          "apt install p7zip-rar\n",
+                          "--------------------------\n",
+                          verbose = verbose
         )
       }
     }
@@ -1280,25 +1240,25 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       if (extractSystemCallPath == "") {
         messagePreProcess("prepInputs is looking for 'unrar' or '7z' in your system...", verbose = verbose)
         extractSystemCallPath <- list.files("C:/Program Files",
-          pattern = "unrar.exe|7z.exe",
-          recursive = TRUE,
-          full.names = TRUE
+                                            pattern = "unrar.exe|7z.exe",
+                                            recursive = TRUE,
+                                            full.names = TRUE
         )
         if (extractSystemCallPath == "" || length(extractSystemCallPath) == 0) {
           extractSystemCallPath <- list.files(dirname(Sys.getenv("SystemRoot")),
-            pattern = "unrar.exe|7z.exe",
-            recursive = TRUE,
-            full.names = TRUE
+                                              pattern = "unrar.exe|7z.exe",
+                                              recursive = TRUE,
+                                              full.names = TRUE
           )
           if (extractSystemCallPath == "" || length(extractSystemCallPath) == 0) {
             extractSystemCallPath <- NULL
             messagePreProcess(missingUnrarMess, verbose = verbose)
           } else {
             messagePreProcess("The extracting software was found in an unusual location: ",
-              extractSystemCallPath, ".",
-              "If you receive an error when extracting the archive, please install ",
-              "'7zip' or 'unrar' in 'Program Files' directory.",
-              verbose = verbose
+                              extractSystemCallPath, ".",
+                              "If you receive an error when extracting the archive, please install ",
+                              "'7zip' or 'unrar' in 'Program Files' directory.",
+                              verbose = verbose
             )
           }
         }
@@ -1306,12 +1266,12 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       }
     } else {
       messagePreProcess(missingUnrarMess,
-        "Try installing with, e.g.,: \n",
-        "--------------------------\n",
-        "apt install p7zip p7zip-rar p7zip-full -y\n",
-        "yum install p7zip p7zip-plugins -y\n",
-        "--------------------------",
-        verbose = verbose
+                        "Try installing with, e.g.,: \n",
+                        "--------------------------\n",
+                        "apt install p7zip p7zip-rar p7zip-full -y\n",
+                        "yum install p7zip p7zip-plugins -y\n",
+                        "--------------------------",
+                        verbose = verbose
       )
     }
   }
@@ -1400,11 +1360,11 @@ is.nulls <- function(x) lapply(x, is.null)
 
 
 
-
 #' @include messages.R
 process <- function(out, funCaptured,
                     useCache = getOption("reproducible.useCache"),
                     verbose = getOption("reproducible.verbose"),
+                    .callingEnv = parent.frame(),
                     ...) {
   theFun <- out$fun
   suppressWarnings({
@@ -1421,6 +1381,16 @@ process <- function(out, funCaptured,
   ))
   args <- NULL
   # keep the ones for theFun
+  isAlreadyQuoted <- tryCatch(any(grepl("quote", theFun)), silent = TRUE,
+                              error = function(e) FALSE)
+  if (isAlreadyQuoted) {
+    theFun <- eval(theFun, envir = out)
+  }
+
+  # need to differentiate sf::st_read from sf::st_read(targetFile, TRUE) -- both are calls, both length 3; both have pkgColon
+  if (length(theFun) == 3 && isDollarSqBrPkgColon(theFun) && all(lengths(as.list(theFun)) == 1)) {
+    theFun <- eval(theFun, envir = out)
+  }
   if (naFun %in% FALSE && !is.call(theFun)) {
     formsForTheFun <- names(formals3(theFun))
     argsFromPrepInputsFamily <- setdiff(argsFromPrepInputsFamily, names(formals3(theFun)))
@@ -1433,15 +1403,17 @@ process <- function(out, funCaptured,
   if (NROW(otherFiles)) {
     .cacheExtra <- .robustDigest(sort(otherFiles$checksum.x))
   }
+  out[["targetFile"]] <- out[["targetFilePath"]] # handle both
 
   if (!(naFun || is.null(theFun))) {
+
     x <- if (is.null(out$object)) {
       st <- Sys.time()
       messagePreProcess("Running `process` (i.e., loading file into R)", verbose = verbose, verboseLevel = 0)
       .message$IndentUpdate()
       if (!is.null(out$targetFilePath)) {
         if (!all(is.na(out$targetFilePath)))
-          messagePreProcess("targetFile located at ", out$targetFilePath, verbose = verbose)
+          messagePreProcess("targetFile located at:\n", paste(out$targetFilePath, collapse = "\n"), verbose = verbose)
       }
 
       if (!isTRUE(is.na(out$targetFilePath)))
@@ -1451,7 +1423,7 @@ process <- function(out, funCaptured,
       if (needRaster) {
         .requireNamespace("raster", stopOnFALSE = TRUE)
       }
-      if (needRaster || needTerra) {
+      if ((needRaster || needTerra) && !is.call(theFun)) {
         ## Don't cache the reading of a raster
         ## -- normal reading of raster on disk is fast b/c only reads metadata
         outProcess <- do.call(theFun, append(list(asPath(out$targetFilePath)), args))
@@ -1459,8 +1431,8 @@ process <- function(out, funCaptured,
         if (identical(theFun, base::load)) {
           if (is.null(args$envir)) {
             messagePreProcess("Running base::load, returning objects as a list. Pass envir = anEnvir ",
-              "if you would like it loaded to a specific environment",
-              verbose = verbose
+                              "if you would like it loaded to a specific environment",
+                              verbose = verbose
             )
             tmpEnv <- new.env(parent = emptyenv())
             returnAsList <- TRUE
@@ -1476,8 +1448,8 @@ process <- function(out, funCaptured,
           }
         } else {
           useCache2 <- useCache
-          if (fileExt(out$targetFilePath) %in% c("qs", "rds") &&
-            !isTRUE(getOption("reproducible.useMemoise"))) {
+          if (any(fileExt(out$targetFilePath) %in% c("qs", "rds")) &&
+              !isTRUE(getOption("reproducible.useMemoise"))) {
             useCache2 <- FALSE
             messagePreProcess("targetFile is already a binary; skipping Cache while loading")
           }
@@ -1495,11 +1467,11 @@ process <- function(out, funCaptured,
                   ),
                   args
                 )
-                out[["targetFile"]] <- out[["targetFilePath"]] # handle both
+                # out[["targetFile"]] <- out[["targetFilePath"]] # handle both
                 if (is.null(funChar)) funChar <- paste0(substr(format(theFun), start = 1, stop = 40), "...")
-                outProcess <- Cache(eval(theFun, envir = out),
+                outProcess <- Cache(eval(theFun, envir = out, enclos = .callingEnv),
                                     useCache = useCache2, .cacheExtra = .cacheExtra,
-                                    .functionName = funChar
+                                    .functionName = funChar, omitArgs = "enclos"
                 )
               } else {
                 args2 <- append(list(asPath(out$targetFilePath)), args)
@@ -1512,7 +1484,7 @@ process <- function(out, funCaptured,
               #  If this was the case, then the above will have just evaluated that
               if (identical(1L, length(outProcess))) {
                 if (isTRUE(is.character(outProcess))) {
-                  possTheFun <- eval(parse(text = outProcess), envir = out)
+                  possTheFun <- eval(parse(text = outProcess), envir = out, enclos = .callingEnv)
                   if (isTRUE(is.function(possTheFun))) {
                     theFun <- possTheFun
                     next
@@ -1538,14 +1510,14 @@ process <- function(out, funCaptured,
       outProcess
 
     } else {
-      # if (is.null(fun) || is.na(fun)) {
-      x <- out$object
-      # } else {
-      #  # x <- out$object
-      #  env1 <- new.env()
-      #  list2env(list(...), envir = env1)
-      #  eval(theFun, envir = env1)
-      # }
+      if (is.null(theFun) || !is.call(theFun) || naFun) {
+        x <- out$object
+      } else {
+        # x <- out$object
+        env1 <- new.env()
+        list2env(out, envir = env1)
+        eval(theFun, envir = env1)
+      }
     }
   } else {
     x <- if ((is.null(theFun) || is.na(theFun)) && !is.null(out$object)) {
@@ -1601,4 +1573,88 @@ reportTime <- function(stStart, mess, minSeconds) {
   dt1auto <- difftime(stNow, stStart)
   messagePreProcess(mess, format(dt1auto, units = "auto"), verbose = dt1sec > minSeconds)
   stNow
+}
+
+
+readCheckSumFilePath <- function(checkSumFilePath, destinationPath, filesToChecksum) {
+  # a checksums file already existed, need to keep some of it
+  cs <- suppressWarnings(try(read.table(checkSumFilePath, header = TRUE), silent = TRUE))
+  if (is(cs, "try-error")) {
+    # meant that it was an empty CHECKSUMS.txt file -- rebuild it
+    cs <- NULL # append <- FALSE
+  }
+  cs
+}
+
+extractFileNOTtoChecksum <- function(cs, destinationPath, filesToChecksum) {
+  setDT(cs)
+  cs[!makeRelative(file, destinationPath) %in%
+       makeRelative(filesToChecksum, destinationPath)]
+  setDF(cs)
+  cs
+}
+
+
+
+appendChecksumsTableWithCS <- function(append, checkSumFilePath, destinationPath,
+                                       filesToChecksum, currentFiles, verbose) {
+  if (append) {
+    cs <- readCheckSumFilePath(checkSumFilePath, destinationPath, filesToChecksum)
+    if (is.null(cs)) {
+      append <- FALSE
+    } else {
+      # a checksums file already existed, need to keep some of it
+      nonCurrentFiles <- extractFileNOTtoChecksum(cs, destinationPath, filesToChecksum)
+    }
+  }
+
+  doWrite <- TRUE
+  if (append) { # a checksums file already existed, need to keep some of it
+    messStart <- "Appending "
+    messagePreProcess(messStart, "checksums to CHECKSUMS.txt. If you see this message repeatedly, ",
+                      "you can specify targetFile (and optionally alsoExtract) so it knows ",
+                      "what to look for.", verbose = verbose)
+
+    currentFilesToRbind <- currentFilesToChecksumsTable(currentFiles, nonCurrentFiles, verbose = verbose)
+
+    # Sometimes a checksums file doesn't have filesize
+    if (!is.null(cs$filesize)) {
+      if (!is.character(cs$filesize)) {
+        cs$filesize <- as.character(cs$filesize)
+      }
+    }
+    if (identical(cs, as.data.frame(currentFilesToRbind))) {
+      doWrite <- FALSE
+    }
+  } else {
+    currentFilesToRbind <- currentFilesToChecksumsTable(currentFiles, verbose = verbose)
+  }
+
+  if (doWrite) {
+    writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
+  }
+}
+
+
+currentFilesToChecksumsTable <- function(currentFiles, nonCurrentFiles = NULL, verbose) {
+  currentFilesToRbind <- data.table::as.data.table(currentFiles)
+  keepCols <- c("expectedFile", "checksum.x", "algorithm.x", "filesize.x")
+  currentFilesToRbind <- currentFilesToRbind[, keepCols, with = FALSE]
+  data.table::setnames(currentFilesToRbind,
+                       old = keepCols,
+                       new = c("file", "checksum", "algorithm", "filesize")
+  )
+  currentFilesToRbind <- rbindlist(list(nonCurrentFiles, currentFilesToRbind), fill = TRUE)
+
+  # Attempt to not change CHECKSUMS.txt file if nothing new occurred
+  currentFilesToRbind <- unique(currentFilesToRbind)
+  anyDuplicates <- duplicated(currentFilesToRbind)
+  if (any(anyDuplicates)) {
+    messagePreProcess("The current targetFile is not the same as the expected targetFile in the ",
+                      "CHECKSUMS.txt; appending new entry in CHECKSUMS.txt. If this is not ",
+                      "desired, please check files for discrepancies",
+                      verbose = verbose
+    )
+  }
+  currentFilesToRbind
 }

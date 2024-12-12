@@ -17,6 +17,7 @@ downloadFile(
   needChecksums,
   preDigest,
   overwrite = getOption("reproducible.overwrite", TRUE),
+  alsoExtract = "similar",
   verbose = getOption("reproducible.verbose", 1),
   purge = FALSE,
   .tempPath,
@@ -81,6 +82,14 @@ in subsequent calls to
 
 \item{overwrite}{Logical. Should downloading and all the other actions occur
 even if they pass the checksums or the files are all there.}
+
+\item{alsoExtract}{Optional character string naming files other than
+\code{targetFile} that must be extracted from the \code{archive}. If
+\code{NULL}, the default, then it will extract all files. Other options:
+\code{"similar"} will extract all files with the same filename without
+file extension as \code{targetFile}. \code{NA} will extract nothing other
+than \code{targetFile}. A character string of specific file names will cause
+only those to be extracted. See table in \code{\link[=preProcess]{preProcess()}}.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
