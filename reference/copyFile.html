@@ -14,7 +14,7 @@ should be very fast as it will do "update only", i.e., nothing.'><!-- mathjax --
 
   gtag('config', 'UA-58633549-5');
 </script></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -28,7 +28,7 @@ should be very fast as it will do "update only", i.e., nothing.'><!-- mathjax --
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.2</span>
       </span>
     </div>
 
@@ -39,7 +39,7 @@ should be very fast as it will do "update only", i.e., nothing.'><!-- mathjax --
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -52,20 +52,20 @@ should be very fast as it will do "update only", i.e., nothing.'><!-- mathjax --
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/PredictiveEcology/reproducible/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Copy a file using <code>robocopy</code> on Windows and <code>rsync</code> on Linux/macOS</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/R/cache-helpers.R" class="external-link"><code>R/cache-helpers.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/R/cache-helpers.R" class="external-link"><code>R/cache-helpers.R</code></a></small>
     <div class="hidden name"><code>copyFile.Rd</code></div>
     </div>
 
@@ -102,43 +102,43 @@ should be very fast as it will do "update only", i.e., nothing.</p>
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>from</dt>
+
+
+<dl><dt id="arg-from">from<a class="anchor" aria-label="anchor" href="#arg-from"></a></dt>
 <dd><p>The source file.</p></dd>
 
 
-<dt>to</dt>
+<dt id="arg-to">to<a class="anchor" aria-label="anchor" href="#arg-to"></a></dt>
 <dd><p>The new file.</p></dd>
 
 
-<dt>useRobocopy</dt>
+<dt id="arg-userobocopy">useRobocopy<a class="anchor" aria-label="anchor" href="#arg-userobocopy"></a></dt>
 <dd><p>For Windows, this will use a system call to <code>robocopy</code>
 which appears to be much faster than the internal <code>file.copy</code> function.
 Uses <code>/MIR</code> flag. Default <code>TRUE</code>.</p></dd>
 
 
-<dt>overwrite</dt>
+<dt id="arg-overwrite">overwrite<a class="anchor" aria-label="anchor" href="#arg-overwrite"></a></dt>
 <dd><p>Passed to <code>file.copy</code></p></dd>
 
 
-<dt>delDestination</dt>
+<dt id="arg-deldestination">delDestination<a class="anchor" aria-label="anchor" href="#arg-deldestination"></a></dt>
 <dd><p>Logical, whether the destination should have any files deleted,
-if they don't exist in the source. This is <code>/purge</code> for robocopy and --delete for
+if they don't exist in the source. This is <code>/purge</code> for robocopy and –delete for
 rsync.</p></dd>
 
 
-<dt>create</dt>
+<dt id="arg-create">create<a class="anchor" aria-label="anchor" href="#arg-create"></a></dt>
 <dd><p>Passed to <code>checkPath</code>.</p></dd>
 
 
-<dt>silent</dt>
+<dt id="arg-silent">silent<a class="anchor" aria-label="anchor" href="#arg-silent"></a></dt>
 <dd><p>Should a progress be printed.</p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
-
-<p>This function is called for its side effect, i.e., a file is copied <code>from</code> to <code>to</code>.</p>
+    <p>This function is called for its side effect, i.e., a file is copied <code>from</code> to <code>to</code>.</p>
     </div>
     <div id="author">
     <h2>Author</h2>
@@ -161,10 +161,10 @@ rsync.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, b <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span>, c <span class="op">=</span> <span class="va">letters</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span><span class="op">)</span>, <span class="va">f1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>c <span class="op">=</span> <span class="fl">11</span><span class="op">:</span><span class="fl">20</span>, d <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span>, e <span class="op">=</span> <span class="va">letters</span><span class="op">[</span><span class="fl">11</span><span class="op">:</span><span class="fl">20</span><span class="op">]</span><span class="op">)</span>, <span class="va">f2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">copyFile</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">f1</span>, <span class="va">f2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">t1</span>, <span class="va">t2</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> /tmp/RtmpxA3jdR/example_fileCopy_from/file1212557e67916.csv </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> "/tmp/RtmpxA3jdR/example_fileCopy_to/file1212557e67916.csv" </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> /tmp/RtmpxA3jdR/example_fileCopy_from/file221252ddb3a88.csv </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> "/tmp/RtmpxA3jdR/example_fileCopy_to/file221252ddb3a88.csv" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  /tmp/Rtmpdrs0ra/example_fileCopy_from/file1252e3a22ef3.csv </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  "/tmp/Rtmpdrs0ra/example_fileCopy_to/file1252e3a22ef3.csv" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> /tmp/Rtmpdrs0ra/example_fileCopy_from/file2252e179e731b.csv </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "/tmp/Rtmpdrs0ra/example_fileCopy_to/file2252e179e731b.csv" </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">t1</span><span class="op">)</span> <span class="co">## TRUE</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">t2</span><span class="op">)</span> <span class="co">## TRUE</span></span></span>
@@ -190,15 +190,15 @@ rsync.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 

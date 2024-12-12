@@ -11,7 +11,7 @@ See Details below."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/aj
 
   gtag('config', 'UA-58633549-5');
 </script></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -25,7 +25,7 @@ See Details below."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/aj
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.2</span>
       </span>
     </div>
 
@@ -36,7 +36,7 @@ See Details below."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/aj
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -49,20 +49,20 @@ See Details below."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/aj
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/PredictiveEcology/reproducible/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1><code>reproducible</code> options</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/R/options.R" class="external-link"><code>R/options.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/R/options.R" class="external-link"><code>R/options.R</code></a></small>
     <div class="hidden name"><code>reproducibleOptions.Rd</code></div>
     </div>
 
@@ -78,9 +78,7 @@ See Details below.</p>
 
     <div id="value">
     <h2>Value</h2>
-    
-
-<p>This function returns a list of all the options that the <code>reproducible</code> package
+    <p>This function returns a list of all the options that the <code>reproducible</code> package
 sets and uses. See below for details of each.</p>
     </div>
     <div id="details">
@@ -192,6 +190,19 @@ it will use <code><a href="https://rdrr.io/pkg/raster/man/shapefile.html" class=
 <dt><code>showSimilar</code></dt>
 <dd><p>Default <code>FALSE</code>. Passed to <code>Cache</code>.</p></dd>
 
+<dt><code>testCharacterAsFile</code></dt>
+<dd><p>Default <code>FALSE</code>. The behaviour of <code>.robustDigest</code> on <code>character</code> vectors prior to
+<code>reproducible == 2.1.2</code> was that the function would test for whether they were
+filenames by using <code>file.exists</code>. If it was a filename, then it would digest
+the file content. In cases of a character vector or a data.frame of "filenames",
+this could cause long hanging of the R system as it tries to digest the file
+contents of potentially many files. This behaviour is not transparent to a user.
+Now the default is to <strong>not</strong> digest the file content of a <code>character</code> vector
+even if they are filenames. To force file content digesting, then convert to
+either <code>asPath</code> or <code><a href="https://fs.r-lib.org/reference/fs_path.html" class="external-link">fs::as_fs_path</a></code>. Or set this option to <code>TRUE</code> and the previous
+behaviour will return, where it tries to guess whether a character vector
+is filenames or not, and if it is, then digest the file content.</p></dd>
+
 <dt><code>timeout</code></dt>
 <dd><p>Default <code>1200</code>. Used in <code>preProcess</code> when downloading occurs. If a user has <code>R.utils</code>
 package installed, <code>R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))</code>
@@ -273,7 +284,7 @@ This may help diagnosing some problems that may occur.</p></dd>
 </dl></div>
     <div id="advanced">
     <h2>Advanced</h2>
-    
+
 
 <p>The following options are likely not needed by a user.</p><dl><dt><code>cloudChecksumsFilename</code></dt>
 <dd><p>Default: <code>file.path(dirname(.reproducibleTempCacheDir()), "checksums.rds")</code>.
@@ -305,15 +316,15 @@ User agent for downloads using this package.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 

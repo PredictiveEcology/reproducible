@@ -4,7 +4,8 @@
 "post-projection-crop", "mask" and possibly "write".
 It uses primarily the terra package internally
 (with some minor functions from sf)
-in an attempt to be as efficient as possible. Currently, this function is tested
+in an attempt to be as efficient as possible, except if all inputs are sf objects.
+(in which case sf is used). Currently, this function is tested
 with sf, SpatVector, SpatRaster, Raster* and Spatial* objects passed
 to from, and the same plus SpatExtent, and crs passed to to or the
 relevant *to functions.
@@ -23,7 +24,7 @@ This function is also used internally with the deprecated family postProcess(),
 
   gtag('config', 'UA-58633549-5');
 </script></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -37,7 +38,7 @@ This function is also used internally with the deprecated family postProcess(),
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.2</span>
       </span>
     </div>
 
@@ -48,7 +49,7 @@ This function is also used internally with the deprecated family postProcess(),
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -61,20 +62,20 @@ This function is also used internally with the deprecated family postProcess(),
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/PredictiveEcology/reproducible/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Transform a GIS dataset so it has the properties (extent, projection, mask) of another</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/R/postProcessTo.R" class="external-link"><code>R/postProcessTo.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/R/postProcessTo.R" class="external-link"><code>R/postProcessTo.R</code></a></small>
     <div class="hidden name"><code>postProcessTo.Rd</code></div>
     </div>
 
@@ -84,7 +85,8 @@ This function is also used internally with the deprecated family postProcess(),
 "post-projection-crop", "mask" and possibly "write".
 It uses primarily the <code>terra</code> package internally
 (with some minor functions from <code>sf</code>)
-in an attempt to be as efficient as possible. Currently, this function is tested
+in an attempt to be as efficient as possible, except if all inputs are <code>sf</code> objects.
+(in which case <code>sf</code> is used). Currently, this function is tested
 with <code>sf</code>, <code>SpatVector</code>, <code>SpatRaster</code>, <code>Raster*</code> and <code>Spatial*</code> objects passed
 to <code>from</code>, and the same plus <code>SpatExtent</code>, and <code>crs</code> passed to <code>to</code> or the
 relevant <code>*to</code> functions.
@@ -161,24 +163,26 @@ This function is also used internally with the deprecated family <code><a href="
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>from</dt>
+
+
+<dl><dt id="arg-from">from<a class="anchor" aria-label="anchor" href="#arg-from"></a></dt>
 <dd><p>A Gridded or Vector dataset on which to do one or more of:
 crop, project, mask, and write</p></dd>
 
 
-<dt>to</dt>
+<dt id="arg-to">to<a class="anchor" aria-label="anchor" href="#arg-to"></a></dt>
 <dd><p>A Gridded or Vector dataset which is the object
 whose metadata will be the target for cropping, projecting, and masking of <code>from</code>.</p></dd>
 
 
-<dt>cropTo</dt>
+<dt id="arg-cropto">cropTo<a class="anchor" aria-label="anchor" href="#arg-cropto"></a></dt>
 <dd><p>Optional Gridded or Vector dataset which,
 if supplied, will supply the extent with which to crop <code>from</code>. To omit
 cropping completely, set this to <code>NA</code>. If supplied, this will override <code>to</code>
 for the cropping step. Defaults to <code>NULL</code>, which means use <code>to</code></p></dd>
 
 
-<dt>projectTo</dt>
+<dt id="arg-projectto">projectTo<a class="anchor" aria-label="anchor" href="#arg-projectto"></a></dt>
 <dd><p>Optional Gridded or Vector dataset, or <code>crs</code> object (e.g., sf::st_crs).
 If Gridded it will supply
 the <code>crs</code>, <code>extent</code>, <code>res</code>, and <code>origin</code>
@@ -196,7 +200,7 @@ the masking step. We  recommend passing a raster templates to <code>projectTo</c
 are both compatible with the object used later for masking (either <code>to</code> or <code>maskTo</code>).</p></dd>
 
 
-<dt>maskTo</dt>
+<dt id="arg-maskto">maskTo<a class="anchor" aria-label="anchor" href="#arg-maskto"></a></dt>
 <dd><p>Optional Gridded or Vector dataset which,
 if supplied, will supply the extent with which to mask <code>from</code>.
 If Gridded, it will mask with the <code>NA</code> values on the <code>maskTo</code>;
@@ -206,18 +210,18 @@ If supplied, this will override <code>to</code> for the masking step.
 Defaults to <code>NULL</code>, which means use <code>to</code></p></dd>
 
 
-<dt>writeTo</dt>
+<dt id="arg-writeto">writeTo<a class="anchor" aria-label="anchor" href="#arg-writeto"></a></dt>
 <dd><p>Optional character string of a filename to use <code>writeRaster</code> to save the final
 object. Default is <code>NULL</code>, which means there is no <code>writeRaster</code></p></dd>
 
 
-<dt>overwrite</dt>
+<dt id="arg-overwrite">overwrite<a class="anchor" aria-label="anchor" href="#arg-overwrite"></a></dt>
 <dd><p>Logical. Used if <code>writeTo</code> is not <code>NULL</code>; also if <code>terra</code> determines
 that the object requires writing to disk during a <code>crop</code>, <code>mask</code> or <code>project</code> call
 e.g., because it is too large.</p></dd>
 
 
-<dt>verbose</dt>
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
@@ -225,7 +229,7 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></dd>
 
 
-<dt>...</dt>
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Arguments passed to <code><a href="https://rspatial.github.io/terra/reference/mask.html" class="external-link">terra::mask</a></code> (for <code>maskTo</code>), <code><a href="https://rspatial.github.io/terra/reference/project.html" class="external-link">terra::project</a></code> (for <code>projectTo</code>)
 or <code><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">terra::writeRaster</a></code> (for <code>writeTo</code>) and not used for <code>cropTo</code>, as well <code>postProcess</code>'s
 <code>rasterToMatch</code> and <code>studyArea</code> arguments (see below). Commonly used arguments might be
@@ -234,23 +238,21 @@ or <code><a href="https://rspatial.github.io/terra/reference/writeRaster.html" c
 <code>gdal*</code> functions. See them for details.</p></dd>
 
 
-<dt>needBuffer</dt>
+<dt id="arg-needbuffer">needBuffer<a class="anchor" aria-label="anchor" href="#arg-needbuffer"></a></dt>
 <dd><p>Logical. Defaults to <code>FALSE</code>, meaning nothing is done out
 of the ordinary. If <code>TRUE</code>, then a buffer around the cropTo, so that if a reprojection
 has to happen on the <code>cropTo</code> prior to using it as a crop layer, then a buffer
 of 1.5 * res(cropTo) will occur prior, so that no edges are cut off.</p></dd>
 
 
-<dt>isStack, isBrick, isRaster, isSpatRaster</dt>
+<dt id="arg-isstack-isbrick-israster-isspatraster">isStack, isBrick, isRaster, isSpatRaster<a class="anchor" aria-label="anchor" href="#arg-isstack-isbrick-israster-isspatraster"></a></dt>
 <dd><p>Logical. Default <code>NULL</code>. Used to convert <code>from</code>
 back to these classes prior to writing, if provided.</p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
-
-<p>An object of the same class as <code>from</code>, but potentially cropped (via <code>cropTo()</code>),
+    <p>An object of the same class as <code>from</code>, but potentially cropped (via <code>cropTo()</code>),
 projected (via <code>projectTo()</code>), masked (via <code>maskTo()</code>), and written to disk
 (via <code>writeTo()</code>).</p>
     </div>
@@ -266,7 +268,7 @@ and faster <code>terra</code> functions.</p>
     </div>
     <div id="use-cases">
     <h2>Use Cases</h2>
-    
+
 
 
 <p>The table below shows what will result from passing different classes to <code>from</code>
@@ -283,7 +285,7 @@ setting a <code>*To</code> argument to <code>NA</code> will prevent that step fr
     </div>
     <div id="projectto">
     <h2><code>projectTo</code></h2>
-    
+
 
 <p>Since these functions use the gis capabilities of <code>sf</code> and <code>terra</code>, they will only
 be able to do things that those functions can do. One key caution, which is
@@ -295,7 +297,7 @@ the <code>maskTo</code> stage.</p>
     </div>
     <div id="backwards-compatibility-with-postprocess">
     <h2>Backwards compatibility with <code>postProcess</code></h2>
-    
+
 
 
 <div class="section">
@@ -329,7 +331,7 @@ detail.</p>
     </div>
     <div id="cropping">
     <h2>Cropping</h2>
-    
+
 
 <p>If <code>cropTo</code> is not <code>NA</code>, <code>postProcessTo</code> does cropping twice, both the first and last steps.
 It does it first for speed, as cropping is a very fast algorithm. This will quickly remove
@@ -368,67 +370,62 @@ call <code>sf::gdal_utils(...)</code> directly: <code><a href="gdalwarpFns.html"
 <span class="r-in"><span><span class="va">vInUTM</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/project.html" class="external-link">project</a></span><span class="op">(</span><span class="va">vOrig</span>, <span class="va">utm</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">vAsRasInLongLat</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">vOrig</span>, resolution <span class="op">=</span> <span class="fl">0.008333333</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res100</span> <span class="op">&lt;-</span> <span class="fl">100</span></span></span>
-<span class="r-in"><span><span class="va">rInUTM</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">vInUTM</span>, resolution <span class="op">=</span> <span class="va">res100</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rInUTM</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">vInUTM</span>, resolution <span class="op">=</span> <span class="va">res100</span>, vals <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># crop, reproject, mask, crop a raster with a vector in a different projection</span></span></span>
 <span class="r-in"><span><span class="co">#  --&gt; gives message about not enough information</span></span></span>
 <span class="r-in"><span><span class="va">t1</span> <span class="op">&lt;-</span> <span class="fu">postProcessTo</span><span class="op">(</span><span class="va">elev1</span>, to <span class="op">=</span> <span class="va">vInUTM</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0542 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> projectTo is a Vector dataset, which does not define all metadata</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">   required.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> Using the origin and extent from `ext(from)` in the projection from</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">   `crs(projectTo)`.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> If this is not correct, create a template gridded object and pass</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">   that to `projectTo`...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0314 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0119 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0382 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.159 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">projecting...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">projectTo is a Vector dataset, which does not define all metadata required.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  <span style="color: #00BBBB;">Using the origin and extent from `ext(from)` in the projection from</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>    <span style="color: #00BBBB;">`crs(projectTo)`.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  <span style="color: #00BBBB;">If this is not correct, create a template gridded object and pass that to</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>    <span style="color: #00BBBB;">`projectTo`...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.032 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">masking...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0109 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0208 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.136 secs</span></span>
 <span class="r-in"><span><span class="co"># crop, reproject, mask a raster to a different projection, then mask</span></span></span>
 <span class="r-in"><span><span class="va">t2a</span> <span class="op">&lt;-</span> <span class="fu">postProcessTo</span><span class="op">(</span><span class="va">elev1</span>, to <span class="op">=</span> <span class="va">vAsRasInLongLat</span>, maskTo <span class="op">=</span> <span class="va">vInUTM</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0136 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0166 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0119 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0111 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.0873 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">projecting...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0336 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">masking...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.011 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0111 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.102 secs</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># using gdal directly --&gt; slightly different mask</span></span></span>
 <span class="r-in"><span><span class="va">opts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>reproducible.gdalwarp <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">t2b</span> <span class="op">&lt;-</span> <span class="fu">postProcessTo</span><span class="op">(</span><span class="va">elev1</span>, to <span class="op">=</span> <span class="va">vAsRasInLongLat</span>, maskTo <span class="op">=</span> <span class="va">vInUTM</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> using sf::gdal_utils('warp') because</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">   options("reproducible.gdalwarp" = TRUE) ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> running gdalProject ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.023 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> running gdalResample ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0192 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> running gdalMask ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0431 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.0876 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">using sf::gdal_utils('warp') because options("reproducible.gdalwarp" = TRUE) ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">running gdalProject ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0204 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">running gdalResample ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0166 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">running gdalMask ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0397 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.0801 secs</span></span>
 <span class="r-in"><span><span class="va">t3b</span> <span class="op">&lt;-</span> <span class="fu">postProcessTo</span><span class="op">(</span><span class="va">elev1</span>, to <span class="op">=</span> <span class="va">rInUTM</span>, maskTo <span class="op">=</span> <span class="va">vInUTM</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> using sf::gdal_utils('warp') because</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">   options("reproducible.gdalwarp" = TRUE) ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> running gdalProject ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0505 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> running gdalResample ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.0324 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> running gdalMask ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> done! took:  0.171 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.257 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">using sf::gdal_utils('warp') because options("reproducible.gdalwarp" = TRUE) ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">running gdalProject ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0465 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">running gdalResample ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0299 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">running gdalMask ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.165 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.245 secs</span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">opts</span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>
@@ -444,15 +441,15 @@ call <code>sf::gdal_utils(...)</code> directly: <code><a href="gdalwarpFns.html"
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 

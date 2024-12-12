@@ -12,7 +12,7 @@ this function after a manual copy of a cache folder. See examples for one way to
 
   gtag('config', 'UA-58633549-5');
 </script></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -26,7 +26,7 @@ this function after a manual copy of a cache folder. See examples for one way to
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.2</span>
       </span>
     </div>
 
@@ -37,7 +37,7 @@ this function after a manual copy of a cache folder. See examples for one way to
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -50,20 +50,20 @@ this function after a manual copy of a cache folder. See examples for one way to
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/PredictiveEcology/reproducible/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Deal with moved cache issues</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/R/DBI.R" class="external-link"><code>R/DBI.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/R/DBI.R" class="external-link"><code>R/DBI.R</code></a></small>
     <div class="hidden name"><code>movedCache.Rd</code></div>
     </div>
 
@@ -86,27 +86,29 @@ this function after a manual copy of a cache folder. See examples for one way to
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>new</dt>
+
+
+<dl><dt id="arg-new">new<a class="anchor" aria-label="anchor" href="#arg-new"></a></dt>
 <dd><p>Either the path of the new <code>cachePath</code> where the cache was moved or copied to, or
 the new DB Table Name</p></dd>
 
 
-<dt>old</dt>
+<dt id="arg-old">old<a class="anchor" aria-label="anchor" href="#arg-old"></a></dt>
 <dd><p>Optional, if there is only one table in the <code>new</code> cache path.
 Either the path of the previous <code>cachePath</code> where the cache was moved or copied from, or
 the old DB Table Name</p></dd>
 
 
-<dt>drv</dt>
+<dt id="arg-drv">drv<a class="anchor" aria-label="anchor" href="#arg-drv"></a></dt>
 <dd><p>if using a database backend, drv must be an object that
 inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite</p></dd>
 
 
-<dt>conn</dt>
+<dt id="arg-conn">conn<a class="anchor" aria-label="anchor" href="#arg-conn"></a></dt>
 <dd><p>an optional DBIConnection object, as returned by dbConnect().</p></dd>
 
 
-<dt>verbose</dt>
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
@@ -116,9 +118,7 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
-
-<p><code>movedCache</code> does not return anything; it is called for its side effects.</p>
+    <p><code>movedCache</code> does not return anything; it is called for its side effects.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -131,7 +131,7 @@ name mismatch.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">tmpdir</span> <span class="op">&lt;-</span> <span class="st">"tmpdir"</span></span></span>
 <span class="r-in"><span><span class="va">tmpCache</span> <span class="op">&lt;-</span> <span class="st">"tmpCache"</span></span></span>
 <span class="r-in"><span><span class="va">tmpCacheDir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/normalizePath.html" class="external-link">normalizePath</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">tmpCache</span><span class="op">)</span>, mustWork <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
@@ -155,8 +155,8 @@ name mismatch.</p>
 <span class="r-in"><span><span class="co">#   happen automatically, with message indicating so</span></span></span>
 <span class="r-in"><span><span class="fu">movedCache</span><span class="op">(</span>new <span class="op">=</span> <span class="va">tmpdirPath</span>, old <span class="op">=</span> <span class="va">tmpCacheDir</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bb</span> <span class="op">&lt;-</span> <span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="va">rnorm</span>, <span class="fl">1</span>, cachePath <span class="op">=</span> <span class="va">tmpdirPath</span><span class="op">)</span> <span class="co"># should recover the previous call</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ... </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous rnorm call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, 422bae4ed2f770cc.rds) ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;"> call</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
@@ -172,15 +172,15 @@ name mismatch.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 

@@ -10,7 +10,7 @@ reasons that do not persist.'><!-- mathjax --><script src="https://cdnjs.cloudfl
 
   gtag('config', 'UA-58633549-5');
 </script></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -24,7 +24,7 @@ reasons that do not persist.'><!-- mathjax --><script src="https://cdnjs.cloudfl
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.2</span>
       </span>
     </div>
 
@@ -35,7 +35,7 @@ reasons that do not persist.'><!-- mathjax --><script src="https://cdnjs.cloudfl
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -48,20 +48,20 @@ reasons that do not persist.'><!-- mathjax --><script src="https://cdnjs.cloudfl
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/PredictiveEcology/reproducible/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>A wrapper around <code>try</code> that retries on failure</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/R/helpers.R" class="external-link"><code>R/helpers.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/R/helpers.R" class="external-link"><code>R/helpers.R</code></a></small>
     <div class="hidden name"><code>retry.Rd</code></div>
     </div>
 
@@ -84,30 +84,32 @@ reasons that do not persist.</p>
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>expr</dt>
+
+
+<dl><dt id="arg-expr">expr<a class="anchor" aria-label="anchor" href="#arg-expr"></a></dt>
 <dd><p>An expression to run, i.e., <code>rnorm(1)</code>, similar to what is passed to <code>try</code></p></dd>
 
 
-<dt>envir</dt>
+<dt id="arg-envir">envir<a class="anchor" aria-label="anchor" href="#arg-envir"></a></dt>
 <dd><p>The environment in which to evaluate the quoted expression, default
 to <code>parent.frame(1)</code></p></dd>
 
 
-<dt>retries</dt>
+<dt id="arg-retries">retries<a class="anchor" aria-label="anchor" href="#arg-retries"></a></dt>
 <dd><p>Numeric. The maximum number of retries.</p></dd>
 
 
-<dt>exponentialDecayBase</dt>
+<dt id="arg-exponentialdecaybase">exponentialDecayBase<a class="anchor" aria-label="anchor" href="#arg-exponentialdecaybase"></a></dt>
 <dd><p>Numeric &gt; 1.0. The delay between
 successive retries will be <code>runif(1, min = 0, max = exponentialDecayBase ^ i - 1)</code>
 where <code>i</code> is the retry number (i.e., follows <code>seq_len(retries)</code>)</p></dd>
 
 
-<dt>silent</dt>
+<dt id="arg-silent">silent<a class="anchor" aria-label="anchor" href="#arg-silent"></a></dt>
 <dd><p>Logical indicating whether to <code>try</code> silently.</p></dd>
 
 
-<dt>exprBetween</dt>
+<dt id="arg-exprbetween">exprBetween<a class="anchor" aria-label="anchor" href="#arg-exprbetween"></a></dt>
 <dd><p>Another expression that should be run after a failed attempt
 of the <code>expr</code>. This should return a named list, where the names indicate the object names
 to update in the main expr, and the return value is the new value. (previous versions allowed
@@ -116,15 +118,13 @@ specifying what object (that is used in <code>expr</code>) will be updated prior
 the <code>expr</code> again. For backwards compatibility, this still works).</p></dd>
 
 
-<dt>messageFn</dt>
+<dt id="arg-messagefn">messageFn<a class="anchor" aria-label="anchor" href="#arg-messagefn"></a></dt>
 <dd><p>A function for messaging to console. Defaults to <code>message</code></p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
-
-<p>As with <code>try</code>, so the successfully returned <code><a href="https://rdrr.io/r/base/function.html" class="external-link">return()</a></code> from the <code>expr</code> or a <code>try-error</code>.</p>
+    <p>As with <code>try</code>, so the successfully returned <code><a href="https://rdrr.io/r/base/function.html" class="external-link">return()</a></code> from the <code>expr</code> or a <code>try-error</code>.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -143,15 +143,15 @@ the <code>expr</code> again. For backwards compatibility, this still works).</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 

@@ -11,7 +11,7 @@ calculated in exactly the same as it calculated inside Cache
 
   gtag('config', 'UA-58633549-5');
 </script></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -25,7 +25,7 @@ calculated in exactly the same as it calculated inside Cache
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.2</span>
       </span>
     </div>
 
@@ -36,7 +36,7 @@ calculated in exactly the same as it calculated inside Cache
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -49,20 +49,20 @@ calculated in exactly the same as it calculated inside Cache
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/PredictiveEcology/reproducible/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Save an object to Cache</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/R/DBI.R" class="external-link"><code>R/DBI.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/R/DBI.R" class="external-link"><code>R/DBI.R</code></a></small>
     <div class="hidden name"><code>saveToCache.Rd</code></div>
     </div>
 
@@ -87,41 +87,43 @@ calculated in exactly the same as it calculated inside <code>Cache</code>
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>cachePath</dt>
+
+
+<dl><dt id="arg-cachepath">cachePath<a class="anchor" aria-label="anchor" href="#arg-cachepath"></a></dt>
 <dd><p>A repository used for storing cached objects.
 This is optional if <code>Cache</code> is used inside a SpaDES module.</p></dd>
 
 
-<dt>drv</dt>
+<dt id="arg-drv">drv<a class="anchor" aria-label="anchor" href="#arg-drv"></a></dt>
 <dd><p>if using a database backend, drv must be an object that
 inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite</p></dd>
 
 
-<dt>conn</dt>
+<dt id="arg-conn">conn<a class="anchor" aria-label="anchor" href="#arg-conn"></a></dt>
 <dd><p>an optional DBIConnection object, as returned by dbConnect().</p></dd>
 
 
-<dt>obj</dt>
+<dt id="arg-obj">obj<a class="anchor" aria-label="anchor" href="#arg-obj"></a></dt>
 <dd><p>The R object to save to the cache</p></dd>
 
 
-<dt>userTags</dt>
+<dt id="arg-usertags">userTags<a class="anchor" aria-label="anchor" href="#arg-usertags"></a></dt>
 <dd><p>A character vector with descriptions of the Cache function call. These
 will be added to the Cache so that this entry in the Cache can be found using
 <code>userTags</code> e.g., via <code><a href="viewCache.html">showCache()</a></code>.</p></dd>
 
 
-<dt>cacheId</dt>
+<dt id="arg-cacheid">cacheId<a class="anchor" aria-label="anchor" href="#arg-cacheid"></a></dt>
 <dd><p>The hash string representing the result of <code>.robustDigest</code></p></dd>
 
 
-<dt>linkToCacheId</dt>
+<dt id="arg-linktocacheid">linkToCacheId<a class="anchor" aria-label="anchor" href="#arg-linktocacheid"></a></dt>
 <dd><p>Optional. If a <code>cacheId</code> is provided here, then a <code>file.link</code>
 will be made to the file with that <code>cacheId</code> name in the cache repo.
 This is used when identical outputs exist in the cache. This will save disk space.</p></dd>
 
 
-<dt>verbose</dt>
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
@@ -131,9 +133,7 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
-
-<p>This is used for its side effects, namely, it will add the object to the cache and
+    <p>This is used for its side effects, namely, it will add the object to the cache and
 cache database.</p>
     </div>
 
@@ -149,15 +149,15 @@ cache database.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 

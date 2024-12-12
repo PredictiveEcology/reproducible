@@ -9,7 +9,7 @@
 
   gtag('config', 'UA-58633549-5');
 </script></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.2</span>
       </span>
     </div>
 
@@ -34,7 +34,7 @@
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -47,20 +47,20 @@
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/PredictiveEcology/reproducible/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Low-level functions to create and work with a cache</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/R/DBI.R" class="external-link"><code>R/DBI.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/R/DBI.R" class="external-link"><code>R/DBI.R</code></a></small>
     <div class="hidden name"><code>CacheHelpers.Rd</code></div>
     </div>
 
@@ -130,25 +130,27 @@
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>cachePath</dt>
+
+
+<dl><dt id="arg-cachepath">cachePath<a class="anchor" aria-label="anchor" href="#arg-cachepath"></a></dt>
 <dd><p>A path describing the directory in which to create
 the database file(s)</p></dd>
 
 
-<dt>drv</dt>
+<dt id="arg-drv">drv<a class="anchor" aria-label="anchor" href="#arg-drv"></a></dt>
 <dd><p>A driver, passed to <code>dbConnect</code></p></dd>
 
 
-<dt>conn</dt>
+<dt id="arg-conn">conn<a class="anchor" aria-label="anchor" href="#arg-conn"></a></dt>
 <dd><p>an optional DBIConnection object, as returned by dbConnect().</p></dd>
 
 
-<dt>force</dt>
+<dt id="arg-force">force<a class="anchor" aria-label="anchor" href="#arg-force"></a></dt>
 <dd><p>Logical. Should it create a cache in the <code>cachePath</code>,
 even if it already exists, overwriting.</p></dd>
 
 
-<dt>verbose</dt>
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
@@ -156,58 +158,57 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></dd>
 
 
-<dt>cacheId</dt>
+<dt id="arg-cacheid">cacheId<a class="anchor" aria-label="anchor" href="#arg-cacheid"></a></dt>
 <dd><p>The cacheId or otherwise digested hash value, as character string.</p></dd>
 
 
-<dt>preDigest</dt>
+<dt id="arg-predigest">preDigest<a class="anchor" aria-label="anchor" href="#arg-predigest"></a></dt>
 <dd><p>The list of <code>preDigest</code> that comes from <code>CacheDigest</code> of an object</p></dd>
 
 
-<dt>fullCacheTableForObj</dt>
+<dt id="arg-fullcachetableforobj">fullCacheTableForObj<a class="anchor" aria-label="anchor" href="#arg-fullcachetableforobj"></a></dt>
 <dd><p>The result of <code>showCache</code>, but subsetted for only
 the <code>cacheId</code> being loaded or selected</p></dd>
 
 
-<dt>format</dt>
+<dt id="arg-format">format<a class="anchor" aria-label="anchor" href="#arg-format"></a></dt>
 <dd><p>The text string representing the file extension used normally by
 different save formats; currently only <code>"rds"</code> or <code>"qs"</code>. Defaults
 to <code>getOption("reproducible.cacheSaveFormat", "rds")</code></p></dd>
 
 
-<dt>.functionName</dt>
+<dt id="arg--functionname">.functionName<a class="anchor" aria-label="anchor" href="#arg--functionname"></a></dt>
 <dd><p>Optional. Used for messaging when this function is called from <code>Cache</code></p></dd>
 
 
-<dt>.dotsFromCache</dt>
+<dt id="arg--dotsfromcache">.dotsFromCache<a class="anchor" aria-label="anchor" href="#arg--dotsfromcache"></a></dt>
 <dd><p>Optional. Used internally.</p></dd>
 
 
-<dt>sc</dt>
+<dt id="arg-sc">sc<a class="anchor" aria-label="anchor" href="#arg-sc"></a></dt>
 <dd><p>a cache tags <code>data.table</code> object</p></dd>
 
 
-<dt>elem</dt>
+<dt id="arg-elem">elem<a class="anchor" aria-label="anchor" href="#arg-elem"></a></dt>
 <dd><p>character string specifying a <code>tagKey</code> value to match</p></dd>
 
 
-<dt>ifNot</dt>
+<dt id="arg-ifnot">ifNot<a class="anchor" aria-label="anchor" href="#arg-ifnot"></a></dt>
 <dd><p>character (or NULL) specifying the return value to use if <code>elem</code> not matched</p></dd>
 
 
-<dt>obj</dt>
+<dt id="arg-obj">obj<a class="anchor" aria-label="anchor" href="#arg-obj"></a></dt>
 <dd><p>The optional object that is of interest; it may have an attribute "saveRawFile"
 that would be important.</p></dd>
 
 
-<dt>create</dt>
+<dt id="arg-create">create<a class="anchor" aria-label="anchor" href="#arg-create"></a></dt>
 <dd><p>Logical. Currently only affects non <span class="pkg">RSQLite</span> default drivers.
 If <code>TRUE</code> and there is no Cache database, the function will create one.</p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
 
 <ul><li><p><code>createCache()</code> returns <code>NULL</code> (invisibly) and intended to be called for side effects;</p></li>
 </ul><ul><li><p><code>loadFromCache()</code> returns the object from the cache that has the particular <code>cacheId</code>;</p></li>
@@ -229,7 +230,7 @@ a <code>reproducible</code> cache database;</p></li>
 </ul></div>
     <div id="details">
     <h2>Details</h2>
-    
+
 <ul><li><p><code>createCache()</code> will create a Cache folder structure and necessary files, based on
 the particular <code>drv</code> or <code>conn</code> provided;</p></li>
 </ul><ul><li><p><code>loadFromCache()</code> retrieves a single object from the cache, given its <code>cacheId</code>;</p></li>
@@ -241,7 +242,7 @@ database files.</p></li>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">newCache</span> <span class="op">&lt;-</span> <span class="fu"><a href="tempdir2.html">tempdir2</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">createCache</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -265,22 +266,22 @@ database files.</p></li>
 <span class="r-in"><span><span class="co"># clean up</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">newCache</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/openmp-utils.html" class="external-link">setDTthreads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">newCache</span> <span class="op">&lt;-</span> <span class="fu"><a href="tempdir2.html">tempdir2</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Given the drv and conn, creates the minimum infrastructure for a cache</span></span></span>
 <span class="r-in"><span><span class="fu">createCache</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">CacheDBFile</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span> <span class="co"># identifies the database file</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpxA3jdR/reproducible/ae0QJHoD/cache.db"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmpdrs0ra/reproducible/ae0QJHoD/cache.db"</span>
 <span class="r-in"><span><span class="fu">CacheStorageDir</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span> <span class="co"># identifies the directory where cached objects are stored</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpxA3jdR/reproducible/ae0QJHoD/cacheOutputs"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmpdrs0ra/reproducible/ae0QJHoD/cacheOutputs"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, cachePath <span class="op">=</span> <span class="va">newCache</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: 422bae4ed2f770cc.rds; fn: </span><span style="color: #BB0000;">rnorm</span></span>
 <span class="r-in"><span><span class="va">cacheId</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"cacheId:"</span>, <span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">out</span>, <span class="st">"tags"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">CacheStoredFile</span><span class="op">(</span><span class="va">newCache</span>, cacheId <span class="op">=</span> <span class="va">cacheId</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpxA3jdR/reproducible/ae0QJHoD/cacheOutputs/422bae4ed2f770cc.rds"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmpdrs0ra/reproducible/ae0QJHoD/cacheOutputs/422bae4ed2f770cc.rds"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The name of the table inside the SQL database</span></span></span>
 <span class="r-in"><span><span class="fu">CacheDBTableName</span><span class="op">(</span><span class="va">newCache</span><span class="op">)</span></span></span>
@@ -305,15 +306,15 @@ database files.</p></li>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 

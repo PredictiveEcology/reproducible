@@ -11,7 +11,7 @@ wrapper around digest::digest."><!-- mathjax --><script src="https://cdnjs.cloud
 
   gtag('config', 'UA-58633549-5');
 </script></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -25,7 +25,7 @@ wrapper around digest::digest."><!-- mathjax --><script src="https://cdnjs.cloud
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.2</span>
       </span>
     </div>
 
@@ -36,7 +36,7 @@ wrapper around digest::digest."><!-- mathjax --><script src="https://cdnjs.cloud
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -49,20 +49,20 @@ wrapper around digest::digest."><!-- mathjax --><script src="https://cdnjs.cloud
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/PredictiveEcology/reproducible/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Calculate checksum</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/R/checksums.R" class="external-link"><code>R/checksums.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/R/checksums.R" class="external-link"><code>R/checksums.R</code></a></small>
     <div class="hidden name"><code>Checksums.Rd</code></div>
     </div>
 
@@ -83,7 +83,7 @@ wrapper around <code><a href="https://rdrr.io/pkg/digest/man/digest.html" class=
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># S4 method for character,logical</span></span>
+<span><span class="co"># S4 method for class 'character,logical'</span></span>
 <span><span class="fu">Checksums</span><span class="op">(</span></span>
 <span>  <span class="va">path</span>,</span>
 <span>  <span class="va">write</span>,</span>
@@ -94,7 +94,7 @@ wrapper around <code><a href="https://rdrr.io/pkg/digest/man/digest.html" class=
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># S4 method for character,missing</span></span>
+<span><span class="co"># S4 method for class 'character,missing'</span></span>
 <span><span class="fu">Checksums</span><span class="op">(</span></span>
 <span>  <span class="va">path</span>,</span>
 <span>  <span class="va">write</span>,</span>
@@ -108,25 +108,27 @@ wrapper around <code><a href="https://rdrr.io/pkg/digest/man/digest.html" class=
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>path</dt>
+
+
+<dl><dt id="arg-path">path<a class="anchor" aria-label="anchor" href="#arg-path"></a></dt>
 <dd><p>Character string giving the directory path containing <code>CHECKSUMS.txt</code>
 file, or where it will be written if <code>checksumFile = TRUE</code>.</p></dd>
 
 
-<dt>write</dt>
+<dt id="arg-write">write<a class="anchor" aria-label="anchor" href="#arg-write"></a></dt>
 <dd><p>Logical indicating whether to overwrite <code>CHECKSUMS.txt</code>.
 Default is <code>FALSE</code>, as users should not change this file.
 Module developers should write this file prior to distributing
 their module code, and update accordingly when the data change.</p></dd>
 
 
-<dt>quickCheck</dt>
+<dt id="arg-quickcheck">quickCheck<a class="anchor" aria-label="anchor" href="#arg-quickcheck"></a></dt>
 <dd><p>Logical. If <code>TRUE</code>, then this will only use file sizes,
 rather than a digest::digest hash. This is generally faster,
 but will be <em>much</em> less robust.</p></dd>
 
 
-<dt>checksumFile</dt>
+<dt id="arg-checksumfile">checksumFile<a class="anchor" aria-label="anchor" href="#arg-checksumfile"></a></dt>
 <dd><p>The filename of the checksums file to read or write to.
 The default is <code class="file">CHECKSUMS.txt</code> located at
 <code>file.path(path, module, "data", checksumFile)</code>.
@@ -135,13 +137,13 @@ only be used in cases such as <code>Cache</code>, which can
 evaluate if the <code>checksumFile</code> has changed.</p></dd>
 
 
-<dt>files</dt>
+<dt id="arg-files">files<a class="anchor" aria-label="anchor" href="#arg-files"></a></dt>
 <dd><p>An optional character string or vector of specific files to checksum.
 This may be very important if there are many files listed in a
 <code>CHECKSUMS.txt</code> file, but only a few are to be checksummed.</p></dd>
 
 
-<dt>verbose</dt>
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
@@ -149,7 +151,7 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></dd>
 
 
-<dt>...</dt>
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Passed to <code><a href="https://rdrr.io/pkg/digest/man/digest.html" class="external-link">digest::digest()</a></code> and <code><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">utils::write.table()</a></code>.
 For <code>digest</code>, the notable argument is <code>algo</code>. For <code>write.table</code>,
 the notable argument is <code>append</code>.</p></dd>
@@ -157,14 +159,10 @@ the notable argument is <code>append</code>.</p></dd>
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
-
-<p>A <code>data.table</code> with columns: <code>result</code>, <code>expectedFile</code>,
+    <p>A <code>data.table</code> with columns: <code>result</code>, <code>expectedFile</code>,
 <code>actualFile</code>, <code>checksum.x</code>, <code>checksum.y</code>,
-<code>algorithm.x</code>, <code>algorithm.y</code>, <code>filesize.x</code>, <code>filesize.y</code></p>
-
-
-<p>indicating the result of comparison between local file (<code>x</code>) and
+<code>algorithm.x</code>, <code>algorithm.y</code>, <code>filesize.x</code>, <code>filesize.y</code>
+indicating the result of comparison between local file (<code>x</code>) and
 expectation based on the <code>CHECKSUMS.txt</code> file.</p>
     </div>
     <div id="note">
@@ -183,7 +181,7 @@ To update your <code class="file">CHECKSUMS.txt</code> files using the new algor
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="va">modulePath</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"myModulePath"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">modulePath</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">moduleName</span> <span class="op">&lt;-</span> <span class="st">"myModule"</span></span></span>
@@ -194,7 +192,7 @@ To update your <code class="file">CHECKSUMS.txt</code> files using the new algor
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## write new CHECKSUMS.txt file</span></span></span>
 <span class="r-in"><span><span class="fu">Checksums</span><span class="op">(</span>files <span class="op">=</span> <span class="va">moduleName</span>, <span class="va">modulePath</span>, write <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
@@ -210,15 +208,15 @@ To update your <code class="file">CHECKSUMS.txt</code> files using the new algor
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 

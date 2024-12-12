@@ -14,7 +14,7 @@ with a required amount of data manipulation between these calls so that the crs 
 
   gtag('config', 'UA-58633549-5');
 </script></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -28,7 +28,7 @@ with a required amount of data manipulation between these calls so that the crs 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.2</span>
       </span>
     </div>
 
@@ -39,7 +39,7 @@ with a required amount of data manipulation between these calls so that the crs 
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -52,20 +52,20 @@ with a required amount of data manipulation between these calls so that the crs 
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/PredictiveEcology/reproducible/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Generic function to post process objects</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/R/postProcess.R" class="external-link"><code>R/postProcess.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/R/postProcess.R" class="external-link"><code>R/postProcess.R</code></a></small>
     <div class="hidden name"><code>postProcess.Rd</code></div>
     </div>
 
@@ -81,22 +81,24 @@ with a required amount of data manipulation between these calls so that the crs 
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">postProcess</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># S3 method for list</span></span>
+<span><span class="co"># S3 method for class 'list'</span></span>
 <span><span class="fu">postProcess</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># S3 method for default</span></span>
+<span><span class="co"># Default S3 method</span></span>
 <span><span class="fu">postProcess</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>x</dt>
+
+
+<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A GIS object of postProcessing,
 e.g., Spat* or sf*. This can be provided as a
 <code><a href="https://rlang.r-lib.org/reference/quosure-tools.html" class="external-link">rlang::quosure</a></code> or a normal R object.</p></dd>
 
 
-<dt>...</dt>
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments passed to methods. For <code>spatialClasses</code>,
 these are: <code><a href="postProcessTo.html">cropTo()</a></code>, <code><a href="fixErrorsIn.html">fixErrorsIn()</a></code>,
 <code><a href="postProcessTo.html">projectTo()</a></code>, <code><a href="postProcessTo.html">maskTo()</a></code>,
@@ -111,14 +113,12 @@ See details.</p></dd>
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
-
-<p>A GIS file (e.g., <code>RasterLayer</code>, <code>SpatRaster</code> etc.) that has been
+    <p>A GIS file (e.g., <code>RasterLayer</code>, <code>SpatRaster</code> etc.) that has been
 appropriately cropped, reprojected, masked, depending on the inputs.</p>
     </div>
     <div id="post-processing-sequence">
     <h2>Post processing sequence</h2>
-    
+
 
 
 <p>If the <code>rasterToMatch</code> or <code>studyArea</code> are passed, then
@@ -136,7 +136,7 @@ there are no file downloads. To achieve fast results, wrap
     </div>
     <div id="backwards-compatibility-with-rastertomatch-and-or-studyarea-arguments">
     <h2>Backwards compatibility with <code>rasterToMatch</code> and/or <code>studyArea</code> arguments</h2>
-    
+
 
 
 <p>For backwards compatibility, <code>postProcess</code> will continue to allow passing
@@ -183,7 +183,7 @@ the new <code>from</code> and <code>to</code> arguments.</p>
 <span class="r-in"><span>  <span class="co"># 2nd step: make the input data layer like the studyArea map</span></span></span>
 <span class="r-in"><span>  <span class="co"># Test only relevant if connected to internet -- so using try just in case</span></span></span>
 <span class="r-in"><span>  <span class="va">elevForStudy</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu"><a href="prepInputs.html">prepInputs</a></span><span class="op">(</span>url <span class="op">=</span> <span class="va">remoteTifUrl</span>, to <span class="op">=</span> <span class="va">studyArea</span>, res <span class="op">=</span> <span class="fl">250</span>,</span></span>
-<span class="r-in"><span>                             destinationPath <span class="op">=</span> <span class="va">dPath</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                                 destinationPath <span class="op">=</span> <span class="va">dPath</span>, useCache <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Alternate way, one step at a time. Must know each of these steps, and perform for each layer</span></span></span>
 <span class="r-in"><span>  <span class="co"># \donttest{</span></span></span>
@@ -192,14 +192,15 @@ the new <code>from</code> and <code>to</code> arguments.</p>
 <span class="r-in"><span>    <span class="va">studyArea2</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/vect.html" class="external-link">vect</a></span><span class="op">(</span><span class="va">localFileLuxSm</span><span class="op">)</span></span></span>
 <span class="r-in"><span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/is.valid.html" class="external-link">is.valid</a></span><span class="op">(</span><span class="va">studyArea2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="va">studyArea2</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/is.valid.html" class="external-link">makeValid</a></span><span class="op">(</span><span class="va">studyArea2</span><span class="op">)</span></span></span>
 <span class="r-in"><span>    <span class="va">tf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".tif"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span>url <span class="op">=</span> <span class="va">remoteTifUrl</span>, destfile <span class="op">=</span> <span class="va">tf</span>, mode <span class="op">=</span> <span class="st">"wb"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span>url <span class="op">=</span> <span class="va">remoteTifUrl</span>, destfile <span class="op">=</span> <span class="va">tf</span>, mode <span class="op">=</span> <span class="st">"wb"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span>    <span class="fu"><a href="Checksums.html">Checksums</a></span><span class="op">(</span><span class="va">dPath</span>, write <span class="op">=</span> <span class="cn">TRUE</span>, files <span class="op">=</span> <span class="va">tf</span><span class="op">)</span></span></span>
 <span class="r-in"><span>    <span class="va">elevOrig</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">tf</span><span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="va">elevForStudy2</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/project.html" class="external-link">project</a></span><span class="op">(</span><span class="va">elevOrig</span>, <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/crs.html" class="external-link">crs</a></span><span class="op">(</span><span class="va">studyArea2</span><span class="op">)</span>, res <span class="op">=</span> <span class="fl">250</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>      <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">studyArea2</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>      <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/mask.html" class="external-link">mask</a></span><span class="op">(</span><span class="va">studyArea2</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="va">studyAreaCrs</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/crs.html" class="external-link">crs</a></span><span class="op">(</span><span class="va">studyArea</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="va">elevForStudy2</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/project.html" class="external-link">project</a></span><span class="op">(</span><span class="va">elevOrig</span>, <span class="va">studyAreaCrs</span>, res <span class="op">=</span> <span class="fl">250</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>      <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/mask.html" class="external-link">mask</a></span><span class="op">(</span><span class="va">studyArea2</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>      <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">studyArea2</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/Logic.html" class="external-link">isTRUE</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">studyArea</span>, <span class="va">studyArea2</span><span class="op">)</span><span class="op">)</span> <span class="co"># Yes!</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/Logic.html" class="external-link">isTRUE</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">elevForStudy</span>, <span class="va">elevForStudy2</span><span class="op">)</span><span class="op">)</span> <span class="co"># TRUE!</span></span></span>
 <span class="r-in"><span>  <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># sf class</span></span></span>
@@ -224,76 +225,58 @@ the new <code>from</code> and <code>to</code> arguments.</p>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="va">od</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `prepInputs`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> Running `preProcess`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Preparing:</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    /home/runner/work/_temp/Library/reproducible/ex/luxSmall.shp</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  alsoExtract is unspecified; assuming that all files must be</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> Running `process` (i.e., loading file into R)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  targetFile located at</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    /home/runner/work/_temp/Library/reproducible/ex/luxSmall.shp</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Loading object into R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `preProcess`</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: /home/runner/work/_temp/Library/reproducible/ex/luxSmall.shp</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `process` (i.e., loading file into R)</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at:</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/home/runner/work/_temp/Library/reproducible/ex/luxSmall.shp</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `prepInputs`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> Running `preProcess`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  targetFile was not supplied; guessed and will try</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    /tmp/RtmpxA3jdR/reproducible/WCGeSKz1/elev.tif. If this is</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    incorrect, please supply targetFile</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Preparing: elev.tif</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  ...downloading...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Downloading</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    https://github.com/rspatial/terra/raw/master/inst/ex/elev.tif ...</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Hardlinked version of file(s) created:</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  ... no copy/copies made.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  alsoExtract is unspecified; assuming that all files must be</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Appending checksums to CHECKSUMS.txt. If you see this message</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    repeatedly, you can specify targetFile (and optionally alsoExtract)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    so it knows what to look for.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> Running `process` (i.e., loading file into R)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  targetFile located at /tmp/RtmpxA3jdR/reproducible/WCGeSKz1/elev.tif</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Loading object into R</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Object with cacheId fcbfe0dc110caf9d appears to have a much larger</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">    size on disk than in memory. This usually means that the object has</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">    captured an environment with many objects due to how a function or a</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">    formula is defined. Usually, a solution involves using quote and</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">    eval around the formulas and defining functions in a package or</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">    otherwise clean space, i.e., not inside another function.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">    See</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">    http://adv-r.had.co.nz/memory.html#gc and 'capturing environments'.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Saved! Cache file: fcbfe0dc110caf9d.rds; fn: </span><span style="color: #BB0000;">terra::rast</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> Running `postProcessTo`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  done! took:  0.0616 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  projectTo is a Vector dataset, which does not define all metadata</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    required.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Using the origin and extent from `ext(from)` in the projection</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    from `crs(projectTo)`.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  If this is not correct, create a template gridded object and pass</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    that to `projectTo`...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  done! took:  0.0992 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  done! took:  0.0075 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  done! took:  0.021 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> postProcessTo done! took:  0.214 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `preProcess`</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   <span style="color: #00BBBB;">targetFile was not supplied; guessed and will try</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     <span style="color: #00BBBB;">/tmp/Rtmpdrs0ra/reproducible/WCGeSKz1/elev.tif. If this is incorrect,</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     <span style="color: #00BBBB;">please supply targetFile</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: elev.tif</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...downloading...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Downloading https://github.com/rspatial/terra/raw/master/inst/ex/elev.tif ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Hardlinked version of file(s) created:</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">... no copy/copies made.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   <span style="color: #00BBBB;">Appending checksums to CHECKSUMS.txt. If you see this message repeatedly, you</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     <span style="color: #00BBBB;">can specify targetFile (and optionally alsoExtract) so it knows what to</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     <span style="color: #00BBBB;">look for.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `process` (i.e., loading file into R)</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at:</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/Rtmpdrs0ra/reproducible/WCGeSKz1/elev.tif</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">projecting...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">projectTo is a Vector dataset, which does not define all metadata required.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   <span style="color: #00BBBB;">Using the origin and extent from `ext(from)` in the projection from</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     <span style="color: #00BBBB;">`crs(projectTo)`.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   <span style="color: #00BBBB;">If this is not correct, create a template gridded object and pass that to</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     <span style="color: #00BBBB;">`projectTo`...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.107 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">masking...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.00672 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.025 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.222 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `prepInputs`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> Running `preProcess`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Preparing:</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    /home/runner/work/_temp/Library/reproducible/ex/luxSmall.shp</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  alsoExtract is unspecified; assuming that all files must be</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Using sf::st_read on shapefile because sf package is available; to</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    force old behaviour with 'raster::shapefile' use fun =</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    'raster::shapefile' or options('reproducible.shapefileRead' =</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    'raster::shapefile')</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> Running `process` (i.e., loading file into R)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  targetFile located at</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    /home/runner/work/_temp/Library/reproducible/ex/luxSmall.shp</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Loading object into R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `preProcess`</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: /home/runner/work/_temp/Library/reproducible/ex/luxSmall.shp</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   <span style="color: #00BBBB;">Using sf::st_read on shapefile because sf package is available; to force old</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     <span style="color: #00BBBB;">behaviour with 'raster::shapefile' use fun = 'raster::shapefile' or</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     <span style="color: #00BBBB;">options('reproducible.shapefileRead' = 'raster::shapefile')</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `process` (i.e., loading file into R)</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at:</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/home/runner/work/_temp/Library/reproducible/ex/luxSmall.shp</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reading layer `luxSmall' from data source </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   `/home/runner/work/_temp/Library/reproducible/ex/luxSmall.shp' </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   using driver `ESRI Shapefile'</span>
@@ -302,44 +285,40 @@ the new <code>from</code> and <code>to</code> arguments.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: 4522355 ymin: 11299040 xmax: 4575913 ymax: 11339850</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Projected CRS: +proj=lcc +lat_0=0 +lon_0=-95 +lat_1=49 +lat_2=77 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Saved! Cache file: 460d09fb19f62653.rds; fn: </span><span style="color: #BB0000;">sf::st_read</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: 460d09fb19f62653.rds; fn: </span><span style="color: #BB0000;">sf::st_read</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `prepInputs`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> Running `preProcess`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Preparing: /home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  alsoExtract is unspecified; assuming that all files must be</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Using sf::st_read on shapefile because sf package is available; to</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    force old behaviour with 'raster::shapefile' use fun =</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    'raster::shapefile' or options('reproducible.shapefileRead' =</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    'raster::shapefile')</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> Running `process` (i.e., loading file into R)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  targetFile located at</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    /home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Loading object into R</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Object to retrieve (fn: </span><span style="color: #BB0000;">sf::st_read</span><span style="color: #0000BB;">,</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">    c6310cb748a054af.rds) ...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  Loaded! Cached result from previous sf::st_read call</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `preProcess`</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: /home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   <span style="color: #00BBBB;">Using sf::st_read on shapefile because sf package is available; to force old</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     <span style="color: #00BBBB;">behaviour with 'raster::shapefile' use fun = 'raster::shapefile' or</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     <span style="color: #00BBBB;">options('reproducible.shapefileRead' = 'raster::shapefile')</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `process` (i.e., loading file into R)</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at:</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">sf::st_read</span><span style="color: #0000BB;">, c6310cb748a054af.rds) ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous </span><span style="color: #BB0000;">sf::st_read</span><span style="color: #0000BB;"> call</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0386 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0363 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0237 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0302 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.049 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0469 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `prepInputs`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> Running `preProcess`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Preparing: /home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  alsoExtract is unspecified; assuming that all files must be</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    extracted</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> Running `process` (i.e., loading file into R)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  targetFile located at</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    /home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  Loading object into R</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `preProcess`</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: /home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `process` (i.e., loading file into R)</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at:</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/home/runner/work/_temp/Library/terra/ex/lux.shp</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">projecting...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0327 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0139 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0185 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0123 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0121 secs</span></span>
 </code></pre></div>
     </div>
   </div>
@@ -354,15 +333,15 @@ the new <code>from</code> and <code>to</code> arguments.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 

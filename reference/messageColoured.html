@@ -11,7 +11,7 @@ messaging in reproducible."><!-- mathjax --><script src="https://cdnjs.cloudflar
 
   gtag('config', 'UA-58633549-5');
 </script></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -25,7 +25,7 @@ messaging in reproducible."><!-- mathjax --><script src="https://cdnjs.cloudflar
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.2</span>
       </span>
     </div>
 
@@ -36,7 +36,7 @@ messaging in reproducible."><!-- mathjax --><script src="https://cdnjs.cloudflar
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -49,20 +49,20 @@ messaging in reproducible."><!-- mathjax --><script src="https://cdnjs.cloudflar
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/PredictiveEcology/reproducible/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Use <code>message</code> with a consistent use of <code>verbose</code></h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/R/messages.R" class="external-link"><code>R/messages.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/R/messages.R" class="external-link"><code>R/messages.R</code></a></small>
     <div class="hidden name"><code>messageColoured.Rd</code></div>
     </div>
 
@@ -128,30 +128,32 @@ messaging in <code>reproducible</code>.</p>
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>df</dt>
+
+
+<dl><dt id="arg-df">df<a class="anchor" aria-label="anchor" href="#arg-df"></a></dt>
 <dd><p>A data.frame, data.table, matrix</p></dd>
 
 
-<dt>round</dt>
+<dt id="arg-round">round<a class="anchor" aria-label="anchor" href="#arg-round"></a></dt>
 <dd><p>An optional numeric to pass to <code>round</code></p></dd>
 
 
-<dt>colour</dt>
-<dd><p>Any colour that can be understood by <code>crayon</code></p></dd>
+<dt id="arg-colour">colour<a class="anchor" aria-label="anchor" href="#arg-colour"></a></dt>
+<dd><p>Any colour that can be understood by <code>cli</code></p></dd>
 
 
-<dt>colnames</dt>
+<dt id="arg-colnames">colnames<a class="anchor" aria-label="anchor" href="#arg-colnames"></a></dt>
 <dd><p>Logical or <code>NULL</code>. If <code>TRUE</code>, then it will print
 column names even if there aren't any in the <code>df</code> (i.e., they will)
 be <code>V1</code> etc., <code>NULL</code> will print them if they exist, and <code>FALSE</code>
 which will omit them.</p></dd>
 
 
-<dt>indent</dt>
+<dt id="arg-indent">indent<a class="anchor" aria-label="anchor" href="#arg-indent"></a></dt>
 <dd><p>An integer, indicating whether to indent each line</p></dd>
 
 
-<dt>verbose</dt>
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
@@ -159,35 +161,33 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></dd>
 
 
-<dt>verboseLevel</dt>
+<dt id="arg-verboselevel">verboseLevel<a class="anchor" aria-label="anchor" href="#arg-verboselevel"></a></dt>
 <dd><p>The numeric value for this <code>message*</code> call, equal or above
 which <code>verbose</code> must be. The higher this is set, the more unlikely the call
 will show a message.</p></dd>
 
 
-<dt>appendLF</dt>
+<dt id="arg-appendlf">appendLF<a class="anchor" aria-label="anchor" href="#arg-appendlf"></a></dt>
 <dd><p>logical: should messages given as a character string
     have a newline appended?</p></dd>
 
 
-<dt>...</dt>
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Any character vector, passed to <code>paste0(...)</code></p></dd>
 
 
-<dt>hangingIndent</dt>
+<dt id="arg-hangingindent">hangingIndent<a class="anchor" aria-label="anchor" href="#arg-hangingindent"></a></dt>
 <dd><p>Logical. If there are <code>\n</code>, should there be a handing indent of 2 spaces.
 Default is <code>TRUE</code></p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
-
-<p>Used for side effects. This will produce a message of a structured <code>data.frame</code>.</p>
+    <p>Used for side effects. This will produce a message of a structured <code>data.frame</code>.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
-    
+
 <ul><li><p><code>messageDF</code> uses <code>message</code> to print a clean square data structure.</p></li>
 <li><p><code>messageColoured</code> allows specific colours to be used.</p></li>
 <li><p><code>messageQuestion</code> sets a high level for <code>verbose</code> so that the message always gets asked.</p></li>
@@ -205,15 +205,15 @@ Default is <code>TRUE</code></p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 

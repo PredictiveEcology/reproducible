@@ -14,7 +14,7 @@ individually."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/li
 
   gtag('config', 'UA-58633549-5');
 </script></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -28,7 +28,7 @@ individually."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/li
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.2</span>
       </span>
     </div>
 
@@ -39,7 +39,7 @@ individually."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/li
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -52,20 +52,20 @@ individually."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/li
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/PredictiveEcology/reproducible/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Wrapper around <code>lobstr::obj_size</code></h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/R/objectSize.R" class="external-link"><code>R/objectSize.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/R/objectSize.R" class="external-link"><code>R/objectSize.R</code></a></small>
     <div class="hidden name"><code>objSize.Rd</code></div>
     </div>
 
@@ -86,43 +86,41 @@ individually.</p>
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>x</dt>
+
+
+<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>An object</p></dd>
 
 
-<dt>quick</dt>
+<dt id="arg-quick">quick<a class="anchor" aria-label="anchor" href="#arg-quick"></a></dt>
 <dd><p>Logical. If <code>FALSE</code>, then an attribute, "objSize" will be added to
 the returned value, with each of the elements' object size returned also.</p></dd>
 
 
-<dt>...</dt>
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments (currently unused), enables backwards compatible use.</p></dd>
 
 
-<dt>sumLevel</dt>
+<dt id="arg-sumlevel">sumLevel<a class="anchor" aria-label="anchor" href="#arg-sumlevel"></a></dt>
 <dd><p>Numeric, indicating at which depth in the list of objects should the
 object sizes be summed (summarized). Default is <code>Inf</code>, meaning no sums. Currently,
 the only option other than Inf is 1: <code>objSizeSession(1)</code>,
 which gives the size of each package.</p></dd>
 
 
-<dt>enclosingEnvs</dt>
+<dt id="arg-enclosingenvs">enclosingEnvs<a class="anchor" aria-label="anchor" href="#arg-enclosingenvs"></a></dt>
 <dd><p>Logical indicating whether to include enclosing environments.
 Default <code>TRUE</code>.</p></dd>
 
 
-<dt>.prevEnvirs</dt>
+<dt id="arg--prevenvirs">.prevEnvirs<a class="anchor" aria-label="anchor" href="#arg--prevenvirs"></a></dt>
 <dd><p>For internal account keeping to identify and prevent duplicate counting</p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
-
-<p>This will return the result from <code><a href="https://lobstr.r-lib.org/reference/obj_size.html" class="external-link">lobstr::obj_size</a></code>, i.e., a <code>lobstr_bytes</code></p>
-
-
-<p>which is a <code>numeric</code>. If <code>quick = FALSE</code>, it will also have an attribute,
+    <p>This will return the result from <code><a href="https://lobstr.r-lib.org/reference/obj_size.html" class="external-link">lobstr::obj_size</a></code>, i.e., a <code>lobstr_bytes</code>
+which is a <code>numeric</code>. If <code>quick = FALSE</code>, it will also have an attribute,
 "objSize", which will
 be a list with each element being the <code>objSize</code> of the individual elements of <code>x</code>.
 This is particularly useful if <code>x</code> is a <code>list</code> or <code>environment</code>.
@@ -151,14 +149,14 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 <span class="r-in"><span><span class="va">foo</span><span class="op">$</span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">objSize</span><span class="op">(</span><span class="va">foo</span><span class="op">)</span> <span class="co"># all the elements in the environment</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2.85 kB</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3.99 MB</span>
 <span class="r-in"><span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/object.size.html" class="external-link">object.size</a></span><span class="op">(</span><span class="va">foo</span><span class="op">)</span> <span class="co"># different - only measuring the environment as an object</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 56 bytes</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/object.size.html" class="external-link">object.size</a></span><span class="op">(</span><span class="va">prepInputs</span><span class="op">)</span> <span class="co"># only the function, without its enclosing environment</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 141144 bytes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 150824 bytes</span>
 <span class="r-in"><span><span class="fu">objSize</span><span class="op">(</span><span class="va">prepInputs</span><span class="op">)</span> <span class="co"># the function, plus its enclosing environment</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37.36 kB</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38.87 kB</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">os1</span> <span class="op">&lt;-</span> <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/object.size.html" class="external-link">object.size</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.environment.html" class="external-link">as.environment</a></span><span class="op">(</span><span class="st">"package:reproducible"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">os1</span><span class="op">)</span> <span class="co"># very small -- just the environment container</span></span></span>
@@ -178,15 +176,15 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 

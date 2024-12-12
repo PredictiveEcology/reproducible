@@ -9,7 +9,7 @@
 
   gtag('config', 'UA-58633549-5');
 </script></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.2</span>
       </span>
     </div>
 
@@ -34,7 +34,7 @@
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -47,20 +47,20 @@
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/PredictiveEcology/reproducible/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Download file from Google Drive</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/HEAD/R/download.R" class="external-link"><code>R/download.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/R/download.R" class="external-link"><code>R/download.R</code></a></small>
     <div class="hidden name"><code>dlGoogle.Rd</code></div>
     </div>
 
@@ -87,11 +87,13 @@
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>url</dt>
+
+
+<dl><dt id="arg-url">url<a class="anchor" aria-label="anchor" href="#arg-url"></a></dt>
 <dd><p>The url (link) to the file.</p></dd>
 
 
-<dt>archive</dt>
+<dt id="arg-archive">archive<a class="anchor" aria-label="anchor" href="#arg-archive"></a></dt>
 <dd><p>Optional character string giving the path of an archive
 containing <code>targetFile</code>, or a vector giving a set of nested archives
 (e.g., <code>c("xxx.tar", "inner.zip", "inner.rar")</code>). If there is/are (an) inner
@@ -102,7 +104,7 @@ file extension (e.g., <code>.zip</code>). This may be useful when an R function
 is expecting an archive directly.</p></dd>
 
 
-<dt>targetFile</dt>
+<dt id="arg-targetfile">targetFile<a class="anchor" aria-label="anchor" href="#arg-targetfile"></a></dt>
 <dd><p>Character string giving the filename (without relative or
 absolute path) to the eventual file
 (raster, shapefile, csv, etc.) after downloading and extracting from a zip
@@ -113,7 +115,7 @@ Using <code>Cache</code> around <code>prepInputs</code> will do a sufficient job
 See table in <code><a href="preProcess.html">preProcess()</a></code>.</p></dd>
 
 
-<dt>destinationPath</dt>
+<dt id="arg-destinationpath">destinationPath<a class="anchor" aria-label="anchor" href="#arg-destinationpath"></a></dt>
 <dd><p>Character string of a directory in which to download
 and save the file that comes from <code>url</code> and is also where the function
 will look for <code>archive</code> or <code>targetFile</code>. NOTE (still experimental):
@@ -123,12 +125,12 @@ search for the file before attempting to download. Default for that option is
 <code>NULL</code> meaning do not search locally.</p></dd>
 
 
-<dt>overwrite</dt>
+<dt id="arg-overwrite">overwrite<a class="anchor" aria-label="anchor" href="#arg-overwrite"></a></dt>
 <dd><p>Logical. Should downloading and all the other actions occur
 even if they pass the checksums or the files are all there.</p></dd>
 
 
-<dt>verbose</dt>
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of
@@ -136,7 +138,7 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></dd>
 
 
-<dt>...</dt>
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Not used here. Only used to allow other arguments to other fns to not fail.</p></dd>
 
 </dl></div>
@@ -157,15 +159,15 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 
