@@ -34,14 +34,13 @@ See `NEWS.md` for a full list of changes.
 
 ## R CMD check results
 
-There are no errors, or warnings in any of the above.
-
-There are some NOTEs:
+There are no errors, or warnings or notes in any of the above.
 
 ## Downstream dependencies
 
-We checked all reverse dependency from CRAN, comparing R CMD check results across CRAN and dev versions of this package.
+## revdepcheck results
 
- * We saw 1 new problem with package `SpaDES.core`, which we will submit an updated version of as soon as `reproducible` is updated on CRAN.
+We checked 20 reverse dependencies (3 from CRAN), comparing R CMD check results across CRAN and dev versions of this package.
 
+ * We saw 0 new problems
  * We failed to check 0 packages
