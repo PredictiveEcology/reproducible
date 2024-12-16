@@ -183,11 +183,7 @@ test_that("test file-backed raster caching", {
   #   solves the error about not being in the testthat package
   val1 <- .cacheNumDefaultTags() + length(tagsSpatRaster()) # adding a userTag here... the +8 is the SpatRaster extras
   ik <- .ignoreTagKeys()
-  # with_mock(
-  #   "reproducible::isInteractive" = function() TRUE,
-  #   {
   aa <- Cache(randomPolyToDisk, tmpfile[1], cachePath = tmpCache, userTags = "something2")
-  # Test clearCache by tags
 
   expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
   clearCache(tmpCache, userTags = "something$", ask = FALSE)
@@ -216,7 +212,7 @@ test_that("test file-backed raster caching", {
         basename(tmpfile[1])
       ), split = "[\\/]")
     ))
-    expect_true(any(grepl(
+    expect_true(any(cli::ansi_grepl(
       pattern = basename(tmpfile[1]),
       dir(file.path(tmpCache, "rasters"))
     )))
@@ -247,7 +243,7 @@ test_that("test file-backed raster caching", {
   # ._prepareOutputs_1 <<- ._prepareOutputs_2 <<- ._getFromRepo <<- 1
   # Will silently update the filename of the RasterLayer, and recover it
   type <- gsub("Connection", "", class(getOption("reproducible.conn")))
-  isSQLite <- grepl(type, "NULL")
+  isSQLite <- cli::ansi_grepl(type, "NULL")
   if (!isSQLite) {
     warn1 <- capture_warnings(movedCache(tmpdir, old = tmpCache))
   }
@@ -506,7 +502,7 @@ test_that("test 'quick' argument", {
     out1c <- Cache(quickFun, thePath, cachePath = tmpdir, quick = TRUE)
   })
 
-  expect_true(sum(grepl(
+  expect_true(sum(cli::ansi_grepl(
     paste0(
       paste(.message$LoadedCache(.message$LoadedCacheResult(), "quickFun"), .message$AddingToMemoised), "|",
       .message$LoadedCache(.message$LoadedCacheResult("Memoised"), "quickFun")
@@ -532,7 +528,7 @@ test_that("test 'quick' argument", {
   mess1 <- capture_messages({
     out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = TRUE)
   })
-  expect_true(sum(grepl(
+  expect_true(sum(cli::ansi_grepl(
     paste0(
       paste(.message$LoadedCache(.message$LoadedCacheResult(), "quickFun"), .message$AddingToMemoised), "|",
       paste(.message$LoadedCacheResult("Memoised"), "quickFun call")
@@ -541,6 +537,7 @@ test_that("test 'quick' argument", {
   )) == 0)
 
   # mess3 <- capture_messages({ out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = FALSE) })
+  # Should be "\033[34mSaved! Cache file: d3d8d40b1aeba01e.rds; fn: \033[31mquickFun\033[34m\033[39m\n"
   mess <- capture_messages({
     out1c <- Cache(quickFun, r1, cachePath = tmpdir, quick = FALSE)
   })
@@ -691,13 +688,13 @@ test_that("test asPath", {
   a1 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
   # Second -- has a filename.RData, and passing a character string,
   #           it tries to see if it is a file, if yes, it digests it
-  a2 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
+  a2 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"), cachePath = tmpdir))
   # Third -- finally has all same as second time
-  a3 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cachePath = tmpdir))
+  a3 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"), cachePath = tmpdir))
 
   expect_equal(length(a1), 1)
   expect_equal(length(a2), 1)
-  expect_true(sum(grepl(paste0(
+  expect_true(sum(cli::ansi_grepl(paste(
     .message$LoadedCacheResult("Memoised"), "|",
     .message$LoadedCacheResult()
   ), a3)) == 1)
@@ -717,10 +714,11 @@ test_that("test asPath", {
                                quick = TRUE, cachePath = tmpdir
   ))
   expect_equal(length(a1), 1)
-  expect_true(sum(grepl(paste0(
+  expect_true(sum(cli::ansi_grepl(paste(
     .message$LoadedCacheResult("Memoised"), "|",
     .message$LoadedCacheResult()
   ), a2)) == 1)
+  expect_true(sum(cli::ansi_grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
 
   expect_true(sum(grepl(paste0(.message$LoadedCacheResult("Memoised"), ".+saveRDS call"), a3)) == 1)
 
@@ -739,11 +737,11 @@ test_that("test asPath", {
                                quick = TRUE, cachePath = tmpdir
   ))
   expect_equal(length(a1), 1)
-  expect_true(sum(grepl(paste0(
+  expect_true(sum(cli::ansi_grepl(paste(
     .message$LoadedCacheResult("Memoised"), "|",
     .message$LoadedCacheResult()
   ), a2)) == 1)
-  expect_true(sum(grepl(paste0(.message$LoadedCacheResult("Memoised"), ".+saveRDS call"), a3)) == 1)
+  expect_true(sum(cli::ansi_grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
 })
 
 test_that("test wrong ways of calling Cache", {
@@ -802,7 +800,7 @@ test_that("test mergeCache", {
   mess <- capture_messages({
     d1 <- mergeCache(tmpCache, tmpdir)
   })
-  expect_true(any(grepl("Skipping", mess)))
+  expect_true(any(cli::ansi_grepl("Skipping", mess)))
   expect_true(identical(showCache(d), showCache(d1)))
 })
 
@@ -866,7 +864,7 @@ test_that("test cache-helpers", {
   bnfn3 <- basename(fn3[actualFiles])
   bnfn2 <- unique(filePathSansExt(bnfn2))
   bnfn3 <- unique(filePathSansExt(bnfn3))
-  sameFileBase <- grepl(pattern = bnfn2, x = bnfn3)
+  sameFileBase <- cli::ansi_grepl(pattern = bnfn2, x = bnfn3)
   expect_true(sameFileBase)
 
   unlink(Filenames(s2))
@@ -886,7 +884,7 @@ test_that("test useCache = 'overwrite'", {
     b <- Cache(rnorm, 1, useCache = "overwrite", cachePath = tmpCache)
   })
   expect_true(!identical(a, b))
-  expect_true(any(grepl(pattern = "Overwriting", mess)))
+  expect_true(any(cli::ansi_grepl(pattern = "Overwriting", mess)))
 
   clearCache(x = tmpCache, ask = FALSE)
 
@@ -901,14 +899,14 @@ test_that("test useCache = 'overwrite'", {
     b <- Cache(rnorm, 1, cachePath = tmpCache)
   })
   expect_true(!identical(a, b))
-  expect_true(any(grepl(pattern = "Overwriting", mess)))
+  expect_true(any(cli::ansi_grepl(pattern = "Overwriting", mess)))
 })
 
 test_that("test rm large non-file-backed rasters", {
   ## This is a large object test!
   skip_on_cran()
   if (!is.null(getOption("reproducible.conn", NULL))) {
-    if (!grepl("SQLite", class(getOption("reproducible.conn", NULL)))) {
+    if (!cli::ansi_grepl("SQLite", class(getOption("reproducible.conn", NULL)))) {
       skip("This is not for non-SQLite")
     }
   }
@@ -955,7 +953,7 @@ test_that("test cc", {
   expect_true(length(unique(b1[[.cacheTableHashColName()]])) == 0)
 
   mess <- capture_messages(cc(ask = FALSE, x = tmpCache)) # Cache is already empty
-  expect_true(any(grepl("Cache already empty", mess)))
+  expect_true(any(cli::ansi_grepl("Cache already empty", mess)))
 })
 
 test_that("test .defaultUserTags", {
@@ -985,14 +983,14 @@ test_that("test changing reproducible.cacheSaveFormat midstream", {
     b <- Cache(rnorm, 1, cachePath = tmpdir)
   })
   expect_false(attr(b, ".Cache")$newCache)
-  expect_true(sum(grepl(paste0(.message$changingFormatTxt, ".+rds to qs"), mess)) == 1)
+  expect_true(sum(cli::ansi_grepl("Changing format of Cache entry from rds to qs", mess)) == 1)
 
   withr::local_options(reproducible.cacheSaveFormat = "rds")
   mess <- capture_messages({
     b <- Cache(rnorm, 1, cachePath = tmpdir)
   })
   expect_false(attr(b, ".Cache")$newCache)
-  expect_true(sum(grepl(paste0(.message$changingFormatTxt, ".+qs to rds"), mess)) == 1)
+  expect_true(sum(cli::ansi_grepl("Changing format of Cache entry from qs to rds", mess)) == 1)
 })
 
 test_that("test file link with duplicate Cache", {
@@ -1030,7 +1028,7 @@ test_that("test file link with duplicate Cache", {
     g <- Cache(sam1, N, cachePath = tmpCache)
   })
 
-  expect_true(sum(grepl("A file with identical", mess3)) == 1)
+  expect_true(sum(cli::ansi_grepl("A file with identical", mess3)) == 1)
 
   set.seed(123)
   mess1 <- capture_messages({
@@ -1046,8 +1044,8 @@ test_that("test file link with duplicate Cache", {
   mess2 <- capture_messages({
     d <- Cache(sam1, N, cachePath = tmpCache)
   })
-  expect_true(any(grepl(.message$LoadedCacheResult(), mess2)))
-  expect_true(any(grepl(.message$LoadedCacheResult(), mess1)))
+  expect_true(any(cli::ansi_grepl(.message$LoadedCacheResult(), mess2)))
+  expect_true(any(cli::ansi_grepl(.message$LoadedCacheResult(), mess1)))
   # There are intermittent "status 5" warnings on next line on Windows -- not relevant here
   warns <- capture_warnings({
     out1 <- try(system2("du", paste0("\"", tmpCache, "\""), stdout = TRUE), silent = TRUE)
@@ -1147,14 +1145,14 @@ test_that("quick arg in Cache as character", {
     ranRas <- terra::rast(terra::ext(0, 10, 0, 10), vals = vals)
     ranRas <- suppressWarningsSpecific(
       falseWarnings = proj6Warn,
-      writeRaster(ranRas, filename = tf2, overwrite = TRUE)
+      writeRaster(ranRas, filename = asPath(tf2), overwrite = TRUE)
     )
     a <- sample(1e7, 1)
     saveRDS(a, file = tf)
 
     # new copy
     messes[[i]] <- capture_messages(Cache(saveRDS, ranRas,
-                                          file = tf, cachePath = tmpCache,
+                                          file = asPath(tf), cachePath = tmpCache,
                                           quick = quicks[[i]]
     ))
   }
@@ -1675,7 +1673,7 @@ test_that("terra files were creating file.link", {
     ras
   }
   mess <- capture_messages(Map(f = func, fn = tmpfile, ras = rasts))
-  expect_false(any(grepl("file.link", mess)))
+  expect_false(any(cli::ansi_grepl("file.link", mess)))
 
 })
 

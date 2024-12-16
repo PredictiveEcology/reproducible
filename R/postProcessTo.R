@@ -1723,7 +1723,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
                  sf::gdal_utils(
                    util = "warp",
                    source = fnSource,
-    destination = writeTo,
+                   destination = writeTo,
                    options = opts))
 
   out <- terra::rast(writeTo)
@@ -1849,10 +1849,10 @@ gdalTransform <- function(from, cropTo, projectTo, maskTo, writeTo, verbose) {
   #
   terra::writeVector(maskTo, filename = tf2)
   system.time(sf::gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
-                         destination = tf, options =
-                           c("-t_srs", tf4,
-                             "-clipdst", tf2, "-overwrite"
-                           )))
+                             destination = tf, options =
+                               c("-t_srs", tf4,
+                                 "-clipdst", tf2, "-overwrite"
+                               )))
   messagePreProcess(messagePrefixDoneIn,
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)

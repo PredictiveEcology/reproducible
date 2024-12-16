@@ -1,8 +1,9 @@
 test_that("preProcess fails if user provides non-existing file", {
   skip_on_cran()
-  testInit("terra", opts = list(reproducible.inputPaths = NULL), verbose = 2)
-  testthat::with_mock(
-    `isInteractive` = function() {
+  testInit("terra", opts = list(reproducible.inputPaths = NULL,
+                                reproducible.interactiveOnDownloadFail = TRUE), verbose = 2)
+  testthat::with_mocked_bindings(
+    isInteractive = function() {
       FALSE
     },
     {
@@ -17,33 +18,44 @@ test_that("preProcess fails if user provides non-existing file", {
           })
         })
       })
-    },
-    .env = "reproducible"
+    }#,
+    #.env = "reproducible"
   )
   expect_true(grepl("manual download", errMsg))
   expect_true(grepl("appendChecksumsTable", errMsg))
 
   withr::local_options(reproducible.interactiveOnDownloadFail = FALSE)
-  co <- capture.output(type = "message", {
-    co2 <- capture.output({
+
+  .downloadErrorFn = function(xxxx) {
+    tryCatch(stop(xxxx), httr2_http_404 = function(cnd) NULL,
+             error = function(xxxx) xxxx,
+             silent = TRUE) # httr2 has a unique error; need to silence it
+    try(stop(xxxx), silent = TRUE)
+  }
+  testthat::with_mocked_bindings(
+      .downloadErrorFn = .downloadErrorFn,
+      isInteractive = function() {
+        FALSE
+      },
+      {
       errMsg <- testthat::capture_error({
-        reproducible::preProcess(
+        preProcess(
           url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
           destinationPath = tmpdir
         )
       })
-    })
-  })
-
+    }
+    #.env = "reproducible"
+  )
   expect_true(grepl("manual download", errMsg))
   expect_true(grepl("appendChecksumsTable", errMsg))
   withr::deferred_run()
 
-  testthat::with_mock(
-    `isInteractive` = function() {
+  testthat::with_mocked_bindings(
+    isInteractive = function() {
       TRUE
     },
-    `.readline` = function(prompt) {
+    .readline = function(prompt) {
       "n"
     },
     {
@@ -59,18 +71,18 @@ test_that("preProcess fails if user provides non-existing file", {
           })
         })
       })
-    },
-    .env = "reproducible"
+    }#,
+    #.env = "reproducible"
   )
   expect_true(sum(grepl("Download failed", errMsg)) == 1)
 
   withr::local_options("reproducible.interactiveOnDownloadFail" = TRUE)
-  zipFilename <- file.path(tmpdir, "rasterTest")
-  testthat::with_mock(
-    `isInteractive` = function() {
+  testthat::with_mocked_bindings(
+    .downloadErrorFn = .downloadErrorFn,
+    isInteractive = function() {
       TRUE
     },
-    `.readline` = function(prompt) {
+    .readline = function(prompt) {
       theFile <- file.path(tmpdir, "rasterTestAA")
       write.table(theFile, file = theFile)
       origDir <- setwd(dirname(theFile))
@@ -93,8 +105,8 @@ test_that("preProcess fails if user provides non-existing file", {
           })
         })
       })
-    },
-    .env = "reproducible"
+    }#,
+    # .env = "reproducible"
   )
   expect_true(sum(grepl("manual.+download", mess)) == 1) # manual download may be broken by \n
   expect_true(sum(grepl("To prevent", mess)) == 1)

@@ -10,8 +10,8 @@ test_that("testing prepInputs with deauthorized googledrive", {
     #   googledrive::drive_deauth()
     #   googledrive::drive_auth("eliotmcintire@gmail.com", cache = "C:/Eliot/.secret")
     #   on.exit(googledrive::drive_deauth())
-    testthat::with_mock(
-      "reproducible::isInteractive" = function() {
+    testthat::with_mocked_bindings(
+      isInteractive = function() {
         FALSE
       },
       {

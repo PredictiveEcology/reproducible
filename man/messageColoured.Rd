@@ -67,7 +67,7 @@ messageColoured(
 
 \item{round}{An optional numeric to pass to \code{round}}
 
-\item{colour}{Any colour that can be understood by \code{crayon}}
+\item{colour}{Any colour that can be understood by \code{cli}}
 
 \item{colnames}{Logical or \code{NULL}. If \code{TRUE}, then it will print
 column names even if there aren't any in the \code{df} (i.e., they will)

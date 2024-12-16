@@ -392,7 +392,7 @@ setMethod(
       if (isTRUE(getOption("reproducible.useMemoise")))
         postMess <- paste0(" ", .message$AddingToMemoised)
     }
-    baseMess <- .message$LoadedCache(whMessage, functionName)
+    baseMess <- .message$LoadedCache(whMessage, .messageFunctionFn(functionName)) # ELIOT HERE
     if (!is.null(postMess))
       baseMess <- paste0(baseMess, postMess)
     messageCache(baseMess, verbose = verbose)
@@ -420,7 +420,7 @@ setMethod(
   fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
 
   messageCache(.message$ObjToRetrieveFn(functionName), ", ",
-  #             messageCache("...(Object to retrieve (fn: ", .messageFunctionFn(functionName), ", ",
+               #             messageCache("...(Object to retrieve (fn: ", .messageFunctionFn(functionName), ", ",
                basename2(CacheStoredFile(cachePath, cacheId, format = fileFormat)),
                ")",
                if (bigFile) " is large: ",
@@ -942,9 +942,9 @@ unmakeMemoisable.default <- function(x) {
   }
 
   if (length(ls(obj, all.names = T)) > 0) {
-  obj2 <- as.list(obj, all.names = TRUE)
-  out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
-               conn = conn, verbose = verbose, outputObjects = outputObjects, ...)
+    obj2 <- as.list(obj, all.names = TRUE)
+    out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
+                 conn = conn, verbose = verbose, outputObjects = outputObjects, ...)
     # obj <- Copy(obj)
     obj2 <- list2envAttempts(out, obj)
     if (!is.null(obj2)) obj <- obj2
@@ -1045,7 +1045,7 @@ unmakeMemoisable.default <- function(x) {
         xmin = terra::xmin(obj), xmax = terra::xmax(obj),
         ymin = terra::ymin(obj), ymax = terra::ymax(obj)
       )
-      attr(obj, "class") <- "PackedSpatExtent"
+      attr(obj, "class") <- "PackedSpatExtent2"
       useWrap <- FALSE
       reassignAtts <- FALSE
     }
@@ -1080,13 +1080,13 @@ unmakeMemoisable.default <- function(x) {
     obj <- lapply(obj, .unwrap)
     obj <- terra::svc(obj)
   }
-  if (any(inherits(obj, c("PackedSpatVector", "PackedSpatRaster", "PackedSpatExtent")))) {
+  if (any(inherits(obj, c("PackedSpatVector", "PackedSpatRaster", "PackedSpatExtent2")))) {
     if (!requireNamespace("terra")) stop("Please install.packages('terra')")
     if (any(inherits(obj, "PackedSpatVector"))) {
       obj <- terra::vect(obj)
     } else if (any(inherits(obj, "PackedSpatRaster"))) {
       obj <- terra::rast(obj)
-    } else if (any(inherits(obj, "PackedSpatExtent"))) {
+    } else if (any(inherits(obj, "PackedSpatExtent2"))) {
       obj <- terra::ext(unlist(obj))
     }
   } else if (any(inherits(obj, "data.table"))) {

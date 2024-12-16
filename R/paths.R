@@ -53,7 +53,7 @@ setMethod(
             #    normalizePaths does this, can't find equivalent in fs
             path[!nas] <-
               normalizePath(path[!nas], winslash = "/", mustWork = FALSE)
-              # fs::path_expand_r(fs::path_abs(path[!nas])) # faster than normalizePath on some machines
+            # fs::path_expand_r(fs::path_abs(path[!nas])) # faster than normalizePath on some machines
           }
           if (any(nas)) {
             path[nas] <- NA_character_
@@ -80,7 +80,7 @@ setMethod(
               if (any(areAbs %in% FALSE)) {
                 nonNApath[!hasDotStart][areAbs %in% FALSE] <-
                   normalizePath(file.path(getwd(), nonNApath[!hasDotStart][areAbs %in% FALSE]),
-                    winslash = "/", mustWork = FALSE
+                                winslash = "/", mustWork = FALSE
                   )
               }
             }
@@ -150,7 +150,7 @@ normPathRel <- function(path) {
   path[nzchar(path)] <- path[nzchar(path)] |>
     fs::path_norm() |>
     fs::path_expand() # |>
-    # normalizePath(winslash = "/", mustWork = FALSE)
+  # normalizePath(winslash = "/", mustWork = FALSE)
 
   path
 }
@@ -206,8 +206,8 @@ setMethod(
           if (create == TRUE) {
             lapply(path[!dirsThatExist[!isExistingFile]], function(pth) {
               dir.create(file.path(pth),
-                recursive = TRUE,
-                showWarnings = FALSE
+                         recursive = TRUE,
+                         showWarnings = FALSE
               )
             })
           } else {

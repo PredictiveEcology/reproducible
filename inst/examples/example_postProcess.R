@@ -16,7 +16,7 @@ if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly 
   # 2nd step: make the input data layer like the studyArea map
   # Test only relevant if connected to internet -- so using try just in case
   elevForStudy <- try(prepInputs(url = remoteTifUrl, to = studyArea, res = 250,
-                             destinationPath = dPath, useCache = FALSE))
+                                 destinationPath = dPath, useCache = FALSE))
 
   # Alternate way, one step at a time. Must know each of these steps, and perform for each layer
   \donttest{
