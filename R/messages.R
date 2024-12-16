@@ -223,7 +223,6 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
     if (!is.null(indent)) {
       mess <- paste0(indent, mess)
     }
-
     # do line wrap with hanging indent
     maxLineLngth <- getOption("width") - 10 # 10 is a "buffer" for Rstudio miscalculations
     chars <- nchar(mess)
@@ -234,7 +233,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
         anyOneLine <- any(nchar(m) > maxLineLngth)
         if (anyOneLine) {
-          messSplit <- strsplit(mess, split = "\n| ")[[1]]
+          messSplit <- strsplit(mess, split = "\n")[[1]]
           remainingChars <- chars
           messBuild <- character()
           while (remainingChars > maxLineLngth) {
@@ -259,7 +258,8 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
             }
             messSplit <- messSplit[-keepInd]
             remainingChars <- remainingChars - nchar(newMess) - 1
-            hangingIndent <<- TRUE
+            if (!isFALSE(hangingIndent))
+              hangingIndent <<- TRUE
           }
           newMess <- paste(messSplit, collapse = " ")
           m <- c(messBuild, newMess)
@@ -270,13 +270,13 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
       mess <- paste0(.addSlashNToAllButFinalElement(mess), collapse = "")
     }
     hi <- if (isTRUE(hangingIndent)) paste0(indent, .message$BecauseOfA) else indent
-    if (any(grepl("\n", mess))) {
+    if (any(grepl("\n", mess)) && !identical(indent, "")) {
       mess <- gsub("\n *", paste0("\n", hi), mess)
-      hasSpaceChar <- grep(.spaceTmpChar, mess)
-      if (length(hasSpaceChar))
-        mess[hasSpaceChar] <- gsub(.spaceTmpChar, " ", mess[hasSpaceChar])
-
     }
+    hasSpaceChar <- grep(.spaceTmpChar, mess)
+    if (length(hasSpaceChar))
+      mess[hasSpaceChar] <- gsub(.spaceTmpChar, " ", mess[hasSpaceChar])
+
 
     if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
       mess <- lapply(strsplit(mess, "\n"), function(m) paste0(getFromNamespace(colour, "crayon")(m)))[[1]]

@@ -253,7 +253,10 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
     args <- evaluate_args(args, envir = .callingEnv)
   }
 
-  func <- getMethodAll(as.call(c(matched_call[[1]], args)), .callingEnv)
+  funcTry <- try(getMethodAll(as.call(c(matched_call[[1]], args)), .callingEnv),
+                 silent = TRUE)
+  if (!is(funcTry, "try-error"))
+    func <- funcTry
 
   combined_args <- combine_clean_args(func, args, .objects = NULL, .callingEnv)
 
@@ -536,6 +539,17 @@ metadata_define_preEval <- function(detailed_key, func_name, userTags,
   df <- unlist(
     .unlistToCharacter(unname(detailed_key[-1]), getOption("reproducible.showSimilarDepth", 3))
   )
+  pat <- "[[:digit:]]{1,5}$"
+  didWeGainNumerics <- grep(names(df), pattern = pat)
+  wouldBe <- gsub("", pattern = pat, names(df))
+  dups <- which(duplicated(wouldBe))
+  wasFirstsOfDups <- setdiff(didWeGainNumerics, dups)
+  isTheDupAGainedNumeric <- wasFirstsOfDups %in% didWeGainNumerics
+  if (any(isTheDupAGainedNumeric)) {
+    changeThese <- c(wasFirstsOfDups, dups)
+    names(df)[changeThese] <- wouldBe[changeThese]
+  }
+
   tagKey <- paste0(names(df), ":", as.character(df))
   if (length(userTags)) {
     ut <- strsplit(userTags, split = ":")
@@ -718,7 +732,8 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
 
     shownCache <- shownCache[tagKey %in% c(metadata$tagKey)][grep(x = tagKey, "elapsedTime|accessed", invert = TRUE)]
     # cacheIdOfSimilar
-    similarFull <- shownCache[tagKey %in% c(metadata$tagKey)]
+    similarFull <- shownCache[tagKey %in% unique(c(metadata$tagKey))]
+    metadataSmall <- metadata[tagKey %in% unique(c(similarFull$tagKey))]
     similar <- similarFull[!metadata, on = c("tagKey", "tagValue")]
     other <- logical()
     if (NROW(similar) == 0) {
@@ -763,12 +778,25 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
                    NROW(unique(simi$cacheId)),
                    " similar calls in the Cache repository.", verbose = verbose * !devMode)
       twoCols <- strsplit(simi[["tagValue"]], ":")
-      set(simi, NULL, c("N", "tagKey", "tagValue"), NULL)
       args <- vapply(twoCols, function(x) x[[1]], FUN.VALUE = character(1))
       vals <- vapply(twoCols, function(x) x[[2]], FUN.VALUE = character(1))
       set(simi, NULL, "arg", args)
       set(simi, NULL, "value", vals)
+      set(simi, NULL, c("N", "tagKey", "tagValue", "createdDate"), NULL)
       setcolorder(simi, c("cacheId", "arg", "value"))
+      setnames(simi, old = c("cacheId", "value"), new = c("cacheIdInCache", "valueInCache"))
+      simi2 <- metadataSmall[!similarFull[cacheId %in% unique(simi$cacheId)], on = c("tagKey", "tagValue")]
+      twoCols <- strsplit(simi2[["tagValue"]], ":")
+      args <- vapply(twoCols, function(x) x[[1]], FUN.VALUE = character(1))
+      vals <- vapply(twoCols, function(x) x[[2]], FUN.VALUE = character(1))
+      set(simi2, NULL, "arg", args)
+      set(simi2, NULL, "value2", vals)
+      set(simi2, NULL, c("tagKey", "tagValue", "createdDate"), NULL)
+      setcolorder(simi2, c("cacheId", "arg", "value2"))
+      setnames(simi2, old = c("cacheId", "value2"),
+               new = c("cacheIdOfThisCall", "valueThisCall"))
+      simi <- simi[simi2, on = c("arg"), allow.cartesian = TRUE] # there can be duplicate args
+
       if (isDevMode(useCache, userTags)) {
         messageCache("------ devMode -------", verbose = verbose)
         messageCache("Previous call(s) exist in the cache with identical userTags (",
@@ -779,7 +807,7 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
         clearCache(cachePath, userTags = cacheIdsToClear, ask = FALSE, drv = drv, conn = conn, verbose = verbose - 2)
       }
       messageCache("with different elements (most recent at top):", verbose = verbose)
-      messageDF(simi, verbose = verbose)
+      messageDF(simi, indent = "", verbose = verbose)
       messageCache("------ devMode -------", verbose = verbose * devMode)
     }
   } else {
@@ -1017,6 +1045,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       fileExt(cache_file)
 
     fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key, format = format)
+    if (!file.exists(fe)) browser()
     if (is.null(shownCache))
       shownCache <- showCacheFast(cache_key, cachePath, dtFile = fe, drv = drv, conn = conn)
 
