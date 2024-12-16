@@ -1272,7 +1272,8 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
           fromMess <- c(head(fromCollapsed[!result]), tail(fromCollapsed[!result]))
           toMess <- c(head(toCollapsed[!result], 24), "... (omitting many)", tail(toCollapsed[!result], 24))
         }
-        result2 <- file.copy(from[!result], to[!result], overwrite = overwrite)
+        result2 <- try(file.copy(from[!result], to[!result], overwrite = overwrite))
+        if (is(result2, "try-error")) browser()
         messagePreProcess("Copy of file: ", fromMess, ", was created at: ", toMess, verbose = verbose)
       }
     } else {
