@@ -572,7 +572,7 @@ metadata_define_preEval <- function(detailed_key, func_name, userTags,
   return(metadata)
 }
 
-metadata_define_postEval <- function(metadata, cacheId, outputToSave,
+metadata_define_postEval <- function(metadata, cacheId, outputToSave, userTags,
                                      .objects, length, algo, quick, classOptions,
                                      elapsedTimeFUN) {
 
@@ -878,8 +878,8 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
 
   # update metadata with other elements including elapsedTime for evaluation
   metadata <- metadata_define_postEval(metadata, detailed_key$key, outputFromEvaluate,
-                                       .objects, length, algo, quick, classOptions,
-                                       elapsedTimeFUN)
+                                       userTags, .objects, length, algo, quick,
+                                       classOptions, elapsedTimeFUN)
   # objectSize <- attr(metadata, "tags")$objectSize
 
   # Can't save NULL with attributes
