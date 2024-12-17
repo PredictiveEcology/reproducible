@@ -1351,10 +1351,12 @@ getMethodAll <- function(FUNcaptured, callingEnv) {
 
     argClassesAreCall <- argsClasses %in% "call" # maybe wasn't evaluated enough to know what it is; force eval
     if (any(argClassesAreCall)) {
-      whAreCall <- names(argsClasses[argClassesAreCall])
-      argsClasses <- Map(wac = whAreCall, function(wac) is(eval(FUNcaptured[[wac]], envir = callingEnv)))
+      argsClasses <- "ANY"
+      #whAreCall <- names(argsClasses[argClassesAreCall])
+      #argsClasses <- Map(wac = whAreCall, function(wac) is(eval(FUNcaptured[[wac]], envir = callingEnv)))
+    } else {
+      FUN <- selectMethod(functionName, signature = argsClasses)
     }
-    FUN <- selectMethod(functionName, signature = argsClasses)
     updatedFUN <- TRUE
   } else {
     isS3 <- isS3stdGeneric(FUN)
