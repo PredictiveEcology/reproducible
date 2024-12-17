@@ -253,10 +253,10 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
     args <- evaluate_args(args, envir = .callingEnv)
   }
 
-  funcTry <- try(getMethodAll(as.call(c(matched_call[[1]], args)), .callingEnv),
-                 silent = TRUE)
-  if (!is(funcTry, "try-error"))
-    func <- funcTry
+  # funcTry <- try(getMethodAll(as.call(c(matched_call[[1]], args)), .callingEnv),
+  #                silent = TRUE)
+  # if (!is(funcTry, "try-error"))
+  #   func <- funcTry
 
   combined_args <- combine_clean_args(func, args, .objects = NULL, .callingEnv)
 

@@ -1181,6 +1181,7 @@ isDollarOnlySqBr <- function(args) {
 }
 
 recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, recursive = TRUE) {
+
   needsEvaling <- (length(args) > 1) || (length(args) == 1 && is.call(args)) # second case is fun() i.e., no args
   if (isTRUE(needsEvaling)) {
     if (is.call(args[[1]])) { # e.g., a$fun, stats::runif
@@ -1250,7 +1251,12 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
         }
       })
 
-      args <- if (isTRUE(outer)) try(as.call(out)) else out
+
+
+      args <- as.call(out)
+      # args <- if (isTRUE(outer)) try(as.call(out)) else out
+      args <- match_call_primitive(args[[1]], args, expand.dots = FALSE, envir = envir)
+      args[[1]] <- getMethodAll(args, envir)
     } else {
       args <- eval(args, envir)
     }
