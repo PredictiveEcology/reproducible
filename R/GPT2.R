@@ -554,7 +554,13 @@ metadata_define_preEval <- function(detailed_key, func_name, userTags,
   if (length(userTags)) {
     ut <- strsplit(userTags, split = ":")
     ll <- lapply(ut, tail, 1)
-    names(ll) <- rep("userTags", length(ll))#lapply(ut, head, 1)
+    strt <- lapply(ut, function(x) x[-length(x)])
+    utagLabel <- rep("userTags", length(ll))#lapply(ut, head, 1)
+    hasLabel <- lengths(strt) > 0
+    if (any(hasLabel)) {
+      utagLabel[hasLabel] <- sapply(strt[hasLabel], function(x) paste0(x, collapse = ":"))
+    }
+    names(ll) <- utagLabel
     userTags <- ll
   }
   userTagsList <- c(
@@ -1045,18 +1051,18 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       fileExt(cache_file)
 
     fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key, format = format)
-    if (!file.exists(fe)) browser()
+    rerun <- !isTRUE(any(file.exists(fe) ))
     if (is.null(shownCache))
       shownCache <- showCacheFast(cache_key, cachePath, dtFile = fe, drv = drv, conn = conn)
 
     .cacheMessageObjectToRetrieve(functionName, shownCache, cachePath,
                                   cacheId = cache_key, verbose = verbose)
-    if (fromMemoise) {
+    if (fromMemoise && !rerun) {
       output <- get(cache_key, envir = memoiseEnv(cachePath))
     } else {
       obj <- try(loadFile(cache_file))
-      if (is(obj, "try-error")) {
-        messageCache("It looks like the cache file is corrupt; deleting and recalculating")
+      if (is(obj, "try-error") || rerun) {
+        messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
         otherFiles <- normPath(file.path(CacheStorageDir(), shownCache[tagKey == "filesToLoad"]$tagValue))
         rmFiles <- c(cache_file, otherFiles)
         unlink(rmFiles)

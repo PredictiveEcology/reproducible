@@ -128,11 +128,8 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL, indent = NULL,
       }
     }
     outMess <- capture.output(df)
-    if (isTRUE(grepl(" +", outMess[2]))) {
-      numInitialSpaces <- length(gregexpr(" ", strsplit(outMess[2], split = "\\S")[[1]][1])[[1]])
-      # Has the "class" 2nd row
-      outMess[2] <- gsub("^ +", paste(rep(.spaceTmpChar, numInitialSpaces), collapse = ""), outMess[2])
-    }
+    outMess <- paddDFInitial(outMess, rows = 1:2, .spaceTmpChar, colour)
+
     if (skipColNames) outMess <- outMess[-1]
     outMess <- .addSlashNToAllButFinalElement(outMess)
     messageColoured(outMess, indent = indent, hangingIndent = FALSE,
@@ -216,12 +213,8 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
   if (isTRUE(verboseLevel <= verbose)) {
 
     if (getOption("reproducible.useCli", TRUE)) {
-      mess <- paste0(..., collapse = " ")
-      if (!is.null(colour)) {
-        fn <- cliCol(colour)
-        # fn <- get(paste0("col_", colour), envir = asNamespace('cli'))
-        mess <- fn(mess)
-      }
+      mess <- paste0(..., collapse = "")
+      # if (grepl("cacheIdInCache", mess)) browser()
       indentNum <- indent
       if (!is.null(indent))
         if (is.character(indent))
@@ -229,15 +222,26 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
       if (is.null(indent)) indentNum <- 0
 
       mess <- cli::ansi_trimws(mess, which = c("both"))
-      hasSlashN <- any(grepl("\n", mess))
+      if (any(grepl(.spaceTmpChar, mess)))
+        mess <- gsub(.spaceTmpChar, " ", mess)
+      hasSlashN <- any(grepl("\n", mess)) # faster than gregexpr that needs to count in the string
       if (!hasSlashN && cli::ansi_nchar(mess) > cli::console_width())
         mess <- cli::ansi_strwrap(x = mess,
                                   indent = indentNum,
                                   exdent = indentNum + hangingIndent * 2,
                                   simplify = TRUE)
       mess <- .addSlashNToAllButFinalElement(mess)
-      if (any(grepl(.spaceTmpChar, mess)))
-        mess <- gsub(.spaceTmpChar, " ", mess)
+
+      if (!is.null(colour)) {
+        fn <- cliCol(colour)
+        hasSlashN2 <- gregexpr("\n", mess)[[1]]
+        if (sum(hasSlashN2 > 0)) {
+          mess <- paste0(fn(strsplit(mess, split = "\n")[[1]]), collapse = "\n")
+        } else {
+          # fn <- get(paste0("col_", colour), envir = asNamespace('cli'))
+          mess <- fn(mess) # add the colour
+        }
+      }
 
       message(mess)
 
@@ -486,4 +490,16 @@ cliCol <- function(col) {
   if (!startsWith(col, "col_"))
     col <- paste0("col_", col)
   getFromNamespace(col, asNamespace("cli"))
+}
+
+paddDFInitial <- function(outMess, rows = 1:2, .spaceTmpChar, colour) {
+  for (r in rows) {
+    if (isTRUE(grepl(" +", outMess[r]))) {
+      numInitialSpaces <- length(gregexpr(" ", strsplit(outMess[r], split = "\\S")[[1]][1])[[1]]) +
+        !is.null(colour)
+      # Has the "class" 2nd row
+      outMess[r] <- gsub("^ +", paste(rep(.spaceTmpChar, numInitialSpaces), collapse = ""), outMess[r])
+    }
+  }
+  outMess
 }
