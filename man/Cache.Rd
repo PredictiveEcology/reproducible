@@ -25,10 +25,10 @@ Cache(
   verbose = getOption("reproducible.verbose", 1),
   cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
-  useCloud = FALSE,
-  cloudFolderID = NULL,
+  useCloud = getOption("reproducible.useCloud", FALSE),
+  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   showSimilar = getOption("reproducible.showSimilar", FALSE),
-  drv = getDrv(getOption("reproducible.drv", NULL)),
+  drv = getOption("reproducible.drv", NULL),
   conn = getOption("reproducible.conn", NULL)
 )
 
@@ -51,10 +51,10 @@ cache2(
   verbose = getOption("reproducible.verbose", 1),
   cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
-  useCloud = FALSE,
-  cloudFolderID = NULL,
+  useCloud = getOption("reproducible.useCloud", FALSE),
+  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   showSimilar = getOption("reproducible.showSimilar", FALSE),
-  drv = getDrv(getOption("reproducible.drv", NULL)),
+  drv = getOption("reproducible.drv", NULL),
   conn = getOption("reproducible.conn", NULL)
 )
 

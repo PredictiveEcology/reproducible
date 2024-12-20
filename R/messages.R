@@ -456,7 +456,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 .message$noSimilarCacheTxt <- function(functionName) {
   paste0("There is no similar item in the cachePath ",
          if (!is.null(functionName))
-           paste0("of '",  .messageFunctionFn(functionName), "' ") else "")
+           paste0("of ",  .messageFunctionFn(functionName), " ") else "")
 }
 
 .message$defunct <- function(arg)
@@ -495,8 +495,7 @@ cliCol <- function(col) {
 paddDFInitial <- function(outMess, rows = 1:2, .spaceTmpChar, colour) {
   for (r in rows) {
     if (isTRUE(grepl(" +", outMess[r]))) {
-      numInitialSpaces <- length(gregexpr(" ", strsplit(outMess[r], split = "\\S")[[1]][1])[[1]]) +
-        !is.null(colour)
+      numInitialSpaces <- length(gregexpr(" ", strsplit(outMess[r], split = "\\S")[[1]][1])[[1]])
       # Has the "class" 2nd row
       outMess[r] <- gsub("^ +", paste(rep(.spaceTmpChar, numInitialSpaces), collapse = ""), outMess[r])
     }

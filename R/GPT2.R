@@ -51,7 +51,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   times <- list()
   times$CacheDigestStart <- Sys.time()
   keyFull <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
-                      length, algo, quick, classOptions, times$CacheDigestStart, verbose)
+                      length, algo, quick, classOptions, times$CacheDigestStart, verbose = verbose)
 
   # If debugCache is "quick", short circuit after doDigest
   if (isTRUE(!is.na(pmatch(debugCache, "quick"))))
@@ -785,7 +785,9 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
                    " similar calls in the Cache repository.", verbose = verbose * !devMode)
       twoCols <- strsplit(simi[["tagValue"]], ":")
       args <- vapply(twoCols, function(x) x[[1]], FUN.VALUE = character(1))
-      vals <- vapply(twoCols, function(x) x[[2]], FUN.VALUE = character(1))
+      lens <- lengths(twoCols)
+      vals <- rep("", length(twoCols))
+      vals[lens > 1] <- vapply(twoCols[lens > 1], function(x) x[[2]], FUN.VALUE = character(1))
       set(simi, NULL, "arg", args)
       set(simi, NULL, "value", vals)
       set(simi, NULL, c("N", "tagKey", "tagValue", "createdDate"), NULL)
@@ -944,6 +946,10 @@ doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
                               classOptions = classOptions,
                               calledFrom = "Cache"
   )
+  diTi <- difftime(Sys.time(), timeCacheDigestStart, units = "sec")
+  if (diTi > 5) {
+    messageCache("Object digesting for ", .messageFunctionFn(.functionName)," took: ", format(diTi, digits = 2))
+  }
   verboseCacheMessage(detailed_key$preDigest, .functionName, timeCacheDigestStart, quick = quick,
                    modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
 
