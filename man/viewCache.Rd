@@ -169,8 +169,7 @@ the default, then it will delete the most recent entry in the Cache.}
 }
 \value{
 Will clear all objects (or those that match \code{userTags}, or those
-between \code{after} or \code{before}) from the repository located at
-\code{cachePath} of the sim object, if \code{sim} is provided, or located in
+between \code{after} or \code{before}) from the repository located in
 \code{cachePath}.
 Invisibly returns a \code{data.table} of the removed items.
 }

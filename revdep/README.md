@@ -1,40 +1,50 @@
 # Platform
 
-|field    |value                                    |
-|:--------|:----------------------------------------|
-|version  |R version 4.3.3 (2024-02-29)             |
-|os       |Ubuntu 20.04.6 LTS                       |
-|system   |x86_64, linux-gnu                        |
-|ui       |RStudio                                  |
-|language |en_CA:en                                 |
-|collate  |en_CA.UTF-8                              |
-|ctype    |en_CA.UTF-8                              |
-|tz       |America/Edmonton                         |
-|date     |2024-05-28                               |
-|rstudio  |2024.04.1+748 Chocolate Cosmos (desktop) |
-|pandoc   |2.5 @ /usr/bin/pandoc                    |
+|field    |value                                   |
+|:--------|:---------------------------------------|
+|version  |R version 4.4.2 (2024-10-31)            |
+|os       |Ubuntu 22.04.5 LTS                      |
+|system   |x86_64, linux-gnu                       |
+|ui       |RStudio                                 |
+|language |(EN)                                    |
+|collate  |en_CA.UTF-8                             |
+|ctype    |en_CA.UTF-8                             |
+|tz       |America/Vancouver                       |
+|date     |2024-12-11                              |
+|rstudio  |2024.04.2+764 Chocolate Cosmos (server) |
+|pandoc   |2.9.2.1 @ /usr/bin/pandoc               |
 
 # Dependencies
 
-|package      |old         |new    |Δ  |
-|:------------|:-----------|:------|:--|
-|reproducible |2.0.12.9020 |2.1.0  |*  |
-|cpp11        |0.4.7       |0.4.7  |   |
-|crayon       |1.5.2       |1.5.2  |   |
-|data.table   |1.15.4      |1.15.4 |   |
-|digest       |0.6.35      |0.6.35 |   |
-|filelock     |1.0.3       |1.0.3  |   |
-|fpCompare    |0.2.4       |0.2.4  |   |
-|fs           |1.6.4       |1.6.4  |   |
-|lobstr       |1.1.2       |1.1.2  |   |
-|prettyunits  |1.2.0       |1.2.0  |   |
-|rlang        |1.1.3       |1.1.3  |   |
+|package      |old    |new    |Δ  |
+|:------------|:------|:------|:--|
+|reproducible |2.1.2  |2.1.2  |NA |
+|cli          |3.6.3  |3.6.3  |NA |
+|cpp11        |0.5.1  |0.5.1  |NA |
+|crayon       |1.5.3  |1.5.3  |NA |
+|data.table   |1.16.4 |1.16.4 |NA |
+|digest       |0.6.37 |0.6.37 |NA |
+|filelock     |1.0.3  |1.0.3  |NA |
+|fpCompare    |0.2.4  |0.2.4  |NA |
+|fs           |1.6.5  |1.6.5  |NA |
+|lobstr       |1.1.2  |1.1.2  |NA |
+|prettyunits  |1.2.0  |1.2.0  |NA |
+|rlang        |1.1.4  |1.1.4  |NA |
 
 # Revdeps
 
-## New problems (1)
+## Failed to check (10)
 
-|package |version    |error  |warning |note |
-|:-------|:----------|:------|:-------|:----|
-|[LandR](problems.md#landr)|1.1.1.9001 |__+1__ |1       |     |
+|package           |version     |error |warning |note |
+|:-----------------|:-----------|:-----|:-------|:----|
+|CBMutils          |?           |      |        |     |
+|fireSenseUtils    |?           |      |        |     |
+|LandR             |?           |      |        |     |
+|LandWebUtils      |?           |      |        |     |
+|PSPclean          |?           |      |        |     |
+|scfmutils         |?           |      |        |     |
+|SpaDES            |2.0.11.9000 |1     |        |     |
+|SpaDES.config     |?           |      |        |     |
+|SpaDES.core       |?           |      |        |     |
+|SpaDES.experiment |?           |      |        |     |
 

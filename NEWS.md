@@ -11,10 +11,15 @@ existed, but their content was not expected to be digested;
 it would take possibly hours to digest. To digest files, user must explicitly coerce to 
 `"Path"` with `asPath(x)`, or `fs::as_fs_path` as the previous hanging behaviour was surprising
 and could not be easily diagnosed;
-* begin to replace `httr` --> convert to use `httr2` for some pieces; transition not complete;
 * `url` in `prepInputs` can now point to a directory; use `alsoExtract` to pick files by regular expression;
-# * improved handling of symlinks in `remapFileNames()`;
+* improved handling of symlinks in `remapFileNames()`;
 * pass `terra::project()` arguments `use_gdal` and `by_util` through `projectTo()` to `terra::project()`;
+* in some cases of downloading a file within `preProcess`, supplying a `user_agent` (which happens automatically within the function) would cause the download to fail; now there is some redundancy within `dlGeneric` that will retry without a `user_agent` if it detects this issue;
+
+## Package dependency changes
+* begin transition to use `cli`;  instead of custom messaging functions;
+* rm `crayon` dependency;
+* begin to replace `httr` --> convert to use `httr2` for some pieces; transition not complete;
 
 ## Bugfix
 * When forcing `cacheId`, e.g., in `Cache(..., cacheId = "myCacheItem")`, `myCacheItem` was not used. Fixed.

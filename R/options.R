@@ -121,7 +121,7 @@
 #'   \item{`showSimilar`}{
 #'     Default `FALSE`. Passed to `Cache`.
 #'   }
-#'   \item{`reproducible.testCharacterAsFile`}{
+#'   \item{`testCharacterAsFile`}{
 #'     Default `FALSE`. The behaviour of `.robustDigest` on `character` vectors prior to
 #'     `reproducible == 2.1.2` was that the function would test for whether they were
 #'     filenames by using `file.exists`. If it was a filename, then it would digest

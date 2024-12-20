@@ -319,7 +319,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   fromMemoise <- isMemoised && useMemoise
   loadFromMgs <- .cacheMessage(obj, .functionName, fromMemoise = fromMemoise, verbose = verbose)
 
-  # # This allows for any class specific things
+  # bug that affects Caching of functions that have an argument called "objects": PR#403
   if ("object" %in% names(.dotsFromCache))
     .dotsFromCache <- .dotsFromCache[setdiff(names(.dotsFromCache), "object")]
 

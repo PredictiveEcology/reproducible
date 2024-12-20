@@ -1642,7 +1642,8 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
                    util = "warp",
                    source = fnSource,
                    destination = filenameDest,
-                   options = opts))
+                   options = opts)
+  )
 
   out <- terra::rast(filenameDest)
   messagePreProcess(messagePrefixDoneIn,

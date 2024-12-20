@@ -21,6 +21,7 @@ downloadFile(
   verbose = getOption("reproducible.verbose", 1),
   purge = FALSE,
   .tempPath,
+  .callingEnv,
   ...
 )
 }
@@ -104,6 +105,9 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{.tempPath}{Optional temporary path for internal file intermediate steps.
 Will be cleared on.exit from this function.}
+
+\item{.callingEnv}{The environment where the function was called from. Used to find
+objects, if necessary.}
 
 \item{...}{Passed to \code{dlFun}. Still experimental. Can be e.g., \code{type} for google docs.}
 }

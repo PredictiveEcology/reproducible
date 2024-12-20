@@ -126,7 +126,7 @@ it will use \code{raster::shapefile}
 \item{\code{showSimilar}}{
 Default \code{FALSE}. Passed to \code{Cache}.
 }
-\item{\code{reproducible.testCharacterAsFile}}{
+\item{\code{testCharacterAsFile}}{
 Default \code{FALSE}. The behaviour of \code{.robustDigest} on \code{character} vectors prior to
 \verb{reproducible == 2.1.2} was that the function would test for whether they were
 filenames by using \code{file.exists}. If it was a filename, then it would digest
