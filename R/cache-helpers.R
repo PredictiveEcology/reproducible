@@ -323,7 +323,9 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   if (is.character(namesObj)) {
     namesObj <- gsub(namesObj, pattern = "\\.|_", replacement = "aa")
     allLower <- tolower(namesObj) == namesObj
-    namesObj[allLower] <- paste0("abALLLOWER", namesObj[allLower])
+    a <- try(namesObj[allLower] <- paste0("abALLLOWER", namesObj[allLower]))
+    if (is(a, "try-error")) browser()
+
 
     onesChanged <- startsWith(namesObj, prefix = "a")
     namesObj[!onesChanged] <- paste0("ZZZZZZZZZ", namesObj[!onesChanged])
@@ -342,14 +344,18 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #'
 #' @param obj  An arbitrary R object.
 #' @param preDigest  A list of hashes.
-#' @param ...  Dots passed from Cache
+#' @param ...  Dots passed from `Cache`
+#' @param fullCall The original call to `Cache`
 #'
 #' @return The same object as `obj`, but with 2 attributes set.
 #'
 #' @author Eliot McIntire
 #' @rdname debugCache
-.debugCache <- function(obj, preDigest, ...) {
-  attr(obj, "debugCache1") <- list(...)
+.debugCache <- function(obj, preDigest, ..., fullCall) {
+  if (missing(fullCall))
+    attr(obj, "debugCache1") <- list(...)
+  else
+    attr(obj, "debugCache1") <- fullCall
   attr(obj, "debugCache2") <- preDigest
   obj
 }

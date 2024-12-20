@@ -142,13 +142,7 @@ test_that("preProcess works when provides url, archive, and destinationPath", {
 test_that("preProcess works when provides url, archive, and destinationPath and reproducible.inputPaths", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  opts <- options("reproducible.inputPaths" = tmpdir)
-  on.exit(
-    {
-      options(opts)
-    },
-    add = TRUE
-  )
+  withr::local_options("reproducible.inputPaths" = tmpdir)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(
@@ -460,7 +454,9 @@ test_that("just google id not url", {
   skip_on_ci()
 
   testInit("terra", needGoogleDriveAuth = TRUE, needInternet = TRUE)
-  smallObj <- prepInputs(url = "1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb")
+  co <- capture.output(
+    smallObj <- prepInputs(url = "1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb")
+  )
   expect_is(smallObj, "sf")
 })
 
@@ -585,7 +581,7 @@ test_that("more nested file structures in zip; alsoExtract NA", {
         terra::writeRaster(filename = file.path(basename(tempfile(fileext = ".tif"))))
     })
     fns2 <- Filenames(ras)
-    zip(zipName, files = c(file.path(basename(dirname(fns1)), basename(fns1)), basename(fns2)))
+    zip(zipName, files = c(file.path(basename(dirname(fns1)), basename(fns1)), basename(fns2)), flags = "-q")
   })
   zipName2 <- file.path(tmpdir, zipName)
 

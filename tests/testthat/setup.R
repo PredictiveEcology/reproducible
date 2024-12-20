@@ -13,7 +13,9 @@ opts <- options(
   reproducible.runLargeFileTests = FALSE, # Set to TRUE to run the 2 long tests -- 20 minutes
   warnPartialMatchArgs = TRUE, # This gives false positives for `raster::stack`
   warnPartialMatchAttr = TRUE,
-  warnPartialMatchDollar = TRUE
+  warnPartialMatchDollar = TRUE,
+  reproducible.cache2 = TRUE,
+  reproducible.useDBI = FALSE  # done TF  = c(691, 764.1), TT c(793,874), FF = c(875.5s, 876s), FT = c(1024.8,934)
 )
 
 if (Sys.info()["nodename"] %in% "W-VIC-A127585") {
@@ -26,12 +28,16 @@ if (Sys.info()["nodename"] %in% "W-VIC-A127585") {
   opts <- append(opts, opts2)
 }
 
+
+
 withr::defer(
   {
     if (wantMoreTests) {
+      print(paste0("getOption('reproducible.cache2') = ", getOption("reproducible.cache2")))
       print(paste0("getOption('reproducible.rasterRead') = ", getOption("reproducible.rasterRead")))
       print(paste0("getOption('reproducible.runLargeFileTests') = ", getOption("reproducible.runLargeFileTests")))
       print(paste0("getOption('reproducible.useDBI') = ", getOption("reproducible.useDBI")))
+      print(paste0("getOption('reproducible.useMemoise') = ", getOption("reproducible.useMemoise")))
       Sys.setenv(NOT_CRAN = "")
       Sys.setenv(SKIP_GAUTH = "")
     }
@@ -44,7 +50,9 @@ withr::defer(
 )
 
 if (wantMoreTests) {
+  print(paste0("getOption('reproducible.cache2') = ", getOption("reproducible.cache2")))
   print(paste0("getOption('reproducible.rasterRead') = ", getOption("reproducible.rasterRead")))
   print(paste0("getOption('reproducible.runLargeFileTests') = ", getOption("reproducible.runLargeFileTests")))
   print(paste0("getOption('reproducible.useDBI') = ", getOption("reproducible.useDBI")))
+  print(paste0("getOption('reproducible.useMemoise') = ", getOption("reproducible.useMemoise")))
 }

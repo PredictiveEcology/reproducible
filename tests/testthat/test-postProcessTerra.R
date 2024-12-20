@@ -7,13 +7,7 @@ test_that("testing terra", {
       "rgdal_show_exportToProj4_warnings" = "none"
     )
   )
-  opts <- options(reproducible.cachePath = tmpCache)
-  on.exit(
-    {
-      options(opts)
-    },
-    add = TRUE
-  )
+  withr::local_options(reproducible.cachePath = tmpCache)
 
   skip_if_not_installed("terra")
   f <- system.file("ex/elev.tif", package = "terra")
@@ -44,24 +38,24 @@ test_that("testing terra", {
 
   # Test Cache of various nested and non nested SpatRaster
   # double nest
-  b <- Cache(fn, list(r, r1), cacheRepo = tmpCache)
+  b <- Cache(fn, list(r, r1), cachePath = tmpCache)
   expect_true(is(b, "list"))
   expect_true(is(b[[1]], "list"))
   expect_true(is(b[[1]][[1]], "SpatRaster"))
 
   # Single nest
-  b <- Cache(fn, r, cacheRepo = tmpCache)
+  b <- Cache(fn, r, cachePath = tmpCache)
   expect_true(is(b, "list"))
   expect_true(is(b[[1]], "SpatRaster"))
 
   # mixed nest
-  b <- Cache(fn, list(r[[1]], r1), cacheRepo = tmpCache)
+  b <- Cache(fn, list(r[[1]], r1), cachePath = tmpCache)
   expect_true(is(b, "list"))
   expect_true(is(b[[1]], "SpatRaster"))
   expect_true(is(b[[2]][[1]], "SpatRaster"))
 
   # mix memory and disk
-  b <- Cache(fn, list(r[[1]], r1, rmem), cacheRepo = tmpCache)
+  b <- Cache(fn, list(r[[1]], r1, rmem), cachePath = tmpCache)
   expect_true(is(b, "list"))
   expect_true(is(b[[1]], "SpatRaster"))
   expect_true(is(b[[2]][[1]], "SpatRaster"))

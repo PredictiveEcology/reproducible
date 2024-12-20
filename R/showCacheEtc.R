@@ -153,7 +153,7 @@ setMethod(
 
       args <- append(
         list(x = x, after = after, before = before, userTags = userTags,
-             fun = fun, cacheId = cacheId, sorted = FALSE),
+             fun = fun, cacheId = cacheId, sorted = FALSE, verbose = verbose),
         list(...)
       )
 
@@ -217,7 +217,10 @@ setMethod(
     }
 
     if (NROW(objsDT)) {
-      filesToRemove <- objsDT[grepl(pattern = "cacheRaster", tagKey)][[.cacheTableTagColName()]]
+      filesToRemove1 <- objsDT[grepl(pattern = "cacheRaster", tagKey)][[.cacheTableTagColName()]]
+      filesToRemove2 <- objsDT[grepl(pattern = "origFilename|filesToLoad", tagKey)][[.cacheTableTagColName()]]
+      filesToRemove2 <- normPath(file.path(CacheStorageDir(x), basename(filesToRemove2)))
+      filesToRemove <- unique(c(filesToRemove1, filesToRemove2))
       # filebackedInRepo <- objsDT[grepl(pattern = "fromDisk", tagKey) &
       #                           grepl(pattern = "TRUE", get(.cacheTableTagColName()))]
       #
@@ -270,17 +273,14 @@ setMethod(
           })
         }
       }
-      rmFromCache(x, objToGet, conn = conn, drv = drv) # many = TRUE)
+      rmFromCache(x, objToGet, conn = conn, drv = drv, verbose = verbose) # many = TRUE)
       if (isTRUE(getOption("reproducible.useMemoise"))) {
-        if (exists(x, envir = .pkgEnv)) {
-          suppressWarnings(rm(list = objToGet, envir = .pkgEnv[[x]]))
+        exist <- vapply(objToGet, exists, envir = memoiseEnv(x), FUN.VALUE = logical(1))
+        if (isTRUE(any(exist))) {
+          suppressWarnings(rm(list = objToGet[exist], envir = memoiseEnv(x)))#.pkgEnv[[x]]))
         }
       }
-
-      # browser(expr = exists("rmFC"))
-      # }
     }
-    # memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
     return(invisible(objsDT))
   }
@@ -420,7 +420,7 @@ setMethod(
 
     if (!useDBI()) {
       if (!is.null(cacheId)) {
-        objsDT <- rbindlist(lapply(cacheId, showCacheFast, cachePath = x))
+        objsDT <- rbindlist(lapply(cacheId, showCacheFast, cachePath = x, drv = drv, conn = conn))
       } else {
         objsDT <- rbindlist(lapply(
           dir(CacheStorageDir(x),
@@ -474,6 +474,7 @@ setMethod(
 
     dots <- dots[!names(dots) %in% sortedOrRegexp]
     if (length(dots)) {
+      names(dots) <- gsub("^Function$", "function", names(dots)) # in case user uses Function instead of "function"
       Map(nam = names(dots), val = dots, function(nam, val) {
         objsDT <<- objsDT[objsDT[tagKey %in% nam & tagValue %in% val, ..onCol], on = onCol]
       })
@@ -486,7 +487,6 @@ setMethod(
     # }
 
     if (NROW(objsDT) > 0) {
-      # if (useDBI()) {
       if (!afterNA || !beforeNA) {
         objsDT3 <- objsDT[tagKey == "accessed"]
         if (!beforeNA) {
@@ -495,13 +495,9 @@ setMethod(
         if (!afterNA) {
           objsDT3 <- objsDT3[(tagValue >= after)]
         }
-        # objsDT3 <- objsDT3[!duplicated(cacheId)]
-        # browser(expr = exists("zzzz"))
-        # objsDT <- objsDT[cacheId %in% objsDT3$cacheId]
         objsDT <- objsDT[objsDT[[.cacheTableHashColName()]] %in%
           unique(objsDT3[[.cacheTableHashColName()]])] # faster than data.table join
       }
-      # }
       if (length(userTags) > 0) {
         if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
           objsDTs <- list()
@@ -615,6 +611,7 @@ setMethod(
   "mergeCache",
   definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom,
                         verbose = getOption("reproducible.verbose")) {
+
     if (useDBI()) {
       if (is.null(connTo)) {
         connTo <- dbConnectAll(drvTo, cachePath = cacheTo)
@@ -637,6 +634,7 @@ setMethod(
     artifacts <- unique(cacheFromList[[.cacheTableHashColName()]])
     objectList <- lapply(artifacts, function(artifact) {
       # browser(expr = exists("gggg"))
+
       if (!(artifact %in% cacheToList[[.cacheTableHashColName()]])) {
         outputToSave <- # if (useDBI()) {
           try(loadFromCache(
@@ -706,6 +704,11 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
 }
 
 useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose"), default = TRUE) {
+  if  (isTRUE(getOption("reproducible.cache2"))) {
+    # browser()
+    # options("reproducible.useDBI" = FALSE)
+    # return(FALSE)
+  }
   canSwitch <- TRUE
   if (!is.null(set)) {
     if (isTRUE(set)) {
@@ -781,13 +784,20 @@ isTRUEorForce <- function(cond) {
   isTRUE(cond) || identical(cond, "force")
 }
 
-showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath")) {
-  fileexists <- dir(CacheStorageDir(cachePath), full.names = TRUE,
-                    pattern = paste0(cacheId, "\\.dbFile"))
-  if (length(fileexists)) {
-    sc <- loadFile(fileexists)
+showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
+                          dtFile, drv, conn) {
+
+  if (missing(dtFile)) {
+    dtFile <- CacheDBFileSingle(cachePath, cacheId)
+    # dtFile <- dir(CacheStorageDir(cachePath), full.names = TRUE,
+    #               pattern = paste0(cacheId, "\\", suffixMultipleDBFiles()))
+  }
+  fe <- file.exists(dtFile)
+  dtFile <- if (any(fe)) dtFile[fe][1] else character()
+  if (length(dtFile)) {
+    sc <- loadFile(dtFile)
   } else {
-    sc <- showCache(userTags = cacheId, verbose = FALSE)[cacheId %in% cacheId]
+    sc <- showCache(cachePath, userTags = cacheId, drv = drv, conn = conn, verbose = FALSE)[cacheId %in% cacheId]
   }
   sc[]
 }

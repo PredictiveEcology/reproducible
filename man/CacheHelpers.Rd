@@ -40,7 +40,8 @@ rmFromCache(
   cacheId,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  format = getOption("reproducible.cacheSaveFormat", "rds")
+  format = getOption("reproducible.cacheSaveFormat", "rds"),
+  verbose
 )
 
 CacheDBFile(

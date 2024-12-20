@@ -146,6 +146,8 @@ preProcessParams <- function(n = NULL) {
 #' `fun` (the function to be used to load the `preProcess`ed object from disk),
 #' and `targetFilePath` (the fully qualified path to the `targetFile`).
 #'
+#' @param .callingEnv The environment where the function was called from. Used to find
+#'   objects, if necessary.
 #' @section Combinations of `targetFile`, `url`, `archive`, `alsoExtract`:
 #'
 #'   Use `preProcessParams()` for a table describing various parameter combinations and their
@@ -169,7 +171,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        overwrite = getOption("reproducible.overwrite", FALSE),
                        purge = FALSE,
                        verbose = getOption("reproducible.verbose", 1),
-                       .tempPath, # .callingEnv = parent.frame(),
+                       .tempPath, .callingEnv = parent.frame(),
                        ...) {
   st <- Sys.time()
   messagePreProcess("Running `preProcess`", verbose = verbose, verboseLevel = 0)
@@ -192,12 +194,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   dots <- list(...)
-  if (is.null(dots$.callingEnv)) {
-    .callingEnv <- parent.frame()
-  } else {
-    .callingEnv <- dots$.callingEnv
-    dots$.callingEnv <- NULL
-  }
+  # if (is.null(dots$.callingEnv)) {
+  #   .callingEnv <- parent.frame()
+  # } else {
+  #   .callingEnv <- dots$.callingEnv
+  #   dots$.callingEnv <- NULL
+  # }
 
   fun <- .checkFunInDots(fun = fun, dots = dots)
   dots <- .checkDeprecated(dots, verbose = verbose)
@@ -417,7 +419,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     overwrite = overwrite, purge = purge, # may need to try purging again if no target,
     alsoExtract = alsoExtract,
     #    archive or alsoExtract were known yet
-    verbose = verbose, .tempPath = .tempPath, # .callingEnv = .callingEnv,
+    verbose = verbose, .tempPath = .tempPath, .callingEnv = .callingEnv,
     ...
   )
 
@@ -1272,7 +1274,8 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
           fromMess <- c(head(fromCollapsed[!result]), tail(fromCollapsed[!result]))
           toMess <- c(head(toCollapsed[!result], 24), "... (omitting many)", tail(toCollapsed[!result], 24))
         }
-        result2 <- file.copy(from[!result], to[!result], overwrite = overwrite)
+        result2 <- try(file.copy(from[!result], to[!result], overwrite = overwrite))
+        if (is(result2, "try-error")) browser()
         messagePreProcess("Copy of file: ", fromMess, ", was created at: ", toMess, verbose = verbose)
       }
     } else {
