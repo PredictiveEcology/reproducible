@@ -22,6 +22,7 @@ DBIConnection
 DBIDriver
 GDAL
 GEOS
+GitHub
 GoogleDrive
 Gridded
 HTTP2
@@ -34,6 +35,7 @@ OSs
 PR368
 PROJ
 PRs
+PostgreSQL
 Postgres
 R6
 RSQLite
@@ -42,6 +44,7 @@ Rasters
 Reproducibility
 Rstudio
 S4
+SQLite
 Simplying
 SpaDES
 SpatRaster
@@ -62,6 +65,7 @@ bugfix
 bugfixes
 cacheId
 cachePath
+checksum
 checksummed
 checksumming
 checksums
@@ -83,12 +87,14 @@ expr
 filebacked
 filepath
 fns
+foundational
 gdalwarp
 gdb
 geo
 geospatial
 getData
 gis
+google
 googledrive
 gridded
 hardlink
@@ -98,7 +104,6 @@ impactful
 keepCache
 libPaths
 longlat
-macOS
 memoisable
 memoise
 memoised
@@ -125,6 +130,7 @@ rds
 refered
 reimplemented
 relativized
+repeatability
 repo
 reprex
 reproducibility
@@ -148,9 +154,12 @@ subattributes
 subfolders
 symlink
 symlinked
+symlinks
 terra
 uncommented
 unevaluated
 unrar
 unrarPath
 useCache
+workflow
+workflows
