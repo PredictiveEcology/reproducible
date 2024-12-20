@@ -19,6 +19,7 @@ downloadRemote(
   preDigest,
   alsoExtract = "similar",
   verbose = getOption("reproducible.verbose", 1),
+  .callingEnv = parent.frame(),
   ...
 )
 }
@@ -89,6 +90,9 @@ only those to be extracted. See table in \code{\link[=preProcess]{preProcess()}}
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{.callingEnv}{The environment where the function was called from. Used to find
+objects, if necessary.}
 
 \item{...}{Additional arguments passed to
 \code{\link[=postProcess]{postProcess()}} and \code{\link[=Cache]{Cache()}}.
