@@ -26,17 +26,17 @@ Should be 0 to start.}
 \item{userTags}{Character string of tags to attach to this \code{outputToSave} in
 the \code{CacheRepo}}
 
-\item{drv}{if using a database backend, drv must be an object that
-inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}
+\item{drv}{If using a database backend, \code{drv} must be an object that
+inherits from \code{DBIDriver} (e.g., \code{RSQLite::SQLite}).}
 
-\item{conn}{an optional DBIConnection object, as returned by dbConnect().}
+\item{conn}{an optional \code{DBIConnection} object, as returned by \code{dbConnect()}.}
 
 \item{cacheId}{Character string. If passed, this will override the calculated hash
-of the inputs, and return the result from this cacheId in the \code{cachePath}.
+of the inputs, and return the result from this \code{cacheId} in the \code{cachePath}.
 Setting this is equivalent to manually saving the output of this function, i.e.,
 the object will be on disk, and will be recovered in subsequent
 This may help in some particularly finicky situations
-where Cache is not correctly detecting unchanged inputs. This will guarantee
+where \code{Cache} is not correctly detecting unchanged inputs. This will guarantee
 the object will be identical each time; this may be useful in operational code.}
 
 \item{linkToCacheId}{Optional. If a \code{cacheId} is provided here, then a \code{file.link}

@@ -112,8 +112,7 @@ setGeneric(".robustDigest", function(object, .objects = NULL,
 setMethod(
   ".robustDigest",
   signature = "ANY",
-  definition = function(object, .objects, length, algo, quick,
-                        classOptions) {
+  definition = function(object, .objects, length, algo, quick, classOptions) {
     # browser(expr = exists("._robustDigest_1"))
     if (is(object, "quosure")) { # can't get this class from rlang via importClass rlang quosure
       if (!requireNamespace("rlang")) stop("Please `install.packages('rlang')`")

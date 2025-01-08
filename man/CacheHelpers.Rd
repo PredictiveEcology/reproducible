@@ -76,7 +76,7 @@ the database file(s)}
 
 \item{drv}{A driver, passed to \code{dbConnect}}
 
-\item{conn}{an optional DBIConnection object, as returned by dbConnect().}
+\item{conn}{an optional \code{DBIConnection} object, as returned by \code{dbConnect()}.}
 
 \item{force}{Logical. Should it create a cache in the \code{cachePath},
 even if it already exists, overwriting.}

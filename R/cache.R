@@ -103,11 +103,11 @@ utils::globalVariables(c(
 #' @section Caching Speed:
 #' Caching speed may become a critical aspect of a final product. For example,
 #' if the final product is a shiny app, rerunning the entire project may need
-#' to take less then a few seconds at most. There are 3 arguments that affect
-#' Cache speed: `quick`, `length`, and
-#' `algo`. `quick` is passed to `.robustDigest`, which currently
-#' only affects `Path` and `Raster*` class objects. In both cases, `quick`
-#' means that little or no disk-based information will be assessed.
+#' to take less then a few seconds at most.
+#' There are 3 arguments that affect `Cache` speed: `quick`, `length`, and `algo`.
+#' `quick` is passed to `.robustDigest`, which currently
+#' only affects `Path` and `Raster*` class objects.
+#' In both cases, `quick` means that little or no disk-based information will be assessed.
 #'
 #'
 #' @section Filepaths:
@@ -230,8 +230,7 @@ utils::globalVariables(c(
 #' @include robustDigest.R
 #'
 #' @param FUN Either a function (e.g., `rnorm`), a function call (e.g., `rnorm(1)`),
-#'             or an unevaluated function call (e.g., using
-#'            `quote`).
+#'             or an unevaluated function call (e.g., using `quote()`).
 #'
 #' @param ... Arguments passed to `FUN`, if `FUN` is not an expression.
 #'
@@ -311,11 +310,11 @@ utils::globalVariables(c(
 #'        option, e.g., `options('reproducible.verbose' = 0) to reduce to minimal`
 #'
 #' @param cacheId Character string. If passed, this will override the calculated hash
-#'        of the inputs, and return the result from this cacheId in the `cachePath`.
+#'        of the inputs, and return the result from this `cacheId` in the `cachePath`.
 #'        Setting this is equivalent to manually saving the output of this function, i.e.,
 #'        the object will be on disk, and will be recovered in subsequent
 #'        This may help in some particularly finicky situations
-#'        where Cache is not correctly detecting unchanged inputs. This will guarantee
+#'        where `Cache` is not correctly detecting unchanged inputs. This will guarantee
 #'        the object will be identical each time; this may be useful in operational code.
 #'
 #' @param useCache Logical, numeric or `"overwrite"` or `"devMode"`. See details.
@@ -337,9 +336,9 @@ utils::globalVariables(c(
 #'        If a number larger than `1`, then it will report the N most recent similar archived
 #'        objects.
 #'
-#' @param drv if using a database backend, drv must be an object that
-#'   inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite
-#' @param conn an optional DBIConnection object, as returned by dbConnect().
+#' @param drv If using a database backend, `drv` must be an object that
+#'   inherits from `DBIDriver` (e.g., `RSQLite::SQLite`).
+#' @param conn an optional `DBIConnection` object, as returned by `dbConnect()`.
 #'
 #' @return Returns the value of the
 #' function call or the cached version (i.e., the result from a previous call

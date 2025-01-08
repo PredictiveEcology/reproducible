@@ -338,7 +338,7 @@ writeChecksumsTable <- function(out, checksumFile, dots) {
 #' @param file  Character vector of file paths.
 #' @param quickCheck Logical indicating whether to use a fast file size check as a heuristic
 #'                   for determining changes to a file.
-#' @param ...   Additional arguments to `digest::digest`.
+#' @param ...   Additional arguments to [digest::digest()].
 #'
 #' @return A character vector of hashes.
 #'

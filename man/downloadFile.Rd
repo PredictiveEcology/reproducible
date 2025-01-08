@@ -103,7 +103,7 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \code{CHECKSUMS.txt} file. Other options, see details.}
 
 \item{.tempPath}{Optional temporary path for internal file intermediate steps.
-Will be cleared on.exit from this function.}
+Will be cleared \code{on.exit} from this function.}
 
 \item{...}{Passed to \code{dlFun}. Still experimental. Can be e.g., \code{type} for google docs.}
 }

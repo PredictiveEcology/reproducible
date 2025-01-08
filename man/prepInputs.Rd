@@ -96,7 +96,7 @@ mean internal caching is more time consuming. We recommend caching the full
 \code{prepInputs} call instead (e.g. \code{prepInputs(...) |> Cache()}).}
 
 \item{.tempPath}{Optional temporary path for internal file intermediate steps.
-Will be cleared on.exit from this function.}
+Will be cleared \code{on.exit} from this function.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.

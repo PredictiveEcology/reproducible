@@ -36,8 +36,7 @@ Cache(
 }
 \arguments{
 \item{FUN}{Either a function (e.g., \code{rnorm}), a function call (e.g., \code{rnorm(1)}),
-or an unevaluated function call (e.g., using
-\code{quote}).}
+or an unevaluated function call (e.g., using \code{quote()}).}
 
 \item{...}{Arguments passed to \code{FUN}, if \code{FUN} is not an expression.}
 
@@ -118,11 +117,11 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{cacheId}{Character string. If passed, this will override the calculated hash
-of the inputs, and return the result from this cacheId in the \code{cachePath}.
+of the inputs, and return the result from this \code{cacheId} in the \code{cachePath}.
 Setting this is equivalent to manually saving the output of this function, i.e.,
 the object will be on disk, and will be recovered in subsequent
 This may help in some particularly finicky situations
-where Cache is not correctly detecting unchanged inputs. This will guarantee
+where \code{Cache} is not correctly detecting unchanged inputs. This will guarantee
 the object will be identical each time; this may be useful in operational code.}
 
 \item{useCache}{Logical, numeric or \code{"overwrite"} or \code{"devMode"}. See details.}
@@ -144,10 +143,10 @@ the next most recent similar archive, and indicate which argument(s) is/are diff
 If a number larger than \code{1}, then it will report the N most recent similar archived
 objects.}
 
-\item{drv}{if using a database backend, drv must be an object that
-inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}
+\item{drv}{If using a database backend, \code{drv} must be an object that
+inherits from \code{DBIDriver} (e.g., \code{RSQLite::SQLite}).}
 
-\item{conn}{an optional DBIConnection object, as returned by dbConnect().}
+\item{conn}{an optional \code{DBIConnection} object, as returned by \code{dbConnect()}.}
 }
 \value{
 Returns the value of the
@@ -261,11 +260,11 @@ treated as paths, if they are file-backed.
 
 Caching speed may become a critical aspect of a final product. For example,
 if the final product is a shiny app, rerunning the entire project may need
-to take less then a few seconds at most. There are 3 arguments that affect
-Cache speed: \code{quick}, \code{length}, and
-\code{algo}. \code{quick} is passed to \code{.robustDigest}, which currently
-only affects \code{Path} and \verb{Raster*} class objects. In both cases, \code{quick}
-means that little or no disk-based information will be assessed.
+to take less then a few seconds at most.
+There are 3 arguments that affect \code{Cache} speed: \code{quick}, \code{length}, and \code{algo}.
+\code{quick} is passed to \code{.robustDigest}, which currently
+only affects \code{Path} and \verb{Raster*} class objects.
+In both cases, \code{quick} means that little or no disk-based information will be assessed.
 }
 
 \section{Filepaths}{

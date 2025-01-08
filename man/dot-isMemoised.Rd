@@ -8,11 +8,11 @@
 }
 \arguments{
 \item{cacheId}{Character string. If passed, this will override the calculated hash
-of the inputs, and return the result from this cacheId in the \code{cachePath}.
+of the inputs, and return the result from this \code{cacheId} in the \code{cachePath}.
 Setting this is equivalent to manually saving the output of this function, i.e.,
 the object will be on disk, and will be recovered in subsequent
 This may help in some particularly finicky situations
-where Cache is not correctly detecting unchanged inputs. This will guarantee
+where \code{Cache} is not correctly detecting unchanged inputs. This will guarantee
 the object will be identical each time; this may be useful in operational code.}
 
 \item{cachePath}{A repository used for storing cached objects.
