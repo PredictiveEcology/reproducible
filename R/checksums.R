@@ -333,7 +333,7 @@ writeChecksumsTable <- function(out, checksumFile, dots) {
 
 #' Calculate the hashes of multiple files
 #'
-#' Internal function. Wrapper for [digest::digest()] using `xxhash64`.
+#' Internal function. Wrapper for [digest::digest()] using `algo = xxhash64`.
 #'
 #' @param file  Character vector of file paths.
 #' @param quickCheck Logical indicating whether to use a fast file size check as a heuristic

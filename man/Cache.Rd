@@ -63,11 +63,7 @@ can be useful when the actual function is not helpful for a user, such as \code{
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}
 
-\item{algo}{The algorithms to be used; currently available choices are
-    \code{md5}, which is also the default, \code{sha1}, \code{crc32},
-    \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64},
-    \code{murmur32}, \code{spookyhash}, \code{blake3}, \code{crc32c},
-    \code{xxh3_64}, and \code{xxh3_128}.}
+\item{algo}{The digest algorithm to use. Default \code{xxhash64} (see \code{\link[digest:digest]{digest::digest()}} for others).}
 
 \item{cacheRepo}{Same as \code{cachePath}, but kept for backwards compatibility.}
 

@@ -255,6 +255,8 @@ utils::globalVariables(c(
 #' @param outputObjects Optional character vector indicating which objects to
 #'                      return. This is only relevant for list, environment (or similar) objects
 #'
+#' @param algo The digest algorithm to use. Default `xxhash64` (see [digest::digest()] for others).
+#'
 #' @param cacheRepo Same as `cachePath`, but kept for backwards compatibility.
 #'
 #' @param cachePath A repository used for storing cached objects.
@@ -338,7 +340,6 @@ utils::globalVariables(c(
 #' @param drv if using a database backend, drv must be an object that
 #'   inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite
 #' @param conn an optional DBIConnection object, as returned by dbConnect().
-#' @inheritParams digest::digest
 #'
 #' @return Returns the value of the
 #' function call or the cached version (i.e., the result from a previous call
