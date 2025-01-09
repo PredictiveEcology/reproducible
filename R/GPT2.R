@@ -1082,12 +1082,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       fileExt(cache_file)
 
     fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key, format = format)
-<<<<<<< Updated upstream
     rerun <- if (useDBI()) FALSE else !isTRUE(any(file.exists(fe)))
-
-=======
-    rerun <- !isTRUE(any(file.exists(fe)))
->>>>>>> Stashed changes
     if (is.null(shownCache))
       shownCache <- showCacheFast(cache_key, cachePath, dtFile = fe, drv = drv, conn = conn)
 
@@ -1117,11 +1112,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
         return(.returnNothing)
       }
 
-<<<<<<< Updated upstream
       output <- .unwrap(obj, cachePath = cachePath, cacheId = cache_key)
-=======
-      output <- .unwrap(obj, cachePath = cachePath)
->>>>>>> Stashed changes
       if (isTRUE(changedSaveFormat)) {
         swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
                             cacheId = cache_key, sameCacheID = sameCacheID,
