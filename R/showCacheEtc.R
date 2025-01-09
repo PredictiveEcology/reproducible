@@ -653,7 +653,7 @@ setMethod(
 
         ## Save it
         userTags <- cacheFromList[artifact, on = .cacheTableHashColName()][
-          !tagKey %in% c("format", "name", "date", "cacheId"), list(tagKey, tagValue)
+          !tagKey %in% c("format", "name", "date"), list(tagKey, tagValue)
         ]
         outputToSave <- .wrap(outputToSave, cachePath = cacheTo, drv = drvTo, conn = connTo)
         output <- saveToCache(cacheTo,
