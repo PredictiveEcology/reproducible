@@ -131,7 +131,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   # TRY link first, if there is a linkToCacheId, but some cases will fail; not sure what these cases are
   if (!is.null(linkToCacheId)) {
-    ftL <- CacheStoredFile(cachePath, linkToCacheId)
+    ftL <- CacheStoredFile(cachePath, linkToCacheId, obj = obj)
     suppressWarnings({
       out <- try(file.link(from = ftL, to = fts), silent = TRUE)
     })
@@ -305,6 +305,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
       # Need exclusive lock
 
       obj <- loadFile(f)
+      browser()
       obj <- .unwrap(obj,
                      cachePath = cachePath,
                      cacheId = cacheId,

@@ -1111,6 +1111,15 @@ unmakeMemoisable.default <- function(x) {
     obj <- data.table::copy(obj)
   } else if (is(obj, "Path")) {
     obj <- unwrapSpatRaster(obj, cachePath, cacheId = cacheId, ...)
+    # obj2 <- try(unwrapSpatRaster(obj, cachePath, ...))
+    # if (is(obj2, "try-error")) {
+    #   browser()
+    #   clearCache(cacheId = cacheId, x = cachePath, ask = FALSE, drv = drv, conn = conn)
+    #   messageCache("Removing ", cacheId, " from the Cache as the file-backing is missing or corrupt")
+    #   obj <- .returnNothing
+    # } else {
+    #   obj <- obj2
+    # }
   }
   # put attributes back on the potentially packed object
   obj <- attributesReassign(atts, obj)
@@ -1155,6 +1164,7 @@ unmakeMemoisable.default <- function(x) {
   atts <- attributes(obj)
   anyNames <- names(obj)
   isSpatVector <- if (is.null(anyNames)) FALSE else all(names(obj) %in% spatVectorNamesForCache)
+  FAIL <- FALSE
   if (isTRUE(isSpatVector)) {
     obj <- unwrapSpatVector(obj)
   } else {
@@ -1163,13 +1173,18 @@ unmakeMemoisable.default <- function(x) {
       obj <- unwrapRaster(obj, cachePath, cacheId)
     } else {
       obj <- lapply(obj, function(out) {
-        .unwrap(out, cachePath, cacheId, drv, conn, ...)
+        ret <- .unwrap(out, cachePath, cacheId, drv, conn, ...)
+        if (is.character(ret))
+          if (identical(.returnNothing, ret))
+            FAIL <<- TRUE
       })
     }
   }
   # put attributes back on the potentially packed object
   obj <- attributesReassign(atts, obj)
 
+  if (isTRUE(FAIL))
+    obj <- .returnNothing
   obj
 }
 

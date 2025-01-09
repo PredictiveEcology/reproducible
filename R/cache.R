@@ -1256,8 +1256,10 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
 
       args <- as.call(out)
       # args <- if (isTRUE(outer)) try(as.call(out)) else out
-      args <- match_call_primitive(args[[1]], args, expand.dots = FALSE, envir = envir)
-      args[[1]] <- getMethodAll(args, envir)
+      if (is.function(args[[1]])) {
+        args <- match_call_primitive(args[[1]], args, expand.dots = FALSE, envir = envir)
+        args[[1]] <- getMethodAll(args, envir)
+      }
     } else {
       args <- eval(args, envir)
     }
@@ -1816,6 +1818,8 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     })
   }
 
+  if (!is(objsToDigest, "list"))
+    browser()
   preDigest <- Map(x = objsToDigest, i = seq_along(objsToDigest), function(x, i) {
     # remove the "newCache" attribute, which is irrelevant for digest
     if (!is.null(attr(x, ".Cache")$newCache)) {
@@ -1830,12 +1834,33 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
         messageCache("Error occurred during .robustDigest of ", nam[i], " in ", .functionName)
     })
   })
+  preDigest2 <- .robustDigest(objsToDigest)
+
+  if (!isTRUE(all.equal(.orderDotsUnderscoreFirst(preDigest), .orderDotsUnderscoreFirst(preDigest2[names(preDigest)]))))
   if (is.character(quick) || isTRUE(quick)) {
     preDigest <- append(preDigest, preDigestQuick)
   }
 
   res <- .robustDigest(unname(sort(unlist(preDigest))), algo = algo, quick = TRUE, ...)
   list(outputHash = res, preDigest = preDigest)
+}
+
+
+CacheDigestOnlyUniques <- function(dots) {
+  ma <- match(dots, dots)
+  dig <- Map(x = ...names(), function(x) x)
+  dd <- dots[unique(ma)]
+  dig2 <- .robustDigest(dd)
+  nameOrigOrd <- reproducible:::.orderDotsUnderscoreFirst(names(dig2))
+  dig[unique(ma)] <- dig2[...names()[unique(ma)]]
+  wh <- which(duplicated(dots))
+  dig[wh] <- dig2[...names()[ma[wh]]]
+  #dig2[...names()] <- dig
+  #dig2 <- dig2[nameOrigOrd]
+  #dig2
+  outputHash <- .robustDigest(unname(sort(unlist(dig))), quick = TRUE)
+  dig2 <- list(outputHash = outputHash, preDigest = dig)
+  dig2
 }
 
 #' @importFrom data.table setDT setkeyv melt
@@ -2598,17 +2623,19 @@ checkOverlappingArgs <- function(CacheMatchedCall, forms, dotsCaptured, function
                                  FUNcapturedNamesEvaled, whichCache = "Cache") {
   # Check for args that are passed to both Cache and the FUN -- if any overlap; pass to both
   possibleOverlap <- if (identical(whichCache, "Cache")) .namesCacheFormals else .namescache2Formals # names(formals(args(Cache)))
-  possibleOverlap <- intersect(names(CacheMatchedCall), possibleOverlap)
-  actualOverlap <- intersect(names(forms), possibleOverlap)
-  if (length(actualOverlap) && !identical(list(), dotsCaptured)) { # e.g., useCache, verbose; but if not in dots, then OK because were separate already
-    message(
-      "The following arguments are arguments for both Cache and ", functionName, ":\n",
-      paste0(actualOverlap, collapse = ", "),
-      "\n...passing to both. If more control is needed, pass as a call, e.g., ",
-      "Cache(", functionName, "(...))"
-    )
-    overlappingArgsAsList <- as.list(CacheMatchedCall)[actualOverlap]
-    FUNcapturedNamesEvaled <- as.call(append(as.list(FUNcapturedNamesEvaled), overlappingArgsAsList))
+  if (!is.call(CacheMatchedCall[["FUN"]])) {
+    possibleOverlap <- intersect(names(CacheMatchedCall), possibleOverlap)
+    actualOverlap <- intersect(names(forms), possibleOverlap)
+    if (length(actualOverlap) && !identical(list(), dotsCaptured)) { # e.g., useCache, verbose; but if not in dots, then OK because were separate already
+      message(
+        "The following arguments are arguments for both Cache and ", functionName, ":\n",
+        paste0(actualOverlap, collapse = ", "),
+        "\n...passing to both. If more control is needed, pass as a call, e.g., ",
+        "Cache(", functionName, "(...))"
+      )
+      overlappingArgsAsList <- as.list(CacheMatchedCall)[actualOverlap]
+      FUNcapturedNamesEvaled <- as.call(append(as.list(FUNcapturedNamesEvaled), overlappingArgsAsList))
+    }
   }
   FUNcapturedNamesEvaled
 }

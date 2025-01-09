@@ -1082,16 +1082,32 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       fileExt(cache_file)
 
     fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key, format = format)
+<<<<<<< Updated upstream
     rerun <- if (useDBI()) FALSE else !isTRUE(any(file.exists(fe)))
 
+=======
+    rerun <- !isTRUE(any(file.exists(fe)))
+>>>>>>> Stashed changes
     if (is.null(shownCache))
       shownCache <- showCacheFast(cache_key, cachePath, dtFile = fe, drv = drv, conn = conn)
 
     .cacheMessageObjectToRetrieve(functionName, shownCache, cachePath,
                                   cacheId = cache_key, verbose = verbose)
+    memoiseFail <- FALSE
     if (fromMemoise && !rerun) {
       output <- get(cache_key, envir = memoiseEnv(cachePath))
-    } else {
+
+      # Some objects, especially Rcpp objects can get stale; rerun if this is the case
+      outputTestIntegrity <- try(output[1], silent = TRUE)
+      if (isTRUE(is(outputTestIntegrity, "try-error")))
+        if (isTRUE(any(grepl("external pointer.+not valid", outputTestIntegrity)))) {
+          memoiseFail <- TRUE
+          rm(list = cache_key, envir = memoiseEnv(cachePath))
+          cache_file <- CacheStoredFile(cachePath, cache_key)
+          browser()
+        }
+    }
+    if (!fromMemoise || rerun || memoiseFail) {
       obj <- try(loadFile(cache_file))
       if (is(obj, "try-error") || rerun) {
         messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
@@ -1101,7 +1117,11 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
         return(.returnNothing)
       }
 
+<<<<<<< Updated upstream
       output <- .unwrap(obj, cachePath = cachePath, cacheId = cache_key)
+=======
+      output <- .unwrap(obj, cachePath = cachePath)
+>>>>>>> Stashed changes
       if (isTRUE(changedSaveFormat)) {
         swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
                             cacheId = cache_key, sameCacheID = sameCacheID,
