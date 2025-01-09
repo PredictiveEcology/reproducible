@@ -25,7 +25,7 @@ test_that("test file-backed raster caching", {
   # https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions
   # https://github.com/r-lib/testthat/issues/734 to direct it to reproducible::isInteractive
   #   solves the error about not being in the testthat package
-  val1 <- .cacheNumDefaultTags() + length(tagsSpatRaster()) # adding a userTag here... the +8 is the SpatRaster extras
+  val1 <- .cacheNumDefaultTags() + length(setdiff(gsub(":", "", tagsSpatRaster()), .ignoreTagKeys())) # adding a userTag here... the +8 is the SpatRaster extras
   ik <- .ignoreTagKeys()
   aa <- Cache(randomPolyToDisk, tmpfile[1], cachePath = tmpCache, userTags = "something2")
 
