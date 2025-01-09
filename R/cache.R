@@ -2642,6 +2642,7 @@ checkConns <- function(cachePaths, conn) {
 
 createConns <- function(cachePath, conns, drv) {
   if (useDBI()) {
+    drv <- getDrv(drv)
     if (is.null(conns[[cachePath]])) {
       conns[[cachePath]] <- dbConnectAll(drv, cachePath = cachePath)
       RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA busy_timeout=5000;"))
