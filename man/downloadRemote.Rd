@@ -73,7 +73,7 @@ even if they pass the checksums or the files are all there.}
 \item{needChecksums}{Logical indicating whether to generate checksums. ## TODO: add overwrite arg to the function?}
 
 \item{.tempPath}{Optional temporary path for internal file intermediate steps.
-Will be cleared on.exit from this function.}
+Will be cleared \code{on.exit} from this function.}
 
 \item{preDigest}{The list of \code{preDigest} that comes from \code{CacheDigest} of an object}
 

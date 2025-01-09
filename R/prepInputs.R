@@ -197,7 +197,7 @@ utils::globalVariables(c(
 #'   `prepInputs` call instead (e.g. `prepInputs(...) |> Cache()`).
 #'
 #' @param .tempPath Optional temporary path for internal file intermediate steps.
-#'   Will be cleared on.exit from this function.
+#'   Will be cleared `on.exit` from this function.
 #'
 #' @inheritParams Cache
 #' @author Eliot McIntire, Jean Marchal, and Tati Micheletti

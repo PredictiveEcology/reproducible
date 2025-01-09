@@ -12,8 +12,11 @@ test_that("symlinks work with cache, input, output paths", {
 
   currentDir <- tmpdir
 
-  linkedDir <- ifelse(dir.exists("/mnt/scratch"), file.path("/mnt/scratch", Sys.info()[["user"]]),
-                      dirname(tempdir())) |>
+  linkedDir <- ifelse(
+    dir.exists("/mnt/scratch"),
+    file.path("/mnt/scratch", Sys.info()[["user"]]),
+    dirname(tempdir())
+  ) |>
     file.path("reproducible_test_symlinks") |>
     checkPath(create = TRUE)
   linkedCacheDir <- file.path(linkedDir, "cache") |>
@@ -36,7 +39,10 @@ test_that("symlinks work with cache, input, output paths", {
   expect_true(file.symlink(linkedOutputDir, outputDir))
   expect_identical(fs::as_fs_path(linkedOutputDir), fs::link_path(outputDir))
 
-  withr::local_options("reproducible.cachePath" = cacheDir)
+  withr::local_options("reproducible.cachePath" = asPath(cacheDir))
+  on.exit({
+    unlink(linkedDir, recursive = TRUE)
+  }, add = TRUE)
 
   ## CRS
   targetCRS <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
@@ -59,16 +65,18 @@ test_that("symlinks work with cache, input, output paths", {
   ## prep LCC for studyArea and write to outputDir
   LCC <- Cache(
     prepInputs,
-    url = paste0("https://ftp.maps.canada.ca/pub/nrcan_rncan/",
-                 "Land-cover_Couverture-du-sol/canada-landcover_canada-couverture-du-sol/",
-                 "CanadaLandcover2010.zip"),
+    url = paste0(
+      "https://ftp.maps.canada.ca/pub/nrcan_rncan/",
+      "Land-cover_Couverture-du-sol/canada-landcover_canada-couverture-du-sol/",
+      "CanadaLandcover2010.zip"
+    ),
     destinationPath = asPath(inputDir),
-    studyArea = studyArea, ## NOTE: this doesn't reproject the raster?
+    to = studyArea,
     method = "near",
     datatype = "INT2U",
     fun = "terra::rast",
     targetFile = asPath("CAN_LC_2010_CAL.tif"),
-    writeTo = file.path(outputDir, "LCC_ON_FMU.tif")
+    writeTo = asPath(file.path(outputDir, "LCC_ON_FMU.tif"))
   )
 
   ## check files exist in the correct places
@@ -88,6 +96,6 @@ test_that("symlinks work with cache, input, output paths", {
   expect_identical(terra::sources(LCC), file.path(linkedOutputDir, "LCC_ON_FMU.tif"))
 
   ## cleanup
-  unlink(linkedDir, recursive = TRUE)
+  try(unlink(linkedDir, recursive = TRUE))
   withr::deferred_run()
 })

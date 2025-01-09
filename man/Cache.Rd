@@ -89,8 +89,7 @@ Cache2(
 }
 \arguments{
 \item{FUN}{Either a function (e.g., \code{rnorm}), a function call (e.g., \code{rnorm(1)}),
-or an unevaluated function call (e.g., using
-\code{quote}).}
+or an unevaluated function call (e.g., using \code{quote()}).}
 
 \item{...}{Arguments passed to \code{FUN}, if \code{FUN} is not an expression.}
 
@@ -116,11 +115,7 @@ can be useful when the actual function is not helpful for a user, such as \code{
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}
 
-\item{algo}{The algorithms to be used; currently available choices are
-    \code{md5}, which is also the default, \code{sha1}, \code{crc32},
-    \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64},
-    \code{murmur32}, \code{spookyhash}, \code{blake3}, \code{crc32c},
-    \code{xxh3_64}, and \code{xxh3_128}.}
+\item{algo}{The digest algorithm to use. Default \code{xxhash64} (see \code{\link[digest:digest]{digest::digest()}} for others).}
 
 \item{cachePath}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
@@ -165,11 +160,11 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{cacheId}{Character string. If passed, this will override the calculated hash
-of the inputs, and return the result from this cacheId in the \code{cachePath}.
+of the inputs, and return the result from this \code{cacheId} in the \code{cachePath}.
 Setting this is equivalent to manually saving the output of this function, i.e.,
 the object will be on disk, and will be recovered in subsequent
 This may help in some particularly finicky situations
-where Cache is not correctly detecting unchanged inputs. This will guarantee
+where \code{Cache} is not correctly detecting unchanged inputs. This will guarantee
 the object will be identical each time; this may be useful in operational code.}
 
 \item{useCache}{Logical, numeric or \code{"overwrite"} or \code{"devMode"}. See details.}
@@ -191,8 +186,8 @@ the next most recent similar archive, and indicate which argument(s) is/are diff
 If a number larger than \code{1}, then it will report the N most recent similar archived
 objects.}
 
-\item{drv}{if using a database backend, drv must be an object that
-inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}
+\item{drv}{If using a database backend, \code{drv} must be an object that
+inherits from \code{DBIDriver} (e.g., \code{RSQLite::SQLite}).}
 
 \item{conn}{an optional DBIConnection object, as returned by dbConnect().}
 
@@ -314,11 +309,11 @@ treated as paths, if they are file-backed.
 
 Caching speed may become a critical aspect of a final product. For example,
 if the final product is a shiny app, rerunning the entire project may need
-to take less then a few seconds at most. There are 3 arguments that affect
-Cache speed: \code{quick}, \code{length}, and
-\code{algo}. \code{quick} is passed to \code{.robustDigest}, which currently
-only affects \code{Path} and \verb{Raster*} class objects. In both cases, \code{quick}
-means that little or no disk-based information will be assessed.
+to take less then a few seconds at most.
+There are 3 arguments that affect \code{Cache} speed: \code{quick}, \code{length}, and \code{algo}.
+\code{quick} is passed to \code{.robustDigest}, which currently
+only affects \code{Path} and \verb{Raster*} class objects.
+In both cases, \code{quick} means that little or no disk-based information will be assessed.
 }
 
 \section{Filepaths}{
