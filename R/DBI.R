@@ -910,6 +910,7 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
   if (length(fts) > 1) {
     ftsOther <- fts[-1]
     fns <- Filenames(obj, allowMultiple = TRUE)
+    ftsOther <- .suffix(ftsOther, suffixCacheId(cacheId)) # makes it unique in the cache
     hardLinkOrCopy(fns, ftsOther, verbose = -2)
     fsOther <- sum(file.size(ftsOther))
     fts <- fts[1]
@@ -1173,3 +1174,6 @@ swapCacheFileFormat <- function(wrappedObj, cachePath, drv, conn, cacheId, sameC
   )
 }
 
+suffixCacheId <- function(cacheId) {
+  paste0("_", cacheId)
+}
