@@ -657,3 +657,19 @@ urlExists <- function(url) {
     mess[1:(length(mess)-1)] <- paste0(mess[1:(length(mess)-1)], "\n")
   mess
 }
+
+
+#' Extract the cache id of an object
+#'
+#' Any object that was returned from the Cache or was calculated as part of a
+#' Cache call will have an attribute, `tags` and an entry with `cacheId:` prefix.
+#' This is a lightweight helper to extract that `cacheId`.
+#'
+#' @param obj Any R object
+#'
+#' @return The cacheId if this was part of a cache call. Otherwise `NULL`
+#' @export
+#'
+cacheId <- function(obj) {
+  gsub("cacheId:", "", attr(obj, "tags"))
+}
