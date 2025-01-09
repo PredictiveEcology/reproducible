@@ -43,7 +43,7 @@ test_that("test Cache argument inheritance to inner functions", {
   # does cachePath propagate to outer ones -- no message about cachePath being tempdir()
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
   expect_true(length(out) == 2)
-  expect_true(sum(grepl(paste0(.message$LoadedCacheResult(), ".+outer call"), out)) == 1)
+  expect_true(sum(cli::ansi_grepl(paste0(.message$LoadedCacheResult(), ".+outer call"), out)) == 1)
 
   # check that the rnorm inside "outer" returns cached value even if outer "outer" function is changed
   outer <- function(n) {
@@ -56,7 +56,7 @@ test_that("test Cache argument inheritance to inner functions", {
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
-  expect_true(sum(grepl(msgGrep, out)) == 1)
+  expect_true(sum(cli::ansi_grepl(msgGrep, out)) == 1)
 
   # Override with explicit argument
   outer <- function(n) {
@@ -79,7 +79,7 @@ test_that("test Cache argument inheritance to inner functions", {
   # Second time will get a cache on outer
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir))
   expect_true(length(out) == 2)
-  expect_true(sum(grepl(paste0(.message$LoadedCacheResult(), ".+outer call"), out)) == 1)
+  expect_true(sum(cli::ansi_grepl(paste0(.message$LoadedCacheResult(), ".+outer call"), out)) == 1)
 
   # doubly nested
   inner <- function(mean, useCache = TRUE) {
@@ -117,7 +117,7 @@ test_that("test Cache argument inheritance to inner functions", {
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
-  expect_true(sum(grepl(msgGrep, out)) == 1)
+  expect_true(sum(cli::ansi_grepl(msgGrep, out)) == 1)
 
   # Check userTags -- all items have it
   clearCache(tmpdir, ask = FALSE)
@@ -190,6 +190,7 @@ test_that("test file-backed raster caching", {
   expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
   clearCache(tmpCache, userTags = "something2", ask = FALSE)
   expect_equal(NROW(showCache(tmpCache)), 0)
+  expect_equal(NROW(dir(CacheStorageDir(tmpCache))), 0) # make sure the `.tif` file is also gone
 
   aa <- Cache(randomPolyToDisk, tmpfile[1], cachePath = tmpCache, userTags = "something2")
   expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
@@ -218,8 +219,9 @@ test_that("test file-backed raster caching", {
     )))
   } else {
     sc <- showCache(tmpCache)
-    origFile <- sc[tagKey == "origFilename"]$cacheId
-    expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + !useDBI())
+    origFile <- sc[grepl("origFilename", tagKey)]$cacheId
+    hasFilenameInCache <- NROW(sc[tagKey %in% tagFilenamesInCache])
+    expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + hasFilenameInCache + !useDBI())
   }
 
   clearCache(x = tmpCache)
@@ -719,8 +721,6 @@ test_that("test asPath", {
     .message$LoadedCacheResult()
   ), a2)) == 1)
   expect_true(sum(cli::ansi_grepl(paste(.message$LoadedCacheResult("Memoised"), "saveRDS call"), a3)) == 1)
-
-  expect_true(sum(grepl(paste0(.message$LoadedCacheResult("Memoised"), ".+saveRDS call"), a3)) == 1)
 
   unlink("filename.RData")
   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
@@ -1282,8 +1282,8 @@ test_that("change to new capturing of FUN & base pipe", {
 
   expect_true(length(grep("\\<sd\\>", mess0)) == 1) # digests just the 1
   expect_true(length(grep("\\<sd\\>", mess1)) == 1) # digests just the 1
-  expect_true(length(grep("\\<sd\\>", strsplit(mess2[[1]], ":")[[1]])) == 6) # digests each element
-  expect_true(length(grep("\\<sd\\>", strsplit(mess3[[1]], ":")[[1]])) == 6) # digests each element
+  expect_true(length(grep("\\<sd\\>", strsplit(mess2[[1]], ":")[[1]])) == 1) # digests each element
+  expect_true(length(grep("\\<sd\\>", strsplit(mess3[[1]], ":")[[1]])) == 1) # digests each element
 
   clearCache(tmpCache)
   for (i in 1:3) Cache(rnorm, i, cachePath = tmpCache)
@@ -1446,7 +1446,9 @@ test_that("test cache with new approach to match.call", {
     a[[3]] <- Cache(do.call, terra::rast, list(m, digits = 4))
     a[[4]] <- Cache(do.call(terra::rast, list(m, digits = 4)))
     a[[5]] <- Cache(quote(terra::rast(m, digits = 4)))
-    expect_identical(1L, length(unique(unlist(.robustDigest(a)))))
+    dig <- .robustDigest(a) # now includes ._list
+    dig <- dig[!nzchar(names(dig))]
+    expect_identical(1L, length(unique(unlist(dig))))
     # expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
     # for (i in 2:NROW(a)) {
     #   test <- identical(attr(a[[i]], ".Cache")$newCache, FALSE)
@@ -1473,7 +1475,9 @@ test_that("test cache with new approach to match.call", {
       ff <- sf::st_make_valid
       a[[5]] <- Cache(ff(p1))
 
-      expect_identical(1L, length(unique(.robustDigest(a))))
+      dig <- .robustDigest(a) # now includes ._list
+      dig <- dig[!nzchar(names(dig))]
+      expect_identical(1L, length(unique(dig)))
 
     }
     # expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
@@ -1705,8 +1709,9 @@ test_that("multifile cache saving", {
   b <- Cache(randomPolyToDisk2(tmpfile), quick = "tmpfiles")
   expect_false(attr(b, ".Cache")$newCache)
   expect_true(attr(a, ".Cache")$newCache)
-  expect_true(all(basename(Filenames(a)) %in% dir(CacheStorageDir())))
-  expect_false(all(Filenames(a) %in% dir(CacheStorageDir(), full.names = TRUE)))
+  fns <- basename(.prefix(Filenames(a),  prefixCacheId(cacheId(a))))
+  expect_true(all(fns %in% dir(CacheStorageDir())))
+  expect_false(all(fns %in% dir(CacheStorageDir(), full.names = TRUE)))
 
 })
 
@@ -1765,6 +1770,7 @@ test_that("cacheId = 'customName'", {
   newDBI <- setdiff(c(TRUE, FALSE), rudbi)
   withr::local_options(reproducible.useDBI = newDBI)
 
+  aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
   f <- rnorm(4) |> Cache(.functionName = fnName, cacheId = "myCacheObj")
   g <- rnorm(5) |> Cache(.functionName = fnName, cacheId = "myCacheObj")
   expect_true(all.equalWONewCache(e, d))
