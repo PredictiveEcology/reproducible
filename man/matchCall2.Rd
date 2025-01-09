@@ -19,8 +19,7 @@ matchCall2(definition, call, envir, envir2 = parent.frame(), FUN)
 \item{envir2}{Environment. The environment where \code{matchCall2} was called.}
 
 \item{FUN}{Either a function (e.g., \code{rnorm}), a function call (e.g., \code{rnorm(1)}),
-or an unevaluated function call (e.g., using
-\code{quote}).}
+or an unevaluated function call (e.g., using \code{quote()}).}
 }
 \value{
 A named list with \code{call} (the original call, without \code{quote}),

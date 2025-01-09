@@ -82,7 +82,20 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   # After memoising fail, try files; need to check Cache dir and set lockfile
   locked <- lockFile(cachePaths[[1]], keyFull$key)
 
+  if (useDBI()) {
+    connOrig <- conn
+    conn <- checkConns(cachePaths, conn)
+    drv <- getDrv(getOption("reproducible.drv", NULL))
+    for (cachePath in cachePaths)
+      conn <- createConns(cachePath, conn, drv) # this will convert backend if it is wrong
+
+    if (is.null(connOrig)) # don't disconnect if conn was user passed
+      # if this is >1st cachePath, then the db will already be disconnected; suppressWarnings
+      on.exit(dbDisconnectAll(conn), add = TRUE)
+  }
+
   # Check if keyFull$key is on disk and return if it is there
+
   outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePaths, cache_file, callList$.functionName, callList$func,
                                               useCache, useCloud, cloudFolderID, gdriveLs,
                                               full_call = callList$new_call,
@@ -291,15 +304,14 @@ evaluate_args <- function(args, envir) {
 check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functionName,
                                       func, useCache, useCloud, cloudFolderID, gdriveLs,
                                       full_call, drv, conn, envir = parent.frame(), verbose) {
-
   # Check if the result is already cached
   connOrig <- conn
-  conns <- checkConns(cachePaths, conn)
+  conns <- conn
+  # conns <- checkConns(cachePaths, conn)
 
   for (cachePath in cachePaths) {
     cache_file <- CacheStoredFile(cachePath, cache_key)
     cacheFileExists <- file.exists(cache_file) # could be length >1
-    conns <- createConns(cachePath, conns, drv) # this will convert backend if it is wrong
     if (useDBI()) {
       inReposPoss <- searchInRepos(cachePath,
                                    outputHash = cache_key,
@@ -1050,6 +1062,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
                                   cache_file = NULL, changedSaveFormat, sameCacheID,
                                   cache_file_orig, func, shownCache = NULL,
                                   full_call, drv, conn, verbose) {
+
   if (identical(useCache, "overwrite")) {
     clearCacheOverwrite(cachePath, cache_key, functionName, drv, conn, verbose)
     return(invisible(.returnNothing))
@@ -1058,7 +1071,8 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       fileExt(cache_file)
 
     fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key, format = format)
-    rerun <- !isTRUE(any(file.exists(fe) ))
+    rerun <- if (useDBI()) FALSE else !isTRUE(any(file.exists(fe)))
+
     if (is.null(shownCache))
       shownCache <- showCacheFast(cache_key, cachePath, dtFile = fe, drv = drv, conn = conn)
 
