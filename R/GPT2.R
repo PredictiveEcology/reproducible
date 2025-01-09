@@ -862,7 +862,8 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
                             preDigest, .functionName, drv, conn, verbose) {
   cacheIdIdentical <- cache_Id_Identical(metadata, cachePath, cache_key)
   linkToCacheId <- if (!is.null(cacheIdIdentical)) filePathSansExt(basename(cacheIdIdentical))  else NULL
-  outputToSave <- .wrap(outputFromEvaluate, cachePath = cachePath, preDigest = preDigest, verbose = verbose)
+  outputToSave <- .wrap(outputFromEvaluate, cachePath = cachePath, preDigest = preDigest,
+                        cacheId = cache_key, verbose = verbose)
   metadata <- metadata_update(outputToSave, metadata, cache_key) # .wrap may have added tags
   userTags <- paste0(metadata$tagKey, ":", metadata$tagValue)
   fs <- saveToCache(cachePath = cachePath, # drv = NULL, conn = NULL,
@@ -1075,8 +1076,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
         return(.returnNothing)
       }
 
-
-      output <- .unwrap(obj, cachePath = cachePath)
+      output <- .unwrap(obj, cachePath = cachePath, cacheId = cache_key)
       if (isTRUE(changedSaveFormat)) {
         swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
                             cacheId = cache_key, sameCacheID = sameCacheID,
