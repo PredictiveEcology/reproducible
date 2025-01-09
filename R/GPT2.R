@@ -168,8 +168,10 @@ cache2 <- Cache
 convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
   # Capture the unevaluated call
 
+  .functionName <- NULL
   # Check if the first argument is a function call
   func_full <- NULL
+
   func_call <- NULL
   if (is.call(call[[2]])) {
 
@@ -231,6 +233,8 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
   }
 
   if (is.call(func) || is.name(func)) {
+    if (is.name(func))
+      .functionName <- format(func)
     fun <- if (is.null(func_full)) func else func_full
     if (is.name(fun)) {
       infixes <- c("+", "-", "*", "/", "==", "!=", "<", ">", "<=", ">=", "&&", "||")
@@ -282,6 +286,8 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
   attr(matched_call, ".Cache")$func_call <- func_call2
   attr(matched_call, ".Cache")$args_w_defaults <- combined_args
   attr(matched_call, ".Cache")$method <- func
+  attr(matched_call, ".Cache")$.functionName <- .functionName
+
 
   return(matched_call)
 }
@@ -1024,11 +1030,16 @@ harmonizeCall <- function(callList, .callingEnv, .functionName = NULL) {
     callList$call <- convertCallWithSquigglyBraces(callList$call, callList$usesDots)
   new_call <- convertCallToCommonFormat(callList$call, callList$usesDots, isSquiggly, .callingEnv) # evaluated arguments
   func_call <- attr(new_call, ".Cache")$func_call         # not evaluated arguments
+  .functionNamePoss <- attr(new_call, ".Cache")$.functionName
   func <- as.list(new_call)[[1]]
 
   # Try to identify the .functionName; if can't just use the matched call callList$FUNorig
-  if (is.null(.functionName))
-    .functionName <- getFunctionName2(func_call)# as.character(normalized_FUN[[1]])
+  if (is.null(.functionName)) {
+    if (!is.null(.functionNamePoss))
+      .functionName <- .functionNamePoss
+    else
+      .functionName <- getFunctionName2(func_call)# as.character(normalized_FUN[[1]])
+  }
   if (!isTRUE(any(nzchar(.functionName)))) {
     .functionName <- format(callList$FUNorig)
   }
