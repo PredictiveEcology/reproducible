@@ -910,7 +910,10 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
   if (length(fts) > 1) {
     ftsOther <- fts[-1]
     fns <- Filenames(obj, allowMultiple = TRUE)
-    ftsOther <- .suffix(ftsOther, suffixCacheId(cacheId)) # makes it unique in the cache
+    ftsOther <- filenameInCacheWPrefix(ftsOther, cacheId, relative = FALSE)
+    # ftsOther <- .prefix(ftsOther, prefixCacheId(cacheId)) # makes it unique in the cache
+    # if (!identical(ftsOther2, ftsOther)) browser()
+
     hardLinkOrCopy(fns, ftsOther, verbose = -2)
     fsOther <- sum(file.size(ftsOther))
     fts <- fts[1]
@@ -1136,7 +1139,7 @@ loadFromCacheSwitchFormat <- function(f, verbose, cachePath, fullCacheTableForOb
         verbose = verbose
       )
 
-      obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn)
+      obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn, cacheId = cacheId)
       swapCacheFileFormat(wrappedObj = obj2, cachePath = cachePath, drv = drv, conn = conn,
                           cacheId = cacheId, sameCacheID = sameCacheID, newFile = f, verbose = verbose)
       # fs <- saveToCache(

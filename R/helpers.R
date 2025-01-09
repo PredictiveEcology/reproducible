@@ -658,6 +658,9 @@ urlExists <- function(url) {
   mess
 }
 
+prefixCacheId <- function(cacheId) {
+  paste0(cacheId, "_")
+}
 
 #' Extract the cache id of an object
 #'

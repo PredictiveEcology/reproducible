@@ -874,7 +874,7 @@ Cache2 <-
       if (.CacheIsNew) {
         outputToSave <- .wrap(output, cachePath, preDigest = preDigest,
                               outputObjects = outputObjects,
-                              drv = drv, conn = conn, verbose = verbose)
+                              drv = drv, conn = conn, cacheId = outputHash, verbose = verbose)
         if (isTRUE(is.character(outputToSave)) && isTRUE(!is.character(output)))
           outputToSave <- asPath(outputToSave)
         output <- .CopyCacheAtts(outputToSave, output)
@@ -2453,7 +2453,8 @@ returnObjFromRepo <- function(isInRepo, notOlderThan, fullCacheTableForObj, cach
     # Here, upload local copy to cloud folder
     isInCloud <- any(grepl(outputHash, gdriveLs$name))
     if (isInCloud %in% FALSE) {
-      outputToSave <- .wrap(output, cachePath, preDigest = preDigest, drv = drv, conn = conn, verbose = verbose)
+      outputToSave <- .wrap(output, cachePath, preDigest = preDigest, drv = drv, conn = conn,
+                            cacheId = outputHash, verbose = verbose)
       cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cachePath, cloudFolderID, ## TODO: saved not found
         outputToSave,
         verbose = verbose

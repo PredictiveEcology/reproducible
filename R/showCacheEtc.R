@@ -218,7 +218,7 @@ setMethod(
 
     if (NROW(objsDT)) {
       filesToRemove1 <- objsDT[grepl(pattern = "cacheRaster", tagKey)][[.cacheTableTagColName()]]
-      filesToRemove2 <- objsDT[grepl(pattern = "origFilename|filesToLoad", tagKey)][[.cacheTableTagColName()]]
+      filesToRemove2 <- objsDT[grepl(pattern = "origFilename|filesToLoad|filenamesInCache", tagKey)][[.cacheTableTagColName()]]
       filesToRemove2 <- normPath(file.path(CacheStorageDir(x), basename(filesToRemove2)))
       filesToRemove <- unique(c(filesToRemove1, filesToRemove2))
       # filebackedInRepo <- objsDT[grepl(pattern = "fromDisk", tagKey) &

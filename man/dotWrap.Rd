@@ -19,6 +19,7 @@
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
+  cacheId,
   ...
 )
 
@@ -30,6 +31,7 @@
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
+  cacheId,
   ...
 )
 
@@ -41,6 +43,7 @@
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
+  cacheId,
   ...
 )
 
@@ -51,6 +54,7 @@
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
+  cacheId,
   ...
 )
 
@@ -112,9 +116,9 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}
 
-\item{...}{Arguments passed to methods; default does not use anything in \code{...}.}
-
 \item{cacheId}{Used strictly for messaging. This should be the cacheId of the object being recovered.}
+
+\item{...}{Arguments passed to methods; default does not use anything in \code{...}.}
 }
 \value{
 Returns an object that can be saved to disk e.g., via \code{saveRDS}.
