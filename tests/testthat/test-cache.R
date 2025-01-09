@@ -63,7 +63,9 @@ test_that("test file-backed raster caching", {
   } else {
     sc <- showCache(tmpCache)
     origFile <- sc[tagKey == "origFilename"]$cacheId
-    expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + !useDBI())
+    hasFilenameInCache <- NROW(sc[tagKey %in% tagFilenamesInCache])
+    expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + hasFilenameInCache + !useDBI())
+    # expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + !useDBI())
   }
 
   clearCache(x = tmpCache)
@@ -1578,8 +1580,13 @@ test_that("multifile cache saving", {
   b <- Cache(randomPolyToDisk2(tmpfile), quick = "tmpfiles")
   expect_false(attr(b, ".Cache")$newCache)
   expect_true(attr(a, ".Cache")$newCache)
-  expect_true(all(basename(Filenames(a)) %in% dir(CacheStorageDir())))
-  expect_false(all(Filenames(a) %in% dir(CacheStorageDir(), full.names = TRUE)))
+
+  fns <- basename(.prefix(Filenames(a),  prefixCacheId(cacheId(a))))
+  expect_true(all(fns %in% dir(CacheStorageDir())))
+  expect_false(all(fns %in% dir(CacheStorageDir(), full.names = TRUE)))
+
+  # expect_true(all(basename(Filenames(a)) %in% dir(CacheStorageDir())))
+  # expect_false(all(Filenames(a) %in% dir(CacheStorageDir(), full.names = TRUE)))
 
 })
 
