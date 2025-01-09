@@ -168,7 +168,7 @@ setMethod(
     # browser(expr = exists("rrrr"))
     # if (useDBI()) {
     if (!CacheIsACache(x, drv = drv, conn = conn)) {
-      return(invisible(.emptyCacheTable))
+      return(.emptyCacheTable)
     }
     # }
 
@@ -431,18 +431,18 @@ setMethod(
         ))
       }
       if (NROW(objsDT) == 0) {
-        return(invisible(.emptyCacheTable))
+        return(.emptyCacheTable)
       }
     } else {
       if (is.null(conn)) {
         conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
         if (is.null(conn)) {
-          return(invisible(.emptyCacheTable))
+          return(.emptyCacheTable)
         }
         on.exit(DBI::dbDisconnect(conn), add = TRUE)
       }
       if (!CacheIsACache(x, drv = drv, conn = conn)) {
-        return(invisible(.emptyCacheTable))
+        return(.emptyCacheTable)
       }
 
       dbTabNam <- CacheDBTableName(x, drv = drv)
@@ -648,7 +648,7 @@ setMethod(
 
         ## Save it
         userTags <- cacheFromList[artifact, on = .cacheTableHashColName()][
-          !tagKey %in% c("format", "name", "date", "cacheId"), list(tagKey, tagValue)
+          !tagKey %in% c("format", "name", "date"), list(tagKey, tagValue)
         ]
         outputToSave <- .wrap(outputToSave, cachePath = cacheTo, drv = drvTo, conn = connTo)
         output <- saveToCache(cacheTo,

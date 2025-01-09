@@ -181,7 +181,7 @@ test_that("test file-backed raster caching", {
   # https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions
   # https://github.com/r-lib/testthat/issues/734 to direct it to reproducible::isInteractive
   #   solves the error about not being in the testthat package
-  val1 <- .cacheNumDefaultTags() + length(tagsSpatRaster()) # adding a userTag here... the +8 is the SpatRaster extras
+  val1 <- .cacheNumDefaultTags() + length(setdiff(gsub(":", "", tagsSpatRaster()), .ignoreTagKeys())) # adding a userTag here... the +8 is the SpatRaster extras
   ik <- .ignoreTagKeys()
   aa <- Cache(randomPolyToDisk, tmpfile[1], cachePath = tmpCache, userTags = "something2")
 
@@ -219,9 +219,10 @@ test_that("test file-backed raster caching", {
     )))
   } else {
     sc <- showCache(tmpCache)
-    origFile <- sc[grepl("origFilename", tagKey)]$cacheId
+    origFile <- sc[tagKey == "origFilename"]$cacheId
     hasFilenameInCache <- NROW(sc[tagKey %in% tagFilenamesInCache])
     expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + hasFilenameInCache + !useDBI())
+    # expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + !useDBI())
   }
 
   clearCache(x = tmpCache)
@@ -1709,9 +1710,13 @@ test_that("multifile cache saving", {
   b <- Cache(randomPolyToDisk2(tmpfile), quick = "tmpfiles")
   expect_false(attr(b, ".Cache")$newCache)
   expect_true(attr(a, ".Cache")$newCache)
+
   fns <- basename(.prefix(Filenames(a),  prefixCacheId(cacheId(a))))
   expect_true(all(fns %in% dir(CacheStorageDir())))
   expect_false(all(fns %in% dir(CacheStorageDir(), full.names = TRUE)))
+
+  # expect_true(all(basename(Filenames(a)) %in% dir(CacheStorageDir())))
+  # expect_false(all(Filenames(a) %in% dir(CacheStorageDir(), full.names = TRUE)))
 
 })
 

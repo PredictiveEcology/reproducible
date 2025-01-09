@@ -557,7 +557,8 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 }
 
 .ignoreTagKeys <- function() {
-  c("preDigest", otherFunctions, "accessed", "elapsedTimeLoad", "fromDisk", "origRaster", "cacheRaster")
+  c("preDigest", otherFunctions, "accessed", "elapsedTimeLoad", "fromDisk", "origRaster", "cacheRaster",
+    "cacheId")
 }
 
 .cacheTableHashColName <- function() {

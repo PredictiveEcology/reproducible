@@ -659,7 +659,10 @@ urlExists <- function(url) {
 }
 
 prefixCacheId <- function(cacheId) {
-  paste0(cacheId, "_")
+  if (is.null(cacheId))
+    character()
+  else
+    paste0(cacheId, "_")
 }
 
 #' Extract the cache id of an object
@@ -674,5 +677,9 @@ prefixCacheId <- function(cacheId) {
 #' @export
 #'
 cacheId <- function(obj) {
-  gsub("cacheId:", "", attr(obj, "tags"))
+  whHasCacheId <- which(grepl("cacheId:", attr(obj, "tags")))
+  if (any(whHasCacheId))
+    gsub("cacheId:", "", attr(obj, "tags")[whHasCacheId])
+  else
+    NULL
 }

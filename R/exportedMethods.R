@@ -33,7 +33,8 @@ tagOrigRelName <- "origRelName"
 tagFilenamesInCache <- "filenamesInCache"
 
 tagsSpatRaster <- function(obj = NULL, relToWhere = NULL, relName = NULL, cls = NULL,
-                           whLayers = NULL, layerNams = NULL, obj2 = NULL, filenamesInCache = NULL) {
+                           whLayers = NULL, layerNams = NULL, obj2 = NULL,
+                           filenamesInCache = NULL, cacheId = NULL) {
   fe <- if (is.null(obj)) NULL else tools::file_ext(obj)
   c(
     attr(obj, "tags"),
@@ -48,7 +49,8 @@ tagsSpatRaster <- function(obj = NULL, relToWhere = NULL, relName = NULL, cls = 
     paste0("whLayers:", whLayers),
     paste0("layerNames:", layerNams),
     paste0(tagFilesToLoad, ":", basename2(obj2)),
-    paste0(tagFilenamesInCache, ":", filenamesInCache)
+    paste0(tagFilenamesInCache, ":", filenamesInCache),
+    paste0("cacheId:", cacheId)
   )
 }
 
@@ -180,7 +182,8 @@ wrapSpatRaster <- function(obj, cachePath, cacheId, ...) {
   # filenameInCache <- basename2(filenameInCache)
   # if (!identical(filenameInCache, filenameInCache2)) browser()
 
-  tags <- tagsSpatRaster(obj, relToWhere, relName, cls, whLayers, layerNams, obj2, filenameInCache)
+  tags <- tagsSpatRaster(obj, relToWhere, relName, cls, whLayers, layerNams, obj2, filenameInCache,
+                         cacheId)
   attr(obj, "tags") <- tags
 
   # c(
