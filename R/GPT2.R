@@ -1187,8 +1187,9 @@ cloudRead <- function(useCloud) {
 }
 
 keyInGdriveLs <- function(cache_key, gdriveLs) {
-  filePathSansExt(filePathSansExt(gdriveLs[["name"]])) %in%  # double filePathSansExt because of the .dbFile.rds
-    cache_key
+  grepl(paste0("^(", cache_key, ").+$"), gdriveLs[["name"]])
+  #filePathSansExt(filePathSansExt(gdriveLs[["name"]])) %in%  # double filePathSansExt because of the .dbFile.rds
+  #  cache_key
 }
 
 verboseCacheDFAll <- function(verbose, functionName, times) {
