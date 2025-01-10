@@ -183,7 +183,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   # Compare the file size with the object size -- to test for "captured environments"
   #  There is a buffer of 4x, plus file sizes are smaller than binary size with qs defaults
   #  So effectively, it is like 6x buffer to try to avoid false positives.
-  if (fs > 1e4) {
+  if (isTRUE(sum(fs) > 1e4)) {
     whichOS <- which(tagKey == "object.size")
     if (length(whichOS)) {
       objSize <- if (identical(unname(tagValue[whichOS]), "NA")) NA else as.numeric(tagValue[whichOS])
