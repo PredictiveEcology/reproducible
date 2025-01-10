@@ -202,8 +202,9 @@ setMethod(
       createCache(x, drv = drv, force = TRUE)
       # }
       if (isTRUE(getOption("reproducible.useMemoise"))) {
-        if (exists(x, envir = .pkgEnv)) {
-          rm(list = x, envir = .pkgEnv)
+        objsInMemEnv <- ls(memoiseEnv(x))
+        if (length(objsInMemEnv)) {
+          rm(list = objsInMemEnv, envir = memoiseEnv(x))
         }
       }
       # memoise::forget(.loadFromLocalRepoMem)
