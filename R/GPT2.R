@@ -1099,7 +1099,6 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
           memoiseFail <- TRUE
           rm(list = cache_key, envir = memoiseEnv(cachePath))
           cache_file <- CacheStoredFile(cachePath, cache_key)
-          browser()
         }
     }
     if (!fromMemoise || rerun || memoiseFail) {
