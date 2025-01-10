@@ -1192,9 +1192,12 @@ unmakeMemoisable.default <- function(x) {
 
 filenameInCacheWPrefix <- function(obj, cacheId, relative = TRUE) {
   # cacheId will be missing if it is in e.g., prepInputs without Cache
-  filenameInCache <- if (missing(cacheId)) obj else .prefix(obj, prefixCacheId(cacheId))
-  if (isTRUE(relative))
-    basename2(filenameInCache)
-  else
-    filenameInCache
+  if (!is.null(obj)) {
+    filenameInCache <- if (missing(cacheId)) obj else .prefix(obj, prefixCacheId(cacheId))
+    if (isTRUE(relative))
+      obj <- basename2(filenameInCache)
+    else
+      obj <- filenameInCache
+  }
+  obj
 }
