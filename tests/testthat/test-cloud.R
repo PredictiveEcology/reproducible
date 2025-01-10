@@ -90,9 +90,11 @@ test_that("test Cache(useCloud=TRUE, ...)", {
       a2 <- Cache(rnorm, 3, cachePath = tmpdir, useCloud = TRUE)
     })
   })
+  options("reproducible.cloudFolderID" = NULL)
 
   expect_true(any(grepl("Uploading", mess5)))
   expect_false(any(grepl("Download", mess5)))
+
 
   warn6 <- capture_warnings({
     mess6 <- capture_messages({

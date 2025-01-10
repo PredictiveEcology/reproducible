@@ -109,7 +109,8 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
         verbose = verbose
       )
     }
-    options("reproducible.cloudFolderID" = cloudFolderID)
+    optionValOrig <- options("reproducible.cloudFolderID" = cloudFolderID)
+    on.exit2(options(optionValOrig), envir = parent.frame())
   }
   return(cloudFolderID)
 }
