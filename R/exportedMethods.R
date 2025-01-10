@@ -1173,10 +1173,11 @@ unmakeMemoisable.default <- function(x) {
       obj <- unwrapRaster(obj, cachePath, cacheId)
     } else {
       obj <- lapply(obj, function(out) {
-        ret <- .unwrap(out, cachePath, cacheId, drv, conn, ...)
+        ret <- .unwrap(out, cachePath, cacheId = cacheId, drv, conn, ...)
         if (is.character(ret))
           if (identical(.returnNothing, ret))
             FAIL <<- TRUE
+        ret
       })
     }
   }

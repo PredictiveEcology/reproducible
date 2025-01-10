@@ -482,7 +482,7 @@ get_function_defaults <- function(func) {
 # Helper function to reorder arguments based on formal arguments, combining defaults and user args
 reorder_arguments <- function(formals, args) {
   # Combine defaults and args: user args override defaults
-  combined_args <- modifyList(formals, args)
+  combined_args <- modifyList(formals, args, keep.null = TRUE)
 
   # Preserve the order of the formals
   ordered_args <- combined_args[union(names(formals), names(combined_args))]
