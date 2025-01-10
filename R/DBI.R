@@ -127,7 +127,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     tagValue <- sub(userTags, pattern = "^[^:]*:", replacement = "")
   }
 
-  fts <- CacheStoredFile(cachePath, cacheId, obj = obj)
+  fts <- CacheStoredFile(cachePath, cacheId, obj = obj) # this includes the extra files
 
   # TRY link first, if there is a linkToCacheId, but some cases will fail; not sure what these cases are
   if (!is.null(linkToCacheId)) {
@@ -677,9 +677,10 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
     }
   }
 
-  fns <- basename2(Filenames(obj, allowMultiple = TRUE))
-  fns <- fns[nzchar(fns)]
-  file.path(CacheStorageDir(cachePath), c(filename, fns))
+  fnsExtras <- basename2(Filenames(obj, allowMultiple = TRUE))
+  fnsExtras <- fnsExtras[nzchar(fnsExtras)]
+  fnsExtras <- filenameInCacheWPrefix(fnsExtras, cacheId)
+  file.path(CacheStorageDir(cachePath), c(filename, fnsExtras))
 }
 
 #' @return
@@ -905,18 +906,18 @@ loadFile <- function(file, format = NULL) {
 
 saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
   if (missing(fts)) {
-    fts <- CacheStoredFile(cachePath, cacheId = cacheId, obj = obj)
+    fts <- CacheStoredFile(cachePath, cacheId = cacheId, obj = obj) # adds prefix
   }
 
   fsOther <- numeric()
   if (length(fts) > 1) {
     ftsOther <- fts[-1]
-    fns <- Filenames(obj, allowMultiple = TRUE)
-    ftsOther <- filenameInCacheWPrefix(ftsOther, cacheId, relative = FALSE)
+    fnsExtras <- Filenames(obj, allowMultiple = TRUE)
+    # ftsOther <- filenameInCacheWPrefix(ftsOther, cacheId, relative = FALSE) # already done in CacheStoredFile
     # ftsOther <- .prefix(ftsOther, prefixCacheId(cacheId)) # makes it unique in the cache
     # if (!identical(ftsOther2, ftsOther)) browser()
 
-    hardLinkOrCopy(fns, ftsOther, verbose = -2)
+    hardLinkOrCopy(fnsExtras, ftsOther, verbose = -2)
     fsOther <- sum(file.size(ftsOther))
     fts <- fts[1]
   }
