@@ -176,7 +176,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
   isInCloud <- grepl(outputHash, gdriveLs$name)
 
   outs <- list()
-  for (i in 1:2) {
+  for (i in 1:1) { # was 1:2 when files were downloaded separately, when file-backed files didn't have cacheId
     localNewFilename <- file.path(tempdir2(), basename2(newFileName))
     outs <- append(outs, lapply(seq_along(isInCloud), function(ind) {
       retry(quote(googledrive::drive_download(
@@ -190,13 +190,15 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
       dt <- loadFile(dtFile, format = fileExt(dtFile))
       fromDisk <- extractFromCache(dt, elem = "fromDisk") %in% "TRUE"
       if (all(!fromDisk)) break
-      newFileName <- extractFromCache(dt, elem = "origFilename")
-      isInCloud <- seq(newFileName)
-      gdriveLs <- googledrive::drive_ls(
-        path = googledrive::as_id(cloudFolderID),
-        pattern = paste(collapse = "|", newFileName)
-      )
-      newFileName <- newFileName[match(newFileName, gdriveLs$name)]
+      localFilenames <- Filenames(dt)
+      # remapFilenames()
+      # newFilename2 <- extractFromCache(dt, elem = "origFilename")
+      # isInCloud <- seq(newFilename2)
+      # gdriveLs <- googledrive::drive_ls(
+      #   path = googledrive::as_id(cloudFolderID),
+      #   pattern = paste(collapse = "|", newFilename2)
+      # )
+      # newFilename2 <- newFilename2[match(newFilename2, gdriveLs$name)]
     }
   }
   outs <- rbindlist(outs)
