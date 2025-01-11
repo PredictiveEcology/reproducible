@@ -13,18 +13,22 @@ test_that("test Cache(useCloud=TRUE, ...)", {
                        "reproducible.useMemoise" = FALSE)
 
   clearCache(x = tmpCache)
-  testsForPkgs <- "testsForPkgs"
-  if (isTRUE(tryCatch(googledrive::drive_ls(testsForPkgs), error = function(e) TRUE))) {
-    testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = testsForPkgs)))
-  }
+  googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
+  # testsForPkgs <- "testsForPkgs"
+  # if (isTRUE(tryCatch(googledrive::drive_ls(testsForPkgs), error = function(e) TRUE))) {
+  #   testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = testsForPkgs)))
+  #   on.exit(googledrive::drive_rm(testsForPkgsDir), add = TRUE)
+  # }
+  # on.exit({
+  #   try(googledrive::drive_rm(testsForPkgsDir))
+  #   try(googledrive::drive_rm(cloudFolderID))
+  #   try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpdir)))
+  #   try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpCache)))
+  # }, add = TRUE)
+
   newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = testsForPkgs)))
   cloudFolderID <- newDir
-  on.exit(
-    {
-      retry(quote(googledrive::drive_rm(cloudFolderID)))
-    },
-    add = TRUE
-  )
+  # on.exit(try(googledrive::drive_rm(cloudFolderID)), add = TRUE)
 
   #
   # local absent, cloud absent
@@ -83,7 +87,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   reproducible::clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
 
   withr::local_options("reproducible.cloudFolderID" = NULL)
-
+  # on.exit(try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpdir))), add = TRUE)
   # Try two different cloud folders -- based on tmpdir and tmpCache
   warn5 <- capture_warnings({
     mess5 <- capture_messages({
@@ -96,6 +100,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   expect_false(any(grepl("Download", mess5)))
 
 
+  # on.exit(try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpCache))), add = TRUE)
   warn6 <- capture_warnings({
     mess6 <- capture_messages({
       a2 <- Cache(rnorm, 3, cachePath = tmpCache, useCloud = TRUE)
@@ -108,7 +113,6 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   expect_true(isTRUE(all.equal(length(warn6), 0)))
 
   # Clear all
-  try(drive_rm(drive_ls(getOption("reproducible.cloudFolderID"))), silent = TRUE)
   try(drive_rm(drive_ls(cloudFolderFromCacheRepo(tmpCache))), silent = TRUE)
 
   # will use getOption("reproducible.cloudFolderID") b/c not specified, which is not cloudFolderFromCacheRepo(tmpCache)
@@ -162,15 +166,16 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
     needGoogleDriveAuth = TRUE,
     opts = list("reproducible.ask" = FALSE)
   )
+  googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
 
   withr::local_options("reproducible.cachePath" = tmpdir)
 
-  on.exit(
-    {
-      retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
-    },
-    add = TRUE
-  )
+  # on.exit(
+  #   {
+  #     retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
+  #   },
+  #   add = TRUE
+  # )
   clearCache(x = tmpCache)
   clearCache(x = tmpdir)
   newDir <- retry(quote(googledrive::drive_mkdir(name = basename2(tmpdir), path = "testsForPkgs")))
@@ -200,13 +205,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
     needGoogleDriveAuth = TRUE,
     opts = list("reproducible.ask" = FALSE)
   )
-
-  on.exit(
-    {
-      retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
-    },
-    add = TRUE
-  )
+  googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
   withr::local_options("reproducible.cachePath" = tmpdir)
   clearCache(x = tmpCache)
   clearCache(x = tmpdir)
@@ -226,14 +225,8 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
     needGoogleDriveAuth = TRUE,
     opts = list("reproducible.ask" = FALSE)
   )
-
+  googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
   withr::local_options("reproducible.cachePath" = tmpdir)
-  on.exit(
-    {
-      retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
-    },
-    add = TRUE
-  )
   clearCache(x = tmpCache)
   clearCache(x = tmpdir)
   newDir <- retry(quote(googledrive::drive_mkdir(name = tempdir2(), path = "testsForPkgs")))
@@ -254,6 +247,8 @@ test_that("prepInputs works with team drives", {
     "googledrive")
   withr::local_options("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
                        "reproducible.ask" = FALSE)
+
+  googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
 
   # zipUrl <- "https://drive.google.com/file/d/1zRX2c55ebJbQtjijCErEfGxhsa7Ieph2" # Orig
   zipUrl <- "https://drive.google.com/file/d/1JpdvM8QiyCyNyQAvSaFU0rAY-1I3mcbp"

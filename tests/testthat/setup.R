@@ -19,7 +19,7 @@ opts <- options(
 )
 
 if (Sys.info()["nodename"] %in% "W-VIC-A127585") {
-  opts2 <- options(gargle_oauth_email = "eliotmcintire@gmail.com")
+  opts2 <- options(gargle_oauth_email = "predictiveecology@gmail.com")
   if (isWindows())
     opts2 <- append(options(gargle_oauth_cache = "C:/Eliot/.secret"),
                     opts2)

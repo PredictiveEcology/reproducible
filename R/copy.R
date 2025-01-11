@@ -161,7 +161,7 @@ setMethod(
         } else {
           newFns <- sapply(fnsAll, nextNumericName)
         }
-        hasNumeric <- hasNumeric <- grepl("_[:0-9:]+$", tools::file_path_sans_ext(newFns))
+        hasNumeric <- grepl("_[:0-9:]+$", tools::file_path_sans_ext(newFns))
         copyFile(fnsAll, newFns)
         # Copy may have given "nextNumericName"
         fnsBase <- tools::file_path_sans_ext(basename(fns))

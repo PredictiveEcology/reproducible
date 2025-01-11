@@ -559,3 +559,19 @@ expect_match_noSlashN <- function(object, regexp, ...) {
   expect_match(object, regexp, ...)
 
 }
+
+
+
+googleSetupForUseCloud <- function(cloudFolderID, tmpdir, tmpCache) {
+  testsForPkgs <- "testsForPkgs"
+  if (isTRUE(tryCatch(googledrive::drive_ls(testsForPkgs), error = function(e) TRUE))) {
+    testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = testsForPkgs)))
+    on.exit2(googledrive::drive_rm(testsForPkgsDir))
+  }
+  on.exit2({
+    try(googledrive::drive_rm(testsForPkgsDir), silent = TRUE)
+    try(googledrive::drive_rm(cloudFolderID), silent = TRUE)
+    try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpdir)), silent = TRUE)
+    try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpCache)), silent = TRUE)
+  })
+}
