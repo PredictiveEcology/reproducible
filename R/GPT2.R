@@ -741,8 +741,6 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
     #   scTmp <- scTmp[which(!scTmp$cacheId %in% rmCacheId)]
     #   dups <- duplicated(scTmp$cacheId)
     #   shownCache <- shownCache[cacheId %in% unique(scTmp$cacheId)]
-    #   # if (is(shownCache2, "try-error"))
-    #   #   browser()
     # }
   }
 
@@ -919,7 +917,6 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
                               # userTags = paste0(metadata$tagKey, ":", metadata$tagValue),
                               preDigest = detailed_key$preDigest, .functionName, drv, conn, verbose)
   # } else {
-  #   browser()
   #   file.link(cacheIdIdentical, cache_file)
   #   # Save metadata file
   #   .message$FileLinkUsed(ftL = cacheIdIdentical, fts = cache_file, verbose)
@@ -929,8 +926,9 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
   # }
 
   # Memoize the outputFromEvaluate by saving it in RAM
-  if (getOption("reproducible.useMemoise"))
+  if (getOption("reproducible.useMemoise")) {
     assign(detailed_key$key, outputFromEvaluate, envir = memoiseEnv(cachePaths[[1]]))
+  }
 
 
   if (identical(outputFromEvaluate, "NULL")) outputFromEvaluate <- NULL
@@ -1091,6 +1089,11 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     memoiseFail <- FALSE
     if (fromMemoise && !rerun) {
       output <- get(cache_key, envir = memoiseEnv(cachePath))
+      # need to update the individual files in file-backed objects from the cache; can't use memoise
+      fns <- Filenames(output)
+      fns <- fns[nzchar(fns)]
+      fnsInCache <- file.path(CacheStorageDir(cachePath), basename(.prefix(fns, prefixCacheId(cacheId = cache_key))))
+      hardLinkOrCopy(fnsInCache, fns, overwrite = TRUE, verbose = FALSE)
 
       # Some objects, especially Rcpp objects can get stale; rerun if this is the case
       outputTestIntegrity <- try(output[1], silent = TRUE)
