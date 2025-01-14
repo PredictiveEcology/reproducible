@@ -344,16 +344,41 @@ setMethod(
   signature = "list",
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
-    if (!is.null(.objects)) object <- object[.objects]
-    inner <- lapply(.sortDotsUnderscoreFirst(object), function(x) {
-      .robustDigest(
-        object = x, .objects = .objects,
-        length = length,
-        algo = algo, quick = quick, classOptions = classOptions
-      )
+    if (!is.null(.objects)) {
+      correctList <- intersect(.objects, names(object))
+      if (length(correctList) > 0) {
+        object <- object[.objects]
+        .objects <- NULL
+      }
+    }
+
+    objsSorted <- .sortDotsUnderscoreFirst(object)
+    # objsSorted[["._list"]] <- NULL
+    inner <- Map(x = objsSorted, i = seq_along(objsSorted), function(x, i) {
+
+      if (!is.null(attr(x, ".Cache")$newCache)) {
+        x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
+        if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
+      }
+
+      withCallingHandlers({
+
+        .robustDigest(
+          object = x, .objects = .objects,
+          length = length,
+          algo = algo, quick = quick, classOptions = classOptions
+        )
+      }, error = function(e) {
+        nam <- names(objsSorted)
+        if (!is.null(nam))
+          # messageCache("Error occurred during .robustDigest of ", nam[i], " in ", .functionName)
+          messageCache("Error occurred during .robustDigest of ", nam[i])
+      })
+
     })
     # have to disginguish a list from an object not in a list
-    append(list(._list = .doDigest(inner)), inner)
+    # append(list(._list = .doDigest(inner)), inner)
+    inner
   }
 )
 
@@ -517,7 +542,8 @@ basenames3 <- function(object, nParentDirs) {
 
 .doDigest <- function(x, algo, length = Inf, file,
                       newAlgo = NULL,
-                      cacheSpeed = getOption("reproducible.cacheSpeed", "slow")) {
+                      cacheSpeed = getOption("reproducible.cacheSpeed", "slow"), ...) {
+  # the ... is just a passthrough so this function doesn't fail if there are other args
   if (missing(algo)) algo <- formals(.robustDigest)$algo
 
   out <- if (!missing(file)) {

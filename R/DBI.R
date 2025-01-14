@@ -305,7 +305,6 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
       # Need exclusive lock
 
       obj <- loadFile(f)
-      browser()
       obj <- .unwrap(obj,
                      cachePath = cachePath,
                      cacheId = cacheId,
