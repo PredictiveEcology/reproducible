@@ -344,13 +344,17 @@ setMethod(
   signature = "list",
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
-    if (!is.null(.objects)) {
-      correctList <- intersect(.objects, names(object))
-      if (length(correctList) > 0) {
-        object <- object[.objects]
-        .objects <- NULL
-      }
-    }
+    object <- rmDotObjects(object, .objects)
+    .objects <- .objectsToNULL(object) # only use it once
+
+    # if (!is.null(.objects)) {
+    #   # This will get "only the top=level" list ... if it matches
+    #   correctList <- intersect(.objects, names(object))
+    #   if (length(correctList) > 0) {
+    #     object <- object[.objects]
+    #     .objects <<- NULL
+    #   }
+    # }
 
     objsSorted <- .sortDotsUnderscoreFirst(object)
     # objsSorted[["._list"]] <- NULL
@@ -569,4 +573,22 @@ basenames3 <- function(object, nParentDirs) {
     out
   }
   out
+}
+
+rmDotObjects <- function(object, .objects) {
+  if (!is.null(.objects)) {
+    # This will get "only the top=level" list ... if it matches
+    correctList <- intersect(.objects, names(object))
+    if (length(correctList) > 0) {
+      object <- object[.objects]
+      attr(object, ".objects") <- .returnNothing
+    }
+  }
+  object
+}
+
+.objectsToNULL <- function(object) {
+  if (identical(attr(object, ".objects"), .returnNothing))
+    .objects <<- NULL # only use it once
+  object
 }

@@ -957,7 +957,15 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
 doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
                      length, algo, quick, classOptions, timeCacheDigestStart, verbose) {
   # Compile a list of elements to digest
+  # attr(callList$new_call,".Cache")$args_w_defaults
   toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
+
+  # Deal with .objects
+  toDigest <- lapply(toDigest, function(x) {
+    x <- rmDotObjects(x, .objects)
+    .objectsToNULL(x) # only use .objects once
+  })
+
   toDigest$.FUN <- attr(new_call, ".Cache")$method
   # Deal with omitArgs by removing elements from the toDigest list of objects to digest
   if (!is.null(omitArgs))
