@@ -14,7 +14,6 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
   clearCache(x = tmpCache)
   googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
-  # testsForPkgs <- "testsForPkgs"
   # if (isTRUE(tryCatch(googledrive::drive_ls(testsForPkgs), error = function(e) TRUE))) {
   #   testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = testsForPkgs)))
   #   on.exit(googledrive::drive_rm(testsForPkgsDir), add = TRUE)
@@ -26,6 +25,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   #   try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpCache)))
   # }, add = TRUE)
 
+  testsForPkgs <- "testsForPkgs"
   newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = testsForPkgs)))
   cloudFolderID <- newDir
   # on.exit(try(googledrive::drive_rm(cloudFolderID)), add = TRUE)

@@ -96,13 +96,13 @@ test_that("test Cache argument inheritance to inner functions", {
   }
 
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir, notOlderThan = Sys.time()))
-  msgGrep <- paste0(paste(.message$LoadedCacheResult(), ".+inner call"),
+  msgGrep <- paste(paste(.message$LoadedCacheResult(), "inner call"),
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
   expect_true(sum(grepl(.message$NoCacheRepoSuppliedGrep, out)) == 1)
 
-  # expect_true(sum(grepl(msgGrep, out)) == 1)
+  expect_true(sum(cli::ansi_grepl(msgGrep, out)) == 1)
 
   outer <- function(n) {
     Cache(inner, 0.1, notOlderThan = Sys.time())
@@ -113,7 +113,7 @@ test_that("test Cache argument inheritance to inner functions", {
   }
 
   out <- capture_messages(Cache(outer, n = 2, cachePath = tmpdir, notOlderThan = Sys.time()))
-  msgGrep <- paste(paste0(.message$LoadedCacheResult(), ".+rnorm call"),
+  msgGrep <- paste(paste(.message$LoadedCacheResult(), "rnorm call"),
                    "There is no similar item in the cachePath",
                    sep = "|"
   )
@@ -997,7 +997,6 @@ test_that("test changing reproducible.cacheSaveFormat midstream", {
 test_that("test file link with duplicate Cache", {
   testInit(verbose = TRUE, opts = list("reproducible.useMemoise" = FALSE))
 
-  aaaa <<- 1; on.exit(rm(aaaa, envir= .GlobalEnv))
 
   sam <- function(...) {
     sample(...)
@@ -1447,8 +1446,8 @@ test_that("test cache with new approach to match.call", {
     a[[3]] <- Cache(do.call, terra::rast, list(m, digits = 4))
     a[[4]] <- Cache(do.call(terra::rast, list(m, digits = 4)))
     a[[5]] <- Cache(quote(terra::rast(m, digits = 4)))
-    dig <- .robustDigest(a) # now includes ._list
-    dig <- dig[!nzchar(names(dig))]
+    dig <- .robustDigest(a)
+    # dig <- dig[!nzchar(names(dig))]
     expect_identical(1L, length(unique(unlist(dig))))
     # expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
     # for (i in 2:NROW(a)) {
@@ -1476,8 +1475,8 @@ test_that("test cache with new approach to match.call", {
       ff <- sf::st_make_valid
       a[[5]] <- Cache(ff(p1))
 
-      dig <- .robustDigest(a) # now includes ._list
-      dig <- dig[!nzchar(names(dig))]
+      dig <- .robustDigest(a)
+      # dig <- dig[!nzchar(names(dig))]
       expect_identical(1L, length(unique(dig)))
 
     }
@@ -1775,7 +1774,6 @@ test_that("cacheId = 'customName'", {
   newDBI <- setdiff(c(TRUE, FALSE), rudbi)
   withr::local_options(reproducible.useDBI = newDBI)
 
-  aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
   f <- rnorm(4) |> Cache(.functionName = fnName, cacheId = "myCacheObj")
   g <- rnorm(5) |> Cache(.functionName = fnName, cacheId = "myCacheObj")
   expect_true(all.equalWONewCache(e, d))
@@ -1989,8 +1987,8 @@ test_that("cacheId is same as calculated", {
   testInit()
   withr::local_options(reproducible.cachePath = tmpCache)
   mess1 <- capture_messages(a <- Cache(rnorm, 1))
-  # manually look at output attribute which shows cacheId: 7072c305d8c69df0
-  mess2 <- capture_messages(b <- Cache(rnorm, 1, cacheId = "422bae4ed2f770cc"))
+  # manually look at output attribute which shows cacheId: ca275879d5116967
+  mess2 <- capture_messages(b <- Cache(rnorm, 1, cacheId = "ca275879d5116967"))
   expect_match(mess2, .message$cacheIdSameTxt, all = FALSE)
   expect_equivalent(a, b)
 })
