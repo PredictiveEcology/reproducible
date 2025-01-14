@@ -1,6 +1,7 @@
 # reproducible 3.0.0
 
-* many edge cases were found that were not correctly Cached. This resulted in 2 major changes: rewrite of `Cache` 
+* many edge cases were found that were not correctly Cached. This resulted in 2 major changes: 
+rewrite and simplification of `Cache` 
 and modified `digest` of the arguments. These changes are not backwards compatible. Details next.
 * near complete rewrite of `Cache` so it is simpler and more robust. 
 The main function is now 130 lines, instead of almost 700. 
