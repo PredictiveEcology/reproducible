@@ -55,7 +55,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
   }
 
   if (!is.null(url) || !is.null(dlFun)) {
-    missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile, destinationPath)
+    missingNeededFiles <- missingFiles(neededFiles, checkSums, destinationPath)
 
     if (missingNeededFiles) { # needed may be missing, but maybe can skip download b/c archive exists
       if (!is.null(archive)) {
@@ -89,7 +89,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
             }
 
             # Check again, post extract ... If FALSE now, then it got it from local, already existing archive
-            missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile, destinationPath)
+            missingNeededFiles <- missingFiles(neededFiles, checkSums, destinationPath)
             if (!missingNeededFiles) {
               archive <- archive[localArchivesExist]
             }
@@ -695,7 +695,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         }
 
         if (is.call(dlFun)) {
-          out <- try(eval(dlFun, envir = .callingEnv))
+          out <- try(eval(dlFun, envir = .callingEnv), silent = TRUE)
           if (is(out, "try-error")) {
             sfs <- sys.frames()
             for (i in seq_along(sfs)) {
@@ -713,10 +713,19 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         }
 
         if (!is.call(dlFun)) {
-          formsDlFun <- formalArgs(dlFun)
-          argsKeep <- intersect(formsDlFun, names(args))
-          args <- args[argsKeep]
-          out <- do.call(dlFun, args = args)
+          out <- runDlFun(args, dlFun)
+          # argsOrig <- args
+          # formsDlFun <- formalArgs(dlFun)
+          # argsKeep <- intersect(formsDlFun, names(args))
+          # args <- args[argsKeep]
+          # for (iii in 1:2) {
+          #   out <- try(do.call(dlFun, args = args), silent = TRUE)
+          #   if (!is(out, "try-error")) {
+          #     break
+          #   }
+          #   args <- argsOrig
+          # }
+
         }
 
         needSave <- !is.null(out) # TRUE
@@ -831,14 +840,34 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                 }
                 filenames <- grep(theGrep, filenames, value = TRUE)
               }
+              # now that we have filenames; need to checksum
               urls <- file.path(url, filenames)
-              messagePrepInputs("url was supplied as a directory; downloading all files ",
-                                "with similar name as targetFile (", filePathSansExt(targetFile), ")",
-                                verbose = verbose)
-              downloadResults <- vapply(urls, function(url)
-                dlGeneric(url, destinationPath = .tempPath, verbose = verbose) |> unlist(),
-                FUN.VALUE = character(1))
-              downloadResults <- list(destFile = downloadResults)
+
+              checkSums <- runChecksums(destinationPath, checkSumFilePath = destinationPath, filenames, verbose)
+              checkSums <- checkSums$checkSums[expectedFile %in% filenames]
+              checkSums <- checkSums[data.table(expectedFile = basename2(filenames)), on = "expectedFile"]
+              missingNeededFiles <- missingFiles(filenames, checkSums, destinationPath)
+              stillNeed <- !checkSums$result %in% "OK"
+
+              downloadResults <- list(destFile = character())
+              if (missingNeededFiles) {
+                stillNeedFile <- match(basename2(urls), checkSums$expectedFile[stillNeed])
+                messagePrepInputs("url was supplied as a directory; downloading\n",
+                                         paste(urls[stillNeed], collapse = "\n"),
+                                  verbose = verbose)
+                downloadResults <- vapply(urls[stillNeedFile], function(url)
+                  dlGeneric(url, destinationPath = .tempPath, verbose = verbose) |> unlist(),
+                  FUN.VALUE = character(1))
+                # named list of local filenames; named with urls
+                downloadResults <- list(destFile = downloadResults)
+              }
+              if (any(!stillNeed)) {
+                filenamesAlreadyHave <- makeAbsolute(checkSums$expectedFile[stillNeed %in% FALSE], destinationPath)
+                alreadyHave <- match(checkSums$expectedFile[stillNeed %in% FALSE], basename2(urls))
+                names(filenamesAlreadyHave) <-  urls[alreadyHave]
+                # downloadResults$destFile <- c(downloadResults$destFile, filenamesAlreadyHave)
+              }
+
             } else {
               stop("url is a directory; need to install.packages(c('httr', 'curl'))")
             }
@@ -903,10 +932,14 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
   } else {
     messagePreProcess("No downloading; no url", verbose = verbose)
   }
+  # clean up from "directory" downloads
+  if (exists("filenamesAlreadyHave", inherits = FALSE)) {
+    downloadResults$destFile <- c(downloadResults$destFile, filenamesAlreadyHave)
+  }
   downloadResults
 }
 
-missingFiles <- function(files, checkSums, targetFile, destinationPath) {
+missingFiles <- function(files, checkSums, destinationPath) {
   filesBasename <- makeRelative(files, destinationPath)
   if (is.null(files)) {
     result <- unique(checkSums$result)
@@ -1172,4 +1205,20 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
 
 .downloadErrorFn <- function(xxxx) {
   try(stop(xxxx))
+}
+
+
+runDlFun <- function(args, dlFun) {
+  argsOrig <- args
+  formsDlFun <- formalArgs(dlFun)
+  argsKeep <- intersect(formsDlFun, names(args))
+  args <- args[argsKeep]
+  for (iii in 1:2) {
+    out <- try(do.call(dlFun, args = args), silent = TRUE)
+    if (!is(out, "try-error")) {
+      break
+    }
+    args <- argsOrig
+  }
+  out
 }

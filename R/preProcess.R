@@ -722,9 +722,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   failStop <- FALSE
   if (isTRUE(isDirectory(url, mustExist = FALSE))) {
-    messagePrepInputs("url pointed to a directory; using targetFilePath:\n",
-                      paste0(downloadFileResult$downloaded, collapse = "\n"))
-    targetFilePath <- downloadFileResult$downloaded
+    if (missing(targetFile)) {
+      messagePrepInputs("url pointed to a directory, but no `targetFile` specified; using targetFilePath:\n",
+                        paste0(downloadFileResult$downloaded, collapse = "\n"))
+      targetFilePath <- downloadFileResult$downloaded
+    }
   }
   if (is.null(targetFilePath)) {
     failStop <- TRUE

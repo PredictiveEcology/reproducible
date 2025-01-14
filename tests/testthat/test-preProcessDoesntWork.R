@@ -76,7 +76,9 @@ test_that("preProcess fails if user provides non-existing file", {
   )
   expect_true(sum(grepl("Download failed", errMsg)) == 1)
 
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest"
   withr::local_options("reproducible.interactiveOnDownloadFail" = TRUE)
+  zipFilename <- tempfile2(fileext = ".zip")
   testthat::with_mocked_bindings(
     .downloadErrorFn = .downloadErrorFn,
     isInteractive = function() {
@@ -88,8 +90,7 @@ test_that("preProcess fails if user provides non-existing file", {
       origDir <- setwd(dirname(theFile))
       on.exit(setwd(origDir), add = TRUE)
       zip(zipfile = zipFilename, files = basename2(theFile), flags = "-q")
-      zipFilenameWithDotZip <- dir(tmpdir, pattern = "\\.zip", full.names = TRUE)
-      file.rename(from = zipFilenameWithDotZip, to = zipFilename)
+      file.copy(zipFilename, file.path(tmpdir, basename(url)))
       "y"
     },
     {
@@ -98,7 +99,8 @@ test_that("preProcess fails if user provides non-existing file", {
           mess <- testthat::capture_messages({
             errMsg <- testthat::capture_error({
               reproducible::preProcess(
-                url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+                fun = NA,
+                url = url,
                 destinationPath = tmpdir
               )
             })
@@ -110,7 +112,7 @@ test_that("preProcess fails if user provides non-existing file", {
   )
   expect_true(sum(grepl("manual.+download", mess)) == 1) # manual download may be broken by \n
   expect_true(sum(grepl("To prevent", mess)) == 1)
-  expect_true(file.exists(filePathSansExt(zipFilename)))
+  expect_true(file.exists(zipFilename))
   cs <- read.table(file.path(tmpdir, "CHECKSUMS.txt"), header = TRUE)
   expect_true(NROW(cs) == 2 || NROW(cs) == 3) # TODO this may be detecting a bug == on GA it is 2, locally it is 3
   expect_true(all(grepl("rasterTest", cs$file)))

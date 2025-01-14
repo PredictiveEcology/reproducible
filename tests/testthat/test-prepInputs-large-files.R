@@ -30,7 +30,6 @@ test_that("prepInputs correctly unzips large files", {
   expect_true(file.info(fout)[["size"]] > 28 * 1024^3)
 })
 
-
 test_that("Issue 181 geodatabase file", {
   skip_on_cran()
   skip_on_ci()
@@ -54,8 +53,6 @@ test_that("Issue 181 geodatabase file", {
   )
   expect_true(is(sf::st_read(rstLCC$targetFilePath, layer = "EOSD_Mosaic_BWC_range_clip", quiet = TRUE), "sf"))
 })
-
-
 
 test_that("Issue 242 masking fail", {
   skip_on_cran()
