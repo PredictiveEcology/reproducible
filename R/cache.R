@@ -1807,41 +1807,50 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     }
     objsToDigestQuick <- objsToDigest[quickObjs]
     objsToDigest <- objsToDigest[!quickObjs]
-
-    preDigestQuick <- lapply(objsToDigestQuick, function(x) {
-      # remove the "newCache" attribute, which is irrelevant for digest
-      if (!is.null(attr(x, ".Cache")$newCache)) {
-        x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
-        if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
-      }
-      .robustDigest(x, algo = algo, quick = TRUE, ...)
-    })
+    preDigestQuick <- .robustDigest(objsToDigestQuick, algo = algo, quick = TRUE, ...)
+    # preDigestQuick <- lapply(objsToDigestQuick, function(x) {
+    #   # remove the "newCache" attribute, which is irrelevant for digest
+    #   if (!is.null(attr(x, ".Cache")$newCache)) {
+    #     x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
+    #     if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
+    #   }
+    #   .robustDigest(x, algo = algo, quick = TRUE, ...)
+    # })
   }
 
-  if (!is(objsToDigest, "list"))
-    browser()
-  preDigest <- Map(x = objsToDigest, i = seq_along(objsToDigest), function(x, i) {
-    # remove the "newCache" attribute, which is irrelevant for digest
-    if (!is.null(attr(x, ".Cache")$newCache)) {
-      x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
-      if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
-    }
-    withCallingHandlers({
-      .robustDigest(x, algo = algo, quick = FALSE, ...)
-    }, error = function(e) {
-      nam <- names(objsToDigest)
-      if (!is.null(nam))
-        messageCache("Error occurred during .robustDigest of ", nam[i], " in ", .functionName)
-    })
-  })
-  preDigest2 <- .robustDigest(objsToDigest)
+  # if (!is(objsToDigest, "list"))
+  preDigest <- .robustDigest(objsToDigest, algo = algo, quick = FALSE, ...)
+  # preDigest <- Map(x = objsToDigest, i = seq_along(objsToDigest), function(x, i) {
+  #   # remove the "newCache" attribute, which is irrelevant for digest
+  #   if (!is.null(attr(x, ".Cache")$newCache)) {
+  #     x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
+  #     if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
+  #   }
+  #   withCallingHandlers({
+  #     .robustDigest(x, algo = algo, quick = FALSE, ...)
+  #   }, error = function(e) {
+  #     nam <- names(objsToDigest)
+  #     if (!is.null(nam))
+  #       messageCache("Error occurred during .robustDigest of ", nam[i], " in ", .functionName)
+  #   })
+  # })
 
-  if (!isTRUE(all.equal(.orderDotsUnderscoreFirst(preDigest), .orderDotsUnderscoreFirst(preDigest2[names(preDigest)]))))
+
+  # if (!isTRUE(all.equal(.orderDotsUnderscoreFirst(preDigest), .orderDotsUnderscoreFirst(preDigest2[names(preDigest)]))))
   if (is.character(quick) || isTRUE(quick)) {
     preDigest <- append(preDigest, preDigestQuick)
   }
 
-  res <- .robustDigest(unname(sort(unlist(preDigest))), algo = algo, quick = TRUE, ...)
+  # preDigest <- .robustDigest(preDigest) # add the ._list
+  # preDigest[["._list"]] <- NULL # don't need this for CacheDigest
+
+  # don't unname -- Eliot Jan 13, 2025 -- this keeps the outputHash
+  if (getOption("reproducible.v3", TRUE)) {
+    res <- .doDigest(preDigest, algo = algo, ...)
+  } else {
+    res <- .robustDigest(.sortDotsUnderscoreFirst(unlist(preDigest)), algo = algo, quick = TRUE, ...)
+  }
+  # res <- .robustDigest(unname(sort(unlist(preDigest))), algo = algo, quick = TRUE, ...)
   list(outputHash = res, preDigest = preDigest)
 }
 

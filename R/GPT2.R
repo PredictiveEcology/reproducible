@@ -717,16 +717,22 @@ lockFile <- function(cachePath, cache_key, envir = parent.frame()) {
 showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, drv, conn, verbose) {
   devMode <- isDevMode(useCache, userTags)  # don't use devMode if no userTags
   shownCache <- showCache(cachePath, Function = .functionName, verbose = verbose - 2)
+  if (NROW(shownCache)) {
   if (!is.null(userTags)) { # userTags are as "strong as" functionName
     userTags2a <- gsub("^.*:", "", userTags)
     userTags2b <- gsub(":.*$", "", userTags)
+    noColons <- userTags2a == userTags2b
+    if (any(noColons)) {
+      userTags2b[noColons] <- "userTags"
+    }
     userTags2b <- ifelse(!nzchar(userTags2b), "userTags", userTags2b)
     userTagsAsDT <- data.table(tagKey = userTags2b, tagValue = userTags2a)
     # identify only those items that match the userTags
-    scMatch <- shownCache[userTagsAsDT, .(length(unique(tagKey)) == length(userTags)),
-               on = c("tagKey", "tagValue"), by = "cacheId"][V1 %in% TRUE]
-    shownCache <- shownCache[scMatch, on = "cacheId"]
-    set(shownCache, NULL, "V1", NULL)
+    scMatch <- shownCache[userTagsAsDT, # .(length(unique(tagKey)) == length(userTags)),
+               on = c("tagKey", "tagValue"), # by = "cacheId",
+               nomatch = FALSE]# [V1 %in% TRUE]
+    shownCache <- shownCache[cacheId %in% unique(scMatch[["cacheId"]]), on = "cacheId"]
+    # set(shownCache, NULL, "V1", NULL)
     #
     #
     # if (!devMode) {  # This has to be exact match for devMode i.e., number of and exact tags;
@@ -742,6 +748,7 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
     #   dups <- duplicated(scTmp$cacheId)
     #   shownCache <- shownCache[cacheId %in% unique(scTmp$cacheId)]
     # }
+  }
   }
 
   if (NROW(shownCache)) {
@@ -788,6 +795,7 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
       # lapply(strsplit(shownCache$tagValue, split = "\\:"), function(x) x[[3]])
 
     }
+
     if (NROW(similar)) {
       simi <- similar[, .N, by = "cacheId"][similar, on = "cacheId"]
       data.table::setorderv(simi, c("N", "createdDate"))
@@ -809,12 +817,13 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
       set(simi, NULL, c("N", "tagKey", "tagValue", "createdDate"), NULL)
       setcolorder(simi, c("cacheId", "arg", "value"))
       setnames(simi, old = c("cacheId", "value"), new = c("cacheIdInCache", "valueInCache"))
-      simi2 <- metadataSmall[!similarFull[cacheId %in% unique(simi$cacheId)], on = c("tagKey", "tagValue")]
-      twoCols <- strsplit(simi2[["tagValue"]], ":")
+      simi2 <- metadataSmall[!similarFull[cacheId %in% unique(simi[["cacheIdInCache"]])], on = c("tagKey", "tagValue")]
+      hasColon <- grep(":", simi2[["tagValue"]])
+      twoCols <- strsplit(simi2[["tagValue"]][hasColon], ":")
       args <- vapply(twoCols, function(x) x[[1]], FUN.VALUE = character(1))
       vals <- vapply(twoCols, function(x) x[[2]], FUN.VALUE = character(1))
-      set(simi2, NULL, "arg", args)
-      set(simi2, NULL, "value2", vals)
+      set(simi2, hasColon, "arg", args)
+      set(simi2, hasColon, "value2", vals)
       set(simi2, NULL, c("tagKey", "tagValue", "createdDate"), NULL)
       setcolorder(simi2, c("cacheId", "arg", "value2"))
       setnames(simi2, old = c("cacheId", "value2"),
@@ -827,7 +836,7 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
                      paste0(userTags, collapse = ", "), ")", verbose = verbose)
         messageCache("This call to cache will replace entry with cacheId(s): ",
                      paste0(simi[["cacheId"]], collapse = ", "), verbose = verbose)
-        cacheIdsToClear <- paste0("^", simi[["cacheId"]], "$", collapse = "|")
+        cacheIdsToClear <- paste0("^", unique(simi[["cacheIdInCache"]]), "$", collapse = "|")
         clearCache(cachePath, userTags = cacheIdsToClear, ask = FALSE, drv = drv, conn = conn, verbose = verbose - 2)
       }
       messageCache("with different elements (most recent at top):", verbose = verbose)
@@ -1092,8 +1101,10 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       # need to update the individual files in file-backed objects from the cache; can't use memoise
       fns <- Filenames(output)
       fns <- fns[nzchar(fns)]
-      fnsInCache <- file.path(CacheStorageDir(cachePath), basename(.prefix(fns, prefixCacheId(cacheId = cache_key))))
-      hardLinkOrCopy(fnsInCache, fns, overwrite = TRUE, verbose = FALSE)
+      if (!is.null(fns) && length(fns) > 0) {
+        fnsInCache <- file.path(CacheStorageDir(cachePath), basename(.prefix(fns, prefixCacheId(cacheId = cache_key))))
+        hardLinkOrCopy(fnsInCache, fns, overwrite = TRUE, verbose = FALSE)
+      }
 
       # Some objects, especially Rcpp objects can get stale; rerun if this is the case
       outputTestIntegrity <- try(output[1], silent = TRUE)
