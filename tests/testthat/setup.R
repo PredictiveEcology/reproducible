@@ -18,11 +18,10 @@ opts <- options(
   reproducible.useDBI = FALSE  # done TF  = c(691, 764.1), TT c(793,874), FF = c(875.5s, 876s), FT = c(1024.8,934)
 )
 
-if (Sys.info()["nodename"] %in% "W-VIC-A127585") {
+if (Sys.info()["user"] %in% "emcintir") {
   opts2 <- options(gargle_oauth_email = "predictiveecology@gmail.com")
-  if (isWindows())
-    opts2 <- append(options(gargle_oauth_cache = "C:/Eliot/.secret"),
-                    opts2)
+  secretDir <- if (isWindows()) "C:/Eliot/.secret" else "~/.secret"
+  opts2 <- append(options(gargle_oauth_cache = secretDir), opts2)
   if (requireNamespace("googledrive"))
     googledrive::drive_auth()
   opts <- append(opts, opts2)
