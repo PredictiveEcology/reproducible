@@ -446,7 +446,8 @@ test_that("testing terra", {
           sum(!is.na(values2(t20MaskedByRas)))) <= 0
       )
 
-      if (interactive()) {
+      if (FALSE) {
+        dev.off()
         terra::plot(ras1SmallAll)
         terra::plot(t18, add = TRUE)
         terra::plot(t20AllByRas)
