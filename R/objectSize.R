@@ -73,11 +73,14 @@ objSize.default <- function(x, quick = FALSE, ...) {
       }
     }
   }
-  out <- obj_size(x)
+  out <- try(obj_size(x), silent = TRUE) # Error in obj_size_(dots, env, size_node(), size_vector()) :
+                                         # bad binding access
+  if (is(out, "try-error"))
+    out <- object.size(x)
   if (exists("out2", inherits = FALSE)) {
     out <- sum(out, out2)
-    class(out) <- "lobstr_bytes"
   }
+  class(out) <- "lobstr_bytes"
 
   if (!quick) {
     attr(out, "objSize") <- list(obj = out)
