@@ -36,13 +36,14 @@ test_that("symlinks work with cache, input, output paths", {
   # test initial state
   expect_identical(character(), unlist(lapply(localDirs, dir)))
 
-  expect_true(file.symlink(linkedCacheDir, localDirs$cacheDir))
+  linkFn <- if (isWindows()) Sys.junction else file.symlink
+  expect_true(linkFn(linkedCacheDir, localDirs$cacheDir))
   expect_identical(fs::as_fs_path(linkedCacheDir), fs::link_path(localDirs$cacheDir))
 
-  expect_true(file.symlink(linkedInputDir, localDirs$inputDir))
+  expect_true(linkFn(linkedInputDir, localDirs$inputDir))
   expect_identical(fs::as_fs_path(linkedInputDir), fs::link_path(localDirs$inputDir))
 
-  expect_true(file.symlink(linkedOutputDir, localDirs$outputDir))
+  expect_true(linkFn(linkedOutputDir, localDirs$outputDir))
   expect_identical(fs::as_fs_path(linkedOutputDir), fs::link_path(localDirs$outputDir))
 
   withr::local_options("reproducible.cachePath" = asPath(localDirs$cacheDir))
