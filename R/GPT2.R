@@ -270,11 +270,6 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
     args <- evaluate_args(args, envir = .callingEnv)
   }
 
-  # funcTry <- try(getMethodAll(as.call(c(matched_call[[1]], args)), .callingEnv),
-  #                silent = TRUE)
-  # if (!is(funcTry, "try-error"))
-  #   func <- funcTry
-
   combined_args <- combine_clean_args(func, args, .objects = NULL, .callingEnv)
 
   # Check for arguments that are in both Cache and the FUN
@@ -1070,7 +1065,7 @@ cacheIdOverride <- function(cacheId, key, .functionName, verbose) {
 
 useCacheFromNested <- function(useCache) {
   isNested <- .pkgEnv$.reproEnv2$nestLevel > 1
-  if (isNested)
+  if (isNested && isTRUE(useCache))
     useCache <- .pkgEnv$.reproEnv2$useCache
   useCacheDueToNumeric <- (is.numeric(useCache) && isTRUE(useCache < .pkgEnv$.reproEnv2$nestLevel))
   if (is.character(useCache)) {
