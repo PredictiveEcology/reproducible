@@ -323,9 +323,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   if (is.character(namesObj)) {
     namesObj <- gsub(namesObj, pattern = "\\.|_", replacement = "aa")
     allLower <- tolower(namesObj) == namesObj
-    a <- try(namesObj[allLower] <- paste0("abALLLOWER", namesObj[allLower]))
-    if (is(a, "try-error")) browser()
-
+    namesObj[allLower] <- paste0("abALLLOWER", namesObj[allLower])
 
     onesChanged <- startsWith(namesObj, prefix = "a")
     namesObj[!onesChanged] <- paste0("ZZZZZZZZZ", namesObj[!onesChanged])
