@@ -36,6 +36,7 @@ tagsSpatRaster <- function(obj = NULL, relToWhere = NULL, relName = NULL, cls = 
                            whLayers = NULL, layerNams = NULL, obj2 = NULL,
                            filenamesInCache = NULL, cacheId = NULL) {
   fe <- if (is.null(obj)) NULL else tools::file_ext(obj)
+  if (missing(cacheId)) cacheId <- NULL
   c(
     attr(obj, "tags"),
     paste0(tagRelToWhere, ":", names(relToWhere)),
