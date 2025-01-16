@@ -982,7 +982,7 @@ unmakeMemoisable.default <- function(x) {
 #'
 .wrap.default <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL),
-                          verbose = getOption("reproducible.verbose"),
+                          verbose = getOption("reproducible.verbose"), outputObjects = NULL,
                           cacheId, ...) {
   rasters <- is(obj, "Raster")
   atts <- attributes(obj)

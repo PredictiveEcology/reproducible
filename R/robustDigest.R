@@ -345,7 +345,7 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
     object <- rmDotObjects(object, .objects)
-    .objects <- .objectsToNULL(object) # only use it once
+    .objects <- dotObjectsToNULL(object, .objects) # only use it once
 
     # if (!is.null(.objects)) {
     #   # This will get "only the top=level" list ... if it matches
@@ -587,8 +587,26 @@ rmDotObjects <- function(object, .objects) {
   object
 }
 
-.objectsToNULL <- function(object) {
-  if (identical(attr(object, ".objects"), .returnNothing))
-    .objects <<- NULL # only use it once
-  object
+rmDotObjectsInList <- function(object, .objects) {
+  lapply(object, function(x) {
+    rmDotObjects(x, .objects)
+  })
 }
+
+dotObjectsToNULL <- function(object, .objects) {
+  if (identical(attr(object, ".objects"), .returnNothing))
+    .objects <- NULL # only use it once
+  .objects
+}
+
+dotObjectsToNULLInList <- function(object, .objects) {
+  if (!is.null(.objects)) {
+    for (i in object) {
+      .objects <- dotObjectsToNULL(object, .objects)
+      break
+    }
+  }
+
+  .objects
+}
+

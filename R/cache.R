@@ -1860,7 +1860,7 @@ CacheDigestOnlyUniques <- function(dots) {
   dig <- Map(x = ...names(), function(x) x)
   dd <- dots[unique(ma)]
   dig2 <- .robustDigest(dd)
-  nameOrigOrd <- reproducible:::.orderDotsUnderscoreFirst(names(dig2))
+  nameOrigOrd <- .orderDotsUnderscoreFirst(names(dig2))
   dig[unique(ma)] <- dig2[...names()[unique(ma)]]
   wh <- which(duplicated(dots))
   dig[wh] <- dig2[...names()[ma[wh]]]

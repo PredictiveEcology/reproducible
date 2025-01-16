@@ -54,6 +54,7 @@
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
+  outputObjects = NULL,
   cacheId,
   ...
 )

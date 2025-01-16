@@ -12,6 +12,11 @@ test_that("symlinks work with cache, input, output paths", {
 
   currentDir <- tmpdir
 
+
+  # This will only test "different drive" if /mnt/scratch or tempdir() are on different drives.
+  #  For Windows, this "different drive" must be on the a local volume, not a network drive
+  #  file.symlink, in theory, will work on Windows, but user needs to be an Administrator; so this is
+  #  not testable here.
   linkedDir <- ifelse(
     dir.exists("/mnt/scratch"),
     file.path("/mnt/scratch", Sys.info()[["user"]], basename(tempfile())),

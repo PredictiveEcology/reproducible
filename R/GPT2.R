@@ -95,7 +95,6 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   }
 
   # Check if keyFull$key is on disk and return if it is there
-
   outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePaths, cache_file, callList$.functionName, callList$func,
                                               useCache, useCloud, cloudFolderID, gdriveLs,
                                               full_call = callList$new_call,
@@ -221,15 +220,6 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
     if (is.call(func) && func[[1]] == quote(`::`)) {
       func <- func[[3]]  # Get the actual function name (e.g., rnorm)
     }
-
-    # Handle variable references in arguments
-    # args <- lapply(args, function(arg) {
-    #   if (is.symbol(arg) || is.call(arg)) {
-    #     return(arg)  # Keep the argument as-is without evaluating
-    #   } else {
-    #     return(arg)  # Return non-symbol arguments unchanged
-    #   }
-    # })
   }
 
   if (is.call(func) || is.name(func)) {
@@ -713,37 +703,21 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
   devMode <- isDevMode(useCache, userTags)  # don't use devMode if no userTags
   shownCache <- showCache(cachePath, Function = .functionName, verbose = verbose - 2)
   if (NROW(shownCache)) {
-  if (!is.null(userTags)) { # userTags are as "strong as" functionName
-    userTags2a <- gsub("^.*:", "", userTags)
-    userTags2b <- gsub(":.*$", "", userTags)
-    noColons <- userTags2a == userTags2b
-    if (any(noColons)) {
-      userTags2b[noColons] <- "userTags"
+    if (!is.null(userTags)) { # userTags are as "strong as" functionName
+      userTags2a <- gsub("^.*:", "", userTags)
+      userTags2b <- gsub(":.*$", "", userTags)
+      noColons <- userTags2a == userTags2b
+      if (any(noColons)) {
+        userTags2b[noColons] <- "userTags"
+      }
+      userTags2b <- ifelse(!nzchar(userTags2b), "userTags", userTags2b)
+      userTagsAsDT <- data.table(tagKey = userTags2b, tagValue = userTags2a)
+      # identify only those items that match the userTags
+      scMatch <- shownCache[userTagsAsDT, # .(length(unique(tagKey)) == length(userTags)),
+                            on = c("tagKey", "tagValue"), # by = "cacheId",
+                            nomatch = FALSE]# [V1 %in% TRUE]
+      shownCache <- shownCache[cacheId %in% unique(scMatch[["cacheId"]]), on = "cacheId"]
     }
-    userTags2b <- ifelse(!nzchar(userTags2b), "userTags", userTags2b)
-    userTagsAsDT <- data.table(tagKey = userTags2b, tagValue = userTags2a)
-    # identify only those items that match the userTags
-    scMatch <- shownCache[userTagsAsDT, # .(length(unique(tagKey)) == length(userTags)),
-               on = c("tagKey", "tagValue"), # by = "cacheId",
-               nomatch = FALSE]# [V1 %in% TRUE]
-    shownCache <- shownCache[cacheId %in% unique(scMatch[["cacheId"]]), on = "cacheId"]
-    # set(shownCache, NULL, "V1", NULL)
-    #
-    #
-    # if (!devMode) {  # This has to be exact match for devMode i.e., number of and exact tags;
-    #   #  not exact match for showSimilar
-    #   shownCache <- shownCache[tagValue %in% userTags2a]
-    # } else {
-    #   scTmp <- shownCache[tagKey == "userTags"] # [tagValue %in% userTags, c("cacheId")]
-    #   scTmp2 <- scTmp[, .N, by = "cacheId"][N == length(userTags)] # Has to be exact
-    #   scTmp <- scTmp[scTmp2, on = "cacheId"]
-    #   userTags3 <- data.table(tagKey = "userTags", tagValue = userTags2a)
-    #   rmCacheId <- scTmp[!userTags3, on = c("tagKey", "tagValue")]
-    #   scTmp <- scTmp[which(!scTmp$cacheId %in% rmCacheId)]
-    #   dups <- duplicated(scTmp$cacheId)
-    #   shownCache <- shownCache[cacheId %in% unique(scTmp$cacheId)]
-    # }
-  }
   }
 
   if (NROW(shownCache)) {
@@ -858,17 +832,6 @@ CacheDBFileCheckAndCreate <- function(cachePath, drv = NULL, conn = NULL, verbos
   dbfile
 }
 
-# saveMetadataFile <- function(metadata, cache_key, userTags, cachePath, objectSize, .functionName, drv, conn, verbose) {
-#   metadata_file <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key)
-#   dbfile <- CacheDBFileCheckAndCreate(cachePath, verbose = verbose)
-#   messageCache(
-#     .message$SavingToCacheTxt(userTags = userTags, otsObjSize = objectSize,
-#                               functionName = .functionName,
-#                               cacheId = cache_key), verbose = verbose - 2)
-#   saveFilesInCacheFolder(metadata, metadata_file, cachePath = cachePath, cacheId = cache_key)
-#   .message$Saved(cachePath, cache_key, functionName = .functionName, verbose)
-# }
-
 convertCallWithSquigglyBraces <- function(call, usesDots) {
   if (length(call) == 2) {
     call <- as.call(c(call[[1]], call[[-1]][[-1]]))
@@ -909,25 +872,14 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
   metadata <- metadata_define_postEval(metadata, detailed_key$key, outputFromEvaluate,
                                        userTags, .objects, length, algo, quick,
                                        classOptions, elapsedTimeFUN)
-  # objectSize <- attr(metadata, "tags")$objectSize
 
   # Can't save NULL with attributes
   if (is.null(outputFromEvaluate)) outputFromEvaluate <- "NULL"
 
-  # cacheIdIdentical <- cache_Id_Identical(metadata, cachePaths, detailed_key$key)
-  # if (is.null(cacheIdIdentical)) {
   outputFromEvaluate <- addCacheAttr(outputFromEvaluate, .CacheIsNew = TRUE, detailed_key$key, func)
   metadata <- wrapSaveToCache(outputFromEvaluate, metadata, detailed_key$key, cachePaths[[1]],
                               # userTags = paste0(metadata$tagKey, ":", metadata$tagValue),
                               preDigest = detailed_key$preDigest, .functionName, drv, conn, verbose)
-  # } else {
-  #   file.link(cacheIdIdentical, cache_file)
-  #   # Save metadata file
-  #   .message$FileLinkUsed(ftL = cacheIdIdentical, fts = cache_file, verbose)
-  #   saveDBFileSingle()
-  #   # saveMetadataFile(metadata, detailed_key$key, userTags, cachePaths[[1]], objectSize, .functionName,
-  #   #                  drv, conn, verbose)
-  # }
 
   # Memoize the outputFromEvaluate by saving it in RAM
   if (getOption("reproducible.useMemoise")) {
@@ -952,14 +904,11 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
 doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
                      length, algo, quick, classOptions, timeCacheDigestStart, verbose) {
   # Compile a list of elements to digest
-  # attr(callList$new_call,".Cache")$args_w_defaults
   toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
 
   # Deal with .objects
-  toDigest <- lapply(toDigest, function(x) {
-    x <- rmDotObjects(x, .objects)
-    .objectsToNULL(x) # only use .objects once
-  })
+  toDigest <- rmDotObjectsInList(toDigest, .objects)
+  .objects <- dotObjectsToNULLInList(toDigest, .objects) # if .objects used in previous, set to NULL here
 
   toDigest$.FUN <- attr(new_call, ".Cache")$method
   # Deal with omitArgs by removing elements from the toDigest list of objects to digest
@@ -1254,3 +1203,5 @@ evalTheFunAndAddChanged <- function(callList, keyFull, outputObjects, length, al
   )
   outputFromEvaluate
 }
+
+
