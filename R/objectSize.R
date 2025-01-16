@@ -19,6 +19,8 @@
 #' @param x An object
 #' @param quick Logical. If `FALSE`, then an attribute, "objSize" will be added to
 #'   the returned value, with each of the elements' object size returned also.
+#' @param recursive Logical. If `TRUE`, then, in addition to evaluating the whole object,
+#'   it will also return the recursive sizes of the elements of a list or environment.
 #' @param ...  Additional arguments (currently unused), enables backwards compatible use.
 #'
 #' @export
@@ -49,7 +51,7 @@
 #' not be included even though `enclosingEnvs = TRUE`.
 #'
 #' @export
-objSize <- function(x, quick = FALSE, ...) {
+objSize <- function(x, quick = FALSE, recursive = FALSE, ...) {
   UseMethod("objSize", x)
 }
 
@@ -73,10 +75,9 @@ objSize.default <- function(x, quick = FALSE, ...) {
       }
     }
   }
-  out <- try(obj_size(x), silent = TRUE) # Error in obj_size_(dots, env, size_node(), size_vector()) :
-                                         # bad binding access
-  if (is(out, "try-error"))
-    out <- object.size(x)
+  out <- object.size(x)
+  # out <- .objSizeWithTry(x)  # out <- try(obj_size(x), silent = TRUE) # Error in obj_size_(dots, env, size_node(), size_vector()) :
+  #                                        # bad binding access
   if (exists("out2", inherits = FALSE)) {
     out <- sum(out, out2)
   }
@@ -90,7 +91,7 @@ objSize.default <- function(x, quick = FALSE, ...) {
 
 #' @export
 #' @importFrom lobstr obj_size
-objSize.list <- function(x, quick = FALSE, ...) {
+objSize.list <- function(x, quick = FALSE, recursive = FALSE, ...) {
   os <- obj_size(x) # need to get overall object size; not just elements;
   # but this doesn't work for e.g., terra
 
@@ -124,12 +125,19 @@ objSize.Path <- function(x, quick = FALSE, ...) {
 
 #' @export
 #' @importFrom lobstr obj_size
-objSize.environment <- function(x, quick = FALSE, ...) {
-  os <- obj_size(x)
+objSize.environment <- function(x, quick = FALSE, recursive = FALSE, ...) {
+  os <- .objSizeWithTry(x)
   if (!quick) {
     out <- lapply(as.list(x, all.names = TRUE), objSize, quick = quick)
     attr(os, "objSize") <- out
   }
+  os
+}
+
+#' @export
+#' @importFrom lobstr obj_size
+objSize.function <- function(x, quick = FALSE, ...) {
+  os <- .objSizeWithTry(x)
   os
 }
 
@@ -151,4 +159,26 @@ objSize.environment <- function(x, quick = FALSE, ...) {
 #' @rdname objSize
 objSizeSession <- function(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = list()) {
   .Defunct("Please use lobstr::obj_size instead")
+}
+
+
+#' `lobstr::obj_size` with a `try` to address issue #72
+#'
+#' It is not clear why, but it appears that running `lobstr::obj_size` again, after
+#' a bad binding error, it will work.
+#' @export
+#' @importFrom lobstr obj_size
+#' @inheritParams objSize
+.objSizeWithTry <- function(x) {
+  for (i in 1:2) {
+    out <- try(obj_size(x), silent = TRUE)
+    if (is(out, "try-error")) {
+      if (identical(i, 1L)) next
+    } else {
+      break
+    }
+    out <- length(serialize(x, NULL))
+    class(out) <- "lobstr_bytes"
+  }
+  out
 }
