@@ -43,13 +43,19 @@ test_that("symlinks work with cache, input, output paths", {
 
   linkFn <- if (isWindows()) Sys.junction else file.symlink
   expect_true(linkFn(linkedCacheDir, localDirs$cacheDir))
-  expect_identical(fs::as_fs_path(linkedCacheDir), fs::link_path(localDirs$cacheDir))
+
+  # On Windows on Github actions, one of these paths has Windows `shortPathName`
+  #   for c:/Users/RUNNER~1, but second has long name; need normalizePath in addition to fs::
+  expect_identical(normalizePath(mustWork = FALSE, winslash = "/", fs::as_fs_path(linkedCacheDir)),
+                   normalizePath(mustWork = FALSE, winslash = "/", fs::link_path(localDirs$cacheDir)))
 
   expect_true(linkFn(linkedInputDir, localDirs$inputDir))
-  expect_identical(fs::as_fs_path(linkedInputDir), fs::link_path(localDirs$inputDir))
+  expect_identical(normalizePath(mustWork = FALSE, winslash = "/", fs::as_fs_path(linkedInputDir)),
+                   normalizePath(mustWork = FALSE, winslash = "/", fs::link_path(localDirs$inputDir)))
 
   expect_true(linkFn(linkedOutputDir, localDirs$outputDir))
-  expect_identical(fs::as_fs_path(linkedOutputDir), fs::link_path(localDirs$outputDir))
+  expect_identical(normalizePath(mustWork = FALSE, winslash = "/", fs::as_fs_path(linkedOutputDir)),
+                   normalizePath(mustWork = FALSE, winslash = "/", fs::link_path(localDirs$outputDir)))
 
   withr::local_options("reproducible.cachePath" = asPath(localDirs$cacheDir))
   on.exit({
