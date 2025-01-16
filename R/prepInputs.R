@@ -853,6 +853,7 @@ extractFromArchive <- function(archive,
         path = .tempPath,
         # list of full paths of all extracted files!
         recursive = TRUE,
+        all.files = TRUE,
         include.dirs = TRUE
       )
 
@@ -994,6 +995,7 @@ extractFromArchive <- function(archive,
     listOfFilesExtracted <- list.files(
       path = .tempPath,
       # list of full paths of all extracted files!
+      all.files = TRUE,
       recursive = TRUE,
       include.dirs = TRUE
     )
@@ -1242,12 +1244,14 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         extractSystemCallPath <- list.files("C:/Program Files",
                                             pattern = "unrar.exe|7z.exe",
                                             recursive = TRUE,
+                                            all.files = TRUE,
                                             full.names = TRUE
         )
         if (extractSystemCallPath == "" || length(extractSystemCallPath) == 0) {
           extractSystemCallPath <- list.files(dirname(Sys.getenv("SystemRoot")),
                                               pattern = "unrar.exe|7z.exe",
                                               recursive = TRUE,
+                                              all.files = TRUE,
                                               full.names = TRUE
           )
           if (extractSystemCallPath == "" || length(extractSystemCallPath) == 0) {

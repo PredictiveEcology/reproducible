@@ -2051,3 +2051,19 @@ test_that("test prepInputs url when a gdrive directory", {
 
   })
 })
+
+
+test_that("test prepInputs with zip file with hidden files", {
+  testInit()
+  withr::local_dir(tmpdir)
+  a <- 1
+  theFile <- "__MACOSX/._theFile.txt"
+  checkPath(dirname(theFile), create = TRUE)
+  cat(a, file = theFile)
+  zipFilename <- "test.zip"
+  zip(files = theFile, zipfile = zipFilename, flags = "-q")
+  unlink(theFile, recursive = TRUE)
+  expect_false(file.exists(file = theFile))
+  b <- prepInputs(targetFile = theFile, archive = zipFilename, fun = NA)
+  expect_true(file.exists(file = theFile))
+})
