@@ -1848,9 +1848,9 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   if (getOption("reproducible.v3", TRUE)) {
     res <- .doDigest(preDigest, algo = algo, ...)
   } else {
-    res <- .robustDigest(.sortDotsUnderscoreFirst(unlist(preDigest)), algo = algo, quick = TRUE, ...)
+    res <- .robustDigest(unname(sort(unlist(preDigest))), algo = algo, quick = TRUE, ...)
+    # res <- .robustDigest(.sortDotsUnderscoreFirst(unlist(preDigest)), algo = algo, quick = TRUE, ...)
   }
-  # res <- .robustDigest(unname(sort(unlist(preDigest))), algo = algo, quick = TRUE, ...)
   list(outputHash = res, preDigest = preDigest)
 }
 
