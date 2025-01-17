@@ -906,9 +906,9 @@ doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
   # Compile a list of elements to digest
   toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
 
-  # Deal with .objects
-  toDigest <- rmDotObjectsInList(toDigest, .objects)
-  .objects <- dotObjectsToNULLInList(toDigest, .objects) # if .objects used in previous, set to NULL here
+  # Deal with .objects -- wait these are dealt with by `.robustDigest`
+  # toDigest <- rmDotObjectsInList(toDigest, .objects)
+  # .objects <- dotObjectsToNULLInList(toDigest, .objects) # if .objects used in previous, set to NULL here
 
   toDigest$.FUN <- attr(new_call, ".Cache")$method
   # Deal with omitArgs by removing elements from the toDigest list of objects to digest
