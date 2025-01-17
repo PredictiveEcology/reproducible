@@ -1885,7 +1885,7 @@ test_that("test future", {
 })
 
 test_that("test failed Cache recovery -- message to delete cacheId", {
-  if (!useDBI() || getOption("reproducible.cache2")) skip("Not relevant for multipleDBfiles or cache2")
+  if (!useDBI() || getOption("reproducible.cache2")) skip("Not relevant for multipleDBfiles or new Cache")
   testInit(opts = list("reproducible.useMemoise" = FALSE))
 
   b <- Cache(rnorm, 1, cachePath = tmpdir)

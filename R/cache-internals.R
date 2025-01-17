@@ -13,9 +13,14 @@ verboseCacheMessage <- function(preDigest, functionName,
     #   stringsAsFactors = FALSE
     # )
 
-    hashObjectSize <- unlist(lapply(modifiedDots, function(x) {
-      if (getOption("reproducible.objSize", TRUE)) unname(attr(objSize(x), "objSize")) else NA
-    }))
+    # hashObjectSize <- unlist(lapply(modifiedDots, objSize, recursive = FALSE, quick = TRUE))
+    hashObjectSize <- if (getOption("reproducible.objSize", TRUE)) {
+      unlist(lapply(modifiedDots, function(x) {
+        unname(attr(objSize(x, quick = FALSE), "objSize"))
+      }))
+    } else {
+      Map(modifiedDots, function(x) NA)
+    }
 
     lengths <- unlist(lapply(preDigestUnlist, function(x) length(unlist(x))))
     hashDetails <- data.frame(

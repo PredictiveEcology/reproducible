@@ -95,8 +95,8 @@ objSize.list <- function(x, quick = FALSE, recursive = FALSE, ...) {
   os <- obj_size(x) # need to get overall object size; not just elements;
   # but this doesn't work for e.g., terra
 
-  if (!quick) {
-    out <- lapply(x, objSize, quick = quick)
+  if (!quick && isTRUE(recursive)) {
+    out <- Map(x = x, function(x) objSize(x, quick = quick))
     os2 <- sum(unlist(out))
     os <- max(os2, os)
     class(os) <- "lobstr_bytes"
@@ -138,6 +138,8 @@ objSize.environment <- function(x, quick = FALSE, recursive = FALSE, ...) {
 #' @importFrom lobstr obj_size
 objSize.function <- function(x, quick = FALSE, ...) {
   os <- .objSizeWithTry(x)
+  if (!quick)
+    attr(os, "objSize") <- os
   os
 }
 
