@@ -408,6 +408,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
   .message$IndentRevert()
   stFinal <- reportTime(stStart, mess = "`prepInputs` done; took ", minSeconds = 10)
+  savePrepInputsState(url, archive, out, stFinal, sysCalls = sys.calls())
   return(x)
 }
 
@@ -1661,4 +1662,37 @@ currentFilesToChecksumsTable <- function(currentFiles, nonCurrentFiles = NULL, v
     )
   }
   currentFilesToRbind
+}
+
+
+savePrepInputsState <- function(url, archive, out, stFinal, sysCalls) {
+  if (is.null(url)) url <- ""
+  if (is.null(out$targetFilePath)) out$targetFilePath <- ""
+  if (is.null(out$destinationPath)) out$destinationPath <- ""
+  if (is.null(out$fun)) out$fun <- ""
+  if (is.null(archive)) archive <- ""
+  co <- paste0(capture.output(sysCalls[[length(sysCalls)]]), collapse = " ")
+  if (isTRUE(!any(grepl(" *<- *", co)))) {
+    co <- ""
+    Cached <- .grepSysCalls(sys.calls(), pattern = "Cache")
+    prepInputed <- .grepSysCalls(sys.calls(), pattern = "prepInputs")
+    if (length(Cached)) {
+      CachedPoss <- as.list(sysCalls[[Cached]])
+      if (identical(as.character(CachedPoss[[2]])[1], "prepInputs")) {
+        co <- paste0(capture.output(sysCalls[[Cached]]), collapse = " ")
+      }
+    }
+  }
+
+  objName <- strsplit(paste0(co, collapse = " "), split = " *<- *")[[1]][1]
+
+  keep <- setDT(list(objName = objName, url = url, archive = archive, targetFile = out$targetFilePath,
+                     destinationPath = out$destinationPath,
+                     fun = format(out$funChar), time = stFinal))
+  if (is.null(.pkgEnv[[._txtPrepInputsObjects]])) {
+    .pkgEnv[[._txtPrepInputsObjects]] <- keep
+  } else {
+    .pkgEnv[[._txtPrepInputsObjects]] <- rbindlist(list(.pkgEnv[[._txtPrepInputsObjects]], keep))
+  }
+  return(invisible())
 }

@@ -502,3 +502,6 @@ paddDFInitial <- function(outMess, rows = 1:2, .spaceTmpChar, colour) {
   }
   outMess
 }
+
+
+._txtPrepInputsObjects <- "prepInputsObjects"
