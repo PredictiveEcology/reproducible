@@ -692,7 +692,18 @@ lockFile <- function(cachePath, cache_key, envir = parent.frame()) {
     if (!any(dir.exists(csd)))
       lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
     lockFile <- file.path(csd, paste0(cache_key, suffixLockFile()))
-    locked <- filelock::lock(lockFile)
+    first <- TRUE
+    while(!exists("locked", inherits = FALSE) || is(locked, "try-error")) {
+      setTimeLimit(elapsed = 3)
+      on.exit(setTimeLimit(elapsed = Inf))
+      locked <- try(filelock::lock(lockFile), silent = TRUE)
+      if (is(locked, "try-error") && isTRUE(first)) {
+        first <- FALSE
+        message("The cache file (", lockFile,") is locked; waiting... ")
+      }
+    }
+    # locked <- evalWithTimeout(, timeout = 1, onTimeout = "error")
+
     on.exit2(releaseLockFile(locked), envir = envir)
     locked
   }
@@ -712,6 +723,7 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
       }
       userTags2b <- ifelse(!nzchar(userTags2b), "userTags", userTags2b)
       userTagsAsDT <- data.table(tagKey = userTags2b, tagValue = userTags2a)
+      userTagsAsDT <- unique(userTagsAsDT)
       # identify only those items that match the userTags
       scMatch <- shownCache[userTagsAsDT, # .(length(unique(tagKey)) == length(userTags)),
                             on = c("tagKey", "tagValue"), # by = "cacheId",
