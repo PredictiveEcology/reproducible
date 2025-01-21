@@ -1992,3 +1992,26 @@ test_that("cacheId is same as calculated", {
   expect_match(mess2, .message$cacheIdSameTxt, all = FALSE)
   expect_equivalent(a, b)
 })
+
+
+test_that("Cache with do.call and variables as list", {
+  testInit()
+
+  a <- list()
+  a[[1]] <- Cache(do.call(rnorm, list(n = 1, mean = 2)))
+
+  Args <- list(n = 1, mean = 2)
+  a[[2]] <- Cache(do.call(rnorm, Args))
+
+  b <- 2
+  Args <- list(n = 1, mean = b)
+  a[[3]] <- Cache(do.call(rnorm, Args))
+
+  b <- function() 2
+  Args <- list(n = 1, mean = b())
+  a[[4]] <- Cache(do.call(rnorm, Args))
+
+  # previously, Args would just be unevaluated so 2, 3, 4 would be same, but different than 1
+  expect_equivalent(length(unique(as.numeric(a))), 1L)
+
+})

@@ -450,6 +450,8 @@ undoDoCall <- function(call) {
     if (is.call(args) && as.character(args[[1]]) == "list") {
       args <- as.list(args[-1])
     }
+    if (is.name(args))
+      args <- recursiveEvalNamesOnly(args)
 
   } else {
     func <- call[[1]]
