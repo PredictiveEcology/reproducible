@@ -202,7 +202,7 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
           }
         }
         if (identical(func, quote(do.call))) {
-          func_call <- undoDoCall(func_call)
+          func_call <- undoDoCall(func_call, .callingEnv = .callingEnv)
           func <- func_call[[1]]  # Extract the function for do.call (e.g., rnorm)
         }
         args <- as.list(func_call)[-1]
@@ -442,7 +442,7 @@ filter_objects <- function(evaluated_args, .objects) {
 }
 
 # Function to normalize the call to handle `do.call`
-undoDoCall <- function(call) {
+undoDoCall <- function(call, .callingEnv) {
   if (is.call(call) && all(as.character(call[[1]]) == "do.call")) {
     func <- call[[2]]
     args <- call[[3]]
@@ -451,7 +451,7 @@ undoDoCall <- function(call) {
       args <- as.list(args[-1])
     }
     if (is.name(args))
-      args <- recursiveEvalNamesOnly(args)
+      args <- recursiveEvalNamesOnly(args, envir = .callingEnv)
 
   } else {
     func <- call[[1]]
