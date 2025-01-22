@@ -505,3 +505,7 @@ paddDFInitial <- function(outMess, rows = 1:2, .spaceTmpChar, colour) {
 
 
 ._txtPrepInputsObjects <- "prepInputsObjects"
+
+
+.txtDownloadFailedFn <- function(pkg)
+  paste0("Download failed; try rerunning after installing ", pkg, " package.")
