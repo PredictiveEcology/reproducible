@@ -221,7 +221,9 @@ setMethod(
       filesToRemove1 <- objsDT[grepl(pattern = "cacheRaster", tagKey)][[.cacheTableTagColName()]]
       filesToRemove2 <- objsDT[grepl(pattern = "origFilename|filesToLoad|filenamesInCache", tagKey)][[.cacheTableTagColName()]]
       filesToRemove2 <- normPath(file.path(CacheStorageDir(x), basename(filesToRemove2)))
-      filesToRemove <- unique(c(filesToRemove1, filesToRemove2))
+      filesToRemove3 <- dir(CacheStorageDir(x), full.names = TRUE)
+      filesToRemove3 <- grep(paste(objsDT[["cacheId"]], collapse = "|"), filesToRemove3, value = TRUE)
+      filesToRemove <- unique(c(filesToRemove1, filesToRemove2, filesToRemove3))
       # filebackedInRepo <- objsDT[grepl(pattern = "fromDisk", tagKey) &
       #                           grepl(pattern = "TRUE", get(.cacheTableTagColName()))]
       #
@@ -239,7 +241,8 @@ setMethod(
         if (isInteractive()) {
           dirLs <- dir(unique(dirname(filesToRemove)), full.names = TRUE)
           dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE))
-          cacheSize <- sum(cacheSize, file.size(dirLs))
+          filesToRemove <- unique(c(filesToRemove, dirLs))
+          cacheSize <- sum(cacheSize, file.size(filesToRemove))
         }
         # }
       }
@@ -249,7 +252,8 @@ setMethod(
         formattedCacheSize <- format(cacheSize, "auto")
         if (isTRUE(ask)) {
           messageQuestion(
-            "Your size of your selected objects is ", formattedCacheSize, ".\n",
+            "Your size of your selected objects (including file-backed objects) is ",
+            formattedCacheSize, ".\n",
             " Are you sure you would like to delete it all? Y or N"
           )
           rl <- readline()
