@@ -22,6 +22,7 @@ did not change after the caching (the pointer to the file was intact, but the fi
 Now, memoising will copy file-backed information from disk
 each time it "retrieves a file-backed object from memeory". This will result in slower
 memoising than previously. However, it will be robust to downstream changes to the file.
+* new function `purgeChecksums` to allow user to manually purge a file from CHECKSUMS.txt
 
 # reproducible 2.1.2
 

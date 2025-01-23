@@ -1317,7 +1317,7 @@ test_that("lightweight tests for code coverage", {
   )
 
   url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
-  globalOutput <- capture.output({
+  #globalOutput <- capture.output({
 
     checkPath(tmpdir, create = TRUE)
     checkSums <- .emptyChecksumsResult
@@ -1380,6 +1380,14 @@ test_that("lightweight tests for code coverage", {
       )
     )
 
+    # try to purge from the CHECKSUMS.txt
+    toPurgeCode <- grep("purgeChecksums|fileToRemove", capture.output(attr(out, "condition")), value = TRUE)
+    toPurgeCode <- parse(text = gsub(">", "", toPurgeCode))
+    checksumsFile <- dir(tmpdir, pattern = "CHECKSUMS.txt", full.names = TRUE)
+    dtBefore <- data.table::fread(checksumsFile)
+    eval(toPurgeCode)
+    dtAfter <- data.table::fread(checksumsFile)
+    expect_equivalent(NROW(dtBefore[!dtAfter, on = "file"]), 1L)
 
     ## 2023-05-08: does not error on macOS
     isErr <- is(out, "try-error")
@@ -1458,7 +1466,7 @@ test_that("lightweight tests for code coverage", {
     expect_true(identical(crs(a), crs(ras3)))
 
     # }
-  })
+  #})
     # sp::CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"))
 })
 
