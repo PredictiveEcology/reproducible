@@ -915,6 +915,11 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
   if (length(fts) > 1) {
     ftsOther <- fts[-1]
     fnsExtras <- Filenames(obj, allowMultiple = TRUE)
+
+    fnsExtrasBase <- basename(fnsExtras)
+    ftsOtherBase <- gsub(paste0(cacheId, "_"), "", basename(ftsOther))
+    fnsExtras <- fnsExtras[match(ftsOtherBase, fnsExtrasBase)]
+
     # ftsOther <- filenameInCacheWPrefix(ftsOther, cacheId, relative = FALSE) # already done in CacheStoredFile
     # ftsOther <- .prefix(ftsOther, prefixCacheId(cacheId)) # makes it unique in the cache
     # if (!identical(ftsOther2, ftsOther)) browser()
