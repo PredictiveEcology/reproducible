@@ -425,7 +425,7 @@ setMethod(
       } else {
         objsDT <- rbindlist(lapply(
           dir(CacheStorageDir(x),
-              pattern = CacheDBFileSingleExt(),
+              pattern = paste(CacheDBFileSingleExt(format = .cacheSaveFormats), collapse = "|"),
               full.names = TRUE
           ),
           loadFile
