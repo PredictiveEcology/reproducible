@@ -1678,9 +1678,12 @@ savePrepInputsState <- function(url, archive, out, stFinal, sysCalls) {
     Cached <- .grepSysCalls(sys.calls(), pattern = "Cache")
     prepInputed <- .grepSysCalls(sys.calls(), pattern = "prepInputs")
     if (length(Cached)) {
-      CachedPoss <- as.list(sysCalls[[Cached]])
+      # CachedPoss <- tryCatch(as.list(sysCalls[[Cached]]), error = function(e) browser())
+      CachedPoss <- sysCalls[Cached]
       if (identical(as.character(CachedPoss[[2]])[1], "prepInputs")) {
         co <- paste0(capture.output(sysCalls[[Cached]]), collapse = " ")
+      } else {
+        co <- paste0(capture.output(sysCalls[tail(Cached, 1)]), collapse = " ")
       }
     }
   }
@@ -1693,7 +1696,8 @@ savePrepInputsState <- function(url, archive, out, stFinal, sysCalls) {
   if (is.null(.pkgEnv[[._txtPrepInputsObjects]])) {
     .pkgEnv[[._txtPrepInputsObjects]] <- keep
   } else {
-    .pkgEnv[[._txtPrepInputsObjects]] <- rbindlist(list(.pkgEnv[[._txtPrepInputsObjects]], keep))
+    .pkgEnv[[._txtPrepInputsObjects]] <- tryCatch(rbindlist(list(.pkgEnv[[._txtPrepInputsObjects]], keep)), error = function(e) browser())
+    # .pkgEnv[[._txtPrepInputsObjects]] <- rbindlist(list(.pkgEnv[[._txtPrepInputsObjects]], keep))
   }
   return(invisible())
 }
