@@ -18,10 +18,10 @@ test_that("test data.table caching", {
 })
 
 test_that("test ALTREP integers", {
-  testInit("qs", opts = list(reproducible.cacheSaveFormat = "qs",
+  testInit(.qsFormat, opts = list(reproducible.cacheSaveFormat = .qsFormat,
                              reproducible.cacheSpeed = "fast"))
 
-  for (i in c("rds", "qs")) {
+  for (i in c(.rdsFormat, .qsFormat)) {
     for (s in c("slow", "fast")) {
       withr::local_options(reproducible.cacheSaveFormat = i,
                            reproducible.cacheSpeed = s)
@@ -29,7 +29,7 @@ test_that("test ALTREP integers", {
       a <- 1991:20200
       aDig <- .robustDigest(a)
       tf <- tempfile(fileext = i);
-      if (identical(i, "rds")) {
+      if (identical(i, .rdsFormat)) {
         saveRDS(a, file = tf);
         b <- readRDS(tf)
       } else {

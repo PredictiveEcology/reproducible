@@ -667,7 +667,7 @@ extractFromArchive <- function(archive,
     if (length(funPoss)) {
       isShapefile <- fileExt %in% funPoss[funPoss[, "type"] == vectorType(), "extension"]
       isRaster <- fileExt %in% funPoss[funPoss[, "type"] == rasterType(), "extension"]
-      isRDS <- fileExt %in% funPoss[funPoss[, "extension"] == "rds", "extension"]
+      isRDS <- fileExt %in% funPoss[funPoss[, "extension"] == .rdsFormat, "extension"]
       if (any(isShapefile)) {
         if (is.null(fun)) {
           if (requireNamespace("sf", quietly = TRUE)) {
@@ -1454,7 +1454,7 @@ process <- function(out, funCaptured,
           }
         } else {
           useCache2 <- useCache
-          if (any(fileExt(out$targetFilePath) %in% c("qs", "rds")) &&
+          if (any(fileExt(out$targetFilePath) %in% c(.qsFormat, .rdsFormat)) &&
               !isTRUE(getOption("reproducible.useMemoise"))) {
             useCache2 <- FALSE
             messagePreProcess("targetFile is already a binary; skipping Cache while loading")

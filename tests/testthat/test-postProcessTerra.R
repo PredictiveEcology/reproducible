@@ -268,12 +268,12 @@ test_that("testing terra", {
       }
 
       # Switch from qs to rds with Cache
-      if (requireNamespace("qs")) {
-        opts <- options(reproducible.cacheSaveFormat = "qs")
+      if (requireNamespace(.qsFormat)) {
+        opts <- options(reproducible.cacheSaveFormat = .qsFormat)
         t13a <- Cache(postProcessTo(xVect, vutmErrors))
-        opts <- options(reproducible.cacheSaveFormat = "rds")
+        opts <- options(reproducible.cacheSaveFormat = .rdsFormat)
         t13a <- Cache(postProcessTo(xVect, vutmErrors))
-        opts <- options(reproducible.cacheSaveFormat = "qs")
+        opts <- options(reproducible.cacheSaveFormat = .qsFormat)
         t13a <- try(Cache(postProcessTo(xVect, vutmErrors)), silent = TRUE)
         a <- try(ncol(t13a), silent = TRUE)
         expect_false(is(a, "try-error"))

@@ -236,7 +236,7 @@ reproducibleOptions <- function() {
   list( # nolint
     reproducible.ask = TRUE,
     reproducible.cachePath = file.path(tempdir(), "reproducible", "cache"),
-    reproducible.cacheSaveFormat = "rds",
+    reproducible.cacheSaveFormat = .rdsFormat,
     reproducible.cacheSpeed = "slow",
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
@@ -297,3 +297,4 @@ getEnv <- function(envvar, default = NULL, allowed = NULL) {
 
   return(val)
 }
+

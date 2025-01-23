@@ -912,8 +912,8 @@ test_that("test rm large non-file-backed rasters", {
     }
   }
 
-  testInit(c("qs", "terra"), opts = list("reproducible.cacheSpeed" = "fast",
-                                         "reproducible.cacheSaveFormat" = "qs"))
+  testInit(c(.qsFormat, "terra"), opts = list("reproducible.cacheSpeed" = "fast",
+                                         "reproducible.cacheSaveFormat" = .qsFormat))
 
   ext <- terra::ext(0, 10000, 0, 10000)
   r <- Cache(terra::rast, ext,
@@ -969,24 +969,24 @@ test_that("test .defaultUserTags", {
 })
 
 test_that("test changing reproducible.cacheSaveFormat midstream", {
-  skip_if_not_installed("qs")
+  skip_if_not_installed(.qsFormat)
 
   testInit(opts = list(
-    reproducible.cacheSaveFormat = "rds",
+    reproducible.cacheSaveFormat = .rdsFormat,
     reproducible.useMemoise = FALSE
   ))
 
   b <- Cache(rnorm, 1, cachePath = tmpdir)
   sc <- showCache(tmpdir)
   ci <- unique(sc[[.cacheTableHashColName()]])
-  withr::local_options(reproducible.cacheSaveFormat = "qs")
+  withr::local_options(reproducible.cacheSaveFormat = .qsFormat)
   mess <- capture_messages({
     b <- Cache(rnorm, 1, cachePath = tmpdir)
   })
   expect_false(attr(b, ".Cache")$newCache)
   expect_true(sum(cli::ansi_grepl("Changing format of Cache entry from rds to qs", mess)) == 1)
 
-  withr::local_options(reproducible.cacheSaveFormat = "rds")
+  withr::local_options(reproducible.cacheSaveFormat = .rdsFormat)
   mess <- capture_messages({
     b <- Cache(rnorm, 1, cachePath = tmpdir)
   })
@@ -1117,7 +1117,7 @@ test_that("test .object arg for list in Cache", {
 
 test_that("quick arg in Cache as character", {
   skip_on_cran()
-  testInit("terra", verbose = TRUE, tmpFileExt = c("rds", "tif"))
+  testInit("terra", verbose = TRUE, tmpFileExt = c(.rdsFormat, "tif"))
 
   tf <- tmpfile[[1]]
   tf2 <- tmpfile[[2]]

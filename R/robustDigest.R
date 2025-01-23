@@ -460,7 +460,7 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    if (identical(getOption("reproducible.cacheSaveFormat"), "qs") &&
+    if (identical(getOption("reproducible.cacheSaveFormat"), .qsFormat) &&
         identical(getOption("reproducible.cacheSpeed"), "fast")) {
       os <- objSize(object)
       if (os == 680) {

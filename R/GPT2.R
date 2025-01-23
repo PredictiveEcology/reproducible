@@ -298,7 +298,6 @@ check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functio
   # Check if the result is already cached
   connOrig <- conn
   conns <- conn
-  # conns <- checkConns(cachePaths, conn)
 
   for (cachePath in cachePaths) {
     cache_file <- CacheStoredFile(cachePath, cache_key)

@@ -481,8 +481,8 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 
   df <- data.frame(
     rbind(
-      c("rds", "base::readRDS", "base::saveRDS", "binary"),
-      c("qs", "qs::qread", "qs::qsave", "qs"),
+      c(.rdsFormat, "base::readRDS", "base::saveRDS", "binary"),
+      c(.qsFormat, "qs::qread", "qs::qsave", .qsFormat),
       cbind(
         c("asc", "grd", "tif"), griddedFile, griddedFileSave,
         rasterType(rasterRead = griddedFile)

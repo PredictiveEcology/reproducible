@@ -179,7 +179,10 @@ objSizeSession <- function(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = l
     } else {
       break
     }
-    out <- length(serialize(x, NULL))
+    out <- try(length(serialize(x, NULL)))
+    if (is(out, "try-error")) {
+      out <- object.size(x)
+    }
     class(out) <- "lobstr_bytes"
   }
   out
