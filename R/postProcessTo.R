@@ -331,7 +331,7 @@ isSF <- function(x) is(x, "sf") || is(x, "sfc")
 isRaster <- function(x) is(x, "Raster")
 isCRSANY <- function(x) isCRSSF(x) || isCRScharacter(x) || isCRSTerra(x)
 isCRSSF <- function(x) is(x, "crs")
-isCRScharacter <- function(x) is.character(x) && (grepl("DATUM", x) || grepl("+proj", x))
+isCRScharacter <- function(x) is.character(x) && (grepl("DATUM", x) || grepl("+proj", x) || grepl("epsg:", x))
 isCRSTerra <- function(x) is(x, "CRS")
 
 #' Fix common errors in GIS layers, using `terra`
@@ -1557,7 +1557,7 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
   opts <- addDataType(opts, fromRas[[1]], ...)
   opts <- updateDstNoData(opts, fromRas)
 
-  tried <- retry(retries = 2, # exprBetween = browser(),
+  tried <- retry(retries = 2,
                  sf::gdal_utils(
                    util = "warp",
                    source = fnSource,
@@ -1637,7 +1637,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
   opts <- addDataType(opts, fromRas[[1]], ...)
   opts <- updateDstNoData(opts, fromRas)
 
-  tried <- retry(retries = 2, # exprBetween = browser(),
+  tried <- retry(retries = 2,
                  sf::gdal_utils(
                    util = "warp",
                    source = fnSource,
@@ -1720,7 +1720,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
   opts <- addDataType(opts, fromRas[[1]], ...)
   opts <- updateDstNoData(opts, fromRas)
 
-  tried <- retry(retries = 2, # exprBetween = browser(),
+  tried <- retry(retries = 2,
                  sf::gdal_utils(
                    util = "warp",
                    source = fnSource,
@@ -1756,7 +1756,6 @@ keepOrigGeom <- function(newObj, origObj) {
   if (!identical(from2Geom, fromGeom)) {
     possTypes <- c("POINT", "LINESTRING", "POLYGON")
     hasTypes <- vapply(possTypes, function(pt) isTRUE(any(grepl(pt, fromGeom))), FUN.VALUE = logical(1))
-    # if (is(hasTypes, "try-error")) browser()
     fromGeomSimple <- names(hasTypes)[hasTypes]
 
     has2Types <- vapply(possTypes, function(pt) isTRUE(any(grepl(pt, from2Geom))), FUN.VALUE = logical(1))
