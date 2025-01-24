@@ -408,7 +408,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
   .message$IndentRevert()
   stFinal <- reportTime(stStart, mess = "`prepInputs` done; took ", minSeconds = 10)
-  savePrepInputsState(url, archive, out, stFinal, sysCalls = sys.calls())
+  if (getOption("reproducible.savePrepInputsState", FALSE))
+    savePrepInputsState(url, archive, out, stFinal, sysCalls = sys.calls())
   return(x)
 }
 
