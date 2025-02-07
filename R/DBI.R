@@ -132,9 +132,17 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   # TRY link first, if there is a linkToCacheId, but some cases will fail; not sure what these cases are
   if (!is.null(linkToCacheId)) {
     ftL <- CacheStoredFile(cachePath, linkToCacheId, obj = obj)
+    ftLfs <- file.size(ftL)
+    out <- if (all(ftLfs > 0)) {# means corrupted if file.size is 0
     suppressWarnings({
-      out <- try(file.link(from = ftL, to = fts), silent = TRUE)
+        try(file.link(from = ftL, to = fts), silent = TRUE)
     })
+    } else {
+      # maybe could be deleting those files here because they are corrupted;
+      #  but should happen whenever they are needed
+      FALSE
+    }
+
     if (is(out, "try-error") || !all((out %in% TRUE))) {
       linkToCacheId <- NULL
     } else {
@@ -931,12 +939,12 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
   if (getOption("reproducible.cacheSaveFormat", .rdsFormat) == .qsFormat) {
     .requireNamespace(.qsFormat, stopOnFALSE = TRUE)
     for (attempt in 1:2) {
-      fs <- try(qs::qsave(obj,
+      fs <- qs::qsave(obj,
         file = fts,
         nthreads = getOption("reproducible.nThreads", 1),
         preset = getOption("reproducible.qsavePreset", "high")
-      ))
-      if (is(fs, "try-error")) browser()
+      )
+      # if (is(fs, "try-error")) browser()
       fs1 <- file.size(fts)
       if (!identical(fs, fs1)) {
         if (attempt == 1) {
