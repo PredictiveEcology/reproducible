@@ -744,9 +744,9 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
       )
     }
 
-    shownCache <- shownCache[tagKey %in% c(metadata$tagKey)][grep(x = tagKey, "elapsedTime|accessed", invert = TRUE)]
+    shownCache <- shownCache[tagKey %in% c(metadata$tagKey)][grep(x = tagKey, "otherFunction|elapsedTime|accessed", invert = TRUE)]
     # cacheIdOfSimilar
-    similarFull <- shownCache[tagKey %in% unique(c(metadata$tagKey))]
+    similarFull <- unique(shownCache[tagKey %in% unique(c(metadata$tagKey))], by = .dtFileMainCols)
     metadataSmall <- metadata[tagKey %in% unique(c(similarFull$tagKey))]
     similar <- similarFull[!metadata, on = c("tagKey", "tagValue")]
     other <- logical()
@@ -784,14 +784,19 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
     if (NROW(similar)) {
       simi <- similar[, .N, by = "cacheId"][similar, on = "cacheId"]
       data.table::setorderv(simi, c("N", "createdDate"))
-      messageCache("There are ", NROW(unique(similar$cacheId)),
+      numSimilars <- NROW(unique(similar$cacheId))
+      messageCache("There are ", numSimilars,
                    " similar calls (same fn: ", .messageFunctionFn(.functionName), ") in the Cache repository.",
                    verbose = verbose * !devMode)
       simi <- split(simi, by = "N") # take first element in split list
       simi <- simi[[1]]
+      if (identical(numSimilars, 1L)) {
+        messageCache("It has ", simi$N[[1]], " differences", verbose = verbose * !devMode)
+      } else {
       messageCache("With fewest differences (", simi$N[[1]], "), there are ",
                    NROW(unique(simi$cacheId)),
                    " similar calls in the Cache repository.", verbose = verbose * !devMode)
+      }
       twoCols <- strsplit(simi[["tagValue"]], ":")
       args <- vapply(twoCols, function(x) x[[1]], FUN.VALUE = character(1))
       lens <- lengths(twoCols)
@@ -813,7 +818,8 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
       setcolorder(simi2, c("cacheId", "arg", "value2"))
       setnames(simi2, old = c("cacheId", "value2"),
                new = c("cacheIdOfThisCall", "valueThisCall"))
-      simi <- simi[simi2, on = c("arg"), allow.cartesian = TRUE] # there can be duplicate args
+      simi <- data.table(simi, simi2[match(simi$arg, arg), -"arg"])
+      # simi <- simi[simi2, on = c("arg"), allow.cartesian = TRUE] # there can be duplicate args
 
       if (isDevMode(useCache, userTags)) {
         messageCache("------ devMode -------", verbose = verbose)
