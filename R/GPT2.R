@@ -50,16 +50,19 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   # do the Digest
   times <- list()
   times$CacheDigestStart <- Sys.time()
+
+  # Override keyFull$key if user has specified with cacheId
+  if (!is.null(cacheId) && !is.na(cacheId)) {
+    keyFull <- list()
+    keyFull$key <- cacheIdOverride(cacheId, keyFull$key, callList$.functionName, verbose)
+  } else {
   keyFull <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
                       length, algo, quick, classOptions, times$CacheDigestStart, verbose = verbose)
+  }
 
   # If debugCache is "quick", short circuit after doDigest
   if (isTRUE(!is.na(pmatch(debugCache, "quick"))))
     return(list(hash = keyFull$preDigest, content = callList$func_call))
-  # Override keyFull$key if user has specified with cacheId
-  if (!is.null(cacheId))
-    keyFull$key <- cacheIdOverride(cacheId, keyFull$key, callList$.functionName, verbose)
-
 
   # Construct the full file path for the cache directory and possible file
   cachePaths <- getCacheRepos(cachePath, callList$new_call[-1], verbose = verbose)
