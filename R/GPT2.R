@@ -670,7 +670,7 @@ appendNestedTags <- function(...) {
 }
 
 .addTagsRepoAccessedTime <- function(cache_key, cachePath = cachePath) {
-  .addTagsRepo(cacheId = cache_key, tagKey = "accessed", tagValue = sysTimeForCacheToChar(),
+  .addTagsRepo(cacheId = cache_key, tagKey = "accessed", tagValue = sysTimeForCacheToChar()
                , cachePath = cachePath)
 }
 
