@@ -934,8 +934,11 @@ doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
 
   toDigest$.FUN <- attr(new_call, ".Cache")$method
   # Deal with omitArgs by removing elements from the toDigest list of objects to digest
-  if (!is.null(omitArgs))
+  if (!is.null(omitArgs)) {
+    if (any("FUN" %in% omitArgs))
+      omitArgs <- c(".FUN", omitArgs)
     toDigest[omitArgs] <- NULL
+  }
   # Deal with .cacheExtra by adding it to the list of objects to digest
   if (!is.null(.cacheExtra))
     toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
