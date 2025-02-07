@@ -425,9 +425,9 @@ setMethod(
 
     if (!useDBI()) {
       if (!is.null(cacheId)) {
-        objsDT <- rbindlist(lapply(cacheId, showCacheFast, cachePath = x, drv = drv, conn = conn))
+        objsDT <- rbindlist(fill = TRUE, lapply(cacheId, showCacheFast, cachePath = x, drv = drv, conn = conn))
       } else {
-        objsDT <- rbindlist(lapply(
+        objsDT <- rbindlist(fill = TRUE, lapply(
           dir(CacheStorageDir(x),
               pattern = paste(CacheDBFileSingleExt(format = .cacheSaveFormats), collapse = "|"),
               full.names = TRUE
@@ -710,7 +710,6 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
 
 useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose"), default = TRUE) {
   if  (isTRUE(getOption("reproducible.cache2"))) {
-    # browser()
     # options("reproducible.useDBI" = FALSE)
     # return(FALSE)
   }

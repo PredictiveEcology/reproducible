@@ -107,7 +107,7 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
 saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId,
-                        linkToCacheId = NULL,
+                        linkToCacheId = NULL, lsStr = NULL,
                         verbose = getOption("reproducible.verbose")) {
 
   if (useDBI()) {
@@ -134,9 +134,9 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     ftL <- CacheStoredFile(cachePath, linkToCacheId, obj = obj)
     ftLfs <- file.size(ftL)
     out <- if (all(ftLfs > 0)) {# means corrupted if file.size is 0
-    suppressWarnings({
+      suppressWarnings({
         try(file.link(from = ftL, to = fts), silent = TRUE)
-    })
+      })
     } else {
       # maybe could be deleting those files here because they are corrupted;
       #  but should happen whenever they are needed
@@ -157,6 +157,11 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   # Save to db file first, then storage file
   dt <- metadataDT(cacheId, tagKey, tagValue)
+
+  if (!is.null(lsStr)) {
+     set(dt, 1L, "lsStr", list(lsStr))
+  }
+
   # dt <- data.table(
   #   "cacheId" = cacheId, "tagKey" = tagKey,
   #   "tagValue" = tagValue, "createdDate" = as.character(Sys.time())
@@ -493,7 +498,7 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
       )
       dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
       dt2 <- loadFile(dtFile)
-      dt <- rbindlist(list(dt2, dt))
+      dt <- rbindlist(list(dt2, dt), fill = TRUE)
       saveFilesInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
     }
   }
@@ -551,7 +556,7 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
       tk <- tagKey
       alreadyThere <- sum(dt3$tagKey == tk & dt3$cacheId == cacheId)
       if (add && alreadyThere == 0) {
-        dt3 <- rbindlist(list(dt3, dt))
+        dt3 <- rbindlist(list(dt3, dt), fill = TRUE)
       } else {
         set(dt3, which(dt3$tagKey == tk & dt3$cacheId == cacheId), "tagValue", dt$tagValue)
         # dt3[tagKey == tk & cacheId == cacheId, tagValue := dt$tagValue]
