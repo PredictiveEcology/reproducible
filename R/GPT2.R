@@ -1091,15 +1091,17 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     }
     if (!fromMemoise || rerun || memoiseFail) {
       obj <- try(loadFile(cache_file))
-      if (is(obj, "try-error") || rerun) {
+      output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
+      if (is(obj, "try-error") || rerun || is(output, "try-error")) {
         messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
-        otherFiles <- normPath(file.path(CacheStorageDir(), shownCache[tagKey == "filesToLoad"]$tagValue))
-        rmFiles <- c(cache_file, otherFiles)
+        otherFiles2 <- dir(CacheStorageDir(cachePath), pattern = cache_key, full.names = TRUE)
+        otherFiles <- normPath(file.path(CacheStorageDir(cachePath),
+                                         shownCache[tagKey == "filesToLoad"]$tagValue))
+        rmFiles <- unique(c(cache_file, otherFiles, otherFiles2))
         unlink(rmFiles)
         return(.returnNothing)
       }
 
-      output <- .unwrap(obj, cachePath = cachePath, cacheId = cache_key)
       if (isTRUE(changedSaveFormat)) {
         swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
                             cacheId = cache_key, sameCacheID = sameCacheID,
