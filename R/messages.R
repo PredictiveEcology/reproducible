@@ -348,6 +348,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
 .message$IndentDefault <- 1
 
+#' @importFrom withr defer
 .message$IndentUpdate <- function(nchar = .message$IndentDefault, envir = parent.frame(), ns = "reproducible") {
   val <- paste0(rep(" ", nchar), collapse = "")
   .message$PreProcessIndent <- paste0(.message$PreProcessIndent, val)
@@ -360,6 +361,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
   )
 }
 
+#' @importFrom withr deferred_clear
 .message$IndentRevert <- function(nchar = .message$IndentDefault, envir = parent.frame(), ns = "reproducible") {
   val <- paste0(rep(" ", nchar), collapse = "")
   .message$PreProcessIndent <- gsub(paste0(val, "$"), "", .message$PreProcessIndent)

@@ -61,7 +61,8 @@ Imports:
     lobstr,
     methods,
     stats,
-    utils
+    utils,
+    withr
 Suggests:
     archive,
     covr,
@@ -85,8 +86,7 @@ Suggests:
     sf,
     sp (>= 1.4-2),
     terra (>= 1.7-20),
-    testthat,
-    withr
+    testthat
 Encoding: UTF-8
 Language: en-CA
 License: GPL-3
