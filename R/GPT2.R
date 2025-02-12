@@ -289,7 +289,14 @@ evaluate_args <- function(args, envir) {
     if (is.call(arg)) {
       arg <- tryCatch(eval(arg, envir = envir), error = function(err) {
         # If it's a call that cannot be evaluated, evaluate recursively
-        as.call(c(arg, evaluate_args(as.list(arg[-1]), envir)))
+        fail <- "fail"
+        newPossArgMinus1 <- tryCatch(evaluate_args(as.list(arg[-1]), envir), error = function(err) {
+          fail
+        })
+        if (!identical(newPossArgMinus1, fail)) {
+          arg <- as.call(c(arg, as.list(newPossArgMinus1[-1])))
+        }
+        arg
       })
     } else if (is.symbol(arg)) {
       # If it's a symbol, evaluate it in the specified environment
