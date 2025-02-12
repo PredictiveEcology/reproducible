@@ -683,8 +683,12 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
       .rdsFormat
     }
   }
-  filename <- if (is.null(cacheId)) NULL else try(paste(cacheId, csExtension, sep = "."))
-  if (is(filename, "try-error")) browser()
+
+  filename <- if (is.null(cacheId)) NULL else paste(cacheId, csExtension, sep = ".")
+  # if (is(filename, "try-error")) browser()
+
+  # filename <- if (is.null(cacheId)) NULL else try(paste(cacheId, csExtension, sep = "."))
+  # if (is(filename, "try-error")) browser()
   if (length(cacheId) > 1) {
     filename <- vapply(filename, nextNumericName, FUN.VALUE = character(1))
     for (i in seq(filename[-1]) + 1) {
@@ -935,7 +939,6 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
 
     # ftsOther <- filenameInCacheWPrefix(ftsOther, cacheId, relative = FALSE) # already done in CacheStoredFile
     # ftsOther <- .prefix(ftsOther, prefixCacheId(cacheId)) # makes it unique in the cache
-    # if (!identical(ftsOther2, ftsOther)) browser()
 
     hardLinkOrCopy(fnsExtras, ftsOther, verbose = -2)
     fsOther <- sum(file.size(ftsOther))
@@ -1186,8 +1189,8 @@ loadFromCacheSwitchFormat <- function(f, verbose, cachePath, fullCacheTableForOb
 
 checkSameCacheId <- function(f) {
   cacheId <- filePathSansExt(basename(f))
-  sameCacheID <- dir(dirname(f), pattern = cacheId)
-  if (!useDBI() || length(sameCacheID) > 1) {
+  sameCacheID <- grep("\\.lock$", dir(dirname(f), pattern = cacheId), invert = TRUE, value = TRUE)
+  if (!useDBI() && length(sameCacheID) > 1) {
     sameCacheID <- onlyStorageFiles(sameCacheID, cacheId)
   }
   sameCacheID
@@ -1198,7 +1201,6 @@ swapCacheFileFormat <- function(wrappedObj, cachePath, drv, conn, cacheId, sameC
   messageCache(.message$changingFormat(prevFile = sameCacheID, newFile = newFile),
                verbose = verbose)
 
-  browser() # this
   fs <- saveToCache(
     obj = wrappedObj, cachePath = cachePath, drv = drv, conn = conn,
     cacheId = cacheId
