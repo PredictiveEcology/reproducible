@@ -58,8 +58,6 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   } else {
     keyFull <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
                         length, algo, quick, classOptions, times$CacheDigestStart, verbose = verbose)
-    keyFull <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
-                        length, algo, quick, classOptions, times$CacheDigestStart, verbose = verbose)
   }
 
   # If debugCache is "quick", short circuit after doDigest
@@ -265,6 +263,7 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
     args <- as.list(FUNcaptured[-1])
   } else {
     args <- as.list(matched_call)[-1]
+    if (exists("aaaa", envir = .GlobalEnv)) browser()
     args <- evaluate_args(args, envir = .callingEnv)
   }
 
