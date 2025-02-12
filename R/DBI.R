@@ -133,7 +133,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   if (!is.null(linkToCacheId)) {
     ftL <- CacheStoredFile(cachePath, linkToCacheId, obj = obj)
     ftLfs <- file.size(ftL)
-    out <- if (all(ftLfs > 0)) {# means corrupted if file.size is 0
+    out <- if (isTRUE(all(ftLfs > 0))) {# means corrupted if file.size is 0
       suppressWarnings({
         try(file.link(from = ftL, to = fts), silent = TRUE)
       })
