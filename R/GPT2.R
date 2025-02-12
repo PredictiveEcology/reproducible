@@ -254,7 +254,7 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
     args <- args[!argsRm %in% TRUE]
 
   # build new call from func and args; both must be correct by here
-  new_call <- as.call(c(func, args))
+  new_call <- as.call(list(func, args))
   # This matches call on the FUN, not a duplicate of matchCall2
   matched_call <- match_call_primitive(func, new_call, expand.dots = TRUE, envir = .callingEnv)
 
