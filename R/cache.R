@@ -472,7 +472,7 @@ Cache2 <-
       # get cachePath if not supplied
       cachePaths <- getCacheRepos(cachePath, modifiedDots, verbose = verbose)
       modifiedDots$.FUN <- fnDetails$.FUN # put in modifiedDots for digesting  # nolint
-      scalls <- if (!is(FUN, "function")) try(.CacheFn1(FUN, sys.calls())) else NULL
+      scalls <- if (!is(FUN, "function")) .CacheFn1(FUN, sys.calls()) else NULL
 
       # extract other function names that are not the ones the focus of the Cache call
       otherFns <- .getOtherFnNamesAndTags(scalls = scalls)

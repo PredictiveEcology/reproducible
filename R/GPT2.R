@@ -234,7 +234,7 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
     fun <- if (is.null(func_full)) func else func_full
     if (is.name(fun)) {
       infixes <- c("+", "-", "*", "/", "==", "!=", "<", ">", "<=", ">=", "&&", "||")
-      areInfixes <- try(any(fun == infixes), silent = TRUE)
+      areInfixes <- any(fun == infixes)
       if (!any(areInfixes)) {
         fun <- parse(text = fun)
       }
@@ -263,7 +263,6 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
     args <- as.list(FUNcaptured[-1])
   } else {
     args <- as.list(matched_call)[-1]
-    if (exists("aaaa", envir = .GlobalEnv)) browser()
     args <- evaluate_args(args, envir = .callingEnv)
   }
 
