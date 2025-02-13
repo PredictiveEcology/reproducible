@@ -92,7 +92,8 @@ objSize.default <- function(x, quick = FALSE, ...) {
 #' @export
 #' @importFrom lobstr obj_size
 objSize.list <- function(x, quick = FALSE, recursive = FALSE, ...) {
-  os <- obj_size(x) # need to get overall object size; not just elements;
+  os <- .objSizeWithTry(x)
+  # os <- try(obj_size(x), silent = TRUE) # need to get overall object size; not just elements;
   # but this doesn't work for e.g., terra
 
   if (!quick && isTRUE(recursive)) {
@@ -110,7 +111,7 @@ objSize.list <- function(x, quick = FALSE, recursive = FALSE, ...) {
 #' @importFrom lobstr obj_size
 objSize.Path <- function(x, quick = FALSE, ...) {
   if (quick) {
-    os <- obj_size(x)
+    os <- .objSizeWithTry(x)
   } else {
     os <- file.size(x)
   }
@@ -179,7 +180,7 @@ objSizeSession <- function(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = l
     } else {
       break
     }
-    out <- try(length(serialize(x, NULL)))
+    out <- try(length(serialize(x, NULL)), silent = TRUE)
     if (is(out, "try-error")) {
       out <- object.size(x)
     }
