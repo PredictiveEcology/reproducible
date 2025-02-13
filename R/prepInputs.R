@@ -1284,7 +1284,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     }
   }
   if (!exists("extractSystemCallPath", inherits = FALSE)) extractSystemCallPath <- NULL
-  if (!nzchar(extractSystemCallPath)) extractSystemCallPath <- NULL
+  if (is.null(extractSystemCallPath) || !nzchar(extractSystemCallPath)) extractSystemCallPath <- NULL
 
   return(extractSystemCallPath)
 }
