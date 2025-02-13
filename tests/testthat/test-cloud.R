@@ -26,6 +26,8 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   # }, add = TRUE)
 
   testsForPkgs <- "testsForPkgs"
+  tryCatch(googledrive::drive_ls(testsForPkgs), error = function(x)
+    googledrive::drive_mkdir(name = testsForPkgs))
   newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = testsForPkgs)))
   cloudFolderID <- newDir
   # on.exit(try(googledrive::drive_rm(cloudFolderID)), add = TRUE)
