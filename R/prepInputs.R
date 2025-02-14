@@ -849,8 +849,9 @@ extractFromArchive <- function(archive,
     # Start the extracting, starting with `archive`
     worked <- FALSE
     if (.requireNamespace("archive", stopOnFALSE = FALSE)) {
-      system.time(
-        extractedFiles <- archive::archive_extract(args[[1]], args$exdir, argList$files))
+      #system.time(
+        extractedFiles <- archive::archive_extract(args[[1]], args$exdir, argList$files)
+      #  )
       listOfFilesExtracted <- extractedFiles <- list.files(
         path = .tempPath,
         # list of full paths of all extracted files!
@@ -879,12 +880,13 @@ extractFromArchive <- function(archive,
 
       if (!tooBig) {
         messagePreProcess("Extracting with R's unzip ... ")
-        stExtract <- system.time(mess <- capture.output(
+        stExtract <- # system.time(
+          mess <- capture.output(
           {
             extractedFiles <- do.call(fun, c(args, argList))
           },
           type = "message"
-        ))
+        )# )
         worked <- if (isUnzip) {
           all(normPath(file.path(args$exdir, argList[[1]])) %in% normPath(extractedFiles))
         } else {
@@ -1282,7 +1284,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     }
   }
   if (!exists("extractSystemCallPath", inherits = FALSE)) extractSystemCallPath <- NULL
-  if (!nzchar(extractSystemCallPath)) extractSystemCallPath <- NULL
+  if (is.null(extractSystemCallPath) || !nzchar(extractSystemCallPath)) extractSystemCallPath <- NULL
 
   return(extractSystemCallPath)
 }
