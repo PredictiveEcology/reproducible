@@ -496,7 +496,7 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
         "tagValue" = tagValue,
         "createdDate" = as.character(Sys.time())
       )
-      dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
+      dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, format = "check")
       dt2 <- loadFile(dtFile)
       dt <- rbindlist(list(dt2, dt), fill = TRUE)
       saveFilesInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
@@ -1011,13 +1011,27 @@ onlyStorageFiles <- function(files, cacheId) {
 }
 
 formatCheck <- function(cachePath, cacheId, format) {
-  altFile <- dir(dirname(CacheStoredFile(cachePath, cacheId)), pattern = cacheId)
-  altFile <- onlyStorageFiles(altFile, cacheId)
-  if (length(altFile)) {
-    format <- tools::file_ext(altFile)
+
+  for (ci in .cacheSaveFormats) {
+    ff <- CacheStoredFile(cachePath, cacheId, format = ci)
+    if (file.exists(ff)) {
+      newFormat <- ci
+      break
+    }
+  }
+  if (exists("newFormat", inherits = FALSE)) {
+    format <- newFormat
   } else if (format == "check") {
     format <- getOption("reproducible.cacheSaveFormat")
   }
+
+  # altFile <- dir(dirname(CacheStoredFile(cachePath, cacheId)), pattern = cacheId)
+  # altFile <- onlyStorageFiles(altFile, cacheId)
+  # if (length(altFile)) {
+  #   format <- tools::file_ext(altFile)
+  # } else if (format == "check") {
+  #   format <- getOption("reproducible.cacheSaveFormat")
+  # }
   format
 }
 

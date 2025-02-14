@@ -1076,13 +1076,39 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     format <- if (missing(cache_file) || is.null(cache_file)) getOption("reproducible.cacheSaveFormat") else
       fileExt(cache_file)
 
-    fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key, format = format)
-    rerun <- if (useDBI()) FALSE else !isTRUE(any(file.exists(fe)))
-    if (is.null(shownCache))
-      shownCache <- showCacheFast(cache_key, cachePath, dtFile = fe, drv = drv, conn = conn)
+    for (iii in 1:2) {
+      fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key, format = format)
+      if (useDBI()) {
+        rerun <- FALSE
+      } else {
+        feReally <- file.exists(fe)
+        if (any(feReally %in% FALSE)) {
+          formatNew <- formatCheck(cachePath, cache_key, format)
+          if (!identical(formatNew, format)) {
+            format <- formatNew
+            next
+          }
 
-    .cacheMessageObjectToRetrieve(functionName, shownCache, cachePath,
-                                  cacheId = cache_key, verbose = verbose)
+        }
+        rerun <- !isTRUE(any(feReally)) && !fromMemoise
+        break
+      }
+    }
+
+    cacheSaveFormatFail <- FALSE
+    if (is.null(shownCache)) {
+      shownCache <- try(showCacheFast(cache_key, cachePath, dtFile = fe, drv = drv, conn = conn),
+                        silent = TRUE)
+      if (is(shownCache, "try-error")) {
+        if (isTRUE(any(grepl("format not detected", shownCache)))) {
+          cacheSaveFormatFail <- TRUE
+        }
+      }
+    }
+
+    if (isFALSE(cacheSaveFormatFail))
+      .cacheMessageObjectToRetrieve(functionName, shownCache, cachePath,
+                                    cacheId = cache_key, verbose = verbose)
     memoiseFail <- FALSE
     if (fromMemoise && !rerun) {
       output <- get(cache_key, envir = memoiseEnv(cachePath))
@@ -1103,15 +1129,22 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
           cache_file <- CacheStoredFile(cachePath, cache_key)
         }
     }
-    if (!fromMemoise || rerun || memoiseFail) {
-      obj <- try(loadFile(cache_file))
+    if (!fromMemoise || rerun || memoiseFail || cacheSaveFormatFail) {
+      obj <- if (!is.null(cache_file)) {
+        try(loadFile(cache_file), silent = TRUE)
+      } else {
+        rerun <- TRUE
+      }
       output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
       if (is(obj, "try-error") || rerun || is(output, "try-error")) {
         messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
         otherFiles2 <- dir(CacheStorageDir(cachePath), pattern = cache_key, full.names = TRUE)
-        otherFiles <- normPath(file.path(CacheStorageDir(cachePath),
-                                         shownCache[tagKey == "filesToLoad"]$tagValue))
-        rmFiles <- unique(c(cache_file, otherFiles, otherFiles2))
+        if (!is(shownCache, "try-error")) {
+          otherFiles <- normPath(file.path(CacheStorageDir(cachePath),
+                                           shownCache[tagKey == "filesToLoad"]$tagValue))
+          otherFiles2 <- c(otherFiles, otherFiles2)
+        }
+        rmFiles <- unique(c(cache_file, otherFiles2))
         unlink(rmFiles)
         return(.returnNothing)
       }
