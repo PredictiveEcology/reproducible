@@ -59,7 +59,7 @@ objSize <- function(x, quick = FALSE, recursive = FALSE, ...) {
 #' @importFrom lobstr obj_size
 objSize.default <- function(x, quick = FALSE, ...) {
   FNs <- Filenames(x)
-  if (!is.null(FNs) && length(FNs)) {
+  if (!is.null(FNs) && length(FNs) && !isTRUE(quick)) {
     if (any(nzchar(FNs))) {
       FNs <- asPath(FNs)
       out2 <- objSize(FNs, quick = FALSE)
@@ -71,7 +71,8 @@ objSize.default <- function(x, quick = FALSE, ...) {
         x <- list(terra::geom(x), terra::values(x))
       } # approximate
       else {
-        x <- list(terra::wrap(x))
+        if (!isTRUE(quick))
+          x <- list(terra::wrap(x))
       }
     }
   }
