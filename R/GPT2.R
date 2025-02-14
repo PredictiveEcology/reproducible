@@ -149,7 +149,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   outputFromEvaluate <- doSaveToCache(outputFromEvaluate, metadata, cachePaths, callList$func,
                                       .objects, length, algo, quick, classOptions,
                                       cache_file, userTags, callList$.functionName, debugCache,
-                                      keyFull,
+                                      keyFull, outputObjects = outputObjects,
                                       useCloud, cloudFolderID, gdriveLs, lsStr = lsStr,
                                       func_call = callList$func_call, drv = drv, conn = conn,
                                       verbose = verbose,
@@ -874,10 +874,11 @@ convertCallWithSquigglyBraces <- function(call, usesDots) {
 }
 
 wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, # userTags,
-                            preDigest, lsStr, .functionName, drv, conn, verbose) {
+                            preDigest, lsStr, .functionName, outputObjects, drv, conn, verbose) {
   cacheIdIdentical <- cache_Id_Identical(metadata, cachePath, cache_key)
   linkToCacheId <- if (!is.null(cacheIdIdentical)) filePathSansExt(basename(cacheIdIdentical))  else NULL
   outputToSave <- .wrap(outputFromEvaluate, cachePath = cachePath, preDigest = preDigest,
+                        outputObjects = outputObjects,
                         cacheId = cache_key, verbose = verbose)
   metadata <- metadata_update(outputToSave, metadata, cache_key) # .wrap may have added tags
   userTags <- paste0(metadata$tagKey, ":", metadata$tagValue)
@@ -893,7 +894,7 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
 doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
                           .objects, length, algo, quick, classOptions,
                           cache_file, userTags, .functionName, debugCache,
-                          detailed_key, func_call, lsStr,
+                          detailed_key, func_call, lsStr, outputObjects,
                           useCloud, cloudFolderID, gdriveLs,
                           drv, conn,
                           verbose, timeSaveStart, timeEvaluateStart) {
@@ -911,7 +912,7 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
   outputFromEvaluate <- addCacheAttr(outputFromEvaluate, .CacheIsNew = TRUE, detailed_key$key, func)
   metadata <- wrapSaveToCache(outputFromEvaluate, metadata, detailed_key$key, cachePaths[[1]],
                               # userTags = paste0(metadata$tagKey, ":", metadata$tagValue),
-                              lsStr = lsStr,
+                              lsStr = lsStr, outputObjects = outputObjects,
                               preDigest = detailed_key$preDigest, .functionName, drv, conn, verbose)
 
   # Memoize the outputFromEvaluate by saving it in RAM
