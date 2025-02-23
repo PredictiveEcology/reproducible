@@ -768,7 +768,7 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
       whOther <- other == "other"
       # similar <- similarFull[whOther %in% TRUE]
       cacheIdOfSimilar <- unique(similarFull$cacheId)
-      simFun <- list(funName = shownCache$tagValue[shownCache$tagKey == "function"])
+      simFun <- list(funName = unique(shownCache$tagValue[shownCache$tagKey == "function"]))
       messageCache("Cache of ", .messageFunctionFn(simFun), " differs from", verbose = verbose)
       sameNames <- simFun$funName %in% .functionName
       fnTxt <- paste0(if (!is.null(.functionName))
