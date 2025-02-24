@@ -768,7 +768,7 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
       whOther <- other == "other"
       # similar <- similarFull[whOther %in% TRUE]
       cacheIdOfSimilar <- unique(similarFull$cacheId)
-      simFun <- list(funName = shownCache$tagValue[shownCache$tagKey == "function"])
+      simFun <- list(funName = unique(shownCache$tagValue[shownCache$tagKey == "function"]))
       messageCache("Cache of ", .messageFunctionFn(simFun), " differs from", verbose = verbose)
       sameNames <- simFun$funName %in% .functionName
       fnTxt <- paste0(if (!is.null(.functionName))
@@ -910,6 +910,8 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
   if (is.null(outputFromEvaluate)) outputFromEvaluate <- "NULL"
 
   outputFromEvaluate <- addCacheAttr(outputFromEvaluate, .CacheIsNew = TRUE, detailed_key$key, func)
+  if (exists("aaaa", envir = .GlobalEnv)) browser()
+
   metadata <- wrapSaveToCache(outputFromEvaluate, metadata, detailed_key$key, cachePaths[[1]],
                               # userTags = paste0(metadata$tagKey, ":", metadata$tagValue),
                               lsStr = lsStr, outputObjects = outputObjects,
