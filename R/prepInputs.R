@@ -525,7 +525,7 @@ extractFromArchive <- function(archive,
           filesExtracted <- c(
             filesExtracted,
             .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
-                                  absolutePrefix = destinationPath,
+                                  absolutePrefix = destinationPath, archive = archive,
                                   files = basename2(archive[2]), .tempPath = .tempPath
             )
           )
@@ -573,6 +573,7 @@ extractFromArchive <- function(archive,
                                   funWArgs$args,
                                   absolutePrefix = destinationPath,
                                   files = filesToExtractNow,
+                                  archive = archive,
                                   .tempPath = .tempPath
             )
           )
@@ -590,6 +591,7 @@ extractFromArchive <- function(archive,
               .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
                                     files = arch,
                                     absolutePrefix = destinationPath,
+                                    archive = archive,
                                     .tempPath = .tempPath
               )
             )
@@ -782,6 +784,7 @@ extractFromArchive <- function(archive,
 #' @importFrom utils capture.output
 .callArchiveExtractFn <- function(fun, args, files, overwrite = TRUE,
                                   absolutePrefix = getOption("reproducible.destinationPath", "."),
+                                  archive = "",
                                   verbose = getOption("reproducible.verbose", 1), .tempPath) {
   argList <- list(files = files)
   argList$files <- makeRelative(argList$files, absolutePrefix)
@@ -811,7 +814,7 @@ extractFromArchive <- function(archive,
     messagePreProcess(
       paste0("The archive appears to be not a .zip. Trying a system call to ", fun),
       verbose = verbose)
-    extractSystemCallPath <- .testForArchiveExtract()
+    extractSystemCallPath <- .testForArchiveExtract(archive)
     if (grepl(x = extractSystemCallPath, pattern = "7z")) {
       prependPath <- if (isWindows()) {
         paste0("\"", extractSystemCallPath, "\"")
@@ -1113,7 +1116,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   }
 
   if (needSystemCall) {
-    extractSystemCallPath <- .testForArchiveExtract()
+    extractSystemCallPath <- .testForArchiveExtract(archive)
     funWArgs <- list(fun = extractSystemCallPath)
     } else {
       funWArgs <- .whichExtractFn(archive[1], NULL)
@@ -1289,12 +1292,12 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   return(extractSystemCallPath)
 }
 
-#' Returns unrar path and creates a shortcut as .unrarPath
+#' Returns unrar path and creates a shortcut as .systemArchivePath
 #' Was not incorporated in previous function so it can be
 #' used in the tests
 #'
 #' @return
-#' unrar or 7zip path if exist, and assign it to .unrarPath
+#' unrar or 7zip path if exist, and assign it to .systemArchivePath
 #' Stops and advise user to install it if unrar doesn't exist
 #'
 #' @author Tati Micheletti
@@ -1302,22 +1305,31 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @keywords internal
 #' @rdname testForArchiveExtract
 #' @name testForArchiveExtract
-.testForArchiveExtract <- function() {
-  if (!is.null(.unrarPath)) {
-    extractSystemCallPath <- .unrarPath
-  } else {
-    # Find the path to unrar and assign to a package-stored object
-    usrTg <- paste(sample(x = LETTERS, size = 15), collapse = "")
-    # Cache for project-level persistence
-    extractSystemCallPath <- Cache(.archiveExtractBinary, userTags = usrTg)
-    utils::assignInMyNamespace(".unrarPath", extractSystemCallPath) # assign in namespace for pkg
+.testForArchiveExtract <- function(archive = "") {
+  sevenzName <- grep("7z", knownSystemArchiveExtensions, value = TRUE)
+
+  extractSystemCallPath <- NULL
+  if (file_ext(archive) == sevenzName) {
+    extractSystemCallPath <- Sys.which(sevenzName)
   }
+
   if (is.null(extractSystemCallPath)) {
-    clearCache(userTags = usrTg, ask = FALSE)
-    stop(
-      "prepInputs did not find '7-Zip' nor 'unrar' installed.",
-      " Please install it before running prepInputs for a '.rar' archive"
-    )
+    if (!is.null(.systemArchivePath)) {
+      extractSystemCallPath <- .systemArchivePath
+    } else {
+      # Find the path to unrar and assign to a package-stored object
+      usrTg <- paste(sample(x = LETTERS, size = 15), collapse = "")
+      # Cache for project-level persistence
+      extractSystemCallPath <- Cache(.archiveExtractBinary, userTags = usrTg)
+      utils::assignInMyNamespace(".systemArchivePath", extractSystemCallPath) # assign in namespace for pkg
+    }
+    if (is.null(extractSystemCallPath)) {
+      clearCache(userTags = usrTg, ask = FALSE)
+      stop(
+        "prepInputs did not find '7-Zip' nor 'unrar' installed.",
+        " Please install it before running prepInputs for a '.rar' archive"
+      )
+    }
   }
   return(extractSystemCallPath)
 }
@@ -1325,13 +1337,14 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' The known path for unrar or 7z
 #' @rdname unrarPath
 #' @name unrarPath
-.unrarPath <- NULL
+.systemArchivePath <- NULL
 
 missingUnrarMess <- "The archive is a 'rar' archive; your system does not have unrar or 7zip;\n"
 proj6Warn <- "NOT UPDATED FOR PROJ"
 
 knownInternalArchiveExtensions <- c("zip", "tar", "tar.gz", "gz")
-knownSystemArchiveExtensions <- c("rar", "7z")
+sevenzName <- "7z"
+knownSystemArchiveExtensions <- c("rar", sevenzName)
 knownArchiveExtensions <- c(knownInternalArchiveExtensions, knownSystemArchiveExtensions)
 
 
@@ -1557,14 +1570,15 @@ filenamesFromArchiveLst <- function(filesOutput) {
   filesLines <- if (length(filesInBetween) == 0)
     filesOutput
   else
-    filesLines <- filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
+    filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
 
   filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line) {
-    first5trimmed <- unlist(strsplit(filesLines[[line]], split = " +"))[-(1:5)]
-    if (length(first5trimmed) > 1)
-      first5trimmed <- paste(first5trimmed, collapse = " ")
-    # first5trimmed <- unlist(strsplit(filesLines[[line]], split = "  "))
-    return(first5trimmed)
+    tail(unlist(strsplit(filesLines[[line]], split = " +")), 1)
+    # first5trimmed <- unlist(strsplit(filesLines[[line]], split = " +"))[-(1:5)]
+    # if (length(first5trimmed) > 1)
+    #   first5trimmed <- paste(first5trimmed, collapse = " ")
+    # # first5trimmed <- unlist(strsplit(filesLines[[line]], split = "  "))
+    # return(first5trimmed)
   }))
   if (isTRUE(any(grepl("\\\\", filesInArchive))))
     filesInArchive <- gsub("\\\\", "/", filesInArchive)
@@ -1681,7 +1695,6 @@ savePrepInputsState <- function(url, archive, out, stFinal, sysCalls) {
     Cached <- .grepSysCalls(sys.calls(), pattern = "Cache")
     prepInputed <- .grepSysCalls(sys.calls(), pattern = "prepInputs")
     if (length(Cached)) {
-      # CachedPoss <- tryCatch(as.list(sysCalls[[Cached]]), error = function(e) browser())
       CachedPoss <- sysCalls[Cached]
       if (identical(as.character(CachedPoss[[2]])[1], "prepInputs")) {
         co <- paste0(capture.output(sysCalls[[Cached]]), collapse = " ")
@@ -1700,7 +1713,6 @@ savePrepInputsState <- function(url, archive, out, stFinal, sysCalls) {
     .pkgEnv[[._txtPrepInputsObjects]] <- keep
   } else {
     .pkgEnv[[._txtPrepInputsObjects]] <- tryCatch(rbindlist(list(.pkgEnv[[._txtPrepInputsObjects]], keep)), error = function(e) browser())
-    # .pkgEnv[[._txtPrepInputsObjects]] <- rbindlist(list(.pkgEnv[[._txtPrepInputsObjects]], keep))
   }
   return(invisible())
 }
