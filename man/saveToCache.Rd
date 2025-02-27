@@ -12,6 +12,7 @@ saveToCache(
   userTags,
   cacheId,
   linkToCacheId = NULL,
+  lsStr = NULL,
   verbose = getOption("reproducible.verbose")
 )
 }

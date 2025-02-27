@@ -1309,7 +1309,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   sevenzName <- grep("7z", knownSystemArchiveExtensions, value = TRUE)
 
   extractSystemCallPath <- NULL
-  if (file_ext(archive) == sevenzName) {
+  if (tools::file_ext(archive) == sevenzName) {
     extractSystemCallPath <- Sys.which(sevenzName)
   }
 
