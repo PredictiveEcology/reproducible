@@ -15,25 +15,27 @@ jobs:
     if: "!contains(github.event.commits[0].message, '[skip-ci]')"
     runs-on: ${{ matrix.config.os }}
 
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }}, nosuggests ${{ matrix.config.nosuggests }})
 
     strategy:
       fail-fast: false
       matrix:
         config:
-          - {os: macOS-latest,   r: 'release'}
-          - {os: windows-latest, r: 'devel', http-user-agent: 'release'}
-          - {os: windows-latest, r: 'release'}
-          - {os: windows-latest, r: 'oldrel-1'}
-          - {os: windows-latest, r: 'oldrel-2'}
-          - {os: windows-latest, r: 'oldrel-3'}
-          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,   r: 'release'}
-          - {os: ubuntu-latest,   r: 'oldrel-1'}
-          - {os: ubuntu-latest,   r: 'oldrel-2'}
-          - {os: ubuntu-latest,   r: 'oldrel-3'}
+          - {os: macOS-latest,   nosuggests: false, r: 'release'}
+          - {os: windows-latest, nosuggests: false, r: 'devel', http-user-agent: 'release'}
+          - {os: windows-latest, nosuggests: false, r: 'release'}
+          - {os: windows-latest, nosuggests: false, r: 'oldrel-1'}
+          - {os: windows-latest, nosuggests: false, r: 'oldrel-2'}
+          - {os: windows-latest, nosuggests: false, r: 'oldrel-3'}
+          - {os: ubuntu-latest,  nosuggests: false,   r: 'devel', http-user-agent: 'release'}
+          - {os: ubuntu-latest,  nosuggests: false,   r: 'release'}
+          - {os: ubuntu-latest,  nosuggests: true,   r: 'release'}
+          - {os: ubuntu-latest,  nosuggests: false,   r: 'oldrel-1'}
+          - {os: ubuntu-latest,  nosuggests: false, r: 'oldrel-2'}
+          - {os: ubuntu-latest,  nosuggests: false,r: 'oldrel-3'}
 
     env:
+      _R_CHECK_DEPENDS_ONLY_: ${{ matrix.config.nosuggests }}
       _SP_EVOLUTION_STATUS_: 2
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
