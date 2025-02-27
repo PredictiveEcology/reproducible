@@ -3,18 +3,18 @@
 \name{testForArchiveExtract}
 \alias{testForArchiveExtract}
 \alias{.testForArchiveExtract}
-\title{Returns unrar path and creates a shortcut as .unrarPath
+\title{Returns unrar path and creates a shortcut as .systemArchivePath
 Was not incorporated in previous function so it can be
 used in the tests}
 \usage{
-.testForArchiveExtract()
+.testForArchiveExtract(archive = "")
 }
 \value{
-unrar or 7zip path if exist, and assign it to .unrarPath
+unrar or 7zip path if exist, and assign it to .systemArchivePath
 Stops and advise user to install it if unrar doesn't exist
 }
 \description{
-Returns unrar path and creates a shortcut as .unrarPath
+Returns unrar path and creates a shortcut as .systemArchivePath
 Was not incorporated in previous function so it can be
 used in the tests
 }
