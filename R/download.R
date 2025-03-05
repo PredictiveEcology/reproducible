@@ -704,11 +704,14 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           if (isGoogleDriveDirectory(url)) {
             drive_files <- googledrive::drive_ls(googledrive::as_id(url))
             if (!is.null(alsoExtract) && length(alsoExtract) > 0) {
+              fileIndex <- seq_len(NROW(drive_files))
               if (length(alsoExtract) > 1)
                 fileIndex <- sapply(alsoExtract, function(ae) grep(pattern = ae, drive_files$name)) |>
                   as.vector()
-              else
-                fileIndex <- grep(pattern = alsoExtract, drive_files$name)
+              else {
+                if (!identical("all", alsoExtract))
+                  fileIndex <- grep(pattern = alsoExtract, drive_files$name)
+              }
               drive_files <- drive_files[fileIndex, ]
             }
 
@@ -732,8 +735,12 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                 team_drive = teamDrive, ...
               )
             )
-            downloadResults <- list(destFile = vapply(downloadResults, function(x) x$destFile, FUN.VALUE = character(1)),
-                                    needChecksums = max(vapply(downloadResults, function(x) x$needChecksums, FUN.VALUE = numeric(1))))
+            if (length(downloadResults)) {
+              downloadResults <- list(destFile = vapply(downloadResults, function(x) x$destFile, FUN.VALUE = character(1)),
+                                      needChecksums = max(vapply(downloadResults, function(x) x$needChecksums, FUN.VALUE = numeric(1))))
+            } else {
+              downloadResults <- list(destFile = character(), needChecksums = 0)
+            }
 
           } else {
             downloadResults <- dlGoogle(
