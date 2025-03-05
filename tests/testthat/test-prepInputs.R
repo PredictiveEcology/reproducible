@@ -2028,34 +2028,19 @@ test_that("test prepInputs url when a gdrive directory", {
   withr::local_options(destinationPath = tmpdir)
 
   globalOutput <- capture.output({
-    url <- "http://forestales.ujed.mx/incendios2/cartografia/tematicos/combustibles_y_vegetacion/tipo_combustibles_serie_VI/"
+    skip_if_no_token()
+    withr::local_dir(tmpdir)
+    dPath <- "."
+    url <- "https://drive.google.com/drive/u/3/folders/1q3aosWJ_THpgEaDzchvCWLMwT91pD9Fs"
+    a <- prepInputs(url = url, fun = quote({
+      tfp <- sort(targetFilePath)
+      b <- terra::rast(tfp)
+      names(b) <- basename(tfp)
+      b
+    }), destinationPath = dPath) |> Cache()
 
-    if (!urlExists(url))
-      skip("Mexico url doesn't exist; skipping")
-    # Nothing specified
-    a <- prepInputs(url = url, fun = "terra::rast")
     expect_is(a, "SpatRaster")
-    files <- dir(tmpdir, pattern = "comb")
-    expect_true(length(files) == 8)
-
-    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
-    a <- prepInputs(url = url, targetFile = "comb_290719.tif", fun = "terra::rast")
-    expect_is(a, "SpatRaster")
-    files <- dir(tmpdir, pattern = "comb")
-    expect_true(length(files) == 8)
-
-    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
-    a <- prepInputs(url = url, targetFile = "comb_290719.tif", alsoExtract = FALSE, fun = "terra::rast")
-    expect_is(a, "SpatRaster")
-    files <- dir(tmpdir, pattern = "comb")
-    expect_true(length(files) == 1)
-
-
-    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
-    a <- prepInputs(url = url, fun = "terra::rast")
-    expect_is(a, "SpatRaster")
-    files <- dir(tmpdir, pattern = "comb_290719")
-    expect_true(length(files) == 7)
+    expect_true(terra::nlyr(a) > 1)
 
   })
 })
@@ -2075,3 +2060,4 @@ test_that("test prepInputs with zip file with hidden files", {
   b <- prepInputs(targetFile = theFile, archive = zipFilename, fun = NA)
   expect_true(file.exists(file = theFile))
 })
+
