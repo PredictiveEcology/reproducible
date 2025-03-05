@@ -1680,7 +1680,7 @@ guessAlsoExtract <- function(targetFile, alsoExtract, checkSumFilePath) {
       if (file.size(checkSumFilePath) > 0) {
         # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with
         # same base name, without extension
-        checksumsTmp <- as.data.table(read.table(checkSumFilePath))
+        checksumsTmp <- data.table::fread(checkSumFilePath)
         alsoExtract <- grep(paste0(filePathSansExt(targetFile), "\\."), checksumsTmp$file,
                             value = TRUE
         )
