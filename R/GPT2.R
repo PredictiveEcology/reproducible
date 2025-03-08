@@ -83,7 +83,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
     return(outputFromMemoise)
 
   # After memoising fail, try files; need to check Cache dir and set lockfile
-  locked <- lockFile(cachePaths[[1]], keyFull$key)
+  locked <- lockFile(cachePaths[[1]], keyFull$key, verbose = verbose)
 
   if (useDBI()) {
     connOrig <- conn
@@ -700,7 +700,8 @@ releaseLockFile <- function(locked) {
   }
 }
 
-lockFile <- function(cachePath, cache_key, envir = parent.frame()) {
+lockFile <- function(cachePath, cache_key, envir = parent.frame(),
+                     verbose = getOption("reproducible.verbose")) {
   if (!useDBI()) {
     csd <- CacheStorageDir(cachePath)
     if (!any(dir.exists(csd)))
@@ -713,8 +714,11 @@ lockFile <- function(cachePath, cache_key, envir = parent.frame()) {
       locked <- try(filelock::lock(lockFile), silent = TRUE)
       if (is(locked, "try-error") && isTRUE(first)) {
         first <- FALSE
-        message("The cache file (", lockFile,") is locked; waiting... ")
+        messageVerbose("The cache file (", lockFile,") is locked; waiting... ", verbose = verbose + 2)
       }
+    }
+    if (first %in% FALSE) {
+      messageVerbose("  ... ", lockFile, " released, continuing ... ", verbose = verbose + 2)
     }
     # locked <- evalWithTimeout(, timeout = 1, onTimeout = "error")
 
@@ -910,7 +914,6 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
   if (is.null(outputFromEvaluate)) outputFromEvaluate <- "NULL"
 
   outputFromEvaluate <- addCacheAttr(outputFromEvaluate, .CacheIsNew = TRUE, detailed_key$key, func)
-  if (exists("aaaa", envir = .GlobalEnv)) browser()
 
   metadata <- wrapSaveToCache(outputFromEvaluate, metadata, detailed_key$key, cachePaths[[1]],
                               # userTags = paste0(metadata$tagKey, ":", metadata$tagValue),
