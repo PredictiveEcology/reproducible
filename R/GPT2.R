@@ -910,7 +910,6 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
   if (is.null(outputFromEvaluate)) outputFromEvaluate <- "NULL"
 
   outputFromEvaluate <- addCacheAttr(outputFromEvaluate, .CacheIsNew = TRUE, detailed_key$key, func)
-  if (exists("aaaa", envir = .GlobalEnv)) browser()
 
   metadata <- wrapSaveToCache(outputFromEvaluate, metadata, detailed_key$key, cachePaths[[1]],
                               # userTags = paste0(metadata$tagKey, ":", metadata$tagValue),

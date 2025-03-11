@@ -1696,7 +1696,9 @@ savePrepInputsState <- function(url, archive, out, stFinal, sysCalls) {
     prepInputed <- .grepSysCalls(sys.calls(), pattern = "prepInputs")
     if (length(Cached)) {
       CachedPoss <- sysCalls[Cached]
-      if (identical(as.character(CachedPoss[[2]])[1], "prepInputs")) {
+      len <- length(CachedPoss)
+      keep <- min(len, 2L)
+      if (identical(as.character(CachedPoss[[keep]])[1], "prepInputs")) {
         co <- paste0(capture.output(sysCalls[[Cached]]), collapse = " ")
       } else {
         co <- paste0(capture.output(sysCalls[tail(Cached, 1)]), collapse = " ")
