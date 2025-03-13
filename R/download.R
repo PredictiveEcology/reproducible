@@ -704,11 +704,14 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           if (isGoogleDriveDirectory(url)) {
             drive_files <- googledrive::drive_ls(googledrive::as_id(url))
             if (!is.null(alsoExtract) && length(alsoExtract) > 0) {
+              fileIndex <- seq_len(NROW(drive_files))
               if (length(alsoExtract) > 1)
                 fileIndex <- sapply(alsoExtract, function(ae) grep(pattern = ae, drive_files$name)) |>
                   as.vector()
-              else
-                fileIndex <- grep(pattern = alsoExtract, drive_files$name)
+              else {
+                if (!identical("all", alsoExtract))
+                  fileIndex <- grep(pattern = alsoExtract, drive_files$name)
+              }
               drive_files <- drive_files[fileIndex, ]
             }
 
@@ -732,8 +735,12 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                 team_drive = teamDrive, ...
               )
             )
-            downloadResults <- list(destFile = vapply(downloadResults, function(x) x$destFile, FUN.VALUE = character(1)),
-                                    needChecksums = max(vapply(downloadResults, function(x) x$needChecksums, FUN.VALUE = numeric(1))))
+            if (length(downloadResults)) {
+              downloadResults <- list(destFile = vapply(downloadResults, function(x) x$destFile, FUN.VALUE = character(1)),
+                                      needChecksums = max(vapply(downloadResults, function(x) x$needChecksums, FUN.VALUE = numeric(1))))
+            } else {
+              downloadResults <- list(destFile = character(), needChecksums = 0)
+            }
 
           } else {
             downloadResults <- dlGoogle(
@@ -904,15 +911,26 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
                                                                   team_drive = team_drive
       )))
     } else {
-      fileAttr <- retry(retries = 1, quote(googledrive::drive_get(googledrive::as_id(url),
-                                                                  shared_drive = team_drive
-      )))
+      if (isTRUE(isDirectory(url, FALSE))) {
+        fileAttr <- retry(retries = 1, quote(googledrive::drive_ls(googledrive::as_id(url),
+                                                                    shared_drive = team_drive
+        )))
+      } else {
+        fileAttr <- retry(retries = 1, quote(googledrive::drive_get(googledrive::as_id(url),
+                                                                    shared_drive = team_drive
+        )))
+      }
     }
-    fileSize <- fileAttr$drive_resource[[1]]$size ## TODO: not returned with team drive (i.e., NULL)
+    fileSize <- sapply(fileAttr$drive_resource, function(x) x$size) ## TODO: not returned with team drive (i.e., NULL)
     if (!is.null(fileSize)) {
       fileSize <- as.numeric(fileSize)
+      len <- length(fileSize)
+      if (len > 1)
+        fileSize <- sum(fileSize)
       class(fileSize) <- "object_size"
-      messagePreProcess("File on Google Drive is ", format(fileSize, units = "auto"),
+      Fils <- Require:::singularPlural(c("File", "Files"), v = len)
+      isAre <- Require:::isAre(v = len)
+      messagePreProcess(Fils, " on Google Drive ", isAre, " ", format(fileSize, units = "auto"),
                         verbose = verbose
       )
     }

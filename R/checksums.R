@@ -118,7 +118,7 @@ setMethod(
     txt <- if (file.size(checksumFile) == 0) {
       .emptyChecksumsFileContent
     } else {
-      read.table(checksumFile,
+      fread(checksumFile,
         header = TRUE,
         stringsAsFactors = FALSE
       )

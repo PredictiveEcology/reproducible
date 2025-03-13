@@ -113,7 +113,7 @@ test_that("preProcess fails if user provides non-existing file", {
   expect_true(sum(grepl("manual.+download", mess)) == 1) # manual download may be broken by \n
   expect_true(sum(grepl("To prevent", mess)) == 1)
   expect_true(file.exists(zipFilename))
-  cs <- read.table(file.path(tmpdir, "CHECKSUMS.txt"), header = TRUE)
+  cs <- fread(file.path(tmpdir, "CHECKSUMS.txt"), header = TRUE)
   expect_true(NROW(cs) == 2 || NROW(cs) == 3) # TODO this may be detecting a bug == on GA it is 2, locally it is 3
   expect_true(all(grepl("rasterTest", cs$file)))
   withr::deferred_run()

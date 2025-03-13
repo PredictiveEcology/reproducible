@@ -1229,7 +1229,6 @@ swapCacheFileFormat <- function(wrappedObj, cachePath, drv, conn, cacheId, sameC
 dbDisconnectAll <- function(conn) {
   if (useDBI()) {
     if (!is.null(conn)) {
-      # browser(); suppressWarnings(dbDisconnectAll(conn)
       suppressWarnings({
       if (is(conn, "list"))
         lapply(conn, DBI::dbDisconnect)
