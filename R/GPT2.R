@@ -870,6 +870,8 @@ CacheDBFileCheckAndCreate <- function(cachePath, drv = NULL, conn = NULL, verbos
 
 convertCallWithSquigglyBraces <- function(call, usesDots) {
   if (length(call) == 2) {
+    if (length(call[[-1]]) > 2)
+      stop("Cache does not yet support multi-step caching unless using the pipe (|>)")
     call <- as.call(c(call[[1]], call[[-1]][[-1]]))
   } else if ((length(call) > 2) && isFALSE(usesDots)) {
     call <- as.call(c(call[[1]], FUN = as.list(call[-1])[[1]][[-1]], as.list(call[-1])[-1]))
