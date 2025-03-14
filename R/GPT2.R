@@ -708,6 +708,7 @@ lockFile <- function(cachePath, cache_key, envir = parent.frame(),
       lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
     lockFile <- file.path(csd, paste0(cache_key, suffixLockFile()))
     first <- TRUE
+    tryCatch({
     while(!exists("locked", inherits = FALSE) || is(locked, "try-error")) {
       setTimeLimit(elapsed = 3)
       on.exit(setTimeLimit(elapsed = Inf))
@@ -716,7 +717,11 @@ lockFile <- function(cachePath, cache_key, envir = parent.frame(),
         first <- FALSE
         messageVerbose("The cache file (", lockFile,") is locked; waiting... ", verbose = verbose + 2)
       }
-    }
+    }}, silent = TRUE)
+    # , error = function(e) {if (any(grepl("reached elapsed time limit", e$message)))
+    #   invokeRestart("muffleError")
+    # }
+    # )
     if (first %in% FALSE) {
       messageVerbose("  ... ", lockFile, " released, continuing ... ", verbose = verbose + 2)
     }
