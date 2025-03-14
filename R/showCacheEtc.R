@@ -424,16 +424,33 @@ setMethod(
     }
 
     if (!useDBI()) {
-      if (!is.null(cacheId)) {
-        objsDT <- rbindlist(fill = TRUE, lapply(cacheId, showCacheFast, cachePath = x, drv = drv, conn = conn))
-      } else {
-        objsDT <- rbindlist(fill = TRUE, lapply(
-          dir(CacheStorageDir(x),
-              pattern = paste(CacheDBFileSingleExt(format = .cacheSaveFormats), collapse = "|"),
-              full.names = TRUE
-          ),
-          loadFile
-        ))
+      # periodically, a cache entry is corrupt; this while, tryCatch will remove the corrupt file and restart
+      objsDT <- list()
+      while(is(objsDT, "list")) {
+        filOutside <- character()
+        objsDT <- tryCatch(
+          if (!is.null(cacheId)) {
+            objsDT <- rbindlist(fill = TRUE, lapply(cacheId, function(fil) {
+              filOutside <<- fil
+              showCacheFast(fil, cachePath = x, drv = drv, conn = conn)
+            }))
+          } else {
+            dd <- dir(CacheStorageDir(x),
+                      pattern = paste(CacheDBFileSingleExt(format = .cacheSaveFormats), collapse = "|"),
+                      full.names = TRUE
+            )
+            rbindlist(fill = TRUE, lapply(dd, function(fil) {
+              filOutside <<- fil
+              loadFile(fil)}))
+          }, error = function(e) {
+              cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", getOption("reproducible.cacheSaveFormat")), "",
+                              basename(file))
+              filesToRm <- dir(dirname(file), pattern = cacheId, full.names = TRUE)
+              messageVerbose("The database file was corrupt; deleting Cache entry for ", cacheId,
+                             verbose = getOption("reproducible.verbose"))
+              unlink(filesToRm)
+          }
+        )
       }
       if (NROW(objsDT) == 0) {
         return(.emptyCacheTable)
