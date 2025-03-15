@@ -83,7 +83,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
     return(outputFromMemoise)
 
   # After memoising fail, try files; need to check Cache dir and set lockfile
-  locked <- lockFile(cachePaths[[1]], keyFull$key)
+  locked <- lockFile(cachePaths[[1]], keyFull$key, verbose = verbose)
 
   if (useDBI()) {
     connOrig <- conn
@@ -700,21 +700,30 @@ releaseLockFile <- function(locked) {
   }
 }
 
-lockFile <- function(cachePath, cache_key, envir = parent.frame()) {
+lockFile <- function(cachePath, cache_key, envir = parent.frame(),
+                     verbose = getOption("reproducible.verbose")) {
   if (!useDBI()) {
     csd <- CacheStorageDir(cachePath)
     if (!any(dir.exists(csd)))
       lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
     lockFile <- file.path(csd, paste0(cache_key, suffixLockFile()))
     first <- TRUE
+    tryCatch({
     while(!exists("locked", inherits = FALSE) || is(locked, "try-error")) {
       setTimeLimit(elapsed = 3)
       on.exit(setTimeLimit(elapsed = Inf))
       locked <- try(filelock::lock(lockFile), silent = TRUE)
       if (is(locked, "try-error") && isTRUE(first)) {
         first <- FALSE
-        message("The cache file (", lockFile,") is locked; waiting... ")
+        messageVerbose("The cache file (", lockFile,") is locked; waiting... ", verbose = verbose + 2)
       }
+    }}, silent = TRUE)
+    # , error = function(e) {if (any(grepl("reached elapsed time limit", e$message)))
+    #   invokeRestart("muffleError")
+    # }
+    # )
+    if (first %in% FALSE) {
+      messageVerbose("  ... ", lockFile, " released, continuing ... ", verbose = verbose + 2)
     }
     # locked <- evalWithTimeout(, timeout = 1, onTimeout = "error")
 
@@ -866,6 +875,8 @@ CacheDBFileCheckAndCreate <- function(cachePath, drv = NULL, conn = NULL, verbos
 
 convertCallWithSquigglyBraces <- function(call, usesDots) {
   if (length(call) == 2) {
+    if (length(call[[-1]]) > 2)
+      stop("Cache does not yet support multi-step caching unless using the pipe (|>)")
     call <- as.call(c(call[[1]], call[[-1]][[-1]]))
   } else if ((length(call) > 2) && isFALSE(usesDots)) {
     call <- as.call(c(call[[1]], FUN = as.list(call[-1])[[1]][[-1]], as.list(call[-1])[-1]))
