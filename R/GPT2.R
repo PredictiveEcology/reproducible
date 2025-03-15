@@ -410,7 +410,7 @@ metadata_update <- function(outputToSave, metadata, cache_key) {
 check_and_get_memoised_copy <- function(cache_key, cachePaths, functionName, func,
                                         useCache, useCloud, cloudFolderID, gdriveLs,
                                         full_call, drv, conn, verbose) {
-  if (getOption("reproducible.useMemoise")) {
+  if (getOption("reproducible.useMemoise", FALSE)) {
     for (cachePath in cachePaths) {
       cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
       if (isTRUE(cache_key_in_memoiseEnv))
@@ -917,7 +917,7 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
                               preDigest = detailed_key$preDigest, .functionName, drv, conn, verbose)
 
   # Memoize the outputFromEvaluate by saving it in RAM
-  if (getOption("reproducible.useMemoise")) {
+  if (getOption("reproducible.useMemoise", FALSE)) {
     assign(detailed_key$key, outputFromEvaluate, envir = memoiseEnv(cachePaths[[1]]))
   }
 
@@ -1166,7 +1166,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     .cacheMessage(object = output, functionName = functionName, fromMemoise = fromMemoise, verbose = verbose)
 
 
-    if (getOption("reproducible.useMemoise")) {
+    if (getOption("reproducible.useMemoise", FALSE)) {
       cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
       if (cache_key_in_memoiseEnv %in% FALSE)
         assign(cache_key, output, envir = memoiseEnv(cachePath))

@@ -96,7 +96,7 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
         }
         newcfid <- try(googledrive::drive_get(cloudFolderID))
         if (is(newcfid, "try-error"))
-          browser()
+          stop(newcfid)
       }
       cloudFolderID <- newcfid
 
