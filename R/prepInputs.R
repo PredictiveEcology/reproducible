@@ -1601,7 +1601,7 @@ reportTime <- function(stStart, mess, minSeconds) {
 
 readCheckSumFilePath <- function(checkSumFilePath, destinationPath, filesToChecksum) {
   # a checksums file already existed, need to keep some of it
-  cs <- suppressWarnings(try(fread(checkSumFilePath, header = TRUE), silent = TRUE))
+  cs <- suppressWarnings(try(read.table(checkSumFilePath, header = TRUE), silent = TRUE))
   if (is(cs, "try-error")) {
     # meant that it was an empty CHECKSUMS.txt file -- rebuild it
     cs <- NULL # append <- FALSE
@@ -1696,9 +1696,7 @@ savePrepInputsState <- function(url, archive, out, stFinal, sysCalls) {
     prepInputed <- .grepSysCalls(sys.calls(), pattern = "prepInputs")
     if (length(Cached)) {
       CachedPoss <- sysCalls[Cached]
-      len <- length(CachedPoss)
-      keep <- min(len, 2L)
-      if (identical(as.character(CachedPoss[[keep]])[1], "prepInputs")) {
+      if (identical(as.character(CachedPoss[[2]])[1], "prepInputs")) {
         co <- paste0(capture.output(sysCalls[[Cached]]), collapse = " ")
       } else {
         co <- paste0(capture.output(sysCalls[tail(Cached, 1)]), collapse = " ")
