@@ -408,7 +408,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
   .message$IndentRevert()
   stFinal <- reportTime(stStart, mess = "`prepInputs` done; took ", minSeconds = 10)
-  if (getOption("reproducible.savePrepInputsState", FALSE))
+  if (getOption("reproducible.savePrepInputs", FALSE))
     savePrepInputsState(url, archive, out, stFinal, sysCalls = sys.calls())
   return(x)
 }
@@ -1683,7 +1683,9 @@ currentFilesToChecksumsTable <- function(currentFiles, nonCurrentFiles = NULL, v
 }
 
 
-savePrepInputsState <- function(url, archive, out, stFinal, sysCalls) {
+savePrepInputsState <- function(url, archive, out, stFinal, sysCalls,
+                                otherTags = getOption("reproducible.savePrepInputsTags"),
+                                envir = getOption("reproducible.savePrepInputsEnvir", .pkgEnv)) {
   if (is.null(url)) url <- ""
   if (is.null(out$targetFilePath)) out$targetFilePath <- ""
   if (is.null(out$destinationPath)) out$destinationPath <- ""
@@ -1709,10 +1711,20 @@ savePrepInputsState <- function(url, archive, out, stFinal, sysCalls) {
   keep <- setDT(list(objName = objName, url = url, archive = archive, targetFile = out$targetFilePath,
                      destinationPath = out$destinationPath,
                      fun = format(out$funChar), time = stFinal))
-  if (is.null(.pkgEnv[[._txtPrepInputsObjects]])) {
-    .pkgEnv[[._txtPrepInputsObjects]] <- keep
+
+  if (!is.null(otherTags)) {
+    for (i in names(otherTags)) {
+      set(keep, NULL, i, otherTags[[i]])
+    }
+
+  }
+
+  browser()
+  keep <- list(keep)
+  if (is.null(envir[[._prepInputsMetadata]])) {
+    envir[[._prepInputsMetadata]] <- keep
   } else {
-    .pkgEnv[[._txtPrepInputsObjects]] <- tryCatch(rbindlist(list(.pkgEnv[[._txtPrepInputsObjects]], keep)), error = function(e) browser())
+    envir[[._prepInputsMetadata]] <- tryCatch(append(envir[[._prepInputsMetadata]], keep), error = function(e) browser())
   }
   return(invisible())
 }

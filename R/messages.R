@@ -506,7 +506,7 @@ paddDFInitial <- function(outMess, rows = 1:2, .spaceTmpChar, colour) {
 }
 
 
-._txtPrepInputsObjects <- "prepInputsObjects"
+._prepInputsMetadata <- "._prepInputsMetadata"
 
 
 .txtDownloadFailedFn <- function(pkg)
