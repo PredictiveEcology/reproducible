@@ -158,7 +158,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   # Save to db file first, then storage file
   dt <- metadataDT(cacheId, tagKey, tagValue)
 
-  if (!is.null(lsStr)) {
+  if (!is.null(lsStr) && !useDBI()) {
      set(dt, 1L, "lsStr", list(lsStr))
   }
 

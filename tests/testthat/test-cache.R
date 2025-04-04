@@ -140,15 +140,16 @@ test_that("test Cache argument inheritance to inner functions", {
   aa <- Cache(outer, n = 2, cachePath = tmpdir, userTags = outerTag)
   bb <- showCache(tmpdir, userTags = outerTag)
   cc <- showCache(tmpdir)
-  data.table::setorderv(cc)
-  data.table::setorderv(bb)
+  onCols <- names(.emptyCacheTable)
+  data.table::setorderv(cc, cols = onCols)
+  data.table::setorderv(bb, cols = onCols)
   expect_true(identical(bb, cc))
 
   #
   bb <- showCache(tmpdir, userTags = "notHowdie")
   cc <- showCache(tmpdir)
-  data.table::setorderv(cc)
-  data.table::setorderv(bb)
+  data.table::setorderv(cc, cols = onCols)
+  data.table::setorderv(bb, cols = onCols)
   expect_false(identical(bb, cc))
   expect_true(length(unique(bb[[.cacheTableHashColName()]])) == 1)
   expect_true(length(unique(cc[[.cacheTableHashColName()]])) == 3)
@@ -1987,12 +1988,13 @@ test_that("cacheId is same as calculated", {
   testInit()
   withr::local_options(reproducible.cachePath = tmpCache)
   mess1 <- capture_messages(a <- Cache(rnorm, 1))
+
   # manually look at output attribute which shows cacheId: ca275879d5116967
-  mess2 <- capture_messages(b <- Cache(rnorm, 1, cacheId = "ca275879d5116967"))
-  expect_match(mess2, .message$cacheIdSameTxt, all = FALSE)
+  manualCacheId <- "ca275879d5116967"
+  mess2 <- capture_messages(b <- Cache(rnorm, 1, cacheId = manualCacheId))
+  expect_match(mess2, .message$cacheIdNotAssessed(manualCacheId), all = FALSE)
   expect_equivalent(a, b)
 })
-
 
 test_that("Cache with do.call and variables as list", {
   testInit()

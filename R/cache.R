@@ -639,6 +639,7 @@ Cache2 <-
 
       # If user passes cacheId, including cacheId = "previous"
       if (!is.null(cacheId)) {
+        browser()
         sc <- cacheIdCheckInCache(cacheId, calculatedCacheId = outputHash, .functionName, verbose)
         outputHashPossible <- attr(sc, "cacheId")
         if (!is.null(outputHashPossible)) outputHash <- outputHashPossible
@@ -2609,14 +2610,19 @@ cacheIdCheckInCache <- function(cacheId, calculatedCacheId, .functionName, verbo
       }
     } else {
       outputHashManual <- cacheId
+      # calculatedCacheId can be NULL to save time; doesn't calculate the digest
       if (identical(outputHashManual, calculatedCacheId)) {
         messageCache(.message$cacheIdSameTxt, verbose = verbose)
         sc <- showCache(userTags = cacheId, verbose = verbose -1)
       } else {
         sc <- showCache(userTags = sc, verbose = verbose -1)
-        messageCache(.message$cacheIdNotSameTxt(cacheId), verbose = verbose)
-        # if (NROW(sc))
+        if (!is.null(calculatedCacheId)) {
+          messageCache(.message$cacheIdNotSameTxt(cacheId), verbose = verbose)
+          # if (NROW(sc))
           # isInRepo <- sc[1,]
+        } else {
+          messageCache(.message$cacheIdNotAssessed(cacheId), verbose = verbose)
+        }
       }
       attr(sc, "cacheId") <- cacheId
       # outputHash <- outputHashManual
