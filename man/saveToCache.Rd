@@ -37,6 +37,8 @@ will be added to the Cache so that this entry in the Cache can be found using
 will be made to the file with that \code{cacheId} name in the cache repo.
 This is used when identical outputs exist in the cache. This will save disk space.}
 
+\item{lsStr}{A list from \code{ls.str}}
+
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
 Default is 1. Above 3 will output much more information about the internals of

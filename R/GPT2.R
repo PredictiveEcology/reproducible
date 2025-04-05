@@ -1,3 +1,5 @@
+utils::globalVariables("arg")
+
 #' @include messages.R
 #' @export
 #' @rdname Cache
@@ -142,7 +144,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                                                 verbose = verbose, ...)
 
   # ## Save to Cache; including to Memoise location; including metadata ## #
-  lsStr <- ls.str(attr(callList$new_call,".Cache")$args_w_defaults)
+  lsStr <- utils::ls.str(attr(callList$new_call,".Cache")$args_w_defaults)
   lsStr <- capture.output(print(lsStr, max.level = 1))
 
   times$SaveStart <- Sys.time()
@@ -715,7 +717,7 @@ lockFile <- function(cachePath, cache_key, envir = parent.frame(),
       locked <- try(filelock::lock(lockFile), silent = TRUE)
       if (is(locked, "try-error") && isTRUE(first)) {
         first <- FALSE
-        messageVerbose("The cache file (", lockFile,") is locked; waiting... ", verbose = verbose + 2)
+        Require::messageVerbose("The cache file (", lockFile,") is locked; waiting... ", verbose = verbose + 2)
       }
     }}, silent = TRUE)
     # , error = function(e) {if (any(grepl("reached elapsed time limit", e$message)))
@@ -723,7 +725,7 @@ lockFile <- function(cachePath, cache_key, envir = parent.frame(),
     # }
     # )
     if (first %in% FALSE) {
-      messageVerbose("  ... ", lockFile, " released, continuing ... ", verbose = verbose + 2)
+      Require::messageVerbose("  ... ", lockFile, " released, continuing ... ", verbose = verbose + 2)
     }
     # locked <- evalWithTimeout(, timeout = 1, onTimeout = "error")
 

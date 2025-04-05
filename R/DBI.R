@@ -97,6 +97,8 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
 #'
 #' @param obj The R object to save to the cache
 #'
+#' @param lsStr A list from `ls.str`
+#'
 #' @param linkToCacheId Optional. If a `cacheId` is provided here, then a `file.link`
 #'   will be made to the file with that `cacheId` name in the cache repo.
 #'   This is used when identical outputs exist in the cache. This will save disk space.
