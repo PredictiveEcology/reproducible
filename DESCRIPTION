@@ -123,6 +123,7 @@ Collate:
     'postProcessTo.R'
     'preProcess.R'
     'prepInputs.R'
+    'reexports.R'
     'reproducible-deprecated.R'
     'reproducible-package.R'
     'search.R'

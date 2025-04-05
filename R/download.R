@@ -928,8 +928,8 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
       if (len > 1)
         fileSize <- sum(fileSize)
       class(fileSize) <- "object_size"
-      Fils <- Require:::singularPlural(c("File", "Files"), v = len)
-      isAre <- Require:::isAre(v = len)
+      Fils <- singularPlural(c("File", "Files"), v = len)
+      isAre <- isAre(v = len)
       messagePreProcess(Fils, " on Google Drive ", isAre, " ", format(fileSize, units = "auto"),
                         verbose = verbose
       )
