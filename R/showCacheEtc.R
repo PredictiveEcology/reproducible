@@ -446,8 +446,8 @@ setMethod(
               cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", getOption("reproducible.cacheSaveFormat")), "",
                               basename(file))
               filesToRm <- dir(dirname(file), pattern = cacheId, full.names = TRUE)
-              Require::messageVerbose("The database file was corrupt; deleting Cache entry for ", cacheId,
-                             verbose = getOption("reproducible.verbose"))
+              messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
+                              verbose = getOption("reproducible.verbose"))
               unlink(filesToRm)
           }
         )

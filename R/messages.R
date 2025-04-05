@@ -514,3 +514,17 @@ paddDFInitial <- function(outMess, rows = 1:2, .spaceTmpChar, colour) {
 
 .txtDownloadFailedFn <- function(pkg)
   paste0("Download failed; try rerunning after installing ", pkg, " package.")
+
+singularPlural <- function (singPlur, l, v) {
+  if (!missing(l)) {
+    out <- singPlur[(length(l) > 1) + 1]
+  }
+  if (!missing(v)) {
+    out <- singPlur[(v > 1) + 1]
+  }
+  out
+}
+
+isAre <- function (l, v) {
+  singularPlural(c("is", "are"), l, v)
+}
