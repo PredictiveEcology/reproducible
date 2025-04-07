@@ -56,8 +56,8 @@
 #'
 #' if (requireNamespace("sf", quietly = TRUE) &&
 #'     requireNamespace("terra", quietly = TRUE)) {
-#' dPath <- checkPath(file.path(tempdir2()), create = TRUE)
-#' localFileLux <- system.file("ex/lux.shp", package = "terra")
+#'   dPath <- checkPath(file.path(tempdir2()), create = TRUE)
+#'   localFileLux <- system.file("ex/lux.shp", package = "terra")
 #'
 #'   # 1 step for each layer
 #'   # 1st step -- get study area
