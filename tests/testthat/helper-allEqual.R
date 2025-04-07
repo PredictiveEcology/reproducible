@@ -64,38 +64,46 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
 
   skip_gauth <- identical(Sys.getenv("SKIP_GAUTH"), "true") # only set in setup.R for covr
   if (isTRUE(needGoogleDriveAuth)) {
-    if (!skip_gauth) {
-      if (interactive()) {
-        if (!googledrive::drive_has_token()) {
-          getAuth <- FALSE
-          if (is.null(getOption("gargle_oauth_email"))) {
-            possLocalCache <- "c:/Eliot/.secret"
-            cache <- if (file.exists(possLocalCache)) {
-              possLocalCache
-            } else {
-              TRUE
-            }
-            switch(Sys.info()["user"],
-                   emcintir = {
-                     options(gargle_oauth_email = "predictiveecology@gmail.com")
-                   }, # ,
-                   # gargle_oauth_cache = cache)},
-                   NULL
-            )
-          }
-          if (is.null(getOption("gargle_oauth_email"))) {
-            if (.isRstudioServer()) {
-              .requireNamespace("httr", stopOnFALSE = TRUE)
-              options(httr_oob_default = TRUE)
-            }
-          }
-          getAuth <- TRUE
-          if (isTRUE(getAuth)) {
-            googledrive::drive_auth()
-          }
+    if (isNamespaceLoaded("googledrive"))
+      if ((!googledrive::drive_has_token())) {
+        if (nzchar(Sys.getenv("GOOGLEDRIVE_AUTH"))) {
+          googledrive::drive_auth(path = Sys.getenv("GOOGLEDRIVE_AUTH"))
         }
       }
-    }
+
+
+    # if (!skip_gauth) {
+    #   if (interactive()) {
+    #     if (!googledrive::drive_has_token()) {
+    #       getAuth <- FALSE
+    #       if (is.null(getOption("gargle_oauth_email"))) {
+    #         possLocalCache <- "c:/Eliot/.secret"
+    #         cache <- if (file.exists(possLocalCache)) {
+    #           possLocalCache
+    #         } else {
+    #           TRUE
+    #         }
+    #         switch(Sys.info()["user"],
+    #                emcintir = {
+    #                  options(gargle_oauth_email = "predictiveecology@gmail.com")
+    #                }, # ,
+    #                # gargle_oauth_cache = cache)},
+    #                NULL
+    #         )
+    #       }
+    #       if (is.null(getOption("gargle_oauth_email"))) {
+    #         if (.isRstudioServer()) {
+    #           .requireNamespace("httr", stopOnFALSE = TRUE)
+    #           options(httr_oob_default = TRUE)
+    #         }
+    #       }
+    #       getAuth <- TRUE
+    #       if (isTRUE(getAuth)) {
+    #         googledrive::drive_auth()
+    #       }
+    #     }
+    #   }
+    # }
     skip_if_no_token()
   }
 
