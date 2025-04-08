@@ -370,7 +370,6 @@ test_that("test file-backed raster caching", {
     r
   }
   bb <- Cache(randomPolyToFactorInMemory, cachePath = tmpdir)
-  browser()
   expect_true(terra::is.int(bb))
   # expect_equal(dataType2(bb), "INT1U") # irrelevant because on disk
   expect_true(terra::is.factor(bb))
