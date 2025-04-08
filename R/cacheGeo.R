@@ -117,8 +117,16 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
   if (is.null(targetFile) && is.null(url)) {
     objExisted <- FALSE
   }
-  if (!isAbsolutePath(targetFile)) {
-    targetFile <- file.path(destinationPath, targetFile)
+
+  if (!missing(targetFile)) {
+    if (!isAbsolutePath(targetFile)) {
+      targetFile <- file.path(destinationPath, targetFile)
+    }
+  } else {
+    if (missing(url))
+      stop("Either targetFile or url must be supplied")
+    out <- .guessAtFile(url = url, archive = NULL, destinationPath = destinationPath, targetFile = NULL)
+    targetFile <- basename(out)
   }
   if (!file.exists(targetFile) && is.null(url)) {
     objExisted <- FALSE
@@ -128,6 +136,7 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
   if (!is.null(url) || isTRUE(useCloud) || !is.null(cloudFolderID)) {
     .requireNamespace("googledrive", stopOnFALSE = TRUE)
     alreadyOnRemote <- FALSE
+    objsInGD <- googledrive::drive_ls(cloudFolderID)
     if (is.null(url)) {
       if (!(nchar(cloudFolderID) == 33 || grepl("https://drive", cloudFolderID))) {
         googledrive::with_drive_quiet(folderExists <- googledrive::drive_get(cloudFolderID))
@@ -143,13 +152,19 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
       if (!folderExists) {
         cloudFolderID <- googledrive::drive_mkdir(cloudFolderID)
       }
-      objsInGD <- googledrive::drive_ls(cloudFolderID)
+      # objsInGD <- googledrive::drive_ls(cloudFolderID)
       objID <- objsInGD[objsInGD$name %in% basename2(targetFile), ]
       if (NROW(objID)) {
         url <- objID$drive_resource[[1]]$webViewLink
       }
     } else {
       objID <- googledrive::drive_get(id = url)
+      # sanity check -- is url inside cloudFolderID
+      urlInCFID <- objID$id %in% objsInGD$id
+      message("both url and cloudFolderID are supplied; using file at url")
+      if (isFALSE(urlInCFID))
+        message("NOTE: url is NOT contained within cloudFolderID; this could cause problems")
+
     }
     if (NROW(objID)) {
       objExisted <- TRUE
@@ -177,10 +192,12 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
     if (!missing(domain)) {
       wh <- sf::st_within(domain, existingObjSF, sparse = FALSE)
       wh1 <- apply(wh, 1, any)
+      wh2 <- apply(wh, 2, any) # This is "are the several domains inside the several existingObjSF"
+      # length of existingObjSF
       domainExisted <- all(wh1)
       if (domainExisted) {
         message("Spatial domain is contained within the url; returning the object")
-        existingObj <- existingObj[wh, ]
+        existingObj <- existingObj[wh2, ]
       }
     } else {
       domainExisted <- TRUE
@@ -190,8 +207,9 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
   if (isFALSE(objExisted) || isFALSE(domainExisted)) {
     message("Domain is not contained within the targetFile; running FUN")
     FUNcaptured <- substitute(FUN)
-    list2env(list(...), envir = environment()) # need the ... to be "here"
-    newObj <- eval(FUNcaptured, envir = environment())
+    env <- environment()
+    list2env(list(...), envir = env) # need the ... to be "here"
+    newObj <- try(eval(FUNcaptured, envir = env), silent = TRUE)
     newObjSF <- if (is(newObj, "sf")) newObj else sf::st_as_sf(newObj)
   }
   if (isFALSE(domainExisted)) {
@@ -208,13 +226,14 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
     }
     if (!any(grepl("^n", action[1], ignore.case = TRUE))) {
       if (!isAbsolutePath(targetFile)) {
-        browser()
+        targetFile <- file.path(destinationPath, targetFile)
       }
       writeTo(existingObj, writeTo = targetFile, overwrite = TRUE)
     }
   }
   # Cloud
   if (!is.null(url) || isTRUE(useCloud) || !is.null(cloudFolderID)) {
+    if (!isAbsolutePath(targetFile)) targetFile <- file.path(destinationPath, targetFile)
     if (NROW(objID)) {
       md5Checksum <- digest::digest(file = targetFile)
       alreadyOnRemote <- identical(objID$drive_resource[[1]]$md5Checksum, md5Checksum)
@@ -224,6 +243,7 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
         media = targetFile,
         path = googledrive::as_id(cloudFolderID)
       )
+      attr(existingObj, "id") <- out
     } else {
       message("skipping googledrive upload; md5sum is same")
     }
