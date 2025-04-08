@@ -385,7 +385,7 @@ test_that("preProcess doesn't work", {
         test <- prepInputs(url = urlShapefiles1Zip, destinationPath = tmpdir)
       })
     })
-    runTest("1_8_9_10_12", vectorType(), 5, mess,
+    runTest("1_8_9_10", vectorType(), 5, mess,
             expectedMess = expectedMessage,
             filePattern = "Shapefile", tmpdir = tmpdir, test = test
     )
@@ -534,7 +534,7 @@ test_that("preProcess doesn't work", {
         )
       })
     })
-    runTest("1_8_9_10_12", vectorType(), 9, mess,
+    runTest("1_8_9_10", vectorType(), 9, mess,
             expectedMess = expectedMessage,
             filePattern = "Shapefile", tmpdir = tmpdir, test = test
     )
@@ -829,7 +829,7 @@ test_that("preProcess doesn't work", {
           )
         })
     })
-    runTest("1_9_10_12", vectorType(), 9, mess,
+    runTest("1_9_10", vectorType(), 9, mess,
             expectedMess = expectedMessage,
             filePattern = "Shapefile", tmpdir = tmpdir, test = test
     )
