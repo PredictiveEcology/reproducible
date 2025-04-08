@@ -29,7 +29,7 @@ opts <- options(
 
 
 # uses eliot-githubauthentication@genial-cycling-408722.iam.gserviceaccount.com
-# Whatever files are on googledrive must be shared with this google account
+# Whatever files are on googledrive must be shared with this google service account
 if (isNamespaceLoaded("googledrive"))
   if ((!googledrive::drive_has_token())) {
     if (nzchar(Sys.getenv("GOOGLEDRIVE_AUTH"))) {
