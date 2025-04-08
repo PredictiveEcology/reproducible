@@ -639,7 +639,6 @@ Cache2 <-
 
       # If user passes cacheId, including cacheId = "previous"
       if (!is.null(cacheId)) {
-        browser()
         sc <- cacheIdCheckInCache(cacheId, calculatedCacheId = outputHash, .functionName, verbose)
         outputHashPossible <- attr(sc, "cacheId")
         if (!is.null(outputHashPossible)) outputHash <- outputHashPossible
@@ -2402,7 +2401,6 @@ searchInRepos <- function(cachePaths, outputHash, drv, conn) {
             dtFile <- NULL
           } else if (length(fe) > 1) { # has both the qs and rds dbFile
             browser()
-
           }
         }
 

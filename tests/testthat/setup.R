@@ -18,15 +18,24 @@ opts <- options(
   reproducible.useDBI = FALSE  # done TF  = c(691, 764.1), TT c(793,874), FF = c(875.5s, 876s), FT = c(1024.8,934)
 )
 
-if (Sys.info()["user"] %in% "emcintir") {
-  opts2 <- options(gargle_oauth_email = "predictiveecology@gmail.com")
-  secretDir <- if (isWindows()) "C:/Eliot/.secret" else "~/.secret"
-  opts2 <- append(options(gargle_oauth_cache = secretDir), opts2)
-  if (requireNamespace("googledrive"))
-    googledrive::drive_auth()
-  opts <- append(opts, opts2)
-}
+# if (Sys.info()["user"] %in% "emcintir") {
+#   opts2 <- options(gargle_oauth_email = "predictiveecology@gmail.com")
+#   secretDir <- if (isWindows()) "C:/Eliot/.secret" else "~/.secret"
+#   opts2 <- append(options(gargle_oauth_cache = secretDir), opts2)
+#   if (requireNamespace("googledrive"))
+#     googledrive::drive_auth()
+#   opts <- append(opts, opts2)
+# }
 
+
+# uses eliot-githubauthentication@genial-cycling-408722.iam.gserviceaccount.com
+# Whatever files are on googledrive must be shared with this google account
+if (isNamespaceLoaded("googledrive"))
+  if ((!googledrive::drive_has_token())) {
+    if (nzchar(Sys.getenv("GOOGLEDRIVE_AUTH"))) {
+      googledrive::drive_auth(path = Sys.getenv("GOOGLEDRIVE_AUTH"))
+    }
+  }
 
 
 withr::defer(

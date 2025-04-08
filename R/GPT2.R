@@ -717,7 +717,7 @@ lockFile <- function(cachePath, cache_key, envir = parent.frame(),
       locked <- try(filelock::lock(lockFile), silent = TRUE)
       if (is(locked, "try-error") && isTRUE(first)) {
         first <- FALSE
-        Require::messageVerbose("The cache file (", lockFile,") is locked; waiting... ", verbose = verbose + 2)
+        messageCache("The cache file (", lockFile,") is locked; waiting... ", verbose = verbose + 2)
       }
     }}, silent = TRUE)
     # , error = function(e) {if (any(grepl("reached elapsed time limit", e$message)))
@@ -725,7 +725,7 @@ lockFile <- function(cachePath, cache_key, envir = parent.frame(),
     # }
     # )
     if (first %in% FALSE) {
-      Require::messageVerbose("  ... ", lockFile, " released, continuing ... ", verbose = verbose + 2)
+      messageCache("  ... ", lockFile, " released, continuing ... ", verbose = verbose + 2)
     }
     # locked <- evalWithTimeout(, timeout = 1, onTimeout = "error")
 
