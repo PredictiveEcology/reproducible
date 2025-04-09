@@ -84,6 +84,7 @@ Suggests:
     rmarkdown,
     RSQLite,
     R.utils,
+    rvest,
     sf,
     sp (>= 1.4-2),
     terra (>= 1.7-20),
