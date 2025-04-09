@@ -976,11 +976,11 @@ isGoogleDriveURL <- function(url) {
     rerunChecksums <- TRUE
     if (any(archiveFilesInCS)) {
       if (all(archiveFilesInCS)) {
-        isOK <- checkSums[expectedFile %in% allFiles]$result %in% "OK"
-        if (all(isOK)) {
+        isOK <- checkSums[expectedFile %in% allFiles][, isOK := result %in% "OK"]#$result %in% "OK"
+        if (isTRUE(all(isOK$isOK))) {
           rerunChecksums <- FALSE
         } else { # some not OK, but present
-          allFiles <- allFiles[!isOK]
+          allFiles <- isOK$expectedFile[isOK$isOK %in% FALSE]
         }
       } else { # some files in the archive are not yet in checkSums -- rerunChecksums on these
         allFiles <- allFiles[!archiveFilesInCS]

@@ -256,7 +256,8 @@ test_that("interactive prepInputs", {
     expect_true(inherits(outsideModule[[1]], rasterType()))
     expect_true(inherits(outsideModule[[2]], rasterType()))
     # expect_true(inherits(terra::crs(outsideModule[[2]]), "CRS"))
-    # expect_true(inherits(crs(outsideModule[[1]]), "CRS"))
+    if (requireNamespace("sf"))
+      expect_true(inherits(sf::st_crs(outsideModule[[1]]), "crs"))
     expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
 
     # remove the .prj files -- test "similar"
@@ -318,7 +319,9 @@ test_that("interactive prepInputs", {
     expect_true(inherits(outsideModule[[2]], rasterType()))
     expect_false(identical(terra::crs(outsideModule[[1]]), "")) # now with subfolders & all files, has crs
     expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
-  })
+ })
+
+
 })
 
 test_that("preProcess doesn't work", {
@@ -1903,10 +1906,13 @@ test_that("rasters aren't properly resampled", {
 
     rasStack <- terra::writeRaster(rasStack, filename = tiftemp4)
     rm(rasStack)
-    out3 <- prepInputs(
-      targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
-      destinationPath = dirname(tiftemp3),
-      writeTo = tempfile(tmpdir = tmpdir, fileext = ".tif")
+    warns <- capture_warnings( # rasters aren't properly resampled ─────
+                               # partial argument match of 'ncol' to 'ncols'
+      out3 <- prepInputs(
+        targetFile = tiftemp4, rasterToMatch = terra::rast(tiftemp2),
+        destinationPath = dirname(tiftemp3),
+        writeTo = tempfile(tmpdir = tmpdir, fileext = ".tif")
+      )
     )
     expect_true(is(out3, rasterType()))
     expect_true(identical(length(Filenames(out3)), 1L))
@@ -2015,7 +2021,6 @@ test_that("test prepInputs url when a directory", {
   })
 })
 
-
 test_that("test prepInputs url when a gdrive directory", {
   skip_on_cran()
 
@@ -2044,7 +2049,6 @@ test_that("test prepInputs url when a gdrive directory", {
 
   })
 })
-
 
 test_that("test prepInputs with zip file with hidden files", {
   testInit()
