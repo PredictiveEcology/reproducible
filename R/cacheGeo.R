@@ -24,7 +24,10 @@
 #'
 #' @param url The (optional) url of the object on Google Drive (the only option currently).
 #'   This is only for downloading and uploading to.
-#' @param targetFile The (optional) local file (or path to file)
+#' @param targetFile The (optional) local file (or path to file) name for a `sf`
+#'   object or `data.frame` that can be coerced to a `sf` object (i.e., has a `geometry`
+#'   column). If `cloudFolderID` is specified, then this will be the name of the
+#'   file stored and/or accessed in that cloud folder.
 #' @param domain An sf polygon object that is the spatial area of interest. If `NULL`,
 #'   then this will return the whole object in `targetFile`.
 #' @param FUN A function call that will be called if there is the `domain` is

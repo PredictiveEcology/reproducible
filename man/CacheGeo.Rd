@@ -20,7 +20,10 @@ CacheGeo(
 )
 }
 \arguments{
-\item{targetFile}{The (optional) local file (or path to file)}
+\item{targetFile}{The (optional) local file (or path to file) name for a \code{sf}
+object or \code{data.frame} that can be coerced to a \code{sf} object (i.e., has a \code{geometry}
+column). If \code{cloudFolderID} is specified, then this will be the name of the
+file stored and/or accessed in that cloud folder.}
 
 \item{url}{The (optional) url of the object on Google Drive (the only option currently).
 This is only for downloading and uploading to.}
@@ -74,7 +77,8 @@ i.e., "read only". \code{append} will add the spatial elements in domain to
 \code{append}, but will also remove any identical geometries before appending.
 \code{replace} does nothing currently.}
 
-\item{...}{Any named objects that are needed for FUN}
+\item{...}{All named objects that are needed for FUN, including the function itself,
+if it is not in a package.}
 }
 \value{
 Returns an object that results from \code{FUN}, which will possibly be a subset
