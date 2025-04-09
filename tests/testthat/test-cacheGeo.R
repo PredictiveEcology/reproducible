@@ -12,6 +12,7 @@ test_that("lightweight tests for code coverage", {
 
   cloudFolderID <- "https://drive.google.com/drive/folders/1An8s2YLFPopQKr4BWK9o06fLSXx-Zggw"
   targetFile <- "fireSenseParams.rds"
+  targetFile2 <- "fireSenseParams2.gpkg"
   localFileLux <- system.file("ex/lux.shp", package = "terra")
 
   # 1 step for each layer
@@ -62,10 +63,21 @@ test_that("lightweight tests for code coverage", {
                                     b = LETTERS[seq_len(NROW(domain))],
                                     d = TRUE)))
   }
+  fun3 <- function(domain, paramsVec) {
+    cbind(domain, paramsVec)
+  }
 
   # Run sequence -- A, B will add new entries in targetFile, C will not,
   #                 D will, E will not
+  paramsVecList <- list(list(a = 1, b = 2, c = "D"),
+                   list(a = 2, b = 3, d = 4),
+                   list(a = 2, b = 3, e = 4),
+                   list(a = 2, b = 3, d = 4),
+                   list(a = 2, b = 3, d = 4),
+                   list(a = 2, b = 3, d = 4))
+  iter <- 0
   for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE, zoneF)) {
+    iter <- iter + 1
     if (identical(z, zoneA) || identical(z, zoneB) || identical(z, zoneD) || identical(z, zoneF)) {
       mess <- "Domain is not contained within the targetFile"
     }
@@ -81,23 +93,35 @@ test_that("lightweight tests for code coverage", {
       action = "update"
     ), mess)
 
+    expect_message(out2 <- CacheGeo(
+      targetFile = targetFile2,
+      domain = z,
+      FUN = fun3(domain, paramsVec = paramsVecList[[iter]]),
+      fun3 = fun3, # pass whatever is needed into the function
+      paramsVecList = paramsVecList,
+      iter = iter,
+      destinationPath = dPath,
+      action = "update"
+    ), mess)
+
   }
 
   outSF <- sf::st_as_sf(out)
 
   gls <- googledrive::drive_ls(cloudFolderID)
-  alreadyThere <- gls$name %in% targetFile
+  alreadyThere <- gls$name %in% c(targetFile, targetFile2)
   if (any(alreadyThere)) {
-    googledrive::drive_rm(gls$id[[which(alreadyThere)]])
+    googledrive::drive_rm(gls$id[which(alreadyThere)])
   }
   on.exit({
     gls <- googledrive::drive_ls(cloudFolderID)
-    googledrive::drive_rm(gls[gls$name %in% targetFile,])
+    googledrive::drive_rm(gls[gls$name %in% c(targetFile, targetFile2),])
   })
 
 
-
+  iter <- 0
   for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE, zoneF)) {
+    iter <- iter + 1
     if (identical(z, zoneA) || identical(z, zoneB) || identical(z, zoneD) || identical(z, zoneF)) {
       mess <- "Domain is not contained within the targetFile"
     }
@@ -117,6 +141,18 @@ test_that("lightweight tests for code coverage", {
       action = "update"
     )
 
+    expect_message(out2 <- CacheGeo(
+      targetFile = targetFile2,
+      domain = z,
+      useCloud = TRUE,
+      cloudFolderID = cloudFolderID,
+      FUN = fun3(domain, paramsVec = paramsVecList[[iter]]),
+      fun3 = fun3, # pass whatever is needed into the function
+      paramsVecList = paramsVecList,
+      iter = iter,
+      destinationPath = dPath,
+      action = "update"
+    ), mess)
   }
   outSFCloud <- sf::st_as_sf(out)
   expect_true(identical(outSFCloud, outSF))
@@ -138,7 +174,7 @@ test_that("lightweight tests for code coverage", {
     targetFile = targetFile,
     domain = smaller,
     useCloud = TRUE,
-    cloudFolderID = "https://drive.google.com/drive/folders/1An8s2YLFPopQKr4BWK9o06fLSXx-Zggw",
+    cloudFolderID = cloudFolderID,
     FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
     fun = fun, # pass whatever is needed into the function
     destinationPath = dPath2,

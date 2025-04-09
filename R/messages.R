@@ -22,6 +22,9 @@
 
 .message$Spatial <- lapply(.message$Greps, gsub, pattern = "\\\\", replacement = "")
 
+.message$cacheGeoDomainContained <- "Spatial domain is contained within the url; returning the object"
+.message$cacheGeoDomainNotContained <- "Domain is not contained within the targetFile; running FUN"
+
 .message$LoadedCacheResult <- function(src = 1) {
   srcPoss <- c("Cached", "Memoised")
   if (is.numeric(src)) {

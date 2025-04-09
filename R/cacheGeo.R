@@ -36,7 +36,8 @@
 #'   2) a googledrive id or 3) an absolute path to a (possibly non-existent yet)
 #'   folder on your google drive.
 #' @param useCloud A logical.
-#' @param ... Any named objects that are needed for FUN
+#' @param ... All named objects that are needed for FUN, including the function itself,
+#'   if it is not in a package.
 #' @inheritParams prepInputs
 #' @inheritParams Cache
 #' @param action A character string, with one of c("nothing", "update",
@@ -166,9 +167,7 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
         message("NOTE: url is NOT contained within cloudFolderID; this could cause problems")
 
     }
-    if (NROW(objID)) {
-      objExisted <- TRUE
-    }
+    objExisted <- if (NROW(objID)) TRUE else FALSE
     if (is.null(targetFile)) {
       targetFile <- file.path(destinationPath, objID$name)
     }
@@ -177,7 +176,7 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
       alreadyOnRemote <- identical(objID$drive_resource[[1]]$md5Checksum, md5Checksum)
       if (isTRUE(alreadyOnRemote)) {
         url <- NULL
-      } # browser()
+      }
     }
   }
 
@@ -196,7 +195,7 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
       # length of existingObjSF
       domainExisted <- all(wh1)
       if (domainExisted) {
-        message("Spatial domain is contained within the url; returning the object")
+        message(.message$cacheGeoDomainContained)
         existingObj <- existingObj[wh2, ]
       }
     } else {
@@ -205,29 +204,34 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
     }
   }
   if (isFALSE(objExisted) || isFALSE(domainExisted)) {
-    message("Domain is not contained within the targetFile; running FUN")
+    message(.message$cacheGeoDomainNotContained)
     FUNcaptured <- substitute(FUN)
     env <- environment()
     list2env(list(...), envir = env) # need the ... to be "here"
     newObj <- try(eval(FUNcaptured, envir = env), silent = TRUE)
     newObjSF <- if (is(newObj, "sf")) newObj else sf::st_as_sf(newObj)
   }
+  if (isFALSE(objExisted)) {
+    existingObj <- newObj
+  }
   if (isFALSE(domainExisted)) {
     if (isTRUE(objExisted)) {
       if (any(grepl("^a|^u", action[1], ignore.case = TRUE))) {
-        existingObj <- rbind(existingObj, newObj)
+        # .gpkg seems to change geometry to "geom"
+        existingObj <- checkNameHasGeom(existingObj)
+        existingObj <- as.data.frame(rbindlist(
+          list(as.data.table(existingObj), as.data.table(newObj)), fill = TRUE, use.names = TRUE))
+        # existingObj <- rbind(existingObj, newObj)
         if (any(duplicated(existingObj))) {
           existingObj <- unique(existingObj)
         }
       }
     }
-    if (isFALSE(objExisted)) {
-      existingObj <- newObj
-    }
     if (!any(grepl("^n", action[1], ignore.case = TRUE))) {
       if (!isAbsolutePath(targetFile)) {
         targetFile <- file.path(destinationPath, targetFile)
       }
+      # if (is(existingObj, "sf")) existingObj <- as.data.frame(existingObj)
       writeTo(existingObj, writeTo = targetFile, overwrite = TRUE)
     }
   }
@@ -249,5 +253,13 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
     }
   }
 
+  existingObj
+}
+
+checkNameHasGeom <- function(existingObj) {
+  hasGeomNamedCol <- names(existingObj) %in% "geom"
+  if (any(hasGeomNamedCol)) {
+    names(existingObj)[hasGeomNamedCol] <- "geometry"
+  }
   existingObj
 }
