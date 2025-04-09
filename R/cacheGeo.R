@@ -132,6 +132,7 @@ CacheGeo <- function(targetFile = NULL,
     objExisted <- FALSE
   }
   domainExisted <- objExisted
+  urlThisTargetFile <- NULL
 
   if (isTRUE(useCloud) || !is.null(cloudFolderID)) {
     .requireNamespace("googledrive", stopOnFALSE = TRUE)
@@ -153,11 +154,9 @@ CacheGeo <- function(targetFile = NULL,
     }
     # objsInGD <- googledrive::drive_ls(cloudFolderID)
     objID <- objsInGD[objsInGD$name %in% basename2(targetFile), ]
-    urlThisTargetFile <- if (NROW(objID)) {
-      urlThisTargetFile <- objID$drive_resource[[1]]$webViewLink
-    } else {
-      NULL
-    }
+
+    if (NROW(objID)) urlThisTargetFile <- objID$drive_resource[[1]]$webViewLink
+
     objExisted <- if (NROW(objID)) TRUE else FALSE
     if (is.null(targetFile)) {
       targetFile <- file.path(destinationPath, objID$name)

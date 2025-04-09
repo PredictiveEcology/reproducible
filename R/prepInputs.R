@@ -646,6 +646,7 @@ extractFromArchive <- function(archive,
 #' @rdname guessAtTarget
 #' @name guessAtTarget
 #' @importFrom utils unzip untar
+#' @importFrom stats setNames
 #' @inheritParams postProcess
 #' @param filesExtracted A character vector of all files that have been extracted (e.g.,
 #'                       from an archive)
@@ -671,14 +672,15 @@ extractFromArchive <- function(archive,
     if (NROW(funPoss) == 0) {
       if (requireNamespace("rvest")) {
         sfURL <- "https://r-spatial.github.io/sf/articles/sf2.html#guessing-a-driver-for-output"
-        tbls_ls <- try({rvest::read_html(sfURL) %>%
+        tbls_ls <- try({rvest::read_html(sfURL) |>
           rvest::html_nodes("table")  |>
           rvest::html_table(fill = TRUE) } |>
           Cache(verbose = FALSE))
         if (!is(tbls_ls, "try-error")) {
           exts <- tbls_ls[[1]]$extension
           if (fileExt %in% exts) {
-            funPoss <- data.frame(fileExt, "sf::st_read", "sf::st_write", "sf") |> setNames(names(feKnown))
+            funPoss <- data.frame(fileExt, "sf::st_read", "sf::st_write", "sf") |>
+              setNames(names(feKnown))
           }
         } else {
           messagePrepInputs("It looks like the sf article identifying which extensions",

@@ -57,12 +57,12 @@ test_that("lightweight tests for code coverage", {
       cbind(params = I(lapply(seq_len(NROW(domain)), function(x) newField)))
   }
 
-  fun2 <- function(domain, newField) {
-    domain |> as.data.frame() |>
-      dplyr::mutate(params2 = list(list(a = seq_len(NROW(domain)),
-                                    b = LETTERS[seq_len(NROW(domain))],
-                                    d = TRUE)))
-  }
+  # fun2 <- function(domain, newField) {
+  #   domain |> as.data.frame() |>
+  #     dplyr::mutate(params2 = list(list(a = seq_len(NROW(domain)),
+  #                                   b = LETTERS[seq_len(NROW(domain))],
+  #                                   d = TRUE)))
+  # }
   fun3 <- function(domain, paramsVec) {
     cbind(domain, paramsVec)
   }
@@ -87,8 +87,8 @@ test_that("lightweight tests for code coverage", {
     expect_message(out <- CacheGeo(
       targetFile = targetFile,
       domain = z,
-      FUN = fun2(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
-      fun2 = fun2, # pass whatever is needed into the function
+      FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
+      fun = fun, # pass whatever is needed into the function
       destinationPath = dPath,
       action = "update"
     ), mess)
@@ -135,8 +135,8 @@ test_that("lightweight tests for code coverage", {
       domain = z,
       useCloud = TRUE,
       cloudFolderID = cloudFolderID,
-      FUN = fun2(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
-      fun2 = fun2, # pass whatever is needed into the function
+      FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
+      fun = fun, # pass whatever is needed into the function
       destinationPath = dPath2,
       action = "update"
     )

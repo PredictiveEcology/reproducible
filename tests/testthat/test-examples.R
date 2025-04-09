@@ -29,7 +29,7 @@ test_that("all exported functions have examples", {
 
   # use for loop as it keeps control at top level
   # owd <- getwd()
-  # tmpdir <- file.path(tmpDir, "test_Examples") %>% checkPath(create = TRUE)
+  # tmpdir <- file.path(tmpDir, "test_Examples") |> checkPath(create = TRUE)
   # setwd(tmpdir)
   # on.exit({
   #   unlink(tmpdir, recursive = TRUE)
