@@ -669,30 +669,10 @@ extractFromArchive <- function(archive,
 
     funPoss <- lapply(fileExt, function(fe) feKnown[startsWith(prefix = feKnown[[1]], fe), ])
     funPoss <- do.call(rbind, funPoss)
-    if (NROW(funPoss) == 0) {
-      if (requireNamespace("rvest")) {
-        sfURL <- "https://r-spatial.github.io/sf/articles/sf2.html#guessing-a-driver-for-output"
-        tbls_ls <- try({rvest::read_html(sfURL) |>
-          rvest::html_nodes("table")  |>
-          rvest::html_table(fill = TRUE) } |>
-          Cache(verbose = FALSE))
-        if (!is(tbls_ls, "try-error")) {
-          exts <- tbls_ls[[1]]$extension
-          if (fileExt %in% exts) {
-            funPoss <- data.frame(fileExt, "sf::st_read", "sf::st_write", "sf") |>
-              setNames(names(feKnown))
-          }
-        } else {
-          messagePrepInputs("It looks like the sf article identifying which extensions",
-                            "it can read has changed", "\nPlease contact reproducible",
-                            "developers citing this message. Currently using:\n",
-                            sfURL, verbose = verbose + 1)
-        }
 
-      }
+    if (NROW(funPoss) == 0 && length(possibleFiles)) {
+      funPoss <- checkSFWebPage(funPoss, fileExt, feKnown, verbose)
     }
-
-
 
     if (length(funPoss)) {
       isShapefile <- fileExt %in% funPoss[funPoss[, "type"] == vectorType(), "extension"]
@@ -1743,3 +1723,33 @@ currentFilesToChecksumsTable <- function(currentFiles, nonCurrentFiles = NULL, v
 #   }
 #   return(invisible())
 # }
+
+
+checkSFWebPage <- function(funPoss, fileExt, feKnown, verbose) {
+  if (requireNamespace("rvest")) {
+    sfURL <- "https://r-spatial.github.io/sf/articles/sf2.html#guessing-a-driver-for-output"
+    tbls_ls <- try({rvest::read_html(sfURL) |>
+        rvest::html_nodes("table")  |>
+        rvest::html_table(fill = TRUE) } |>
+          Cache(verbose = FALSE))
+    if (!is(tbls_ls, "try-error")) {
+      exts <- tbls_ls[[1]]$extension
+      if (isTRUE(any(fileExt %in% exts))) {
+        funPoss <- data.frame(fileExt, "sf::st_read", "sf::st_write", "sf") |>
+          setNames(names(feKnown))
+      }
+    } else {
+      messagePrepInputs("It looks like the sf article identifying which extensions",
+                        "it can read has changed", "\nPlease contact reproducible",
+                        "developers citing this message. Currently using:\n",
+                        sfURL, verbose = verbose + 1)
+    }
+
+  } else {
+    messagePrepInputs("`reproducible` does not know the file type passed.\n",
+                      "Please run `install.packages('rvest')` to load other known ",
+                      "file types that the `sf` package can load.",
+                      verbose = verbose + 1)
+  }
+  funPoss
+}
