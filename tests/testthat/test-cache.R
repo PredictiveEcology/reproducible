@@ -369,7 +369,8 @@ test_that("test file-backed raster caching", {
     r
   }
   bb <- Cache(randomPolyToFactorInMemory, cachePath = tmpdir)
-  expect_true(terra::is.int(bb))
+  expect_true(terra::is.factor(bb))
+  expect_true(is.integer(values(bb, mat = FALSE)))
   # expect_equal(dataType2(bb), "INT1U") # irrelevant because on disk
   expect_true(terra::is.factor(bb))
   expect_true(is(terra::cats(bb)[[1]], "data.frame"))
