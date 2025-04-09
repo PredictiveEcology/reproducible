@@ -10,6 +10,8 @@ test_that("lightweight tests for code coverage", {
   dPath <- checkPath(file.path(tempdir2()), create = TRUE)
   dPath2 <- checkPath(file.path(tempdir2()), create = TRUE)
 
+  cloudFolderID <- "https://drive.google.com/drive/folders/1An8s2YLFPopQKr4BWK9o06fLSXx-Zggw"
+  targetFile <- "fireSenseParams.rds"
   localFileLux <- system.file("ex/lux.shp", package = "terra")
 
   # 1 step for each layer
@@ -55,8 +57,8 @@ test_that("lightweight tests for code coverage", {
   }
 
   fun2 <- function(domain, newField) {
-    domain |>
-      dplyr::mutate(ppp = list(list(a = seq_len(NROW(domain)),
+    domain |> as.data.frame() |>
+      dplyr::mutate(params2 = list(list(a = seq_len(NROW(domain)),
                                     b = LETTERS[seq_len(NROW(domain))],
                                     d = TRUE)))
   }
@@ -71,10 +73,10 @@ test_that("lightweight tests for code coverage", {
       mess <- "Spatial domain is contained within the url"
     }
     expect_message(out <- CacheGeo(
-      targetFile = "fireSenseParams.rds",
+      targetFile = targetFile,
       domain = z,
-      FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
-      fun = fun, # pass whatever is needed into the function
+      FUN = fun2(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
+      fun2 = fun2, # pass whatever is needed into the function
       destinationPath = dPath,
       action = "update"
     ), mess)
@@ -82,6 +84,17 @@ test_that("lightweight tests for code coverage", {
   }
 
   outSF <- sf::st_as_sf(out)
+
+  gls <- googledrive::drive_ls(cloudFolderID)
+  alreadyThere <- gls$name %in% targetFile
+  if (any(alreadyThere)) {
+    googledrive::drive_rm(gls$id[[which(alreadyThere)]])
+  }
+  on.exit({
+    gls <- googledrive::drive_ls(cloudFolderID)
+    googledrive::drive_rm(gls[gls$name %in% targetFile,])
+  })
+
 
 
   for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE, zoneF)) {
@@ -94,18 +107,17 @@ test_that("lightweight tests for code coverage", {
     # With directory url
     out <- CacheGeo(
       # url = "https://drive.google.com/file/d/1st4lUiCgXJp8SdpMP056smPOh9gbZEoQ",
-      targetFile = "fireSenseParams.rds",
+      targetFile = targetFile,
       domain = z,
       useCloud = TRUE,
-      cloudFolderID = "https://drive.google.com/drive/folders/1An8s2YLFPopQKr4BWK9o06fLSXx-Zggw",
-      FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
-      fun = fun, # pass whatever is needed into the function
+      cloudFolderID = cloudFolderID,
+      FUN = fun2(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
+      fun2 = fun2, # pass whatever is needed into the function
       destinationPath = dPath2,
       action = "update"
     )
 
   }
-  browser()
   outSFCloud <- sf::st_as_sf(out)
   expect_true(identical(outSFCloud, outSF))
 
@@ -123,7 +135,7 @@ test_that("lightweight tests for code coverage", {
   plot(smaller[1, 1], add = TRUE, col = "green")
 
   out <- CacheGeo(
-    targetFile = "fireSenseParams.rds",
+    targetFile = targetFile,
     domain = smaller,
     useCloud = TRUE,
     cloudFolderID = "https://drive.google.com/drive/folders/1An8s2YLFPopQKr4BWK9o06fLSXx-Zggw",
@@ -133,8 +145,8 @@ test_that("lightweight tests for code coverage", {
     action = "nothing"
   )
   outSFCloudSmaller <- sf::st_as_sf(out)
-  out[, "params"]
-  expect_identical(as.data.frame(outSFCloudSmaller)[, "params"], out[, "params"])
+  out[, "params2"]
+  expect_identical(as.data.frame(outSFCloudSmaller)[, "params2"], out[, "params2"])
 
 })
 
