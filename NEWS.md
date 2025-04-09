@@ -1,5 +1,6 @@
 # reproducible 3.0.0
 
+* `CacheGeo` added new cases that are able to be used.
 * many edge cases were found that were not correctly Cached. This resulted in 2 major changes: 
 rewrite and simplification of `Cache` 
 and modified `digest` of the arguments. These changes are not backwards compatible. Details next.

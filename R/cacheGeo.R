@@ -6,7 +6,7 @@
 #' domains. This differs from `Cache` in that the current function call doesn't
 #' have to have an identical function call previously run. Instead, it needs
 #' to have had a previous function call where the `domain` being passes is
-#' *within* the geographic limits of the `targetFile` or file located at the `url`.
+#' *within* the geographic limits of the `targetFile`.
 #' This is similar to a geospatial operation on a remote GIS server, with 2 differences:
 #' 1. This downloads the object first before doing the GIS locally, and 2. it will
 #' optionally upload an updated object if the geographic area did not yet exist.
@@ -22,8 +22,6 @@
 #' the existing "same extent" entry in the `sf` object.
 #'
 #'
-#' @param url The (optional) url of the object on Google Drive (the only option currently).
-#'   This is only for downloading and uploading to.
 #' @param targetFile The (optional) local file (or path to file) name for a `sf`
 #'   object or `data.frame` that can be coerced to a `sf` object (i.e., has a `geometry`
 #'   column). If `cloudFolderID` is specified, then this will be the name of the
@@ -31,7 +29,7 @@
 #' @param domain An sf polygon object that is the spatial area of interest. If `NULL`,
 #'   then this will return the whole object in `targetFile`.
 #' @param FUN A function call that will be called if there is the `domain` is
-#'   not already contained within the `sf` object at `url` or `targetFile`. This function
+#'   not already contained within the `sf` object at `targetFile`. This function
 #'   call MUST return either a `sf` class object or a `data.frame` class object
 #'   that has a geometry column (which can then be converted to `sf` with `st_as_sf`)
 #' @param cloudFolderID If this is specified, then it must be either 1) a googledrive
@@ -52,7 +50,7 @@
 #'   `replace` does nothing currently.
 #'
 #' @return Returns an object that results from `FUN`, which will possibly be a subset
-#' of a larger spatial object that is specified with `targetFile` or `url`.
+#' of a larger spatial object that is specified with `targetFile`.
 #'
 #' @export
 #' @examples
@@ -108,7 +106,8 @@
 #'   }
 #' }
 #' }
-CacheGeo <- function(targetFile = NULL, url = NULL, domain,
+CacheGeo <- function(targetFile = NULL,
+                     domain,
                      FUN,
                      destinationPath = getOption("reproducible.destinationPath", "."),
                      useCloud = getOption("reproducible.useCloud", FALSE),
@@ -118,7 +117,7 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
                      action = c("nothing", "update", "replace", "append"),
                      ...) {
   objExisted <- TRUE
-  if (is.null(targetFile) && is.null(url)) {
+  if (is.null(targetFile)) {
     objExisted <- FALSE
   }
 
@@ -127,48 +126,37 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
       targetFile <- file.path(destinationPath, targetFile)
     }
   } else {
-    if (missing(url))
-      stop("Either targetFile or url must be supplied")
-    out <- .guessAtFile(url = url, archive = NULL, destinationPath = destinationPath, targetFile = NULL)
-    targetFile <- basename(out)
+    stop("Either targetFile must be supplied")
   }
-  if (!file.exists(targetFile) && is.null(url)) {
+  if (!file.exists(targetFile)) {
     objExisted <- FALSE
   }
   domainExisted <- objExisted
 
-  if (!is.null(url) || isTRUE(useCloud) || !is.null(cloudFolderID)) {
+  if (isTRUE(useCloud) || !is.null(cloudFolderID)) {
     .requireNamespace("googledrive", stopOnFALSE = TRUE)
     alreadyOnRemote <- FALSE
     objsInGD <- googledrive::drive_ls(cloudFolderID)
-    if (is.null(url)) {
-      if (!(nchar(cloudFolderID) == 33 || grepl("https://drive", cloudFolderID))) {
-        googledrive::with_drive_quiet(folderExists <- googledrive::drive_get(cloudFolderID))
-        if (NROW(folderExists)) {
-          cloudFolderID <- googledrive::as_id(folderExists$id)
-        }
-      } else {
-        cloudFolderID <- googledrive::as_id(cloudFolderID)
-        folderExists <- googledrive::drive_get(cloudFolderID)
-      }
-      folderExists <- NROW(folderExists) > 0
-
-      if (!folderExists) {
-        cloudFolderID <- googledrive::drive_mkdir(cloudFolderID)
-      }
-      # objsInGD <- googledrive::drive_ls(cloudFolderID)
-      objID <- objsInGD[objsInGD$name %in% basename2(targetFile), ]
-      if (NROW(objID)) {
-        url <- objID$drive_resource[[1]]$webViewLink
+    if (!(nchar(cloudFolderID) == 33 || grepl("https://drive", cloudFolderID))) {
+      googledrive::with_drive_quiet(folderExists <- googledrive::drive_get(cloudFolderID))
+      if (NROW(folderExists)) {
+        cloudFolderID <- googledrive::as_id(folderExists$id)
       }
     } else {
-      objID <- googledrive::drive_get(id = url)
-      # sanity check -- is url inside cloudFolderID
-      urlInCFID <- objID$id %in% objsInGD$id
-      message("both url and cloudFolderID are supplied; using file at url")
-      if (isFALSE(urlInCFID))
-        message("NOTE: url is NOT contained within cloudFolderID; this could cause problems")
+      cloudFolderID <- googledrive::as_id(cloudFolderID)
+      folderExists <- googledrive::drive_get(cloudFolderID)
+    }
+    folderExists <- NROW(folderExists) > 0
 
+    if (!folderExists) {
+      cloudFolderID <- googledrive::drive_mkdir(cloudFolderID)
+    }
+    # objsInGD <- googledrive::drive_ls(cloudFolderID)
+    objID <- objsInGD[objsInGD$name %in% basename2(targetFile), ]
+    urlThisTargetFile <- if (NROW(objID)) {
+      urlThisTargetFile <- objID$drive_resource[[1]]$webViewLink
+    } else {
+      NULL
     }
     objExisted <- if (NROW(objID)) TRUE else FALSE
     if (is.null(targetFile)) {
@@ -177,15 +165,12 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
     if (file.exists(targetFile) && NROW(objID)) {
       md5Checksum <- digest::digest(file = targetFile)
       alreadyOnRemote <- identical(objID$drive_resource[[1]]$md5Checksum, md5Checksum)
-      if (isTRUE(alreadyOnRemote)) {
-        url <- NULL
-      }
     }
   }
 
   if (isTRUE(objExisted)) {
     existingObj <- prepInputs(
-      targetFile = targetFile, url = url,
+      targetFile = targetFile, url = urlThisTargetFile,
       destinationPath = destinationPath, # domain = domain,
       useCache = useCache, purge = purge,
       overwrite = overwrite
@@ -239,7 +224,7 @@ CacheGeo <- function(targetFile = NULL, url = NULL, domain,
     }
   }
   # Cloud
-  if (!is.null(url) || isTRUE(useCloud) || !is.null(cloudFolderID)) {
+  if (isTRUE(useCloud) || !is.null(cloudFolderID)) {
     if (!isAbsolutePath(targetFile)) targetFile <- file.path(destinationPath, targetFile)
     if (NROW(objID)) {
       md5Checksum <- digest::digest(file = targetFile)

@@ -6,7 +6,6 @@
 \usage{
 CacheGeo(
   targetFile = NULL,
-  url = NULL,
   domain,
   FUN,
   destinationPath = getOption("reproducible.destinationPath", "."),
@@ -25,14 +24,11 @@ object or \code{data.frame} that can be coerced to a \code{sf} object (i.e., has
 column). If \code{cloudFolderID} is specified, then this will be the name of the
 file stored and/or accessed in that cloud folder.}
 
-\item{url}{The (optional) url of the object on Google Drive (the only option currently).
-This is only for downloading and uploading to.}
-
 \item{domain}{An sf polygon object that is the spatial area of interest. If \code{NULL},
 then this will return the whole object in \code{targetFile}.}
 
 \item{FUN}{A function call that will be called if there is the \code{domain} is
-not already contained within the \code{sf} object at \code{url} or \code{targetFile}. This function
+not already contained within the \code{sf} object at \code{targetFile}. This function
 call MUST return either a \code{sf} class object or a \code{data.frame} class object
 that has a geometry column (which can then be converted to \code{sf} with \code{st_as_sf})}
 
@@ -82,7 +78,7 @@ if it is not in a package.}
 }
 \value{
 Returns an object that results from \code{FUN}, which will possibly be a subset
-of a larger spatial object that is specified with \code{targetFile} or \code{url}.
+of a larger spatial object that is specified with \code{targetFile}.
 }
 \description{
 \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
@@ -92,7 +88,7 @@ This function is a combination of \code{Cache} and \code{prepInputs} but for spa
 domains. This differs from \code{Cache} in that the current function call doesn't
 have to have an identical function call previously run. Instead, it needs
 to have had a previous function call where the \code{domain} being passes is
-\emph{within} the geographic limits of the \code{targetFile} or file located at the \code{url}.
+\emph{within} the geographic limits of the \code{targetFile}.
 This is similar to a geospatial operation on a remote GIS server, with 2 differences:
 \enumerate{
 \item This downloads the object first before doing the GIS locally, and 2. it will
