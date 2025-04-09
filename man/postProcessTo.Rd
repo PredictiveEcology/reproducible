@@ -248,6 +248,7 @@ crop removes all NA cells so they are tight to the mask.
 }
 
 \examples{
+if (requireNamespace("terra")) {
 # prepare dummy data -- 3 SpatRasters, 2 SpatVectors
 # need 2 SpatRaster
 rf <- system.file("ex/elev.tif", package = "terra")
@@ -279,6 +280,7 @@ opts <- options(reproducible.gdalwarp = TRUE)
 t2b <- postProcessTo(elev1, to = vAsRasInLongLat, maskTo = vInUTM)
 t3b <- postProcessTo(elev1, to = rInUTM, maskTo = vInUTM)
 options(opts)
+}
 }
 \seealso{
 \code{\link[=maskTo]{maskTo()}}, \code{\link[=cropTo]{cropTo()}}, \code{\link[=projectTo]{projectTo()}}, \code{\link[=writeTo]{writeTo()}}, and \code{\link[=fixErrorsIn]{fixErrorsIn()}}.

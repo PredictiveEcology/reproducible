@@ -1,3 +1,4 @@
+if (requireNamespace("terra")) {
 # prepare dummy data -- 3 SpatRasters, 2 SpatVectors
 # need 2 SpatRaster
 rf <- system.file("ex/elev.tif", package = "terra")
@@ -29,3 +30,4 @@ opts <- options(reproducible.gdalwarp = TRUE)
 t2b <- postProcessTo(elev1, to = vAsRasInLongLat, maskTo = vInUTM)
 t3b <- postProcessTo(elev1, to = rInUTM, maskTo = vInUTM)
 options(opts)
+}
