@@ -134,9 +134,11 @@ CacheGeo <- function(targetFile = NULL,
   domainExisted <- objExisted
   urlThisTargetFile <- NULL
 
+  alreadyOnRemote <- FALSE
+  cacheExtra <- NULL
+
   if (isTRUE(useCloud) || !is.null(cloudFolderID)) {
     .requireNamespace("googledrive", stopOnFALSE = TRUE)
-    alreadyOnRemote <- FALSE
     objsInGD <- googledrive::drive_ls(cloudFolderID)
     if (!(nchar(cloudFolderID) == 33 || grepl("https://drive", cloudFolderID))) {
       googledrive::with_drive_quiet(folderExists <- googledrive::drive_get(cloudFolderID))
@@ -164,16 +166,21 @@ CacheGeo <- function(targetFile = NULL,
     if (file.exists(targetFile) && NROW(objID)) {
       md5Checksum <- digest::digest(file = targetFile)
       alreadyOnRemote <- identical(objID$drive_resource[[1]]$md5Checksum, md5Checksum)
+      cacheExtra <- objID$drive_resource[[1]]$md5Checksum
     }
   }
 
   if (isTRUE(objExisted)) {
+
     existingObj <- prepInputs(
-      targetFile = targetFile, url = urlThisTargetFile,
+      targetFile = asPath(targetFile),
+      url = urlThisTargetFile,
       destinationPath = destinationPath, # domain = domain,
-      useCache = useCache, purge = purge,
+      useCache = useCache,
+      purge = 7, # It isn't relevant if the file is different than the Checksums
       overwrite = overwrite
-    )
+    ) |> Cache(.cacheExtra = cacheExtra) # cacheExtra is the md5Checksum on GDrive
+
     existingObjSF <- if (is(existingObj, "sf")) existingObj else sf::st_as_sf(existingObj)
     if (!missing(domain)) {
       wh <- sf::st_within(domain, existingObjSF, sparse = FALSE)

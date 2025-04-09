@@ -93,7 +93,8 @@ test_that("lightweight tests for code coverage", {
       action = "update"
     ), mess)
 
-    expect_message(out2 <- CacheGeo(
+    co <- capture.output({
+      expect_message(out2 <- CacheGeo(
       targetFile = targetFile2,
       domain = z,
       FUN = fun3(domain, paramsVec = paramsVecList[[iter]]),
@@ -103,6 +104,7 @@ test_that("lightweight tests for code coverage", {
       destinationPath = dPath,
       action = "update"
     ), mess)
+    })
 
   }
 
@@ -181,8 +183,7 @@ test_that("lightweight tests for code coverage", {
     action = "nothing"
   )
   outSFCloudSmaller <- sf::st_as_sf(out)
-  out[, "params2"]
-  expect_identical(as.data.frame(outSFCloudSmaller)[, "params2"], out[, "params2"])
+  expect_identical(as.data.frame(outSFCloudSmaller)[, "params"], out[, "params"])
 
 })
 
