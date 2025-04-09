@@ -1044,7 +1044,7 @@ extractFromArchive <- function(archive,
 
   if (length(listOfFilesExtracted) == 0) {
     stop(
-      "preProcess could not extract the files from the archive ", args[[1]], ".",
+      "preProcess could not extract the files from the archive ", args[[1]], ".\n",
       "Please try to extract it manually to the destinationPath"
     )
   }

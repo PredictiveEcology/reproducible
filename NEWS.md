@@ -1,5 +1,6 @@
 # reproducible 3.0.0
 
+* slowly deprecating R 4.1 support as there are package dependencies that do not work on R 4.1
 * `CacheGeo` added new cases that are able to be used.
 * many edge cases were found that were not correctly Cached. This resulted in 2 major changes: 
 rewrite and simplification of `Cache` 
