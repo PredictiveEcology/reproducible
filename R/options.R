@@ -160,6 +160,12 @@
 #'     behaviour to avoid deleting objects.
 #'     This, therefore, is most useful if the user is using unique values for `userTags`.
 #'   }
+#'   \item{`reproducible.useCacheV3`}{
+#'     Default: `TRUE`. If this is set to `FALSE`, it will use the old `Cache` source
+#'     code. This will only be available for a short period before it is deleted
+#'     from the package. See also `reproducible.digestV3`. It is not guaranteed to
+#'     be identical to using a previous version of `reproducible (<3.0)`.
+#'   }
 #'   \item{`useCloud`}{
 #'     Default `FALSE`. Passed to `Cache`.
 #'   }
@@ -211,6 +217,15 @@
 #'     load the cached copy from the repository.
 #'     This may help diagnosing some problems that may occur.
 #'   }
+#'   \item{`digestV3`}{
+#'     Default: `TRUE`. This uses a digest approach that includes the names of
+#'     list elements and several other tweaks that were created for `reproducible 3.x`.
+#'     Set this to `FALSE` to use *some of* the previous cache digesting to
+#'     achieve some backwards compatibility with the digest algorithms of `reproducible (<3.x)`.
+#'     It will not be possible to get it exact for all classes of objects, particularly
+#'     those with file-backing.
+#'   }
+#'
 #' }
 #'
 #' @section Advanced:
@@ -268,6 +283,7 @@ reproducibleOptions <- function() {
     reproducible.testCharacterAsFile = FALSE,
     reproducible.timeout = 1200,
     reproducible.useCache = TRUE, # override Cache function
+    reproducible.useCacheV3 = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
     reproducible.useDBI = {
       getEnv("R_REPRODUCIBLE_USE_DBI",
@@ -280,7 +296,8 @@ reproducibleOptions <- function() {
     reproducible.useGdown = FALSE,
     reproducible.useMemoise = FALSE, # memoise
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
-    reproducible.verbose = 1
+    reproducible.verbose = 1,
+    reproducible.digestV3 = TRUE
   )
 }
 

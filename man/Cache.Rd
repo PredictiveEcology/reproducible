@@ -3,7 +3,7 @@
 \name{Cache}
 \alias{Cache}
 \alias{cache2}
-\alias{Cache2}
+\alias{CacheV2}
 \title{Saves a wide variety function call outputs to disk and optionally RAM, for recovery later}
 \usage{
 Cache(
@@ -58,7 +58,7 @@ cache2(
   conn = getOption("reproducible.conn", NULL)
 )
 
-Cache2(
+CacheV2(
   FUN,
   ...,
   notOlderThan = NULL,

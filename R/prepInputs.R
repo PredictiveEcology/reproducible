@@ -448,7 +448,7 @@ extractFromArchive <- function(archive,
                                verbose = getOption("reproducible.verbose", 1),
                                .tempPath, ...) {
   if (!is.null(archive)) {
-    if (!(any(c(knownInternalArchiveExtensions, knownSystemArchiveExtensions) %in% fileExt(archive)))) {
+    if (!(any(c(knownArchiveExtensions) %in% fileExt(archive)))) {
       stop(
         "Archives of type ", fileExt(archive), " are not currently supported. ",
         "Try extracting manually then placing extracted files in ", destinationPath
@@ -771,15 +771,28 @@ extractFromArchive <- function(archive,
           paste(knownArchiveExtensions, collapse = ", ")
         )
       }
-      if (ext == "zip") {
-        fun <- unzip
-        args <- c(args, list(junkpaths = FALSE))
-      } else if (ext %in% c("tar", "tar.gz", "gz")) {
-        fun <- untar
-      } else if (ext == "rar") {
-        fun <- "unrar"
-      } else if (ext == "7z") {
-        fun <- "7z"
+      canUseArchive <- .requireNamespace("archive")
+      mustUseArchive <- !(ext %in% knownInternalArchiveExtensions)
+      useArchive <- (mustUseArchive && canUseArchive || canUseArchive)
+      if (mustUseArchive && canUseArchive %in% FALSE) {
+        stop("Please install.packages('archive') to extract files from \n", archive)
+      }
+      if (useArchive) {
+        fun <- archive::archive_extract
+      } else { # base R or system call functions
+        browser()
+        if (ext == "zip") {
+          fun <- unzip
+          args <- c(args, list(junkpaths = FALSE))
+        } else if (ext %in% c("tar", "tar.gz", "gz")) {
+          fun <- untar
+        } else { # system only
+          if (ext == "rar") {
+            fun <- "unrar"
+          } else if (ext == "7z") {
+            fun <- "7z"
+          }
+        }
       }
       out <- list(fun = fun, args = args)
     }
@@ -1126,19 +1139,27 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     extractSystemCallPath <- .testForArchiveExtract(archive)
     funWArgs <- list(fun = extractSystemCallPath)
     } else {
-      funWArgs <- .whichExtractFn(archive[1], NULL)
-    }
+    funWArgs <- .whichExtractFn(archive[1], NULL)
+  }
 
-    filesInArchive <- NULL
+  filesInArchive <- NULL
   if (!is.null(funWArgs$fun)) {
     if (file.exists(archive[1])) {
       if (!needSystemCall) {
-        filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
-        if ("Name" %in% names(filesInArchive)) {
+        if (identical(archive::archive_extract, funWArgs$fun)) {
+          filesInArchive <- archive::archive(archive[1])
+        } else {
+          filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
+        }
+        nams <- names(filesInArchive)
+        if ("Name" %in% nams) {
           # for zips, rm directories (length = 0)
           filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
+        } else if ("path" %in% nams) {
+          # from archive::archive
+          filesInArchive <- filesInArchive[filesInArchive$size != 0, ]$path
         } else {
-          # untar
+          # untar & archive::archive
           filesInArchive
         }
       } else {
@@ -1349,10 +1370,13 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 missingUnrarMess <- "The archive is a 'rar' archive; your system does not have unrar or 7zip;\n"
 proj6Warn <- "NOT UPDATED FOR PROJ"
 
-knownInternalArchiveExtensions <- c("zip", "tar", "tar.gz", "gz")
 sevenzName <- "7z"
+knownArchivePkgExtensions <- c("zip", "tar", "tar.gz", "gz", "rar", sevenzName, "cab")
+knownInternalArchiveExtensions <- c("zip", "tar", "tar.gz", "gz")
+# knownSystemArchiveExtensions <- c("rar", sevenzName, "unrar")
 knownSystemArchiveExtensions <- c("rar", sevenzName)
-knownArchiveExtensions <- c(knownInternalArchiveExtensions, knownSystemArchiveExtensions)
+knownArchiveExtensions <- unique(c(knownInternalArchiveExtensions, knownSystemArchiveExtensions,
+                            knownArchivePkgExtensions))
 
 
 prepInputsAssertions <- function(env) {

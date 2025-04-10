@@ -1,30 +1,40 @@
 # reproducible 3.0.0
 
+* near complete rewrite of `Cache` so it is simpler and more robust. 
+The main function is now 130 lines, instead of almost 700. 
+* In addition to full rewrites, numerous simplifications throughout code that is still being used;
 * slowly deprecating R 4.1 support as there are package dependencies that do not work on R 4.1
 * `CacheGeo` added new cases that are able to be used.
 * many edge cases were found that were not correctly Cached. This resulted in 2 major changes: 
 rewrite and simplification of `Cache` 
 and modified `digest` of the arguments. These changes are not backwards compatible. Details next.
-* near complete rewrite of `Cache` so it is simpler and more robust. 
-The main function is now 130 lines, instead of almost 700. 
-* In addition to full rewrites, numerous simplifications throughout code that is still being used;
-* Fixes to several ongoing "edge cases" that were difficult to address, mostly focused around deeply nested objects 
+* Fixes to several ongoing "edge cases" that were difficult to address, mostly 
+focused around deeply nested objects 
 that are file-backed with pointers, such `terra::SpatRaster` class;
 * `digest` changes include the following fixes:
-  - lists would be digested without their top-level names; thus two lists with 
-  exactly the same elements but with and without names would have the same digest
+  - `CacheDigest` which is used within `Cache` did not digest the names of the 
+  list of arguments passed. This did not affect `.robustDigest` of a normal list, which
+  keeps the names intact. 
   - file-backed objects were not correctly unique in the cache as they did not have
   the `cacheId` in the filename; now they will have the 
   `cacheId` prefixed on the file (so they sort alongside the main cache file). This 
   `cacheId` prefix is removed on recovery from the cache, overwriting 
   any files with the same name.
   - extracting the functionName from a function had several edge cases did not work; these now work
+* To maintain as much compatibility with an other Cache database, while losing the more accurate digesting, 
+  a user can set `options(reproducible.digestV3 = FALSE)`. This will keep the behaviour where
+  lists are digested without their names for `CacheDigest` and `Cache`. 
+  This will not affect the file-backed objects changes described above, which will ignore this
+  option. 
 * `useMemoise` would work with file-backed objects, but only if the file-backed object 
 did not change after the caching (the pointer to the file was intact, but the file changed). 
 Now, memoising will copy file-backed information from disk
-each time it "retrieves a file-backed object from memeory". This will result in slower
+each time it "retrieves a file-backed object from memory". This will result in slower
 memoising than previously. However, it will be robust to downstream changes to the file.
 * new function `purgeChecksums` to allow user to manually purge a file from CHECKSUMS.txt
+* new options to help with backwards compatibility:
+  - `reproducible.useCacheV3`: default = TRUE to use the new Cache source code
+  - `reproducible.digestV3`: default = TRUE to use the new Cache digest algorithms
 
 # reproducible 2.1.2
 

@@ -108,7 +108,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
     b <- Cache(rnorm, n = 2, mean = 1, sd = 3, showSimilar = TRUE, cachePath = tmpCache)
   })
 
-  if (!getOption("reproducible.cache2") %in% TRUE) {
+  if (!getOption("reproducible.useCacheV3") %in% TRUE) {
     expect_true(any(grepl("different n", bMess)))
     expect_true(any(grepl("different .+sd", bMess)))
     # expect_true(any(grepl("new argument.*sd", bMess)))
@@ -159,7 +159,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   })
   expect_true(any(grepl("no similar item", eMess))) # shouldn't find b/c new
   expect_true(any(grepl("no similar item", fMess))) # shouldn't find b/c args are same
-  if (!getOption("reproducible.cache2") %in% TRUE) {
+  if (!getOption("reproducible.useCacheV3") %in% TRUE) {
     expect_true(any(grepl("next closest.+rmultin", gMess))) # should only find rmultinom
     expect_true(any(grepl("next closest.+rbinom", hMess))) # should only find rbinom
     expect_true(sum(grepl(".+rcompletelynew|next closest.+rmultin", iMess)) == 3) # should notice different name, but still find
@@ -195,7 +195,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   nMess <- capture_messages({
     bn <- Cache(rnorm, 1, 2, 2, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # similar to kMess
   })
-  if (!getOption("reproducible.cache2") %in% TRUE) {
+  if (!getOption("reproducible.useCacheV3") %in% TRUE) {
     nMess <- grep("^.+next closest cacheId\\(s\\) (.+) of .+$", nMess, value = TRUE)
     expect_true(grepl(
       x = attr(bm, "tags"),
@@ -219,7 +219,7 @@ test_that("test debugCache arg", {
   ## debugCache -- "complete"
   thing <- 1
   aa <- Cache(rnorm, thing, debugCache = "complete", cachePath = tmpCache)
-  if (!getOption("reproducible.cache2") %in% TRUE) {
+  if (!getOption("reproducible.useCacheV3") %in% TRUE) {
     expect_true(identical(thing, attr(aa, "debugCache1")[[1]]))
   } else {
     expect_true(identical(thing, attr(aa, "debugCache1")[[2]]))
@@ -230,7 +230,7 @@ test_that("test debugCache arg", {
   ## debugCache -- "quick"
   aa <- Cache(rnorm, thing, debugCache = "quick", cachePath = tmpCache)
   expect_true(identical(.robustDigest(thing), aa$hash$n))
-  if (!getOption("reproducible.cache2") %in% TRUE) {
+  if (!getOption("reproducible.useCacheV3") %in% TRUE) {
     expect_true(identical(thing, aa$content[[1]]))
   } else {
     expect_true(identical(thing, aa$content[[2]]))

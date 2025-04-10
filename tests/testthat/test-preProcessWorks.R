@@ -172,43 +172,44 @@ test_that("preProcess works when provides url, targetfile and destinationPath", 
 test_that("preProcess works when provides url and destinationPath for a .rar file", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
+  # extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- theRasterTestRar
 
-  if (!is(extractSystemCallPath, "try-error")) {
-    if (is.null(extractSystemCallPath)) {
-      noisyOutput <- capture.output(
-        expect_error({
-          ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-        })
-      )
-    } else {
+  # if (!is(extractSystemCallPath, "try-error")) {
+    # if (is.null(extractSystemCallPath)) {
+    #   noisyOutput <- capture.output(
+    #     expect_error({
+    #       ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+    #     })
+    #   )
+    # } else {
+      # aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
       noisyOutput <- capture.output(
         ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
       )
       testthat::expect_is(object = ras, class = "list")
       testthat::expect_true(file.exists(ras$targetFilePath))
-    }
-  }
+    # }
+  # }
 })
 
 test_that("preProcess works when provides url, targetfile and destinationPath for a .rar file", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
+  ## extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- theRasterTestRar
 
-  if (!is(extractSystemCallPath, "try-error")) {
-    if (is.null(extractSystemCallPath)) {
-      noisyOutput <- capture.output(
-        expect_error({
-          ras <- reproducible::preProcess(
-            url = url, targetFile = theRasterTestFilename(suff = "tif"),
-            destinationPath = tmpdir
-          )
-        })
-      )
-    } else {
+  # if (!is(extractSystemCallPath, "try-error")) {
+    # if (is.null(extractSystemCallPath)) {
+    #   noisyOutput <- capture.output(
+    #     expect_error({
+    #       ras <- reproducible::preProcess(
+    #         url = url, targetFile = theRasterTestFilename(suff = "tif"),
+    #         destinationPath = tmpdir
+    #       )
+    #     })
+    #   )
+    # } else {
       wd <- getwd()
       noisyOutput <- capture.output(
         ras <- reproducible::preProcess(
@@ -219,32 +220,32 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
       testthat::expect_is(object = ras, class = "list")
       testthat::expect_true(file.exists(ras$targetFilePath))
       expect_equal(wd, getwd()) # Test that working directory is restored after unrar call
-    }
-  }
+    # }
+  # }
 })
 
 test_that("preProcess works when provides url, archive and destinationPath for a .rar file", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
+  # extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- theRasterTestRar
   rasterTestRarFilename <- theRasterTestFilename(suff = "rar")
 
-  if (!is(extractSystemCallPath, "try-error")) {
-    if (is.null(extractSystemCallPath)) {
-      noisyOutput <- capture.output(
-        expect_error({
-          ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
-        })
-      )
-    } else {
+  # if (!is(extractSystemCallPath, "try-error")) {
+  #   if (is.null(extractSystemCallPath)) {
+    #   noisyOutput <- capture.output(
+    #     expect_error({
+    #       ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
+    #     })
+    #   )
+    # } else {
       noisyOutput <- capture.output(
         ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
       )
       testthat::expect_is(object = ras, class = "list")
       testthat::expect_true(file.exists(ras$targetFilePath))
-    }
-  }
+  #   }
+  # }
 })
 
 test_that("preProcess works, but gives a warning when supplying cacheTags", {
@@ -478,7 +479,6 @@ test_that("Test of using future and progress indicator for lrg files on Google D
   }
 })
 
-
 test_that("lightweight tests for preProcess code coverage", {
   skip_on_cran()
   testInit(c("sf", "terra"))
@@ -662,7 +662,6 @@ test_that("more nested file structures in zip; alsoExtract NA", {
   expect_false(all(.listFilesInArchive(zipName2) %in% files))
   expect_true(sum(.listFilesInArchive(zipName2) %in% files) == 1)
 })
-
 
 test_that("PR#358 if dwnld already exists, was missing nested paths", {
   skip_on_cran()
