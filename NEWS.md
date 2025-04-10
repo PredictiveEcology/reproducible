@@ -20,6 +20,9 @@ that are file-backed with pointers, such `terra::SpatRaster` class;
   `cacheId` prefix is removed on recovery from the cache, overwriting 
   any files with the same name.
   - extracting the functionName from a function had several edge cases did not work; these now work
+* To maintain as much compatibility with an other Cache database, while losing the more accurate digesting, 
+  a user can set `options(reproducible.v3 = FALSE)`. This will keep the behaviour where
+  lists are digested without their names. This will not affect the file-backed objects changes described above. 
 * `useMemoise` would work with file-backed objects, but only if the file-backed object 
 did not change after the caching (the pointer to the file was intact, but the file changed). 
 Now, memoising will copy file-backed information from disk
