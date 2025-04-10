@@ -40,23 +40,3 @@ test_that("test multiple cachePath", {
 
 })
 
-##########################
-test_that("test multiple cachePath with 1 of them a cloudCache", {
-  skip(message = "test cloudCache inside Cache -- Not fully written test")
-
-  testInit(libraries = "googledrive", needGoogleDriveAuth = TRUE)
-
-  newDir <- googledrive::drive_mkdir("testFolder")
-  on.exit(googledrive::drive_rm(googledrive::as_id(newDir$id), add = TRUE))
-
-  clearCache(ask = FALSE, cachePath = tmpCache)
-  cloudSyncCache(cloudFolderID = newDir$id, cachePath = tmpCache)
-  cloudCache(rnorm, 1, cloudFolderID = newDir$id, cachePath = tmpCache)
-  mess <- capture_messages(cloudCache(rnorm, 1,
-    cloudFolderID = newDir$id,
-    cachePath = tmpCache
-  ))
-  expect_true(all(grepl("local and cloud|loading cached result", mess)))
-
-  withr::local_options("reproducible.cachePath" = list(tmpdir, googledrive::as_id(newDir$id)))
-})

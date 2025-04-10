@@ -14,35 +14,20 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
   clearCache(x = tmpCache)
   googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
-  # if (isTRUE(tryCatch(googledrive::drive_ls(testsForPkgs), error = function(e) TRUE))) {
-  #   testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = testsForPkgs)))
-  #   on.exit(googledrive::drive_rm(testsForPkgsDir), add = TRUE)
-  # }
-  # on.exit({
-  #   try(googledrive::drive_rm(testsForPkgsDir))
-  #   try(googledrive::drive_rm(cloudFolderID))
-  #   try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpdir)))
-  #   try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpCache)))
-  # }, add = TRUE)
 
   testsForPkgs <- "testsForPkgs"
   tryCatch(googledrive::drive_ls(testsForPkgs), error = function(x)
     googledrive::drive_mkdir(name = testsForPkgs))
   newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = testsForPkgs)))
   cloudFolderID <- newDir
-  # on.exit(try(googledrive::drive_rm(cloudFolderID)), add = TRUE)
 
-  #
   # local absent, cloud absent
-  #
   mess1 <- capture_messages({
     a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
   })
   expect_true(any(grepl("Uploading", mess1)))
 
-  #
   # local present, cloud present
-  #
   mess2 <- capture_messages({
     a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
   })
@@ -51,11 +36,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   expect_false(all(grepl("uploaded", ignore.case = TRUE, mess2)))
   expect_false(all(grepl("download", mess2)))
 
-  #
   # local absent, cloud present
-  #
-  # kkkk <<- 1
-
   clearCache(userTags = .robustDigest(1), x = tmpCache, useCloud = FALSE)
   mess3 <- capture_messages({
     a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
@@ -70,9 +51,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   expect_false(any(grepl("Uploaded", mess3)))
   expect_true(any(grepl("Downloading", mess3)))
 
-  #
   # local present, cloud absent
-  #
   clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
   a1 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID, cachePath = tmpCache)
   mess4 <- capture_messages({
@@ -83,9 +62,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   expect_true(any(grepl("Uploading", mess4)))
   expect_false(any(grepl("Download", mess4)))
 
-  #
   # cloudFolderID missing
-  #
   reproducible::clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
 
   withr::local_options("reproducible.cloudFolderID" = NULL)

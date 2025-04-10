@@ -1320,7 +1320,7 @@ test_that("lightweight tests for code coverage", {
   )
 
   url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
-  #globalOutput <- capture.output({
+  globalOutput <- capture.output({
 
     checkPath(tmpdir, create = TRUE)
     checkSums <- .emptyChecksumsResult
@@ -1469,7 +1469,7 @@ test_that("lightweight tests for code coverage", {
     expect_true(identical(crs(a), crs(ras3)))
 
     # }
-  #})
+  })
     # sp::CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"))
 })
 
