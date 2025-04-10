@@ -14,8 +14,8 @@ opts <- options(
   warnPartialMatchArgs = TRUE, # This gives false positives for `raster::stack`
   warnPartialMatchAttr = TRUE,
   warnPartialMatchDollar = TRUE,
-  reproducible.cache2 = TRUE,
-  reproducible.useDBI = FALSE  # done TF  = c(691, 764.1), TT c(793,874), FF = c(875.5s, 876s), FT = c(1024.8,934)
+  reproducible.useCacheV3 = TRUE#,
+  #reproducible.useDBI = FALSE  # done TF  = c(691, 764.1), TT c(793,874), FF = c(875.5s, 876s), FT = c(1024.8,934)
 )
 
 # if (Sys.info()["user"] %in% "emcintir") {
@@ -41,7 +41,7 @@ if (isNamespaceLoaded("googledrive"))
 withr::defer(
   {
     if (wantMoreTests) {
-      print(paste0("getOption('reproducible.cache2') = ", getOption("reproducible.cache2")))
+      print(paste0("getOption('reproducible.useCacheV3') = ", getOption("reproducible.useCacheV3")))
       print(paste0("getOption('reproducible.rasterRead') = ", getOption("reproducible.rasterRead")))
       print(paste0("getOption('reproducible.runLargeFileTests') = ", getOption("reproducible.runLargeFileTests")))
       print(paste0("getOption('reproducible.useDBI') = ", getOption("reproducible.useDBI")))
@@ -58,7 +58,7 @@ withr::defer(
 )
 
 if (wantMoreTests) {
-  print(paste0("getOption('reproducible.cache2') = ", getOption("reproducible.cache2")))
+  print(paste0("getOption('reproducible.useCacheV3') = ", getOption("reproducible.useCacheV3")))
   print(paste0("getOption('reproducible.rasterRead') = ", getOption("reproducible.rasterRead")))
   print(paste0("getOption('reproducible.runLargeFileTests') = ", getOption("reproducible.runLargeFileTests")))
   print(paste0("getOption('reproducible.useDBI') = ", getOption("reproducible.useDBI")))

@@ -12,8 +12,9 @@ and modified `digest` of the arguments. These changes are not backwards compatib
 focused around deeply nested objects 
 that are file-backed with pointers, such `terra::SpatRaster` class;
 * `digest` changes include the following fixes:
-  - lists would be digested without their top-level names; thus two lists with 
-  exactly the same elements but with and without names would have the same digest
+  - `CacheDigest` which is used within `Cache` did not digest the names of the 
+  list of arguments passed. This did not affect `.robustDigest` of a normal list, which
+  keeps the names intact. 
   - file-backed objects were not correctly unique in the cache as they did not have
   the `cacheId` in the filename; now they will have the 
   `cacheId` prefixed on the file (so they sort alongside the main cache file). This 
@@ -21,14 +22,19 @@ that are file-backed with pointers, such `terra::SpatRaster` class;
   any files with the same name.
   - extracting the functionName from a function had several edge cases did not work; these now work
 * To maintain as much compatibility with an other Cache database, while losing the more accurate digesting, 
-  a user can set `options(reproducible.v3 = FALSE)`. This will keep the behaviour where
-  lists are digested without their names. This will not affect the file-backed objects changes described above. 
+  a user can set `options(reproducible.digestV3 = FALSE)`. This will keep the behaviour where
+  lists are digested without their names for `CacheDigest` and `Cache`. 
+  This will not affect the file-backed objects changes described above, which will ignore this
+  option. 
 * `useMemoise` would work with file-backed objects, but only if the file-backed object 
 did not change after the caching (the pointer to the file was intact, but the file changed). 
 Now, memoising will copy file-backed information from disk
 each time it "retrieves a file-backed object from memory". This will result in slower
 memoising than previously. However, it will be robust to downstream changes to the file.
 * new function `purgeChecksums` to allow user to manually purge a file from CHECKSUMS.txt
+* new options to help with backwards compatibility:
+  - `reproducible.useCacheV3`: default = TRUE to use the new Cache source code
+  - `reproducible.digestV3`: default = TRUE to use the new Cache digest algorithms
 
 # reproducible 2.1.2
 

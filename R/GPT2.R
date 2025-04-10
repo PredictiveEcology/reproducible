@@ -30,8 +30,9 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   # Capture and match call so it can be manipulated
   callList <- matchCall2(sys.function(0), sys.call(0), envir = .callingEnv, FUN = FUN)
 
-  if (isFALSE(getOption("reproducible.cache2"))) {
-    callList$call[[1]] <- substitute(Cache2)
+  if (isFALSE(getOption("reproducible.useCacheV3"))) {
+    # This run CacheV2 which is the OLD CACHE FUNCTION
+    callList$call[[1]] <- substitute(CacheV2)
     return(eval(callList$call, envir = .callingEnv))
   }
 
@@ -1260,9 +1261,9 @@ optionsSetForCache <- function(drv = NULL, conn = NULL, envir = parent.frame(1),
       reproducible.useDBI = FALSE
     )
   }
-  if (!isFALSE(getOption("reproducible.cache2")))
+  if (!isFALSE(getOption("reproducible.useCacheV3")))
     opt2 <- options(
-      reproducible.cache2 = TRUE
+      reproducible.useCacheV3 = TRUE
     )
 }
 

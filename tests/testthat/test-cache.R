@@ -1826,7 +1826,7 @@ test_that("lightweight tests for code coverage", {
   withr::local_options(reproducible.cachePath = tmpdir)
 
   expect_error(Cache(), "requires")
-  if (getOption("reproducible.cache2")) {
+  if (getOption("reproducible.useCacheV3")) {
     fn <- expect_error
   } else {
       fn <- expect_message
@@ -1885,7 +1885,7 @@ test_that("test future", {
 })
 
 test_that("test failed Cache recovery -- message to delete cacheId", {
-  if (!useDBI() || getOption("reproducible.cache2")) skip("Not relevant for multipleDBfiles or new Cache")
+  if (!useDBI() || getOption("reproducible.useCacheV3")) skip("Not relevant for multipleDBfiles or new Cache")
   testInit(opts = list("reproducible.useMemoise" = FALSE))
 
   b <- Cache(rnorm, 1, cachePath = tmpdir)
@@ -1930,7 +1930,7 @@ test_that("test pre-creating conn", {
 })
 
 test_that("test defunct arguments", {
-  skip_if_not(getOption("reproducible.cache2"))
+  skip_if_not(getOption("reproducible.useCacheV3"))
   testInit()
 
   # Manual testing

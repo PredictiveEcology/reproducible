@@ -356,7 +356,7 @@ utils::globalVariables(c(
 #'
 #' @example inst/examples/example_Cache.R
 #'
-Cache2 <-
+CacheV2 <-
   function(FUN, ..., notOlderThan = NULL,
            .objects = NULL, .cacheExtra = NULL, .functionName = NULL,
            outputObjects = NULL, # nolint
@@ -1845,7 +1845,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   # preDigest[["._list"]] <- NULL # don't need this for CacheDigest
 
   # don't unname -- Eliot Jan 13, 2025 -- this keeps the outputHash
-  if (getOption("reproducible.v3", TRUE)) {
+  if (getOption("reproducible.digestV3", TRUE)) {
     res <- .doDigest(preDigest, algo = algo, ...)
   } else {
     res <- .robustDigest(unname(sort(unlist(preDigest))), algo = algo, quick = TRUE, ...)

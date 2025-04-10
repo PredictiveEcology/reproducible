@@ -109,8 +109,8 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
 
   out <- list()
 
-  if (isFALSE(getOption("reproducible.cache2"))) {
-    testthat::local_mocked_bindings(Cache = reproducible:::Cache2, .env = pf)
+  if (isFALSE(getOption("reproducible.useCacheV3"))) {
+    testthat::local_mocked_bindings(Cache = reproducible:::CacheV2, .env = pf)
     # withr::local_options("reproducible.useDBI" = FALSE, .local_envir = pf)
   }
 
