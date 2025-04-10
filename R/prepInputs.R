@@ -448,7 +448,7 @@ extractFromArchive <- function(archive,
                                verbose = getOption("reproducible.verbose", 1),
                                .tempPath, ...) {
   if (!is.null(archive)) {
-    if (!(any(c(knownInternalArchiveExtensions, knownSystemArchiveExtensions) %in% fileExt(archive)))) {
+    if (!(any(c(knownArchiveExtensions) %in% fileExt(archive)))) {
       stop(
         "Archives of type ", fileExt(archive), " are not currently supported. ",
         "Try extracting manually then placing extracted files in ", destinationPath
@@ -806,7 +806,6 @@ extractFromArchive <- function(archive,
                                   absolutePrefix = getOption("reproducible.destinationPath", "."),
                                   archive = "",
                                   verbose = getOption("reproducible.verbose", 1), .tempPath) {
-  if (exists("aaaa", envir = .GlobalEnv)) browser()
   argList <- list(files = files)
   argList$files <- makeRelative(argList$files, absolutePrefix)
 
@@ -1371,7 +1370,7 @@ sevenzName <- "7z"
 knownArchivePkgExtensions <- c("zip", "tar", "tar.gz", "gz", "rar", sevenzName, "cab")
 knownInternalArchiveExtensions <- c("zip", "tar", "tar.gz", "gz")
 # knownSystemArchiveExtensions <- c("rar", sevenzName, "unrar")
-knownSystemArchiveExtensions <- c()
+knownSystemArchiveExtensions <- c("rar", sevenzName)
 knownArchiveExtensions <- unique(c(knownInternalArchiveExtensions, knownSystemArchiveExtensions,
                             knownArchivePkgExtensions))
 
