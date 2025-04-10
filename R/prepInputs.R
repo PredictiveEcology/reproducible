@@ -1147,13 +1147,17 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     if (file.exists(archive[1])) {
       if (!needSystemCall) {
         if (identical(archive::archive_extract, funWArgs$fun)) {
-          filesInArchive <- archive::archive(archive[1])$path
+          filesInArchive <- archive::archive(archive[1])
         } else {
           filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
         }
-        if ("Name" %in% names(filesInArchive)) {
+        nams <- names(filesInArchive)
+        if ("Name" %in% nams) {
           # for zips, rm directories (length = 0)
           filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
+        } else if ("path" %in% nams) {
+          # from archive::archive
+          filesInArchive <- filesInArchive[filesInArchive$size != 0, ]$path
         } else {
           # untar & archive::archive
           filesInArchive
