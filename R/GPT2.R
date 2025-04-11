@@ -314,6 +314,10 @@ check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functio
   # Check if the result is already cached
   connOrig <- conn
   conns <- conn
+  if (!is.list(conns)) {
+    conns <- list(conn)
+    names(conns) <- cachePaths
+  }
 
   for (cachePath in cachePaths) {
     cache_file <- CacheStoredFile(cachePath, cache_key)
@@ -326,7 +330,7 @@ check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functio
       if (cachePath == cachePaths[[1]] || NROW(inReposPoss$isInRepo)) {
         # keep important parts if it is first one, or if it has the object in the cacheRepo
         # inRepos <- inReposPoss
-        conn <- conns[cachePath]
+        conn <- conns[[cachePath]] # keep it as a list so places where it needs the name work
         if (is.null(connOrig)) # don't disconnect if conn was user passed
           # if this is >1st cachePath, then the db will already be disconnected; suppressWarnings
           on.exit2(suppressWarnings(DBI::dbDisconnect(conn)), envir = envir)

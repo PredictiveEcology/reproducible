@@ -2364,6 +2364,8 @@ searchInRepos <- function(cachePaths, outputHash, drv, conn) {
   while (tries <= length(cachePaths)) {
     repo <- cachePaths[[tries]]
     if (useDBI()) {
+      if (is.list(conn))
+        conn <- conn[[cachePaths[1]]]
       dbTabNam <- CacheDBTableName(repo, drv = drv)
 
       isInRepo <- getHashFromDB(tries, conn, drv, repo, dbTabNam, outputHash)
