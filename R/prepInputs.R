@@ -777,7 +777,7 @@ extractFromArchive <- function(archive,
       if (mustUseArchive && canUseArchive %in% FALSE) {
         stop("Please install.packages('archive') to extract files from \n", archive)
       }
-      if (useArchive) {
+      if (useArchive && .requireNamespace("archive")) {
         fun <- archive::archive_extract
       } else { # base R or system call functions
         if (ext == "zip") {
@@ -1145,7 +1145,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   if (!is.null(funWArgs$fun)) {
     if (file.exists(archive[1])) {
       if (!needSystemCall) {
-        if (identical(archive::archive_extract, funWArgs$fun)) {
+        if (.requireNamespace("archive") && identical(archive::archive_extract, funWArgs$fun)) {
           filesInArchive <- archive::archive(archive[1])
         } else {
           filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
@@ -1255,7 +1255,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   } else {
     ""
   }
-  if (!(isWindows())) { ## TODO: macOS ?? #266
+  if (!(isWindows() && !isMac())) { ## TODO: macOS ?? #266
     if (grepl("7z", extractSystemCallPath)) {
       SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE)
       SevenZrarExists <- grepl(SevenZrarExists, pattern = "installed")

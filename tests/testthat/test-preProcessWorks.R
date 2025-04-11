@@ -184,12 +184,15 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
     #   )
     # } else {
       # aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
-      noisyOutput <- capture.output(
-        ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-      )
-      testthat::expect_is(object = ras, class = "list")
-      testthat::expect_true(file.exists(ras$targetFilePath))
-    # }
+  if (isWindows() && getRversion() < "4.3")
+    skip("archive pkg on Windows 4.2.3 fails on rar")
+
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  )
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+  # }
   # }
 })
 
@@ -200,27 +203,30 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
   url <- theRasterTestRar
 
   # if (!is(extractSystemCallPath, "try-error")) {
-    # if (is.null(extractSystemCallPath)) {
-    #   noisyOutput <- capture.output(
-    #     expect_error({
-    #       ras <- reproducible::preProcess(
-    #         url = url, targetFile = theRasterTestFilename(suff = "tif"),
-    #         destinationPath = tmpdir
-    #       )
-    #     })
-    #   )
-    # } else {
-      wd <- getwd()
-      noisyOutput <- capture.output(
-        ras <- reproducible::preProcess(
-          url = url, targetFile = theRasterTestFilename(suff = "tif"),
-          destinationPath = tmpdir
-        )
-      )
-      testthat::expect_is(object = ras, class = "list")
-      testthat::expect_true(file.exists(ras$targetFilePath))
-      expect_equal(wd, getwd()) # Test that working directory is restored after unrar call
-    # }
+  # if (is.null(extractSystemCallPath)) {
+  #   noisyOutput <- capture.output(
+  #     expect_error({
+  #       ras <- reproducible::preProcess(
+  #         url = url, targetFile = theRasterTestFilename(suff = "tif"),
+  #         destinationPath = tmpdir
+  #       )
+  #     })
+  #   )
+  # } else {
+  if (isWindows() && getRversion() < "4.3")
+    skip("archive pkg on Windows 4.2.3 fails on rar")
+
+  wd <- getwd()
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(
+      url = url, targetFile = theRasterTestFilename(suff = "tif"),
+      destinationPath = tmpdir
+    )
+  )
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+  expect_equal(wd, getwd()) # Test that working directory is restored after unrar call
+  # }
   # }
 })
 
@@ -233,17 +239,19 @@ test_that("preProcess works when provides url, archive and destinationPath for a
 
   # if (!is(extractSystemCallPath, "try-error")) {
   #   if (is.null(extractSystemCallPath)) {
-    #   noisyOutput <- capture.output(
-    #     expect_error({
-    #       ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
-    #     })
-    #   )
-    # } else {
-      noisyOutput <- capture.output(
-        ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
-      )
-      testthat::expect_is(object = ras, class = "list")
-      testthat::expect_true(file.exists(ras$targetFilePath))
+  #   noisyOutput <- capture.output(
+  #     expect_error({
+  #       ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
+  #     })
+  #   )
+  # } else {
+  if (isWindows() && getRversion() < "4.3")
+    skip("archive pkg on Windows 4.2.3 fails on rar")
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
+  )
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
   #   }
   # }
 })

@@ -2052,6 +2052,7 @@ test_that("test prepInputs url when a gdrive directory", {
 
 test_that("test prepInputs with zip file with hidden files", {
   testInit()
+  skip_on_os("mac")
   withr::local_dir(tmpdir)
   a <- 1
   theFile <- "__MACOSX/._theFile.txt"

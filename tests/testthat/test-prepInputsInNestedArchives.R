@@ -50,8 +50,7 @@ test_that("prepInputs in a two files double nested zip file, passing targetFile"
   expect_true(exists("testZip4"))
 })
 
-test_that(
-  paste0(
+test_that(paste0(
     "prepInputs in a two files double nested zip file, with the wanted file in",
     "the second layer, and a shapefile in the first, not specifying the targetFile"
   ),
@@ -121,14 +120,16 @@ test_that(
     #   })
     # } else {
 
-      noisyOutput <- capture.output({
-        testRar <- reproducible::prepInputs(
-          url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
-          destinationPath = tmpdir
-        )
-      })
-      expect_true(exists("testRar"))
-      expect_is(testRar, rasterType())
+    if (isWindows() && getRversion() < "4.3")
+      skip("archive pkg on Windows 4.2.3 fails on rar")
+    noisyOutput <- capture.output({
+      testRar <- reproducible::prepInputs(
+        url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
+        destinationPath = tmpdir
+      )
+    })
+    expect_true(exists("testRar"))
+    expect_is(testRar, rasterType())
     # }
   }
 )
@@ -157,15 +158,17 @@ test_that(
     #     })
     #   )
     # } else {
-      noisyOutput <- capture.output({
-        testRar2 <- reproducible::prepInputs(
-          url = url,
-          targetFile = "rasterTOtestRAR.tif",
-          destinationPath = tmpdir
-        )
-      })
-      expect_true(exists("testRar2"))
-      expect_is(testRar2, rasterType())
+    if (isWindows() && getRversion() < "4.3")
+      skip("archive pkg on Windows 4.2.3 fails on rar")
+    noisyOutput <- capture.output({
+      testRar2 <- reproducible::prepInputs(
+        url = url,
+        targetFile = "rasterTOtestRAR.tif",
+        destinationPath = tmpdir
+      )
+    })
+    expect_true(exists("testRar2"))
+    expect_is(testRar2, rasterType())
     # }
   }
 )
@@ -193,16 +196,19 @@ test_that(paste0(
   #     })
   #   )
   # } else {
-    noisyOutput <- capture.output({
-      testRar3 <- reproducible::prepInputs(
-        url = url,
-        archive = "nestedRarTxtFiles.rar",
-        targetFile = "rasterTOtestRAR.tif",
-        destinationPath = tmpdir
-      )
-    })
-    expect_true(exists("testRar3"))
-    expect_is(testRar3, rasterType())
+  if (isWindows() && getRversion() < "4.3")
+    skip("archive pkg on Windows 4.2.3 fails on rar")
+
+  noisyOutput <- capture.output({
+    testRar3 <- reproducible::prepInputs(
+      url = url,
+      archive = "nestedRarTxtFiles.rar",
+      targetFile = "rasterTOtestRAR.tif",
+      destinationPath = tmpdir
+    )
+  })
+  expect_true(exists("testRar3"))
+  expect_is(testRar3, rasterType())
   # }
 })
 
