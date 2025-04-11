@@ -780,7 +780,6 @@ extractFromArchive <- function(archive,
       if (useArchive && .requireNamespace("archive")) {
         fun <- archive::archive_extract
       } else { # base R or system call functions
-        browser()
         if (ext == "zip") {
           fun <- unzip
           args <- c(args, list(junkpaths = FALSE))
