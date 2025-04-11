@@ -326,7 +326,7 @@ check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functio
       if (cachePath == cachePaths[[1]] || NROW(inReposPoss$isInRepo)) {
         # keep important parts if it is first one, or if it has the object in the cacheRepo
         # inRepos <- inReposPoss
-        conn <- conns[[cachePath]]
+        conn <- conns[cachePath]
         if (is.null(connOrig)) # don't disconnect if conn was user passed
           # if this is >1st cachePath, then the db will already be disconnected; suppressWarnings
           on.exit2(suppressWarnings(DBI::dbDisconnect(conn)), envir = envir)
