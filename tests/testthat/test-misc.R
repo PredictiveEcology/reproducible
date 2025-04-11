@@ -127,7 +127,8 @@ test_that("unrar is working as expected", {
   out <- try(utils::zip(zipfile = rarPath, files = tmpfile, flags = "-q")) # this should only be relevant if system can unrar
   if (!is(out, "try-error")) {
     unrar <- .whichExtractFn(archive = rarPath, args = "")
-    expect_true(identical(unrar$fun, archive::archive_extract))
+    if (.requireNamespace("archive"))
+      expect_true(identical(unrar$fun, archive::archive_extract))
     suppressWarnings(
       expect_error(.callArchiveExtractFn(unrar$fun, files = "", args = list(exdir = tmpCache)))
     )
