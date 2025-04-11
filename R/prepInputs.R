@@ -1255,7 +1255,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   } else {
     ""
   }
-  if (!(isWindows())) { ## TODO: macOS ?? #266
+  if (!(isWindows() && !isMac())) { ## TODO: macOS ?? #266
     if (grepl("7z", extractSystemCallPath)) {
       SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE)
       SevenZrarExists <- grepl(SevenZrarExists, pattern = "installed")
