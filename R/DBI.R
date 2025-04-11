@@ -173,10 +173,10 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   if (!useDBI()) {
     dtFile <- saveDBFileSingle(dt = dt, cachePath, cacheId)
   } else {
-    fl <- "/home/emcintir/tmp/usingDBI.rds"
-    usingDBI <- if (file.exists(fl)) readRDS(fl) else 1
-    usingDBI <- ifelse(length(usingDBI) < 1, 1, usingDBI  + 1)
-    saveRDS(usingDBI, file = fl)
+    # fl <- "/home/emcintir/tmp/usingDBI.rds"
+    # usingDBI <- if (file.exists(fl)) readRDS(fl) else 1
+    # usingDBI <- ifelse(length(usingDBI) < 1, 1, usingDBI  + 1)
+    # saveRDS(usingDBI, file = fl)
     a <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
       DBI::dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)
     ))
