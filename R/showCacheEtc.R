@@ -439,6 +439,13 @@ setMethod(
                       pattern = paste(CacheDBFileSingleExt(format = .cacheSaveFormats), collapse = "|"),
                       full.names = TRUE
             )
+
+            # For `options("reproducible.savePreDigest")`
+            preDigest <- startsWith(basename(dd), "preDigest")
+            if (isTRUE(any(preDigest))) {
+              dd <- dd[preDigest %in% FALSE]
+            }
+
             rbindlist(fill = TRUE, lapply(dd, function(fil) {
               filOutside <<- fil
               loadFile(fil)}))
