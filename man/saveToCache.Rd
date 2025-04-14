@@ -12,7 +12,6 @@ saveToCache(
   userTags,
   cacheId,
   linkToCacheId = NULL,
-  lsStr = NULL,
   verbose = getOption("reproducible.verbose")
 )
 }
@@ -36,8 +35,6 @@ will be added to the Cache so that this entry in the Cache can be found using
 \item{linkToCacheId}{Optional. If a \code{cacheId} is provided here, then a \code{file.link}
 will be made to the file with that \code{cacheId} name in the cache repo.
 This is used when identical outputs exist in the cache. This will save disk space.}
-
-\item{lsStr}{A list from \code{ls.str}}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.

@@ -54,21 +54,28 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   times <- list()
   times$CacheDigestStart <- Sys.time()
 
+  # Construct the full file path for the cache directory and possible file
+  cachePaths <- getCacheRepos(cachePath, callList$new_call[-1], verbose = verbose)
+
   # Override keyFull$key if user has specified with cacheId
   if (!is.null(cacheId) && !is.na(cacheId)) {
     keyFull <- list()
     keyFull$key <- cacheIdOverride(cacheId, keyFull$key, callList$.functionName, verbose)
   } else {
-    keyFull <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
-                        length, algo, quick, classOptions, times$CacheDigestStart, verbose = verbose)
+    toDigest <- doDigestPrepare(callList$new_call, omitArgs, .cacheExtra)
+    keyFull <- doDigest(toDigest, callList$.functionName, .objects,
+                       length, algo, quick, classOptions, times$CacheDigestStart,
+                       verbose = verbose)
+    # keyFull2 <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
+    #                     length, algo, quick, classOptions, times$CacheDigestStart,
+    #                     cachePath = cachePaths[[1]], verbose = verbose)
+    # if (!identical(keyFull2, keyFull)) browser()
   }
 
   # If debugCache is "quick", short circuit after doDigest
   if (isTRUE(!is.na(pmatch(debugCache, "quick"))))
     return(list(hash = keyFull$preDigest, content = callList$func_call))
 
-  # Construct the full file path for the cache directory and possible file
-  cachePaths <- getCacheRepos(cachePath, callList$new_call[-1], verbose = verbose)
   # cachePath <- cachePaths[[1]]
   CacheDBFileCheckAndCreate(cachePaths[[1]], drv, conn, verbose = verbose) # checks that we are using multiDBfile backend
 
@@ -145,19 +152,42 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                                                 verbose = verbose, ...)
 
   # ## Save to Cache; including to Memoise location; including metadata ## #
-  lsStr <- utils::ls.str(attr(callList$new_call,".Cache")$args_w_defaults)
-  lsStr <- capture.output(print(lsStr, max.level = 1))
-
   times$SaveStart <- Sys.time()
+  elapsedTimeFUN <- difftime(times$SaveStart, times$EvaluateStart, units = "secs")
+
+  # update metadata with other elements including elapsedTime for evaluation
+  metadata <- metadata_define_postEval(metadata, keyFull$key, outputFromEvaluate,
+                                       userTags, .objects, length, algo, quick,
+                                       classOptions, elapsedTimeFUN)
+
   outputFromEvaluate <- doSaveToCache(outputFromEvaluate, metadata, cachePaths, callList$func,
                                       .objects, length, algo, quick, classOptions,
                                       cache_file, userTags, callList$.functionName, debugCache,
                                       keyFull, outputObjects = outputObjects,
-                                      useCloud, cloudFolderID, gdriveLs, lsStr = lsStr,
+                                      useCloud, cloudFolderID, gdriveLs,
                                       func_call = callList$func_call, drv = drv, conn = conn,
+                                      useMemoise = getOption("reproducible.useMemoise", FALSE),
                                       verbose = verbose,
                                       times$SaveStart, times$EvaluateStart)
   times$SaveEnd <- Sys.time()
+  if (getOption("reproducible.savePreDigest", FALSE)) {
+    keyFullPreDigest <- keyFull
+    keyFullPreDigest$key <- paste0("preDigest_", keyFullPreDigest$key)
+    times$SavePreDigestStart <- Sys.time()
+    locked <- lockFile(cachePaths[[1]], keyFullPreDigest$key, verbose = verbose)
+
+    toDigestOut <- doSaveToCache(toDigest, metadata, cachePaths, callList$func,
+                                 .objects, length, algo, quick, classOptions,
+                                 cache_file, userTags, callList$.functionName, debugCache,
+                                 keyFullPreDigest, outputObjects = outputObjects,
+                                 useCloud = FALSE,
+                                 cloudFolderID = NULL, gdriveLs = NULL,
+                                 func_call = callList$func_call, drv = drv, conn = conn,
+                                 useMemoise = FALSE, # not this preDigest one
+                                 verbose = verbose,
+                                 times$SavePreDigestStart, times$SaveStart)
+    times$SaveEnd <- Sys.time()
+  }
   verboseCacheDFAll(verbose, callList$.functionName, times)
 
   return(outputFromEvaluate)
@@ -588,15 +618,14 @@ metadata_define_preEval <- function(detailed_key, func_name, userTags,
     userTags <- ll
   }
   userTagsList <- c(
-    list(FUN = func_name),
+    list(func_name) |> setNames(nm = .cacheTagsFirstGroup[1]),
     userTags,
-    list(accessed = sysTimeForCacheToChar()),
-    list(inCloud = isTRUE(useCloud)),
-    list(elapsedTimeDigest = format(elapsedTimeCacheDigest, units = "secs")),
-    list(preDigest = tagKey)
+    list(sysTimeForCacheToChar()) |> setNames(nm = .cacheTagsFirstGroup[3]),
+    list(isTRUE(useCloud)) |> setNames(nm = .cacheTagsFirstGroup[4]),
+    list(format(elapsedTimeCacheDigest, units = "secs")) |> setNames(nm = .cacheTagsFirstGroup[5]),
+    list(tagKey) |> setNames(nm = .cacheTagsFirstGroup[6])
   )
   names(userTagsList)[1] <- "function"
-
   cache_key <- detailed_key$key
   metadata <- userTagsListToDT(cache_key, userTagsList)
   return(metadata)
@@ -605,8 +634,16 @@ metadata_define_preEval <- function(detailed_key, func_name, userTags,
 metadata_define_postEval <- function(metadata, cacheId, outputToSave, userTags,
                                      .objects, length, algo, quick, classOptions,
                                      elapsedTimeFUN) {
-
-  objSize <- if (getOption("reproducible.objSize", TRUE)) sum(objSize(outputToSave)) else NA
+  objSize <- NA
+  if (getOption("reproducible.objSize", TRUE)) {
+    hasPointer <- usesPointer(outputToSave)
+    if (any(unlist(hasPointer))) {
+      os <- objSize(outputToSave, recursive = TRUE)
+    } else {
+      os <- objSize(outputToSave)
+    }
+    objSize <- sum(os)
+  }
 
   resultHash <- ""
   if (isTRUE(objSize > .objectSizeMinForBig)) {
@@ -617,12 +654,15 @@ metadata_define_postEval <- function(metadata, cacheId, outputToSave, userTags,
     )$outputHash
   }
   fns <- Filenames(outputToSave)
+  # tagsFromDefaults <- .cacheTagsDefault
+  # .cacheTagsSecondGroup <- c("class", "object.size", "fromDisk", "resultHash", "elapsedTimeFirstRun")
+
   userTagsList <- c(
-    list(class = class(outputToSave)[1]),
-    list(object.size = format(as.numeric(objSize))),
-    list(fromDisk = isTRUE(any(nchar(fns) > 0))),
-    list(resultHash = resultHash),
-    list(elapsedTimeFirstRun = format(elapsedTimeFUN, units = "secs"))
+    list(class(outputToSave)[1]) |> setNames(nm = .cacheTagsSecondGroup[1]),
+    list(format(as.numeric(objSize))) |> setNames(nm = .cacheTagsSecondGroup[2]),
+    list(isTRUE(any(nchar(fns) > 0))) |> setNames(nm = .cacheTagsSecondGroup[3]),
+    list(resultHash) |> setNames(nm = .cacheTagsSecondGroup[4]),
+    list(format(elapsedTimeFUN, units = "secs")) |> setNames(nm = .cacheTagsSecondGroup[5])
   )
   cache_key <- cacheId
   metadataNew <- userTagsListToDT(cache_key, userTagsList)
@@ -892,7 +932,7 @@ convertCallWithSquigglyBraces <- function(call, usesDots) {
 }
 
 wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, # userTags,
-                            preDigest, lsStr, .functionName, outputObjects, drv, conn, verbose) {
+                            preDigest, .functionName, outputObjects, drv, conn, verbose) {
   cacheIdIdentical <- cache_Id_Identical(metadata, cachePath, cache_key)
   linkToCacheId <- if (!is.null(cacheIdIdentical)) filePathSansExt(basename(cacheIdIdentical))  else NULL
   outputToSave <- .wrap(outputFromEvaluate, cachePath = cachePath, preDigest = preDigest,
@@ -902,7 +942,7 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
   userTags <- paste0(metadata$tagKey, ":", metadata$tagValue)
   fs <- saveToCache(cachePath = cachePath, # drv = NULL, conn = NULL,
                     obj = outputToSave, verbose = verbose, # cache_file[1],
-                    userTags = userTags, linkToCacheId = linkToCacheId, lsStr = lsStr,
+                    userTags = userTags, linkToCacheId = linkToCacheId,
                     drv = drv, conn = conn,
                     cacheId = cache_key)
   .message$Saved(cachePath, cache_key, functionName = .functionName, verbose = verbose)
@@ -912,17 +952,17 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
 doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
                           .objects, length, algo, quick, classOptions,
                           cache_file, userTags, .functionName, debugCache,
-                          detailed_key, func_call, lsStr, outputObjects,
+                          detailed_key, func_call, outputObjects,
                           useCloud, cloudFolderID, gdriveLs,
-                          drv, conn,
+                          drv, conn, useMemoise = getOption("reproducible.useMemoise", FALSE),
                           verbose, timeSaveStart, timeEvaluateStart) {
 
-  elapsedTimeFUN <- difftime(timeSaveStart, timeEvaluateStart, units = "secs")
-
-  # update metadata with other elements including elapsedTime for evaluation
-  metadata <- metadata_define_postEval(metadata, detailed_key$key, outputFromEvaluate,
-                                       userTags, .objects, length, algo, quick,
-                                       classOptions, elapsedTimeFUN)
+  # elapsedTimeFUN <- difftime(timeSaveStart, timeEvaluateStart, units = "secs")
+  #
+  # # update metadata with other elements including elapsedTime for evaluation
+  # metadata <- metadata_define_postEval(metadata, detailed_key$key, outputFromEvaluate,
+  #                                      userTags, .objects, length, algo, quick,
+  #                                      classOptions, elapsedTimeFUN)
 
   # Can't save NULL with attributes
   if (is.null(outputFromEvaluate)) outputFromEvaluate <- "NULL"
@@ -931,11 +971,11 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
 
   metadata <- wrapSaveToCache(outputFromEvaluate, metadata, detailed_key$key, cachePaths[[1]],
                               # userTags = paste0(metadata$tagKey, ":", metadata$tagValue),
-                              lsStr = lsStr, outputObjects = outputObjects,
+                              outputObjects = outputObjects,
                               preDigest = detailed_key$preDigest, .functionName, drv, conn, verbose)
 
   # Memoize the outputFromEvaluate by saving it in RAM
-  if (getOption("reproducible.useMemoise", FALSE)) {
+  if (isTRUE(useMemoise)) {
     assign(detailed_key$key, outputFromEvaluate, envir = memoiseEnv(cachePaths[[1]]))
   }
 
@@ -954,42 +994,43 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
 }
 
 
-doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
-                     length, algo, quick, classOptions, timeCacheDigestStart, verbose) {
-  # Compile a list of elements to digest
-  toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
-
-  # Deal with .objects -- wait these are dealt with by `.robustDigest`
-  # toDigest <- rmDotObjectsInList(toDigest, .objects)
-  # .objects <- dotObjectsToNULLInList(toDigest, .objects) # if .objects used in previous, set to NULL here
-
-  toDigest$.FUN <- attr(new_call, ".Cache")$method
-  # Deal with omitArgs by removing elements from the toDigest list of objects to digest
-  if (!is.null(omitArgs)) {
-    if (any("FUN" %in% omitArgs))
-      omitArgs <- c(".FUN", omitArgs)
-    toDigest[omitArgs] <- NULL
-  }
-  # Deal with .cacheExtra by adding it to the list of objects to digest
-  if (!is.null(.cacheExtra))
-    toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
-  detailed_key <- CacheDigest(toDigest,
-                              .functionName = .functionName,
-                              .objects = .objects,
-                              length = length, algo = algo, quick = quick,
-                              classOptions = classOptions,
-                              calledFrom = "Cache"
-  )
-  diTi <- difftime(Sys.time(), timeCacheDigestStart, units = "sec")
-  if (diTi > 5) {
-    messageCache("Object digesting for ", .messageFunctionFn(.functionName)," took: ", format(diTi, digits = 2))
-  }
-  verboseCacheMessage(detailed_key$preDigest, .functionName, timeCacheDigestStart, quick = quick,
-                   modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
-
-  names(detailed_key)[[1]] <- "key"
-  detailed_key
-}
+# doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
+#                      length, algo, quick, classOptions, timeCacheDigestStart,
+#                      cachePath, verbose) {
+#   # Compile a list of elements to digest
+#   toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
+#
+#   # Deal with .objects -- wait these are dealt with by `.robustDigest`
+#   # toDigest <- rmDotObjectsInList(toDigest, .objects)
+#   # .objects <- dotObjectsToNULLInList(toDigest, .objects) # if .objects used in previous, set to NULL here
+#
+#   toDigest$.FUN <- attr(new_call, ".Cache")$method
+#   # Deal with omitArgs by removing elements from the toDigest list of objects to digest
+#   if (!is.null(omitArgs)) {
+#     if (any("FUN" %in% omitArgs))
+#       omitArgs <- c(".FUN", omitArgs)
+#     toDigest[omitArgs] <- NULL
+#   }
+#   # Deal with .cacheExtra by adding it to the list of objects to digest
+#   if (!is.null(.cacheExtra))
+#     toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
+#   detailed_key <- CacheDigest(toDigest,
+#                               .functionName = .functionName,
+#                               .objects = .objects,
+#                               length = length, algo = algo, quick = quick,
+#                               classOptions = classOptions,
+#                               calledFrom = "Cache"
+#   )
+#   diTi <- difftime(Sys.time(), timeCacheDigestStart, units = "sec")
+#   if (diTi > 5) {
+#     messageCache("Object digesting for ", .messageFunctionFn(.functionName)," took: ", format(diTi, digits = 2))
+#   }
+#   verboseCacheMessage(detailed_key$preDigest, .functionName, timeCacheDigestStart, quick = quick,
+#                    modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
+#
+#   names(detailed_key)[[1]] <- "key"
+#   detailed_key
+# }
 
 #' Remove `quote` and determine if call uses `...`
 #'
@@ -1298,3 +1339,62 @@ evalTheFunAndAddChanged <- function(callList, keyFull, outputObjects, length, al
 
 
 .dtFileMainCols <- c("cacheId", "tagKey", "tagValue", "createdDate")
+
+doDigestPrepare <- function(new_call, omitArgs, .cacheExtra) {
+  toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
+
+  # Deal with .objects -- wait these are dealt with by `.robustDigest`
+  # toDigest <- rmDotObjectsInList(toDigest, .objects)
+  # .objects <- dotObjectsToNULLInList(toDigest, .objects) # if .objects used in previous, set to NULL here
+
+  toDigest$.FUN <- attr(new_call, ".Cache")$method
+  # Deal with omitArgs by removing elements from the toDigest list of objects to digest
+  if (!is.null(omitArgs)) {
+    if (any("FUN" %in% omitArgs))
+      omitArgs <- c(".FUN", omitArgs)
+    toDigest[omitArgs] <- NULL
+  }
+  # Deal with .cacheExtra by adding it to the list of objects to digest
+  if (!is.null(.cacheExtra))
+    toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
+  toDigest
+}
+
+
+
+# Compile a list of elements to digest
+# toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
+#
+# # Deal with .objects -- wait these are dealt with by `.robustDigest`
+# # toDigest <- rmDotObjectsInList(toDigest, .objects)
+# # .objects <- dotObjectsToNULLInList(toDigest, .objects) # if .objects used in previous, set to NULL here
+#
+# toDigest$.FUN <- attr(new_call, ".Cache")$method
+# # Deal with omitArgs by removing elements from the toDigest list of objects to digest
+# if (!is.null(omitArgs)) {
+#   if (any("FUN" %in% omitArgs))
+#     omitArgs <- c(".FUN", omitArgs)
+#   toDigest[omitArgs] <- NULL
+# }
+# # Deal with .cacheExtra by adding it to the list of objects to digest
+# if (!is.null(.cacheExtra))
+#   toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
+doDigest <- function(toDigest, .functionName, .objects, length, algo, quick,
+                      classOptions, timeCacheDigestStart, verbose) {
+  detailed_key <- CacheDigest(toDigest,
+                              .functionName = .functionName,
+                              .objects = .objects,
+                              length = length, algo = algo, quick = quick,
+                              classOptions = classOptions,
+                              calledFrom = "Cache"
+  )
+  diTi <- difftime(Sys.time(), timeCacheDigestStart, units = "sec")
+  if (diTi > 5) {
+    messageCache("Object digesting for ", .messageFunctionFn(.functionName)," took: ", format(diTi, digits = 2))
+  }
+  verboseCacheMessage(detailed_key$preDigest, .functionName, timeCacheDigestStart, quick = quick,
+                      modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
+
+  names(detailed_key)[[1]] <- "key"
+  detailed_key
+}
