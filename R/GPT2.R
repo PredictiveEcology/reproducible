@@ -172,7 +172,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   times$SaveEnd <- Sys.time()
   if (getOption("reproducible.savePreDigest", FALSE)) {
     keyFullPreDigest <- keyFull
-    keyFullPreDigest$key <- paste0("preDigest_", keyFullPreDigest$key)
+    keyFullPreDigest$key <- paste0(.txtPreDigest, "_", keyFullPreDigest$key)
     times$SavePreDigestStart <- Sys.time()
     locked <- lockFile(cachePaths[[1]], keyFullPreDigest$key, verbose = verbose)
 
@@ -180,9 +180,9 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                                  .objects, length, algo, quick, classOptions,
                                  cache_file, userTags, callList$.functionName, debugCache,
                                  keyFullPreDigest, outputObjects = outputObjects,
-                                 useCloud = FALSE,
-                                 cloudFolderID = NULL, gdriveLs = NULL,
                                  func_call = callList$func_call, drv = drv, conn = conn,
+                                 useCloud = FALSE, # not this preDigest one
+                                 cloudFolderID = NULL, gdriveLs = NULL,# not this preDigest one
                                  useMemoise = FALSE, # not this preDigest one
                                  verbose = verbose,
                                  times$SavePreDigestStart, times$SaveStart)
@@ -562,7 +562,10 @@ match_call_primitive <- function(definition = sys.function(sys.parent()),
 cache_Id_Identical <- function(metadata, cachePaths, cache_key) {
   linkToCacheId <- NULL
   os <- metadata$tagValue[metadata$tagKey == "object.size"]
-  if (!identical(os, "NA")) {
+
+  skipPreDigest <- startsWith(cache_key, .txtPreDigest)
+
+  if (!identical(os, "NA") && skipPreDigest %in% FALSE) {
     if (isTRUE(as.numeric(os) > .objectSizeMinForBig)) {
       for (cachePath in cachePaths) {
         allCache <- showCache(x = cachePath, verbose = -2)

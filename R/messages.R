@@ -531,3 +531,6 @@ singularPlural <- function (singPlur, l, v) {
 isAre <- function (l, v) {
   singularPlural(c("is", "are"), l, v)
 }
+
+
+.txtPreDigest <- "preDigest"
