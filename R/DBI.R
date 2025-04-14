@@ -97,8 +97,6 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
 #'
 #' @param obj The R object to save to the cache
 #'
-#' @param lsStr A list from `ls.str`
-#'
 #' @param linkToCacheId Optional. If a `cacheId` is provided here, then a `file.link`
 #'   will be made to the file with that `cacheId` name in the cache repo.
 #'   This is used when identical outputs exist in the cache. This will save disk space.
@@ -109,7 +107,7 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
 saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId,
-                        linkToCacheId = NULL, lsStr = NULL,
+                        linkToCacheId = NULL,
                         verbose = getOption("reproducible.verbose")) {
 
   if (useDBI()) {
@@ -161,10 +159,6 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   # Save to db file first, then storage file
   dt <- metadataDT(cacheId, tagKey, tagValue)
-
-  if (!is.null(lsStr) && !useDBI()) {
-     set(dt, 1L, "lsStr", list(lsStr))
-  }
 
   # dt <- data.table(
   #   "cacheId" = cacheId, "tagKey" = tagKey,

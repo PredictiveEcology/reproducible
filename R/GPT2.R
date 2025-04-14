@@ -145,15 +145,13 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                                                 verbose = verbose, ...)
 
   # ## Save to Cache; including to Memoise location; including metadata ## #
-  lsStr <- utils::ls.str(attr(callList$new_call,".Cache")$args_w_defaults)
-  lsStr <- capture.output(print(lsStr, max.level = 1))
 
   times$SaveStart <- Sys.time()
   outputFromEvaluate <- doSaveToCache(outputFromEvaluate, metadata, cachePaths, callList$func,
                                       .objects, length, algo, quick, classOptions,
                                       cache_file, userTags, callList$.functionName, debugCache,
                                       keyFull, outputObjects = outputObjects,
-                                      useCloud, cloudFolderID, gdriveLs, lsStr = lsStr,
+                                      useCloud, cloudFolderID, gdriveLs,
                                       func_call = callList$func_call, drv = drv, conn = conn,
                                       verbose = verbose,
                                       times$SaveStart, times$EvaluateStart)
@@ -892,7 +890,7 @@ convertCallWithSquigglyBraces <- function(call, usesDots) {
 }
 
 wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, # userTags,
-                            preDigest, lsStr, .functionName, outputObjects, drv, conn, verbose) {
+                            preDigest, .functionName, outputObjects, drv, conn, verbose) {
   cacheIdIdentical <- cache_Id_Identical(metadata, cachePath, cache_key)
   linkToCacheId <- if (!is.null(cacheIdIdentical)) filePathSansExt(basename(cacheIdIdentical))  else NULL
   outputToSave <- .wrap(outputFromEvaluate, cachePath = cachePath, preDigest = preDigest,
@@ -902,7 +900,7 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
   userTags <- paste0(metadata$tagKey, ":", metadata$tagValue)
   fs <- saveToCache(cachePath = cachePath, # drv = NULL, conn = NULL,
                     obj = outputToSave, verbose = verbose, # cache_file[1],
-                    userTags = userTags, linkToCacheId = linkToCacheId, lsStr = lsStr,
+                    userTags = userTags, linkToCacheId = linkToCacheId,
                     drv = drv, conn = conn,
                     cacheId = cache_key)
   .message$Saved(cachePath, cache_key, functionName = .functionName, verbose = verbose)
@@ -912,7 +910,7 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
 doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
                           .objects, length, algo, quick, classOptions,
                           cache_file, userTags, .functionName, debugCache,
-                          detailed_key, func_call, lsStr, outputObjects,
+                          detailed_key, func_call, outputObjects,
                           useCloud, cloudFolderID, gdriveLs,
                           drv, conn,
                           verbose, timeSaveStart, timeEvaluateStart) {
@@ -931,7 +929,7 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
 
   metadata <- wrapSaveToCache(outputFromEvaluate, metadata, detailed_key$key, cachePaths[[1]],
                               # userTags = paste0(metadata$tagKey, ":", metadata$tagValue),
-                              lsStr = lsStr, outputObjects = outputObjects,
+                              outputObjects = outputObjects,
                               preDigest = detailed_key$preDigest, .functionName, drv, conn, verbose)
 
   # Memoize the outputFromEvaluate by saving it in RAM
