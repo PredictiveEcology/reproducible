@@ -189,11 +189,11 @@ test_that("test file-backed raster caching", {
     val1 <- .cacheNumDefaultTags()
     val1WOSpatRaster <- val1
     val1 <- val1 + length(setdiff(gsub(":.*$", "", tagsSpatRaster()), .ignoreTagKeys())) # adding a userTag here... the +8 is the SpatRaster extras
-    if (isTRUE(savePreDigest))
-      val1 <- val1 + .cacheNumDefaultTags() # the preDigest ones
+    # if (isTRUE(savePreDigest))
+    #   val1 <- val1 + .cacheNumDefaultTags() # the preDigest ones
     ik <- .ignoreTagKeys()
 
-    val1WOSpatRaster <- val1WOSpatRaster * (savePreDigest + 1)
+    # val1WOSpatRaster <- val1WOSpatRaster * (savePreDigest + 1)
 
     aa <- Cache(randomPolyToDisk, tmpfile[1], cachePath = tmpCache, userTags = "something2")
 
