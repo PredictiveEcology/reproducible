@@ -152,17 +152,42 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                                                 verbose = verbose, ...)
 
   # ## Save to Cache; including to Memoise location; including metadata ## #
-
   times$SaveStart <- Sys.time()
+  elapsedTimeFUN <- difftime(times$SaveStart, times$EvaluateStart, units = "secs")
+
+  # update metadata with other elements including elapsedTime for evaluation
+  metadata <- metadata_define_postEval(metadata, keyFull$key, outputFromEvaluate,
+                                       userTags, .objects, length, algo, quick,
+                                       classOptions, elapsedTimeFUN)
+
   outputFromEvaluate <- doSaveToCache(outputFromEvaluate, metadata, cachePaths, callList$func,
                                       .objects, length, algo, quick, classOptions,
                                       cache_file, userTags, callList$.functionName, debugCache,
                                       keyFull, outputObjects = outputObjects,
                                       useCloud, cloudFolderID, gdriveLs,
                                       func_call = callList$func_call, drv = drv, conn = conn,
+                                      useMemoise = getOption("reproducible.useMemoise", FALSE),
                                       verbose = verbose,
                                       times$SaveStart, times$EvaluateStart)
   times$SaveEnd <- Sys.time()
+  if (getOption("reproducible.savePreDigest", FALSE)) {
+    keyFullPreDigest <- keyFull
+    keyFullPreDigest$key <- paste0("preDigest_", keyFullPreDigest$key)
+    times$SavePreDigestStart <- Sys.time()
+    locked <- lockFile(cachePaths[[1]], keyFullPreDigest$key, verbose = verbose)
+
+    toDigestOut <- doSaveToCache(toDigest, metadata, cachePaths, callList$func,
+                                 .objects, length, algo, quick, classOptions,
+                                 cache_file, userTags, callList$.functionName, debugCache,
+                                 keyFullPreDigest, outputObjects = outputObjects,
+                                 useCloud = FALSE,
+                                 cloudFolderID = NULL, gdriveLs = NULL,
+                                 func_call = callList$func_call, drv = drv, conn = conn,
+                                 useMemoise = FALSE, # not this preDigest one
+                                 verbose = verbose,
+                                 times$SavePreDigestStart, times$SaveStart)
+    times$SaveEnd <- Sys.time()
+  }
   verboseCacheDFAll(verbose, callList$.functionName, times)
 
   return(outputFromEvaluate)
@@ -929,15 +954,15 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
                           cache_file, userTags, .functionName, debugCache,
                           detailed_key, func_call, outputObjects,
                           useCloud, cloudFolderID, gdriveLs,
-                          drv, conn,
+                          drv, conn, useMemoise = getOption("reproducible.useMemoise", FALSE),
                           verbose, timeSaveStart, timeEvaluateStart) {
 
-  elapsedTimeFUN <- difftime(timeSaveStart, timeEvaluateStart, units = "secs")
-
-  # update metadata with other elements including elapsedTime for evaluation
-  metadata <- metadata_define_postEval(metadata, detailed_key$key, outputFromEvaluate,
-                                       userTags, .objects, length, algo, quick,
-                                       classOptions, elapsedTimeFUN)
+  # elapsedTimeFUN <- difftime(timeSaveStart, timeEvaluateStart, units = "secs")
+  #
+  # # update metadata with other elements including elapsedTime for evaluation
+  # metadata <- metadata_define_postEval(metadata, detailed_key$key, outputFromEvaluate,
+  #                                      userTags, .objects, length, algo, quick,
+  #                                      classOptions, elapsedTimeFUN)
 
   # Can't save NULL with attributes
   if (is.null(outputFromEvaluate)) outputFromEvaluate <- "NULL"
@@ -950,7 +975,7 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
                               preDigest = detailed_key$preDigest, .functionName, drv, conn, verbose)
 
   # Memoize the outputFromEvaluate by saving it in RAM
-  if (getOption("reproducible.useMemoise", FALSE)) {
+  if (isTRUE(useMemoise)) {
     assign(detailed_key$key, outputFromEvaluate, envir = memoiseEnv(cachePaths[[1]]))
   }
 
