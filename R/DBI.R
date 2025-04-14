@@ -567,12 +567,21 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
     }
   }
 }
+
+
+
+.cacheTagsSecondGroup <- c("class", "object.size", "fromDisk", "resultHash", "elapsedTimeFirstRun")
+.cacheTagsFirstGroup <- c("function", "userTags", "accessed", "inCloud", "elapsedTimeDigest", "preDigest")
+
+.cacheTagsDefault <- c(.cacheTagsFirstGroup, .cacheTagsSecondGroup)
+
 .cacheNumDefaultTags <- function() {
-  7 # else 12
+  length(setdiff(.cacheTagsDefault, .ignoreTagKeys())) # currently 7
 }
 
 .ignoreTagKeys <- function() {
-  c("preDigest", otherFunctions, "accessed", "elapsedTimeLoad", "fromDisk", "origRaster", "cacheRaster",
+  c("preDigest", otherFunctions, "accessed", "elapsedTimeLoad", "elapsedTimeFirstRun",
+    "fromDisk", "origRaster", "cacheRaster", "userTags",
     "cacheId")
 }
 

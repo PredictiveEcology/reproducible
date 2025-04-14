@@ -586,15 +586,14 @@ metadata_define_preEval <- function(detailed_key, func_name, userTags,
     userTags <- ll
   }
   userTagsList <- c(
-    list(FUN = func_name),
+    list(func_name) |> setNames(nm = .cacheTagsFirstGroup[1]),
     userTags,
-    list(accessed = sysTimeForCacheToChar()),
-    list(inCloud = isTRUE(useCloud)),
-    list(elapsedTimeDigest = format(elapsedTimeCacheDigest, units = "secs")),
-    list(preDigest = tagKey)
+    list(sysTimeForCacheToChar()) |> setNames(nm = .cacheTagsFirstGroup[3]),
+    list(isTRUE(useCloud)) |> setNames(nm = .cacheTagsFirstGroup[4]),
+    list(format(elapsedTimeCacheDigest, units = "secs")) |> setNames(nm = .cacheTagsFirstGroup[5]),
+    list(tagKey) |> setNames(nm = .cacheTagsFirstGroup[6])
   )
   names(userTagsList)[1] <- "function"
-
   cache_key <- detailed_key$key
   metadata <- userTagsListToDT(cache_key, userTagsList)
   return(metadata)
@@ -623,12 +622,15 @@ metadata_define_postEval <- function(metadata, cacheId, outputToSave, userTags,
     )$outputHash
   }
   fns <- Filenames(outputToSave)
+  # tagsFromDefaults <- .cacheTagsDefault
+  # .cacheTagsSecondGroup <- c("class", "object.size", "fromDisk", "resultHash", "elapsedTimeFirstRun")
+
   userTagsList <- c(
-    list(class = class(outputToSave)[1]),
-    list(object.size = format(as.numeric(objSize))),
-    list(fromDisk = isTRUE(any(nchar(fns) > 0))),
-    list(resultHash = resultHash),
-    list(elapsedTimeFirstRun = format(elapsedTimeFUN, units = "secs"))
+    list(class(outputToSave)[1]) |> setNames(nm = .cacheTagsSecondGroup[1]),
+    list(format(as.numeric(objSize))) |> setNames(nm = .cacheTagsSecondGroup[2]),
+    list(isTRUE(any(nchar(fns) > 0))) |> setNames(nm = .cacheTagsSecondGroup[3]),
+    list(resultHash) |> setNames(nm = .cacheTagsSecondGroup[4]),
+    list(format(elapsedTimeFUN, units = "secs")) |> setNames(nm = .cacheTagsSecondGroup[5])
   )
   cache_key <- cacheId
   metadataNew <- userTagsListToDT(cache_key, userTagsList)

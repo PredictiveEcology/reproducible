@@ -181,7 +181,10 @@ test_that("test file-backed raster caching", {
   # https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions
   # https://github.com/r-lib/testthat/issues/734 to direct it to reproducible::isInteractive
   #   solves the error about not being in the testthat package
-  val1 <- .cacheNumDefaultTags() + length(setdiff(gsub(":", "", tagsSpatRaster()), .ignoreTagKeys())) # adding a userTag here... the +8 is the SpatRaster extras
+
+    val1 <- .cacheNumDefaultTags()
+    val1WOSpatRaster <- val1
+    val1 <- val1 + length(setdiff(gsub(":.*$", "", tagsSpatRaster()), .ignoreTagKeys())) # adding a userTag here... the +8 is the SpatRaster extras
   ik <- .ignoreTagKeys()
   aa <- Cache(randomPolyToDisk, tmpfile[1], cachePath = tmpCache, userTags = "something2")
 
@@ -2016,3 +2019,24 @@ test_that("Cache with do.call and variables as list", {
   expect_equivalent(length(unique(as.numeric(a))), 1L)
 
 })
+
+test_that("ensure default tags are correct", {
+  testInit()
+
+  # This test is necessary because it uses these in a very specific order; CANNOT CHANGE THESE
+  #  without being fully aware of changes
+  cacheTagsSecondGroup <- c("class", "object.size", "fromDisk", "resultHash", "elapsedTimeFirstRun")
+  cacheTagsFirstGroup <- c("function", "userTags", "accessed", "inCloud", "elapsedTimeDigest", "preDigest")
+
+  expect_identical(.cacheTagsFirstGroup, cacheTagsFirstGroup)
+  expect_identical(.cacheTagsSecondGroup, cacheTagsSecondGroup)
+
+  missingFromDefault <- setdiff(.cacheTagsSecondGroup, .cacheTagsDefault)
+  expect_true(length(missingFromDefault) == 0)
+
+  missingFromDefault <- setdiff(.cacheTagsFirstGroup, .cacheTagsDefault)
+  expect_true(length(missingFromDefault) == 0)
+
+})
+
+
