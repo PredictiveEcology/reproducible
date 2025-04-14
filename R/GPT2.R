@@ -54,21 +54,28 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   times <- list()
   times$CacheDigestStart <- Sys.time()
 
+  # Construct the full file path for the cache directory and possible file
+  cachePaths <- getCacheRepos(cachePath, callList$new_call[-1], verbose = verbose)
+
   # Override keyFull$key if user has specified with cacheId
   if (!is.null(cacheId) && !is.na(cacheId)) {
     keyFull <- list()
     keyFull$key <- cacheIdOverride(cacheId, keyFull$key, callList$.functionName, verbose)
   } else {
-    keyFull <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
-                        length, algo, quick, classOptions, times$CacheDigestStart, verbose = verbose)
+    toDigest <- doDigestPrepare(callList$new_call, omitArgs, .cacheExtra)
+    keyFull <- doDigest(toDigest, callList$.functionName, .objects,
+                       length, algo, quick, classOptions, times$CacheDigestStart,
+                       verbose = verbose)
+    # keyFull2 <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
+    #                     length, algo, quick, classOptions, times$CacheDigestStart,
+    #                     cachePath = cachePaths[[1]], verbose = verbose)
+    # if (!identical(keyFull2, keyFull)) browser()
   }
 
   # If debugCache is "quick", short circuit after doDigest
   if (isTRUE(!is.na(pmatch(debugCache, "quick"))))
     return(list(hash = keyFull$preDigest, content = callList$func_call))
 
-  # Construct the full file path for the cache directory and possible file
-  cachePaths <- getCacheRepos(cachePath, callList$new_call[-1], verbose = verbose)
   # cachePath <- cachePaths[[1]]
   CacheDBFileCheckAndCreate(cachePaths[[1]], drv, conn, verbose = verbose) # checks that we are using multiDBfile backend
 
@@ -962,42 +969,43 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
 }
 
 
-doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
-                     length, algo, quick, classOptions, timeCacheDigestStart, verbose) {
-  # Compile a list of elements to digest
-  toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
-
-  # Deal with .objects -- wait these are dealt with by `.robustDigest`
-  # toDigest <- rmDotObjectsInList(toDigest, .objects)
-  # .objects <- dotObjectsToNULLInList(toDigest, .objects) # if .objects used in previous, set to NULL here
-
-  toDigest$.FUN <- attr(new_call, ".Cache")$method
-  # Deal with omitArgs by removing elements from the toDigest list of objects to digest
-  if (!is.null(omitArgs)) {
-    if (any("FUN" %in% omitArgs))
-      omitArgs <- c(".FUN", omitArgs)
-    toDigest[omitArgs] <- NULL
-  }
-  # Deal with .cacheExtra by adding it to the list of objects to digest
-  if (!is.null(.cacheExtra))
-    toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
-  detailed_key <- CacheDigest(toDigest,
-                              .functionName = .functionName,
-                              .objects = .objects,
-                              length = length, algo = algo, quick = quick,
-                              classOptions = classOptions,
-                              calledFrom = "Cache"
-  )
-  diTi <- difftime(Sys.time(), timeCacheDigestStart, units = "sec")
-  if (diTi > 5) {
-    messageCache("Object digesting for ", .messageFunctionFn(.functionName)," took: ", format(diTi, digits = 2))
-  }
-  verboseCacheMessage(detailed_key$preDigest, .functionName, timeCacheDigestStart, quick = quick,
-                   modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
-
-  names(detailed_key)[[1]] <- "key"
-  detailed_key
-}
+# doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
+#                      length, algo, quick, classOptions, timeCacheDigestStart,
+#                      cachePath, verbose) {
+#   # Compile a list of elements to digest
+#   toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
+#
+#   # Deal with .objects -- wait these are dealt with by `.robustDigest`
+#   # toDigest <- rmDotObjectsInList(toDigest, .objects)
+#   # .objects <- dotObjectsToNULLInList(toDigest, .objects) # if .objects used in previous, set to NULL here
+#
+#   toDigest$.FUN <- attr(new_call, ".Cache")$method
+#   # Deal with omitArgs by removing elements from the toDigest list of objects to digest
+#   if (!is.null(omitArgs)) {
+#     if (any("FUN" %in% omitArgs))
+#       omitArgs <- c(".FUN", omitArgs)
+#     toDigest[omitArgs] <- NULL
+#   }
+#   # Deal with .cacheExtra by adding it to the list of objects to digest
+#   if (!is.null(.cacheExtra))
+#     toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
+#   detailed_key <- CacheDigest(toDigest,
+#                               .functionName = .functionName,
+#                               .objects = .objects,
+#                               length = length, algo = algo, quick = quick,
+#                               classOptions = classOptions,
+#                               calledFrom = "Cache"
+#   )
+#   diTi <- difftime(Sys.time(), timeCacheDigestStart, units = "sec")
+#   if (diTi > 5) {
+#     messageCache("Object digesting for ", .messageFunctionFn(.functionName)," took: ", format(diTi, digits = 2))
+#   }
+#   verboseCacheMessage(detailed_key$preDigest, .functionName, timeCacheDigestStart, quick = quick,
+#                    modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
+#
+#   names(detailed_key)[[1]] <- "key"
+#   detailed_key
+# }
 
 #' Remove `quote` and determine if call uses `...`
 #'
@@ -1306,3 +1314,62 @@ evalTheFunAndAddChanged <- function(callList, keyFull, outputObjects, length, al
 
 
 .dtFileMainCols <- c("cacheId", "tagKey", "tagValue", "createdDate")
+
+doDigestPrepare <- function(new_call, omitArgs, .cacheExtra) {
+  toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
+
+  # Deal with .objects -- wait these are dealt with by `.robustDigest`
+  # toDigest <- rmDotObjectsInList(toDigest, .objects)
+  # .objects <- dotObjectsToNULLInList(toDigest, .objects) # if .objects used in previous, set to NULL here
+
+  toDigest$.FUN <- attr(new_call, ".Cache")$method
+  # Deal with omitArgs by removing elements from the toDigest list of objects to digest
+  if (!is.null(omitArgs)) {
+    if (any("FUN" %in% omitArgs))
+      omitArgs <- c(".FUN", omitArgs)
+    toDigest[omitArgs] <- NULL
+  }
+  # Deal with .cacheExtra by adding it to the list of objects to digest
+  if (!is.null(.cacheExtra))
+    toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
+  toDigest
+}
+
+
+
+# Compile a list of elements to digest
+# toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
+#
+# # Deal with .objects -- wait these are dealt with by `.robustDigest`
+# # toDigest <- rmDotObjectsInList(toDigest, .objects)
+# # .objects <- dotObjectsToNULLInList(toDigest, .objects) # if .objects used in previous, set to NULL here
+#
+# toDigest$.FUN <- attr(new_call, ".Cache")$method
+# # Deal with omitArgs by removing elements from the toDigest list of objects to digest
+# if (!is.null(omitArgs)) {
+#   if (any("FUN" %in% omitArgs))
+#     omitArgs <- c(".FUN", omitArgs)
+#   toDigest[omitArgs] <- NULL
+# }
+# # Deal with .cacheExtra by adding it to the list of objects to digest
+# if (!is.null(.cacheExtra))
+#   toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
+doDigest <- function(toDigest, .functionName, .objects, length, algo, quick,
+                      classOptions, timeCacheDigestStart, verbose) {
+  detailed_key <- CacheDigest(toDigest,
+                              .functionName = .functionName,
+                              .objects = .objects,
+                              length = length, algo = algo, quick = quick,
+                              classOptions = classOptions,
+                              calledFrom = "Cache"
+  )
+  diTi <- difftime(Sys.time(), timeCacheDigestStart, units = "sec")
+  if (diTi > 5) {
+    messageCache("Object digesting for ", .messageFunctionFn(.functionName)," took: ", format(diTi, digits = 2))
+  }
+  verboseCacheMessage(detailed_key$preDigest, .functionName, timeCacheDigestStart, quick = quick,
+                      modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
+
+  names(detailed_key)[[1]] <- "key"
+  detailed_key
+}
