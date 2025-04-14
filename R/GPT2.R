@@ -471,7 +471,7 @@ undoDoCall <- function(call, .callingEnv) {
     func <- call[[2]]
     args <- call[[3]]
 
-    if (is.call(args) && as.character(args[[1]]) == "list") {
+    if (isTRUE(is.call(args)) && isTRUE(as.character(args[[1]]) == "list")) {
       args <- as.list(args[-1])
     }
     if (is.name(args))
