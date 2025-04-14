@@ -1245,3 +1245,31 @@ dbDisconnectAll <- function(conn) {
 .cacheSaveFormats <- c("qs", "rds")
 .qsFormat <- grep("qs", .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
 .rdsFormat <- grep("rds", .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
+
+
+#' @export
+usesPointer <- function(x) {
+  UseMethod("usesPointer", x)
+}
+
+#' @export
+usesPointer.default <- function(x) {
+  if (requireNamespace("terra")) {
+    x <- is(x, "SpatRaster") && any(terra::inMemory(x))
+  }
+  x
+}
+
+#' @export
+usesPointer.list <- function(x) {
+  lapply(x, usesPointer)
+}
+
+#' @export
+usesPointer.environment <- function(x) {
+  x <- as.list(x, all.names = TRUE)
+  usesPointer(x)
+}
+
+
+

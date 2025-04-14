@@ -603,8 +603,16 @@ metadata_define_preEval <- function(detailed_key, func_name, userTags,
 metadata_define_postEval <- function(metadata, cacheId, outputToSave, userTags,
                                      .objects, length, algo, quick, classOptions,
                                      elapsedTimeFUN) {
-
-  objSize <- if (getOption("reproducible.objSize", TRUE)) sum(objSize(outputToSave)) else NA
+  objSize <- NA
+  if (getOption("reproducible.objSize", TRUE)) {
+    hasPointer <- usesPointer(outputToSave)
+    if (any(unlist(hasPointer))) {
+      os <- objSize(outputToSave, recursive = TRUE)
+    } else {
+      os <- objSize(outputToSave)
+    }
+    objSize <- sum(os)
+  }
 
   resultHash <- ""
   if (isTRUE(objSize > .objectSizeMinForBig)) {
