@@ -182,7 +182,7 @@ test_that("test file-backed raster caching", {
   # https://github.com/r-lib/testthat/issues/734 to direct it to reproducible::isInteractive
   #   solves the error about not being in the testthat package
 
-  savePreDigests <- c(FALSE, TRUE)
+  savePreDigests <- rev(c(FALSE, TRUE))
   for (savePreDigest in savePreDigests) {
     withr::local_options(reproducible.savePreDigest = savePreDigest)
 
@@ -202,7 +202,8 @@ test_that("test file-backed raster caching", {
     expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
     clearCache(tmpCache, userTags = "something2", ask = FALSE)
     expect_equal(NROW(showCache(tmpCache)), 0)
-    expect_equal(NROW(dir(CacheStorageDir(tmpCache))), 0) # make sure the `.tif` file is also gone
+    expect_equal(NROW(dir(CacheStorageDir(tmpCache, preDigest = !savePreDigest))), 0) # make sure the `.tif` file is also gone
+    expect_equal(NROW(dir(CacheStorageDir(tmpCache, preDigest = savePreDigest))), 0) # make sure the `.tif` file is also gone
 
     aa <- Cache(randomPolyToDisk, tmpfile[1], cachePath = tmpCache, userTags = "something2")
     expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
@@ -234,8 +235,11 @@ test_that("test file-backed raster caching", {
       origFile <- sc[tagKey == "origFilename"]$cacheId
       hasFilenameInCache <- NROW(sc[tagKey %in% tagFilenamesInCache])
       expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) ==
-                    (1 + hasFilenameInCache + as.integer(!useDBI()) + 2 * savePreDigest))
-      # expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + !useDBI())
+                    (1 + hasFilenameInCache + as.integer(!useDBI())))# + 2 * savePreDigest))
+      if (savePreDigest)
+        expect_true(length(dir(CacheStorageDir(tmpCache, preDigest = TRUE), pattern = origFile)) ==
+                      (hasFilenameInCache + as.integer(!useDBI())))# + 2 * savePreDigest))
+        # expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + !useDBI())
     }
 
     clearCache(x = tmpCache)
@@ -251,6 +255,8 @@ test_that("test file-backed raster caching", {
     froms <- normPath(dir(tmpCache, recursive = TRUE, full.names = TRUE))
     checkPath(file.path(tmpdir, "rasters"), create = TRUE)
     checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
+    if (savePreDigest)
+      checkPath(file.path(tmpdir, "preDigest_cacheInputs"), create = TRUE)
     file.copy(
       from = froms, overwrite = TRUE,
       to = gsub(normPath(tmpCache), normPath(tmpdir), froms)
@@ -310,6 +316,9 @@ test_that("test file-backed raster caching", {
     froms <- normPath(dir(tmpCache, recursive = TRUE, full.names = TRUE))
     # checkPath(file.path(tmpdir, "rasters"), create = TRUE)
     checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
+    if (savePreDigest)
+      checkPath(file.path(tmpdir, "preDigest_cacheInputs"), create = TRUE)
+
     file.copy(
       from = froms, overwrite = TRUE,
       to = gsub(normPath(tmpCache), normPath(tmpdir), froms)

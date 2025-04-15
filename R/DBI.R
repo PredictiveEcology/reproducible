@@ -107,7 +107,7 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
 saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId,
-                        linkToCacheId = NULL,
+                        linkToCacheId = NULL, savePreDigest = FALSE,
                         verbose = getOption("reproducible.verbose")) {
 
   if (useDBI()) {
@@ -129,7 +129,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     tagValue <- sub(userTags, pattern = "^[^:]*:", replacement = "")
   }
 
-  fts <- CacheStoredFile(cachePath, cacheId, obj = obj) # this includes the extra files
+  fts <- CacheStoredFile(cachePath, cacheId, obj = obj, preDigest = savePreDigest) # this includes the extra files
 
   # TRY link first, if there is a linkToCacheId, but some cases will fail; not sure what these cases are
   if (!is.null(linkToCacheId)) {
@@ -165,7 +165,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   #   "tagValue" = tagValue, "createdDate" = as.character(Sys.time())
   # )
   if (!useDBI()) {
-    dtFile <- saveDBFileSingle(dt = dt, cachePath, cacheId)
+    dtFile <- saveDBFileSingle(dt = dt, cachePath, cacheId, savePreDigest = savePreDigest)
   } else {
     # fl <- "/home/emcintir/tmp/usingDBI.rds"
     # usingDBI <- if (file.exists(fl)) readRDS(fl) else 1
@@ -177,7 +177,8 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   }
 
   if (is.null(linkToCacheId)) {
-    fs <- saveFilesInCacheFolder(cachePath = cachePath, obj, fts, cacheId = cacheId)
+    fs <- saveFilesInCacheFolder(cachePath = cachePath, obj, fts, cacheId = cacheId,
+                                 savePreDigest = savePreDigest)
   }
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     obj <- .unwrap(obj, cachePath, cacheId, drv, conn) # This takes time, but whether it happens now or later, same
@@ -400,7 +401,8 @@ extractFromCache <- function(sc, elem, ifNot = NULL) {
 rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                         cacheId, drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL),
-                        format = getOption("reproducible.cacheSaveFormat", .rdsFormat), verbose) {
+                        format = getOption("reproducible.cacheSaveFormat", .rdsFormat),
+                        preDigest = FALSE, verbose) {
   if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
@@ -423,10 +425,10 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
     DBI::dbClearResult(res)
   } else {
-    dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, format = format)
+    dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, format = format, preDigest = preDigest)
     unlink(dtFile)
   }
-  unlink(CacheStoredFile(cachePath, cacheId = cacheId, format = format))
+  unlink(CacheStoredFile(cachePath, cacheId = cacheId, format = format, preDigest = preDigest))
 }
 
 dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
@@ -655,8 +657,13 @@ CacheDBFile <- function(cachePath = getOption("reproducible.cachePath"),
 #'
 #' @export
 #' @rdname CacheHelpers
-CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
-  file.path(cachePath, "cacheOutputs")
+CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath"), preDigest = FALSE) {
+  if (isTRUE(preDigest)) {
+    file.path(cachePath, "preDigest_cacheInputs")
+  } else {
+    file.path(cachePath, "cacheOutputs")
+  }
+
 }
 
 #' @param obj The optional object that is of interest; it may have an attribute "saveRawFile"
@@ -674,7 +681,7 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 #' @export
 #' @rdname CacheHelpers
 CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cacheId,
-                            format = NULL, obj = NULL) {
+                            format = NULL, obj = NULL, preDigest = FALSE) {
   if (is.null(format)) format <- getOption("reproducible.cacheSaveFormat", .rdsFormat)
   if (missing(cacheId)) cacheId <- NULL
   if (any(format %in% "check")) {
@@ -696,7 +703,6 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
   }
 
   filename <- if (is.null(cacheId)) NULL else paste(cacheId, csExtension, sep = ".")
-  # if (is(filename, "try-error")) browser()
 
   # filename <- if (is.null(cacheId)) NULL else try(paste(cacheId, csExtension, sep = "."))
   # if (is(filename, "try-error")) browser()
@@ -710,7 +716,8 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
   fnsExtras <- basename2(Filenames(obj, allowMultiple = TRUE))
   fnsExtras <- fnsExtras[nzchar(fnsExtras)]
   fnsExtras <- filenameInCacheWPrefix(fnsExtras, cacheId)
-  file.path(CacheStorageDir(cachePath), c(filename, fnsExtras))
+  csd <- CacheStorageDir(cachePath, preDigest = preDigest)
+  file.path(csd, c(filename, fnsExtras))
 }
 
 #' @return
@@ -934,9 +941,9 @@ loadFile <- function(file, format = NULL) {
   obj
 }
 
-saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
+saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId, savePreDigest = FALSE) {
   if (missing(fts)) {
-    fts <- CacheStoredFile(cachePath, cacheId = cacheId, obj = obj) # adds prefix
+    fts <- CacheStoredFile(cachePath, cacheId = cacheId, obj = obj, preDigest = savePreDigest) # adds prefix
   }
 
   fsOther <- numeric()
@@ -963,7 +970,6 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
         nthreads = getOption("reproducible.nThreads", 1),
         preset = getOption("reproducible.qsavePreset", "high")
       )
-      # if (is(fs, "try-error")) browser()
       fs1 <- file.size(fts)
       if (!identical(fs, fs1)) {
         if (attempt == 1) {
@@ -988,7 +994,8 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId) {
 }
 
 CacheDBFileSingle <- function(cachePath, cacheId,
-                              format = getOption("reproducible.cacheSaveFormat")) {
+                              format = getOption("reproducible.cacheSaveFormat"),
+                              preDigest = FALSE) {
   fullSuff <- CacheDBFileSingleExt(format = format)
   if (any(format %in% "check")) {
     format <- formatCheck(cachePath, cacheId, format)
@@ -996,7 +1003,7 @@ CacheDBFileSingle <- function(cachePath, cacheId,
       fullSuff <- CacheDBFileSingleExt(format)
     }
   }
-  out <- file.path(CacheStorageDir(cachePath), paste0(cacheId, fullSuff))
+  out <- file.path(CacheStorageDir(cachePath, preDigest = preDigest), paste0(cacheId, fullSuff))
   out
 }
 
@@ -1060,8 +1067,8 @@ getDrv <- function(drv = NULL) {
   drv
 }
 
-saveDBFileSingle <- function(dt, cachePath, cacheId) {
-  dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId)
+saveDBFileSingle <- function(dt, cachePath, cacheId, savePreDigest = FALSE) {
+  dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, preDigest = savePreDigest)
   saveFilesInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId)
   dtFile
 }
@@ -1114,9 +1121,10 @@ messConvert <- function() {
   )
 }
 
-CacheDBFiles <- function(cachePath = getOption("reproducible.cachePath")) {
+CacheDBFiles <- function(cachePath = getOption("reproducible.cachePath"), preDigest = FALSE) {
   ext <- CacheDBFileSingleExt()
-  dtFiles <- dir(CacheStorageDir(cachePath), pattern = ext, full.names = TRUE)
+  dtFiles <- dir(CacheStorageDir(cachePath, preDigest = preDigest),
+                 pattern = ext, full.names = TRUE)
   dtFiles
 }
 

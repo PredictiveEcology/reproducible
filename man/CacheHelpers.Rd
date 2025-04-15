@@ -50,13 +50,17 @@ CacheDBFile(
   conn = getOption("reproducible.conn", NULL)
 )
 
-CacheStorageDir(cachePath = getOption("reproducible.cachePath"))
+CacheStorageDir(
+  cachePath = getOption("reproducible.cachePath"),
+  preDigest = FALSE
+)
 
 CacheStoredFile(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
   format = NULL,
-  obj = NULL
+  obj = NULL,
+  preDigest = FALSE
 )
 
 CacheDBTableName(

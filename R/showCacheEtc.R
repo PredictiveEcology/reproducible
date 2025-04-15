@@ -192,6 +192,10 @@ setMethod(
 
       unlink(CacheStorageDir(x), recursive = TRUE)
 
+      if (getOption("reproducible.savePreDigest", FALSE)) {
+        unlink(CacheStorageDir(x, preDigest = TRUE), recursive = TRUE)
+      }
+
       if (useDBI()) {
         unlink(file.path(x, "rasters"), recursive = TRUE)
         unlink(CacheDBFile(x, drv = drv, conn = conn), recursive = TRUE, force = TRUE)
@@ -222,8 +226,15 @@ setMethod(
       filesToRemove2 <- objsDT[grepl(pattern = "origFilename|filesToLoad|filenamesInCache", tagKey)][[.cacheTableTagColName()]]
       filesToRemove2 <- normPath(file.path(CacheStorageDir(x), basename(filesToRemove2)))
       filesToRemove3 <- dir(CacheStorageDir(x), full.names = TRUE)
-      filesToRemove3 <- grep(paste(objsDT[["cacheId"]], collapse = "|"), filesToRemove3, value = TRUE)
+      filesToRemove3 <- grep(paste(unique(objsDT[["cacheId"]], collapse = "|")), filesToRemove3, value = TRUE)
       filesToRemove <- unique(c(filesToRemove1, filesToRemove2, filesToRemove3))
+
+      if (getOption("reproducible.savePreDigest", FALSE)) {
+        filesToRemove4 <- dir(CacheStorageDir(x, preDigest = TRUE), pattern = unique(objsDT[["cacheId"]], collapse = "|"),
+            full.names = TRUE)
+        filesToRemove <- unique(c(filesToRemove, filesToRemove4))
+      }
+
       # filebackedInRepo <- objsDT[grepl(pattern = "fromDisk", tagKey) &
       #                           grepl(pattern = "TRUE", get(.cacheTableTagColName()))]
       #
@@ -242,7 +253,7 @@ setMethod(
           dirLs <- dir(unique(dirname(filesToRemove)), full.names = TRUE)
           dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE))
           filesToRemove <- unique(c(filesToRemove, dirLs))
-          cacheSize <- sum(cacheSize, file.size(filesToRemove))
+          cacheSize <- sum(cacheSize, na.omit(file.size(filesToRemove)))
         }
         # }
       }
@@ -439,12 +450,6 @@ setMethod(
                       pattern = paste(CacheDBFileSingleExt(format = .cacheSaveFormats), collapse = "|"),
                       full.names = TRUE
             )
-
-            # For `options("reproducible.savePreDigest")`
-            preDigest <- startsWith(basename(dd), "preDigest")
-            if (isTRUE(any(preDigest))) {
-              dd <- dd[preDigest %in% FALSE]
-            }
 
             rbindlist(fill = TRUE, lapply(dd, function(fil) {
               filOutside <<- fil
