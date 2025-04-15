@@ -172,13 +172,8 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                                       times$SaveStart, times$EvaluateStart)
   times$SaveEnd <- Sys.time()
   if (getOption("reproducible.savePreDigest", FALSE)) {
-    # keyFullPreDigest <- keyFull
-    # keyFullPreDigest$key <- paste0(.txtPreDigest, "_", keyFullPreDigest$key)
     times$SavePreDigestStart <- Sys.time()
-    # cachePathForPreDigests <- file.path(dirname(cachePaths[[1]]),
-    #                                     paste0(basename(cachePaths[[1]]), "_", .txtPreDigest))
     locked <- lockFile(cachePaths[[1]], keyFull$key, preDigest = TRUE, verbose = verbose)
-
     toDigestOut <- doSaveToCache(toDigest, metadata, cachePaths, callList$func,
                                  .objects, length, algo, quick, classOptions,
                                  cache_file, userTags, callList$.functionName, debugCache,

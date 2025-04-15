@@ -226,7 +226,7 @@ setMethod(
       filesToRemove2 <- objsDT[grepl(pattern = "origFilename|filesToLoad|filenamesInCache", tagKey)][[.cacheTableTagColName()]]
       filesToRemove2 <- normPath(file.path(CacheStorageDir(x), basename(filesToRemove2)))
       filesToRemove3 <- dir(CacheStorageDir(x), full.names = TRUE)
-      filesToRemove3 <- grep(paste(unique(objsDT[["cacheId"]], collapse = "|")), filesToRemove3, value = TRUE)
+      filesToRemove3 <- grep(paste(unique(objsDT[["cacheId"]]), collapse = "|"), filesToRemove3, value = TRUE)
       filesToRemove <- unique(c(filesToRemove1, filesToRemove2, filesToRemove3))
 
       if (getOption("reproducible.savePreDigest", FALSE)) {
