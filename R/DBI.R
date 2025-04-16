@@ -704,8 +704,6 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
 
   filename <- if (is.null(cacheId)) NULL else paste(cacheId, csExtension, sep = ".")
 
-  # filename <- if (is.null(cacheId)) NULL else try(paste(cacheId, csExtension, sep = "."))
-  # if (is(filename, "try-error")) browser()
   if (length(cacheId) > 1) {
     filename <- vapply(filename, nextNumericName, FUN.VALUE = character(1))
     for (i in seq(filename[-1]) + 1) {
@@ -713,7 +711,13 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
     }
   }
 
-  fnsExtras <- basename2(Filenames(obj, allowMultiple = TRUE))
+  fns <- Filenames(obj, allowMultiple = TRUE)
+  if (length(fns)) {
+    dirs <- fs::is_dir(fns)
+    if (isTRUE(any(dirs)))
+      fns <- fns[dirs %in% FALSE]
+  }
+  fnsExtras <- basename2(fns)
   fnsExtras <- fnsExtras[nzchar(fnsExtras)]
   fnsExtras <- filenameInCacheWPrefix(fnsExtras, cacheId)
   csd <- CacheStorageDir(cachePath, preDigest = preDigest)
