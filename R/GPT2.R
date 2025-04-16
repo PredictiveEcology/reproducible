@@ -160,36 +160,42 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                                        userTags, .objects, length, algo, quick,
                                        classOptions, elapsedTimeFUN)
 
-  outputFromEvaluate <- doSaveToCache(outputFromEvaluate, metadata, cachePaths, callList$func,
-                                      .objects, length, algo, quick, classOptions,
-                                      cache_file, userTags, callList$.functionName, debugCache,
-                                      keyFull, outputObjects = outputObjects,
-                                      useCloud, cloudFolderID, gdriveLs,
-                                      func_call = callList$func_call, drv = drv, conn = conn,
-                                      useMemoise = getOption("reproducible.useMemoise", FALSE),
-                                      savePreDigest = FALSE,
-                                      verbose = verbose,
-                                      times$SaveStart, times$EvaluateStart)
+  # Potentially save both output (default) and inputs to `cachePath`
+  savePreDigests <- unique(c(FALSE, getOption("reproducible.savePreDigest", FALSE)))
+  outputFromEvaluate <- Map(savePreDigest = savePreDigests, function(savePreDigest) {
+    if (isTRUE(savePreDigest)) {
+      locked <- lockFile(cachePaths[[1]], keyFull$key, preDigest = TRUE, verbose = verbose)
+    }
+    doSaveToCache(outputFromEvaluate = if (savePreDigest) toDigest else outputFromEvaluate,
+                  metadata, cachePaths, callList$func,
+                  .objects, length, algo, quick, classOptions,
+                  cache_file, userTags, callList$.functionName, debugCache,
+                  keyFull, outputObjects = outputObjects,
+                  useCloud = ifelse(savePreDigest, FALSE, useCloud),
+                  cloudFolderID = if(isTRUE(savePreDigest)) NULL else cloudFolderID,
+                  gdriveLs = if (isTRUE(savePreDigest)) NULL else gdriveLs,
+                  func_call = callList$func_call, drv = drv, conn = conn,
+                  savePreDigest = savePreDigest,
+                  useMemoise = ifelse(savePreDigest, FALSE, getOption("reproducible.useMemoise")),
+                  verbose = verbose)
+  })
   times$SaveEnd <- Sys.time()
-  if (getOption("reproducible.savePreDigest", FALSE)) {
-    times$SavePreDigestStart <- Sys.time()
-    locked <- lockFile(cachePaths[[1]], keyFull$key, preDigest = TRUE, verbose = verbose)
-    toDigestOut <- doSaveToCache(toDigest, metadata, cachePaths, callList$func,
-                                 .objects, length, algo, quick, classOptions,
-                                 cache_file, userTags, callList$.functionName, debugCache,
-                                 keyFull, outputObjects = outputObjects,
-                                 func_call = callList$func_call, drv = drv, conn = conn,
-                                 useCloud = FALSE, # not this preDigest one
-                                 cloudFolderID = NULL, gdriveLs = NULL,# not this preDigest one
-                                 useMemoise = FALSE, # not this preDigest one
-                                 savePreDigest = TRUE,
-                                 verbose = verbose,
-                                 times$SavePreDigestStart, times$SaveStart)
-    times$SaveEnd <- Sys.time()
-  }
+  # if (getOption("reproducible.savePreDigest", FALSE)) {
+  #   locked <- lockFile(cachePaths[[1]], keyFull$key, preDigest = TRUE, verbose = verbose)
+  #   toDigestOut <- doSaveToCache(toDigest, metadata, cachePaths, callList$func,
+  #                                .objects, length, algo, quick, classOptions,
+  #                                cache_file, userTags, callList$.functionName, debugCache,
+  #                                keyFull, outputObjects = outputObjects,
+  #                                func_call = callList$func_call, drv = drv, conn = conn,
+  #                                useMemoise = FALSE, # not this preDigest one
+  #                                savePreDigest = TRUE,
+  #                                verbose = verbose)
+  #   times$SaveEnd <- Sys.time()
+  # }
   verboseCacheDFAll(verbose, callList$.functionName, times)
 
-  return(outputFromEvaluate)
+  # only the first of the list is the outputs; 2nd if it exists is inputs for savePreDigest
+  return(outputFromEvaluate[[1]])
 }
 
 #' @rdname Cache
@@ -957,10 +963,11 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
                           .objects, length, algo, quick, classOptions,
                           cache_file, userTags, .functionName, debugCache,
                           detailed_key, func_call, outputObjects,
-                          useCloud, cloudFolderID, gdriveLs,
-                          drv, conn, useMemoise = getOption("reproducible.useMemoise", FALSE),
+                          useCloud = FALSE, cloudFolderID = NULL, gdriveLs = NULL,
+                          drv, conn,
+                          useMemoise = getOption("reproducible.useMemoise", FALSE),
                           savePreDigest = FALSE,
-                          verbose, timeSaveStart, timeEvaluateStart) {
+                          verbose) {
 
   # elapsedTimeFUN <- difftime(timeSaveStart, timeEvaluateStart, units = "secs")
   #
@@ -992,7 +999,7 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
 
   if (cloudWrite(useCloud)) {
     cloudUploadFromCache(detailed_key$key %in% filePathSansExt(gdriveLs[["name"]]), detailed_key$key,
-                         cachePaths[[1]], cloudFolderID = cloudFolderID, outputFromEvaluate, verbose = verbose)
+                         cachePath = cachePaths[[1]], cloudFolderID = cloudFolderID, outputFromEvaluate, verbose = verbose)
   }
   outputFromEvaluate
 
