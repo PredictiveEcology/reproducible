@@ -1,3 +1,7 @@
+# reproducible (development version)
+
+* drop support for R 4.1 and 4.2;
+
 # reproducible 2.1.2
 
 * remove `PackedStatExtent` class, releasing it for `terra`; `reproducible`
