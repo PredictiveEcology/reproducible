@@ -18,6 +18,7 @@ test_that("testing terra", {
   tf4 <- tempfile(fileext = ".tif")
   tf5 <- tempfile(fileext = ".tif")
   tf6 <- tempfile(fileext = ".tif")
+  tf7 <- tempfile(fileext = ".tif") # don't create it: testing writeTo
   file.copy(f, tf)
   file.copy(f, tf1)
   file.copy(f, tf2)
@@ -118,7 +119,14 @@ test_that("testing terra", {
   expect_true(all(t6$elevation == 1))
   expect_true(NROW(t6) == 2)
 
-  #
+  # Only writeTo
+  expect_false(file.exists(tf7))
+  t11a <- suppressWarnings({
+    postProcessTo(elevRas, writeTo = tf7)
+  }) ## WARNING: Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition
+  expect_true(file.exists(tf2))
+  expect_equivalent(elevRas, t11a)
+
 
   t10 <- postProcessTo(xVect, v)
   expect_true(terra::ext(t10) < terra::ext(xVect))
@@ -127,9 +135,18 @@ test_that("testing terra", {
   ## following #253
   # https://github.com/PredictiveEcology/reproducible/issues/253#issuecomment-1263562631
   tf1 <- tempfile(fileext = ".shp")
+  tf2 <- tempfile(fileext = ".shp")
   t11 <- suppressWarnings({
     postProcessTo(xVect, v, writeTo = tf1)
   }) ## WARNING: Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition
+
+  # Only writeTo
+  t11a <- suppressWarnings({
+    postProcessTo(xVect, writeTo = tf2)
+  }) ## WARNING: Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition
+  expect_true(file.exists(tf2))
+  expect_true(identical(xVect, t11a))
+
   tw_t11 <- terra::wrap(t11)
   vv <- terra::vect(tf1)
   tw_vv <- terra::wrap(vv)
@@ -141,6 +158,7 @@ test_that("testing terra", {
   t11 <- suppressWarnings({
     postProcessTo(xVect, v, writeTo = tf1)
   }) ## WARNING: GDAL Message 6: dataset does not support layer creation option ENCODING
+
   tw_t11 <- terra::wrap(t11)
   vv <- terra::vect(tf1)
   tw_vv <- terra::wrap(vv)

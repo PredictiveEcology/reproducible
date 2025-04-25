@@ -182,7 +182,7 @@ postProcessTo <- function(from, to,
     if (is.null(projectTo)) projectTo <- to
   }
 
-  if (!all(is.null(to), is.null(cropTo), is.null(maskTo), is.null(projectTo))) {
+  if (!all(is.null(to), is.null(cropTo), is.null(maskTo), is.null(projectTo), is.null(writeTo))) {
     messagePreProcess("Running `postProcessTo`", verbose = verbose, verboseLevel = 0)
     .message$IndentUpdate()
     if (isTRUE(is.character(from))) {
