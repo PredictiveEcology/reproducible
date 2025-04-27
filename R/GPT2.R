@@ -48,7 +48,9 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   # Harmonize call so the different versions are all cannonical, now that useCache = FALSE is past
   callList <- harmonizeCall(callList, .callingEnv, .functionName)
   # Add .functionName to .pkgEnv userTags in case this becomes part of a nested Cache
-  appendNestedTags(otherFunction = callList$.functionName)
+  needFunctionName(userTags, callList$.functionName)
+  # appendNestedTags(outerFunction = callList$.functionName)
+
 
   # do the Digest
   times <- list()
@@ -720,8 +722,17 @@ setupCacheNesting <- function(userTags, useCache, envir = parent.frame(1)) {
     .pkgEnv$.reproEnv2$useCache <- useCache
     on.exit2(rm(list = ".reproEnv2", envir = .pkgEnv), envir = envir)
   } else {
-    userTags <- .pkgEnv$.reproEnv2$userTags <- c(.pkgEnv$.reproEnv2$userTags, userTags)
-    .pkgEnv$.reproEnv2$nestLevel <- .pkgEnv$.reproEnv2$nestLevel + 1
+    userTagsOld <- .pkgEnv$.reproEnv2$userTags
+    allUT1 <- c(userTagsOld, userTags)
+    allUT2 <- allUT1[!duplicated(sapply(strsplit(allUT1, split = ":"), tail, 1))]
+    userTags <- allUT2
+    .pkgEnv$.reproEnv2$userTags <- userTags
+    nestLevelOld <- .pkgEnv$.reproEnv2$nestLevel
+    nestLevelNew <- nestLevelOld + 1
+    on.exit2({
+      .pkgEnv$.reproEnv2$nestLevel <- nestLevelOld
+      .pkgEnv$.reproEnv2$userTags <- userTagsOld
+    }, envir = envir)
   }
   userTags
 }
