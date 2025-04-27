@@ -941,7 +941,8 @@ convertCallWithSquigglyBraces <- function(call, usesDots) {
 
 wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, # userTags,
                             preDigest, savePreDigest = FALSE, .functionName,
-                            outputObjects, drv, conn, verbose) {
+                            outputObjects, useMemoise = getOption("reproducible.useMemoise", FALSE),
+                            drv, conn, verbose) {
   cacheIdIdentical <- cache_Id_Identical(metadata, cachePath, cache_key)
   linkToCacheId <- if (!is.null(cacheIdIdentical)) filePathSansExt(basename(cacheIdIdentical))  else NULL
   outputToSave <- .wrap(outputFromEvaluate, cachePath = cachePath, preDigest = preDigest,
@@ -953,6 +954,7 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
                     obj = outputToSave, verbose = verbose, # cache_file[1],
                     userTags = userTags, linkToCacheId = linkToCacheId,
                     savePreDigest = savePreDigest,
+                    useMemoise = useMemoise,
                     drv = drv, conn = conn,
                     cacheId = cache_key)
   .message$Saved(cachePath, cache_key, functionName = .functionName, verbose = verbose)
@@ -984,7 +986,9 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
   metadata <- wrapSaveToCache(outputFromEvaluate, metadata, detailed_key$key, cachePaths[[1]],
                               # userTags = paste0(metadata$tagKey, ":", metadata$tagValue),
                               outputObjects = outputObjects, savePreDigest = savePreDigest,
-                              preDigest = detailed_key$preDigest, .functionName, drv, conn, verbose)
+                              preDigest = detailed_key$preDigest, .functionName,
+                              useMemoise = useMemoise,
+                              drv, conn, verbose)
 
   # Memoize the outputFromEvaluate by saving it in RAM
   if (isTRUE(useMemoise)) {
@@ -1409,4 +1413,15 @@ doDigest <- function(toDigest, .functionName, .objects, length, algo, quick,
 
   names(detailed_key)[[1]] <- "key"
   detailed_key
+}
+
+needFunctionName <- function(userTags, functionName) {
+  tags <- c(userTags, functionName)
+  allUT <- c(userTags, functionName)
+  dups <- duplicated(sapply(strsplit(allUT, split = ":"), tail, 1))
+  allUT <- allUT[!dups] # only take after :
+  needFN <- identical(tail(dups, 1), FALSE)
+  if (isTRUE(needFN)) {
+    appendNestedTags(outerFunction = functionName)
+  }
 }

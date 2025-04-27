@@ -108,6 +108,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId,
                         linkToCacheId = NULL, savePreDigest = FALSE,
+                        useMemoise = getOption("reproducible.useMemoise", FALSE),
                         verbose = getOption("reproducible.verbose")) {
 
   if (useDBI()) {
@@ -180,7 +181,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     fs <- saveFilesInCacheFolder(cachePath = cachePath, obj, fts, cacheId = cacheId,
                                  savePreDigest = savePreDigest)
   }
-  if (isTRUE(getOption("reproducible.useMemoise"))) {
+  if (isTRUE(useMemoise)) {
     obj <- .unwrap(obj, cachePath, cacheId, drv, conn) # This takes time, but whether it happens now or later, same
     obj2 <- makeMemoisable(obj)
     assign(cacheId, obj2, envir = memoiseEnv(cachePath))
@@ -243,12 +244,13 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 #' @export
 #' @rdname CacheHelpers
 loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
-                          cacheId, preDigest,
+                          cacheId, preDigest = NULL,
                           fullCacheTableForObj = NULL,
                           format = getOption("reproducible.cacheSaveFormat", .rdsFormat),
                           .functionName = NULL, .dotsFromCache = NULL,
                           drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL),
+                          useMemoise = getOption("reproducible.useMemoise", FALSE),
                           verbose = getOption("reproducible.verbose")) {
   if (verbose > 3) {
     startLoadTime <- Sys.time()
@@ -271,7 +273,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   if (!isTRUE(isMemoised)) {
     # Put this in a loop -- try the format that the user requested, but switch back if can't do it
     for (i in 1:2) {
-      f <- CacheStoredFile(cachePath, cacheId, format)
+      f <- CacheStoredFile(cachePath, cacheId, format, preDigest = preDigest)
       f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
 
       # First test if it is correct format
@@ -320,7 +322,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
       # }
       # Need exclusive lock
 
-      obj <- loadFile(f)
+      obj <- try(loadFile(f))
+      if (is(obj, "try-error")) browser()
       obj <- .unwrap(obj,
                      cachePath = cachePath,
                      cacheId = cacheId,
@@ -331,7 +334,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   }
 
   # Class-specific message
-  useMemoise <- if (getOption("reproducible.useMemoise") %in% TRUE) TRUE else NA
+  useMemoise <- if (useMemoise %in% TRUE) TRUE else NA
   fromMemoise <- isMemoised && useMemoise
   loadFromMgs <- .cacheMessage(obj, .functionName, fromMemoise = fromMemoise, verbose = verbose)
 
@@ -1149,7 +1152,7 @@ memoiseEnv <- function(cachePath, envir = .GlobalEnv) {
 }
 
 
-otherFunctions <- "otherFunctions"
+otherFunctions <- "outerFunctions"
 
 #' Evaluate whether a cacheId is memoised
 #'
