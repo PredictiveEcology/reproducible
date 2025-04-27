@@ -433,6 +433,7 @@ setMethod(
         }
       }
     }
+    preDigest <- list(...)$preDigest
 
     if (!useDBI()) {
       # periodically, a cache entry is corrupt; this while, tryCatch will remove the corrupt file and restart
@@ -446,7 +447,7 @@ setMethod(
               showCacheFast(fil, cachePath = x, drv = drv, conn = conn)
             }))
           } else {
-            dd <- dir(CacheStorageDir(x),
+            dd <- dir(CacheStorageDir(x, preDigest = preDigest),
                       pattern = paste(CacheDBFileSingleExt(format = .cacheSaveFormats), collapse = "|"),
                       full.names = TRUE
             )
@@ -505,6 +506,7 @@ setMethod(
       objsDT <- objsDT[objsDT[tagKey %in% "function" & tagValue %in% fun, ..onCol], on = onCol]
     }
     dots <- list(...)
+    dots$preDigest <- NULL
 
     dots <- dots[!names(dots) %in% sortedOrRegexp]
     if (length(dots)) {
