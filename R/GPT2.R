@@ -86,10 +86,32 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
     gdriveLs <- retry(quote(driveLs(cloudFolderID, keyFull$key, cachePath = cachePaths[[1]], verbose = verbose)))
   }
 
+  # browser()# rm(list = ls(memoiseEnv(cachePaths[[1]])), envir = memoiseEnv(cachePaths[[1]]))
+  if (getOption("reproducible.savePreDigest", FALSE) &&
+      !file.exists(CacheStoredFile(cachePaths[[1]], cacheId = keyFull$key, preDigest = TRUE))) {
+    metadata_savePreDigest <- metadata_define_preEval(keyFull, callList$.functionName, userTags,
+                                        .objects, length, algo, quick, classOptions,
+                                        timeEvaluateStart = NULL, timeCacheDigestStart = NULL)
+    message("Saving input arguments to preDigest Cache folder for ", reproducible:::.messageFunctionFn(callList$.functionName))
+    locked2 <- lockFile(cachePaths[[1]], keyFull$key, preDigest = TRUE, verbose = verbose)
+    toDigestOut <- doSaveToCache(toDigest, metadata_savePreDigest, cachePaths, callList$func,
+                                 .objects, length, algo, quick, classOptions,
+                                 cache_file = CacheStoredFile(cachePaths, cacheId = keyFull$key,
+                                                              preDigest = TRUE),
+                                 userTags, callList$.functionName, debugCache,
+                                 keyFull, outputObjects = outputObjects,
+                                 func_call = callList$func_call, drv = drv, conn = conn,
+                                 useMemoise = FALSE, # not this preDigest one
+                                 savePreDigest = TRUE,
+                                 verbose = verbose - 1L)
+    releaseLockFile(locked2)
+  }
+
   # Memoise and return if it is there #
   outputFromMemoise <- check_and_get_memoised_copy(keyFull$key, cachePaths, callList$.functionName,
                                                    callList$func, useCache, useCloud,
                                                    cloudFolderID, gdriveLs, full_call = callList$new_call,
+                                                   preDigest = FALSE,
                                                    drv = drv, conn = conn, verbose)
   if (!identical2(.returnNothing, outputFromMemoise))
     return(outputFromMemoise)
@@ -112,7 +134,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   # Check if keyFull$key is on disk and return if it is there
   outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePaths, cache_file, callList$.functionName, callList$func,
                                               useCache, useCloud, cloudFolderID, gdriveLs,
-                                              full_call = callList$new_call,
+                                              full_call = callList$new_call, preDigest = FALSE,
                                               drv, conn, verbose = verbose)
 
   if (!identical2(.returnNothing, outputFromDisk))
@@ -158,29 +180,22 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   elapsedTimeFUN <- difftime(times$SaveStart, times$EvaluateStart, units = "secs")
 
   # update metadata with other elements including elapsedTime for evaluation
-  metadata <- metadata_define_postEval(metadata, keyFull$key, outputFromEvaluate,
+  metadata <- try(metadata_define_postEval(metadata, keyFull$key, outputFromEvaluate,
                                        userTags, .objects, length, algo, quick,
-                                       classOptions, elapsedTimeFUN)
+                                       classOptions, elapsedTimeFUN))
+  if (is(metadata, "try-error")) browser() # this is because objSize fails internally when a memoised object is faulty
 
-  # Potentially save both output (default) and inputs to `cachePath`
-  savePreDigests <- unique(c(FALSE, getOption("reproducible.savePreDigest", FALSE)))
-  outputFromEvaluate <- Map(savePreDigest = savePreDigests, function(savePreDigest) {
-    if (isTRUE(savePreDigest)) {
-      locked <- lockFile(cachePaths[[1]], keyFull$key, preDigest = TRUE, verbose = verbose)
-    }
-    doSaveToCache(outputFromEvaluate = if (savePreDigest) toDigest else outputFromEvaluate,
+  outputFromEvaluate <- doSaveToCache(outputFromEvaluate,
                   metadata, cachePaths, callList$func,
                   .objects, length, algo, quick, classOptions,
                   cache_file, userTags, callList$.functionName, debugCache,
                   keyFull, outputObjects = outputObjects,
-                  useCloud = ifelse(savePreDigest, FALSE, useCloud),
-                  cloudFolderID = if(isTRUE(savePreDigest)) NULL else cloudFolderID,
-                  gdriveLs = if (isTRUE(savePreDigest)) NULL else gdriveLs,
+                  useCloud = useCloud,
+                  cloudFolderID = cloudFolderID,
+                  gdriveLs = gdriveLs,
                   func_call = callList$func_call, drv = drv, conn = conn,
-                  savePreDigest = savePreDigest,
-                  useMemoise = ifelse(savePreDigest, FALSE, getOption("reproducible.useMemoise")),
+                  useMemoise = getOption("reproducible.useMemoise"),
                   verbose = verbose)
-  })
   times$SaveEnd <- Sys.time()
   # if (getOption("reproducible.savePreDigest", FALSE)) {
   #   locked <- lockFile(cachePaths[[1]], keyFull$key, preDigest = TRUE, verbose = verbose)
@@ -197,7 +212,7 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   verboseCacheDFAll(verbose, callList$.functionName, times)
 
   # only the first of the list is the outputs; 2nd if it exists is inputs for savePreDigest
-  return(outputFromEvaluate[[1]])
+  return(outputFromEvaluate)
 }
 
 #' @rdname Cache
@@ -347,7 +362,7 @@ evaluate_args <- function(args, envir) {
 
 check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functionName,
                                       func, useCache, useCloud, cloudFolderID, gdriveLs,
-                                      full_call, drv, conn, envir = parent.frame(), verbose) {
+                                      full_call, preDigest = NULL, drv, conn, envir = parent.frame(), verbose) {
   # Check if the result is already cached
   connOrig <- conn
   conns <- conn
@@ -411,7 +426,7 @@ check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functio
                                     cache_key, functionName, cache_file = cache_file,
                                     changedSaveFormat = changedSaveFormat, sameCacheID,
                                     cache_file_orig, func, shownCache = shownCache,
-                                    full_call = full_call,
+                                    full_call = full_call, preDigest = preDigest,
                                     drv = drv, conn = conn, verbose = verbose)
     return(output)
 
@@ -453,7 +468,7 @@ metadata_update <- function(outputToSave, metadata, cache_key) {
 
 check_and_get_memoised_copy <- function(cache_key, cachePaths, functionName, func,
                                         useCache, useCloud, cloudFolderID, gdriveLs,
-                                        full_call, drv, conn, verbose) {
+                                        full_call, preDigest = NULL, drv, conn, verbose) {
   if (getOption("reproducible.useMemoise", FALSE)) {
     for (cachePath in cachePaths) {
       cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
@@ -466,7 +481,7 @@ check_and_get_memoised_copy <- function(cache_key, cachePaths, functionName, fun
                                       cloudFolderID = cloudFolderID, gdriveLs = gdriveLs,
                                       cachePath = cachePath, cache_key = cache_key,
                                       functionName = functionName, func = func,
-                                      full_call = full_call,
+                                      full_call = full_call, preDigest = preDigest,
                                       drv = drv, conn = conn, verbose = verbose,
                                       )
       return(output)
@@ -1155,7 +1170,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
                                   functionName,
                                   cache_file = NULL, changedSaveFormat, sameCacheID,
                                   cache_file_orig, func, shownCache = NULL,
-                                  full_call, drv, conn, verbose) {
+                                  full_call, preDigest = FALSE, drv, conn, verbose) {
 
   if (identical(useCache, "overwrite")) {
     clearCacheOverwrite(cachePath, cache_key, functionName, drv, conn, verbose)
@@ -1165,7 +1180,8 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       fileExt(cache_file)
 
     for (iii in 1:2) {
-      fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key, format = format)
+      fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key, format = format,
+                              preDigest = preDigest)
       if (useDBI()) {
         rerun <- FALSE
       } else {
