@@ -41,6 +41,7 @@ rmFromCache(
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   format = getOption("reproducible.cacheSaveFormat", .rdsFormat),
+  preDigest = FALSE,
   verbose
 )
 

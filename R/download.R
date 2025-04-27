@@ -981,9 +981,9 @@ SSL_REVOKE_BEST_EFFORT <- function(envir = parent.frame(1)) {
   }, envir = envir)
 }
 
-on.exit2 <- function(expr, envir = parent.frame()) {
+on.exit2 <- function(expr, envir = sys.frame(-2), add = TRUE, after = TRUE) {
   funExpr <- as.call(list(function() expr))
-  do.call(base::on.exit, list(funExpr, TRUE, TRUE), envir = envir)
+  do.call(base::on.exit, list(funExpr, add, after), envir = envir)
 }
 
 
