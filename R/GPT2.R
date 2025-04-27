@@ -1217,7 +1217,8 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
                                     cacheId = cache_key, verbose = verbose)
     memoiseFail <- FALSE
     if (fromMemoise && !rerun) {
-      output <- get(cache_key, envir = memoiseEnv(cachePath))
+      output <- try(get(cache_key, envir = memoiseEnv(cachePath)))
+      if (is(output, "try-error")) browser()
       # need to update the individual files in file-backed objects from the cache; can't use memoise
       fns <- Filenames(output)
       fns <- fns[nzchar(fns)]
@@ -1236,13 +1237,13 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
         }
     }
     if (!fromMemoise || rerun || memoiseFail || cacheSaveFormatFail) {
-      obj <- if (!is.null(cache_file)) {
-        try(loadFile(cache_file), silent = TRUE)
+      if (!is.null(cache_file)) {
+        obj <- try(loadFile(cache_file), silent = TRUE)
       } else {
         rerun <- TRUE
       }
       output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
-      if (is(obj, "try-error") || rerun || is(output, "try-error")) {
+      if (rerun || is(obj, "try-error") || is(output, "try-error")) {
         messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
         otherFiles2 <- dir(CacheStorageDir(cachePath), pattern = cache_key, full.names = TRUE)
         if (!is(shownCache, "try-error")) {
