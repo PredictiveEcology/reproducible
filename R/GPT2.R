@@ -71,7 +71,6 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
     # keyFull2 <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
     #                     length, algo, quick, classOptions, times$CacheDigestStart,
     #                     cachePath = cachePaths[[1]], verbose = verbose)
-    # if (!identical(keyFull2, keyFull)) browser()
   }
 
   # If debugCache is "quick", short circuit after doDigest
