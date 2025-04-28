@@ -50,7 +50,7 @@ Authors@R:
       person(given = "His Majesty the King in Right of Canada, as represented by the Minister of Natural Resources Canada",
              role = "cph"))
 Depends:
-    R (>= 4.1)
+    R (>= 4.3)
 Imports:
     cli,
     data.table (>= 1.10.4),
