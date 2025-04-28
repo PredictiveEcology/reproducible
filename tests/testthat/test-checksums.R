@@ -77,10 +77,14 @@ test_that("Checksums read and written correctly", {
   a <- basename2(sort(grep("\\.R$", txt$expectedFile, value = TRUE)))
   # print(txt$expectedFile)
   expect_identical(a, b)
-  # expect_identical(a[1], b[1])
-  # expect_identical(a[2], b[2])
-  # expect_identical(a[3], b[3])
-  # expect_identical(a[4], b[4])
-  # expect_identical(a[5], b[5])
-  # expect_identical(a[6], b[6])
+
+  # Now add a leading dot (./) to filenames; this must be removed
+  csf <- dir(tmpdir, full.names = TRUE, pattern = "CHECKSUMS.txt")
+  txt <- read.table(csf, header = TRUE) |> as.data.table()
+  txt[, file := paste0("./", file)]
+  write.table(txt, file = csf)
+  doCS <- Checksums(tmpdir)
+  doCS <- doCS[grepl("[.]R$", expectedFile)][result == "OK", ]
+  expect_equal(nrow(doCS), NROW(dir(tmpdir, pattern = "[.]R$")))
+
 })
