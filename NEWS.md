@@ -1,5 +1,6 @@
 # reproducible 3.0.0
 
+* drop support for R 4.1 and 4.2;
 * near complete rewrite of `Cache` so it is simpler and more robust. 
 The main function is now 130 lines, instead of almost 700. 
 * In addition to full rewrites, numerous simplifications throughout code that is still being used;

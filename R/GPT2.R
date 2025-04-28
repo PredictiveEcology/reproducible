@@ -48,7 +48,9 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   # Harmonize call so the different versions are all cannonical, now that useCache = FALSE is past
   callList <- harmonizeCall(callList, .callingEnv, .functionName)
   # Add .functionName to .pkgEnv userTags in case this becomes part of a nested Cache
-  appendNestedTags(otherFunction = callList$.functionName)
+  needFunctionName(userTags, callList$.functionName)
+  # appendNestedTags(outerFunction = callList$.functionName)
+
 
   # do the Digest
   times <- list()
@@ -715,8 +717,17 @@ setupCacheNesting <- function(userTags, useCache, envir = parent.frame(1)) {
     .pkgEnv$.reproEnv2$useCache <- useCache
     on.exit2(rm(list = ".reproEnv2", envir = .pkgEnv), envir = envir)
   } else {
-    userTags <- .pkgEnv$.reproEnv2$userTags <- c(.pkgEnv$.reproEnv2$userTags, userTags)
-    .pkgEnv$.reproEnv2$nestLevel <- .pkgEnv$.reproEnv2$nestLevel + 1
+    userTagsOld <- .pkgEnv$.reproEnv2$userTags
+    allUT1 <- c(userTagsOld, userTags)
+    allUT2 <- allUT1[!duplicated(sapply(strsplit(allUT1, split = ":"), tail, 1))]
+    userTags <- allUT2
+    .pkgEnv$.reproEnv2$userTags <- userTags
+    nestLevelOld <- .pkgEnv$.reproEnv2$nestLevel
+    nestLevelNew <- nestLevelOld + 1
+    on.exit2({
+      .pkgEnv$.reproEnv2$nestLevel <- nestLevelOld
+      .pkgEnv$.reproEnv2$userTags <- userTagsOld
+    }, envir = envir)
   }
   userTags
 }
@@ -759,15 +770,17 @@ lockFile <- function(cachePath, cache_key, envir = parent.frame(),
     lockFile <- file.path(csd, paste0(cache_key, suffixLockFile()))
     first <- TRUE
     tryCatch({
-    while(!exists("locked", inherits = FALSE) || is(locked, "try-error")) {
-      setTimeLimit(elapsed = 3)
-      on.exit(setTimeLimit(elapsed = Inf))
-      locked <- try(filelock::lock(lockFile), silent = TRUE)
-      if (is(locked, "try-error") && isTRUE(first)) {
-        first <- FALSE
-        messageCache("The cache file (", lockFile,") is locked; waiting... ", verbose = verbose + 2)
-      }
-    }}, silent = TRUE)
+      while(!exists("locked", inherits = FALSE) ||
+            tryCatch(isTRUE(is(locked, "try-error")), error = function(e) {TRUE})) {
+        setTimeLimit(elapsed = 3)
+        on.exit(setTimeLimit(elapsed = Inf))
+        locked <- try(filelock::lock(lockFile), silent = TRUE)
+        stillLocked <- tryCatch(isTRUE(any(is(locked, "try-error"))), error = function(err) {TRUE})
+        if (stillLocked && isTRUE(first)) {
+          first <- FALSE
+          messageCache("The cache file (", lockFile,") is locked; waiting... ", verbose = verbose + 2)
+        }
+      }}, silent = TRUE)
     # , error = function(e) {if (any(grepl("reached elapsed time limit", e$message)))
     #   invokeRestart("muffleError")
     # }
@@ -1400,4 +1413,17 @@ doDigest <- function(toDigest, .functionName, .objects, length, algo, quick,
 
   names(detailed_key)[[1]] <- "key"
   detailed_key
+}
+
+
+
+needFunctionName <- function(userTags, functionName) {
+  tags <- c(userTags, functionName)
+  allUT <- c(userTags, functionName)
+  dups <- duplicated(sapply(strsplit(allUT, split = ":"), tail, 1))
+  allUT <- allUT[!dups] # only take after :
+  needFN <- identical(tail(dups, 1), FALSE)
+  if (isTRUE(needFN)) {
+    appendNestedTags(outerFunction = functionName)
+  }
 }

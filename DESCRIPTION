@@ -19,8 +19,8 @@ SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.ra
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2025-04-10
-Version: 2.1.2.9041
+Date: 2025-04-28
+Version: 2.1.2.9044
 Authors@R: 
     c(person(given = "Eliot J B",
              family = "McIntire",
@@ -50,7 +50,7 @@ Authors@R:
       person(given = "His Majesty the King in Right of Canada, as represented by the Minister of Natural Resources Canada",
              role = "cph"))
 Depends:
-    R (>= 4.1)
+    R (>= 4.3)
 Imports:
     cli,
     data.table (>= 1.10.4),
