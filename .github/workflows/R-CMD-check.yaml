@@ -26,7 +26,6 @@ jobs:
           - {os: windows-latest, nosuggests: false, r: 'release'}
           - {os: windows-latest, nosuggests: false, r: 'oldrel-1'}
           - {os: windows-latest, nosuggests: false, r: 'oldrel-2'}
-          - {os: windows-latest, nosuggests: false, r: 'oldrel-3'}
           - {os: ubuntu-latest,  nosuggests: false,   r: 'devel', http-user-agent: 'release'}
           - {os: ubuntu-latest,  nosuggests: false,   r: 'release'}
           - {os: ubuntu-latest,  nosuggests: true,   r: 'release'}

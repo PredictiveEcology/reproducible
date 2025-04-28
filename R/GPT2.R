@@ -1445,6 +1445,8 @@ doDigest <- function(toDigest, .functionName, .objects, length, algo, quick,
   detailed_key
 }
 
+
+
 needFunctionName <- function(userTags, functionName) {
   tags <- c(userTags, functionName)
   allUT <- c(userTags, functionName)
