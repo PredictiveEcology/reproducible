@@ -1,3 +1,4 @@
+# reproducible 3.0.0
 
 * drop support for R 4.1 and 4.2;
 * near complete rewrite of `Cache` so it is simpler and more robust. 
@@ -35,8 +36,6 @@ memoising than previously. However, it will be robust to downstream changes to t
 * new options to help with backwards compatibility:
   - `reproducible.useCacheV3`: default = TRUE to use the new Cache source code
   - `reproducible.digestV3`: default = TRUE to use the new Cache digest algorithms
-
-# reproducible 3.0.0
 
 # reproducible 2.1.2
 
