@@ -1120,7 +1120,7 @@ harmonizeCall <- function(callList, .callingEnv, .functionName = NULL) {
 
 cacheIdOverride <- function(cacheId, key, .functionName, verbose) {
   shownCache <- cacheIdCheckInCache(cacheId, calculatedCacheId = key, .functionName, verbose)
-  if (NROW(shownCache)) cacheId <- shownCache$cacheId[1]
+  if (NROW(shownCache) == 0) cacheId <- NULL
   cacheId
 }
 
