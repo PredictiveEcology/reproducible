@@ -448,15 +448,28 @@ setMethod(
 
             rbindlist(fill = TRUE, lapply(dd, function(fil) {
               filOutside <<- fil
-              loadFile(fil)}))
-          }, error = function(e) {
-              cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", getOption("reproducible.cacheSaveFormat")), "",
-                              basename(file))
-              filesToRm <- dir(dirname(file), pattern = cacheId, full.names = TRUE)
-              messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
-                              verbose = getOption("reproducible.verbose"))
-              unlink(filesToRm)
-          }
+              out <- try(loadFile(fil))
+              if (is(out, "try-error")) {
+                browser()
+                cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", getOption("reproducible.cacheSaveFormat")), "",
+                                basename(fil))
+                filesToRm <- dir(dirname(fil), pattern = cacheId, full.names = TRUE)
+                messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
+                             verbose = getOption("reproducible.verbose"))
+                unlink(filesToRm)
+              }
+              out
+
+              }))
+          }# , error = function(e) {
+            # browser()
+            #   cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", getOption("reproducible.cacheSaveFormat")), "",
+            #                   basename(file))
+            #   filesToRm <- dir(dirname(file), pattern = cacheId, full.names = TRUE)
+            #   messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
+            #                   verbose = getOption("reproducible.verbose"))
+            #   unlink(filesToRm)
+          # }
         )
       }
       if (NROW(objsDT) == 0) {
