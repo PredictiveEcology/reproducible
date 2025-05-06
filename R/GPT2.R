@@ -48,7 +48,8 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
   # Harmonize call so the different versions are all cannonical, now that useCache = FALSE is past
   callList <- harmonizeCall(callList, .callingEnv, .functionName)
   # Add .functionName to .pkgEnv userTags in case this becomes part of a nested Cache
-  needFunctionName(userTags, callList$.functionName)
+  appendFunctionNameToNestedTags(userTags, callList$.functionName)
+  # .pkgEnv$.reproEnv2$userTags
   # appendNestedTags(outerFunction = callList$.functionName)
 
 
