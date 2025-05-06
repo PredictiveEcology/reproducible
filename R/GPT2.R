@@ -875,8 +875,15 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
                    paste(collapse = ", ", as.character(otherLabels[whOther %in% TRUE])),
                    verbose = verbose
       )
-      # lapply(strsplit(shownCache$tagValue, split = "\\:"), function(x) x[[3]])
 
+    }
+
+    # This is for dryRun: i.e., there is a cacheId, but no difference in metadata
+    isIdentical <- vapply(similar, function(x) NROW(x) == 0, FUN.VALUE = logical(1))
+    if (any(isIdentical)) {
+      messageCache("Call is identical to ", paste(names(similar)[isIdentical], collapse = ", "),
+                   " and would return that object")
+      return(NULL)
     }
 
     if (NROW(similar)) {
@@ -884,39 +891,48 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
       data.table::setorderv(simi, c("N", "createdDate"))
       numSimilars <- NROW(unique(similar$cacheId))
       messageCache("There are ", numSimilars,
-                   " similar calls (same fn: ", .messageFunctionFn(.functionName), ") in the Cache repository.",
+                   " calls with same fn (", .messageFunctionFn(.functionName), ") in the Cache repository.",
                    verbose = verbose * !devMode)
-      simi <- split(simi, by = "N") # take first element in split list
-      simi <- simi[[1]]
       if (identical(numSimilars, 1L)) {
-        messageCache("It has ", simi$N[[1]], " differences", verbose = verbose * !devMode)
+        messageCache("It has ", minNumDiffs, " differences", verbose = verbose * !devMode)
       } else {
-        messageCache("With fewest differences (", simi$N[[1]], "), there are ",
-                     NROW(unique(simi$cacheId)),
+        messageCache("With fewest differences (", minNumDiffs, "), there ", isAre(v = numSmallest),
+                     " ", numSmallest,
                      " similar calls in the Cache repository.", verbose = verbose * !devMode)
       }
-      twoCols <- strsplit(simi[["tagValue"]], ":")
-      args <- vapply(twoCols, function(x) x[[1]], FUN.VALUE = character(1))
-      lens <- lengths(twoCols)
-      vals <- rep("", length(twoCols))
-      vals[lens > 1] <- vapply(twoCols[lens > 1], function(x) x[[2]], FUN.VALUE = character(1))
-      set(simi, NULL, "arg", args)
-      set(simi, NULL, "value", vals)
-      set(simi, NULL, c("N", "tagKey", "tagValue", "createdDate"), NULL)
-      setcolorder(simi, c("cacheId", "arg", "value"))
-      setnames(simi, old = c("cacheId", "value"), new = c("cacheIdInCache", "valueInCache"))
-      simi2 <- metadataSmall[!similarFull[cacheId %in% unique(simi[["cacheIdInCache"]])], on = c("tagKey", "tagValue")]
-      hasColon <- grep(":", simi2[["tagValue"]])
-      twoCols <- strsplit(simi2[["tagValue"]][hasColon], ":")
-      args <- vapply(twoCols, function(x) x[[1]], FUN.VALUE = character(1))
-      vals <- vapply(twoCols, function(x) x[[2]], FUN.VALUE = character(1))
-      set(simi2, hasColon, "arg", args)
-      set(simi2, hasColon, "value2", vals)
-      set(simi2, NULL, c("tagKey", "tagValue", "createdDate"), NULL)
-      setcolorder(simi2, c("cacheId", "arg", "value2"))
-      setnames(simi2, old = c("cacheId", "value2"),
-               new = c("cacheIdOfThisCall", "valueThisCall"))
-      simi <- data.table(simi, simi2[match(simi$arg, arg), -"arg"])
+      # data.table::setnames(notInSC2, old = c("valueInCache", "cacheIdInCache"), c("valueThisCall", "cacheIdOfThisCall"),
+      #                      skip_absent = TRUE)
+      #
+      # # a <- notInSC2[notInMetadata2, on = "arg"]
+      # # b <- notInMetadata2[notInSC2, on = "arg"]
+      # # simi <- rbindlist(list(a, b), fill = TRUE)
+      #
+      # simi <- lapply(split(notInMetadata2, by = "cacheIdInCache"), function(x) {
+      #   a <- notInSC2[x, on = "arg"]
+      #   b <- x[notInSC2, on = "arg"]
+      #   d <- rbindlist(list(a, b), fill = TRUE)
+      #   setcolorder(d, c("arg",
+      #                    grep("InCache", value = TRUE, colnames(d)),
+      #                    grep("ThisCall", value = TRUE, colnames(d))))
+      #   d
+      # })
+
+      # notInMetadata2 <- createSimilar(notInThisCall, notInSC2, cacheIdInsimi = unique(simi[["cacheIdInCache"]]))
+      # simi22 <- createMerged(notInSC2, notInMetadata2)
+
+#
+#       noMergeCols <- c("outerFunction", "userTags")
+#       simi1NoMergeCols <- simi[arg %in% noMergeCols]
+#       simi2NoMergeCols <- simi2[arg %in% noMergeCols]
+#       simi1B <- simi1NoMergeCols[!simi2NoMergeCols, on = c("arg", "valueInCache" = "valueThisCall")]
+#       simi2B <- simi2NoMergeCols[!simi1NoMergeCols, on = c("arg", "valueThisCall" = "valueInCache")]
+#       simi1MergeCols <- simi[!arg %in% noMergeCols]
+#       simi2MergeCols <- simi2[!arg %in% noMergeCols]
+#
+#
+#       simiMergeCols <- data.table(simi1MergeCols, simi2MergeCols[match(simi1MergeCols$arg, arg), -"arg"])
+#       simi <- rbindlist(list(simi1NoMergeCols, simi2NoMergeCols, simiMergeCols), fill = TRUE)
+#       setorderv(simi, c("cacheIdInCache", "arg"))
       # simi <- simi[simi2, on = c("arg"), allow.cartesian = TRUE] # there can be duplicate args
 
       if (isDevMode(useCache, userTags)) {
@@ -929,7 +945,19 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
         clearCache(cachePath, userTags = cacheIdsToClear, ask = FALSE, drv = drv, conn = conn, verbose = verbose - 2)
       }
       messageCache("with different elements (most recent at top):", verbose = verbose)
-      messageDF(simi, indent = "", verbose = verbose)
+      dashes <- "----------------------"
+      messageCache(dashes)
+      lala <- Map(si = simi, nam = names(simi), function(si, nam) {
+        prefix <- if (identical(.GlobalEnv, whereInStack("sim"))) "" else .txtNoPrefix
+        messageCache(prefix, "Compared to cacheId: ", nam, verbose = verbose)
+        if (verbose > 0) {
+          oo <- capture.output(si)
+          fn <- cliCol(getOption("reproducible.messageColourCache"))
+          cat(fn(oo), sep = "\n")
+        }
+        messageCache(prefix, dashes)
+        })
+
       messageCache("------ devMode -------", verbose = verbose * devMode)
     }
   } else {
@@ -1433,13 +1461,91 @@ doDigest <- function(toDigest, .functionName, .objects, length, algo, quick,
 
 
 
-needFunctionName <- function(userTags, functionName) {
-  tags <- c(userTags, functionName)
-  allUT <- c(userTags, functionName)
-  dups <- duplicated(sapply(strsplit(allUT, split = ":"), tail, 1))
-  allUT <- allUT[!dups] # only take after :
-  needFN <- identical(tail(dups, 1), FALSE)
-  if (isTRUE(needFN)) {
-    appendNestedTags(outerFunction = functionName)
-  }
+appendFunctionNameToNestedTags <- function(userTags, functionName) {
+  # allUT <- c(paste0("outerFunction:", functionName), userTags)
+  # dups <- duplicated(sapply(strsplitOnlySingleColon(allUT), tail, 1))
+  # allUT <- allUT[!dups] # only take after :
+  # allUT <- sort(allUT)
+  .pkgEnv$.reproEnv2$userTags <- c(.pkgEnv$.reproEnv2$userTags,
+                                   paste0("outerFunction:", functionName))
+  .pkgEnv$.reproEnv2$userTags <- .pkgEnv$.reproEnv2$userTags[!duplicated(.pkgEnv$.reproEnv2$userTags)]
+  # needFN <- identical(tail(dups, 1), FALSE)
+  # if (isTRUE(needFN)) {
+  #   appendNestedTags(outerFunction = functionName)
+  # }
 }
+
+.txtGrepStrSplitSingleColon <- "(?<!:):(?!:)"
+
+strsplitOnlySingleColon <- function(x, ...) {
+  strsplit(x, split = .txtGrepStrSplitSingleColon, perl = TRUE)
+}
+
+
+reorder_by_first_element <- function(x) {
+  keys <- sapply(x, `[[`, 1)  # extract the first elements
+  seen <- character()
+  res <- list()
+
+  for (i in seq_along(x)) {
+    key <- keys[i]
+    if (!key %in% seen) {
+      # First time we see this key: append
+      res[[length(res) + 1]] <- x[[i]]
+      seen <- c(seen, key)
+    } else {
+      # Find last index where this key is already in res
+      last_idx <- max(which(sapply(res, `[[`, 1) == key))
+      res <- append(res, list(x[[i]]), after = last_idx)
+    }
+  }
+
+  res
+}
+
+
+
+createSimilar <- function(similar, .functionName, verbose, devMode) {
+
+  simi <- similar[, .N, by = "cacheId"][similar, on = "cacheId"]
+  data.table::setorderv(simi, c("N", "createdDate"))
+  numSimilars <- NROW(unique(similar$cacheId))
+  # messageCache("There are ", numSimilars,
+  #              " similar calls (same fn: ", .messageFunctionFn(.functionName), ") in the Cache repository.",
+  #              verbose = verbose * !devMode)
+  simi <- split(simi, by = "N") # take first element in split list
+  if (length(simi)) {
+    simi <- simi[[1]]
+    # if (identical(numSimilars, 1L)) {
+    #   messageCache("It has ", simi$N[[1]], " differences", verbose = verbose * !devMode)
+    # } else {
+    #   messageCache("With fewest differences (", simi$N[[1]], "), there are ",
+    #                NROW(unique(simi$cacheId)),
+    #                " similar calls in the Cache repository.", verbose = verbose * !devMode)
+    # }
+    twoCols <- strsplitOnlySingleColon(simi[["tagValue"]])
+    lens <- lengths(twoCols)
+    hasNoColon <- lens == 1
+    if (isTRUE(any(hasNoColon))) {
+      whNoColon <- which(hasNoColon)
+      twoCols[whNoColon] <- lapply(whNoColon, function(x) c(simi[["tagKey"]][[x]], twoCols[[x]]))
+    }
+
+    args <- vapply(twoCols, function(x) x[[1]], FUN.VALUE = character(1))
+    lens <- lengths(twoCols)
+    vals <- rep("", length(twoCols))
+    vals[lens > 1] <- vapply(twoCols[lens > 1], function(x) x[[2]], FUN.VALUE = character(1))
+    set(simi, NULL, "arg", args)
+    set(simi, NULL, "value", vals)
+    set(simi, NULL, c("N", "tagKey", "tagValue", "createdDate"), NULL)
+    setcolorder(simi, c("cacheId", "arg", "value"))
+    setnames(simi, old = c("cacheId", "value"), new = c("cacheIdInCache", "valueInCache"))
+  } else {
+    simi <- data.table(args = character(), cacheIdInCache = character(), valueInCache = character())
+  }
+  simi
+}
+
+
+.txtNoPrefix <- "noPrefix"
+.txtDryRunTRUE <- "dryRun = TRUE: "
