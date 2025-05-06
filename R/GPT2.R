@@ -930,9 +930,46 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
     }
 
     if (NROW(similar)) {
-      simi <- similar[, .N, by = "cacheId"][similar, on = "cacheId"]
-      data.table::setorderv(simi, c("N", "createdDate"))
-      numSimilars <- NROW(unique(similar$cacheId))
+
+      notInSCLen <- vapply(notInSC0, NROW, FUN.VALUE = integer(1))
+      notInThisCallLen <- vapply(notInThisCall0, NROW, FUN.VALUE = integer(1))
+      numSimilars <- length(notInSCLen)
+
+      # First pass -- this will shrink probably down a lot
+      diffs <- mapply(n = notInSCLen, m = notInThisCallLen, function(n, m) n + m, SIMPLIFY = TRUE)
+      minNumDiffs <- min(diffs)
+      smallestDiffs <- which(diffs == minNumDiffs)
+      notInSC2 <- notInSC0[smallestDiffs]
+      notInThisCall2 <- notInThisCall0[smallestDiffs]
+
+      notInSC4 <- lapply(notInSC2, function(x) {
+        x <- createSimilar(x, verbose = verbose, devMode = devMode, .functionName = .functionName)
+        data.table::setnames(x, old = c("valueInCache", "cacheIdInCache"),
+                             new = c("valueThisCall", "cacheIdOfThisCall"),
+                             skip_absent = TRUE)
+        })
+      notInThisCall3 <- lapply(notInThisCall2, function(x) createSimilar(x, verbose = verbose, devMode = devMode, .functionName = .functionName))
+      simi <- Map(n = names(notInThisCall3), function(n) {
+        if (NROW(notInThisCall3[[n]]) && NROW(notInSC4[[n]])) {
+          a <- notInSC4[[n]][notInThisCall3[[n]], on = "arg", allow.cartesian = TRUE]
+          b <- notInThisCall3[[n]][notInSC4[[n]], on = "arg", allow.cartesian = TRUE]
+          d <- unique(rbindlist(list(a, b), fill = TRUE))
+        } else {
+          d <- data.table(notInSC4[[n]], valueInCache = NA, cacheIdInCache = NA)
+        }
+        setcolorder(d, c("arg",
+                         grep("InCache", value = TRUE, colnames(d)),
+                         grep("ThisCall", value = TRUE, colnames(d))))
+        d
+      })
+
+      # Second pass -- this will be different if there were no new arguments; just arg value changes
+      diffs <- mapply(x = simi, function(x) NROW(x), SIMPLIFY = TRUE)
+      minNumDiffs <- min(diffs)
+      smallestDiffs <- which(diffs == minNumDiffs)
+      numSmallest <- length(smallestDiffs)
+      simi <- simi[smallestDiffs]
+
       messageCache("There are ", numSimilars,
                    " calls with same fn (", .messageFunctionFn(.functionName), ") in the Cache repository.",
                    verbose = verbose * !devMode)
