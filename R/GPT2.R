@@ -3,7 +3,7 @@ utils::globalVariables("arg")
 #' @include messages.R
 #' @export
 #' @rdname Cache
-Cache <- function(FUN, ..., notOlderThan = NULL,
+Cache <- function(FUN, ..., dryRun = FALSE, notOlderThan = NULL,
                   .objects = NULL, .cacheExtra = NULL, .functionName = NULL,
                   outputObjects = NULL, # nolint
                   algo = "xxhash64",
@@ -11,7 +11,8 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                   length = getOption("reproducible.length", Inf),
                   userTags = c(),
                   omitArgs = NULL,
-                  classOptions = list(), debugCache = character(),
+                  classOptions = list(),
+                  debugCache = character(),
                   quick = getOption("reproducible.quick", FALSE),
                   verbose = getOption("reproducible.verbose", 1),
                   cacheId = NULL,
@@ -86,38 +87,53 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
     gdriveLs <- retry(quote(driveLs(cloudFolderID, keyFull$key, cachePath = cachePaths[[1]], verbose = verbose)))
   }
 
+  if (missing(dryRun)) dryRun <- getOption("reproducible.cacheDryRun", FALSE)
+
+  # if (dryRun) {
+  #   metadata <- metadata_define_preEval(keyFull, callList$.functionName, userTags,
+  #                                       .objects, length, algo, quick, classOptions,
+  #                                       times$EvaluateStart, times$CacheDigestStart)
+  #
+  #   if (isTRUE(showSimilar) || isDevMode(useCache, userTags))
+  #     showSimilar(cachePaths[[1]], metadata, callList$.functionName, userTags, useCache,
+  #                 drv = drv, conn = conn, verbose)
+  #   return(NULL)
+  # }
+
   # Memoise and return if it is there #
-  outputFromMemoise <- check_and_get_memoised_copy(keyFull$key, cachePaths, callList$.functionName,
-                                                   callList$func, useCache, useCloud,
-                                                   cloudFolderID, gdriveLs, full_call = callList$new_call,
-                                                   drv = drv, conn = conn, verbose)
-  if (!identical2(.returnNothing, outputFromMemoise))
-    return(outputFromMemoise)
+  if (!dryRun) {
+    outputFromMemoise <- check_and_get_memoised_copy(keyFull$key, cachePaths, callList$.functionName,
+                                                     callList$func, useCache, useCloud,
+                                                     cloudFolderID, gdriveLs, full_call = callList$new_call,
+                                                     drv = drv, conn = conn, verbose)
+    if (!identical2(.returnNothing, outputFromMemoise))
+      return(outputFromMemoise)
 
-  # After memoising fail, try files; need to check Cache dir and set lockfile
-  locked <- lockFile(cachePaths[[1]], keyFull$key, verbose = verbose)
+    # After memoising fail, try files; need to check Cache dir and set lockfile
+    locked <- lockFile(cachePaths[[1]], keyFull$key, verbose = verbose)
 
-  if (useDBI()) {
-    connOrig <- conn
-    conn <- checkConns(cachePaths, conn)
-    drv <- getDrv(getOption("reproducible.drv", NULL))
-    for (cachePath in cachePaths)
-      conn <- createConns(cachePath, conn, drv) # this will convert backend if it is wrong
+    if (useDBI()) {
+      connOrig <- conn
+      conn <- checkConns(cachePaths, conn)
+      drv <- getDrv(getOption("reproducible.drv", NULL))
+      for (cachePath in cachePaths)
+        conn <- createConns(cachePath, conn, drv) # this will convert backend if it is wrong
 
-    if (is.null(connOrig)) # don't disconnect if conn was user passed
-      # if this is >1st cachePath, then the db will already be disconnected; suppressWarnings
-      on.exit(dbDisconnectAll(conn), add = TRUE)
+      if (is.null(connOrig)) # don't disconnect if conn was user passed
+        # if this is >1st cachePath, then the db will already be disconnected; suppressWarnings
+        on.exit(dbDisconnectAll(conn), add = TRUE)
+    }
+
+    # Check if keyFull$key is on disk and return if it is there
+    outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePaths, cache_file, callList$.functionName, callList$func,
+                                                useCache, useCloud, cloudFolderID, gdriveLs,
+                                                full_call = callList$new_call,
+                                                drv, conn, verbose = verbose)
+
+    if (!identical2(.returnNothing, outputFromDisk))
+      return(outputFromDisk)
+
   }
-
-  # Check if keyFull$key is on disk and return if it is there
-  outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePaths, cache_file, callList$.functionName, callList$func,
-                                              useCache, useCloud, cloudFolderID, gdriveLs,
-                                              full_call = callList$new_call,
-                                              drv, conn, verbose = verbose)
-
-  if (!identical2(.returnNothing, outputFromDisk))
-    return(outputFromDisk)
-
   if (useDBI()) conn <- attr(outputFromDisk, ".Cache")$conn
 
   cache_file <- CacheStoredFile(cachePaths[[1]], keyFull$key) # now we know it is not in Cache; use 1st cachePath
@@ -142,9 +158,13 @@ Cache <- function(FUN, ..., notOlderThan = NULL,
                                       .objects, length, algo, quick, classOptions,
                                       times$EvaluateStart, times$CacheDigestStart)
 
-  if (isTRUE(showSimilar) || isDevMode(useCache, userTags))
+  if (isTRUE(showSimilar) || isDevMode(useCache, userTags) || isTRUE(dryRun)) {
+    if (dryRun) messageColoured(.txtDryRunTRUE, colour = "green")
     showSimilar(cachePaths[[1]], metadata, callList$.functionName, userTags, useCache,
                 drv = drv, conn = conn, verbose)
+  }
+  if (isTRUE(dryRun))
+    return(invisible(NULL))
 
   # ## evaluate the call ## #
   outputFromEvaluate <- evalTheFunAndAddChanged(callList = callList, keyFull = keyFull,
