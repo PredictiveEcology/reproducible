@@ -437,7 +437,8 @@ metadata_update <- function(outputToSave, metadata, cache_key) {
   userTagsExtra <- attr(outputToSave, "tags") # .wrap may have added tags
   userTagsExtra <- grep("cacheId:", userTagsExtra, invert = TRUE, value = TRUE) # don't add cacheId to tagKey
   if (!is.null(userTagsExtra) && length(userTagsExtra) > 0) {
-    ut <- strsplit(userTagsExtra, split = ":")
+    ut <- strsplitOnlySingleColon(userTagsExtra)
+    # ut <- strsplit(userTagsExtra, split = ":")
     ll <- lapply(ut, tail, 1)
     names(ll) <- lapply(ut, head, 1)
     userTagsList <- ll
@@ -611,7 +612,8 @@ metadata_define_preEval <- function(detailed_key, func_name, userTags,
 
   tagKey <- paste0(names(df), ":", as.character(df))
   if (length(userTags)) {
-    ut <- strsplit(userTags, split = ":")
+    ut <- strsplitOnlySingleColon(userTags)
+    # ut <- strsplit(userTags, split = ":")
     ll <- lapply(ut, tail, 1)
     strt <- lapply(ut, function(x) x[-length(x)])
     utagLabel <- rep("userTags", length(ll))#lapply(ut, head, 1)

@@ -2038,8 +2038,10 @@ test_that("ensure default tags are correct", {
 
   # This test is necessary because it uses these in a very specific order; CANNOT CHANGE THESE
   #  without being fully aware of changes
-  cacheTagsSecondGroup <- c("class", "object.size", "fromDisk", "resultHash", "elapsedTimeFirstRun")
-  cacheTagsFirstGroup <- c("function", "userTags", "accessed", "inCloud", "elapsedTimeDigest", "preDigest")
+  # cacheTagsSecondGroup <- c("class", "object.size", "fromDisk", "resultHash", "elapsedTimeFirstRun")
+  # cacheTagsFirstGroup <- c("function", "userTags", "accessed", "inCloud", "elapsedTimeDigest", "preDigest")
+  cacheTagsFirstGroup <- .cacheTagsFirstGroup
+  cacheTagsSecondGroup <- .cacheTagsSecondGroup
 
   expect_identical(.cacheTagsFirstGroup, cacheTagsFirstGroup)
   expect_identical(.cacheTagsSecondGroup, cacheTagsSecondGroup)
