@@ -837,24 +837,29 @@ lockFile <- function(cachePath, cache_key, envir = parent.frame(),
 showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, drv, conn, verbose) {
   devMode <- isDevMode(useCache, userTags)  # don't use devMode if no userTags
   shownCache <- showCache(cachePath, Function = .functionName, verbose = verbose - 2)
-  if (NROW(shownCache)) {
-    if (!is.null(userTags)) { # userTags are as "strong as" functionName
-      userTags2a <- gsub("^.*:", "", userTags)
-      userTags2b <- gsub(":.*$", "", userTags)
-      noColons <- userTags2a == userTags2b
-      if (any(noColons)) {
-        userTags2b[noColons] <- "userTags"
-      }
-      userTags2b <- ifelse(!nzchar(userTags2b), "userTags", userTags2b)
-      userTagsAsDT <- data.table(tagKey = userTags2b, tagValue = userTags2a)
-      userTagsAsDT <- unique(userTagsAsDT)
-      # identify only those items that match the userTags
-      scMatch <- shownCache[userTagsAsDT, # .(length(unique(tagKey)) == length(userTags)),
-                            on = c("tagKey", "tagValue"), # by = "cacheId",
-                            nomatch = FALSE]# [V1 %in% TRUE]
-      shownCache <- shownCache[cacheId %in% unique(scMatch[["cacheId"]]), on = "cacheId"]
-    }
-  }
+  setorderv(shownCache, "createdDate", order = -1)
+  # shownCache <- shownCache[tagKey != "outerFunction"] # doesn't matter what outerFunctions do, if all others are same
+  # metadata <- metadata[tagKey != "outerFunction"]
+  onKey <- c("tagKey", "tagValue")
+
+  # if (NROW(shownCache)) {
+  #   if (!is.null(userTags)) { # userTags are as "strong as" functionName
+  #     userTags2a <- gsub("^.*:", "", userTags)
+  #     userTags2b <- gsub(":.*$", "", userTags)
+  #     noColons <- userTags2a == userTags2b
+  #     if (any(noColons)) {
+  #       userTags2b[noColons] <- "userTags"
+  #     }
+  #     userTags2b <- ifelse(!nzchar(userTags2b), "userTags", userTags2b)
+  #     userTagsAsDT <- data.table(tagKey = userTags2b, tagValue = userTags2a)
+  #     userTagsAsDT <- unique(userTagsAsDT)
+  #     # identify only those items that match the userTags
+  #     scMatch <- shownCache[userTagsAsDT, # .(length(unique(tagKey)) == length(userTags)),
+  #                           on = onKey, # by = "cacheId",
+  #                           nomatch = FALSE]# [V1 %in% TRUE]
+  #     shownCache <- shownCache[cacheId %in% unique(scMatch[["cacheId"]]), on = "cacheId"]
+  #   }
+  # }
 
   if (NROW(shownCache)) {
     userTagsMess <- if (!is.null(userTags)) {
@@ -864,11 +869,27 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
       )
     }
 
-    shownCache <- shownCache[tagKey %in% c(metadata$tagKey)][grep(x = tagKey, "otherFunction|elapsedTime|accessed", invert = TRUE)]
+    rmTagKeys <- "otherFunction|elapsedTime|accessed"
+    # shownCache <- shownCache[tagKey %in% c(metadata$tagKey)][grep(x = tagKey, rmTagKeys, invert = TRUE)]
+    shownCache <- shownCache[grep(x = tagKey, rmTagKeys, invert = TRUE)]
+    metadataSmall <- metadata[grep(x = tagKey, rmTagKeys, invert = TRUE)]
     # cacheIdOfSimilar
+    # Can only compare on tagKeys that are *not yet* in the metadata; e.g., object.size may
+    #   not be there, so don't know if it is different
     similarFull <- unique(shownCache[tagKey %in% unique(c(metadata$tagKey))], by = .dtFileMainCols)
-    metadataSmall <- metadata[tagKey %in% unique(c(similarFull$tagKey))]
-    similar <- similarFull[!metadata, on = c("tagKey", "tagValue")]
+    # similarFull <- unique(shownCache, by = .dtFileMainCols)
+    # metadataSmall <- metadataSmall[tagKey %in% unique(c(similarFull$tagKey))]
+    similarFullList <- split(similarFull, by = "cacheId")
+    notInThisCall <- lapply(similarFullList, function(x) x[!metadataSmall, on = onKey])
+    notInSC <- lapply(similarFullList, function(x) metadataSmall[!x, on = onKey])
+    # notInThisCall <- similarFull[!metadataSmall, on = onKey]
+    # notInSC <- metadataSmall[!similarFull, on = onKey]
+    # notInSC[grep("userTags", tagKey ), tagValue := paste0(tagKey, ":", tagValue)]
+    # notInThisCall[grep("userTags", tagKey ), tagValue := paste0(tagKey, ":", tagValue)]
+    notInThisCall0 <- lapply(notInThisCall, function(x) x[grep("userTags", tagKey ), tagValue := paste0(tagKey, ":", tagValue)])
+    notInSC0 <- lapply(notInSC, function(x) x[grep("userTags", tagKey ), tagValue := paste0(tagKey, ":", tagValue)])
+
+    similar <- notInThisCall
     other <- logical()
     if (NROW(similar) == 0) {
       other <- vapply(strsplit(similarFull$tagValue, split = "\\:"),
