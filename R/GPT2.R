@@ -814,7 +814,9 @@ lockFile <- function(cachePath, cache_key, envir = parent.frame(),
         stillLocked <- tryCatch(isTRUE(any(is(locked, "try-error"))), error = function(err) {TRUE})
         if (stillLocked && isTRUE(first)) {
           first <- FALSE
-          messageCache("The cache file (", lockFile,") is locked; waiting... ", verbose = verbose + 2)
+          messageCache("The cache file (", lockFile,") is locked due to a concurrent process; waiting... ",
+                       "\nIf there is no concurrent process (i.e., no parallelism), ",
+                       "delete that lockfile", verbose = verbose + 2)
         }
       }}, silent = TRUE)
     # , error = function(e) {if (any(grepl("reached elapsed time limit", e$message)))
