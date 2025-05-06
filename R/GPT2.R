@@ -892,9 +892,9 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
     similar <- notInThisCall
     other <- logical()
     if (NROW(similar) == 0) {
-      other <- vapply(strsplit(similarFull$tagValue, split = "\\:"),
+      other <- vapply(strsplitOnlySingleColon(similarFull$tagValue, split = "\\:"),
                       function(x) ifelse(length(x) == 2, x[[2]], NA_character_), FUN.VALUE = character(1))
-      otherLabels <- vapply(strsplit(similarFull$tagValue, split = "\\:"),
+      otherLabels <- vapply(strsplitOnlySingleColon(similarFull$tagValue, split = "\\:"),
                       function(x) ifelse(length(x) == 2, x[[1]], NA_character_), FUN.VALUE = character(1))
       whOther <- other == "other"
       # similar <- similarFull[whOther %in% TRUE]
