@@ -15,6 +15,7 @@ CacheGeo(
   useCache = getOption("reproducible.useCache"),
   overwrite = getOption("reproducible.overwrite"),
   action = c("nothing", "update", "replace", "append"),
+  bufferOK = FALSE,
   ...
 )
 }
@@ -72,6 +73,11 @@ i.e., "read only". \code{append} will add the spatial elements in domain to
 \code{targetFile} (and writing it back to disk). \code{update} will do the same as
 \code{append}, but will also remove any identical geometries before appending.
 \code{replace} does nothing currently.}
+
+\item{bufferOK}{A logical. If \code{TRUE}, then after testing whether the domain is
+within the \code{targetFile} spatial object, and if it returns \code{FALSE}, then the function
+will create a larger object, buffered by 2.5\% of the extent of the object. If
+\code{FALSE}, then it will be strict about whether the \code{domain} is within the \code{targetFile}.}
 
 \item{...}{All named objects that are needed for FUN, including the function itself,
 if it is not in a package.}

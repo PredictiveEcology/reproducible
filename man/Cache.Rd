@@ -9,6 +9,7 @@
 Cache(
   FUN,
   ...,
+  dryRun = FALSE,
   notOlderThan = NULL,
   .objects = NULL,
   .cacheExtra = NULL,
@@ -35,6 +36,7 @@ Cache(
 cache2(
   FUN,
   ...,
+  dryRun = FALSE,
   notOlderThan = NULL,
   .objects = NULL,
   .cacheExtra = NULL,
