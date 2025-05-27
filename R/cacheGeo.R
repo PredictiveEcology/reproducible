@@ -37,8 +37,13 @@
 #'   2) a googledrive id or 3) an absolute path to a (possibly non-existent yet)
 #'   folder on your google drive.
 #' @param useCloud A logical.
+#' @param bufferOK A logical. If `TRUE`, then after testing whether the domain is
+#'   within the `targetFile` spatial object, and if it returns `FALSE`, then the function
+#'   will create a larger object, buffered by 2.5% of the extent of the object. If
+#'   `FALSE`, then it will be strict about whether the `domain` is within the `targetFile`.
 #' @param ... All named objects that are needed for FUN, including the function itself,
 #'   if it is not in a package.
+#'
 #' @inheritParams prepInputs
 #' @inheritParams Cache
 #' @param action A character string, with one of c("nothing", "update",
@@ -115,6 +120,7 @@ CacheGeo <- function(targetFile = NULL,
                      purge = FALSE, useCache = getOption("reproducible.useCache"),
                      overwrite = getOption("reproducible.overwrite"),
                      action = c("nothing", "update", "replace", "append"),
+                     bufferOK = FALSE,
                      ...) {
   objExisted <- TRUE
   if (is.null(targetFile)) {
@@ -131,7 +137,7 @@ CacheGeo <- function(targetFile = NULL,
   if (!file.exists(targetFile)) {
     objExisted <- FALSE
   }
-  domainExisted <- objExisted
+  domainExisted <- objExisted # !missing(domain) # objExisted
   urlThisTargetFile <- NULL
 
   alreadyOnRemote <- FALSE
@@ -184,29 +190,55 @@ CacheGeo <- function(targetFile = NULL,
     existingObjSF <- if (is(existingObj, "sf")) existingObj else sf::st_as_sf(existingObj)
     if (!missing(domain)) {
       wh <- sf::st_within(domain, existingObjSF, sparse = FALSE)
+      if (isTRUE(wh %in% FALSE) && isTRUE(bufferOK)) {
+        diffs <- mapply(minmax = list(c("xmin", "xmax"), c("ymin", "ymax")), function(minmax)
+         round(abs(diff(st_bbox(existingObjSF)[minmax])), 0))
+        buff <- diffs * 0.025
+        meanBuff <- mean(buff)
+        meanBuffKm <- round(meanBuff/1e3, 1)
+        message("domain is not within existing object; trying a 2.5% (", meanBuffKm, "km) buffer")
+        existingObjSF_wider <- sf::st_buffer(existingObjSF, dist = meanBuff)
+        wh <- sf::st_within(domain, existingObjSF_wider, sparse = FALSE)
+      }
       wh1 <- apply(wh, 1, any)
       wh2 <- apply(wh, 2, any) # This is "are the several domains inside the several existingObjSF"
       # length of existingObjSF
       domainExisted <- all(wh1)
       if (domainExisted) {
-        message(.message$cacheGeoDomainContained)
+        if (isTRUE(bufferOK)) # the message will be previously given
+          message("domain is within the buffered object; returning the existing parameters")
+        else
+          message(.message$cacheGeoDomainContained)
         existingObj <- existingObj[wh2, ]
+      }
+      if (all(wh1 %in% FALSE)) {
+        existingObj <- NULL
       }
     } else {
       domainExisted <- TRUE
       message("Spatial domain is missing; returning entire spatial domain")
     }
   }
-  if (isFALSE(objExisted) || isFALSE(domainExisted)) {
+  if ( (isFALSE(objExisted) || isFALSE(domainExisted) ) && !missing(FUN)) {
     message(.message$cacheGeoDomainNotContained)
     FUNcaptured <- substitute(FUN)
     env <- environment()
     list2env(list(...), envir = env) # need the ... to be "here"
     newObj <- try(eval(FUNcaptured, envir = env), silent = TRUE)
     newObjSF <- if (is(newObj, "sf")) newObj else sf::st_as_sf(newObj)
-  }
-  if (isFALSE(objExisted)) {
-    existingObj <- newObj
+    if (isFALSE(objExisted)) {
+      existingObj <- newObj
+    }
+  } else {
+    if (isFALSE(objExisted)) {
+      message("targetFile does not exist")
+      existingObj <- NULL
+    }
+    if (isFALSE(domainExisted))
+      message("domain does not exist in targetFile")
+    if (missing(FUN) && isFALSE(domainExisted))
+      message("FUN is missing; no evaluation possible")
+
   }
   if (isFALSE(domainExisted)) {
     if (isTRUE(objExisted)) {
@@ -226,7 +258,17 @@ CacheGeo <- function(targetFile = NULL,
         targetFile <- file.path(destinationPath, targetFile)
       }
       # if (is(existingObj, "sf")) existingObj <- as.data.frame(existingObj)
-      writeTo(existingObj, writeTo = targetFile, overwrite = TRUE)
+      browser()
+      if (identical("rds", fs::path_ext(targetFile)))  {
+        saveRDS(existingObj, file = targetFile)
+      } else {
+          writeTo(existingObj, writeTo = targetFile, overwrite = TRUE)
+        }
+    } else {
+      if (!missing(FUN)) {
+        message("The spatial domain is new, and should be added, but\n")
+        message("action was 'nothing'; nothing done")
+      }
     }
   }
   # Cloud
