@@ -68,12 +68,12 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
     keyFull$key <- cacheIdOverride(cacheId, keyFull$key, callList$.functionName, verbose)
   } else {
     toDigest <- doDigestPrepare(callList$new_call, omitArgs, .cacheExtra)
-    keyFull <- doDigest(toDigest, callList$.functionName, .objects,
+    keyFull <- try(doDigest(toDigest, callList$.functionName, .objects,
                        length, algo, quick, classOptions, times$CacheDigestStart,
-                       verbose = verbose)
-    # keyFull2 <- doDigest(callList$new_call, omitArgs, .cacheExtra, callList$.functionName, .objects,
-    #                     length, algo, quick, classOptions, times$CacheDigestStart,
-    #                     cachePath = cachePaths[[1]], verbose = verbose)
+                       verbose = verbose))
+    if (is(keyFull, "try-error")) {
+      stopRcppError(toDigest, .objects, length, algo, quick, classOptions)
+    }
   }
 
   # If debugCache is "quick", short circuit after doDigest
