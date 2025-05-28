@@ -1401,8 +1401,10 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
 
     if (getOption("reproducible.useMemoise", FALSE)) {
       cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
-      if (cache_key_in_memoiseEnv %in% FALSE)
-        assign(cache_key, output, envir = memoiseEnv(cachePath))
+      if (cache_key_in_memoiseEnv %in% FALSE) {
+        assign(cache_key, .unwrap(obj, cachePath = cachePath, cacheId = cache_key),
+               envir = memoiseEnv(cachePath))
+      }
     }
 
     if (!is.null(output))
