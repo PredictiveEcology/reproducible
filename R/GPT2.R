@@ -1270,7 +1270,7 @@ cacheIdOverride <- function(cacheId, key, .functionName, verbose) {
 }
 
 useCacheFromNested <- function(useCache) {
-  isNested <- .pkgEnv$.reproEnv2$nestLevel > 1
+  isNested <- isTRUE(.pkgEnv$.reproEnv2$nestLevel > 1)
   if (isNested && isTRUE(useCache))
     useCache <- .pkgEnv$.reproEnv2$useCache
   useCacheDueToNumeric <- (is.numeric(useCache) && isTRUE(useCache < .pkgEnv$.reproEnv2$nestLevel))
