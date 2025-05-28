@@ -1319,41 +1319,53 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     if (fromMemoise && !rerun) {
       output <- get(cache_key, envir = memoiseEnv(cachePath))
       # need to update the individual files in file-backed objects from the cache; can't use memoise
-      fns <- Filenames(output)
-      fns <- fns[nzchar(fns)]
-      if (!is.null(fns) && length(fns) > 0) {
-        fnsInCache <- file.path(CacheStorageDir(cachePath), basename(.prefix(fns, prefixCacheId(cacheId = cache_key))))
-        hardLinkOrCopy(fnsInCache, fns, overwrite = TRUE, verbose = FALSE)
-      }
-
-      # Some objects, especially Rcpp objects can get stale; rerun if this is the case
       outputTestIntegrity <- try(output[1], silent = TRUE)
-      if (isTRUE(is(outputTestIntegrity, "try-error")))
-        if (isTRUE(any(grepl("external pointer.+not valid", outputTestIntegrity)))) {
+      fns <- try(Filenames(output), silent = TRUE) # previous will only get some of the failures
+
+      if (isTRUE(is(outputTestIntegrity, "try-error")) || isTRUE(is(fns, "try-error"))) {
+        # Some objects, especially Rcpp objects can get stale; rerun if this is the case
+        failMsgs <- "external pointer.+not valid|NULL value passed as symbol address"
+        if (isTRUE(any(grepl(failMsgs, outputTestIntegrity))) ||
+            isTRUE(any(grepl(failMsgs, fns)))) {
           memoiseFail <- TRUE
           rm(list = cache_key, envir = memoiseEnv(cachePath))
           cache_file <- CacheStoredFile(cachePath, cache_key)
         }
-    }
-    if (!fromMemoise || rerun || memoiseFail || cacheSaveFormatFail) {
-      obj <- if (!is.null(cache_file)) {
-        try(loadFile(cache_file), silent = TRUE)
       } else {
-        rerun <- TRUE
-      }
-      output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
-      if (is(obj, "try-error") || rerun || is(output, "try-error")) {
-        messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
-        otherFiles2 <- dir(CacheStorageDir(cachePath), pattern = cache_key, full.names = TRUE)
-        if (!is(shownCache, "try-error")) {
-          otherFiles <- normPath(file.path(CacheStorageDir(cachePath),
-                                           shownCache[tagKey == "filesToLoad"]$tagValue))
-          otherFiles2 <- c(otherFiles, otherFiles2)
+        fns <- fns[nzchar(fns)]
+        if (!is.null(fns) && length(fns) > 0) {
+          fnsInOutputObjects <- intersect(names(fns), outputObjects)
+          fns <- fns[fnsInOutputObjects]
+          fnsExistBefore <- try(file.exists(fns))
+          fnsInCache <- file.path(CacheStorageDir(cachePath),
+                                  basename(.prefix(fns, prefixCacheId(cacheId = cache_key))))
+          hardLinkOrCopy(fnsInCache, fns, overwrite = TRUE, verbose = FALSE)
+          fnsExistAfter <- file.exists(fns)
+          if (any(fnsExistAfter %in% FALSE) && isTRUE(any(fnsExistBefore != fnsExistAfter))) # this means that hardLinkOrCopy failed
+            browser()
         }
-        rmFiles <- unique(c(cache_file, otherFiles2))
-        unlink(rmFiles)
-        return(.returnNothing)
       }
+    }
+
+      if (!fromMemoise || rerun || memoiseFail || cacheSaveFormatFail) {
+        obj <- if (!is.null(cache_file)) {
+          try(loadFile(cache_file), silent = TRUE)
+        } else {
+          rerun <- TRUE
+        }
+        output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
+        if (is(obj, "try-error") || rerun || is(output, "try-error")) {
+          messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
+          otherFiles2 <- dir(CacheStorageDir(cachePath), pattern = cache_key, full.names = TRUE)
+          if (!is(shownCache, "try-error")) {
+            otherFiles <- normPath(file.path(CacheStorageDir(cachePath),
+                                             shownCache[tagKey == "filesToLoad"]$tagValue))
+            otherFiles2 <- c(otherFiles, otherFiles2)
+          }
+          rmFiles <- unique(c(cache_file, otherFiles2))
+          unlink(rmFiles)
+          return(.returnNothing)
+        }
 
       if (isTRUE(changedSaveFormat)) {
         swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
@@ -1634,3 +1646,20 @@ createSimilar <- function(similar, .functionName, verbose, devMode) {
 
 .txtNoPrefix <- "noPrefix"
 .txtDryRunTRUE <- "dryRun = TRUE: "
+
+
+stopRcppError <- function(toDigest, .objects, length, algo, quick, classOptions) {
+  ooo <- Map(obj = names(toDigest), function(obj)
+    try(.robustDigest(toDigest[[obj]], .objects = .objects,
+                      length, algo, quick, classOptions)), silent = TRUE)
+  ite <- Map(o = ooo, function(o) {
+    is(o, "try-error")
+  })
+  ite <- ite[unlist(ite)]
+  if (length(ite))
+    stop(paste(names(ite), collapse = ", "), " ", isAre(ite), " corrupt. ",
+         "This can usually be resolved by restarting the R session")
+  else
+    stop("One or more objects to be digested for Cache are corrupt. ",
+         "This can usually be resolved by restarting the R session")
+}
