@@ -1384,12 +1384,12 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
           return(.returnNothing)
         }
 
-      if (isTRUE(changedSaveFormat)) {
-        swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
-                            cacheId = cache_key, sameCacheID = sameCacheID,
-                            newFile = cache_file_orig, verbose = verbose)
+        if (isTRUE(changedSaveFormat)) {
+          swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
+                              cacheId = cache_key, sameCacheID = sameCacheID,
+                              newFile = cache_file_orig, verbose = verbose)
+        }
       }
-    }
 
     if (cloudWrite(useCloud)) {
       cloudUploadFromCache(cache_key %in% filePathSansExt(gdriveLs[["name"]]), cache_key,
@@ -1416,7 +1416,9 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     if ("object" %in% names(.dotsFromCache))
       .dotsFromCache <- .dotsFromCache[setdiff(names(.dotsFromCache), "object")]
 
-    output <- do.call(.prepareOutput, args = append(list(object = output, cachePath), .dotsFromCache))
+    # if (exists("aaaa", envir = .GlobalEnv)) browser()
+    output <- do.call(.prepareOutput, args = append(list(object = output, cachePath),
+                                                    .dotsFromCache))
 
 
     return(output)
