@@ -3,7 +3,8 @@ utils::globalVariables("arg")
 #' @include messages.R
 #' @export
 #' @rdname Cache
-Cache <- function(FUN, ..., dryRun = FALSE, notOlderThan = NULL,
+Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
+                  notOlderThan = NULL,
                   .objects = NULL, .cacheExtra = NULL, .functionName = NULL,
                   outputObjects = NULL, # nolint
                   algo = "xxhash64",
