@@ -493,6 +493,12 @@ check_and_get_memoised_copy <- function(cache_key, cachePaths, functionName, fun
                                       )
       return(output)
     }
+  } else {
+    # If useMemoise gets turned off, it needs to be emptied or there will be stale entries
+    me <- memoiseEnv(cachePaths[[1]])
+    le <- ls(me)
+    if (length(le))
+      rm(list = le, envir = me)
   }
   return(invisible(.returnNothing))
 }
@@ -1296,7 +1302,10 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
           }
 
         }
-        rerun <- !isTRUE(any(feReally)) && !fromMemoise
+        # usually happens when user had memoise on before, then turned it off, then turned it back on
+        danglingMemoise <- (isFALSE(any(feReally)) && fromMemoise)
+        if (isTRUE(danglingMemoise)) rm(list = cache_key, envir = memoiseEnv(cachePath))
+        rerun <- (!isTRUE(any(feReally)) && !fromMemoise) || danglingMemoise
         break
       }
     }
