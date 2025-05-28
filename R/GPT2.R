@@ -106,6 +106,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
     outputFromMemoise <- check_and_get_memoised_copy(keyFull$key, cachePaths, callList$.functionName,
                                                      callList$func, useCache, useCloud,
                                                      cloudFolderID, gdriveLs, full_call = callList$new_call,
+                                                     outputObjects = outputObjects,
                                                      drv = drv, conn = conn, verbose)
     if (!identical2(.returnNothing, outputFromMemoise))
       return(outputFromMemoise)
@@ -129,7 +130,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
     outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePaths, cache_file, callList$.functionName, callList$func,
                                                 useCache, useCloud, cloudFolderID, gdriveLs,
                                                 full_call = callList$new_call,
-                                                drv, conn, verbose = verbose)
+                                                outputObjects = outputObjects, drv, conn, verbose = verbose)
 
     if (!identical2(.returnNothing, outputFromDisk))
       return(outputFromDisk)
@@ -150,6 +151,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
     outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePaths, cache_file, callList$.functionName, callList$func,
                                                 useCache, useCloud = FALSE, cloudFolderID, gdriveLs,
                                                 full_call = callList$new_call,
+                                                outputObjects = outputObjects,
                                                 drv, conn, verbose = verbose)
     return(outputFromDisk)
   } # Derive some metadata prior to evaluation so "showSimilar" can have something to compare with
@@ -363,7 +365,7 @@ evaluate_args <- function(args, envir) {
 
 check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functionName,
                                       func, useCache, useCloud, cloudFolderID, gdriveLs,
-                                      full_call, drv, conn, envir = parent.frame(), verbose) {
+                                      full_call, outputObjects, drv, conn, envir = parent.frame(), verbose) {
   # Check if the result is already cached
   connOrig <- conn
   conns <- conn
@@ -428,6 +430,7 @@ check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functio
                                     changedSaveFormat = changedSaveFormat, sameCacheID,
                                     cache_file_orig, func, shownCache = shownCache,
                                     full_call = full_call,
+                                    outputObjects = outputObjects,
                                     drv = drv, conn = conn, verbose = verbose)
     return(output)
 
@@ -470,7 +473,7 @@ metadata_update <- function(outputToSave, metadata, cache_key) {
 
 check_and_get_memoised_copy <- function(cache_key, cachePaths, functionName, func,
                                         useCache, useCloud, cloudFolderID, gdriveLs,
-                                        full_call, drv, conn, verbose) {
+                                        full_call, outputObjects, drv, conn, verbose) {
   if (getOption("reproducible.useMemoise", FALSE)) {
     for (cachePath in cachePaths) {
       cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
@@ -484,6 +487,8 @@ check_and_get_memoised_copy <- function(cache_key, cachePaths, functionName, fun
                                       cachePath = cachePath, cache_key = cache_key,
                                       functionName = functionName, func = func,
                                       full_call = full_call,
+                                      changedSaveFormat = FALSE,
+                                      outputObjects = outputObjects,
                                       drv = drv, conn = conn, verbose = verbose,
                                       )
       return(output)
@@ -1269,8 +1274,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
                                   functionName,
                                   cache_file = NULL, changedSaveFormat, sameCacheID,
                                   cache_file_orig, func, shownCache = NULL,
-                                  full_call, drv, conn, verbose) {
-
+                                  full_call, outputObjects, drv, conn, verbose) {
   if (identical(useCache, "overwrite")) {
     clearCacheOverwrite(cachePath, cache_key, functionName, drv, conn, verbose)
     return(invisible(.returnNothing))
