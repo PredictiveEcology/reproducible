@@ -934,7 +934,10 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
     }
 
     # This is for dryRun: i.e., there is a cacheId, but no difference in metadata
-    isIdentical <- vapply(similar, function(x) NROW(x) == 0, FUN.VALUE = logical(1))
+    # isIdentical0 <- vapply(similar, function(x) NROW(x) == 0, FUN.VALUE = logical(1))
+    isIdentical1 <- vapply(notInSC0, function(x) NROW(x) == 0, FUN.VALUE = logical(1))
+    isIdentical2 <- vapply(notInThisCall0, function(x) NROW(x) == 0, FUN.VALUE = logical(1))
+    isIdentical <- isIdentical1 & isIdentical2
     if (any(isIdentical)) {
       messageCache("Call is identical to ", paste(names(similar)[isIdentical], collapse = ", "),
                    " and would return that object")
@@ -960,9 +963,14 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
                              new = c("valueThisCall", "cacheIdOfThisCall"),
                              skip_absent = TRUE)
         })
-      notInThisCall3 <- lapply(notInThisCall2, function(x) createSimilar(x, verbose = verbose, devMode = devMode, .functionName = .functionName))
+      notInThisCall3 <- lapply(notInThisCall2, function(x) {
+        ss <- createSimilar(x, verbose = verbose, devMode = devMode, .functionName = .functionName)
+        if (isTRUE(any("lsStr" %in% colnames(ss))))
+          set(ss, NULL, "lsStr", NULL)
+        ss
+        })
       simi <- Map(n = names(notInThisCall3), function(n) {
-        if (NROW(notInThisCall3[[n]]) && NROW(notInSC4[[n]])) {
+        if (NROW(notInThisCall3[[n]]) || NROW(notInSC4[[n]])) {
           a <- notInSC4[[n]][notInThisCall3[[n]], on = "arg", allow.cartesian = TRUE]
           b <- notInThisCall3[[n]][notInSC4[[n]], on = "arg", allow.cartesian = TRUE]
           d <- unique(rbindlist(list(a, b), fill = TRUE))
@@ -1647,7 +1655,7 @@ createSimilar <- function(similar, .functionName, verbose, devMode) {
     setcolorder(simi, c("cacheId", "arg", "value"))
     setnames(simi, old = c("cacheId", "value"), new = c("cacheIdInCache", "valueInCache"))
   } else {
-    simi <- data.table(args = character(), cacheIdInCache = character(), valueInCache = character())
+    simi <- data.table(arg = character(), cacheIdInCache = character(), valueInCache = character())
   }
   simi
 }
