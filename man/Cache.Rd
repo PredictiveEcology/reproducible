@@ -9,7 +9,7 @@
 Cache(
   FUN,
   ...,
-  dryRun = FALSE,
+  dryRun = getOption("reproducible.dryRun", FALSE),
   notOlderThan = NULL,
   .objects = NULL,
   .cacheExtra = NULL,
@@ -36,7 +36,7 @@ Cache(
 cache2(
   FUN,
   ...,
-  dryRun = FALSE,
+  dryRun = getOption("reproducible.dryRun", FALSE),
   notOlderThan = NULL,
   .objects = NULL,
   .cacheExtra = NULL,
