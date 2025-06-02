@@ -752,11 +752,12 @@ setupCacheNesting <- function(userTags, useCache, envir = parent.frame(1)) {
     on.exit2(rm(list = ".reproEnv2", envir = .pkgEnv), envir = envir)
   } else {
     userTagsOld <- .pkgEnv$.reproEnv2$userTags
-    hasColon <- grepl(.txtGrepStrSplitSingleColon, userTags, perl = TRUE)
-    if (isTRUE(any(!hasColon)))
-      userTags[!hasColon] <- paste0("userTags:", userTags[!hasColon])
-
     allUT1 <- c(userTagsOld, userTags)
+
+    hasColon <- grepl(.txtGrepStrSplitSingleColon, allUT1, perl = TRUE)
+    if (isTRUE(any(!hasColon)))
+      allUT1[!hasColon] <- paste0("userTags:", allUT1[!hasColon])
+
 
     allUT2 <- allUT1[!duplicated(sapply(strsplitOnlySingleColon(allUT1), tail, 1))]
 
