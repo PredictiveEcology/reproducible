@@ -240,6 +240,7 @@ CacheGeo <- function(targetFile = NULL,
       message("FUN is missing; no evaluation possible")
 
   }
+  msgActionIsNothing <- "action was 'nothing'; nothing done"
   if (isFALSE(domainExisted)) {
     if (isTRUE(objExisted)) {
       if (any(grepl("^a|^u", action[1], ignore.case = TRUE))) {
@@ -258,7 +259,6 @@ CacheGeo <- function(targetFile = NULL,
         targetFile <- file.path(destinationPath, targetFile)
       }
       # if (is(existingObj, "sf")) existingObj <- as.data.frame(existingObj)
-      browser()
       if (identical("rds", fs::path_ext(targetFile)))  {
         saveRDS(existingObj, file = targetFile)
       } else {
@@ -267,7 +267,7 @@ CacheGeo <- function(targetFile = NULL,
     } else {
       if (!missing(FUN)) {
         message("The spatial domain is new, and should be added, but\n")
-        message("action was 'nothing'; nothing done")
+        message(msgActionIsNothing)
       }
     }
   }
@@ -279,13 +279,18 @@ CacheGeo <- function(targetFile = NULL,
       alreadyOnRemote <- identical(objID$drive_resource[[1]]$md5Checksum, md5Checksum)
     }
     if (!alreadyOnRemote) {
-      out <- googledrive::drive_put(
-        media = targetFile,
-        path = googledrive::as_id(cloudFolderID)
-      )
-      attr(existingObj, "id") <- out
-    } else {
-      message("skipping googledrive upload; md5sum is same")
+      msgSkippingUpload <- "skipping googledrive upload;"
+      if (!any(grepl("^n", action[1], ignore.case = TRUE))) {
+        out <- googledrive::drive_put(
+          media = targetFile,
+          path = googledrive::as_id(cloudFolderID)
+        )
+        attr(existingObj, "id") <- out
+      } else {
+        message(msgSkippingUpload)
+        message(msgActionIsNothing)
+      }
+
     }
   }
 
