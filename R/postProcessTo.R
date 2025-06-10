@@ -436,9 +436,9 @@ maskTo <- function(from, maskTo, # touches = FALSE,
       if (isRaster(maskTo)) {
         maskTo <- terra::rast(maskTo)
       }
-      if (isGridded(maskTo) && isVector(from)) {
-        omit <- TRUE
-      }
+      # if (isGridded(maskTo) && isVector(from)) {
+      #   omit <- TRUE
+      # }
       if (!isSpatialAny(maskTo)) {
         if (is.na(maskTo) || isCRSANY(maskTo)) omit <- TRUE
       }
@@ -452,6 +452,11 @@ maskTo <- function(from, maskTo, # touches = FALSE,
         }
         if (isSF(from)) {
           if (!isSF(maskTo)) {
+            if (isGridded(maskTo)) {
+              maskToTmp <- !is.na(maskTo)
+              maskToTmp[maskToTmp[] == 0] <- NA
+              maskTo <- terra::as.polygons(maskToTmp)
+            }
             maskTo <- sf::st_as_sf(maskTo)
           }
         }
