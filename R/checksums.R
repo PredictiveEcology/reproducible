@@ -149,7 +149,7 @@ setMethod(
 
     stStart <- Sys.time()
     filesToCheck <- if (length(txt$file) & length(files)) {
-      inTxt <- makeRelative(files, path) %in% makeRelative(txt$file)
+      inTxt <- makeRelative(files, path) %in% makeRelative(txt$file, path)
       if (isTRUE(any(inTxt)))
         files <- files[inTxt]
       else {
