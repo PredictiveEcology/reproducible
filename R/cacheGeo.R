@@ -189,10 +189,15 @@ CacheGeo <- function(targetFile = NULL,
 
     existingObjSF <- if (is(existingObj, "sf")) existingObj else sf::st_as_sf(existingObj)
     if (!missing(domain)) {
+      #must be sf for st_within
+      if (!inherits(domain, "sf")) domain <- st_as_sf(domain)
+      #must have same crs for st_within
+      existingObjSF <- st_transform(existingObjSF, st_crs(domain))
+
       wh <- sf::st_within(domain, existingObjSF, sparse = FALSE)
       if (isTRUE(wh %in% FALSE) && isTRUE(bufferOK)) {
         diffs <- mapply(minmax = list(c("xmin", "xmax"), c("ymin", "ymax")), function(minmax)
-         round(abs(diff(st_bbox(existingObjSF)[minmax])), 0))
+          round(abs(diff(st_bbox(existingObjSF)[minmax])), 0))
         buff <- diffs * 0.025
         meanBuff <- mean(buff)
         meanBuffKm <- round(meanBuff/1e3, 1)
