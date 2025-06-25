@@ -222,8 +222,25 @@ setMethod(
       filesToRemove2 <- objsDT[grepl(pattern = "origFilename|filesToLoad|filenamesInCache", tagKey)][[.cacheTableTagColName()]]
       filesToRemove2 <- normPath(file.path(CacheStorageDir(x), basename(filesToRemove2)))
       filesToRemove3 <- dir(CacheStorageDir(x), full.names = TRUE)
-      filesToRemove3 <- grep(paste(objsDT[["cacheId"]], collapse = "|"), filesToRemove3, value = TRUE)
-      filesToRemove <- unique(c(filesToRemove1, filesToRemove2, filesToRemove3))
+
+      # grep can only handle so many -- do in groups
+      # filesToRemove3 <- grep(paste(cacheIdsToRm, collapse = "|"), filesToRemove3, value = TRUE)
+      cacheIdsToRm <- unique(objsDT[["cacheId"]])
+      maxNumForGrep <- 20
+      sequen <- seq(cacheIdsToRm)
+      if (length(cacheIdsToRm) > maxNumForGrep) {
+        groups <- cut(sequen, breaks = ceiling(length(cacheIdsToRm) / maxNumForGrep))
+        groups <- split(sequen, groups)
+      } else {
+        groups <- list(sequen)
+      }
+
+      filesToRemove4 <- lapply(groups, function(g) {
+        cis <- cacheIdsToRm[sequen[g]] |> unlist()
+        grep(paste(cis, collapse = "|"), filesToRemove3, value = TRUE)
+      }) |> unlist() |> unname()
+
+      filesToRemove <- unique(c(filesToRemove1, filesToRemove2, filesToRemove4))
       # filebackedInRepo <- objsDT[grepl(pattern = "fromDisk", tagKey) &
       #                           grepl(pattern = "TRUE", get(.cacheTableTagColName()))]
       #
