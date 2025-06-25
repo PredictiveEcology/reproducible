@@ -1250,6 +1250,14 @@ harmonizeCall <- function(callList, .callingEnv, .functionName = NULL) {
   .functionNamePoss <- attr(new_call, ".Cache")$.functionName
   func <- as.list(new_call)[[1]]
 
+  if (!is.null(.functionName)) {
+    dotFnGrep <- "\\.functionName"
+    hasDotFNLogical <- grepl(dotFnGrep, .functionName)
+    hasDotFN <- isTRUE(any(hasDotFNLogical) )
+    if (hasDotFN)
+      .functionName <- gsub(dotFnGrep, .functionNamePoss, .functionName)
+  }
+
   # Try to identify the .functionName; if can't just use the matched call callList$FUNorig
   if (is.null(.functionName)) {
     if (!is.null(.functionNamePoss))
