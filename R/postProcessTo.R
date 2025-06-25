@@ -450,13 +450,21 @@ maskTo <- function(from, maskTo, # touches = FALSE,
         if (isSpatial(from)) {
           from <- sf::st_as_sf(from)
         }
+
+        # New to deal with case where `maskTo` is a SpatRaster
+        if (isGridded(maskTo)) {
+          maskToTmp <- !is.na(maskTo)[[1]] # the [[1]] is in case it is a multilayer stack; take first
+          maskToTmp[maskToTmp[] == 0] <- NA
+          maskTo <- terra::as.polygons(maskToTmp)
+        }
+
         if (isSF(from)) {
           if (!isSF(maskTo)) {
-            if (isGridded(maskTo)) {
-              maskToTmp <- !is.na(maskTo)
-              maskToTmp[maskToTmp[] == 0] <- NA
-              maskTo <- terra::as.polygons(maskToTmp)
-            }
+            # if (isGridded(maskTo)) {
+            #   maskToTmp <- !is.na(maskTo)
+            #   maskToTmp[maskToTmp[] == 0] <- NA
+            #   maskTo <- terra::as.polygons(maskToTmp)
+            # }
             maskTo <- sf::st_as_sf(maskTo)
           }
         }

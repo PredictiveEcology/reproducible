@@ -1419,7 +1419,6 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     if ("object" %in% names(.dotsFromCache))
       .dotsFromCache <- .dotsFromCache[setdiff(names(.dotsFromCache), "object")]
 
-    # if (exists("aaaa", envir = .GlobalEnv)) browser()
     output <- do.call(.prepareOutput, args = append(list(object = output, cachePath),
                                                     .dotsFromCache))
 
