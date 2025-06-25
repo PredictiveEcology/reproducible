@@ -687,12 +687,13 @@ remapFilenames <- function(obj, tags, cachePath, ...) {
     }
 
     possRelPaths <- modifyListPaths(cachePath, ...)
-    if (relToWhere %in% names(possRelPaths)) {
+    relToWhereInPossRelPaths <- relToWhere %in% names(possRelPaths)
+    if (isTRUE(any(relToWhereInPossRelPaths))) {
       absBase <- absoluteBase(relToWhere, cachePath, ...)
     } else {
       absBase <- possRelPaths[[1]]
       isOutside <- grepl(grepStartsTwoDots, origRelName)
-      if (any(isOutside)) {
+      if (isTRUE(any(isOutside))) {
         ## means the relative path is "outside" of something;
         ## strip all ".." if relToWhere doesn't exist
         while (any(grepl(grepStartsTwoDots, origRelName))) {
