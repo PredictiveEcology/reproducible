@@ -467,12 +467,18 @@ setMethod(
               filOutside <<- fil
               out <- try(loadFile(fil))
               if (is(out, "try-error")) {
-                browser()
                 cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", getOption("reproducible.cacheSaveFormat")), "",
                                 basename(fil))
                 filesToRm <- dir(dirname(fil), pattern = cacheId, full.names = TRUE)
-                messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
-                             verbose = getOption("reproducible.verbose"))
+                fileExtIncorrect <- unique(fileExt(filesToRm)) %in% getOption("reproducible.cacheSaveFormat")
+                if (any(fileExtIncorrect)) {
+                  messageCache("The database file was using a different save format; deleting Cache entry for ", cacheId,
+                               verbose = getOption("reproducible.verbose"))
+
+                } else {
+                  messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
+                               verbose = getOption("reproducible.verbose"))
+                }
                 unlink(filesToRm)
               }
               out
