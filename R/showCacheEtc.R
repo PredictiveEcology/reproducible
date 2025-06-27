@@ -857,7 +857,7 @@ showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath
                           drv, conn) {
 
   if (missing(dtFile)) {
-    dtFile <- CacheDBFileSingle(cachePath, cacheId, cacheSaveFormat = cacheSaveFormat)
+    dtFile <- CacheDBFileSingle(cachePath, cacheId, cacheSaveFormat = "check")
     # dtFile <- dir(CacheStorageDir(cachePath), full.names = TRUE,
     #               pattern = paste0(cacheId, "\\", suffixMultipleDBFiles()))
   }

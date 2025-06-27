@@ -104,9 +104,10 @@ test_that("test miscellaneous unit tests cache-helpers", {
     a <- Cache(rnorm, n = 1, mean = 1, cachePath = tmpCache)
   })
   # lapply(letters[11], function(l) assign(paste(rep(l, 4), collapse = ""), 1, envir = .GlobalEnv))
-  bMess <- capture_messages({
-    b <- Cache(rnorm, n = 2, mean = 1, sd = 3, showSimilar = TRUE, cachePath = tmpCache)
-  })
+  oo <- capture.output(
+    bMess <- capture_messages({
+      b <- Cache(rnorm, n = 2, mean = 1, sd = 3, showSimilar = TRUE, cachePath = tmpCache)
+    }))
 
   if (!getOption("reproducible.useCacheV3") %in% TRUE) {
     expect_true(any(grepl("different n", bMess)))
@@ -150,10 +151,10 @@ test_that("test miscellaneous unit tests cache-helpers", {
   })
   gMess <- capture_messages({
     b <- Cache(rmultinom, 14, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
-  })
+  }) |> capture.output() -> oo
   hMess <- capture_messages({
     b <- Cache(rbinom, 14, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
-  })
+  }) |> capture.output() -> oo
   iMess <- capture_messages({
     b <- Cache(rcompletelynew, 12, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
   })
@@ -178,9 +179,6 @@ test_that("test miscellaneous unit tests cache-helpers", {
     bk <- Cache(rnorm, 1, 3, 4, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # not similar
   })
 
-  ## THIS IS PREVIOUSLY FALSE BECAUSE USERTAGS ARE AS IMPORTANT AS FUNCTIONNAME: IT IS NOT SIMILAR
-  ##  BECAUSE OF THE USERTAGS
-  browser()
   expect_true(any(grepl("no similar item", kMess))) # shouldn't find b/c args are same
 
   lMess <- capture_messages({
@@ -195,7 +193,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   nMess <- capture_messages({
     bn <- Cache(rnorm, 1, 2, 2, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # similar to kMess
-  })
+  }) |> capture.output() -> oo
   if (!getOption("reproducible.useCacheV3") %in% TRUE) {
     nMess <- grep("^.+next closest cacheId\\(s\\) (.+) of .+$", nMess, value = TRUE)
     expect_true(grepl(
