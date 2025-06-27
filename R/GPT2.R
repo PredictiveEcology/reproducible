@@ -1066,8 +1066,10 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
                      paste0(userTags, collapse = ", "), ")", verbose = verbose)
         messageCache("This call to cache will replace entry with cacheId(s): ",
                      paste0(simi[["cacheId"]], collapse = ", "), verbose = verbose)
-        cacheIdsToClear <- paste0("^", unique(simi[["cacheIdInCache"]]), "$", collapse = "|")
-        clearCache(cachePath, userTags = cacheIdsToClear, ask = FALSE, drv = drv, conn = conn, verbose = verbose - 2)
+        cacheIdsToClear <- unique(names(simi))
+        # cacheIdsToClear <- paste0("^", unique(names(simi)), "$", collapse = "|")
+        clearCache(cachePath, cacheId = cacheIdsToClear, ask = FALSE,  drv = drv, conn = conn, verbose = verbose - 2)
+        # clearCache(cachePath, userTags = cacheIdsToClear, ask = FALSE, drv = drv, conn = conn, verbose = verbose - 2)
       }
       messageCache("with different elements (most recent at top):", verbose = verbose)
       dashes <- "----------------------"
