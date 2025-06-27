@@ -403,7 +403,7 @@ setGeneric("showCache", function(x, userTags = character(), after = NULL, before
 setMethod(
   "showCache",
   definition = function(x, userTags, after = NULL, before = NULL, fun = NULL,
-                        cacheId = NULL, cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
+                        cacheId = NULL, # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                         drv, conn, ...) {
     # browser(expr = exists("rrrr"))
     if (missing(x)) {
@@ -452,7 +452,8 @@ setMethod(
           if (!is.null(cacheId)) {
             objsDT <- rbindlist(fill = TRUE, lapply(cacheId, function(fil) {
               filOutside <<- fil
-              showCacheFast(fil, cachePath = x, , cacheSaveFormat = cacheSaveFormat, drv = drv, conn = conn)
+              showCacheFast(fil, cachePath = x, # cacheSaveFormat = cacheSaveFormat,
+                            drv = drv, conn = conn)
             }))
           } else {
             dd <- dir(CacheStorageDir(x),
@@ -468,7 +469,7 @@ setMethod(
 
             rbindlist(fill = TRUE, lapply(dd, function(fil) {
               filOutside <<- fil
-              out <- try(loadFile(fil, cacheSaveFormat = cacheSaveFormat))
+              out <- try(loadFile(fil))#, cacheSaveFormat = cacheSaveFormat))
               if (is(out, "try-error")) {
                 cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", cacheSaveFormat), "",
                                 basename(fil))
@@ -852,7 +853,7 @@ isTRUEorForce <- function(cond) {
 }
 
 showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
-                          dtFile, cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
+                          dtFile, # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                           drv, conn) {
 
   if (missing(dtFile)) {
@@ -863,7 +864,7 @@ showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath
   fe <- file.exists(dtFile)
   dtFile <- if (any(fe)) dtFile[fe][1] else character()
   if (length(dtFile)) {
-    sc <- loadFile(dtFile, cacheSaveFormat = cacheSaveFormat)
+    sc <- loadFile(dtFile) # , cacheSaveFormat = cacheSaveFormat)
   } else {
     sc <- showCache(cachePath, userTags = cacheId, drv = drv, conn = conn, verbose = FALSE)[cacheId %in% cacheId]
   }

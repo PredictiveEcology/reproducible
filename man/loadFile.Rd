@@ -4,19 +4,15 @@
 \alias{loadFile}
 \title{Load a file from the cache}
 \usage{
-loadFile(
-  file,
-  cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
-  ...
-)
+loadFile(file, ...)
 }
 \arguments{
 \item{file}{character specifying the path to the file}
 
+\item{...}{Allows \code{format} for backward compatibility}
+
 \item{cacheSaveFormat}{(optional) character string specifying file extension (.qsFormat or .rdsFormat) of \code{file};
 if not specified (i.e., NULL), will be deduced from the file extension of \code{file}.}
-
-\item{...}{Allows \code{format} for backward compatibility}
 }
 \value{
 the object loaded from \code{file}

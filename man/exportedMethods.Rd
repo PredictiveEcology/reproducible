@@ -57,6 +57,7 @@
   fullCacheTableForObj,
   cachePath,
   cacheId,
+  cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
   verbose
 )
 
@@ -136,6 +137,10 @@ the object will be on disk, and will be recovered in subsequent
 This may help in some particularly finicky situations
 where \code{Cache} is not correctly detecting unchanged inputs. This will guarantee
 the object will be identical each time; this may be useful in operational code.}
+
+\item{cacheSaveFormat}{Character string: currently either \code{qs} or \code{rds}. Defaults to
+\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} is faster but appears to have
+narrower range of conditions that work; \code{rds} is safer, but slower.}
 
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}

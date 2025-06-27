@@ -6,6 +6,7 @@
 \usage{
 saveToCache(
   cachePath = getOption("reproducible.cachePath"),
+  cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   obj,
@@ -18,6 +19,10 @@ saveToCache(
 \arguments{
 \item{cachePath}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
+
+\item{cacheSaveFormat}{Character string: currently either \code{qs} or \code{rds}. Defaults to
+\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} is faster but appears to have
+narrower range of conditions that work; \code{rds} is safer, but slower.}
 
 \item{drv}{If using a database backend, \code{drv} must be an object that
 inherits from \code{DBIDriver} (e.g., \code{RSQLite::SQLite}).}
