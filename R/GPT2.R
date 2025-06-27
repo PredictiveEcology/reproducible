@@ -871,7 +871,9 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
                         # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                         drv, conn, verbose) {
   devMode <- isDevMode(useCache, userTags)  # don't use devMode if no userTags
-  shownCache <- showCache(cachePath, Function = .functionName, verbose = verbose - 2)
+  shownCache <- showCache(cachePath, Function = .functionName, userTags = userTags, verbose = verbose - 2)
+  # functionByDigest <- metadata[tagKey %in% "preDigest" & startsWith(tagValue, ".FUN")]$tagValue
+  # shownCache <- shownCache[tagKey %in% "preDigest" & tagValue %in% functionByDigest]
   setorderv(shownCache, "createdDate", order = -1)
   # shownCache <- shownCache[tagKey != "outerFunction"] # doesn't matter what outerFunctions do, if all others are same
   # metadata <- metadata[tagKey != "outerFunction"]
