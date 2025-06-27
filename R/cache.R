@@ -316,6 +316,9 @@ utils::globalVariables(c(
 #' @param useCache Logical, numeric or `"overwrite"` or `"devMode"`. See details.
 #'
 #' @param useCloud Logical. See Details.
+#' @param cacheSaveFormat Character string: currently either `qs` or `rds`. Defaults to
+#'    `getOption("reproducible.cacheSaveFormat")`. `qs` is faster but appears to have
+#'    narrower range of conditions that work; `rds` is safer, but slower.
 #'
 #' @param cloudFolderID A googledrive dribble of a folder, e.g., using `drive_mkdir()`.
 #'   If left as `NULL`, the function will create a cloud folder with name from last
@@ -2386,13 +2389,13 @@ searchInRepos <- function(cachePaths, outputHash, drv, conn) {
       # DBI::dbClearResult(res)
     } else {
       # The next line will find it whether it is qs, rds or other; this is necessary for "change cacheSaveFormat"
-      csf <- CacheStoredFile(cachePath = repo, cacheId = outputHash, format = "check")
+      csf <- CacheStoredFile(cachePath = repo, cacheId = outputHash, cacheSaveFormat = "check")
 
       if (all(file.exists(csf))) {
         dtFile <- CacheDBFileSingle(cachePath = repo, cacheId = outputHash)
 
         if (!file.exists(dtFile)) { # check first for wrong rds vs qs
-          dtFile <- CacheDBFileSingle(cachePath = repo, cacheId = outputHash, format = "check")
+          dtFile <- CacheDBFileSingle(cachePath = repo, cacheId = outputHash, cacheSaveFormat = "check")
           fe <- file.exists(dtFile)
           if (isTRUE(!(fe))) { # still doesn't == means it is broken state
             warning(
@@ -2590,7 +2593,8 @@ getFromCacheWithCacheIdPrevious <- function(.functionName, verbose, tagKey, inRe
   }
 }
 
-cacheIdCheckInCache <- function(cacheId, calculatedCacheId, .functionName, verbose) {
+cacheIdCheckInCache <- function(cacheId, calculatedCacheId, .functionName,
+                                verbose) {
   sc <- NULL
   if (!is.null(cacheId)) {
     if  (identical(cacheId, "previous")) {

@@ -121,7 +121,6 @@ verboseCacheMessage <- function(preDigest, functionName,
   fromMemoise <- NA
   output <- loadFromCache(cachePath, isInRepo[[.cacheTableHashColName()[lastOne]]],
     fullCacheTableForObj = fullCacheTableForObj,
-    # format = fileFormat, loadFun = loadFun,
     .functionName = fnDetails$functionName, preDigest = preDigest, .dotsFromCache = modifiedDots,
     drv = drv, conn = conn,
     verbose = verbose

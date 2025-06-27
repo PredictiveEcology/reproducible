@@ -17,6 +17,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                   quick = getOption("reproducible.quick", FALSE),
                   verbose = getOption("reproducible.verbose", 1),
                   cacheId = NULL,
+                  cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                   useCache = getOption("reproducible.useCache", TRUE),
                   useCloud = getOption("reproducible.useCloud", FALSE),
                   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
@@ -66,7 +67,10 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   if (!is.null(cacheId) && !is.na(cacheId)) {
     keyFull <- list()
     keyFull$key <- cacheIdOverride(cacheId, keyFull$key, callList$.functionName, verbose)
-  } else {
+    if (is.null(keyFull$key))
+      cacheId <- NULL
+  }
+  if (is.null(cacheId) || is.na(cacheId)) {
     toDigest <- doDigestPrepare(callList$new_call, omitArgs, .cacheExtra)
     keyFull <- try(doDigest(toDigest, callList$.functionName, .objects,
                        length, algo, quick, classOptions, times$CacheDigestStart,
@@ -107,6 +111,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                                                      callList$func, useCache, useCloud,
                                                      cloudFolderID, gdriveLs, full_call = callList$new_call,
                                                      outputObjects = outputObjects,
+                                                     cacheSaveFormat = cacheSaveFormat,
                                                      drv = drv, conn = conn, verbose)
     if (!identical2(.returnNothing, outputFromMemoise))
       return(outputFromMemoise)
@@ -130,7 +135,9 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
     outputFromDisk <- check_and_get_cached_copy(keyFull$key, cachePaths, cache_file, callList$.functionName, callList$func,
                                                 useCache, useCloud, cloudFolderID, gdriveLs,
                                                 full_call = callList$new_call,
-                                                outputObjects = outputObjects, drv, conn, verbose = verbose)
+                                                outputObjects = outputObjects,
+                                                cacheSaveFormat = cacheSaveFormat,
+                                                drv, conn, verbose = verbose)
 
     if (!identical2(.returnNothing, outputFromDisk))
       return(outputFromDisk)
@@ -152,6 +159,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                                                 useCache, useCloud = FALSE, cloudFolderID, gdriveLs,
                                                 full_call = callList$new_call,
                                                 outputObjects = outputObjects,
+                                                cacheSaveFormat = cacheSaveFormat,
                                                 drv, conn, verbose = verbose)
     return(outputFromDisk)
   } # Derive some metadata prior to evaluation so "showSimilar" can have something to compare with
@@ -190,7 +198,8 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                                       cache_file, userTags, callList$.functionName, debugCache,
                                       keyFull, outputObjects = outputObjects,
                                       useCloud, cloudFolderID, gdriveLs,
-                                      func_call = callList$func_call, drv = drv, conn = conn,
+                                      func_call = callList$func_call,
+                                      cacheSaveFormat = cacheSaveFormat, drv = drv, conn = conn,
                                       useMemoise = getOption("reproducible.useMemoise", FALSE),
                                       verbose = verbose,
                                       times$SaveStart, times$EvaluateStart)
@@ -205,7 +214,9 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                                  .objects, length, algo, quick, classOptions,
                                  cache_file, userTags, callList$.functionName, debugCache,
                                  keyFullPreDigest, outputObjects = outputObjects,
-                                 func_call = callList$func_call, drv = drv, conn = conn,
+                                 func_call = callList$func_call,
+                                 cacheSaveFormat = cacheSaveFormat,
+                                 drv = drv, conn = conn,
                                  useCloud = FALSE, # not this preDigest one
                                  cloudFolderID = NULL, gdriveLs = NULL,# not this preDigest one
                                  useMemoise = FALSE, # not this preDigest one
@@ -365,7 +376,9 @@ evaluate_args <- function(args, envir) {
 
 check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functionName,
                                       func, useCache, useCloud, cloudFolderID, gdriveLs,
-                                      full_call, outputObjects, drv, conn, envir = parent.frame(), verbose) {
+                                      full_call, outputObjects,
+                                      cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
+                                      drv, conn, envir = parent.frame(), verbose) {
   # Check if the result is already cached
   connOrig <- conn
   conns <- conn
@@ -375,7 +388,7 @@ check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functio
   }
 
   for (cachePath in cachePaths) {
-    cache_file <- CacheStoredFile(cachePath, cache_key)
+    cache_file <- CacheStoredFile(cachePath, cache_key, cacheSaveFormat = cacheSaveFormat)
     cacheFileExists <- file.exists(cache_file) # could be length >1
     if (useDBI()) {
       inReposPoss <- searchInRepos(cachePath,
@@ -431,6 +444,7 @@ check_and_get_cached_copy <- function(cache_key, cachePaths, cache_file, functio
                                     cache_file_orig, func, shownCache = shownCache,
                                     full_call = full_call,
                                     outputObjects = outputObjects,
+                                    cacheSaveFormat = cacheSaveFormat,
                                     drv = drv, conn = conn, verbose = verbose)
     return(output)
 
@@ -473,7 +487,9 @@ metadata_update <- function(outputToSave, metadata, cache_key) {
 
 check_and_get_memoised_copy <- function(cache_key, cachePaths, functionName, func,
                                         useCache, useCloud, cloudFolderID, gdriveLs,
-                                        full_call, outputObjects, drv, conn, verbose) {
+                                        full_call, outputObjects,
+                                        cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
+                                        drv, conn, verbose) {
   if (getOption("reproducible.useMemoise", FALSE)) {
     for (cachePath in cachePaths) {
       cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
@@ -489,6 +505,7 @@ check_and_get_memoised_copy <- function(cache_key, cachePaths, functionName, fun
                                       full_call = full_call,
                                       changedSaveFormat = FALSE,
                                       outputObjects = outputObjects,
+                                      cacheSaveFormat = cacheSaveFormat,
                                       drv = drv, conn = conn, verbose = verbose,
                                       )
       return(output)
@@ -594,7 +611,8 @@ match_call_primitive <- function(definition = sys.function(sys.parent()),
 }
 
 
-cache_Id_Identical <- function(metadata, cachePaths, cache_key) {
+cache_Id_Identical <- function(metadata, cachePaths, cache_key,
+                               cacheSaveFormat = getOption("reproducible.cacheSaveFormat")) {
   linkToCacheId <- NULL
   os <- metadata$tagValue[metadata$tagKey == "object.size"]
 
@@ -616,7 +634,7 @@ cache_Id_Identical <- function(metadata, cachePaths, cache_key) {
       }
     }
   }
-  if (!is.null(linkToCacheId)) linkToCacheId <- CacheStoredFile(cachePath, linkToCacheId)
+  if (!is.null(linkToCacheId)) linkToCacheId <- CacheStoredFile(cachePath, linkToCacheId, cacheSaveFormat = cacheSaveFormat)
   linkToCacheId
 }
 
@@ -1093,8 +1111,10 @@ convertCallWithSquigglyBraces <- function(call, usesDots) {
 }
 
 wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, # userTags,
-                            preDigest, .functionName, outputObjects, drv, conn, verbose) {
-  cacheIdIdentical <- cache_Id_Identical(metadata, cachePath, cache_key)
+                            preDigest, .functionName, outputObjects,
+                            cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
+                            drv, conn, verbose) {
+  cacheIdIdentical <- cache_Id_Identical(metadata, cachePath, cache_key, cacheSaveFormat = cacheSaveFormat)
   linkToCacheId <- if (!is.null(cacheIdIdentical)) filePathSansExt(basename(cacheIdIdentical))  else NULL
   outputToSave <- .wrap(outputFromEvaluate, cachePath = cachePath, preDigest = preDigest,
                         outputObjects = outputObjects,
@@ -1115,6 +1135,7 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
                           cache_file, userTags, .functionName, debugCache,
                           detailed_key, func_call, outputObjects,
                           useCloud, cloudFolderID, gdriveLs,
+                          cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                           drv, conn, useMemoise = getOption("reproducible.useMemoise", FALSE),
                           verbose, timeSaveStart, timeEvaluateStart) {
 
@@ -1133,7 +1154,8 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, func,
   metadata <- wrapSaveToCache(outputFromEvaluate, metadata, detailed_key$key, cachePaths[[1]],
                               # userTags = paste0(metadata$tagKey, ":", metadata$tagValue),
                               outputObjects = outputObjects,
-                              preDigest = detailed_key$preDigest, .functionName, drv, conn, verbose)
+                              preDigest = detailed_key$preDigest, .functionName,
+                              cacheSaveFormat = cacheSaveFormat, drv, conn, verbose)
 
   # Memoize the outputFromEvaluate by saving it in RAM
   if (isTRUE(useMemoise)) {
@@ -1274,7 +1296,10 @@ harmonizeCall <- function(callList, .callingEnv, .functionName = NULL) {
 
 cacheIdOverride <- function(cacheId, key, .functionName, verbose) {
   shownCache <- cacheIdCheckInCache(cacheId, calculatedCacheId = key, .functionName, verbose)
-  if (NROW(shownCache) == 0) cacheId <- NULL
+  cacheId <- if (NROW(shownCache) == 0)
+    NULL
+  else
+    unique(shownCache$cacheId)
   cacheId
 }
 
@@ -1297,7 +1322,9 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
                                   functionName,
                                   cache_file = NULL, changedSaveFormat, sameCacheID,
                                   cache_file_orig, func, shownCache = NULL,
-                                  full_call, outputObjects, drv, conn, verbose) {
+                                  full_call, outputObjects,
+                                  cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
+                                  drv, conn, verbose) {
   if (identical(useCache, "overwrite")) {
     clearCacheOverwrite(cachePath, cache_key, functionName, drv, conn, verbose)
     return(invisible(.returnNothing))
@@ -1306,15 +1333,15 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       fileExt(cache_file)
 
     for (iii in 1:2) {
-      fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key, format = format)
+      fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key, cacheSaveFormat = cacheSaveFormat)
       if (useDBI()) {
         rerun <- FALSE
       } else {
         feReally <- file.exists(fe)
         if (any(feReally %in% FALSE)) {
-          formatNew <- formatCheck(cachePath, cache_key, format)
-          if (!identical(formatNew, format)) {
-            format <- formatNew
+          formatNew <- formatCheck(cachePath, cache_key, cacheSaveFormat)
+          if (!identical(formatNew, cacheSaveFormat)) {
+            cacheSaveFormat <- formatNew
             next
           }
 
@@ -1329,7 +1356,8 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
 
     cacheSaveFormatFail <- FALSE
     if (is.null(shownCache)) {
-      shownCache <- try(showCacheFast(cache_key, cachePath, dtFile = fe, drv = drv, conn = conn),
+      shownCache <- try(showCacheFast(cache_key, cachePath, dtFile = fe,
+                                      cacheSaveFormat = cacheSaveFormat, drv = drv, conn = conn),
                         silent = TRUE)
       if (is(shownCache, "try-error")) {
         if (isTRUE(any(grepl("format not detected", shownCache)))) {
@@ -1375,7 +1403,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
 
       if (!fromMemoise || rerun || memoiseFail || cacheSaveFormatFail) {
         obj <- if (!is.null(cache_file)) {
-          try(loadFile(cache_file), silent = TRUE)
+          try(loadFile(cache_file, cacheSaveFormat = cacheSaveFormat), silent = TRUE)
         } else {
           rerun <- TRUE
         }

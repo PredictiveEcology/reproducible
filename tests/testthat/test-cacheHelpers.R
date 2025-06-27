@@ -180,6 +180,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   ## THIS IS PREVIOUSLY FALSE BECAUSE USERTAGS ARE AS IMPORTANT AS FUNCTIONNAME: IT IS NOT SIMILAR
   ##  BECAUSE OF THE USERTAGS
+  browser()
   expect_true(any(grepl("no similar item", kMess))) # shouldn't find b/c args are same
 
   lMess <- capture_messages({

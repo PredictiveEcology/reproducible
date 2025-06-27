@@ -390,9 +390,11 @@ cc <- function(secs, ..., verbose = getOption("reproducible.verbose")) {
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  fun = NULL, cacheId = NULL,
+                                 cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                                  drv = getDrv(getOption("reproducible.drv", NULL)),
                                  conn = getOption("reproducible.conn", NULL),
-                                 verbose = getOption("reproducible.verbose"), ...) {
+                                 verbose = getOption("reproducible.verbose"),
+                                 ...) {
   standardGeneric("showCache")
 })
 
@@ -401,7 +403,8 @@ setGeneric("showCache", function(x, userTags = character(), after = NULL, before
 setMethod(
   "showCache",
   definition = function(x, userTags, after = NULL, before = NULL, fun = NULL,
-                        cacheId = NULL, drv, conn, ...) {
+                        cacheId = NULL, cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
+                        drv, conn, ...) {
     # browser(expr = exists("rrrr"))
     if (missing(x)) {
       messageCache("x not specified; using ", getOption("reproducible.cachePath")[1], verbose = verbose)
@@ -449,11 +452,11 @@ setMethod(
           if (!is.null(cacheId)) {
             objsDT <- rbindlist(fill = TRUE, lapply(cacheId, function(fil) {
               filOutside <<- fil
-              showCacheFast(fil, cachePath = x, drv = drv, conn = conn)
+              showCacheFast(fil, cachePath = x, , cacheSaveFormat = cacheSaveFormat, drv = drv, conn = conn)
             }))
           } else {
             dd <- dir(CacheStorageDir(x),
-                      pattern = paste(CacheDBFileSingleExt(format = .cacheSaveFormats), collapse = "|"),
+                      pattern = paste(CacheDBFileSingleExt(cacheSaveFormat = .cacheSaveFormats), collapse = "|"),
                       full.names = TRUE
             )
 
@@ -465,12 +468,12 @@ setMethod(
 
             rbindlist(fill = TRUE, lapply(dd, function(fil) {
               filOutside <<- fil
-              out <- try(loadFile(fil))
+              out <- try(loadFile(fil, cacheSaveFormat = cacheSaveFormat))
               if (is(out, "try-error")) {
-                cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", getOption("reproducible.cacheSaveFormat")), "",
+                cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", cacheSaveFormat), "",
                                 basename(fil))
                 filesToRm <- dir(dirname(fil), pattern = cacheId, full.names = TRUE)
-                fileExtIncorrect <- unique(fileExt(filesToRm)) %in% getOption("reproducible.cacheSaveFormat")
+                fileExtIncorrect <- unique(fileExt(filesToRm)) %in% cacheSaveFormat
                 if (any(fileExtIncorrect)) {
                   messageCache("The database file was using a different save format; deleting Cache entry for ", cacheId,
                                verbose = getOption("reproducible.verbose"))
@@ -486,7 +489,7 @@ setMethod(
               }))
           }# , error = function(e) {
             # browser()
-            #   cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", getOption("reproducible.cacheSaveFormat")), "",
+            #   cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", cacheSaveFormat), "",
             #                   basename(file))
             #   filesToRm <- dir(dirname(file), pattern = cacheId, full.names = TRUE)
             #   messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
@@ -849,17 +852,18 @@ isTRUEorForce <- function(cond) {
 }
 
 showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
-                          dtFile, drv, conn) {
+                          dtFile, cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
+                          drv, conn) {
 
   if (missing(dtFile)) {
-    dtFile <- CacheDBFileSingle(cachePath, cacheId)
+    dtFile <- CacheDBFileSingle(cachePath, cacheId, cacheSaveFormat = cacheSaveFormat)
     # dtFile <- dir(CacheStorageDir(cachePath), full.names = TRUE,
     #               pattern = paste0(cacheId, "\\", suffixMultipleDBFiles()))
   }
   fe <- file.exists(dtFile)
   dtFile <- if (any(fe)) dtFile[fe][1] else character()
   if (length(dtFile)) {
-    sc <- loadFile(dtFile)
+    sc <- loadFile(dtFile, cacheSaveFormat = cacheSaveFormat)
   } else {
     sc <- showCache(cachePath, userTags = cacheId, drv = drv, conn = conn, verbose = FALSE)[cacheId %in% cacheId]
   }

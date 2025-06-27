@@ -1,6 +1,8 @@
 # reproducible 3.0.0
 
 * drop support for R 4.1 and 4.2;
+* `cacheSaveFormat` is now an argument so individual Cache calls can switch backend; this can be useful when e.g., 
+`qs` which tends to be faster and smaller files does not work for all types of objects e.g., `xgboost`
 * near complete rewrite of `Cache` so it is simpler and more robust. 
 The main function is now 130 lines, instead of almost 700. 
 * In addition to full rewrites, numerous simplifications throughout code that is still being used;

@@ -436,7 +436,7 @@ setMethod(
 
   messageCache(.message$ObjToRetrieveFn(functionName), ", ",
                #             messageCache("...(Object to retrieve (fn: ", .messageFunctionFn(functionName), ", ",
-               basename2(CacheStoredFile(cachePath, cacheId, format = fileFormat)),
+               basename2(CacheStoredFile(cachePath, cacheId, cacheSaveFormat = fileFormat)),
                ")",
                if (bigFile) " is large: ",
                if (bigFile) format(objSize, units = "auto"),

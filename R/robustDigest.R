@@ -457,10 +457,11 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "integer",
-  definition = function(object, .objects, length, algo, quick, classOptions) {
+  definition = function(object, .objects, length, algo, quick, classOptions,
+                        cacheSaveFormat = getOption("reproducible.cacheSaveFormat")) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    if (identical(getOption("reproducible.cacheSaveFormat"), .qsFormat) &&
+    if (identical(cacheSaveFormat, .qsFormat) &&
         identical(getOption("reproducible.cacheSpeed"), "fast")) {
       os <- objSize(object)
       if (os == 680) {
