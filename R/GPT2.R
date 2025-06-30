@@ -1274,7 +1274,8 @@ matchCall2 <- function(definition, call, envir, envir2 = parent.frame(), FUN) {
 harmonizeCall <- function(callList, .callingEnv, .functionName = NULL) {
   callList$call <- callIsQuote(callList$call) # stip `quote`
 
-  isSquiggly <- is(callList$FUNorig, "{")
+  isSquiggly <- isSquigglyCall(callList$FUNorig)
+  # isSquiggly <- is(callList$FUNorig, "{")
   if (isTRUE(isSquiggly))
     callList$call <- convertCallWithSquigglyBraces(callList$call, callList$usesDots)
   new_call <- convertCallToCommonFormat(callList$call, callList$usesDots, isSquiggly, .callingEnv) # evaluated arguments
@@ -1730,4 +1731,10 @@ stopRcppError <- function(toDigest, .objects, length, algo, quick, classOptions)
   else
     stop("One or more objects to be digested for Cache are corrupt. ",
          "This can usually be resolved by restarting the R session")
+}
+
+
+
+isSquigglyCall <- function(x) {
+  is(x, "{")
 }
