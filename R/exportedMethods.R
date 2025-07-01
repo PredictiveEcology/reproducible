@@ -427,12 +427,16 @@ setMethod(
 #'
 #' @export
 #' @rdname exportedMethods
-.cacheMessageObjectToRetrieve <- function(functionName, fullCacheTableForObj, cachePath, cacheId, verbose) {
+.cacheMessageObjectToRetrieve <- function(functionName, fullCacheTableForObj, cachePath, cacheId,
+                                          cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
+                                          verbose) {
   objSize <- as.numeric(tail(extractFromCache(fullCacheTableForObj, elem = "file.size"), 1))
   class(objSize) <- "object_size"
   bigFile <- isTRUE(objSize > 1e6)
 
   fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
+  if (is.null(fileFormat))
+    fileFormat <- cacheSaveFormat
 
   messageCache(.message$ObjToRetrieveFn(functionName), ", ",
                #             messageCache("...(Object to retrieve (fn: ", .messageFunctionFn(functionName), ", ",

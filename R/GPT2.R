@@ -172,6 +172,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   if (isTRUE(showSimilar) || isDevMode(useCache, userTags) || isTRUE(dryRun)) {
     if (dryRun) messageColoured(.txtDryRunTRUE, colour = "green")
     showSimilar(cachePaths[[1]], metadata, callList$.functionName, userTags, useCache,
+                # cacheSaveFormat = cacheSaveFormat,
                 drv = drv, conn = conn, verbose)
   }
   if (isTRUE(dryRun))
@@ -807,9 +808,10 @@ appendNestedTags <- function(...) {
   return(invisible(NULL))
 }
 
-.addTagsRepoAccessedTime <- function(cache_key, cachePath = cachePath) {
+.addTagsRepoAccessedTime <- function(cache_key, cachePath = cachePath,
+                                     cacheSaveFormat = getOption("reproducible.cacheSaveFormat")) {
   .addTagsRepo(cacheId = cache_key, tagKey = "accessed", tagValue = sysTimeForCacheToChar()
-               , cachePath = cachePath)
+               , cacheSaveFormat = cacheSaveFormat, cachePath = cachePath)
 }
 
 callIsQuote <- function(call) {
@@ -865,9 +867,13 @@ lockFile <- function(cachePath, cache_key, envir = parent.frame(),
 }
 
 #' @importFrom data.table setorderv setcolorder
-showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, drv, conn, verbose) {
+showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
+                        # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
+                        drv, conn, verbose) {
   devMode <- isDevMode(useCache, userTags)  # don't use devMode if no userTags
-  shownCache <- showCache(cachePath, Function = .functionName, verbose = verbose - 2)
+  shownCache <- showCache(cachePath, Function = .functionName, userTags = userTags, verbose = verbose - 2)
+  # functionByDigest <- metadata[tagKey %in% "preDigest" & startsWith(tagValue, ".FUN")]$tagValue
+  # shownCache <- shownCache[tagKey %in% "preDigest" & tagValue %in% functionByDigest]
   setorderv(shownCache, "createdDate", order = -1)
   # shownCache <- shownCache[tagKey != "outerFunction"] # doesn't matter what outerFunctions do, if all others are same
   # metadata <- metadata[tagKey != "outerFunction"]
@@ -1060,8 +1066,10 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache, 
                      paste0(userTags, collapse = ", "), ")", verbose = verbose)
         messageCache("This call to cache will replace entry with cacheId(s): ",
                      paste0(simi[["cacheId"]], collapse = ", "), verbose = verbose)
-        cacheIdsToClear <- paste0("^", unique(simi[["cacheIdInCache"]]), "$", collapse = "|")
-        clearCache(cachePath, userTags = cacheIdsToClear, ask = FALSE, drv = drv, conn = conn, verbose = verbose - 2)
+        cacheIdsToClear <- unique(names(simi))
+        # cacheIdsToClear <- paste0("^", unique(names(simi)), "$", collapse = "|")
+        clearCache(cachePath, cacheId = cacheIdsToClear, ask = FALSE,  drv = drv, conn = conn, verbose = verbose - 2)
+        # clearCache(cachePath, userTags = cacheIdsToClear, ask = FALSE, drv = drv, conn = conn, verbose = verbose - 2)
       }
       messageCache("with different elements (most recent at top):", verbose = verbose)
       dashes <- "----------------------"
@@ -1124,9 +1132,11 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
   fs <- saveToCache(cachePath = cachePath, # drv = NULL, conn = NULL,
                     obj = outputToSave, verbose = verbose, # cache_file[1],
                     userTags = userTags, linkToCacheId = linkToCacheId,
+                    cacheSaveFormat = cacheSaveFormat,
                     drv = drv, conn = conn,
                     cacheId = cache_key)
-  .message$Saved(cachePath, cache_key, functionName = .functionName, verbose = verbose)
+  .message$Saved(cachePath, cache_key, functionName = .functionName,
+                 cacheSaveFormat = cacheSaveFormat, verbose = verbose)
   return(metadata)
 }
 
@@ -1264,7 +1274,8 @@ matchCall2 <- function(definition, call, envir, envir2 = parent.frame(), FUN) {
 harmonizeCall <- function(callList, .callingEnv, .functionName = NULL) {
   callList$call <- callIsQuote(callList$call) # stip `quote`
 
-  isSquiggly <- is(callList$FUNorig, "{")
+  isSquiggly <- isSquigglyCall(callList$FUNorig)
+  # isSquiggly <- is(callList$FUNorig, "{")
   if (isTRUE(isSquiggly))
     callList$call <- convertCallWithSquigglyBraces(callList$call, callList$usesDots)
   new_call <- convertCallToCommonFormat(callList$call, callList$usesDots, isSquiggly, .callingEnv) # evaluated arguments
@@ -1329,7 +1340,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     clearCacheOverwrite(cachePath, cache_key, functionName, drv, conn, verbose)
     return(invisible(.returnNothing))
   } else {
-    format <- if (missing(cache_file) || is.null(cache_file)) getOption("reproducible.cacheSaveFormat") else
+    format <- if (missing(cache_file) || is.null(cache_file)) cacheSaveFormat else
       fileExt(cache_file)
 
     for (iii in 1:2) {
@@ -1339,7 +1350,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       } else {
         feReally <- file.exists(fe)
         if (any(feReally %in% FALSE)) {
-          formatNew <- formatCheck(cachePath, cache_key, cacheSaveFormat)
+          formatNew <- formatCheck(cachePath, cache_key, format)
           if (!identical(formatNew, cacheSaveFormat)) {
             cacheSaveFormat <- formatNew
             next
@@ -1357,7 +1368,8 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     cacheSaveFormatFail <- FALSE
     if (is.null(shownCache)) {
       shownCache <- try(showCacheFast(cache_key, cachePath, dtFile = fe,
-                                      cacheSaveFormat = cacheSaveFormat, drv = drv, conn = conn),
+                                      # cacheSaveFormat = cacheSaveFormat,
+                                      drv = drv, conn = conn),
                         silent = TRUE)
       if (is(shownCache, "try-error")) {
         if (isTRUE(any(grepl("format not detected", shownCache)))) {
@@ -1368,7 +1380,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
 
     if (isFALSE(cacheSaveFormatFail))
       .cacheMessageObjectToRetrieve(functionName, shownCache, cachePath,
-                                    cacheId = cache_key, verbose = verbose)
+                                    cacheId = cache_key, cacheSaveFormat = cacheSaveFormat, verbose = verbose)
     memoiseFail <- FALSE
     if (fromMemoise && !rerun) {
       output <- get(cache_key, envir = memoiseEnv(cachePath))
@@ -1447,7 +1459,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     if (!is.null(output))
       output <- addCacheAttr(output, .CacheIsNew = FALSE, outputHash = cache_key, func)
 
-    .addTagsRepoAccessedTime(cache_key, cachePath = cachePath)
+    .addTagsRepoAccessedTime(cache_key, cachePath = cachePath, cacheSaveFormat = cacheSaveFormat)
     attr(output, ".Cache")$newCache <- FALSE
 
     .dotsFromCache <- as.list(attr(full_call, ".Cache")$func_call)[-1]
@@ -1719,4 +1731,10 @@ stopRcppError <- function(toDigest, .objects, length, algo, quick, classOptions)
   else
     stop("One or more objects to be digested for Cache are corrupt. ",
          "This can usually be resolved by restarting the R session")
+}
+
+
+
+isSquigglyCall <- function(x) {
+  is(x, "{")
 }

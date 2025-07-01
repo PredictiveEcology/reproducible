@@ -233,6 +233,16 @@ setMethod(
 #' @export
 setMethod(
   ".robustDigest",
+  signature = "call",
+  definition = function(object, .objects, length, algo, quick, classOptions) {
+    .robustDigestFormatOnly(object, algo = algo)
+  }
+)
+
+#' @rdname robustDigest
+#' @export
+setMethod(
+  ".robustDigest",
   signature = "character",
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
