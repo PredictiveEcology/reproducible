@@ -570,6 +570,9 @@ setMethod(
         if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
           objsDTs <- list()
           for (ut in userTags) {
+            if (grepl(":", ut)) {
+              ut <- paste(strsplit(ut, ":")[[1]], collapse = "|")
+            }
             objsDT2 <- objsDT[
               grepl(get(.cacheTableTagColName()), pattern = ut) |
                 grepl(tagKey, pattern = ut) |
