@@ -1413,32 +1413,32 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       }
     }
 
-      if (!fromMemoise || rerun || memoiseFail || cacheSaveFormatFail) {
-        obj <- if (!is.null(cache_file)) {
-          try(loadFile(cache_file, cacheSaveFormat = cacheSaveFormat), silent = TRUE)
-        } else {
-          rerun <- TRUE
-        }
-        output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
-        if (is(obj, "try-error") || rerun || is(output, "try-error")) {
-          messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
-          otherFiles2 <- dir(CacheStorageDir(cachePath), pattern = cache_key, full.names = TRUE)
-          if (!is(shownCache, "try-error")) {
-            otherFiles <- normPath(file.path(CacheStorageDir(cachePath),
-                                             shownCache[tagKey == "filesToLoad"]$tagValue))
-            otherFiles2 <- c(otherFiles, otherFiles2)
-          }
-          rmFiles <- unique(c(cache_file, otherFiles2))
-          unlink(rmFiles)
-          return(.returnNothing)
-        }
-
-        if (isTRUE(changedSaveFormat)) {
-          swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
-                              cacheId = cache_key, sameCacheID = sameCacheID,
-                              newFile = cache_file_orig, verbose = verbose)
-        }
+    if (!fromMemoise || rerun || memoiseFail || cacheSaveFormatFail) {
+      obj <- if (!is.null(cache_file)) {
+        try(loadFile(cache_file, cacheSaveFormat = cacheSaveFormat), silent = TRUE)
+      } else {
+        rerun <- TRUE
       }
+      output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
+      if (is(obj, "try-error") || rerun || is(output, "try-error")) {
+        messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
+        otherFiles2 <- dir(CacheStorageDir(cachePath), pattern = cache_key, full.names = TRUE)
+        if (!is(shownCache, "try-error")) {
+          otherFiles <- normPath(file.path(CacheStorageDir(cachePath),
+                                           shownCache[tagKey == "filesToLoad"]$tagValue))
+          otherFiles2 <- c(otherFiles, otherFiles2)
+        }
+        rmFiles <- unique(c(cache_file, otherFiles2))
+        unlink(rmFiles)
+        return(.returnNothing)
+      }
+
+      if (isTRUE(changedSaveFormat)) {
+        swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
+                            cacheId = cache_key, sameCacheID = sameCacheID,
+                            newFile = cache_file_orig, verbose = verbose)
+      }
+    }
 
     if (cloudWrite(useCloud)) {
       cloudUploadFromCache(cache_key %in% filePathSansExt(gdriveLs[["name"]]), cache_key,
@@ -1446,7 +1446,6 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     }
 
     .cacheMessage(object = output, functionName = functionName, fromMemoise = fromMemoise, verbose = verbose)
-
 
     if (getOption("reproducible.useMemoise", FALSE)) {
       cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
