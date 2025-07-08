@@ -465,12 +465,13 @@ list2envAttempts <- function(x, envir) {
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
                                      drv = getDrv(getOption("reproducible.drv", NULL)),
                                      conn = getOption("reproducible.conn", NULL),
+                                     verbose = getOption("reproducible.verbose"),
                                      ...) {
   fnsAll <- Filenames(obj)
   fnsShort <- Filenames(obj, FALSE)
   if (!all(nchar(fnsAll) == 0)) {
     repoDir <- checkPath(repoDir, create = TRUE)
-    isRepo <- CacheIsACache(cachePath = repoDir, drv = drv, conn = conn)
+    isRepo <- CacheIsACache(cachePath = repoDir, drv = drv, conn = conn, verbose = verbose)
     # thoseWithGRI <- endsWith(fnsAll, "gri")
     fns <- fnsAll
     FB <- nchar(fns) > 0

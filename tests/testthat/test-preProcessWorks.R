@@ -183,7 +183,6 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
     #     })
     #   )
     # } else {
-      # aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
   if (isWindows() && getRversion() < "4.3")
     skip("archive pkg on Windows 4.2.3 fails on rar")
 

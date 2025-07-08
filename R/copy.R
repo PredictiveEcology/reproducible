@@ -131,7 +131,8 @@ setMethod(
           filebackedDir <- tempdir2(rndstr(1, 11))
         }
         if (!is.null(filebackedDir)) {
-          out <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn)
+          out <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn,
+                                          verbose = verbose)
         }
       }
     } else if (inherits(object, "SpatRaster")) {

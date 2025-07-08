@@ -578,7 +578,7 @@ CacheV2 <-
       for (cachePath in cachePaths) {
         # Need conn --> also need exclusive lock
         #if (useDBI()) {
-          conns <- createConns(cachePath, conns, drv)
+          conns <- createConns(cachePath, conns, drv, verbose = verbose)
           # if (is.null(conns[[cachePath]])) {
           #   conns[[cachePath]] <- dbConnectAll(drv, cachePath = cachePath)
           #   RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA busy_timeout=5000;"))
@@ -1130,9 +1130,10 @@ CacheV2 <-
 writeFuture <- function(written, outputToSave, cachePath, userTags,
                         drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL),
-                        cacheId, linkToCacheId = NULL) {
+                        cacheId, linkToCacheId = NULL,
+                        verbose = getOption("reproducible.verbose")) {
   counter <- 0
-  if (!CacheIsACache(cachePath = cachePath, drv = drv, conn = conn)) {
+  if (!CacheIsACache(cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)) {
     stop("That cachePath does not exist")
   }
 
@@ -2687,7 +2688,8 @@ checkConns <- function(cachePaths, conn) {
 }
 
 
-createConns <- function(cachePath, conns, drv) {
+createConns <- function(cachePath, conns, drv,
+                        verbose = getOption("reproducible.verbose")) {
   if (useDBI()) {
     drv <- getDrv(drv)
     if (is.null(conns[[cachePath]])) {
@@ -2699,7 +2701,7 @@ createConns <- function(cachePath, conns, drv) {
 
   isIntactRepo <- CacheIsACache(
     cachePath = cachePath, drv = drv, create = TRUE,
-    conn = conns[[cachePath]]
+    conn = conns[[cachePath]], verbose = verbose
   )
   if (any(!isIntactRepo)) {
     ret <- createCache(cachePath,

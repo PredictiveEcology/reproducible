@@ -112,7 +112,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                                                      cloudFolderID, gdriveLs, full_call = callList$new_call,
                                                      outputObjects = outputObjects,
                                                      cacheSaveFormat = cacheSaveFormat,
-                                                     drv = drv, conn = conn, verbose)
+                                                     drv = drv, conn = conn, verbose = verbose)
     if (!identical2(.returnNothing, outputFromMemoise))
       return(outputFromMemoise)
 
@@ -124,7 +124,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
       conn <- checkConns(cachePaths, conn)
       drv <- getDrv(getOption("reproducible.drv", NULL))
       for (cachePath in cachePaths)
-        conn <- createConns(cachePath, conn, drv) # this will convert backend if it is wrong
+        conn <- createConns(cachePath, conn, drv, verbose = verbose) # this will convert backend if it is wrong
 
       if (is.null(connOrig)) # don't disconnect if conn was user passed
         # if this is >1st cachePath, then the db will already be disconnected; suppressWarnings
@@ -1094,7 +1094,7 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
 
 CacheDBFileCheckAndCreate <- function(cachePath, drv = NULL, conn = NULL, verbose) {
 
-  convertDBbackendIfIncorrect(cachePath, drv, conn, verbose)
+  convertDBbackendIfIncorrect(cachePath, drv, conn, verbose = verbose)
 
   dbfile <- CacheDBFile(cachePath, drv = drv, conn = conn)
   if (isTRUE(!file.exists(dbfile[1])))

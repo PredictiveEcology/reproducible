@@ -41,7 +41,7 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL), force = FALSE,
                         verbose = getOption("reproducible.verbose")) {
-  alreadyExists <- CacheIsACache(cachePath, drv = drv, conn = conn, create = TRUE)
+  alreadyExists <- CacheIsACache(cachePath, drv = drv, conn = conn, create = TRUE, verbose = verbose)
   if (alreadyExists && force == FALSE) {
     messageCache("Cache already exists at ", cachePath, " and force = FALSE. Not creating new cache.",
       verbose = verbose
@@ -771,7 +771,8 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
 #' @rdname CacheHelpers
 CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), create = FALSE,
                           drv = getDrv(getOption("reproducible.drv", NULL)),
-                          conn = getOption("reproducible.conn", NULL)) {
+                          conn = getOption("reproducible.conn", NULL),
+                          verbose = getOption("reproducible.verbose")) {
 
   checkPath(cachePath, create = TRUE)
   if (useDBI()) {
@@ -786,7 +787,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
     list.files(cachePath))
 
   ## Need to check even if ret is TRUE because we may be in the process of changing
-  convertDBbackendIfIncorrect(cachePath, drv, conn)
+  convertDBbackendIfIncorrect(cachePath, drv, conn, verbose = verbose)
 
   needCreate <- FALSE
   if (useDBI()) {

@@ -998,7 +998,8 @@ unmakeMemoisable.default <- function(x) {
     objOrig <- obj
     obj <- .prepareFileBackedRaster(obj,
                                     repoDir = cachePath,
-                                    overwrite = FALSE, drv = drv, conn = conn
+                                    overwrite = FALSE, drv = drv, conn = conn,
+                                    verbose = verbose
     )
     isFromDisk <- raster::fromDisk(obj)
 
