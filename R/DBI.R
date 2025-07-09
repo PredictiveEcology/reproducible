@@ -928,15 +928,11 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
 #'
 #' @param file character specifying the path to the file
 #'
-#' @param cacheSaveFormat (optional) character string specifying file extension (.qsFormat or .rdsFormat) of `file`;
-#'        if not specified (i.e., NULL), will be deduced from the file extension of `file`.
-#'
 #' @param ... Allows `format` for backward compatibility
 #' @return the object loaded from `file`
 #'
 #' @export
-loadFile <- function(file, # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
-                     ...) {
+loadFile <- function(file, ...) {
   if (!is.null(list(...)$format))
     cacheSaveFormat <- list(...)$format
   # if (is.null(cacheSaveFormat)) {
