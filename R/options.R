@@ -48,6 +48,9 @@
 #'     Default: `RSQLite::SQLite()`. Sets the default driver for the backend database system.
 #'     Only tested with `RSQLite::SQLite()` and `RPostgres::Postgres()`.
 #'   }
+#'   \item{dryRun}{
+#'     Default: `FALSE`.
+#'   }
 #'   \item{`futurePlan`}{
 #'     Default: `FALSE`. On Linux OSes, `Cache` and `cloudCache` have some
 #'     functionality that uses the `future` package.
@@ -256,6 +259,7 @@ reproducibleOptions <- function() {
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
     reproducible.drv = NULL, # RSQLite::SQLite(),
+    reproducible.dryRun = FALSE,
     reproducible.futurePlan = FALSE, # future::plan("multisession"), #memoise
     reproducible.gdalwarp = FALSE,
     reproducible.gdalwarpThreads = 2L,

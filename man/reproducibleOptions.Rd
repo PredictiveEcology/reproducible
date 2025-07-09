@@ -53,6 +53,9 @@ Can be set globally here.
 Default: \code{RSQLite::SQLite()}. Sets the default driver for the backend database system.
 Only tested with \code{RSQLite::SQLite()} and \code{RPostgres::Postgres()}.
 }
+\item{dryRun}{
+Default: \code{FALSE}.
+}
 \item{\code{futurePlan}}{
 Default: \code{FALSE}. On Linux OSes, \code{Cache} and \code{cloudCache} have some
 functionality that uses the \code{future} package.
