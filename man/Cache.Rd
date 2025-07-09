@@ -446,7 +446,7 @@ This feature is now deprecated. Do not use as it is ignored.
 
 \examples{
 data.table::setDTthreads(2)
-tmpDir <- tempfile()
+tmpDir <- tempdir()
 opts <- options(reproducible.cachePath = tmpDir)
 
 # Usage -- All below are equivalent; even where args are missing or provided,
