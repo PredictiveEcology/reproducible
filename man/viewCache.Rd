@@ -51,7 +51,6 @@ showCache(
   before = NULL,
   fun = NULL,
   cacheId = NULL,
-  cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
@@ -65,7 +64,6 @@ showCache(
   before = NULL,
   fun = NULL,
   cacheId = NULL,
-  cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
@@ -168,10 +166,6 @@ it can also be \code{sorted = FALSE} to return the object unsorted.}
 \item{secs}{Currently 3 options: the number of seconds to pass to \code{clearCache(after = secs)},
 a \code{POSIXct} time e.g., from \code{Sys.time()}, or missing. If missing,
 the default, then it will delete the most recent entry in the Cache.}
-
-\item{cacheSaveFormat}{Character string: currently either \code{qs} or \code{rds}. Defaults to
-\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} is faster but appears to have
-narrower range of conditions that work; \code{rds} is safer, but slower.}
 }
 \value{
 Will clear all objects (or those that match \code{userTags}, or those
