@@ -384,13 +384,14 @@ setMethod(
         )
       }, error = function(e) {
         nam <- names(objsSorted)
-        if (!is.null(nam))
+        if (!is.null(nam)) {
           # messageCache("Error occurred during .robustDigest of ", nam[i], " in ", .functionName)
           messageCache("Error occurred during .robustDigest of ", nam[i])
+        }
       })
 
     })
-    # have to disginguish a list from an object not in a list
+    ## have to distinguish a list from an object not in a list
     # append(list(._list = .doDigest(inner)), inner)
     inner
   }
@@ -431,7 +432,6 @@ setMethod(
     .robustDigest(unlist(dig), quick = TRUE, algo = algo, classOptions = classOptions)
   }
 )
-
 
 #' @rdname robustDigest
 #' @export
