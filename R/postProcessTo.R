@@ -1021,14 +1021,20 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
         if (is.null(isSpatRaster)) isSpatRaster <- isSpat(from) && isGridded(from)
         if (is.null(isRaster)) isRaster <- inherits(from, "Raster")
 
+        if (any(file.exists(writeTo))) {
+          if (isFALSE(overwrite)) {
+            stop(writeTo, " already exists and `overwrite = FALSE`; please set `overwrite = TRUE` and run again.")
+          }
+          unlink(writeTo, force = TRUE, recursive = TRUE)
+        }
         if (isSpatRaster || isVector(from)) {
           ## trying to prevent write failure and subsequent overwrite error with terra::writeRaster
-          if (any(file.exists(writeTo))) {
-            if (isFALSE(overwrite)) {
-              stop(writeTo, " already exists and `overwrite = FALSE`; please set `overwrite = TRUE` and run again.")
-            }
-            unlink(writeTo, force = TRUE, recursive = TRUE)
-          }
+          # if (any(file.exists(writeTo))) {
+          #   if (isFALSE(overwrite)) {
+          #     stop(writeTo, " already exists and `overwrite = FALSE`; please set `overwrite = TRUE` and run again.")
+          #   }
+          #   unlink(writeTo, force = TRUE, recursive = TRUE)
+          # }
           if (isSpatRaster) {
             ## if the file still exists it's probably already "loaded"
             ## and `terra` can't overwrite it even if `overwrite = TRUE`

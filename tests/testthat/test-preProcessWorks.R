@@ -176,13 +176,13 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
   url <- theRasterTestRar
 
   # if (!is(extractSystemCallPath, "try-error")) {
-    # if (is.null(extractSystemCallPath)) {
-    #   noisyOutput <- capture.output(
-    #     expect_error({
-    #       ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-    #     })
-    #   )
-    # } else {
+  # if (is.null(extractSystemCallPath)) {
+  #   noisyOutput <- capture.output(
+  #     expect_error({
+  #       ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  #     })
+  #   )
+  # } else {
   if (isWindows() && getRversion() < "4.3")
     skip("archive pkg on Windows 4.2.3 fails on rar")
 
