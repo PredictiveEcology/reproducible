@@ -1290,10 +1290,12 @@ usesPointer <- function(x) {
 
 #' @export
 usesPointer.default <- function(x) {
-  if (requireNamespace("terra")) {
-    x <- is(x, "SpatRaster") && any(terra::inMemory(x))
-  }
-  x
+  xState <- FALSE
+  if (is(x, "SpatRaster"))
+    if (requireNamespace("terra")) {
+      xState <- any(terra::inMemory(x))
+    }
+  xState
 }
 
 #' @export
