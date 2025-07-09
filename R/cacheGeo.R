@@ -31,11 +31,11 @@
 #' @param FUN A function call that will be called if there is the `domain` is
 #'   not already contained within the `sf` object at `targetFile`. This function
 #'   call MUST return either a `sf` class object or a `data.frame` class object
-#'   that has a geometry column (which can then be converted to `sf` with `st_as_sf`)
-#' @param cloudFolderID If this is specified, then it must be either 1) a googledrive
+#'   that has a geometry column (which can then be converted to `sf` with `sf::st_as_sf`)
+#' @param cloudFolderID If this is specified, then it must be either 1) a Google Drive
 #'   url to a folder where the `targetFile` will be read from or written to, or
-#'   2) a googledrive id or 3) an absolute path to a (possibly non-existent yet)
-#'   folder on your google drive.
+#'   2) a `googledrive` id or 3) an absolute path to a (possibly non-existent yet)
+#'   folder on your Google drive.
 #' @param useCloud A logical.
 #' @param bufferOK A logical. If `TRUE`, then after testing whether the domain is
 #'   within the `targetFile` spatial object, and if it returns `FALSE`, then the function
@@ -190,14 +190,14 @@ CacheGeo <- function(targetFile = NULL,
     existingObjSF <- if (is(existingObj, "sf")) existingObj else sf::st_as_sf(existingObj)
     if (!missing(domain)) {
       #must be sf for st_within
-      if (!inherits(domain, "sf")) domain <- st_as_sf(domain)
+      if (!inherits(domain, "sf")) domain <- sf::st_as_sf(domain)
       #must have same crs for st_within
       existingObjSF <- sf::st_transform(existingObjSF, sf::st_crs(domain))
 
       wh <- sf::st_within(domain, existingObjSF, sparse = FALSE)
       if (isTRUE(wh %in% FALSE) && isTRUE(bufferOK)) {
         diffs <- mapply(minmax = list(c("xmin", "xmax"), c("ymin", "ymax")), function(minmax)
-          round(abs(diff(st_bbox(existingObjSF)[minmax])), 0))
+          round(abs(diff(sf::st_bbox(existingObjSF)[minmax])), 0))
         buff <- diffs * 0.025
         meanBuff <- mean(buff)
         meanBuffKm <- round(meanBuff/1e3, 1)
