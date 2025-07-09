@@ -493,6 +493,18 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
       )
     )
   )
+
+  sfCanRead <- c("bna","csv", "e00", "gdb", "geojson", "gml", "gmt", "gpkg", "gps",
+    "gtm", "gxt", "jml", "map", "mdb", "nc", "ods", "osm", "pbf", "shp", "sqlite",
+    "vdv", "xls", "xlsx" )
+  sfFun <- shpFile
+  sfSaveFun <- shpFileSave
+  type = "sf"
+  colnames(df) <- c("extension", "fun", "saveFun", "type")
+  df2 <- data.frame(sfCanRead, sfFun, sfSaveFun, type)
+  colnames(df2) <- c("extension", "fun", "saveFun", "type")
+  df <- rbind(df, df2)
+
   colnames(df) <- c("extension", "fun", "saveFun", "type")
   df
 }
