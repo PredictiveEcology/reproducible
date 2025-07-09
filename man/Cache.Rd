@@ -97,6 +97,8 @@ or an unevaluated function call (e.g., using \code{quote()}).}
 
 \item{...}{Arguments passed to \code{FUN}, if \code{FUN} is not an expression.}
 
+\item{dryRun}{See \link{reproducibleOptions}.}
+
 \item{notOlderThan}{A time. Load an object from the Cache if it was created after this.}
 
 \item{.objects}{Character vector of objects to be digested. This is only applicable
@@ -446,7 +448,7 @@ This feature is now deprecated. Do not use as it is ignored.
 
 \examples{
 data.table::setDTthreads(2)
-tmpDir <- tempfile()
+tmpDir <- tempdir()
 opts <- options(reproducible.cachePath = tmpDir)
 
 # Usage -- All below are equivalent; even where args are missing or provided,

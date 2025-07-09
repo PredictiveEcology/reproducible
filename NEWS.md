@@ -1,16 +1,16 @@
 # reproducible 3.0.0
 
 * drop support for R 4.1 and 4.2;
-* `cacheSaveFormat` is now an argument so individual Cache calls can switch backend; this can be useful when e.g., 
-`qs` which tends to be faster and smaller files does not work for all types of objects e.g., `xgboost`
+* `format` replaces `cacheSaveFormat` as an argument so individual Cache calls can switch backend;
+  this can be useful when e.g., `qs` (which tends to be faster and smaller files) does not work
+  for all types of objects e.g., `xgboost`.
 * near complete rewrite of `Cache` so it is simpler and more robust. 
 The main function is now 130 lines, instead of almost 700. 
 * In addition to full rewrites, numerous simplifications throughout code that is still being used;
-* slowly deprecating R 4.1 support as there are package dependencies that do not work on R 4.1
 * `CacheGeo` added new cases that are able to be used.
 * many edge cases were found that were not correctly Cached. This resulted in 2 major changes: 
-rewrite and simplification of `Cache` 
-and modified `digest` of the arguments. These changes are not backwards compatible. Details next.
+  - rewrite and simplification of `Cache`;
+  - modified `digest` of the arguments. These changes are not backwards compatible. Details next.
 * Fixes to several ongoing "edge cases" that were difficult to address, mostly 
 focused around deeply nested objects 
 that are file-backed with pointers, such `terra::SpatRaster` class;

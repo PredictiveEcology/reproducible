@@ -1,5 +1,7 @@
 utils::globalVariables("arg")
 
+#' @param dryRun See [reproducibleOptions].
+#'
 #' @include messages.R
 #' @export
 #' @rdname Cache

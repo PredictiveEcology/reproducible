@@ -31,7 +31,7 @@ then this will return the whole object in \code{targetFile}.}
 \item{FUN}{A function call that will be called if there is the \code{domain} is
 not already contained within the \code{sf} object at \code{targetFile}. This function
 call MUST return either a \code{sf} class object or a \code{data.frame} class object
-that has a geometry column (which can then be converted to \code{sf} with \code{st_as_sf})}
+that has a geometry column (which can then be converted to \code{sf} with \code{sf::st_as_sf})}
 
 \item{destinationPath}{Character string of a directory in which to download
 and save the file that comes from \code{url} and is also where the function
@@ -43,10 +43,10 @@ search for the file before attempting to download. Default for that option is
 
 \item{useCloud}{A logical.}
 
-\item{cloudFolderID}{If this is specified, then it must be either 1) a googledrive
+\item{cloudFolderID}{If this is specified, then it must be either 1) a Google Drive
 url to a folder where the \code{targetFile} will be read from or written to, or
-2) a googledrive id or 3) an absolute path to a (possibly non-existent yet)
-folder on your google drive.}
+2) a \code{googledrive} id or 3) an absolute path to a (possibly non-existent yet)
+folder on your Google drive.}
 
 \item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing
 \code{CHECKSUMS.txt} file and
