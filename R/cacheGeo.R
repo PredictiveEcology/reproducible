@@ -192,7 +192,7 @@ CacheGeo <- function(targetFile = NULL,
       #must be sf for st_within
       if (!inherits(domain, "sf")) domain <- st_as_sf(domain)
       #must have same crs for st_within
-      existingObjSF <- sf::st_transform(existingObjSF, st_crs(domain))
+      existingObjSF <- sf::st_transform(existingObjSF, sf::st_crs(domain))
 
       wh <- sf::st_within(domain, existingObjSF, sparse = FALSE)
       if (isTRUE(wh %in% FALSE) && isTRUE(bufferOK)) {
