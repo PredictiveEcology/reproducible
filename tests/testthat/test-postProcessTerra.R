@@ -4,6 +4,7 @@ test_that("testing terra", {
     needGoogleDriveAuth = FALSE,
     opts = list(
       reproducible.useMemoise = FALSE,
+      reproducible.cacheSaveFormat = .qsFormat,
       "rgdal_show_exportToProj4_warnings" = "none"
     )
   )
@@ -292,9 +293,10 @@ test_that("testing terra", {
         opts <- options(reproducible.cacheSaveFormat = .rdsFormat)
         t13a <- Cache(postProcessTo(xVect, vutmErrors))
         opts <- options(reproducible.cacheSaveFormat = .qsFormat)
-        t13a <- try(Cache(postProcessTo(xVect, vutmErrors)), silent = TRUE)
-        a <- try(ncol(t13a), silent = TRUE)
-        expect_false(is(a, "try-error"))
+        t13b <- Cache(postProcessTo(xVect, vutmErrors))
+        expect_equal(t13a, t13b)
+        # a <- try(ncol(t13a), silent = TRUE)
+        # expect_false(is(a, "try-error"))
       }
     }
 

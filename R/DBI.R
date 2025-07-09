@@ -1255,7 +1255,7 @@ swapCacheFileFormat <- function(wrappedObj, cachePath, drv, conn, cacheId, sameC
 
   fs <- saveToCache(
     obj = wrappedObj, cachePath = cachePath, drv = drv, conn = conn,
-    cacheId = cacheId
+    cacheId = cacheId, cacheSaveFormat = fileExt(newFile)
   )
   rmFromCache(
     cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,

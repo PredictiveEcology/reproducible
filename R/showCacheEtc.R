@@ -390,7 +390,7 @@ cc <- function(secs, ..., verbose = getOption("reproducible.verbose")) {
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  fun = NULL, cacheId = NULL,
-                                 cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
+                                 # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                                  drv = getDrv(getOption("reproducible.drv", NULL)),
                                  conn = getOption("reproducible.conn", NULL),
                                  verbose = getOption("reproducible.verbose"),
@@ -471,10 +471,12 @@ setMethod(
               filOutside <<- fil
               out <- try(loadFile(fil))#, cacheSaveFormat = cacheSaveFormat))
               if (is(out, "try-error")) {
-                cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", cacheSaveFormat), "",
+                cacheId <- gsub(paste0(CacheDBFileSingleExt()), "",
                                 basename(fil))
+                # cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", cacheSaveFormat), "",
+                #                 basename(fil))
                 filesToRm <- dir(dirname(fil), pattern = cacheId, full.names = TRUE)
-                fileExtIncorrect <- unique(fileExt(filesToRm)) %in% cacheSaveFormat
+                fileExtIncorrect <- unique(fileExt(filesToRm)) # %in% cacheSaveFormat
                 if (any(fileExtIncorrect)) {
                   messageCache("The database file was using a different save format; deleting Cache entry for ", cacheId,
                                verbose = getOption("reproducible.verbose"))
@@ -488,6 +490,7 @@ setMethod(
               out
 
               }))
+
           }# , error = function(e) {
             # browser()
             #   cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", cacheSaveFormat), "",

@@ -1435,6 +1435,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
         swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
                             cacheId = cache_key, sameCacheID = sameCacheID,
                             newFile = cache_file_orig, verbose = verbose)
+        cacheSaveFormat <- setdiff(.cacheSaveFormats, cacheSaveFormat)
       }
     }
 
