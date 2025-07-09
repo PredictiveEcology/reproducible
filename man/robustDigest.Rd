@@ -6,6 +6,7 @@
 \alias{.robustDigest,function-method}
 \alias{.robustDigest,expression-method}
 \alias{.robustDigest,language-method}
+\alias{.robustDigest,call-method}
 \alias{.robustDigest,character-method}
 \alias{.robustDigest,Path-method}
 \alias{.robustDigest,environment-method}
@@ -33,6 +34,8 @@
 \S4method{.robustDigest}{expression}(object, .objects, length, algo, quick, classOptions)
 
 \S4method{.robustDigest}{language}(object, .objects, length, algo, quick, classOptions)
+
+\S4method{.robustDigest}{call}(object, .objects, length, algo, quick, classOptions)
 
 \S4method{.robustDigest}{character}(object, .objects, length, algo, quick, classOptions)
 

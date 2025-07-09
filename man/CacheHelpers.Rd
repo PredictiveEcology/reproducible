@@ -69,7 +69,8 @@ CacheIsACache(
   cachePath = getOption("reproducible.cachePath"),
   create = FALSE,
   drv = getDrv(getOption("reproducible.drv", NULL)),
-  conn = getOption("reproducible.conn", NULL)
+  conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose")
 )
 }
 \arguments{
