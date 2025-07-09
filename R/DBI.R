@@ -1278,7 +1278,12 @@ dbDisconnectAll <- function(conn) {
 .qsFormat <- grep("qs", .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
 .rdsFormat <- grep("rds", .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
 
-
+#' Does an object use a pointer?
+#'
+#' @param x an object
+#'
+#' @return logical
+#'
 #' @export
 usesPointer <- function(x) {
   UseMethod("usesPointer", x)
