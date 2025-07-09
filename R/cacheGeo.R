@@ -250,9 +250,9 @@ CacheGeo <- function(targetFile = NULL,
     if (isTRUE(objExisted)) {
       if (any(grepl("^a|^u", action[1], ignore.case = TRUE))) {
         # .gpkg seems to change geometry to "geom"
-        existingObj <- checkNameHasGeom(existingObj)
+        existingObjSF <- checkNameHasGeom(existingObjSF)
         existingObj <- as.data.frame(rbindlist(
-          list(as.data.table(existingObj), as.data.table(newObj)), fill = TRUE, use.names = TRUE))
+          list(as.data.table(existingObjSF), as.data.table(newObj)), fill = TRUE, use.names = TRUE))
         # existingObj <- rbind(existingObj, newObj)
         if (any(duplicated(existingObj))) {
           existingObj <- unique(existingObj)
@@ -267,8 +267,8 @@ CacheGeo <- function(targetFile = NULL,
       if (identical("rds", fs::path_ext(targetFile)))  {
         saveRDS(existingObj, file = targetFile)
       } else {
-          writeTo(existingObj, writeTo = targetFile, overwrite = TRUE)
-        }
+        writeTo(existingObj, writeTo = targetFile, overwrite = TRUE, append = TRUE)
+      }
     } else {
       if (!missing(FUN)) {
         message("The spatial domain is new, and should be added, but\n")

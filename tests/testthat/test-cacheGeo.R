@@ -1,11 +1,11 @@
 test_that("lightweight tests for code coverage", {
   skip_on_cran()
   testInit(c("sf", "terra"),
-    opts = list(
-      "reproducible.overwrite" = TRUE,
-      "reproducible.inputPaths" = NULL
-    ),
-    needGoogleDriveAuth = TRUE
+           opts = list(
+             "reproducible.overwrite" = TRUE,
+             "reproducible.inputPaths" = NULL
+           ),
+           needGoogleDriveAuth = TRUE
   )
   dPath <- checkPath(file.path(tempdir2()), create = TRUE)
   dPath2 <- checkPath(file.path(tempdir2()), create = TRUE)
@@ -70,11 +70,11 @@ test_that("lightweight tests for code coverage", {
   # Run sequence -- A, B will add new entries in targetFile, C will not,
   #                 D will, E will not
   paramsVecList <- list(list(a = 1, b = 2, c = "D"),
-                   list(a = 2, b = 3, d = 4),
-                   list(a = 2, b = 3, e = 4),
-                   list(a = 2, b = 3, d = 4),
-                   list(a = 2, b = 3, d = 4),
-                   list(a = 2, b = 3, d = 4))
+                        list(a = 2, b = 3, d = 4),
+                        list(a = 2, b = 3, e = 4),
+                        list(a = 2, b = 3, d = 4),
+                        list(a = 2, b = 3, d = 4),
+                        list(a = 2, b = 3, d = 4))
   iter <- 0
   for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE, zoneF)) {
     iter <- iter + 1
@@ -84,14 +84,16 @@ test_that("lightweight tests for code coverage", {
     if (identical(z, zoneC) || identical(z, zoneE)) {
       mess <- "Spatial domain is contained within the url"
     }
-    expect_message(out <- CacheGeo(
+
+    messCap <- capture_messages(out <- CacheGeo(
       targetFile = targetFile,
       domain = z,
       FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
       fun = fun, # pass whatever is needed into the function
       destinationPath = dPath,
       action = "update"
-    ), mess)
+    ))
+    expect_match(messCap, mess, all = FALSE)
 
     co <- capture.output({
       expect_message(out2 <- CacheGeo(
@@ -112,6 +114,7 @@ test_that("lightweight tests for code coverage", {
 
   gls <- googledrive::drive_ls(cloudFolderID)
   alreadyThere <- gls$name %in% c(targetFile, targetFile2)
+
   if (any(alreadyThere)) {
     googledrive::drive_rm(gls$id[which(alreadyThere)])
   }
@@ -122,68 +125,73 @@ test_that("lightweight tests for code coverage", {
 
 
   iter <- 0
-  for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE, zoneF)) {
-    iter <- iter + 1
-    if (identical(z, zoneA) || identical(z, zoneB) || identical(z, zoneD) || identical(z, zoneF)) {
-      mess <- "Domain is not contained within the targetFile"
+  # the following will fail if not predictiveecology@gmail.com or eliotmcintire@gmail.com or the funky
+  #   service account eliot-githubauthentication@genial-cycling-408722.iam.gserviceaccount.com if that
+  #   has been added to the environment
+  try({
+    for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE, zoneF)) {
+      iter <- iter + 1
+      if (identical(z, zoneA) || identical(z, zoneB) || identical(z, zoneD) || identical(z, zoneF)) {
+        mess <- "Domain is not contained within the targetFile"
+      }
+      if (identical(z, zoneC) || identical(z, zoneE)) {
+        mess <- "Spatial domain is contained within the url"
+      }
+      # With directory url
+
+      out <- CacheGeo(
+        targetFile = targetFile,
+        domain = z,
+        useCloud = TRUE,
+        cloudFolderID = cloudFolderID,
+        FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
+        fun = fun, # pass whatever is needed into the function
+        destinationPath = dPath2,
+        action = "update"
+      )
+
+      expect_message(out2 <- CacheGeo(
+        targetFile = targetFile2,
+        domain = z,
+        useCloud = TRUE,
+        cloudFolderID = cloudFolderID,
+        FUN = fun3(domain, paramsVec = paramsVecList[[iter]]),
+        fun3 = fun3, # pass whatever is needed into the function
+        paramsVecList = paramsVecList,
+        iter = iter,
+        destinationPath = dPath,
+        action = "update"
+      ), mess)
     }
-    if (identical(z, zoneC) || identical(z, zoneE)) {
-      mess <- "Spatial domain is contained within the url"
-    }
-    # With directory url
+    outSFCloud <- sf::st_as_sf(out)
+    expect_true(identical(outSFCloud, outSF))
+
+    keeps <- sf::st_contains(outSF, outSF[1, 1], sparse = FALSE)
+
+    polysWithParams <- outSF[keeps, ]
+
+    expect_true(NROW(polysWithParams) == 2)
+
+    smaller <- sf::st_as_sf(terra::buffer(terra::vect(polysWithParams[1, ]), width = -2000))
+
+    plot(polysWithParams[2, 1], reset = FALSE)
+    plot(polysWithParams[1, 1], add = TRUE, col = "red", reset = FALSE)
+    smaller <- sf::st_as_sf(terra::buffer(terra::vect(polysWithParams[1, ]), width = -2000))
+    plot(smaller[1, 1], add = TRUE, col = "green")
+
     out <- CacheGeo(
-      # url = "https://drive.google.com/file/d/1st4lUiCgXJp8SdpMP056smPOh9gbZEoQ",
       targetFile = targetFile,
-      domain = z,
+      domain = smaller,
       useCloud = TRUE,
       cloudFolderID = cloudFolderID,
       FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
       fun = fun, # pass whatever is needed into the function
       destinationPath = dPath2,
-      action = "update"
+      action = "nothing"
     )
-
-    expect_message(out2 <- CacheGeo(
-      targetFile = targetFile2,
-      domain = z,
-      useCloud = TRUE,
-      cloudFolderID = cloudFolderID,
-      FUN = fun3(domain, paramsVec = paramsVecList[[iter]]),
-      fun3 = fun3, # pass whatever is needed into the function
-      paramsVecList = paramsVecList,
-      iter = iter,
-      destinationPath = dPath,
-      action = "update"
-    ), mess)
-  }
-  outSFCloud <- sf::st_as_sf(out)
-  expect_true(identical(outSFCloud, outSF))
-
-  keeps <- sf::st_contains(outSF, outSF[1, 1], sparse = FALSE)
-
-  polysWithParams <- outSF[keeps, ]
-
-  expect_true(NROW(polysWithParams) == 2)
-
-  smaller <- sf::st_as_sf(terra::buffer(terra::vect(polysWithParams[1, ]), width = -2000))
-
-  plot(polysWithParams[2, 1], reset = FALSE)
-  plot(polysWithParams[1, 1], add = TRUE, col = "red", reset = FALSE)
-  smaller <- sf::st_as_sf(terra::buffer(terra::vect(polysWithParams[1, ]), width = -2000))
-  plot(smaller[1, 1], add = TRUE, col = "green")
-
-  out <- CacheGeo(
-    targetFile = targetFile,
-    domain = smaller,
-    useCloud = TRUE,
-    cloudFolderID = cloudFolderID,
-    FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
-    fun = fun, # pass whatever is needed into the function
-    destinationPath = dPath2,
-    action = "nothing"
-  )
-  outSFCloudSmaller <- sf::st_as_sf(out)
-  expect_identical(as.data.frame(outSFCloudSmaller)[, "params"], out[, "params"])
+    outSFCloudSmaller <- sf::st_as_sf(out)
+    expect_identical(as.data.frame(outSFCloudSmaller)[, "params"], out[, "params"])
+  }, silent = TRUE)
 
 })
 

@@ -407,7 +407,7 @@ CacheV2 <-
     )
     # next line is (1 && 1) && 1 -- if it has :: or $ or [] e.g., fun$b, it MUST be length 3 for it to not be "captured function"
     isCapturedFUN <- isFALSE(isDollarSqBrPkgColon(FUNcaptured) &&
-      length(FUNcaptured) == 3) &&
+                               length(FUNcaptured) == 3) &&
       length(dotsCaptured) == 0 && # no dots; likely not a captured function, unless it has no args
       (length(FUNcaptured) > 1) # Must have some args
     isSquiggly <- FALSE
@@ -429,8 +429,8 @@ CacheV2 <-
       #   verbose = verbose
       # )
       output <- evalTheFun(FUNcaptured, isCapturedFUN, FUNbackup,
-        envir = parent.frame(),
-        verbose, ...
+                           envir = parent.frame(),
+                           verbose, ...
       )
       # }
     } else {
@@ -438,7 +438,7 @@ CacheV2 <-
 
       if (!missing(compareRasterFileLength)) {
         messageCache("compareRasterFileLength argument being deprecated. Use 'length'",
-          verbose = verbose
+                     verbose = verbose
         )
         length <- compareRasterFileLength
       }
@@ -487,7 +487,7 @@ CacheV2 <-
 
       if (isTRUE("sideEffect" %in% ...names())) {
         messageCache("sideEffect is deprecated; being ignored",
-          verbose = verbose, verboseLevel = 0
+                     verbose = verbose, verboseLevel = 0
         )
       }
 
@@ -537,16 +537,16 @@ CacheV2 <-
       )
       if (verbose > 3) {
         a <- verboseCacheMessage(preDigest, functionName = fnDetails$functionName,
-          startHashTime, modifiedDots,
-          quick = quick,
-          verbose = verbose, verboseLevel = 3
+                                 startHashTime, modifiedDots,
+                                 quick = quick,
+                                 verbose = verbose, verboseLevel = 3
         )
         on.exit(
           {
             assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
             messageDF(.reproEnv$verboseTiming, colour = "blue", verbose = verbose, verboseLevel = 3)
             messageCache("This object is also available from .reproEnv$cacheTimings",
-              verbose = verbose, verboseLevel = 3
+                         verbose = verbose, verboseLevel = 3
             )
             if (exists("verboseTiming", envir = .reproEnv)) {
               rm("verboseTiming", envir = .reproEnv)
@@ -578,7 +578,7 @@ CacheV2 <-
       for (cachePath in cachePaths) {
         # Need conn --> also need exclusive lock
         #if (useDBI()) {
-          conns <- createConns(cachePath, conns, drv, verbose = verbose)
+        conns <- createConns(cachePath, conns, drv, verbose = verbose)
           # if (is.null(conns[[cachePath]])) {
           #   conns[[cachePath]] <- dbConnectAll(drv, cachePath = cachePath)
           #   RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA busy_timeout=5000;"))

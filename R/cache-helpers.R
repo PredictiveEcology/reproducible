@@ -247,8 +247,8 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     sn <- slotNames(object@legend)
     legendSlotsToDigest <- lapply(sn, function(s) slot(object@legend, s))
     dig2 <- .robustDigest(legendSlotsToDigest,
-      length = length, quick = quick,
-      algo = algo
+                          length = length, quick = quick,
+                          algo = algo
     ) # don't include object@data -- these are volatile
     dig <- c(dig, dig2)
 
@@ -256,8 +256,8 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     sn <- sn[!(sn %in% c("name"))]
     fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
     digFile <- .robustDigest(asPath(fileSlotsToDigest),
-      length = length, quick = quick,
-      algo = algo
+                             length = length, quick = quick,
+                             algo = algo
     ) # don't include object@file -- these are volatile
 
     dig <- c(dig, digFile)
@@ -412,7 +412,7 @@ nextNumericName <- function(string) {
   if (isTRUE(any(alreadyHasNumeric))) {
     splits <- strsplit(allSimilarFilesInDirSansExt[alreadyHasNumeric], split = "_")
     highestNumber <- max(unlist(lapply(splits, function(split) as.numeric(tail(split, 1)))),
-      na.rm = TRUE
+                         na.rm = TRUE
     )
     preNumeric <- unique(unlist(lapply(splits, function(spl) paste(spl[-length(spl)], collapse = "_")))) # nolint
     ## keep rndstr in here (below), so that both streams keep same rnd number state
