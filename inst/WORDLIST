@@ -11,8 +11,8 @@
 ALTREP
 Bugfix
 Bugfixes
+CHECKSUMS
 CMD
-CRS
 CacheDigest
 CacheRepo
 Checksumming
@@ -69,7 +69,6 @@ dirnames
 evalutating
 expr
 filebacked
-filepath
 fns
 gdalwarp
 gdb
@@ -100,13 +99,10 @@ postgresql
 postpend
 pre
 prepInputs
-qs
 quickCheck
 rcnst
-rds
 refered
 reimplemented
-repo
 reprex
 reproducibleOptions
 reproject
@@ -131,5 +127,4 @@ symlinked
 symlinks
 uncommented
 unrar
-unrarPath
 useCache

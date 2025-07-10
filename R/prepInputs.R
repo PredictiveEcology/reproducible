@@ -1319,13 +1319,12 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   return(extractSystemCallPath)
 }
 
-#' Returns unrar path and creates a shortcut as .systemArchivePath
-#' Was not incorporated in previous function so it can be
-#' used in the tests
+#' Returns `unrar` path and creates a shortcut as `.systemArchivePath`.
+#' Was not incorporated in previous function so it can be used in the tests.
 #'
 #' @return
-#' unrar or 7zip path if exist, and assign it to .systemArchivePath
-#' Stops and advise user to install it if unrar doesn't exist
+#' path to `unrar` or `7-zip` if it exists, and assign it to `.systemArchivePath`.
+#' Advise the user if not found..
 #'
 #' @author Tati Micheletti
 #'

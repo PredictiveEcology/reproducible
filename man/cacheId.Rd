@@ -10,7 +10,7 @@ cacheId(obj)
 \item{obj}{Any R object}
 }
 \value{
-The cacheId if this was part of a cache call. Otherwise \code{NULL}
+The \code{cacheId} if this was part of a \code{Cache} call. Otherwise \code{NULL}
 }
 \description{
 Any object that was returned from the Cache or was calculated as part of a
