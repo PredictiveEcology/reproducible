@@ -685,9 +685,9 @@ prefixCacheId <- function(cacheId) {
 #'
 #' @param obj Any R object
 #'
-#' @return The cacheId if this was part of a cache call. Otherwise `NULL`
-#' @export
+#' @return The `cacheId` if this was part of a `Cache` call. Otherwise `NULL`
 #'
+#' @export
 cacheId <- function(obj) {
   whHasCacheId <- which(grepl("cacheId:", attr(obj, "tags")))
   if (any(whHasCacheId))
