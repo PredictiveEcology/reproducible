@@ -692,8 +692,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
       }
 
       if (is.null(out)) {
-        isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
-                     !grepl("\\.[^\\.]+$", url)) # doesn't have an extension --> GDrive ID's as url
+        isGID <- all(isTRUE(grepl("^[A-Za-z0-9_-]{33}$", url)), # Has 33 characters as letters, numbers or - or _
+                     isTRUE(!grepl("\\.[^\\.]+$", url))) # doesn't have an extension --> GDrive ID's as url
         if (any(isGID, grepl("d.+.google.com", url))) {
           if (!requireNamespace("googledrive", quietly = TRUE)) {
             stop(.message$RequireNamespaceFn("googledrive", "to use google drive files"))
@@ -750,9 +750,9 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
               team_drive = teamDrive, ...
             )
           }
-        } else if (grepl("dl.dropbox.com", url)) {
+        } else if (isTRUE(grepl("dl.dropbox.com", url))) {
           stop("Dropbox downloading is currently not supported")
-        } else if (grepl("onedrive.live.com", url)) {
+        } else if (isTRUE(grepl("onedrive.live.com", url))) {
           stop("Onedrive downloading is currently not supported")
         } else {
           if (isTRUE(isDirectory(url, mustExist = FALSE))) { # a folder
