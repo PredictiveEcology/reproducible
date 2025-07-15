@@ -183,9 +183,17 @@ CacheGeo <- function(targetFile = NULL,
       url = urlThisTargetFile,
       destinationPath = destinationPath, # domain = domain,
       useCache = useCache,
-      purge = 7, # It isn't relevant if the file is different than the Checksums
+      # purge = 7, # It isn't relevant if the file is different than the Checksums
       overwrite = overwrite
     ) |> Cache(.cacheExtra = cacheExtra) # cacheExtra is the md5Checksum on GDrive
+
+    cn <- colnames(existingObj)
+    # Assumption that data.frame should be data.table
+    existingObj <- lapply(existingObj, function(x) if (is.data.frame(x[[1]])) I(list(as.data.table(x[[1]]))) else x) |>
+      as.data.frame()
+    colnames(existingObj) <- cn
+
+    # existingObjSF <- if (is(df, "sf")) df else sf::st_as_sf(df)
 
     existingObjSF <- if (is(existingObj, "sf")) existingObj else sf::st_as_sf(existingObj)
     if (!missing(domain)) {
