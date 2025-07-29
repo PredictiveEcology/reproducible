@@ -1,0 +1,20 @@
+[1mdiff --git a/R/cacheGeo.R b/R/cacheGeo.R[m
+[1mindex 3f124bb9..68d97dc4 100644[m
+[1m--- a/R/cacheGeo.R[m
+[1m+++ b/R/cacheGeo.R[m
+[36m@@ -190,12 +190,14 @@[m [mCacheGeo <- function(targetFile = NULL,[m
+     cn <- colnames(existingObj)[m
+     # Assumption that data.frame should be data.table[m
+     existingObj <- lapply(existingObj, function(x) if (is.data.frame(x[[1]])) I(list(as.data.table(x[[1]]))) else x) |>[m
+[31m-      as.data.frame()[m
+[32m+[m[32m      as.data.table(fill = TRUE)[m
+     colnames(existingObj) <- cn[m
+ [m
+     # existingObjSF <- if (is(df, "sf")) df else sf::st_as_sf(df)[m
+ [m
+     existingObjSF <- if (is(existingObj, "sf")) existingObj else sf::st_as_sf(existingObj)[m
+[32m+[m[32m    existingObjSF <- existingObjSF[!sf::st_is_empty(existingObjSF),] #for some reason some have empty geometries...[m
+[32m+[m
+     if (!missing(domain)) {[m
+       #must be sf for st_within[m
+       if (!inherits(domain, "sf")) domain <- sf::st_as_sf(domain)[m

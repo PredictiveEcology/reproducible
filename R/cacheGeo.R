@@ -190,12 +190,14 @@ CacheGeo <- function(targetFile = NULL,
     cn <- colnames(existingObj)
     # Assumption that data.frame should be data.table
     existingObj <- lapply(existingObj, function(x) if (is.data.frame(x[[1]])) I(list(as.data.table(x[[1]]))) else x) |>
-      as.data.frame()
+      as.data.table(fill = TRUE)
     colnames(existingObj) <- cn
 
     # existingObjSF <- if (is(df, "sf")) df else sf::st_as_sf(df)
 
     existingObjSF <- if (is(existingObj, "sf")) existingObj else sf::st_as_sf(existingObj)
+    existingObjSF <- existingObjSF[!sf::st_is_empty(existingObjSF),] #for some reason some have empty geometries...
+
     if (!missing(domain)) {
       #must be sf for st_within
       if (!inherits(domain, "sf")) domain <- sf::st_as_sf(domain)
