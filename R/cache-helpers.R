@@ -322,10 +322,10 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 
   if (is.character(namesObj)) {
     namesObj <- gsub(namesObj, pattern = "\\.|_", replacement = "aa")
-    allLower <- tolower(namesObj) == namesObj
+    allLower <- (tolower(namesObj) == namesObj) %in% TRUE
     namesObj[allLower] <- paste0("abALLLOWER", namesObj[allLower])
 
-    onesChanged <- startsWith(namesObj, prefix = "a")
+    onesChanged <- startsWith(namesObj, prefix = "a") %in% TRUE
     namesObj[!onesChanged] <- paste0("ZZZZZZZZZ", namesObj[!onesChanged])
 
     out <- order(namesObj)
