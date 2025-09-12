@@ -18,8 +18,8 @@ SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.ra
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2025-07-14
-Version: 2.1.2.9060
+Date: 2025-09-12
+Version: 2.1.2.9061
 Authors@R: 
     c(person(given = "Eliot J B",
              family = "McIntire",
@@ -95,7 +95,7 @@ VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Collate: 
     'DBI.R'
     'messages.R'
