@@ -945,6 +945,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
       archive <- file.path(destinationPath, basename2(archive))
       downloadFilename <- archive
     }
+    attr(downloadFilename, "drive_resource") <- fileAttr$drive_resource
   } else {
     downloadFilename <- archive
   }
@@ -952,7 +953,6 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     attr(downloadFilename, "fileSize") <- fileSize
   }
 
-  attr(downloadFilename, "drive_resource") <- fileAttr$drive_resource
   return(downloadFilename)
 }
 
