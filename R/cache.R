@@ -1467,6 +1467,22 @@ formals3 <- function(FUN, modifiedDots = list(), removeNulls = FALSE) {
   modifiedDots
 }
 
+# This is taken from Rdpack::S4formals
+formals4reproducible <- function (fun, ...) {
+  if (!is(fun, "MethodDefinition"))
+    fun <- getMethod(fun, ...)
+  fff <- fun@.Data
+  funbody <- body(fff)
+  if (length(funbody) == 3 && identical(funbody[[1]], as.name("{")) &&
+      length(funbody[[2]]) == 3 && identical(funbody[[c(2,
+                                                        1)]], as.name("<-")) && identical(funbody[[c(2, 2)]],
+                                                                                          as.name(".local")) && is.function(funbody[[c(2, 3)]])) {
+    formals(funbody[[c(2, 3)]])
+  }
+  else {
+    formals(fff)
+  }
+}
 
 getFunctionName2 <- function(mc) {
   if (length(mc) > 1) {
