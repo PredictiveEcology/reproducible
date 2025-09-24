@@ -799,7 +799,6 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                 messagePrepInputs("url was supplied as a directory; downloading\n",
                                          paste(urls[stillNeed], collapse = "\n"),
                                   verbose = verbose)
-                browser()
 
                 downloadResults <- vapply(urls[stillNeedFile], function(url)
                   dlGeneric(url, destinationPath = .tempPath, verbose = verbose) |> unlist(),
@@ -1151,7 +1150,6 @@ runDlFun <- function(args, dlFun) {
     if (!is(out, "try-error")) {
       break
     }
-    browser()
     args <- argsOrig
   }
   out
