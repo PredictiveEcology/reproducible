@@ -496,7 +496,7 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 
   sfCanRead <- c("bna","csv", "e00", "gdb", "geojson", "gml", "gmt", "gpkg", "gps",
     "gtm", "gxt", "jml", "map", "mdb", "nc", "ods", "osm", "pbf", "shp", "sqlite",
-    "vdv", "xls", "xlsx" )
+    "vdv")#, "xls", "xlsx" )
   sfFun <- shpFile
   sfSaveFun <- shpFileSave
   type = "sf"
