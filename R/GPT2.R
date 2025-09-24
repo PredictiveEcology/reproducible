@@ -1308,9 +1308,13 @@ harmonizeCall <- function(callList, .callingEnv, .functionName = NULL) {
 }
 
 cacheIdOverride <- function(cacheId, key, .functionName, verbose) {
-  shownCache <- cacheIdCheckInCache(cacheId, calculatedCacheId = key, .functionName, verbose)
-  if (NROW(shownCache) == 0)
-    cacheId <- NULL
+  if  (identical(cacheId, "previous")) {
+    cacheId <- getPreviousEntryInCache(.functionName, cacheId, verbose)
+  } else {
+    shownCache <- cacheIdCheckInCache(cacheId, calculatedCacheId = key, .functionName, verbose)
+    # if (NROW(shownCache) == 0)
+    #   cacheId <- NULL
+  }
   cacheId
 }
 
