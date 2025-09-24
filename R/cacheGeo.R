@@ -286,6 +286,8 @@ CacheGeo <- function(targetFile = NULL,
 
 
   }
+  existingObjSF <- if (!is(existingObj, "sf"))
+    sf::st_as_sf(existingObj) else existingObj
   if (isFALSE(domainExisted)) {
     if (isTRUE(objExisted)) {
       if (any(grepl("^a|^u", action[1], ignore.case = TRUE))) {
