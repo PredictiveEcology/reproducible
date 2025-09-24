@@ -293,9 +293,9 @@ CacheGeo <- function(targetFile = NULL,
       if (any(grepl("^a|^u", action[1], ignore.case = TRUE))) {
         # .gpkg seems to change geometry to "geom"
         existingObjSF <- checkNameHasGeom(existingObjSF)
-        if (!any(is(sf::st_geometry(newObj), "sfc_MULTIPOLYGON"))) {
+        if (!any(is(sf::st_geometry(newObjSF), "sfc_MULTIPOLYGON"))) {
           newObjSF <- sf::st_cast(newObjSF, "MULTIPOLYGON")
-          newObj <- sf::st_cast(newObj, "MULTIPOLYGON")
+          # newObj <- sf::st_cast(newObj, "MULTIPOLYGON")
         }
 
         # THE APPEND LINE
@@ -313,7 +313,7 @@ CacheGeo <- function(targetFile = NULL,
       }
     }
     if (!any(grepl("^n", action[1], ignore.case = TRUE))) {
-      if (!isAbsolutePath(targetFile)) {
+      if (!isAbsolutePath(targetFileWithDP)) {
         targetFileWithDP <- file.path(destinationPath, targetFile)
       }
       # if (is(existingObj, "sf")) existingObj <- as.data.frame(existingObj)
@@ -383,6 +383,7 @@ CacheGeo <- function(targetFile = NULL,
     cat(cli::col_yellow(coo), sep = "\n")
   }
 
+    existingObjSF <- sf::st_as_sf(existingObj)
   existingObjSF
 }
 
