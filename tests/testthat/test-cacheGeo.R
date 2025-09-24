@@ -64,7 +64,7 @@ test_that("lightweight tests for code coverage", {
   #                                   d = TRUE)))
   # }
   fun3 <- function(domain, paramsVec) {
-    cbind(domain, paramsVec)
+    cbind(domain, params = I(lapply(seq(NROW(domain)), function(x) paramsVec)))
   }
 
   # Run sequence -- A, B will add new entries in targetFile, C will not,
@@ -91,22 +91,29 @@ test_that("lightweight tests for code coverage", {
       FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
       fun = fun, # pass whatever is needed into the function
       destinationPath = dPath,
-      action = "update"
+      action = "update", verbose = 0
     ))
     expect_match(messCap, mess, all = FALSE)
 
     co <- capture.output({
-      expect_message(out2 <- CacheGeo(
-      targetFile = targetFile2,
-      domain = z,
-      FUN = fun3(domain, paramsVec = paramsVecList[[iter]]),
-      fun3 = fun3, # pass whatever is needed into the function
-      paramsVecList = paramsVecList,
-      iter = iter,
-      destinationPath = dPath,
-      action = "update"
-    ), mess)
+      warns <- capture_warnings(
+        expect_message(out2 <- CacheGeo(
+          targetFile = targetFile2,
+          domain = z,
+          FUN = fun3(domain, paramsVec = paramsVecList[[iter]]),
+          fun3 = fun3, # pass whatever is needed into the function
+          paramsVecList = paramsVecList,
+          iter = iter,
+          destinationPath = dPath,
+          action = "update"
+        ), mess)
+      )
     })
+
+    if (NROW(warns)) {
+      expect_match(warns, substr(.message$BecauseOfLossOfColumn(""), start = 1, 10), all = FALSE)
+      expect_match(warns, "Dropping", all = FALSE)
+    }
 
   }
 
@@ -147,21 +154,29 @@ test_that("lightweight tests for code coverage", {
         FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
         fun = fun, # pass whatever is needed into the function
         destinationPath = dPath2,
-        action = "update"
+        action = "update", verbose = 0
       )
 
-      expect_message(out2 <- CacheGeo(
-        targetFile = targetFile2,
-        domain = z,
-        useCloud = TRUE,
-        cloudFolderID = cloudFolderID,
-        FUN = fun3(domain, paramsVec = paramsVecList[[iter]]),
-        fun3 = fun3, # pass whatever is needed into the function
-        paramsVecList = paramsVecList,
-        iter = iter,
-        destinationPath = dPath,
-        action = "update"
-      ), mess)
+      co <- capture.output(
+        warns <- capture_warnings(
+          expect_message(out2 <- CacheGeo(
+            targetFile = targetFile2,
+            domain = z,
+            useCloud = TRUE,
+            cloudFolderID = cloudFolderID,
+            FUN = fun3(domain, paramsVec = paramsVecList[[iter]]),
+            fun3 = fun3, # pass whatever is needed into the function
+            paramsVecList = paramsVecList,
+            iter = iter,
+            destinationPath = dPath,
+            action = "update", verbose = 0
+          ), mess)
+        ))
+      if (NROW(warns)) {
+        expect_match(warns, substr(.message$BecauseOfLossOfColumn(""), start = 1, 10), all = FALSE)
+        expect_match(warns, "Dropping", all = FALSE)
+      }
+
     }
     outSFCloud <- sf::st_as_sf(out)
     expect_true(identical(outSFCloud, outSF))
