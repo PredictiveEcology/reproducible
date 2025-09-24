@@ -1577,7 +1577,7 @@ test_that("options inputPaths", {
   })
 
 
-  useGADM <- !is(test0, "try-error")
+  useGADM <- !is(test0, "try-error") && any(grepl("server seems|server is", mess1)) %in% FALSE # NROW(dir(tmpdir, recursive = TRUE)) > 0
 
   if (useGADM) {
     # noisyOutput <- capture.output(type = "message", {
@@ -1622,6 +1622,7 @@ test_that("options inputPaths", {
   withr::local_options("reproducible.inputPaths" = tmpdir)
   withr::local_options("reproducible.inputPathsRecursive" = FALSE)
   dlFun1 <- if (useGADM) getDataFn else NULL
+
   mess1 <- capture_messages({
     test1 <- prepInputs(
       url = if (!useGADM) url2 else f$url,
@@ -1674,24 +1675,24 @@ test_that("options inputPaths", {
     withr::local_options("reproducible.inputPathsRecursive" = TRUE)
     file.remove(file.path(tmpCache, theFile))
     tmpdir1 <- file.path(tmpCache, "test1")
-    mess1 <- capture_messages({
-      test1 <- prepInputs(
-        url = url_2,
-        targetFile = targetFile_2,
-        dlFun = dlFun_2,
-        name = name_2,
-        country = country_2,
-        level = level_2,
-        path = path_2,
-        destinationPath = tmpdir1, verbose = 3
-      )
-    })
-
+    warns <- capture_warnings(
+      mess1 <- capture_messages({
+        test1 <- prepInputs(
+          url = url_2,
+          targetFile = targetFile_2,
+          dlFun = dlFun_2,
+          name = name_2,
+          country = country_2,
+          level = level_2,
+          path = path_2,
+          destinationPath = tmpdir1, verbose = 3
+        )
+      }))
 
     mess1 <- gsub("\n    ", " ", mess1) ## remove misc new lines
     expect_true(sum(grepl(paste0(hardlinkOrSymlinkMessagePrefixForGrep), mess1)) == 1)
     expect_true(sum(grepl(whPointsToMessForGrep, mess1)) == 1)
-    expect_true(sum(grepl(file.path(tmpdir1, theFile), mess1)) == 1)
+    expect_true(sum(grepl(paste0(file.path(tmpdir1, theFile), ".+which point.+"), mess1)) == 1)
     expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 3)
 
     ## Try download to inputPath, intercepting the destination, creating a link
@@ -1760,7 +1761,7 @@ test_that("options inputPaths", {
     })
     expect_true(sum(grepl(hardlinkOrSymlinkMessagePrefixForGrep, mess1)) == 1) # used a linked version
     expect_true(sum(grepl(paste0("Hardlinked.*"), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
-    expect_true(sum(grepl(paste0(basename(tmpdir2)), mess1)) == 2) # it is now in tmpdir2, i.e., the destinationPath
+    expect_true(sum(grepl(paste0(basename(tmpdir2)), mess1)) == 3) # it is now in tmpdir2, i.e., the destinationPath
 
     # Have file in destinationPath, not in inputPath
     unlink(file.path(tmpdir, theFile))
@@ -1781,7 +1782,7 @@ test_that("options inputPaths", {
         name = name_2,
         country = country_2,
         level = level_2,
-        path = path_2,
+        path = path_2, overwrite = TRUE,
         destinationPath = tmpdir2, verbose = 2
       )
     })

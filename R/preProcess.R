@@ -670,6 +670,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   ## Convert the fun as character string to function class, if not already
+  if (exists("aaaa", envir = .GlobalEnv)) browser()
   fun <- .extractFunction(funChar)
 
   if (needChecksums > 0) {

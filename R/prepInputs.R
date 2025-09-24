@@ -375,7 +375,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     useCache = useCache,
     .tempPath = .tempPath,
     verbose = verbose,
-    # .callingEnv = .callingEnv,
+    .callingEnv = .callingEnv,
     ...
   )
 
@@ -1477,7 +1477,8 @@ process <- function(out, funCaptured,
       if ((needRaster || needTerra) && !is.call(theFun)) {
         ## Don't cache the reading of a raster
         ## -- normal reading of raster on disk is fast b/c only reads metadata
-        outProcess <- do.call(theFun, append(list(asPath(out$targetFilePath)), args))
+        outProcess <- try(do.call(theFun, append(list(asPath(out$targetFilePath)), args)))
+        if (is(outProcess, "try-error")) browser()
       } else {
         if (identical(theFun, base::load)) {
           if (is.null(args$envir)) {

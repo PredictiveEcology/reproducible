@@ -605,7 +605,11 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
       if (!is.null(dlFun)) {
         dlFunName <- dlFun
-        dlFun <- .extractFunction(dlFun, envir = list2env(list(...)))
+        if (exists("aaaa", envir = .GlobalEnv)) browser()
+        dlFunPoss <- try(.extractFunction(dlFun, envir = list2env(list(...))), silent = TRUE)
+        if (is(dlFunPoss, "try-error"))
+          dlFunPoss <- get0(dlFun, envir = .callingEnv)
+        dlFun <- dlFunPoss
         fun <- if (is(dlFun, "call")) {
           CacheMatchedCall <- match.call(call = dlFun)
           .fnCleanup(dlFun, callingFun = "downloadRemote", CacheMatchedCall = CacheMatchedCall)
@@ -645,7 +649,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           }
         }
 
-        if (!is.call(dlFun)) {
+        if (!is.call(dlFun) && !is.null(dlFun)) {
           out <- runDlFun(args, dlFun)
           # argsOrig <- args
           # formsDlFun <- formalArgs(dlFun)
@@ -795,6 +799,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                 messagePrepInputs("url was supplied as a directory; downloading\n",
                                          paste(urls[stillNeed], collapse = "\n"),
                                   verbose = verbose)
+                browser()
+
                 downloadResults <- vapply(urls[stillNeedFile], function(url)
                   dlGeneric(url, destinationPath = .tempPath, verbose = verbose) |> unlist(),
                   FUN.VALUE = character(1))
@@ -812,6 +818,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
               stop("url is a directory; need to install.packages(c('httr', 'curl'))")
             }
           } else {
+
             downloadResults <- dlGeneric(url = url, destinationPath = .tempPath, verbose = verbose)
           }
           downloadResults$needChecksums <- needChecksums
@@ -847,7 +854,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         # Try hard link first -- the only type that R deeply recognizes
         # if that fails, fall back to copying the file.
         # NOTE: never use symlink because the original will be deleted.
-        result <- hardLinkOrCopy(downloadResults$destFile, desiredPath, verbose = verbose)
+        result <- hardLinkOrCopy(downloadResults$destFile, desiredPath, verbose = verbose - 3)
 
         # result <- suppressWarningsSpecific(
         #   file.link(downloadResults$destFile, desiredPath),
@@ -1144,6 +1151,7 @@ runDlFun <- function(args, dlFun) {
     if (!is(out, "try-error")) {
       break
     }
+    browser()
     args <- argsOrig
   }
   out
