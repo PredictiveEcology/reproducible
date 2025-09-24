@@ -319,9 +319,11 @@ CacheGeo <- function(targetFile = NULL,
       # if (is(existingObj, "sf")) existingObj <- as.data.frame(existingObj)
 
       # Put it in order
-      polygonIDnum <- as.numeric(gsub("(\\..)\\.", "\\1", existingObj$polygonID))
-      ord <- order(polygonIDnum)
-      existingObj <- existingObj[ord,]
+      if (!is.null(existingObj[["polygonID"]])) {
+        polygonIDnum <- as.numeric(gsub("(\\..)\\.", "\\1", existingObj$polygonID))
+        ord <- order(polygonIDnum)
+        existingObj <- existingObj[ord,]
+      }
       ## end of putting it in order
 
       if (identical("rds", fs::path_ext(targetFileWithDP)))  {
