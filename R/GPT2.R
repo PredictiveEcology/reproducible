@@ -1074,8 +1074,7 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
         # clearCache(cachePath, userTags = cacheIdsToClear, ask = FALSE, drv = drv, conn = conn, verbose = verbose - 2)
       }
       messageCache("with different elements (most recent at top):", verbose = verbose)
-      dashes <- "----------------------"
-      messageCache(dashes)
+      messageCache(.message$dashes)
       lala <- Map(si = simi, nam = names(simi), function(si, nam) {
         prefix <- if (identical(.GlobalEnv, whereInStack("sim"))) "" else .txtNoPrefix
         messageCache(prefix, "Compared to cacheId: ", nam, verbose = verbose)
@@ -1084,7 +1083,7 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
           fn <- cliCol(getOption("reproducible.messageColourCache"))
           cat(fn(oo), sep = "\n")
         }
-        messageCache(prefix, dashes)
+        messageCache(prefix, .message$dashes)
         })
 
       messageCache("------ devMode -------", verbose = verbose * devMode)
