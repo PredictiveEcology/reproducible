@@ -545,3 +545,5 @@ isAre <- function (l, v) {
 }
 
 .message$dashes <- "----------------------"
+
+.message$NoPrefix <- "._noPrefix"
