@@ -1074,20 +1074,30 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
         # clearCache(cachePath, userTags = cacheIdsToClear, ask = FALSE, drv = drv, conn = conn, verbose = verbose - 2)
       }
       messageCache("with different elements (most recent at top):", verbose = verbose)
-      dashes <- "----------------------"
-      messageCache(dashes)
+      # don't add a prefix if there is no `sim` in the stack
+      prefix <- if (identical(.GlobalEnv, whereInStack("sim"))) "" else .message$NoPrefix
+      # if (exists("aaaa", envir = .GlobalEnv)) browser()
+      messageCache(.message$dashes, prefix)
       lala <- Map(si = simi, nam = names(simi), function(si, nam) {
-        prefix <- if (identical(.GlobalEnv, whereInStack("sim"))) "" else .txtNoPrefix
-        messageCache(prefix, "Compared to cacheId: ", nam, verbose = verbose)
+        messageCache(paste0("Compared to cacheId: ", nam, prefix), verbose = verbose)
         if (verbose > 0) {
           oo <- capture.output(si)
           fn <- cliCol(getOption("reproducible.messageColourCache"))
-          cat(fn(oo), sep = "\n")
+          # cat(fn(oo), sep = "\n")
+          # nc <- NCOL(si)
+          # set(si, 1, NCOL(si), paste0(si[1, ..nc], .message$NoPrefix))
+          # messageDF(si, colour = getOption("reproducible.messageColourCache"))
+          # messageDF(paste0(as.character(fn(oo)), .message$NoPrefix))
+          oo <- paddDFInitial(oo, rows = 1:2, .spaceTmpChar, colour = getOption("reproducible.messageColourCache"))
+          messageColoured(paste0(paste(oo, collapse = "\n"), .message$NoPrefix),
+                          colour = getOption("reproducible.messageColourCache"))
+          # messageDF(fn(oo))
         }
-        messageCache(prefix, dashes)
-        })
+        messageCache(.message$dashes, prefix)
+      })
 
       messageCache("------ devMode -------", verbose = verbose * devMode)
+
     }
   } else {
     messageCache(.message$noSimilarCacheTxt(.functionName), verbose = verbose)
@@ -1308,9 +1318,13 @@ harmonizeCall <- function(callList, .callingEnv, .functionName = NULL) {
 }
 
 cacheIdOverride <- function(cacheId, key, .functionName, verbose) {
-  shownCache <- cacheIdCheckInCache(cacheId, calculatedCacheId = key, .functionName, verbose)
-  if (NROW(shownCache) == 0)
-    cacheId <- NULL
+  if  (identical(cacheId, "previous")) {
+    cacheId <- getPreviousEntryInCache(.functionName, cacheId, verbose)
+  } else {
+    shownCache <- cacheIdCheckInCache(cacheId, calculatedCacheId = key, .functionName, verbose)
+    # if (NROW(shownCache) == 0)
+    #   cacheId <- NULL
+  }
   cacheId
 }
 

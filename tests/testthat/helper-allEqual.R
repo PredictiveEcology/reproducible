@@ -66,9 +66,10 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
   if (isTRUE(needGoogleDriveAuth)) {
     if (isNamespaceLoaded("googledrive"))
       if ((!googledrive::drive_has_token())) {
-        if (nzchar(Sys.getenv("GOOGLEDRIVE_AUTH"))) {
-          googledrive::drive_auth(path = Sys.getenv("GOOGLEDRIVE_AUTH"))
+        if (!nzchar(Sys.getenv("GOOGLEDRIVE_AUTH"))) {
+          Sys.setenv("GOOGLEDRIVE_AUTH" = "~/genial-cycling-408722-788552a3ecac.json")
         }
+        googledrive::drive_auth(path = Sys.getenv("GOOGLEDRIVE_AUTH"))
       }
 
 

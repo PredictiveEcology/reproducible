@@ -537,8 +537,19 @@ isAre <- function (l, v) {
 
 .txtPreDigest <- "preDigest"
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 126651823edc0dfceea9b40298cc31f23ce739dd
 .message$BecauseOfLossOfColumn <- function(targetFileWithDP) {
   paste0("Because of loss of column, resaving the same object as an RDS ",
          "file at: \n", targetFileWithDP, "\nIt will have to be loaded with
                     `readRDS('",targetFileWithDP,"') |> sf::st_as_sf()`")
 }
+<<<<<<< HEAD
+=======
+
+.message$dashes <- "----------------------"
+
+.message$NoPrefix <- "._noPrefix"
+>>>>>>> 126651823edc0dfceea9b40298cc31f23ce739dd

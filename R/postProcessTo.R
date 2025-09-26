@@ -720,7 +720,9 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
               }
               from13 <- sf::st_transform(from, projectTo)
             } else {
-              from13 <- terra::project(from, projectTo)
+              ll <- list(from, projectTo)
+              ll <- addDotArgs(ll, terra::project, class(from), method, ...)
+              from13 <- do.call(terra::project, ll)
             }
             attempt <- attempt + 2
           }
@@ -753,7 +755,9 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
           FALSE
         }
         if (!isTRUE(sameGeom)) {
-          ll <- append(list(from, projectTo, overwrite = overwrite), dotArgs)
+          ll <- list(from, projectTo)
+          ll <- append(ll, list(overwrite = overwrite))
+          ll <- addDotArgs(ll, terra::project, class(from), method, ...)
           do.call(terra::project, ll)
         } else {
           from
@@ -1900,4 +1904,23 @@ updateDstNoData <- function(opts, fromRas) {
 
   opts[hasDstNoData + 1] <- va
   opts
+}
+
+addDotArgsInner <- function(ll, fun, class, ...) {
+  formsForProject <- formals4reproducible(fun, class)
+  dotsElements <- intersect(names(formsForProject), ...names())
+  if (length(dotsElements)) {
+    mc <- match.call(expand.dots = FALSE)
+    dots <- mc$...
+    ll <- append(ll, dots[dotsElements])
+  }
+  ll
+}
+
+
+addDotArgs <- function(ll, fun, class, method, ...) {
+  ll <- addDotArgsInner(ll, fun, class, ...)
+  if (!is.null(method))
+    ll <- modifyList(ll, list(method = method))
+  ll
 }
