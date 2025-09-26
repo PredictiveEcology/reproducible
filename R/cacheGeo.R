@@ -466,8 +466,6 @@ update_bbox <- function(sfobj){
 
   return(sfobj)
 }
-<<<<<<< HEAD
-=======
 #' Cache-like function for spatial domains
 #'
 #' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
@@ -936,5 +934,5 @@ update_bbox <- function(sfobj){
 
   return(sfobj)
 }
->>>>>>> 126651823edc0dfceea9b40298cc31f23ce739dd
+
 
