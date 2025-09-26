@@ -120,7 +120,7 @@ CacheGeo <- function(targetFile = NULL,
                      purge = FALSE, useCache = getOption("reproducible.useCache"),
                      overwrite = getOption("reproducible.overwrite"),
                      action = c("nothing", "update", "replace", "append"),
-                     bufferOK = FALSE,
+                     bufferOK = FALSE, verbose = getOption("reproducible.verbose"),
                      ...) {
   objExisted <- TRUE
   if (is.null(targetFile)) {
@@ -291,9 +291,9 @@ CacheGeo <- function(targetFile = NULL,
       if (any(grepl("^a|^u", action[1], ignore.case = TRUE))) {
         # .gpkg seems to change geometry to "geom"
         existingObjSF <- checkNameHasGeom(existingObjSF)
-        if (!any(is(sf::st_geometry(newObj), "sfc_MULTIPOLYGON"))) {
+        if (!any(is(sf::st_geometry(newObjSF), "sfc_MULTIPOLYGON"))) {
           newObjSF <- sf::st_cast(newObjSF, "MULTIPOLYGON")
-          newObj <- sf::st_cast(newObj, "MULTIPOLYGON")
+          # newObj <- sf::st_cast(newObj, "MULTIPOLYGON")
         }
 
         # THE APPEND LINE
@@ -311,21 +311,37 @@ CacheGeo <- function(targetFile = NULL,
       }
     }
     if (!any(grepl("^n", action[1], ignore.case = TRUE))) {
-      if (!isAbsolutePath(targetFile)) {
+      if (!isAbsolutePath(targetFileWithDP)) {
         targetFileWithDP <- file.path(destinationPath, targetFile)
       }
       # if (is(existingObj, "sf")) existingObj <- as.data.frame(existingObj)
 
       # Put it in order
-      polygonIDnum <- as.numeric(gsub("(\\..)\\.", "\\1", existingObj$polygonID))
-      ord <- order(polygonIDnum)
-      existingObj <- existingObj[ord,]
+      if (!is.null(existingObj[["polygonID"]])) {
+        polygonIDnum <- as.numeric(gsub("(\\..)\\.", "\\1", existingObj$polygonID))
+        ord <- order(polygonIDnum)
+        existingObj <- existingObj[ord,]
+      }
       ## end of putting it in order
 
-      if (identical("rds", fs::path_ext(targetFileWithDP)))  {
-        saveRDS(existingObj, file = targetFileWithDP)
-      } else {
-        writeTo(existingObj, writeTo = targetFileWithDP, overwrite = TRUE, append = TRUE)
+      for (attempt in 1:2) {
+        if (identical("rds", fs::path_ext(targetFileWithDP)) || identical(attempt, 2L))  {
+          saveRDS(existingObj, file = targetFileWithDP)
+          break
+        } else {
+          warns <- character()
+          withCallingHandlers(
+            writeTo(existingObj, writeTo = targetFileWithDP,
+                    overwrite = TRUE, append = TRUE),
+            warning = function(w) {
+              warns <<- w$message
+            }
+          )
+          if (!any(grepl("Dropping column", warns))) break
+          targetFileWithDP <- gsub(fileExt(targetFileWithDP), "rds", targetFileWithDP)
+          warning(.message$BecauseOfLossOfColumn(targetFileWithDP))
+
+        }
       }
     } else {
       if (!missing(FUN)) {
@@ -365,8 +381,14 @@ CacheGeo <- function(targetFile = NULL,
     messageColoured("To get the full object from googledrive, which looks like this:\n")
     useOrig <- (NROW(existingObj) < NROW(existingObjOrig))
     objLooksLike <- if (useOrig) existingObjOrig else existingObj
-    cat(cli::col_yellow(capture.output(objLooksLike)), sep = "\n")
-    messageColoured("... run the following:\n")
+    if (verbose > 0) {
+      cat(cli::col_yellow(capture.output(objLooksLike)), sep = "\n")
+      messageColoured("... run the following:\n")
+      enn <- environment()
+      ll <- lapply(aa, function(x) eval(x, envir = enn))
+      coo <- capture.output(as.call(append(list(quote(prepInputs)), ll[-1])))#, sep = "\n")
+      cat(cli::col_yellow(coo), sep = "\n")
+    }
     # aa <- quote(prepInputs(
     #   targetFile = asPath(targetFile),
     #   url = urlThisTargetFile,
@@ -375,18 +397,18 @@ CacheGeo <- function(targetFile = NULL,
     #   purge = purge, # It isn't relevant if the file is different than the Checksums
     #   overwrite = overwrite
     # ))
-    enn <- environment()
-    ll <- lapply(aa, function(x) eval(x, envir = enn))
-    coo <- capture.output(as.call(append(list(quote(prepInputs)), ll[-1])))#, sep = "\n")
-    cat(cli::col_yellow(coo), sep = "\n")
+
   }
 
+  if (!exists("existingObjSF"))
+    existingObjSF <- sf::st_as_sf(existingObj)
   existingObjSF
 }
 
 checkNameHasGeom <- function(existingObj) {
   hasGeomNamedCol <- names(existingObj) %in% "geom"
   if (any(hasGeomNamedCol)) {
+    browser()
     names(existingObj)[hasGeomNamedCol] <- "geometry"
   }
   existingObj
@@ -444,3 +466,4 @@ update_bbox <- function(sfobj){
 
   return(sfobj)
 }
+
