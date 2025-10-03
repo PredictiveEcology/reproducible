@@ -644,6 +644,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       targetFilePath = targetFilePath, quick = quick,
       verbose = verbose, .tempPath = .tempPath
     )
+    # might have duplicates because filesExtr are in `inputPaths`, but extractedFiles are in destinationPath
+    feOrig <- fs::path_rel(filesExtr, fs::path_common(filesExtr))
+    feNew <- fs::path_rel(extractedFiles$filesExtr, fs::path_common(extractedFiles$filesExtr))
+    inExtracted <- feOrig %in% feNew
+    filesExtr <- setdiff(filesExtr[!inExtracted], archive)
+
     filesExtr <- c(filesExtr, extractedFiles$filesExtr)
   }
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
@@ -1236,12 +1242,16 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
         )
         messagePreProcess(messageNoCopyMade, verbose = verbose)
       } else {
-        if (grepl("cannot link.+different disk drive", warns) && !isTRUE(symlink)) {
+        if ((
+          grepl("cannot link.+different disk drive", warns) ||
+          grepl("Invalid cross-device link", warns)) && !isTRUE(symlink)) {
           messageColoured("An attempt was made to use hard links to make a quick pointer ",
                           "from one (set of) file(s) to another; \nthis is not possible because ",
                           "the files would be on different drives. Consider changing the paths\n",
-                          "so that they will be on the same physical drive", colour = "red")
-          message(warns)
+                          "so that they will be on the same physical drive", colour = "red",
+                          verbose = verbose)
+          if (verbose > 0)
+            message(warns)
         }
       }
 
@@ -1268,17 +1278,24 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
 
       if (isFALSE(all(result))) {
         len <- length(from[!result])
-        if (len < 50) fromCollapsed[!result] else c(head(fromCollapsed[!result]), tail(fromCollapsed[!result]))
+        # if (len < 50) fromCollapsed[!result] else c(head(fromCollapsed[!result]), tail(fromCollapsed[!result]))
         if (len < 50) {
-          fromMess <- fromCollapsed[!result]
-          toMess <- toCollapsed[!result]
+          fromMess <- from[!result]
+          toMess <- to[!result]
         } else {
           fromMess <- c(head(fromCollapsed[!result]), tail(fromCollapsed[!result]))
           toMess <- c(head(toCollapsed[!result], 24), "... (omitting many)", tail(toCollapsed[!result], 24))
         }
         result2 <- try(file.copy(from[!result], to[!result], overwrite = overwrite))
         if (is(result2, "try-error")) browser()
-        messagePreProcess("Copy of file: ", fromMess, ", was created at: ", toMess, verbose = verbose)
+
+        toMessCollapsed <- paste(toMess, collapse = "\n")
+        fromMessCollapsed <- paste(fromMess, collapse = "\n")
+
+        messagePreProcess(singularPlural(c("Copy", "Copies"), l = fromMess), " of ", singularPlural(c("file: ", "files: "), l = fromMess),
+                          "\n", fromMessCollapsed, ",\n",
+                          singularPlural(c("was", "were"), l = fromMess)," created at:\n",
+                          toMessCollapsed, verbose = verbose)
       }
     } else {
       messagePreProcess("File ", fromCollapsed, " does not exist. Not copying.", verbose = verbose)
