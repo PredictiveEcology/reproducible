@@ -1469,8 +1469,9 @@ process <- function(out, funCaptured,
       if (!isTRUE(is.na(out$targetFilePath)))
         messagePreProcess("Loading object into R", verbose = verbose)
       needRaster <- any(grepl("raster$|stack$|brick$", funCaptured)) ||
-        any(grepl("raster$|stack$|brick$", funChar))
-      needTerra <- any(grepl("terra|rast$", funCaptured)) || any(grepl("terra|rast$", funChar))
+        any(grepl("raster$|stack$|brick$", funChar)) || any(grepl("raster", capture.output(show(theFun))))
+      needTerra <- any(grepl("terra|rast$", funCaptured)) || any(grepl("terra|rast$", funChar)) ||
+        any(grepl("terra", capture.output(show(theFun))))
       if (needRaster) {
         .requireNamespace("raster", stopOnFALSE = TRUE)
       }
