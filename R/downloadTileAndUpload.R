@@ -14,22 +14,26 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
 
     # Preview intersecting tile IDs
 
-    # urlFullTif <- "https://drive.google.com/file/d/1fmdDfOstKNRSyV5-tw3thw_dBFK2lYQS/view?usp=drive_link"
     file <- googledrive::drive_get(url) |> Cache()
     file_id <- file$id
     targetFile <- file$name
     dPath <- destinationPath# "~/testing/"
     targetFileFullPath <- file.path(dPath, targetFile)
+
+    dig <- .robustDigest(to)
+
+    # If the postprocessed final object is available; pull the plug, if not in dev mode
+    targetFilePostProcessedFullPath <- .suffix(targetFileFullPath, dig)
+    if (file.exists(targetFilePostProcessedFullPath) && doUploads %in% FALSE)
+      return(terra::rast(targetFilePostProcessedFullPath))
+
     haveLocalFullFile <- file.exists(targetFileFullPath)
 
-    browser()
     if (fs::is_absolute_path(tilesFolder)) {
       tilesFolderFullPath <- file.path(tilesFolder, filePathSansExt(targetFile))
     } else {
       tilesFolderFullPath <- file.path(dPath, tilesFolder, filePathSansExt(targetFile))
     }
-
-    dig <- .robustDigest(to)
 
     noTiles <- FALSE
 
@@ -56,7 +60,6 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
       message("⚠️ Some tiles are missing locally. Will try to download tiles from from url2.")
       print(missingTilesLocal)
     }
-    browser()
     # if (doUploads && !all(all_tile_names %in% dd)) {
     #   haveLocalTiles <- FALSE
     # }
@@ -64,7 +67,8 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
     if (haveLocalTiles %in% FALSE || doUploads) {
 
       # Get the folder at url2 (replace with actual folder name or ID)
-      tile_folder_onGoogleDrive <- googledrive::drive_get(urlTiles)
+      urlTilesID <- googledrive::as_id(extract_drive_id(urlTiles))
+      tile_folder_onGoogleDrive <- googledrive::drive_get(urlTilesID)
       # targetFile <- "alnu_rub.tif"
 
       # List all files in the folder
@@ -89,7 +93,10 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
       doTileDownload <- FALSE
       missingTilesRemoteAll <- setdiff(all_tile_names, existing_tiles$name)
 
-      if (length(missingTilesOnRemote) == 0 && (length(missingTilesRemoteAll) == 0 && doUploads %in% TRUE)) {
+      tilesFullOnRemote <- TRUE
+      if (doUploads %in% TRUE) tilesFullOnRemote <- length(missingTilesRemoteAll) == 0
+
+      if (length(missingTilesOnRemote) == 0 && tilesFullOnRemote) {
         message("✅ All needed tiles are available on Google Drive.  Proceeding to download only those.")
         needUploads <- FALSE
         doTileDownload <- haveLocalTiles %in% FALSE
@@ -97,19 +104,21 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
         message("⚠️ Some tiles are missing on Google Drive. Will download full file from url1.")
         print(missingTilesOnRemote)
       }
-      browser()
+
       # if (haveLocal %in% FALSE && needUploads %in% FALSE) {
       if (haveLocalTiles %in% FALSE && doTileDownload %in% TRUE) {
         whGet <- match(tilesToGet, existing_tiles$name)
         tileIDSToGet <- existing_tiles[whGet, ]
         ogwd <- getwd()
+        if (dir.exists(tilesFolderFullPath) %in% FALSE)
+          dir.create(tilesFolderFullPath, recursive = TRUE, showWarnings = FALSE)
         setwd(tilesFolderFullPath)
         on.exit(setwd(ogwd))
         by(tileIDSToGet, seq_len(NROW(tileIDSToGet)), function(i) {
           download_resumable_httr2(i$id, i$name)
         })
-        tile_paths <- tileIDSToGet$name
-        tile_rasters <- Map(x = tile_paths, function(x) terra::rast(x))
+        haveLocalTiles <- TRUE
+        setwd(ogwd)
       }
 
       fe <- file.exists(targetFileFullPath)
@@ -121,15 +130,15 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
           needDownloadFull <- FALSE
         }
       }
-      browser()
       if (needDownloadFull) {
         download_resumable_httr2(url, targetFileFullPath)
         rfull <- terra::rast(targetFileFullPath)
       }
 
       if (needUploads %in% TRUE || (doUploads %in% TRUE && haveRemoteTiles %in% FALSE)) {
-        #if (doUploads) {
-        tile_raster_write_all(targetFileFullPath, tilesFolderFullPath, nx = numTiles2D[[1]], ny = numTiles2D[[2]])
+        browser()
+        tile_raster_write_auto(targetFileFullPath, tilesFolderFullPath, nx = numTiles2D[[1]], ny = numTiles2D[[2]])
+        # tile_raster_write_all(targetFileFullPath, tilesFolderFullPath, nx = numTiles2D[[1]], ny = numTiles2D[[2]])
 
         upload_tiles_to_drive_url(tilesFolderFullPath, urlTiles, targetFileFullPath)
         tile_paths <- dir(tilesFolderFullPath, pattern = "\\.tif$")
@@ -156,10 +165,62 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
     if (noTiles %in% FALSE) {
       mosaic_raster <- terra::sprc(tile_rasters)
       final <- terra::crop(mosaic_raster, to)
-      rfull <- terra::writeRaster(terra::merge(final), filename = .suffix(targetFileFullPath, dig), overwrite = TRUE)
+      rfull <- terra::writeRaster(terra::merge(final), filename = targetFilePostProcessedFullPath, overwrite = TRUE)
     }
     rfull
   }
+}
+
+library(terra)
+library(parallel)
+library(fs)
+
+tile_raster_write_auto <- function(raster_path, out_dir, nx = 10, ny = 5) {
+  r <- terra::rast(raster_path)
+
+  ext <- terra::ext(r)
+  x_breaks <- seq(ext[1], ext[2], length.out = nx + 1)
+  y_breaks <- seq(ext[3], ext[4], length.out = ny + 1)
+
+  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+
+  # Build tile specs
+  tile_specs <- list()
+  tile_id <- 1
+  for (i in 1:nx) {
+    for (j in 1:ny) {
+      tile_ext <- terra::ext(x_breaks[i], x_breaks[i + 1], y_breaks[j], y_breaks[j + 1])
+      tile_path <- file.path(out_dir, paste0("tile_", sprintf("%02d", tile_id), ".tif"))
+      tile_specs[[tile_id]] <- list(ext = tile_ext, path = tile_path)
+      tile_id <- tile_id + 1
+    }
+  }
+
+  # Worker function
+  process_tile <- function(spec) {
+    if (!file.exists(spec$path)) {
+      tile <- terra::crop(r, spec$ext)
+      terra::writeRaster(tile, spec$path,
+                         overwrite = FALSE,
+                         gdal = c("COMPRESS=LZW", "TILED=YES"))
+      return(paste("✅ Saved:", spec$path))
+    } else {
+      return(paste("⏩ Skipped (already exists):", spec$path))
+    }
+  }
+
+  message("🧩 Creating tiles ...")
+
+  # Choose parallel or sequential based on OS
+  if (.Platform$OS.type == "unix") {
+    results <- mclapply(tile_specs, process_tile, mc.cores = detectCores(logical = FALSE))
+  } else {
+    results <- lapply(tile_specs, process_tile)
+  }
+
+  # Print results
+  for (msg in results) message(msg)
+  message("🎉 Tiling complete.")
 }
 
 tile_raster_write_all <- function(raster_path, out_dir, nx = 10, ny = 5) {
@@ -268,4 +329,8 @@ proj4stringSCANFI <- "+proj=lcc +lat_0=0 +lon_0=-95 +lat_1=49 +lat_2=77 +x_0=0 +
 makeTileNames <- function(tileIds) {
   paddedTilenames <- sprintf("%02d", as.integer(tileIds))
   paste0("tile_", paddedTilenames, ".tif")
+}
+
+rastTiles <- function(tiles, tilesFolderFullPath) {
+  tile_rasters <- Map(x = tiles, function(x) terra::rast(file.path(tilesFolderFullPath, x))  )
 }
