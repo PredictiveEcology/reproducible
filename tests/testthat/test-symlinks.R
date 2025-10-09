@@ -51,7 +51,7 @@ test_that("symlinks work with cache, input, output paths", {
   ## get studyArea (Ontario forest management units)
   studyArea <- {
     prepInputs(
-      url = "https://www.gisapplication.lrc.gov.on.ca/fmedatadownload/Packages/FORMGMT.zip",
+      url = "https://ws.gisetl.lrc.gov.on.ca/fmedatadownload/Packages/FORMGMT.zip",
       destinationPath = asPath(inputDir),
       targetFile = "FOREST_MANAGEMENT_UNIT.shp",
       alsoExtract = "similar",
