@@ -1173,3 +1173,40 @@ purgeChecksums <- function(checksumFile, fileToRemove) {
   dtNew <- dt[!toPurge, on = c("file", "checksum")]
   data.table::fwrite(dtNew, file = checksumFile)
 }
+download_resumable_httr2 <- function(file_name, local_path) {
+  # Authenticate and get file metadata
+  # googledrive::drive_auth()
+  file <- googledrive::drive_get(file_name)
+  file_id <- file$id
+
+  # Build download URL
+  download_url <- paste0("https://www.googleapis.com/drive/v3/files/", file_id, "?alt=media")
+
+  # Get token
+  token <- googledrive::drive_token()
+  bearer <- token$auth_token$credentials$access_token
+
+  # Check how much has already been downloaded
+  downloaded_bytes <- if (file.exists(local_path)) file.info(local_path)$size else 0
+
+  if (as.numeric(file$drive_resource[[1]]$size) > downloaded_bytes) {
+
+    # Create request with Range header
+    browser()
+    req <- httr2::request(download_url) |>
+      httr2::req_auth_bearer_token(bearer) |>
+      httr2::req_headers(Range = paste0("bytes=", downloaded_bytes, "-")) |>
+      httr2::req_progress()
+
+    # Open connection in append mode
+    con <- file(local_path, open = "ab")
+
+    # Stream response and append to file
+    resp <- httr2::req_perform(req)
+    body <- httr2::resp_body_raw(resp)
+    writeBin(body, con)
+    close(con)
+  }
+}
+
+
