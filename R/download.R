@@ -1222,7 +1222,6 @@ download_resumable_httr2 <- function(file_name, local_path) {
   if (as.numeric(file$drive_resource[[1]]$size) > downloaded_bytes) {
 
     # Create request with Range header
-    browser()
     req <- httr2::request(download_url) |>
       httr2::req_auth_bearer_token(bearer) |>
       httr2::req_headers(Range = paste0("bytes=", downloaded_bytes, "-")) |>
@@ -1230,6 +1229,7 @@ download_resumable_httr2 <- function(file_name, local_path) {
 
     # Open connection in append mode
     con <- file(local_path, open = "ab")
+    on.exit(try(close(con), silent = TRUE))
 
     # Stream response and append to file
     resp <- httr2::req_perform(req)

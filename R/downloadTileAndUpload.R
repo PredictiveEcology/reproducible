@@ -20,7 +20,9 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
     targetFile <- file$name
     dPath <- destinationPath# "~/testing/"
     targetFileFullPath <- file.path(dPath, targetFile)
+    haveLocalFullFile <- file.exists(targetFileFullPath)
 
+    browser()
     if (fs::is_absolute_path(tilesFolder)) {
       tilesFolderFullPath <- file.path(tilesFolder, filePathSansExt(targetFile))
     } else {
@@ -32,23 +34,34 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
     noTiles <- FALSE
 
     # Find intersecting tiles
+    all_tile_names <- makeTileNames(canadaGrid$tile_id)
+
     intersecting_tiles <- terra::intersect(canadaGrid, to)
-    paddedTilenames <- sprintf("%02d", as.integer(intersecting_tiles$tile_id))
-    needed_tile_names <- paste0("tile_", paddedTilenames, ".tif")
+    needed_tile_names <- makeTileNames(intersecting_tiles$tile_id)
+
+    #
+    # paddedTilenames <- sprintf("%02d", as.integer(intersecting_tiles$tile_id))
+    # needed_tile_names <- paste0("tile_", paddedTilenames, ".tif")
 
     dd <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
-    missing_tiles <- setdiff(needed_tile_names, dd)
+    missingTilesLocal <- setdiff(needed_tile_names, dd)
+
+    missingTilesLocalAll <- setdiff(all_tile_names, dd)
     tilesToGet <- intersect(needed_tile_names, dd)
-    haveLocal <- FALSE
-    if (length(missing_tiles) == 0) {
+    haveLocalTiles <- FALSE
+    if (length(missingTilesLocal) == 0 && (length(missingTilesLocalAll) == 0 && doUploads %in% TRUE)) {
       message("✅ All needed tiles are available locally. Proceeding to load only those.")
-      haveLocal <- TRUE
+      haveLocalTiles <- TRUE
     } else {
       message("⚠️ Some tiles are missing locally. Will try to download tiles from from url2.")
-      print(missing_tiles)
+      print(missingTilesLocal)
     }
+    browser()
+    # if (doUploads && !all(all_tile_names %in% dd)) {
+    #   haveLocalTiles <- FALSE
+    # }
 
-    if (haveLocal %in% FALSE || doUploads) {
+    if (haveLocalTiles %in% FALSE || doUploads) {
 
       # Get the folder at url2 (replace with actual folder name or ID)
       tile_folder_onGoogleDrive <- googledrive::drive_get(urlTiles)
@@ -67,21 +80,26 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
       available_tile_names <- existing_tiles$name
 
       # Determine which tiles are missing
-      missing_tiles <- setdiff(needed_tile_names, available_tile_names)
+      missingTilesOnRemote <- setdiff(needed_tile_names, available_tile_names)
       tilesToGet <- intersect(needed_tile_names, available_tile_names)
 
+      haveRemoteTiles <- all(all_tile_names %in% existing_tiles$name)
       # Preview decision
-      downloadTilesOnly <- FALSE
-      if (length(missing_tiles) == 0) {
+      needUploads <- TRUE
+      doTileDownload <- FALSE
+      missingTilesRemoteAll <- setdiff(all_tile_names, existing_tiles$name)
+
+      if (length(missingTilesOnRemote) == 0 && (length(missingTilesRemoteAll) == 0 && doUploads %in% TRUE)) {
         message("✅ All needed tiles are available on Google Drive.  Proceeding to download only those.")
-        downloadTilesOnly <- TRUE
+        needUploads <- FALSE
+        doTileDownload <- haveLocalTiles %in% FALSE
       } else {
         message("⚠️ Some tiles are missing on Google Drive. Will download full file from url1.")
-        print(missing_tiles)
+        print(missingTilesOnRemote)
       }
-
-      if (isTRUE(downloadTilesOnly) && !doUploads) {
-
+      browser()
+      # if (haveLocal %in% FALSE && needUploads %in% FALSE) {
+      if (haveLocalTiles %in% FALSE && doTileDownload %in% TRUE) {
         whGet <- match(tilesToGet, existing_tiles$name)
         tileIDSToGet <- existing_tiles[whGet, ]
         ogwd <- getwd()
@@ -92,35 +110,47 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
         })
         tile_paths <- tileIDSToGet$name
         tile_rasters <- Map(x = tile_paths, function(x) terra::rast(x))
-      } else {
+      }
 
-        if (all(file.exists(targetFileFullPath) %in% FALSE)) {
+      fe <- file.exists(targetFileFullPath)
+      needDownloadFull <- haveLocalTiles %in% FALSE && haveRemoteTiles %in% FALSE
+      if (any(fe)) {
+        if (file.size(targetFileFullPath) < file$drive_resource[[1]]$size) {
           unlink(targetFileFullPath, force = TRUE)
-          download_resumable_httr2(url, targetFileFullPath)
-        }
-
-        rfull <- terra::rast(targetFileFullPath)
-        if (doUploads) {
-          tile_raster_write_all(targetFileFullPath, tilesFolderFullPath, nx = numTiles2D[[1]], ny = numTiles2D[[2]])
-
-          upload_tiles_to_drive_url(tilesFolderFullPath, urlTiles, targetFileFullPath)
-          tile_paths <- dir(tilesFolderFullPath, pattern = "\\.tif$")
-          saExt <- terra::ext(to)
-
-          # Filter tiles that intersect the study area
-          intersecting_tiles2 <- purrr::keep(tile_paths, function(path) {
-            tile_ext <- terra::ext(terra::rast(file.path(tilesFolderFullPath, path)))
-
-            # Check for bounding box overlap
-            !(tile_ext[1] > saExt[2] || tile_ext[2] < saExt[1] ||  # x overlap
-                tile_ext[3] > saExt[4] || tile_ext[4] < saExt[3])    # y overlap
-          })
-          tile_rasters <- Map(x = intersecting_tiles2, function(x) terra::rast(file.path(tilesFolderFullPath, x))  )
         } else {
-          noTiles <- TRUE
+          needDownloadFull <- FALSE
         }
       }
-    } else {
+      browser()
+      if (needDownloadFull) {
+        download_resumable_httr2(url, targetFileFullPath)
+        rfull <- terra::rast(targetFileFullPath)
+      }
+
+      if (needUploads %in% TRUE || (doUploads %in% TRUE && haveRemoteTiles %in% FALSE)) {
+        #if (doUploads) {
+        tile_raster_write_all(targetFileFullPath, tilesFolderFullPath, nx = numTiles2D[[1]], ny = numTiles2D[[2]])
+
+        upload_tiles_to_drive_url(tilesFolderFullPath, urlTiles, targetFileFullPath)
+        tile_paths <- dir(tilesFolderFullPath, pattern = "\\.tif$")
+        saExt <- terra::ext(to)
+
+        # Filter tiles that intersect the study area
+        intersecting_tiles2 <- purrr::keep(tile_paths, function(path) {
+          tile_ext <- terra::ext(terra::rast(file.path(tilesFolderFullPath, path)))
+
+          # Check for bounding box overlap
+          !(tile_ext[1] > saExt[2] || tile_ext[2] < saExt[1] ||  # x overlap
+              tile_ext[3] > saExt[4] || tile_ext[4] < saExt[3])    # y overlap
+        })
+        tile_rasters <- Map(x = intersecting_tiles2, function(x) terra::rast(file.path(tilesFolderFullPath, x))  )
+      } # else {
+      #   noTiles <- TRUE
+      # }
+
+
+    }
+    if (haveLocalTiles %in% TRUE) {
       tile_rasters <- Map(x = tilesToGet, function(x) terra::rast(file.path(tilesFolderFullPath, x))  )
     }
     if (noTiles %in% FALSE) {
@@ -142,6 +172,7 @@ tile_raster_write_all <- function(raster_path, out_dir, nx = 10, ny = 5) {
   dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
   tile_id <- 1
+  message("Creating tiles from full SpatRaster ... ")
   for (i in 1:nx) {
     for (j in 1:ny) {
       tile_ext <- terra::ext(x_breaks[i], x_breaks[i + 1], y_breaks[j], y_breaks[j + 1])
@@ -233,3 +264,8 @@ makeCanadaGrid <- function(numTiles2D = c(10, 5), crs) {
 }
 
 proj4stringSCANFI <- "+proj=lcc +lat_0=0 +lon_0=-95 +lat_1=49 +lat_2=77 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs"
+
+makeTileNames <- function(tileIds) {
+  paddedTilenames <- sprintf("%02d", as.integer(tileIds))
+  paste0("tile_", paddedTilenames, ".tif")
+}
