@@ -378,13 +378,17 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       class(fs) <- "object_size"
     }
     isLargeFile <- ifelse(is.null(fs), FALSE, fs > 1e6)
-    downloadCall <- quote(
-      googledrive::drive_download(
-        googledrive::as_id(url),
-        path = destFile,
-        type = type,
-        overwrite = overwrite, verbose = TRUE)
-    )
+
+    # download_with_speed(url, local_path = destFile)
+    # downloadCall <- quote(download_resumable_httr2(url, local_path = destFile))
+    downloadCall <- quote(drive_downloadWProgress(url, local_path = destFile))
+    # downloadCall <- quote(
+    #   googledrive::drive_download(
+    #     googledrive::as_id(url),
+    #     path = destFile,
+    #     type = type,
+    #     overwrite = overwrite, verbose = TRUE)
+    # )
 
     if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&
         !isFALSE(getOption("reproducible.futurePlan"))) {
@@ -470,6 +474,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
     messagePreProcess(messSkipDownload, verbose = verbose)
     needChecksums <- 0
   }
+
   return(list(destFile = destFile, needChecksums = needChecksums))
 }
 
@@ -1173,6 +1178,31 @@ purgeChecksums <- function(checksumFile, fileToRemove) {
   dtNew <- dt[!toPurge, on = c("file", "checksum")]
   data.table::fwrite(dtNew, file = checksumFile)
 }
+
+
+
+
+drive_downloadWProgress <- function(file_name, local_path) {
+  # Authenticate and get file metadata
+  # googledrive::drive_auth()
+  file <- googledrive::drive_get(file_name)
+  file_id <- file$id
+
+  # Build download URL
+  download_url <- paste0("https://www.googleapis.com/drive/v3/files/", file_id, "?alt=media")
+
+  # Get token from googledrive
+  token <- googledrive::drive_token()
+  bearer <- token$auth_token$credentials$access_token
+
+  # Create request with progress and perform download
+  httr2::request(download_url) |>
+    httr2::req_auth_bearer_token(bearer) |>
+    httr2::req_progress() |>
+    httr2::req_perform(path = local_path)
+}
+# Example usage
+
 download_resumable_httr2 <- function(file_name, local_path) {
   # Authenticate and get file metadata
   # googledrive::drive_auth()
