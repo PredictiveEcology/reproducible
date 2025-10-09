@@ -131,16 +131,17 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
         }
       }
       if (needDownloadFull) {
+        message("Downloading full file (", targetFile,") from ", url)
+        if (!is.null(file$drive_resource[[1]]$size))
+          message()
+
         download_resumable_httr2(url, targetFileFullPath)
         rfull <- terra::rast(targetFileFullPath)
       }
 
       if (needUploads %in% TRUE || (doUploads %in% TRUE && haveRemoteTiles %in% FALSE)) {
-        browser()
         tile_raster_write_auto(targetFileFullPath, tilesFolderFullPath, nx = numTiles2D[[1]], ny = numTiles2D[[2]])
-        # tile_raster_write_all(targetFileFullPath, tilesFolderFullPath, nx = numTiles2D[[1]], ny = numTiles2D[[2]])
-
-        upload_tiles_to_drive_url(tilesFolderFullPath, urlTiles, targetFileFullPath)
+        upload_tiles_to_drive_url_parallel(tilesFolderFullPath, urlTiles, targetFileFullPath)
         tile_paths <- dir(tilesFolderFullPath, pattern = "\\.tif$")
         saExt <- terra::ext(to)
 
@@ -299,6 +300,52 @@ upload_tiles_to_drive_url <- function(local_dir, drive_folder_url, thisFilename)
   message("🎉 Upload complete.")
 }
 
+
+upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, thisFilename) {
+  # Extract parent folder ID from URL
+  parent_id <- extract_drive_id(drive_folder_url)
+
+  # Create subfolder named after original raster filename
+  subfolder_name <- basename(tools::file_path_sans_ext(thisFilename))
+  subfolder <- googledrive::drive_find(q = paste0("name = '", subfolder_name, "' and '", parent_id, "' in parents"))
+
+  if (nrow(subfolder) == 0) {
+    subfolder <- googledrive::drive_mkdir(subfolder_name, path = googledrive::as_id(parent_id))
+    message("📁 Created subfolder: ", subfolder_name)
+  } else {
+    message("📁 Found existing subfolder: ", subfolder_name)
+  }
+
+  # List local .tif files
+  tif_files <- dir(local_dir, pattern = "\\.tif$", full.names = TRUE)
+
+  # Get existing files in Drive subfolder
+  existingAll <- googledrive::drive_ls(subfolder$id)
+  existing_names <- existingAll$name
+
+  # Upload helper
+  upload_one <- function(file_path) {
+    file_name <- basename(file_path)
+    if (!(file_name %in% existing_names)) {
+      googledrive::drive_upload(file_path, path = googledrive::as_id(subfolder$id))
+      return(paste("✅ Uploaded:", file_name))
+    } else {
+      return(paste("⏩ Skipped (already exists):", file_name))
+    }
+  }
+
+  # Upload in parallel on Linux/macOS, sequential on Windows
+  if (.Platform$OS.type == "unix") {
+    results <- parallel::mclapply(tif_files, upload_one,
+                                  mc.cores = min(3, parallel::detectCores(logical = FALSE)))
+  } else {
+    results <- lapply(tif_files, upload_one)
+  }
+
+  # Print results
+  for (msg in results) message(msg)
+  message("🎉 Upload complete.")
+}
 if (FALSE) {
 
   url <- "https://drive.google.com/file/d/1fmdDfOstKNRSyV5-tw3thw_dBFK2lYQS/view?usp=drive_link"
@@ -316,7 +363,6 @@ makeCanadaGrid <- function(numTiles2D = c(10, 5), crs) {
 
   canadaFullExt <- terra::ext(c(xmin = -2341500, xmax = 3010500, ymin = 5863500, ymax = 9436500))
   canadaV <- terra::as.polygons(canadaFullExt, crs = crs)
-  # numTiles2D <- c(10, 5)
   canadaGrid <- sf::st_make_grid(sf::st_as_sfc(sf::st_as_sf(canadaV)), n = numTiles2D) |>
     terra::vect()
   m <- t(matrix(1:50, nrow = numTiles2D[[2]], byrow = F))
