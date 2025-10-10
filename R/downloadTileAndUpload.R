@@ -43,8 +43,13 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath, tilesFolder = 
 
     targetObjCRS <- NULL # don't know it yet
     if (file.exists(targetFileFullPath)) {
-      targetObj <- terra::rast(targetFileFullPath)
-      targetObjCRS <- terra::crs(targetObj)
+      targetObj <- try(terra::rast(targetFileFullPath))
+      if (is(targetObj, "try-error")) {
+        unlink(targetFileFullPath, force = TRUE)
+        message("File appears to be corrupt; deleting it and trying local tiles, then remotes")
+      } else {
+        targetObjCRS <- terra::crs(targetObj)
+      }
     }
     # need to get the targetObjCRS to know what the tiles will look like
     dd <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
@@ -571,24 +576,31 @@ best_square_grid <- function(m, n, min_tiles = 1, max_tiles = 1000) {
 
 
 makeTileGridFromGADMcode <- function(tileGrid, numTiles = NULL, crs) {
-  browser()
-  tilePoly <- {terra::aggregate(geodata::gadm(tileGrid, resolution = 2))} |> Cache()
+  g <- geodata::gadm(tileGrid, resolution = 2)
+  if (is.null(g)) {
+    # most likely geodata server is down
+    tileExt <- terra::ext(c(xmin = -2342000, xmax = 3011000, ymin = 5860000, ymax = 9436000))
+    tilePoly2 <- tileExt
+  } else {
 
-  if (grepl("CAN", substr(tileGrid, 1, 3), ignore.case = TRUE)) {
-    vals <- terra::ext(tilePoly)[]
-    vals[["ymax"]] <- 70
-    tilePoly <- terra::crop(tilePoly, terra::ext(vals))
+    tilePoly <- {terra::aggregate(g)} |> Cache()
+
+    if (grepl("CAN", substr(tileGrid, 1, 3), ignore.case = TRUE)) {
+      vals <- terra::ext(tilePoly)[]
+      vals[["ymax"]] <- 70
+      tilePoly <- terra::crop(tilePoly, terra::ext(vals))
+    }
+    if (missing(crs))
+      crs <- build_lambert_proj4(terra::ext(tilePoly))
+    tilePoly2 <- postProcess(tilePoly, to = crs) |> Cache()
+    vals <- terra::ext(tilePoly2)[]
+    tileExt <- c(xmin = floor(vals[["xmin"]]/1e3) * 1e3,
+                 xmax = ceiling(vals[["xmax"]]/1e3) * 1e3,
+                 ymin = floor(vals[["ymin"]]/1e3) * 1e3,
+                 ymax = ceiling(vals[["ymax"]]/1e3) * 1e3)
+    tileExt <- terra::ext(tileExt)
+
   }
-  if (missing(crs))
-    crs <- build_lambert_proj4(terra::ext(tilePoly))
-  tilePoly2 <- postProcess(tilePoly, to = crs) |> Cache()
-  vals <- terra::ext(tilePoly2)[]
-  tileExt <- c(xmin = floor(vals[["xmin"]]/1e3) * 1e3,
-               xmax = ceiling(vals[["xmax"]]/1e3) * 1e3,
-               ymin = floor(vals[["ymin"]]/1e3) * 1e3,
-               ymax = ceiling(vals[["ymax"]]/1e3) * 1e3)
-  tileExt <- terra::ext(tileExt)
-
   if (is.null(numTiles)) {
     bsg <- best_square_grid(m = tileExt[][["xmax"]] - tileExt[][["xmin"]],
                             n = tileExt[][["ymax"]] - tileExt[][["ymin"]]
