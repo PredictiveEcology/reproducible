@@ -380,8 +380,8 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
     isLargeFile <- ifelse(is.null(fs), FALSE, fs > 1e6)
 
     # download_with_speed(url, local_path = destFile)
-    # downloadCall <- quote(download_resumable_httr2(url, local_path = destFile))
-    downloadCall <- quote(drive_downloadWProgress(url, local_path = destFile))
+    downloadCall <- quote(download_resumable_httr2(url, local_path = destFile))
+    # downloadCall <- quote(drive_downloadWProgress(url, local_path = destFile))
     # downloadCall <- quote(
     #   googledrive::drive_download(
     #     googledrive::as_id(url),
@@ -934,16 +934,17 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     }
     fileSize <- sapply(fileAttr$drive_resource, function(x) x$size) ## TODO: not returned with team drive (i.e., NULL)
     if (!is.null(fileSize)) {
-      fileSize <- as.numeric(fileSize)
-      len <- length(fileSize)
-      if (len > 1)
-        fileSize <- sum(fileSize)
-      class(fileSize) <- "object_size"
-      Fils <- singularPlural(c("File", "Files"), v = len)
-      isAre <- isAre(v = len)
-      messagePreProcess(Fils, " on Google Drive ", isAre, " ", format(fileSize, units = "auto"),
-                        verbose = verbose
-      )
+      messageAboutGoogleDriveFilesize(fileSize, verbose)
+      # fileSize <- as.numeric(fileSize)
+      # len <- length(fileSize)
+      # if (len > 1)
+      #   fileSize <- sum(fileSize)
+      # class(fileSize) <- "object_size"
+      # Fils <- singularPlural(c("File", "Files"), v = len)
+      # isAre <- isAre(v = len)
+      # messagePreProcess(Fils, " on Google Drive ", isAre, " ", format(fileSize, units = "auto"),
+      #                   verbose = verbose
+      # )
     }
     archive <- .isArchive(fileAttr$name)
     if (is.null(archive)) {
@@ -1022,7 +1023,8 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
     isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
                  !grepl("\\.[^\\.]+$", url)) # doesn't have an extension
     if (isGID) {
-      urlMessage <- paste0("https://drive.google.com/file/d/", url)
+      urlMessage <- googledriveIDtoHumanURL(id)
+      # urlMessage <- paste0("https://drive.google.com/file/d/", url)
     } else {
       urlMessage <- url
     }
@@ -1182,25 +1184,27 @@ purgeChecksums <- function(checksumFile, fileToRemove) {
 
 
 
-drive_downloadWProgress <- function(file_name, local_path) {
-  # Authenticate and get file metadata
-  # googledrive::drive_auth()
-  file <- googledrive::drive_get(file_name)
-  file_id <- file$id
-
-  # Build download URL
-  download_url <- paste0("https://www.googleapis.com/drive/v3/files/", file_id, "?alt=media")
-
-  # Get token from googledrive
-  token <- googledrive::drive_token()
-  bearer <- token$auth_token$credentials$access_token
-
-  # Create request with progress and perform download
-  httr2::request(download_url) |>
-    httr2::req_auth_bearer_token(bearer) |>
-    httr2::req_progress() |>
-    httr2::req_perform(path = local_path)
-}
+# drive_downloadWProgress <- function(file_name, local_path) {
+#   # Authenticate and get file metadata
+#   # googledrive::drive_auth()
+#   file <- googledrive::drive_get(file_name)
+#   file_id <- file$id
+#
+#   # Build download URL
+#   download_url <- googledriveIDtoURL(file_id)
+#   # download_url <- paste0("https://www.googleapis.com/drive/v3/files/", file_id, "?alt=media")
+#
+#   # Get token from googledrive
+#   token <- googledrive::drive_token()
+#   bearer <- token$auth_token$credentials$access_token
+#
+#   browser()
+#   # Create request with progress and perform download
+#   httr2::request(download_url) |>
+#     httr2::req_auth_bearer_token(bearer) |>
+#     httr2::req_progress() |>
+#     httr2::req_perform(path = local_path)
+# }
 # Example usage
 
 download_resumable_httr2 <- function(file_name, local_path) {
@@ -1210,7 +1214,8 @@ download_resumable_httr2 <- function(file_name, local_path) {
   file_id <- file$id
 
   # Build download URL
-  download_url <- paste0("https://www.googleapis.com/drive/v3/files/", file_id, "?alt=media")
+  download_url <- googledriveIDtoDownloadURL(file_id)
+  # download_url <- paste0("https://www.googleapis.com/drive/v3/files/", file_id, "?alt=media")
 
   # Get token
   token <- googledrive::drive_token()
@@ -1240,3 +1245,26 @@ download_resumable_httr2 <- function(file_name, local_path) {
 }
 
 
+
+
+
+messageAboutGoogleDriveFilesize <- function(fileSize, verbose) {
+  fileSize <- as.numeric(fileSize)
+  len <- length(fileSize)
+  if (len > 1)
+    fileSize <- sum(fileSize)
+  class(fileSize) <- "object_size"
+  Fils <- singularPlural(c("File", "Files"), v = len)
+  isAre <- isAre(v = len)
+  messagePreProcess(Fils, " on Google Drive ", isAre, " ", format(fileSize, units = "auto"),
+                    verbose = verbose
+  )
+}
+
+googledriveIDtoDownloadURL <- function(id) {
+  paste0("https://www.googleapis.com/drive/v3/files/", id, "?alt=media")
+}
+
+googledriveIDtoHumanURL <- function(id) {
+  paste0("https://drive.google.com/file/d/", id)
+}
