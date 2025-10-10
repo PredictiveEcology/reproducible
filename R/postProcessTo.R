@@ -274,10 +274,10 @@ postProcessTo <- function(from, to,
       #   cropTo --> i.e., projecting cropTo to from's crs, then crop, then proceed was making
       #   errors and slivers
       if (!(isPolygons(from) && isPolygons(projectTo) && identical(cropTo, projectTo)))
-        from <- cropTo(from, cropTo, needBuffer = TRUE, ..., overwrite = overwrite) # crop first for speed
-      from <- projectTo(from, projectTo, ..., overwrite = overwrite) # need to project with edges intact
-      from <- maskTo(from, maskTo, ..., overwrite = overwrite)
-      from <- cropTo(from, cropTo, needBuffer = FALSE, ..., overwrite = overwrite) # need to recrop to trim excess pixels in new projection
+        from <- cropTo(from, cropTo, needBuffer = TRUE, verbose = verbose, ..., overwrite = overwrite) # crop first for speed
+      from <- projectTo(from, projectTo, verbose = verbose, ..., overwrite = overwrite) # need to project with edges intact
+      from <- maskTo(from, maskTo, verbose = verbose, ..., overwrite = overwrite)
+      from <- cropTo(from, cropTo, needBuffer = FALSE, verbose = verbose, ..., overwrite = overwrite) # need to recrop to trim excess pixels in new projection
 
       # Put this message near the end so doesn't get lost
       if (is.naSpatial(cropTo) && isVector(maskTo)) {
