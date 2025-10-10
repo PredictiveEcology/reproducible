@@ -571,7 +571,6 @@ best_square_grid <- function(m, n, min_tiles = 1, max_tiles = 1000) {
 
 
 makeTileGridFromGADMcode <- function(tileGrid, numTiles = NULL, crs) {
-  browser()
   tilePoly <- {terra::aggregate(geodata::gadm(tileGrid, resolution = 2))} |> Cache()
 
   if (grepl("CAN", substr(tileGrid, 1, 3), ignore.case = TRUE)) {
