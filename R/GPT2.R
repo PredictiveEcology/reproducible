@@ -779,25 +779,26 @@ setupCacheNesting <- function(userTags, useCache, envir = parent.frame(1)) {
     if (isTRUE(any(!hasColon)))
       allUT1[!hasColon] <- paste0("userTags:", allUT1[!hasColon])
 
+    if (!is.null(allUT1)) {
+      allUT2 <- allUT1[!duplicated(sapply(strsplitOnlySingleColon(allUT1), tail, 1))]
 
-    allUT2 <- allUT1[!duplicated(sapply(strsplitOnlySingleColon(allUT1), tail, 1))]
+      splitted <- strsplitOnlySingleColon(allUT2)
+      # firstPart <- sapply(strsplitOnlySingleColon(allUT2), function(x) x[[2]])
+      # allUT2 <- allUT2[order(firstPart)]
 
-    splitted <- strsplitOnlySingleColon(allUT2)
-    # firstPart <- sapply(strsplitOnlySingleColon(allUT2), function(x) x[[2]])
-    # allUT2 <- allUT2[order(firstPart)]
-
-    allUT2 <- sapply(
-      reorder_by_first_element(splitted), function(x) paste0(x[[1]], ":", x[[2]])
+      allUT2 <- sapply(
+        reorder_by_first_element(splitted), function(x) paste0(x[[1]], ":", x[[2]])
       )
 
-    userTags <- allUT2
-    .pkgEnv$.reproEnv2$userTags <- userTags
-    nestLevelOld <- .pkgEnv$.reproEnv2$nestLevel
-    .pkgEnv$.reproEnv2$nestLevel <- nestLevelOld + 1
-    on.exit2({
-      .pkgEnv$.reproEnv2$nestLevel <- nestLevelOld
-      .pkgEnv$.reproEnv2$userTags <- userTagsOld
-    }, envir = envir)
+      userTags <- allUT2
+      .pkgEnv$.reproEnv2$userTags <- userTags
+      nestLevelOld <- .pkgEnv$.reproEnv2$nestLevel
+      .pkgEnv$.reproEnv2$nestLevel <- nestLevelOld + 1
+      on.exit2({
+        .pkgEnv$.reproEnv2$nestLevel <- nestLevelOld
+        .pkgEnv$.reproEnv2$userTags <- userTagsOld
+      }, envir = envir)
+    }
   }
   userTags
 }
