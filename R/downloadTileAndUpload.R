@@ -2,6 +2,7 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
                                 to, doUploads = getOption("reproducible.prepInputsDoUploads", FALSE)) {
 
   if (missing(to) || missing(urlTiles)) {
+    message("prepInputsWithTiles must have `to` argument specified with a spatial object")
     return("NULL")
   } else {
     numTiles2D <- c(10, 5)
@@ -14,7 +15,8 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
 
     # Preview intersecting tile IDs
 
-    file <- googledrive::drive_get(url) |> Cache()
+    file <- googledrive::drive_get(url) |>
+      Cache(verbose = FALSE, notOlderThan = Sys.time() - 60*60) # refresh every hour
     file_id <- file$id
     targetFile <- file$name
     dPath <- destinationPath# "~/testing/"
@@ -40,7 +42,9 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
     # Find intersecting tiles
     all_tile_names <- makeTileNames(canadaGrid$tile_id)
 
-    intersecting_tiles <- terra::intersect(canadaGrid, to)
+    toInCanadaGrid <- terra::ext(postProcessTo(to, to = canadaGrid, verbose = -2))
+    # intersecting_tiles <- terra::intersect(canadaGrid, to)
+    intersecting_tiles <- terra::intersect(canadaGrid, toInCanadaGrid)
     needed_tile_names <- makeTileNames(intersecting_tiles$tile_id)
 
     #
@@ -153,7 +157,8 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
           !(tile_ext[1] > saExt[2] || tile_ext[2] < saExt[1] ||  # x overlap
               tile_ext[3] > saExt[4] || tile_ext[4] < saExt[3])    # y overlap
         })
-        tile_rasters <- Map(x = intersecting_tiles2, function(x) terra::rast(file.path(tilesFolderFullPath, x))  )
+        tile_rasters <- rastTiles(intersecting_tiles2, tilesFolderFullPath)
+        # tile_rasters <- Map(x = intersecting_tiles2, function(x) terra::rast(file.path(tilesFolderFullPath, x))  )
       } # else {
       #   noTiles <- TRUE
       # }
@@ -161,12 +166,14 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
 
     }
     if (haveLocalTiles %in% TRUE) {
-      tile_rasters <- Map(x = tilesToGet, function(x) terra::rast(file.path(tilesFolderFullPath, x))  )
+      tile_rasters <- rastTiles(tilesToGet, tilesFolderFullPath)
+      # tile_rasters <- Map(x = tilesToGet, function(x) terra::rast(file.path(tilesFolderFullPath, x))  )
     }
     if (noTiles %in% FALSE) {
       mosaic_raster <- terra::sprc(tile_rasters)
-      final <- terra::crop(mosaic_raster, to)
-      rfull <- terra::writeRaster(terra::merge(final), filename = targetFilePostProcessedFullPath, overwrite = TRUE)
+      final <- terra::crop(mosaic_raster, toInCanadaGrid)
+      rfull <- terra::writeRaster(terra::merge(final), filename = targetFilePostProcessedFullPath,
+                                  overwrite = TRUE)
     }
     rfull
   }
