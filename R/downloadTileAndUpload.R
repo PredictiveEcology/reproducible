@@ -26,8 +26,10 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
 
     # If the postprocessed final object is available; pull the plug, if not in dev mode
     targetFilePostProcessedFullPath <- .suffix(targetFileFullPath, dig)
-    if (file.exists(targetFilePostProcessedFullPath) && doUploads %in% FALSE)
+    if (file.exists(targetFilePostProcessedFullPath) && doUploads %in% FALSE) {
+      message("Correct post processed file exists; returning it now...")
       return(terra::rast(targetFilePostProcessedFullPath))
+    }
 
     haveLocalFullFile <- file.exists(targetFileFullPath)
 
@@ -57,12 +59,17 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
     missingTilesLocalAll <- setdiff(all_tile_names, dd)
     tilesToGet <- intersect(needed_tile_names, dd)
     haveLocalTiles <- FALSE
-    if (length(missingTilesLocal) == 0 && (length(missingTilesLocalAll) == 0 && doUploads %in% TRUE)) {
+
+    tilesFullOnLocal <- TRUE
+    if (doUploads %in% TRUE) tilesFullOnLocal <- length(missingTilesRemoteAll) == 0
+
+    if (length(missingTilesLocal) == 0 && tilesFullOnLocal) {
+    # if (length(missingTilesLocal) == 0 && (length(missingTilesLocalAll) == 0 && doUploads %in% TRUE)) {
       message("✅ All needed tiles are available locally. Proceeding to load only those.")
       haveLocalTiles <- TRUE
     } else {
-      message("⚠️ Some tiles are missing locally. Will try to download tiles from from url2.")
-      print(missingTilesLocal)
+      message("⚠️ These tiles are missing locally: ")
+      message(paste(missingTilesLocal, collapse = ", "))
     }
     # if (doUploads && !all(all_tile_names %in% dd)) {
     #   haveLocalTiles <- FALSE
@@ -105,8 +112,8 @@ prepInputsWithTiles <- function(url, destinationPath, tilesFolder = "tiles", url
         needUploads <- FALSE
         doTileDownload <- haveLocalTiles %in% FALSE
       } else {
-        message("⚠️ Some tiles are missing on Google Drive. Will download full file from url1.")
-        print(missingTilesOnRemote)
+        message("⚠️ These tiles are missing on Google Drive: ")
+        message(paste(missingTilesOnRemote, collapse = ", "))
       }
 
       # if (haveLocal %in% FALSE && needUploads %in% FALSE) {
