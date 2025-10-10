@@ -29,8 +29,10 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath, tilesFolder = 
     # If the postprocessed final object is available; pull the plug, if not in dev mode
     targetFileFullPath <- file.path(dPath, targetFile)
     targetFilePostProcessedFullPath <- .suffix(targetFileFullPath, dig)
-    if (file.exists(targetFilePostProcessedFullPath) && doUploads %in% FALSE)
+    if (file.exists(targetFilePostProcessedFullPath) && doUploads %in% FALSE) {
+      message("Correct post processed file exists; returning it now...")
       return(terra::rast(targetFilePostProcessedFullPath))
+    }
 
     if (fs::is_absolute_path(tilesFolder)) {
       tilesFolderFullPath <- file.path(tilesFolder, filePathSansExt(targetFile))
