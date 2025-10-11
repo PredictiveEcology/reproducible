@@ -934,7 +934,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     }
     fileSize <- sapply(fileAttr$drive_resource, function(x) x$size) ## TODO: not returned with team drive (i.e., NULL)
     if (!is.null(fileSize)) {
-      messageAboutGoogleDriveFilesize(fileSize, verbose)
+      messageAboutFilesize(fileSize, verbose)
       # fileSize <- as.numeric(fileSize)
       # len <- length(fileSize)
       # if (len > 1)
@@ -1248,7 +1248,7 @@ download_resumable_httr2 <- function(file_name, local_path) {
 
 
 
-messageAboutGoogleDriveFilesize <- function(fileSize, verbose) {
+messageAboutFilesize <- function(fileSize, verbose, msgMiddle = " on Google Drive ") {
   fileSize <- as.numeric(fileSize)
   len <- length(fileSize)
   if (len > 1)
@@ -1256,7 +1256,7 @@ messageAboutGoogleDriveFilesize <- function(fileSize, verbose) {
   class(fileSize) <- "object_size"
   Fils <- singularPlural(c("File", "Files"), v = len)
   isAre <- isAre(v = len)
-  messagePreProcess(Fils, " on Google Drive ", isAre, " ", format(fileSize, units = "auto"),
+  messagePreProcess(Fils, msgMiddle, isAre, " ", format(fileSize, units = "auto"),
                     verbose = verbose
   )
 }

@@ -33,7 +33,6 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath, tilesFolder = 
       message("Correct post processed file exists; returning it now...")
       return(terra::rast(targetFilePostProcessedFullPath))
     }
-
     if (fs::is_absolute_path(tilesFolder)) {
       tilesFolderFullPath <- file.path(tilesFolder, filePathSansExt(targetFile))
     } else {
@@ -69,6 +68,9 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath, tilesFolder = 
             setwd(tilesFolderFullPath)
             on.exit(setwd(ogwd))
             download_resumable_httr2(existing_tiles$id[1], existing_tiles$name[1])
+            singleTile <- terra::rast(file.path(tilesFolderFullPath, existing_tiles$name[1]))
+            targetObjCRS <- terra::crs(singleTile)
+            setwd(ogwd)
 
           }
         }
@@ -79,7 +81,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath, tilesFolder = 
         messagePreProcess("Downloading full file (", targetFile,") from\n", url, verbose = verbose)
         fileSize <- file$drive_resource[[1]]$size
         if (!is.null(fileSize))
-          messageAboutGoogleDriveFilesize(fileSize, verbose = verbose)
+          messageAboutFilesize(fileSize, verbose = verbose)
 
         download_resumable_httr2(url, targetFileFullPath)
         rfull <- terra::rast(targetFileFullPath)
@@ -118,14 +120,19 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath, tilesFolder = 
     missingTilesLocalAll <- setdiff(all_tile_names, dd)
     tilesToGet <- intersect(needed_tile_names, dd)
     haveLocalTiles <- FALSE
-    if (length(missingTilesLocal) == 0 && (length(missingTilesLocalAll) == 0 && doUploads %in% TRUE)) {
+    messagePreProcess("Need to load/get these tiles:\n", verbose = verbose)
+    messagePreProcess(paste(needed_tile_names, collapse =  ", "), verbose = verbose)
+    haveAllNeededTiles <- if (doUploads %in% TRUE) length(missingTilesLocalAll) == 0 else TRUE
+
+
+    if (length(missingTilesLocal) == 0 && (haveAllNeededTiles)) {
       messagePreProcess(
         "✅ All needed tiles are available locally. Proceeding to load only those.",
         verbose = verbose)
       haveLocalTiles <- TRUE
     } else {
       messagePreProcess(
-        "⚠️ Some tiles are missing locally. Will try to download tiles\n",
+        "⚠️ Tiles are missing locally. Will try to download these:\n",
         verbose = verbose)
       messagePreProcess(paste(missingTilesLocal, collapse = ", "), verbose = verbose)
       messagePreProcess(paste0("... from urlTiles (",urlTiles,")"), verbose = verbose)
@@ -213,14 +220,22 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath, tilesFolder = 
         # tile_rasters <- rastTiles(needed_tile_names, tilesFolderFullPath)
       }
     }
-    # if (haveLocalTiles %in% TRUE) {
-      tile_rasters <- rastTiles(needed_tile_names, tilesFolderFullPath)
-    # }
+    tile_rasters <- rastTiles(needed_tile_names, tilesFolderFullPath)
     if (noTiles %in% FALSE) {
       mosaic_raster <- terra::sprc(tile_rasters)
       final <- terra::crop(mosaic_raster, to_inTileGrid)
       rfull <- terra::writeRaster(terra::merge(final), filename = targetFilePostProcessedFullPath,
                                   overwrite = TRUE)
+      if (exists("file", inherits = FALSE)) {
+        fileSize <- file$drive_resource[[1]]$size
+        messageAboutFilesize(fileSize, verbose = verbose)
+        fsLocal <- file.size(targetFilePostProcessedFullPath)
+        dd1 <- dir(tilesFolderFullPath)
+        dd2 <- dir(tilesFolderFullPath, full.names = TRUE)
+        tilesUsed <- dd2[match(needed_tile_names, dd1)]
+        messageAboutFilesize(file.size(tilesUsed), verbose = verbose, msgMiddle = " on local drive using tiles ")
+
+      }
     }
     rfull
   }
@@ -577,7 +592,7 @@ best_square_grid <- function(m, n, min_tiles = 1, max_tiles = 1000) {
 
 makeTileGridFromGADMcode <- function(tileGrid, numTiles = NULL, crs) {
   g <- geodata::gadm(tileGrid, resolution = 2) |> Cache()
-  if (is.null(g)) {
+  if (is.null(g) || ("NULL" == g)) {
     # most likely geodata server is down
     tileExt <- terra::ext(c(xmin = -2342000, xmax = 3011000, ymin = 5860000, ymax = 9436000))
     tilePoly2 <- tileExt
