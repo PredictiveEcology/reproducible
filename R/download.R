@@ -1263,17 +1263,10 @@ download_resumable_httr2 <- function(file_name, local_path) {
   isGD <- isGoogleDriveURL(file_name) || inherits(file_name, "drive_id")
 
   if (isGD) {
-    file <- googledrive::drive_get(file_name)
-    file_id <- file$id
-    download_url <- googledriveIDtoDownloadURL(file_id)
     token <- googledrive::drive_token()
     bearer <- paste("Bearer", token$auth_token$credentials$access_token)
-    total_size <- as.numeric(file$drive_resource[[1]]$size)
-  } else {
-    download_url <- file_name
-    head_resp <- httr::HEAD(download_url)
-    total_size <- as.numeric(httr::headers(head_resp)[["content-length"]])
   }
+  total_size <- getRemoteFileSize(isGD, file_name)
 
   downloaded_bytes <- if (file.exists(local_path)) file.info(local_path)$size else 0
 
@@ -1326,4 +1319,19 @@ googledriveIDtoDownloadURL <- function(id) {
 
 googledriveIDtoHumanURL <- function(id) {
   paste0("https://drive.google.com/file/d/", id)
+}
+
+
+getRemoteFileSize <- function(isGD, url) {
+  if (isGD) {
+    file <- googledrive::drive_get(url)
+    file_id <- file$id
+    download_url <- googledriveIDtoDownloadURL(file_id)
+    total_size <- as.numeric(file$drive_resource[[1]]$size)
+  } else {
+    download_url <- url
+    head_resp <- httr::HEAD(download_url)
+    total_size <- as.numeric(httr::headers(head_resp)[["content-length"]])
+  }
+  total_size
 }
