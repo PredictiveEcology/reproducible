@@ -1258,48 +1258,64 @@ purgeChecksums <- function(checksumFile, fileToRemove) {
 # }
 
 
-
 download_resumable_httr2 <- function(file_name, local_path) {
   isGD <- isGoogleDriveURL(file_name) || inherits(file_name, "drive_id")
 
   if (isGD) {
+    file <- googledrive::drive_get(file_name)
+    file_id <- file$id
+    download_url <- googledriveIDtoDownloadURL(file_id)
     token <- googledrive::drive_token()
     bearer <- paste("Bearer", token$auth_token$credentials$access_token)
+    total_size <- as.numeric(file$drive_resource[[1]]$size)
+  } else {
+    download_url <- file_name
+    head_resp <- httr::HEAD(download_url)
+    total_size <- as.numeric(httr::headers(head_resp)[["content-length"]])
   }
-  total_size <- getRemoteFileSize(isGD, file_name)
 
   downloaded_bytes <- if (file.exists(local_path)) file.info(local_path)$size else 0
 
   if (total_size > downloaded_bytes) {
-    # Check if curl is available
     curl_path <- Sys.which("curl")
-    if (nzchar(curl_path)) {
-      # Use curl with resume support
-      method <- "curl"
-      extra_args <- "-C -"
-    } else {
-      # Fallback to libcurl or wininet (no resume support)
-      method <- if (.Platform$OS.type == "windows") "wininet" else "libcurl"
-      extra_args <- NULL
-      message("⚠️ 'curl' not found. Falling back to method = '", method, "' (no resume support).")
-    }
 
-    tryCatch({
-      utils::download.file(
-        url = download_url,
-        destfile = local_path,
-        method = method,
-        quiet = FALSE,
-        extra = extra_args
-      )
-      message("✅ Download completed using method = '", method, "'.")
-    }, error = function(e) {
-      stop("❌ Download failed: ", e$message)
-    })
+    # Expand ~ to full path for compatibility with system calls
+    local_path_expanded <- normalizePath(local_path, mustWork = FALSE)
+
+    if (nzchar(curl_path)) {
+      # Use system curl with resume and progress bar
+      cmd <- sprintf('"%s" -C - -o "%s" "%s"', curl_path, local_path_expanded, download_url)
+      message("📥 Starting download with system curl...")
+      status <- system(cmd, intern = FALSE, ignore.stdout = FALSE, ignore.stderr = FALSE)
+
+      if (status == 0) {
+        message("✅ Download completed or resumed using system curl.")
+      } else {
+        stop("❌ Download failed using system curl (exit code ", status, ").")
+      }
+
+    } else {
+      # Fallback to utils::download.file with libcurl or wininet
+      method <- if (.Platform$OS.type == "windows") "wininet" else "libcurl"
+      message("⚠️ 'curl' not found. Falling back to utils::download.file with method = '", method, "' (no resume support).")
+
+      tryCatch({
+        utils::download.file(
+          url = download_url,
+          destfile = local_path_expanded,
+          method = method,
+          quiet = FALSE
+        )
+        message("✅ Download completed using download.file with method = '", method, "'.")
+      }, error = function(e) {
+        stop("❌ Fallback download failed: ", e$message)
+      })
+    }
   } else {
     message("✅ File already fully downloaded.")
   }
 }
+
 messageAboutFilesize <- function(fileSize, verbose, msgMiddle = " on Google Drive ") {
   fileSize <- as.numeric(fileSize)
   len <- length(fileSize)
