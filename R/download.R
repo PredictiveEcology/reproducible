@@ -610,7 +610,6 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
       if (!is.null(dlFun)) {
         dlFunName <- dlFun
-        if (exists("aaaa", envir = .GlobalEnv)) browser()
         dlFunPoss <- try(.extractFunction(dlFun, envir = list2env(list(...))), silent = TRUE)
         if (is(dlFunPoss, "try-error"))
           dlFunPoss <- get0(dlFun, envir = .callingEnv)
@@ -1207,60 +1206,107 @@ purgeChecksums <- function(checksumFile, fileToRemove) {
 # }
 # Example usage
 
+# download_resumable_httr2 <- function(file_name, local_path) {
+#   # Authenticate and get file metadata
+#   # googledrive::drive_auth()
+#   isGD <- isGoogleDriveURL(file_name) || is(file_name, "drive_id")
+#   if (isGD) {
+#     file <- googledrive::drive_get(file_name)
+#     file_id <- file$id
+#     download_url <- googledriveIDtoDownloadURL(file_id)
+#     token <- googledrive::drive_token()
+#     bearer <- token$auth_token$credentials$access_token
+#     total_size <- as.numeric(file$drive_resource[[1]]$size)
+#     req <- httr2::request(download_url)
+#     req <- req |> httr2::req_auth_bearer_token(bearer)
+#
+#   } else {
+#     req <- httr2::request(file_name)
+#     head_req <- req |> httr2::req_method("HEAD")
+#     head_resp <- httr2::req_perform(head_req)
+#     total_size <- as.numeric(httr2::resp_header(head_resp, "content-length"))
+#
+#   }
+#
+#   # Build download URL
+#   # download_url <- paste0("https://www.googleapis.com/drive/v3/files/", file_id, "?alt=media")
+#
+#   # Get token
+#
+#   # Check how much has already been downloaded
+#   downloaded_bytes <- if (file.exists(local_path)) file.info(local_path)$size else 0
+#
+#   if (total_size > downloaded_bytes) {
+#
+#     # Create request with Range header
+#     req <- req |> # httr2::request(download_url) |>
+#       # httr2::req_auth_bearer_token(bearer) |>
+#       httr2::req_headers(Range = paste0("bytes=", downloaded_bytes, "-")) |>
+#       httr2::req_progress()
+#
+#     # Open connection in append mode
+#     con <- file(local_path, open = "ab")
+#     on.exit(try(close(con), silent = TRUE))
+#
+#     # Stream response and append to file
+#     browser()
+#     resp <- httr2::req_perform(req)
+#     body <- httr2::resp_body_raw(resp)
+#     writeBin(body, con)
+#     close(con)
+#   }
+# }
+
+
+
 download_resumable_httr2 <- function(file_name, local_path) {
-  # Authenticate and get file metadata
-  # googledrive::drive_auth()
-  isGD <- isGoogleDriveURL(file_name) || is(file_name, "drive_id")
+  isGD <- isGoogleDriveURL(file_name) || inherits(file_name, "drive_id")
+
   if (isGD) {
     file <- googledrive::drive_get(file_name)
     file_id <- file$id
     download_url <- googledriveIDtoDownloadURL(file_id)
     token <- googledrive::drive_token()
-    bearer <- token$auth_token$credentials$access_token
+    bearer <- paste("Bearer", token$auth_token$credentials$access_token)
     total_size <- as.numeric(file$drive_resource[[1]]$size)
-    req <- httr2::request(download_url)
-    req <- req |> httr2::req_auth_bearer_token(bearer)
-
   } else {
-    req <- httr2::request(file_name)
-    head_req <- req |> httr2::req_method("HEAD")
-    head_resp <- httr2::req_perform(head_req)
-    total_size <- as.numeric(httr2::resp_header(head_resp, "content-length"))
-
+    download_url <- file_name
+    head_resp <- httr::HEAD(download_url)
+    total_size <- as.numeric(httr::headers(head_resp)[["content-length"]])
   }
 
-  # Build download URL
-  # download_url <- paste0("https://www.googleapis.com/drive/v3/files/", file_id, "?alt=media")
-
-  # Get token
-
-  # Check how much has already been downloaded
   downloaded_bytes <- if (file.exists(local_path)) file.info(local_path)$size else 0
 
   if (total_size > downloaded_bytes) {
+    # Check if curl is available
+    curl_path <- Sys.which("curl")
+    if (nzchar(curl_path)) {
+      # Use curl with resume support
+      method <- "curl"
+      extra_args <- "-C -"
+    } else {
+      # Fallback to libcurl or wininet (no resume support)
+      method <- if (.Platform$OS.type == "windows") "wininet" else "libcurl"
+      extra_args <- NULL
+      message("⚠️ 'curl' not found. Falling back to method = '", method, "' (no resume support).")
+    }
 
-    # Create request with Range header
-    req <- req |> # httr2::request(download_url) |>
-      # httr2::req_auth_bearer_token(bearer) |>
-      httr2::req_headers(Range = paste0("bytes=", downloaded_bytes, "-")) |>
-      httr2::req_progress()
-
-    # Open connection in append mode
-    con <- file(local_path, open = "ab")
-    on.exit(try(close(con), silent = TRUE))
-
-    # Stream response and append to file
-    resp <- httr2::req_perform(req)
-    body <- httr2::resp_body_raw(resp)
-    writeBin(body, con)
-    close(con)
+    tryCatch({
+      utils::download.file(
+        url = download_url,
+        destfile = local_path,
+        method = method,
+        quiet = FALSE,
+        extra = extra_args
+      )
+      message("✅ Download completed using method = '", method, "'.")
+    }, error = function(e) {
+      stop("❌ Download failed: ", e$message)
+    })
+  } else {
+    message("✅ File already fully downloaded.")
   }
 }
-
-
-
-
-
 messageAboutFilesize <- function(fileSize, verbose, msgMiddle = " on Google Drive ") {
   fileSize <- as.numeric(fileSize)
   len <- length(fileSize)

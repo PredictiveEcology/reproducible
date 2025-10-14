@@ -1,9 +1,76 @@
+#' Alternative to `prepInputs` that can use Spatial Tiles stored locally or on Google Drive
+#'
+#' Downloads, processes and optionally uploads a `SpatRaster` object through a tiling intermediary.
+#' If the original `url` is for a very large object, but `to` is a relatively small subset
+#' of the area represented by the spatial file at `url`, then this function will
+#' potentially by-pass the download of the large file at `url` and instead only download
+#' the minimum number of tiles necessary to cover the `to` area. When `doUploads` is
+#' TRUE, then this function will potentially create and upload the tiles to `tileFolder`,
+#' prior to returning the spatial object, `postProcess`ed to `to`. This function supports
+#' both Google Drive and HTTP(S) URLs.
+#'
+#'
+#' @param targetFile Character. Name of the target file to be downloaded or processed.
+#'   If missing, it will be inferred from the URL or Google Drive metadata.
+#' @param url Character. URL to the full dataset (Google Drive or HTTP/S).
+#' @param destinationPath Character. Path to the directory where files will be downloaded and processed.
+#' @param to A spatial object (e.g., `SpatRaster`, `SpatVector`, `sf`, or `Spatial*`) defining the area of interest.
+#' @param tilesFolder A local file path to put tiles. If this is an absolute path, then
+#'   that will be used; if it is a relative path, then it will be
+#'   `file.path(destinationPath, tilesFolder)`
+#' @param urlTiles Character. URL to the tile source (e.g., Google Drive folder or HTTP/S endpoint). Default is `getOption("reproducible.prepInputsUrlTiles", NULL)`.
+#' @param doUploads Logical. Whether to upload processed tiles.
+#'   Default is `getOption("reproducible.prepInputsDoUploads", FALSE)`.
 #' @param tileGrid Either length 3 character string, such as "CAN", to be sent to `geodata::gadm(...)`
 #'   or an actual `SpatVector` object with a grid of polygons
-prepInputsWithTiles <- function(targetFile, url, destinationPath, tilesFolder = "tiles",
+#' @param numTiles Integer. Number of tiles to generate. Optional.
+#' @param plot.grid Logical. Whether to plot the tile grid and area of interest. Default is `FALSE`.
+#' @param verbose Logical or numeric. Controls verbosity of messages. Default is `getOption("reproducible.verbose")`.
+#'
+#' @return A `SpatRaster` object cropped to the area of interest (`to`), composed of the necessary tiles.
+#' If the post-processed file already exists locally, it will be returned directly.
+#'
+#' @details
+#' This function can be triggered *inside* `prepInputs`
+#' if the `to` is supplied and both `url` and `urlTiles` are supplied. **NOTE**:
+#' `urlTiles` can be supplied using the
+#' `option(reproducible.prepInputsUrlTiles = someGoogleDriveFolderURL`), so the original
+#' `prepInputs` function call can remain unaffected.
+#'
+#' This function is useful for working with large spatial datasets, but where the user
+#' only requires a "relatively small" section of that dataset. This function will
+#' potentially bypass the full download and download only the tiles that are necessary
+#' for the `to`.
+#' It handles downloading only the required tiles based on spatial intersection
+#' with the target area, and supports resumable downloads from Google Drive or HTTP/S sources.
+#'
+#' If `targetFile` is missing, the function attempts to infer it from the URL
+#' using the `Content-Disposition` header or the basename of the URL.
+#' For Google Drive URLs, it uses the file metadata.
+#'
+#' @seealso [googledrive::drive_get()], [terra::rast()], [terra::crop()], [terra::merge()]
+#'
+#' @examples
+#' \dontrun{
+#' to <- sf::st_as_sf(sf::st_sfc(sf::st_point(c(-123.3656, 48.4284)), crs = 4326))
+#' result <- prepInputsWithTiles(
+#'   url = "https://example.com/data.tif",
+#'   destinationPath = tempdir(),
+#'   to = to,
+#'   urlTiles = "https://example.com/tiles/",
+#'   tileGrid = "CAN"
+#' )
+#' }
+#'
+#' @export
+prepInputsWithTiles <- function(targetFile, url, destinationPath,
+                                to,
+                                tilesFolder = "tiles",
                                 urlTiles = getOption("reproducible.prepInputsUrlTiles", NULL),
-                                to, doUploads = getOption("reproducible.prepInputsDoUploads", FALSE),
-                                tileGrid = "CAN", numTiles = NULL, plot.grid = FALSE,
+                                doUploads = getOption("reproducible.prepInputsDoUploads", FALSE),
+                                tileGrid = "CAN",
+                                numTiles = NULL,
+                                plot.grid = FALSE,
                                 verbose = getOption("reproducible.verbose")) {
 
   if (missing(to) || is.null(urlTiles)) {
@@ -130,10 +197,6 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath, tilesFolder = 
   rfull
 
 }
-
-library(terra)
-library(parallel)
-library(fs)
 
 tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_names, nx = 10, ny = 5,
                                    verbose = getOption("reproducible.verbose")) {
@@ -563,14 +626,13 @@ crsFromGoogleDriveTile <- function(tilesFolderFullPath, existing_tiles) {
 crsFromLocalFile <- function(targetFileFullPath, targetObjCRS) {
   targetObj <- try(terra::rast(targetFileFullPath))
   if (is(targetObj, "try-error")) {
-    unlink(targetFileFullPath, force = TRUE)
+    # unlink(targetFileFullPath, force = TRUE)
     message("File appears to be corrupt; deleting it and trying local tiles, then remotes")
   } else {
     targetObjCRS <- terra::crs(targetObj)
   }
   targetObjCRS
 }
-
 
 
 getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath, targetFile,
