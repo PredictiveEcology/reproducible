@@ -1210,25 +1210,38 @@ purgeChecksums <- function(checksumFile, fileToRemove) {
 download_resumable_httr2 <- function(file_name, local_path) {
   # Authenticate and get file metadata
   # googledrive::drive_auth()
-  file <- googledrive::drive_get(file_name)
-  file_id <- file$id
+  isGD <- isGoogleDriveURL(file_name)
+  if (isGD) {
+    file <- googledrive::drive_get(file_name)
+    file_id <- file$id
+    download_url <- googledriveIDtoDownloadURL(file_id)
+    token <- googledrive::drive_token()
+    bearer <- token$auth_token$credentials$access_token
+    total_size <- as.numeric(file$drive_resource[[1]]$size)
+    req <- httr2::request(download_url)
+    req <- req |> httr2::req_auth_bearer_token(bearer)
+
+  } else {
+    req <- httr2::request(file_name)
+    head_req <- req |> httr2::req_method("HEAD")
+    head_resp <- httr2::req_perform(head_req)
+    total_size <- as.numeric(httr2::resp_header(head_resp, "content-length"))
+
+  }
 
   # Build download URL
-  download_url <- googledriveIDtoDownloadURL(file_id)
   # download_url <- paste0("https://www.googleapis.com/drive/v3/files/", file_id, "?alt=media")
 
   # Get token
-  token <- googledrive::drive_token()
-  bearer <- token$auth_token$credentials$access_token
 
   # Check how much has already been downloaded
   downloaded_bytes <- if (file.exists(local_path)) file.info(local_path)$size else 0
 
-  if (as.numeric(file$drive_resource[[1]]$size) > downloaded_bytes) {
+  if (total_size > downloaded_bytes) {
 
     # Create request with Range header
-    req <- httr2::request(download_url) |>
-      httr2::req_auth_bearer_token(bearer) |>
+    req <- req |> # httr2::request(download_url) |>
+      # httr2::req_auth_bearer_token(bearer) |>
       httr2::req_headers(Range = paste0("bytes=", downloaded_bytes, "-")) |>
       httr2::req_progress()
 
