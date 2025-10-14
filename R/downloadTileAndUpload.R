@@ -604,8 +604,15 @@ lsExistingTilesOnGoogleDrive <- function(urlTiles, targetFile) {
 }
 
 crsFromLocalTile <- function(tilesFolderFullPath, dirTilesFolder) {
-  singleTile <- terra::rast(file.path(tilesFolderFullPath, dirTilesFolder[1]))
-  targetObjCRS <- terra::crs(singleTile)
+  targetObjCRS <- tryRastThenGetCRS(file.path(tilesFolderFullPath, dirTilesFolder[1]))
+  # singleTile <- try(terra::rast(file.path(tilesFolderFullPath, dirTilesFolder[1])))
+  # if (is(singleTile, "try-error")) {
+  #   unlink(singleTile)
+  #   targetObjCRS <- NULL
+  # } else {
+  #   targetObjCRS <- terra::crs(singleTile)
+  # }
+  targetObjCRS
 }
 
 
@@ -616,22 +623,23 @@ crsFromGoogleDriveTile <- function(tilesFolderFullPath, existing_tiles) {
   setwd(tilesFolderFullPath)
   on.exit(setwd(ogwd))
   download_resumable_httr2(existing_tiles$id[1], existing_tiles$name[1])
-  singleTile <- terra::rast(file.path(tilesFolderFullPath, existing_tiles$name[1]))
-  targetObjCRS <- terra::crs(singleTile)
+  targetObjCRS <- tryRastThenGetCRS(file.path(tilesFolderFullPath, existing_tiles$name[1]))
+  # singleTile <- terra::rast(file.path(tilesFolderFullPath, existing_tiles$name[1]))
+  # targetObjCRS <- terra::crs(singleTile)
   setwd(ogwd)
   targetObjCRS
 }
 
 
 crsFromLocalFile <- function(targetFileFullPath, targetObjCRS) {
-  targetObj <- try(terra::rast(targetFileFullPath))
-  if (is(targetObj, "try-error")) {
-    # unlink(targetFileFullPath, force = TRUE)
-    message("File appears to be corrupt; deleting it and trying local tiles, then remotes")
-  } else {
-    targetObjCRS <- terra::crs(targetObj)
-  }
-  targetObjCRS
+  tryRastThenGetCRS(targetFileFullPath)
+  # targetObj <- try(terra::rast(targetFileFullPath))
+  # if (is(targetObj, "try-error")) {
+  #   # unlink(targetFileFullPath, force = TRUE)
+  #   message("File appears to be corrupt; deleting it and trying local tiles, then remotes")
+  # } else {
+  #   targetObjCRS <- terra::crs(targetObj)
+  # }
 }
 
 
@@ -646,16 +654,17 @@ getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath
     for (i in 1:2) { # try local file, then googledrive, then back to local after googledrive download
       if (length(dirTilesFolder))  {
         targetObjCRS <- crsFromLocalTile(tilesFolderFullPath, dirTilesFolder)
-        break
+        if (!is.null(targetObjCRS)) break
       }
       if (is.null(targetObjCRS)) {
         existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
+        browser()
         if (!is.null(existing_tiles)) {
           targetObjCRS <- crsFromGoogleDriveTile(tilesFolderFullPath, existing_tiles)
         }
       }
       dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
-      if (is.null(existing_tiles) && length(dirTilesFolder) ==0)
+      if (is.null(existing_tiles) && length(dirTilesFolder) == 0)
         break
     }
   }
@@ -795,4 +804,18 @@ messageAboutFilesizeCompare <- function(fileSize, needed_tile_names,
   dd2 <- dir(tilesFolderFullPath, full.names = TRUE)
   tilesUsed <- dd2[match(needed_tile_names, dd1)]
   messageAboutFilesize(file.size(tilesUsed), verbose = verbose, msgMiddle = " on local drive using tiles ")
+}
+
+
+
+tryRastThenGetCRS <- function(targetFileFullPath) {
+  targetObj <- try(terra::rast(targetFileFullPath))
+  if (is(targetObj, "try-error")) {
+    # unlink(targetFileFullPath, force = TRUE)
+    targetObjCRS <- NULL
+    message("File appears to be corrupt; deleting it and trying local tiles, then remotes")
+  } else {
+    targetObjCRS <- terra::crs(targetObj)
+  }
+  targetObjCRS
 }

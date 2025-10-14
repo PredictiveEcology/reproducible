@@ -1261,53 +1261,90 @@ purgeChecksums <- function(checksumFile, fileToRemove) {
 download_resumable_httr2 <- function(file_name, local_path) {
   isGD <- isGoogleDriveURL(file_name) || inherits(file_name, "drive_id")
 
+  # Normalize path to avoid issues with ~
+  local_path_expanded <- normalizePath(local_path, mustWork = FALSE)
+
   if (isGD) {
+    # Google Drive download using httr2 (no resume support)
     file <- googledrive::drive_get(file_name)
     file_id <- file$id
     download_url <- googledriveIDtoDownloadURL(file_id)
     token <- googledrive::drive_token()
-    bearer <- paste("Bearer", token$auth_token$credentials$access_token)
-    total_size <- as.numeric(file$drive_resource[[1]]$size)
-  } else {
-    download_url <- file_name
-    head_resp <- httr::HEAD(download_url)
-    total_size <- as.numeric(httr::headers(head_resp)[["content-length"]])
-  }
+    bearer <- token$auth_token$credentials$access_token
 
-  downloaded_bytes <- if (file.exists(local_path)) file.info(local_path)$size else 0
+    req <- httr2::request(download_url) |>
+      httr2::req_auth_bearer_token(bearer) |>
+      httr2::req_progress()
 
-  if (total_size > downloaded_bytes) {
-    # Expand ~ to full path for compatibility
-    local_path_expanded <- normalizePath(local_path, mustWork = FALSE)
-
-    # Check if curl is available
-    curl_path <- Sys.which("curl")
-    if (nzchar(curl_path)) {
-      method <- "curl"
-      extra_args <- "-C -"
-      message("📥 Using 'curl' with resume support.")
-    } else {
-      method <- if (.Platform$OS.type == "windows") "wininet" else "libcurl"
-      extra_args <- NULL
-      message("⚠️ 'curl' not found. Using method = '", method, "' (no resume support).")
-    }
+    con <- file(local_path_expanded, open = "wb")
+    on.exit(try(close(con), silent = TRUE), add = TRUE)
 
     tryCatch({
-      utils::download.file(
-        url = download_url,
-        destfile = local_path_expanded,
-        method = method,
-        quiet = FALSE,
-        extra = extra_args
-      )
-      message("✅ Download completed using method = '", method, "'.")
+      resp <- httr2::req_perform(req)
+      body <- httr2::resp_body_raw(resp)
+      writeBin(body, con)
+      message("✅ Google Drive download completed using httr2.")
     }, error = function(e) {
-      stop("❌ Download failed: ", e$message)
+      stop("❌ Google Drive download failed: ", e$message)
     })
+
   } else {
-    message("✅ File already fully downloaded.")
+    # Non-Google Drive download
+    if (.Platform$OS.type != "windows" && nzchar(Sys.which("curl"))) {
+      # Use download.file with curl on Linux/macOS
+      method <- "curl"
+      extra_args <- "-C -"
+      message("📥 Using 'curl' with resume support on Linux/macOS.")
+
+      tryCatch({
+        utils::download.file(
+          url = file_name,
+          destfile = local_path_expanded,
+          method = method,
+          quiet = FALSE,
+          extra = extra_args
+        )
+        message("✅ Non-Google Drive download completed using download.file with curl.")
+      }, error = function(e) {
+        stop("❌ Non-Google Drive download failed: ", e$message)
+      })
+
+    } else {
+      # Use httr2 for non-Google Drive downloads on Windows or if curl is unavailable
+      downloaded_bytes <- if (file.exists(local_path_expanded)) file.info(local_path_expanded)$size else 0
+
+      # Try to get total size
+      head_resp <- try(httr::HEAD(file_name), silent = TRUE)
+      total_size <- if (inherits(head_resp, "response")) {
+        as.numeric(httr::headers(head_resp)[["content-length"]])
+      } else {
+        NA
+      }
+
+      req <- httr2::request(file_name)
+
+      if (!is.na(total_size) && total_size > downloaded_bytes) {
+        req <- req |>
+          httr2::req_headers(Range = paste0("bytes=", downloaded_bytes, "-"))
+      }
+
+      req <- req |> httr2::req_progress()
+
+      con <- file(local_path_expanded, open = if (downloaded_bytes > 0) "ab" else "wb")
+      on.exit(try(close(con), silent = TRUE), add = TRUE)
+
+      tryCatch({
+        resp <- httr2::req_perform(req)
+        body <- httr2::resp_body_raw(resp)
+        writeBin(body, con)
+        message("✅ Non-Google Drive download completed using httr2.")
+      }, error = function(e) {
+        stop("❌ Non-Google Drive download failed: ", e$message)
+      })
+    }
   }
 }
+
 
 
 messageAboutFilesize <- function(fileSize, verbose, msgMiddle = " on Google Drive ") {
