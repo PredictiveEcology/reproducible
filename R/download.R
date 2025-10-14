@@ -1210,7 +1210,7 @@ purgeChecksums <- function(checksumFile, fileToRemove) {
 download_resumable_httr2 <- function(file_name, local_path) {
   # Authenticate and get file metadata
   # googledrive::drive_auth()
-  isGD <- isGoogleDriveURL(file_name)
+  isGD <- isGoogleDriveURL(file_name) || is(file_name, "drive_id")
   if (isGD) {
     file <- googledrive::drive_get(file_name)
     file_id <- file$id
