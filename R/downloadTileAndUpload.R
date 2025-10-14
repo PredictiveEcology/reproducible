@@ -1,244 +1,228 @@
 #' @param tileGrid Either length 3 character string, such as "CAN", to be sent to `geodata::gadm(...)`
 #'   or an actual `SpatVector` object with a grid of polygons
-prepInputsWithTiles <- function(targetFile, url, destinationPath, tilesFolder = "tiles", urlTiles,
+prepInputsWithTiles <- function(targetFile, url, destinationPath, tilesFolder = "tiles",
+                                urlTiles = getOption("reproducible.prepInputsUrlTiles"),
                                 to, doUploads = getOption("reproducible.prepInputsDoUploads", FALSE),
                                 tileGrid = "CAN", numTiles = NULL, plot.grid = FALSE,
                                 verbose = getOption("reproducible.verbose")) {
 
-  if (missing(to) || missing(urlTiles)) {
+  if (missing(to) || missing(urlTiles) || is.null(urlTiles)) {
     messagePreProcess(
-      "prepInputsWithTiles must have `to` argument specified with a spatial object",
-      verbose = verbose)
+      "prepInputsWithTiles must have `urlTiles` and `url` plus a `to` spatial object",
+      "returning `'NULL'`", verbose = verbose)
     return("NULL")
-  } else {
-    # Preview intersecting tile IDs
-    urlAsID <- extract_drive_id(url)
-    if (identical(as.character(urlAsID), as.character(url))) {
-      url <- googledriveIDtoHumanURL(url)
-    }
-
-    if (missing(targetFile)) {
-      file <- googledrive::drive_get(url) |>
-        Cache(verbose = FALSE, notOlderThan = Sys.time() - 60*60) # refresh every hour
-      file_id <- file$id
-      targetFile <- file$name
-      dPath <- destinationPath# "~/testing/"
-    }
-    dig <- .robustDigest(to)
-
-    # If the postprocessed final object is available; pull the plug, if not in dev mode
-    targetFileFullPath <- file.path(dPath, targetFile)
-    targetFilePostProcessedFullPath <- .suffix(targetFileFullPath, dig)
-    if (file.exists(targetFilePostProcessedFullPath) && doUploads %in% FALSE) {
-      message("Correct post processed file exists; returning it now...")
-      return(terra::rast(targetFilePostProcessedFullPath))
-    }
-    if (fs::is_absolute_path(tilesFolder)) {
-      tilesFolderFullPath <- file.path(tilesFolder, filePathSansExt(targetFile))
-    } else {
-      tilesFolderFullPath <- file.path(dPath, tilesFolder, filePathSansExt(targetFile))
-    }
-    # haveLocalFullFile <- file.exists(targetFileFullPath)
-
-    targetObjCRS <- NULL # don't know it yet
-    if (file.exists(targetFileFullPath)) {
-      targetObj <- try(terra::rast(targetFileFullPath))
-      if (is(targetObj, "try-error")) {
-        unlink(targetFileFullPath, force = TRUE)
-        message("File appears to be corrupt; deleting it and trying local tiles, then remotes")
-      } else {
-        targetObjCRS <- terra::crs(targetObj)
-      }
-    }
-    # need to get the targetObjCRS to know what the tiles will look like
-    dd <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
-    if (is.null(targetObjCRS)) {
-      for (i in 1:2) {
-        if (length(dd))  {
-          singleTile <- terra::rast(file.path(tilesFolderFullPath, dd[1]))
-          targetObjCRS <- terra::crs(singleTile)
-          break
-        }
-        if (is.null(targetObjCRS)) {
-          existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
-          if (!is.null(existing_tiles)) {
-            ogwd <- getwd()
-            if (dir.exists(tilesFolderFullPath) %in% FALSE)
-              dir.create(tilesFolderFullPath, recursive = TRUE, showWarnings = FALSE)
-            setwd(tilesFolderFullPath)
-            on.exit(setwd(ogwd))
-            download_resumable_httr2(existing_tiles$id[1], existing_tiles$name[1])
-            singleTile <- terra::rast(file.path(tilesFolderFullPath, existing_tiles$name[1]))
-            targetObjCRS <- terra::crs(singleTile)
-            setwd(ogwd)
-
-          }
-        }
-      }
-    }
-    if (is.null(targetObjCRS)) {
-      # still doesn't have it
-        messagePreProcess("Downloading full file (", targetFile,") from\n", url, verbose = verbose)
-        fileSize <- file$drive_resource[[1]]$size
-        if (!is.null(fileSize))
-          messageAboutFilesize(fileSize, verbose = verbose)
-
-        download_resumable_httr2(url, targetFileFullPath)
-        rfull <- terra::rast(targetFileFullPath)
-        targetObjCRS <- terra::crs(rfull)
-        # }
-
-    }
-
-    noTiles <- FALSE
-
-    if (is.character(tileGrid)) {
-      tg <- makeTileGridFromGADMcode(tileGrid, numTiles, crs = targetObjCRS) |> Cache(verbose = verbose - 1)
-      tileGrid <- tg$tileGrid
-      numTiles <- tg$numTiles
-      theArea <- tg$area
-    }
-    if (isTRUE(plot.grid)) {
-      a <- terra::centroids(tileGrid)
-      terra::plot(tileGrid)
-      terra::text(a, labels = a$tile_id, col = "blue", cex = 1.2)
-      tilePolyTG <- terra::project(theArea, tileGrid)
-      terra::plot(tilePolyTG, add = TRUE)
-      terra::plot(to, add = TRUE, col = "red")
-    }
-    # Find intersecting tiles
-    all_tile_names <- sort(makeTileNames(tileGrid$tile_id))
-
-
-    to_inTileGrid <- postProcessTo(to, to = targetObjCRS, verbose = -2)
-    intersecting_tiles <- terra::intersect(tileGrid, terra::ext(to_inTileGrid))
-    needed_tile_names <- makeTileNames(intersecting_tiles$tile_id)
-    needed_tile_names <- sort(needed_tile_names)
-
-    missingTilesLocal <- setdiff(needed_tile_names, dd)
-
-    missingTilesLocalAll <- setdiff(all_tile_names, dd)
-    tilesToGet <- intersect(needed_tile_names, dd)
-    haveLocalTiles <- FALSE
-    messagePreProcess("Need to load/get these tiles:\n", verbose = verbose)
-    messagePreProcess(paste(needed_tile_names, collapse =  ", "), verbose = verbose)
-    haveAllNeededTiles <- if (doUploads %in% TRUE) length(missingTilesLocalAll) == 0 else TRUE
-
-
-    if (length(missingTilesLocal) == 0 && (haveAllNeededTiles)) {
-      messagePreProcess(
-        "✅ All needed tiles are available locally. Proceeding to load only those.",
-        verbose = verbose)
-      haveLocalTiles <- TRUE
-    } else {
-      messagePreProcess(
-        "⚠️ Tiles are missing locally. Will try to download these:\n",
-        verbose = verbose)
-      messagePreProcess(paste(missingTilesLocal, collapse = ", "), verbose = verbose)
-      messagePreProcess(paste0("... from urlTiles (",urlTiles,")"), verbose = verbose)
-    }
-
-    if (haveLocalTiles %in% FALSE || doUploads) {
-      existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
-
-      available_tile_names_onGoogleDrive <- existing_tiles$name
-
-      # Determine which tiles are missing
-      missingTilesOnRemote <- setdiff(needed_tile_names, available_tile_names_onGoogleDrive)
-      tilesToGet <- intersect(needed_tile_names, available_tile_names_onGoogleDrive)
-
-      haveRemoteTiles <- all(all_tile_names %in% existing_tiles$name)
-      # Preview decision
-      needUploads <- TRUE
-      doTileDownload <- FALSE
-      missingTilesRemoteAll <- setdiff(all_tile_names, existing_tiles$name)
-
-      tilesFullOnRemote <- TRUE
-      if (doUploads %in% TRUE) tilesFullOnRemote <- length(missingTilesRemoteAll) == 0
-
-      if (length(missingTilesOnRemote) == 0 && tilesFullOnRemote) {
-        doTileDownload <- haveLocalTiles %in% FALSE
-        messagePreProcess("✅ All needed tiles are available on Google Drive.  ",
-                          verbose = verbose)
-        needUploads <- FALSE
-        if (doTileDownload) {
-          messagePreProcess("Proceeding to download only the needed tiles...", verbose = verbose)
-        } else {
-          messagePreProcess("Nothing to download", verbose = verbose)
-        }
-
-
-      } else {
-        messagePreProcess("⚠️ Some tiles are missing on Google Drive:")
-
-        missingOnes <- if (doUploads) missingTilesRemoteAll else missingTilesOnRemote
-
-        message(paste(missingOnes, collapse = ", "), verbose = verbose)
-      }
-
-      # if (haveLocal %in% FALSE && needUploads %in% FALSE) {
-      if (haveLocalTiles %in% FALSE && doTileDownload %in% TRUE) {
-        whGet <- match(tilesToGet, existing_tiles$name)
-        tileIDSToGet <- existing_tiles[whGet, ]
-        ogwd <- getwd()
-        if (dir.exists(tilesFolderFullPath) %in% FALSE)
-          dir.create(tilesFolderFullPath, recursive = TRUE, showWarnings = FALSE)
-        setwd(tilesFolderFullPath)
-        on.exit(setwd(ogwd))
-        by(tileIDSToGet, seq_len(NROW(tileIDSToGet)), function(i) {
-          download_resumable_httr2(i$id, i$name)
-        })
-        haveLocalTiles <- TRUE
-        setwd(ogwd)
-      }
-
-      fe <- file.exists(targetFileFullPath)
-
-      if (needUploads %in% TRUE || (doUploads %in% TRUE && haveRemoteTiles %in% FALSE)) {
-        if (haveLocalTiles %in% FALSE)
-          tile_raster_write_auto(targetFileFullPath, tilesFolderFullPath, tileGrid,
-                                 all_tile_names = all_tile_names,
-                                 nx = numTiles[[1]], ny = numTiles[[2]],
-                                 verbose = verbose)
-        upload_tiles_to_drive_url_parallel(tilesFolderFullPath, urlTiles, targetFileFullPath,
-                                           verbose = verbose)
-        tile_paths <- dir(tilesFolderFullPath, pattern = "\\.tif$")
-        saExt <- terra::ext(to_inTileGrid)
-
-        # Filter tiles that intersect the study area
-        intersecting_tiles2 <- purrr::keep(tile_paths, function(path) {
-          tile_ext <- terra::ext(terra::rast(file.path(tilesFolderFullPath, path)))
-
-          # Check for bounding box overlap
-          !(tile_ext[1] > saExt[2] || tile_ext[2] < saExt[1] ||  # x overlap
-              tile_ext[3] > saExt[4] || tile_ext[4] < saExt[3])    # y overlap
-        })
-        if (!identical(needed_tile_names, intersecting_tiles2)) {
-          browser() # the intersecting_tiles2 from the newly created need to be the same as the
-          # expected from the grid
-        }
-        # tile_rasters <- rastTiles(needed_tile_names, tilesFolderFullPath)
-      }
-    }
-    tile_rasters <- rastTiles(needed_tile_names, tilesFolderFullPath)
-    if (noTiles %in% FALSE) {
-      mosaic_raster <- terra::sprc(tile_rasters)
-      final <- terra::crop(mosaic_raster, to_inTileGrid)
-      rfull <- terra::writeRaster(terra::merge(final), filename = targetFilePostProcessedFullPath,
-                                  overwrite = TRUE)
-      if (exists("file", inherits = FALSE)) {
-        fileSize <- file$drive_resource[[1]]$size
-        messageAboutFilesize(fileSize, verbose = verbose)
-        fsLocal <- file.size(targetFilePostProcessedFullPath)
-        dd1 <- dir(tilesFolderFullPath)
-        dd2 <- dir(tilesFolderFullPath, full.names = TRUE)
-        tilesUsed <- dd2[match(needed_tile_names, dd1)]
-        messageAboutFilesize(file.size(tilesUsed), verbose = verbose, msgMiddle = " on local drive using tiles ")
-
-      }
-    }
-    rfull
   }
+
+  # Preview intersecting tile IDs
+  urlAsID <- extract_drive_id(url)
+  if (identical(as.character(urlAsID), as.character(url))) {
+    url <- googledriveIDtoHumanURL(url)
+  }
+
+  if (missing(targetFile)) {
+    file <- googledrive::drive_get(url) |>
+      Cache(verbose = FALSE, notOlderThan = Sys.time() - 60*60) # refresh every hour
+    fileSize <- file$drive_resource[[1]]$size
+    file_id <- file$id
+    targetFile <- file$name
+  }
+  dig <- .robustDigest(to)
+
+  # If the postprocessed final object is available; pull the plug, if not in dev mode
+  targetFileFullPath <- file.path(destinationPath, targetFile)
+  targetFilePostProcessedFullPath <- .suffix(targetFileFullPath, dig)
+  if (file.exists(targetFilePostProcessedFullPath) && doUploads %in% FALSE) {
+    message("Correct post processed file exists; returning it now...")
+    return(terra::rast(targetFilePostProcessedFullPath))
+  }
+  if (fs::is_absolute_path(tilesFolder)) {
+    tilesFolderFullPath <- file.path(tilesFolder, filePathSansExt(targetFile))
+  } else {
+    tilesFolderFullPath <- file.path(destinationPath, tilesFolder, filePathSansExt(targetFile))
+  }
+  dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
+
+  # Need to get target object crs targetObjCRS; first try local file, then local tile,
+  #     then gdrive tile, then full remote file
+  targetObjCRS <- getTargetCRS(targetFileFullPath, dirTilesFolder, tilesFolderFullPath, targetFile,
+                           url, urlTiles, fileSize, verbose)
+  # targetObjCRS <- NULL # don't know it yet
+  # if (file.exists(targetFileFullPath)) {
+  #   targetObjCRS <- crsFromLocalFile(targetFileFullPath, targetObjCRS)
+  # }
+  # # need to get the targetObjCRS to know what the tiles will look like
+  # if (is.null(targetObjCRS)) {
+  #   for (i in 1:2) { # try local file, then googledrive, then back to local after googledrive download
+  #     if (length(dirTilesFolder))  {
+  #       targetObjCRS <- crsFromLocalTile(tilesFolderFullPath, dirTilesFolder)
+  #       break
+  #     }
+  #     if (is.null(targetObjCRS)) {
+  #       existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
+  #       if (!is.null(existing_tiles)) {
+  #         targetObjCRS <- crsFromGoogleDriveTile(tilesFolderFullPath, existing_tiles)
+  #       }
+  #     }
+  #   }
+  # }
+  # if (is.null(targetObjCRS)) {
+  #   # still doesn't have it
+  #   messagePreProcess("Downloading full file (", targetFile,") from\n", url, verbose = verbose)
+  #   if (!exists("fileSize", inherits = FALSE))
+  #     messageAboutFilesize(fileSize, verbose = verbose)
+  #   download_resumable_httr2(url, targetFileFullPath)
+  #   # rfull <- terra::rast(targetFileFullPath)
+  #   targetObjCRS <- terra::crs(terra::rast(targetFileFullPath))
+  # }
+
+  noTiles <- FALSE
+
+  if (is.character(tileGrid)) {
+    tg <- makeTileGridFromGADMcode(tileGrid, numTiles, crs = targetObjCRS) |> Cache(verbose = verbose - 1)
+    tileGrid <- tg$tileGrid
+    numTiles <- tg$numTiles
+    theArea <- tg$area
+  }
+  if (isTRUE(plot.grid)) {
+    a <- terra::centroids(tileGrid)
+    terra::plot(tileGrid)
+    terra::text(a, labels = a$tile_id, col = "blue", cex = 1.2)
+    tilePolyTG <- terra::project(theArea, tileGrid)
+    terra::plot(tilePolyTG, add = TRUE)
+    terra::plot(to, add = TRUE, col = "red")
+  }
+  # Find intersecting tiles
+  all_tile_names <- sort(makeTileNames(tileGrid$tile_id))
+
+  to_inTileGrid <- postProcessTo(to, to = targetObjCRS, verbose = -2)
+  intersecting_tiles <- terra::intersect(tileGrid, terra::ext(to_inTileGrid))
+  needed_tile_names <- makeTileNames(intersecting_tiles$tile_id)
+  needed_tile_names <- sort(needed_tile_names)
+
+  missingTilesLocal <- setdiff(needed_tile_names, dirTilesFolder)
+
+  missingTilesLocalAll <- setdiff(all_tile_names, dirTilesFolder)
+  tilesToGet <- intersect(needed_tile_names, dirTilesFolder)
+  haveLocalTiles <- FALSE
+  messagePreProcess("Need to load/get these tiles:\n", verbose = verbose)
+  messagePreProcess(paste(needed_tile_names, collapse =  ", "), verbose = verbose)
+  haveAllNeededTiles <- if (doUploads %in% TRUE) length(missingTilesLocalAll) == 0 else TRUE
+
+
+  if (length(missingTilesLocal) == 0 && (haveAllNeededTiles)) {
+    messagePreProcess(
+      "✅ All needed tiles are available locally. Proceeding to load only those.",
+      verbose = verbose)
+    haveLocalTiles <- TRUE
+  } else {
+    messagePreProcess(
+      "⚠️ Tiles are missing locally. Will try to download these:\n",
+      verbose = verbose)
+    messagePreProcess(paste(missingTilesLocal, collapse = ", "), verbose = verbose)
+    messagePreProcess(paste0("... from urlTiles (",urlTiles,")"), verbose = verbose)
+  }
+
+  if (haveLocalTiles %in% FALSE || doUploads) {
+    existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
+
+    available_tile_names_onGoogleDrive <- existing_tiles$name
+
+    # Determine which tiles are missing
+    missingTilesOnRemote <- setdiff(needed_tile_names, available_tile_names_onGoogleDrive)
+    tilesToGet <- intersect(needed_tile_names, available_tile_names_onGoogleDrive)
+
+    haveRemoteTiles <- all(all_tile_names %in% existing_tiles$name)
+    # Preview decision
+    needUploads <- TRUE
+    doTileDownload <- FALSE
+    missingTilesRemoteAll <- setdiff(all_tile_names, existing_tiles$name)
+
+    tilesFullOnRemote <- TRUE
+    if (doUploads %in% TRUE) tilesFullOnRemote <- length(missingTilesRemoteAll) == 0
+
+    if (length(missingTilesOnRemote) == 0 && tilesFullOnRemote) {
+      doTileDownload <- haveLocalTiles %in% FALSE
+      messagePreProcess("✅ All needed tiles are available on Google Drive.  ",
+                        verbose = verbose)
+      needUploads <- FALSE
+      if (doTileDownload) {
+        messagePreProcess("Proceeding to download only the needed tiles...", verbose = verbose)
+      } else {
+        messagePreProcess("Nothing to download", verbose = verbose)
+      }
+
+
+    } else {
+      messagePreProcess("⚠️ Some tiles are missing on Google Drive:")
+
+      missingOnes <- if (doUploads) missingTilesRemoteAll else missingTilesOnRemote
+
+      message(paste(missingOnes, collapse = ", "), verbose = verbose)
+    }
+
+    # if (haveLocal %in% FALSE && needUploads %in% FALSE) {
+    if (haveLocalTiles %in% FALSE && doTileDownload %in% TRUE) {
+      whGet <- match(tilesToGet, existing_tiles$name)
+      tileIDSToGet <- existing_tiles[whGet, ]
+      ogwd <- getwd()
+      if (dir.exists(tilesFolderFullPath) %in% FALSE)
+        dir.create(tilesFolderFullPath, recursive = TRUE, showWarnings = FALSE)
+      setwd(tilesFolderFullPath)
+      on.exit(setwd(ogwd))
+      by(tileIDSToGet, seq_len(NROW(tileIDSToGet)), function(i) {
+        download_resumable_httr2(i$id, i$name)
+      })
+      haveLocalTiles <- TRUE
+      setwd(ogwd)
+    }
+
+    fe <- file.exists(targetFileFullPath)
+
+    if (needUploads %in% TRUE || (doUploads %in% TRUE && haveRemoteTiles %in% FALSE)) {
+      if (haveLocalTiles %in% FALSE)
+        tile_raster_write_auto(targetFileFullPath, tilesFolderFullPath, tileGrid,
+                               all_tile_names = all_tile_names,
+                               nx = numTiles[[1]], ny = numTiles[[2]],
+                               verbose = verbose)
+      upload_tiles_to_drive_url_parallel(tilesFolderFullPath, urlTiles, targetFileFullPath,
+                                         verbose = verbose)
+      tile_paths <- dir(tilesFolderFullPath, pattern = "\\.tif$")
+      saExt <- terra::ext(to_inTileGrid)
+
+      # Filter tiles that intersect the study area
+      intersecting_tiles2 <- purrr::keep(tile_paths, function(path) {
+        tile_ext <- terra::ext(terra::rast(file.path(tilesFolderFullPath, path)))
+
+        # Check for bounding box overlap
+        !(tile_ext[1] > saExt[2] || tile_ext[2] < saExt[1] ||  # x overlap
+            tile_ext[3] > saExt[4] || tile_ext[4] < saExt[3])    # y overlap
+      })
+      if (!identical(needed_tile_names, intersecting_tiles2)) {
+        browser() # the intersecting_tiles2 from the newly created need to be the same as the
+        # expected from the grid
+      }
+
+    }
+  }
+  tile_rasters <- rastTiles(needed_tile_names, tilesFolderFullPath)
+  if (noTiles %in% FALSE) {
+    mosaic_raster <- terra::sprc(tile_rasters)
+    final <- terra::crop(mosaic_raster, to_inTileGrid)
+    rfull <- terra::writeRaster(terra::merge(final), filename = targetFilePostProcessedFullPath,
+                                overwrite = TRUE)
+    if (exists("file", inherits = FALSE)) {
+      fileSize <- file$drive_resource[[1]]$size
+      messageAboutFilesize(fileSize, verbose = verbose)
+      fsLocal <- file.size(targetFilePostProcessedFullPath)
+      dd1 <- dir(tilesFolderFullPath)
+      dd2 <- dir(tilesFolderFullPath, full.names = TRUE)
+      tilesUsed <- dd2[match(needed_tile_names, dd1)]
+      messageAboutFilesize(file.size(tilesUsed), verbose = verbose, msgMiddle = " on local drive using tiles ")
+
+    }
+  }
+  rfull
+
 }
 
 library(terra)
@@ -648,4 +632,70 @@ lsExistingTilesOnGoogleDrive <- function(urlTiles, targetFile) {
     existing_tiles <- NULL
   }
   existing_tiles
+}
+
+crsFromLocalTile <- function(tilesFolderFullPath, dirTilesFolder) {
+  singleTile <- terra::rast(file.path(tilesFolderFullPath, dirTilesFolder[1]))
+  targetObjCRS <- terra::crs(singleTile)
+}
+
+
+crsFromGoogleDriveTile <- function(tilesFolderFullPath, existing_tiles) {
+  ogwd <- getwd()
+  if (dir.exists(tilesFolderFullPath) %in% FALSE)
+    dir.create(tilesFolderFullPath, recursive = TRUE, showWarnings = FALSE)
+  setwd(tilesFolderFullPath)
+  on.exit(setwd(ogwd))
+  download_resumable_httr2(existing_tiles$id[1], existing_tiles$name[1])
+  singleTile <- terra::rast(file.path(tilesFolderFullPath, existing_tiles$name[1]))
+  targetObjCRS <- terra::crs(singleTile)
+  setwd(ogwd)
+  targetObjCRS
+}
+
+
+crsFromLocalFile <- function(targetFileFullPath, targetObjCRS) {
+  targetObj <- try(terra::rast(targetFileFullPath))
+  if (is(targetObj, "try-error")) {
+    unlink(targetFileFullPath, force = TRUE)
+    message("File appears to be corrupt; deleting it and trying local tiles, then remotes")
+  } else {
+    targetObjCRS <- terra::crs(targetObj)
+  }
+  targetObjCRS
+}
+
+
+
+getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath, targetFile,
+                         url, urlTiles, fileSize, verbose) {
+  targetObjCRS <- NULL # don't know it yet
+  if (file.exists(targetFileFullPath)) {
+    targetObjCRS <- crsFromLocalFile(targetFileFullPath, targetObjCRS)
+  }
+  # need to get the targetObjCRS to know what the tiles will look like
+  if (is.null(targetObjCRS)) {
+    for (i in 1:2) { # try local file, then googledrive, then back to local after googledrive download
+      if (length(dirTilesFolder))  {
+        targetObjCRS <- crsFromLocalTile(tilesFolderFullPath, dirTilesFolder)
+        break
+      }
+      if (is.null(targetObjCRS)) {
+        existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
+        if (!is.null(existing_tiles)) {
+          targetObjCRS <- crsFromGoogleDriveTile(tilesFolderFullPath, existing_tiles)
+        }
+      }
+    }
+  }
+  if (is.null(targetObjCRS)) {
+    # still doesn't have it
+    messagePreProcess("Downloading full file (", targetFile,") from\n", url, verbose = verbose)
+    if (!exists("fileSize", inherits = FALSE))
+      messageAboutFilesize(fileSize, verbose = verbose)
+    download_resumable_httr2(url, targetFileFullPath)
+    # rfull <- terra::rast(targetFileFullPath)
+    targetObjCRS <- terra::crs(terra::rast(targetFileFullPath))
+  }
+  targetObjCRS
 }
