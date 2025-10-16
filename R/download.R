@@ -1184,7 +1184,7 @@ purgeChecksums <- function(checksumFile, fileToRemove) {
 
 
 
-download_resumable_httr2 <- function(file_name, local_path) {
+download_resumable_httr2 <- function(file_name, local_path, verbose = getOption("reproducible.verbose")) {
   isGD <- isGoogleDriveURL(file_name) || inherits(file_name, "drive_id")
 
   # Normalize path to avoid issues with ~
@@ -1224,7 +1224,7 @@ download_resumable_httr2 <- function(file_name, local_path) {
         extra_args <- paste("-L -H", shQuote(paste("Authorization: Bearer", bearer)))
       } else {
         extra_args <- "-C -"
-        message("📥 Using 'curl' with resume support on Linux/macOS.")
+        messagePreProcess("📥 Using 'curl' with resume support on Linux/macOS.", verbose = verbose)
       }
 
       tryCatch({
@@ -1277,7 +1277,7 @@ download_resumable_httr2 <- function(file_name, local_path) {
     }
   }
   if (isTRUE(completed))
-    message("✅ Download of " , local_path, " complete")
+    messagePreProcess("✅ Download of " , local_path, " complete",  verbose = verbose)
 
 }
 

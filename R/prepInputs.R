@@ -360,11 +360,15 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   prepInputsAssertions(environment())
 
   rpiut <- getOption("reproducible.prepInputsUrlTiles")
-  if (!(isNULLorNA(rpiut) || rpiut %in% FALSE)) {
-    out2 <- prepInputsWithTiles(url = url, destinationPath = dPath, purge = purge,
-                                ...)
-    if (!identical(out2, "NULL"))
-      return(out2)
+  if (!(isNULLorNA(rpiut) || rpiut %in% FALSE) && !is.null(list(...)$to)) {
+    if (!is.null(url) && isGoogleDriveDirectory(rpiut)) {
+      message("Using prepInputsWithTiles because `to` is supplied and \n",
+              "options(reproducible.prepInputsUrlTiles) is set to a Google Drive folder")
+      out2 <- prepInputsWithTiles(url = url, destinationPath = dPath, purge = purge,
+                                  ...)
+      if (!identical(out2, "NULL"))
+        return(out2)
+    }
   }
 
   ##################################################################

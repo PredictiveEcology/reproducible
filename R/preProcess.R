@@ -882,8 +882,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 isGoogleID <- function(url) {
   all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
-      !grepl("\\.[^\\.]+$", url)) ||
-    grepl("drive.google.com", url)
+      !grepl("\\.[^\\.]+$", url)) # ||
+    # grepl("drive.google.com", url)
 }
 
 isGoogleDriveURL <- function(url) {
