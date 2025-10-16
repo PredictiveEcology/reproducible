@@ -82,10 +82,19 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   }
 
   # Preview intersecting tile IDs
-  isGDurl <- isGoogleDriveURL(url)
-  urlAsID <- if (isGDurl) extract_drive_id(url) else NULL
+  url <- gsub("(?<!:)//+", "/", url, perl = TRUE) # removes double // except in http://
+  isGDid <- isGoogleID(url)
+  if (isGDid) {
+    urlAsID <- url
+    url <- googledriveIDtoHumanURL(url)
+    isGDurl <- TRUE
+  } else {
+    isGDurl <- isGoogleDriveURL(url)
+    urlAsID <- if (isGDurl) extract_drive_id(url) else NULL
+  }
 
   if (identical(as.character(urlAsID), as.character(url))) {
+    browser() # This may not hit this
     url <- googledriveIDtoHumanURL(url)
   }
 
@@ -94,6 +103,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
       Cache(verbose = FALSE, notOlderThan = Sys.time() - 60*60) # refresh every hour
     fileSize <- file$drive_resource[[1]]$size
     file_id <- file$id
+    remoteHash <- file$drive_resource[[1]]$md5Checksum
     targetFile <- file$name
   }
 
@@ -101,12 +111,37 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   if (missing(targetFile)) {
     response <- httr2::request(url) |> httr2::req_method("HEAD") |> httr2::req_perform()
     # Try to extract filename from Content-Disposition
+
+    remoteHash <- httr2::resp_headers(response)[["etag"]] |>
+      gsub(pattern = "^\"|\"$", replacement = "")
+
     content_disposition <- httr2::resp_header(response, "content-disposition")
+    fileSize <- httr2::resp_header(response, "content-length") |> as.numeric()
+    timestampOnline <- httr2::resp_header(response, "Date")
     if (isTRUE(!(is.na(content_disposition)))) {
       targetFile <- sub('.*filename="([^"]+)".*', '\\1', content_disposition)
     } else {
       # Fallback: extract from URL
       targetFile <- basename(url)
+    }
+  }
+
+  remoteHashFile <- makeRemoteHashFile(url, dPath, targetFile, remoteHash)
+  haveCorrectVersion <- FALSE
+  fe <- file.exists(remoteHashFile)
+  if (fe)
+    haveCorrectVersion <- identical(readLines(remoteHashFile), remoteHash)
+  if (isTRUE(fe)) {
+    if (haveCorrectVersion %in% FALSE) {
+      message("The local version is not the version that matches the remote version")
+      message("Do you want to purge all local data and redownload? Y or N")
+      yorn <- readline(" ")
+      yorn <- substr(tolower(yorn), 1, 1)
+      if (identical("y", yorn))
+        purge <- TRUE
+    } else {
+      messagePreProcess("Local files match the current remote file version; proceeding",
+                        verbose = verbose)
     }
   }
 
@@ -130,10 +165,9 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
     return(terra::rast(targetFilePostProcessedFullPath))
   }
 
-  if (fs::is_absolute_path(tilesFolder)) {
-    tilesFolderFullPath <- file.path(tilesFolder, filePathSansExt(targetFile))
-  } else {
-    tilesFolderFullPath <- file.path(destinationPath, tilesFolder, filePathSansExt(targetFile))
+  tilesFolderFullPath <- file.path(tilesFolder, filePathSansExt(targetFile))
+  if (fs::is_absolute_path(tilesFolder) %in% FALSE) {
+    tilesFolderFullPath <- file.path(destinationPath, tilesFolderFullPath)
   }
   dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
 
@@ -170,7 +204,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   missingTilesLocal <- setdiff(needed_tile_names, dirTilesFolder)
 
   missingTilesLocalAll <- setdiff(all_tile_names, dirTilesFolder)
-  tilesToGet <- intersect(needed_tile_names, dirTilesFolder)
+  tilesToGet <- missingTilesLocal
   haveLocalTiles <- FALSE
   messagePreProcess("Need to load/get these tiles:\n", verbose = verbose)
   messagePreProcess(paste(needed_tile_names, collapse =  ", "), verbose = verbose)
@@ -192,21 +226,39 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
 
   if (haveLocalTiles %in% FALSE || doUploads) {
     needed_tile_names <- downloadMakeAndUploadTiles(url, urlTiles, targetFile, targetFileFullPath,
-                               needed_tile_names, all_tile_names, haveLocalTiles,
+                               needed_tile_names, tilesToGet, all_tile_names, haveLocalTiles,
                                tilesFolderFullPath, tileGrid, numTiles,
                                to_inTileGrid, doUploads, verbose)
   }
   tile_rasters <- rastTiles(needed_tile_names, tilesFolderFullPath)
+  noData <- FALSE
   if (noTiles %in% FALSE) {
-    mosaic_raster <- terra::sprc(tile_rasters)
-    final <- terra::crop(mosaic_raster, to_inTileGrid)
-    rfull <- terra::writeRaster(terra::merge(final), filename = targetFilePostProcessedFullPath,
-                                overwrite = TRUE)
-    if (exists("file", inherits = FALSE)) {
-      messageAboutFilesizeCompare(file$drive_resource[[1]]$size, needed_tile_names,
-                                  targetFilePostProcessedFullPath,  tilesFolderFullPath,
-                                  verbose)
+    allNull <- all(sapply(tile_rasters, is.null))
+    if (allNull %in% FALSE) {
+      mosaic_raster <- terra::sprc(tile_rasters)
+      intersects <- terra::intersect(terra::ext(mosaic_raster), terra::ext(to_inTileGrid))
+      if (!is.null(intersects)) {
+        final <- terra::crop(mosaic_raster, to_inTileGrid)
+        rfull <- terra::writeRaster(terra::merge(final), filename = targetFilePostProcessedFullPath,
+                                    overwrite = TRUE)
+        if (exists("fileSize", inherits = FALSE)) {
+          messageAboutFilesizeCompare(fileSize, needed_tile_names,
+                                      targetFilePostProcessedFullPath,  tilesFolderFullPath,
+                                      verbose)
+        }
+      } else {
+        noData <- TRUE
+      }
+    } else {
+      noData <- TRUE
     }
+    if (isTRUE(noData)) {
+      messagePreProcess("The dataset at \n", url, "\ndoes not have data inside `to`; ",
+                        "returning NULL", verbose = verbose)
+      rfull <- NULL
+    }
+
+
   }
   rfull
 
@@ -257,7 +309,10 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
 
   # Choose parallel or sequential based on OS
   if (.Platform$OS.type == "unix") {
-    results <- mclapply(tile_specs, process_tile, mc.cores = detectCores(logical = FALSE))
+    numCoresToUse <- numCoresToUse(max = length(tile_specs))
+    results <- parallel::mclapply(
+      tile_specs, process_tile,
+      mc.cores = numCoresToUse)
   } else {
     results <- lapply(tile_specs, process_tile)
   }
@@ -276,7 +331,6 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
   # Extract parent folder ID from URL
   parent_id <- extract_drive_id(drive_folder_url)
 
-  browser()
   # Create subfolder named after original raster filename
   subfolder_name <- basename(tools::file_path_sans_ext(thisFilename))
   subfolder <- googledrive::drive_find(q = paste0("name = '", subfolder_name, "' and '", parent_id, "' in parents"))
@@ -308,8 +362,11 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
 
   # Upload in parallel on Linux/macOS, sequential on Windows
   if (.Platform$OS.type == "unix") {
-    results <- parallel::mclapply(tif_files, upload_one,
-                                  mc.cores = min(3, parallel::detectCores(logical = FALSE)))
+    numCoresToUse <- numCoresToUse(max = 7) # more than 7 on a fast internet connection
+                         # tends to be slower; but this will depend on connection speed
+    results <- parallel::mclapply(
+      tif_files, upload_one,
+      mc.cores = numCoresToUse)
   } else {
     results <- lapply(tif_files, upload_one)
   }
@@ -339,7 +396,12 @@ makeTileNames <- function(tileIds) {
 }
 
 rastTiles <- function(tiles, tilesFolderFullPath) {
-  tile_rasters <- Map(x = tiles, function(x) terra::rast(file.path(tilesFolderFullPath, x))  )
+  tile_rasters <- Map(x = tiles, function(x) {
+    a <- try(terra::rast(file.path(tilesFolderFullPath, x)), silent = TRUE)
+    if (is(a, "try-error"))
+      a <- NULL
+    a
+    })
 }
 
 build_albers_proj4_longlat <- function(ext_obj) {
@@ -433,6 +495,7 @@ best_square_grid <- function(m, n, min_tiles = 1, max_tiles = 1000) {
   return(best_grid)
 }
 
+
 makeTileGridFromGADMcode <- function(tileGrid, numTiles = NULL, crs) {
   g <- geodata::gadm(tileGrid, resolution = 2) |> Cache()
   if (is.null(g) || (is.character(g) && isTRUE(g == "NULL"))) {
@@ -521,27 +584,40 @@ crsFromLocalFile <- function(targetFileFullPath, targetObjCRS) {
   # }
 }
 
-getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath, targetFile,
-                         url, urlTiles, fileSize, verbose) {
+getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath,
+                         targetFile,
+                         url, urlTiles, fileSize, remoteHash, purge, verbose) {
+
   targetObjCRS <- NULL # don't know it yet
   if (file.exists(targetFileFullPath)) {
     targetObjCRS <- crsFromLocalFile(targetFileFullPath, targetObjCRS)
   }
   # need to get the targetObjCRS to know what the tiles will look like
   if (is.null(targetObjCRS)) {
+    existing_tiles <- NULL
     for (i in 1:2) { # try local file, then googledrive, then back to local after googledrive download
       if (length(dirTilesFolder))  {
         targetObjCRS <- crsFromLocalTile(tilesFolderFullPath, dirTilesFolder)
         if (!is.null(targetObjCRS)) break
       }
-      if (is.null(targetObjCRS)) {
+      if (is.null(targetObjCRS) && is.null(existing_tiles)) {
         existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
-        if (!is.null(existing_tiles)) {
-          targetObjCRS <- crsFromGoogleDriveTile(tilesFolderFullPath, existing_tiles)
+        if (!is.null(existing_tiles) && NROW(existing_tiles) > 0) {
+          if (isTRUE(purge)) {
+            messagePreProcess("Purging GoogleDrive tiles from old version of file", verbose = verbose)
+            folderID <- googledrive::drive_ls(googledrive::as_id(extract_drive_id(urlTiles)),
+                                  pattern = filePathSansExt(targetFile))
+            # googledrive::drive_rm(existing_tiles) # too slow -- 1 file per rm call
+            googledrive::drive_rm(folderID)
+            existing_tiles <- NULL
+          } else {
+            targetObjCRS <- crsFromGoogleDriveTile(tilesFolderFullPath, existing_tiles)
+          }
         }
       }
       dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
-      if (is.null(existing_tiles) && length(dirTilesFolder) == 0)
+      if ( (is.null(existing_tiles) || NROW(existing_tiles) == 0) &&
+        length(dirTilesFolder) == 0)
         break
     }
   }
@@ -551,6 +627,8 @@ getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath
     if (!exists("fileSize", inherits = FALSE))
       messageAboutFilesize(fileSize, verbose = verbose)
     download_resumable_httr2(url, targetFileFullPath)
+
+    makeRemoteHashFile(url, dPath, targetFile, remoteHash, write = TRUE)
     # rfull <- terra::rast(targetFileFullPath)
     targetObjCRS <- terra::crs(terra::rast(targetFileFullPath))
   }
@@ -586,7 +664,7 @@ getTilesFromGoogleDrive <- function(tilesToGet, existing_tiles, tilesFolderFullP
 }
 
 downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFullPath,
-                                       needed_tile_names, all_tile_names, haveLocalTiles,
+                                       needed_tile_names, tilesToGet, all_tile_names, haveLocalTiles,
                                        tilesFolderFullPath, tileGrid, numTiles,
                                        to_inTileGrid, doUploads, verbose) {
   existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
@@ -595,7 +673,7 @@ downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFull
 
   # Determine which tiles are missing
   missingTilesOnRemote <- setdiff(needed_tile_names, available_tile_names_onGoogleDrive)
-  tilesToGet <- intersect(needed_tile_names, available_tile_names_onGoogleDrive)
+  # tilesToGet <- intersect(needed_tile_names, available_tile_names_onGoogleDrive)
 
   haveRemoteTiles <- all(all_tile_names %in% existing_tiles$name)
   # Preview decision
@@ -659,7 +737,9 @@ downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFull
           tile_ext[3] > saExt[4] || tile_ext[4] < saExt[3])    # y overlap
     })
     if (!identical(needed_tile_names, intersecting_tiles2)) {
-      browser() # the intersecting_tiles2 from the newly created need to be the same as the
+      messagePreProcess("`to` does not overlap with any tiles on file at:\n",
+              url, verbose = verbose)
+      # the intersecting_tiles2 from the newly created need to be the same as the
       # expected from the grid
     }
 
@@ -672,7 +752,7 @@ messageAboutFilesizeCompare <- function(fileSize, needed_tile_names,
                                         targetFilePostProcessedFullPath,  tilesFolderFullPath,
                                         verbose) {
   # fileSize <- file$drive_resource[[1]]$size
-  messageAboutFilesize(fileSize, verbose = verbose)
+  messageAboutFilesize(fileSize, verbose = verbose, msgMiddle = " on remote url ")
   fsLocal <- file.size(targetFilePostProcessedFullPath)
   dd1 <- dir(tilesFolderFullPath)
   dd2 <- dir(tilesFolderFullPath, full.names = TRUE)
@@ -693,3 +773,59 @@ tryRastThenGetCRS <- function(targetFileFullPath) {
   }
   targetObjCRS
 }
+
+
+
+#' Estimate Number of CPU Cores to Use for Parallel Processing
+#'
+#' This function estimates the number of CPU cores that can be safely used for
+#' parallel processing, taking into account a minimum threshold, the total
+#' number of physical cores, and currently active threads.
+#'
+#' @param min An integer specifying the minimum number of cores to use. Default
+#'   is `2`.
+#' @param max An integer specifying the maximum number of cores available,
+#'   typically the number of physical cores. Default is
+#'   `parallel::detectCores(logical = FALSE)`.
+#'
+#' @return An integer representing the number of cores that can be used for
+#'   parallel tasks, ensuring at least `min` cores are used, while subtracting
+#'   one for the current process and an estimate of actively used threads (via
+#'   `detectActiveCores()`).
+#'
+#' @examples
+#' \dontrun{
+#'   numCoresToUse()
+#'   numCoresToUse(min = 4)
+#' }
+#'
+#' @note This function depends on `detectActiveCores()` and is not supported on
+#'   Windows systems.
+#'
+#' @seealso [detectActiveCores()]
+#'
+numCoresToUse <- function(min = 2, max) {
+  if (is.null(.pkgEnv$detectedCores))
+    .pkgEnv$detectedCores <- parallel::detectCores(logical = FALSE)
+  dc <- .pkgEnv$detectedCores
+  if (missing(max))
+    max <- dc
+  max <- min(dc -  # total
+               1 - # remove one for the current process
+               detectActiveCores(), # estimate actively used ones
+             max)
+  max(min, max)
+}
+
+
+
+makeRemoteHashFile <- function(url, dPath, targetFile, remoteHash, write = FALSE) {
+  url_no_protocol <- sub("^https?://", "", url)
+  # Replace all slashes with underscores
+  urlWithUnderscores <- gsub("/", "_", file.path(basename(targetFile), dirname(url_no_protocol)))
+  remoteHashFile <- file.path(dPath, paste0(urlWithUnderscores, ".hash"))
+  if (isTRUE(write) && !file.exists(remoteHashFile))
+    writeLines(remoteHash, remoteHashFile)
+  return(remoteHashFile)
+}
+
