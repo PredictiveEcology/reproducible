@@ -360,7 +360,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   prepInputsAssertions(environment())
 
   if (getOption("reproducible.prepInputsWithTiles", FALSE)) {
-    out2 <- prepInputsWithTiles(url = url, destinationPath = dPath,
+    out2 <- prepInputsWithTiles(url = url, destinationPath = dPath, purge = purge,
                                 # doUploads = getOption("reproducible.prepInputsDoUploads", FALSE),
                                 ...)
     if (!identical(out2, "NULL"))

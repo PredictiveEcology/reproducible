@@ -71,6 +71,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
                                 tileGrid = "CAN",
                                 numTiles = NULL,
                                 plot.grid = FALSE,
+                                purge = FALSE,
                                 verbose = getOption("reproducible.verbose")) {
 
   if (missing(to) || is.null(urlTiles)) {
@@ -116,6 +117,14 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   }
   targetFileFullPath <- file.path(destinationPath, targetFile)
   targetFilePostProcessedFullPath <- .suffix(targetFileFullPath, dig)
+
+  if (isTRUE(purge)) {
+    if (file.exists(targetFilePostProcessedFullPath))
+      unlink(targetFilePostProcessedFullPath)
+    if (file.exists(targetFileFullPath))
+      unlink(targetFileFullPath)
+  }
+
   if (file.exists(targetFilePostProcessedFullPath) && doUploads %in% FALSE) {
     message("Correct post processed file exists; returning it now...")
     return(terra::rast(targetFilePostProcessedFullPath))
@@ -128,11 +137,16 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   }
   dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
 
+  if (isTRUE(purge) && length(dirTilesFolder)) {
+    dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE, full.names = TRUE)
+    unlink(dirTilesFolder)
+  }
+
 
   # Need to get target object crs targetObjCRS; first try local file, then local tile,
   #     then gdrive tile, then full remote file
   targetObjCRS <- getTargetCRS(targetFileFullPath, dirTilesFolder, tilesFolderFullPath, targetFile,
-                           url, urlTiles, fileSize, verbose)
+                           url, urlTiles, fileSize, remoteHash, purge, verbose)
 
   noTiles <- FALSE
 
