@@ -140,8 +140,9 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
       if (identical("y", yorn))
         purge <- TRUE
     } else {
-      messagePreProcess("Local files match the current remote file version; proceeding",
-                        verbose = verbose)
+      if (!purge %in% TRUE)
+        messagePreProcess("Local files match the current remote file version; proceeding",
+                          verbose = verbose)
     }
   }
 
@@ -154,10 +155,13 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   targetFilePostProcessedFullPath <- .suffix(targetFileFullPath, dig)
 
   if (isTRUE(purge)) {
+    messagePreProcess("purge = TRUE; purging local targetFile", verbose = verbose)
     if (file.exists(targetFilePostProcessedFullPath))
       unlink(targetFilePostProcessedFullPath)
     if (file.exists(targetFileFullPath))
       unlink(targetFileFullPath)
+    if (file.exists(remoteHashFile))
+      unlink(remoteHashFile)
   }
 
   if (file.exists(targetFilePostProcessedFullPath) && doUploads %in% FALSE) {
@@ -172,8 +176,10 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
 
   if (isTRUE(purge) && length(dirTilesFolder)) {
-    dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE, full.names = TRUE)
-    unlink(dirTilesFolder)
+    messagePreProcess("purge = TRUE; purging local tiles", verbose = verbose)
+    dirTilesFolder2 <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE, full.names = TRUE)
+    unlink(dirTilesFolder2)
+    dirTilesFolder <- NULL
   }
 
 
@@ -232,6 +238,12 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   }
   tile_rasters <- rastTiles(needed_tile_names, tilesFolderFullPath)
   noData <- FALSE
+
+  if (file.exists(targetFilePostProcessedFullPath)) {
+    message("Correct post processed file exists; returning it now...")
+    return(terra::rast(targetFilePostProcessedFullPath))
+  }
+
   if (noTiles %in% FALSE) {
     allNull <- all(sapply(tile_rasters, is.null))
     if (allNull %in% FALSE) {
@@ -567,8 +579,6 @@ crsFromGoogleDriveTile <- function(tilesFolderFullPath, existing_tiles) {
   on.exit(setwd(ogwd))
   download_resumable_httr2(existing_tiles$id[1], existing_tiles$name[1])
   targetObjCRS <- tryRastThenGetCRS(file.path(tilesFolderFullPath, existing_tiles$name[1]))
-  # singleTile <- terra::rast(file.path(tilesFolderFullPath, existing_tiles$name[1]))
-  # targetObjCRS <- terra::crs(singleTile)
   setwd(ogwd)
   targetObjCRS
 }
@@ -604,7 +614,7 @@ getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath
         existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
         if (!is.null(existing_tiles) && NROW(existing_tiles) > 0) {
           if (isTRUE(purge)) {
-            messagePreProcess("Purging GoogleDrive tiles from old version of file", verbose = verbose)
+            messagePreProcess("purging GoogleDrive tiles...", verbose = verbose)
             folderID <- googledrive::drive_ls(googledrive::as_id(extract_drive_id(urlTiles)),
                                   pattern = filePathSansExt(targetFile))
             # googledrive::drive_rm(existing_tiles) # too slow -- 1 file per rm call
@@ -694,7 +704,8 @@ downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFull
     } else {
       messagePreProcess("Nothing to download", verbose = verbose)
     }
-
+    if (needUploads %in% FALSE)
+      messagePreProcess("Nothing to upload", verbose = verbose)
 
   } else {
     messagePreProcess("⚠️ Some tiles are missing on Google Drive:")
