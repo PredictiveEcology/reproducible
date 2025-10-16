@@ -360,7 +360,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   prepInputsAssertions(environment())
 
   rpiut <- getOption("reproducible.prepInputsUrlTiles")
-  if (isNULLorNA(rpiut) || rpiut %in% FALSE) {
+  if (!(isNULLorNA(rpiut) || rpiut %in% FALSE)) {
     out2 <- prepInputsWithTiles(url = url, destinationPath = dPath, purge = purge,
                                 ...)
     if (!identical(out2, "NULL"))
