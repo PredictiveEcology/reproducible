@@ -1183,80 +1183,6 @@ purgeChecksums <- function(checksumFile, fileToRemove) {
 
 
 
-# drive_downloadWProgress <- function(file_name, local_path) {
-#   # Authenticate and get file metadata
-#   # googledrive::drive_auth()
-#   file <- googledrive::drive_get(file_name)
-#   file_id <- file$id
-#
-#   # Build download URL
-#   download_url <- googledriveIDtoURL(file_id)
-#   # download_url <- paste0("https://www.googleapis.com/drive/v3/files/", file_id, "?alt=media")
-#
-#   # Get token from googledrive
-#   token <- googledrive::drive_token()
-#   bearer <- token$auth_token$credentials$access_token
-#
-#   browser()
-#   # Create request with progress and perform download
-#   httr2::request(download_url) |>
-#     httr2::req_auth_bearer_token(bearer) |>
-#     httr2::req_progress() |>
-#     httr2::req_perform(path = local_path)
-# }
-# Example usage
-
-# download_resumable_httr2 <- function(file_name, local_path) {
-#   # Authenticate and get file metadata
-#   # googledrive::drive_auth()
-#   isGD <- isGoogleDriveURL(file_name) || is(file_name, "drive_id")
-#   if (isGD) {
-#     file <- googledrive::drive_get(file_name)
-#     file_id <- file$id
-#     download_url <- googledriveIDtoDownloadURL(file_id)
-#     token <- googledrive::drive_token()
-#     bearer <- token$auth_token$credentials$access_token
-#     total_size <- as.numeric(file$drive_resource[[1]]$size)
-#     req <- httr2::request(download_url)
-#     req <- req |> httr2::req_auth_bearer_token(bearer)
-#
-#   } else {
-#     req <- httr2::request(file_name)
-#     head_req <- req |> httr2::req_method("HEAD")
-#     head_resp <- httr2::req_perform(head_req)
-#     total_size <- as.numeric(httr2::resp_header(head_resp, "content-length"))
-#
-#   }
-#
-#   # Build download URL
-#   # download_url <- paste0("https://www.googleapis.com/drive/v3/files/", file_id, "?alt=media")
-#
-#   # Get token
-#
-#   # Check how much has already been downloaded
-#   downloaded_bytes <- if (file.exists(local_path)) file.info(local_path)$size else 0
-#
-#   if (total_size > downloaded_bytes) {
-#
-#     # Create request with Range header
-#     req <- req |> # httr2::request(download_url) |>
-#       # httr2::req_auth_bearer_token(bearer) |>
-#       httr2::req_headers(Range = paste0("bytes=", downloaded_bytes, "-")) |>
-#       httr2::req_progress()
-#
-#     # Open connection in append mode
-#     con <- file(local_path, open = "ab")
-#     on.exit(try(close(con), silent = TRUE))
-#
-#     # Stream response and append to file
-#     browser()
-#     resp <- httr2::req_perform(req)
-#     body <- httr2::resp_body_raw(resp)
-#     writeBin(body, con)
-#     close(con)
-#   }
-# }
-
 
 download_resumable_httr2 <- function(file_name, local_path) {
   isGD <- isGoogleDriveURL(file_name) || inherits(file_name, "drive_id")
@@ -1264,15 +1190,17 @@ download_resumable_httr2 <- function(file_name, local_path) {
   # Normalize path to avoid issues with ~
   local_path_expanded <- normalizePath(local_path, mustWork = FALSE)
 
+  completed <- FALSE
   if (isGD) {
-    # Google Drive download using httr2 (no resume support)
     file <- googledrive::drive_get(file_name)
     file_id <- file$id
-    download_url <- googledriveIDtoDownloadURL(file_id)
+    file_name <- googledriveIDtoDownloadURL(file_id)
     token <- googledrive::drive_token()
     bearer <- token$auth_token$credentials$access_token
-
-    req <- httr2::request(download_url) |>
+  }
+  if (isGD &&  (.Platform$OS.type == "windows") ) {
+    # Google Drive download using httr2 (no resume support)
+    req <- httr2::request(file_name) |>
       httr2::req_auth_bearer_token(bearer) |>
       httr2::req_progress()
 
@@ -1283,18 +1211,21 @@ download_resumable_httr2 <- function(file_name, local_path) {
       resp <- httr2::req_perform(req)
       body <- httr2::resp_body_raw(resp)
       writeBin(body, con)
-      message("✅ Google Drive download completed using httr2.")
+      completed <- TRUE
     }, error = function(e) {
       stop("❌ Google Drive download failed: ", e$message)
     })
 
   } else {
-    # Non-Google Drive download
     if (.Platform$OS.type != "windows" && nzchar(Sys.which("curl"))) {
       # Use download.file with curl on Linux/macOS
       method <- "curl"
-      extra_args <- "-C -"
-      message("📥 Using 'curl' with resume support on Linux/macOS.")
+      if (isGD) {
+        extra_args <- paste("-L -H", shQuote(paste("Authorization: Bearer", bearer)))
+      } else {
+        extra_args <- "-C -"
+        message("📥 Using 'curl' with resume support on Linux/macOS.")
+      }
 
       tryCatch({
         utils::download.file(
@@ -1304,7 +1235,8 @@ download_resumable_httr2 <- function(file_name, local_path) {
           quiet = FALSE,
           extra = extra_args
         )
-        message("✅ Non-Google Drive download completed using download.file with curl.")
+        completed <- TRUE
+        # message("✅ Download completed using download.file with curl.")
       }, error = function(e) {
         stop("❌ Non-Google Drive download failed: ", e$message)
       })
@@ -1337,12 +1269,16 @@ download_resumable_httr2 <- function(file_name, local_path) {
         resp <- httr2::req_perform(req)
         body <- httr2::resp_body_raw(resp)
         writeBin(body, con)
-        message("✅ Non-Google Drive download completed using httr2.")
+        completed <- TRUE
+        # message("✅ Non-Google Drive download completed using httr2.")
       }, error = function(e) {
-        stop("❌ Non-Google Drive download failed: ", e$message)
+        stop("❌ Download failed: ", e$message)
       })
     }
   }
+  if (isTRUE(completed))
+    message("✅ Download of " , local_path, " complete")
+
 }
 
 
