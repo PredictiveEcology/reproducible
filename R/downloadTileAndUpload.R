@@ -186,7 +186,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   # Need to get target object crs targetObjCRS; first try local file, then local tile,
   #     then gdrive tile, then full remote file
   targetObjCRS <- getTargetCRS(targetFileFullPath, dirTilesFolder, tilesFolderFullPath, targetFile,
-                           url, urlTiles, fileSize, remoteHash, purge, verbose)
+                           url, urlTiles, fileSize, remoteHash, purge, doUploads, verbose)
 
   noTiles <- FALSE
 
@@ -596,7 +596,7 @@ crsFromLocalFile <- function(targetFileFullPath, targetObjCRS) {
 
 getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath,
                          targetFile,
-                         url, urlTiles, fileSize, remoteHash, purge, verbose) {
+                         url, urlTiles, fileSize, remoteHash, purge, doUploads, verbose) {
 
   targetObjCRS <- NULL # don't know it yet
   if (file.exists(targetFileFullPath)) {
@@ -613,7 +613,7 @@ getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath
       if (is.null(targetObjCRS) && is.null(existing_tiles)) {
         existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
         if (!is.null(existing_tiles) && NROW(existing_tiles) > 0) {
-          if (isTRUE(purge)) {
+          if (isTRUE(purge) && doUploads %in% TRUE) {
             messagePreProcess("purging GoogleDrive tiles...", verbose = verbose)
             folderID <- googledrive::drive_ls(googledrive::as_id(extract_drive_id(urlTiles)),
                                   pattern = filePathSansExt(targetFile))
