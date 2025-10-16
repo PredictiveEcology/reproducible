@@ -359,9 +359,9 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   funCaptured <- substitute(fun)
   prepInputsAssertions(environment())
 
-  if (getOption("reproducible.prepInputsWithTiles", FALSE)) {
+  rpiut <- getOption("reproducible.prepInputsUrlTiles")
+  if (!(isNULLorNA(rpiut) || rpiut %in% FALSE)) {
     out2 <- prepInputsWithTiles(url = url, destinationPath = dPath, purge = purge,
-                                # doUploads = getOption("reproducible.prepInputsDoUploads", FALSE),
                                 ...)
     if (!identical(out2, "NULL"))
       return(out2)
