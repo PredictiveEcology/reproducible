@@ -604,32 +604,34 @@ getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath
   }
   # need to get the targetObjCRS to know what the tiles will look like
   if (is.null(targetObjCRS)) {
-    existing_tiles <- NULL
-    for (i in 1:2) { # try local file, then googledrive, then back to local after googledrive download
-      if (length(dirTilesFolder))  {
-        targetObjCRS <- crsFromLocalTile(tilesFolderFullPath, dirTilesFolder)
-        if (!is.null(targetObjCRS)) break
-      }
-      if (is.null(targetObjCRS) && is.null(existing_tiles)) {
-        existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
-        if (!is.null(existing_tiles) && NROW(existing_tiles) > 0) {
-          if (isTRUE(purge) && doUploads %in% TRUE) {
-            messagePreProcess("purging GoogleDrive tiles...", verbose = verbose)
-            folderID <- googledrive::drive_ls(googledrive::as_id(extract_drive_id(urlTiles)),
-                                  pattern = filePathSansExt(targetFile))
-            # googledrive::drive_rm(existing_tiles) # too slow -- 1 file per rm call
-            googledrive::drive_rm(folderID)
-            existing_tiles <- NULL
-          } else {
-            targetObjCRS <- crsFromGoogleDriveTile(tilesFolderFullPath, existing_tiles)
-          }
-        }
-      }
-      dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
-      if ( (is.null(existing_tiles) || NROW(existing_tiles) == 0) &&
-        length(dirTilesFolder) == 0)
-        break
-    }
+    targetObjCRS <- crsFromLocalOrGDTiles(dirTilesFolder, tilesFolderFullPath, urlTiles,
+                                          targetFile, purge, doUploads, verbose)
+    # existing_tiles <- NULL
+    # for (i in 1:2) { # try local file, then googledrive, then back to local after googledrive download
+    #   if (length(dirTilesFolder))  {
+    #     targetObjCRS <- crsFromLocalTile(tilesFolderFullPath, dirTilesFolder)
+    #     if (!is.null(targetObjCRS)) break
+    #   }
+    #   if (is.null(targetObjCRS) && is.null(existing_tiles)) {
+    #     existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
+    #     if (!is.null(existing_tiles) && NROW(existing_tiles) > 0) {
+    #       if (isTRUE(purge) && doUploads %in% TRUE) {
+    #         messagePreProcess("purging GoogleDrive tiles...", verbose = verbose)
+    #         folderID <- googledrive::drive_ls(googledrive::as_id(extract_drive_id(urlTiles)),
+    #                               pattern = filePathSansExt(targetFile))
+    #         # googledrive::drive_rm(existing_tiles) # too slow -- 1 file per rm call
+    #         googledrive::drive_rm(folderID)
+    #         existing_tiles <- NULL
+    #       } else {
+    #         targetObjCRS <- crsFromGoogleDriveTile(tilesFolderFullPath, existing_tiles)
+    #       }
+    #     }
+    #   }
+    #   dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
+    #   if ( (is.null(existing_tiles) || NROW(existing_tiles) == 0) &&
+    #     length(dirTilesFolder) == 0)
+    #     break
+    # }
   }
   if (is.null(targetObjCRS)) {
     # still doesn't have it
@@ -840,3 +842,33 @@ makeRemoteHashFile <- function(url, dPath, targetFile, remoteHash, write = FALSE
   return(remoteHashFile)
 }
 
+
+
+crsFromLocalOrGDTiles <- function(dirTilesFolder, tilesFolderFullPath, urlTiles, targetFile, purge, doUploads, verbose) {
+  existing_tiles <- NULL
+  for (i in 1:2) { # try local file, then googledrive, then back to local after googledrive download
+    if (length(dirTilesFolder))  {
+      targetObjCRS <- crsFromLocalTile(tilesFolderFullPath, dirTilesFolder)
+      if (!is.null(targetObjCRS)) break
+    }
+    if (is.null(targetObjCRS) && is.null(existing_tiles)) {
+      existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
+      if (!is.null(existing_tiles) && NROW(existing_tiles) > 0) {
+        if (isTRUE(purge) && doUploads %in% TRUE) {
+          existing_tiles <- purgeGoogleTiles(urlTiles, targetFile, verbose)
+        } else {
+          targetObjCRS <- crsFromGoogleDriveTile(tilesFolderFullPath, existing_tiles, verbose = verbose)
+        }
+      }
+    }
+    if (is.null(targetObjCRS)) {
+      dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
+      if ( (is.null(existing_tiles) || NROW(existing_tiles) == 0) &&
+           length(dirTilesFolder) == 0)
+        break
+    } else {
+      break
+    }
+  }
+  targetObjCRS
+}
