@@ -110,6 +110,7 @@ Collate:
     'convertPaths.R'
     'copy.R'
     'download.R'
+    'downloadTileAndUpload.R'
     'exportedMethods.R'
     'gis.R'
     'helpers.R'

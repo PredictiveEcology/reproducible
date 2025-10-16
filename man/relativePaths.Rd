@@ -31,7 +31,7 @@ This is useful when dealing with symlinked paths.
 }
 }
 \examples{
-\dontshow{if (!identical(.Platform$OS.type, "windows")) withAutoprint(\{ # examplesIf}
+\dontshow{if (!identical(.Platform$OS.type, "windows")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 
 ## create a project directory (e.g., on a hard drive)
 (tmp1 <- tempdir2("myProject", create = TRUE))
