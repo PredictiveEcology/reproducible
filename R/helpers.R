@@ -695,3 +695,41 @@ cacheId <- function(obj) {
   else
     NULL
 }
+
+
+#' Count Active Threads Based on CPU Usage
+#'
+#' This function counts the number of active system processes (threads) that
+#' match a given pattern and exceed a specified minimum CPU usage threshold. It
+#' works on Unix-like systems (e.g., Linux, macOS) and does not support Windows.
+#'
+#' @param pattern A character string used to filter process lines. Only
+#'   processes whose command line matches this pattern will be considered.
+#'   Default is `""` (matches all).
+#' @param minCPU A numeric value specifying the minimum CPU usage (in percent)
+#'   for a process to be considered active. Default is `50`.
+#'
+#' @return An integer representing the number of active threads matching the
+#'   pattern and exceeding the CPU usage threshold. Returns `NULL` with a
+#'   message if run on Windows.
+#'
+#' @examples
+#' \dontrun{
+#'   detectActiveCores(pattern = "R", minCPU = 30)
+#' }
+#'
+#' @note This function uses the `ps -ef` system command and regular expressions
+#'   to parse CPU usage. It may not be portable across all Unix variants.
+#'
+#' @export
+detectActiveCores <- function (pattern = "", minCPU = 50) {
+  if (!identical(.Platform$OS.type, "windows")) {
+    a0 <- system("ps -ef", intern = TRUE)[-1]
+    a4 <- grep(pattern, a0, value = TRUE)
+    a5 <- gsub("^.*[[:digit:]]* [[:digit:]]* ([[:digit:]]{1,3}) .*$",
+               "\\1", a4)
+    sum(as.numeric(a5) > minCPU)
+  } else {
+    message("Does not work on Windows")
+  }
+}
