@@ -120,6 +120,9 @@ setMethod(
         stop("Please install terra package")
       }
       fns <- terra::sources(obj)
+      if (any(fileExt(fns) %in% "vrt"))
+        fns <- c(fns, terra::vrt_tiles(obj))
+
       fns <- allowMultipleFNs(allowMultiple, fns)
     } else {
       fns <- NULL
