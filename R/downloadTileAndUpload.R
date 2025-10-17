@@ -116,9 +116,9 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   }
 
   if (file.exists(targetFilePostProcessedFullPath) && doUploads %in% FALSE) {
-    messagePreProcess(paste0("Correct post processed file exists (",
+    messagePreProcess("Correct post processed file exists (",
                              .messageFunctionFn(targetFilePostProcessedFullPath),
-                             ");\nreturning it now..."), verbose = verbose)
+                             ");\nreturning it now...", verbose = verbose)
     messagePreProcess("prepInputsWithTiles ", gsub("^\b", "", messagePrefixDoneIn),
                       format(difftime(Sys.time(), st), units = "secs", digits = 3),
                       verbose = verbose)
@@ -199,9 +199,9 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   noData <- FALSE
 
   if (file.exists(targetFilePostProcessedFullPath)) {
-    messagePreProcess(paste0("Correct post processed file exists (",
+    messagePreProcess("Correct post processed file exists (",
                              .messageFunctionFn(targetFilePostProcessedFullPath),
-                      ");\n returning it now..."), verbose = verbose)
+                      ");\n returning it now...", verbose = verbose)
     return(terra::rast(targetFilePostProcessedFullPath))
   }
 
@@ -831,7 +831,7 @@ sprcMosaicRast <- function(url, tile_rasters, to_inTileGrid, targetFilePostProce
   if (allNull %in% FALSE) {
     anyNull <- any(sapply(tile_rasters, is.null))
     if (anyNull) {
-      stop("For unknown reasons, the tiles are not availalbe")
+      stop("For unknown reasons, the tiles are not available")
     }
     mosaic_raster <- terra::sprc(tile_rasters)
     # mosaic_raster <- terra::vrt(mosaic_raster)
@@ -842,6 +842,13 @@ sprcMosaicRast <- function(url, tile_rasters, to_inTileGrid, targetFilePostProce
       final <- terra::crop(mosaic_raster, to_inTileGrid)
       messagePreProcess("  ", gsub("^\b", "", messagePrefixDoneIn),
                         format(difftime(Sys.time(), st1), units = "secs", digits = 3),
+                        verbose = verbose)
+
+      st3 <- Sys.time()
+      messagePrepInputs("merging tiles ", .messageFunctionFn(targetFilePostProcessedFullPath), " ...", verbose = verbose)
+      merged <- terra::merge(final)
+      messagePreProcess("  ", gsub("^\b", "", messagePrefixDoneIn),
+                        format(difftime(Sys.time(), st3), units = "secs", digits = 3),
                         verbose = verbose)
 
       st2 <- Sys.time()
