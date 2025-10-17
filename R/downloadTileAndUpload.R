@@ -26,6 +26,7 @@
 #' @param numTiles Integer. Number of tiles to generate. Optional.
 #' @param plot.grid Logical. Whether to plot the tile grid and area of interest. Default is `FALSE`.
 #' @param verbose Logical or numeric. Controls verbosity of messages. Default is `getOption("reproducible.verbose")`.
+#' @param ... Passed to `writeRaster`, e.g., `datatype`.
 #'
 #' @return A `SpatRaster` object cropped to the area of interest (`to`), composed of the necessary tiles.
 #' If the post-processed file already exists locally, it will be returned directly.
@@ -72,7 +73,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
                                 numTiles = NULL,
                                 plot.grid = FALSE,
                                 purge = FALSE,
-                                verbose = getOption("reproducible.verbose")) {
+                                verbose = getOption("reproducible.verbose"), ...) {
 
   st <- Sys.time()
   if (missing(to) || is.null(urlTiles)) {
@@ -81,6 +82,11 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
       "returning `'NULL'`", verbose = verbose)
     return("NULL")
   }
+
+  datatype <- "FLT4S"
+  dtype <- list(...)$datatype
+  if (!is.null(dtype))
+    datatype <- dtype
 
   # Preview intersecting tile IDs
   url <- gsub("(?<!:)//+", "/", url, perl = TRUE) # removes double // except in http://
@@ -179,7 +185,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
       needed_tile_names <- downloadMakeAndUploadTiles(url, urlTiles, remoteMetadata$targetFile, targetFileFullPath,
                                                       needed_tile_names, tilesToGet, all_tile_names, haveLocalTiles,
                                                       tilesFolderFullPath, tileGridAndArea$tileGrid, tileGridAndArea$numTiles,
-                                                      to_inTileGrid, doUploads, verbose)
+                                                      to_inTileGrid, doUploads, datatype, verbose)
     }
     tile_rasters <- rastTiles(needed_tile_names, tilesFolderFullPath)
     if (any(sapply(tile_rasters, is.null))) {
@@ -202,7 +208,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   if (noTiles %in% FALSE) {
     rfull <- sprcMosaicRast(url, tile_rasters, to_inTileGrid, targetFilePostProcessedFullPath,
                             remoteMetadata$fileSize, needed_tile_names, tilesFolderFullPath,
-                            noData, verbose)
+                            noData, datatype, verbose)
   }
   messagePreProcess("prepInputsWithTiles ", gsub("^\b", "", messagePrefixDoneIn),
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
@@ -211,6 +217,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
 }
 
 tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_names, nx = 10, ny = 5,
+                                   datatype = NULL,
                                    verbose = getOption("reproducible.verbose")) {
   r <- terra::rast(raster_path)
 
@@ -241,7 +248,8 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
       tile <- terra::crop(r, spec$ext)
       # isAllNA <- terra::allNA(tile)[1] %in% TRUE
       # if (isAllNA %in% FALSE) {
-        terra::writeRaster(tile, spec$path,
+
+        terra::writeRaster(tile, spec$path, datatype = datatype,
                            overwrite = FALSE,
                            gdal = c("COMPRESS=LZW", "TILED=YES"))
         return(paste("✅ Saved:", spec$path))
@@ -258,7 +266,7 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
     numCoresToUse <- numCoresToUse(max = length(tile_specs))
     results <- parallel::mclapply(
       tile_specs, process_tile,
-      mc.cores = numCoresToUse)
+      mc.cores = numCoresToUse, datatype = datatype)
   } else {
     results <- lapply(tile_specs, process_tile)
   }
@@ -599,7 +607,7 @@ getTilesFromGoogleDrive <- function(tilesToGet, existing_tiles, tilesFolderFullP
 downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFullPath,
                                        needed_tile_names, tilesToGet, all_tile_names, haveLocalTiles,
                                        tilesFolderFullPath, tileGrid, numTiles,
-                                       to_inTileGrid, doUploads, verbose) {
+                                       to_inTileGrid, doUploads, datatype, verbose) {
   existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
 
   available_tile_names_onGoogleDrive <- existing_tiles$name
@@ -651,7 +659,7 @@ downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFull
 
     if (haveLocalTiles %in% FALSE || (doUploads %in% TRUE && needUploads))
       tile_raster_write_auto(targetFileFullPath, tilesFolderFullPath, tileGrid,
-                             all_tile_names = all_tile_names,
+                             all_tile_names = all_tile_names, datatype = datatype,
                              nx = numTiles[[1]], ny = numTiles[[2]],
                              verbose = verbose)
     if (needUploads %in% FALSE && doUploads %in% TRUE)
@@ -817,7 +825,7 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
 }
 
 sprcMosaicRast <- function(url, tile_rasters, to_inTileGrid, targetFilePostProcessedFullPath,
-                           fileSize, needed_tile_names, tilesFolderFullPath, noData, verbose) {
+                           fileSize, needed_tile_names, tilesFolderFullPath, noData, datatype, verbose) {
   allNull <- all(sapply(tile_rasters, is.null))
   if (allNull %in% FALSE) {
     anyNull <- any(sapply(tile_rasters, is.null))
@@ -837,7 +845,8 @@ sprcMosaicRast <- function(url, tile_rasters, to_inTileGrid, targetFilePostProce
 
       st2 <- Sys.time()
       messagePrepInputs("writing ", .messageFunctionFn(targetFilePostProcessedFullPath), " ...", verbose = verbose)
-      rfull <- terra::writeRaster(terra::merge(final), filename = targetFilePostProcessedFullPath,
+      rfull <- terra::writeRaster(merged, filename = targetFilePostProcessedFullPath,
+                                  datatype = datatype,
                                   overwrite = TRUE)
       messagePreProcess("  ", gsub("^\b", "", messagePrefixDoneIn),
                         format(difftime(Sys.time(), st2), units = "secs", digits = 3),
