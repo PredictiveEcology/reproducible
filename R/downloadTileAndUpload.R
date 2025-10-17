@@ -74,6 +74,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
                                 purge = FALSE,
                                 verbose = getOption("reproducible.verbose")) {
 
+  st <- Sys.time()
   if (missing(to) || is.null(urlTiles)) {
     messagePreProcess(
       "prepInputsWithTiles must have `urlTiles` and `url` plus a `to` spatial object",
@@ -109,7 +110,11 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   }
 
   if (file.exists(targetFilePostProcessedFullPath) && doUploads %in% FALSE) {
-    message("Correct post processed file exists; returning it now...")
+    messagePreProcess(paste0("Correct post processed file exists (", targetFilePostProcessedFullPath,
+                             ");\n returning it now..."), verbose = verbose)
+    messagePreProcess("prepInputsWithTiles ", gsub("^\b", "", messagePrefixDoneIn),
+                      format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                      verbose = verbose)
     return(terra::rast(targetFilePostProcessedFullPath))
   }
 
@@ -187,7 +192,8 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   noData <- FALSE
 
   if (file.exists(targetFilePostProcessedFullPath)) {
-    message("Correct post processed file exists; returning it now...")
+    messagePreProcess(paste0("Correct post processed file exists (", targetFilePostProcessedFullPath,
+                      ");\n returning it now..."), verbose = verbose)
     return(terra::rast(targetFilePostProcessedFullPath))
   }
 
@@ -196,6 +202,9 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
                             remoteMetadata$fileSize, needed_tile_names, tilesFolderFullPath,
                             noData, verbose)
   }
+  messagePreProcess("prepInputsWithTiles ", gsub("^\b", "", messagePrefixDoneIn),
+                    format(difftime(Sys.time(), st), units = "secs", digits = 3),
+                    verbose = verbose)
   rfull
 }
 
@@ -817,9 +826,21 @@ sprcMosaicRast <- function(url, tile_rasters, to_inTileGrid, targetFilePostProce
     # mosaic_raster <- terra::vrt(mosaic_raster)
     intersects <- terra::intersect(terra::ext(mosaic_raster), terra::ext(to_inTileGrid))
     if (!is.null(intersects)) {
+      messagePrepInputs("cropping ... ", verbose = verbose)
+      st1 <- Sys.time()
       final <- terra::crop(mosaic_raster, to_inTileGrid)
+      messagePreProcess("  ", gsub("^\b", "", messagePrefixDoneIn),
+                        format(difftime(Sys.time(), st1), units = "secs", digits = 3),
+                        verbose = verbose)
+
+      st2 <- Sys.time()
+      messagePrepInputs("writing ... ", verbose = verbose)
       rfull <- terra::writeRaster(terra::merge(final), filename = targetFilePostProcessedFullPath,
                                   overwrite = TRUE)
+      messagePreProcess("  ", gsub("^\b", "", messagePrefixDoneIn),
+                        format(difftime(Sys.time(), st2), units = "secs", digits = 3),
+                        verbose = verbose)
+
       if (exists("fileSize", inherits = FALSE)) {
         messageAboutFilesizeCompare(fileSize, needed_tile_names,
                                     targetFilePostProcessedFullPath,  tilesFolderFullPath,
