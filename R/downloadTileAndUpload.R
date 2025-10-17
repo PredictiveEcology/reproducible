@@ -148,8 +148,10 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   missingTilesLocalAll <- setdiff(all_tile_names, dirTilesFolder)
   tilesToGet <- missingTilesLocal
   haveLocalTiles <- FALSE
-  messagePreProcess("Need to load/get these tiles:\n", verbose = verbose)
-  messagePreProcess(paste(needed_tile_names, collapse =  ", "), verbose = verbose)
+    messagePreProcess("Need to load/get these tiles:\n", verbose = verbose) # use message because of line wrap
+    if (verbose > 0) {
+      message(paste(needed_tile_names, collapse =  ", "))
+  }
   haveAllNeededTiles <- if (doUploads %in% TRUE) length(missingTilesLocalAll) == 0 else TRUE
 
 
