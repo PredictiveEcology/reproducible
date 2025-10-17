@@ -102,7 +102,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
     stop("Please supply `targetFile` or a url from which `targetFile` can be extracted from")
   }
   targetFileFullPath <- file.path(destinationPath, remoteMetadata$targetFile)
-  messagePreProcess("Preparing ", targetFileFullPath)
+  messagePreProcess("Preparing ", .messageFunctionFn(targetFileFullPath), verbose = verbose)
   targetFilePostProcessedFullPath <- .suffix(targetFileFullPath, dig)
 
   if (isTRUE(purge)) {
@@ -110,8 +110,9 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   }
 
   if (file.exists(targetFilePostProcessedFullPath) && doUploads %in% FALSE) {
-    messagePreProcess(paste0("Correct post processed file exists (", targetFilePostProcessedFullPath,
-                             ");\n returning it now..."), verbose = verbose)
+    messagePreProcess(paste0("Correct post processed file exists (",
+                             .messageFunctionFn(targetFilePostProcessedFullPath),
+                             ");\nreturning it now..."), verbose = verbose)
     messagePreProcess("prepInputsWithTiles ", gsub("^\b", "", messagePrefixDoneIn),
                       format(difftime(Sys.time(), st), units = "secs", digits = 3),
                       verbose = verbose)
@@ -155,7 +156,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   haveLocalTiles <- FALSE
     messagePreProcess("Need to load/get these tiles:\n", verbose = verbose) # use message because of line wrap
     if (verbose > 0) {
-      message(paste(needed_tile_names, collapse =  ", "))
+      messagePreProcess(.messageFunctionFn(paste(needed_tile_names, collapse =  ", ")), verbose = verbose)
   }
   haveAllNeededTiles <- if (doUploads %in% TRUE) length(missingTilesLocalAll) == 0 else TRUE
 
@@ -169,8 +170,8 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
     messagePreProcess(
       "⚠️ Tiles are missing locally. Will try to download these:\n",
       verbose = verbose)
-    messagePreProcess(paste(missingTilesLocal, collapse = ", "), verbose = verbose)
-    messagePreProcess(paste0("... from urlTiles (",urlTiles,")"), verbose = verbose)
+    messagePreProcess(.messageFunctionFn(paste(missingTilesLocal, collapse = ", ")), verbose = verbose)
+    messagePreProcess(paste0("... from urlTiles (",.messageFunctionFn(urlTiles),")"), verbose = verbose)
   }
 
   for (ii in 1:2) { # try twice in case a local tile is corrupt; if yes, delete it, redownload, reload
@@ -192,7 +193,8 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   noData <- FALSE
 
   if (file.exists(targetFilePostProcessedFullPath)) {
-    messagePreProcess(paste0("Correct post processed file exists (", targetFilePostProcessedFullPath,
+    messagePreProcess(paste0("Correct post processed file exists (",
+                             .messageFunctionFn(targetFilePostProcessedFullPath),
                       ");\n returning it now..."), verbose = verbose)
     return(terra::rast(targetFilePostProcessedFullPath))
   }
@@ -288,9 +290,9 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
 
   if (nrow(subfolder) == 0) {
     subfolder <- googledrive::drive_mkdir(subfolder_name, path = googledrive::as_id(parent_id))
-    messagePreProcess("📁 Created subfolder: ", subfolder_name, verbose = verbose)
+    messagePreProcess("📁 Created subfolder: ", .messageFunctionFn(subfolder_name), verbose = verbose)
   } else {
-    messagePreProcess("📁 Found existing subfolder: ", subfolder_name, verbose = verbose)
+    messagePreProcess("📁 Found existing subfolder: ", .messageFunctionFn(subfolder_name), verbose = verbose)
   }
 
   # List local .tif files
@@ -554,7 +556,7 @@ getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath
   }
   if (is.null(targetObjCRS)) {
     # still doesn't have it
-    messagePreProcess("Downloading full file (", targetFile,") from\n", url, verbose = verbose)
+    messagePreProcess("Downloading full file (", .messageFunctionFn(targetFile),") from\n", url, verbose = verbose)
     if (!exists("fileSize", inherits = FALSE))
       messageAboutFilesize(fileSize, verbose = verbose)
     download_resumable_httr2(url, targetFileFullPath)
@@ -634,7 +636,7 @@ downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFull
   if (needUploads && length(missingTilesOnRemote) == 0) {
     messagePreProcess("Some 'unneeded' tiles are missing, but doUploads is TRUE and local tiles exist: ",
                       "uploading: ", verbose = verbose)
-    messagePreProcess(paste(missingTilesRemoteAll, collapse = ", "), verbose = verbose)
+    messagePreProcess(.messageFunctionFn(paste(missingTilesRemoteAll, collapse = ", ")), verbose = verbose)
   }
 
   if (haveLocalTiles %in% FALSE && doTileDownload %in% TRUE) {
@@ -670,7 +672,7 @@ downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFull
     })
     if (!identical(needed_tile_names, intersecting_tiles2)) {
       messagePreProcess("`to` does not overlap with any tiles on file at:\n",
-              url, verbose = verbose)
+                        .messageFunctionFn(url), verbose = verbose)
       # the intersecting_tiles2 from the newly created need to be the same as the
       # expected from the grid
     }
@@ -834,7 +836,7 @@ sprcMosaicRast <- function(url, tile_rasters, to_inTileGrid, targetFilePostProce
                         verbose = verbose)
 
       st2 <- Sys.time()
-      messagePrepInputs("writing ... ", verbose = verbose)
+      messagePrepInputs("writing ", .messageFunctionFn(targetFilePostProcessedFullPath), " ...", verbose = verbose)
       rfull <- terra::writeRaster(terra::merge(final), filename = targetFilePostProcessedFullPath,
                                   overwrite = TRUE)
       messagePreProcess("  ", gsub("^\b", "", messagePrefixDoneIn),

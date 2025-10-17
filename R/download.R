@@ -1198,7 +1198,7 @@ download_resumable_httr2 <- function(file_name, local_path, verbose = getOption(
     token <- googledrive::drive_token()
     bearer <- token$auth_token$credentials$access_token
   }
-  if (isGD &&  (.Platform$OS.type == "windows") ) {
+  if (isGD &&  (.Platform$OS.type == "windows") || nzchar(Sys.which("curl")) %in% FALSE) {
     # Google Drive download using httr2 (no resume support)
     req <- httr2::request(file_name) |>
       httr2::req_auth_bearer_token(bearer) |>
@@ -1232,7 +1232,7 @@ download_resumable_httr2 <- function(file_name, local_path, verbose = getOption(
           url = file_name,
           destfile = local_path_expanded,
           method = method,
-          quiet = FALSE,
+          quiet = verbose < 1,
           extra = extra_args
         )
         completed <- TRUE
@@ -1241,40 +1241,40 @@ download_resumable_httr2 <- function(file_name, local_path, verbose = getOption(
         stop("❌ Non-Google Drive download failed: ", e$message)
       })
 
-    } else {
-      # Use httr2 for non-Google Drive downloads on Windows or if curl is unavailable
-      downloaded_bytes <- if (file.exists(local_path_expanded)) file.info(local_path_expanded)$size else 0
-
-      # Try to get total size
-      head_resp <- try(httr::HEAD(file_name), silent = TRUE)
-      total_size <- if (inherits(head_resp, "response")) {
-        as.numeric(httr::headers(head_resp)[["content-length"]])
-      } else {
-        NA
-      }
-
-      req <- httr2::request(file_name)
-
-      if (!is.na(total_size) && total_size > downloaded_bytes) {
-        req <- req |>
-          httr2::req_headers(Range = paste0("bytes=", downloaded_bytes, "-"))
-      }
-
-      req <- req |> httr2::req_progress()
-
-      con <- file(local_path_expanded, open = if (downloaded_bytes > 0) "ab" else "wb")
-      on.exit(try(close(con), silent = TRUE), add = TRUE)
-
-      tryCatch({
-        resp <- httr2::req_perform(req)
-        body <- httr2::resp_body_raw(resp)
-        writeBin(body, con)
-        completed <- TRUE
-        # message("✅ Non-Google Drive download completed using httr2.")
-      }, error = function(e) {
-        stop("❌ Download failed: ", e$message)
-      })
-    }
+    } # else {
+      # # Use httr2 for non-Google Drive downloads on Windows or if curl is unavailable
+      # downloaded_bytes <- if (file.exists(local_path_expanded)) file.info(local_path_expanded)$size else 0
+      #
+      # # Try to get total size
+      # head_resp <- try(httr::HEAD(file_name), silent = TRUE)
+      # total_size <- if (inherits(head_resp, "response")) {
+      #   as.numeric(httr::headers(head_resp)[["content-length"]])
+      # } else {
+      #   NA
+      # }
+      #
+      # req <- httr2::request(file_name)
+      #
+      # if (!is.na(total_size) && total_size > downloaded_bytes) {
+      #   req <- req |>
+      #     httr2::req_headers(Range = paste0("bytes=", downloaded_bytes, "-"))
+      # }
+      #
+      # req <- req |> httr2::req_progress()
+      #
+      # con <- file(local_path_expanded, open = if (downloaded_bytes > 0) "ab" else "wb")
+      # on.exit(try(close(con), silent = TRUE), add = TRUE)
+      #
+      # tryCatch({
+      #   resp <- httr2::req_perform(req)
+      #   body <- httr2::resp_body_raw(resp)
+      #   writeBin(body, con)
+      #   completed <- TRUE
+      #   # message("✅ Non-Google Drive download completed using httr2.")
+      # }, error = function(e) {
+      #   stop("❌ Download failed: ", e$message)
+      # })
+    # }
   }
   if (isTRUE(completed))
     messagePreProcess("✅ Download of " , local_path, " complete",  verbose = verbose)
