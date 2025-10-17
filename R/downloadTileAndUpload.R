@@ -526,13 +526,13 @@ crsFromLocalTile <- function(tilesFolderFullPath, dirTilesFolder) {
   targetObjCRS
 }
 
-crsFromGoogleDriveTile <- function(tilesFolderFullPath, existing_tiles, verbose = getOption("reproducible.verbose")) {
+crsFromGoogleDriveTile <- function(tilesFolderFullPath, existing_tiles, fileSize, verbose = getOption("reproducible.verbose")) {
   ogwd <- getwd()
   if (dir.exists(tilesFolderFullPath) %in% FALSE)
     dir.create(tilesFolderFullPath, recursive = TRUE, showWarnings = FALSE)
   setwd(tilesFolderFullPath)
   on.exit(setwd(ogwd))
-  download_resumable_httr2(existing_tiles$id[1], existing_tiles$name[1], verbose = verbose - 1)
+  download_resumable_httr2(existing_tiles$id[1], existing_tiles$name[1], fileSize, verbose = verbose - 1)
   targetObjCRS <- tryRastThenGetCRS(file.path(tilesFolderFullPath, existing_tiles$name[1]))
   setwd(ogwd)
   targetObjCRS
@@ -560,14 +560,14 @@ getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath
   # need to get the targetObjCRS to know what the tiles will look like
   if (is.null(targetObjCRS)) {
     targetObjCRS <- crsFromLocalOrGDTiles(targetObjCRS, dirTilesFolder, tilesFolderFullPath, urlTiles,
-                                          targetFile, purge, doUploads, verbose)
+                                          targetFile, purge, doUploads, fileSize, verbose)
   }
   if (is.null(targetObjCRS)) {
     # still doesn't have it
     messagePreProcess("Downloading full file (", .messageFunctionFn(targetFile),") from\n", url, verbose = verbose)
     if (!exists("fileSize", inherits = FALSE))
       messageAboutFilesize(fileSize, verbose = verbose)
-    download_resumable_httr2(url, targetFileFullPath)
+    download_resumable_httr2(url, targetFileFullPath, fileSize = fileSize)
 
     # rfull <- terra::rast(targetFileFullPath)
     targetObjCRS <- terra::crs(terra::rast(targetFileFullPath))
@@ -597,7 +597,8 @@ getTilesFromGoogleDrive <- function(tilesToGet, existing_tiles, tilesFolderFullP
   setwd(tilesFolderFullPath)
   on.exit(setwd(ogwd))
   by(tileIDSToGet, seq_len(NROW(tileIDSToGet)), function(i) {
-    download_resumable_httr2(i$id, i$name)
+    download_resumable_httr2(i$id, i$name, gdriveDetails = i,
+                             fileSize = as.numeric(i$drive_resource[[1]]$size))
   })
   haveLocalTiles <- TRUE
   setwd(ogwd)
@@ -911,7 +912,8 @@ rmRastIfTryError <- function(obj, tilesFolderFullPath, x) {
 
 
 
-crsFromLocalOrGDTiles <- function(targetObjCRS, dirTilesFolder, tilesFolderFullPath, urlTiles, targetFile, purge, doUploads, verbose) {
+crsFromLocalOrGDTiles <- function(targetObjCRS, dirTilesFolder, tilesFolderFullPath,
+                                  urlTiles, targetFile, purge, doUploads, fileSize, verbose) {
   existing_tiles <- NULL
   for (i in 1:2) { # try local file, then googledrive, then back to local after googledrive download
     if (length(dirTilesFolder))  {
@@ -924,7 +926,7 @@ crsFromLocalOrGDTiles <- function(targetObjCRS, dirTilesFolder, tilesFolderFullP
         if (isTRUE(purge) && doUploads %in% TRUE) {
           existing_tiles <- purgeGoogleTiles(urlTiles, targetFile, verbose)
         } else {
-          targetObjCRS <- crsFromGoogleDriveTile(tilesFolderFullPath, existing_tiles, verbose = verbose)
+          targetObjCRS <- crsFromGoogleDriveTile(tilesFolderFullPath, existing_tiles, fileSize, verbose = verbose)
         }
       }
     }
