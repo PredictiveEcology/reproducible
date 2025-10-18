@@ -239,7 +239,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
         fn <- cliCol(colour)
         hasSlashN2 <- gregexpr("\n", mess)[[1]]
         if (sum(hasSlashN2 > 0)) {
-          mess <- paste0(fn(strsplit(mess, split = "\n")), collapse = "\n")
+          mess <- paste0(fn(unlist(strsplit(mess, split = "\n"))), collapse = "\n")
         } else {
           # fn <- get(paste0("col_", colour), envir = asNamespace('cli'))
           mess <- fn(mess) # add the colour

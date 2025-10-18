@@ -98,8 +98,14 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   }
 
   remoteMetadata <- getRemoteMetadata(targetFile, isGDurl, url)
+  if (!is.null(.isArchive(remoteMetadata$targetFile)))  {
+    messagePreProcess(
+      "prepInputsWithTiles does not work with archives yet",
+      "returning `'NULL'`", verbose = verbose)
+    return("NULL")
+  }
 
-  remoteHashFile <- makeRemoteHashFile(url, dPath, remoteMetadata$targetFile, remoteMetadata$remoteHash)
+  remoteHashFile <- makeRemoteHashFile(url, destinationPath, remoteMetadata$targetFile, remoteMetadata$remoteHash)
   purge <- checkHaveCorrectHashedVersion(remoteHashFile, remoteMetadata$remoteHash, purge, verbose)
 
   dig <- .robustDigest(to)
@@ -138,6 +144,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   # Need to get target object crs targetObjCRS; first try local file, then local tile,
   #     then gdrive tile, then full remote file
   targetObjCRS <- getTargetCRS(targetFileFullPath, dirTilesFolder, tilesFolderFullPath, remoteMetadata$targetFile,
+                               destinationPath = destinationPath,
                            url, urlTiles, remoteMetadata$fileSize, remoteMetadata$remoteHash, purge, doUploads, verbose)
   # need to rerun because there may have been a rm in previous line
   dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
@@ -550,7 +557,7 @@ crsFromLocalFile <- function(targetFileFullPath, targetObjCRS) {
 }
 
 getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath,
-                         targetFile,
+                         targetFile, destinationPath,
                          url, urlTiles, fileSize, remoteHash, purge, doUploads, verbose) {
 
   targetObjCRS <- NULL # don't know it yet
@@ -572,7 +579,7 @@ getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath
     # rfull <- terra::rast(targetFileFullPath)
     targetObjCRS <- terra::crs(terra::rast(targetFileFullPath))
   }
-  makeRemoteHashFile(url, dPath, targetFile, remoteHash, write = TRUE)
+  makeRemoteHashFile(url, destinationPath, targetFile, remoteHash, write = TRUE)
   targetObjCRS
 }
 
@@ -761,11 +768,11 @@ numCoresToUse <- function(min = 2, max) {
   max(min, max)
 }
 
-makeRemoteHashFile <- function(url, dPath, targetFile, remoteHash, write = FALSE) {
+makeRemoteHashFile <- function(url, destinationPath, targetFile, remoteHash, write = FALSE) {
   url_no_protocol <- sub("^https?://", "", url)
   # Replace all slashes with underscores
   urlWithUnderscores <- gsub("/", "_", file.path(basename(targetFile), dirname(url_no_protocol)))
-  remoteHashFile <- file.path(dPath, paste0(urlWithUnderscores, ".hash"))
+  remoteHashFile <- file.path(destinationPath, paste0(urlWithUnderscores, ".hash"))
   if (isTRUE(write) && !file.exists(remoteHashFile))
     writeLines(remoteHash, remoteHashFile)
   return(remoteHashFile)

@@ -1214,9 +1214,10 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
   if ( (isGD &&  (.Platform$OS.type == "windows")) || nzchar(Sys.which("curl")) %in% FALSE ||
       fileSize < 1e9) { # i.e., < 1GB can just use the simpler httr2 progress
     # Google Drive download using httr2 (no resume support)
-    req <- httr2::request(file_name) |>
-      httr2::req_auth_bearer_token(bearer) |>
-      httr2::req_progress()
+    req <- httr2::request(file_name)
+    if (isGD)
+      req <- req |> httr2::req_auth_bearer_token(bearer)
+    req <- req |> httr2::req_progress()
 
     con <- file(local_path_expanded, open = "wb")
     on.exit(try(close(con), silent = TRUE), add = TRUE)
