@@ -1,6 +1,7 @@
 # reproducible (development version)
 
 * drop support for R 4.1 and 4.2;
+* minor bugfixes
 
 # reproducible 2.1.2
 
