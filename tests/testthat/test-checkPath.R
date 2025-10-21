@@ -93,7 +93,6 @@ test_that("checkPath: checkPath consistency", {
   expect_true(file.create(f1)) ## TRUE
   expect_true(file.exists(f1)) ## TRUE
 
-  opts <- options("reproducible.verbose" = 1)
-  on.exit(options(opts), add = TRUE)
+  withr::local_options("reproducible.verbose" = 1)
   expect_message(checkPath(f1), "is an existing file")
 })

@@ -22,6 +22,9 @@
 
 .message$Spatial <- lapply(.message$Greps, gsub, pattern = "\\\\", replacement = "")
 
+.message$cacheGeoDomainContained <- "Spatial domain is contained within the url; returning the object"
+.message$cacheGeoDomainNotContained <- "Domain is not contained within the targetFile; running FUN"
+
 .message$LoadedCacheResult <- function(src = 1) {
   srcPoss <- c("Cached", "Memoised")
   if (is.numeric(src)) {
@@ -31,6 +34,20 @@
   }
   paste0("Loaded! ", src, " result from previous")
 }
+
+.message$overwriting <- function(names, type = c("function", "userTags"), verbose) {
+  messageCache("Overwriting Cache entry with ", type[1],": '", paste(names, collapse = ", "), "'",
+               verbose = verbose
+  )
+}
+
+.message$changingFormatTxt <- "Changing format of Cache entry from"
+
+.message$changingFormat <- function(prevFile, newFile) {
+  paste0("     (", .message$changingFormatTxt, " ", fileExt(prevFile), " to ",
+  fileExt(newFile), ")")
+}
+
 
 .message$AddingToMemoised <- "(and added a memoised copy)"
 
@@ -114,6 +131,8 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL, indent = NULL,
       }
     }
     outMess <- capture.output(df)
+    outMess <- paddDFInitial(outMess, rows = 1:2, .spaceTmpChar, colour)
+
     if (skipColNames) outMess <- outMess[-1]
     outMess <- .addSlashNToAllButFinalElement(outMess)
     messageColoured(outMess, indent = indent, hangingIndent = FALSE,
@@ -155,13 +174,14 @@ messagePreProcess <- function(..., appendLF = TRUE,
 messageCache <- function(..., colour = getOption("reproducible.messageColourCache"),
                          verbose = getOption("reproducible.verbose"), verboseLevel = 1,
                          appendLF = TRUE) {
-  needIndent <- try(any(grepl("\b", unlist(list(...)))))
-  if (is(needIndent, "try-error")) browser()
-  indent <- if (isTRUE(!needIndent)) .message$PreProcessIndent else ""
-  messageColoured(..., indent = indent, # .message$CacheIndent,
-                  colour = colour, appendLF = appendLF,
-                  verboseLevel = verboseLevel, verbose = verbose
-  )
+  if (isTRUE(verboseLevel <= verbose)) { # this is duplicate of messageColoured; but will be faster
+    needIndent <- any(grepl("\b", unlist(list(...))))
+    indent <- if (isTRUE(!needIndent)) .message$PreProcessIndent else ""
+    messageColoured(..., indent = indent, # .message$CacheIndent,
+                    colour = colour, appendLF = appendLF,
+                    verboseLevel = verboseLevel, verbose = verbose
+    )
+  }
 }
 
 #' @export
@@ -196,12 +216,8 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
   if (isTRUE(verboseLevel <= verbose)) {
 
     if (getOption("reproducible.useCli", TRUE)) {
-      mess <- paste0(..., collapse = " ")
-      if (!is.null(colour)) {
-        fn <- cliCol(colour)
-        # fn <- get(paste0("col_", colour), envir = asNamespace('cli'))
-        mess <- fn(mess)
-      }
+      mess <- paste0(..., collapse = "")
+      # if (grepl("cacheIdInCache", mess)) browser()
       indentNum <- indent
       if (!is.null(indent))
         if (is.character(indent))
@@ -209,15 +225,26 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
       if (is.null(indent)) indentNum <- 0
 
       mess <- cli::ansi_trimws(mess, which = c("both"))
-      hasSlashN <- any(grepl("\n", mess))
+      if (any(grepl(.spaceTmpChar, mess)))
+        mess <- gsub(.spaceTmpChar, " ", mess)
+      hasSlashN <- any(grepl("\n", mess)) # faster than gregexpr that needs to count in the string
       if (!hasSlashN && cli::ansi_nchar(mess) > cli::console_width())
         mess <- cli::ansi_strwrap(x = mess,
                                   indent = indentNum,
                                   exdent = indentNum + hangingIndent * 2,
                                   simplify = TRUE)
       mess <- .addSlashNToAllButFinalElement(mess)
-      if (any(grepl(.spaceTmpChar, mess)))
-        mess <- gsub(.spaceTmpChar, " ", mess)
+
+      if (!is.null(colour)) {
+        fn <- cliCol(colour)
+        hasSlashN2 <- gregexpr("\n", mess)[[1]]
+        if (sum(hasSlashN2 > 0)) {
+          mess <- paste0(fn(strsplit(mess, split = "\n")[[1]]), collapse = "\n")
+        } else {
+          # fn <- get(paste0("col_", colour), envir = asNamespace('cli'))
+          mess <- fn(mess) # add the colour
+        }
+      }
 
       message(mess)
 
@@ -349,6 +376,72 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 .message$IndentDefault <- 1
 
 #' @importFrom withr defer
+.message$FileLinkUsed <- function(ftL, fts, verbose) {
+  messageCache("  (A file with identical properties already exists in the Cache: ", basename(ftL), "; ")
+  messageCache("    The newly added (", basename(fts), ") is a file.link to that file)",
+               verbose = verbose
+  )
+}
+
+
+.cacheMessageObjectSize <- function(otsObjSize, isBig) {
+  if (!anyNA(otsObjSize)) {
+    class(otsObjSize) <- "object_size"
+    osMess <- format(otsObjSize, units = "auto")[isBig]
+  } else {
+    osMess <- ""
+  }
+  osMess
+}
+
+
+.message$SavedTxt <- "Saved! Cache file: "
+
+.message$Saved <- function(cachePath, outputHash, functionName,
+                           cacheSaveFormat = getOption("reproducible.cacheSaveFormat"), verbose) {
+  postMess <- ""
+  if (isTRUE(getOption("reproducible.useMemoise")))
+    postMess <- paste0(" ", .message$AddingToMemoised)
+  messageCache(.message$SavedTxt,
+               basename2(CacheStoredFile(cachePath = cachePath, cacheId = outputHash,
+                                         cacheSaveFormat = cacheSaveFormat)),
+               "; fn: ", .messageFunctionFn(functionName), postMess,
+               verbose = verbose)
+}
+
+
+.message$useCacheIsFALSE <- function(nestLevel, functionName, useCache, verbose) {
+  nestedLev <- max(0, as.numeric(nestLevel)) ## nestedLev >= 0
+  spacing <- paste(collapse = "", rep("  ", nestedLev))
+  messageCache(spacing, "useCache is ", useCache,
+               "; skipping Cache on function ", functionName,
+               if (nestedLev > -1) paste0(" (currently running nested Cache level ", nestedLev + 1, ")"),
+               verbose = verbose
+  )
+}
+
+.message$cacheIdSameTxt <- "cacheId is same as calculated hash"
+.message$cacheIdNotSameTxt <- function(cacheId)
+  paste0("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId)
+
+.message$cacheIdNotAssessed <- function(cacheId)
+  paste0("cacheId passed to override automatic digesting; using ", cacheId)
+
+.message$SavingToCacheTxt <- function(isBig, userTags, functionName, cacheId, otsObjSize, osMess) {
+  if (missing(otsObjSize))
+    otsObjSize <- objectSizeGetFromUserTags(userTags)
+  if (missing(isBig))
+    isBig <- isTRUE(otsObjSize > .objectSizeMinForBig)
+  if (missing(osMess))
+    osMess <- .cacheMessageObjectSize(otsObjSize, isBig)
+
+  c(
+    "Saving ", "large "[isBig], "object (fn: ", .messageFunctionFn(functionName),
+    ", cacheId: ", cacheId, ") to Cache", ": "[isBig],
+    osMess
+  )
+}
+
 .message$IndentUpdate <- function(nchar = .message$IndentDefault, envir = parent.frame(), ns = "reproducible") {
   val <- paste0(rep(" ", nchar), collapse = "")
   .message$PreProcessIndent <- paste0(.message$PreProcessIndent, val)
@@ -370,6 +463,37 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
 .spaceTmpChar <- "spAcE"
 
+.message$noSimilarCacheTxt <- function(functionName) {
+  paste0("There is no similar item in the cachePath ",
+         if (!is.null(functionName))
+           paste0("of ",  .messageFunctionFn(functionName), " ") else "")
+}
+
+.message$defunct <- function(arg)
+  paste0(arg, " is a defunct argument; please remove it from this Cache call")
+
+
+
+.message$CacheTimings <- function(verbose) {
+  if (verbose > 3) {
+    assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
+    messageDF(.reproEnv$verboseTiming, colour = "blue", verbose = verbose, verboseLevel = 3)
+    messageCache("This object is also available from .reproEnv$cacheTimings",
+                 verbose = verbose, verboseLevel = 3
+    )
+    if (exists("verboseTiming", envir = .reproEnv)) {
+      rm("verboseTiming", envir = .reproEnv)
+    }
+  }
+}
+
+.message$CacheRequiresFUNtxt <- function() {
+  "Cache requires the FUN argument"
+}
+
+messageStripColor <- function(o)
+  gsub("\033.[[:digit:]]{2}[[:alpha:]]", "", o)
+
 .txtUnableToAccessIndex <- "unable to access index"
 
 cliCol <- function(col) {
@@ -377,3 +501,48 @@ cliCol <- function(col) {
     col <- paste0("col_", col)
   getFromNamespace(col, asNamespace("cli"))
 }
+
+paddDFInitial <- function(outMess, rows = 1:2, .spaceTmpChar, colour) {
+  for (r in rows) {
+    if (isTRUE(grepl(" +", outMess[r]))) {
+      numInitialSpaces <- length(gregexpr(" ", strsplit(outMess[r], split = "\\S")[[1]][1])[[1]])
+      # Has the "class" 2nd row
+      outMess[r] <- gsub("^ +", paste(rep(.spaceTmpChar, numInitialSpaces), collapse = ""), outMess[r])
+    }
+  }
+  outMess
+}
+
+
+._prepInputsMetadata <- "._prepInputsMetadata"
+
+
+.txtDownloadFailedFn <- function(pkg)
+  paste0("Download failed; try rerunning after installing ", pkg, " package.")
+
+singularPlural <- function (singPlur, l, v) {
+  if (!missing(l)) {
+    out <- singPlur[(length(l) > 1) + 1]
+  }
+  if (!missing(v)) {
+    out <- singPlur[(v > 1) + 1]
+  }
+  out
+}
+
+isAre <- function (l, v) {
+  singularPlural(c("is", "are"), l, v)
+}
+
+
+.txtPreDigest <- "preDigest"
+
+.message$BecauseOfLossOfColumn <- function(targetFileWithDP) {
+  paste0("Because of loss of column, resaving the same object as an RDS ",
+         "file at: \n", targetFileWithDP, "\nIt will have to be loaded with
+                    `readRDS('",targetFileWithDP,"') |> sf::st_as_sf()`")
+}
+
+.message$dashes <- "----------------------"
+
+.message$NoPrefix <- "._noPrefix"

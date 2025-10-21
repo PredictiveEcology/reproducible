@@ -108,6 +108,7 @@ setMethod(
         pattern = makeRelative(checksumFile, path),
         value = TRUE, invert = TRUE
       )
+      # files <- fs::path_norm(files)
     } else {
       isAbs <- isAbsolutePath(files)
       if (any(!isAbs)) {
@@ -148,7 +149,7 @@ setMethod(
 
     stStart <- Sys.time()
     filesToCheck <- if (length(txt$file) & length(files)) {
-      inTxt <- makeRelative(files, path) %in% txt$file
+      inTxt <- makeRelative(files, path) %in% makeRelative(txt$file, path)
       if (isTRUE(any(inTxt)))
         files <- files[inTxt]
       else {

@@ -373,7 +373,6 @@ makeRelative <- function(files, absoluteBase) {
       absoluteBase <- normPath(absoluteBase) # can be "." which means 'any character' in a grep
       if (length(absoluteBase) < length(files))
         absoluteBase <- rep(absoluteBase, length.out = length(files))
-      # if (length(absoluteBase) > 1) browser()
       files[areAbs] <- unlist(Map(ab = absoluteBase[areAbs], file = files[areAbs], function(ab, file)
         gsub(paste0("^", ab, "/{0,1}"), "", file)
       ))
@@ -382,6 +381,11 @@ makeRelative <- function(files, absoluteBase) {
       # this does dumb things when it is not relative ... i.e., with prepend ../../../../../..
       # files[areAbs] <- fs::path_rel(start = absoluteBase, files[areAbs])
     }
+  }
+  if (length(files)) {
+    hasStartingDot <- startsWith(files, ".")
+    if (isTRUE(any(hasStartingDot)))
+      files[hasStartingDot] <- fs::path_norm(files[hasStartingDot])
   }
   if (isList) {
     if (length(nams) == length(files)) {

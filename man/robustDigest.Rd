@@ -6,6 +6,7 @@
 \alias{.robustDigest,function-method}
 \alias{.robustDigest,expression-method}
 \alias{.robustDigest,language-method}
+\alias{.robustDigest,call-method}
 \alias{.robustDigest,character-method}
 \alias{.robustDigest,Path-method}
 \alias{.robustDigest,environment-method}
@@ -34,6 +35,8 @@
 
 \S4method{.robustDigest}{language}(object, .objects, length, algo, quick, classOptions)
 
+\S4method{.robustDigest}{call}(object, .objects, length, algo, quick, classOptions)
+
 \S4method{.robustDigest}{character}(object, .objects, length, algo, quick, classOptions)
 
 \S4method{.robustDigest}{Path}(object, .objects, length, algo, quick, classOptions)
@@ -48,7 +51,15 @@
 
 \S4method{.robustDigest}{matrix}(object, .objects, length, algo, quick, classOptions)
 
-\S4method{.robustDigest}{integer}(object, .objects, length, algo, quick, classOptions)
+\S4method{.robustDigest}{integer}(
+  object,
+  .objects,
+  length,
+  algo,
+  quick,
+  classOptions,
+  cacheSaveFormat = getOption("reproducible.cacheSaveFormat")
+)
 }
 \arguments{
 \item{object}{an object to digest.}
@@ -78,6 +89,10 @@ specific classes. Should be options that the \code{.robustDigest} knows what
 to do with.}
 
 \item{...}{Arguments passed to \code{FUN}, if \code{FUN} is not an expression.}
+
+\item{cacheSaveFormat}{Character string: currently either \code{qs} or \code{rds}. Defaults to
+\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} is faster but appears to have
+narrower range of conditions that work; \code{rds} is safer, but slower.}
 
 \item{objects}{Optional character vector indicating which objects are to
 be considered while making digestible. This argument is not used

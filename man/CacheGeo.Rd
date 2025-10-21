@@ -6,7 +6,6 @@
 \usage{
 CacheGeo(
   targetFile = NULL,
-  url = NULL,
   domain,
   FUN,
   destinationPath = getOption("reproducible.destinationPath", "."),
@@ -16,22 +15,40 @@ CacheGeo(
   useCache = getOption("reproducible.useCache"),
   overwrite = getOption("reproducible.overwrite"),
   action = c("nothing", "update", "replace", "append"),
+  bufferOK = FALSE,
+  verbose = getOption("reproducible.verbose"),
+  ...
+)
+
+CacheGeo(
+  targetFile = NULL,
+  domain,
+  FUN,
+  destinationPath = getOption("reproducible.destinationPath", "."),
+  useCloud = getOption("reproducible.useCloud", FALSE),
+  cloudFolderID = NULL,
+  purge = FALSE,
+  useCache = getOption("reproducible.useCache"),
+  overwrite = getOption("reproducible.overwrite"),
+  action = c("nothing", "update", "replace", "append"),
+  bufferOK = FALSE,
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 }
 \arguments{
-\item{targetFile}{The (optional) local file (or path to file)}
-
-\item{url}{The (optional) url of the object on Google Drive (the only option currently).
-This is only for downloading and uploading to.}
+\item{targetFile}{The (optional) local file (or path to file) name for a \code{sf}
+object or \code{data.frame} that can be coerced to a \code{sf} object (i.e., has a \code{geometry}
+column). If \code{cloudFolderID} is specified, then this will be the name of the
+file stored and/or accessed in that cloud folder.}
 
 \item{domain}{An sf polygon object that is the spatial area of interest. If \code{NULL},
 then this will return the whole object in \code{targetFile}.}
 
 \item{FUN}{A function call that will be called if there is the \code{domain} is
-not already contained within the \code{sf} object at \code{url} or \code{targetFile}. This function
+not already contained within the \code{sf} object at \code{targetFile}. This function
 call MUST return either a \code{sf} class object or a \code{data.frame} class object
-that has a geometry column (which can then be converted to \code{sf} with \code{st_as_sf})}
+that has a geometry column (which can then be converted to \code{sf} with \code{sf::st_as_sf})}
 
 \item{destinationPath}{Character string of a directory in which to download
 and save the file that comes from \code{url} and is also where the function
@@ -43,10 +60,10 @@ search for the file before attempting to download. Default for that option is
 
 \item{useCloud}{A logical.}
 
-\item{cloudFolderID}{If this is specified, then it must be either 1) a googledrive
+\item{cloudFolderID}{If this is specified, then it must be either 1) a Google Drive
 url to a folder where the \code{targetFile} will be read from or written to, or
-2) a googledrive id or 3) an absolute path to a (possibly non-existent yet)
-folder on your google drive.}
+2) a \code{googledrive} id or 3) an absolute path to a (possibly non-existent yet)
+folder on your Google drive.}
 
 \item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing
 \code{CHECKSUMS.txt} file and
@@ -74,13 +91,30 @@ i.e., "read only". \code{append} will add the spatial elements in domain to
 \code{append}, but will also remove any identical geometries before appending.
 \code{replace} does nothing currently.}
 
-\item{...}{Any named objects that are needed for FUN}
+\item{bufferOK}{A logical. If \code{TRUE}, then after testing whether the domain is
+within the \code{targetFile} spatial object, and if it returns \code{FALSE}, then the function
+will create a larger object, buffered by 2.5\% of the extent of the object. If
+\code{FALSE}, then it will be strict about whether the \code{domain} is within the \code{targetFile}.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{...}{All named objects that are needed for FUN, including the function itself,
+if it is not in a package.}
 }
 \value{
 Returns an object that results from \code{FUN}, which will possibly be a subset
-of a larger spatial object that is specified with \code{targetFile} or \code{url}.
+of a larger spatial object that is specified with \code{targetFile}.
+
+Returns an object that results from \code{FUN}, which will possibly be a subset
+of a larger spatial object that is specified with \code{targetFile}.
 }
 \description{
+\if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
+
 \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
 }
 \details{
@@ -88,7 +122,27 @@ This function is a combination of \code{Cache} and \code{prepInputs} but for spa
 domains. This differs from \code{Cache} in that the current function call doesn't
 have to have an identical function call previously run. Instead, it needs
 to have had a previous function call where the \code{domain} being passes is
-\emph{within} the geographic limits of the \code{targetFile} or file located at the \code{url}.
+\emph{within} the geographic limits of the \code{targetFile}.
+This is similar to a geospatial operation on a remote GIS server, with 2 differences:
+\enumerate{
+\item This downloads the object first before doing the GIS locally, and 2. it will
+optionally upload an updated object if the geographic area did not yet exist.
+}
+
+This has a very specific use case: assess whether an existing \code{sf} polygon
+or multipolygon object (local or remote) covers the spatial
+area of a \code{domain} of interest. If it does, then return only that
+part of the \code{sf} object that completely covers the \code{domain}.
+If it does not, then run \code{FUN}. It is expected that \code{FUN} will produce an \code{sf}
+polygon or multipolygon class object. The result of \code{FUN} will then be
+appended to the \code{sf} object as a new entry (feature) or it will replace
+the existing "same extent" entry in the \code{sf} object.
+
+This function is a combination of \code{Cache} and \code{prepInputs} but for spatial
+domains. This differs from \code{Cache} in that the current function call doesn't
+have to have an identical function call previously run. Instead, it needs
+to have had a previous function call where the \code{domain} being passes is
+\emph{within} the geographic limits of the \code{targetFile}.
 This is similar to a geospatial operation on a remote GIS server, with 2 differences:
 \enumerate{
 \item This downloads the object first before doing the GIS locally, and 2. it will
@@ -109,8 +163,60 @@ the existing "same extent" entry in the \code{sf} object.
 
 if (requireNamespace("sf", quietly = TRUE) &&
     requireNamespace("terra", quietly = TRUE)) {
-dPath <- checkPath(file.path(tempdir2()), create = TRUE)
-localFileLux <- system.file("ex/lux.shp", package = "terra")
+  dPath <- checkPath(file.path(tempdir2()), create = TRUE)
+  localFileLux <- system.file("ex/lux.shp", package = "terra")
+
+  # 1 step for each layer
+  # 1st step -- get study area
+  full <- prepInputs(localFileLux, destinationPath = dPath) # default is sf::st_read
+  zoneA <- full[3:6, ]
+  zoneB <- full[8, ] # not in A
+  zoneC <- full[3, ] # yes in A
+  zoneD <- full[7:8, ] # not in A, B or C
+  zoneE <- full[3:5, ] # yes in A
+  # 2nd step: re-write to disk as read/write is lossy; want all "from disk" for this ex.
+  writeTo(zoneA, writeTo = "zoneA.shp", destinationPath = dPath)
+  writeTo(zoneB, writeTo = "zoneB.shp", destinationPath = dPath)
+  writeTo(zoneC, writeTo = "zoneC.shp", destinationPath = dPath)
+  writeTo(zoneD, writeTo = "zoneD.shp", destinationPath = dPath)
+  writeTo(zoneE, writeTo = "zoneE.shp", destinationPath = dPath)
+  # Must re-read to get identical columns
+  zoneA <- sf::st_read(file.path(dPath, "zoneA.shp"))
+  zoneB <- sf::st_read(file.path(dPath, "zoneB.shp"))
+  zoneC <- sf::st_read(file.path(dPath, "zoneC.shp"))
+  zoneD <- sf::st_read(file.path(dPath, "zoneD.shp"))
+  zoneE <- sf::st_read(file.path(dPath, "zoneE.shp"))
+
+  # The function that is to be run. This example returns a data.frame because
+  #    saving `sf` class objects with list-like columns does not work with
+  #    many st_driver()
+  fun <- function(domain, newField) {
+    domain |>
+      as.data.frame() |>
+      cbind(params = I(lapply(seq_len(NROW(domain)), function(x) newField)))
+  }
+
+  # Run sequence -- A, B will add new entries in targetFile, C will not,
+  #                 D will, E will not
+  for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE)) {
+    out <- CacheGeo(
+      targetFile = "fireSenseParams.rds",
+      domain = z,
+      FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
+      fun = fun, # pass whatever is needed into the function
+      destinationPath = dPath,
+      action = "update"
+      # , cloudFolderID = "cachedObjects" # to upload/download from cloud
+    )
+  }
+}
+}
+\donttest{
+
+if (requireNamespace("sf", quietly = TRUE) &&
+    requireNamespace("terra", quietly = TRUE)) {
+  dPath <- checkPath(file.path(tempdir2()), create = TRUE)
+  localFileLux <- system.file("ex/lux.shp", package = "terra")
 
   # 1 step for each layer
   # 1st step -- get study area

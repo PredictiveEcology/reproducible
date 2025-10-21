@@ -230,8 +230,8 @@ utils::globalVariables(c(
 #'   # Make dummy "large" map that must be cropped to the study area
 #'   outerSA <- terra::buffer(studyArea, 50000)
 #'   terra::crs(outerSA) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-#'   tf <- normPath(file.path(tempdir2("prepInputsEx"), "prepInputs2.shp"))
-#'   terra::writeVector(outerSA, tf, overwrite = TRUE)
+#'   tf <- normPath(file.path(tempdir2(), "prepInputs2.shp"))
+#'   terra::writeVector(outerSA, tf)
 #'
 #'   # run prepInputs -- load file, postProcess it to the studyArea
 #'
@@ -408,6 +408,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
   .message$IndentRevert()
   stFinal <- reportTime(stStart, mess = "`prepInputs` done; took ", minSeconds = 10)
+  # if (getOption("reproducible.savePrepInputsState", FALSE))
+  #   savePrepInputsState(url, archive, out, stFinal, sysCalls = sys.calls())
   return(x)
 }
 
@@ -446,7 +448,7 @@ extractFromArchive <- function(archive,
                                verbose = getOption("reproducible.verbose", 1),
                                .tempPath, ...) {
   if (!is.null(archive)) {
-    if (!(any(c(knownInternalArchiveExtensions, knownSystemArchiveExtensions) %in% fileExt(archive)))) {
+    if (!(any(c(knownArchiveExtensions) %in% fileExt(archive)))) {
       stop(
         "Archives of type ", fileExt(archive), " are not currently supported. ",
         "Try extracting manually then placing extracted files in ", destinationPath
@@ -523,7 +525,7 @@ extractFromArchive <- function(archive,
           filesExtracted <- c(
             filesExtracted,
             .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
-                                  absolutePrefix = destinationPath,
+                                  absolutePrefix = destinationPath, archive = archive,
                                   files = basename2(archive[2]), .tempPath = .tempPath
             )
           )
@@ -571,6 +573,7 @@ extractFromArchive <- function(archive,
                                   funWArgs$args,
                                   absolutePrefix = destinationPath,
                                   files = filesToExtractNow,
+                                  archive = archive,
                                   .tempPath = .tempPath
             )
           )
@@ -588,6 +591,7 @@ extractFromArchive <- function(archive,
               .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
                                     files = arch,
                                     absolutePrefix = destinationPath,
+                                    archive = archive,
                                     .tempPath = .tempPath
               )
             )
@@ -642,6 +646,7 @@ extractFromArchive <- function(archive,
 #' @rdname guessAtTarget
 #' @name guessAtTarget
 #' @importFrom utils unzip untar
+#' @importFrom stats setNames
 #' @inheritParams postProcess
 #' @param filesExtracted A character vector of all files that have been extracted (e.g.,
 #'                       from an archive)
@@ -661,12 +666,18 @@ extractFromArchive <- function(archive,
     isRDS <- FALSE
     fileExt <- fileExt(possibleFiles)
     feKnown <- .fileExtsKnown() # An object in helpers.R
+
     funPoss <- lapply(fileExt, function(fe) feKnown[startsWith(prefix = feKnown[[1]], fe), ])
     funPoss <- do.call(rbind, funPoss)
+
+    if (NROW(funPoss) == 0 && length(possibleFiles)) {
+      funPoss <- checkSFWebPage(funPoss, fileExt, feKnown, verbose)
+    }
+
     if (length(funPoss)) {
       isShapefile <- fileExt %in% funPoss[funPoss[, "type"] == vectorType(), "extension"]
       isRaster <- fileExt %in% funPoss[funPoss[, "type"] == rasterType(), "extension"]
-      isRDS <- fileExt %in% funPoss[funPoss[, "extension"] == "rds", "extension"]
+      isRDS <- fileExt %in% funPoss[funPoss[, "extension"] == .rdsFormat, "extension"]
       if (any(isShapefile)) {
         if (is.null(fun)) {
           if (requireNamespace("sf", quietly = TRUE)) {
@@ -760,15 +771,27 @@ extractFromArchive <- function(archive,
           paste(knownArchiveExtensions, collapse = ", ")
         )
       }
-      if (ext == "zip") {
-        fun <- unzip
-        args <- c(args, list(junkpaths = FALSE))
-      } else if (ext %in% c("tar", "tar.gz", "gz")) {
-        fun <- untar
-      } else if (ext == "rar") {
-        fun <- "unrar"
-      } else if (ext == "7z") {
-        fun <- "7z"
+      canUseArchive <- .requireNamespace("archive")
+      mustUseArchive <- !(ext %in% knownInternalArchiveExtensions)
+      useArchive <- (mustUseArchive && canUseArchive || canUseArchive)
+      if (mustUseArchive && canUseArchive %in% FALSE) {
+        stop("Please install.packages('archive') to extract files from \n", archive)
+      }
+      if (useArchive && .requireNamespace("archive")) {
+        fun <- archive::archive_extract
+      } else { # base R or system call functions
+        if (ext == "zip") {
+          fun <- unzip
+          args <- c(args, list(junkpaths = FALSE))
+        } else if (ext %in% c("tar", "tar.gz", "gz")) {
+          fun <- untar
+        } else { # system only
+          if (ext == "rar") {
+            fun <- "unrar"
+          } else if (ext == "7z") {
+            fun <- "7z"
+          }
+        }
       }
       out <- list(fun = fun, args = args)
     }
@@ -780,6 +803,7 @@ extractFromArchive <- function(archive,
 #' @importFrom utils capture.output
 .callArchiveExtractFn <- function(fun, args, files, overwrite = TRUE,
                                   absolutePrefix = getOption("reproducible.destinationPath", "."),
+                                  archive = "",
                                   verbose = getOption("reproducible.verbose", 1), .tempPath) {
   argList <- list(files = files)
   argList$files <- makeRelative(argList$files, absolutePrefix)
@@ -809,7 +833,7 @@ extractFromArchive <- function(archive,
     messagePreProcess(
       paste0("The archive appears to be not a .zip. Trying a system call to ", fun),
       verbose = verbose)
-    extractSystemCallPath <- .testForArchiveExtract()
+    extractSystemCallPath <- .testForArchiveExtract(archive)
     if (grepl(x = extractSystemCallPath, pattern = "7z")) {
       prependPath <- if (isWindows()) {
         paste0("\"", extractSystemCallPath, "\"")
@@ -847,12 +871,14 @@ extractFromArchive <- function(archive,
     # Start the extracting, starting with `archive`
     worked <- FALSE
     if (.requireNamespace("archive", stopOnFALSE = FALSE)) {
-      system.time(
-        extractedFiles <- archive::archive_extract(args[[1]], args$exdir, argList$files))
+      #system.time(
+        extractedFiles <- archive::archive_extract(args[[1]], args$exdir, argList$files)
+      #  )
       listOfFilesExtracted <- extractedFiles <- list.files(
         path = .tempPath,
         # list of full paths of all extracted files!
         recursive = TRUE,
+        all.files = TRUE,
         include.dirs = TRUE
       )
 
@@ -876,12 +902,13 @@ extractFromArchive <- function(archive,
 
       if (!tooBig) {
         messagePreProcess("Extracting with R's unzip ... ")
-        stExtract <- system.time(mess <- capture.output(
+        stExtract <- # system.time(
+          mess <- capture.output(
           {
             extractedFiles <- do.call(fun, c(args, argList))
           },
           type = "message"
-        ))
+        )# )
         worked <- if (isUnzip) {
           all(normPath(file.path(args$exdir, argList[[1]])) %in% normPath(extractedFiles))
         } else {
@@ -994,6 +1021,7 @@ extractFromArchive <- function(archive,
     listOfFilesExtracted <- list.files(
       path = .tempPath,
       # list of full paths of all extracted files!
+      all.files = TRUE,
       recursive = TRUE,
       include.dirs = TRUE
     )
@@ -1028,7 +1056,7 @@ extractFromArchive <- function(archive,
 
   if (length(listOfFilesExtracted) == 0) {
     stop(
-      "preProcess could not extract the files from the archive ", args[[1]], ".",
+      "preProcess could not extract the files from the archive ", args[[1]], ".\n",
       "Please try to extract it manually to the destinationPath"
     )
   }
@@ -1107,22 +1135,30 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   }
 
   if (needSystemCall) {
-    extractSystemCallPath <- .testForArchiveExtract()
+    extractSystemCallPath <- .testForArchiveExtract(archive)
     funWArgs <- list(fun = extractSystemCallPath)
     } else {
-      funWArgs <- .whichExtractFn(archive[1], NULL)
-    }
+    funWArgs <- .whichExtractFn(archive[1], NULL)
+  }
 
-    filesInArchive <- NULL
+  filesInArchive <- NULL
   if (!is.null(funWArgs$fun)) {
     if (file.exists(archive[1])) {
       if (!needSystemCall) {
-        filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
-        if ("Name" %in% names(filesInArchive)) {
+        if (.requireNamespace("archive") && identical(archive::archive_extract, funWArgs$fun)) {
+          filesInArchive <- archive::archive(archive[1])
+        } else {
+          filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
+        }
+        nams <- names(filesInArchive)
+        if ("Name" %in% nams) {
           # for zips, rm directories (length = 0)
           filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
+        } else if ("path" %in% nams) {
+          # from archive::archive
+          filesInArchive <- filesInArchive[filesInArchive$size != 0, ]$path
         } else {
-          # untar
+          # untar & archive::archive
           filesInArchive
         }
       } else {
@@ -1219,7 +1255,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   } else {
     ""
   }
-  if (!(isWindows())) { ## TODO: macOS ?? #266
+  if (!(isWindows() && !isMac())) { ## TODO: macOS ?? #266
     if (grepl("7z", extractSystemCallPath)) {
       SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE)
       SevenZrarExists <- grepl(SevenZrarExists, pattern = "installed")
@@ -1242,12 +1278,14 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         extractSystemCallPath <- list.files("C:/Program Files",
                                             pattern = "unrar.exe|7z.exe",
                                             recursive = TRUE,
+                                            all.files = TRUE,
                                             full.names = TRUE
         )
         if (extractSystemCallPath == "" || length(extractSystemCallPath) == 0) {
           extractSystemCallPath <- list.files(dirname(Sys.getenv("SystemRoot")),
                                               pattern = "unrar.exe|7z.exe",
                                               recursive = TRUE,
+                                              all.files = TRUE,
                                               full.names = TRUE
           )
           if (extractSystemCallPath == "" || length(extractSystemCallPath) == 0) {
@@ -1276,40 +1314,48 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     }
   }
   if (!exists("extractSystemCallPath", inherits = FALSE)) extractSystemCallPath <- NULL
-  if (!nzchar(extractSystemCallPath)) extractSystemCallPath <- NULL
+  if (is.null(extractSystemCallPath) || !nzchar(extractSystemCallPath)) extractSystemCallPath <- NULL
 
   return(extractSystemCallPath)
 }
 
-#' Returns unrar path and creates a shortcut as .unrarPath
-#' Was not incorporated in previous function so it can be
-#' used in the tests
+#' Returns `unrar` path and creates a shortcut as `.systemArchivePath`.
+#' Was not incorporated in previous function so it can be used in the tests.
 #'
 #' @return
-#' unrar or 7zip path if exist, and assign it to .unrarPath
-#' Stops and advise user to install it if unrar doesn't exist
+#' path to `unrar` or `7-zip` if it exists, and assign it to `.systemArchivePath`.
+#' Advise the user if not found..
 #'
 #' @author Tati Micheletti
 #'
 #' @keywords internal
 #' @rdname testForArchiveExtract
 #' @name testForArchiveExtract
-.testForArchiveExtract <- function() {
-  if (!is.null(.unrarPath)) {
-    extractSystemCallPath <- .unrarPath
-  } else {
-    # Find the path to unrar and assign to a package-stored object
-    usrTg <- paste(sample(x = LETTERS, size = 15), collapse = "")
-    # Cache for project-level persistence
-    extractSystemCallPath <- Cache(.archiveExtractBinary, userTags = usrTg)
-    utils::assignInMyNamespace(".unrarPath", extractSystemCallPath) # assign in namespace for pkg
+.testForArchiveExtract <- function(archive = "") {
+  sevenzName <- grep("7z", knownSystemArchiveExtensions, value = TRUE)
+
+  extractSystemCallPath <- NULL
+  if (tools::file_ext(archive) == sevenzName) {
+    extractSystemCallPath <- Sys.which(sevenzName)
   }
+
   if (is.null(extractSystemCallPath)) {
-    clearCache(userTags = usrTg, ask = FALSE)
-    stop(
-      "prepInputs did not find '7-Zip' nor 'unrar' installed.",
-      " Please install it before running prepInputs for a '.rar' archive"
-    )
+    if (!is.null(.systemArchivePath)) {
+      extractSystemCallPath <- .systemArchivePath
+    } else {
+      # Find the path to unrar and assign to a package-stored object
+      usrTg <- paste(sample(x = LETTERS, size = 15), collapse = "")
+      # Cache for project-level persistence
+      extractSystemCallPath <- Cache(.archiveExtractBinary, userTags = usrTg)
+      utils::assignInMyNamespace(".systemArchivePath", extractSystemCallPath) # assign in namespace for pkg
+    }
+    if (is.null(extractSystemCallPath)) {
+      clearCache(userTags = usrTg, ask = FALSE)
+      stop(
+        "prepInputs did not find '7-Zip' nor 'unrar' installed.",
+        " Please install it before running prepInputs for a '.rar' archive"
+      )
+    }
   }
   return(extractSystemCallPath)
 }
@@ -1317,14 +1363,18 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' The known path for unrar or 7z
 #' @rdname unrarPath
 #' @name unrarPath
-.unrarPath <- NULL
+.systemArchivePath <- NULL
 
 missingUnrarMess <- "The archive is a 'rar' archive; your system does not have unrar or 7zip;\n"
 proj6Warn <- "NOT UPDATED FOR PROJ"
 
+sevenzName <- "7z"
+knownArchivePkgExtensions <- c("zip", "tar", "tar.gz", "gz", "rar", sevenzName, "cab")
 knownInternalArchiveExtensions <- c("zip", "tar", "tar.gz", "gz")
-knownSystemArchiveExtensions <- c("rar", "7z")
-knownArchiveExtensions <- c(knownInternalArchiveExtensions, knownSystemArchiveExtensions)
+# knownSystemArchiveExtensions <- c("rar", sevenzName, "unrar")
+knownSystemArchiveExtensions <- c("rar", sevenzName)
+knownArchiveExtensions <- unique(c(knownInternalArchiveExtensions, knownSystemArchiveExtensions,
+                            knownArchivePkgExtensions))
 
 
 prepInputsAssertions <- function(env) {
@@ -1418,15 +1468,18 @@ process <- function(out, funCaptured,
 
       if (!isTRUE(is.na(out$targetFilePath)))
         messagePreProcess("Loading object into R", verbose = verbose)
-      needRaster <- any(grepl("raster$|stack$|brick$", funCaptured))
-      needTerra <- any(grepl("terra|rast$", funCaptured))
+      needRaster <- any(grepl("raster$|stack$|brick$", funCaptured)) ||
+        any(grepl("raster$|stack$|brick$", funChar)) || any(grepl("raster", capture.output(show(theFun))))
+      needTerra <- any(grepl("terra|rast$", funCaptured)) || any(grepl("terra|rast$", funChar)) ||
+        any(grepl("terra", capture.output(show(theFun))))
       if (needRaster) {
         .requireNamespace("raster", stopOnFALSE = TRUE)
       }
       if ((needRaster || needTerra) && !is.call(theFun)) {
         ## Don't cache the reading of a raster
         ## -- normal reading of raster on disk is fast b/c only reads metadata
-        outProcess <- do.call(theFun, append(list(asPath(out$targetFilePath)), args))
+        outProcess <- try(do.call(theFun, append(list(asPath(out$targetFilePath)), args)))
+        if (is(outProcess, "try-error")) browser()
       } else {
         if (identical(theFun, base::load)) {
           if (is.null(args$envir)) {
@@ -1448,7 +1501,7 @@ process <- function(out, funCaptured,
           }
         } else {
           useCache2 <- useCache
-          if (any(fileExt(out$targetFilePath) %in% c("qs", "rds")) &&
+          if (any(fileExt(out$targetFilePath) %in% c(.qsFormat, .rdsFormat)) &&
               !isTRUE(getOption("reproducible.useMemoise"))) {
             useCache2 <- FALSE
             messagePreProcess("targetFile is already a binary; skipping Cache while loading")
@@ -1548,14 +1601,15 @@ filenamesFromArchiveLst <- function(filesOutput) {
   filesLines <- if (length(filesInBetween) == 0)
     filesOutput
   else
-    filesLines <- filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
+    filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
 
   filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line) {
-    first5trimmed <- unlist(strsplit(filesLines[[line]], split = " +"))[-(1:5)]
-    if (length(first5trimmed) > 1)
-      first5trimmed <- paste(first5trimmed, collapse = " ")
-    # first5trimmed <- unlist(strsplit(filesLines[[line]], split = "  "))
-    return(first5trimmed)
+    tail(unlist(strsplit(filesLines[[line]], split = " +")), 1)
+    # first5trimmed <- unlist(strsplit(filesLines[[line]], split = " +"))[-(1:5)]
+    # if (length(first5trimmed) > 1)
+    #   first5trimmed <- paste(first5trimmed, collapse = " ")
+    # # first5trimmed <- unlist(strsplit(filesLines[[line]], split = "  "))
+    # return(first5trimmed)
   }))
   if (isTRUE(any(grepl("\\\\", filesInArchive))))
     filesInArchive <- gsub("\\\\", "/", filesInArchive)
@@ -1657,4 +1711,69 @@ currentFilesToChecksumsTable <- function(currentFiles, nonCurrentFiles = NULL, v
     )
   }
   currentFilesToRbind
+}
+
+
+# savePrepInputsState <- function(url, archive, out, stFinal, sysCalls) {
+#   if (is.null(url)) url <- ""
+#   if (is.null(out$targetFilePath)) out$targetFilePath <- ""
+#   if (is.null(out$destinationPath)) out$destinationPath <- ""
+#   if (is.null(out$fun)) out$fun <- ""
+#   if (is.null(archive)) archive <- ""
+#   co <- paste0(capture.output(sysCalls[[length(sysCalls)]]), collapse = " ")
+#   if (isTRUE(!any(grepl(" *<- *", co)))) {
+#     co <- ""
+#     Cached <- .grepSysCalls(sys.calls(), pattern = "Cache")
+#     prepInputed <- .grepSysCalls(sys.calls(), pattern = "prepInputs")
+#     if (length(Cached)) {
+#       CachedPoss <- sysCalls[Cached]
+#       if (identical(as.character(CachedPoss[[2]])[1], "prepInputs")) {
+#         co <- paste0(capture.output(sysCalls[[Cached]]), collapse = " ")
+#       } else {
+#         co <- paste0(capture.output(sysCalls[tail(Cached, 1)]), collapse = " ")
+#       }
+#     }
+#   }
+#
+#   objName <- strsplit(paste0(co, collapse = " "), split = " *<- *")[[1]][1]
+#
+#   keep <- setDT(list(objName = objName, url = url, archive = archive, targetFile = out$targetFilePath,
+#                      destinationPath = out$destinationPath,
+#                      fun = format(out$funChar), time = stFinal))
+#   if (is.null(.pkgEnv[[._txtPrepInputsObjects]])) {
+#     .pkgEnv[[._txtPrepInputsObjects]] <- keep
+#   } else {
+#     .pkgEnv[[._txtPrepInputsObjects]] <- tryCatch(rbindlist(list(.pkgEnv[[._txtPrepInputsObjects]], keep)), error = function(e) browser())
+#   }
+#   return(invisible())
+# }
+
+
+checkSFWebPage <- function(funPoss, fileExt, feKnown, verbose) {
+  if (requireNamespace("rvest")) {
+    sfURL <- "https://r-spatial.github.io/sf/articles/sf2.html#guessing-a-driver-for-output"
+    tbls_ls <- try({rvest::read_html(sfURL) |>
+        rvest::html_nodes("table")  |>
+        rvest::html_table(fill = TRUE) } |>
+          Cache(verbose = FALSE))
+    if (!is(tbls_ls, "try-error")) {
+      exts <- tbls_ls[[1]]$extension
+      if (isTRUE(any(fileExt %in% exts))) {
+        funPoss <- data.frame(fileExt, "sf::st_read", "sf::st_write", "sf") |>
+          setNames(names(feKnown))
+      }
+    } else {
+      messagePrepInputs("It looks like the sf article identifying which extensions",
+                        "it can read has changed", "\nPlease contact reproducible",
+                        "developers citing this message. Currently using:\n",
+                        sfURL, verbose = verbose + 1)
+    }
+
+  } else {
+    messagePrepInputs("`reproducible` does not know the file type passed.\n",
+                      "Please run `install.packages('rvest')` to load other known ",
+                      "file types that the `sf` package can load.",
+                      verbose = verbose + 1)
+  }
+  funPoss
 }

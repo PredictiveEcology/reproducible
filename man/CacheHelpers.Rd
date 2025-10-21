@@ -25,7 +25,7 @@ loadFromCache(
   cacheId,
   preDigest,
   fullCacheTableForObj = NULL,
-  format = getOption("reproducible.cacheSaveFormat", "rds"),
+  cacheSaveFormat = getOption("reproducible.cacheSaveFormat", .rdsFormat),
   .functionName = NULL,
   .dotsFromCache = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
@@ -40,7 +40,9 @@ rmFromCache(
   cacheId,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  format = getOption("reproducible.cacheSaveFormat", "rds")
+  cacheSaveFormat = getOption("reproducible.cacheSaveFormat", .rdsFormat),
+  verbose,
+  ...
 )
 
 CacheDBFile(
@@ -54,7 +56,7 @@ CacheStorageDir(cachePath = getOption("reproducible.cachePath"))
 CacheStoredFile(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
-  format = NULL,
+  cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
   obj = NULL
 )
 
@@ -67,7 +69,8 @@ CacheIsACache(
   cachePath = getOption("reproducible.cachePath"),
   create = FALSE,
   drv = getDrv(getOption("reproducible.drv", NULL)),
-  conn = getOption("reproducible.conn", NULL)
+  conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose")
 )
 }
 \arguments{
@@ -94,7 +97,7 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{fullCacheTableForObj}{The result of \code{showCache}, but subsetted for only
 the \code{cacheId} being loaded or selected}
 
-\item{format}{The text string representing the file extension used normally by
+\item{cacheSaveFormat}{The text string representing the file extension used normally by
 different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
 to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 
@@ -107,6 +110,8 @@ to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 \item{elem}{character string specifying a \code{tagKey} value to match}
 
 \item{ifNot}{character (or NULL) specifying the return value to use if \code{elem} not matched}
+
+\item{...}{Arguments passed to \code{FUN}, if \code{FUN} is not an expression.}
 
 \item{obj}{The optional object that is of interest; it may have an attribute "saveRawFile"
 that would be important.}

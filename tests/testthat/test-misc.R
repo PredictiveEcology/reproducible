@@ -95,6 +95,7 @@ test_that("setting options works correctly", {
   b1 <- b[names(a1)]
   # b1 <- b1[!names(b1) %in% omit]
   a2 <- a1 # [!names(a1) %in% omit]
+  #a1[names(a1) %in% "reproducible.useMemoise"] <- NULL # useMemoise may be TRUE during some tests
   expect_identical(b1, a2)
 })
 
@@ -122,11 +123,12 @@ test_that("unrar is working as expected", {
   cat("hi", file = tmpfile[1])
   cat("hi", file = tmpfile[2])
   rarPath <- file.path(tmpdir, "tmp.rar")
-  oo <- capture.output(out <- try(utils::zip(zipfile = rarPath, files = tmpfile, flags = "-q"),
-                            silent = TRUE)) # this should only be relevant if system can unrar
+  file.create(tmpfile)
+  out <- try(utils::zip(zipfile = rarPath, files = tmpfile, flags = "-q")) # this should only be relevant if system can unrar
   if (!is(out, "try-error")) {
     unrar <- .whichExtractFn(archive = rarPath, args = "")
-    expect_true(identical(unrar$fun, "unrar"))
+    if (.requireNamespace("archive"))
+      expect_true(identical(unrar$fun, archive::archive_extract))
     suppressWarnings(
       expect_error(.callArchiveExtractFn(unrar$fun, files = "", args = list(exdir = tmpCache)))
     )

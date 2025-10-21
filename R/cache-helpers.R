@@ -247,8 +247,8 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     sn <- slotNames(object@legend)
     legendSlotsToDigest <- lapply(sn, function(s) slot(object@legend, s))
     dig2 <- .robustDigest(legendSlotsToDigest,
-      length = length, quick = quick,
-      algo = algo
+                          length = length, quick = quick,
+                          algo = algo
     ) # don't include object@data -- these are volatile
     dig <- c(dig, dig2)
 
@@ -256,8 +256,8 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     sn <- sn[!(sn %in% c("name"))]
     fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
     digFile <- .robustDigest(asPath(fileSlotsToDigest),
-      length = length, quick = quick,
-      algo = algo
+                             length = length, quick = quick,
+                             algo = algo
     ) # don't include object@file -- these are volatile
 
     dig <- c(dig, digFile)
@@ -322,10 +322,10 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 
   if (is.character(namesObj)) {
     namesObj <- gsub(namesObj, pattern = "\\.|_", replacement = "aa")
-    allLower <- tolower(namesObj) == namesObj
+    allLower <- (tolower(namesObj) == namesObj) %in% TRUE
     namesObj[allLower] <- paste0("abALLLOWER", namesObj[allLower])
 
-    onesChanged <- startsWith(namesObj, prefix = "a")
+    onesChanged <- startsWith(namesObj, prefix = "a") %in% TRUE
     namesObj[!onesChanged] <- paste0("ZZZZZZZZZ", namesObj[!onesChanged])
 
     out <- order(namesObj)
@@ -342,14 +342,18 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #'
 #' @param obj  An arbitrary R object.
 #' @param preDigest  A list of hashes.
-#' @param ...  Dots passed from Cache
+#' @param ...  Dots passed from `Cache`
+#' @param fullCall The original call to `Cache`
 #'
 #' @return The same object as `obj`, but with 2 attributes set.
 #'
 #' @author Eliot McIntire
 #' @rdname debugCache
-.debugCache <- function(obj, preDigest, ...) {
-  attr(obj, "debugCache1") <- list(...)
+.debugCache <- function(obj, preDigest, ..., fullCall) {
+  if (missing(fullCall))
+    attr(obj, "debugCache1") <- list(...)
+  else
+    attr(obj, "debugCache1") <- fullCall
   attr(obj, "debugCache2") <- preDigest
   obj
 }
@@ -408,7 +412,7 @@ nextNumericName <- function(string) {
   if (isTRUE(any(alreadyHasNumeric))) {
     splits <- strsplit(allSimilarFilesInDirSansExt[alreadyHasNumeric], split = "_")
     highestNumber <- max(unlist(lapply(splits, function(split) as.numeric(tail(split, 1)))),
-      na.rm = TRUE
+                         na.rm = TRUE
     )
     preNumeric <- unique(unlist(lapply(splits, function(spl) paste(spl[-length(spl)], collapse = "_")))) # nolint
     ## keep rndstr in here (below), so that both streams keep same rnd number state
@@ -461,12 +465,13 @@ list2envAttempts <- function(x, envir) {
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
                                      drv = getDrv(getOption("reproducible.drv", NULL)),
                                      conn = getOption("reproducible.conn", NULL),
+                                     verbose = getOption("reproducible.verbose"),
                                      ...) {
   fnsAll <- Filenames(obj)
   fnsShort <- Filenames(obj, FALSE)
   if (!all(nchar(fnsAll) == 0)) {
     repoDir <- checkPath(repoDir, create = TRUE)
-    isRepo <- CacheIsACache(cachePath = repoDir, drv = drv, conn = conn)
+    isRepo <- CacheIsACache(cachePath = repoDir, drv = drv, conn = conn, verbose = verbose)
     # thoseWithGRI <- endsWith(fnsAll, "gri")
     fns <- fnsAll
     FB <- nchar(fns) > 0

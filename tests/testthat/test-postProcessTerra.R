@@ -4,16 +4,11 @@ test_that("testing terra", {
     needGoogleDriveAuth = FALSE,
     opts = list(
       reproducible.useMemoise = FALSE,
+      reproducible.cacheSaveFormat = .qsFormat,
       "rgdal_show_exportToProj4_warnings" = "none"
     )
   )
-  opts <- options(reproducible.cachePath = tmpCache)
-  on.exit(
-    {
-      options(opts)
-    },
-    add = TRUE
-  )
+  withr::local_options(reproducible.cachePath = tmpCache)
 
   skip_if_not_installed("terra")
   f <- system.file("ex/elev.tif", package = "terra")
@@ -24,6 +19,7 @@ test_that("testing terra", {
   tf4 <- tempfile(fileext = ".tif")
   tf5 <- tempfile(fileext = ".tif")
   tf6 <- tempfile(fileext = ".tif")
+  tf7 <- tempfile(fileext = ".tif") # don't create it: testing writeTo
   file.copy(f, tf)
   file.copy(f, tf1)
   file.copy(f, tf2)
@@ -44,24 +40,24 @@ test_that("testing terra", {
 
   # Test Cache of various nested and non nested SpatRaster
   # double nest
-  b <- Cache(fn, list(r, r1), cacheRepo = tmpCache)
+  b <- Cache(fn, list(r, r1), cachePath = tmpCache)
   expect_true(is(b, "list"))
   expect_true(is(b[[1]], "list"))
   expect_true(is(b[[1]][[1]], "SpatRaster"))
 
   # Single nest
-  b <- Cache(fn, r, cacheRepo = tmpCache)
+  b <- Cache(fn, r, cachePath = tmpCache)
   expect_true(is(b, "list"))
   expect_true(is(b[[1]], "SpatRaster"))
 
   # mixed nest
-  b <- Cache(fn, list(r[[1]], r1), cacheRepo = tmpCache)
+  b <- Cache(fn, list(r[[1]], r1), cachePath = tmpCache)
   expect_true(is(b, "list"))
   expect_true(is(b[[1]], "SpatRaster"))
   expect_true(is(b[[2]][[1]], "SpatRaster"))
 
   # mix memory and disk
-  b <- Cache(fn, list(r[[1]], r1, rmem), cacheRepo = tmpCache)
+  b <- Cache(fn, list(r[[1]], r1, rmem), cachePath = tmpCache)
   expect_true(is(b, "list"))
   expect_true(is(b[[1]], "SpatRaster"))
   expect_true(is(b[[2]][[1]], "SpatRaster"))
@@ -124,7 +120,14 @@ test_that("testing terra", {
   expect_true(all(t6$elevation == 1))
   expect_true(NROW(t6) == 2)
 
-  #
+  # Only writeTo
+  expect_false(file.exists(tf7))
+  t11a <- suppressWarnings({
+    postProcessTo(elevRas, writeTo = tf7)
+  }) ## WARNING: Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition
+  expect_true(file.exists(tf2))
+  expect_equivalent(elevRas, t11a)
+
 
   t10 <- postProcessTo(xVect, v)
   expect_true(terra::ext(t10) < terra::ext(xVect))
@@ -133,9 +136,18 @@ test_that("testing terra", {
   ## following #253
   # https://github.com/PredictiveEcology/reproducible/issues/253#issuecomment-1263562631
   tf1 <- tempfile(fileext = ".shp")
+  tf2 <- tempfile(fileext = ".shp")
   t11 <- suppressWarnings({
     postProcessTo(xVect, v, writeTo = tf1)
   }) ## WARNING: Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition
+
+  # Only writeTo
+  t11a <- suppressWarnings({
+    postProcessTo(xVect, writeTo = tf2)
+  }) ## WARNING: Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition
+  expect_true(file.exists(tf2))
+  expect_true(identical(xVect, t11a))
+
   tw_t11 <- terra::wrap(t11)
   vv <- terra::vect(tf1)
   tw_vv <- terra::wrap(vv)
@@ -147,6 +159,7 @@ test_that("testing terra", {
   t11 <- suppressWarnings({
     postProcessTo(xVect, v, writeTo = tf1)
   }) ## WARNING: GDAL Message 6: dataset does not support layer creation option ENCODING
+
   tw_t11 <- terra::wrap(t11)
   vv <- terra::vect(tf1)
   tw_vv <- terra::wrap(vv)
@@ -274,15 +287,16 @@ test_that("testing terra", {
       }
 
       # Switch from qs to rds with Cache
-      if (requireNamespace("qs")) {
-        opts <- options(reproducible.cacheSaveFormat = "qs")
+      if (requireNamespace(.qsFormat)) {
+        opts <- options(reproducible.cacheSaveFormat = .qsFormat)
         t13a <- Cache(postProcessTo(xVect, vutmErrors))
-        opts <- options(reproducible.cacheSaveFormat = "rds")
+        opts <- options(reproducible.cacheSaveFormat = .rdsFormat)
         t13a <- Cache(postProcessTo(xVect, vutmErrors))
-        opts <- options(reproducible.cacheSaveFormat = "qs")
-        t13a <- try(Cache(postProcessTo(xVect, vutmErrors)), silent = TRUE)
-        a <- try(ncol(t13a), silent = TRUE)
-        expect_false(is(a, "try-error"))
+        opts <- options(reproducible.cacheSaveFormat = .qsFormat)
+        t13b <- Cache(postProcessTo(xVect, vutmErrors))
+        expect_equal(t13a, t13b)
+        # a <- try(ncol(t13a), silent = TRUE)
+        # expect_false(is(a, "try-error"))
       }
     }
 
@@ -452,7 +466,8 @@ test_that("testing terra", {
           sum(!is.na(values2(t20MaskedByRas)))) <= 0
       )
 
-      if (interactive()) {
+      if (FALSE) {
+        dev.off()
         terra::plot(ras1SmallAll)
         terra::plot(t18, add = TRUE)
         terra::plot(t20AllByRas)

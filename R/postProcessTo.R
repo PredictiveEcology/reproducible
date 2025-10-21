@@ -182,7 +182,7 @@ postProcessTo <- function(from, to,
     if (is.null(projectTo)) projectTo <- to
   }
 
-  if (!all(is.null(to), is.null(cropTo), is.null(maskTo), is.null(projectTo))) {
+  if (!all(is.null(to), is.null(cropTo), is.null(maskTo), is.null(projectTo), is.null(writeTo))) {
     messagePreProcess("Running `postProcessTo`", verbose = verbose, verboseLevel = 0)
     .message$IndentUpdate()
     if (isTRUE(is.character(from))) {
@@ -331,7 +331,7 @@ isSF <- function(x) is(x, "sf") || is(x, "sfc")
 isRaster <- function(x) is(x, "Raster")
 isCRSANY <- function(x) isCRSSF(x) || isCRScharacter(x) || isCRSTerra(x)
 isCRSSF <- function(x) is(x, "crs")
-isCRScharacter <- function(x) is.character(x) && (grepl("DATUM", x) || grepl("+proj", x))
+isCRScharacter <- function(x) is.character(x) && (grepl("DATUM", x) || grepl("+proj", x) || grepl("epsg:", x))
 isCRSTerra <- function(x) is(x, "CRS")
 
 #' Fix common errors in GIS layers, using `terra`
@@ -436,9 +436,9 @@ maskTo <- function(from, maskTo, # touches = FALSE,
       if (isRaster(maskTo)) {
         maskTo <- terra::rast(maskTo)
       }
-      if (isGridded(maskTo) && isVector(from)) {
-        omit <- TRUE
-      }
+      # if (isGridded(maskTo) && isVector(from)) {
+      #   omit <- TRUE
+      # }
       if (!isSpatialAny(maskTo)) {
         if (is.na(maskTo) || isCRSANY(maskTo)) omit <- TRUE
       }
@@ -450,8 +450,21 @@ maskTo <- function(from, maskTo, # touches = FALSE,
         if (isSpatial(from)) {
           from <- sf::st_as_sf(from)
         }
+
+        # New to deal with case where `maskTo` is a SpatRaster
+        if (isGridded(maskTo)) {
+          maskToTmp <- !is.na(maskTo)[[1]] # the [[1]] is in case it is a multilayer stack; take first
+          maskToTmp[maskToTmp[] == 0] <- NA
+          maskTo <- terra::as.polygons(maskToTmp)
+        }
+
         if (isSF(from)) {
           if (!isSF(maskTo)) {
+            # if (isGridded(maskTo)) {
+            #   maskToTmp <- !is.na(maskTo)
+            #   maskToTmp[maskToTmp[] == 0] <- NA
+            #   maskTo <- terra::as.polygons(maskToTmp)
+            # }
             maskTo <- sf::st_as_sf(maskTo)
           }
         }
@@ -707,7 +720,9 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
               }
               from13 <- sf::st_transform(from, projectTo)
             } else {
-              from13 <- terra::project(from, projectTo)
+              ll <- list(from, projectTo)
+              ll <- addDotArgs(ll, terra::project, class(from), method, ...)
+              from13 <- do.call(terra::project, ll)
             }
             attempt <- attempt + 2
           }
@@ -740,7 +755,9 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
           FALSE
         }
         if (!isTRUE(sameGeom)) {
-          ll <- append(list(from, projectTo, overwrite = overwrite), dotArgs)
+          ll <- list(from, projectTo)
+          ll <- append(ll, list(overwrite = overwrite))
+          ll <- addDotArgs(ll, terra::project, class(from), method, ...)
           do.call(terra::project, ll)
         } else {
           from
@@ -1008,14 +1025,20 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
         if (is.null(isSpatRaster)) isSpatRaster <- isSpat(from) && isGridded(from)
         if (is.null(isRaster)) isRaster <- inherits(from, "Raster")
 
+        if (any(file.exists(writeTo))) {
+          if (isFALSE(overwrite)) {
+            stop(writeTo, " already exists and `overwrite = FALSE`; please set `overwrite = TRUE` and run again.")
+          }
+          unlink(writeTo, force = TRUE, recursive = TRUE)
+        }
         if (isSpatRaster || isVector(from)) {
           ## trying to prevent write failure and subsequent overwrite error with terra::writeRaster
-          if (any(file.exists(writeTo))) {
-            if (isFALSE(overwrite)) {
-              stop(writeTo, " already exists and `overwrite = FALSE`; please set `overwrite = TRUE` and run again.")
-            }
-            unlink(writeTo, force = TRUE, recursive = TRUE)
-          }
+          # if (any(file.exists(writeTo))) {
+          #   if (isFALSE(overwrite)) {
+          #     stop(writeTo, " already exists and `overwrite = FALSE`; please set `overwrite = TRUE` and run again.")
+          #   }
+          #   unlink(writeTo, force = TRUE, recursive = TRUE)
+          # }
           if (isSpatRaster) {
             ## if the file still exists it's probably already "loaded"
             ## and `terra` can't overwrite it even if `overwrite = TRUE`
@@ -1557,7 +1580,7 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
   opts <- addDataType(opts, fromRas[[1]], ...)
   opts <- updateDstNoData(opts, fromRas)
 
-  tried <- retry(retries = 2, # exprBetween = browser(),
+  tried <- retry(retries = 2,
                  sf::gdal_utils(
                    util = "warp",
                    source = fnSource,
@@ -1637,7 +1660,7 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
   opts <- addDataType(opts, fromRas[[1]], ...)
   opts <- updateDstNoData(opts, fromRas)
 
-  tried <- retry(retries = 2, # exprBetween = browser(),
+  tried <- retry(retries = 2,
                  sf::gdal_utils(
                    util = "warp",
                    source = fnSource,
@@ -1720,7 +1743,7 @@ gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("r
   opts <- addDataType(opts, fromRas[[1]], ...)
   opts <- updateDstNoData(opts, fromRas)
 
-  tried <- retry(retries = 2, # exprBetween = browser(),
+  tried <- retry(retries = 2,
                  sf::gdal_utils(
                    util = "warp",
                    source = fnSource,
@@ -1756,7 +1779,6 @@ keepOrigGeom <- function(newObj, origObj) {
   if (!identical(from2Geom, fromGeom)) {
     possTypes <- c("POINT", "LINESTRING", "POLYGON")
     hasTypes <- vapply(possTypes, function(pt) isTRUE(any(grepl(pt, fromGeom))), FUN.VALUE = logical(1))
-    # if (is(hasTypes, "try-error")) browser()
     fromGeomSimple <- names(hasTypes)[hasTypes]
 
     has2Types <- vapply(possTypes, function(pt) isTRUE(any(grepl(pt, from2Geom))), FUN.VALUE = logical(1))
@@ -1849,11 +1871,12 @@ gdalTransform <- function(from, cropTo, projectTo, maskTo, writeTo, verbose) {
   #                          )))
   #
   terra::writeVector(maskTo, filename = tf2)
-  system.time(sf::gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
+  # system.time(
+    sf::gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
                              destination = tf, options =
                                c("-t_srs", tf4,
                                  "-clipdst", tf2, "-overwrite"
-                               )))
+                               ))# )
   messagePreProcess(messagePrefixDoneIn,
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)
@@ -1881,4 +1904,23 @@ updateDstNoData <- function(opts, fromRas) {
 
   opts[hasDstNoData + 1] <- va
   opts
+}
+
+addDotArgsInner <- function(ll, fun, class, ...) {
+  formsForProject <- formals4reproducible(fun, class)
+  dotsElements <- intersect(names(formsForProject), ...names())
+  if (length(dotsElements)) {
+    mc <- match.call(expand.dots = FALSE)
+    dots <- mc$...
+    ll <- append(ll, dots[dotsElements])
+  }
+  ll
+}
+
+
+addDotArgs <- function(ll, fun, class, method, ...) {
+  ll <- addDotArgsInner(ll, fun, class, ...)
+  if (!is.null(method))
+    ll <- modifyList(ll, list(method = method))
+  ll
 }

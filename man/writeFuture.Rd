@@ -12,7 +12,8 @@ writeFuture(
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   cacheId,
-  linkToCacheId = NULL
+  linkToCacheId = NULL,
+  verbose = getOption("reproducible.verbose")
 )
 }
 \arguments{
@@ -42,6 +43,12 @@ the object will be identical each time; this may be useful in operational code.}
 \item{linkToCacheId}{Optional. If a \code{cacheId} is provided here, then a \code{file.link}
 will be made to the file with that \code{cacheId} name in the cache repo.
 This is used when identical outputs exist in the cache. This will save disk space.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \value{
 Run for its side effect.

@@ -8,18 +8,24 @@ skip_if_no_token <- function() {
   testthat::skip_if_not(googledrive::drive_has_token(), "No Drive token")
 }
 
-# puts tmpdir, tmpCache, tmpfile (can be vectorized with length >1 tmpFileExt),
-#   optsAsk in this environment,
-# loads and libraries indicated plus testthat,
-# sets options("reproducible.ask" = FALSE) if ask = FALSE
-# if `needInternet = TRUE`, it will only re-try every 30 seconds
+## NOTE: needs to be called after testInit("googledrive", needGoogleDriveAuth = TRUE)
+skip_if_service_account <- function() {
+  ## service accounts cannot upload to standard drive folders (no quota)
+  testthat::skip_if_not(!grepl("gserviceaccount", googledrive::drive_user()$emailAddress),
+                        message =  "Using service account")
+}
+
+## puts tmpdir, tmpCache, tmpfile (can be vectorized with length >1 tmpFileExt),
+##   optsAsk in this environment,
+## loads and libraries indicated plus testthat,
+## sets options("reproducible.ask" = FALSE) if ask = FALSE
+## if `needInternet = TRUE`, it will only re-try every 30 seconds
 testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt = "",
                      opts = NULL, needGoogleDriveAuth = FALSE, needInternet = FALSE,
                      envir = parent.frame(1)) {
   set.randomseed()
 
   pf <- parent.frame()
-
 
   if (isTRUE(needGoogleDriveAuth)) {
     libraries <- c(libraries, "googledrive")
@@ -64,45 +70,54 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
 
   skip_gauth <- identical(Sys.getenv("SKIP_GAUTH"), "true") # only set in setup.R for covr
   if (isTRUE(needGoogleDriveAuth)) {
-    if (!skip_gauth) {
-      if (interactive()) {
-        if (!googledrive::drive_has_token()) {
-          getAuth <- FALSE
-          if (is.null(getOption("gargle_oauth_email"))) {
-            possLocalCache <- "c:/Eliot/.secret"
-            cache <- if (file.exists(possLocalCache)) {
-              possLocalCache
-            } else {
-              TRUE
-            }
-            switch(Sys.info()["user"],
-                   emcintir = {
-                     options(gargle_oauth_email = "predictiveecology@gmail.com")
-                   }, # ,
-                   # gargle_oauth_cache = cache)},
-                   NULL
-            )
-          }
-          if (is.null(getOption("gargle_oauth_email"))) {
-            if (.isRstudioServer()) {
-              .requireNamespace("httr", stopOnFALSE = TRUE)
-              options(httr_oob_default = TRUE)
-            }
-          }
-          getAuth <- TRUE
-          if (isTRUE(getAuth)) {
-            googledrive::drive_auth()
-          }
+    if (isNamespaceLoaded("googledrive"))
+      if ((!googledrive::drive_has_token())) {
+        if (!nzchar(Sys.getenv("GOOGLEDRIVE_AUTH"))) {
+          Sys.setenv("GOOGLEDRIVE_AUTH" = "~/genial-cycling-408722-788552a3ecac.json")
         }
+        googledrive::drive_auth(path = Sys.getenv("GOOGLEDRIVE_AUTH"))
       }
-    }
+
+
+    # if (!skip_gauth) {
+    #   if (interactive()) {
+    #     if (!googledrive::drive_has_token()) {
+    #       getAuth <- FALSE
+    #       if (is.null(getOption("gargle_oauth_email"))) {
+    #         possLocalCache <- "c:/Eliot/.secret"
+    #         cache <- if (file.exists(possLocalCache)) {
+    #           possLocalCache
+    #         } else {
+    #           TRUE
+    #         }
+    #         switch(Sys.info()["user"],
+    #                emcintir = {
+    #                  options(gargle_oauth_email = "predictiveecology@gmail.com")
+    #                }, # ,
+    #                # gargle_oauth_cache = cache)},
+    #                NULL
+    #         )
+    #       }
+    #       if (is.null(getOption("gargle_oauth_email"))) {
+    #         if (.isRstudioServer()) {
+    #           .requireNamespace("httr", stopOnFALSE = TRUE)
+    #           options(httr_oob_default = TRUE)
+    #         }
+    #       }
+    #       getAuth <- TRUE
+    #       if (isTRUE(getAuth)) {
+    #         googledrive::drive_auth()
+    #       }
+    #     }
+    #   }
+    # }
     skip_if_no_token()
   }
 
   out <- list()
 
-  if (isFALSE(getOption("reproducible.cache2"))) {
-    testthat::local_mocked_bindings(Cache = reproducible:::Cache2, .env = pf)
+  if (isFALSE(getOption("reproducible.useCacheV3"))) {
+    testthat::local_mocked_bindings(Cache = reproducible:::CacheV2, .env = pf)
     # withr::local_options("reproducible.useDBI" = FALSE, .local_envir = pf)
   }
 
@@ -558,4 +573,18 @@ expect_match_noSlashN <- function(object, regexp, ...) {
   object <- gsub("  ", " ", gsub("\\n", "", messageStripColor(object)))
   expect_match(object, regexp, ...)
 
+}
+
+googleSetupForUseCloud <- function(cloudFolderID, tmpdir, tmpCache) {
+  testsForPkgs <- "testsForPkgs"
+  if (isTRUE(tryCatch(googledrive::drive_ls(testsForPkgs), error = function(e) TRUE))) {
+    testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = testsForPkgs)))
+    on.exit2(googledrive::drive_rm(testsForPkgsDir))
+  }
+  on.exit2({
+    try(googledrive::drive_rm(testsForPkgsDir), silent = TRUE)
+    try(googledrive::drive_rm(cloudFolderID), silent = TRUE)
+    try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpdir)), silent = TRUE)
+    try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpCache)), silent = TRUE)
+  })
 }

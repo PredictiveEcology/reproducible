@@ -142,13 +142,7 @@ test_that("preProcess works when provides url, archive, and destinationPath", {
 test_that("preProcess works when provides url, archive, and destinationPath and reproducible.inputPaths", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  opts <- options("reproducible.inputPaths" = tmpdir)
-  on.exit(
-    {
-      options(opts)
-    },
-    add = TRUE
-  )
+  withr::local_options("reproducible.inputPaths" = tmpdir)
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(
@@ -178,79 +172,87 @@ test_that("preProcess works when provides url, targetfile and destinationPath", 
 test_that("preProcess works when provides url and destinationPath for a .rar file", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
+  # extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- theRasterTestRar
 
-  if (!is(extractSystemCallPath, "try-error")) {
-    if (is.null(extractSystemCallPath)) {
-      noisyOutput <- capture.output(
-        expect_error({
-          ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-        })
-      )
-    } else {
-      noisyOutput <- capture.output(
-        ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-      )
-      testthat::expect_is(object = ras, class = "list")
-      testthat::expect_true(file.exists(ras$targetFilePath))
-    }
-  }
+  # if (!is(extractSystemCallPath, "try-error")) {
+  # if (is.null(extractSystemCallPath)) {
+  #   noisyOutput <- capture.output(
+  #     expect_error({
+  #       ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  #     })
+  #   )
+  # } else {
+  if (isWindows() && getRversion() < "4.3")
+    skip("archive pkg on Windows 4.2.3 fails on rar")
+
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  )
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+  # }
+  # }
 })
 
 test_that("preProcess works when provides url, targetfile and destinationPath for a .rar file", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
+  ## extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- theRasterTestRar
 
-  if (!is(extractSystemCallPath, "try-error")) {
-    if (is.null(extractSystemCallPath)) {
-      noisyOutput <- capture.output(
-        expect_error({
-          ras <- reproducible::preProcess(
-            url = url, targetFile = theRasterTestFilename(suff = "tif"),
-            destinationPath = tmpdir
-          )
-        })
-      )
-    } else {
-      wd <- getwd()
-      noisyOutput <- capture.output(
-        ras <- reproducible::preProcess(
-          url = url, targetFile = theRasterTestFilename(suff = "tif"),
-          destinationPath = tmpdir
-        )
-      )
-      testthat::expect_is(object = ras, class = "list")
-      testthat::expect_true(file.exists(ras$targetFilePath))
-      expect_equal(wd, getwd()) # Test that working directory is restored after unrar call
-    }
-  }
+  # if (!is(extractSystemCallPath, "try-error")) {
+  # if (is.null(extractSystemCallPath)) {
+  #   noisyOutput <- capture.output(
+  #     expect_error({
+  #       ras <- reproducible::preProcess(
+  #         url = url, targetFile = theRasterTestFilename(suff = "tif"),
+  #         destinationPath = tmpdir
+  #       )
+  #     })
+  #   )
+  # } else {
+  if (isWindows() && getRversion() < "4.3")
+    skip("archive pkg on Windows 4.2.3 fails on rar")
+
+  wd <- getwd()
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(
+      url = url, targetFile = theRasterTestFilename(suff = "tif"),
+      destinationPath = tmpdir
+    )
+  )
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+  expect_equal(wd, getwd()) # Test that working directory is restored after unrar call
+  # }
+  # }
 })
 
 test_that("preProcess works when provides url, archive and destinationPath for a .rar file", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
+  # extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- theRasterTestRar
   rasterTestRarFilename <- theRasterTestFilename(suff = "rar")
 
-  if (!is(extractSystemCallPath, "try-error")) {
-    if (is.null(extractSystemCallPath)) {
-      noisyOutput <- capture.output(
-        expect_error({
-          ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
-        })
-      )
-    } else {
-      noisyOutput <- capture.output(
-        ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
-      )
-      testthat::expect_is(object = ras, class = "list")
-      testthat::expect_true(file.exists(ras$targetFilePath))
-    }
-  }
+  # if (!is(extractSystemCallPath, "try-error")) {
+  #   if (is.null(extractSystemCallPath)) {
+  #   noisyOutput <- capture.output(
+  #     expect_error({
+  #       ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
+  #     })
+  #   )
+  # } else {
+  if (isWindows() && getRversion() < "4.3")
+    skip("archive pkg on Windows 4.2.3 fails on rar")
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
+  )
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+  #   }
+  # }
 })
 
 test_that("preProcess works, but gives a warning when supplying cacheTags", {
@@ -460,7 +462,9 @@ test_that("just google id not url", {
   skip_on_ci()
 
   testInit("terra", needGoogleDriveAuth = TRUE, needInternet = TRUE)
-  smallObj <- prepInputs(url = "1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb")
+  co <- capture.output(
+    smallObj <- prepInputs(url = "1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb")
+  )
   expect_is(smallObj, "sf")
 })
 
@@ -481,7 +485,6 @@ test_that("Test of using future and progress indicator for lrg files on Google D
     expect_true(is(smallRT, "list"))
   }
 })
-
 
 test_that("lightweight tests for preProcess code coverage", {
   skip_on_cran()
@@ -585,7 +588,7 @@ test_that("more nested file structures in zip; alsoExtract NA", {
         terra::writeRaster(filename = file.path(basename(tempfile(fileext = ".tif"))))
     })
     fns2 <- Filenames(ras)
-    zip(zipName, files = c(file.path(basename(dirname(fns1)), basename(fns1)), basename(fns2)))
+    zip(zipName, files = c(file.path(basename(dirname(fns1)), basename(fns1)), basename(fns2)), flags = "-q")
   })
   zipName2 <- file.path(tmpdir, zipName)
 
@@ -666,7 +669,6 @@ test_that("more nested file structures in zip; alsoExtract NA", {
   expect_false(all(.listFilesInArchive(zipName2) %in% files))
   expect_true(sum(.listFilesInArchive(zipName2) %in% files) == 1)
 })
-
 
 test_that("PR#358 if dwnld already exists, was missing nested paths", {
   skip_on_cran()

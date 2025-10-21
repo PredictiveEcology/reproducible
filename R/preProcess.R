@@ -146,6 +146,8 @@ preProcessParams <- function(n = NULL) {
 #' `fun` (the function to be used to load the `preProcess`ed object from disk),
 #' and `targetFilePath` (the fully qualified path to the `targetFile`).
 #'
+#' @param .callingEnv The environment where the function was called from. Used to find
+#'   objects, if necessary.
 #' @section Combinations of `targetFile`, `url`, `archive`, `alsoExtract`:
 #'
 #'   Use `preProcessParams()` for a table describing various parameter combinations and their
@@ -169,7 +171,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        overwrite = getOption("reproducible.overwrite", FALSE),
                        purge = FALSE,
                        verbose = getOption("reproducible.verbose", 1),
-                       .tempPath, # .callingEnv = parent.frame(),
+                       .tempPath, .callingEnv = parent.frame(),
                        ...) {
   st <- Sys.time()
   messagePreProcess("Running `preProcess`", verbose = verbose, verboseLevel = 0)
@@ -192,12 +194,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   dots <- list(...)
-  if (is.null(dots$.callingEnv)) {
-    .callingEnv <- parent.frame()
-  } else {
-    .callingEnv <- dots$.callingEnv
-    dots$.callingEnv <- NULL
-  }
+  # if (is.null(dots$.callingEnv)) {
+  #   .callingEnv <- parent.frame()
+  # } else {
+  #   .callingEnv <- dots$.callingEnv
+  #   dots$.callingEnv <- NULL
+  # }
 
   fun <- .checkFunInDots(fun = fun, dots = dots)
   dots <- .checkDeprecated(dots, verbose = verbose)
@@ -417,7 +419,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     overwrite = overwrite, purge = purge, # may need to try purging again if no target,
     alsoExtract = alsoExtract,
     #    archive or alsoExtract were known yet
-    verbose = verbose, .tempPath = .tempPath, # .callingEnv = .callingEnv,
+    verbose = verbose, .tempPath = .tempPath, .callingEnv = .callingEnv,
     ...
   )
 
@@ -642,6 +644,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       targetFilePath = targetFilePath, quick = quick,
       verbose = verbose, .tempPath = .tempPath
     )
+    # might have duplicates because filesExtr are in `inputPaths`, but extractedFiles are in destinationPath
+    feOrig <- fs::path_rel(filesExtr, fs::path_common(filesExtr))
+    feNew <- fs::path_rel(extractedFiles$filesExtr, fs::path_common(extractedFiles$filesExtr))
+    inExtracted <- feOrig %in% feNew
+    filesExtr <- setdiff(filesExtr[!inExtracted], archive)
+
     filesExtr <- c(filesExtr, extractedFiles$filesExtr)
   }
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
@@ -720,9 +728,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   failStop <- FALSE
   if (isTRUE(isDirectory(url, mustExist = FALSE))) {
-    messagePrepInputs("url pointed to a directory; using targetFilePath:\n",
-                      paste0(downloadFileResult$downloaded, collapse = "\n"))
-    targetFilePath <- downloadFileResult$downloaded
+    if (missing(targetFile)) {
+      messagePrepInputs("url pointed to a directory, but no `targetFile` specified; using targetFilePath:\n",
+                        paste0(downloadFileResult$downloaded, collapse = "\n"))
+      targetFilePath <- downloadFileResult$downloaded
+    }
   }
   if (is.null(targetFilePath)) {
     failStop <- TRUE
@@ -972,11 +982,11 @@ isGoogleDriveURL <- function(url) {
     rerunChecksums <- TRUE
     if (any(archiveFilesInCS)) {
       if (all(archiveFilesInCS)) {
-        isOK <- checkSums[expectedFile %in% allFiles]$result %in% "OK"
-        if (all(isOK)) {
+        isOK <- checkSums[expectedFile %in% allFiles][, isOK := result %in% "OK"]#$result %in% "OK"
+        if (isTRUE(all(isOK$isOK))) {
           rerunChecksums <- FALSE
         } else { # some not OK, but present
-          allFiles <- allFiles[!isOK]
+          allFiles <- isOK$expectedFile[isOK$isOK %in% FALSE]
         }
       } else { # some files in the archive are not yet in checkSums -- rerunChecksums on these
         allFiles <- allFiles[!archiveFilesInCS]
@@ -1232,12 +1242,16 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
         )
         messagePreProcess(messageNoCopyMade, verbose = verbose)
       } else {
-        if (grepl("cannot link.+different disk drive", warns) && !isTRUE(symlink)) {
+        if ((
+          grepl("cannot link.+different disk drive", warns) ||
+          grepl("Invalid cross-device link", warns)) && !isTRUE(symlink)) {
           messageColoured("An attempt was made to use hard links to make a quick pointer ",
                           "from one (set of) file(s) to another; \nthis is not possible because ",
                           "the files would be on different drives. Consider changing the paths\n",
-                          "so that they will be on the same physical drive", colour = "red")
-          message(warns)
+                          "so that they will be on the same physical drive", colour = "red",
+                          verbose = verbose)
+          if (verbose > 0)
+            message(warns)
         }
       }
 
@@ -1264,16 +1278,24 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
 
       if (isFALSE(all(result))) {
         len <- length(from[!result])
-        if (len < 50) fromCollapsed[!result] else c(head(fromCollapsed[!result]), tail(fromCollapsed[!result]))
+        # if (len < 50) fromCollapsed[!result] else c(head(fromCollapsed[!result]), tail(fromCollapsed[!result]))
         if (len < 50) {
-          fromMess <- fromCollapsed[!result]
-          toMess <- toCollapsed[!result]
+          fromMess <- from[!result]
+          toMess <- to[!result]
         } else {
           fromMess <- c(head(fromCollapsed[!result]), tail(fromCollapsed[!result]))
           toMess <- c(head(toCollapsed[!result], 24), "... (omitting many)", tail(toCollapsed[!result], 24))
         }
-        result2 <- file.copy(from[!result], to[!result], overwrite = overwrite)
-        messagePreProcess("Copy of file: ", fromMess, ", was created at: ", toMess, verbose = verbose)
+        result2 <- try(file.copy(from[!result], to[!result], overwrite = overwrite))
+        if (is(result2, "try-error")) browser()
+
+        toMessCollapsed <- paste(toMess, collapse = "\n")
+        fromMessCollapsed <- paste(fromMess, collapse = "\n")
+
+        messagePreProcess(singularPlural(c("Copy", "Copies"), l = fromMess), " of ", singularPlural(c("file: ", "files: "), l = fromMess),
+                          "\n", fromMessCollapsed, ",\n",
+                          singularPlural(c("was", "were"), l = fromMess)," created at:\n",
+                          toMessCollapsed, verbose = verbose)
       }
     } else {
       messagePreProcess("File ", fromCollapsed, " does not exist. Not copying.", verbose = verbose)
@@ -1675,11 +1697,14 @@ guessAlsoExtract <- function(targetFile, alsoExtract, checkSumFilePath) {
       if (file.size(checkSumFilePath) > 0) {
         # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with
         # same base name, without extension
-        checksumsTmp <- as.data.table(read.table(checkSumFilePath))
-        alsoExtract <- grep(paste0(filePathSansExt(targetFile), "\\."), checksumsTmp$file,
-                            value = TRUE
-        )
-        rm(checksumsTmp) # clean up
+        if (!is.null(targetFile)) {
+          checksumsTmp <- read.table(checkSumFilePath)
+          alsoExtract <- grep(paste(collapse = "|", paste0(filePathSansExt(targetFile), "\\.")),
+                              checksumsTmp$file,
+                              value = TRUE
+          )
+          rm(checksumsTmp) # clean up
+        }
       }
     }
   }

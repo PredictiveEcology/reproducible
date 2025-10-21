@@ -1,67 +1,74 @@
-.CacheVerboseFn1 <- function(preDigest, fnDetails,
+verboseCacheMessage <- function(preDigest, functionName,
                              startHashTime, modifiedDots, quick,
                              verbose = getOption("reproducible.verbose", 1),
                              verboseLevel = 1) {
-  preDigestUnlist <- .unlistToCharacter(preDigest, 4)
-  endHashTime <- Sys.time()
-  verboseDF <- data.frame(
-    functionName = fnDetails$functionName,
-    component = "Hashing",
-    elapsedTime = as.numeric(difftime(endHashTime, startHashTime, units = "secs")),
-    units = "secs",
-    stringsAsFactors = FALSE
-  )
+  if (verbose >= verboseLevel) {
+    preDigestUnlist <- .unlistToCharacter(preDigest, 4)
+    verboseDF0(verbose, functionName, startHashTime)
+    # verboseDF <- data.frame(
+    #   functionName = functionName,
+    #   component = "Hashing",
+    #   elapsedTime = as.numeric(difftime(endHashTime, startHashTime, units = "secs")),
+    #   units = "secs",
+    #   stringsAsFactors = FALSE
+    # )
 
-  hashObjectSize <- unlist(lapply(modifiedDots, function(x) {
-    if (getOption("reproducible.objSize", TRUE)) unname(attr(objSize(x), "objSize")) else NA
-  }))
+    # hashObjectSize <- unlist(lapply(modifiedDots, objSize, recursive = FALSE, quick = TRUE))
+    hashObjectSize <- if (getOption("reproducible.objSize", TRUE)) {
+      unlist(lapply(modifiedDots, function(x) {
+        unname(attr(objSize(x, quick = FALSE), "objSize"))
+      }))
+    } else {
+      Map(modifiedDots, function(x) NA)
+    }
 
-  lengths <- unlist(lapply(preDigestUnlist, function(x) length(unlist(x))))
-  hashDetails <- data.frame(
-    objectNames = rep(names(preDigestUnlist), lengths),
-    hashElements = names(unlist(preDigestUnlist)),
-    hash = unname(unlist(preDigestUnlist)),
-    stringsAsFactors = FALSE
-  )
-  preDigestUnlistNames <- unlist(lapply(
-    strsplit(names(unlist(preDigestUnlist)), split = "\\."), # nolint
-    function(x) paste0(tail(x, 2), collapse = ".")
-  ))
-  hashObjectSizeNames <- unlist(lapply(
-    strsplit(names(hashObjectSize), split = "\\$"),
-    function(x) paste0(tail(x, 2), collapse = ".")
-  ))
-  hashObjectSizeNames <- gsub("\\.y", replacement = "", hashObjectSizeNames)
-  hashObjectSizeNames <- unlist(lapply(
-    strsplit(hashObjectSizeNames, split = "\\."),
-    function(x) paste0(tail(x, 2), collapse = ".")
-  ))
-  hashDetails$objSize <- NA
-  hashDetails$objSize[preDigestUnlistNames %in% hashObjectSizeNames] <-
-    hashObjectSize[hashObjectSizeNames %in% preDigestUnlistNames]
-
-  if (exists("hashDetails", envir = .reproEnv)) {
-    .reproEnv$hashDetails <- rbind(.reproEnv$hashDetails, hashDetails)
-  } else {
-    .reproEnv$hashDetails <- hashDetails
-    on.exit(
-      {
-        assign("hashDetailsAll", .reproEnv$hashDetails, envir = .reproEnv)
-        messageDF(.reproEnv$hashDetails, colour = "blue", verbose = verbose, verboseLevel = verboseLevel)
-        messageCache("The hashing details are available from .reproEnv$hashDetails",
-          verbose = verbose, verboseLevel = verboseLevel
-        )
-        rm("hashDetails", envir = .reproEnv)
-      },
-      add = TRUE
+    lengths <- unlist(lapply(preDigestUnlist, function(x) length(unlist(x))))
+    hashDetails <- data.frame(
+      objectNames = rep(names(preDigestUnlist), lengths),
+      hashElements = names(unlist(preDigestUnlist)),
+      hash = unname(unlist(preDigestUnlist)),
+      stringsAsFactors = FALSE
     )
-  }
+    preDigestUnlistNames <- unlist(lapply(
+      strsplit(names(unlist(preDigestUnlist)), split = "\\."), # nolint
+      function(x) paste0(tail(x, 2), collapse = ".")
+    ))
+    hashObjectSizeNames <- unlist(lapply(
+      strsplit(names(hashObjectSize), split = "\\$"),
+      function(x) paste0(tail(x, 2), collapse = ".")
+    ))
+    hashObjectSizeNames <- gsub("\\.y", replacement = "", hashObjectSizeNames)
+    hashObjectSizeNames <- unlist(lapply(
+      strsplit(hashObjectSizeNames, split = "\\."),
+      function(x) paste0(tail(x, 2), collapse = ".")
+    ))
+    hashDetails$objSize <- NA
+    hashDetails$objSize[preDigestUnlistNames %in% hashObjectSizeNames] <-
+      hashObjectSize[hashObjectSizeNames %in% preDigestUnlistNames]
 
-  if (exists("verboseTiming", envir = .reproEnv)) {
-    verboseDF$functionName <- paste0("  ", verboseDF$functionName)
-    .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
-  } else {
-    .reproEnv$verboseTiming <- verboseDF
+    if (exists("hashDetails", envir = .reproEnv, inherits = FALSE)) {
+      .reproEnv$hashDetails <- rbind(.reproEnv$hashDetails, hashDetails)
+    } else {
+      .reproEnv$hashDetails <- hashDetails
+      on.exit(
+        {
+          assign("hashDetailsAll", .reproEnv$hashDetails, envir = .reproEnv)
+          messageDF(.reproEnv$hashDetails, colour = "blue", verbose = verbose, verboseLevel = verboseLevel)
+          messageCache("The hashing details are available from .reproEnv$hashDetailsAll",
+                       verbose = verbose, verboseLevel = verboseLevel
+          )
+          rm("hashDetails", envir = .reproEnv)
+        },
+        add = TRUE
+      )
+    }
+
+    # if (exists("verboseTiming", envir = .reproEnv, inherits = FALSE)) {
+    #   verboseDF$functionName <- paste0("  ", verboseDF$functionName)
+    #   .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+    # } else {
+    #   .reproEnv$verboseTiming <- verboseDF
+    # }
   }
 }
 
@@ -114,7 +121,6 @@
   fromMemoise <- NA
   output <- loadFromCache(cachePath, isInRepo[[.cacheTableHashColName()[lastOne]]],
     fullCacheTableForObj = fullCacheTableForObj,
-    # format = fileFormat, loadFun = loadFun,
     .functionName = fnDetails$functionName, preDigest = preDigest, .dotsFromCache = modifiedDots,
     drv = drv, conn = conn,
     verbose = verbose
@@ -134,20 +140,7 @@
   # attr(output, ".Cache")$newCache <- FALSE
   if (!identical(attr(output, ".Cache")$newCache, FALSE)) stop("attributes are not correct 2")
 
-  if (verbose > 3) {
-    endCacheTime <- Sys.time()
-    verboseDF <- data.frame(
-      functionName = fnDetails$functionName,
-      component = "Whole Cache call",
-      elapsedTime = as.numeric(difftime(endCacheTime, startCacheTime, units = "secs")),
-      units = "secs",
-      stringsAsFactors = FALSE
-    )
-
-    if (exists("verboseTiming", envir = .reproEnv)) {
-      .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
-    }
-  }
+  # verboseDF3(verbose, fnDetails$functionName, startCacheTime)
 
   # If it was a NULL, the cachePath stored it as "NULL" ... return it as NULL
   if (is.character(output)) {

@@ -5,7 +5,7 @@
 \alias{objSizeSession}
 \title{Wrapper around \code{lobstr::obj_size}}
 \usage{
-objSize(x, quick = FALSE, ...)
+objSize(x, quick = FALSE, recursive = FALSE, ...)
 
 objSizeSession(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = list())
 }
@@ -14,6 +14,9 @@ objSizeSession(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = list())
 
 \item{quick}{Logical. If \code{FALSE}, then an attribute, "objSize" will be added to
 the returned value, with each of the elements' object size returned also.}
+
+\item{recursive}{Logical. If \code{TRUE}, then, in addition to evaluating the whole object,
+it will also return the recursive sizes of the elements of a list or environment.}
 
 \item{...}{Additional arguments (currently unused), enables backwards compatible use.}
 

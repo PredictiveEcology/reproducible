@@ -94,31 +94,31 @@ setMethod(
     out <- object # many methods just do a pass through
     if (any(grepl("DBIConnection", is(object)))) {
       messageCache("Copy will not do a deep copy of a DBI connection object; no copy being made. ",
-        "This may have unexpected consequences...",
-        verbose = verbose
+                   "This may have unexpected consequences...",
+                   verbose = verbose
       )
     } else if (is(object, "proto")) { # don't want to import class for reproducible package; an edge case
       out <- get(class(object)[1])(object)
     } else if (inherits(object, "SQLiteConnection")) {
       con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
       messageCache("Making a copy of the entire SQLite database: ", object@dbname,
-        "; this may not be desireable ...",
-        verbose = verbose
+                   "; this may not be desireable ...",
+                   verbose = verbose
       )
       out <- RSQLite::sqliteCopyDatabase(object, con)
     } else if (!identical(is(object)[1], "environment") && is.environment(object)) {
       # keep this environment method here, as it will intercept "proto"
       #   and other environments that it shouldn't
       messageCache("Trying to do a deep copy (Copy) of object of class ", class(object),
-        ", which does not appear to be a normal environment. If it can be copied ",
-        "like a normal environment, ignore this message; otherwise, may need to create ",
-        "a Copy method for this class. See ?Copy",
-        verbose = verbose
+                   ", which does not appear to be a normal environment. If it can be copied ",
+                   "like a normal environment, ignore this message; otherwise, may need to create ",
+                   "a Copy method for this class. See ?Copy",
+                   verbose = verbose
       )
     } else if (is.environment(object)) {
       listVersion <- Copy(as.list(object, all.names = TRUE),
-        filebackedDir = filebackedDir,
-        drv = drv, conn = conn, verbose = verbose, ...
+                          filebackedDir = filebackedDir,
+                          drv = drv, conn = conn, verbose = verbose, ...
       )
 
       parentEnv <- parent.env(object)
@@ -131,7 +131,8 @@ setMethod(
           filebackedDir <- tempdir2(rndstr(1, 11))
         }
         if (!is.null(filebackedDir)) {
-          out <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn)
+          out <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn,
+                                          verbose = verbose)
         }
       }
     } else if (inherits(object, "SpatRaster")) {
@@ -161,7 +162,7 @@ setMethod(
         } else {
           newFns <- sapply(fnsAll, nextNumericName)
         }
-        hasNumeric <- hasNumeric <- grepl("_[:0-9:]+$", tools::file_path_sans_ext(newFns))
+        hasNumeric <- grepl("_[:0-9:]+$", tools::file_path_sans_ext(newFns))
         copyFile(fnsAll, newFns)
         # Copy may have given "nextNumericName"
         fnsBase <- tools::file_path_sans_ext(basename(fns))

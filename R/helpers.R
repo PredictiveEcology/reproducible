@@ -481,8 +481,8 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 
   df <- data.frame(
     rbind(
-      c("rds", "base::readRDS", "base::saveRDS", "binary"),
-      c("qs", "qs::qread", "qs::qsave", "qs"),
+      c(.rdsFormat, "base::readRDS", "base::saveRDS", "binary"),
+      c(.qsFormat, "qs::qread", "qs::qsave", .qsFormat),
       cbind(
         c("asc", "grd", "tif"), griddedFile, griddedFileSave,
         rasterType(rasterRead = griddedFile)
@@ -493,6 +493,18 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
       )
     )
   )
+
+  sfCanRead <- c("bna","csv", "e00", "gdb", "geojson", "gml", "gmt", "gpkg", "gps",
+    "gtm", "gxt", "jml", "map", "mdb", "nc", "ods", "osm", "pbf", "shp", "sqlite",
+    "vdv")#, "xls", "xlsx" )
+  sfFun <- shpFile
+  sfSaveFun <- shpFileSave
+  type = "sf"
+  colnames(df) <- c("extension", "fun", "saveFun", "type")
+  df2 <- data.frame(sfCanRead, sfFun, sfSaveFun, type)
+  colnames(df2) <- c("extension", "fun", "saveFun", "type")
+  df <- rbind(df, df2)
+
   colnames(df) <- c("extension", "fun", "saveFun", "type")
   df
 }
@@ -656,4 +668,30 @@ urlExists <- function(url) {
   if (length(mess) > 1)
     mess[1:(length(mess)-1)] <- paste0(mess[1:(length(mess)-1)], "\n")
   mess
+}
+
+prefixCacheId <- function(cacheId) {
+  if (is.null(cacheId))
+    character()
+  else
+    paste0(cacheId, "_")
+}
+
+#' Extract the cache id of an object
+#'
+#' Any object that was returned from the Cache or was calculated as part of a
+#' Cache call will have an attribute, `tags` and an entry with `cacheId:` prefix.
+#' This is a lightweight helper to extract that `cacheId`.
+#'
+#' @param obj Any R object
+#'
+#' @return The `cacheId` if this was part of a `Cache` call. Otherwise `NULL`
+#'
+#' @export
+cacheId <- function(obj) {
+  whHasCacheId <- which(grepl("cacheId:", attr(obj, "tags")))
+  if (any(whHasCacheId))
+    gsub("cacheId:", "", attr(obj, "tags")[whHasCacheId])
+  else
+    NULL
 }

@@ -233,6 +233,16 @@ setMethod(
 #' @export
 setMethod(
   ".robustDigest",
+  signature = "call",
+  definition = function(object, .objects, length, algo, quick, classOptions) {
+    .robustDigestFormatOnly(object, algo = algo)
+  }
+)
+
+#' @rdname robustDigest
+#' @export
+setMethod(
+  ".robustDigest",
   signature = "character",
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
@@ -344,15 +354,46 @@ setMethod(
   signature = "list",
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
-    # browser(expr = exists("._robustDigest_2"))
-    if (!is.null(.objects)) object <- object[.objects]
-    lapply(.sortDotsUnderscoreFirst(object), function(x) {
-      .robustDigest(
-        object = x, .objects = .objects,
-        length = length,
-        algo = algo, quick = quick, classOptions = classOptions
-      )
+    object <- rmDotObjects(object, .objects)
+    .objects <- dotObjectsToNULL(object, .objects) # only use it once
+
+    # if (!is.null(.objects)) {
+    #   # This will get "only the top=level" list ... if it matches
+    #   correctList <- intersect(.objects, names(object))
+    #   if (length(correctList) > 0) {
+    #     object <- object[.objects]
+    #     .objects <<- NULL
+    #   }
+    # }
+
+    objsSorted <- .sortDotsUnderscoreFirst(object)
+    # objsSorted[["._list"]] <- NULL
+    inner <- Map(x = objsSorted, i = seq_along(objsSorted), function(x, i) {
+
+      if (!is.null(attr(x, ".Cache")$newCache)) {
+        x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
+        if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
+      }
+
+      withCallingHandlers({
+
+        .robustDigest(
+          object = x, .objects = .objects,
+          length = length,
+          algo = algo, quick = quick, classOptions = classOptions
+        )
+      }, error = function(e) {
+        nam <- names(objsSorted)
+        if (!is.null(nam)) {
+          # messageCache("Error occurred during .robustDigest of ", nam[i], " in ", .functionName)
+          messageCache("Error occurred during .robustDigest of ", nam[i])
+        }
+      })
+
     })
+    ## have to distinguish a list from an object not in a list
+    # append(list(._list = .doDigest(inner)), inner)
+    inner
   }
 )
 
@@ -392,7 +433,6 @@ setMethod(
   }
 )
 
-
 #' @rdname robustDigest
 #' @export
 setMethod(
@@ -427,10 +467,11 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "integer",
-  definition = function(object, .objects, length, algo, quick, classOptions) {
+  definition = function(object, .objects, length, algo, quick, classOptions,
+                        cacheSaveFormat = getOption("reproducible.cacheSaveFormat")) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    if (identical(getOption("reproducible.cacheSaveFormat"), "qs") &&
+    if (identical(cacheSaveFormat, .qsFormat) &&
         identical(getOption("reproducible.cacheSpeed"), "fast")) {
       os <- objSize(object)
       if (os == 680) {
@@ -516,7 +557,8 @@ basenames3 <- function(object, nParentDirs) {
 
 .doDigest <- function(x, algo, length = Inf, file,
                       newAlgo = NULL,
-                      cacheSpeed = getOption("reproducible.cacheSpeed", "slow")) {
+                      cacheSpeed = getOption("reproducible.cacheSpeed", "slow"), ...) {
+  # the ... is just a passthrough so this function doesn't fail if there are other args
   if (missing(algo)) algo <- formals(.robustDigest)$algo
 
   out <- if (!missing(file)) {
@@ -543,3 +585,39 @@ basenames3 <- function(object, nParentDirs) {
   }
   out
 }
+
+rmDotObjects <- function(object, .objects) {
+  if (!is.null(.objects)) {
+    # This will get "only the top=level" list ... if it matches
+    correctList <- intersect(.objects, names(object))
+    if (length(correctList) > 0) {
+      object <- object[.objects]
+      attr(object, ".objects") <- .returnNothing
+    }
+  }
+  object
+}
+
+rmDotObjectsInList <- function(object, .objects) {
+  lapply(object, function(x) {
+    rmDotObjects(x, .objects)
+  })
+}
+
+dotObjectsToNULL <- function(object, .objects) {
+  if (identical(attr(object, ".objects"), .returnNothing))
+    .objects <- NULL # only use it once
+  .objects
+}
+
+dotObjectsToNULLInList <- function(object, .objects) {
+  if (!is.null(.objects)) {
+    for (i in object) {
+      .objects <- dotObjectsToNULL(object, .objects)
+      break
+    }
+  }
+
+  .objects
+}
+

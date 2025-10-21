@@ -24,7 +24,7 @@ test_that("preProcess fails if user provides non-existing file", {
   expect_true(grepl("manual download", errMsg))
   expect_true(grepl("appendChecksumsTable", errMsg))
 
-  optsOrig <- options(reproducible.interactiveOnDownloadFail = FALSE)
+  withr::local_options(reproducible.interactiveOnDownloadFail = FALSE)
 
   .downloadErrorFn = function(xxxx) {
     tryCatch(stop(xxxx), httr2_http_404 = function(cnd) NULL,
@@ -32,7 +32,6 @@ test_that("preProcess fails if user provides non-existing file", {
              silent = TRUE) # httr2 has a unique error; need to silence it
     try(stop(xxxx), silent = TRUE)
   }
-
   testthat::with_mocked_bindings(
       .downloadErrorFn = .downloadErrorFn,
       isInteractive = function() {
@@ -50,7 +49,7 @@ test_that("preProcess fails if user provides non-existing file", {
   )
   expect_true(grepl("manual download", errMsg))
   expect_true(grepl("appendChecksumsTable", errMsg))
-  options(optsOrig)
+  withr::deferred_run()
 
   testthat::with_mocked_bindings(
     isInteractive = function() {
@@ -77,7 +76,9 @@ test_that("preProcess fails if user provides non-existing file", {
   )
   expect_true(sum(grepl("Download failed", errMsg)) == 1)
 
-  # optsOrig <- options("reproducible.interactiveOnDownloadFail" = TRUE)
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest"
+  withr::local_options("reproducible.interactiveOnDownloadFail" = TRUE)
+  zipFilename <- tempfile2(fileext = ".zip")
   testthat::with_mocked_bindings(
     .downloadErrorFn = .downloadErrorFn,
     isInteractive = function() {
@@ -86,35 +87,36 @@ test_that("preProcess fails if user provides non-existing file", {
     .readline = function(prompt) {
       theFile <- file.path(tmpdir, "rasterTestAA")
       write.table(theFile, file = theFile)
-      zipFilename <- file.path(tmpdir, "rasterTest")
       origDir <- setwd(dirname(theFile))
       on.exit(setwd(origDir), add = TRUE)
       zip(zipfile = zipFilename, files = basename2(theFile), flags = "-q")
-      zipFilenameWithDotZip <- dir(tmpdir, pattern = "\\.zip", full.names = TRUE)
-      file.rename(from = zipFilenameWithDotZip, to = zipFilename)
+      file.copy(zipFilename, file.path(tmpdir, basename(url)))
       "y"
     },
     {
-      co <- capture.output({
-        mess <- testthat::capture_messages({
-          errMsg <- testthat::capture_error({
-            reproducible::preProcess(
-              url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
-              destinationPath = tmpdir
-            )
+      co <- capture.output(type = "message", {
+        co <- capture.output({
+          mess <- testthat::capture_messages({
+            errMsg <- testthat::capture_error({
+              reproducible::preProcess(
+                fun = NA,
+                url = url,
+                destinationPath = tmpdir
+              )
+            })
           })
         })
       })
     }#,
     # .env = "reproducible"
   )
-  expect_true(sum(grepl("manual download", mess)) == 1)
+  expect_true(sum(grepl("manual.+download", mess)) == 1) # manual download may be broken by \n
   expect_true(sum(grepl("To prevent", mess)) == 1)
-  expect_true(file.exists(file.path(tmpdir, "rasterTest.zip")))
-  cs <- read.table(file.path(tmpdir, "CHECKSUMS.txt"), header = TRUE)
+  expect_true(file.exists(zipFilename))
+  cs <- fread(file.path(tmpdir, "CHECKSUMS.txt"), header = TRUE)
   expect_true(NROW(cs) == 2 || NROW(cs) == 3) # TODO this may be detecting a bug == on GA it is 2, locally it is 3
   expect_true(all(grepl("rasterTest", cs$file)))
-  options(optsOrig)
+  withr::deferred_run()
 })
 
 test_that("preProcess fails if user provides a non .zip/.tar as archive", {
