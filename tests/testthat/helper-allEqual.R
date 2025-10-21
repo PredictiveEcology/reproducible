@@ -8,18 +8,24 @@ skip_if_no_token <- function() {
   testthat::skip_if_not(googledrive::drive_has_token(), "No Drive token")
 }
 
-# puts tmpdir, tmpCache, tmpfile (can be vectorized with length >1 tmpFileExt),
-#   optsAsk in this environment,
-# loads and libraries indicated plus testthat,
-# sets options("reproducible.ask" = FALSE) if ask = FALSE
-# if `needInternet = TRUE`, it will only re-try every 30 seconds
+## NOTE: needs to be called after testInit("googledrive", needGoogleDriveAuth = TRUE)
+skip_if_service_account <- function() {
+  ## service accounts cannot upload to standard drive folders (no quota)
+  testthat::skip_if_not(!grepl("gserviceaccount", googledrive::drive_user()$emailAddress),
+                        message =  "Using service account")
+}
+
+## puts tmpdir, tmpCache, tmpfile (can be vectorized with length >1 tmpFileExt),
+##   optsAsk in this environment,
+## loads and libraries indicated plus testthat,
+## sets options("reproducible.ask" = FALSE) if ask = FALSE
+## if `needInternet = TRUE`, it will only re-try every 30 seconds
 testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt = "",
                      opts = NULL, needGoogleDriveAuth = FALSE, needInternet = FALSE,
                      envir = parent.frame(1)) {
   set.randomseed()
 
   pf <- parent.frame()
-
 
   if (isTRUE(needGoogleDriveAuth)) {
     libraries <- c(libraries, "googledrive")
@@ -568,8 +574,6 @@ expect_match_noSlashN <- function(object, regexp, ...) {
   expect_match(object, regexp, ...)
 
 }
-
-
 
 googleSetupForUseCloud <- function(cloudFolderID, tmpdir, tmpCache) {
   testsForPkgs <- "testsForPkgs"
