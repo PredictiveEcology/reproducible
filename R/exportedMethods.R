@@ -955,7 +955,8 @@ unmakeMemoisable.default <- function(x) {
 #' @rdname dotWrap
 .wrap.environment <- function(obj, cachePath, preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                               conn = getOption("reproducible.conn", NULL),
-                              verbose = getOption("reproducible.verbose"), outputObjects = NULL, ...) {
+                              verbose = getOption("reproducible.verbose"), outputObjects = NULL,
+                              cacheId, ...) {
   if (!is.null(outputObjects)) {
     allObjs <- ls(obj)
     nullify <- setdiff(allObjs, outputObjects)
