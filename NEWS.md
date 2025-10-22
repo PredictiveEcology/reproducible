@@ -39,6 +39,7 @@ memoising than previously. However, it will be robust to downstream changes to t
   - `reproducible.useCacheV3`: default = TRUE to use the new Cache source code
   - `reproducible.digestV3`: default = TRUE to use the new Cache digest algorithms
 * `maskTo` can now use a `SpatRaster` for the mask
+* minor bugfixes
 
 # reproducible 2.1.2
 
