@@ -932,7 +932,13 @@ unmakeMemoisable.default <- function(x) {
   }
 
   attrsOrig <- attributes(obj)
-  obj <- lapply(obj, .wrap, preDigest = preDigest, cachePath = cachePath, drv = drv,
+  ## this is not calling the right method:
+  # obj <- lapply(obj, .wrap, preDigest = preDigest, cachePath = cachePath, drv = drv,
+                # conn = conn, verbose = verbose, ...)
+
+  obj <- lapply(obj, function(objj, ...) {
+    .wrap(objj, ...)
+  }, preDigest = preDigest, cachePath = cachePath, drv = drv,
                 conn = conn, verbose = verbose, cacheId = cacheId, ...)
   hasTagAttr <- lapply(obj, function(x) attr(x, "tags"))
   tagAttr <- unname(unlist(hasTagAttr)) # this removed name
