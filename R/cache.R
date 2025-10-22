@@ -1100,7 +1100,12 @@ CacheV2 <-
       }
     })
   } else {
-    unlist(l)
+    if (is.list(l)) {
+      unlist(l)
+    } else {
+      "not list2"
+    }
+    # unlist(l)
   }
 }
 

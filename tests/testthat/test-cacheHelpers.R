@@ -237,7 +237,7 @@ test_that("test debugCache arg", {
 
   ## .unlistToCharacter
   expect_true(grepl("not list", unlist(.unlistToCharacter(1, 1))))
-  expect_true(grepl("other", unlist(.unlistToCharacter(1, 0))))
+  expect_true(grepl("not list2", unlist(.unlistToCharacter(1, 0))))
 
   ## writeFuture
   comp <- # if (useDBI())
