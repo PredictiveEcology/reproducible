@@ -1533,7 +1533,7 @@ isGeomType <- function(geom, type) {
 #' @seealso [gdalResample()], and [gdalMask()] and the overarching [postProcessTo()]
 gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("reproducible.verbose"), ...) {
 
-  if (!requireNamespace("sf") && !requireNamespace("terra"))
+  if (!requireNamespace("sf", quietly = TRUE) && !requireNamespace("terra", quietly = TRUE))
     stop("Can't use gdalProject without sf and terra")
 
   messagePreProcess("running gdalProject ...", appendLF = FALSE, verbose = verbose)

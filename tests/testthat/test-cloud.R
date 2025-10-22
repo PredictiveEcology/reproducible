@@ -7,9 +7,15 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     tmpFileExt = c(".tif", ".grd"),
     needGoogleDriveAuth = TRUE,
   )
-  withr::local_options("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
-                       "reproducible.ask" = FALSE,
-                       "reproducible.useMemoise" = FALSE)
+
+  ## service accounts cannot upload to standard drive folders (no quota)
+  skip_if_service_account()
+
+  withr::local_options(
+    reproducible.cachePath = file.path(tempdir(), rndstr(1, 7)),
+    reproducible.ask = FALSE,
+    reproducible.useMemoise = FALSE
+  )
 
   clearCache(x = tmpCache)
   googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
@@ -142,11 +148,15 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
   skip_on_ci()
   testInit(c("googledrive", "terra"),
     needGoogleDriveAuth = TRUE,
-    opts = list("reproducible.ask" = FALSE)
+    opts = list(reproducible.ask = FALSE)
   )
+
+  ## service accounts cannot upload to standard drive folders (no quota)
+  skip_if_service_account()
+
   googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
 
-  withr::local_options("reproducible.cachePath" = tmpdir)
+  withr::local_options(reproducible.cachePath = tmpdir)
 
   # on.exit(
   #   {
@@ -169,7 +179,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
   newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
   cloudFolderID <- newDir
 
-  # the 3 raster files include the .grd, .gri, and .grd.aux.xml
+  ## the 3 raster files include the .grd, .gri, and .grd.aux.xml
   testRasterInCloud(".grd",
     cloudFolderID = cloudFolderID, numRasterFiles = 3, tmpdir = tmpdir,
     type = "Raster"
@@ -181,10 +191,14 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
   skip_on_ci()
   testInit(c("googledrive", "terra"),
     needGoogleDriveAuth = TRUE,
-    opts = list("reproducible.ask" = FALSE)
+    opts = list(reproducible.ask = FALSE)
   )
+
+  ## service accounts cannot upload to standard drive folders (no quota)
+  skip_if_service_account()
+
   googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
-  withr::local_options("reproducible.cachePath" = tmpdir)
+  withr::local_options(reproducible.cachePath = tmpdir)
   clearCache(x = tmpCache)
   clearCache(x = tmpdir)
   newDir <- retry(quote(googledrive::drive_mkdir(name = basename2(tmpdir), path = "testsForPkgs")))
@@ -201,10 +215,14 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
   skip_on_ci()
   testInit(c("googledrive", "terra"),
     needGoogleDriveAuth = TRUE,
-    opts = list("reproducible.ask" = FALSE)
+    opts = list(reproducible.ask = FALSE)
   )
+
+  ## service accounts cannot upload to standard drive folders (no quota)
+  skip_if_service_account()
+
   googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
-  withr::local_options("reproducible.cachePath" = tmpdir)
+  withr::local_options(reproducible.cachePath = tmpdir)
   clearCache(x = tmpCache)
   clearCache(x = tmpdir)
   newDir <- retry(quote(googledrive::drive_mkdir(name = tempdir2(), path = "testsForPkgs")))
@@ -220,11 +238,11 @@ test_that("prepInputs works with team drives", {
   skip_on_cran()
   skip_on_ci()
 
-  testInit(
-    needGoogleDriveAuth = TRUE,
-    "googledrive")
-  withr::local_options("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
-                       "reproducible.ask" = FALSE)
+  testInit(needGoogleDriveAuth = TRUE, "googledrive")
+  withr::local_options(
+    reproducible.cachePath = file.path(tempdir(), rndstr(1, 7)),
+    reproducible.ask = FALSE
+  )
 
   googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
 

@@ -336,9 +336,9 @@ setMethod(
         asList <- asList[-da]
       }
       rd <- .robustDigest(asList,
-        .objects = .objects,
-        length = length,
-        algo = algo, quick = quick, classOptions = classOptions
+                          .objects = .objects,
+                          length = length,
+                          algo = algo, quick = quick, classOptions = classOptions
       )
     } else {
       rd <- NULL
@@ -530,13 +530,14 @@ basenames3 <- function(object, nParentDirs) {
     isSpatVector <- all(names(from) %in% c("x", "type", "atts", "crs"))
 
     if ((is(from, "list") || is(from, "environment")) && onDiskRaster %in% FALSE && isSpatVector %in% FALSE) {
-      if (length(from) && length(to)) {
-        nams <- grep("^\\.mods$|^\\._", namesFrom, value = TRUE, invert = TRUE)
-        for (nam in nams) {
-          to[[nam]] <- try(.CopyCacheAtts(from[[nam]], to[[nam]]))
+      if (!inherits(to, "GPModel")) { ## can't do this for GPmodel Class
+        if (length(from) && length(to)) {
+          nams <- grep("^\\.mods$|^\\._", namesFrom, value = TRUE, invert = TRUE)
+          for (nam in nams) {
+            to[[nam]] <- try(.CopyCacheAtts(from[[nam]], to[[nam]]))
+          }
         }
       }
-
       return(to)
     }
   }
