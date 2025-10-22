@@ -6,31 +6,29 @@ See `NEWS.md` for a full list of changes.
 
 ## Test environments
 
-  
 ### Previous R versions
-* Ubuntu 20.04                 (GitHub), R 4.1.3, 4.2.3, 4.3.3
-* Windows                      (GitHub), R 4.1.3, 4.2.3, 4.3.3
-* Windows                 (win-builder), R 4.3.3
+* Ubuntu 24.04                 (GitHub), R 4.3.3, 4.4.3
+* Windows                      (GitHub), R 4.3.3, 4.4.3
+* Windows                 (win-builder), R 4.4.3
 
 ### Current R versions
-* macOS 12.6.3                 (GitHub), R 4.4.2
-* macOS 13.3.1            (mac-builder), R 4.4.2
-* macOS 14.4.1                  (local), R 4.4.2
-* Ubuntu 20.04                 (GitHub), R 4.4.2
-* Ubuntu 20.04                  (local), R 4.4.2
-* Windows                      (GitHub), R 4.4.2
-* Windows                       (local), R 4.4.2
-* Windows                 (win-builder), R 4.4.2
+* macOS 13.3.1            (mac-builder), R 4.5.1
+* macOS 14.7.6                 (GitHub), R 4.5.1
+* macOS 26.0.1                  (local), R 4.5.1
+* Ubuntu 24.04                 (GitHub), R 4.5.1
+* Ubuntu 24.04                  (local), R 4.5.1
+* Windows                      (GitHub), R 4.5.1
+* Windows                       (local), R 4.5.1
+* Windows                 (win-builder), R 4.5.1
 
 ### Development R version
-* Ubuntu 20.04                 (GitHub), R-devel (2024-12-10 r87437)
-* Ubuntu 20.04                  (local), R-devel (2024-12-10 r87437)
-* Windows                      (GitHub), R-devel (2024-12-10 r87437 ucrt)
-* Windows                 (win-builder), R-devel (2024-12-10 r87437 ucrt)
+* Ubuntu 24.04                 (GitHub), R-devel (2025-10-08 r88906)
+* Ubuntu 24.04                  (local), R-devel (2025-10-08 r88906)
+* Windows                      (GitHub), R-devel (2025-10-08 r88906 ucrt)
+* Windows                 (win-builder), R-devel (2025-10-08 r88906 ucrt)
 
 ### R-hub v2
 * Flavours              Linux, Mac, Windows
-
 
 ## R CMD check results
 

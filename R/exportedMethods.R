@@ -957,14 +957,13 @@ unmakeMemoisable.default <- function(x) {
                               conn = getOption("reproducible.conn", NULL),
                               verbose = getOption("reproducible.verbose"), outputObjects = NULL,
                               cacheId, ...) {
-
   if (!is.null(outputObjects)) {
     allObjs <- ls(obj)
     nullify <- setdiff(allObjs, outputObjects)
     rm(list = nullify, envir = obj)
   }
 
-  if (length(ls(obj, all.names = T)) > 0) {
+  if (length(ls(obj, all.names = TRUE)) > 0) {
     obj2 <- as.list(obj, all.names = TRUE)
     out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
                  conn = conn, verbose = verbose, outputObjects = outputObjects, cacheId = cacheId, ...)
