@@ -1,6 +1,7 @@
 # reproducible 3.0.0
 
 * drop support for R 4.1 and 4.2;
+* minor bugfixes
 * `format` replaces `cacheSaveFormat` as an argument so individual Cache calls can switch backend;
   this can be useful when e.g., `qs` (which tends to be faster and smaller files) does not work
   for all types of objects e.g., `xgboost`.
