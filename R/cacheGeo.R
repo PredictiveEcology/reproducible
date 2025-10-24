@@ -868,8 +868,16 @@ CacheGeo <- function(targetFile = NULL,
 
   }
 
-  if (!exists("existingObjSF"))
-    existingObjSF <- sf::st_as_sf(existingObj)
+
+  if (!exists("existingObjSF")) {
+    if (is.null(existingObj)) {
+      existingObjSF <- existingObj
+    } else {
+      existingObjSF <- sf::st_as_sf(existingObj)
+    }
+  }
+
+
   existingObjSF
 }
 
