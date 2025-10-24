@@ -548,29 +548,92 @@ withoutFinalNumeric <- function(string) {
 setClass("PackedSpatExtent2")
 
 wrapSpatVector <- function(obj) {
-  obj <- terra::wrap(obj)
+
+  # stopifnot(inherits(obj, "SpatVector"))
+  if (TRUE) # old; stable but slow
+    stWrap <- system.time(obj2 <- terra::wrap(obj))
+
+
+  stWrapSpecial <- system.time(obj <- list(
+    geometry = geom(obj),                      # matrix of coordinates
+    attributes = as.data.frame(obj),           # attribute table
+    crs = crs(obj),                             # coordinate reference system
+    extent = .wrap(ext(obj)),                          # bounding box
+    geom_type = geomtype(obj),                  # "points", "lines", "polygons", etc.
+    n_features = nrow(obj),
+    n_fields = ncol(obj)
+  ))
+  attr(obj, "class") <- "PackedSpatVector2"
+
+  ss <- sample(1e8, 1)
+  env <- reproducible:::memoiseEnv(cachePath = getOption("reproducible.cachePath"))
+  if (!exists("wrapTimings", envir = env))
+    env$wrapTimings <- new.env(parent = emptyenv())
+  assign(paste0("ss", ss), list(stWrap = stWrap, stWrapSpecial = stWrapSpecial), envir = env$wrapTimings)
+
   if (FALSE) {
-    geom1 <- terra::geom(obj)
-    geom1 <- list(
-      cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),
-      cols34 = matrix(as.integer(geom1[, c(3, 4)]), ncol = 2)
-    )
-    geomtype1 <- terra::geomtype(obj)
-    dat1 <- terra::values(obj)
-    crs1 <- terra::crs(obj)
-    obj <- list(geom1, geomtype1, dat1, crs1)
-    names(obj) <- spatVectorNamesForCache
+    geom_only <- obj
+    values(geom_only) <- NULL
+    df <- as.data.frame(obj)
+    cfs <- terra::crs(obj)
+    #geom1 <- terra::geom(obj)
+    #df <- as.data.frame(obj)
+    values(geom_only) <- df
+
+    wrap_spatvector <- function(obj) {
+      stopifnot(inherits(obj, "SpatVector"))
+
+      list(
+        geometry = geom(obj),                      # matrix of coordinates
+        attributes = as.data.frame(obj),           # attribute table
+        crs = crs(obj),                             # coordinate reference system
+        extent = ext(obj),                          # bounding box
+        geom_type = geomtype(obj),                  # "points", "lines", "polygons", etc.
+        n_features = nrow(obj),
+        n_fields = ncol(obj)
+      )
+    }
+
+    unwrap_spatvector <- function(unwrap) {
+      # Create empty SpatVector from geometry
+      sv <- vect(unwrap$geometry, type = unwrap$geom_type, crs = unwrap$crs)
+
+      # Attach attributes
+      values(sv) <- unwrap$attributes
+
+      sv
+    }
+
+    #
+    #
+    # geom1 <- list(
+    #   cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),
+    #   cols34 = matrix(as.integer(geom1[, c(3, 4)]), ncol = 2)
+    # )
+    # geomtype1 <- terra::geomtype(obj)
+    # dat1 <- terra::values(obj)
+    # crs1 <- terra::crs(obj)
+    # obj <- list(geom1, geomtype1, dat1, crs1)
+    # names(obj) <- spatVectorNamesForCache
+    obj
   }
   obj
 }
 
 unwrapSpatVector <- function(obj) {
-  obj <- terra::unwrap(obj)
+  sv <- vect(obj$geometry, type = obj$geom_type, crs = obj$crs)
+
+  # Attach attributes
+  values(sv) <- obj$attributes
+
   if (FALSE) {
+    obj <- terra::unwrap(obj)
     obj$x <- cbind(obj$x$cols125[, 1:2, drop = FALSE], obj$x$cols34[, 1:2, drop = FALSE], obj$x$cols125[, 3, drop = FALSE])
     do.call(terra::vect, obj)
+    obj
   }
-  obj
+  sv
+
 }
 
 #' Has a cached object has been updated?

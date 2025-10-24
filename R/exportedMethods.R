@@ -1105,7 +1105,7 @@ unmakeMemoisable.default <- function(x) {
     obj <- lapply(obj, .unwrap)
     obj <- terra::svc(obj)
   }
-  if (any(inherits(obj, c("PackedSpatVector", "PackedSpatRaster", "PackedSpatExtent2")))) {
+  if (any(inherits(obj, c("PackedSpatVector", "PackedSpatRaster", "PackedSpatExtent2", "PackedSpatVector2")))) {
     if (!requireNamespace("terra")) stop("Please install.packages('terra')")
     if (any(inherits(obj, "PackedSpatVector"))) {
       obj <- terra::vect(obj)
