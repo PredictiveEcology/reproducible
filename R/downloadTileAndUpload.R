@@ -26,7 +26,8 @@
 #' @param numTiles Integer. Number of tiles to generate. Optional.
 #' @param plot.grid Logical. Whether to plot the tile grid and area of interest. Default is `FALSE`.
 #' @param verbose Logical or numeric. Controls verbosity of messages. Default is `getOption("reproducible.verbose")`.
-#' @param ... Passed to `writeRaster`, e.g., `datatype`.
+#' @param ... Either `maskTo`, `cropTo` (which will be used if `to` is not supplied, or
+#'   arguments passed to `writeRaster`, e.g., `datatype` (used when writing tiles).
 #'
 #' @return A `SpatRaster` object cropped to the area of interest (`to`), composed of the necessary tiles.
 #' If the post-processed file already exists locally, it will be returned directly.
@@ -66,7 +67,7 @@
 #' @export
 prepInputsWithTiles <- function(targetFile, url, destinationPath,
                                 to,
-                                tilesFolder = "tiles",
+                                tilesFolder = file.path(getOption("reproducible.inputPath"), "tiles"),
                                 urlTiles = getOption("reproducible.prepInputsUrlTiles", NULL),
                                 doUploads = getOption("reproducible.prepInputsDoUploads", FALSE),
                                 tileGrid = "CAN",
@@ -76,12 +77,24 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
                                 verbose = getOption("reproducible.verbose"), ...) {
 
   st <- Sys.time()
-  if (missing(to) || is.null(urlTiles)) {
+
+  # deal with `to` first, to identify the tiles, then rest can be Cached easily, even
+  #  if the to changes slightly
+  maskToCropTo <- c("maskTo", "cropTo")
+  whMaskToCropTo <- match(maskToCropTo, ...names())
+  if ( (missing(to) && anyNA(whMaskToCropTo)) || is.null(urlTiles)) {
     messagePreProcess(
-      "prepInputsWithTiles must have `urlTiles` and `url` plus a `to` spatial object",
-      "returning `'NULL'`", verbose = verbose)
+      "prepInputsWithTiles must have `urlTiles` and `url` plus a `to`, `cropTo` or ",
+      "`maskTo` spatial object",
+      verbose = verbose)
     return("NULL")
   }
+  if (missing(to)) # take the first of maskTo or cropTo, which are in the ...
+    if (!anyNA(whMaskToCropTo)) to <- ...elt(whMaskToCropTo[1])
+  if (is(to, "SpatRaster"))
+    to <- boundaryPolygon(to)
+  dig <- .robustDigest(to)
+
 
   datatype <- "FLT4S"
   dtype <- list(...)$datatype
@@ -98,17 +111,16 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   }
 
   remoteMetadata <- getRemoteMetadata(targetFile, isGDurl, url)
+  remoteHashFile <- makeRemoteHashFile(url, destinationPath,
+                                       remoteMetadata$targetFile, remoteMetadata$remoteHash)
   if (!is.null(.isArchive(remoteMetadata$targetFile)))  {
     messagePreProcess(
       "prepInputsWithTiles does not work with archives yet",
-      "returning `'NULL'`", verbose = verbose)
+      verbose = verbose)
     return("NULL")
   }
 
-  remoteHashFile <- makeRemoteHashFile(url, destinationPath, remoteMetadata$targetFile, remoteMetadata$remoteHash)
   purge <- checkHaveCorrectHashedVersion(remoteHashFile, remoteMetadata$remoteHash, purge, verbose)
-
-  dig <- .robustDigest(to)
 
   if (is.null(remoteMetadata$targetFile)) {
     stop("Please supply `targetFile` or a url from which `targetFile` can be extracted from")
@@ -121,7 +133,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
     purgeLocals(targetFilePostProcessedFullPath, targetFileFullPath, remoteHashFile, verbose)
   }
 
-  if (file.exists(targetFilePostProcessedFullPath) && doUploads %in% FALSE) {
+  if (file.exists(targetFilePostProcessedFullPath) && doUploads < 1) {
     messagePreProcess("Correct post processed file exists (",
                              .messageFunctionFn(targetFilePostProcessedFullPath),
                              ");\nreturning it now...", verbose = verbose)
@@ -151,13 +163,14 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
 
   noTiles <- FALSE
 
+  to_inTileGrid <- postProcessTo(to, to = targetObjCRS, verbose = verbose - 2)
   tileGridAndArea <- makeAndPlotTileGrid(tileGrid, theArea, numTiles, targetObjCRS,
-                                         plot.grid, to, verbose)
+                                         plot.grid, to = to_inTileGrid, verbose)
+
 
   # Find intersecting tiles
   all_tile_names <- sort(makeTileNames(tileGridAndArea$tileGrid$tile_id))
 
-  to_inTileGrid <- postProcessTo(to, to = targetObjCRS, verbose = verbose - 2)
   intersecting_tiles <- terra::intersect(tileGridAndArea$tileGrid, terra::ext(to_inTileGrid))
   needed_tile_names <- makeTileNames(intersecting_tiles$tile_id)
   needed_tile_names <- sort(needed_tile_names)
@@ -171,7 +184,7 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
     if (verbose > 0) {
       messagePreProcess(.messageFunctionFn(paste(needed_tile_names, collapse =  ", ")), verbose = verbose)
   }
-  haveAllNeededTiles <- if (doUploads %in% TRUE) length(missingTilesLocalAll) == 0 else TRUE
+  haveAllNeededTiles <- if (doUploads > 0) length(missingTilesLocalAll) == 0 else TRUE
 
 
   if (length(missingTilesLocal) == 0){# && (haveAllNeededTiles)) {
@@ -181,14 +194,14 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
     haveLocalTiles <- TRUE
   } else {
     messagePreProcess(
-      "⚠️ Tiles are missing locally. Will try to download these:\n",
-      verbose = verbose)
+      "⚠️ Tiles are missing locally in:\n",.messageFunctionFn(tilesFolderFullPath),
+      "\nWill try to download these:\n", verbose = verbose)
     messagePreProcess(.messageFunctionFn(paste(missingTilesLocal, collapse = ", ")), verbose = verbose)
     messagePreProcess(paste0("... from urlTiles (",.messageFunctionFn(urlTiles),")"), verbose = verbose)
   }
 
   for (ii in 1:2) { # try twice in case a local tile is corrupt; if yes, delete it, redownload, reload
-    if (haveLocalTiles %in% FALSE || doUploads) {
+    if (haveLocalTiles %in% FALSE || doUploads > 0) {
       needed_tile_names <- downloadMakeAndUploadTiles(url, urlTiles, remoteMetadata$targetFile, targetFileFullPath,
                                                       needed_tile_names, tilesToGet, all_tile_names, haveLocalTiles,
                                                       tilesFolderFullPath, tileGridAndArea$tileGrid, tileGridAndArea$numTiles,
@@ -250,7 +263,7 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
   }
 
   # Worker function
-  process_tile <- function(spec) {
+  process_tile <- function(spec, datatype) {
     if (!file.exists(spec$path)) {
       tile <- terra::crop(r, spec$ext)
       # isAllNA <- terra::allNA(tile)[1] %in% TRUE
@@ -275,7 +288,7 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
       tile_specs, process_tile,
       mc.cores = numCoresToUse, datatype = datatype)
   } else {
-    results <- lapply(tile_specs, process_tile)
+    results <- lapply(tile_specs, process_tile, datatype = datatype)
   }
 
   # Print results
@@ -301,10 +314,12 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
 
   # Create subfolder named after original raster filename
   subfolder_name <- basename(tools::file_path_sans_ext(thisFilename))
-  subfolder <- googledrive::drive_find(q = paste0("name = '", subfolder_name, "' and '", parent_id, "' in parents"))
+  subfolder <- googledrive::with_drive_quiet(
+    googledrive::drive_find(q = paste0("name = '", subfolder_name, "' and '", parent_id, "' in parents")))
 
   if (nrow(subfolder) == 0) {
-    subfolder <- googledrive::drive_mkdir(subfolder_name, path = googledrive::as_id(parent_id))
+    subfolder <- googledrive::with_drive_quiet(googledrive::drive_mkdir(subfolder_name,
+                                                                        path = googledrive::as_id(parent_id)))
     messagePreProcess("📁 Created subfolder: ", .messageFunctionFn(subfolder_name), verbose = verbose)
   } else {
     messagePreProcess("📁 Found existing subfolder: ", .messageFunctionFn(subfolder_name), verbose = verbose)
@@ -314,7 +329,7 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
   tif_files <- dir(local_dir, pattern = "\\.tif$", full.names = TRUE)
 
   # Get existing files in Drive subfolder
-  existingAll <- googledrive::drive_ls(subfolder$id)
+  existingAll <- googledrive::with_drive_quiet(googledrive::drive_ls(subfolder$id))
   existing_names <- existingAll$name
 
   # Upload helper
@@ -512,11 +527,11 @@ lsExistingTilesOnGoogleDrive <- function(urlTiles, targetFile) {
   # targetFile <- "alnu_rub.tif"
 
   # List all files in the folder
-  existing_tiles <- googledrive::drive_ls(tile_folder_onGoogleDrive)
+  existing_tiles <- googledrive::with_drive_quiet(googledrive::drive_ls(tile_folder_onGoogleDrive))
   hasSubfolder <- grep(filePathSansExt(targetFile), existing_tiles$name)
   if (length(hasSubfolder)) {
     tile_subfolder <- existing_tiles[hasSubfolder, ]$id
-    existing_tiles <- googledrive::drive_ls(tile_subfolder)
+    existing_tiles <- googledrive::with_drive_quiet(googledrive::drive_ls(tile_subfolder))
   } else {
     existing_tiles <- NULL
   }
@@ -539,7 +554,8 @@ crsFromGoogleDriveTile <- function(tilesFolderFullPath, existing_tiles, fileSize
     dir.create(tilesFolderFullPath, recursive = TRUE, showWarnings = FALSE)
   setwd(tilesFolderFullPath)
   on.exit(setwd(ogwd))
-  download_resumable_httr2(existing_tiles$id[1], existing_tiles$name[1], fileSize, verbose = verbose - 1)
+  download_resumable_httr2(existing_tiles$id[1], existing_tiles$name[1],
+                           gdriveDetails = existing_tiles[1, ], fileSize, verbose = verbose - 1)
   targetObjCRS <- tryRastThenGetCRS(file.path(tilesFolderFullPath, existing_tiles$name[1]))
   setwd(ogwd)
   targetObjCRS
@@ -592,7 +608,8 @@ plotGridAndArea <- function(tileGrid, theArea, to) {
   }
   tilePolyTG <- terra::project(theArea, tileGrid)
   terra::plot(tilePolyTG, add = TRUE)
-  terra::plot(to, add = TRUE, col = "red")
+  toForPlot <- if (!any(terra::compareGeom(tileGrid, to))) postProcess(to, terra::crs(tileGrid)) else to
+  terra::plot(toForPlot, add = TRUE, col = "red")
 }
 
 getTilesFromGoogleDrive <- function(tilesToGet, existing_tiles, tilesFolderFullPath) {
@@ -631,7 +648,7 @@ downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFull
   missingTilesRemoteAll <- setdiff(all_tile_names, existing_tiles$name)
 
   tilesFullOnRemote <- TRUE
-  if (doUploads %in% TRUE) tilesFullOnRemote <- length(missingTilesRemoteAll) == 0
+  if (doUploads > 1) tilesFullOnRemote <- length(missingTilesRemoteAll) == 0
 
   if (length(missingTilesOnRemote) == 0) {
     doTileDownload <- haveLocalTiles %in% FALSE
@@ -645,7 +662,7 @@ downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFull
     }
   } else {
     messagePreProcess("⚠️ Some tiles are missing on Google Drive:")
-    missingOnes <- if (doUploads) missingTilesRemoteAll else missingTilesOnRemote
+    missingOnes <- if (doUploads > 1) missingTilesRemoteAll else missingTilesOnRemote
     if (verbose > 0) message(paste(missingOnes, collapse = ", "))
   }
 
@@ -659,18 +676,18 @@ downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFull
     haveLocalTiles <- getTilesFromGoogleDrive(tilesToGet, existing_tiles, tilesFolderFullPath)
   }
 
-  if (needUploads %in% TRUE || (doUploads %in% TRUE && haveRemoteTiles %in% FALSE)) {
+  if (needUploads %in% TRUE || (doUploads > 0 && haveRemoteTiles %in% FALSE)) {
     fe <- file.exists(targetFileFullPath)
     if (fe %in% FALSE)
       download_resumable_httr2(url, targetFileFullPath)
 
 
-    if (haveLocalTiles %in% FALSE || (doUploads %in% TRUE && needUploads))
+    if (haveLocalTiles %in% FALSE || (doUploads > 0 && needUploads))
       tile_raster_write_auto(targetFileFullPath, tilesFolderFullPath, tileGrid,
                              all_tile_names = all_tile_names, datatype = datatype,
                              nx = numTiles[[1]], ny = numTiles[[2]],
                              verbose = verbose)
-    if (needUploads %in% FALSE && doUploads %in% TRUE)
+    if (needUploads %in% FALSE && doUploads > 0)
       messagePreProcess("Nothing to upload", verbose = verbose)
 
     upload_tiles_to_drive_url_parallel(tilesFolderFullPath, urlTiles, targetFileFullPath,
@@ -833,7 +850,8 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
 }
 
 sprcMosaicRast <- function(url, tile_rasters, to_inTileGrid, targetFilePostProcessedFullPath,
-                           fileSize, needed_tile_names, tilesFolderFullPath, noData, datatype, verbose) {
+                           fileSize, needed_tile_names, tilesFolderFullPath, noData,
+                           datatype, verbose) {
   allNull <- all(sapply(tile_rasters, is.null))
   if (allNull %in% FALSE) {
     anyNull <- any(sapply(tile_rasters, is.null))
@@ -852,17 +870,17 @@ sprcMosaicRast <- function(url, tile_rasters, to_inTileGrid, targetFilePostProce
                         verbose = verbose)
 
       st3 <- Sys.time()
-      messagePrepInputs("merging tiles ", .messageFunctionFn(targetFilePostProcessedFullPath), " ...", verbose = verbose)
-      merged <- terra::merge(final)
+      messagePrepInputs("merging tiles in ", .messageFunctionFn(tilesFolderFullPath), " ...", verbose = verbose)
+      rfull <- terra::merge(final)
       messagePreProcess("  ", gsub("^\b", "", messagePrefixDoneIn),
                         format(difftime(Sys.time(), st3), units = "secs", digits = 3),
                         verbose = verbose)
 
       st2 <- Sys.time()
-      messagePrepInputs("writing ", .messageFunctionFn(targetFilePostProcessedFullPath), " ...", verbose = verbose)
-      rfull <- terra::writeRaster(merged, filename = targetFilePostProcessedFullPath,
-                                  datatype = datatype,
-                                  overwrite = TRUE)
+      # messagePrepInputs("writing ", .messageFunctionFn(targetFilePostProcessedFullPath), " ...", verbose = verbose)
+      # rfull <- terra::writeRaster(merged, filename = targetFilePostProcessedFullPath,
+      #                             datatype = datatype,
+      #                             overwrite = TRUE)
       messagePreProcess("  ", gsub("^\b", "", messagePrefixDoneIn),
                         format(difftime(Sys.time(), st2), units = "secs", digits = 3),
                         verbose = verbose)
@@ -879,8 +897,8 @@ sprcMosaicRast <- function(url, tile_rasters, to_inTileGrid, targetFilePostProce
     noData <- TRUE
   }
   if (isTRUE(noData)) {
-    messagePreProcess("The dataset at \n", url, "\ndoes not have data inside `to`; ",
-                      "returning NULL", verbose = verbose)
+    messagePreProcess("The dataset at \n", url, "\ndoes not have data that overlaps with `to`",
+                      verbose = verbose)
     rfull <- NULL
   }
   rfull
@@ -937,7 +955,7 @@ crsFromLocalOrGDTiles <- function(targetObjCRS, dirTilesFolder, tilesFolderFullP
     if (is.null(targetObjCRS) && is.null(existing_tiles)) {
       existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
       if (!is.null(existing_tiles) && NROW(existing_tiles) > 0) {
-        if (isTRUE(purge) && doUploads %in% TRUE) {
+        if (isTRUE(purge) && doUploads > 1) {
           existing_tiles <- purgeGoogleTiles(urlTiles, targetFile, verbose)
         } else {
           targetObjCRS <- crsFromGoogleDriveTile(tilesFolderFullPath, existing_tiles, fileSize, verbose = verbose)
@@ -966,8 +984,37 @@ makeAndPlotTileGrid <- function(tileGrid, theArea, numTiles, targetObjCRS, plot.
   if (missing(theArea)) {
     theArea <- terra::ext(tileGrid)
   }
-  if (isTRUE(plot.grid)) {
+  if (isTRUE(plot.grid) && !missing(to)) {
     plotGridAndArea(tileGrid, theArea, to)
   }
   list(tileGrid = tileGrid, numTiles = numTiles)
+}
+
+
+# Get resolution
+boundaryPolygon <- function(r) {
+  res_x <- terra::res(r)[1]
+  res_y <- terra::res(r)[2]
+
+  # Get raster extent
+  ext <- terra::ext(r)
+
+  # Generate coordinates of pixel corners along the boundary
+  # Top edge (left to right)
+  top <- cbind(seq(ext[1], ext[2] - res_x, by = res_x), rep(ext[4], nrow(r)))
+
+  # Right edge (top to bottom)
+  right <- cbind(rep(ext[2], nrow(r)), seq(ext[4], ext[3] + res_y, by = -res_y))
+
+  # Bottom edge (right to left)
+  bottom <- cbind(seq(ext[2], ext[1] + res_x, by = -res_x), rep(ext[3], nrow(r)))
+
+  # Left edge (bottom to top)
+  left <- cbind(rep(ext[1], nrow(r)), seq(ext[3], ext[4] - res_y, by = res_y))
+
+  # Combine all edges into one closed polygon
+  boundary_coords <- rbind(top, right, bottom, left, top[1, , drop = FALSE])
+
+  # Create polygon
+  terra::vect(list(boundary_coords), type = "polygons", crs = terra::crs(r))
 }
