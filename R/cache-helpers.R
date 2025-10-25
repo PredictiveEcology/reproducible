@@ -550,11 +550,12 @@ setClass("PackedSpatExtent2")
 wrapSpatVector <- function(obj) {
 
   # stopifnot(inherits(obj, "SpatVector"))
-  if (TRUE) # old; stable but slow
+  if (FALSE) # old; stable but slow
     stWrap <- system.time(obj2 <- terra::wrap(obj))
 
 
-  stWrapSpecial <- system.time(obj <- list(
+  # stWrapSpecial <- system.time(
+    obj <- list(
     geometry = geom(obj),                      # matrix of coordinates
     attributes = as.data.frame(obj),           # attribute table
     crs = crs(obj),                             # coordinate reference system
@@ -562,14 +563,15 @@ wrapSpatVector <- function(obj) {
     geom_type = geomtype(obj),                  # "points", "lines", "polygons", etc.
     n_features = nrow(obj),
     n_fields = ncol(obj)
-  ))
-  attr(obj, "class") <- "PackedSpatVector2"
+  )
+  # )
+  attr(obj, "class") <- c("PackedSpatVector2", attr(obj, "class"))
 
-  ss <- sample(1e8, 1)
-  env <- reproducible:::memoiseEnv(cachePath = getOption("reproducible.cachePath"))
-  if (!exists("wrapTimings", envir = env))
-    env$wrapTimings <- new.env(parent = emptyenv())
-  assign(paste0("ss", ss), list(stWrap = stWrap, stWrapSpecial = stWrapSpecial), envir = env$wrapTimings)
+  # ss <- sample(1e8, 1)
+  # env <- reproducible:::memoiseEnv(cachePath = getOption("reproducible.cachePath"))
+  # if (!exists("wrapTimings", envir = env))
+  #   env$wrapTimings <- new.env(parent = emptyenv())
+  # assign(paste0("ss", ss), list(stWrap = stWrap, stWrapSpecial = stWrapSpecial), envir = env$wrapTimings)
 
   if (FALSE) {
     geom_only <- obj
