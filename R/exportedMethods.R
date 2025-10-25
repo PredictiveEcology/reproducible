@@ -1105,17 +1105,12 @@ unmakeMemoisable.default <- function(x) {
     obj <- lapply(obj, .unwrap)
     obj <- terra::svc(obj)
   }
-  if (any(inherits(obj, c("PackedSpatVector", "PackedSpatRaster", "PackedSpatExtent2", "PackedSpatVector2")))) {
+  if (any(inherits(obj, c("PackedSpatRaster")))) {
     if (!requireNamespace("terra")) stop("Please install.packages('terra')")
-    if (any(inherits(obj, "PackedSpatVector"))) {
-      obj <- terra::vect(obj)
-    } else if (any(inherits(obj, "PackedSpatRaster"))) {
+    if (any(inherits(obj, "PackedSpatRaster"))) {
       obj <- terra::rast(obj)
-    } else if (any(inherits(obj, "PackedSpatExtent2"))) {
-      obj <- terra::ext(unlist(obj))
     }
-  } else if (any(inherits(obj, "data.table"))) {
-    obj <- data.table::copy(obj)
+
   } else if (is(obj, "Path")) {
     obj <- unwrapSpatRaster(obj, cachePath, cacheId = cacheId, ...)
     # obj2 <- try(unwrapSpatRaster(obj, cachePath, ...))
@@ -1196,6 +1191,62 @@ unmakeMemoisable.default <- function(x) {
   obj
 }
 
+#' @export
+#' @rdname dotWrap
+.unwrap.PackedSpatExtent2 <- function(obj, cachePath, cacheId,
+                                      drv = getDrv(getOption("reproducible.drv", NULL)),
+                                      conn = getOption("reproducible.conn", NULL), ...) {
+  atts <- attributes(obj)
+  obj <- terra::ext(unlist(obj))
+  # put attributes back on the potentially packed object
+  obj <- attributesReassign(atts, obj)
+
+  obj
+
+}
+
+
+#' @export
+#' @rdname dotWrap
+.unwrap.PackedSpatVector2 <- function(obj, cachePath, cacheId,
+                            drv = getDrv(getOption("reproducible.drv", NULL)),
+                            conn = getOption("reproducible.conn", NULL), ...) {
+  atts <- attributes(obj)
+  obj <- unwrapSpatVector(obj)
+  # put attributes back on the potentially packed object
+  obj <- attributesReassign(atts, obj)
+
+  obj
+
+}
+
+#' @export
+#' @rdname dotWrap
+.unwrap.data.table <- function(obj, cachePath, cacheId,
+                                     drv = getDrv(getOption("reproducible.drv", NULL)),
+                                     conn = getOption("reproducible.conn", NULL), ...) {
+  atts <- attributes(obj)
+  obj <- data.table::copy(obj)
+  # put attributes back on the potentially packed object
+  obj <- attributesReassign(atts, obj)
+
+  obj
+
+}
+
+#' @export
+#' @rdname dotWrap
+.unwrap.PackedSpatVector <- function(obj, cachePath, cacheId,
+                                      drv = getDrv(getOption("reproducible.drv", NULL)),
+                                      conn = getOption("reproducible.conn", NULL), ...) {
+  atts <- attributes(obj)
+  obj <- terra::vect(obj)
+  # put attributes back on the potentially packed object
+  obj <- attributesReassign(atts, obj)
+
+  obj
+
+}
 
 filenameInCacheWPrefix <- function(obj, cacheId, relative = TRUE) {
   # cacheId will be missing if it is in e.g., prepInputs without Cache
