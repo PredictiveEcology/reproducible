@@ -367,28 +367,49 @@ setMethod(
     # }
 
     objsSorted <- .sortDotsUnderscoreFirst(object)
+    addr <- list()
+    seen <- new.env(parent = emptyenv())
+    localAddrs <- Map(o = objsSorted, function(o) lobstr::obj_addr(o))
+
+    # rcae <- getOption(reproducible.CacheAddressEnv)
     # objsSorted[["._list"]] <- NULL
-    inner <- Map(x = objsSorted, i = seq_along(objsSorted), function(x, i) {
+    inner <- Map(x = objsSorted, i = seq_along(objsSorted), addr = localAddrs,
+                 function(x, i, addr) {
 
-      if (!is.null(attr(x, ".Cache")$newCache)) {
-        x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
-        if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
-      }
+                   if (!is.null(attr(x, ".Cache")$newCache)) {
+                     x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
+                     if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
+                   }
 
-      withCallingHandlers({
+                   # if (!is.null(rcae)) {
+                   #   if (exists(addr, envir = rcae, inherits = FALSE)) {
+                   #     browser()
+                   #     return(rcae[[addr]])
+                   #
+                   #   }
+                   # }
 
-        .robustDigest(
-          object = x, .objects = .objects,
-          length = length,
-          algo = algo, quick = quick, classOptions = classOptions
-        )
-      }, error = function(e) {
-        nam <- names(objsSorted)
-        if (!is.null(nam)) {
-          # messageCache("Error occurred during .robustDigest of ", nam[i], " in ", .functionName)
-          messageCache("Error occurred during .robustDigest of ", nam[i])
-        }
-      })
+                   if (exists(addr, envir = seen)) {
+                     return(seen[[addr]])
+                   }
+
+                   withCallingHandlers({
+
+                     result <- .robustDigest(
+                       object = x, .objects = .objects,
+                       length = length,
+                       algo = algo, quick = quick, classOptions = classOptions
+                     )
+                   }, error = function(e) {
+                     nam <- names(objsSorted)
+                     if (!is.null(nam)) {
+                       # messageCache("Error occurred during .robustDigest of ", nam[i], " in ", .functionName)
+                       messageCache("Error occurred during .robustDigest of ", nam[i])
+                     }
+                   })
+                   seen[[addr]] <- result
+
+                   result
 
     })
     ## have to distinguish a list from an object not in a list
