@@ -207,8 +207,4 @@ test_that("lightweight tests for code coverage", {
     outSFCloudSmaller <- sf::st_as_sf(out)
     expect_identical(as.data.frame(outSFCloudSmaller)[, "params"], out[, "params"])
   }, silent = TRUE)
-
 })
-
-
-

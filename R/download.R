@@ -699,7 +699,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         downloadResults <- list(out = out, destFile = normPath(destFile), needChecksums = 2)
       }
 
-      if (is.null(out)) {
+      if (is.null(out) && !is.null(url)) { # if url is NULL and out is NULL; means dlFun did all the work
         isGID <- all(isTRUE(grepl("^[A-Za-z0-9_-]{33}$", url)), # Has 33 characters as letters, numbers or - or _
                      isTRUE(!grepl("\\.[^\\.]+$", url))) # doesn't have an extension --> GDrive ID's as url
         if (any(isGID, grepl("d.+.google.com", url))) {
@@ -931,8 +931,8 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
         )))
       }
     }
-    fileSize <- sapply(fileAttr$drive_resource, function(x) x$size) ## TODO: not returned with team drive (i.e., NULL)
-    if (!is.null(fileSize)) {
+    fileSize <- sapply(fileAttr$drive_resource, function(x) x$size)
+    if (!is.null(unlist(fileSize))) {
       messageAboutFilesize(fileSize, verbose)
       # fileSize <- as.numeric(fileSize)
       # len <- length(fileSize)

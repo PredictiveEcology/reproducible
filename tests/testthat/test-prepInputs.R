@@ -1656,7 +1656,10 @@ test_that("options inputPaths", {
     )
   })
   expect_true(sum(grepl(paste0(hardlinkOrSymlinkMessagePrefixForGrep), mess1)) == 1)
-  expect_true(sum(grepl(paste0(tmpdir3), mess1)) == 2)
+  # because the targetFile could be absent or present, this may create a spurious message
+  #  that we don't need to test for
+  mess1b <- grep("targetFile was not supplied", mess1, invert = TRUE, value = TRUE)
+  expect_true(sum(grepl(paste0(tmpdir3), mess1b)) == 2)
 
   # THIS NEXT ONE DOESN"T PASS ON GA on WINDOWS, skip it
   #  should copy from 2nd directory (tmpCache) because it is removed in the lower
@@ -2032,9 +2035,9 @@ test_that("test prepInputs url when a gdrive directory", {
            )
   )
   withr::local_options(destinationPath = tmpdir)
+  skip_if_no_token()
 
   globalOutput <- capture.output({
-    skip_if_no_token()
     withr::local_dir(tmpdir)
     dPath <- "."
     url <- "https://drive.google.com/drive/u/3/folders/1q3aosWJ_THpgEaDzchvCWLMwT91pD9Fs"

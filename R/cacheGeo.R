@@ -1,3 +1,5 @@
+utils::globalVariables(c("X", "Y"))
+
 #' Cache-like function for spatial domains
 #'
 #' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
@@ -466,6 +468,7 @@ update_bbox <- function(sfobj){
 
   return(sfobj)
 }
+
 #' Cache-like function for spatial domains
 #'
 #' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
