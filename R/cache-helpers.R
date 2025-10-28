@@ -556,13 +556,13 @@ wrapSpatVector <- function(obj) {
 
   # stWrapSpecial <- system.time(
     obj <- list(
-    geometry = geom(obj),                      # matrix of coordinates
+    geometry = terra::geom(obj),                      # matrix of coordinates
     attributes = as.data.frame(obj),           # attribute table
-    crs = crs(obj),                             # coordinate reference system
-    extent = .wrap(ext(obj)),                          # bounding box
-    geom_type = geomtype(obj),                  # "points", "lines", "polygons", etc.
-    n_features = nrow(obj),
-    n_fields = ncol(obj)
+    crs = terra::crs(obj),                             # coordinate reference system
+    extent = .wrap(terra::ext(obj)),                          # bounding box
+    geom_type = terra::geomtype(obj),                  # "points", "lines", "polygons", etc.
+    n_features = terra::nrow(obj),
+    n_fields = terra::ncol(obj)
   )
   # )
   attr(obj, "class") <- c("PackedSpatVector2", attr(obj, "class"))
@@ -586,10 +586,10 @@ wrapSpatVector <- function(obj) {
       stopifnot(inherits(obj, "SpatVector"))
 
       list(
-        geometry = geom(obj),                      # matrix of coordinates
+        geometry = terra::geom(obj),                      # matrix of coordinates
         attributes = as.data.frame(obj),           # attribute table
         crs = crs(obj),                             # coordinate reference system
-        extent = ext(obj),                          # bounding box
+        extent = terra::ext(obj),                          # bounding box
         geom_type = geomtype(obj),                  # "points", "lines", "polygons", etc.
         n_features = nrow(obj),
         n_fields = ncol(obj)
