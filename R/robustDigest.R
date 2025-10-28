@@ -642,3 +642,50 @@ dotObjectsToNULLInList <- function(object, .objects) {
   .objects
 }
 
+
+# CacheAddressEnv <- function(envir = .GlobalEnv, create = FALSE, remove = FALSE) {
+#   browser()
+#   env <- NULL
+#   cae <- "CacheAddressEnv"
+#   if (isTRUE(remove)) {
+#     rm(list = cae, envir = .pkgEnv)
+#   } else {
+#     if (exists(cae, envir = .pkgEnv)) {
+#       env <- get(cae, envir = .pkgEnv, inherits = FALSE)
+#     }
+#     if (create %in% TRUE) {
+#       obj <- paste0(".reproducibleCacheAddressEnv")
+#       if (!exists(obj, envir = envir))
+#         assign(obj, new.env(parent = emptyenv()), envir = envir)
+# 
+#       if (is.null(.pkgEnv[[cae]]))
+#         assign(cae, new.env(parent = emptyenv()), envir = .pkgEnv)
+# 
+#       assign(obj, envir[[obj]], envir = .pkgEnv[[cae]])# <- env
+#     }
+# 
+#     if (exists(obj, envir = envir) && is.null(env)) {
+#       env <- get(obj, envir = envir, inherits = FALSE)
+#     }
+# 
+#   }
+#   env
+# }
+# 
+# reproducible.CacheAddressEnv <- "reproducible.CacheAddressEnv"
+# 
+# memoiseEnv <- function(cachePath, envir = .GlobalEnv) {
+#   memPersist <- isTRUE(getOption("reproducible.memoisePersist", NULL))
+#   if (memPersist) {
+#     obj <- paste0(".reproducibleMemoise_", cachePath)
+#     if (!exists(obj, envir = envir))
+#       assign(obj, new.env(parent = emptyenv()), envir = envir)
+#     memEnv <- get(obj, envir = envir, inherits = FALSE)
+#   } else {
+#     if (is.null(.pkgEnv[[cachePath]])) {
+#       .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
+#     }
+#     memEnv <- .pkgEnv[[cachePath]]
+#   }
+#   memEnv
+# }
