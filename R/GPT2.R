@@ -1351,6 +1351,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
                                   full_call, outputObjects,
                                   cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                                   drv, conn, verbose) {
+
   if (identical(useCache, "overwrite")) {
     clearCacheOverwrite(cachePath, cache_key, functionName, drv, conn, verbose)
     return(invisible(.returnNothing))
@@ -1388,6 +1389,8 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
                         silent = TRUE)
       if (is(shownCache, "try-error")) {
         if (isTRUE(any(grepl("format not detected", shownCache)))) {
+          cacheSaveFormatFail <- TRUE
+        } else { # e.g., change from qs to qs2
           cacheSaveFormatFail <- TRUE
         }
       }
@@ -1452,7 +1455,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
         swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
                             cacheId = cache_key, sameCacheID = sameCacheID,
                             newFile = cache_file_orig, verbose = verbose)
-        cacheSaveFormat <- setdiff(.cacheSaveFormats, cacheSaveFormat)
+        cacheSaveFormat <- fileExt(cache_file_orig) # setdiff(.cacheSaveFormats, cacheSaveFormat)
       }
     }
 

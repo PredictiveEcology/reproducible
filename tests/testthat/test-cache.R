@@ -985,29 +985,32 @@ test_that("test .defaultUserTags", {
 })
 
 test_that("test changing reproducible.cacheSaveFormat midstream", {
-  skip_if_not_installed(.qsFormat)
 
-  testInit(opts = list(
-    reproducible.cacheSaveFormat = .rdsFormat,
-    reproducible.useMemoise = FALSE
-  ))
+  for (form in c(.qsFormat, .qs2Format)) {
+    skip_if_not_installed(form)
 
-  b <- Cache(rnorm, 1, cachePath = tmpdir)
-  sc <- showCache(tmpdir)
-  ci <- unique(sc[[.cacheTableHashColName()]])
-  withr::local_options(reproducible.cacheSaveFormat = .qsFormat)
-  mess <- capture_messages({
+    testInit(opts = list(
+      reproducible.cacheSaveFormat = .rdsFormat,
+      reproducible.useMemoise = FALSE
+    ))
+
     b <- Cache(rnorm, 1, cachePath = tmpdir)
-  })
-  expect_false(attr(b, ".Cache")$newCache)
-  expect_true(sum(cli::ansi_grepl("Changing format of Cache entry from rds to qs", mess)) == 1)
+    sc <- showCache(tmpdir)
+    ci <- unique(sc[[.cacheTableHashColName()]])
+    withr::local_options(reproducible.cacheSaveFormat = form)
+    mess <- capture_messages({
+      b <- Cache(rnorm, 1, cachePath = tmpdir)
+    })
+    expect_false(attr(b, ".Cache")$newCache)
+    expect_true(sum(cli::ansi_grepl(paste0("Changing format of Cache entry from rds to ", form), mess)) == 1)
 
-  withr::local_options(reproducible.cacheSaveFormat = .rdsFormat)
-  mess <- capture_messages({
-    b <- Cache(rnorm, 1, cachePath = tmpdir)
-  })
-  expect_false(attr(b, ".Cache")$newCache)
-  expect_true(sum(cli::ansi_grepl("Changing format of Cache entry from qs to rds", mess)) == 1)
+    withr::local_options(reproducible.cacheSaveFormat = .rdsFormat)
+    mess <- capture_messages({
+      b <- Cache(rnorm, 1, cachePath = tmpdir)
+    })
+    expect_false(attr(b, ".Cache")$newCache)
+    expect_true(sum(cli::ansi_grepl(paste0("Changing format of Cache entry from ", form," to rds"), mess)) == 1)
+  }
 })
 
 test_that("test file link with duplicate Cache", {
