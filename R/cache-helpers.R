@@ -623,10 +623,10 @@ wrapSpatVector <- function(obj) {
 }
 
 unwrapSpatVector <- function(obj) {
-  sv <- vect(obj$geometry, type = obj$geom_type, crs = obj$crs)
+  sv <- terra::vect(obj$geometry, type = obj$geom_type, crs = obj$crs)
 
   # Attach attributes
-  values(sv) <- obj$attributes
+  terra::values(sv) <- obj$attributes
 
   if (FALSE) {
     obj <- terra::unwrap(obj)
