@@ -263,9 +263,10 @@ setMethod(
         filesToRemove <- unlist(filesToRemove)
         if (isInteractive()) {
           dirLs <- dir(unique(dirname(filesToRemove)), full.names = TRUE)
-          dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE))
-          filesToRemove <- unique(c(filesToRemove, dirLs))
-          cacheSize <- sum(cacheSize, file.size(filesToRemove))
+          filesToRemove <- dirLs[which(basename(dirLs)  %in% basename(filesToRemove))]
+          # dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE))
+          # filesToRemove <- unique(c(filesToRemove, dirLs))
+          cacheSize <- sum(file.size(filesToRemove))
         }
         # }
       }
@@ -498,7 +499,6 @@ setMethod(
               }))
 
           }# , error = function(e) {
-            # browser()
             #   cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", cacheSaveFormat), "",
             #                   basename(file))
             #   filesToRm <- dir(dirname(file), pattern = cacheId, full.names = TRUE)
@@ -637,17 +637,21 @@ setMethod(
       messageCache("x not specified; using ", getOption("reproducible.cachePath")[1], verbose = verbose)
       x <- getOption("reproducible.cachePath")[1]
     }
-    args <- append(list(x = x, after = after, before = before, userTags = userTags), list(...))
+    args <- append(list(x = x, after = after, before = before, userTags = userTags),
+                   modifyList(list(...), list(verbose = FALSE)))
 
     objsDTAll <- suppressMessages(showCache(x, verbose = FALSE, sorted = FALSE))
     objsDT <- do.call(showCache, args = args)
     keep <- unique(objsDT[[.cacheTableHashColName()]])
+
     eliminate <- unique(objsDTAll[[.cacheTableHashColName()]][
       !(objsDTAll[[.cacheTableHashColName()]] %in% keep)
     ])
 
     if (length(eliminate)) {
-      clearCache(x, eliminate, verbose = FALSE, regexp = FALSE, ask = ask)
+      clearCache(x, cacheId = eliminate, verbose = FALSE, regexp = FALSE, ask = ask)
+    } else {
+      messageCache("Nothing to remove; keeping all")
     }
     return(objsDT)
   }
@@ -869,6 +873,7 @@ showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath
                           drv, conn) {
 
   if (missing(dtFile)) {
+    # dtFile <- CacheDBFileSingle(cachePath, cacheId, cacheSaveFormat = "check")
     dtFile <- CacheDBFileSingle(cachePath, cacheId, cacheSaveFormat = "check")
     # dtFile <- dir(CacheStorageDir(cachePath), full.names = TRUE,
     #               pattern = paste0(cacheId, "\\", suffixMultipleDBFiles()))

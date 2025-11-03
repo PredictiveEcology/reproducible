@@ -709,7 +709,7 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
   }
 
   filename <- if (is.null(cacheId)) NULL else paste(cacheId, csExtension, sep = ".")
-  
+
   if (length(cacheId) > 1) {
     filename <- vapply(filename, nextNumericName, FUN.VALUE = character(1))
     for (i in seq(filename[-1]) + 1) {
@@ -957,7 +957,7 @@ loadFile <- function(file, ...) {
 
 saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId,
                                    cacheSaveFormat = getOption("reproducible.cacheSaveFormat")) {
-    
+
   if (missing(fts)) {
     fts <- CacheStoredFile(cachePath, cacheId = cacheId, obj = obj, cacheSaveFormat = cacheSaveFormat) # adds prefix
   }
@@ -1023,7 +1023,9 @@ CacheDBFileSingle <- function(cachePath, cacheId,
                               cacheSaveFormat = getOption("reproducible.cacheSaveFormat")) {
   fullSuff <- CacheDBFileSingleExt(cacheSaveFormat = cacheSaveFormat)
   if (any(cacheSaveFormat %in% "check")) {
-    cacheSaveFormat <- formatCheck(cachePath, cacheId, cacheSaveFormat = cacheSaveFormat)
+    cacheSaveFormat <- formatCheck(cachePath,
+                                   paste0(cacheId, gsub("\\.$*", "", suffixMultipleDBFiles())),
+                                   cacheSaveFormat = cacheSaveFormat)
     if (!is.null(cacheSaveFormat)) {
       fullSuff <- CacheDBFileSingleExt(cacheSaveFormat)
     }
@@ -1064,8 +1066,8 @@ formatCheck <- function(cachePath, cacheId, cacheSaveFormat = getOption("reprodu
   }
   if (exists("newFormat", inherits = FALSE)) {
     cacheSaveFormat <- newFormat
-  } else if (cacheSaveFormat == "check") {
-    cacheSaveFormat <- cacheSaveFormat#getOption("reproducible.cacheSaveFormat")
+  } else if (cacheSaveFormat == "check") { # means there was no file; possibly deleted inadvertently
+    cacheSaveFormat <- getOption("reproducible.cacheSaveFormat") #getOption("reproducible.cacheSaveFormat")
   }
 
   # altFile <- dir(dirname(CacheStoredFile(cachePath, cacheId)), pattern = cacheId)
