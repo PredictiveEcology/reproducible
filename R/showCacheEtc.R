@@ -225,12 +225,12 @@ setMethod(
 
       # Way faster to gsub for the cacheId, rather than greps
       cacheIdsOfTheseFilenames <- gsub("^.*/([0-9a-zA-Z]+)\\..*$", "\\1", filesToRemove3)
+      cacheIdsToRm <- unique(objsDT[["cacheId"]])
       indicesToRm <- which(cacheIdsOfTheseFilenames %in% cacheIdsToRm)
-      filesToRemove4 <- filesToRemove3[indices]
+      filesToRemove4 <- filesToRemove3[indicesToRm]
 
       # grep can only handle so many -- do in groups
       # filesToRemove3 <- grep(paste(cacheIdsToRm, collapse = "|"), filesToRemove3, value = TRUE)
-      # cacheIdsToRm <- unique(objsDT[["cacheId"]])
       # maxNumForGrep <- 20
       # sequen <- seq(cacheIdsToRm)
       # if (length(cacheIdsToRm) > maxNumForGrep) {
