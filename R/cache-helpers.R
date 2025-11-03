@@ -623,6 +623,8 @@ wrapSpatVector <- function(obj) {
 }
 
 unwrapSpatVector <- function(obj) {
+  if (NROW(obj$geometry))
+    obj$geom_type <- "points"
   sv <- terra::vect(obj$geometry, type = obj$geom_type, crs = obj$crs)
 
   # Attach attributes

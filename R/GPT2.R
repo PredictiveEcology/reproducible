@@ -72,6 +72,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
     if (is.null(keyFull$key))
       cacheId <- NULL
   }
+
   if (is.null(cacheId) || is.na(cacheId)) {
     toDigest <- doDigestPrepare(callList$new_call, omitArgs, .cacheExtra)
     keyFull <- try(doDigest(toDigest, callList$.functionName, .objects,
