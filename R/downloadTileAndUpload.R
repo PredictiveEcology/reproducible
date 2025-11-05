@@ -614,10 +614,15 @@ getTilesFromGoogleDrive <- function(tilesToGet, existing_tiles, tilesFolderFullP
   haveLocalTiles
 }
 
+#' @importFrom purrr keep
 downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFullPath,
                                        needed_tile_names, tilesToGet, all_tile_names, haveLocalTiles,
                                        tilesFolderFullPath, tileGrid, numTiles,
                                        to_inTileGrid, doUploads, datatype, verbose) {
+  if (!requireNamespace("terra")) {
+    stop("Please install.packages('terra')")
+  }
+
   existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
 
   available_tile_names_onGoogleDrive <- existing_tiles$name
