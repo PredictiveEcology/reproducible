@@ -755,8 +755,8 @@ tryRastThenGetCRS <- function(targetFileFullPath) {
 #' @note This function depends on `detectActiveCores()` and is not supported on
 #'   Windows systems.
 #'
+#' @export
 #' @seealso [detectActiveCores()]
-#'
 numCoresToUse <- function(min = 2, max) {
   if (is.null(.pkgEnv$detectedCores))
     .pkgEnv$detectedCores <- parallel::detectCores(logical = FALSE)
