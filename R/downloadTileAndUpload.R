@@ -25,6 +25,8 @@
 #'   or an actual `SpatVector` object with a grid of polygons
 #' @param numTiles Integer. Number of tiles to generate. Optional.
 #' @param plot.grid Logical. Whether to plot the tile grid and area of interest. Default is `FALSE`.
+#' @param purge Logical or Integer. `0/FALSE` (default) keeps existing `CHECKSUMS.txt` file and
+#'   `prepInputs` will write or append to it. `1/TRUE` will deleted the entire `CHECKSUMS.txt` file.
 #' @param verbose Logical or numeric. Controls verbosity of messages. Default is `getOption("reproducible.verbose")`.
 #' @param ... Passed to `writeRaster`, e.g., `datatype`.
 #'

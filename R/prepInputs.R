@@ -171,10 +171,9 @@ utils::globalVariables(c(
 #'   [Cache()] (the quick argument). This results in faster, though
 #'   less robust checking of inputs. See the respective functions.
 #'
-#' @param purge Logical or Integer. `0/FALSE` (default) keeps existing
-#'    `CHECKSUMS.txt` file and
-#'    `prepInputs` will write or append to it. `1/TRUE` will deleted the entire
-#'    `CHECKSUMS.txt` file. Other options, see details.
+#' @param purge Logical or Integer. `0/FALSE` (default) keeps existing `CHECKSUMS.txt` file and
+#'   `prepInputs` will write or append to it. `1/TRUE` will deleted the entire `CHECKSUMS.txt` file.
+#'    Other options, see details.
 #'
 #' @param overwrite Logical. Should downloading and all the other actions occur
 #'   even if they pass the checksums or the files are all there.
