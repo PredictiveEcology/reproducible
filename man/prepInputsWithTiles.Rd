@@ -16,7 +16,8 @@ prepInputsWithTiles(
   numTiles = NULL,
   plot.grid = FALSE,
   purge = FALSE,
-  verbose = getOption("reproducible.verbose")
+  verbose = getOption("reproducible.verbose"),
+  ...
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ or an actual \code{SpatVector} object with a grid of polygons}
 \item{plot.grid}{Logical. Whether to plot the tile grid and area of interest. Default is \code{FALSE}.}
 
 \item{verbose}{Logical or numeric. Controls verbosity of messages. Default is \code{getOption("reproducible.verbose")}.}
+
+\item{...}{Passed to \code{writeRaster}, e.g., \code{datatype}.}
 }
 \value{
 A \code{SpatRaster} object cropped to the area of interest (\code{to}), composed of the necessary tiles.
