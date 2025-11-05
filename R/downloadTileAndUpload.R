@@ -120,12 +120,12 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
     return("NULL")
   }
 
-  purge <- checkHaveCorrectHashedVersion(remoteHashFile, remoteMetadata$remoteHash, purge, verbose)
-
   if (is.null(remoteMetadata$targetFile)) {
     stop("Please supply `targetFile` or a url from which `targetFile` can be extracted from")
   }
+
   targetFileFullPath <- file.path(destinationPath, remoteMetadata$targetFile)
+  purge <- checkHaveCorrectHashedVersion(targetFileFullPath, remoteHashFile, remoteMetadata, purge, verbose)
   messagePreProcess("Preparing ", .messageFunctionFn(targetFileFullPath), verbose = verbose)
   targetFilePostProcessedFullPath <- .suffix(targetFileFullPath, dig)
 
@@ -797,25 +797,37 @@ makeRemoteHashFile <- function(url, destinationPath, targetFile, remoteHash, wri
 
 
 
-checkHaveCorrectHashedVersion <- function(remoteHashFile, remoteHash, purge, verbose) {
+checkHaveCorrectHashedVersion <- function(targetFile, remoteHashFile, remoteMetadata, purge, verbose) {
   haveCorrectVersion <- FALSE
+  askAboutPurge <- FALSE
   fe <- file.exists(remoteHashFile)
   if (fe)
-    haveCorrectVersion <- identical(readLines(remoteHashFile), remoteHash)
+    haveCorrectVersion <- identical(readLines(remoteHashFile), remoteMetadata$remoteHash)
+  # But still could be incomplete
   if (isTRUE(fe)) {
     if (haveCorrectVersion %in% FALSE) {
-      message("The local version is not the version that matches the remote version")
-      message("Do you want to purge all local data and redownload? Y or N")
-      yorn <- readline(" ")
-      yorn <- substr(tolower(yorn), 1, 1)
-      if (identical("y", yorn))
-        purge <- TRUE
+      askAboutPurge <- TRUE
     } else {
-      if (!purge %in% TRUE)
-        messagePreProcess("Local files match the current remote file version; proceeding",
-                          verbose = verbose)
+      if (file.exists(targetFile)) {
+        if (!identical(file.size(targetFile), as.numeric(remoteMetadata$fileSize) )) {
+          askAboutPurge <- TRUE
+        }
+      }
     }
   }
+  if (isTRUE(askAboutPurge)) {
+    message("The local version is not the version that matches the remote version")
+    message("Do you want to purge all local data and redownload? Y or N")
+    yorn <- readline(" ")
+    yorn <- substr(tolower(yorn), 1, 1)
+    if (identical("y", yorn))
+      purge <- TRUE
+
+  }
+  if (!purge %in% TRUE)
+    messagePreProcess("Local files match the current remote file version; proceeding",
+                      verbose = verbose)
+
   purge
 }
 
@@ -976,7 +988,8 @@ crsFromLocalOrGDTiles <- function(targetObjCRS, dirTilesFolder, tilesFolderFullP
 
 makeAndPlotTileGrid <- function(tileGrid, theArea, numTiles, targetObjCRS, plot.grid, to, verbose) {
   if (is.character(tileGrid)) {
-    tg <- makeTileGridFromGADMcode(tileGrid, numTiles, crs = targetObjCRS) |> Cache(verbose = verbose - 1)
+    tg <- makeTileGridFromGADMcode(tileGrid, numTiles, crs = targetObjCRS) |>
+      Cache(verbose = verbose - 1)
     tileGrid <- tg$tileGrid
     numTiles <- tg$numTiles
     theArea <- tg$area
