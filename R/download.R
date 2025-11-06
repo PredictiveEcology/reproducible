@@ -1172,9 +1172,9 @@ purgeChecksums <- function(checksumFile, fileToRemove) {
 
 download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileSize = NULL,
                                      verbose = getOption("reproducible.verbose")) {
-  stopifnot(requireNamespace("googledrive", quietly = TRUE))
+  .requireNamespace("googledrive", stopOnFALSE = TRUE)
 
-  # Normalize path to avoid issues with ~
+  ## Normalize path to avoid issues with ~
   local_path_expanded <- normalizePath(local_path, mustWork = FALSE)
 
   if (missing(gdriveDetails)) {
@@ -1193,7 +1193,11 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
     fileSize <- as.numeric(gdriveDetails$drive_resource[[1]]$size)
     file_name <- googledriveIDtoDownloadURL(file_id)
     token <- googledrive::drive_token()
-    bearer <- token$auth_token$credentials$access_token
+    if (googledrive::drive_has_token()) {
+      bearer <- token$auth_token$credentials$access_token
+    } else {
+      stop("no googledrive token discovered; run drive_auth() to authenticate.")
+    }
   } else {
     if (is.null(fileSize)) {
       fileSize <- getRemoteFileSize(isGD, url)
@@ -1202,10 +1206,11 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
 
   if ( (isGD &&  (.Platform$OS.type == "windows")) || nzchar(Sys.which("curl")) %in% FALSE ||
       fileSize < 1e9) { # i.e., < 1GB can just use the simpler httr2 progress
-    # Google Drive download using httr2 (no resume support)
+    ## Google Drive download using httr2 (no resume support)
     req <- httr2::request(file_name)
-    if (isGD)
+    if (isGD) {
       req <- req |> httr2::req_auth_bearer_token(bearer)
+    }
     req <- req |> httr2::req_progress()
 
     con <- file(local_path_expanded, open = "wb")
