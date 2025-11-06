@@ -54,15 +54,16 @@
 #' @seealso [googledrive::drive_get()], [terra::rast()], [terra::crop()], [terra::merge()]
 #'
 #' @examples
-#' \dontrun{
-#' to <- sf::st_as_sf(sf::st_sfc(sf::st_point(c(-123.3656, 48.4284)), crs = 4326))
-#' result <- prepInputsWithTiles(
-#'   url = "https://example.com/data.tif",
-#'   destinationPath = tempdir(),
-#'   to = to,
-#'   urlTiles = "https://example.com/tiles/",
-#'   tileGrid = "CAN"
-#' )
+#'
+#' if (FALSE) {
+#'   to <- sf::st_as_sf(sf::st_sfc(sf::st_point(c(-123.3656, 48.4284)), crs = 4326))
+#'   result <- prepInputsWithTiles(
+#'     url = "https://example.com/data.tif",
+#'     destinationPath = tempdir(),
+#'     to = to,
+#'     urlTiles = "https://example.com/tiles/",
+#'     tileGrid = "CAN"
+#'   )
 #' }
 #'
 #' @export
