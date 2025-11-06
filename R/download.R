@@ -966,7 +966,6 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   return(downloadFilename)
 }
 
-
 .isRstudioServer <- function() {
   isRstudioServer <- FALSE
 
@@ -980,11 +979,10 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   isRstudioServer
 }
 
-
 SSL_REVOKE_BEST_EFFORT <- function(envir = parent.frame(1)) {
   # Take from https://github.com/rstudio/rstudio/issues/10163#issuecomment-1193316767 #
   prevCurlVal <- Sys.getenv("R_LIBCURL_SSL_REVOKE_BEST_EFFORT")
-  Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT=TRUE)
+  Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = TRUE)
   on.exit2({#withr::defer({
     if (nzchar(prevCurlVal))
       Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = prevCurlVal)
@@ -998,11 +996,8 @@ on.exit2 <- function(expr, envir = sys.frame(-2), add = TRUE, after = TRUE) {
   do.call(base::on.exit, list(funExpr, add, after), envir = envir)
 }
 
-
-
 dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, url,
-                            fileToDownload, destinationPath, targetFile, checksumFile,
-                            verbose) {
+                            fileToDownload, destinationPath, targetFile, checksumFile, verbose) {
   if (isTRUE(grepl(paste("already exists", .txtDownloadFailedFn(".+"), sep = "|"), downloadResults))) {
     stop(downloadResults)
   }
@@ -1068,8 +1063,6 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
     if (failed > 1) Sys.sleep(0.5) else SSL_REVOKE_BEST_EFFORT() # uses withr::defer to remove it after this test
   }
 
-  #
-  #
   # # ELIOT removed this as httr is being deprecated --> the above chunk should work
   # # if (any(grepl("SSL peer certificate or SSH remote key was not OK", messOrig))) {
   # #   # THIS IS A MAJOR WORK AROUND FOR SSL ISSUES IN SOME WORK ENVIRONMENTS. NOT ADVERTISED.
@@ -1168,7 +1161,7 @@ runDlFun <- function(args, dlFun) {
 #' @param fileToRemove The filename to remove from the `checksumFile`
 #'
 #' @export
-#' @return NULL. Run for its side effect, namely, and file removed from the CHECKSUMS.txt
+#' @return NULL. Run for its side effect, namely, and file removed from the \file{CHECKSUMS.txt}
 #'   file.
 purgeChecksums <- function(checksumFile, fileToRemove) {
   dt <- data.table::fread(checksumFile)
