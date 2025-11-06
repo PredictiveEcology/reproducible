@@ -748,11 +748,10 @@ tryRastThenGetCRS <- function(targetFileFullPath) {
 #' parallel processing, taking into account a minimum threshold, the total
 #' number of physical cores, and currently active threads.
 #'
-#' @param min An integer specifying the minimum number of cores to use. Default
-#'   is `2`.
+#' @param min An integer specifying the minimum number of cores to use. Default is `2`.
 #' @param max An integer specifying the maximum number of cores available,
 #'   typically the number of physical cores. Default is
-#'   `parallel::detectCores(logical = FALSE)`.
+#'   `max(1L, getOption("Ncpus", 1L), parallel::detectCores() - 1, logical = FALSE, na.rm = TRUE)`.
 #'
 #' @return An integer representing the number of cores that can be used for
 #'   parallel tasks, ensuring at least `min` cores are used, while subtracting
@@ -760,7 +759,7 @@ tryRastThenGetCRS <- function(targetFileFullPath) {
 #'   `detectActiveCores()`).
 #'
 #' @examples
-#' \dontrun{
+#' if (FALSE) {
 #'   numCoresToUse()
 #'   numCoresToUse(min = 4)
 #' }
@@ -770,12 +769,16 @@ tryRastThenGetCRS <- function(targetFileFullPath) {
 #'
 #' @export
 #' @seealso [detectActiveCores()]
-numCoresToUse <- function(min = 2, max) {
-  if (is.null(.pkgEnv$detectedCores))
-    .pkgEnv$detectedCores <- parallel::detectCores(logical = FALSE)
+numCoresToUse <- function(min = 2, max = NULL) {
+  if (is.null(.pkgEnv$detectedCores)) {
+    ## see <https://parallelly.futureverse.org/#availablecores-vs-paralleldetectcores>
+    .pkgEnv$detectedCores <- max(1L, getOption("Ncpus", 1L), parallel::detectCores() - 1,
+                                 logical = FALSE, na.rm = TRUE)
+  }
   dc <- .pkgEnv$detectedCores
-  if (missing(max))
+  if (is.null(max)) {
     max <- dc
+  }
   max <- min(dc -  # total
                1 - # remove one for the current process
                detectActiveCores(), # estimate actively used ones
