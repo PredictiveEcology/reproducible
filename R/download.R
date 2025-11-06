@@ -411,10 +411,8 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       ))
       a <- future::future(
         {
-          googledrive::drive_auth(email = goe,
-                                  cache = goc)
-          retry(retries = 2,
-                downloadCall)
+          googledrive::drive_auth(email = goe, cache = goc)
+          retry(retries = 2, downloadCall)
         },
         globals = list(
           goc = getOption("gargle_oauth_cache"),
@@ -465,9 +463,10 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                             ", but gdown is not available at the cmd line; skipping")
         }
       }
-      if (isTRUE(useGoogleDrive))
-        a <- retry(downloadCall, retries = 2)
 
+      if (isTRUE(useGoogleDrive)) {
+        a <- retry(downloadCall, retries = 2)
+      }
     }
   } else {
     messagePreProcess(messSkipDownload, verbose = verbose)
