@@ -36,7 +36,6 @@ downloadFile <- function(archive, targetFile, neededFiles,
                          verbose = getOption("reproducible.verbose", 1),
                          purge = FALSE, .tempPath, .callingEnv,
                          ...) {
-
   dots <- list(...)
   # if (is.null(dots$.callingEnv)) {
   #   .callingEnv <- parent.frame()
@@ -1145,7 +1144,6 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
   try(stop(xxxx))
 }
 
-
 runDlFun <- function(args, dlFun) {
   argsOrig <- args
   formsDlFun <- formalArgs(dlFun)
@@ -1160,7 +1158,6 @@ runDlFun <- function(args, dlFun) {
   }
   out
 }
-
 
 #' Purge the checksums of a single file
 #'
@@ -1228,7 +1225,7 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
       writeBin(body, con)
       completed <- TRUE
     }, error = function(e) {
-      stop("❌ Google Drive download failed: ", e$message)
+      stop("Google Drive download failed: ", e$message)
     })
 
   } else {
@@ -1239,7 +1236,7 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
         extra_args <- paste("-L -H", shQuote(paste("Authorization: Bearer", bearer)))
       } else {
         extra_args <- "-C -"
-        messagePreProcess("📥 Using 'curl' with resume support on Linux/macOS.", verbose = verbose)
+        messagePreProcess("Using 'curl' with resume support on Linux/macOS.", verbose = verbose)
       }
 
       tryCatch({
@@ -1251,9 +1248,9 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
           extra = extra_args
         )
         completed <- TRUE
-        # message("✅ Download completed using download.file with curl.")
+        # message("Download completed using download.file with curl.")
       }, error = function(e) {
-        stop("❌ Non-Google Drive download failed: ", e$message)
+        stop("Non-Google Drive download failed: ", e$message)
       })
 
     } # else {
@@ -1285,18 +1282,17 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
       #   body <- httr2::resp_body_raw(resp)
       #   writeBin(body, con)
       #   completed <- TRUE
-      #   # message("✅ Non-Google Drive download completed using httr2.")
+      #   # message("Non-Google Drive download completed using httr2.")
       # }, error = function(e) {
-      #   stop("❌ Download failed: ", e$message)
+      #   stop("Download failed: ", e$message)
       # })
     # }
   }
-  if (isTRUE(completed))
-    messagePreProcess("✅ Download of " , local_path, " complete",  verbose = verbose)
 
+  if (isTRUE(completed)) {
+    messagePreProcess("Download of " , local_path, " complete",  verbose = verbose)
+  }
 }
-
-
 
 messageAboutFilesize <- function(fileSize, verbose, msgMiddle = " on Google Drive ") {
   fileSize <- as.numeric(fileSize)

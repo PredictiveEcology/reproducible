@@ -177,14 +177,14 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   haveAllNeededTiles <- if (doUploads %in% TRUE) length(missingTilesLocalAll) == 0 else TRUE
 
 
-  if (length(missingTilesLocal) == 0){# && (haveAllNeededTiles)) {
+  if (length(missingTilesLocal) == 0) {# && (haveAllNeededTiles)) {
     messagePreProcess(
-      "✅ All needed tiles are available locally. Proceeding to load them",
+      "All needed tiles are available locally. Proceeding to load them",
       verbose = verbose)
     haveLocalTiles <- TRUE
   } else {
     messagePreProcess(
-      "⚠️ Tiles are missing locally. Will try to download these:\n",
+      "Tiles are missing locally. Will try to download these:\n",
       verbose = verbose)
     messagePreProcess(.messageFunctionFn(paste(missingTilesLocal, collapse = ", ")), verbose = verbose)
     messagePreProcess(paste0("... from urlTiles (",.messageFunctionFn(urlTiles),")"), verbose = verbose)
@@ -262,14 +262,14 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
         terra::writeRaster(tile, spec$path, datatype = datatype,
                            overwrite = FALSE,
                            gdal = c("COMPRESS=LZW", "TILED=YES"))
-        return(paste("✅ Saved:", spec$path))
+        return(paste("Saved:", spec$path))
       # }
     } else {
-      return(paste("⏩ Skipped (already exists):", spec$path))
+      return(paste("Skipped (already exists):", spec$path))
     }
   }
 
-  messagePreProcess("🧩 Creating tiles ...", verbose = verbose)
+  messagePreProcess("Creating tiles ...", verbose = verbose)
 
   # Choose parallel or sequential based on OS
   if (.Platform$OS.type == "unix") {
@@ -283,7 +283,7 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
 
   # Print results
   for (msg in results[!sapply(results, is.null)]) messagePreProcess(msg, verbose = verbose)
-  messagePreProcess("🎉 Tiling complete.", verbose = verbose)
+  messagePreProcess("Tiling complete.", verbose = verbose)
 }
 
 extract_drive_id <- function(url) {
@@ -308,9 +308,9 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
 
   if (nrow(subfolder) == 0) {
     subfolder <- googledrive::drive_mkdir(subfolder_name, path = googledrive::as_id(parent_id))
-    messagePreProcess("📁 Created subfolder: ", .messageFunctionFn(subfolder_name), verbose = verbose)
+    messagePreProcess("Created subfolder: ", .messageFunctionFn(subfolder_name), verbose = verbose)
   } else {
-    messagePreProcess("📁 Found existing subfolder: ", .messageFunctionFn(subfolder_name), verbose = verbose)
+    messagePreProcess("Found existing subfolder: ", .messageFunctionFn(subfolder_name), verbose = verbose)
   }
 
   # List local .tif files
@@ -325,9 +325,9 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
     file_name <- basename(file_path)
     if (!(file_name %in% existing_names)) {
       googledrive::drive_upload(file_path, path = googledrive::as_id(subfolder$id))
-      return(paste("✅ Uploaded:", file_name))
+      return(paste("Uploaded:", file_name))
     } else {
-      return(paste("⏩ Skipped (already exists):", file_name))
+      return(paste("Skipped (already exists):", file_name))
     }
   }
 
@@ -344,7 +344,7 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
 
   # Print results
   for (msg in results) messagePreProcess(msg, verbose = verbose)
-  messagePreProcess("🎉 Upload complete.", verbose = verbose)
+  messagePreProcess("Upload complete.", verbose = verbose)
 }
 
 makeTileGrid <- function(ext, crs, numTiles) {
@@ -643,7 +643,7 @@ downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFull
 
   if (length(missingTilesOnRemote) == 0) {
     doTileDownload <- haveLocalTiles %in% FALSE
-    messagePreProcess("✅ All needed tiles are available on Google Drive.  ",
+    messagePreProcess("All needed tiles are available on Google Drive.  ",
                       verbose = verbose)
     needUploads <- tilesFullOnRemote %in% FALSE
     if (doTileDownload) {
@@ -652,7 +652,7 @@ downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFull
       messagePreProcess("Nothing to download", verbose = verbose)
     }
   } else {
-    messagePreProcess("⚠️ Some tiles are missing on Google Drive:")
+    messagePreProcess("Some tiles are missing on Google Drive:")
     missingOnes <- if (doUploads) missingTilesRemoteAll else missingTilesOnRemote
     if (verbose > 0) message(paste(missingOnes, collapse = ", "))
   }
