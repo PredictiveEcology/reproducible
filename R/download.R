@@ -1015,7 +1015,7 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
     isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
                  !grepl("\\.[^\\.]+$", url)) # doesn't have an extension
     if (isGID) {
-      urlMessage <- googledriveIDtoHumanURL(id)
+      urlMessage <- googledriveIDtoHumanURL(url)
       # urlMessage <- paste0("https://drive.google.com/file/d/", url)
     } else {
       urlMessage <- url
