@@ -299,6 +299,8 @@ extract_drive_id <- function(url) {
 
 upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, thisFilename,
                                                verbose = getOption("reproducible.verbose")) {
+  stopifnot(requireNamespace("googledrive", quietly = TRUE))
+
   # Extract parent folder ID from URL
   parent_id <- extract_drive_id(drive_folder_url)
 
@@ -348,13 +350,18 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
 }
 
 makeTileGrid <- function(ext, crs, numTiles) {
+  stopifnot(
+    requireNamespace("sf", quietly = TRUE),
+    requireNamespace("terra", quietly = TRUE)
+  )
+
   if (missing(crs)) crs <- proj4stringSCANFI
 
   # ext <- terra::ext(c(xmin = -2341500, xmax = 3010500, ymin = 5863500, ymax = 9436500))
   areaV <- terra::as.polygons(ext, crs = crs)
   areaGrid <- sf::st_make_grid(sf::st_as_sfc(sf::st_as_sf(areaV)), n = numTiles) |>
     terra::vect()
-  m <- t(matrix(seq(prod(numTiles)), nrow = numTiles[[2]], byrow = F))
+  m <- t(matrix(seq(prod(numTiles)), nrow = numTiles[[2]], byrow = FALSE))
   areaGrid[["tile_id"]] <- makePaddedNamesForTiles(as.character(m))
   areaGrid
 }

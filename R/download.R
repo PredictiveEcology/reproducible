@@ -1170,11 +1170,10 @@ purgeChecksums <- function(checksumFile, fileToRemove) {
   data.table::fwrite(dtNew, file = checksumFile)
 }
 
+download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileSize = NULL,
+                                     verbose = getOption("reproducible.verbose")) {
+  stopifnot(requireNamespace("googledrive", quietly = TRUE))
 
-
-
-
-download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileSize = NULL, verbose = getOption("reproducible.verbose")) {
   # Normalize path to avoid issues with ~
   local_path_expanded <- normalizePath(local_path, mustWork = FALSE)
 
