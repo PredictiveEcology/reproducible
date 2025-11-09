@@ -34,16 +34,16 @@ downloadFile <- function(archive, targetFile, neededFiles,
                          overwrite = getOption("reproducible.overwrite", TRUE),
                          alsoExtract = "similar",
                          verbose = getOption("reproducible.verbose", 1),
-                         purge = FALSE, .tempPath, # .callingEnv,
+                         purge = FALSE, .tempPath, .callingEnv,
                          ...) {
 
   dots <- list(...)
-  if (is.null(dots$.callingEnv)) {
-    .callingEnv <- parent.frame()
-  } else {
-    .callingEnv <- dots$.callingEnv
-    dots$.callingEnv <- NULL
-  }
+  # if (is.null(dots$.callingEnv)) {
+  #   .callingEnv <- parent.frame()
+  # } else {
+  #   .callingEnv <- dots$.callingEnv
+  #   dots$.callingEnv <- NULL
+  # }
 
   # browser(expr = exists("._downloadFile_1"))
   if (missing(.tempPath)) {
@@ -142,7 +142,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
               alsoExtract = alsoExtract,
               verbose = verbose,
               .tempPath = .tempPath,
-              # .callingEnv = .callingEnv,
+              .callingEnv = .callingEnv,
               ...
             )
             , error = function(e) {
@@ -641,15 +641,15 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, messSkipDownload,
                            destinationPath, overwrite, needChecksums, .tempPath, preDigest,
                            alsoExtract = "similar",
-                           verbose = getOption("reproducible.verbose", 1), # .callingEnv = parent.frame(),
+                           verbose = getOption("reproducible.verbose", 1), .callingEnv = parent.frame(),
                            ...) {
   dots <- list(...)
-  if (is.null(dots$.callingEnv)) {
-    .callingEnv <- parent.frame()
-  } else {
-    .callingEnv <- dots$.callingEnv
-    dots$.callingEnv <- NULL
-  }
+  # if (is.null(dots$.callingEnv)) {
+  #   .callingEnv <- parent.frame()
+  # } else {
+  #   .callingEnv <- dots$.callingEnv
+  #   dots$.callingEnv <- NULL
+  # }
 
   noTargetFile <- is.null(targetFile) || length(targetFile) == 0
   if (missing(.tempPath)) {
@@ -713,6 +713,9 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         }
 
         if (!is.call(dlFun)) {
+          formsDlFun <- formalArgs(dlFun)
+          argsKeep <- intersect(formsDlFun, names(args))
+          args <- args[argsKeep]
           out <- do.call(dlFun, args = args)
         }
 

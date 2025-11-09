@@ -20,6 +20,7 @@ preProcess(
   purge = FALSE,
   verbose = getOption("reproducible.verbose", 1),
   .tempPath,
+  .callingEnv = parent.frame(),
   ...
 )
 }
@@ -103,6 +104,9 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{.tempPath}{Optional temporary path for internal file intermediate steps.
 Will be cleared \code{on.exit} from this function.}
+
+\item{.callingEnv}{The environment where the function was called from. Used to find
+objects, if necessary.}
 
 \item{...}{Additional arguments passed to
 \code{\link[=postProcess]{postProcess()}} and \code{\link[=Cache]{Cache()}}.

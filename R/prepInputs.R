@@ -375,7 +375,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     useCache = useCache,
     .tempPath = .tempPath,
     verbose = verbose,
-    .callingEnv = .callingEnv,
+    # .callingEnv = .callingEnv,
     ...
   )
 
