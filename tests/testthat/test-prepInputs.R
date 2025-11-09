@@ -2004,3 +2004,108 @@ test_that("rasters aren't properly resampled", {
     }
   }
 })
+
+test_that("test prepInputs url when a directory", {
+  skip_on_cran()
+
+  testInit("terra",
+           opts = list(
+             "reproducible.overwrite" = TRUE,
+             "reproducible.inputPaths" = NULL
+           )
+  )
+  withr::local_options(destinationPath = tmpdir)
+
+  globalOutput <- capture.output({
+    url <- "http://forestales.ujed.mx/incendios2/cartografia/tematicos/combustibles_y_vegetacion/tipo_combustibles_serie_VI/"
+
+    if (!urlExists(url))
+      skip("Mexico url doesn't exist; skipping")
+    # Nothing specified
+    a <- prepInputs(url = url, fun = "terra::rast")
+    expect_is(a, "SpatRaster")
+    files <- dir(tmpdir, pattern = "comb")
+    expect_true(length(files) == 8)
+
+    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
+    a <- prepInputs(url = url, targetFile = "comb_290719.tif", fun = "terra::rast")
+    expect_is(a, "SpatRaster")
+    files <- dir(tmpdir, pattern = "comb")
+    expect_true(length(files) == 8)
+
+    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
+    a <- prepInputs(url = url, targetFile = "comb_290719.tif", alsoExtract = FALSE, fun = "terra::rast")
+    expect_is(a, "SpatRaster")
+    files <- dir(tmpdir, pattern = "comb")
+    expect_true(length(files) == 1)
+
+
+    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
+    a <- prepInputs(url = url, fun = "terra::rast")
+    expect_is(a, "SpatRaster")
+    files <- dir(tmpdir, pattern = "comb_290719")
+    expect_true(length(files) == 7)
+
+  })
+})
+
+
+test_that("test prepInputs url when a gdrive directory", {
+  skip_on_cran()
+
+  testInit(c("terra", "googledrive"),
+           opts = list(
+             "reproducible.overwrite" = TRUE,
+             "reproducible.inputPaths" = NULL
+           )
+  )
+  withr::local_options(destinationPath = tmpdir)
+
+  globalOutput <- capture.output({
+    url <- "http://forestales.ujed.mx/incendios2/cartografia/tematicos/combustibles_y_vegetacion/tipo_combustibles_serie_VI/"
+
+    if (!urlExists(url))
+      skip("Mexico url doesn't exist; skipping")
+    # Nothing specified
+    a <- prepInputs(url = url, fun = "terra::rast")
+    expect_is(a, "SpatRaster")
+    files <- dir(tmpdir, pattern = "comb")
+    expect_true(length(files) == 8)
+
+    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
+    a <- prepInputs(url = url, targetFile = "comb_290719.tif", fun = "terra::rast")
+    expect_is(a, "SpatRaster")
+    files <- dir(tmpdir, pattern = "comb")
+    expect_true(length(files) == 8)
+
+    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
+    a <- prepInputs(url = url, targetFile = "comb_290719.tif", alsoExtract = FALSE, fun = "terra::rast")
+    expect_is(a, "SpatRaster")
+    files <- dir(tmpdir, pattern = "comb")
+    expect_true(length(files) == 1)
+
+
+    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
+    a <- prepInputs(url = url, fun = "terra::rast")
+    expect_is(a, "SpatRaster")
+    files <- dir(tmpdir, pattern = "comb_290719")
+    expect_true(length(files) == 7)
+
+  })
+})
+
+
+test_that("test prepInputs with zip file with hidden files", {
+  testInit()
+  withr::local_dir(tmpdir)
+  a <- 1
+  theFile <- "__MACOSX/._theFile.txt"
+  checkPath(dirname(theFile), create = TRUE)
+  cat(a, file = theFile)
+  zipFilename <- "test.zip"
+  zip(files = theFile, zipfile = zipFilename, flags = "-q")
+  unlink(theFile, recursive = TRUE)
+  expect_false(file.exists(file = theFile))
+  b <- prepInputs(targetFile = theFile, archive = zipFilename, fun = NA)
+  expect_true(file.exists(file = theFile))
+})
