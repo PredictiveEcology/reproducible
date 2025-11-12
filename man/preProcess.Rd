@@ -91,10 +91,9 @@ less robust checking of inputs. See the respective functions.}
 \item{overwrite}{Logical. Should downloading and all the other actions occur
 even if they pass the checksums or the files are all there.}
 
-\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing
-\code{CHECKSUMS.txt} file and
-\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
-\code{CHECKSUMS.txt} file. Other options, see details.}
+\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing \code{CHECKSUMS.txt} file and
+\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire \code{CHECKSUMS.txt} file.
+Other options, see details.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.

@@ -25,6 +25,8 @@
 #'   or an actual `SpatVector` object with a grid of polygons
 #' @param numTiles Integer. Number of tiles to generate. Optional.
 #' @param plot.grid Logical. Whether to plot the tile grid and area of interest. Default is `FALSE`.
+#' @param purge Logical or Integer. `0/FALSE` (default) keeps existing `CHECKSUMS.txt` file and
+#'   `prepInputs` will write or append to it. `1/TRUE` will deleted the entire `CHECKSUMS.txt` file.
 #' @param verbose Logical or numeric. Controls verbosity of messages. Default is `getOption("reproducible.verbose")`.
 #' @param ... Either `maskTo`, `cropTo` (which will be used if `to` is not supplied, or
 #'   arguments passed to `writeRaster`, e.g., `datatype` (used when writing tiles).
@@ -53,15 +55,16 @@
 #' @seealso [googledrive::drive_get()], [terra::rast()], [terra::crop()], [terra::merge()]
 #'
 #' @examples
-#' \dontrun{
-#' to <- sf::st_as_sf(sf::st_sfc(sf::st_point(c(-123.3656, 48.4284)), crs = 4326))
-#' result <- prepInputsWithTiles(
-#'   url = "https://example.com/data.tif",
-#'   destinationPath = tempdir(),
-#'   to = to,
-#'   urlTiles = "https://example.com/tiles/",
-#'   tileGrid = "CAN"
-#' )
+#'
+#' if (FALSE) {
+#'   to <- sf::st_as_sf(sf::st_sfc(sf::st_point(c(-123.3656, 48.4284)), crs = 4326))
+#'   result <- prepInputsWithTiles(
+#'     url = "https://example.com/data.tif",
+#'     destinationPath = tempdir(),
+#'     to = to,
+#'     urlTiles = "https://example.com/tiles/",
+#'     tileGrid = "CAN"
+#'   )
 #' }
 #'
 #' @export
@@ -187,9 +190,9 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   haveAllNeededTiles <- if (doUploads > 0) length(missingTilesLocalAll) == 0 else TRUE
 
 
-  if (length(missingTilesLocal) == 0){# && (haveAllNeededTiles)) {
+  if (length(missingTilesLocal) == 0) {# && (haveAllNeededTiles)) {
     messagePreProcess(
-      "✅ All needed tiles are available locally. Proceeding to load them",
+      "All needed tiles are available locally. Proceeding to load them",
       verbose = verbose)
     haveLocalTiles <- TRUE
   } else {
@@ -272,14 +275,14 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
         terra::writeRaster(tile, spec$path, datatype = datatype,
                            overwrite = FALSE,
                            gdal = c("COMPRESS=LZW", "TILED=YES"))
-        return(paste("✅ Saved:", spec$path))
+        return(paste("Saved:", spec$path))
       # }
     } else {
-      return(paste("⏩ Skipped (already exists):", spec$path))
+      return(paste("Skipped (already exists):", spec$path))
     }
   }
 
-  messagePreProcess("🧩 Creating tiles ...", verbose = verbose)
+  messagePreProcess("Creating tiles ...", verbose = verbose)
 
   # Choose parallel or sequential based on OS
   if (.Platform$OS.type == "unix") {
@@ -293,7 +296,7 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
 
   # Print results
   for (msg in results[!sapply(results, is.null)]) messagePreProcess(msg, verbose = verbose)
-  messagePreProcess("🎉 Tiling complete.", verbose = verbose)
+  messagePreProcess("Tiling complete.", verbose = verbose)
 }
 
 extract_drive_id <- function(url) {
@@ -309,6 +312,8 @@ extract_drive_id <- function(url) {
 
 upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, thisFilename,
                                                verbose = getOption("reproducible.verbose")) {
+  stopifnot(requireNamespace("googledrive", quietly = TRUE))
+
   # Extract parent folder ID from URL
   parent_id <- extract_drive_id(drive_folder_url)
 
@@ -322,7 +327,7 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
                                                                         path = googledrive::as_id(parent_id)))
     messagePreProcess("📁 Created subfolder: ", .messageFunctionFn(subfolder_name), verbose = verbose)
   } else {
-    messagePreProcess("📁 Found existing subfolder: ", .messageFunctionFn(subfolder_name), verbose = verbose)
+    messagePreProcess("Found existing subfolder: ", .messageFunctionFn(subfolder_name), verbose = verbose)
   }
 
   # List local .tif files
@@ -337,9 +342,9 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
     file_name <- basename(file_path)
     if (!(file_name %in% existing_names)) {
       googledrive::drive_upload(file_path, path = googledrive::as_id(subfolder$id))
-      return(paste("✅ Uploaded:", file_name))
+      return(paste("Uploaded:", file_name))
     } else {
-      return(paste("⏩ Skipped (already exists):", file_name))
+      return(paste("Skipped (already exists):", file_name))
     }
   }
 
@@ -356,17 +361,22 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
 
   # Print results
   for (msg in results) messagePreProcess(msg, verbose = verbose)
-  messagePreProcess("🎉 Upload complete.", verbose = verbose)
+  messagePreProcess("Upload complete.", verbose = verbose)
 }
 
 makeTileGrid <- function(ext, crs, numTiles) {
+  stopifnot(
+    requireNamespace("sf", quietly = TRUE),
+    requireNamespace("terra", quietly = TRUE)
+  )
+
   if (missing(crs)) crs <- proj4stringSCANFI
 
   # ext <- terra::ext(c(xmin = -2341500, xmax = 3010500, ymin = 5863500, ymax = 9436500))
   areaV <- terra::as.polygons(ext, crs = crs)
   areaGrid <- sf::st_make_grid(sf::st_as_sfc(sf::st_as_sf(areaV)), n = numTiles) |>
     terra::vect()
-  m <- t(matrix(seq(prod(numTiles)), nrow = numTiles[[2]], byrow = F))
+  m <- t(matrix(seq(prod(numTiles)), nrow = numTiles[[2]], byrow = FALSE))
   areaGrid[["tile_id"]] <- makePaddedNamesForTiles(as.character(m))
   areaGrid
 }
@@ -629,10 +639,15 @@ getTilesFromGoogleDrive <- function(tilesToGet, existing_tiles, tilesFolderFullP
   haveLocalTiles
 }
 
+#' @importFrom purrr keep
 downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFullPath,
                                        needed_tile_names, tilesToGet, all_tile_names, haveLocalTiles,
                                        tilesFolderFullPath, tileGrid, numTiles,
                                        to_inTileGrid, doUploads, datatype, verbose) {
+  if (!requireNamespace("terra")) {
+    stop("Please install.packages('terra')")
+  }
+
   existing_tiles <- lsExistingTilesOnGoogleDrive(urlTiles, targetFile)
 
   available_tile_names_onGoogleDrive <- existing_tiles$name
@@ -652,7 +667,7 @@ downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFull
 
   if (length(missingTilesOnRemote) == 0) {
     doTileDownload <- haveLocalTiles %in% FALSE
-    messagePreProcess("✅ All needed tiles are available on Google Drive.  ",
+    messagePreProcess("All needed tiles are available on Google Drive.  ",
                       verbose = verbose)
     needUploads <- tilesFullOnRemote %in% FALSE
     if (doTileDownload) {
@@ -750,11 +765,10 @@ tryRastThenGetCRS <- function(targetFileFullPath) {
 #' parallel processing, taking into account a minimum threshold, the total
 #' number of physical cores, and currently active threads.
 #'
-#' @param min An integer specifying the minimum number of cores to use. Default
-#'   is `2`.
+#' @param min An integer specifying the minimum number of cores to use. Default is `2`.
 #' @param max An integer specifying the maximum number of cores available,
 #'   typically the number of physical cores. Default is
-#'   `parallel::detectCores(logical = FALSE)`.
+#'   `max(1L, getOption("Ncpus", 1L), parallel::detectCores() - 1, logical = FALSE, na.rm = TRUE)`.
 #'
 #' @return An integer representing the number of cores that can be used for
 #'   parallel tasks, ensuring at least `min` cores are used, while subtracting
@@ -762,7 +776,7 @@ tryRastThenGetCRS <- function(targetFileFullPath) {
 #'   `detectActiveCores()`).
 #'
 #' @examples
-#' \dontrun{
+#' if (FALSE) {
 #'   numCoresToUse()
 #'   numCoresToUse(min = 4)
 #' }
@@ -770,14 +784,18 @@ tryRastThenGetCRS <- function(targetFileFullPath) {
 #' @note This function depends on `detectActiveCores()` and is not supported on
 #'   Windows systems.
 #'
+#' @export
 #' @seealso [detectActiveCores()]
-#'
-numCoresToUse <- function(min = 2, max) {
-  if (is.null(.pkgEnv$detectedCores))
-    .pkgEnv$detectedCores <- parallel::detectCores(logical = FALSE)
+numCoresToUse <- function(min = 2, max = NULL) {
+  if (is.null(.pkgEnv$detectedCores)) {
+    ## see <https://parallelly.futureverse.org/#availablecores-vs-paralleldetectcores>
+    .pkgEnv$detectedCores <- max(1L, getOption("Ncpus", 1L), parallel::detectCores() - 1,
+                                 logical = FALSE, na.rm = TRUE)
+  }
   dc <- .pkgEnv$detectedCores
-  if (missing(max))
+  if (is.null(max)) {
     max <- dc
+  }
   max <- min(dc -  # total
                1 - # remove one for the current process
                detectActiveCores(), # estimate actively used ones

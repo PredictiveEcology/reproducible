@@ -36,7 +36,6 @@ downloadFile <- function(archive, targetFile, neededFiles,
                          verbose = getOption("reproducible.verbose", 1),
                          purge = FALSE, .tempPath, .callingEnv,
                          ...) {
-
   dots <- list(...)
   # if (is.null(dots$.callingEnv)) {
   #   .callingEnv <- parent.frame()
@@ -412,10 +411,8 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       ))
       a <- future::future(
         {
-          googledrive::drive_auth(email = goe,
-                                  cache = goc)
-          retry(retries = 2,
-                downloadCall)
+          googledrive::drive_auth(email = goe, cache = goc)
+          retry(retries = 2, downloadCall)
         },
         globals = list(
           goc = getOption("gargle_oauth_cache"),
@@ -466,9 +463,10 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                             ", but gdown is not available at the cmd line; skipping")
         }
       }
-      if (isTRUE(useGoogleDrive))
-        a <- retry(downloadCall, retries = 2)
 
+      if (isTRUE(useGoogleDrive)) {
+        a <- retry(downloadCall, retries = 2)
+      }
     }
   } else {
     messagePreProcess(messSkipDownload, verbose = verbose)
@@ -967,7 +965,6 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   return(downloadFilename)
 }
 
-
 .isRstudioServer <- function() {
   isRstudioServer <- FALSE
 
@@ -981,11 +978,10 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   isRstudioServer
 }
 
-
 SSL_REVOKE_BEST_EFFORT <- function(envir = parent.frame(1)) {
   # Take from https://github.com/rstudio/rstudio/issues/10163#issuecomment-1193316767 #
   prevCurlVal <- Sys.getenv("R_LIBCURL_SSL_REVOKE_BEST_EFFORT")
-  Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT=TRUE)
+  Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = TRUE)
   on.exit2({#withr::defer({
     if (nzchar(prevCurlVal))
       Sys.setenv(R_LIBCURL_SSL_REVOKE_BEST_EFFORT = prevCurlVal)
@@ -999,11 +995,8 @@ on.exit2 <- function(expr, envir = sys.frame(-2), add = TRUE, after = TRUE) {
   do.call(base::on.exit, list(funExpr, add, after), envir = envir)
 }
 
-
-
 dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, url,
-                            fileToDownload, destinationPath, targetFile, checksumFile,
-                            verbose) {
+                            fileToDownload, destinationPath, targetFile, checksumFile, verbose) {
   if (isTRUE(grepl(paste("already exists", .txtDownloadFailedFn(".+"), sep = "|"), downloadResults))) {
     stop(downloadResults)
   }
@@ -1022,7 +1015,7 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
     isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
                  !grepl("\\.[^\\.]+$", url)) # doesn't have an extension
     if (isGID) {
-      urlMessage <- googledriveIDtoHumanURL(id)
+      urlMessage <- googledriveIDtoHumanURL(url)
       # urlMessage <- paste0("https://drive.google.com/file/d/", url)
     } else {
       urlMessage <- url
@@ -1069,8 +1062,6 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
     if (failed > 1) Sys.sleep(0.5) else SSL_REVOKE_BEST_EFFORT() # uses withr::defer to remove it after this test
   }
 
-  #
-  #
   # # ELIOT removed this as httr is being deprecated --> the above chunk should work
   # # if (any(grepl("SSL peer certificate or SSH remote key was not OK", messOrig))) {
   # #   # THIS IS A MAJOR WORK AROUND FOR SSL ISSUES IN SOME WORK ENVIRONMENTS. NOT ADVERTISED.
@@ -1145,7 +1136,6 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
   try(stop(xxxx))
 }
 
-
 runDlFun <- function(args, dlFun) {
   argsOrig <- args
   formsDlFun <- formalArgs(dlFun)
@@ -1161,7 +1151,6 @@ runDlFun <- function(args, dlFun) {
   out
 }
 
-
 #' Purge the checksums of a single file
 #'
 #' This is a manual way of achieving `prepInputs(..., purge = 7)`, useful in cases
@@ -1171,7 +1160,7 @@ runDlFun <- function(args, dlFun) {
 #' @param fileToRemove The filename to remove from the `checksumFile`
 #'
 #' @export
-#' @return NULL. Run for its side effect, namely, and file removed from the CHECKSUMS.txt
+#' @return NULL. Run for its side effect, namely, and file removed from the \file{CHECKSUMS.txt}
 #'   file.
 purgeChecksums <- function(checksumFile, fileToRemove) {
   dt <- data.table::fread(checksumFile)
@@ -1180,12 +1169,11 @@ purgeChecksums <- function(checksumFile, fileToRemove) {
   data.table::fwrite(dtNew, file = checksumFile)
 }
 
+download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileSize = NULL,
+                                     verbose = getOption("reproducible.verbose")) {
+  .requireNamespace("googledrive", stopOnFALSE = TRUE)
 
-
-
-
-download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileSize = NULL, verbose = getOption("reproducible.verbose")) {
-  # Normalize path to avoid issues with ~
+  ## Normalize path to avoid issues with ~
   local_path_expanded <- normalizePath(local_path, mustWork = FALSE)
 
   if (missing(gdriveDetails)) {
@@ -1204,7 +1192,11 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
     fileSize <- as.numeric(gdriveDetails$drive_resource[[1]]$size)
     file_name <- googledriveIDtoDownloadURL(file_id)
     token <- googledrive::drive_token()
-    bearer <- token$auth_token$credentials$access_token
+    if (googledrive::drive_has_token()) {
+      bearer <- token$auth_token$credentials$access_token
+    } else {
+      stop("no googledrive token discovered; run drive_auth() to authenticate.")
+    }
   } else {
     if (is.null(fileSize)) {
       fileSize <- getRemoteFileSize(isGD, url)
@@ -1213,10 +1205,11 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
 
   if ( (isGD &&  (.Platform$OS.type == "windows")) || nzchar(Sys.which("curl")) %in% FALSE ||
       fileSize < 1e9) { # i.e., < 1GB can just use the simpler httr2 progress
-    # Google Drive download using httr2 (no resume support)
+    ## Google Drive download using httr2 (no resume support)
     req <- httr2::request(file_name)
-    if (isGD)
+    if (isGD) {
       req <- req |> httr2::req_auth_bearer_token(bearer)
+    }
     req <- req |> httr2::req_progress()
 
     con <- file(local_path_expanded, open = "wb")
@@ -1228,7 +1221,7 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
       writeBin(body, con)
       completed <- TRUE
     }, error = function(e) {
-      stop("❌ Google Drive download failed: ", e$message)
+      stop("Google Drive download failed: ", e$message)
     })
 
   } else {
@@ -1239,7 +1232,7 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
         extra_args <- paste("-L -H", shQuote(paste("Authorization: Bearer", bearer)))
       } else {
         extra_args <- "-C -"
-        messagePreProcess("📥 Using 'curl' with resume support on Linux/macOS.", verbose = verbose)
+        messagePreProcess("Using 'curl' with resume support on Linux/macOS.", verbose = verbose)
       }
 
       tryCatch({
@@ -1251,9 +1244,9 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
           extra = extra_args
         )
         completed <- TRUE
-        # message("✅ Download completed using download.file with curl.")
+        # message("Download completed using download.file with curl.")
       }, error = function(e) {
-        stop("❌ Non-Google Drive download failed: ", e$message)
+        stop("Non-Google Drive download failed: ", e$message)
       })
 
     } # else {
@@ -1285,18 +1278,17 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
       #   body <- httr2::resp_body_raw(resp)
       #   writeBin(body, con)
       #   completed <- TRUE
-      #   # message("✅ Non-Google Drive download completed using httr2.")
+      #   # message("Non-Google Drive download completed using httr2.")
       # }, error = function(e) {
-      #   stop("❌ Download failed: ", e$message)
+      #   stop("Download failed: ", e$message)
       # })
     # }
   }
-  if (isTRUE(completed))
-    messagePreProcess("✅ Download of " , local_path, " complete",  verbose = verbose)
 
+  if (isTRUE(completed)) {
+    messagePreProcess("Download of " , local_path, " complete",  verbose = verbose)
+  }
 }
-
-
 
 messageAboutFilesize <- function(fileSize, verbose, msgMiddle = " on Google Drive ") {
   fileSize <- as.numeric(fileSize)

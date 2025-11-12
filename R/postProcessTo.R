@@ -1804,7 +1804,6 @@ detectThreads <- function(threads = getOption("reproducible.gdalwarpThreads", 2)
   if (isNULLThreads) {
     threads <- 1L
   } else {
-
     if (isNotNumThreads || isNAThreads || lenNumThreadsNot1) {
       if (isNotNumThreads)
         threads <- 2L

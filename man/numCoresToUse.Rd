@@ -4,15 +4,14 @@
 \alias{numCoresToUse}
 \title{Estimate Number of CPU Cores to Use for Parallel Processing}
 \usage{
-numCoresToUse(min = 2, max)
+numCoresToUse(min = 2, max = NULL)
 }
 \arguments{
-\item{min}{An integer specifying the minimum number of cores to use. Default
-is \code{2}.}
+\item{min}{An integer specifying the minimum number of cores to use. Default is \code{2}.}
 
 \item{max}{An integer specifying the maximum number of cores available,
 typically the number of physical cores. Default is
-\code{parallel::detectCores(logical = FALSE)}.}
+\code{max(1L, getOption("Ncpus", 1L), parallel::detectCores() - 1, logical = FALSE, na.rm = TRUE)}.}
 }
 \value{
 An integer representing the number of cores that can be used for
@@ -30,7 +29,7 @@ This function depends on \code{detectActiveCores()} and is not supported on
 Windows systems.
 }
 \examples{
-\dontrun{
+if (FALSE) {
   numCoresToUse()
   numCoresToUse(min = 4)
 }

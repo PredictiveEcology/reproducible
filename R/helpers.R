@@ -697,7 +697,6 @@ cacheId <- function(obj) {
     NULL
 }
 
-
 #' Count Active Threads Based on CPU Usage
 #'
 #' This function counts the number of active system processes (threads) that
@@ -723,7 +722,7 @@ cacheId <- function(obj) {
 #'   to parse CPU usage. It may not be portable across all Unix variants.
 #'
 #' @export
-detectActiveCores <- function (pattern = "", minCPU = 50) {
+detectActiveCores <- function(pattern = "", minCPU = 50) {
   if (!identical(.Platform$OS.type, "windows")) {
     a0 <- system("ps -ef", intern = TRUE)[-1]
     a4 <- grep(pattern, a0, value = TRUE)

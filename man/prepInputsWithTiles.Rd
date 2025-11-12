@@ -46,6 +46,9 @@ or an actual \code{SpatVector} object with a grid of polygons}
 
 \item{plot.grid}{Logical. Whether to plot the tile grid and area of interest. Default is \code{FALSE}.}
 
+\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing \code{CHECKSUMS.txt} file and
+\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire \code{CHECKSUMS.txt} file.}
+
 \item{verbose}{Logical or numeric. Controls verbosity of messages. Default is \code{getOption("reproducible.verbose")}.}
 
 \item{...}{Passed to \code{writeRaster}, e.g., \code{datatype}.}
@@ -83,15 +86,16 @@ using the \code{Content-Disposition} header or the basename of the URL.
 For Google Drive URLs, it uses the file metadata.
 }
 \examples{
-\dontrun{
-to <- sf::st_as_sf(sf::st_sfc(sf::st_point(c(-123.3656, 48.4284)), crs = 4326))
-result <- prepInputsWithTiles(
-  url = "https://example.com/data.tif",
-  destinationPath = tempdir(),
-  to = to,
-  urlTiles = "https://example.com/tiles/",
-  tileGrid = "CAN"
-)
+
+if (FALSE) {
+  to <- sf::st_as_sf(sf::st_sfc(sf::st_point(c(-123.3656, 48.4284)), crs = 4326))
+  result <- prepInputsWithTiles(
+    url = "https://example.com/data.tif",
+    destinationPath = tempdir(),
+    to = to,
+    urlTiles = "https://example.com/tiles/",
+    tileGrid = "CAN"
+  )
 }
 
 }
