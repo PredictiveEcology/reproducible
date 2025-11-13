@@ -2056,3 +2056,67 @@ test_that("ensure default tags are correct", {
   expect_true(length(missingFromDefault) == 0)
 
 })
+
+test_that("cacheChaining", {
+  testInit()
+  withr::local_options(reproducible.verbose = TRUE,
+                       reproducible.useMemoise = TRUE)
+  clearCache(ask = F, verbose = FALSE)
+  samWMean <- function(x, size, other) {
+    sample(x, size) |> mean()
+  }
+  a <- list()
+  args <- c(3,5)
+  N <- 1e6
+  for (arg in args) { # These are 2 different functions (below); one is identical each time, the other is not
+    mess <- list()
+    sc <- list()
+    for (i in c(TRUE, FALSE)) {
+      withr::local_seed(123)
+      iChar <- as.character(i)
+      options(reproducible.cacheChaining = i)
+      clearCache(ask = FALSE)
+      fn1 <- function(x) {
+        a <- sample(N) |> Cache()
+        b <- samWMean(a, size = length(a) * 0.9, other = x) |> Cache()
+        d <- samWMean(a, size = length(a) * 0.8, other = x) |> Cache()
+        c(mean(a), b, d)
+      }
+      if (arg == args[1]) {
+        fn2 <- function(y) {
+          fn1(2)
+        }
+      } else {
+        fn2 <- function(y) {
+          fn1(sample(1e6, size = 1))
+        }
+      }
+      a[[iChar]] <- list()
+      mess[[iChar]] <- capture_messages({
+        a[[iChar]][[1]] <- fn2() # a --> calculate & slow; b --> no digest, but still calculate & slow; d --> no digest, still calculate & slow
+        a[[iChar]][[2]] <- fn2()# a --> digest & return cache; b --> skip digest, return cache; d --> skip digest, return cache
+      })
+      sc[[iChar]] <- showCache(verbose = FALSE)[tagKey == "elapsedTimeDigest"]
+    }
+
+    # Should be the same pattern of saving/loading regardless of chainCaching
+    expect_equivalent(length(grep("Saved", mess$`TRUE`)), arg)
+    expect_equivalent(length(grep("Saved", mess$`FALSE`)), arg)
+
+
+    # Should only show the messaging when cacheChaining is on
+    expect_equivalent(length(grep("cacheChaining", mess$`TRUE`)), 6)
+    expect_equivalent(length(grep("Skipping digest", mess$`TRUE`)), 4)
+    expect_equivalent(length(grep("cacheChaining", mess$`FALSE`)), 0)
+    expect_equivalent(length(grep("Skipping digest", mess$`FALSE`)), 0)
+
+    # Basically, 2 of the 3 MUST be faster to digest
+    if (interactive()) # but this will be unreliable because of the sample(1e6) above is fast to digest;
+      #  to confirm this, set the N to 1e7
+      expect_true(sum(sc$`TRUE`$tagValue < sc$`FALSE`$tagValue) >= 2)
+
+    # cacheChaining shouldn't change anything; they should be the same
+    expect_equivalent(a$`TRUE`, a$`FALSE`)
+  }
+
+})

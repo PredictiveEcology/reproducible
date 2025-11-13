@@ -9,7 +9,7 @@ prepInputsWithTiles(
   url,
   destinationPath,
   to,
-  tilesFolder = "tiles",
+  tilesFolder = file.path(getOption("reproducible.inputPath"), "tiles"),
   urlTiles = getOption("reproducible.prepInputsUrlTiles", NULL),
   doUploads = getOption("reproducible.prepInputsDoUploads", FALSE),
   tileGrid = "CAN",
@@ -51,7 +51,8 @@ or an actual \code{SpatVector} object with a grid of polygons}
 
 \item{verbose}{Logical or numeric. Controls verbosity of messages. Default is \code{getOption("reproducible.verbose")}.}
 
-\item{...}{Passed to \code{writeRaster}, e.g., \code{datatype}.}
+\item{...}{Either \code{maskTo}, \code{cropTo} (which will be used if \code{to} is not supplied, or
+arguments passed to \code{writeRaster}, e.g., \code{datatype} (used when writing tiles).}
 }
 \value{
 A \code{SpatRaster} object cropped to the area of interest (\code{to}), composed of the necessary tiles.

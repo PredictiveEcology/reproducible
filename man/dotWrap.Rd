@@ -9,6 +9,10 @@
 \alias{.unwrap}
 \alias{.unwrap.environment}
 \alias{.unwrap.list}
+\alias{.unwrap.PackedSpatExtent2}
+\alias{.unwrap.PackedSpatVector2}
+\alias{.unwrap.data.table}
+\alias{.unwrap.PackedSpatVector}
 \title{Deal with class for saving to and loading from Cache or Disk}
 \usage{
 .wrap(
@@ -87,6 +91,42 @@
 )
 
 \method{.unwrap}{list}(
+  obj,
+  cachePath,
+  cacheId,
+  drv = getDrv(getOption("reproducible.drv", NULL)),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
+
+\method{.unwrap}{PackedSpatExtent2}(
+  obj,
+  cachePath,
+  cacheId,
+  drv = getDrv(getOption("reproducible.drv", NULL)),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
+
+\method{.unwrap}{PackedSpatVector2}(
+  obj,
+  cachePath,
+  cacheId,
+  drv = getDrv(getOption("reproducible.drv", NULL)),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
+
+\method{.unwrap}{data.table}(
+  obj,
+  cachePath,
+  cacheId,
+  drv = getDrv(getOption("reproducible.drv", NULL)),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
+
+\method{.unwrap}{PackedSpatVector}(
   obj,
   cachePath,
   cacheId,

@@ -21,6 +21,9 @@
 #'   \item{`ask`}{
 #'     Default: `TRUE`. Used in [clearCache()] and [keepCache()].
 #'   }
+#'   \item{`cacheChaining`}{
+#'     Default: `FALSE`. Used in [Cache()] in the `.cacheChaining` argument.
+#'   }
 #'   \item{`cachePath`}{
 #'     Default: `.reproducibleTempCacheDir`. Used in [Cache()] and many others.
 #'     The default path for repositories if not passed as an argument.
@@ -253,6 +256,7 @@
 reproducibleOptions <- function() {
   list( # nolint
     reproducible.ask = TRUE,
+    reproducible.cacheChaining = FALSE,
     reproducible.cachePath = file.path(tempdir(), "reproducible", "cache"),
     reproducible.cacheSaveFormat = .rdsFormat,
     reproducible.cacheSpeed = "slow",

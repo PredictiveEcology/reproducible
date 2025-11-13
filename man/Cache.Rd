@@ -14,6 +14,7 @@ Cache(
   .objects = NULL,
   .cacheExtra = NULL,
   .functionName = NULL,
+  .cacheChaining = getOption("reproducible.cacheChaining", NULL),
   outputObjects = NULL,
   algo = "xxhash64",
   cachePath = NULL,
@@ -42,6 +43,7 @@ cache2(
   .objects = NULL,
   .cacheExtra = NULL,
   .functionName = NULL,
+  .cacheChaining = getOption("reproducible.cacheChaining", NULL),
   outputObjects = NULL,
   algo = "xxhash64",
   cachePath = NULL,
@@ -117,6 +119,18 @@ more control and understanding for debugging.}
 \item{.functionName}{A an arbitrary character string that provides a name that is different
 than the actual function name (e.g., "rnorm") which will be used for messaging. This
 can be useful when the actual function is not helpful for a user, such as \code{do.call}.}
+
+\item{.cacheChaining}{A logical or a the name of a function. If \code{TRUE}, then
+the current \code{Cache} call will evaluate the function "outside" the \code{Cache} call
+(via \code{sys.function(-1)}) and
+attach the \code{digest} of that outer function to the entry for this \code{Cache} call. This
+will then be used by any subsequent \code{Cache} call within the same (unchanged) function.
+If there is one or more objects that had been returned by a previous \code{Cache} call,
+then those objects will not be digested; rather their \code{cacheId} tag will be used
+in place of a new \code{digest}. This \emph{should} cause no change in Caching outcomes,
+but it should be faster in cases where there are several \code{Cache} calls within
+the same function. If \code{NULL} or \code{FALSE} (current default), then this feature is
+not used. Can be set by an \code{option}}
 
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}

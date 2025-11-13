@@ -26,6 +26,9 @@ The following options are likely of interest to most users:
 \item{\code{ask}}{
 Default: \code{TRUE}. Used in \code{\link[=clearCache]{clearCache()}} and \code{\link[=keepCache]{keepCache()}}.
 }
+\item{\code{cacheChaining}}{
+Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}} in the \code{.cacheChaining} argument.
+}
 \item{\code{cachePath}}{
 Default: \code{.reproducibleTempCacheDir}. Used in \code{\link[=Cache]{Cache()}} and many others.
 The default path for repositories if not passed as an argument.

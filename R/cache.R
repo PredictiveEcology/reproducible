@@ -247,6 +247,17 @@ utils::globalVariables(c(
 #'       when `options("reproducible.showSimilar" = TRUE)`. This can allow a user
 #'       more control and understanding for debugging.
 #'
+#' @param .cacheChaining A logical or a the name of a function. If `TRUE`, then
+#'   the current `Cache` call will evaluate the function "outside" the `Cache` call
+#'   (via `sys.function(-1)`) and
+#'   attach the `digest` of that outer function to the entry for this `Cache` call. This
+#'   will then be used by any subsequent `Cache` call within the same (unchanged) function.
+#'   If there is one or more objects that had been returned by a previous `Cache` call,
+#'   then those objects will not be digested; rather their `cacheId` tag will be used
+#'   in place of a new `digest`. This *should* cause no change in Caching outcomes,
+#'   but it should be faster in cases where there are several `Cache` calls within
+#'   the same function. If `NULL` or `FALSE` (current default), then this feature is
+#'   not used. Can be set by an `option`
 #' @param .functionName A an arbitrary character string that provides a name that is different
 #'       than the actual function name (e.g., "rnorm") which will be used for messaging. This
 #'       can be useful when the actual function is not helpful for a user, such as `do.call`.
