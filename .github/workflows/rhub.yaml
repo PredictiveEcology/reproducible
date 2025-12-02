@@ -31,6 +31,9 @@ jobs:
       containers: ${{ steps.rhub-setup.outputs.containers }}
       platforms: ${{ steps.rhub-setup.outputs.platforms }}
 
+    env:
+      GOOGLEDRIVE_AUTH: ${{ secrets.GOOGLEDRIVE_AUTH }}
+
     steps:
     # NO NEED TO CHECKOUT HERE
     - uses: r-hub/actions/setup@v1
