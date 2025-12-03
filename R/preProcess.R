@@ -646,7 +646,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     )
     # might have duplicates because filesExtr are in `inputPaths`, but extractedFiles are in destinationPath
     feOrig <- fs::path_rel(filesExtr, fs::path_common(filesExtr))
-    feNew <- fs::path_rel(extractedFiles$filesExtr, fs::path_common(extractedFiles$filesExtr))
+    absFiles <- fs::is_absolute_path(extractedFiles$filesExtr)
+    feNew <- c(extractedFiles$filesExtr[!absFiles],
+               fs::path_rel(extractedFiles$filesExtr[absFiles],
+                            fs::path_common(extractedFiles$filesExtr[absFiles])))
     inExtracted <- feOrig %in% feNew
     filesExtr <- setdiff(filesExtr[!inExtracted], archive)
 
