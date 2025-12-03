@@ -653,11 +653,14 @@ extractFromArchive <- function(archive,
       }
     })
     if (!is(tryC, "try-error")) {
-      if (identical(dontUse, tail(dontUses, 1)[[1]])) {
+      # if (identical(dontUse, tail(dontUses, 1)[[1]])) {
         break
-      } else {
-        stop(tryC)
-      }
+      # } else {
+
+      # }
+    }
+    if (identical(dontUse, tail(dontUses, 1)[[1]])) {
+      stop(tryC)
     }
   }
 
