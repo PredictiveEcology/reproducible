@@ -1,11 +1,10 @@
 test_that("lightweight tests for code coverage", {
   skip_on_cran()
-  testInit(c("sf", "terra"),
-           opts = list(
-             "reproducible.overwrite" = TRUE,
-             "reproducible.inputPaths" = NULL
-           ),
-           needGoogleDriveAuth = TRUE
+
+  testInit(
+    c("sf", "terra"),
+    opts = list("reproducible.overwrite" = TRUE, "reproducible.inputPaths" = NULL),
+    needGoogleDriveAuth = TRUE
   )
   dPath <- checkPath(file.path(tempdir2()), create = TRUE)
   dPath2 <- checkPath(file.path(tempdir2()), create = TRUE)
@@ -17,7 +16,7 @@ test_that("lightweight tests for code coverage", {
 
   # 1 step for each layer
   # 1st step -- get study area
-  (full <- prepInputs(localFileLux, destinationPath = dPath)) |> capture.output() -> co# default is sf::st_read
+  (full <- prepInputs(localFileLux, destinationPath = dPath)) |> capture.output() -> co # default is sf::st_read
   zoneA <- full[3:6, c("NAME_1", "AREA")]
   zoneB <- full[8, c("NAME_1", "AREA")] # not in A
   zoneC <- full[3, c("NAME_1", "AREA")] # yes in A
@@ -27,8 +26,12 @@ test_that("lightweight tests for code coverage", {
   # This will be 1, 2 and 3 -- THIS IS THE INTERESTING ONE ... it will mean that a
   #  test below will have 2 different polygons the are "contains", so, result of
   #  Cache will be not just one polygon, but 2
-  zoneF <- aggregate(full[, c("AREA")], by = list(NAME_1 = c(rep(1,3), rep(2,NROW(full) - 3))), sum)
-  zoneF <- zoneF[zoneF$NAME_1 == 1,]
+  zoneF <- aggregate(
+    full[, c("AREA")],
+    by = list(NAME_1 = c(rep(1, 3), rep(2, NROW(full) - 3))),
+    sum
+  )
+  zoneF <- zoneF[zoneF$NAME_1 == 1, ]
 
   # zoneF[, "AREA"] <- sf::st_area(zoneF)/1e6
   # 2nd step: re-write to disk as read/write is lossy; want all "from disk" for this ex.
@@ -69,12 +72,14 @@ test_that("lightweight tests for code coverage", {
 
   # Run sequence -- A, B will add new entries in targetFile, C will not,
   #                 D will, E will not
-  paramsVecList <- list(list(a = 1, b = 2, c = "D"),
-                        list(a = 2, b = 3, d = 4),
-                        list(a = 2, b = 3, e = 4),
-                        list(a = 2, b = 3, d = 4),
-                        list(a = 2, b = 3, d = 4),
-                        list(a = 2, b = 3, d = 4))
+  paramsVecList <- list(
+    list(a = 1, b = 2, c = "D"),
+    list(a = 2, b = 3, d = 4),
+    list(a = 2, b = 3, e = 4),
+    list(a = 2, b = 3, d = 4),
+    list(a = 2, b = 3, d = 4),
+    list(a = 2, b = 3, d = 4)
+  )
   iter <- 0
   for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE, zoneF)) {
     iter <- iter + 1
@@ -85,19 +90,22 @@ test_that("lightweight tests for code coverage", {
       mess <- "Spatial domain is contained within the url"
     }
 
-    messCap <- capture_messages(out <- CacheGeo(
-      targetFile = targetFile,
-      domain = z,
-      FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
-      fun = fun, # pass whatever is needed into the function
-      destinationPath = dPath,
-      action = "update", verbose = 0
-    ))
+    messCap <- capture_messages(
+      out <- CacheGeo(
+        targetFile = targetFile,
+        domain = z,
+        FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
+        fun = fun, # pass whatever is needed into the function
+        destinationPath = dPath,
+        action = "update",
+        verbose = 0
+      )
+    )
     expect_match(messCap, mess, all = FALSE)
 
     co <- capture.output({
-      warns <- capture_warnings(
-        expect_message(out2 <- CacheGeo(
+      warns <- capture_warnings(expect_message(
+        out2 <- CacheGeo(
           targetFile = targetFile2,
           domain = z,
           FUN = fun3(domain, paramsVec = paramsVecList[[iter]]),
@@ -106,15 +114,15 @@ test_that("lightweight tests for code coverage", {
           iter = iter,
           destinationPath = dPath,
           action = "update"
-        ), mess)
-      )
+        ),
+        mess
+      ))
     })
 
     if (NROW(warns)) {
       expect_match(warns, substr(.message$BecauseOfLossOfColumn(""), start = 1, 10), all = FALSE)
       expect_match(warns, "Dropping", all = FALSE)
     }
-
   }
 
   outSF <- sf::st_as_sf(out)
@@ -127,84 +135,95 @@ test_that("lightweight tests for code coverage", {
   }
   on.exit({
     gls <- googledrive::drive_ls(cloudFolderID)
-    googledrive::drive_rm(gls[gls$name %in% c(targetFile, targetFile2),])
+    googledrive::drive_rm(gls[gls$name %in% c(targetFile, targetFile2), ])
   })
-
 
   iter <- 0
   # the following will fail if not predictiveecology@gmail.com or eliotmcintire@gmail.com or the funky
   #   service account eliot-githubauthentication@genial-cycling-408722.iam.gserviceaccount.com if that
   #   has been added to the environment
-  try({
-    for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE, zoneF)) {
-      iter <- iter + 1
-      if (identical(z, zoneA) || identical(z, zoneB) || identical(z, zoneD) || identical(z, zoneF)) {
-        mess <- "Domain is not contained within the targetFile"
+  try(
+    {
+      for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE, zoneF)) {
+        iter <- iter + 1
+        if (
+          identical(z, zoneA) || identical(z, zoneB) || identical(z, zoneD) || identical(z, zoneF)
+        ) {
+          mess <- "Domain is not contained within the targetFile"
+        }
+        if (identical(z, zoneC) || identical(z, zoneE)) {
+          mess <- "Spatial domain is contained within the url"
+        }
+        # With directory url
+
+        out <- CacheGeo(
+          targetFile = targetFile,
+          domain = z,
+          useCloud = TRUE,
+          cloudFolderID = cloudFolderID,
+          FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
+          fun = fun, # pass whatever is needed into the function
+          destinationPath = dPath2,
+          action = "update",
+          verbose = 0
+        )
+
+        co <- capture.output(
+          warns <- capture_warnings(expect_message(
+            out2 <- CacheGeo(
+              targetFile = targetFile2,
+              domain = z,
+              useCloud = TRUE,
+              cloudFolderID = cloudFolderID,
+              FUN = fun3(domain, paramsVec = paramsVecList[[iter]]),
+              fun3 = fun3, # pass whatever is needed into the function
+              paramsVecList = paramsVecList,
+              iter = iter,
+              destinationPath = dPath,
+              action = "update",
+              verbose = 0
+            ),
+            mess
+          ))
+        )
+        if (NROW(warns)) {
+          expect_match(
+            warns,
+            substr(.message$BecauseOfLossOfColumn(""), start = 1, 10),
+            all = FALSE
+          )
+          expect_match(warns, "Dropping", all = FALSE)
+        }
       }
-      if (identical(z, zoneC) || identical(z, zoneE)) {
-        mess <- "Spatial domain is contained within the url"
-      }
-      # With directory url
+      outSFCloud <- sf::st_as_sf(out)
+      expect_true(identical(outSFCloud, outSF))
+
+      keeps <- sf::st_contains(outSF, outSF[1, 1], sparse = FALSE)
+
+      polysWithParams <- outSF[keeps, ]
+
+      expect_true(NROW(polysWithParams) == 2)
+
+      smaller <- sf::st_as_sf(terra::buffer(terra::vect(polysWithParams[1, ]), width = -2000))
+
+      plot(polysWithParams[2, 1], reset = FALSE)
+      plot(polysWithParams[1, 1], add = TRUE, col = "red", reset = FALSE)
+      smaller <- sf::st_as_sf(terra::buffer(terra::vect(polysWithParams[1, ]), width = -2000))
+      plot(smaller[1, 1], add = TRUE, col = "green")
 
       out <- CacheGeo(
         targetFile = targetFile,
-        domain = z,
+        domain = smaller,
         useCloud = TRUE,
         cloudFolderID = cloudFolderID,
         FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
         fun = fun, # pass whatever is needed into the function
         destinationPath = dPath2,
-        action = "update", verbose = 0
+        action = "nothing"
       )
-
-      co <- capture.output(
-      warns <- capture_warnings(
-        expect_message(out2 <- CacheGeo(
-          targetFile = targetFile2,
-          domain = z,
-          useCloud = TRUE,
-          cloudFolderID = cloudFolderID,
-          FUN = fun3(domain, paramsVec = paramsVecList[[iter]]),
-          fun3 = fun3, # pass whatever is needed into the function
-          paramsVecList = paramsVecList,
-          iter = iter,
-          destinationPath = dPath,
-          action = "update", verbose = 0
-        ), mess)
-      ))
-      if (NROW(warns)) {
-        expect_match(warns, substr(.message$BecauseOfLossOfColumn(""), start = 1, 10), all = FALSE)
-        expect_match(warns, "Dropping", all = FALSE)
-      }
-
-    }
-    outSFCloud <- sf::st_as_sf(out)
-    expect_true(identical(outSFCloud, outSF))
-
-    keeps <- sf::st_contains(outSF, outSF[1, 1], sparse = FALSE)
-
-    polysWithParams <- outSF[keeps, ]
-
-    expect_true(NROW(polysWithParams) == 2)
-
-    smaller <- sf::st_as_sf(terra::buffer(terra::vect(polysWithParams[1, ]), width = -2000))
-
-    plot(polysWithParams[2, 1], reset = FALSE)
-    plot(polysWithParams[1, 1], add = TRUE, col = "red", reset = FALSE)
-    smaller <- sf::st_as_sf(terra::buffer(terra::vect(polysWithParams[1, ]), width = -2000))
-    plot(smaller[1, 1], add = TRUE, col = "green")
-
-    out <- CacheGeo(
-      targetFile = targetFile,
-      domain = smaller,
-      useCloud = TRUE,
-      cloudFolderID = cloudFolderID,
-      FUN = fun(domain, newField = I(list(list(a = 1, b = 1:2, c = "D")))),
-      fun = fun, # pass whatever is needed into the function
-      destinationPath = dPath2,
-      action = "nothing"
-    )
-    outSFCloudSmaller <- sf::st_as_sf(out)
-    expect_identical(as.data.frame(outSFCloudSmaller)[, "params"], out[, "params"])
-  }, silent = TRUE)
+      outSFCloudSmaller <- sf::st_as_sf(out)
+      expect_identical(as.data.frame(outSFCloudSmaller)[, "params"], out[, "params"])
+    },
+    silent = TRUE
+  )
 })

@@ -24,9 +24,7 @@ test_that("preProcess works with only url", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
-  noisyOutput <- capture.output(
-    ras <- reproducible::preProcess(url = url)
-  )
+  noisyOutput <- capture.output(ras <- reproducible::preProcess(url = url))
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -40,15 +38,15 @@ test_that("preProcess works when provides only archive", {
   )
   testthat::expect_is(object = pre, class = "list")
   noisyOutput <- capture.output(
-    ras <- reproducible::preProcess(archive = file.path(
-      pre$destinationPath,
-      list.files(pre$destinationPath)[
-        grepl(
+    ras <- reproducible::preProcess(
+      archive = file.path(
+        pre$destinationPath,
+        list.files(pre$destinationPath)[grepl(
           x = list.files(pre$destinationPath),
           pattern = ".zip|.tar"
-        )
-      ]
-    ))
+        )]
+      )
+    )
   )
   testthat::expect_is(object = ras, class = "list")
 })
@@ -65,12 +63,10 @@ test_that("preProcess works when provides archive and destinationPath", {
     ras <- reproducible::preProcess(
       archive = file.path(
         pre$destinationPath,
-        list.files(pre$destinationPath)[
-          grepl(
-            x = list.files(pre$destinationPath),
-            pattern = ".zip|.tar"
-          )
-        ]
+        list.files(pre$destinationPath)[grepl(
+          x = list.files(pre$destinationPath),
+          pattern = ".zip|.tar"
+        )]
       ),
       destinationPath = tmpdir
     )
@@ -86,9 +82,7 @@ test_that("preProcess works when provides only targetFile", {
     pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
   )
   testthat::expect_is(object = pre, class = "list")
-  noisyOutput <- capture.output(
-    ras <- reproducible::preProcess(targetFile = pre$targetFilePath)
-  )
+  noisyOutput <- capture.output(ras <- reproducible::preProcess(targetFile = pre$targetFilePath))
   testthat::expect_is(object = ras, class = "list")
 })
 
@@ -101,10 +95,7 @@ test_that("preProcess works when provides targetfile and destinationPath", {
   )
   testthat::expect_is(object = pre, class = "list")
   noisyOutput <- capture.output(
-    ras <- reproducible::preProcess(
-      targetFile = pre$targetFilePath,
-      destinationPath = tmpdir
-    )
+    ras <- reproducible::preProcess(targetFile = pre$targetFilePath, destinationPath = tmpdir)
   )
   testthat::expect_is(object = ras, class = "list")
 })
@@ -115,7 +106,8 @@ test_that("preProcess works when provides url, archive, targetfile and destinati
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(
-      url = url, targetFile = theRasterTestFilename(suff = "tif"),
+      url = url,
+      targetFile = theRasterTestFilename(suff = "tif"),
       archive = theRasterTestFilename(suff = "zip"),
       destinationPath = tmpdir
     )
@@ -161,7 +153,8 @@ test_that("preProcess works when provides url, targetfile and destinationPath", 
   url <- theRasterTestZip
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(
-      url = url, targetFile = theRasterTestFilename(suff = "tif"),
+      url = url,
+      targetFile = theRasterTestFilename(suff = "tif"),
       destinationPath = tmpdir
     )
   )
@@ -171,6 +164,8 @@ test_that("preProcess works when provides url, targetfile and destinationPath", 
 
 test_that("preProcess works when provides url and destinationPath for a .rar file", {
   skip_on_cran()
+  skip_on_os("mac") ## TODO: deal with unrar for macOS #266
+
   testInit("terra", needInternet = TRUE)
   # extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- theRasterTestRar
@@ -183,8 +178,9 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
   #     })
   #   )
   # } else {
-  if (isWindows() && getRversion() < "4.3")
+  if (isWindows() && getRversion() < "4.3") {
     skip("archive pkg on Windows 4.2.3 fails on rar")
+  }
 
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
@@ -197,6 +193,8 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
 
 test_that("preProcess works when provides url, targetfile and destinationPath for a .rar file", {
   skip_on_cran()
+  skip_on_os("mac") ## TODO: deal with unrar for macOS #266
+
   testInit("terra", needInternet = TRUE)
   ## extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- theRasterTestRar
@@ -212,13 +210,15 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
   #     })
   #   )
   # } else {
-  if (isWindows() && getRversion() < "4.3")
+  if (isWindows() && getRversion() < "4.3") {
     skip("archive pkg on Windows 4.2.3 fails on rar")
+  }
 
   wd <- getwd()
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(
-      url = url, targetFile = theRasterTestFilename(suff = "tif"),
+      url = url,
+      targetFile = theRasterTestFilename(suff = "tif"),
       destinationPath = tmpdir
     )
   )
@@ -231,6 +231,8 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
 
 test_that("preProcess works when provides url, archive and destinationPath for a .rar file", {
   skip_on_cran()
+  skip_on_os("mac") ## TODO: deal with unrar for macOS #266
+
   testInit("terra", needInternet = TRUE)
   # extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- theRasterTestRar
@@ -244,10 +246,15 @@ test_that("preProcess works when provides url, archive and destinationPath for a
   #     })
   #   )
   # } else {
-  if (isWindows() && getRversion() < "4.3")
+  if (isWindows() && getRversion() < "4.3") {
     skip("archive pkg on Windows 4.2.3 fails on rar")
+  }
   noisyOutput <- capture.output(
-    ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
+    ras <- reproducible::preProcess(
+      url = url,
+      archive = rasterTestRarFilename,
+      destinationPath = tmpdir
+    )
   )
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
@@ -259,11 +266,13 @@ test_that("preProcess works, but gives a warning when supplying cacheTags", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
-  noisyOutput <- capture.output(
-    testthat::expect_message({
-      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, cacheTags = "objectName::ras")
-    })
-  )
+  noisyOutput <- capture.output(testthat::expect_message({
+    ras <- reproducible::preProcess(
+      url = url,
+      destinationPath = tmpdir,
+      cacheTags = "objectName::ras"
+    )
+  }))
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -272,14 +281,13 @@ test_that("preProcess works, but gives a warning when supplying postProcessedFil
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
-  noisyOutput <- capture.output(
-    testthat::expect_message({
-      ras <- reproducible::preProcess(
-        url = url, destinationPath = tmpdir,
-        postProcessedFilename = "ras.tif"
-      )
-    })
-  )
+  noisyOutput <- capture.output(testthat::expect_message({
+    ras <- reproducible::preProcess(
+      url = url,
+      destinationPath = tmpdir,
+      postProcessedFilename = "ras.tif"
+    )
+  }))
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -288,14 +296,13 @@ test_that("preProcess works, but gives a warning when supplying rasterInterpMeth
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
-  noisyOutput <- capture.output(
-    testthat::expect_message({
-      ras <- reproducible::preProcess(
-        url = url, destinationPath = tmpdir,
-        rasterInterpMethod = "near"
-      )
-    })
-  )
+  noisyOutput <- capture.output(testthat::expect_message({
+    ras <- reproducible::preProcess(
+      url = url,
+      destinationPath = tmpdir,
+      rasterInterpMethod = "near"
+    )
+  }))
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -304,11 +311,9 @@ test_that("preProcess works, but gives a warning when supplying rasterDatatype",
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
-  noisyOutput <- capture.output(
-    testthat::expect_message({
-      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, rasterDatatype = "INT1U")
-    })
-  )
+  noisyOutput <- capture.output(testthat::expect_message({
+    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, rasterDatatype = "INT1U")
+  }))
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -317,11 +322,14 @@ test_that("preProcess works, but gives a warning when supplying pkg", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
   url <- theRasterTestZip
-  noisyOutput <- capture.output(
-    testthat::expect_message({
-      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, pkg = "utils", fun = "unzip")
-    })
-  )
+  noisyOutput <- capture.output(testthat::expect_message({
+    ras <- reproducible::preProcess(
+      url = url,
+      destinationPath = tmpdir,
+      pkg = "utils",
+      fun = "unzip"
+    )
+  }))
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -339,11 +347,9 @@ test_that("message when files from archive are already present", {
       )
     )
   )
-  noisyOutput <- capture.output(
-    testthat::expect_message({
-      ras <- reproducible::preProcess(archive = "rasterTest.zip", destinationPath = tmpdir)
-    })
-  )
+  noisyOutput <- capture.output(testthat::expect_message({
+    ras <- reproducible::preProcess(archive = "rasterTest.zip", destinationPath = tmpdir)
+  }))
 })
 
 test_that("message when file is a shapefile", {
@@ -351,11 +357,9 @@ test_that("message when file is a shapefile", {
   testInit("terra", needInternet = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/shapefileTest.zip"
   noisyOutput <- capture.output(
-    ccc <- testthat::capture_output(
-      testthat::expect_message({
-        ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-      })
-    )
+    ccc <- testthat::capture_output(testthat::expect_message({
+      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+    }))
   )
 })
 
@@ -364,11 +368,9 @@ test_that("message when doesn't know the targetFile extension", {
   testInit("terra", needInternet = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/unknownTargetFile.zip"
   noisyOutput <- capture.output(
-    ccc <- testthat::capture_output(
-      testthat::expect_error(regexp = "guess at which function to use to read", {
-        ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-      })
-    )
+    ccc <- testthat::capture_output(testthat::expect_error(regexp = "guess at which function to use to read", {
+      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+    }))
   )
 })
 
@@ -377,15 +379,13 @@ test_that("When supplying two files without archive, when archive and files have
   testInit("terra", needInternet = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/twoKnownFiles.zip"
   noisyOutput <- capture.output(
-    ccc <- testthat::capture_output(
-      testthat::expect_error({
-        ras <- reproducible::preProcess(
-          url = url,
-          targetFile = c("rasterTest.tif", "shapefileTest.shp"),
-          destinationPath = tmpdir
-        )
-      })
-    )
+    ccc <- testthat::capture_output(testthat::expect_error({
+      ras <- reproducible::preProcess(
+        url = url,
+        targetFile = c("rasterTest.tif", "shapefileTest.shp"),
+        destinationPath = tmpdir
+      )
+    }))
   )
 })
 
@@ -394,16 +394,14 @@ test_that("message when archive has two known files (raster and shapefile)", {
   testInit("terra", needInternet = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/knownFiles.zip"
   noisyOutput <- capture.output(
-    ccc <- testthat::capture_output(
-      testthat::expect_error({
-        ras <- reproducible::preProcess(
-          url = url,
-          archive = "knownFiles.zip",
-          targetFile = c("knownFiles.tif", "knownFiles.shp"),
-          destinationPath = tmpdir
-        )
-      })
-    )
+    ccc <- testthat::capture_output(testthat::expect_error({
+      ras <- reproducible::preProcess(
+        url = url,
+        archive = "knownFiles.zip",
+        targetFile = c("knownFiles.tif", "knownFiles.shp"),
+        destinationPath = tmpdir
+      )
+    }))
   )
 })
 
@@ -462,9 +460,7 @@ test_that("just google id not url", {
   skip_on_ci()
 
   testInit("terra", needGoogleDriveAuth = TRUE, needInternet = TRUE)
-  co <- capture.output(
-    smallObj <- prepInputs(url = "1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb")
-  )
+  co <- capture.output(smallObj <- prepInputs(url = "1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb"))
   expect_is(smallObj, "sf")
 })
 
@@ -473,13 +469,17 @@ test_that("Test of using future and progress indicator for lrg files on Google D
   skip_if_not_installed("googledrive")
 
   if (interactive()) {
-    testInit(c("terra", "future"),
-      needGoogleDriveAuth = TRUE, needInternet = TRUE,
+    testInit(
+      c("terra", "future"),
+      needGoogleDriveAuth = TRUE,
+      needInternet = TRUE,
       opts = list("reproducible.futurePlan" = "multisession")
     )
     noisyOutput <- capture.output({
       ccc <- testthat::capture_output({
-        smallRT <- preProcess(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
+        smallRT <- preProcess(
+          url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN"
+        )
       })
     })
     expect_true(is(smallRT, "list"))
@@ -497,18 +497,15 @@ test_that("lightweight tests for preProcess code coverage", {
 
   # test purge
   localFileLuxSm <- system.file("ex/luxSmall.shp", package = "reproducible")
-  capture.output(
-    la <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir)
-  )
+  capture.output(la <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir))
   csf <- dir(pattern = "CHECKSUMS", path = tmpdir, full.names = TRUE)
   a <- file.info(csf)
   Sys.sleep(0.1)
-  capture.output(
-    la2 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir)
-  )
+  capture.output(la2 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir))
   b <- file.info(csf)
   expect_true(milliseconds(b$mtime) == milliseconds(a$mtime))
-  if (isWindows() && isInteractive()) { # apparently atime is not write on *nix-alikes
+  if (isWindows() && isInteractive()) {
+    # apparently atime is not write on *nix-alikes
     expect_false(milliseconds(b$atime) == milliseconds(a$atime))
   }
 
@@ -517,7 +514,8 @@ test_that("lightweight tests for preProcess code coverage", {
     la3 <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir, purge = 7)
   )
   d <- file.info(csf)
-  if (isWindows()) { # linux doesn't do ctime
+  if (isWindows()) {
+    # linux doesn't do ctime
     expect_true(milliseconds(d$ctime) == milliseconds(a$ctime))
     expect_false(milliseconds(d$atime) == milliseconds(a$atime))
   }
@@ -559,7 +557,8 @@ test_that("large test for nested file structures in zips", {
   )
   lapply(files, function(fis) {
     res1 <- preProcess(
-      url = climateDataURL, destinationPath = tmpdir,
+      url = climateDataURL,
+      destinationPath = tmpdir,
       targetFile = "Alberta/Year_2020M/CMD01.asc",
       alsoExtract = fis
     )
@@ -588,7 +587,11 @@ test_that("more nested file structures in zip; alsoExtract NA", {
         terra::writeRaster(filename = file.path(basename(tempfile(fileext = ".tif"))))
     })
     fns2 <- Filenames(ras)
-    zip(zipName, files = c(file.path(basename(dirname(fns1)), basename(fns1)), basename(fns2)), flags = "-q")
+    zip(
+      zipName,
+      files = c(file.path(basename(dirname(fns1)), basename(fns1)), basename(fns2)),
+      flags = "-q"
+    )
   })
   zipName2 <- file.path(tmpdir, zipName)
 
@@ -598,7 +601,10 @@ test_that("more nested file structures in zip; alsoExtract NA", {
   knownOtherFiles <- c("cache.db", "CHECKSUMS.txt", "ex.zip", "testCache")
   files <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
   expect_true(all(.listFilesInArchive(zipName2) %in% files))
-  unlink(file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)), recursive = TRUE)
+  unlink(
+    file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)),
+    recursive = TRUE
+  )
   files2 <- dir(pattern = ".tif", tmpdir, full.names = TRUE)
   unlink(files2)
 
@@ -612,28 +618,32 @@ test_that("more nested file structures in zip; alsoExtract NA", {
   )
   files <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
   expect_true(all(.listFilesInArchive(zipName2) %in% files))
-  unlink(file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)), recursive = TRUE)
+  unlink(
+    file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)),
+    recursive = TRUE
+  )
   files2 <- dir(pattern = ".tif", tmpdir, full.names = TRUE)
   unlink(files2)
-
 
   # alsoExtract = NA --> extract only targetFile -- with wrong filename (missing subdir)
   checkPath(dirname(zipName2), create = TRUE)
   linkOrCopy(zipName, zipName2)
   filesPre <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
   a <- prepInputs(
-    archive = zipName, alsoExtract = NA,
+    archive = zipName,
+    alsoExtract = NA,
     targetFile = grep("\\.tif", basename(files), value = TRUE)[1],
     destinationPath = tmpdir
   )
   files <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
   expect_false(all(.listFilesInArchive(zipName2) %in% files))
   expect_true(sum(.listFilesInArchive(zipName2) %in% files) == 1)
-  unlink(file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)), recursive = TRUE)
+  unlink(
+    file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)),
+    recursive = TRUE
+  )
   files2 <- dir(pattern = ".tif", tmpdir, full.names = TRUE)
   unlink(files2)
-
-
 
   # alsoExtract = a filename --> extract targetFile & 1 other -- with correct filename (with subdir)
   checkPath(dirname(zipName2), create = TRUE)
@@ -642,17 +652,20 @@ test_that("more nested file structures in zip; alsoExtract NA", {
   filesWithSubDir <- grep("\\/", possFiles, value = TRUE, invert = FALSE)
   filesPre <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
   a <- prepInputs(
-    archive = zipName, alsoExtract = filesWithSubDir[2],
+    archive = zipName,
+    alsoExtract = filesWithSubDir[2],
     targetFile = filesWithSubDir[1],
     destinationPath = tmpdir
   )
   files <- dir(tmpdir, recursive = TRUE) # no subdir on this file, so non-recursive should do it
   expect_false(all(.listFilesInArchive(zipName2) %in% files))
   expect_true(sum(.listFilesInArchive(zipName2) %in% files) == 2) #
-  unlink(file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)), recursive = TRUE)
+  unlink(
+    file.path(tmpdir, grep("\\.", invert = TRUE, dirname(files), value = TRUE)),
+    recursive = TRUE
+  )
   files2 <- dir(pattern = ".tif", tmpdir, full.names = TRUE)
   unlink(files2)
-
 
   # alsoExtract = NA --> extract only targetFile -- with correct filename (with subdir)
   checkPath(dirname(zipName2), create = TRUE)
@@ -661,7 +674,8 @@ test_that("more nested file structures in zip; alsoExtract NA", {
   filesNoSubDir <- grep("\\/", possFiles, value = TRUE, invert = TRUE)
   filesPre <- dir(tmpdir, recursive = TRUE) # %in% dirname(.listFilesInArchive(zipName2))
   a <- prepInputs(
-    archive = zipName, alsoExtract = NA,
+    archive = zipName,
+    alsoExtract = NA,
     targetFile = filesNoSubDir[1],
     destinationPath = tmpdir
   )
@@ -675,22 +689,25 @@ test_that("PR#358 if dwnld already exists, was missing nested paths", {
   testInit("terra", needInternet = TRUE, needGoogleDriveAuth = TRUE)
   url <- "https://drive.google.com/file/d/1S-4itShMXtwzGxjKPgsznpdTD2ydE9qn/"
   noisyOutput <- capture.output(
-    ras <- preProcess(targetFile = "all_gp_site_info.csv",
-               url = url,
-               destinationPath = getOption("reproducible.destinationPath", file.path(tmpdir, "dPath")),
-               overwrite = TRUE,
-               fun = "data.table::fread",
-               useCache = FALSE)  )
+    ras <- preProcess(
+      targetFile = "all_gp_site_info.csv",
+      url = url,
+      destinationPath = getOption("reproducible.destinationPath", file.path(tmpdir, "dPath")),
+      overwrite = TRUE,
+      fun = "data.table::fread",
+      useCache = FALSE
+    )
+  )
   testthat::expect_true(file.exists(ras$targetFilePath))
   noisyOutput <- capture.output(
-    ras <- preProcess(targetFile = "all_gp_site_info.csv",
-               url = url,
-               destinationPath = getOption("reproducible.destinationPath", file.path(tmpdir, "dPath")),
-               overwrite = TRUE,
-               fun = "data.table::fread",
-               useCache = FALSE)  )
+    ras <- preProcess(
+      targetFile = "all_gp_site_info.csv",
+      url = url,
+      destinationPath = getOption("reproducible.destinationPath", file.path(tmpdir, "dPath")),
+      overwrite = TRUE,
+      fun = "data.table::fread",
+      useCache = FALSE
+    )
+  )
   testthat::expect_true(file.exists(ras$targetFilePath))
-
 })
-
-
