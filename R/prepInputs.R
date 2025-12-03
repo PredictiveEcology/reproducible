@@ -806,16 +806,16 @@ extractFromArchive <- function(archive,
       if (mustUseArchive && canUseArchive %in% FALSE) {
         stop("Please install.packages('archive') to extract files from \n", archive)
       }
-      if (useArchive && .requireNamespace("archive") && !isTRUE(dontUse %in% "archive")) {
+      if (useArchive && .requireNamespace("archive") && !isTRUE(any(dontUse %in% "archive"))) {
         fun <- archive::archive_extract
       } else { # base R or system call functions
-        if (ext == "zip") {
+        if (ext == "zip" && !isTRUE(any(dontUse %in% "unzip"))) {
           fun <- unzip
           args <- c(args, list(junkpaths = FALSE))
-        } else if (ext %in% c("tar", "tar.gz", "gz")) {
+        } else if (ext %in% c("tar", "tar.gz", "gz") && !isTRUE(any(dontUse %in% "untar"))) {
           fun <- untar
         } else { # system only
-          if (ext == "rar") {
+          if (ext == "rar" && !isTRUE(any(dontUse %in% "unrar"))) {
             fun <- "unrar"
           } else if (ext == "7z") {
             fun <- "7z"
