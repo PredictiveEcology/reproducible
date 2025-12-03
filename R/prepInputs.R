@@ -491,7 +491,8 @@ extractFromArchive <- function(archive,
     FALSE
   }
 
-  for (dontUse in list(NULL, "archive")) {
+  dontUses <- list(NULL, "archive", c("archive", "unzip"))
+  for (dontUse in dontUses) {
     tryC <- try({
       if (!(all(compareNA(result, "OK")) && hasAllFiles)) {
         if (!is.null(archive)) {
@@ -502,7 +503,7 @@ extractFromArchive <- function(archive,
             )
           }
           args <- list(archive[1], exdir = destinationPath[1])
-          funWArgs <- .whichExtractFn(archive[1], args, dontUse = dontUse[[1]])
+          funWArgs <- .whichExtractFn(archive[1], args, dontUse = dontUse)
 
           # need to deal with \\ vs. / and also needs to stay relative
           filesInArchive <- makeRelative(.listFilesInArchive(archive), destinationPath)
@@ -652,7 +653,7 @@ extractFromArchive <- function(archive,
       }
     })
     if (!is(tryC, "try-error")) {
-      if (identical(dontUse[[1]], NULL)) {
+      if (identical(dontUse, tail(dontUses, 1)[[1]])) {
         break
       } else {
         stop(tryC)
@@ -817,7 +818,7 @@ extractFromArchive <- function(archive,
         } else { # system only
           if (ext == "rar" && !isTRUE(any(dontUse %in% "unrar"))) {
             fun <- "unrar"
-          } else if (ext == "7z") {
+          } else { # if (ext == "7z") {
             fun <- "7z"
           }
         }
@@ -1756,42 +1757,6 @@ currentFilesToChecksumsTable <- function(currentFiles, nonCurrentFiles = NULL, v
   }
   currentFilesToRbind
 }
-
-
-# savePrepInputsState <- function(url, archive, out, stFinal, sysCalls) {
-#   if (is.null(url)) url <- ""
-#   if (is.null(out$targetFilePath)) out$targetFilePath <- ""
-#   if (is.null(out$destinationPath)) out$destinationPath <- ""
-#   if (is.null(out$fun)) out$fun <- ""
-#   if (is.null(archive)) archive <- ""
-#   co <- paste0(capture.output(sysCalls[[length(sysCalls)]]), collapse = " ")
-#   if (isTRUE(!any(grepl(" *<- *", co)))) {
-#     co <- ""
-#     Cached <- .grepSysCalls(sys.calls(), pattern = "Cache")
-#     prepInputed <- .grepSysCalls(sys.calls(), pattern = "prepInputs")
-#     if (length(Cached)) {
-#       CachedPoss <- sysCalls[Cached]
-#       if (identical(as.character(CachedPoss[[2]])[1], "prepInputs")) {
-#         co <- paste0(capture.output(sysCalls[[Cached]]), collapse = " ")
-#       } else {
-#         co <- paste0(capture.output(sysCalls[tail(Cached, 1)]), collapse = " ")
-#       }
-#     }
-#   }
-#
-#   objName <- strsplit(paste0(co, collapse = " "), split = " *<- *")[[1]][1]
-#
-#   keep <- setDT(list(objName = objName, url = url, archive = archive, targetFile = out$targetFilePath,
-#                      destinationPath = out$destinationPath,
-#                      fun = format(out$funChar), time = stFinal))
-#   if (is.null(.pkgEnv[[._txtPrepInputsObjects]])) {
-#     .pkgEnv[[._txtPrepInputsObjects]] <- keep
-#   } else {
-#     .pkgEnv[[._txtPrepInputsObjects]] <- tryCatch(rbindlist(list(.pkgEnv[[._txtPrepInputsObjects]], keep)), error = function(e) browser())
-#   }
-#   return(invisible())
-# }
-
 
 checkSFWebPage <- function(funPoss, fileExt, feKnown, verbose) {
   if (requireNamespace("rvest")) {
