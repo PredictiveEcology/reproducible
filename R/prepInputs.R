@@ -861,7 +861,7 @@ extractFromArchive <- function(archive,
 
   if (is.character(fun)) {
     messagePreProcess(
-      paste0("The archive appears to be not a .zip. Trying a system call to ", fun),
+      paste0("The archive cannot be opened using R tools. Trying a system call to ", fun),
       verbose = verbose)
     extractSystemCallPath <- .testForArchiveExtract(archive)
     if (grepl(x = extractSystemCallPath, pattern = "7z")) {
