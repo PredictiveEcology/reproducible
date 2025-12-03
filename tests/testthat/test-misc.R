@@ -132,6 +132,8 @@ test_that("unrar is working as expected", {
     suppressWarnings(
       expect_error(.callArchiveExtractFn(unrar$fun, files = "", args = list(exdir = tmpCache)))
     )
+
+
   }
 })
 

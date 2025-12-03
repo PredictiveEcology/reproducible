@@ -491,163 +491,175 @@ extractFromArchive <- function(archive,
     FALSE
   }
 
-  if (!(all(compareNA(result, "OK")) && hasAllFiles)) {
-    if (!is.null(archive)) {
-      if (!file.exists(archive[1])) {
-        stop(
-          "No archive exists with filename: ", archive[1],
-          ". Please pass an archive name to a path that exists"
-        )
-      }
-      args <- list(archive[1], exdir = destinationPath[1])
-      funWArgs <- .whichExtractFn(archive[1], args)
-
-      # need to deal with \\ vs. / and also needs to stay relative
-      filesInArchive <- makeRelative(.listFilesInArchive(archive), destinationPath)
-      if (is.null(neededFiles)) {
-        neededFiles <- filesInArchive
-      }
-
-      neededFiles <- checkRelative(neededFiles, absolutePrefix = destinationPath, filesInArchive)
-      neededFilesRel <- makeRelative(neededFiles, destinationPath) # neededFiles may have been changed
-      neededFiles <- makeAbsolute(neededFiles, destinationPath)
-      result <- if (NROW(checkSums)) {
-        checkSums[checkSums$expectedFile %in% neededFilesRel, ]$result
-      } else {
-        logical(0)
-      }
-      # need to re-Checksums because
-      checkSums <- .checkSumsUpdate(
-        destinationPath = destinationPath,
-        newFilesToCheck = neededFiles,
-        checkSums = checkSums,
-        checkSumFilePath = checkSumFilePath
-      )
-
-      # isOK will have "directories" so it will be longer than neededFiles
-      isOK <- if (!is.null(checkSums)) {
-        .compareChecksumsAndFilesAddDirs(checkSums, neededFiles, destinationPath)
-      } else {
-        FALSE
-      }
-
-      # recheck, now that we have the whole file list
-      if (!(all(isOK)) || NROW(result) == 0) {
-        # don't extract if we already have all files and they are fine
-
-        # use binary addition -- 1 is new file, 2 is append
-        if (needChecksums == 0) needChecksums <- 2
-        filesInArchiveAbs <- makeAbsolute(filesInArchive, destinationPath)
-        if (length(archive) > 1) {
-          filesExtracted <- c(
-            filesExtracted,
-            .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
-                                  absolutePrefix = destinationPath, archive = archive,
-                                  files = basename2(archive[2]), .tempPath = .tempPath
+  for (dontUse in list(NULL, "archive")) {
+    tryC <- try({
+      if (!(all(compareNA(result, "OK")) && hasAllFiles)) {
+        if (!is.null(archive)) {
+          if (!file.exists(archive[1])) {
+            stop(
+              "No archive exists with filename: ", archive[1],
+              ". Please pass an archive name to a path that exists"
             )
-          )
-          # recursion, removing one archive
-          extractedObjs <- extractFromArchive(
-            archive[-1],
-            destinationPath = destinationPath,
-            neededFiles = neededFiles,
-            extractedArchives = extractedArchives,
-            checkSums = checkSums,
-            quick = quick,
-            needChecksums = needChecksums,
-            checkSumFilePath = checkSumFilePath,
-            filesExtracted = filesExtracted,
-            verbose = verbose,
-            .tempPath = .tempPath
-          )
-        } else if (any(neededFiles %in% filesInArchiveAbs) || is.null(neededFiles)) {
-          possibleFolders <- dir.exists(filesInArchive)
-          if (sum(possibleFolders)) {
-            filesInArchive <- setdiff(filesInArchive, possibleFolders)
           }
-          neededFilesRel <- if (is.null(neededFiles)) {
-            NULL
+          args <- list(archive[1], exdir = destinationPath[1])
+          funWArgs <- .whichExtractFn(archive[1], args, dontUse = dontUse[[1]])
+
+          # need to deal with \\ vs. / and also needs to stay relative
+          filesInArchive <- makeRelative(.listFilesInArchive(archive), destinationPath)
+          if (is.null(neededFiles)) {
+            neededFiles <- filesInArchive
+          }
+
+          neededFiles <- checkRelative(neededFiles, absolutePrefix = destinationPath, filesInArchive)
+          neededFilesRel <- makeRelative(neededFiles, destinationPath) # neededFiles may have been changed
+          neededFiles <- makeAbsolute(neededFiles, destinationPath)
+          result <- if (NROW(checkSums)) {
+            checkSums[checkSums$expectedFile %in% neededFilesRel, ]$result
           } else {
-            if (!is.null(names(isOK))) {
-              names(isOK)[!isOK]
-            } else {
-              makeRelative(neededFiles[!isOK], destinationPath)
-            }
+            logical(0)
           }
-          filesToExtractNow <- intersect(filesInArchive, neededFilesRel)
-          dt <- data.table(files = filesToExtractNow)
-          # extractingTheseFiles <- paste(filesToExtractNow, collapse = "\n")
-          # extractingTheseFiles <- paste(basename2(filesInArchive[basename2(filesInArchive) %in%
-          #                                                         neededFiles]), collapse = ", ")
-          # if (!any(nzchar(filesToExtractNow)))
-          #   extractingTheseFiles <- paste0("all files: ",
-          #                                  paste(filesInArchive, collapse = "\n"))
-          messagePreProcess("From:\n", archive[1], "  \n", "Extracting", verbose = verbose)
-          messageDF(dt, indent = .message$PreProcessIndent, verbose = verbose, colour = getOption("reproducible.messageColourPrepInputs"))
-          filesExtracted <- c(
-            filesExtracted,
-            .callArchiveExtractFn(funWArgs$fun,
-                                  funWArgs$args,
-                                  absolutePrefix = destinationPath,
-                                  files = filesToExtractNow,
-                                  archive = archive,
-                                  .tempPath = .tempPath
-            )
-          )
-        } else {
-          # don't have a 2nd archive, and don't have our neededFiles file
-          # isArchive <- grepl(fileExt(filesInArchive), pattern = "(zip|tar|rar)", ignore.case = TRUE)
-          isArchive <- grepl(fileExt(filesInArchive),
-                             pattern = paste0("(", paste(knownArchiveExtensions, collapse = "|"), ")"), ignore.case = TRUE
+          # need to re-Checksums because
+          checkSums <- .checkSumsUpdate(
+            destinationPath = destinationPath,
+            newFilesToCheck = neededFiles,
+            checkSums = checkSums,
+            checkSumFilePath = checkSumFilePath
           )
 
-          if (any(isArchive)) {
-            arch <- makeRelative(filesInArchive[isArchive], destinationPath)
-            filesExtracted <- c(
-              filesExtracted,
-              .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
-                                    files = arch,
-                                    absolutePrefix = destinationPath,
-                                    archive = archive,
-                                    .tempPath = .tempPath
+          # isOK will have "directories" so it will be longer than neededFiles
+          isOK <- if (!is.null(checkSums)) {
+            .compareChecksumsAndFilesAddDirs(checkSums, neededFiles, destinationPath)
+          } else {
+            FALSE
+          }
+
+          # recheck, now that we have the whole file list
+          if (!(all(isOK)) || NROW(result) == 0) {
+            # don't extract if we already have all files and they are fine
+
+            # use binary addition -- 1 is new file, 2 is append
+            if (needChecksums == 0) needChecksums <- 2
+            filesInArchiveAbs <- makeAbsolute(filesInArchive, destinationPath)
+            if (length(archive) > 1) {
+              filesExtracted <- c(
+                filesExtracted,
+                .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
+                                      absolutePrefix = destinationPath, archive = archive,
+                                      files = basename2(archive[2]), .tempPath = .tempPath
+                )
               )
-            )
-            filesExtracted <- unique(filesExtracted) # maybe unnecessary
-
-            prevExtract <- lapply(makeAbsolute(arch, destinationPath), function(ap) {
-              extractFromArchive(
-                archive = ap, destinationPath = destinationPath,
+              # recursion, removing one archive
+              extractedObjs <- extractFromArchive(
+                archive[-1],
+                destinationPath = destinationPath,
                 neededFiles = neededFiles,
                 extractedArchives = extractedArchives,
-                filesExtracted = filesExtracted,
                 checkSums = checkSums,
+                quick = quick,
                 needChecksums = needChecksums,
                 checkSumFilePath = checkSumFilePath,
-                quick = quick,
+                filesExtracted = filesExtracted,
+                verbose = verbose,
                 .tempPath = .tempPath
               )
-            })
+            } else if (any(neededFiles %in% filesInArchiveAbs) || is.null(neededFiles)) {
+              possibleFolders <- dir.exists(filesInArchive)
+              if (sum(possibleFolders)) {
+                filesInArchive <- setdiff(filesInArchive, possibleFolders)
+              }
+              neededFilesRel <- if (is.null(neededFiles)) {
+                NULL
+              } else {
+                if (!is.null(names(isOK))) {
+                  names(isOK)[!isOK]
+                } else {
+                  makeRelative(neededFiles[!isOK], destinationPath)
+                }
+              }
+              filesToExtractNow <- intersect(filesInArchive, neededFilesRel)
+              dt <- data.table(files = filesToExtractNow)
+              # extractingTheseFiles <- paste(filesToExtractNow, collapse = "\n")
+              # extractingTheseFiles <- paste(basename2(filesInArchive[basename2(filesInArchive) %in%
+              #                                                         neededFiles]), collapse = ", ")
+              # if (!any(nzchar(filesToExtractNow)))
+              #   extractingTheseFiles <- paste0("all files: ",
+              #                                  paste(filesInArchive, collapse = "\n"))
+              messagePreProcess("From:\n", archive[1], "  \n", "Extracting", verbose = verbose)
+              messageDF(dt, indent = .message$PreProcessIndent, verbose = verbose, colour = getOption("reproducible.messageColourPrepInputs"))
+              filesExtracted <- c(
+                filesExtracted,
+                .callArchiveExtractFn(funWArgs$fun,
+                                      funWArgs$args,
+                                      absolutePrefix = destinationPath,
+                                      files = filesToExtractNow,
+                                      archive = archive,
+                                      .tempPath = .tempPath
+                )
+              )
+            } else {
+              # don't have a 2nd archive, and don't have our neededFiles file
+              # isArchive <- grepl(fileExt(filesInArchive), pattern = "(zip|tar|rar)", ignore.case = TRUE)
+              isArchive <- grepl(fileExt(filesInArchive),
+                                 pattern = paste0("(", paste(knownArchiveExtensions, collapse = "|"), ")"), ignore.case = TRUE
+              )
 
-            extractedArchives <- c(prevExtract[[1]]$extractedArchives, extractedArchives)
-            filesExtracted <- unique(c(prevExtract[[1]]$filesExtracted, filesExtracted))
+              if (any(isArchive)) {
+                arch <- makeRelative(filesInArchive[isArchive], destinationPath)
+                filesExtracted <- c(
+                  filesExtracted,
+                  .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
+                                        files = arch,
+                                        absolutePrefix = destinationPath,
+                                        archive = archive,
+                                        .tempPath = .tempPath
+                  )
+                )
+                filesExtracted <- unique(filesExtracted) # maybe unnecessary
+
+                prevExtract <- lapply(makeAbsolute(arch, destinationPath), function(ap) {
+                  extractFromArchive(
+                    archive = ap, destinationPath = destinationPath,
+                    neededFiles = neededFiles,
+                    extractedArchives = extractedArchives,
+                    filesExtracted = filesExtracted,
+                    checkSums = checkSums,
+                    needChecksums = needChecksums,
+                    checkSumFilePath = checkSumFilePath,
+                    quick = quick,
+                    .tempPath = .tempPath
+                  )
+                })
+
+                extractedArchives <- c(prevExtract[[1]]$extractedArchives, extractedArchives)
+                filesExtracted <- unique(c(prevExtract[[1]]$filesExtracted, filesExtracted))
+              }
+            }
+          } else {
+            messagePreProcess("Skipping extractFromArchive: all files already present", verbose = verbose)
+            filesExtracted <- checkSums[checkSums$expectedFile %in%
+                                          makeRelative(filesInArchive, destinationPath), ]$expectedFile
+            filesExtracted <- makeAbsolute(filesInArchive, destinationPath)
           }
         }
       } else {
-        messagePreProcess("Skipping extractFromArchive: all files already present", verbose = verbose)
-        filesExtracted <- checkSums[checkSums$expectedFile %in%
-                                      makeRelative(filesInArchive, destinationPath), ]$expectedFile
-        filesExtracted <- makeAbsolute(filesInArchive, destinationPath)
+        if (!is.null(archive)) { # if archive is null, it means there was no archive passed
+          messagePreProcess("Skipping extractFromArchive: all needed ",
+                            "files now present",
+                            verbose = verbose
+          )
+        }
+        filesExtracted <- setdiff(neededFiles, if (!is.null(archive)) makeRelative(archive, destinationPath))
+      }
+    })
+    if (!is(tryC, "try-error")) {
+      if (identical(dontUse[[1]], NULL)) {
+        break
+      } else {
+        stop(tryC)
       }
     }
-  } else {
-    if (!is.null(archive)) { # if archive is null, it means there was no archive passed
-      messagePreProcess("Skipping extractFromArchive: all needed ",
-                        "files now present",
-                        verbose = verbose
-      )
-    }
-    filesExtracted <- setdiff(neededFiles, if (!is.null(archive)) makeRelative(archive, destinationPath))
   }
+
   list(
     extractedArchives = c(extractedArchives, archive),
     neededFiles = neededFiles, # these may have been corrected for user supplying incorrect basename path
@@ -777,7 +789,7 @@ extractFromArchive <- function(archive,
 }
 
 #' @importFrom utils untar unzip
-.whichExtractFn <- function(archive, args) {
+.whichExtractFn <- function(archive, args, dontUse = NULL) {
   out <- NULL
   if (!(is.null(archive))) {
     if (!is.na(archive)) {
@@ -794,7 +806,7 @@ extractFromArchive <- function(archive,
       if (mustUseArchive && canUseArchive %in% FALSE) {
         stop("Please install.packages('archive') to extract files from \n", archive)
       }
-      if (useArchive && .requireNamespace("archive")) {
+      if (useArchive && .requireNamespace("archive") && !isTRUE(dontUse %in% "archive")) {
         fun <- archive::archive_extract
       } else { # base R or system call functions
         if (ext == "zip") {
@@ -1143,91 +1155,104 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #'
 #' @keywords internal
 #' @rdname listFilesInArchive
-.listFilesInArchive <- function(archive) {
+.listFilesInArchive <- function(archive, dontUse = NULL) {
   needSystemCall <- (length(archive) > 0 && fileExt(archive[1]) %in% knownSystemArchiveExtensions)
-  if (length(archive) > 0) {
-    if (file.exists(archive[1])) {
-      needSystemCall <- needSystemCall || file.size(archive[1]) > 2e9
-    }
-  }
 
-  if (needSystemCall) {
-    extractSystemCallPath <- .testForArchiveExtract(archive)
-    funWArgs <- list(fun = extractSystemCallPath)
-    } else {
-    funWArgs <- .whichExtractFn(archive[1], NULL)
-  }
+  for (dontUse in list(NULL, "archive")) {
+    tryC <- try({
 
-  filesInArchive <- NULL
-  if (!is.null(funWArgs$fun)) {
-    if (file.exists(archive[1])) {
-      if (!needSystemCall) {
-        if (.requireNamespace("archive") && identical(archive::archive_extract, funWArgs$fun)) {
-          filesInArchive <- archive::archive(archive[1])
-        } else {
-          filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
+      if (length(archive) > 0) {
+        if (file.exists(archive[1])) {
+          needSystemCall <- needSystemCall || file.size(archive[1]) > 2e9
         }
-        nams <- names(filesInArchive)
-        if ("Name" %in% nams) {
-          # for zips, rm directories (length = 0)
-          filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
-        } else if ("path" %in% nams) {
-          # from archive::archive
-          filesInArchive <- filesInArchive[filesInArchive$size != 0, ]$path
-        } else {
-          # untar & archive::archive
-          filesInArchive
-        }
+      }
+
+      if (needSystemCall) {
+        extractSystemCallPath <- .testForArchiveExtract(archive)
+        funWArgs <- list(fun = extractSystemCallPath)
       } else {
-        if (grepl(x = extractSystemCallPath, pattern = "7z")) {
-          extractSystemCall <- paste0("\"", extractSystemCallPath, "\"", " l \"", path.expand(archive[1]), "\"")
-          if (isWindows()) {
-              filesOutput <- captureWarningsToAttr(
-                system(extractSystemCall, show.output.on.console = FALSE, intern = TRUE)
-              )
-              warn <- attr(filesOutput, "warning")
-              attr(filesOutput, "warning") <- NULL
+        funWArgs <- .whichExtractFn(archive[1], NULL, dontUse = dontUse)
+      }
+
+      filesInArchive <- NULL
+      if (!is.null(funWArgs$fun)) {
+        if (file.exists(archive[1])) {
+          if (!needSystemCall) {
+            if (.requireNamespace("archive") && identical(archive::archive_extract, funWArgs$fun)) {
+              filesInArchive <- archive::archive(archive[1])
             } else {
-              # On Linux/MacOS
-              filesOutput <- captureWarningsToAttr(
-                system(extractSystemCall, intern = TRUE, ignore.stderr = TRUE)
-              )
-              warn <- attr(filesOutput, "warning")
-              attr(filesOutput, "warning") <- NULL
+              filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
+            }
+            nams <- names(filesInArchive)
+            if ("Name" %in% nams) {
+              # for zips, rm directories (length = 0)
+              filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
+            } else if ("path" %in% nams) {
+              # from archive::archive
+              filesInArchive <- filesInArchive[filesInArchive$size != 0, ]$path
+            } else {
+              # untar & archive::archive
+              filesInArchive
             }
           } else {
-            archiveExtractBinary <- .archiveExtractBinary()
-            if (is.null(archiveExtractBinary)) {
-              stop("unrar is not on this system; please install it")
+            if (grepl(x = extractSystemCallPath, pattern = "7z")) {
+              extractSystemCall <- paste0("\"", extractSystemCallPath, "\"", " l \"", path.expand(archive[1]), "\"")
+              if (isWindows()) {
+                filesOutput <- captureWarningsToAttr(
+                  system(extractSystemCall, show.output.on.console = FALSE, intern = TRUE)
+                )
+                warn <- attr(filesOutput, "warning")
+                attr(filesOutput, "warning") <- NULL
+              } else {
+                # On Linux/MacOS
+                filesOutput <- captureWarningsToAttr(
+                  system(extractSystemCall, intern = TRUE, ignore.stderr = TRUE)
+                )
+                warn <- attr(filesOutput, "warning")
+                attr(filesOutput, "warning") <- NULL
+              }
+            } else {
+              archiveExtractBinary <- .archiveExtractBinary()
+              if (is.null(archiveExtractBinary)) {
+                stop("unrar is not on this system; please install it")
+              }
+              filesOutput <- system(paste0("unrar l ", archive[1]), intern = TRUE)
             }
-            filesOutput <- system(paste0("unrar l ", archive[1]), intern = TRUE)
+            if (exists("warn", inherits = FALSE) && isTRUE(any(grepl("had status 2", warn)))) {
+              stop(warn)
+            }
+            if (isTRUE(any(grepl("(Can not open the file as archive)|(Errors: 1)", filesOutput)))) {
+              stop("archive appears defective")
+            }
+            # filesInBetween <- grep(pattern = "----", filesOutput)
+            # filesLines <- filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
+            filesInArchive <- filenamesFromArchiveLst(filesOutput)
+            # filenamesFromArchiveLst <- function(filesLines) {
+            #   filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line) {
+            #     first5trimmed <- unlist(strsplit(filesLines[[line]], split = " +"))[-(1:5)]
+            #     if (length(first5trimmed) > 1)
+            #       first5trimmed <- paste(first5trimmed, collapse = " ")
+            #     # first5trimmed <- unlist(strsplit(filesLines[[line]], split = "  "))
+            #     return(first5trimmed)
+            #   }))
+            # }
+            if (length(filesInArchive) == 0) {
+              stop("preProcess could not find any files in the archive ", archive)
+            }
           }
-          if (exists("warn", inherits = FALSE) && isTRUE(any(grepl("had status 2", warn)))) {
-            stop(warn)
-          }
-          if (isTRUE(any(grepl("(Can not open the file as archive)|(Errors: 1)", filesOutput)))) {
-            stop("archive appears defective")
-          }
-          # filesInBetween <- grep(pattern = "----", filesOutput)
-          # filesLines <- filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
-          filesInArchive <- filenamesFromArchiveLst(filesOutput)
-          # filenamesFromArchiveLst <- function(filesLines) {
-          #   filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line) {
-          #     first5trimmed <- unlist(strsplit(filesLines[[line]], split = " +"))[-(1:5)]
-          #     if (length(first5trimmed) > 1)
-          #       first5trimmed <- paste(first5trimmed, collapse = " ")
-          #     # first5trimmed <- unlist(strsplit(filesLines[[line]], split = "  "))
-          #     return(first5trimmed)
-          #   }))
-          # }
-          if (length(filesInArchive) == 0) {
-            stop("preProcess could not find any files in the archive ", archive)
         }
+      }
+      if (isTRUE(any(grepl("\\\\", filesInArchive))))
+        filesInArchive <- gsub("\\\\", "/", filesInArchive)
+    })
+    if (!is(tryC, "try-error")) {
+      if (identical(dontUse[[1]], NULL)) {
+        break
+      } else {
+        stop(tryC)
       }
     }
   }
-  if (isTRUE(any(grepl("\\\\", filesInArchive))))
-    filesInArchive <- gsub("\\\\", "/", filesInArchive)
   return(filesInArchive)
 }
 
