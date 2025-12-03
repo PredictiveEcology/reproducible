@@ -1151,6 +1151,8 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' Makes the outputs from`.tar``.zip` the same, which they aren't by default.
 #'
 #' @param archive A character string of a single file name to list files in.
+#' @param dontUse. A character string or vector of unzipping tool(s) to not use,
+#'   e.g., one or more of: `c("archive", "unzip", "7z")`
 #'
 #' @return A character string of all files in the archive.
 #'
