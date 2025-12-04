@@ -4,10 +4,13 @@
 \alias{.listFilesInArchive}
 \title{List files in either a \code{.zip} or or \code{.tar} file}
 \usage{
-.listFilesInArchive(archive)
+.listFilesInArchive(archive, dontUse = NULL)
 }
 \arguments{
 \item{archive}{A character string of a single file name to list files in.}
+
+\item{dontUse}{A character string or vector of unzipping tool(s) to not use,
+e.g., one or more of: \code{c("archive", "unzip", "7z")}}
 }
 \value{
 A character string of all files in the archive.
