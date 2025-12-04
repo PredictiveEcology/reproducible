@@ -9,7 +9,7 @@
 \arguments{
 \item{archive}{A character string of a single file name to list files in.}
 
-\item{dontUse.}{A character string or vector of unzipping tool(s) to not use,
+\item{dontUse}{A character string or vector of unzipping tool(s) to not use,
 e.g., one or more of: \code{c("archive", "unzip", "7z")}}
 }
 \value{

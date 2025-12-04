@@ -491,7 +491,6 @@ extractFromArchive <- function(archive,
     FALSE
   }
 
-  dontUses <- list(NULL, "archive", c("archive", "unzip"))
   for (dontUse in dontUses) {
     tryC <- try({
       if (!(all(compareNA(result, "OK")) && hasAllFiles)) {
@@ -653,11 +652,7 @@ extractFromArchive <- function(archive,
       }
     })
     if (!is(tryC, "try-error")) {
-      # if (identical(dontUse, tail(dontUses, 1)[[1]])) {
         break
-      # } else {
-
-      # }
     }
     if (identical(dontUse, tail(dontUses, 1)[[1]])) {
       stop(tryC)
@@ -1154,7 +1149,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' Makes the outputs from`.tar``.zip` the same, which they aren't by default.
 #'
 #' @param archive A character string of a single file name to list files in.
-#' @param dontUse. A character string or vector of unzipping tool(s) to not use,
+#' @param dontUse A character string or vector of unzipping tool(s) to not use,
 #'   e.g., one or more of: `c("archive", "unzip", "7z")`
 #'
 #' @return A character string of all files in the archive.
@@ -1164,7 +1159,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 .listFilesInArchive <- function(archive, dontUse = NULL) {
   needSystemCall <- (length(archive) > 0 && fileExt(archive[1]) %in% knownSystemArchiveExtensions)
 
-  for (dontUse in list(NULL, "archive")) {
+  for (dontUse in dontUses) {
     tryC <- try({
 
       if (length(archive) > 0) {
@@ -1252,11 +1247,10 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         filesInArchive <- gsub("\\\\", "/", filesInArchive)
     })
     if (!is(tryC, "try-error")) {
-      if (identical(dontUse[[1]], NULL)) {
-        break
-      } else {
-        stop(tryC)
-      }
+      break
+    }
+    if (identical(dontUse, tail(dontUses, 1)[[1]])) {
+      stop(tryC)
     }
   }
   return(filesInArchive)
@@ -1791,3 +1785,5 @@ checkSFWebPage <- function(funPoss, fileExt, feKnown, verbose) {
   }
   funPoss
 }
+
+dontUses <- list(NULL, "archive", c("archive", "unzip"))
