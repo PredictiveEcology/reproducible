@@ -15,6 +15,24 @@ skip_if_service_account <- function() {
                         message =  "Using service account")
 }
 
+skip_if_service_account_releaseVer_NotLinux <- function() {
+  ## service accounts cannot upload to standard drive folders (no quota)
+
+  skip <- FALSE
+  if (grepl("gserviceaccount", googledrive::drive_user()$emailAddress)) {
+    if ((Sys.info()[["sysname"]] != "Linux")) {
+      skip <- TRUE
+    }
+    if (Sys.getenv("R_VERSION_LABEL") != "release") {
+      skip <- TRUE
+    }
+  }
+  testthat::skip_if(skip,
+          paste("Skipping: If GoogleService Account, only Linux current R will run"))
+
+
+}
+
 ## puts tmpdir, tmpCache, tmpfile (can be vectorized with length >1 tmpFileExt),
 ##   optsAsk in this environment,
 ## loads and libraries indicated plus testthat,

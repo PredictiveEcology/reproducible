@@ -9,7 +9,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   )
 
   ## service accounts cannot upload to standard drive folders (no quota)
-  # skip_if_service_account()
+  skip_if_service_account_releaseVer_NotLinux()
 
   withr::local_options(
     reproducible.cachePath = file.path(tempdir(), rndstr(1, 7)),
@@ -152,7 +152,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
   )
 
   ## service accounts cannot upload to standard drive folders (no quota)
-  # skip_if_service_account()
+  skip_if_service_account_releaseVer_NotLinux()
 
   googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
 
@@ -195,7 +195,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
   )
 
   ## service accounts cannot upload to standard drive folders (no quota)
-  # skip_if_service_account()
+  skip_if_service_account_releaseVer_NotLinux()
 
   googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
   withr::local_options(reproducible.cachePath = tmpdir)
@@ -219,7 +219,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
   )
 
   ## service accounts cannot upload to standard drive folders (no quota)
-  # skip_if_service_account()
+  skip_if_service_account_releaseVer_NotLinux()
 
   googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
   withr::local_options(reproducible.cachePath = tmpdir)
