@@ -154,6 +154,8 @@ test_that("test miscellaneous fns (part 2)", {
   ras <- terra::rast(terra::ext(0, 1, 0, 1), resolution = 1, vals = 1)
   ras <- terra::writeRaster(ras, filename = tmpfile[1], overwrite = TRUE)
 
+  skip_if_service_account_releaseVer_NotLinux()
+
   gdriveLs1 <- data.frame(name = "GADM", id = "sdfsd", drive_resource = list(sdfsd = 1))
   tmpCloudFolderID <- checkAndMakeCloudFolderID(create = TRUE)
   gdriveLs <- driveLs(cloudFolderID = NULL, "sdfsdf")
