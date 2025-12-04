@@ -127,6 +127,8 @@ test_that("lightweight tests for code coverage", {
 
   outSF <- sf::st_as_sf(out)
 
+  skip_if_service_account_releaseVer_NotLinux()
+
   gls <- googledrive::drive_ls(cloudFolderID)
   alreadyThere <- gls$name %in% c(targetFile, targetFile2)
 
