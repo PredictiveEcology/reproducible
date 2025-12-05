@@ -460,6 +460,40 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
   tagValue = character(), createdDate = character()
 )
 
+
+
+#' Add a Tag to a Cached Object in the Repository
+#'
+#' This hidden function appends a single tag (key-value pair) to the metadata
+#' of a cached object identified by its `cacheId`. Tags can be stored either in
+#' a database (via DBI) or in a file-based cache system.
+#'
+#' @param cacheId `character(1)`
+#'   The unique identifier of the cached object. Must be of length 1.
+#' @param cachePath `character(1)`
+#'   Path to the cache directory. Defaults to `getOption("reproducible.cachePath")`.
+#' @param tagKey `character(1)`
+#'   The key for the tag. Defaults to `"accessed"` if not provided.
+#' @param tagValue `character(1)`
+#'   The value for the tag. Defaults to the current system time if not provided.
+#' @param cacheSaveFormat `character(1)`
+#'   Format used for saving cache files. Defaults to `getOption("reproducible.cacheSaveFormat")`.
+#' @param drv A DBI driver object. Defaults to `getDrv(getOption("reproducible.drv", NULL))`.
+#' @param conn A DBI connection object. If `NULL`, a new connection is created internally.
+#'
+#' @details
+#' This function is primarily used internally by the `reproducible` package to
+#' maintain metadata about cached objects. It supports both database-backed and
+#' file-based caching systems.
+#'
+#' @return `NULL` (invisibly). The function is called for its side effects.
+#'
+#' @examples
+#' \dontrun{
+#' .addTagsRepo(cacheId = "abc123", tagKey = "status", tagValue = "processed")
+#' }
+#'
+#' @export
 .addTagsRepo <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
                          tagKey = character(), tagValue = character(),
                          cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
@@ -520,6 +554,47 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
   }
 }
 
+
+#' Update or Add a Tag for a Cached Object
+#'
+#' Updates the value of an existing tag for a cached object identified by its
+#' `cacheId`. If the tag does not exist and `add = TRUE`, the tag will be added.
+#' This function supports both database-backed and file-based cache systems.
+#'
+#' @param cacheId `character(1)`
+#'   Unique identifier of the cached object. Must be of length 1.
+#' @param cachePath `character(1)`
+#'   Path to the cache directory. Defaults to `getOption("reproducible.cachePath")`.
+#' @param tagKey `character(1)`
+#'   The key for the tag. Must be supplied.
+#' @param tagValue `character(1)`
+#'   The new value for the tag. Must be supplied.
+#' @param add `logical(1)`
+#'   If `TRUE`, adds the tag if it does not exist. Defaults to `TRUE`.
+#' @param cacheSaveFormat `character(1)`
+#'   Format used for saving cache files. Defaults to `getOption("reproducible.cacheSaveFormat")`.
+#' @param drv A DBI driver object. Defaults to `getDrv(getOption("reproducible.drv", NULL))`.
+#' @param conn A DBI connection object. If `NULL`, a new connection is created internally.
+#'
+#' @details
+#' - If `useDBI()` returns `TRUE`, the tag update is performed in the database table.
+#' - If no rows are affected and `add = TRUE`, the tag is inserted using `.addTagsRepo()`.
+#' - For file-based caches, the function modifies the tag in the corresponding metadata file.
+#'
+#' @return `NULL` (invisibly). Called for its side effects.
+#'
+#' @seealso [`.addTagsRepo()`] for adding tags without updating.
+#'
+#' @examples
+#' \dontrun{
+#' # Update an existing tag
+#' .updateTagsRepo(cacheId = "abc123", tagKey = "status", tagValue = "updated")
+#'
+#' # Add a tag if it doesn't exist
+#' .updateTagsRepo(cacheId = "abc123", tagKey = "processed", tagValue = "TRUE", add = TRUE)
+#' }
+#'
+#' @export
 .updateTagsRepo <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
                             tagKey = character(), tagValue = character(),
                             add = TRUE,
