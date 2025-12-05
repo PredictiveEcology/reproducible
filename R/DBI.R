@@ -488,9 +488,13 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 #'
 #' @return `NULL` (invisibly). The function is called for its side effects.
 #'
+#' @rdname addTags
 #' @examples
 #' \dontrun{
-#' .addTagsRepo(cacheId = "abc123", tagKey = "status", tagValue = "processed")
+#' a <- Cache(rnorm(1))
+#' .addTagsRepo(cacheId = gsub("cacheId:", "", attr(a, "tags")),
+#'              tagKey = "status", tagValue = "processed")
+#' showCache() # last entry is the above line
 #' }
 #'
 #' @export
@@ -585,13 +589,17 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 #'
 #' @seealso [`.addTagsRepo()`] for adding tags without updating.
 #'
+#' @rdname addTags
 #' @examples
 #' \dontrun{
+#' a <- Cache(rnorm(1))
 #' # Update an existing tag
-#' .updateTagsRepo(cacheId = "abc123", tagKey = "status", tagValue = "updated")
+#' .updateTagsRepo(cacheId = gsub("cacheId:", "", attr(a, "tags")),
+#'              tagKey = "status", tagValue = "second")
 #'
 #' # Add a tag if it doesn't exist
-#' .updateTagsRepo(cacheId = "abc123", tagKey = "processed", tagValue = "TRUE", add = TRUE)
+#' .updateTagsRepo(cacheId = gsub("cacheId:", "", attr(a, "tags")),
+#'              tagKey = "status", tagValue = "new", add = TRUE)
 #' }
 #'
 #' @export
