@@ -369,7 +369,7 @@ isSpat2 <- function(origClass) any(origClass %in% c("SpatVector", "SpatRaster"))
 isRaster <- function(x) inherits(x, "Raster")
 isCRSSF <- function(x) inherits(x, "crs")
 isCRScharacter <- function(x) is.character(x) && (grepl("DATUM", x) || grepl("+proj", x) || grepl("epsg:", x))
-isCRSTerra <- function(x) inherits(x, "CRS")
+isCRSTerra <- function(x) inherits(x, "CRS") || (is.character(x) && startsWith(x, "GEOGCRS"))
 
 #' Fix common errors in GIS layers, using `terra`
 #'
@@ -742,6 +742,10 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
           # projectTo <- sf::st_crs(projectTo)$wkt
         }
       }
+
+      # For some reason, terra::project can't handle a crs class
+      if (isCRSSF(projectTo))
+        projectTo <- projectTo[["wkt"]]
 
       # Since we only use the crs when projectTo is a Vector, no need to "fixErrorsIn"
       from <- if (.isVector(from)) {
