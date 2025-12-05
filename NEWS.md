@@ -1,5 +1,7 @@
 # reproducible 3.0.0
 
+* several formerly unexported functions have been converted to `dot` functions and are now exported
+  e.g., for use in other packages;
 * near complete rewrite of `Cache` so it is simpler and more robust. The main function is now 200 
   lines, instead of almost 700;
 * In addition to full rewrites, numerous simplifications throughout code that is still being used;
