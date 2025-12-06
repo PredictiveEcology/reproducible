@@ -79,8 +79,7 @@ its nested \verb{*Input} functions (e.g., \code{cropInputs}, \code{projectInputs
 mean internal caching is more time consuming. We recommend caching the full
 \code{prepInputs} call instead (e.g. \code{prepInputs(...) |> Cache()}).}
 
-\item{overwrite}{Logical. Should downloading and all the other actions occur
-even if they pass the checksums or the files are all there.}
+\item{overwrite}{Logical. Passed to \code{writeTo} (possibly inside \code{postProcess}) and \code{postProcess}.}
 
 \item{action}{A character string, with one of c("nothing", "update",
 "replace", "append"). Partial matching is used ("n" is sufficient).

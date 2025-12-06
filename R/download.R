@@ -12,6 +12,8 @@ utils::globalVariables(c(
 #' @inheritParams preProcess
 #' @inheritParams prepInputs
 #' @inheritParams extractFromArchive
+#' @param overwrite Logical. If `TRUE` then the download will overwrite an existing file
+#'   if it exists.
 #' @param dlFun Optional "download function" name, such as `"raster::getData"`, which does
 #'              custom downloading, in addition to loading into R. Still experimental.
 #' @param ... Passed to `dlFun`. Still experimental. Can be e.g., `type` for google docs.

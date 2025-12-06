@@ -175,8 +175,7 @@ utils::globalVariables(c(
 #'   `prepInputs` will write or append to it. `1/TRUE` will deleted the entire `CHECKSUMS.txt` file.
 #'    Other options, see details.
 #'
-#' @param overwrite Logical. Should downloading and all the other actions occur
-#'   even if they pass the checksums or the files are all there.
+#' @param overwrite Logical. Passed to `writeTo` (possibly inside `postProcess`) and `postProcess`.
 #'
 #' @param ... Additional arguments passed to
 #'   [postProcess()] and [reproducible::Cache()].
