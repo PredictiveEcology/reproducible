@@ -19,16 +19,19 @@ skip_if_service_account_releaseVer_NotLinux <- function() {
   ## service accounts cannot upload to standard drive folders (no quota)
 
   skip <- FALSE
-  if (grepl("gserviceaccount", googledrive::drive_user()$emailAddress)) {
-    if ((Sys.info()[["sysname"]] != "Linux")) {
-      skip <- TRUE
+  # unexported from testthat:::on_ci and testthat:::env_var_is_true
+  on_ci <- isTRUE(as.logical(Sys.getenv("CI", "false")))
+  if (!interactive() || on_ci)
+    if (grepl("gserviceaccount", googledrive::drive_user()$emailAddress)) {
+      if ((Sys.info()[["sysname"]] != "Linux")) {
+        skip <- TRUE
+      }
+      if (Sys.getenv("R_VERSION_LABEL") != "release") {
+        skip <- TRUE
+      }
     }
-    if (Sys.getenv("R_VERSION_LABEL") != "release") {
-      skip <- TRUE
-    }
-  }
   testthat::skip_if(skip,
-          paste("Skipping: If GoogleService Account, only Linux current R will run"))
+                    paste("Skipping: If GoogleService Account, only Linux current R will run"))
 
 
 }
