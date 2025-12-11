@@ -89,6 +89,16 @@
 #'     Default: `FALSE`. Used in [prepInputs()] and [preProcess()].
 #'     Should the `reproducible.inputPaths` be searched recursively for existence of a file?
 #'   }
+#'   \item{`leaveOnDisk`}{
+#'     Default: `TRUE`. Used in [postProcess()].
+#'     When there is a `SpatRaster` object, should `postProcess` force any file-backed object,
+#'     to use the file-based, memory-safe tools within `terra` (by temporarily setting
+#'     `terraOption(memfrac = 0)`. Alternatively, if this is set to `FALSE`,
+#'     then `postProcess` will let `terra` decide on its own based on its internal
+#'     cues (largely based on `memfrac`, `maxmem` `terraOptions`). This will be ignored,
+#'     however, if the user has set the `terraOptions` away from its default of `0.5`. The default
+#'     increases predictability of whether the returned object is on disk or in memory.
+#'   }
 #'   \item{`memoisePersist`}{
 #'     Default: `FALSE`. Used in [Cache()].
 #'     Should the memoised copy of the Cache objects persist even if `reproducible` reloads
@@ -270,6 +280,7 @@ reproducibleOptions <- function() {
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
+    reproducible.leaveOnDisk = TRUE,
     reproducible.length = Inf,
     reproducible.memoisePersist = FALSE,
     reproducible.messageColourPrepInputs = "cyan",

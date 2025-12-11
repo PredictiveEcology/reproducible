@@ -94,6 +94,16 @@ duplicated files.
 Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
 Should the \code{reproducible.inputPaths} be searched recursively for existence of a file?
 }
+\item{\code{leaveOnDisk}}{
+Default: \code{TRUE}. Used in \code{\link[=postProcess]{postProcess()}}.
+When there is a \code{SpatRaster} object, should \code{postProcess} force any file-backed object,
+to use the file-based, memory-safe tools within \code{terra} (by temporarily setting
+\code{terraOption(memfrac = 0)}. Alternatively, if this is set to \code{FALSE},
+then \code{postProcess} will let \code{terra} decide on its own based on its internal
+cues (largely based on \code{memfrac}, \code{maxmem} \code{terraOptions}). This will be ignored,
+however, if the user has set the \code{terraOptions} away from its default of \code{0.5}. The default
+increases predictability of whether the returned object is on disk or in memory.
+}
 \item{\code{memoisePersist}}{
 Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}.
 Should the memoised copy of the Cache objects persist even if \code{reproducible} reloads
