@@ -360,15 +360,20 @@ setMethod(
       fs <- file.size(file)
       as.character(fs) # need as.character for empty case
     } else {
-      as.character(
-        unname(
-          unlist(
-            lapply(file, function(f) {
-              digest::digest(object = f, file = TRUE, algo = algo, ...)
-            })
+      fss <- file.size(file)
+      nonZeroSize <- fss != 0
+      fss2 <- character(length(file))
+      fss2[nonZeroSize] <-
+        as.character(
+          unname(
+            unlist(
+              lapply(file[nonZeroSize], function(f) {
+                digest::digest(object = f, file = TRUE, algo = algo, ...)
+              })
+            )
           )
-        )
-      ) # need as.character for empty case # nolint
+        ) # need as.character for empty case # nolint
+      fss2
     }
   }
 )
