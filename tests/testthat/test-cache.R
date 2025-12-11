@@ -2180,3 +2180,19 @@ test_that("Cache with weird dots", {
   expect_true(attr(d, ".Cache")$newCache)
 
 })
+
+test_that(".digest with empty and broken files", {
+  testInit()
+  tf <- tempfile()
+  # tf2 <- tempfile(fileext = ".tif")
+  file.create(tf)
+  file.create(tf2)
+  a <- .digest(file = tf)
+  file.remove(tf)
+  expect_error(.digest(file = tf))
+  # .digest(file = tf2)
+
+  expect_true(is.character(a))
+  expect_true(length(a) == 1)
+
+})

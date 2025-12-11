@@ -347,7 +347,7 @@ writeChecksumsTable <- function(out, checksumFile, dots) {
 #' @importFrom digest digest
 #' @keywords internal
 #' @rdname digest
-setGeneric(".digest", function(file, quickCheck, ...) {
+setGeneric(".digest", function(file, quickCheck = FALSE, ...) {
   standardGeneric(".digest")
 })
 
@@ -355,24 +355,37 @@ setGeneric(".digest", function(file, quickCheck, ...) {
 setMethod(
   ".digest",
   signature = c(file = "character"),
-  definition = function(file, quickCheck, algo = "xxhash64", ...) {
+  definition = function(file, quickCheck = FALSE, algo = "xxhash64", ...) {
+    fss <- file.size(file)
     if (quickCheck) {
-      fs <- file.size(file)
-      as.character(fs) # need as.character for empty case
+      as.character(fss) # need as.character for empty case
     } else {
-      fss <- file.size(file)
-      nonZeroSize <- fss != 0
-      fss2 <- character(length(file))
-      fss2[nonZeroSize] <-
-        as.character(
-          unname(
-            unlist(
-              lapply(file[nonZeroSize], function(f) {
-                digest::digest(object = f, file = TRUE, algo = algo, ...)
-              })
-            )
+      # fss <- file.size(file)
+      evalThis <- quote(as.character(
+        unname(
+          unlist(
+            lapply(file, function(f) {
+              digest::digest(object = f, file = TRUE, algo = algo, ...)
+            })
           )
-        ) # need as.character for empty case # nolint
+        )
+      )) # need as.character for empty case # nolint
+      nonZeroSize <- fss != 0
+
+      if (isTRUE(any(nonZeroSize))) {
+        # some zero length files fail digest::digest, others don't. Don't know the exact reason yet.
+        # BUT don't use `try` for all/any digests as it is too slow to run all/any time
+        fss2 <- try(eval(evalThis), silent = TRUE)
+        if (is(fss2, "try-error")) {
+          browser()
+          fss2 <- character(length(file))
+          file <- file[nonZeroSize]
+          fss2[nonZeroSize] <- eval(evalThis)
+        }
+      } else {
+        fss2 <- eval(evalThis)
+      }
+
       fss2
     }
   }

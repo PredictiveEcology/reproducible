@@ -5,9 +5,9 @@
 \alias{.digest,character-method}
 \title{Calculate the hashes of multiple files}
 \usage{
-.digest(file, quickCheck, ...)
+.digest(file, quickCheck = FALSE, ...)
 
-\S4method{.digest}{character}(file, quickCheck, algo = "xxhash64", ...)
+\S4method{.digest}{character}(file, quickCheck = FALSE, algo = "xxhash64", ...)
 }
 \arguments{
 \item{file}{Character vector of file paths.}
