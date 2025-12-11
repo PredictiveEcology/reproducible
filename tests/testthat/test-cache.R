@@ -2186,7 +2186,7 @@ test_that(".digest with empty and broken files", {
   tf <- tempfile()
   # tf2 <- tempfile(fileext = ".tif")
   file.create(tf)
-  file.create(tf2)
+  # file.create(tf2)
   a <- .digest(file = tf)
   file.remove(tf)
   expect_error(.digest(file = tf))
