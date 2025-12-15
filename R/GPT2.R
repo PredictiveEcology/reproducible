@@ -80,12 +80,12 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
     keyFull <- try(doDigest(toDigest, callList$.functionName, .objects,
                             length, algo, quick, classOptions, times$CacheDigestStart,
                             verbose = verbose))
-    # update with cacheChain info
-    keyFull <- cacheChainingStep(keyFull, callList, .cacheChaining, cacheChainDetails, cachePaths)
-
     if (is(keyFull, "try-error")) {
       stopRcppError(toDigest, .objects, length, algo, quick, classOptions)
     }
+    # update with cacheChain info
+    keyFull <- cacheChainingStep(keyFull, callList, .cacheChaining, cacheChainDetails, cachePaths)
+
   }
 
   # If debugCache is "quick", short circuit after doDigest
