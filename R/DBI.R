@@ -765,8 +765,8 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 #' @param cacheId The cacheId or otherwise digested hash value, as character string.
 #'
 #' @param cacheSaveFormat The text string representing the file extension used normally by
-#'   different save formats; currently only `"rds"` or `"qs"`. Defaults
-#'   to `getOption("reproducible.cacheSaveFormat", "rds")`
+#'   different save formats; currently only `"rds"` or `"qs"` (which now uses `qs2` package.
+#'   Defaults to `getOption("reproducible.cacheSaveFormat", "rds")`
 #'
 #' @return
 #' - `CacheStoredFile` returns the file path to the file with the specified hash value;
@@ -1023,20 +1023,18 @@ loadFile <- function(file, ...) {
   if (!is.null(list(...)$format))
     cacheSaveFormat <- list(...)$format
   # if (is.null(cacheSaveFormat)) {
-    cacheSaveFormat <- fileExt(file)
+  cacheSaveFormat <- fileExt(file)
   # }
-  isQs <- cacheSaveFormat %in% .qsFormat
-  isQs2 <- cacheSaveFormat %in% .qs2Format
+  isQsAny <- cacheSaveFormat %in% c(.qsFormat, .qs2Format)
+  # isQs2 <- cacheSaveFormat %in% .qs2Format
+  # isQsAny <- isQs | isQs2
 
-  if (any(isQs)) {
-    .requireNamespace(.qsFormat, stopOnFALSE = TRUE)
-    obj <- qs::qread(file = file[isQs], nthreads = getOption("reproducible.nThreads", 1))
-  } else if (any(isQs2)) {
+  if (isQsAny) {
     .requireNamespace(.qs2Format, stopOnFALSE = TRUE)
-    obj <- qs2::qs_read(file = file[isQs2], nthreads = getOption("reproducible.nThreads", 1))
+    obj <- qs2::qs_read(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
   } else {
     suppressWarningsSpecific(falseWarnings = "\\'package:stats\\' may not be available when loading",
-                             obj <- readRDS(file = file[!isQs])
+                             obj <- readRDS(file = file[!isQsAny])
     )
   }
 
@@ -1066,41 +1064,22 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId,
     fsOther <- sum(file.size(ftsOther))
     fts <- fts[1]
   }
-  if (cacheSaveFormat == .qsFormat) {
-    .requireNamespace(.qsFormat, stopOnFALSE = TRUE)
-    for (attempt in 1:2) {
-      fs <- qs::qsave(obj,
-        file = fts,
-        nthreads = getOption("reproducible.nThreads", 1),
-        preset = getOption("reproducible.qsavePreset", "high")
-      )
-      fs1 <- file.size(fts)
-      if (!identical(fs, fs1)) {
-        if (attempt == 1) {
-          warning("Attempted to save to Cache, but save seemed to fail; trying again")
-        } else {
-          stop("Saving to Cache did not work correctly; file appears corrupted. Please retry")
-        }
-      } else {
-        break
-      }
-    }
-  } else if (cacheSaveFormat == .qs2Format) {
+  if (cacheSaveFormat %in% c(.qsFormat, .qs2Format)) {
     .requireNamespace(.qs2Format, stopOnFALSE = TRUE)
-    for (attempt in 1:2) {
+    for (attempt in 1) {
       fs <- qs2::qs_save(obj,
                       file = fts,
                       nthreads = getOption("reproducible.nThreads", 1)
       )
       # if (is(fs, "try-error")) browser()
-      fs <- file.size(fts)
+      # fs <- file.size(fts)
     }
   } else {
     suppressWarningsSpecific(falseWarnings = "\\'package:stats\\' may not be available when loading",
                              saveRDS(obj, file = fts)
     )
-    fs <- sum(file.size(fts))
   }
+  fs <- sum(file.size(fts))
   fs <- sum(fs, fsOther)
 
 

@@ -333,8 +333,8 @@ utils::globalVariables(c(
 #'
 #' @param useCloud Logical. See Details.
 #' @param cacheSaveFormat Character string: currently either `qs` or `rds`. Defaults to
-#'    `getOption("reproducible.cacheSaveFormat")`. `qs` is faster but appears to have
-#'    narrower range of conditions that work; `rds` is safer, but slower.
+#'    `getOption("reproducible.cacheSaveFormat")`. `qs` may be faster but appears to have
+#'    narrower range of conditions that work; `rds` is safer, and may be slower.
 #'
 #' @param cloudFolderID A googledrive dribble of a folder, e.g., using `drive_mkdir()`.
 #'   If left as `NULL`, the function will create a cloud folder with name from last
@@ -2432,13 +2432,13 @@ searchInRepos <- function(cachePaths, outputHash, drv, conn) {
       # isInRepo <- setDT(DBI::dbFetch(res))
       # DBI::dbClearResult(res)
     } else {
-      # The next line will find it whether it is qs, rds or other; this is necessary for "change cacheSaveFormat"
+      # The next line will find it whether it is qs2, rds or other; this is necessary for "change cacheSaveFormat"
       csf <- CacheStoredFile(cachePath = repo, cacheId = outputHash, cacheSaveFormat = "check")
 
       if (all(file.exists(csf))) {
         dtFile <- CacheDBFileSingle(cachePath = repo, cacheId = outputHash)
 
-        if (!file.exists(dtFile)) { # check first for wrong rds vs qs
+        if (!file.exists(dtFile)) { # check first for wrong rds vs qs2
           dtFile <- CacheDBFileSingle(cachePath = repo, cacheId = outputHash, cacheSaveFormat = "check")
           fe <- file.exists(dtFile)
           if (isTRUE(!(fe))) { # still doesn't == means it is broken state
@@ -2448,7 +2448,7 @@ searchInRepos <- function(cachePaths, outputHash, drv, conn) {
             )
             unlink(csf)
             dtFile <- NULL
-          } else if (length(fe) > 1) { # has both the qs and rds dbFile
+          } else if (length(fe) > 1) { # has both the qs2 and rds dbFile
             browser()
           }
         }

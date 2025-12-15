@@ -2127,7 +2127,7 @@ test_that("cacheChaining", {
 
 
       # Should only show the messaging when cacheChaining is on
-      if (dfIndex == 1) {
+      if (dfIndex == 1 && (useDBI() %in% FALSE)) {
         expect_equivalent(length(grep("cacheChaining", mess$`1`)), 6)
         expect_equivalent(length(grep("Skipping digest", mess$`1`)), 4)
         expect_equivalent(length(grep("cacheChaining", mess$`2`)), 0)

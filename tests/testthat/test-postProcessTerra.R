@@ -275,7 +275,7 @@ test_that("testing terra", {
         vutmErrors <- terra::project(v2, utm)
       }
 
-      # Switch from qs to rds with Cache
+      # Switch from qs2 to rds with Cache
       if (requireNamespace(.qsFormat)) {
         opts <- options(reproducible.cacheSaveFormat = .qsFormat)
         t13a <- Cache(postProcessTo(xVect, vutmErrors))
