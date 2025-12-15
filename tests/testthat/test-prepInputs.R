@@ -1521,17 +1521,14 @@ test_that("lightweight tests 2 for code coverage", {
   theRDSFile <- tempfile(tmpdir = tmpdir, fileext = ".rds")
   a <- 1
   saveRDS(a, file = theRDSFile)
-  origWD <- setwd(dirname(theRDSFile))
-  #noisyOutput <- capture_output(
-  zip(zipfile = theZipFile, files = basename(theRDSFile), flags = "-q")
-  #)
-  #noisyOutput <- capture.output(
-  zip(zipfile = theZipFile2, files = basename(theZipFile), flags = "-q") #)
-  #noisyOutput <- capture.output(
-  zip(zipfile = theZipFile3, files = basename(theZipFile2), flags = "-q") #)
-  setwd(origWD)
-  expect_error(extractFromArchive(theZapFile), "Archives of type zap are not currently supported")
 
+  withr::with_dir(dirname(theRDSFile), {
+    utils::zip(zipfile = theZipFile, files = basename(theRDSFile), flags = "-q")
+    utils::zip(zipfile = theZipFile2, files = basename(theZipFile), flags = "-q")
+    utils::zip(zipfile = theZipFile3, files = basename(theZipFile2), flags = "-q")
+  })
+
+  expect_error(extractFromArchive(theZapFile), "Archives of type zap are not currently supported")
   expect_error(extractFromArchive(theZipName), "No archive exists with filename")
 
   extractFromArchive(theZipFile, neededFiles = character())
