@@ -98,8 +98,8 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 the \code{cacheId} being loaded or selected}
 
 \item{cacheSaveFormat}{The text string representing the file extension used normally by
-different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
-to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
+different save formats; currently only \code{"rds"} or \code{"qs"} (which now uses \code{qs2} package.
+Defaults to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 
 \item{.functionName}{Optional. Used for messaging when this function is called from \code{Cache}}
 

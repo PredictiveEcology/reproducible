@@ -41,6 +41,7 @@ if (isNamespaceLoaded("googledrive"))
 withr::defer(
   {
     if (wantMoreTests) {
+      print(paste0("getOption('reproducible.cacheSaveFormat') = '", getOption("reproducible.cacheSaveFormat"), "'"))
       print(paste0("getOption('reproducible.useCacheV3') = ", getOption("reproducible.useCacheV3")))
       print(paste0("getOption('reproducible.rasterRead') = ", getOption("reproducible.rasterRead")))
       print(paste0("getOption('reproducible.runLargeFileTests') = ", getOption("reproducible.runLargeFileTests")))
@@ -58,6 +59,7 @@ withr::defer(
 )
 
 if (wantMoreTests) {
+  print(paste0("getOption('reproducible.cacheSaveFormat') = '", getOption("reproducible.cacheSaveFormat"), "'"))
   print(paste0("getOption('reproducible.useCacheV3') = ", getOption("reproducible.useCacheV3")))
   print(paste0("getOption('reproducible.rasterRead') = ", getOption("reproducible.rasterRead")))
   print(paste0("getOption('reproducible.runLargeFileTests') = ", getOption("reproducible.runLargeFileTests")))

@@ -29,7 +29,8 @@
 #'     The default path for repositories if not passed as an argument.
 #'   }
 #'   \item{`cacheSaveFormat`}{
-#'     Default: `"rds"`. What save format to use; currently, `"qs"` or `"rds"`.
+#'     Default: `"rds"`. What save format to use; currently, `"qs"` (which will use
+#'     `qs2` package as of `reproducible` version ">= 2.1.3"), `"qs2"`, or `"rds"`.
 #'   }
 #'   \item{`cacheSpeed`}{
 #'     Default `"slow"`. One of `"slow"` or `"fast"` (1 or 2).

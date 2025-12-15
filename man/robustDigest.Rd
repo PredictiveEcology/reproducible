@@ -91,8 +91,8 @@ to do with.}
 \item{...}{Arguments passed to \code{FUN}, if \code{FUN} is not an expression.}
 
 \item{cacheSaveFormat}{Character string: currently either \code{qs} or \code{rds}. Defaults to
-\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} is faster but appears to have
-narrower range of conditions that work; \code{rds} is safer, but slower.}
+\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} may be faster but appears to have
+narrower range of conditions that work; \code{rds} is safer, and may be slower.}
 
 \item{objects}{Optional character vector indicating which objects are to
 be considered while making digestible. This argument is not used

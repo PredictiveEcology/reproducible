@@ -193,8 +193,8 @@ where \code{Cache} is not correctly detecting unchanged inputs. This will guaran
 the object will be identical each time; this may be useful in operational code.}
 
 \item{cacheSaveFormat}{Character string: currently either \code{qs} or \code{rds}. Defaults to
-\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} is faster but appears to have
-narrower range of conditions that work; \code{rds} is safer, but slower.}
+\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} may be faster but appears to have
+narrower range of conditions that work; \code{rds} is safer, and may be slower.}
 
 \item{useCache}{Logical, numeric or \code{"overwrite"} or \code{"devMode"}. See details.}
 

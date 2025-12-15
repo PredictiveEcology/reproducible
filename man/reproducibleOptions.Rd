@@ -34,7 +34,8 @@ Default: \code{.reproducibleTempCacheDir}. Used in \code{\link[=Cache]{Cache()}}
 The default path for repositories if not passed as an argument.
 }
 \item{\code{cacheSaveFormat}}{
-Default: \code{"rds"}. What save format to use; currently, \code{"qs"} or \code{"rds"}.
+Default: \code{"rds"}. What save format to use; currently, \code{"qs"} (which will use
+\code{qs2} package as of \code{reproducible} version ">= 2.1.3"), \code{"qs2"}, or \code{"rds"}.
 }
 \item{\code{cacheSpeed}}{
 Default \code{"slow"}. One of \code{"slow"} or \code{"fast"} (1 or 2).

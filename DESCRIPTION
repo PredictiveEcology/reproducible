@@ -77,7 +77,6 @@ Suggests:
     httr2 (>= 1.2.1),
     knitr,
     parallel,
-    qs,
     qs2,
     raster (>= 3.5-15),
     RCurl (>= 1.95-4.8),

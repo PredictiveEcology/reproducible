@@ -33,8 +33,8 @@ test_that("test ALTREP integers", {
         saveRDS(a, file = tf);
         b <- readRDS(tf)
       } else {
-        qs::qsave(a, file = tf);
-        b <- qs::qread(tf)
+        qs2::qs_save(a, file = tf);
+        b <- qs2::qs_read(tf)
       }
       bDig <- .robustDigest(b)
       expect_true(identical(aDig, bDig))
