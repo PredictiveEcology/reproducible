@@ -188,7 +188,7 @@ postProcessTo <- function(from, to,
     if (.isGridded(from)) {
       if (getOption("reproducible.leaveOnDisk", TRUE)) {
         co <- capture.output(origMemFrac <- terra::terraOptions()$memfrac)
-        if (identical(origMemFrac, 0.5)) {
+        if (identical(origMemFrac, 0.5)) { # 0.5 is the default in `terra` on Dec 15, 2025
           terra::terraOptions(memfrac = 0)
           on.exit(terra::terraOptions(memfrac = origMemFrac))
         }
