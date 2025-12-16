@@ -882,7 +882,6 @@ showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath
   }
   fe <- file.exists(dtFile)
   sc <- NULL
-  # if (exists("aaaa", envir = .GlobalEnv)) browser()
   if (fe || isFALSE(strict)) {
     dtFile <- if (any(fe)) dtFile[fe][1] else character()
     if (length(dtFile)) {

@@ -2078,7 +2078,6 @@ test_that("cacheChaining", {
       for (index in 1:3) {
         # i <- c(TRUE, FALSE, TRUE)[index]
         #if (index == 3 && arg == args[2])
-        #  aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
         i <- df[[dfIndex]][[index]]
         # index <- index + 1L
         withr::local_seed(123)
@@ -2086,9 +2085,7 @@ test_that("cacheChaining", {
         withr::local_options(reproducible.cacheChaining = i)
         fn1 <- function(x) {
           a <- sample(N) |> Cache()
-          # if (exists("aaaa", envir = .GlobalEnv)) browser()
           b <- samWMean(a, size = length(a) * 0.9, other = x) |> Cache()
-          # if (exists("aaaa", envir = .GlobalEnv)) browser()
           d <- samWMean(a, size = length(a) * 0.8, other = x) |> Cache()
           c(mean(a), b, d)
         }
@@ -2104,20 +2101,16 @@ test_that("cacheChaining", {
         arb[[iChar]] <- list()
         if (index < 3) { # don't clear the 3rd one so that we can test that cacheChaining doesn't need a new entry in the Cache
           clearCache(ask = FALSE)
-        } else {
-          # aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
         }
         mess[[iChar]] <- capture_messages({
           arb[[iChar]][[1]] <- fn2() # a --> calculate & slow; b --> no digest, but still calculate & slow; d --> no digest, still calculate & slow
           arb[[iChar]][[2]] <- fn2()# a --> digest & return cache; b --> skip digest, return cache; d --> skip digest, return cache
         })
-        # rm(aaaa, envir = .GlobalEnv)
         sc[[iChar]] <- showCache(verbose = FALSE)[tagKey == "elapsedTimeDigest"]
 
       }
 
       # Should be the same pattern of saving/loading regardless of chainCaching
-      # aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
       #if (dfIndex == 2)
       #   browser()
       expect_equivalent(length(grep("Saved", mess$`2`)), arg)

@@ -1,6 +1,7 @@
 if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly = TRUE)) {
   library(reproducible)
   withr::local_tempdir()
+  withr::local_options(reproducible.inputPaths = NULL)
   # od <- setwd(tempdir2())
   # download a (spatial) file from remote url (which often is an archive) load into R
   # need 3 files for this example; 1 from remote, 2 local
@@ -13,7 +14,6 @@ if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly 
   # 1 step for each layer
   # 1st step -- get study area
   studyArea <- prepInputs(localFileLuxSm, fun = "terra::vect") # default is sf::st_read
-  aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
   # 2nd step: make the input data layer like the studyArea map
   # Test only relevant if connected to internet -- so using try just in case
   elevForStudy <- try(prepInputs(url = remoteTifUrl, to = studyArea, res = 250,

@@ -833,7 +833,6 @@ test_that("preProcess doesn't work", {
       value = TRUE
     ))
 
-    # aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
     mess <- capture_messages({
       warns <- capture_warnings({
         test <- prepInputs(
