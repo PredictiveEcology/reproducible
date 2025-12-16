@@ -371,12 +371,18 @@ makeRelative <- function(files, absoluteBase) {
     areAbs <- isAbsolutePath(files)
     if (any(areAbs)) {
       files[areAbs] <- normPath(files[areAbs])
+      if (.pkgEnv$runningOnMac) {
+        absoluteBaseOrig <- absoluteBase
+        browser()
+      }
       absoluteBase <- normPath(absoluteBase) # can be "." which means 'any character' in a grep
       if (length(absoluteBase) < length(files))
         absoluteBase <- rep(absoluteBase, length.out = length(files))
       files[areAbs] <- unlist(Map(ab = absoluteBase[areAbs], file = files[areAbs], function(ab, file)
         gsub(paste0("^", ab, "/{0,1}"), "", file)
       ))
+      if (length(files) > 1)
+        browser()
     }
   }
   if (length(files)) {
