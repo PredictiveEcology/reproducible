@@ -845,6 +845,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         unique(dirname(normPath(downloadResults$destFile))),
         normPath(as.character(destinationPath))
       )) || testFTD) {
+        if (exists("aaaa", envir = .GlobalEnv)) browser()
         # basename2 is OK because the destFile will be flat; it is just archive extraction that needs to allow nesting
         desiredPath <- makeAbsolute(basename2(downloadResults$destFile), destinationPath)
         desiredPathExists <- file.exists(desiredPath)
