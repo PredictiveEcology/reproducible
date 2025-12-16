@@ -1529,7 +1529,10 @@ test_that("lightweight tests 2 for code coverage", {
   })
 
   expect_error(extractFromArchive(theZapFile), "Archives of type zap are not currently supported")
-  expect_error(extractFromArchive(theZipName), "No archive exists with filename")
+  oo <- capture.output(
+    type = "message",
+    expect_error(extractFromArchive(theZipName), "No archive exists with filename")
+  )
 
   extractFromArchive(theZipFile, neededFiles = character())
 
@@ -1547,6 +1550,7 @@ test_that("lightweight tests 2 for code coverage", {
   # check Checksums fn
 
   expect_error(
+    oo <- capture.output(type = "message",
     suppressWarnings(extractFromArchive(
       theZipFile,
       neededFiles = character(),
@@ -1554,7 +1558,7 @@ test_that("lightweight tests 2 for code coverage", {
       destinationPath = tmpdir
     )),
     "checkSumFilePath is not a CHECKSUMS.txt"
-  )
+  ))
 
   # Doubley nested zips -- extract inner, inner
   a <- extractFromArchive(
