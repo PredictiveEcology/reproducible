@@ -383,7 +383,7 @@ makeRelative <- function(files, absoluteBase) {
       if (.pkgEnv$runningOnMac) {
         areAbs <- isAbsolutePath(files)
         if (any(areAbs)) {
-          if (exists("aaaa", envir = .GlobalEnv)) browser()
+          # if (exists("aaaa", envir = .GlobalEnv)) browser()
           files[areAbs] <- unlist(Map(ab = absoluteBaseOrig[areAbs],
                                       file = files[areAbs], function(ab, file)
                                         gsub(paste0("^", ab, "/{0,1}"), "", file)
@@ -391,8 +391,8 @@ makeRelative <- function(files, absoluteBase) {
         }
 
       }
-      if (length(files) > 1)
-        if (exists("aaaa", envir = .GlobalEnv)) browser()
+      # if (length(files) > 1)
+      #   if (exists("aaaa", envir = .GlobalEnv)) browser()
     }
   }
   if (length(files)) {
