@@ -32,8 +32,10 @@ opts <- options(
 # Whatever files are on googledrive must be shared with this google service account
 if (isNamespaceLoaded("googledrive"))
   if ((!googledrive::drive_has_token())) {
-    if (nzchar(Sys.getenv("GOOGLEDRIVE_AUTH"))) {
-      googledrive::drive_auth(path = Sys.getenv("GOOGLEDRIVE_AUTH"))
+    gauthEnv <- Sys.getenv("GOOGLEDRIVE_AUTH")
+    if (nzchar(gauthEnv)) {
+      if (file.exists(gauthEnv))
+        googledrive::drive_auth(path = gauthEnv)
     }
   }
 
