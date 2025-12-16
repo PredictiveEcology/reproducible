@@ -259,20 +259,25 @@ postProcessTo <- function(from, to,
       messagePreProcess("using sf::gdal_utils('warp') because options(\"reproducible.gdalwarp\" = TRUE) ...", appendLF = TRUE, verbose = verbose)
       st <- Sys.time()
 
-      tryCatch({
-        from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
-        from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose, ...)
-        if (.isGridded(maskTo)) { # won't be used at the moment because couldDoGDAL = FALSE for gridded
-          from <- maskTo(from = from, maskTo = maskTo, verbose = verbose, ...)
-        } else {
-          from <- gdalMask(fromRas = from, maskToVect = maskTo, writeTo = writeTo, verbose = verbose, ...)
-        }
-      }, error = function(e) {
-        stillNeed <<- TRUE
-        couldDoGDAL <<- FALSE
-        message("Attempted to use gdal* functions, but errors occured; trying without gdal*...")
-      })
-      # from <- setMinMax(from)
+      withCallingHandlers(
+        tryCatch({
+          from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
+          from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose, ...)
+          if (.isGridded(maskTo)) { # won't be used at the moment because couldDoGDAL = FALSE for gridded
+            from <- maskTo(from = from, maskTo = maskTo, verbose = verbose, ...)
+          } else {
+            from <- gdalMask(fromRas = from, maskToVect = maskTo, writeTo = writeTo, verbose = verbose, ...)
+          }
+        }, error = function(e) {
+          stillNeed <<- TRUE
+          couldDoGDAL <<- FALSE
+          message("Attempted to use gdal* functions, but errors occured; trying without gdal*...")
+        }),
+        warning = function(w) {
+          if (any(grepl("transformer options does not support option NUM_THREADS", w$message)))
+            invokeRestart("muffleWarning")
+        })
+        # from <- setMinMax(from)
 
     } # else {
 
