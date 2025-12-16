@@ -1,6 +1,6 @@
 if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly = TRUE)) {
   library(reproducible)
-  withr::local_tempdir()
+  withr::local_dir(withr::local_tempdir())
   withr::local_options(reproducible.inputPaths = NULL)
   # od <- setwd(tempdir2())
   # download a (spatial) file from remote url (which often is an archive) load into R
