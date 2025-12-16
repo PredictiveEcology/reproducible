@@ -363,6 +363,7 @@ makeRelative <- function(files, absoluteBase) {
   # NOT VECTORIZED on absoluteBase
   isList <- is(files, "list")
   filesOrig <- files
+  files <- normPath(files)
   if (isList) {
     nams <- names(files)
     files <- unlist(files)
