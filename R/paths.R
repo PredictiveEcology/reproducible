@@ -374,6 +374,9 @@ makeRelative <- function(files, absoluteBase) {
       if (length(absoluteBase) < length(files))
         absoluteBase <- rep(absoluteBase, length.out = length(files))
       if (.pkgEnv$runningOnMac) {
+        # on macos, normPath returns a different answer depending on whether
+        #   the file(s) exists or not. Here, try first as with other OSs; then
+        #   below, try again for those that are still absolute.
         absoluteBaseOrig <- absoluteBase
       }
       absoluteBase <- normPath(absoluteBase) # can be "." which means 'any character' in a grep
