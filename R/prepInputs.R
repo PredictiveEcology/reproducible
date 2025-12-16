@@ -651,7 +651,7 @@ extractFromArchive <- function(archive,
       }
     })
     if (!is(tryC, "try-error")) {
-        break
+      break
     }
     if (identical(dontUse, tail(dontUses, 1)[[1]])) {
       stop(tryC)

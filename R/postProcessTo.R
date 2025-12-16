@@ -182,7 +182,19 @@ postProcessTo <- function(from, to,
     if (is.null(projectTo)) projectTo <- to
   }
 
-  if (!all(is.null(to), is.null(cropTo), is.null(maskTo), is.null(projectTo), is.null(writeTo))) {
+  needPostProcessing <- !all(is.null(to), is.null(cropTo), is.null(maskTo),
+                             is.null(projectTo), is.null(writeTo))
+  if (needPostProcessing) {
+    if (.isGridded(from)) {
+      if (getOption("reproducible.leaveOnDisk", TRUE)) {
+        co <- capture.output(origMemFrac <- terra::terraOptions()$memfrac)
+        if (identical(origMemFrac, 0.5)) { # 0.5 is the default in `terra` on Dec 15, 2025
+          terra::terraOptions(memfrac = 0)
+          on.exit(terra::terraOptions(memfrac = origMemFrac))
+        }
+      }
+    }
+
     messagePreProcess("Running `postProcessTo`", verbose = verbose, verboseLevel = 0)
     .message$IndentUpdate()
     if (isTRUE(is.character(from))) {

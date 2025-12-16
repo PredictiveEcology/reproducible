@@ -1,5 +1,12 @@
 # reproducible 3.0.0
 
+* new option `reproducible.leaveOnDisk` which is only relevant for `postProcess` with 
+  objects that are sometimes disk-backed and sometimes memory-based (like `SpatRaster` or `Raster`).
+  The default `terra` and `raster` behaviour (which creates unpredictable behaviour, with 
+  the transient compute context being the trigger for one behaviour or another)
+  for these was creating unnecessarily slow `postProcessing` by bringing the objects
+  to memory, sometimes, and this in turn led to unnecessarily slow `Cache` behaviour because
+  `terra::wrap` is very slow for large `SpatRaster` objects. See `?reproducibleOptions`;
 * several formerly unexported functions have been converted to `dot` functions and are now exported
   e.g., for use in other packages;
 * near complete rewrite of `Cache` so it is simpler and more robust. The main function is now 200 
