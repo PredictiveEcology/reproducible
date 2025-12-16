@@ -1092,7 +1092,7 @@ test_that("test file link with duplicate Cache", {
   out2 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
   if (!is(out2, "try-error")) {
     fs2 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out2))
-    expect_true(all(fs1 * 1.9 < fs2))
+    expect_true(all(fs1 * 1.5 < fs2)) # macos needed this to be smaller than 1.9; I think b/c mac uses 8kb block size
   }
   # Test if the `try` works if the file.link is not to a meaningful file
   cacheIds <- unique(showCache(tmpCache)[[.cacheTableHashColName()]])
