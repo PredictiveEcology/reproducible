@@ -1162,7 +1162,7 @@ test_that("prepInputs when fun = NA", {
         )
       })
     })
-    if (!is(test1, "try-error")) {
+    if (!is(test1, "try-error") && !any(grepl("out of service", mess1))) {
       expect_true(is(test1, "SpatVector"))
       # test quoted version of `dlFun`
       mess3 <- capture_messages({

@@ -45,7 +45,7 @@ test_that("all exported functions have examples", {
     }
     # for debugging only
     #if (isTRUE(grepl("emcintir|achubaty", Sys.info()[["user"]])))
-      print(file)
+      # print(file)
     co3 <- capture.output(type = "output",
                           co2 <- capture_messages(
                             co <- capture.output(type = "message",

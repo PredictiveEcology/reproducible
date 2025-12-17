@@ -128,9 +128,11 @@ test_that("preProcess fails if user provides a non .zip/.tar as archive", {
     })
   })
   testthat::expect_is(object = pre, class = "list")
+  oo <- capture.output(type = "message",
   testthat::expect_error({
     ras <- reproducible::preProcess(archive = pre$targetFilePath)
   })
+  )
 })
 
 test_that("preProcess fails if user provides non-existing file", {
