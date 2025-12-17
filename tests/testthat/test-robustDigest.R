@@ -18,7 +18,7 @@ test_that("test data.table caching", {
 })
 
 test_that("test ALTREP integers", {
-  testInit(.qsFormat, opts = list(reproducible.cacheSaveFormat = .qsFormat,
+  testInit(.qs2Format, opts = list(reproducible.cacheSaveFormat = .qsFormat,
                              reproducible.cacheSpeed = "fast"))
 
   for (i in c(.rdsFormat, .qsFormat)) {
