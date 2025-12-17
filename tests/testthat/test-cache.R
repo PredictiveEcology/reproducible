@@ -928,7 +928,7 @@ test_that("test rm large non-file-backed rasters", {
     }
   }
 
-  testInit(c(.qsFormat, "terra"), opts = list("reproducible.cacheSpeed" = "fast",
+  testInit(c(.qs2Format, "terra"), opts = list("reproducible.cacheSpeed" = "fast",
                                          "reproducible.cacheSaveFormat" = .qsFormat))
 
   ext <- terra::ext(0, 10000, 0, 10000)
@@ -986,7 +986,7 @@ test_that("test .defaultUserTags", {
 
 test_that("test changing reproducible.cacheSaveFormat midstream", {
 
-  for (form in c(.qsFormat, .qs2Format)) {
+  for (form in c(.qs2Format)) {
     skip_if_not_installed(form)
 
     testInit(opts = list(
@@ -1904,7 +1904,7 @@ test_that("test future", {
 })
 
 test_that("test failed Cache recovery -- message to delete cacheId", {
-  if (!useDBI() || getOption("reproducible.useCacheV3")) skip("Not relevant for multipleDBfiles or new Cache")
+  if (!useDBI() || getOption("reproducible.useCacheV3")) skip("Only relevant for DBI backend")
   testInit(opts = list("reproducible.useMemoise" = FALSE))
 
   b <- Cache(rnorm, 1, cachePath = tmpdir)
