@@ -125,11 +125,13 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
 
   # can't figure out how to build and delete a temporary working directory with withr
   #  The test is `test-cluster.R` that fails if using
-  # withr::local_dir(withr::local_tempdir())
-  wd <- tempfile2() |> checkPath(create = TRUE)
-  od <- getwd()
-  withr::defer({setwd(od); unlink(wd, recursive = TRUE)}, envir = pf)
-  withr::local_dir(wd, .local_envir = pf)
+  withr::local_dir(withr::local_tempdir())
+
+  # BUT CRAN does not let you change the setwd during testing ... so, neither works
+  # wd <- tempfile2() |> checkPath(create = TRUE)
+  # od <- getwd()
+  # withr::defer({setwd(od); unlink(wd, recursive = TRUE)}, envir = pf)
+  # withr::local_dir(wd, .local_envir = pf)
   ###
 
   if (isTRUE(any(nzchar(tmpFileExt)))) {

@@ -2010,6 +2010,7 @@ test_that("cacheId is same as calculated", {
   # manually look at output attribute which shows cacheId: ca275879d5116967
   manualCacheId <- "ca275879d5116967"
   mess2 <- capture_messages(b <- Cache(rnorm, 1, cacheId = manualCacheId))
+  mess2 <- gsub("\n ", "", cli::ansi_strip(mess2)) # there may be "\n " if window width too small
   expect_match(mess2, .message$cacheIdNotAssessed(manualCacheId), all = FALSE)
   expect_equivalent(a, b)
 })
