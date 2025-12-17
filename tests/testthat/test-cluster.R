@@ -73,7 +73,5 @@ test_that("test parallel collisions", {
     expect_equal(sum(news), numNew)
   }
   endTime <- Sys.time()
-  # if (interactive()) {
-  #   print(endTime - startTime)
-  # }
+
 })
