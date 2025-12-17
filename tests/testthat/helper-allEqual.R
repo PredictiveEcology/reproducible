@@ -128,7 +128,7 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
   # withr::local_dir(withr::local_tempdir())
   wd <- tempfile2() |> checkPath(create = TRUE)
   od <- getwd()
-  withr::defer({setwd(od); unlink(wd, recursive = TRUE)})
+  withr::defer({setwd(od); unlink(wd, recursive = TRUE)}, envir = pf)
   withr::local_dir(wd, .local_envir = pf)
   ###
 
@@ -153,40 +153,6 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
   return(out)
 }
 
-testOnExit <- function(testInitOut) {
-  return()
-
-  # if (length(testInitOut$optsVerbose))
-  #   options("reproducible.verbose" = testInitOut$optsVerbose[[1]])
-  # if (length(testInitOut$optsAsk))
-  #   options("reproducible.ask" = testInitOut$optsAsk[[1]])
-  # if (length(testInitOut$opts))
-  #   options(testInitOut$opts)
-  # setwd(testInitOut$origDir)
-  # unlink(testInitOut$tmpdir, recursive = TRUE)
-  # if (isTRUE(testInitOut$needGoogleDriveAuth)) {
-  #   .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
-  #   if (utils::packageVersion("googledrive") < "1.0.0")
-  #     googledrive::drive_auth_config(active = FALSE)
-  # }
-  # unlink(testInitOut$tmpCache, recursive = TRUE, force = TRUE)
-  # unlink(testInitOut$tmpdir, recursive = TRUE, force = TRUE)
-  #
-  # if (grepl("Pq", class(getOption("reproducible.conn", NULL)))) {
-  #   tabs <- DBI::dbListTables(conn = getOption("reproducible.conn", NULL))
-  #   tab1 <- grep(value = TRUE, tabs, pattern =
-  #                  paste(collapse = "_", c(basename2(dirname(testInitOut$tmpCache)),
-  #                                          basename2(testInitOut$tmpCache))))
-  #   tab2 <- grep(value = TRUE, tabs, pattern =
-  #                  paste(collapse = "_", c(basename2(dirname(testInitOut$tmpdir)),
-  #                                          basename2(testInitOut$tmpdir))))
-  #   if (length(tab1))
-  #     try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab1))
-  #   if (length(tab2))
-  #     try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab2))
-  # }
-  #
-}
 
 runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpdir, test) {
   files <- dir(tmpdir, pattern = filePattern, full.names = TRUE)
