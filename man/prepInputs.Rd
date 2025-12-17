@@ -338,6 +338,7 @@ if (requireNamespace("terra", quietly = TRUE) &&
       unlink(dPath)
     }
   }
+  withr::deferred_run()
 }
 }
 

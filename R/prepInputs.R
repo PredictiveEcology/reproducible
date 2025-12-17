@@ -317,6 +317,7 @@ utils::globalVariables(c(
 #'       unlink(dPath)
 #'     }
 #'   }
+#'   withr::deferred_run()
 #' }
 #' }
 #'
