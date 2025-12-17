@@ -1,8 +1,8 @@
 if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly = TRUE)) {
   library(reproducible)
-  withr::local_dir(withr::local_tempdir())
+  # withr::local_dir(withr::local_tempdir())
   withr::local_options(reproducible.inputPaths = NULL)
-  # od <- setwd(tempdir2())
+  od <- setwd(tempdir2())
   # download a (spatial) file from remote url (which often is an archive) load into R
   # need 3 files for this example; 1 from remote, 2 local
   dPath <- file.path(tempdir2())
@@ -56,6 +56,6 @@ if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly 
     out <- lapply(studyAreas, function(x) terra::plot(x))
   }
 
-  withr::deferred_run()
-  # setwd(od)
+  # withr::deferred_run()
+  setwd(od)
 }
