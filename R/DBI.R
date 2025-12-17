@@ -784,7 +784,7 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
   csf <- cacheSaveFormat
   # qs <- grep(.qsFormat, .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
   # rds <- grep(.rdsFormat, .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
-  csExtension <- if (isTRUE(any(.qsFormat %in% csf))) {
+  csExtension <- if (isTRUE(any(c(.qsFormat, .qs2Format) %in% csf))) {
     .qs2Format
   } else if (isTRUE(any(.rdsFormat %in% csf))) {
     .rdsFormat
@@ -1356,7 +1356,7 @@ dbDisconnectAll <- function(conn) {
 }
 
 
-.cacheSaveFormats <- c("qs", "rds", "qs2")
+.cacheSaveFormats <- c("rds", "qs2")
 .qs2Format <- grep("qs2$", .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
 .qsFormat <- grep("qs$", .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
 .rdsFormat <- grep("rds$", .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
