@@ -1010,9 +1010,28 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
         } else {
           d <- data.table(notInSC4[[n]], valueInCache = NA, cacheIdInCache = NA)
         }
-        setcolorder(d, c("arg",
-                         grep("InCache", value = TRUE, colnames(d)),
-                         grep("ThisCall", value = TRUE, colnames(d))))
+
+        # Convert .FUN to the actual function name; need 2 mechanisms because SpaDES.core manually
+        #   places an entry with the actual name
+        hasDotFun <- d[[argTxt]] %in% dotFunTxt
+        if (any(hasDotFun)) {
+          dups <- duplicated(d[[valThisCallTxt]])
+          if (any(dups)) {
+            # Remove .FUN if there is another one with "more info"
+            theDupCI <- d[[valThisCallTxt]][dups]
+            theDotFun <- d[[valThisCallTxt]] %in% theDupCI & hasDotFun
+            d <- d[!theDotFun]
+          } else {
+            # case where it shows only ".FUN", with no duplication
+            scHere <- shownCache[shownCache$cacheId %in% d[[cacheIdInCacheTxt]], ]# $tagKey %in% "function"
+            funName <- scHere[["tagValue"]][scHere[["tagKey"]] %in% "function"]
+            if (length(funName))
+              d[[argTxt]] <- funName
+          }
+
+        }
+        setcolorder(d, c(argTxt, cacheIdInCacheTxt, valInCacheTxt,
+                         cacheIdThisCallTxt, valThisCallTxt))
         d
       })
 
