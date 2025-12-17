@@ -1828,9 +1828,9 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
     lengthChars <- nchar(namesOTD)
     if (!any(namesOTD %in% "FUN")) {
       zeroLength <- which(lengthChars == 0)
-      alreadyHasDotFun <- ".FUN" %in% namesOTD
+      alreadyHasDotFun <- dotFunTxt %in% namesOTD
       if (sum(zeroLength) > 0 && !alreadyHasDotFun) {
-        names(objsToDigest)[zeroLength[1]] <- ".FUN"
+        names(objsToDigest)[zeroLength[1]] <- dotFunTxt
       }
     }
   }
@@ -1953,7 +1953,7 @@ CacheDigestOnlyUniques <- function(dots) {
   }
   aa <- localTags[tag %in% userTags3 | tag %in% utOrig]
   accessed <- localTags[tagKey == "accessed"]
-  hasCommonFUN <- startsWith(aa$tagValue, ".FUN") |  # same function
+  hasCommonFUN <- startsWith(aa$tagValue, dotFunTxt) |  # same function
     startsWith(aa$tagKey, "function")  # same function name
   if (any(hasCommonFUN)) {
     hasCommonUserTagsOrig <- userTagsOrig %in% aa[[.cacheTableTagColName()]]
@@ -2814,3 +2814,4 @@ getPreviousEntryInCache <- function(.functionName, verbose, data.table, setorder
 }
 
 callInCache <- "callInCache"
+dotFunTxt <- ".FUN"

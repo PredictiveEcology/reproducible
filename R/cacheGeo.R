@@ -724,14 +724,19 @@ CacheGeo <- function(targetFile = NULL,
         existingObjSF <- checkNameHasGeom(existingObjSF)
         if (!any(is(sf::st_geometry(newObjSF), "sfc_MULTIPOLYGON"))) {
           newObjSF <- sf::st_cast(newObjSF, "MULTIPOLYGON")
-          # newObj <- sf::st_cast(newObj, "MULTIPOLYGON")
         }
+          # newObj <- sf::st_cast(newObj, "MULTIPOLYGON")
+                if (!is(sf::st_geometry(newObj), "MULTIPOLYGON"))
+          newObj <- sf::st_cast(newObj, "MULTIPOLYGON")
 
         # THE APPEND LINE
         existingObj <- as.data.frame(rbindlist(
           list(as.data.table(existingObjOrig), as.data.table(newObj)), fill = TRUE, use.names = TRUE))
         existingObjSF <- sf::st_as_sf(existingObj)
 
+        if (sf::st_crs(domain) != sf::st_crs(existingObjSF)) {
+          domain <- sf::st_transform(domain, sf::st_crs(existingObjSF))
+        }
         outs <- extractPolygonIfWithin(domain, existingObjSF, bufferOK, existingObj)
         list2env(outs) # existingObjSF, existingObj, domainExisted
 
