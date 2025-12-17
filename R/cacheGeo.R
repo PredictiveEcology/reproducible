@@ -733,6 +733,9 @@ CacheGeo <- function(targetFile = NULL,
           list(as.data.table(existingObjOrig), as.data.table(newObj)), fill = TRUE, use.names = TRUE))
         existingObjSF <- sf::st_as_sf(existingObj)
 
+        if (sf::st_crs(domain) != sf::st_crs(existingObjSF)) {
+          domain <- sf::st_transform(domain, sf::st_crs(existingObjSF))
+        }
         outs <- extractPolygonIfWithin(domain, existingObjSF, bufferOK, existingObj)
         list2env(outs) # existingObjSF, existingObj, domainExisted
 
