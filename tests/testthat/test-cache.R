@@ -929,7 +929,7 @@ test_that("test rm large non-file-backed rasters", {
   }
 
   testInit(c(.qs2Format, "terra"), opts = list("reproducible.cacheSpeed" = "fast",
-                                         "reproducible.cacheSaveFormat" = .qsFormat))
+                                         "reproducible.cacheSaveFormat" = .qs2Format))
 
   ext <- terra::ext(0, 10000, 0, 10000)
   r <- Cache(terra::rast, ext,

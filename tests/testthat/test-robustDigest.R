@@ -18,10 +18,10 @@ test_that("test data.table caching", {
 })
 
 test_that("test ALTREP integers", {
-  testInit(.qs2Format, opts = list(reproducible.cacheSaveFormat = .qsFormat,
+  testInit(.qs2Format, opts = list(reproducible.cacheSaveFormat = .qs2Format,
                              reproducible.cacheSpeed = "fast"))
 
-  for (i in c(.rdsFormat, .qsFormat)) {
+  for (i in c(.rdsFormat, .qs2Format)) {
     for (s in c("slow", "fast")) {
       withr::local_options(reproducible.cacheSaveFormat = i,
                            reproducible.cacheSpeed = s)

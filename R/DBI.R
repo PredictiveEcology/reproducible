@@ -785,7 +785,7 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
   # qs <- grep(.qsFormat, .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
   # rds <- grep(.rdsFormat, .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
   csExtension <- if (isTRUE(any(.qsFormat %in% csf))) {
-    .qsFormat
+    .qs2Format
   } else if (isTRUE(any(.rdsFormat %in% csf))) {
     .rdsFormat
   } else {
