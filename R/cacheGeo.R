@@ -724,6 +724,7 @@ CacheGeo <- function(targetFile = NULL,
         existingObjSF <- checkNameHasGeom(existingObjSF)
         if (!any(is(sf::st_geometry(newObjSF), "sfc_MULTIPOLYGON"))) {
           newObjSF <- sf::st_cast(newObjSF, "MULTIPOLYGON")
+        }
           # newObj <- sf::st_cast(newObj, "MULTIPOLYGON")
                 if (!is(sf::st_geometry(newObj), "MULTIPOLYGON"))
           newObj <- sf::st_cast(newObj, "MULTIPOLYGON")
