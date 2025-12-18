@@ -775,7 +775,7 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 #'   different save formats; currently only `"rds"` or `"qs"` (which now uses `qs2` package.
 #'   Defaults to `getOption("reproducible.cacheSaveFormat", "rds")`
 #' @param readOnly Logical. Only relevant during transition from `qs` to `qs2`.
-#'   Essentially, during transition, `qs` objects can be read, but not saved. 
+#'   Essentially, during transition, `qs` objects can be read, but not saved.
 #'   If `TRUE` then the `CacheStoredFile` can return a `.qs` file; if `FALSE`,
 #'   then this will not be able to return `qs`; instead it will return `qs2`
 #'   files.
@@ -1040,8 +1040,9 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
 loadFile <- function(file, ...) {
   if (!is.null(list(...)$format))
     cacheSaveFormat <- list(...)$format
-  # if (is.null(cacheSaveFormat)) {
-  cacheSaveFormat <- fileExt(file)
+  else
+    # if (is.null(cacheSaveFormat)) {
+    cacheSaveFormat <- fileExt(file)
   # }
   isQsAny <- cacheSaveFormat %in% c(.qsFormat, .qs2Format)
   # isQs2 <- cacheSaveFormat %in% .qs2Format

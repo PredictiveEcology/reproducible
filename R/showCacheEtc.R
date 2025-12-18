@@ -240,7 +240,6 @@ setMethod(
       #   groups <- list(sequen)
       # }
       #
-      # browser()
       # filesToRemove4 <- lapply(groups, function(g) {
       #   cis <- cacheIdsToRm[sequen[g]] |> unlist()
       #   grep(paste(cis, collapse = "|"), filesToRemove3, value = TRUE)
@@ -474,12 +473,39 @@ setMethod(
             #   dd <- dd[preDigest %in% FALSE]
             # }
 
-            rbindlist(fill = TRUE, lapply(dd, function(fil) {
+            if (isWindows() || length(dd) < 300) {
+              lapplyFun <- lapply
+            } else {
+              cores <- 15
+              if (requireNamespace("parallelly")) {
+                cores <- max(1, min(15, floor(parallelly::freeCores() * 0.9)))
+              }
+              optToUndo2 <- options(mc.cores = cores)
+              on.exit(options(optToUndo2), add = TRUE)
+              lapplyFun <- mclapply
+            }
+
+            rbindlist(fill = TRUE, lapplyFun(dd, function(fil) {
               # filOutside <<- fil
-              out <- try(loadFile(fil))#, cacheSaveFormat = cacheSaveFormat))
+              out <- try(loadFile(fil), silent = TRUE)#, cacheSaveFormat = cacheSaveFormat))
               if (is(out, "try-error")) {
                 cacheId <- gsub(paste0(CacheDBFileSingleExt()), "",
                                 basename(fil))
+
+                fileEx <- fileExt(fil)
+                fileExs <- setdiff(.cacheSaveFormats, fileEx)
+                for (fe in fileExs) {
+                  out <- try(loadFile(fil, format = fe), silent = TRUE)
+                  if (!is(out, "try-error")) {
+                    if (identical(getOption("reproducible.cacheSaveFormat"), .qsFormat))
+                      optForUndo <- options("reproducible.qsFormat" = .qsFormat)
+                    on.exit(options(optForUndo), add = TRUE)
+                    saveFilesInCacheFolder(out, fts = fil, cachePath = x,
+                                           cacheId = cacheId)
+
+                    return(out)
+                  }
+                }
                 # cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", cacheSaveFormat), "",
                 #                 basename(fil))
                 filesToRm <- dir(dirname(fil), pattern = cacheId, full.names = TRUE)
