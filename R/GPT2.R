@@ -1067,12 +1067,14 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
         cacheIdsToClear <- unique(names(simi))
         clearCache(cachePath, cacheId = cacheIdsToClear, ask = FALSE,  drv = drv, conn = conn, verbose = verbose - 2)
       }
-      messageCache("with different elements (most recent at top):", verbose = verbose)
+      nShow <- min(numSmallest, 5)
+      messageCache("with different elements (", nShow, " most recent at top):", verbose = verbose)
       # don't add a prefix if there is no `sim` in the stack
       wis <- .whereInStack("sim")
       prefix <- if (identical(.GlobalEnv, wis) || is.null(wis)) "" else .message$NoPrefix
       messageCache(.message$dashes, prefix)
-      lala <- Map(si = simi, nam = names(simi), function(si, nam) {
+      keepers <- seq_len(nShow)
+      lala <- Map(si = simi[keepers], nam = names(simi[keepers]), function(si, nam) {
         messageCache(paste0("Compared to cacheId: ", nam, prefix), verbose = verbose)
         if (verbose > 0) {
           oo <- capture.output(si)
