@@ -1442,6 +1442,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       if (isTRUE(changedSaveFormat)) {
         swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
                             cacheId = cache_key, sameCacheID = sameCacheID,
+                            userTags = paste0(shownCache$tagKey, ":", shownCache$tagValue),
                             newFile = cache_file_orig, verbose = verbose)
         cacheSaveFormat <- fileExt(cache_file_orig) # setdiff(.cacheSaveFormats, cacheSaveFormat)
       }

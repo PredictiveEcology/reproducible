@@ -1355,12 +1355,14 @@ checkSameCacheId <- function(f) {
 }
 
 swapCacheFileFormat <- function(wrappedObj, cachePath, drv, conn, cacheId, sameCacheID,
-                                newFile, verbose) {
+                                userTags, newFile, verbose) {
   messageCache(.message$changingFormat(prevFile = sameCacheID, newFile = newFile),
                verbose = verbose)
 
+  # if (exists("aaaa", envir = .GlobalEnv)) browser()
   fs <- saveToCache(
-    obj = wrappedObj, cachePath = cachePath, drv = drv, conn = conn,
+    obj = wrappedObj, cachePath = cachePath,
+    userTags = userTags, drv = drv, conn = conn,
     cacheId = cacheId, cacheSaveFormat = fileExt(newFile)
   )
   rmFromCache(
