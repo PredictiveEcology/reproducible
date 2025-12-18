@@ -315,9 +315,11 @@ CacheGeo <- function(targetFile = NULL,
         if (!any(is(sf::st_geometry(newObjSF), "sfc_MULTIPOLYGON"))) {
           newObjSF <- sf::st_cast(newObjSF, "MULTIPOLYGON")
         }
-          # newObj <- sf::st_cast(newObj, "MULTIPOLYGON")
-                if (!is(sf::st_geometry(newObj), "MULTIPOLYGON"))
-          newObj <- sf::st_cast(newObj, "MULTIPOLYGON")
+        # newObj <- sf::st_cast(newObj, "MULTIPOLYGON")
+        if (!is(sf::st_geometry(newObj$geometry), "MULTIPOLYGON"))
+          newObj$geometry <- sf::st_cast(newObj$geometry, "MULTIPOLYGON")
+        if (!is(sf::st_geometry(existingObjOrig$geometry), "MULTIPOLYGON"))
+          existingObjOrig$geometry <- sf::st_cast(existingObjOrig$geometry, "MULTIPOLYGON")
 
         # THE APPEND LINE
         existingObj <- as.data.frame(rbindlist(
