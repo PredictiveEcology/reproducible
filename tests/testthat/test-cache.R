@@ -986,30 +986,49 @@ test_that("test .defaultUserTags", {
 
 test_that("test changing reproducible.cacheSaveFormat midstream", {
 
-  for (form in c(.qs2Format)) {
-    skip_if_not_installed(form)
+  formA <- c(.qs2Format, .rdsFormat, .qsFormat)
+  forms <- expand.grid(A = formA, B = formA)
+  forms <- forms[forms[["A"]]!=forms[["B"]],]
+  forms <- forms[c(1, 2, 4),]
+
+  for (ind in seq_len(NROW(forms))) {
+    needed <- unname(unlist(t(forms[ind,]))[,1])
+    neededpkgs <- setdiff(needed, "rds")
+    have <- vapply(neededpkgs, function(need)  {
+      requireNamespace(need, quietly = TRUE)
+    }, logical(1))
+    if (!all(have))
+      next
 
     testInit(opts = list(
-      reproducible.cacheSaveFormat = .rdsFormat,
+      reproducible.cacheSaveFormat = needed[1],
+      reproducible.qsFormat = setdiff(needed, "rds")[1],
       reproducible.useMemoise = FALSE
     ))
 
     b <- Cache(rnorm, 1, cachePath = tmpdir)
     sc <- showCache(tmpdir)
     ci <- unique(sc[[.cacheTableHashColName()]])
-    withr::local_options(reproducible.cacheSaveFormat = form)
+    withr::local_options(reproducible.cacheSaveFormat = needed[2],
+                         reproducible.qsFormat = tail(setdiff(needed, "rds"), 1))
+    # if (ind == 3)
+    #   aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
+    # if (exists("aaaa", envir = .GlobalEnv)) browser()
     mess <- capture_messages({
       b <- Cache(rnorm, 1, cachePath = tmpdir)
     })
     expect_false(attr(b, ".Cache")$newCache)
-    expect_true(sum(cli::ansi_grepl(paste0("Changing format of Cache entry from rds to ", form), mess)) == 1)
+    expect_true(sum(cli::ansi_grepl(paste0("Changing format of Cache entry from ",
+                                           needed[1], " to ", needed[2]), mess)) == 1)
 
-    withr::local_options(reproducible.cacheSaveFormat = .rdsFormat)
+    withr::local_options(reproducible.cacheSaveFormat = needed[1],
+                         reproducible.qsFormat = setdiff(needed, "rds")[1])
     mess <- capture_messages({
       b <- Cache(rnorm, 1, cachePath = tmpdir)
     })
     expect_false(attr(b, ".Cache")$newCache)
-    expect_true(sum(cli::ansi_grepl(paste0("Changing format of Cache entry from ", form," to rds"), mess)) == 1)
+    expect_true(sum(cli::ansi_grepl(paste0("Changing format of Cache entry from ",
+                                           needed[2], " to ", needed[1]), mess)) == 1)
   }
 })
 

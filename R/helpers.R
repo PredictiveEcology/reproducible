@@ -482,7 +482,7 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   df <- data.frame(
     rbind(
       c(.rdsFormat, "base::readRDS", "base::saveRDS", "binary"),
-      c(.qsFormat, "qs2::qs_read", "qs2::qs_save", .qsFormat),
+      c(.qsFormat, "qs::qread", "qs::qsave", .qsFormat),
       c(.qs2Format, "qs2::qs_read", "qs2::qs_save", .qs2Format),
       cbind(
         c("asc", "grd", "tif"), griddedFile, griddedFileSave,

@@ -101,6 +101,9 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
 
   if (missing(dryRun)) dryRun <- getOption("reproducible.cacheDryRun", FALSE)
 
+  if (cacheSaveFormat %in% c(.qsFormat))
+    cacheSaveFormat <- getOption("reproducible.qsFormat", .qs2Format)
+
   # Memoise and return if it is there #
   if (!dryRun) {
     outputFromMemoise <- check_and_get_memoised_copy(keyFull, cachePaths, callList$.functionName,
@@ -394,7 +397,7 @@ check_and_get_cached_copy <- function(detailed_key, cachePaths, cache_file, func
   }
 
   for (cachePath in cachePaths) {
-    cache_file <- CacheStoredFile(cachePath, cache_key, cacheSaveFormat = cacheSaveFormat)
+    cache_file <- CacheStoredFile(cachePath, cache_key, cacheSaveFormat = cacheSaveFormat, readOnly = TRUE)
     cacheFileExists <- file.exists(cache_file) # could be length >1
     if (useDBI()) {
       inReposPoss <- searchInRepos(cachePath,
@@ -669,7 +672,8 @@ cache_Id_Identical <- function(metadata, cachePaths, cache_key,
       }
     }
   }
-  if (!is.null(linkToCacheId)) linkToCacheId <- CacheStoredFile(cachePath, linkToCacheId, cacheSaveFormat = cacheSaveFormat)
+  if (!is.null(linkToCacheId))
+    linkToCacheId <- CacheStoredFile(cachePath, linkToCacheId, cacheSaveFormat = cacheSaveFormat)
   linkToCacheId
 }
 
@@ -1343,7 +1347,8 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       fileExt(cache_file)
 
     for (iii in 1:2) {
-      fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key, cacheSaveFormat = cacheSaveFormat)
+      fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key,
+                              cacheSaveFormat = cacheSaveFormat)
       if (useDBI()) {
         rerun <- FALSE
       } else {
@@ -1396,7 +1401,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
             isTRUE(any(grepl(failMsgs, fns)))) {
           memoiseFail <- TRUE
           rm(list = cache_key, envir = memoiseEnv(cachePath))
-          cache_file <- CacheStoredFile(cachePath, cache_key)
+          cache_file <- CacheStoredFile(cachePath, cache_key, readOnly = TRUE)
         }
       } else {
         fns <- fns[nzchar(fns)]
