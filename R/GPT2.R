@@ -869,7 +869,48 @@ releaseLockFile <- function(locked) {
   }
 }
 
-lockFile <- function(cachePath, cache_key, envir = parent.frame(),
+lockFile <- function(cachePath, cache_key,
+                     envir   = parent.frame(),
+                     verbose = getOption("reproducible.verbose")) {
+  if (!useDBI()) {
+    csd <- CacheStorageDir(cachePath)
+    if (!any(dir.exists(csd))) lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
+
+    lock_path <- file.path(csd, paste0(cache_key, suffixLockFile()))
+    first <- TRUE
+    locked <- NULL
+
+    # Try repeatedly, but with bounded waits and backoff
+    repeat {
+      ## If you still want a time cap on the *attempt*, make it transient and reset:
+      setTimeLimit(elapsed = 3, transient = TRUE)
+      locked <- filelock::lock(lock_path, timeout = 2500)   # ~2.5 s wait, returns NULL on timeout
+      setTimeLimit(elapsed = Inf, transient = TRUE)
+
+      if (!is.null(locked)) break  # acquired
+
+      if (isTRUE(first)) {
+        first <- FALSE
+        messageCache(
+          "The cache file (", lock_path, ") is locked due to a concurrent process; waiting... ",
+          "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
+          verbose = verbose + 2
+        )
+      }
+      Sys.sleep(0.25)  # backoff
+    }
+
+    if (!first) {
+      messageCache("  ... ", lock_path, " released, continuing ... ", verbose = verbose + 2)
+    }
+
+    # Ensure release when the *outer* scope exits
+    on.exit2(releaseLockFile(locked), envir = envir)
+    locked
+  }
+}
+
+lockFileOld <- function(cachePath, cache_key, envir = parent.frame(),
                      verbose = getOption("reproducible.verbose")) {
   if (!useDBI()) {
     csd <- CacheStorageDir(cachePath)
