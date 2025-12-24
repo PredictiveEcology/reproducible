@@ -450,6 +450,12 @@ setMethod(
     }
 
     if (!useDBI()) {
+      pkgEnv <- memoiseEnv(cachePath = x)
+      if (!exists("shownCache", envir = pkgEnv))
+        pkgEnv[["shownCache"]] <- new.env()
+      if (!exists(x, envir = pkgEnv[["shownCache"]]))
+        pkgEnv[["shownCache"]][[x]] <- new.env()
+      scEnv <- pkgEnv[["shownCache"]][[x]]
       # periodically, a cache entry is corrupt; this while, tryCatch will remove the corrupt file and restart
       objsDT <- list()
       while(is(objsDT, "list")) {
@@ -466,27 +472,23 @@ setMethod(
                       pattern = paste(CacheDBFileSingleExt(cacheSaveFormat = .cacheSaveFormats), collapse = "|"),
                       full.names = TRUE
             )
-
-            # # For `options("reproducible.savePreDigest")`
-            # preDigest <- startsWith(basename(dd), "preDigest")
-            # if (isTRUE(any(preDigest))) {
-            #   dd <- dd[preDigest %in% FALSE]
-            # }
-
-            if (isWindows() || length(dd) < 300) {
-              lapplyFun <- lapply
+            lapplyFun <- lapply
+            curFileInfo <- file.info(dd) |> setDT(keep.rownames = "filename")
+            if (is.null(scEnv$FileInfo)) {
+              newOnes <- curFileInfo
             } else {
-              cores <- 15
-              if (requireNamespace("parallelly")) {
-                cores <- max(1, min(15, floor(parallelly::freeCores() * 0.9)))
+              newOnes <- curFileInfo[!scEnv$FileInfo, on = colnames(curFileInfo)]
+              removeOnes <- scEnv$FileInfo[!curFileInfo, on = colnames(curFileInfo)]
+              if (NROW(removeOnes)) {
+                scEnv$FileInfo <- scEnv$FileInfo[!removeOnes, on = colnames(curFileInfo)]
+                cis <- filePathSansExt(filePathSansExt(basename(removeOnes$filename)))
+                scEnv$sc <- scEnv$sc[!cacheId %in% cis]
               }
-              optToUndo2 <- options(mc.cores = cores)
-              on.exit(options(optToUndo2), add = TRUE)
-              lapplyFun <- mclapply
             }
-
-            rbindlist(fill = TRUE, lapplyFun(dd, function(fil) {
-              # filOutside <<- fil
+            dd <- newOnes[["filename"]]
+            scEnv$FileInfo <- curFileInfo
+            
+            ret <- try(rbindlist(fill = TRUE, lapplyFun(dd, function(fil) {
               out <- try(loadFile(fil), silent = TRUE)#, cacheSaveFormat = cacheSaveFormat))
               if (is(out, "try-error")) {
                 cacheId <- gsub(paste0(CacheDBFileSingleExt()), "",
@@ -506,24 +508,22 @@ setMethod(
                     return(out)
                   }
                 }
-                # cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", cacheSaveFormat), "",
-                #                 basename(fil))
                 filesToRm <- dir(dirname(fil), pattern = cacheId, full.names = TRUE)
-                # fileExtIncorrect <- unique(fileExt(filesToRm)) # %in% .cacheSaveFormats
-                # if (any(fileExtIncorrect)) {
-                #   messageCache("The database file was using a different save format; deleting Cache entry for ", cacheId,
-                #                verbose = getOption("reproducible.verbose"))
-                #
-                # } else {
                   messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
                                verbose = getOption("reproducible.verbose"))
-                # }
                 unlink(filesToRm)
               }
               out
 
-              }))
-
+              })))
+            if (is(ret, "try-error"))
+              browser()
+            if (!is.null(scEnv$sc)) {
+              ret <- rbindlist(list(scEnv$sc, ret))
+            }
+            scEnv$sc <- ret
+            ret
+            
           }# , error = function(e) {
             #   cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", cacheSaveFormat), "",
             #                   basename(file))
