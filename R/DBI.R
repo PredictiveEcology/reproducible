@@ -1349,6 +1349,7 @@ loadFromCacheSwitchFormat <- function(f, verbose, cachePath, fullCacheTableForOb
 checkSameCacheId <- function(f) {
   cacheId <- filePathSansExt(basename(f))
   sameCacheID <- grep("\\.lock$", dir(dirname(f), pattern = cacheId), invert = TRUE, value = TRUE)
+  sameCacheID <- grep(paste0(paste(.cacheSaveFormats, collapse = "|"), "$"), sameCacheID, value = TRUE)
   if (!useDBI() && length(sameCacheID) > 1) {
     sameCacheID <- onlyStorageFiles(sameCacheID, cacheId)
   }
@@ -1360,7 +1361,6 @@ swapCacheFileFormat <- function(wrappedObj, cachePath, drv, conn, cacheId, sameC
   messageCache(.message$changingFormat(prevFile = sameCacheID, newFile = newFile),
                verbose = verbose)
 
-  # if (exists("aaaa", envir = .GlobalEnv)) browser()
   fs <- saveToCache(
     obj = wrappedObj, cachePath = cachePath,
     userTags = userTags, drv = drv, conn = conn,

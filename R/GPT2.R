@@ -81,6 +81,10 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                             length, algo, quick, classOptions, times$CacheDigestStart,
                             verbose = verbose))
     if (is(keyFull, "try-error")) {
+      # This is the bit that indicates that one or more objects in the toDigest
+      #   are corrupted and can't be digested. So, it is the inputs to the
+      #   function that are corrupted: this can't self heal. Needs better user
+      #   error message to give help.
       stopRcppError(toDigest, .objects, length, algo, quick, classOptions)
     }
     # update with cacheChain info
@@ -1470,26 +1474,30 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
         rerun <- TRUE
       }
       output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
+      if (isTRUE(changedSaveFormat)) {
+        swapTry <- try(swapCacheFileFormat(
+          wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
+          cacheId = cache_key, sameCacheID = sameCacheID,
+          userTags = paste0(shownCache$tagKey, ":", shownCache$tagValue),
+          newFile = cache_file_orig, verbose = verbose), silent = TRUE)
+        cacheSaveFormat <- fileExt(cache_file_orig) # setdiff(.cacheSaveFormats, cacheSaveFormat)
+        rerun <- TRUE
+      }
       if (is(obj, "try-error") || rerun || is(output, "try-error")) {
         messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
         otherFiles2 <- dir(CacheStorageDir(cachePath), pattern = cache_key, full.names = TRUE)
         if (!is(shownCache, "try-error")) {
-          otherFiles <- normPath(file.path(CacheStorageDir(cachePath),
-                                           shownCache[tagKey == "filesToLoad"]$tagValue))
-          otherFiles2 <- c(otherFiles, otherFiles2)
+          if (!is.null(shownCache)) {
+            otherFiles <- normPath(file.path(CacheStorageDir(cachePath),
+                                             shownCache[tagKey == "filesToLoad"]$tagValue))
+            otherFiles2 <- c(otherFiles, otherFiles2)
+          }
         }
         rmFiles <- unique(c(cache_file, otherFiles2))
         unlink(rmFiles)
         return(.returnNothing)
       }
 
-      if (isTRUE(changedSaveFormat)) {
-        swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
-                            cacheId = cache_key, sameCacheID = sameCacheID,
-                            userTags = paste0(shownCache$tagKey, ":", shownCache$tagValue),
-                            newFile = cache_file_orig, verbose = verbose)
-        cacheSaveFormat <- fileExt(cache_file_orig) # setdiff(.cacheSaveFormats, cacheSaveFormat)
-      }
     }
 
     if (cloudWrite(useCloud)) {
