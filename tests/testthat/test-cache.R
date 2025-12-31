@@ -571,7 +571,7 @@ test_that("test date-based cache removal", {
   expect_true(NROW(a1) > 0)
   b <- clearCache(tmpdir, before = Sys.Date() - 1, ask = FALSE)
   expect_true(NROW(b) == 0)
-  expect_identical(a1, showCache(tmpdir))
+  expect_equivalent(a1, showCache(tmpdir)) # now has an index on cacheId
 
   b <- clearCache(tmpdir, before = Sys.Date() + 1, ask = FALSE)
   expect_identical(data.table::setindex(b, NULL), data.table::setindex(a1, NULL))
@@ -818,7 +818,7 @@ test_that("test mergeCache", {
     d1 <- mergeCache(tmpCache, tmpdir)
   })
   expect_true(any(cli::ansi_grepl("Skipping", mess)))
-  expect_true(identical(showCache(d), showCache(d1)))
+  expect_equivalent(showCache(d), showCache(d1))
 })
 
 test_that("test cache-helpers", {
@@ -1008,7 +1008,7 @@ test_that("test changing reproducible.cacheSaveFormat midstream", {
 
     b <- Cache(rnorm, 1, cachePath = tmpdir)
     sc <- showCache(tmpdir)
-    ci <- unique(sc[[.cacheTableHashColName()]])
+    # ci <- unique(sc[[.cacheTableHashColName()]])
     withr::local_options(reproducible.cacheSaveFormat = needed[2],
                          reproducible.qsFormat = tail(setdiff(needed, "rds"), 1))
     # if (ind == 3)
