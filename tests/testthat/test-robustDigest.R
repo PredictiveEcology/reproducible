@@ -22,10 +22,10 @@ test_that("test ALTREP integers", {
                              reproducible.cacheSpeed = "fast"))
 
   for (i in .cacheSaveFormats) {
-    for (s in c("slow", "fast")) {
+    if (.requireNamespace(i)) {
+      for (s in c("slow", "fast")) {
       withr::local_options(reproducible.cacheSaveFormat = i,
                            reproducible.cacheSpeed = s)
-
       a <- 1991:20200
       aDig <- .robustDigest(a)
       tf <- tempfile(fileext = i);
@@ -46,6 +46,8 @@ test_that("test ALTREP integers", {
       bDig <- .robustDigest(b)
       expect_true(identical(aDig, bDig))
       withr::deferred_run()
-    }}
+      }
+    }
 
+  }
 })
