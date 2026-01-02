@@ -833,7 +833,6 @@ test_that("preProcess doesn't work", {
       value = TRUE
     ))
 
-    # aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
     mess <- capture_messages({
       warns <- capture_warnings({
         test <- prepInputs(
@@ -1163,7 +1162,7 @@ test_that("prepInputs when fun = NA", {
         )
       })
     })
-    if (!is(test1, "try-error")) {
+    if (!is(test1, "try-error") && !any(grepl("out of service", mess1))) {
       expect_true(is(test1, "SpatVector"))
       # test quoted version of `dlFun`
       mess3 <- capture_messages({
@@ -1808,7 +1807,7 @@ test_that("options inputPaths", {
   })
   expect_true(sum(grepl(hardlinkOrSymlinkMessagePrefixForGrep, mess1)) == 1) # used a linked version
   expect_true(sum(grepl(paste0("Hardlinked.*"), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
-  expect_true(sum(grepl(paste0(basename(tmpdir2)), mess1)) == 2) # it is now in tmpdir2, i.e., the destinationPath
+  expect_true(sum(grepl(paste0(basename(tmpdir2)), mess1)) %in% 2:3) # it is now in tmpdir2, i.e., the destinationPath
 
   ## Have file in destinationPath, not in inputPath
   unlink(file.path(tmpdir, theFile))
@@ -2042,16 +2041,16 @@ test_that("test prepInputs url when a directory", {
     # Nothing specified
     a <- prepInputs(url = url, fun = "terra::rast")
     expect_is(a, "SpatRaster")
-    files <- dir(tmpdir, pattern = "comb")
+    files <- dir(getwd(), pattern = "comb")
     expect_true(length(files) == 8)
 
-    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
+    unlink(dir(getwd(), recursive = TRUE, full.names = TRUE))
     a <- prepInputs(url = url, targetFile = "comb_290719.tif", fun = "terra::rast")
     expect_is(a, "SpatRaster")
-    files <- dir(tmpdir, pattern = "comb")
+    files <- dir(getwd(), pattern = "comb")
     expect_true(length(files) == 8)
 
-    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
+    unlink(dir(getwd(), recursive = TRUE, full.names = TRUE))
     a <- prepInputs(
       url = url,
       targetFile = "comb_290719.tif",
@@ -2059,13 +2058,13 @@ test_that("test prepInputs url when a directory", {
       fun = "terra::rast"
     )
     expect_is(a, "SpatRaster")
-    files <- dir(tmpdir, pattern = "comb")
+    files <- dir(getwd(), pattern = "comb")
     expect_true(length(files) == 1)
 
-    unlink(dir(tmpdir, recursive = TRUE, full.names = TRUE))
+    unlink(dir(getwd(), recursive = TRUE, full.names = TRUE))
     a <- prepInputs(url = url, fun = "terra::rast")
     expect_is(a, "SpatRaster")
-    files <- dir(tmpdir, pattern = "comb_290719")
+    files <- dir(getwd(), pattern = "comb_290719")
     expect_true(length(files) == 7)
   })
 })

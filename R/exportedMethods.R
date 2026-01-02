@@ -213,7 +213,7 @@ unwrapSpatRaster <- function(obj, cachePath, cacheId, ...) {
       if (!is.null(cachePath)) {
         filenameInCache <- CacheStoredFile(cachePath,
                                            # cacheId = tools::file_path_sans_ext(basename(obj)),
-                                           obj = obj
+                                           obj = obj, readOnly = TRUE
         )
         filenameInCache <- filenameInCacheWPrefix(filenameInCache, cacheId, relative = FALSE)
         # filenameInCache <- .prefix(filenameInCache, prefixCacheId(cacheId))
@@ -440,7 +440,8 @@ setMethod(
 
   messageCache(.message$ObjToRetrieveFn(functionName), ", ",
                #             messageCache("...(Object to retrieve (fn: ", .messageFunctionFn(functionName), ", ",
-               basename2(CacheStoredFile(cachePath, cacheId, cacheSaveFormat = fileFormat)),
+               basename2(CacheStoredFile(cachePath, cacheId, cacheSaveFormat = fileFormat,
+                                         readOnly = TRUE)),
                ")",
                if (bigFile) " is large: ",
                if (bigFile) format(objSize, units = "auto"),

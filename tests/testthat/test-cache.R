@@ -571,7 +571,7 @@ test_that("test date-based cache removal", {
   expect_true(NROW(a1) > 0)
   b <- clearCache(tmpdir, before = Sys.Date() - 1, ask = FALSE)
   expect_true(NROW(b) == 0)
-  expect_identical(a1, showCache(tmpdir))
+  expect_equivalent(a1, showCache(tmpdir)) # now has an index on cacheId
 
   b <- clearCache(tmpdir, before = Sys.Date() + 1, ask = FALSE)
   expect_identical(data.table::setindex(b, NULL), data.table::setindex(a1, NULL))
@@ -818,7 +818,7 @@ test_that("test mergeCache", {
     d1 <- mergeCache(tmpCache, tmpdir)
   })
   expect_true(any(cli::ansi_grepl("Skipping", mess)))
-  expect_true(identical(showCache(d), showCache(d1)))
+  expect_equivalent(showCache(d), showCache(d1))
 })
 
 test_that("test cache-helpers", {
@@ -928,8 +928,8 @@ test_that("test rm large non-file-backed rasters", {
     }
   }
 
-  testInit(c(.qsFormat, "terra"), opts = list("reproducible.cacheSpeed" = "fast",
-                                         "reproducible.cacheSaveFormat" = .qsFormat))
+  testInit(c(.qs2Format, "terra"), opts = list("reproducible.cacheSpeed" = "fast",
+                                         "reproducible.cacheSaveFormat" = .qs2Format))
 
   ext <- terra::ext(0, 10000, 0, 10000)
   r <- Cache(terra::rast, ext,
@@ -986,30 +986,49 @@ test_that("test .defaultUserTags", {
 
 test_that("test changing reproducible.cacheSaveFormat midstream", {
 
-  for (form in c(.qsFormat, .qs2Format)) {
-    skip_if_not_installed(form)
+  formA <- c(.qs2Format, .rdsFormat, .qsFormat)
+  forms <- expand.grid(A = formA, B = formA)
+  forms <- forms[forms[["A"]]!=forms[["B"]],]
+  forms <- forms[c(1, 2, 4),]
+
+  for (ind in seq_len(NROW(forms))) {
+    needed <- unname(unlist(t(forms[ind,]))[,1])
+    neededpkgs <- setdiff(needed, "rds")
+    have <- vapply(neededpkgs, function(need)  {
+      requireNamespace(need, quietly = TRUE)
+    }, logical(1))
+    if (!all(have))
+      next
 
     testInit(opts = list(
-      reproducible.cacheSaveFormat = .rdsFormat,
+      reproducible.cacheSaveFormat = needed[1],
+      reproducible.qsFormat = setdiff(needed, "rds")[1],
       reproducible.useMemoise = FALSE
     ))
 
     b <- Cache(rnorm, 1, cachePath = tmpdir)
     sc <- showCache(tmpdir)
-    ci <- unique(sc[[.cacheTableHashColName()]])
-    withr::local_options(reproducible.cacheSaveFormat = form)
+    # ci <- unique(sc[[.cacheTableHashColName()]])
+    withr::local_options(reproducible.cacheSaveFormat = needed[2],
+                         reproducible.qsFormat = tail(setdiff(needed, "rds"), 1))
+    # if (ind == 3)
+    #   aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
+    # if (exists("aaaa", envir = .GlobalEnv)) browser()
     mess <- capture_messages({
       b <- Cache(rnorm, 1, cachePath = tmpdir)
     })
     expect_false(attr(b, ".Cache")$newCache)
-    expect_true(sum(cli::ansi_grepl(paste0("Changing format of Cache entry from rds to ", form), mess)) == 1)
+    expect_true(sum(cli::ansi_grepl(paste0("Changing format of Cache entry from ",
+                                           needed[1], " to ", needed[2]), mess)) == 1)
 
-    withr::local_options(reproducible.cacheSaveFormat = .rdsFormat)
+    withr::local_options(reproducible.cacheSaveFormat = needed[1],
+                         reproducible.qsFormat = setdiff(needed, "rds")[1])
     mess <- capture_messages({
       b <- Cache(rnorm, 1, cachePath = tmpdir)
     })
     expect_false(attr(b, ".Cache")$newCache)
-    expect_true(sum(cli::ansi_grepl(paste0("Changing format of Cache entry from ", form," to rds"), mess)) == 1)
+    expect_true(sum(cli::ansi_grepl(paste0("Changing format of Cache entry from ",
+                                           needed[2], " to ", needed[1]), mess)) == 1)
   }
 })
 
@@ -1904,7 +1923,7 @@ test_that("test future", {
 })
 
 test_that("test failed Cache recovery -- message to delete cacheId", {
-  if (!useDBI() || getOption("reproducible.useCacheV3")) skip("Not relevant for multipleDBfiles or new Cache")
+  if (!useDBI() || getOption("reproducible.useCacheV3")) skip("Only relevant for DBI backend")
   testInit(opts = list("reproducible.useMemoise" = FALSE))
 
   b <- Cache(rnorm, 1, cachePath = tmpdir)
@@ -2010,6 +2029,7 @@ test_that("cacheId is same as calculated", {
   # manually look at output attribute which shows cacheId: ca275879d5116967
   manualCacheId <- "ca275879d5116967"
   mess2 <- capture_messages(b <- Cache(rnorm, 1, cacheId = manualCacheId))
+  mess2 <- gsub("\n ", "", cli::ansi_strip(mess2)) # there may be "\n " if window width too small
   expect_match(mess2, .message$cacheIdNotAssessed(manualCacheId), all = FALSE)
   expect_equivalent(a, b)
 })
@@ -2078,7 +2098,6 @@ test_that("cacheChaining", {
       for (index in 1:3) {
         # i <- c(TRUE, FALSE, TRUE)[index]
         #if (index == 3 && arg == args[2])
-        #  aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
         i <- df[[dfIndex]][[index]]
         # index <- index + 1L
         withr::local_seed(123)
@@ -2086,9 +2105,7 @@ test_that("cacheChaining", {
         withr::local_options(reproducible.cacheChaining = i)
         fn1 <- function(x) {
           a <- sample(N) |> Cache()
-          # if (exists("aaaa", envir = .GlobalEnv)) browser()
           b <- samWMean(a, size = length(a) * 0.9, other = x) |> Cache()
-          # if (exists("aaaa", envir = .GlobalEnv)) browser()
           d <- samWMean(a, size = length(a) * 0.8, other = x) |> Cache()
           c(mean(a), b, d)
         }
@@ -2104,20 +2121,16 @@ test_that("cacheChaining", {
         arb[[iChar]] <- list()
         if (index < 3) { # don't clear the 3rd one so that we can test that cacheChaining doesn't need a new entry in the Cache
           clearCache(ask = FALSE)
-        } else {
-          # aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
         }
         mess[[iChar]] <- capture_messages({
           arb[[iChar]][[1]] <- fn2() # a --> calculate & slow; b --> no digest, but still calculate & slow; d --> no digest, still calculate & slow
           arb[[iChar]][[2]] <- fn2()# a --> digest & return cache; b --> skip digest, return cache; d --> skip digest, return cache
         })
-        # rm(aaaa, envir = .GlobalEnv)
         sc[[iChar]] <- showCache(verbose = FALSE)[tagKey == "elapsedTimeDigest"]
 
       }
 
       # Should be the same pattern of saving/loading regardless of chainCaching
-      # aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
       #if (dfIndex == 2)
       #   browser()
       expect_equivalent(length(grep("Saved", mess$`2`)), arg)

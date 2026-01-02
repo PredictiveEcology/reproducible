@@ -38,20 +38,20 @@ test_that("Issue 181 geodatabase file", {
 
   ## based on #145. extracted file is ~30 GB so this takes a long time to test!
   testInit(c("terra", "googledrive"), needGoogleDriveAuth = TRUE)
-  rstLCC <- Cache(prepInputs,
+  rstLCC <- prepInputs(
     targetFile = "EOSD_Mosaic.gdb",
     archive = "EOSD_2000_2007_combined.zip",
     alsoExtract = "similar",
     url = "https://drive.google.com/file/d/1p66_P6dNdlrvAF3Mp99Xz9Bdz2lvfaQ7",
     destinationPath = tmpdir,
     filename2 = NULL,
-    fun = NA,
-    userTags = c(
+    fun = NA) |>
+    Cache(userTags = c(
       "outFun:Cache",
       "step:prepEOSD"
     )
   )
-  expect_true(is(sf::st_read(rstLCC$targetFilePath, layer = "EOSD_Mosaic_BWC_range_clip", quiet = TRUE), "sf"))
+  expect_true(is(sf::st_read(rstLCC, layer = "EOSD_Mosaic_BWC_range_clip", quiet = TRUE), "sf"))
 })
 
 test_that("Issue 242 masking fail", {

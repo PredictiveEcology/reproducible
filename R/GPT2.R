@@ -81,6 +81,10 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                             length, algo, quick, classOptions, times$CacheDigestStart,
                             verbose = verbose))
     if (is(keyFull, "try-error")) {
+      # This is the bit that indicates that one or more objects in the toDigest
+      #   are corrupted and can't be digested. So, it is the inputs to the
+      #   function that are corrupted: this can't self heal. Needs better user
+      #   error message to give help.
       stopRcppError(toDigest, .objects, length, algo, quick, classOptions)
     }
     # update with cacheChain info
@@ -100,6 +104,9 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   }
 
   if (missing(dryRun)) dryRun <- getOption("reproducible.cacheDryRun", FALSE)
+
+  if (cacheSaveFormat %in% c(.qsFormat))
+    cacheSaveFormat <- getOption("reproducible.qsFormat", .qs2Format)
 
   # Memoise and return if it is there #
   if (!dryRun) {
@@ -394,7 +401,7 @@ check_and_get_cached_copy <- function(detailed_key, cachePaths, cache_file, func
   }
 
   for (cachePath in cachePaths) {
-    cache_file <- CacheStoredFile(cachePath, cache_key, cacheSaveFormat = cacheSaveFormat)
+    cache_file <- CacheStoredFile(cachePath, cache_key, cacheSaveFormat = cacheSaveFormat, readOnly = TRUE)
     cacheFileExists <- file.exists(cache_file) # could be length >1
     if (useDBI()) {
       inReposPoss <- searchInRepos(cachePath,
@@ -669,7 +676,8 @@ cache_Id_Identical <- function(metadata, cachePaths, cache_key,
       }
     }
   }
-  if (!is.null(linkToCacheId)) linkToCacheId <- CacheStoredFile(cachePath, linkToCacheId, cacheSaveFormat = cacheSaveFormat)
+  if (!is.null(linkToCacheId))
+    linkToCacheId <- CacheStoredFile(cachePath, linkToCacheId, cacheSaveFormat = cacheSaveFormat)
   linkToCacheId
 }
 
@@ -865,7 +873,48 @@ releaseLockFile <- function(locked) {
   }
 }
 
-lockFile <- function(cachePath, cache_key, envir = parent.frame(),
+lockFile <- function(cachePath, cache_key,
+                     envir   = parent.frame(),
+                     verbose = getOption("reproducible.verbose")) {
+  if (!useDBI()) {
+    csd <- CacheStorageDir(cachePath)
+    if (!any(dir.exists(csd))) lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
+
+    lock_path <- file.path(csd, paste0(cache_key, suffixLockFile()))
+    first <- TRUE
+    locked <- NULL
+
+    # Try repeatedly, but with bounded waits and backoff
+    repeat {
+      ## If you still want a time cap on the *attempt*, make it transient and reset:
+      setTimeLimit(elapsed = 3, transient = TRUE)
+      locked <- filelock::lock(lock_path, timeout = 2500)   # ~2.5 s wait, returns NULL on timeout
+      setTimeLimit(elapsed = Inf, transient = TRUE)
+
+      if (!is.null(locked)) break  # acquired
+
+      if (isTRUE(first)) {
+        first <- FALSE
+        messageCache(
+          "The cache file (", lock_path, ") is locked due to a concurrent process; waiting... ",
+          "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
+          verbose = verbose + 2
+        )
+      }
+      Sys.sleep(0.25)  # backoff
+    }
+
+    if (!first) {
+      messageCache("  ... ", lock_path, " released, continuing ... ", verbose = verbose + 2)
+    }
+
+    # Ensure release when the *outer* scope exits
+    on.exit2(releaseLockFile(locked), envir = envir)
+    locked
+  }
+}
+
+lockFileOld <- function(cachePath, cache_key, envir = parent.frame(),
                      verbose = getOption("reproducible.verbose")) {
   if (!useDBI()) {
     csd <- CacheStorageDir(cachePath)
@@ -906,32 +955,14 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
                         # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                         drv, conn, verbose) {
   devMode <- isDevMode(useCache, userTags)  # don't use devMode if no userTags
-  shownCache <- showCache(cachePath, Function = .functionName, userTags = userTags, verbose = verbose - 2)
-  # functionByDigest <- metadata[tagKey %in% "preDigest" & startsWith(tagValue, ".FUN")]$tagValue
+  shownCache <- showCache(cachePath, Function = .functionName, userTags = userTags,
+                          verbose = verbose - 2)
+  # functionByDigest <- metadata[tagKey %in% "preDigest" & startsWith(tagValue, dotFunTxt)]$tagValue
   # shownCache <- shownCache[tagKey %in% "preDigest" & tagValue %in% functionByDigest]
   setorderv(shownCache, "createdDate", order = -1)
   # shownCache <- shownCache[tagKey != "outerFunction"] # doesn't matter what outerFunctions do, if all others are same
   # metadata <- metadata[tagKey != "outerFunction"]
   onKey <- c("tagKey", "tagValue")
-
-  # if (NROW(shownCache)) {
-  #   if (!is.null(userTags)) { # userTags are as "strong as" functionName
-  #     userTags2a <- gsub("^.*:", "", userTags)
-  #     userTags2b <- gsub(":.*$", "", userTags)
-  #     noColons <- userTags2a == userTags2b
-  #     if (any(noColons)) {
-  #       userTags2b[noColons] <- "userTags"
-  #     }
-  #     userTags2b <- ifelse(!nzchar(userTags2b), "userTags", userTags2b)
-  #     userTagsAsDT <- data.table(tagKey = userTags2b, tagValue = userTags2a)
-  #     userTagsAsDT <- unique(userTagsAsDT)
-  #     # identify only those items that match the userTags
-  #     scMatch <- shownCache[userTagsAsDT, # .(length(unique(tagKey)) == length(userTags)),
-  #                           on = onKey, # by = "cacheId",
-  #                           nomatch = FALSE]# [V1 %in% TRUE]
-  #     shownCache <- shownCache[cacheId %in% unique(scMatch[["cacheId"]]), on = "cacheId"]
-  #   }
-  # }
 
   if (NROW(shownCache)) {
     userTagsMess <- if (!is.null(userTags)) {
@@ -942,22 +973,14 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
     }
 
     rmTagKeys <- "otherFunction|elapsedTime|accessed"
-    # shownCache <- shownCache[tagKey %in% c(metadata$tagKey)][grep(x = tagKey, rmTagKeys, invert = TRUE)]
     shownCache <- shownCache[grep(x = tagKey, rmTagKeys, invert = TRUE)]
     metadataSmall <- metadata[grep(x = tagKey, rmTagKeys, invert = TRUE)]
-    # cacheIdOfSimilar
     # Can only compare on tagKeys that are *not yet* in the metadata; e.g., object.size may
     #   not be there, so don't know if it is different
     similarFull <- unique(shownCache[tagKey %in% unique(c(metadata$tagKey))], by = .dtFileMainCols)
-    # similarFull <- unique(shownCache, by = .dtFileMainCols)
-    # metadataSmall <- metadataSmall[tagKey %in% unique(c(similarFull$tagKey))]
     similarFullList <- split(similarFull, by = "cacheId")
     notInThisCall <- lapply(similarFullList, function(x) x[!metadataSmall, on = onKey])
     notInSC <- lapply(similarFullList, function(x) metadataSmall[!x, on = onKey])
-    # notInThisCall <- similarFull[!metadataSmall, on = onKey]
-    # notInSC <- metadataSmall[!similarFull, on = onKey]
-    # notInSC[grep("userTags", tagKey ), tagValue := paste0(tagKey, ":", tagValue)]
-    # notInThisCall[grep("userTags", tagKey ), tagValue := paste0(tagKey, ":", tagValue)]
     notInThisCall0 <- lapply(notInThisCall, function(x) x[grep("userTags", tagKey ), tagValue := paste0(tagKey, ":", tagValue)])
     notInSC0 <- lapply(notInSC, function(x) x[grep("userTags", tagKey ), tagValue := paste0(tagKey, ":", tagValue)])
 
@@ -969,7 +992,6 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
       otherLabels <- vapply(strsplitOnlySingleColon(similarFull$tagValue, split = "\\:"),
                       function(x) ifelse(length(x) == 2, x[[1]], NA_character_), FUN.VALUE = character(1))
       whOther <- other == "other"
-      # similar <- similarFull[whOther %in% TRUE]
       cacheIdOfSimilar <- unique(similarFull$cacheId)
       simFun <- list(funName = unique(shownCache$tagValue[shownCache$tagKey == "function"]))
       messageCache("Cache of ", .messageFunctionFn(simFun), " differs from", verbose = verbose)
@@ -1019,8 +1041,8 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
 
       notInSC4 <- lapply(notInSC2, function(x) {
         x <- createSimilar(x, verbose = verbose, devMode = devMode, .functionName = .functionName)
-        data.table::setnames(x, old = c("valueInCache", "cacheIdInCache"),
-                             new = c("valueThisCall", "cacheIdOfThisCall"),
+        data.table::setnames(x, old = c(valInCacheTxt, cacheIdInCacheTxt),
+                             new = c(valThisCallTxt, cacheIdThisCallTxt),
                              skip_absent = TRUE)
         })
       notInThisCall3 <- lapply(notInThisCall2, function(x) {
@@ -1029,17 +1051,37 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
           set(ss, NULL, "lsStr", NULL)
         ss
         })
+
       simi <- Map(n = names(notInThisCall3), function(n) {
         if (NROW(notInThisCall3[[n]]) || NROW(notInSC4[[n]])) {
-          a <- notInSC4[[n]][notInThisCall3[[n]], on = "arg", allow.cartesian = TRUE]
-          b <- notInThisCall3[[n]][notInSC4[[n]], on = "arg", allow.cartesian = TRUE]
+          a <- notInSC4[[n]][notInThisCall3[[n]], on = argTxt, allow.cartesian = TRUE]
+          b <- notInThisCall3[[n]][notInSC4[[n]], on = argTxt, allow.cartesian = TRUE]
           d <- unique(rbindlist(list(a, b), fill = TRUE))
         } else {
           d <- data.table(notInSC4[[n]], valueInCache = NA, cacheIdInCache = NA)
         }
-        setcolorder(d, c("arg",
-                         grep("InCache", value = TRUE, colnames(d)),
-                         grep("ThisCall", value = TRUE, colnames(d))))
+
+        # Convert .FUN to the actual function name; need 2 mechanisms because SpaDES.core manually
+        #   places an entry with the actual name
+        hasDotFun <- d[[argTxt]] %in% dotFunTxt
+        if (any(hasDotFun)) {
+          dups <- duplicated(d[[valThisCallTxt]])
+          if (any(dups)) {
+            # Remove .FUN if there is another one with "more info"
+            theDupCI <- d[[valThisCallTxt]][dups]
+            theDotFun <- d[[valThisCallTxt]] %in% theDupCI & hasDotFun
+            d <- d[!theDotFun]
+          } else {
+            # case where it shows only ".FUN", with no duplication
+            scHere <- shownCache[shownCache$cacheId %in% d[[cacheIdInCacheTxt]], ]# $tagKey %in% "function"
+            funName <- scHere[["tagValue"]][scHere[["tagKey"]] %in% "function"]
+            if (length(funName))
+              d[[argTxt]] <- funName
+          }
+
+        }
+        setcolorder(d, c(argTxt, cacheIdInCacheTxt, valInCacheTxt,
+                         cacheIdThisCallTxt, valThisCallTxt))
         d
       })
 
@@ -1060,40 +1102,6 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
                      " ", numSmallest,
                      " similar calls in the Cache repository.", verbose = verbose * !devMode)
       }
-      # data.table::setnames(notInSC2, old = c("valueInCache", "cacheIdInCache"), c("valueThisCall", "cacheIdOfThisCall"),
-      #                      skip_absent = TRUE)
-      #
-      # # a <- notInSC2[notInMetadata2, on = "arg"]
-      # # b <- notInMetadata2[notInSC2, on = "arg"]
-      # # simi <- rbindlist(list(a, b), fill = TRUE)
-      #
-      # simi <- lapply(split(notInMetadata2, by = "cacheIdInCache"), function(x) {
-      #   a <- notInSC2[x, on = "arg"]
-      #   b <- x[notInSC2, on = "arg"]
-      #   d <- rbindlist(list(a, b), fill = TRUE)
-      #   setcolorder(d, c("arg",
-      #                    grep("InCache", value = TRUE, colnames(d)),
-      #                    grep("ThisCall", value = TRUE, colnames(d))))
-      #   d
-      # })
-
-      # notInMetadata2 <- createSimilar(notInThisCall, notInSC2, cacheIdInsimi = unique(simi[["cacheIdInCache"]]))
-      # simi22 <- createMerged(notInSC2, notInMetadata2)
-
-#
-#       noMergeCols <- c("outerFunction", "userTags")
-#       simi1NoMergeCols <- simi[arg %in% noMergeCols]
-#       simi2NoMergeCols <- simi2[arg %in% noMergeCols]
-#       simi1B <- simi1NoMergeCols[!simi2NoMergeCols, on = c("arg", "valueInCache" = "valueThisCall")]
-#       simi2B <- simi2NoMergeCols[!simi1NoMergeCols, on = c("arg", "valueThisCall" = "valueInCache")]
-#       simi1MergeCols <- simi[!arg %in% noMergeCols]
-#       simi2MergeCols <- simi2[!arg %in% noMergeCols]
-#
-#
-#       simiMergeCols <- data.table(simi1MergeCols, simi2MergeCols[match(simi1MergeCols$arg, arg), -"arg"])
-#       simi <- rbindlist(list(simi1NoMergeCols, simi2NoMergeCols, simiMergeCols), fill = TRUE)
-#       setorderv(simi, c("cacheIdInCache", "arg"))
-      # simi <- simi[simi2, on = c("arg"), allow.cartesian = TRUE] # there can be duplicate args
 
       if (isDevMode(useCache, userTags)) {
         messageCache("------ devMode -------", verbose = verbose)
@@ -1102,28 +1110,23 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
         messageCache("This call to cache will replace entry with cacheId(s): ",
                      paste0(simi[["cacheId"]], collapse = ", "), verbose = verbose)
         cacheIdsToClear <- unique(names(simi))
-        # cacheIdsToClear <- paste0("^", unique(names(simi)), "$", collapse = "|")
         clearCache(cachePath, cacheId = cacheIdsToClear, ask = FALSE,  drv = drv, conn = conn, verbose = verbose - 2)
-        # clearCache(cachePath, userTags = cacheIdsToClear, ask = FALSE, drv = drv, conn = conn, verbose = verbose - 2)
       }
-      messageCache("with different elements (most recent at top):", verbose = verbose)
+      nShow <- min(numSmallest, 5)
+      messageCache("with different elements (", nShow, " most recent at top):", verbose = verbose)
       # don't add a prefix if there is no `sim` in the stack
-      prefix <- if (identical(.GlobalEnv, .whereInStack("sim"))) "" else .message$NoPrefix
+      wis <- .whereInStack("sim")
+      prefix <- if (identical(.GlobalEnv, wis) || is.null(wis)) "" else .message$NoPrefix
       messageCache(.message$dashes, prefix)
-      lala <- Map(si = simi, nam = names(simi), function(si, nam) {
+      keepers <- seq_len(nShow)
+      lala <- Map(si = simi[keepers], nam = names(simi[keepers]), function(si, nam) {
         messageCache(paste0("Compared to cacheId: ", nam, prefix), verbose = verbose)
         if (verbose > 0) {
           oo <- capture.output(si)
           fn <- cliCol(getOption("reproducible.messageColourCache"))
-          # cat(fn(oo), sep = "\n")
-          # nc <- NCOL(si)
-          # set(si, 1, NCOL(si), paste0(si[1, ..nc], .message$NoPrefix))
-          # messageDF(si, colour = getOption("reproducible.messageColourCache"))
-          # messageDF(paste0(as.character(fn(oo)), .message$NoPrefix))
           oo <- paddDFInitial(oo, rows = 1:2, .spaceTmpChar, colour = getOption("reproducible.messageColourCache"))
           messageColoured(paste0(paste(oo, collapse = "\n"), .message$NoPrefix),
                           colour = getOption("reproducible.messageColourCache"))
-          # messageDF(fn(oo))
         }
         messageCache(.message$dashes, prefix)
       })
@@ -1244,7 +1247,7 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, callList, # 
 #   # Deal with omitArgs by removing elements from the toDigest list of objects to digest
 #   if (!is.null(omitArgs)) {
 #     if (any("FUN" %in% omitArgs))
-#       omitArgs <- c(".FUN", omitArgs)
+#       omitArgs <- c(dotFunTxt, omitArgs)
 #     toDigest[omitArgs] <- NULL
 #   }
 #   # Deal with .cacheExtra by adding it to the list of objects to digest
@@ -1392,7 +1395,8 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       fileExt(cache_file)
 
     for (iii in 1:2) {
-      fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key, cacheSaveFormat = cacheSaveFormat)
+      fe <- CacheDBFileSingle(cachePath = cachePath, cacheId = cache_key,
+                              cacheSaveFormat = cacheSaveFormat)
       if (useDBI()) {
         rerun <- FALSE
       } else {
@@ -1445,7 +1449,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
             isTRUE(any(grepl(failMsgs, fns)))) {
           memoiseFail <- TRUE
           rm(list = cache_key, envir = memoiseEnv(cachePath))
-          cache_file <- CacheStoredFile(cachePath, cache_key)
+          cache_file <- CacheStoredFile(cachePath, cache_key, readOnly = TRUE)
         }
       } else {
         fns <- fns[nzchar(fns)]
@@ -1470,25 +1474,30 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
         rerun <- TRUE
       }
       output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
+      if (isTRUE(changedSaveFormat)) {
+        swapTry <- try(swapCacheFileFormat(
+          wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
+          cacheId = cache_key, sameCacheID = sameCacheID,
+          userTags = paste0(shownCache$tagKey, ":", shownCache$tagValue),
+          newFile = cache_file_orig, verbose = verbose), silent = TRUE)
+        cacheSaveFormat <- fileExt(cache_file_orig) # setdiff(.cacheSaveFormats, cacheSaveFormat)
+        # rerun <- TRUE
+      }
       if (is(obj, "try-error") || rerun || is(output, "try-error")) {
         messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
         otherFiles2 <- dir(CacheStorageDir(cachePath), pattern = cache_key, full.names = TRUE)
         if (!is(shownCache, "try-error")) {
-          otherFiles <- normPath(file.path(CacheStorageDir(cachePath),
-                                           shownCache[tagKey == "filesToLoad"]$tagValue))
-          otherFiles2 <- c(otherFiles, otherFiles2)
+          if (!is.null(shownCache)) {
+            otherFiles <- normPath(file.path(CacheStorageDir(cachePath),
+                                             shownCache[tagKey == "filesToLoad"]$tagValue))
+            otherFiles2 <- c(otherFiles, otherFiles2)
+          }
         }
         rmFiles <- unique(c(cache_file, otherFiles2))
         unlink(rmFiles)
         return(.returnNothing)
       }
 
-      if (isTRUE(changedSaveFormat)) {
-        swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
-                            cacheId = cache_key, sameCacheID = sameCacheID,
-                            newFile = cache_file_orig, verbose = verbose)
-        cacheSaveFormat <- fileExt(cache_file_orig) # setdiff(.cacheSaveFormats, cacheSaveFormat)
-      }
     }
 
     if (cloudWrite(useCloud)) {
@@ -1631,7 +1640,7 @@ doDigestPrepare <- function(new_call, omitArgs, .cacheExtra) {
   # Deal with omitArgs by removing elements from the toDigest list of objects to digest
   if (!is.null(omitArgs)) {
     if (any("FUN" %in% omitArgs))
-      omitArgs <- c(".FUN", omitArgs)
+      omitArgs <- c(dotFunTxt, omitArgs)
     toDigest[omitArgs] <- NULL
   }
   # Deal with .cacheExtra by adding it to the list of objects to digest
@@ -1653,7 +1662,7 @@ doDigestPrepare <- function(new_call, omitArgs, .cacheExtra) {
 # # Deal with omitArgs by removing elements from the toDigest list of objects to digest
 # if (!is.null(omitArgs)) {
 #   if (any("FUN" %in% omitArgs))
-#     omitArgs <- c(".FUN", omitArgs)
+#     omitArgs <- c(dotFunTxt, omitArgs)
 #   toDigest[omitArgs] <- NULL
 # }
 # # Deal with .cacheExtra by adding it to the list of objects to digest
@@ -1755,11 +1764,11 @@ createSimilar <- function(similar, .functionName, verbose, devMode) {
     lens <- lengths(twoCols)
     vals <- rep("", length(twoCols))
     vals[lens > 1] <- vapply(twoCols[lens > 1], function(x) x[[2]], FUN.VALUE = character(1))
-    set(simi, NULL, "arg", args)
+    set(simi, NULL, argTxt, args)
     set(simi, NULL, "value", vals)
     set(simi, NULL, c("N", "tagKey", "tagValue", "createdDate"), NULL)
-    setcolorder(simi, c("cacheId", "arg", "value"))
-    setnames(simi, old = c("cacheId", "value"), new = c("cacheIdInCache", "valueInCache"))
+    setcolorder(simi, c("cacheId", argTxt, "value"))
+    setnames(simi, old = c("cacheId", "value"), new = c(cacheIdInCacheTxt, valInCacheTxt))
   } else {
     simi <- data.table(arg = character(), cacheIdInCache = character(), valueInCache = character())
   }
@@ -2026,3 +2035,12 @@ cacheChainingStep <- function(keyFull, callList, .cacheChaining, cacheChainDetai
   }
   return(keyFull)
 }
+
+
+inCacheTxt <- "InCache"
+thisCallTxt <- "ThisCall"
+argTxt <- "arg"
+valInCacheTxt <- paste0("value", inCacheTxt)
+cacheIdInCacheTxt <- paste0("cacheId", inCacheTxt)
+cacheIdThisCallTxt <- paste0("cacheIdOf", thisCallTxt)
+valThisCallTxt <- paste0("value", thisCallTxt)

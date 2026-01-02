@@ -239,6 +239,10 @@ test_that("cropInputs crops too closely when input projections are different", {
     "rgdal_show_exportToProj4_warnings" = "none" # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
   ), needGoogleDriveAuth = TRUE)
 
+  oo <- capture.output(orig <- terra::terraOptions()$memfrac)
+  terra::terraOptions(memfrac = 0.6)
+  on.exit(terra::terraOptions(memfrac = orig))
+
   ext2 <- terra::ext(c(
     xmin = -3229772.32501426,
     xmax = 3680227.67498574,

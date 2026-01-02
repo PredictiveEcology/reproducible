@@ -19,6 +19,7 @@
   if (any(toset)) options(opts.reproducible[toset])
   .pkgEnv$SysInfo <- Sys.info() # record once at loading; repeatedly calling Sys.info is a waste
 
+  .pkgEnv$runningOnMac <- isMac()
   invisible()
 }
 

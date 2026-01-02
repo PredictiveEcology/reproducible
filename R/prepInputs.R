@@ -219,6 +219,7 @@ utils::globalVariables(c(
 #' if (requireNamespace("terra", quietly = TRUE) &&
 #'   requireNamespace("sf", quietly = TRUE)) {
 #'   library(reproducible)
+#'   withr::local_dir(withr::local_tempdir())
 #'   # Make a dummy study area map -- user would supply this normally
 #'   coords <- structure(c(-122.9, -116.1, -99.2, -106, -122.9, 59.9, 65.7, 63.6, 54.8, 59.9),
 #'     .Dim = c(5L, 2L)
@@ -316,6 +317,7 @@ utils::globalVariables(c(
 #'       unlink(dPath)
 #'     }
 #'   }
+#'   withr::deferred_run()
 #' }
 #' }
 #'
@@ -1544,7 +1546,7 @@ process <- function(out, funCaptured,
           }
         } else {
           useCache2 <- useCache
-          if (any(fileExt(out$targetFilePath) %in% c(.qsFormat, .rdsFormat)) &&
+          if (any(fileExt(out$targetFilePath) %in% c(.qsFormat, .qs2Format, .rdsFormat)) &&
               !isTRUE(getOption("reproducible.useMemoise"))) {
             useCache2 <- FALSE
             messagePreProcess("targetFile is already a binary; skipping Cache while loading")

@@ -57,7 +57,8 @@ CacheStoredFile(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
   cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
-  obj = NULL
+  obj = NULL,
+  readOnly = FALSE
 )
 
 CacheDBTableName(
@@ -115,6 +116,12 @@ Defaults to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 
 \item{obj}{The optional object that is of interest; it may have an attribute "saveRawFile"
 that would be important.}
+
+\item{readOnly}{Logical. Only relevant during transition from \code{qs} to \code{qs2}.
+Essentially, during transition, \code{qs} objects can be read, but not saved.
+If \code{TRUE} then the \code{CacheStoredFile} can return a \code{.qs} file; if \code{FALSE},
+then this will not be able to return \code{qs}; instead it will return \code{qs2}
+files.}
 
 \item{create}{Logical. Currently only affects non \pkg{RSQLite} default drivers.
 If \code{TRUE} and there is no Cache database, the function will create one.}

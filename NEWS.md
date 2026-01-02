@@ -7,6 +7,8 @@
   for these was creating unnecessarily slow `postProcessing` by bringing the objects
   to memory, sometimes, and this in turn led to unnecessarily slow `Cache` behaviour because
   `terra::wrap` is very slow for large `SpatRaster` objects. See `?reproducibleOptions`;
+* `showCache` (when `useDBI()` is `FALSE`) now uses a type of internal memoising, so it 
+  is much faster for large cache databases, after a first time called.
 * several formerly unexported functions have been converted to `dot` functions and are now exported
   e.g., for use in other packages;
 * near complete rewrite of `Cache` so it is simpler and more robust. The main function is now 200 

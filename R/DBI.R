@@ -111,6 +111,10 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                         linkToCacheId = NULL,
                         verbose = getOption("reproducible.verbose")) {
 
+  # saveToCache can be coming from a few places, not just Cache
+  if (cacheSaveFormat %in% c(.qsFormat))
+    cacheSaveFormat <- getOption("reproducible.qsFormat", .qs2Format)
+
   if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
@@ -134,7 +138,8 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   # TRY link first, if there is a linkToCacheId, but some cases will fail; not sure what these cases are
   if (!is.null(linkToCacheId)) {
-    ftL <- CacheStoredFile(cachePath, linkToCacheId, obj = obj, cacheSaveFormat = cacheSaveFormat)
+    ftL <- CacheStoredFile(cachePath, linkToCacheId, obj = obj, cacheSaveFormat = cacheSaveFormat,
+                           readOnly = TRUE)
     ftLfs <- file.size(ftL)
     out <- if (isTRUE(all(ftLfs > 0))) {# means corrupted if file.size is 0
       suppressWarnings({
@@ -268,11 +273,13 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     obj <- unmakeMemoisable(obj)
   }
   # }
+  if (cacheSaveFormat %in% c(.qsFormat))
+    cacheSaveFormat <- getOption("reproducible.qsFormat", .qs2Format)
 
   if (!isTRUE(isMemoised)) {
     # Put this in a loop -- try the cacheSaveFormat that the user requested, but switch back if can't do it
     for (i in 1:2) {
-      f <- CacheStoredFile(cachePath, cacheId, cacheSaveFormat)
+      f <- CacheStoredFile(cachePath, cacheId, cacheSaveFormat, readOnly = TRUE)
       f <- unique(f) # It is OK if there is a vector of unique cacheIds e.g., loadFromCache(showCache(userTags = "hi")$cacheId)
 
       # First test if it is correct cacheSaveFormat
@@ -433,7 +440,7 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, cacheSaveFormat = cacheSaveFormat)
     unlink(dtFile)
   }
-  unlink(CacheStoredFile(cachePath, cacheId = cacheId, cacheSaveFormat = cacheSaveFormat))
+  unlink(CacheStoredFile(cachePath, cacheId = cacheId, cacheSaveFormat = cacheSaveFormat, readOnly = TRUE))
 }
 
 dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
@@ -549,7 +556,7 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
       #   "tagValue" = tagValue,
       #   "createdDate" = as.character(Sys.time())
       # )
-      dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, cacheSaveFormat = "check")
+      dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, cacheSaveFormat = cacheSaveFormat)
       dt2 <- loadFile(dtFile)#, cacheSaveFormat = cacheSaveFormat)
       dt <- rbindlist(list(dt2, dt), fill = TRUE)
       saveFilesInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId,
@@ -767,6 +774,11 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 #' @param cacheSaveFormat The text string representing the file extension used normally by
 #'   different save formats; currently only `"rds"` or `"qs"` (which now uses `qs2` package.
 #'   Defaults to `getOption("reproducible.cacheSaveFormat", "rds")`
+#' @param readOnly Logical. Only relevant during transition from `qs` to `qs2`.
+#'   Essentially, during transition, `qs` objects can be read, but not saved.
+#'   If `TRUE` then the `CacheStoredFile` can return a `.qs` file; if `FALSE`,
+#'   then this will not be able to return `qs`; instead it will return `qs2`
+#'   files.
 #'
 #' @return
 #' - `CacheStoredFile` returns the file path to the file with the specified hash value;
@@ -775,7 +787,7 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 #' @rdname CacheHelpers
 CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cacheId,
                             cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
-                            obj = NULL) {
+                            obj = NULL, readOnly = FALSE) {
   # if (is.null(cacheSaveFormat)) cacheSaveFormat <- getOption("reproducible.cacheSaveFormat", .rdsFormat)
   if (missing(cacheId)) cacheId <- NULL
   if (any(cacheSaveFormat %in% "check")) {
@@ -784,10 +796,16 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
   csf <- cacheSaveFormat
   # qs <- grep(.qsFormat, .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
   # rds <- grep(.rdsFormat, .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
-  csExtension <- if (isTRUE(any(.qsFormat %in% csf))) {
-    .qsFormat
-  } else if (isTRUE(any(.rdsFormat %in% csf))) {
-    .rdsFormat
+  csExtension <- if (isTRUE(any(c(.qsFormat, .qs2Format) %in% csf))) {
+    if (isTRUE(readOnly)) {
+      csf
+    } else {
+      qsForm <- getOption("reproducible.qsFormat", .qs2Format)
+      qsForm
+    }
+  } else if (.rdsFormat %in% csf) {
+    # convert from qs to qs2
+    csf
   } else {
     if (is.character(cacheSaveFormat)) {
       cacheSaveFormat
@@ -1022,16 +1040,20 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
 loadFile <- function(file, ...) {
   if (!is.null(list(...)$format))
     cacheSaveFormat <- list(...)$format
-  # if (is.null(cacheSaveFormat)) {
-  cacheSaveFormat <- fileExt(file)
+  else
+    # if (is.null(cacheSaveFormat)) {
+    cacheSaveFormat <- fileExt(file)
   # }
   isQsAny <- cacheSaveFormat %in% c(.qsFormat, .qs2Format)
   # isQs2 <- cacheSaveFormat %in% .qs2Format
   # isQsAny <- isQs | isQs2
 
   if (isQsAny) {
-    .requireNamespace(.qs2Format, stopOnFALSE = TRUE)
-    obj <- qs2::qs_read(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
+    .requireNamespace(cacheSaveFormat, stopOnFALSE = TRUE)
+    funRead <- .fileExtsKnown()$fun[.fileExtsKnown()$extension == cacheSaveFormat]
+    funRead <- eval(parse(text = funRead))
+    obj <- funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
+    # obj <- qs2::qs_read(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
   } else {
     suppressWarningsSpecific(falseWarnings = "\\'package:stats\\' may not be available when loading",
                              obj <- readRDS(file = file[!isQsAny])
@@ -1067,7 +1089,14 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId,
   if (cacheSaveFormat %in% c(.qsFormat, .qs2Format)) {
     .requireNamespace(.qs2Format, stopOnFALSE = TRUE)
     for (attempt in 1) {
-      fs <- qs2::qs_save(obj,
+      # During transition from qs to qs2; the user should not be able to save in qs, so
+      #  use a hidden option; otherwise developers can still use it for testing
+      formatToUse <- getOption("reproducible.qsFormat", .qs2Format) # force qs2
+      if (formatToUse %in% .qsFormat)
+        .requireNamespace(.qsFormat, stopOnFALSE = TRUE)
+      funSave <- .fileExtsKnown()[["saveFun"]][.fileExtsKnown()[["extension"]] == formatToUse]
+      funSave <- eval(parse(text = funSave))
+      fs <- funSave(obj,
                       file = fts,
                       nthreads = getOption("reproducible.nThreads", 1)
       )
@@ -1117,7 +1146,7 @@ onlyStorageFiles <- function(files, cacheId) {
   #   invert = TRUE, value = TRUE
   # )
   shouldBeFiles <- unname(sapply(.cacheSaveFormats, function(form)
-    basename(CacheStoredFile(cacheId = cacheId, cacheSaveFormat = form))))
+    basename(CacheStoredFile(cacheId = cacheId, cacheSaveFormat = form, readOnly = TRUE))))
   shouldBeFiles <- paste(shouldBeFiles, collapse = "|")
   grep(shouldBeFiles, files, value = TRUE)
 }
@@ -1125,7 +1154,7 @@ onlyStorageFiles <- function(files, cacheId) {
 formatCheck <- function(cachePath, cacheId, cacheSaveFormat = getOption("reproducible.cacheSaveFormat")) {
 
   for (ci in .cacheSaveFormats) {
-    ff <- CacheStoredFile(cachePath, cacheId, cacheSaveFormat = ci)
+    ff <- CacheStoredFile(cachePath, cacheId, cacheSaveFormat = ci, readOnly = TRUE)
     if (file.exists(ff)) {
       newFormat <- ci
       break
@@ -1320,6 +1349,7 @@ loadFromCacheSwitchFormat <- function(f, verbose, cachePath, fullCacheTableForOb
 checkSameCacheId <- function(f) {
   cacheId <- filePathSansExt(basename(f))
   sameCacheID <- grep("\\.lock$", dir(dirname(f), pattern = cacheId), invert = TRUE, value = TRUE)
+  sameCacheID <- grep(paste0(paste(.cacheSaveFormats, collapse = "|"), "$"), sameCacheID, value = TRUE)
   if (!useDBI() && length(sameCacheID) > 1) {
     sameCacheID <- onlyStorageFiles(sameCacheID, cacheId)
   }
@@ -1327,12 +1357,13 @@ checkSameCacheId <- function(f) {
 }
 
 swapCacheFileFormat <- function(wrappedObj, cachePath, drv, conn, cacheId, sameCacheID,
-                                newFile, verbose) {
+                                userTags, newFile, verbose) {
   messageCache(.message$changingFormat(prevFile = sameCacheID, newFile = newFile),
                verbose = verbose)
 
   fs <- saveToCache(
-    obj = wrappedObj, cachePath = cachePath, drv = drv, conn = conn,
+    obj = wrappedObj, cachePath = cachePath,
+    userTags = userTags, drv = drv, conn = conn,
     cacheId = cacheId, cacheSaveFormat = fileExt(newFile)
   )
   rmFromCache(
@@ -1356,7 +1387,7 @@ dbDisconnectAll <- function(conn) {
 }
 
 
-.cacheSaveFormats <- c("qs", "rds", "qs2")
+.cacheSaveFormats <- c("qs2", "rds", "qs")
 .qs2Format <- grep("qs2$", .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
 .qsFormat <- grep("qs$", .cacheSaveFormats, value = TRUE, ignore.case = TRUE)
 .rdsFormat <- grep("rds$", .cacheSaveFormats, value = TRUE, ignore.case = TRUE)

@@ -492,7 +492,7 @@ setMethod(
                         cacheSaveFormat = getOption("reproducible.cacheSaveFormat")) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    if (identical(cacheSaveFormat, .qsFormat) &&
+    if (identical(cacheSaveFormat, .qs2Format) &&
         identical(getOption("reproducible.cacheSpeed"), "fast")) {
       os <- objSize(object)
       if (os == 680) {

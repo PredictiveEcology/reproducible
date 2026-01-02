@@ -18,27 +18,36 @@ test_that("test data.table caching", {
 })
 
 test_that("test ALTREP integers", {
-  testInit(.qsFormat, opts = list(reproducible.cacheSaveFormat = .qsFormat,
+  testInit(.qs2Format, opts = list(reproducible.cacheSaveFormat = .qs2Format,
                              reproducible.cacheSpeed = "fast"))
 
-  for (i in c(.rdsFormat, .qsFormat)) {
-    for (s in c("slow", "fast")) {
+  for (i in .cacheSaveFormats) {
+    if (.requireNamespace(i)) {
+      for (s in c("slow", "fast")) {
       withr::local_options(reproducible.cacheSaveFormat = i,
                            reproducible.cacheSpeed = s)
-
       a <- 1991:20200
       aDig <- .robustDigest(a)
       tf <- tempfile(fileext = i);
       if (identical(i, .rdsFormat)) {
         saveRDS(a, file = tf);
         b <- readRDS(tf)
+      } else if (i %in% c(.qs2Format, .qsFormat)) {
+        fek <- .fileExtsKnown()
+        funSave <- fek$saveFun[fek$extension == i]
+        funSave <- eval(parse(text = funSave))
+        funRead <- fek$fun[fek$extension == i]
+        funRead <- eval(parse(text = funRead))
+        funSave(a, file = tf);
+        b <- funRead(tf)
       } else {
-        qs2::qs_save(a, file = tf);
-        b <- qs2::qs_read(tf)
+
       }
       bDig <- .robustDigest(b)
       expect_true(identical(aDig, bDig))
       withr::deferred_run()
-    }}
+      }
+    }
 
+  }
 })
