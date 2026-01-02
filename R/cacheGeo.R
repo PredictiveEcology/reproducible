@@ -243,7 +243,7 @@ CacheGeo <- function(targetFile = NULL,
       targetFile = asPath(targetFile),
       url = urlThisTargetFile,
       destinationPath = destinationPath, # domain = domain,
-      useCache = useCache,
+      useCache = FALSE,
       purge = purge, # It isn't relevant if the file is different than the Checksums
       overwrite = overwrite
     ))
