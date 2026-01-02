@@ -134,29 +134,29 @@ setMethod(
         x <- getOption("reproducible.cachePath")[1]
       }
     }
-
+    
     dots <- list(...)
     hasNoOther <- (length(dots)) == 0 | is.null(dots[!names(dots) %in% sortedOrRegexp])
-
+    
     # Check if no args -- faster to delete all then make new empty repo for large repos
     clearWholeCache <- all(missing(userTags), is.null(after), is.null(before),
                            is.null(fun), is.null(cacheId), isTRUE(hasNoOther))
-
+    
     if (isTRUEorForce(useCloud) || !clearWholeCache) {
       if (isTRUEorForce(useCloud)) {
         .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
       }
-
+      
       # browser(expr = exists("._clearCache_2"))
       # if (missing(after)) after <- NA # "1970-01-01"
       # if (missing(before)) before <- NA # Sys.time() + 1e5
-
+      
       args <- append(
         list(x = x, after = after, before = before, userTags = userTags,
              fun = fun, cacheId = cacheId, sorted = FALSE, verbose = verbose),
         list(...)
       )
-
+      
       objsDT <- do.call(showCache, args = args, quote = TRUE)
       if (isTRUE(useCloud) && NROW(objsDT) > 0 || identical(useCloud, "force")) {
         cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
@@ -164,14 +164,14 @@ setMethod(
         rmFromCloudFolder(cloudFolderID, x, cacheIds, otherFiles = fns, verbose = verbose)
       }
     }
-
+    
     # browser(expr = exists("rrrr"))
     # if (useDBI()) {
     if (!CacheIsACache(x, drv = drv, conn = conn)) {
       return(.emptyCacheTable)
     }
     # }
-
+    
     if (clearWholeCache) {
       if (isInteractive()) {
         if (isTRUE(ask)) {
@@ -189,14 +189,14 @@ setMethod(
           }
         }
       }
-
+      
       unlink(CacheStorageDir(x), recursive = TRUE)
-
+      
       if (useDBI()) {
         unlink(file.path(x, "rasters"), recursive = TRUE)
         unlink(CacheDBFile(x, drv = drv, conn = conn), recursive = TRUE, force = TRUE)
       }
-
+      
       checkPath(x, create = TRUE)
       # if (useDBI()) {
       createCache(x, drv = drv, force = TRUE)
@@ -210,25 +210,25 @@ setMethod(
       # memoise::forget(.loadFromLocalRepoMem)
       return(invisible())
     }
-
+    
     if (isInteractive()) {
       objSz <- objsDT[tagKey == "object.size"][[.cacheTableTagColName()]]
       objSizes <- if ("NA" %in% objSz) NA else as.numeric(objSz)
       cacheSize <- sum(objSizes) / 4
     }
-
+    
     if (NROW(objsDT)) {
       filesToRemove1 <- objsDT[grepl(pattern = "cacheRaster", tagKey)][[.cacheTableTagColName()]]
       filesToRemove2 <- objsDT[grepl(pattern = "origFilename|filesToLoad|filenamesInCache", tagKey)][[.cacheTableTagColName()]]
       filesToRemove2 <- normPath(file.path(CacheStorageDir(x), basename(filesToRemove2)))
       filesToRemove3 <- dir(CacheStorageDir(x), full.names = TRUE)
-
+      
       # Way faster to gsub for the cacheId, rather than greps
       cacheIdsOfTheseFilenames <- gsub("^.*/([0-9a-zA-Z]+)\\..*$", "\\1", filesToRemove3)
       cacheIdsToRm <- unique(objsDT[["cacheId"]])
       indicesToRm <- which(cacheIdsOfTheseFilenames %in% cacheIdsToRm)
       filesToRemove4 <- filesToRemove3[indicesToRm]
-
+      
       # grep can only handle so many -- do in groups
       # filesToRemove3 <- grep(paste(cacheIdsToRm, collapse = "|"), filesToRemove3, value = TRUE)
       # maxNumForGrep <- 20
@@ -244,7 +244,7 @@ setMethod(
       #   cis <- cacheIdsToRm[sequen[g]] |> unlist()
       #   grep(paste(cis, collapse = "|"), filesToRemove3, value = TRUE)
       # }) |> unlist() |> unname()
-
+      
       filesToRemove <- unique(c(filesToRemove1, filesToRemove2, filesToRemove4))
       # filebackedInRepo <- objsDT[grepl(pattern = "fromDisk", tagKey) &
       #                           grepl(pattern = "TRUE", get(.cacheTableTagColName()))]
@@ -255,7 +255,7 @@ setMethod(
       #                          grepl(pattern = "list", get(.cacheTableTagColName()))]
       # hasARaster <- all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(rastersInRepo) > 0 # nolint
       # hasAList <- all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(listsInRepo) > 0 # nolint
-
+      
       if (NROW(filesToRemove)) {
         # fileBackedRastersInRepo <- filebackedInRepo[[.cacheTableHashColName()]]# [rasterObjSizes < 1e5]
         # if (NROW(fileBackedRastersInRepo)) {
@@ -269,7 +269,7 @@ setMethod(
         }
         # }
       }
-
+      
       if (isInteractive() && isTRUE(!is.na(cacheSize))) {
         class(cacheSize) <- "object_size"
         formattedCacheSize <- format(cacheSize, "auto")
@@ -286,12 +286,12 @@ setMethod(
           }
         }
       }
-
+      
       # remove file-backed files
       if (NROW(filesToRemove) > 0) {
         unlink(filesToRemove)
       }
-
+      
       objToGet <- unique(objsDT[[.cacheTableHashColName()]])
       if (useDBI()) {
         if (is.null(conn)) {
@@ -347,7 +347,7 @@ setMethod(
 cc <- function(secs, ..., verbose = getOption("reproducible.verbose")) {
   if (missing(secs)) {
     messageCache("No time provided; removing the most recent entry to the Cache",
-      verbose = verbose
+                 verbose = verbose
     )
     suppressMessages({
       theCache <- reproducible::showCache(...)
@@ -433,7 +433,7 @@ setMethod(
     #   if (is.null(after)) after <- "1970-01-01"
     #   if (is.null(before)) before <- Sys.time() + 1e5
     # }
-
+    
     # not seeing userTags
     # Clear the futures that are resolved
     .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
@@ -441,14 +441,14 @@ setMethod(
     if (.onLinux) {
       if (exists("futureEnv", envir = .reproEnv)) {
         hasFuture <- .requireNamespace("future",
-          messageStart = "To use reproducible.futurePlan, "
+                                       messageStart = "To use reproducible.futurePlan, "
         )
         if (hasFuture) {
           checkFutures(verbose)
         }
       }
     }
-
+    
     if (!useDBI()) {
       pkgEnv <- memoiseEnv(cachePath = x)
       if (!exists("shownCache", envir = pkgEnv))
@@ -488,36 +488,48 @@ setMethod(
             dd <- newOnes[["filename"]]
             scEnv$FileInfo <- curFileInfo
             
-            ret <- try(rbindlist(fill = TRUE, lapplyFun(dd, function(fil) {
-              out <- try(loadFile(fil), silent = TRUE)#, cacheSaveFormat = cacheSaveFormat))
-              if (is(out, "try-error")) {
-                cacheId <- gsub(paste0(CacheDBFileSingleExt()), "",
-                                basename(fil))
-
-                fileEx <- fileExt(fil)
-                fileExs <- setdiff(.cacheSaveFormats, fileEx)
-                for (fe in fileExs) {
-                  out <- try(loadFile(fil, format = fe), silent = TRUE)
-                  if (!is(out, "try-error")) {
-                    if (identical(getOption("reproducible.cacheSaveFormat"), .qsFormat))
-                      optForUndo <- options("reproducible.qsFormat" = .qsFormat)
-                    on.exit(options(optForUndo), add = TRUE)
-                    saveFilesInCacheFolder(out, fts = fil, cachePath = x,
-                                           cacheId = cacheId)
-
-                    return(out)
+            keepDoing <- TRUE
+            while(keepDoing) {
+              ret <- tryCatch(rbindlist(fill = TRUE, lapplyFun(dd, function(fil) {
+                out <- try(loadFile(fil), silent = TRUE)#, cacheSaveFormat = cacheSaveFormat))
+                if (is(out, "try-error")) {
+                  cacheId <- gsub(paste0(CacheDBFileSingleExt()), "",
+                                  basename(fil))
+                  
+                  fileEx <- fileExt(fil)
+                  fileExs <- setdiff(.cacheSaveFormats, fileEx)
+                  for (fe in fileExs) {
+                    out <- try(loadFile(fil, format = fe), silent = TRUE)
+                    if (!is(out, "try-error")) {
+                      if (identical(getOption("reproducible.cacheSaveFormat"), .qsFormat))
+                        optForUndo <- options("reproducible.qsFormat" = .qsFormat)
+                      on.exit(options(optForUndo), add = TRUE)
+                      saveFilesInCacheFolder(out, fts = fil, cachePath = x,
+                                             cacheId = cacheId)
+                      
+                      return(out)
+                    }
                   }
-                }
-                filesToRm <- dir(dirname(fil), pattern = cacheId, full.names = TRUE)
+                  filesToRm <- dir(dirname(fil), pattern = cacheId, full.names = TRUE)
                   messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
                                verbose = getOption("reproducible.verbose"))
-                unlink(filesToRm)
-              }
-              out
-
-              })))
-            if (is(ret, "try-error"))
-              browser()
+                  unlink(filesToRm)
+                }
+                out
+                
+              })), error = function(err) {
+                if (any(grepl("Item .+ is not a", err$message))) {
+                  toDel <- gsub("Item ([[:digit:]]+) of.+", "\\1", err$message) |> as.numeric()
+                  unlink(dd[toDel])
+                  dd <- dd[-toDel]
+                }
+                next
+              })
+              if (is(ret, "try-error"))
+                browser()
+              keepDoing <- FALSE
+            }
+            
             if (!is.null(scEnv$sc)) {
               ret <- rbindlist(list(scEnv$sc, ret))
             }
@@ -525,12 +537,12 @@ setMethod(
             ret
             
           }# , error = function(e) {
-            #   cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", cacheSaveFormat), "",
-            #                   basename(file))
-            #   filesToRm <- dir(dirname(file), pattern = cacheId, full.names = TRUE)
-            #   messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
-            #                   verbose = getOption("reproducible.verbose"))
-            #   unlink(filesToRm)
+          #   cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", cacheSaveFormat), "",
+          #                   basename(file))
+          #   filesToRm <- dir(dirname(file), pattern = cacheId, full.names = TRUE)
+          #   messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
+          #                   verbose = getOption("reproducible.verbose"))
+          #   unlink(filesToRm)
           # }
         )
       }
@@ -548,7 +560,7 @@ setMethod(
       if (!CacheIsACache(x, drv = drv, conn = conn)) {
         return(.emptyCacheTable)
       }
-
+      
       dbTabNam <- CacheDBTableName(x, drv = drv)
       # tab <- dbReadTable(conn, dbTabNam)
       res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
@@ -562,10 +574,10 @@ setMethod(
         objsDT <- setDT(tab)
       }
       if (!is.null(fun)) {
-
+        
       }
     }
-
+    
     onCol <- "cacheId"
     if (!is.null(cacheId)) {
       cacheIds <- cacheId
@@ -575,21 +587,21 @@ setMethod(
       objsDT <- objsDT[objsDT[tagKey %in% "function" & tagValue %in% fun, ..onCol], on = onCol]
     }
     dots <- list(...)
-
+    
     dots <- dots[!names(dots) %in% sortedOrRegexp]
     if (length(dots)) {
       names(dots) <- gsub("^Function$", "function", names(dots)) # in case user uses Function instead of "function"
       Map(nam = names(dots), val = dots, function(nam, val) {
         objsDT <<- objsDT[objsDT[tagKey %in% nam & tagValue %in% val, ..onCol], on = onCol]
       })
-
+      
     }
     sorted <- !isFALSE(list(...)$sorted) # NULL and TRUE are sorted
     if (isTRUE(sorted) && NROW(objsDT)) {
       data.table::setorderv(objsDT, onCol)
     }
     # }
-
+    
     if (NROW(objsDT) > 0) {
       if (!afterNA || !beforeNA) {
         objsDT3 <- objsDT[tagKey == "accessed"]
@@ -600,7 +612,7 @@ setMethod(
           objsDT3 <- objsDT3[(tagValue >= after)]
         }
         objsDT <- objsDT[objsDT[[.cacheTableHashColName()]] %in%
-          unique(objsDT3[[.cacheTableHashColName()]])] # faster than data.table join
+                           unique(objsDT3[[.cacheTableHashColName()]])] # faster than data.table join
       }
       if (length(userTags) > 0) {
         if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
@@ -635,8 +647,8 @@ setMethod(
       }
     }
     .message$CacheSize(x,
-      artifacts = unique(objsDT[[.cacheTableHashColName()]]),
-      cacheTable = objsDT, verbose = verbose
+                       artifacts = unique(objsDT[[.cacheTableHashColName()]]),
+                       cacheTable = objsDT, verbose = verbose
     )
     return(objsDT)
   }
@@ -665,15 +677,15 @@ setMethod(
     }
     args <- append(list(x = x, after = after, before = before, userTags = userTags),
                    modifyList(list(...), list(verbose = FALSE)))
-
+    
     objsDTAll <- suppressMessages(showCache(x, verbose = FALSE, sorted = FALSE))
     objsDT <- do.call(showCache, args = args)
     keep <- unique(objsDT[[.cacheTableHashColName()]])
-
+    
     eliminate <- unique(objsDTAll[[.cacheTableHashColName()]][
       !(objsDTAll[[.cacheTableHashColName()]] %in% keep)
     ])
-
+    
     if (length(eliminate)) {
       clearCache(x, cacheId = eliminate, verbose = FALSE, regexp = FALSE, ask = ask)
     } else {
@@ -722,30 +734,30 @@ setMethod(
   "mergeCache",
   definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom,
                         verbose = getOption("reproducible.verbose")) {
-
+    
     if (useDBI()) {
       if (is.null(connTo)) {
         connTo <- dbConnectAll(drvTo, cachePath = cacheTo)
         on.exit(DBI::dbDisconnect(connTo), add = TRUE)
       }
-
+      
       if (is.null(connFrom)) {
         connFrom <- dbConnectAll(drvFrom, cachePath = cacheFrom)
         on.exit(DBI::dbDisconnect(connFrom), add = TRUE)
       }
     }
-
+    
     suppressMessages({
       cacheFromList <- showCache(cacheFrom, drv = drvFrom, conn = connFrom, sorted = FALSE)
     })
     suppressMessages({
       cacheToList <- showCache(cacheTo, drv = drvTo, conn = connTo, sorted = FALSE)
     })
-
+    
     artifacts <- unique(cacheFromList[[.cacheTableHashColName()]])
     objectList <- lapply(artifacts, function(artifact) {
       # browser(expr = exists("gggg"))
-
+      
       if (!(artifact %in% cacheToList[[.cacheTableHashColName()]])) {
         outputToSave <- # if (useDBI()) {
           try(loadFromCache(
@@ -756,15 +768,15 @@ setMethod(
           messageCache("Continuing to load others", verbose = verbose)
           outputToSave <- NULL
         }
-
+        
         ## Save it
         userTags <- cacheFromList[artifact, on = .cacheTableHashColName()][
           !tagKey %in% c("format", "name", "date"), list(tagKey, tagValue)
         ]
         outputToSave <- .wrap(outputToSave, cachePath = cacheTo, drv = drvTo, conn = connTo)
         output <- saveToCache(cacheTo,
-          userTags = userTags, obj = outputToSave, cacheId = artifact,
-          drv = drvTo, conn = connTo
+                              userTags = userTags, obj = outputToSave, cacheId = artifact,
+                              drv = drvTo, conn = connTo
         ) # nolint
         messageCache(artifact, " copied", verbose = verbose)
         outputToSave
@@ -772,9 +784,9 @@ setMethod(
         messageCache("Skipping ", artifact, "; already in ", cacheTo, verbose = verbose)
       }
     })
-
+    
     .message$CacheSize(cacheTo, cacheTable = showCache(cacheTo, sorted = FALSE), verbose = verbose)
-
+    
     return(invisible(cacheTo))
   }
 )
@@ -787,9 +799,9 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
   resol1 <- FALSE
   count <- 0
   lsFutureEnv <- ls(.reproEnv$futureEnv)
-
+  
   anyFutureWrite <- length(lsFutureEnv)
-
+  
   if (anyFutureWrite > 0) {
     # objsInReproEnv <- ls(.reproEnv)
     # objsInReproEnv <- grep("^future|cloudCheckSums", objsInReproEnv, value = TRUE)
@@ -800,7 +812,7 @@ checkFutures <- function(verbose = getOption("reproducible.verbose")) {
         Sys.sleep(0.001)
         if (count > 1e3) {
           messageCache("Future is not resolved after 1 second of waiting. Allowing to proceed.",
-            verbose = verbose
+                       verbose = verbose
           )
           break
         }
@@ -841,11 +853,11 @@ useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose"), defa
       }
     }
   }
-
+  
   if (isFALSE(canSwitch)) {
     messageColoured("User has requested to use DBI as the backend, but DBI and/or RSQLite not ",
-      "installed.",
-      verboseLevel = 1, verbose = verbose
+                    "installed.",
+                    verboseLevel = 1, verbose = verbose
     )
   }
   if (!is.null(set)) {
@@ -858,7 +870,7 @@ useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose"), defa
       messageColoured(messSet, verboseLevel = 0, verbose = verbose)
     }
   }
-
+  
   ud
 }
 
@@ -868,7 +880,7 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds, otherFiles,
   if (is.null(cloudFolderID)) {
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cachePath = x)
   }
-
+  
   whEmpty <- !nzchar(otherFiles)
   if (any(whEmpty)) {
     otherFiles <- otherFiles[!whEmpty]
@@ -880,14 +892,14 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds, otherFiles,
   if (!is.null(dim(isInCloud))) {
     isInCloud <- apply(isInCloud, 2, any)
   }
-
+  
   if (any(isInCloud)) {
     toDelete <- gdriveLs[isInCloud, ]
   }
   if (any(isInCloud)) {
     retry(quote(googledrive::drive_rm(toDelete)))
   }
-
+  
   return(invisible())
 }
 
@@ -899,7 +911,7 @@ isTRUEorForce <- function(cond) {
 showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
                           dtFile, strict = TRUE, # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                           drv, conn) {
-
+  
   if (missing(dtFile)) {
     # dtFile <- CacheDBFileSingle(cachePath, cacheId, cacheSaveFormat = "check")
     dtFile <- CacheDBFileSingle(cachePath, cacheId, cacheSaveFormat = "check")
