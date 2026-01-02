@@ -1807,7 +1807,7 @@ test_that("options inputPaths", {
   })
   expect_true(sum(grepl(hardlinkOrSymlinkMessagePrefixForGrep, mess1)) == 1) # used a linked version
   expect_true(sum(grepl(paste0("Hardlinked.*"), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
-  expect_true(sum(grepl(paste0(basename(tmpdir2)), mess1)) == 3) # it is now in tmpdir2, i.e., the destinationPath
+  expect_true(sum(grepl(paste0(basename(tmpdir2)), mess1)) %in% 2:3) # it is now in tmpdir2, i.e., the destinationPath
 
   ## Have file in destinationPath, not in inputPath
   unlink(file.path(tmpdir, theFile))

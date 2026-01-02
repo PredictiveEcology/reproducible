@@ -1481,7 +1481,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
           userTags = paste0(shownCache$tagKey, ":", shownCache$tagValue),
           newFile = cache_file_orig, verbose = verbose), silent = TRUE)
         cacheSaveFormat <- fileExt(cache_file_orig) # setdiff(.cacheSaveFormats, cacheSaveFormat)
-        rerun <- TRUE
+        # rerun <- TRUE
       }
       if (is(obj, "try-error") || rerun || is(output, "try-error")) {
         messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
