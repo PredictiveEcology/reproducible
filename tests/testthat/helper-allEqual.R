@@ -75,7 +75,7 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
   if (length(libraries)) {
     libraries <- unique(libraries)
     if (identical(getOption("reproducible.rasterRead"), "raster::raster")) {
-      libraries <- c(libraries, "raster")
+      libraries <- unique(c(libraries, "raster"))
     }
     loadedAlready <- vapply(libraries, function(pkg) {
       any(grepl(paste0("package:", pkg), search()))

@@ -537,7 +537,9 @@ rasterType <- function(nlayers = 1,
     if (identical("terra::rast", rasterRead)) {
       if (.requireNamespace("terra")) rasterRead <- eval(parse(text = rasterRead)) else ""
     }
-    if (identical("raster::raster", rasterRead)) {
+    if (identical("raster::raster", rasterRead) ||
+        identical("raster::stack", rasterRead) ||
+        identical("raster::brick", rasterRead)) {
       rasterRead <- if (.requireNamespace("raster")) eval(parse(text = rasterRead)) else ""
     } else {
       ""
