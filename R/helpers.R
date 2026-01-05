@@ -531,13 +531,19 @@ rasterRead <- function(...) {
 
 rasterType <- function(nlayers = 1,
                        rasterRead = getOption("reproducible.rasterRead", "terra::rast")) {
+  # This does not have to fail if `raster` is not installed because this function may be
+  #    called with .fileExtsKnown(), even if no gridded object is being used
   if (is.character(rasterRead)) {
-    rasterRead <- if (.requireNamespace("terra") || .requireNamespace("raster")) {
-      eval(parse(text = rasterRead))
+    if (identical("terra::rast", rasterRead)) {
+      if (.requireNamespace("terra")) rasterRead <- eval(parse(text = rasterRead)) else ""
+    }
+    if (identical("raster::raster", rasterRead)) {
+      rasterRead <- if (.requireNamespace("raster")) eval(parse(text = rasterRead)) else ""
     } else {
       ""
     }
   }
+
   if (!is.character(rasterRead)) {
     rasterRead <- if (identical(rasterRead, terra::rast)) {
       "SpatRaster"
