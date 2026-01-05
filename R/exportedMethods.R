@@ -1171,7 +1171,7 @@ unmakeMemoisable.default <- function(x) {
                          conn = getOption("reproducible.conn", NULL), ...) {
   atts <- attributes(obj)
   anyNames <- names(obj)
-  isSpatVector <- if (is.null(anyNames)) FALSE else all(names(obj) %in% spatVectorNamesForCache)
+  isSpatVector <- if (is.null(anyNames) || length(anyNames) == 0) FALSE else all(names(obj) %in% spatVectorNamesForCache)
   FAIL <- FALSE
   if (isTRUE(isSpatVector)) {
     obj <- unwrapSpatVector(obj)
