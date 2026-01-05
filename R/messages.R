@@ -10,6 +10,9 @@
 
 .message$SkipDownload <- "Skipping download of url; local copy already exists and passes checksums"
 
+.message$stopNeedArchive <- function(archive)
+  paste0("Please install.packages('archive') to extract files from \n", archive)
+
 .message$Greps <- list(
   studyArea_Spatial = "The \\'studyArea\\' provided is not a Spatial\\* object.",
   rasterToMatch_Raster = "The \\'rasterToMatch\\' provided is not a Raster\\* object.",

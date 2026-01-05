@@ -803,8 +803,22 @@ extractFromArchive <- function(archive,
       canUseArchive <- .requireNamespace("archive")
       mustUseArchive <- !(ext %in% knownInternalArchiveExtensions)
       useArchive <- (mustUseArchive && canUseArchive || canUseArchive)
+      sevenZ <- ""
+      unrar <- ""
       if (mustUseArchive && canUseArchive %in% FALSE) {
-        stop("Please install.packages('archive') to extract files from \n", archive)
+        sevenZ <- Sys.which("7z")
+        unrar <- Sys.which("unrar")
+        doStop <- TRUE
+        if (ext %in% "rar") {
+          if (nchar(sevenZ) || nzchar(unrar)) {
+            mustUseArchive <- FALSE
+            canUseArchive <- FALSE
+            doStop <- FALSE
+          }
+        }
+
+        if (isTRUE(doStop))
+          stop(.message$stopNeedArchive(archive))
       }
       if (useArchive && .requireNamespace("archive") && !isTRUE(any(dontUse %in% "archive"))) {
         fun <- archive::archive_extract
@@ -815,10 +829,12 @@ extractFromArchive <- function(archive,
         } else if (ext %in% c("tar", "tar.gz", "gz") && !isTRUE(any(dontUse %in% "untar"))) {
           fun <- untar
         } else { # system only
-          if (ext == "rar" && !isTRUE(any(dontUse %in% "unrar"))) {
+          if (ext == "rar" && !isTRUE(any(dontUse %in% "unrar")) && nzchar(unrar)) {
             fun <- "unrar"
-          } else { # if (ext == "7z") {
+          } else if (nzchar(sevenZ)) { # if (ext == "7z") {
             fun <- "7z"
+          } else {
+            stop(.message$stopNeedArchive(archive))
           }
         }
       }
@@ -1788,3 +1804,4 @@ checkSFWebPage <- function(funPoss, fileExt, feKnown, verbose) {
 }
 
 dontUses <- list(NULL, "archive", c("archive", "unzip"))
+

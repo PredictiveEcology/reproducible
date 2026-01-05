@@ -903,10 +903,19 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
                 }
               }
               if (.isVector(cropTo) && .isGridded(from)) {
-                if (.isSpat(cropTo))
-                  cropTo <- sf::st_as_sf(cropTo)
-                a <- sf::st_convex_hull(cropTo)
-                cropToInFromCRS <- terra::project(terra::vect(a), terraCRSFrom)
+                if (!.isSpat(cropTo)) {
+                  if (!.isSF(cropTo)) { # e.g., sp
+                    if (.requireNamespace("sf", stopOnFALSE = TRUE)) {
+                      cropTo <- sf::st_as_sf(cropTo)
+                    }
+                  }
+                  a <- sf::st_convex_hull(cropTo)
+                  convH <- terra::vect(a)
+                } else {
+                  convH <- terra::convHull(cropTo)
+                }
+
+                cropToInFromCRS <- terra::project(convH, terraCRSFrom)
               } else {
                 # cropToVec <- terra::as.polygons(terra::ext(cropTo), crs = terra::crs(cropTo))
                 cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
