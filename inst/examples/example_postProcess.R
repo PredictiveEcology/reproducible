@@ -1,4 +1,6 @@
-if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly = TRUE)) {
+if (requireNamespace("terra", quietly = TRUE) &&
+    requireNamespace("sf", quietly = TRUE) &&
+    requireNamespace("withr", quietly = TRUE)) {
   library(reproducible)
   withr::local_dir(withr::local_tempdir())
   withr::local_options(reproducible.inputPaths = NULL)

@@ -450,7 +450,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 .message$IndentUpdate <- function(nchar = .message$IndentDefault, envir = parent.frame(), ns = "reproducible") {
   val <- paste0(rep(" ", nchar), collapse = "")
   .message$PreProcessIndent <- paste0(.message$PreProcessIndent, val)
-  withr::defer(
+  on.exit2(# withr::defer(
     envir = envir,
     expr =
       {
@@ -463,7 +463,14 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 .message$IndentRevert <- function(nchar = .message$IndentDefault, envir = parent.frame(), ns = "reproducible") {
   val <- paste0(rep(" ", nchar), collapse = "")
   .message$PreProcessIndent <- gsub(paste0(val, "$"), "", .message$PreProcessIndent)
-  withr::deferred_clear(envir = envir)
+  # browser()
+
+  # Base R equivalent of withr::deferred_clear(envir = envir)
+  if (!is.null(attr(envir, "handlers"))) {
+    attr(envir, "handlers") <- NULL   # or set to list(), see note below
+  }
+
+  # withr::deferred_clear(envir = envir)
 }
 
 .spaceTmpChar <- "spAcE"
