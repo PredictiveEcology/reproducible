@@ -50,6 +50,7 @@ if (requireNamespace("terra", quietly = TRUE) &&
 
   # SpatVector-- note: doesn't matter what class the "to" object is, only the "from"
   studyAreas <- list()
+  studyAreaSmall <- prepInputs(localFileLuxSm)
   studyAreas[["orig"]] <- prepInputs(localFileLux)
   studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
   studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
