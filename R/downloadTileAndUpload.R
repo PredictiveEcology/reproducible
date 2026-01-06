@@ -291,8 +291,8 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
   messagePreProcess("Creating tiles ...", verbose = verbose)
 
   # Choose parallel or sequential based on OS
-  if (.Platform$OS.type == "unix") {
-    numCoresToUse <- numCoresToUse(max = length(tile_specs))
+  if (.Platform$OS.type == "unix" && requireNamespace("parallel")) {
+    numCoresToUse <- min(getOption("mc.cores"), numCoresToUse(max = length(tile_specs)))
     results <- parallel::mclapply(
       tile_specs, process_tile,
       mc.cores = numCoresToUse, datatype = datatype)

@@ -15,7 +15,8 @@ test_that("prepInputsUrlTiles", {
   )
 
   withr::local_options(reproducible.cachePath = tmpdir,
-                       reproducible.inputPath = tmpdir)# used by tiles
+                       reproducible.inputPath = tmpdir,
+                       mc.cores = 2L)# used by tiles
   outerDriveFolder <- "1KuBraAYnBpyxl3Nf0udc05fQlTPds2xY"
   urlForTiles <- try(googledrive::drive_ls(googledrive::as_id(outerDriveFolder)))
   if (is(urlForTiles, "try-error") || NROW(urlForTiles) == 0) {
