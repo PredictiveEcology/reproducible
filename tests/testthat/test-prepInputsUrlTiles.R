@@ -2,8 +2,9 @@ test_that("prepInputsUrlTiles", {
   skip_on_cran()
   skip_on_ci()
 
-  testInit(
-    "terra",
+  testInit(needGoogleDriveAuth = TRUE,
+    c("terra", "googledrive"),
+
     opts = list(
       rasterTmpDir = tempdir2(rndstr(1, 6)),
       reproducible.inputPaths = NULL,
@@ -17,7 +18,7 @@ test_that("prepInputsUrlTiles", {
                        reproducible.inputPath = tmpdir)# used by tiles
   outerDriveFolder <- "1KuBraAYnBpyxl3Nf0udc05fQlTPds2xY"
   urlForTiles <- try(googledrive::drive_ls(googledrive::as_id(outerDriveFolder)))
-  if (is(urlForTiles, "try-error")) {
+  if (is(urlForTiles, "try-error") || NROW(urlForTiles) == 0) {
     urlForTiles <- googledrive::drive_mkdir(
       name = "urlForTiles",
       path = googledrive::as_id(outerDriveFolder))
