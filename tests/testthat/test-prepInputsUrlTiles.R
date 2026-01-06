@@ -19,11 +19,9 @@ test_that("prepInputsUrlTiles", {
                        mc.cores = 2L)# used by tiles
   outerDriveFolder <- "1KuBraAYnBpyxl3Nf0udc05fQlTPds2xY"
   urlForTiles <- try(googledrive::drive_ls(googledrive::as_id(outerDriveFolder)))
-  if (is(urlForTiles, "try-error") || NROW(urlForTiles) == 0) {
-    urlForTiles <- googledrive::drive_mkdir(
-      name = "urlForTiles",
-      path = googledrive::as_id(outerDriveFolder))
-  }
+  urlForTiles <- googledrive::drive_mkdir(
+    name = basename(tempfile(pattern = "urlForTiles_")),
+    path = googledrive::as_id(outerDriveFolder))
   urlForTiles <- urlForTiles$id
   withr::local_options(reproducible.prepInputsUrlTiles = urlForTiles)
   fn <- "reproducible_testUrlTiles_test4Tiles.tif"
