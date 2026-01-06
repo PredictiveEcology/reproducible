@@ -251,7 +251,15 @@ cache2 <- Cache
 #' @param isSquiggly Logical. Whether there are curly braces e.g., as in a pipe sequence.
 #' @param .callingEnv Environment. The environment from which `Cache` was called.
 convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
-  # Capture the unevaluated call
+
+  if (requireNamespace("covr", quietly = TRUE) && covr::in_covr()) {
+    strip_covr_wrappers <- function(expr) {
+      while (is.call(expr) && identical(expr[[1]], as.name("{"))) expr <- expr[[length(expr)]]
+      expr
+    }
+    call <- strip_covr_wrappers(call)
+    if (length(call) >= 2L && is.language(call[[2]])) call[[2]] <- strip_covr_wrappers(call[[2]])
+  }
 
   .functionName <- NULL
   # Check if the first argument is a function call
@@ -316,7 +324,15 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
       infixes <- c("+", "-", "*", "/", "==", "!=", "<", ">", "<=", ">=", "&&", "||")
       areInfixes <- any(fun == infixes)
       if (!any(areInfixes)) {
-        fun <- parse(text = fun)
+
+          fun_chr <- as.character(fun)
+          # Only parse if it's not a reserved word
+          if (!(fun_chr %in% c("if", "function"))) {
+            fun <- parse(text = fun_chr)
+          }
+          # else: leave fun as-is (symbol), so downstream logic can handle it
+
+        # fun <- parse(text = fun)
       }
     }
     func <- eval(fun, envir = .callingEnv)
