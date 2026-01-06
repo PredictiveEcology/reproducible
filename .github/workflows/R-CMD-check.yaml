@@ -32,6 +32,7 @@ jobs:
           - {os: ubuntu-latest,  nosuggests: false, r: 'oldrel-2'}
 
     env:
+      CRAN: https://cran.rstudio.com/
       _R_CHECK_DEPENDS_ONLY_: ${{ matrix.config.nosuggests }}
       _SP_EVOLUTION_STATUS_: 2
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -57,10 +58,12 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          pak-version: stable
           extra-packages: |
             any::rcmdcheck
             rspatial/geodata
-          pak-version: devel
+            any::sf
+            any::terra
 
       - uses: r-lib/actions/check-r-package@v2
         with:
