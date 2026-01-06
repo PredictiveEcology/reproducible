@@ -355,8 +355,9 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
   }
 
   # Upload in parallel on Linux/macOS, sequential on Windows
-  if (.Platform$OS.type == "unix") {
-    numCoresToUse <- numCoresToUse(max = 7) # more than 7 on a fast internet connection
+  if (.Platform$OS.type == "unix" && requireNamespace("parallel")) {
+    numCoresToUse <- min(getOption("mc.cores"), numCoresToUse(max = 7))
+    # numCoresToUse <- numCoresToUse(max = 7) # more than 7 on a fast internet connection
                          # tends to be slower; but this will depend on connection speed
     results <- parallel::mclapply(
       tif_files, upload_one,
