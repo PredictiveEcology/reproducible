@@ -141,7 +141,7 @@ if (requireNamespace("terra", quietly = TRUE) &&
   }
 
   # sf class
-  if (requireNamespace("sf")) {
+  if (requireNamespace("sf", quietly = TRUE)) {
     studyAreaSmall <- prepInputs(localFileLuxSm, fun = "sf::st_read")
     studyAreas <- list()
     studyAreas[["orig"]] <- prepInputs(localFileLux)
