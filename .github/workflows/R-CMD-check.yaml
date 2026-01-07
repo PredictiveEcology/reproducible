@@ -64,8 +64,6 @@ jobs:
             rspatial/geodata
             any::sf
             any::terra
-          install-args: |
-            type = "source"
 
       - uses: r-lib/actions/check-r-package@v2
         with:
