@@ -525,13 +525,6 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   df
 }
 
-#' @importFrom utils packageDescription
-.isDevelVersion <- function() {
-  length(strsplit(packageDescription("reproducible")$Version, "\\.")[[1]]) > 3
-}
-
-#' A helper to `getOption("reproducible.rasterRead")`
-#'
 #' A helper to `getOption("reproducible.rasterRead")`
 #' @export
 #' @param ... Passed to the function parsed and evaluated from
@@ -657,13 +650,6 @@ milliseconds <- function(time = Sys.time()) {
   tt <- as.numeric(time)
   rnd <- round(tt, -5)
   (tt - rnd) * 1000
-}
-
-cat2file <- function(..., file) {
-  if (missing(file)) {
-    file <- "~/log.txt"
-  }
-  cat(..., file = file)
 }
 
 layerNamesDelimiter <- "_%%_"

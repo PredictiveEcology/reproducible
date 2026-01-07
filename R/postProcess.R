@@ -675,17 +675,6 @@ MaxValsFlts <- MaxVals[grep("FLT", names(MinVals), value = TRUE)]
 projNotWKT2warn <- "Using PROJ not WKT2"
 
 
-progressBarCode <- function(..., doProgress = TRUE, message,
-                            colour = getOption("reproducible.messageColourCache"),
-                            verbose = getOption("reproducible.verbose"),
-                            verboseLevel = 1) {
-  messageCache(message, verbose = verbose, verboseLevel = verboseLevel)
-  out <- eval(...)
-  if (doProgress) messageCache("\b Done!", verbose = verbose, verboseLevel = verboseLevel)
-  out
-}
-
-
 switchDataTypes <- function(datatype, type) {
 
   gdalVersion <- "3.1"

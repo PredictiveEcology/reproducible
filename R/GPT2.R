@@ -912,41 +912,6 @@ lockFile <- function(cachePath, cache_key,
   }
 }
 
-lockFileOld <- function(cachePath, cache_key, envir = parent.frame(),
-                     verbose = getOption("reproducible.verbose")) {
-  if (!useDBI()) {
-    csd <- CacheStorageDir(cachePath)
-    if (!any(dir.exists(csd)))
-      lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
-    lockFile <- file.path(csd, paste0(cache_key, suffixLockFile()))
-    first <- TRUE
-    tryCatch({
-      while(!exists("locked", inherits = FALSE) ||
-            tryCatch(isTRUE(is(locked, "try-error")), error = function(e) {TRUE})) {
-        setTimeLimit(elapsed = 3)
-        on.exit(setTimeLimit(elapsed = Inf))
-        locked <- try(filelock::lock(lockFile), silent = TRUE)
-        stillLocked <- tryCatch(isTRUE(any(is(locked, "try-error"))), error = function(err) {TRUE})
-        if (stillLocked && isTRUE(first)) {
-          first <- FALSE
-          messageCache("The cache file (", lockFile,") is locked due to a concurrent process; waiting... ",
-                       "\nIf there is no concurrent process (i.e., no parallelism), ",
-                       "delete that lockfile", verbose = verbose + 2)
-        }
-      }}, silent = TRUE)
-    # , error = function(e) {if (any(grepl("reached elapsed time limit", e$message)))
-    #   invokeRestart("muffleError")
-    # }
-    # )
-    if (first %in% FALSE) {
-      messageCache("  ... ", lockFile, " released, continuing ... ", verbose = verbose + 2)
-    }
-    # locked <- evalWithTimeout(, timeout = 1, onTimeout = "error")
-
-    on.exit2(releaseLockFile(locked), envir = envir)
-    locked
-  }
-}
 
 #' @importFrom data.table setorderv setcolorder
 showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
