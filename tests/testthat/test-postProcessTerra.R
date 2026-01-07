@@ -191,8 +191,45 @@ test_that("testing terra", {
   }
 
   if (.requireNamespace("sf")) {
-    utm <- sf::st_crs("epsg:23028")#$wkt
-    # utm <- terra::crs("epsg:23028") # $wkt
+    utm <- paste0('PROJCRS["ED50 / UTM zone 28N",
+    BASEGEOGCRS["ED50",
+        DATUM["European Datum 1950",
+            ELLIPSOID["International 1924",6378388,297,
+                LENGTHUNIT["metre",1]]],
+        PRIMEM["Greenwich",0,
+            ANGLEUNIT["degree",0.0174532925199433]],
+        ID["EPSG",4230]],
+    CONVERSION["UTM zone 28N",
+        METHOD["Transverse Mercator",
+            ID["EPSG",9807]],
+        PARAMETER["Latitude of natural origin",0,
+            ANGLEUNIT["degree",0.0174532925199433],
+            ID["EPSG",8801]],
+        PARAMETER["Longitude of natural origin",-15,
+            ANGLEUNIT["degree",0.0174532925199433],
+            ID["EPSG",8802]],
+        PARAMETER["Scale factor at natural origin",0.9996,
+            SCALEUNIT["unity",1],
+            ID["EPSG",8805]],
+        PARAMETER["False easting",500000,
+            LENGTHUNIT["metre",1],
+            ID["EPSG",8806]],
+        PARAMETER["False northing",0,
+            LENGTHUNIT["metre",1],
+            ID["EPSG",8807]]],
+    CS[Cartesian,2],
+        AXIS["(E)",east,
+            ORDER[1],
+            LENGTHUNIT["metre",1]],
+        AXIS["(N)",north,
+            ORDER[2],
+            LENGTHUNIT["metre",1]],
+    USAGE[
+        SCOPE["Engineering survey, topographic mapping."],
+        AREA["Europe - between 18°W and 12°W - Ireland offshore."],
+        BBOX[48.43,-16.1,56.57,-12]],
+    ID["EPSG",23028]]')
+    # utm <- sf::st_crs("epsg:23028")#$wkt
 
     vsfutm <- sf::st_transform(vsf, utm)
     vutm <- terra::vect(vsfutm)
