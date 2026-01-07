@@ -70,22 +70,24 @@ ras <- terra::rast(terra::ext(0, 300, 0, 300), vals = 1:9e4, res = 1)
 terra::crs(ras) <- "+proj=lcc +lat_0=50 +lat_1=60 +lon_0=-100 +datum=WGS84"
 
 newCRS <- "epsg:4326" # A longlat crs
+tmplate <- terra::rast(terra::ext(c(-100, -99.99587, 50, 50.00266)), nrows = 300, ncols = 300)
+terra::crs(tmplate) <- newCRS
 
 # No Cache
-system.time(suppressWarnings(map1 <- terra::project(ras, newCRS))) # Warnings due to new PROJ
+system.time(map1 <- terra::project(ras, tmplate, method = "near"))
 
 # Try with memoise for this example -- for many simple cases, memoising will not be faster
 opts <- options("reproducible.useMemoise" = TRUE)
 # With Cache -- a little slower the first time because saving to disk
 system.time({
   suppressWarnings({
-    map1 <- terra::project(ras, newCRS) |> Cache(cachePath = tmpDir, notOlderThan = Sys.time())
+    map1 <- terra::project(ras, tmplate, method = "near") |> Cache(cachePath = tmpDir, notOlderThan = Sys.time())
   })
 })
 
 # faster the second time; improvement depends on size of object and time to run function
 system.time({
-  map2 <- terra::project(ras, newCRS) |> Cache(cachePath = tmpDir)
+  map2 <- terra::project(ras, tmplate, method = "near") |> Cache(cachePath = tmpDir)
 })
 
 options(opts)
