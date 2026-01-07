@@ -21,7 +21,7 @@ editor_options:
 
 
 ```{r setup, include = FALSE}
-SuggestedPkgsNeeded <- c("terra")
+SuggestedPkgsNeeded <- c("terra", "sf")
 hasSuggests <- all(sapply(SuggestedPkgsNeeded, require, character.only = TRUE, quietly = TRUE))
 useSuggests <- !(tolower(Sys.getenv("_R_CHECK_DEPENDS_ONLY_")) == "true")
 
@@ -48,14 +48,12 @@ This can be extremely useful for web apps built with, say `shiny`.
 
 ## Function-level caching
 
-Any function can be cached by wrapping `Cache` around the function call, or by using base pipe `|>` or using: `Cache(FUN = functionName, ...)`
+Any function can be cached by wrapping `Cache` around the function call, or by using base pipe `|>`:
 
 This will be a slight change to a function call, such as:
 `terra::project(raster, crs = terra::crs(newRaster))`
 to
 `Cache(terra::project(raster, crs = terra::crs(newRaster)))`
-or
-`Cache(terra::project, raster, crs = terra::crs(newRaster))`
 or with the pipe
 `terra::project(raster, crs = terra::crs(newRaster)) |> Cache()`
 
@@ -66,30 +64,35 @@ This is particularly useful for expensive operations.
 library(reproducible)
 library(data.table)
 
-tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
+
+tmpDir <- file.path(tempfile(), "reproducible_examples", "Cache")
 dir.create(tmpDir, recursive = TRUE)
 
 ras <- terra::rast(terra::ext(0, 300, 0, 300), vals = 1:9e4, res = 1)
-terra::crs(ras) <- "EPSG:42103" 
-# terra::crs(ras) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +datum=WGS84"
 
+lcc_wkt <- sf::st_crs("+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +datum=WGS84")$wkt
+
+# Assign WKT to your raster
+terra::crs(ras) <- lcc_wkt
 newCRS <- "epsg:4326" # A longlat crs
 
 # No Cache
-system.time(suppressWarnings(map1 <- terra::project(ras, newCRS))) # Warnings due to new PROJ
+system.time(suppressWarnings(map1 <- terra::project(ras, newCRS, use_gdal = FALSE))) # Warnings due to new PROJ
 
 # Try with memoise for this example -- for many simple cases, memoising will not be faster
 opts <- options("reproducible.useMemoise" = TRUE)
 # With Cache -- a little slower the first time because saving to disk
 system.time({
   suppressWarnings({
-    map1 <- Cache(terra::project, ras, newCRS, cachePath = tmpDir, notOlderThan = Sys.time())
+    map1 <- terra::project(ras, newCRS, use_gdal = FALSE) |> 
+      Cache(cachePath = tmpDir, notOlderThan = Sys.time()) 
   })
 })
 
 # faster the second time; improvement depends on size of object and time to run function
 system.time({
-  map2 <- Cache(terra::project, ras, newCRS, cachePath = tmpDir)
+  map2 <- terra::project(ras, newCRS, use_gdal = FALSE) |> 
+    Cache(cachePath = tmpDir) 
 })
 
 options(opts)
@@ -222,19 +225,19 @@ rasCRS <- terra::crs(ras)
 # A slow operation, like GIS operation
 notCached <- suppressWarnings(
   # project raster generates warnings when run non-interactively
-  terra::project(ras, rasCRS, res = 5)
+  terra::project(ras, rasCRS, res = 5, use_gdal = FALSE)
 )
 
 cached <- suppressWarnings(
   # project raster generates warnings when run non-interactively
   # using quote works also
-  Cache(terra::project, ras, rasCRS, res = 5, cachePath = tmpDir)
+  terra::project(ras, rasCRS, res = 5, use_gdal = FALSE) |> Cache(cachePath = tmpDir)
 )
 
 # second time is much faster
 reRun <- suppressWarnings(
   # project raster generates warnings when run non-interactively
-  Cache(terra::project, ras, rasCRS, res = 5, cachePath = tmpDir)
+  terra::project(ras, rasCRS, res = 5, use_gdal = FALSE) |> Cache(cachePath = tmpDir)
 )
 
 # recovered cached version is same as non-cached version
@@ -262,8 +265,8 @@ outer <- function(n) {
 }
 
 # make 2 different cache paths
-tmpdir1 <- file.path(tempdir(), "first")
-tmpdir2 <- file.path(tempdir(), "second")
+tmpdir1 <- file.path(tempfile(), "first")
+tmpdir2 <- file.path(tempfile(), "second")
 
 # Run the Cache ... notOlderThan propagates to all 3 Cache calls,
 #   but cachePath is tmpdir1 in top level Cache and all nested
