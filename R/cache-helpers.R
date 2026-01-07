@@ -359,43 +359,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 }
 
 #' @keywords internal
-.getOtherFnNamesAndTags <- function(scalls) {
-  if (is.null(scalls)) {
-    scalls <- sys.calls()
-  }
-
-  patt <- paste(.defaultOtherFunctionsOmit, collapse = ")|(")
-  otherFns <- .grepSysCalls(
-    scalls,
-    pattern = patt
-  )
-  if (length(otherFns)) {
-    otherFns <- unlist(lapply(scalls[-otherFns], function(x) {
-      tryCatch(as.character(x[[1]]), error = function(y) "")
-    }))
-    otherFns <- otherFns[nzchar(otherFns)]
-    otherFns <- otherFns[!startsWith(otherFns, prefix = ".")]
-    otherFns <- paste0("otherFunctions:", otherFns)
-  } else {
-    otherFns <- character()
-  }
-
-  # Figure out if it is in SpaDES.core call, which could be either a .parseModule or .runModuleInputObjects call...
-  #   , if yes, then extract the module
-  doEventFrameNum <- .grepSysCalls(scalls, "\\.parseModule|\\.runModuleInputObjects")
-  if (length(doEventFrameNum)) {
-    module <- get0("m", envir = sys.frame(tail(doEventFrameNum, 1)))
-    if (is.null(module)) { # this block should cover any other cases, though is likely unnecessary
-      # This whole mechanism is predicated on the module name being called "m" in the above 2 functions
-      moduleEnv <- .whereInStack("m")
-      module <- get0("m", envir = moduleEnv)
-    }
-
-    # module <- get("m", envir = sys.frame(doEventFrameNum[2])) # always 2
-    otherFns <- c(paste0("module:", module), otherFns)
-  }
-  unique(otherFns)
-}
 
 #' @keywords internal
 nextNumericName <- function(string) {
@@ -573,52 +536,6 @@ wrapSpatVector <- function(obj) {
   #   env$wrapTimings <- new.env(parent = emptyenv())
   # assign(paste0("ss", ss), list(stWrap = stWrap, stWrapSpecial = stWrapSpecial), envir = env$wrapTimings)
 
-  if (FALSE) {
-    geom_only <- obj
-    values(geom_only) <- NULL
-    df <- as.data.frame(obj)
-    cfs <- terra::crs(obj)
-    #geom1 <- terra::geom(obj)
-    #df <- as.data.frame(obj)
-    values(geom_only) <- df
-
-    wrap_spatvector <- function(obj) {
-      stopifnot(inherits(obj, "SpatVector"))
-
-      list(
-        geometry = terra::geom(obj),                      # matrix of coordinates
-        attributes = as.data.frame(obj),           # attribute table
-        crs = crs(obj),                             # coordinate reference system
-        extent = terra::ext(obj),                          # bounding box
-        geom_type = geomtype(obj),                  # "points", "lines", "polygons", etc.
-        n_features = nrow(obj),
-        n_fields = ncol(obj)
-      )
-    }
-
-    unwrap_spatvector <- function(unwrap) {
-      # Create empty SpatVector from geometry
-      sv <- vect(unwrap$geometry, type = unwrap$geom_type, crs = unwrap$crs)
-
-      # Attach attributes
-      values(sv) <- unwrap$attributes
-
-      sv
-    }
-
-    #
-    #
-    # geom1 <- list(
-    #   cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),
-    #   cols34 = matrix(as.integer(geom1[, c(3, 4)]), ncol = 2)
-    # )
-    # geomtype1 <- terra::geomtype(obj)
-    # dat1 <- terra::values(obj)
-    # crs1 <- terra::crs(obj)
-    # obj <- list(geom1, geomtype1, dat1, crs1)
-    # names(obj) <- spatVectorNamesForCache
-    obj
-  }
   obj
 }
 
@@ -630,12 +547,10 @@ unwrapSpatVector <- function(obj) {
   # Attach attributes
   terra::values(sv) <- obj$attributes
 
-  if (FALSE) {
-    obj <- terra::unwrap(obj)
-    obj$x <- cbind(obj$x$cols125[, 1:2, drop = FALSE], obj$x$cols34[, 1:2, drop = FALSE], obj$x$cols125[, 3, drop = FALSE])
-    do.call(terra::vect, obj)
-    obj
-  }
+  # obj <- terra::unwrap(obj)
+  # obj$x <- cbind(obj$x$cols125[, 1:2, drop = FALSE], obj$x$cols34[, 1:2, drop = FALSE], obj$x$cols125[, 3, drop = FALSE])
+  # do.call(terra::vect, obj)
+  # obj
   sv
 
 }
