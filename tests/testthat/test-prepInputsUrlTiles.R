@@ -47,32 +47,32 @@ test_that("prepInputsUrlTiles", {
   cat(mess1, file = "~/tmp/mess1.txt")
   a1b <- .wrap(a1)
   a2b <- .wrap(a2)
-  save(a1b, a2b, a1, a2, file = "~/tmp/objs.rda")
   expect_is(a2, "SpatRaster")
+  expect_is(a1, "SpatRaster")
 
   testthat::expect_equivalent(a1, a2)
 
-  if (FALSE) {
-    withr::local_options(reproducible.prepInputsUrlTiles = urlForTiles)
-    fn <- "reproducible_testUrlTiles_test1Tile.tif"
-    ext <- c(ymin = 1306000, ymax = 1394000, xmin = 307000, xmax = 363000)
-    ext <- unname(ext)
-    b <- terra::rast(terra::ext(ext, xy = FALSE), resolution = 100, vals = 1)
-    terra::crs(b) <- "epsg:3978"
-    extLrg <- terra::extend(b, 1e2)
-    terra::crs(extLrg) <- "epsg:3978"
-    extLrg <- terra::writeRaster(x = extLrg, filename = fn, overwrite = TRUE)
-    d <- googledrive::drive_upload(fn, path = googledrive::as_id(urlForTiles))
-    b1 <- prepInputs(url = d$id, to = b, doUploads = TRUE, numTiles = c(2,2))
-    withr::local_options(reproducible.prepInputsUrlTiles = NULL)
-    b2 <- prepInputs(url = d$id, to = b)
-    testthat::expect_equivalent(b1, b2)
-    save(a1, a2, b1, b2, file = "~/tmp/objs.rda")
-    gls <- googledrive::drive_ls(urlForTiles)
+  # if (FALSE) {
+  withr::local_options(reproducible.prepInputsUrlTiles = urlForTiles)
+  fn <- "reproducible_testUrlTiles_test1Tile.tif"
+  ext <- c(ymin = 1306000, ymax = 1394000, xmin = 307000, xmax = 363000)
+  ext <- unname(ext)
+  b <- terra::rast(terra::ext(ext, xy = FALSE), resolution = 100, vals = 1)
+  terra::crs(b) <- "epsg:3978"
+  extLrg <- terra::extend(b, 1e2)
+  terra::crs(extLrg) <- "epsg:3978"
+  extLrg <- terra::writeRaster(x = extLrg, filename = fn, overwrite = TRUE)
+  d <- googledrive::drive_upload(fn, path = googledrive::as_id(urlForTiles))
+  b1 <- prepInputs(url = d$id, to = b, doUploads = TRUE, numTiles = c(2,2))
+  withr::local_options(reproducible.prepInputsUrlTiles = NULL)
+  b2 <- prepInputs(url = d$id, to = b)
+  testthat::expect_equivalent(b1, b2)
+  save(a1, a2, b1, b2, file = "~/tmp/objs.rda")
+  gls <- googledrive::drive_ls(urlForTiles)
 
-    # clean up
-    # googledrive::drive_rm(gls)
-    googledrive::drive_rm(urlForTiles)
+  # clean up
+  # googledrive::drive_rm(gls)
+  googledrive::drive_rm(urlForTiles)
 
-  }
+  # }
 })
