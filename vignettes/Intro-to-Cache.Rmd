@@ -66,20 +66,19 @@ library(data.table)
 tmpDir <- file.path(tempfile(), "reproducible_examples", "Cache")
 dir.create(tmpDir, recursive = TRUE)
 
+# Source raster with a complete LCC definition
 ras <- terra::rast(terra::ext(0, 300, 0, 300), vals = 1:9e4, res = 1)
-terra::crs(ras) <- "+proj=lcc +lat_0=50 +lat_1=60 +lat_2=70 +lon_0=-100 +datum=WGS84"
+terra::crs(ras) <- "+proj=lcc +lat_1=60 +lat_2=70 +lat_0=50 +lon_0=-100 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
 
-newCRS <- "epsg:4326" # A longlat crs
+# Target CRS in PROJ form (no EPSG lookup)
+newCRS <- "+proj=longlat +datum=WGS84 +no_defs"
 
-# Derive target extent from source extent
+# Derive target extent from source extent (no registry lookup)
 target_ext <- terra::project(terra::ext(ras), from = terra::crs(ras), to = newCRS)
 
 # Build template with chosen resolution; assign CRS
 tmplate <- terra::rast(target_ext, resolution = 0.00001)
 terra::crs(tmplate) <- newCRS
-
-# tmplate <- terra::rast(terra::ext(c(-100, -99.99592, 50, 50.00263)), nrows = 300, ncols = 300)
-# terra::crs(tmplate) <- newCRS
 
 # No Cache
 system.time(map1 <- terra::project(ras, tmplate, method = "near"))
