@@ -67,29 +67,36 @@ tmpDir <- file.path(tempfile(), "reproducible_examples", "Cache")
 dir.create(tmpDir, recursive = TRUE)
 
 ras <- terra::rast(terra::ext(0, 300, 0, 300), vals = 1:9e4, res = 1)
-terra::crs(ras) <- "+proj=lcc +lat_0=50 +lat_1=60 +lon_0=-100 +datum=WGS84"
+terra::crs(ras) <- "+proj=lcc +lat_0=50 +lat_1=60 +lat_2=70 +lon_0=-100 +datum=WGS84"
 
 newCRS <- "epsg:4326" # A longlat crs
-tmplate <- terra::rast(terra::ext(c(-100, -99.99587, 50, 50.00266)), nrows = 300, ncols = 300)
+
+# Derive target extent from source extent
+target_ext <- terra::project(terra::ext(ras), from = terra::crs(ras), to = newCRS)
+
+# Build template with chosen resolution; assign CRS
+tmplate <- terra::rast(target_ext, resolution = 0.00001)
 terra::crs(tmplate) <- newCRS
 
+# tmplate <- terra::rast(terra::ext(c(-100, -99.99592, 50, 50.00263)), nrows = 300, ncols = 300)
+# terra::crs(tmplate) <- newCRS
+
 # No Cache
-# use_gdal = FALSE is not necessary in most cases
-system.time(map1 <- terra::project(ras, tmplate, method = "near", use_gdal = FALSE))
+system.time(map1 <- terra::project(ras, tmplate, method = "near"))
 
 # Try with memoise for this example -- for many simple cases, memoising will not be faster
 opts <- options("reproducible.useMemoise" = TRUE)
 # With Cache -- a little slower the first time because saving to disk
 system.time({
   suppressWarnings({
-    map1 <- terra::project(ras, tmplate, method = "near", use_gdal = FALSE) |> 
+    map1 <- terra::project(ras, tmplate, method = "near") |> 
       Cache(cachePath = tmpDir)
   })
 })
 
 # faster the second time; improvement depends on size of object and time to run function
 system.time({
-  map2 <- terra::project(ras, tmplate, method = "near", use_gdal = FALSE) |> 
+  map2 <- terra::project(ras, tmplate, method = "near") |> 
     Cache(cachePath = tmpDir)
 })
 
