@@ -420,7 +420,22 @@ isDirectory <- function(pathnames, mustExist = TRUE) {
 }
 
 isGoogleDriveDirectory <- function(url) {
-  grepl("folders", url)
+  isFold <- grepl("folders", url)
+  if (isFold %in% FALSE && is(url, "drive_id")) {
+    # second check if it is just a google id
+    driveMeta <- googledrive::drive_get(url)
+    isFold <- isGoogleDriveDirectoryFromTibble(driveMeta)
+  }
+  isFold
+}
+
+isGoogleDriveDirectoryFromTibble <- function(tib) {
+  if (tib$drive_resource[[1]]$mimeType == "application/vnd.google-apps.folder") {
+    isFold <- TRUE
+  } else {
+    isFold <- FALSE
+  }
+  isFold
 }
 
 isFile <- function(pathnames) {

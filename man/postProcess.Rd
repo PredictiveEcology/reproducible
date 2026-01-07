@@ -100,7 +100,8 @@ the new \code{from} and \code{to} arguments.
 }
 
 \examples{
-if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly = TRUE)) {
+if (requireNamespace("terra", quietly = TRUE) &&
+    requireNamespace("withr", quietly = TRUE)) {
   library(reproducible)
   withr::local_dir(withr::local_tempdir())
   withr::local_options(reproducible.inputPaths = NULL)
@@ -140,16 +141,19 @@ if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly 
   }
 
   # sf class
-  studyAreaSmall <- prepInputs(localFileLuxSm)
-  studyAreas <- list()
-  studyAreas[["orig"]] <- prepInputs(localFileLux)
-  studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
-  studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
-  studyAreas[["masked"]] <- suppressWarnings(maskTo(studyAreas[["orig"]], studyAreaSmall))
+  if (requireNamespace("sf", quietly = TRUE)) {
+    studyAreaSmall <- prepInputs(localFileLuxSm, fun = "sf::st_read")
+    studyAreas <- list()
+    studyAreas[["orig"]] <- prepInputs(localFileLux)
+    studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
+    studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
+    studyAreas[["masked"]] <- suppressWarnings(maskTo(studyAreas[["orig"]], studyAreaSmall))
+  }
 
   # SpatVector-- note: doesn't matter what class the "to" object is, only the "from"
   studyAreas <- list()
-  studyAreas[["orig"]] <- prepInputs(localFileLux, fun = "terra::vect")
+  studyAreaSmall <- prepInputs(localFileLuxSm)
+  studyAreas[["orig"]] <- prepInputs(localFileLux)
   studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
   studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
   studyAreas[["masked"]] <- suppressWarnings(maskTo(studyAreas[["orig"]], studyAreaSmall))

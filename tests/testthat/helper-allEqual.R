@@ -72,6 +72,9 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
     if (!intExists) skip("Need internet")
   }
 
+  if (!requireNamespace("withr"))
+    skip("Need withr")
+
   if (length(libraries)) {
     libraries <- unique(libraries)
     if (identical(getOption("reproducible.rasterRead"), "raster::raster")) {

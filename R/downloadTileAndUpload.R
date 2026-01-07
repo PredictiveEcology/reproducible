@@ -88,6 +88,13 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
 
   st <- Sys.time()
 
+  .i <- 0
+
+  env <- environment()
+
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
   # deal with `to` first, to identify the tiles, then rest can be Cached easily, even
   #  if the to changes slightly
   maskToCropTo <- c("maskTo", "cropTo")
@@ -105,6 +112,12 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
     to <- boundaryPolygon(to)
   dig <- .robustDigest(to)
 
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
+
 
   datatype <- "FLT4S"
   dtype <- list(...)$datatype
@@ -120,6 +133,12 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
     isGDurl <- TRUE
   }
 
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
+
   remoteMetadata <- getRemoteMetadata(targetFile, isGDurl, url)
   remoteHashFile <- makeRemoteHashFile(url, destinationPath,
                                        remoteMetadata$targetFile, remoteMetadata$remoteHash)
@@ -133,6 +152,13 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   if (is.null(remoteMetadata$targetFile)) {
     stop("Please supply `targetFile` or a url from which `targetFile` can be extracted from")
   }
+
+
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
 
   targetFileFullPath <- file.path(destinationPath, remoteMetadata$targetFile)
   purge <- checkHaveCorrectHashedVersion(targetFileFullPath, remoteHashFile, remoteMetadata, purge, verbose)
@@ -159,6 +185,13 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   }
   dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
 
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
+
+
   if (isTRUE(purge) && length(dirTilesFolder)) {
     dirTilesFolder <- purgeLocalTiles(tilesFolderFullPath, verbose)
   }
@@ -171,12 +204,18 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   # need to rerun because there may have been a rm in previous line
   dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
 
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
+
+
   noTiles <- FALSE
 
   to_inTileGrid <- postProcessTo(to, to = targetObjCRS, verbose = verbose - 2)
   tileGridAndArea <- makeAndPlotTileGrid(tileGrid, numTiles, targetObjCRS,
                                          plot.grid, to = to_inTileGrid, verbose)
-
 
   # Find intersecting tiles
   all_tile_names <- sort(makeTileNames(tileGridAndArea$tileGrid$tile_id))
@@ -195,6 +234,13 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
       messagePreProcess(.messageFunctionFn(paste(needed_tile_names, collapse =  ", ")), verbose = verbose)
   }
   haveAllNeededTiles <- if (doUploads > 0) length(missingTilesLocalAll) == 0 else TRUE
+
+
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
 
 
   if (length(missingTilesLocal) == 0) {# && (haveAllNeededTiles)) {
@@ -228,12 +274,26 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   }
   noData <- FALSE
 
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
+
+
   if (file.exists(targetFilePostProcessedFullPath)) {
     messagePreProcess("Correct post processed file exists (",
                              .messageFunctionFn(targetFilePostProcessedFullPath),
                       ");\n returning it now...", verbose = verbose)
     return(terra::rast(targetFilePostProcessedFullPath))
   }
+
+
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
 
   if (noTiles %in% FALSE) {
     rfull <- sprcMosaicRast(url, tile_rasters, to_inTileGrid, targetFilePostProcessedFullPath,
@@ -243,6 +303,12 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   messagePreProcess("prepInputsWithTiles ", gsub("^\b", "", messagePrefixDoneIn),
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
+
   rfull
 }
 
@@ -292,8 +358,8 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
   messagePreProcess("Creating tiles ...", verbose = verbose)
 
   # Choose parallel or sequential based on OS
-  if (.Platform$OS.type == "unix") {
-    numCoresToUse <- numCoresToUse(max = length(tile_specs))
+  if (.Platform$OS.type == "unix" && requireNamespace("parallel")) {
+    numCoresToUse <- min(getOption("mc.cores"), numCoresToUse(max = length(tile_specs)))
     results <- parallel::mclapply(
       tile_specs, process_tile,
       mc.cores = numCoresToUse, datatype = datatype)
@@ -356,8 +422,9 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
   }
 
   # Upload in parallel on Linux/macOS, sequential on Windows
-  if (.Platform$OS.type == "unix") {
-    numCoresToUse <- numCoresToUse(max = 7) # more than 7 on a fast internet connection
+  if (.Platform$OS.type == "unix" && requireNamespace("parallel")) {
+    numCoresToUse <- min(getOption("mc.cores"), numCoresToUse(max = 7))
+    # numCoresToUse <- numCoresToUse(max = 7) # more than 7 on a fast internet connection
                          # tends to be slower; but this will depend on connection speed
     results <- parallel::mclapply(
       tif_files, upload_one,
@@ -545,7 +612,9 @@ lsExistingTilesOnGoogleDrive <- function(urlTiles, targetFile) {
 
   # List all files in the folder
   existing_tiles <- googledrive::with_drive_quiet(googledrive::drive_ls(tile_folder_onGoogleDrive))
-  hasSubfolder <- grep(filePathSansExt(targetFile), existing_tiles$name)
+  whFolders <- sapply(seq(NROW(existing_tiles)), function(x)
+    isGoogleDriveDirectoryFromTibble(existing_tiles[x,]))
+  hasSubfolder <- grep(filePathSansExt(targetFile), existing_tiles$name[whFolders])
   if (length(hasSubfolder)) {
     tile_subfolder <- existing_tiles[hasSubfolder, ]$id
     existing_tiles <- googledrive::with_drive_quiet(googledrive::drive_ls(tile_subfolder))
@@ -599,7 +668,8 @@ getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath
   }
   # need to get the targetObjCRS to know what the tiles will look like
   if (is.null(targetObjCRS)) {
-    targetObjCRS <- crsFromLocalOrGDTiles(targetObjCRS, dirTilesFolder, tilesFolderFullPath, urlTiles,
+    targetObjCRS <- crsFromLocalOrGDTiles(targetObjCRS, dirTilesFolder, tilesFolderFullPath,
+                                          urlTiles,
                                           targetFile, purge, doUploads, fileSize, verbose)
   }
   if (is.null(targetObjCRS)) {
@@ -646,7 +716,6 @@ getTilesFromGoogleDrive <- function(tilesToGet, existing_tiles, tilesFolderFullP
   haveLocalTiles
 }
 
-#' @importFrom purrr keep
 downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFullPath,
                                        needed_tile_names, tilesToGet, all_tile_names, haveLocalTiles,
                                        tilesFolderFullPath, tileGrid, numTiles,
@@ -718,13 +787,23 @@ downloadMakeAndUploadTiles <- function(url, urlTiles, targetFile, targetFileFull
     saExt <- terra::ext(to_inTileGrid)
 
     # Filter tiles that intersect the study area
-    intersecting_tiles2 <- purrr::keep(tile_paths, function(path) {
+    keep_idx <- vapply(tile_paths, function(path) {
       tile_ext <- terra::ext(terra::rast(file.path(tilesFolderFullPath, path)))
 
-      # Check for bounding box overlap
-      !(tile_ext[1] > saExt[2] || tile_ext[2] < saExt[1] ||  # x overlap
-          tile_ext[3] > saExt[4] || tile_ext[4] < saExt[3])    # y overlap
-    })
+      # bounding box overlap (x then y)
+      !(tile_ext[1] > saExt[2] || tile_ext[2] < saExt[1] ||  # x no-overlap
+          tile_ext[3] > saExt[4] || tile_ext[4] < saExt[3])    # y no-overlap
+    }, logical(1))
+
+    intersecting_tiles2 <- tile_paths[keep_idx]
+
+    # intersecting_tiles2 <- purrr::keep(tile_paths, function(path) {
+    #   tile_ext <- terra::ext(terra::rast(file.path(tilesFolderFullPath, path)))
+    #
+    #   # Check for bounding box overlap
+    #   !(tile_ext[1] > saExt[2] || tile_ext[2] < saExt[1] ||  # x overlap
+    #       tile_ext[3] > saExt[4] || tile_ext[4] < saExt[3])    # y overlap
+    # })
     if (!identical(needed_tile_names, intersecting_tiles2)) {
       messagePreProcess("`to` does not overlap with any tiles on file at:\n",
                         .messageFunctionFn(url), verbose = verbose)
@@ -1040,13 +1119,13 @@ boundaryPolygon <- function(r) {
 
   # Generate coordinates of pixel corners along the boundary
   # Top edge (left to right)
-  top <- cbind(seq(ext[1], ext[2] - res_x, by = res_x), rep(ext[4], nrow(r)))
+  top <- cbind(seq(ext[1], ext[2] - res_x, by = res_x), rep(ext[4], ncol(r)))
 
   # Right edge (top to bottom)
   right <- cbind(rep(ext[2], nrow(r)), seq(ext[4], ext[3] + res_y, by = -res_y))
 
   # Bottom edge (right to left)
-  bottom <- cbind(seq(ext[2], ext[1] + res_x, by = -res_x), rep(ext[3], nrow(r)))
+  bottom <- cbind(seq(ext[2], ext[1] + res_x, by = -res_x), rep(ext[3], ncol(r)))
 
   # Left edge (bottom to top)
   left <- cbind(rep(ext[1], nrow(r)), seq(ext[3], ext[4] - res_y, by = res_y))

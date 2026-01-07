@@ -367,31 +367,21 @@ setMethod(
     # }
 
     objsSorted <- .sortDotsUnderscoreFirst(object)
-    addr <- list()
-    seen <- new.env(parent = emptyenv())
-    localAddrs <- Map(o = objsSorted, function(o) lobstr::obj_addr(o))
+    # addr <- list()
+    # seen <- new.env(parent = emptyenv())
+    # localAddrs <- Map(o = objsSorted, function(o) lobstr::obj_addr(o))
 
-    # rcae <- getOption(reproducible.CacheAddressEnv)
-    # objsSorted[["._list"]] <- NULL
-    inner <- Map(x = objsSorted, i = seq_along(objsSorted), addr = localAddrs,
-                 function(x, i, addr) {
+    inner <- Map(x = objsSorted, i = seq_along(objsSorted), # addr = localAddrs,
+                 function(x, i) {#, addr) {
 
                    if (!is.null(attr(x, ".Cache")$newCache)) {
                      x <- .setSubAttrInList(x, ".Cache", "newCache", NULL)
                      if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
                    }
 
-                   # if (!is.null(rcae)) {
-                   #   if (exists(addr, envir = rcae, inherits = FALSE)) {
-                   #     browser()
-                   #     return(rcae[[addr]])
-                   #
-                   #   }
+                   # if (exists(addr, envir = seen)) {
+                   #   return(seen[[addr]])
                    # }
-
-                   if (exists(addr, envir = seen)) {
-                     return(seen[[addr]])
-                   }
 
                    withCallingHandlers({
 
@@ -403,11 +393,10 @@ setMethod(
                    }, error = function(e) {
                      nam <- names(objsSorted)
                      if (!is.null(nam)) {
-                       # messageCache("Error occurred during .robustDigest of ", nam[i], " in ", .functionName)
                        messageCache("Error occurred during .robustDigest of ", nam[i])
                      }
                    })
-                   seen[[addr]] <- result
+                   # seen[[addr]] <- result
 
                    result
 

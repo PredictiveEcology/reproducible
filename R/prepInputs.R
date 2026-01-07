@@ -217,7 +217,7 @@ utils::globalVariables(c(
 #' @examples
 #' \donttest{
 #' if (requireNamespace("terra", quietly = TRUE) &&
-#'   requireNamespace("sf", quietly = TRUE)) {
+#'   requireNamespace("withr", quietly = TRUE)) {
 #'   library(reproducible)
 #'   withr::local_dir(withr::local_tempdir())
 #'   # Make a dummy study area map -- user would supply this normally
@@ -369,8 +369,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
               "options(reproducible.prepInputsUrlTiles) is set to a Google Drive folder")
       x <- prepInputsWithTiles(url = url, destinationPath = destinationPath, purge = purge,
                                ...)
+      if (!identical(x, "NULL")) runNormalPreProcess <- FALSE
     }
-    if (!identical(x, "NULL")) runNormalPreProcess <- FALSE
 
   }
 

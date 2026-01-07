@@ -238,7 +238,7 @@ If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
 \examples{
 \donttest{
 if (requireNamespace("terra", quietly = TRUE) &&
-  requireNamespace("sf", quietly = TRUE)) {
+  requireNamespace("withr", quietly = TRUE)) {
   library(reproducible)
   withr::local_dir(withr::local_tempdir())
   # Make a dummy study area map -- user would supply this normally

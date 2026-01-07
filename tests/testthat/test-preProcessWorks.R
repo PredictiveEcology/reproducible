@@ -461,7 +461,8 @@ test_that("just google id not url", {
 
   testInit("terra", needGoogleDriveAuth = TRUE, needInternet = TRUE)
   co <- capture.output(smallObj <- prepInputs(url = "1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb"))
-  expect_is(smallObj, "sf")
+  # depends on whether `sf` is installed
+  expect_is(smallObj, c("SpatVector", "sf"))
 })
 
 test_that("Test of using future and progress indicator for lrg files on Google Drive", {
