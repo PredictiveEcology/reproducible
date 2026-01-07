@@ -36,12 +36,6 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   # Capture and match call so it can be manipulated
   callList <- matchCall2(sys.function(0), sys.call(0), envir = .callingEnv, FUN = FUN)
 
-  if (isFALSE(getOption("reproducible.useCacheV3"))) {
-    # This run CacheV2 which is the OLD CACHE FUNCTION
-    callList$call[[1]] <- substitute(CacheV2)
-    return(eval(callList$call, envir = .callingEnv))
-  }
-
   # Check if this is a nested Cache call; this must be before skipCache because useCache may be numeric
   userTags <- setupCacheNesting(userTags, useCache) # get nested userTags
 
@@ -56,8 +50,6 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   # Add .functionName to .pkgEnv userTags in case this becomes part of a nested Cache
   appendFunctionNameToNestedTags(userTags, callList$.functionName)
   # .pkgEnv$.reproEnv2$userTags
-  # appendNestedTags(outerFunction = callList$.functionName)
-
 
   # do the Digest
   times <- list()
@@ -857,14 +849,6 @@ setupCacheNesting <- function(userTags, useCache, envir = parent.frame(1)) {
   userTags
 }
 
-appendNestedTags <- function(...) {
-  nams <- ...names()
-  vals <- list(...)
-  tags <- paste0(nams, ":", as.character(vals))
-  .pkgEnv$.reproEnv2$userTags <- c(.pkgEnv$.reproEnv2$userTags, tags)
-  return(invisible(NULL))
-}
-
 .addTagsRepoAccessedTime <- function(cache_key, cachePath = cachePath,
                                      cacheSaveFormat = getOption("reproducible.cacheSaveFormat")) {
   .addTagsRepo(cacheId = cache_key, tagKey = "accessed", tagValue = sysTimeForCacheToChar()
@@ -1247,43 +1231,7 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, callList, # 
 }
 
 
-# doDigest <- function(new_call, omitArgs, .cacheExtra, .functionName, .objects,
-#                      length, algo, quick, classOptions, timeCacheDigestStart,
-#                      cachePath, verbose) {
-#   # Compile a list of elements to digest
-#   toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
-#
-#   # Deal with .objects -- wait these are dealt with by `.robustDigest`
-#   # toDigest <- rmDotObjectsInList(toDigest, .objects)
-#   # .objects <- dotObjectsToNULLInList(toDigest, .objects) # if .objects used in previous, set to NULL here
-#
-#   toDigest$.FUN <- attr(new_call, ".Cache")$method
-#   # Deal with omitArgs by removing elements from the toDigest list of objects to digest
-#   if (!is.null(omitArgs)) {
-#     if (any("FUN" %in% omitArgs))
-#       omitArgs <- c(dotFunTxt, omitArgs)
-#     toDigest[omitArgs] <- NULL
-#   }
-#   # Deal with .cacheExtra by adding it to the list of objects to digest
-#   if (!is.null(.cacheExtra))
-#     toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
-#   detailed_key <- CacheDigest(toDigest,
-#                               .functionName = .functionName,
-#                               .objects = .objects,
-#                               length = length, algo = algo, quick = quick,
-#                               classOptions = classOptions,
-#                               calledFrom = "Cache"
-#   )
-#   diTi <- difftime(Sys.time(), timeCacheDigestStart, units = "sec")
-#   if (diTi > 5) {
-#     messageCache("Object digesting for ", .messageFunctionFn(.functionName)," took: ", format(diTi, digits = 2))
-#   }
-#   verboseCacheMessage(detailed_key$preDigest, .functionName, timeCacheDigestStart, quick = quick,
-#                    modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
-#
-#   names(detailed_key)[[1]] <- "key"
-#   detailed_key
-# }
+
 
 #' Remove `quote` and determine if call uses `...`
 #'
@@ -1609,10 +1557,9 @@ optionsSetForCache <- function(drv = NULL, conn = NULL, envir = parent.frame(1),
       reproducible.useDBI = FALSE
     )
   }
-  if (!isFALSE(getOption("reproducible.useCacheV3")))
-    opt2 <- options(
-      reproducible.useCacheV3 = TRUE
-    )
+  opt2 <- options(
+    reproducible.useCacheV3 = TRUE
+  )
 }
 
 identical2 <- function(a, b) {
@@ -1646,10 +1593,6 @@ evalTheFunAndAddChanged <- function(callList, keyFull, outputObjects, length, al
 doDigestPrepare <- function(new_call, omitArgs, .cacheExtra) {
   toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
 
-  # Deal with .objects -- wait these are dealt with by `.robustDigest`
-  # toDigest <- rmDotObjectsInList(toDigest, .objects)
-  # .objects <- dotObjectsToNULLInList(toDigest, .objects) # if .objects used in previous, set to NULL here
-
   toDigest$.FUN <- attr(new_call, ".Cache")$method
   # Deal with omitArgs by removing elements from the toDigest list of objects to digest
   if (!is.null(omitArgs)) {
@@ -1665,23 +1608,7 @@ doDigestPrepare <- function(new_call, omitArgs, .cacheExtra) {
 
 
 
-# Compile a list of elements to digest
-# toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
-#
-# # Deal with .objects -- wait these are dealt with by `.robustDigest`
-# # toDigest <- rmDotObjectsInList(toDigest, .objects)
-# # .objects <- dotObjectsToNULLInList(toDigest, .objects) # if .objects used in previous, set to NULL here
-#
-# toDigest$.FUN <- attr(new_call, ".Cache")$method
-# # Deal with omitArgs by removing elements from the toDigest list of objects to digest
-# if (!is.null(omitArgs)) {
-#   if (any("FUN" %in% omitArgs))
-#     omitArgs <- c(dotFunTxt, omitArgs)
-#   toDigest[omitArgs] <- NULL
-# }
-# # Deal with .cacheExtra by adding it to the list of objects to digest
-# if (!is.null(.cacheExtra))
-#   toDigest <- append(toDigest, list(.cacheExtra = .cacheExtra))
+
 doDigest <- function(toDigest, .functionName, .objects, length, algo, quick,
                       classOptions, timeCacheDigestStart, verbose) {
   detailed_key <- CacheDigest(toDigest,
@@ -1712,10 +1639,6 @@ appendFunctionNameToNestedTags <- function(userTags, functionName) {
   .pkgEnv$.reproEnv2$userTags <- c(.pkgEnv$.reproEnv2$userTags,
                                    paste0("outerFunction:", functionName))
   .pkgEnv$.reproEnv2$userTags <- .pkgEnv$.reproEnv2$userTags[!duplicated(.pkgEnv$.reproEnv2$userTags)]
-  # needFN <- identical(tail(dups, 1), FALSE)
-  # if (isTRUE(needFN)) {
-  #   appendNestedTags(outerFunction = functionName)
-  # }
 }
 
 .txtGrepStrSplitSingleColon <- "(?<!:):(?!:)"

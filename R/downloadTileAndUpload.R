@@ -472,36 +472,6 @@ rastTiles <- function(tiles, tilesFolderFullPath) {
     })
 }
 
-build_albers_proj4_longlat <- function(ext_obj) {
-  if (!inherits(ext_obj, "SpatExtent")) stop("Input must be a terra::ext object")
-
-  # Extract geographic bounds
-  lon_min <- ext_obj[1]
-  lon_max <- ext_obj[2]
-  lat_min <- ext_obj[3]
-  lat_max <- ext_obj[4]
-
-  # Central meridian and latitude of origin
-  lon_0 <- (lon_min + lon_max) / 2
-  lat_0 <- (lat_min + lat_max) / 2
-
-  # Standard parallels: 1/6 from top and bottom
-  lat_1 <- lat_min + (lat_max - lat_min) / 6
-  lat_2 <- lat_max - (lat_max - lat_min) / 6
-
-  # Build PROJ.4 string
-  proj4string <- paste(
-    "+proj=aea",
-    paste0("+lat_1=", round(lat_1, 6)),
-    paste0("+lat_2=", round(lat_2, 6)),
-    paste0("+lat_0=", round(lat_0, 6)),
-    paste0("+lon_0=", round(lon_0, 6)),
-    "+x_0=0 +y_0=0",
-    "+datum=WGS84 +units=m +no_defs"
-  )
-
-  return(proj4string)
-}
 
 build_lambert_proj4 <- function(ext_obj) {
   if (!inherits(ext_obj, "SpatExtent")) stop("Input must be a terra::ext object")

@@ -1171,22 +1171,6 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
   from
 }
 
-saveTo <- function(x, file) {
-  fe <- .fileExtsKnown()
-  whType <- fe$extension %in% tools::file_ext(file)
-  if (any(whType)) {
-    eval(parse(text = fe$saveFun[whType]))(x, file)
-  }
-}
-
-readFrom <- function(file) {
-  fe <- .fileExtsKnown()
-  whType <- fe$extension %in% tools::file_ext(file)
-  if (any(whType)) {
-    eval(parse(text = fe$fun[whType]))(file)
-  }
-}
-
 postProcessToAssertions <- function(from, to, cropTo, maskTo, projectTo,
                                     verbose = getOption("reproducible.verbose")) {
   # sometimes there are quosures

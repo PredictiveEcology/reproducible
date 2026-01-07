@@ -536,34 +536,6 @@ basenames3 <- function(object, nParentDirs) {
   x
 }
 
-.CopyCacheAtts <- function(from, to) {
-  onDiskRaster <- FALSE
-  namesFrom <- names(from)
-  if (!is.null(namesFrom)) { # has to have names
-    onDiskRaster <- all(namesFrom %in% c("origRaster", "cacheRaster"))
-    isSpatVector <- all(names(from) %in% c("x", "type", "atts", "crs"))
-
-    if ((inherits(from, "list") || inherits(from, "environment")) && onDiskRaster %in% FALSE && isSpatVector %in% FALSE) {
-      if (!inherits(to, "GPModel")) { ## can't do this for GPmodel Class
-        if (length(from) && length(to)) {
-          nams <- grep("^\\.mods$|^\\._", namesFrom, value = TRUE, invert = TRUE)
-          for (nam in nams) {
-            to[[nam]] <- try(.CopyCacheAtts(from[[nam]], to[[nam]]))
-          }
-        }
-      }
-      return(to)
-    }
-  }
-
-  for (i in c("tags", ".Cache", callInCache)) {
-    if (!is.null(attr(from, i))) {
-      attr(to, i) <- attr(from, i)
-    }
-  }
-  to
-}
-
 .robustDigestFormatOnly <- function(object, .objects, length, algo, quick,
                                     classOptions) {
   object <- .removeCacheAtts(object)
@@ -613,11 +585,6 @@ rmDotObjects <- function(object, .objects) {
   object
 }
 
-rmDotObjectsInList <- function(object, .objects) {
-  lapply(object, function(x) {
-    rmDotObjects(x, .objects)
-  })
-}
 
 dotObjectsToNULL <- function(object, .objects) {
   if (identical(attr(object, ".objects"), .returnNothing))
@@ -625,16 +592,6 @@ dotObjectsToNULL <- function(object, .objects) {
   .objects
 }
 
-dotObjectsToNULLInList <- function(object, .objects) {
-  if (!is.null(.objects)) {
-    for (i in object) {
-      .objects <- dotObjectsToNULL(object, .objects)
-      break
-    }
-  }
-
-  .objects
-}
 
 
 # CacheAddressEnv <- function(envir = .GlobalEnv, create = FALSE, remove = FALSE) {

@@ -1864,15 +1864,7 @@ test_that("lightweight tests for code coverage", {
   withr::local_options(reproducible.cachePath = tmpdir)
 
   expect_error(Cache(), "requires")
-  if (getOption("reproducible.useCacheV3")) {
-    fn <- expect_error
-  } else {
-      fn <- expect_message
-      expect_error(
-        Cache(cachePath = tmpCache, conn = list(tmpCache, tmpdir), rnorm(1)),
-        "different lengths"
-      )
-  }
+  fn <- expect_error
   fn(Cache(compareRasterFileLength = TRUE, rnorm(1)), regexp = "compareRasterFileLength")
   fn(Cache(sideEffect = TRUE, rnorm(1)), regexp = "sideEffect")
 
