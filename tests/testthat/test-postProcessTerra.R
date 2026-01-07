@@ -191,8 +191,8 @@ test_that("testing terra", {
   }
 
   if (.requireNamespace("sf")) {
-    # utm <- sf::st_crs("epsg:23028")#$wkt
-    utm <- terra::crs("epsg:23028") # $wkt
+    utm <- sf::st_crs("epsg:23028")#$wkt
+    # utm <- terra::crs("epsg:23028") # $wkt
 
     vsfutm <- sf::st_transform(vsf, utm)
     vutm <- terra::vect(vsfutm)

@@ -70,7 +70,8 @@ tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 dir.create(tmpDir, recursive = TRUE)
 
 ras <- terra::rast(terra::ext(0, 300, 0, 300), vals = 1:9e4, res = 1)
-terra::crs(ras) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +datum=WGS84"
+terra::crs(ras) <- "EPSG:42103" 
+# terra::crs(ras) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +datum=WGS84"
 
 newCRS <- "epsg:4326" # A longlat crs
 
