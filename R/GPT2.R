@@ -324,14 +324,12 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
       infixes <- c("+", "-", "*", "/", "==", "!=", "<", ">", "<=", ">=", "&&", "||")
       areInfixes <- any(fun == infixes)
       if (!any(areInfixes)) {
-
-          fun_chr <- as.character(fun)
-          # Only parse if it's not a reserved word
-          if (!(fun_chr %in% c("if", "function"))) {
-            fun <- parse(text = fun_chr)
-          }
-          # else: leave fun as-is (symbol), so downstream logic can handle it
-
+        fun_chr <- as.character(fun)
+        # Only parse if it's not a reserved word
+        if (!(fun_chr %in% c("if", "function"))) {
+          fun <- parse(text = fun_chr)
+        }
+        # else: leave fun as-is (symbol), so downstream logic can handle it
         # fun <- parse(text = fun)
       }
     }

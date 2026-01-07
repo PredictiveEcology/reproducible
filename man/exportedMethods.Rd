@@ -55,8 +55,8 @@
 .cacheMessageObjectToRetrieve(
   functionName,
   fullCacheTableForObj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
   verbose
 )
@@ -81,9 +81,9 @@
   verbose = getOption("reproducible.verbose", 1)
 )
 
-.prepareOutput(object, cachePath, ...)
+.prepareOutput(object, cachePath = getOption("reproducible.cachePath"), ...)
 
-\S4method{.prepareOutput}{ANY}(object, cachePath, ...)
+\S4method{.prepareOutput}{ANY}(object, cachePath = getOption("reproducible.cachePath"), ...)
 
 .addChangedAttr(object, preDigest, origArguments, ...)
 

@@ -88,6 +88,13 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
 
   st <- Sys.time()
 
+  .i <- 0
+
+  env <- environment()
+
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
   # deal with `to` first, to identify the tiles, then rest can be Cached easily, even
   #  if the to changes slightly
   maskToCropTo <- c("maskTo", "cropTo")
@@ -105,6 +112,12 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
     to <- boundaryPolygon(to)
   dig <- .robustDigest(to)
 
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
+
 
   datatype <- "FLT4S"
   dtype <- list(...)$datatype
@@ -120,6 +133,12 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
     isGDurl <- TRUE
   }
 
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
+
   remoteMetadata <- getRemoteMetadata(targetFile, isGDurl, url)
   remoteHashFile <- makeRemoteHashFile(url, destinationPath,
                                        remoteMetadata$targetFile, remoteMetadata$remoteHash)
@@ -133,6 +152,13 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   if (is.null(remoteMetadata$targetFile)) {
     stop("Please supply `targetFile` or a url from which `targetFile` can be extracted from")
   }
+
+
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
 
   targetFileFullPath <- file.path(destinationPath, remoteMetadata$targetFile)
   purge <- checkHaveCorrectHashedVersion(targetFileFullPath, remoteHashFile, remoteMetadata, purge, verbose)
@@ -159,6 +185,13 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   }
   dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
 
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
+
+
   if (isTRUE(purge) && length(dirTilesFolder)) {
     dirTilesFolder <- purgeLocalTiles(tilesFolderFullPath, verbose)
   }
@@ -170,6 +203,13 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
                            url, urlTiles, remoteMetadata$fileSize, remoteMetadata$remoteHash, purge, doUploads, verbose)
   # need to rerun because there may have been a rm in previous line
   dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
+
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
+
 
   noTiles <- FALSE
 
@@ -194,6 +234,13 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
       messagePreProcess(.messageFunctionFn(paste(needed_tile_names, collapse =  ", ")), verbose = verbose)
   }
   haveAllNeededTiles <- if (doUploads > 0) length(missingTilesLocalAll) == 0 else TRUE
+
+
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
 
 
   if (length(missingTilesLocal) == 0) {# && (haveAllNeededTiles)) {
@@ -227,12 +274,26 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   }
   noData <- FALSE
 
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
+
+
   if (file.exists(targetFilePostProcessedFullPath)) {
     messagePreProcess("Correct post processed file exists (",
                              .messageFunctionFn(targetFilePostProcessedFullPath),
                       ");\n returning it now...", verbose = verbose)
     return(terra::rast(targetFilePostProcessedFullPath))
   }
+
+
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
 
   if (noTiles %in% FALSE) {
     rfull <- sprcMosaicRast(url, tile_rasters, to_inTileGrid, targetFilePostProcessedFullPath,
@@ -242,6 +303,12 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   messagePreProcess("prepInputsWithTiles ", gsub("^\b", "", messagePrefixDoneIn),
                     format(difftime(Sys.time(), st), units = "secs", digits = 3),
                     verbose = verbose)
+  # DEBUGGING
+  objs <- Map(x = ls(), function(x) tryCatch(.wrap(get(x, envir = env, inherits = FALSE)), error = function(e) NULL))
+  .i <- .i + 1
+  save(objs, file = paste0("~/tmp/objs", .i, ".rda"))
+  # END DEBUGGING
+
   rfull
 }
 

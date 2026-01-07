@@ -17,56 +17,56 @@
 \usage{
 .wrap(
   obj,
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
-  cacheId,
+  cacheId = NULL,
   ...
 )
 
 \method{.wrap}{list}(
   obj,
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
-  cacheId,
+  cacheId = NULL,
   ...
 )
 
 \method{.wrap}{environment}(
   obj,
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
-  cacheId,
+  cacheId = NULL,
   ...
 )
 
 \method{.wrap}{default}(
   obj,
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
-  cacheId,
+  cacheId = NULL,
   ...
 )
 
 \method{.unwrap}{default}(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -74,8 +74,8 @@
 
 .unwrap(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -83,8 +83,8 @@
 
 \method{.unwrap}{environment}(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -92,8 +92,8 @@
 
 \method{.unwrap}{list}(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -101,8 +101,8 @@
 
 \method{.unwrap}{PackedSpatExtent2}(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -110,8 +110,8 @@
 
 \method{.unwrap}{PackedSpatVector2}(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -119,8 +119,8 @@
 
 \method{.unwrap}{data.table}(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -128,8 +128,8 @@
 
 \method{.unwrap}{PackedSpatVector}(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -157,7 +157,8 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}
 
-\item{cacheId}{Used strictly for messaging. This should be the cacheId of the object being recovered.}
+\item{cacheId}{Used strictly for messaging. This should be the cacheId of the object being recovered.
+Default is \code{NULL}.}
 
 \item{...}{Arguments passed to methods; default does not use anything in \code{...}.}
 }
