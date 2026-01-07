@@ -74,20 +74,23 @@ tmplate <- terra::rast(terra::ext(c(-100, -99.99587, 50, 50.00266)), nrows = 300
 terra::crs(tmplate) <- newCRS
 
 # No Cache
-system.time(map1 <- terra::project(ras, tmplate, method = "near"))
+# use_gdal = FALSE is not necessary in most cases
+system.time(map1 <- terra::project(ras, tmplate, method = "near", use_gdal = FALSE))
 
 # Try with memoise for this example -- for many simple cases, memoising will not be faster
 opts <- options("reproducible.useMemoise" = TRUE)
 # With Cache -- a little slower the first time because saving to disk
 system.time({
   suppressWarnings({
-    map1 <- terra::project(ras, tmplate, method = "near") |> Cache(cachePath = tmpDir, notOlderThan = Sys.time())
+    map1 <- terra::project(ras, tmplate, method = "near", use_gdal = FALSE) |> 
+      Cache(cachePath = tmpDir)
   })
 })
 
 # faster the second time; improvement depends on size of object and time to run function
 system.time({
-  map2 <- terra::project(ras, tmplate, method = "near") |> Cache(cachePath = tmpDir)
+  map2 <- terra::project(ras, tmplate, method = "near", use_gdal = FALSE) |> 
+    Cache(cachePath = tmpDir)
 })
 
 options(opts)
@@ -267,7 +270,7 @@ tmpdir2 <- file.path(tempfile(), "second")
 #   but cachePath is tmpdir1 in top level Cache and all nested
 #   Cache calls, unless individually overridden ... here inner
 #   uses tmpdir2 repository
-outer(n = 2) |> Cache(cachePath = tmpdir1, notOlderThan = Sys.time())
+outer(n = 2) |> Cache(cachePath = tmpdir1)
 
 showCache(tmpdir1) # 2 function calls
 showCache(tmpdir2) # 1 function call
