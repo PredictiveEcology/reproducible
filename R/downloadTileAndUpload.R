@@ -777,20 +777,24 @@ tryRastThenGetCRS <- function(targetFileFullPath) {
 #' @export
 #' @seealso [detectActiveCores()]
 numCoresToUse <- function(min = 2, max = NULL) {
-  if (is.null(.pkgEnv$detectedCores)) {
-    ## see <https://parallelly.futureverse.org/#availablecores-vs-paralleldetectcores>
-    .pkgEnv$detectedCores <- max(1L, getOption("Ncpus", 1L), parallel::detectCores() - 1,
-                                 logical = FALSE, na.rm = TRUE)
+  if (.requireNamespace("parallelly")) {
+    nctu <- max(min, min(max, parallelly::freeCores()))
+    return(nctu)
   }
-  dc <- .pkgEnv$detectedCores
-  if (is.null(max)) {
-    max <- dc
-  }
-  max <- min(dc -  # total
-               1 - # remove one for the current process
-               detectActiveCores(), # estimate actively used ones
-             max)
-  max(min, max)
+  # if (is.null(.pkgEnv$detectedCores)) {
+  #   ## see <https://parallelly.futureverse.org/#availablecores-vs-paralleldetectcores>
+  #   .pkgEnv$detectedCores <- max(1L, getOption("Ncpus", 1L), parallel::detectCores() - 1,
+  #                                logical = FALSE, na.rm = TRUE)
+  # }
+  # dc <- .pkgEnv$detectedCores
+  # if (is.null(max)) {
+  #   max <- dc
+  # }
+  # max <- min(dc -  # total
+  #              1 - # remove one for the current process
+  #              detectActiveCores(), # estimate actively used ones
+  #            max)
+  # max(min, max)
 }
 
 makeRemoteHashFile <- function(url, destinationPath, targetFile, remoteHash, write = FALSE) {
