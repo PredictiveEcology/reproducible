@@ -6,10 +6,6 @@ test_that("testing prepInputs with deauthorized googledrive", {
     testInit("terra", needGoogleDriveAuth = TRUE)
     withr::local_dir(tmpdir)
 
-    # if (Sys.info()["user"] == "emcintir") {
-    #   googledrive::drive_deauth()
-    #   googledrive::drive_auth("eliotmcintire@gmail.com", cache = "C:/Eliot/.secret")
-    #   on.exit(googledrive::drive_deauth())
     testthat::with_mocked_bindings(
       isInteractive = function() {
         FALSE

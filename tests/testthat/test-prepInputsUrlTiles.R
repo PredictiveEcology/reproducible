@@ -19,6 +19,10 @@ test_that("prepInputsUrlTiles", {
                        reproducible.inputPath = tmpdir,
                        mc.cores = 2L)# used by tiles
   outerDriveFolder <- "1KuBraAYnBpyxl3Nf0udc05fQlTPds2xY"
+  skip_if_service_account_releaseVer_NotLinux()
+
+
+
   urlForTiles <- try(googledrive::drive_ls(googledrive::as_id(outerDriveFolder)))
   urlForTiles <- googledrive::drive_mkdir(
     name = basename(tempfile(pattern = "urlForTiles_")),

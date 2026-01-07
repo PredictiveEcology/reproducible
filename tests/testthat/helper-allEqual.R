@@ -30,6 +30,9 @@ skip_if_service_account_releaseVer_NotLinux <- function() {
         skip <- TRUE
       }
     }
+  if (requireNamespace("covr", quietly = TRUE) && covr::in_covr()) {
+    skip <- FALSE
+  }
   testthat::skip_if(skip,
                     paste("Skipping: If GoogleService Account, only Linux current R will run"))
 
