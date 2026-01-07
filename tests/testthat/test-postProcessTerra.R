@@ -191,7 +191,7 @@ test_that("testing terra", {
   }
 
   if (.requireNamespace("sf")) {
-    utm <- paste0('PROJCRS["ED50 / UTM zone 28N",
+    utmWKT <- paste0('PROJCRS["ED50 / UTM zone 28N",
     BASEGEOGCRS["ED50",
         DATUM["European Datum 1950",
             ELLIPSOID["International 1924",6378388,297,
@@ -231,7 +231,7 @@ test_that("testing terra", {
     ID["EPSG",23028]]')
     # utm <- sf::st_crs("epsg:23028")#$wkt
 
-    vsfutm <- sf::st_transform(vsf, utm)
+    vsfutm <- sf::st_transform(vsf, utmWKT)
     vutm <- terra::vect(vsfutm)
     res100 <- 100
     rutm <- terra::rast(vutm, resolution = res100)
@@ -296,9 +296,9 @@ test_that("testing terra", {
 
     # projection with errors
     if (getRversion() >= "4.1" && isWindows()) { # bug in older `terra` that is not going to be fixed here
-      utm <- terra::crs("epsg:23028") # This is same as above, but terra way
+      # utm <- terra::crs("epsg:23028") # This is same as above, but terra way
       if (getRversion() < "4.3.0") { # this same error crashes the session in R 4.3.0 when it is R-devel
-        vutmErrors <- terra::project(v2, utm)
+        vutmErrors <- terra::project(v2, utmWKT)
         mess <- capture_messages({
           t13a <- postProcessTo(xVect, vutmErrors)
         })
@@ -309,7 +309,7 @@ test_that("testing terra", {
         expect_true(is(t13a, "SpatVector"))
       } else {
         v2 <- terra::makeValid(v2)
-        vutmErrors <- terra::project(v2, utm)
+        vutmErrors <- terra::project(v2, utmWKT)
       }
 
       # Switch from qs2 to rds with Cache
