@@ -252,32 +252,33 @@ postProcessTo <- function(from, to,
     stillNeed <- TRUE
 
     if (isTRUE(getOption("reproducible.gdalwarp", FALSE)) && couldDoGDAL) {
-      stillNeed <- FALSE
-      #############################################################
-      # project resample mask sequence ################################
-      #############################################################
-      messagePreProcess("using sf::gdal_utils('warp') because options(\"reproducible.gdalwarp\" = TRUE) ...", appendLF = TRUE, verbose = verbose)
-      st <- Sys.time()
-
-      withCallingHandlers(
-        tryCatch({
-          from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
-          from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose, ...)
-          if (.isGridded(maskTo)) { # won't be used at the moment because couldDoGDAL = FALSE for gridded
-            from <- maskTo(from = from, maskTo = maskTo, verbose = verbose, ...)
-          } else {
-            from <- gdalMask(fromRas = from, maskToVect = maskTo, writeTo = writeTo, verbose = verbose, ...)
-          }
-        }, error = function(e) {
-          stillNeed <<- TRUE
-          couldDoGDAL <<- FALSE
-          message("Attempted to use gdal* functions, but errors occured; trying without gdal*...")
-        }),
-        warning = function(w) {
-          if (any(grepl("transformer options does not support option NUM_THREADS", w$message)))
-            invokeRestart("muffleWarning")
-        })
-        # from <- setMinMax(from)
+      messagePreProcess("option(reproducible.gdalwarp = TRUE) is now defunct; passing to postProcessTo...")
+      # stillNeed <- FALSE
+      # #############################################################
+      # # project resample mask sequence ################################
+      # #############################################################
+      # messagePreProcess("using sf::gdal_utils('warp') because options(\"reproducible.gdalwarp\" = TRUE) ...", appendLF = TRUE, verbose = verbose)
+      # st <- Sys.time()
+      #
+      # withCallingHandlers(
+      #   tryCatch({
+      #     from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
+      #     from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose, ...)
+      #     if (.isGridded(maskTo)) { # won't be used at the moment because couldDoGDAL = FALSE for gridded
+      #       from <- maskTo(from = from, maskTo = maskTo, verbose = verbose, ...)
+      #     } else {
+      #       from <- gdalMask(fromRas = from, maskToVect = maskTo, writeTo = writeTo, verbose = verbose, ...)
+      #     }
+      #   }, error = function(e) {
+      #     stillNeed <<- TRUE
+      #     couldDoGDAL <<- FALSE
+      #     message("Attempted to use gdal* functions, but errors occured; trying without gdal*...")
+      #   }),
+      #   warning = function(w) {
+      #     if (any(grepl("transformer options does not support option NUM_THREADS", w$message)))
+      #       invokeRestart("muffleWarning")
+      #   })
+      #   # from <- setMinMax(from)
 
     } # else {
 
@@ -1557,6 +1558,8 @@ isGeomType <- function(geom, type) {
 
 #' 3-Step postProcess sequence for SpatRasters using `gdalwarp`
 #'
+#' DEFUNCT: Please use the `postProcessTo` functions.
+#'
 #' `gdalProject` is a thin wrapper around `sf::gdal_utils('gdalwarp', ...)` with specific options
 #' set, notably, `-r` to `method` (in the ...), `-t_srs` to the crs of the `toRas`,
 #' `-te` to the extent of the `toRas`, `-te_srs` to the `crs` of the `toRas`,
@@ -1585,66 +1588,67 @@ isGeomType <- function(geom, type) {
 #' @seealso [gdalResample()], and [gdalMask()] and the overarching [postProcessTo()]
 gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("reproducible.verbose"), ...) {
 
-  if (!requireNamespace("sf", quietly = TRUE) && !requireNamespace("terra", quietly = TRUE))
-    stop("Can't use gdalProject without sf and terra")
-
-  messagePreProcess("running gdalProject ...", appendLF = FALSE, verbose = verbose)
-  st <- Sys.time()
-
-  hasMethod <- which(...names() %in% "method")
-  method <- if (length(hasMethod)) {
-    method <- assessDataTypeOuter(fromRas, ...elt(hasMethod))
-  } else {
-    NULL
-  }
-  if (is.null(method))
-    method <- "near"
-
-  fns <- unique(Filenames(fromRas))
-  if (length(fns) == 1 && isTRUE(nzchar(fns))) {
-    fnSource <- fns
-  } else {
-    fnSource <- tempfile(fileext = ".tif")
-    terra::writeRaster(fromRas, filename = fnSource)
-    on.exit(unlink(fnSource))
-  }
-
-  if (missing(filenameDest))
-    filenameDest <- tempfile(fileext = ".tif")
-
-  tf4 <- tempfile(fileext = ".prj")
-  on.exit(unlink(tf4), add = TRUE)
-  cat(sf::st_crs(toRas)$wkt, file = tf4)
-
-  threads <- detectThreads()
-
-  opts <- c(
-    "-t_srs", tf4,
-    "-r", method,
-    "-te", as.vector(terra::ext(toRas))[c(1, 3, 2, 4)],
-    "-te_srs", tf4,
-    "-wo", paste0("NUM_THREADS=", threads),
-    # "-srcnodata", "NA",
-    "-dstnodata", "NA", # THERE IS AN ARTIFACT THAT OCCURS
-    "-overwrite"
-  )
-
-  opts <- addDataType(opts, fromRas[[1]], ...)
-  opts <- updateDstNoData(opts, fromRas)
-
-  tried <- retry(retries = 2,
-                 sf::gdal_utils(
-                   util = "warp",
-                   source = fnSource,
-                   destination = filenameDest,
-                   options = opts))
-
-  out <- terra::rast(filenameDest)
-  messagePreProcess(messagePrefixDoneIn,
-                    format(difftime(Sys.time(), st), units = "secs", digits = 3),
-                    verbose = verbose)
-
-  out
+  .Defunct("postProcessTo")
+  # if (!requireNamespace("sf", quietly = TRUE) && !requireNamespace("terra", quietly = TRUE))
+  #   stop("Can't use gdalProject without sf and terra")
+  #
+  # messagePreProcess("running gdalProject ...", appendLF = FALSE, verbose = verbose)
+  # st <- Sys.time()
+  #
+  # hasMethod <- which(...names() %in% "method")
+  # method <- if (length(hasMethod)) {
+  #   method <- assessDataTypeOuter(fromRas, ...elt(hasMethod))
+  # } else {
+  #   NULL
+  # }
+  # if (is.null(method))
+  #   method <- "near"
+  #
+  # fns <- unique(Filenames(fromRas))
+  # if (length(fns) == 1 && isTRUE(nzchar(fns))) {
+  #   fnSource <- fns
+  # } else {
+  #   fnSource <- tempfile(fileext = ".tif")
+  #   terra::writeRaster(fromRas, filename = fnSource)
+  #   on.exit(unlink(fnSource))
+  # }
+  #
+  # if (missing(filenameDest))
+  #   filenameDest <- tempfile(fileext = ".tif")
+  #
+  # tf4 <- tempfile(fileext = ".prj")
+  # on.exit(unlink(tf4), add = TRUE)
+  # cat(sf::st_crs(toRas)$wkt, file = tf4)
+  #
+  # threads <- detectThreads()
+  #
+  # opts <- c(
+  #   "-t_srs", tf4,
+  #   "-r", method,
+  #   "-te", as.vector(terra::ext(toRas))[c(1, 3, 2, 4)],
+  #   "-te_srs", tf4,
+  #   "-wo", paste0("NUM_THREADS=", threads),
+  #   # "-srcnodata", "NA",
+  #   "-dstnodata", "NA", # THERE IS AN ARTIFACT THAT OCCURS
+  #   "-overwrite"
+  # )
+  #
+  # opts <- addDataType(opts, fromRas[[1]], ...)
+  # opts <- updateDstNoData(opts, fromRas)
+  #
+  # tried <- retry(retries = 2,
+  #                sf::gdal_utils(
+  #                  util = "warp",
+  #                  source = fnSource,
+  #                  destination = filenameDest,
+  #                  options = opts))
+  #
+  # out <- terra::rast(filenameDest)
+  # messagePreProcess(messagePrefixDoneIn,
+  #                   format(difftime(Sys.time(), st), units = "secs", digits = 3),
+  #                   verbose = verbose)
+  #
+  # out
 }
 
 
@@ -1665,66 +1669,67 @@ gdalProject <- function(fromRas, toRas, filenameDest, verbose = getOption("repro
 #' @rdname gdalwarpFns
 #' @aliases gdalResample
 gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("reproducible.verbose"), ...) {
+  .Defunct("projectTo")
 
-  if (!requireNamespace("sf") && !requireNamespace("terra"))
-    stop("Can't use gdalResample without sf and terra")
-
-  messagePreProcess("running gdalResample ...", appendLF = FALSE, verbose = verbose)
-  st <- Sys.time()
-
-  hasMethod <- which(...names() %in% "method")
-  method <- if (length(hasMethod)) {
-    method <- assessDataTypeOuter(fromRas, ...elt(hasMethod))
-  } else {
-    NULL
-  }
-  if (is.null(method))
-    method <- "near"
-
-  fns <- unique(Filenames(fromRas))
-  if (length(fns) ==1 && isTRUE(nzchar(fns))) {
-    fnSource <- fns
-  } else {
-    fnSource <- tempfile(fileext = ".tif")
-    terra::writeRaster(fromRas, filename = fnSource)
-    on.exit(unlink(fnSource))
-  }
-
-  if (missing(filenameDest))
-    filenameDest <- tempfile(fileext = ".tif")
-
-  tf4 <- tempfile(fileext = ".prj")
-  cat(sf::st_crs(toRas)$wkt, file = tf4)
-
-
-  opts <- c(
-    "-r", method,
-    "-te", c(terra::xmin(toRas), terra::ymin(toRas),
-             terra::xmin(toRas) + (terra::ncol(toRas) ) * terra::res(toRas)[1],
-             terra::ymin(toRas) + (terra::nrow(toRas) ) * terra::res(toRas)[2]),
-    "-te_srs", tf4, # 3347, 3348, 3978, 3979
-    "-tr", terra::res(toRas),
-    "-dstnodata", "NA",
-    # "-tap",
-    "-overwrite"
-  )
-
-  opts <- addDataType(opts, fromRas[[1]], ...)
-  opts <- updateDstNoData(opts, fromRas)
-
-  tried <- retry(retries = 2,
-                 sf::gdal_utils(
-                   util = "warp",
-                   source = fnSource,
-                   destination = filenameDest,
-                   options = opts)
-  )
-
-  out <- terra::rast(filenameDest)
-  messagePreProcess(messagePrefixDoneIn,
-                    format(difftime(Sys.time(), st), units = "secs", digits = 3),
-                    verbose = verbose)
-  out
+  # if (!requireNamespace("sf") && !requireNamespace("terra"))
+  #   stop("Can't use gdalResample without sf and terra")
+  #
+  # messagePreProcess("running gdalResample ...", appendLF = FALSE, verbose = verbose)
+  # st <- Sys.time()
+  #
+  # hasMethod <- which(...names() %in% "method")
+  # method <- if (length(hasMethod)) {
+  #   method <- assessDataTypeOuter(fromRas, ...elt(hasMethod))
+  # } else {
+  #   NULL
+  # }
+  # if (is.null(method))
+  #   method <- "near"
+  #
+  # fns <- unique(Filenames(fromRas))
+  # if (length(fns) ==1 && isTRUE(nzchar(fns))) {
+  #   fnSource <- fns
+  # } else {
+  #   fnSource <- tempfile(fileext = ".tif")
+  #   terra::writeRaster(fromRas, filename = fnSource)
+  #   on.exit(unlink(fnSource))
+  # }
+  #
+  # if (missing(filenameDest))
+  #   filenameDest <- tempfile(fileext = ".tif")
+  #
+  # tf4 <- tempfile(fileext = ".prj")
+  # cat(sf::st_crs(toRas)$wkt, file = tf4)
+  #
+  #
+  # opts <- c(
+  #   "-r", method,
+  #   "-te", c(terra::xmin(toRas), terra::ymin(toRas),
+  #            terra::xmin(toRas) + (terra::ncol(toRas) ) * terra::res(toRas)[1],
+  #            terra::ymin(toRas) + (terra::nrow(toRas) ) * terra::res(toRas)[2]),
+  #   "-te_srs", tf4, # 3347, 3348, 3978, 3979
+  #   "-tr", terra::res(toRas),
+  #   "-dstnodata", "NA",
+  #   # "-tap",
+  #   "-overwrite"
+  # )
+  #
+  # opts <- addDataType(opts, fromRas[[1]], ...)
+  # opts <- updateDstNoData(opts, fromRas)
+  #
+  # tried <- retry(retries = 2,
+  #                sf::gdal_utils(
+  #                  util = "warp",
+  #                  source = fnSource,
+  #                  destination = filenameDest,
+  #                  options = opts)
+  # )
+  #
+  # out <- terra::rast(filenameDest)
+  # messagePreProcess(messagePrefixDoneIn,
+  #                   format(difftime(Sys.time(), st), units = "secs", digits = 3),
+  #                   verbose = verbose)
+  # out
 }
 
 
@@ -1739,74 +1744,75 @@ gdalResample <- function(fromRas, toRas, filenameDest, verbose = getOption("repr
 #' @rdname gdalwarpFns
 #' @aliases gdalMask
 gdalMask <- function(fromRas, maskToVect, writeTo = NULL, verbose = getOption("reproducible.verbose"), ...) {
+  .Defunct("maskTo")
 
-  if (!requireNamespace("sf") && !requireNamespace("terra"))
-    stop("Can't use gdalMask without sf and terra")
-
-  messagePreProcess("running gdalMask ...", appendLF = FALSE, verbose = verbose)
-  st <- Sys.time()
-
-  fns <- unique(Filenames(fromRas))
-
-  if (length(fns) ==1 && isTRUE(nzchar(fns))) {
-    fnSource <- fns
-  } else {
-    fnSource <- tempfile(fileext = ".tif")
-    terra::writeRaster(fromRas, filename = fnSource)
-    on.exit(unlink(fnSource))
-  }
-
-  tf3 <- tempfile(fileext = ".shp")
-  on.exit(unlink(tf3), add = TRUE)
-  if (.isGridded(maskToVect)) { # not used by default because postProcessTo will return couldDoGDAL = FALSE
-    if (!.isSpatRaster(maskToVect)) {
-      maskToVect <- terra::rast(maskToVect)
-    }
-    maskToVect <- terra::as.polygons(maskToVect, values = FALSE)
-  }
-  if (.isSF(maskToVect)) {
-    shp <- sf::st_transform(maskToVect, terra::crs(fromRas))
-    sf::st_write(shp, dsn = tf3)
-  } else {
-    shp <- terra::project(maskToVect, terra::crs(fromRas))
-    terra::writeVector(shp, filename = tf3)
-  }
-
-  dPath <- which(...names() %in% "destinationPath")
-  destinationPath <- if (length(dPath)) {
-    destinationPath <- ...elt(dPath)
-  } else {
-    getOption("reproducible.destinationPath", ".")
-  }
-
-  if (is.null(writeTo))
-    writeTo <- tempfile(fileext = ".tif")
-
-  writeTo <- determineFilename(writeTo, destinationPath = destinationPath, verbose = verbose)
-
-  opts <- c(
-    "-cutline", tf3,
-    "-dstnodata", "NA",
-    "-overwrite"
-  )
-  if (!isFALSE(list(...)$touches)) # default is TRUE, like terra::mask
-    opts <- c(opts, "-wo", "CUTLINE_ALL_TOUCHED=TRUE")
-
-  opts <- addDataType(opts, fromRas[[1]], ...)
-  opts <- updateDstNoData(opts, fromRas)
-
-  tried <- retry(retries = 2,
-                 sf::gdal_utils(
-                   util = "warp",
-                   source = fnSource,
-                   destination = writeTo,
-                   options = opts))
-
-  out <- terra::rast(writeTo)
-  messagePreProcess(messagePrefixDoneIn,
-                    format(difftime(Sys.time(), st), units = "secs", digits = 3),
-                    verbose = verbose)
-  out
+  # if (!requireNamespace("sf") && !requireNamespace("terra"))
+  #   stop("Can't use gdalMask without sf and terra")
+  #
+  # messagePreProcess("running gdalMask ...", appendLF = FALSE, verbose = verbose)
+  # st <- Sys.time()
+  #
+  # fns <- unique(Filenames(fromRas))
+  #
+  # if (length(fns) ==1 && isTRUE(nzchar(fns))) {
+  #   fnSource <- fns
+  # } else {
+  #   fnSource <- tempfile(fileext = ".tif")
+  #   terra::writeRaster(fromRas, filename = fnSource)
+  #   on.exit(unlink(fnSource))
+  # }
+  #
+  # tf3 <- tempfile(fileext = ".shp")
+  # on.exit(unlink(tf3), add = TRUE)
+  # if (.isGridded(maskToVect)) { # not used by default because postProcessTo will return couldDoGDAL = FALSE
+  #   if (!.isSpatRaster(maskToVect)) {
+  #     maskToVect <- terra::rast(maskToVect)
+  #   }
+  #   maskToVect <- terra::as.polygons(maskToVect, values = FALSE)
+  # }
+  # if (.isSF(maskToVect)) {
+  #   shp <- sf::st_transform(maskToVect, terra::crs(fromRas))
+  #   sf::st_write(shp, dsn = tf3)
+  # } else {
+  #   shp <- terra::project(maskToVect, terra::crs(fromRas))
+  #   terra::writeVector(shp, filename = tf3)
+  # }
+  #
+  # dPath <- which(...names() %in% "destinationPath")
+  # destinationPath <- if (length(dPath)) {
+  #   destinationPath <- ...elt(dPath)
+  # } else {
+  #   getOption("reproducible.destinationPath", ".")
+  # }
+  #
+  # if (is.null(writeTo))
+  #   writeTo <- tempfile(fileext = ".tif")
+  #
+  # writeTo <- determineFilename(writeTo, destinationPath = destinationPath, verbose = verbose)
+  #
+  # opts <- c(
+  #   "-cutline", tf3,
+  #   "-dstnodata", "NA",
+  #   "-overwrite"
+  # )
+  # if (!isFALSE(list(...)$touches)) # default is TRUE, like terra::mask
+  #   opts <- c(opts, "-wo", "CUTLINE_ALL_TOUCHED=TRUE")
+  #
+  # opts <- addDataType(opts, fromRas[[1]], ...)
+  # opts <- updateDstNoData(opts, fromRas)
+  #
+  # tried <- retry(retries = 2,
+  #                sf::gdal_utils(
+  #                  util = "warp",
+  #                  source = fnSource,
+  #                  destination = writeTo,
+  #                  options = opts))
+  #
+  # out <- terra::rast(writeTo)
+  # messagePreProcess(messagePrefixDoneIn,
+  #                   format(difftime(Sys.time(), st), units = "secs", digits = 3),
+  #                   verbose = verbose)
+  # out
 }
 
 messagePrefixDoneIn <- "\bdone! took:  "

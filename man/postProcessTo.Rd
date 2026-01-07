@@ -270,12 +270,8 @@ if (require("terra", quietly = TRUE)) {
   t1 <- postProcessTo(elev1, to = vInUTM)
   # crop, reproject, mask a raster to a different projection, then mask
   t2a <- postProcessTo(elev1, to = vAsRasInLongLat, maskTo = vInUTM)
+  t3a <- postProcessTo(elev1, to = rInUTM, maskTo = vInUTM)
 
-  # using gdal directly --> slightly different mask
-  opts <- options(reproducible.gdalwarp = TRUE)
-  t2b <- postProcessTo(elev1, to = vAsRasInLongLat, maskTo = vInUTM)
-  t3b <- postProcessTo(elev1, to = rInUTM, maskTo = vInUTM)
-  options(opts)
 }
 }
 \seealso{

@@ -55,10 +55,7 @@ For all \verb{gdal*}, this can also be and \code{datatype}.}
 object. Default is \code{NULL}, which means there is no \code{writeRaster}}
 }
 \description{
-\code{gdalProject} is a thin wrapper around \code{sf::gdal_utils('gdalwarp', ...)} with specific options
-set, notably, \code{-r} to \code{method} (in the ...), \code{-t_srs} to the crs of the \code{toRas},
-\code{-te} to the extent of the \code{toRas}, \code{-te_srs} to the \code{crs} of the \code{toRas},
-\code{-dstnodata = NA}, and \code{-overwrite}.
+DEFUNCT: Please use the \code{postProcessTo} functions.
 
 \code{gdalResample} is a thin wrapper around \code{sf::gdal_utils('gdalwarp', ...)} with specific options
 set, notably, \verb{"-r", "near"}, \code{-te}, \code{-te_srs}, \code{tr}, \code{-dstnodata = NA}, \code{-overwrite}.
@@ -67,6 +64,11 @@ set, notably, \verb{"-r", "near"}, \code{-te}, \code{-te_srs}, \code{tr}, \code{
 set, notably, \code{-cutline}, \code{-dstnodata = NA}, and \code{-overwrite}.
 }
 \details{
+\code{gdalProject} is a thin wrapper around \code{sf::gdal_utils('gdalwarp', ...)} with specific options
+set, notably, \code{-r} to \code{method} (in the ...), \code{-t_srs} to the crs of the \code{toRas},
+\code{-te} to the extent of the \code{toRas}, \code{-te_srs} to the \code{crs} of the \code{toRas},
+\code{-dstnodata = NA}, and \code{-overwrite}.
+
 These three functions are used within \code{postProcessTo}, in the sequence:
 \code{gdalProject}, \code{gdalResample} and \code{gdalMask}, when \code{from} and \code{projectTo} are \code{SpatRaster} and
 \code{maskTo} is a \code{SpatVector}, but only if \code{options(reproducible.gdalwarp = TRUE)} is set.
@@ -101,12 +103,8 @@ if (require("terra", quietly = TRUE)) {
   t1 <- postProcessTo(elev1, to = vInUTM)
   # crop, reproject, mask a raster to a different projection, then mask
   t2a <- postProcessTo(elev1, to = vAsRasInLongLat, maskTo = vInUTM)
+  t3a <- postProcessTo(elev1, to = rInUTM, maskTo = vInUTM)
 
-  # using gdal directly --> slightly different mask
-  opts <- options(reproducible.gdalwarp = TRUE)
-  t2b <- postProcessTo(elev1, to = vAsRasInLongLat, maskTo = vInUTM)
-  t3b <- postProcessTo(elev1, to = rInUTM, maskTo = vInUTM)
-  options(opts)
 }
 }
 \seealso{
