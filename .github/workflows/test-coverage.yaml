@@ -12,10 +12,11 @@ name: test-coverage
 
 jobs:
   test-coverage:
-    if: "!contains(github.event.commits[0].message, '[skip-ci]')"
     runs-on: macOS-latest
     env:
+      GOOGLEDRIVE_AUTH: ${{ secrets.GOOGLEDRIVE_AUTH }}
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       NOT_CRAN: true
 
     steps:
@@ -23,7 +24,7 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      - uses: PredictiveEcology/actions/install-spatial-deps@v0.1
+      - uses: PredictiveEcology/actions/install-spatial-deps@v0.2
 
       - uses: r-lib/actions/setup-r@v2
         with:
@@ -37,5 +38,5 @@ jobs:
             rspatial/geodata
 
       - name: Test coverage
-        run: covr::codecov()
+        run: covr::codecov(token = Sys.getenv("CODECOV_TOKEN"))
         shell: Rscript {0}

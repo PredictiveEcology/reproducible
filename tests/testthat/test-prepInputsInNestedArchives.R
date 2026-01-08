@@ -102,33 +102,37 @@ test_that(
   ),
   {
     skip_on_cran()
-    skip_if(isMac() && isCI())
+    skip_on_os("mac") ## TODO: deal with unrar for macOS #266
 
     testInit("terra", needInternet = TRUE)
 
-    extractSystemCallPath <- .archiveExtractBinary()
+    # extractSystemCallPath <- .archiveExtractBinary()
+    #
+    # if (is.null(extractSystemCallPath)) {
+    #   noisyOutput <- capture.output({
+    #     warn <- capture_warnings({
+    #       expect_error({
+    #         testRar <- reproducible::prepInputs(
+    #           url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
+    #           destinationPath = tmpdir
+    #         )
+    #       })
+    #     })
+    #   })
+    # } else {
 
-    if (is.null(extractSystemCallPath)) {
-      noisyOutput <- capture.output({
-        warn <- capture_warnings({
-          expect_error({
-            testRar <- reproducible::prepInputs(
-              url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
-              destinationPath = tmpdir
-            )
-          })
-        })
-      })
-    } else {
-      noisyOutput <- capture.output({
-        testRar <- reproducible::prepInputs(
-          url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
-          destinationPath = tmpdir
-        )
-      })
-      expect_true(exists("testRar"))
-      expect_is(testRar, rasterType())
+    if (isWindows() && getRversion() < "4.3") {
+      skip("archive pkg on Windows 4.2.3 fails on rar")
     }
+    noisyOutput <- capture.output({
+      testRar <- reproducible::prepInputs(
+        url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
+        destinationPath = tmpdir
+      )
+    })
+    expect_true(exists("testRar"))
+    expect_is(testRar, rasterType())
+    # }
   }
 )
 
@@ -139,58 +143,69 @@ test_that(
   ),
   {
     skip_on_cran()
-    skip_if(isMac() && isCI())
+    skip_on_os("mac") ## TODO: deal with unrar for macOS #266
 
     testInit("terra", needInternet = TRUE)
-
-    extractSystemCallPath <- .archiveExtractBinary()
     url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
-    if (is.null(extractSystemCallPath)) {
-      noisyOutput <- capture.output(
-        expect_error({
-          testRar2 <- reproducible::prepInputs(
-            url = url,
-            targetFile = "rasterTOtestRAR.tif",
-            destinationPath = tmpdir
-          )
-        })
-      )
-    } else {
-      noisyOutput <- capture.output({
-        testRar2 <- reproducible::prepInputs(
-          url = url,
-          targetFile = "rasterTOtestRAR.tif",
-          destinationPath = tmpdir
-        )
-      })
-      expect_true(exists("testRar2"))
-      expect_is(testRar2, rasterType())
+
+    # extractSystemCallPath <- .archiveExtractBinary()
+    # if (is.null(extractSystemCallPath)) {
+    #   noisyOutput <- capture.output(
+    #     expect_error({
+    #       testRar2 <- reproducible::prepInputs(
+    #         url = url,
+    #         targetFile = "rasterTOtestRAR.tif",
+    #         destinationPath = tmpdir
+    #       )
+    #     })
+    #   )
+    # } else {
+    if (isWindows() && getRversion() < "4.3") {
+      skip("archive pkg on Windows 4.2.3 fails on rar")
     }
+    noisyOutput <- capture.output({
+      testRar2 <- reproducible::prepInputs(
+        url = url,
+        targetFile = "rasterTOtestRAR.tif",
+        destinationPath = tmpdir
+      )
+    })
+    expect_true(exists("testRar2"))
+    expect_is(testRar2, rasterType())
+    # }
   }
 )
 
-test_that(paste0(
-  "prepInputs in a two files double nested rar file, with the wanted file in",
-  "the second layer, not specifying the targetFile, passing the main archive"
-), {
-  skip_on_cran()
-  skip_if(isMac() && isCI())
-  testInit("terra", needInternet = TRUE)
+test_that(
+  paste0(
+    "prepInputs in a two files double nested rar file, with the wanted file in",
+    "the second layer, not specifying the targetFile, passing the main archive"
+  ),
+  {
+    skip_on_cran()
+    skip_on_os("mac") ## TODO: deal with unrar for macOS #266
 
-  extractSystemCallPath <- .archiveExtractBinary()
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
-  if (is.null(extractSystemCallPath)) {
-    noisyOutput <- capture.output(
-      expect_error({
-        testRar3 <- reproducible::prepInputs(
-          url = url,
-          archive = "nestedRarTxtFiles.rar",
-          targetFile = "rasterTOtestRAR.tif",
-          destinationPath = tmpdir
-        )
-      })
-    )
-  } else {
+    testInit("terra", needInternet = TRUE)
+
+    url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
+
+    # extractSystemCallPath <- .archiveExtractBinary()
+    # if (is.null(extractSystemCallPath)) {
+    #   noisyOutput <- capture.output(
+    #     expect_error({
+    #       testRar3 <- reproducible::prepInputs(
+    #         url = url,
+    #         archive = "nestedRarTxtFiles.rar",
+    #         targetFile = "rasterTOtestRAR.tif",
+    #         destinationPath = tmpdir
+    #       )
+    #     })
+    #   )
+    # } else {
+    if (isWindows() && getRversion() < "4.3") {
+      skip("archive pkg on Windows 4.2.3 fails on rar")
+    }
+
     noisyOutput <- capture.output({
       testRar3 <- reproducible::prepInputs(
         url = url,
@@ -201,8 +216,9 @@ test_that(paste0(
     })
     expect_true(exists("testRar3"))
     expect_is(testRar3, rasterType())
+    # }
   }
-})
+)
 
 test_that("prepInputs works with nested rar file inside internal rar folder", {
   skip_on_cran()
@@ -211,29 +227,29 @@ test_that("prepInputs works with nested rar file inside internal rar folder", {
 
   testInit("terra", needInternet = TRUE)
 
-  extractSystemCallPath <- .archiveExtractBinary()
   url <- "https://github.com/tati-micheletti/host/raw/master/data/testRasterNested.rar"
-  if (is.null(extractSystemCallPath)) {
-    noisyOutput <- capture.output(
-      expect_error({
-        testRar4 <- reproducible::prepInputs(
-          url = url,
-          targetFile = "rasterTest.tif",
-          destinationPath = tmpdir,
-          useCache = FALSE
-        )
-      })
+  # extractSystemCallPath <- .archiveExtractBinary()
+  # if (is.null(extractSystemCallPath)) {
+  #   noisyOutput <- capture.output(
+  #     expect_error({
+  #       testRar4 <- reproducible::prepInputs(
+  #         url = url,
+  #         targetFile = "rasterTest.tif",
+  #         destinationPath = tmpdir,
+  #         useCache = FALSE
+  #       )
+  #     })
+  #   )
+  # } else {
+  noisyOutput <- capture.output({
+    testRar4 <- reproducible::prepInputs(
+      url = url,
+      targetFile = "rasterTest.tif",
+      destinationPath = tmpdir,
+      useCache = FALSE
     )
-  } else {
-    noisyOutput <- capture.output({
-      testRar4 <- reproducible::prepInputs(
-        url = url,
-        targetFile = "rasterTest.tif",
-        destinationPath = tmpdir,
-        useCache = FALSE
-      )
-    })
-    expect_true(exists("testRar4"))
-    expect_is(testRar4, rasterType())
-  }
+  })
+  expect_true(exists("testRar4"))
+  expect_is(testRar4, rasterType())
+  # }
 })

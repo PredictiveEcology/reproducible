@@ -20,3 +20,5 @@
 ^tests/testthat/\.httr-oauth$
 ^vignettes/.*_cache$
 ^vignettes/.*\.log$
+^[.]?air[.]toml$
+^\.vscode$

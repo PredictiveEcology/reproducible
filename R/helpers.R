@@ -409,7 +409,7 @@ isDirectory <- function(pathnames, mustExist = TRUE) {
     id <- dir.exists(pathnames)
     id[id] <- file.info(pathnames[id])$isdir
   } else {
-    if (isGoogleID(pathnames)) {
+    if (isGoogleID(pathnames) || isGoogleDriveURL(pathnames)) {
       id <- isGoogleDriveDirectory(pathnames)
     } else {
       id <- grepl("/$|\\\\$", pathnames)
@@ -420,7 +420,22 @@ isDirectory <- function(pathnames, mustExist = TRUE) {
 }
 
 isGoogleDriveDirectory <- function(url) {
-  grepl("folders", url)
+  isFold <- grepl("folders", url)
+  if (isFold %in% FALSE && is(url, "drive_id")) {
+    # second check if it is just a google id
+    driveMeta <- googledrive::drive_get(url)
+    isFold <- isGoogleDriveDirectoryFromTibble(driveMeta)
+  }
+  isFold
+}
+
+isGoogleDriveDirectoryFromTibble <- function(tib) {
+  if (tib$drive_resource[[1]]$mimeType == "application/vnd.google-apps.folder") {
+    isFold <- TRUE
+  } else {
+    isFold <- FALSE
+  }
+  isFold
 }
 
 isFile <- function(pathnames) {
@@ -481,8 +496,9 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 
   df <- data.frame(
     rbind(
-      c("rds", "base::readRDS", "base::saveRDS", "binary"),
-      c("qs", "qs::qread", "qs::qsave", "qs"),
+      c(.rdsFormat, "base::readRDS", "base::saveRDS", "binary"),
+      c(.qsFormat, "qs::qread", "qs::qsave", .qsFormat),
+      c(.qs2Format, "qs2::qs_read", "qs2::qs_save", .qs2Format),
       cbind(
         c("asc", "grd", "tif"), griddedFile, griddedFileSave,
         rasterType(rasterRead = griddedFile)
@@ -493,17 +509,22 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
       )
     )
   )
+
+  sfCanRead <- c("bna","csv", "e00", "gdb", "geojson", "gml", "gmt", "gpkg", "gps",
+    "gtm", "gxt", "jml", "map", "mdb", "nc", "ods", "osm", "pbf", "shp", "sqlite",
+    "vdv")#, "xls", "xlsx" )
+  sfFun <- shpFile
+  sfSaveFun <- shpFileSave
+  type = "sf"
+  colnames(df) <- c("extension", "fun", "saveFun", "type")
+  df2 <- data.frame(sfCanRead, sfFun, sfSaveFun, type)
+  colnames(df2) <- c("extension", "fun", "saveFun", "type")
+  df <- rbind(df, df2)
+
   colnames(df) <- c("extension", "fun", "saveFun", "type")
   df
 }
 
-#' @importFrom utils packageDescription
-.isDevelVersion <- function() {
-  length(strsplit(packageDescription("reproducible")$Version, "\\.")[[1]]) > 3
-}
-
-#' A helper to `getOption("reproducible.rasterRead")`
-#'
 #' A helper to `getOption("reproducible.rasterRead")`
 #' @export
 #' @param ... Passed to the function parsed and evaluated from
@@ -518,13 +539,21 @@ rasterRead <- function(...) {
 
 rasterType <- function(nlayers = 1,
                        rasterRead = getOption("reproducible.rasterRead", "terra::rast")) {
+  # This does not have to fail if `raster` is not installed because this function may be
+  #    called with .fileExtsKnown(), even if no gridded object is being used
   if (is.character(rasterRead)) {
-    rasterRead <- if (.requireNamespace("terra") || .requireNamespace("raster")) {
-      eval(parse(text = rasterRead))
+    if (identical("terra::rast", rasterRead)) {
+      if (.requireNamespace("terra")) rasterRead <- eval(parse(text = rasterRead)) else ""
+    }
+    if (identical("raster::raster", rasterRead) ||
+        identical("raster::stack", rasterRead) ||
+        identical("raster::brick", rasterRead)) {
+      rasterRead <- if (.requireNamespace("raster")) eval(parse(text = rasterRead)) else ""
     } else {
       ""
     }
   }
+
   if (!is.character(rasterRead)) {
     rasterRead <- if (identical(rasterRead, terra::rast)) {
       "SpatRaster"
@@ -553,13 +582,22 @@ vectorType <- function(vectorRead = getOption("reproducible.shapefileRead", "sf:
     }
   }
   if (!is.character(vectorRead)) {
-    vectorRead <- if (identical(vectorRead, terra::vect)) {
+    isTerra <- try(.requireNamespace("terra"), silent = TRUE)
+    isTerra2 <- if (isTRUE(isTerra)) identical(vectorRead, terra::vect) else FALSE
+    isSF <- try(.requireNamespace("sf"), silent = TRUE)
+    isSF2 <- if (isTRUE(isSF)) identical(vectorRead, sf::st_read) else FALSE
+
+    vectorRead <- if (isTerra2) {
+      if (isTerra %in% FALSE) .requireNamespace("terra", stopOnFALSE = TRUE)
       "SpatVector"
     } else if (needRasterPkg) {
       .requireNamespace("raster", stopOnFALSE = TRUE)
       "SpatialPolygons"
-    } else {
+    } else if (isTRUE(isSF2)) {
+      if (isSF %in% FALSE) .requireNamespace("sf", stopOnFALSE = TRUE)
       "sf"
+    } else {
+      stop("No vector read options available (")
     }
   }
   vectorRead
@@ -614,13 +652,6 @@ milliseconds <- function(time = Sys.time()) {
   (tt - rnd) * 1000
 }
 
-cat2file <- function(..., file) {
-  if (missing(file)) {
-    file <- "~/log.txt"
-  }
-  cat(..., file = file)
-}
-
 layerNamesDelimiter <- "_%%_"
 
 #' Checks for existed of a url or the internet using <https://CRAN.R-project.org>
@@ -656,4 +687,67 @@ urlExists <- function(url) {
   if (length(mess) > 1)
     mess[1:(length(mess)-1)] <- paste0(mess[1:(length(mess)-1)], "\n")
   mess
+}
+
+prefixCacheId <- function(cacheId) {
+  if (is.null(cacheId))
+    character()
+  else
+    paste0(cacheId, "_")
+}
+
+#' Extract the cache id of an object
+#'
+#' Any object that was returned from the Cache or was calculated as part of a
+#' Cache call will have an attribute, `tags` and an entry with `cacheId:` prefix.
+#' This is a lightweight helper to extract that `cacheId`.
+#'
+#' @param obj Any R object
+#'
+#' @return The `cacheId` if this was part of a `Cache` call. Otherwise `NULL`
+#'
+#' @export
+cacheId <- function(obj) {
+  whHasCacheId <- which(grepl("cacheId:", attr(obj, "tags")))
+  if (any(whHasCacheId))
+    gsub("cacheId:", "", attr(obj, "tags")[whHasCacheId])
+  else
+    NULL
+}
+
+#' Count Active Threads Based on CPU Usage
+#'
+#' This function counts the number of active system processes (threads) that
+#' match a given pattern and exceed a specified minimum CPU usage threshold. It
+#' works on Unix-like systems (e.g., Linux, macOS) and does not support Windows.
+#'
+#' @param pattern A character string used to filter process lines. Only
+#'   processes whose command line matches this pattern will be considered.
+#'   Default is `""` (matches all).
+#' @param minCPU A numeric value specifying the minimum CPU usage (in percent)
+#'   for a process to be considered active. Default is `50`.
+#'
+#' @return An integer representing the number of active threads matching the
+#'   pattern and exceeding the CPU usage threshold. Returns `NULL` with a
+#'   message if run on Windows.
+#'
+#' @examples
+#' \dontrun{
+#'   detectActiveCores(pattern = "R", minCPU = 30)
+#' }
+#'
+#' @note This function uses the `ps -ef` system command and regular expressions
+#'   to parse CPU usage. It may not be portable across all Unix variants.
+#'
+#' @export
+detectActiveCores <- function(pattern = "", minCPU = 50) {
+  if (!identical(.Platform$OS.type, "windows")) {
+    a0 <- system("ps -ef", intern = TRUE)[-1]
+    a4 <- grep(pattern, a0, value = TRUE)
+    a5 <- gsub("^.*[[:digit:]]* [[:digit:]]* ([[:digit:]]{1,3}) .*$",
+               "\\1", a4)
+    sum(as.numeric(a5) > minCPU)
+  } else {
+    message("Does not work on Windows")
+  }
 }

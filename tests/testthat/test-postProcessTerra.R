@@ -4,16 +4,11 @@ test_that("testing terra", {
     needGoogleDriveAuth = FALSE,
     opts = list(
       reproducible.useMemoise = FALSE,
+      reproducible.cacheSaveFormat = .qs2Format,
       "rgdal_show_exportToProj4_warnings" = "none"
     )
   )
-  opts <- options(reproducible.cachePath = tmpCache)
-  on.exit(
-    {
-      options(opts)
-    },
-    add = TRUE
-  )
+  withr::local_options(reproducible.cachePath = tmpCache)
 
   skip_if_not_installed("terra")
   f <- system.file("ex/elev.tif", package = "terra")
@@ -24,6 +19,7 @@ test_that("testing terra", {
   tf4 <- tempfile(fileext = ".tif")
   tf5 <- tempfile(fileext = ".tif")
   tf6 <- tempfile(fileext = ".tif")
+  tf7 <- tempfile(fileext = ".tif") # don't create it: testing writeTo
   file.copy(f, tf)
   file.copy(f, tf1)
   file.copy(f, tf2)
@@ -44,27 +40,27 @@ test_that("testing terra", {
 
   # Test Cache of various nested and non nested SpatRaster
   # double nest
-  b <- Cache(fn, list(r, r1), cacheRepo = tmpCache)
+  b <- Cache(fn, list(r, r1), cachePath = tmpCache)
   expect_true(is(b, "list"))
   expect_true(is(b[[1]], "list"))
-  expect_true(is(b[[1]][[1]], "SpatRaster"))
+  expect_true(.isSpatRaster(b[[1]][[1]]))
 
   # Single nest
-  b <- Cache(fn, r, cacheRepo = tmpCache)
+  b <- Cache(fn, r, cachePath = tmpCache)
   expect_true(is(b, "list"))
-  expect_true(is(b[[1]], "SpatRaster"))
+  expect_true(.isSpatRaster(b[[1]]))
 
   # mixed nest
-  b <- Cache(fn, list(r[[1]], r1), cacheRepo = tmpCache)
+  b <- Cache(fn, list(r[[1]], r1), cachePath = tmpCache)
   expect_true(is(b, "list"))
-  expect_true(is(b[[1]], "SpatRaster"))
-  expect_true(is(b[[2]][[1]], "SpatRaster"))
+  expect_true(.isSpatRaster(b[[1]]))
+  expect_true(.isSpatRaster(b[[2]][[1]]))
 
   # mix memory and disk
-  b <- Cache(fn, list(r[[1]], r1, rmem), cacheRepo = tmpCache)
+  b <- Cache(fn, list(r[[1]], r1, rmem), cachePath = tmpCache)
   expect_true(is(b, "list"))
-  expect_true(is(b[[1]], "SpatRaster"))
-  expect_true(is(b[[2]][[1]], "SpatRaster"))
+  expect_true(.isSpatRaster(b[[1]]))
+  expect_true(.isSpatRaster(b[[2]][[1]]))
   expect_true(terra::inMemory(b[[3]][[1]]))
   expect_true(!terra::inMemory(b[[2]][[1]]))
   expect_true(!terra::inMemory(b[[1]]))
@@ -124,7 +120,14 @@ test_that("testing terra", {
   expect_true(all(t6$elevation == 1))
   expect_true(NROW(t6) == 2)
 
-  #
+  # Only writeTo
+  expect_false(file.exists(tf7))
+  t11a <- suppressWarnings({
+    postProcessTo(elevRas, writeTo = tf7)
+  }) ## WARNING: Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition
+  expect_true(file.exists(tf2))
+  expect_equivalent(elevRas, t11a)
+
 
   t10 <- postProcessTo(xVect, v)
   expect_true(terra::ext(t10) < terra::ext(xVect))
@@ -133,9 +136,18 @@ test_that("testing terra", {
   ## following #253
   # https://github.com/PredictiveEcology/reproducible/issues/253#issuecomment-1263562631
   tf1 <- tempfile(fileext = ".shp")
+  tf2 <- tempfile(fileext = ".shp")
   t11 <- suppressWarnings({
     postProcessTo(xVect, v, writeTo = tf1)
   }) ## WARNING: Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition
+
+  # Only writeTo
+  t11a <- suppressWarnings({
+    postProcessTo(xVect, writeTo = tf2)
+  }) ## WARNING: Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition
+  expect_true(file.exists(tf2))
+  expect_true(identical(xVect, t11a))
+
   tw_t11 <- terra::wrap(t11)
   vv <- terra::vect(tf1)
   tw_vv <- terra::wrap(vv)
@@ -147,6 +159,7 @@ test_that("testing terra", {
   t11 <- suppressWarnings({
     postProcessTo(xVect, v, writeTo = tf1)
   }) ## WARNING: GDAL Message 6: dataset does not support layer creation option ENCODING
+
   tw_t11 <- terra::wrap(t11)
   vv <- terra::vect(tf1)
   tw_vv <- terra::wrap(vv)
@@ -178,10 +191,47 @@ test_that("testing terra", {
   }
 
   if (.requireNamespace("sf")) {
+    utmWKT <- paste0('PROJCRS["ED50 / UTM zone 28N",
+    BASEGEOGCRS["ED50",
+        DATUM["European Datum 1950",
+            ELLIPSOID["International 1924",6378388,297,
+                LENGTHUNIT["metre",1]]],
+        PRIMEM["Greenwich",0,
+            ANGLEUNIT["degree",0.0174532925199433]],
+        ID["EPSG",4230]],
+    CONVERSION["UTM zone 28N",
+        METHOD["Transverse Mercator",
+            ID["EPSG",9807]],
+        PARAMETER["Latitude of natural origin",0,
+            ANGLEUNIT["degree",0.0174532925199433],
+            ID["EPSG",8801]],
+        PARAMETER["Longitude of natural origin",-15,
+            ANGLEUNIT["degree",0.0174532925199433],
+            ID["EPSG",8802]],
+        PARAMETER["Scale factor at natural origin",0.9996,
+            SCALEUNIT["unity",1],
+            ID["EPSG",8805]],
+        PARAMETER["False easting",500000,
+            LENGTHUNIT["metre",1],
+            ID["EPSG",8806]],
+        PARAMETER["False northing",0,
+            LENGTHUNIT["metre",1],
+            ID["EPSG",8807]]],
+    CS[Cartesian,2],
+        AXIS["(E)",east,
+            ORDER[1],
+            LENGTHUNIT["metre",1]],
+        AXIS["(N)",north,
+            ORDER[2],
+            LENGTHUNIT["metre",1]],
+    USAGE[
+        SCOPE["Engineering survey, topographic mapping."],
+        AREA["Europe - between 18°W and 12°W - Ireland offshore."],
+        BBOX[48.43,-16.1,56.57,-12]],
+    ID["EPSG",23028]]')
     # utm <- sf::st_crs("epsg:23028")#$wkt
-    utm <- terra::crs("epsg:23028") # $wkt
 
-    vsfutm <- sf::st_transform(vsf, utm)
+    vsfutm <- sf::st_transform(vsf, utmWKT)
     vutm <- terra::vect(vsfutm)
     res100 <- 100
     rutm <- terra::rast(vutm, resolution = res100)
@@ -232,17 +282,6 @@ test_that("testing terra", {
       }
     }
 
-    # if (Sys.info()["user"] %in% "emcintir") {
-    #   env <- new.env(parent = emptyenv())
-    #   suppressWarnings(
-    #     b <- lapply(ls(), function(xx) if (isSpat(get(xx))) try(assign(xx, envir = env, terra::wrap(get(xx)))))
-    #   )
-    #   save(list = ls(envir = env), envir = env, file = "~/tmp2.rda")
-    #   # load(file = "~/tmp2.rda")
-    #   # env <- environment()
-    #   # b <- lapply(ls(), function(xx) if (is(get(xx, env), "PackedSpatRaster") || is(get(xx, env), "PackedSpatVector")) try(assign(xx, envir = env, terra::unwrap(get(xx)))))
-    # }
-
     t11 <- postProcessTo(elevRas, vutm)
     expect_true(terra::same.crs(t11, vutm))
 
@@ -257,9 +296,9 @@ test_that("testing terra", {
 
     # projection with errors
     if (getRversion() >= "4.1" && isWindows()) { # bug in older `terra` that is not going to be fixed here
-      utm <- terra::crs("epsg:23028") # This is same as above, but terra way
+      # utm <- terra::crs("epsg:23028") # This is same as above, but terra way
       if (getRversion() < "4.3.0") { # this same error crashes the session in R 4.3.0 when it is R-devel
-        vutmErrors <- terra::project(v2, utm)
+        vutmErrors <- terra::project(v2, utmWKT)
         mess <- capture_messages({
           t13a <- postProcessTo(xVect, vutmErrors)
         })
@@ -270,19 +309,20 @@ test_that("testing terra", {
         expect_true(is(t13a, "SpatVector"))
       } else {
         v2 <- terra::makeValid(v2)
-        vutmErrors <- terra::project(v2, utm)
+        vutmErrors <- terra::project(v2, utmWKT)
       }
 
-      # Switch from qs to rds with Cache
-      if (requireNamespace("qs")) {
-        opts <- options(reproducible.cacheSaveFormat = "qs")
+      # Switch from qs2 to rds with Cache
+      if (requireNamespace(.qs2Format)) {
+        opts <- options(reproducible.cacheSaveFormat = .qs2Format)
         t13a <- Cache(postProcessTo(xVect, vutmErrors))
-        opts <- options(reproducible.cacheSaveFormat = "rds")
+        opts <- options(reproducible.cacheSaveFormat = .rdsFormat)
         t13a <- Cache(postProcessTo(xVect, vutmErrors))
-        opts <- options(reproducible.cacheSaveFormat = "qs")
-        t13a <- try(Cache(postProcessTo(xVect, vutmErrors)), silent = TRUE)
-        a <- try(ncol(t13a), silent = TRUE)
-        expect_false(is(a, "try-error"))
+        opts <- options(reproducible.cacheSaveFormat = .qs2Format)
+        t13b <- Cache(postProcessTo(xVect, vutmErrors))
+        expect_equal(t13a, t13b)
+        # a <- try(ncol(t13a), silent = TRUE)
+        # expect_false(is(a, "try-error"))
       }
     }
 
@@ -428,10 +468,10 @@ test_that("testing terra", {
       t20MaskedByRas <- maskTo(t20, ras1SmallAll)
       t20ProjectedByRas <- projectTo(t20, ras1SmallAll)
       t20AllByRas <- postProcessTo(t20, ras1SmallAll) # only does terra::rast 1x
-      expect_true(is(t20AllByRas, "SpatRaster"))
-      expect_true(is(t20CroppedByRas, "SpatRaster"))
-      expect_true(is(t20MaskedByRas, "SpatRaster"))
-      expect_true(is(t20ProjectedByRas, "SpatRaster"))
+      expect_true(.isSpatRaster(t20AllByRas))
+      expect_true(.isSpatRaster(t20CroppedByRas))
+      expect_true(.isSpatRaster(t20MaskedByRas))
+      expect_true(.isSpatRaster(t20ProjectedByRas))
       expect_equal(terra::res(t20ProjectedByRas), terra::res(ras1SmallAll))
       expect_equal(terra::res(t20AllByRas), terra::res(ras1SmallAll))
       expect_equal(terra::ext(t20AllByRas), terra::ext(ras1SmallAll))
@@ -452,7 +492,8 @@ test_that("testing terra", {
           sum(!is.na(values2(t20MaskedByRas)))) <= 0
       )
 
-      if (interactive()) {
+      if (FALSE) {
+        dev.off()
         terra::plot(ras1SmallAll)
         terra::plot(t18, add = TRUE)
         terra::plot(t20AllByRas)

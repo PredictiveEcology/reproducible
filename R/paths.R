@@ -370,18 +370,38 @@ makeRelative <- function(files, absoluteBase) {
   if (length(files)) {
     areAbs <- isAbsolutePath(files)
     if (any(areAbs)) {
-      absoluteBase <- normPath(absoluteBase) # can be "." which means 'any character' in a grep
+      files[areAbs] <- normPath(files[areAbs])
       if (length(absoluteBase) < length(files))
         absoluteBase <- rep(absoluteBase, length.out = length(files))
-      # if (length(absoluteBase) > 1) browser()
+      if (.pkgEnv$runningOnMac) {
+        # on macos, normPath returns a different answer depending on whether
+        #   the file(s) exists or not. Here, try first as with other OSs; then
+        #   below, try again for those that are still absolute.
+        absoluteBaseOrig <- absoluteBase
+      }
+      absoluteBase <- normPath(absoluteBase) # can be "." which means 'any character' in a grep
       files[areAbs] <- unlist(Map(ab = absoluteBase[areAbs], file = files[areAbs], function(ab, file)
         gsub(paste0("^", ab, "/{0,1}"), "", file)
       ))
-      # files[areAbs] <- gsub(paste0("^", absoluteBase, "/{0,1}"), "", files[areAbs])
+      if (.pkgEnv$runningOnMac) {
+        areAbs <- isAbsolutePath(files)
+        if (any(areAbs)) {
+          # if (exists("aaaa", envir = .GlobalEnv)) browser()
+          files[areAbs] <- unlist(Map(ab = absoluteBaseOrig[areAbs],
+                                      file = files[areAbs], function(ab, file)
+                                        gsub(paste0("^", ab, "/{0,1}"), "", file)
+          ))
+        }
 
-      # this does dumb things when it is not relative ... i.e., with prepend ../../../../../..
-      # files[areAbs] <- fs::path_rel(start = absoluteBase, files[areAbs])
+      }
+      # if (length(files) > 1)
+      #   if (exists("aaaa", envir = .GlobalEnv)) browser()
     }
+  }
+  if (length(files)) {
+    hasStartingDot <- startsWith(files, ".")
+    if (isTRUE(any(hasStartingDot)))
+      files[hasStartingDot] <- fs::path_norm(files[hasStartingDot])
   }
   if (isList) {
     if (length(nams) == length(files)) {

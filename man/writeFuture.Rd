@@ -12,7 +12,8 @@ writeFuture(
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   cacheId,
-  linkToCacheId = NULL
+  linkToCacheId = NULL,
+  verbose = getOption("reproducible.verbose")
 )
 }
 \arguments{
@@ -26,22 +27,28 @@ Should be 0 to start.}
 \item{userTags}{Character string of tags to attach to this \code{outputToSave} in
 the \code{CacheRepo}}
 
-\item{drv}{if using a database backend, drv must be an object that
-inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}
+\item{drv}{If using a database backend, \code{drv} must be an object that
+inherits from \code{DBIDriver} (e.g., \code{RSQLite::SQLite}).}
 
-\item{conn}{an optional DBIConnection object, as returned by dbConnect().}
+\item{conn}{an optional \code{DBIConnection} object, as returned by \code{dbConnect()}.}
 
 \item{cacheId}{Character string. If passed, this will override the calculated hash
-of the inputs, and return the result from this cacheId in the \code{cachePath}.
+of the inputs, and return the result from this \code{cacheId} in the \code{cachePath}.
 Setting this is equivalent to manually saving the output of this function, i.e.,
 the object will be on disk, and will be recovered in subsequent
 This may help in some particularly finicky situations
-where Cache is not correctly detecting unchanged inputs. This will guarantee
+where \code{Cache} is not correctly detecting unchanged inputs. This will guarantee
 the object will be identical each time; this may be useful in operational code.}
 
 \item{linkToCacheId}{Optional. If a \code{cacheId} is provided here, then a \code{file.link}
 will be made to the file with that \code{cacheId} name in the cache repo.
 This is used when identical outputs exist in the cache. This will save disk space.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \value{
 Run for its side effect.

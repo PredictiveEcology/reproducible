@@ -2,7 +2,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   skip_if_not_installed("sf")
   skip_if_not_installed("terra")
 
-  testInit(libraries = c("sf", "terra"), opts = list(reproducible.useMemoise = TRUE))
+  testInit(opts = list(reproducible.useMemoise = TRUE))
 
   a <- 1
   mess <- capture_message(.cacheMessage(a, "test", TRUE))
@@ -17,9 +17,9 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_false(all(grepl("adding", mess)))
 
   # studyAreaName with sf and sfc
-  if (require("sf")) {
-    pol <- st_sfc(st_polygon(list(cbind(c(0, 3, 3, 0, 0), c(0, 0, 3, 3, 0)))))
-    h <- st_sf(r = 5, pol)
+  if (requireNamespace("sf", quietly = TRUE)) {
+    pol <- sf::st_sfc(sf::st_polygon(list(cbind(c(0, 3, 3, 0, 0), c(0, 0, 3, 3, 0)))))
+    h <- sf::st_sf(r = 5, pol)
     expect_true(is(studyAreaName(pol), "character"))
     expect_true(is(studyAreaName(h), "character"))
   }
@@ -53,17 +53,14 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_error(studyAreaName(integer(0)))
 
   # .checkCacheRepo
-  options(reproducible.cachePath = .reproducibleTempCacheDir())
+  withr::local_options(reproducible.cachePath = .reproducibleTempCacheDir())
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl(.message$NoCacheRepoSuppliedGrep, mess)))
 
-  opt11 <- options("reproducible.cachePath" = NULL)
-  on.exit(
-    {
-      options(opt11)
-    },
-    add = TRUE
-  )
+  withr::local_options(reproducible.cachePath = NULL,
+                       "rasterTmpDir" = tempdir2(rndstr(1, 6)),
+                       "reproducible.inputPaths" = NULL,
+                       "reproducible.overwrite" = TRUE)
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl(paste0(.message$NoCachePathSupplied, ". Using"), mess)))
 
@@ -107,36 +104,40 @@ test_that("test miscellaneous unit tests cache-helpers", {
     a <- Cache(rnorm, n = 1, mean = 1, cachePath = tmpCache)
   })
   # lapply(letters[11], function(l) assign(paste(rep(l, 4), collapse = ""), 1, envir = .GlobalEnv))
-  bMess <- capture_messages({
-    b <- Cache(rnorm, n = 2, mean = 1, sd = 3, showSimilar = TRUE, cachePath = tmpCache)
-  })
-  expect_true(any(grepl("different n", bMess)))
-  expect_true(any(grepl("different .+sd", bMess)))
-  # expect_true(any(grepl("new argument.*sd", bMess)))
-  expect_true(any(grepl("next closest cacheId", bMess)))
-  cMess <- capture_messages({
-    b <- Cache(rnorm, n = 3, mean = 1, sd = 3, showSimilar = TRUE, cachePath = tmpCache)
-  })
-  expect_true(any(grepl("different n", cMess)))
-  expect_false(any(grepl("new argument.*sd", cMess)))
-  cMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", cMess, value = TRUE))
-  bMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", bMess, value = TRUE))
-  expect_false(identical(cMessCacheId, bMessCacheId))
+  oo <- capture.output(
+    bMess <- capture_messages({
+      b <- Cache(rnorm, n = 2, mean = 1, sd = 3, showSimilar = TRUE, cachePath = tmpCache)
+    }))
 
-  dMess <- capture_messages({
-    b <- Cache(rnorm, n = 4, mean = 1, sd = 4, showSimilar = TRUE, cachePath = tmpCache)
-  })
+  if (!getOption("reproducible.useCacheV3") %in% TRUE) {
+    expect_true(any(grepl("different n", bMess)))
+    expect_true(any(grepl("different .+sd", bMess)))
+    # expect_true(any(grepl("new argument.*sd", bMess)))
+    expect_true(any(grepl("next closest cacheId", bMess)))
+    cMess <- capture_messages({
+      b <- Cache(rnorm, n = 3, mean = 1, sd = 3, showSimilar = TRUE, cachePath = tmpCache)
+    })
+    expect_true(any(grepl("different n", cMess)))
+    expect_false(any(grepl("new argument.*sd", cMess)))
+    cMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", cMess, value = TRUE))
+    bMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", bMess, value = TRUE))
+    expect_false(identical(cMessCacheId, bMessCacheId))
 
-  # There are 2 ways this may come out -- similarity to 1 of 2 alternatives above
-  expect1 <- any(grepl("different n, sd", dMess))
-  expect2 <- any(grepl("different n", dMess)) && any(grepl("new argument.*sd", dMess))
-  expect_true(expect1 || (expect2))
-  dMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", dMess, value = TRUE))
-  bMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", bMess, value = TRUE))
-  if (expect1) {
-    expect_false(identical(dMessCacheId, bMessCacheId))
-  } else {
-    expect_true(identical(dMessCacheId, bMessCacheId))
+    dMess <- capture_messages({
+      b <- Cache(rnorm, n = 4, mean = 1, sd = 4, showSimilar = TRUE, cachePath = tmpCache)
+    })
+
+    # There are 2 ways this may come out -- similarity to 1 of 2 alternatives above
+    expect1 <- any(grepl("different n, sd", dMess))
+    expect2 <- any(grepl("different n", dMess)) && any(grepl("new argument.*sd", dMess))
+    expect_true(expect1 || (expect2))
+    dMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", dMess, value = TRUE))
+    bMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", bMess, value = TRUE))
+    if (expect1) {
+      expect_false(identical(dMessCacheId, bMessCacheId))
+    } else {
+      expect_true(identical(dMessCacheId, bMessCacheId))
+    }
   }
 
   rcompletelynew <- rmultinom
@@ -150,18 +151,20 @@ test_that("test miscellaneous unit tests cache-helpers", {
   })
   gMess <- capture_messages({
     b <- Cache(rmultinom, 14, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
-  })
+  }) |> capture.output() -> oo
   hMess <- capture_messages({
     b <- Cache(rbinom, 14, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
-  })
+  }) |> capture.output() -> oo
   iMess <- capture_messages({
     b <- Cache(rcompletelynew, 12, 15, prob = 0.8, showSimilar = TRUE, cachePath = tmpCache)
   })
   expect_true(any(grepl("no similar item", eMess))) # shouldn't find b/c new
   expect_true(any(grepl("no similar item", fMess))) # shouldn't find b/c args are same
-  expect_true(any(grepl("next closest.+rmultin", gMess))) # should only find rmultinom
-  expect_true(any(grepl("next closest.+rbinom", hMess))) # should only find rbinom
-  expect_true(sum(grepl(".+rcompletelynew|next closest.+rmultin", iMess)) == 3) # should notice different name, but still find
+  if (!getOption("reproducible.useCacheV3") %in% TRUE) {
+    expect_true(any(grepl("next closest.+rmultin", gMess))) # should only find rmultinom
+    expect_true(any(grepl("next closest.+rbinom", hMess))) # should only find rbinom
+    expect_true(sum(grepl(".+rcompletelynew|next closest.+rmultin", iMess)) == 3) # should notice different name, but still find
+  }
 
   ### UserTags matching -- prefer similar if all userTags match
   rcompletelynew <- rnorm
@@ -175,6 +178,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   kMess <- capture_messages({
     bk <- Cache(rnorm, 1, 3, 4, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # not similar
   })
+
   expect_true(any(grepl("no similar item", kMess))) # shouldn't find b/c args are same
 
   lMess <- capture_messages({
@@ -189,37 +193,51 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   nMess <- capture_messages({
     bn <- Cache(rnorm, 1, 2, 2, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # similar to kMess
-  })
-  nMess <- grep("^.+next closest cacheId\\(s\\) (.+) of .+$", nMess, value = TRUE)
-  expect_true(grepl(
-    x = attr(bm, "tags"),
-    gsub("^.+next closest cacheId\\(s\\) (.+) of .+$", "\\1", nMess)
-  )) ## find mMess (jMess) because it's the most recent
+  }) |> capture.output() -> oo
+  if (!getOption("reproducible.useCacheV3") %in% TRUE) {
+    nMess <- grep("^.+next closest cacheId\\(s\\) (.+) of .+$", nMess, value = TRUE)
+    expect_true(grepl(
+      x = attr(bm, "tags"),
+      gsub("^.+next closest cacheId\\(s\\) (.+) of .+$", "\\1", nMess)
+    )) ## find mMess (jMess) because it's the most recent
 
-  oMess <- capture_messages({
-    bo <- Cache(rnorm, 1, 2, 1, showSimilar = TRUE, cachePath = tmpCache) # similar to kMess
-  })
-  oMess <- grep("^.+next closest cacheId\\(s\\) (.+) of .+$", oMess, value = TRUE)
-  expect_true(grepl(
-    x = attr(bn, "tags"),
-    gsub("^.+next closest cacheId\\(s\\) (.+) of .+$", "\\1", oMess) ## TODO: fix failing test
-  )) ## find nMess (jMess) because it's the most recent
+    oMess <- capture_messages({
+      bo <- Cache(rnorm, 1, 2, 1, showSimilar = TRUE, cachePath = tmpCache) # similar to kMess
+    })
+    oMess <- grep("^.+next closest cacheId\\(s\\) (.+) of .+$", oMess, value = TRUE)
+    expect_true(grepl(
+      x = attr(bn, "tags"),
+      gsub("^.+next closest cacheId\\(s\\) (.+) of .+$", "\\1", oMess) ## TODO: fix failing test
+    )) ## find nMess (jMess) because it's the most recent
+  }
+})
+
+test_that("test debugCache arg", {
+  testInit(opts = list(reproducible.useMemoise = TRUE))
 
   ## debugCache -- "complete"
   thing <- 1
   aa <- Cache(rnorm, thing, debugCache = "complete", cachePath = tmpCache)
-  expect_true(identical(thing, attr(aa, "debugCache1")[[1]]))
+  if (!getOption("reproducible.useCacheV3") %in% TRUE) {
+    expect_true(identical(thing, attr(aa, "debugCache1")[[1]]))
+  } else {
+    expect_true(identical(thing, attr(aa, "debugCache1")[[2]]))
+  }
   expect_true(identical(.robustDigest(thing), attr(aa, "debugCache2")$n))
   expect_true(is.numeric(aa))
 
   ## debugCache -- "quick"
   aa <- Cache(rnorm, thing, debugCache = "quick", cachePath = tmpCache)
   expect_true(identical(.robustDigest(thing), aa$hash$n))
-  expect_true(identical(thing, aa$content[[1]]))
+  if (!getOption("reproducible.useCacheV3") %in% TRUE) {
+    expect_true(identical(thing, aa$content[[1]]))
+  } else {
+    expect_true(identical(thing, aa$content[[2]]))
+  }
 
   ## .unlistToCharacter
   expect_true(grepl("not list", unlist(.unlistToCharacter(1, 1))))
-  expect_true(grepl("other", unlist(.unlistToCharacter(1, 0))))
+  expect_true(grepl("not list2", unlist(.unlistToCharacter(1, 0))))
 
   ## writeFuture
   comp <- # if (useDBI())
@@ -238,11 +256,14 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   if (interactive()) {
     try(silent = TRUE, clearCache(tmpCache, ask = FALSE))
-    bMess <- capture_output({
-      aMess <- capture_messages({
-        aa <- Cache(fnCacheHelper, 1, verbose = 4, cachePath = tmpCache, cacheRepo2 = tmpCache)
+    warn <- capture_warnings(
+      bMess <- capture_output({
+        aMess <- capture_messages({
+          aa <- Cache(fnCacheHelper, 1, verbose = 4, cachePath = tmpCache, cacheRepo2 = tmpCache)
+        })
       })
-    })
+    )
+    # warn has 'package:reproducible' may not be available when loading, not relevant
     expect_true(any(grepl("fnCacheHelper", aMess))) # TODO: fix this;
     expect_true(any(grepl("The hashing details", aMess)))
   }

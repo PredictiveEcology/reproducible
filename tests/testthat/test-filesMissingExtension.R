@@ -31,6 +31,7 @@ test_that("prepInputs WORKS if the file is not originally a .zip, but archive is
 test_that("prepInputs WORKS if passing archive .zip", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
+  clearCache(x = normalizePath(getOption("reproducible.cachePath"), winslash = "/"))
   noisyOutput <- capture.output(
     testthat::expect_message({
       ras <- reproducible::prepInputs(
@@ -61,6 +62,7 @@ test_that("prepInputs WORKS passing just targetFile that is NOT an archive", {
 test_that("prepInputs WORKS passing archive + targetFile", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
+  clearCache(x = normalizePath(getOption("reproducible.cachePath"), winslash = "/"))
   noisyOutput <- capture.output({
     testthat::expect_message({
       ras <- reproducible::prepInputs(

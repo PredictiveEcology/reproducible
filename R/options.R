@@ -21,12 +21,16 @@
 #'   \item{`ask`}{
 #'     Default: `TRUE`. Used in [clearCache()] and [keepCache()].
 #'   }
+#'   \item{`cacheChaining`}{
+#'     Default: `FALSE`. Used in [Cache()] in the `.cacheChaining` argument.
+#'   }
 #'   \item{`cachePath`}{
 #'     Default: `.reproducibleTempCacheDir`. Used in [Cache()] and many others.
 #'     The default path for repositories if not passed as an argument.
 #'   }
 #'   \item{`cacheSaveFormat`}{
-#'     Default: `"rds"`. What save format to use; currently, `"qs"` or `"rds"`.
+#'     Default: `"rds"`. What save format to use; currently, `"qs"` (which will use
+#'     `qs2` package as of `reproducible` version ">= 2.1.3"), `"qs2"`, or `"rds"`.
 #'   }
 #'   \item{`cacheSpeed`}{
 #'     Default `"slow"`. One of `"slow"` or `"fast"` (1 or 2).
@@ -47,6 +51,9 @@
 #'   \item{`drv`}{
 #'     Default: `RSQLite::SQLite()`. Sets the default driver for the backend database system.
 #'     Only tested with `RSQLite::SQLite()` and `RPostgres::Postgres()`.
+#'   }
+#'   \item{dryRun}{
+#'     Default: `FALSE`.
 #'   }
 #'   \item{`futurePlan`}{
 #'     Default: `FALSE`. On Linux OSes, `Cache` and `cloudCache` have some
@@ -82,6 +89,16 @@
 #'   \item{`inputPathsRecursive`}{
 #'     Default: `FALSE`. Used in [prepInputs()] and [preProcess()].
 #'     Should the `reproducible.inputPaths` be searched recursively for existence of a file?
+#'   }
+#'   \item{`leaveOnDisk`}{
+#'     Default: `TRUE`. Used in [postProcess()].
+#'     When there is a `SpatRaster` object, should `postProcess` force any file-backed object,
+#'     to use the file-based, memory-safe tools within `terra` (by temporarily setting
+#'     `terraOption(memfrac = 0)`. Alternatively, if this is set to `FALSE`,
+#'     then `postProcess` will let `terra` decide on its own based on its internal
+#'     cues (largely based on `memfrac`, `maxmem` `terraOptions`). This will be ignored,
+#'     however, if the user has set the `terraOptions` away from its default of `0.5`. The default
+#'     increases predictability of whether the returned object is on disk or in memory.
 #'   }
 #'   \item{`memoisePersist`}{
 #'     Default: `FALSE`. Used in [Cache()].
@@ -160,6 +177,12 @@
 #'     behaviour to avoid deleting objects.
 #'     This, therefore, is most useful if the user is using unique values for `userTags`.
 #'   }
+#'   \item{`reproducible.useCacheV3`}{
+#'     Default: `TRUE`. If this is set to `FALSE`, it will use the old `Cache` source
+#'     code. This will only be available for a short period before it is deleted
+#'     from the package. See also `reproducible.digestV3`. It is not guaranteed to
+#'     be identical to using a previous version of `reproducible (<3.0)`.
+#'   }
 #'   \item{`useCloud`}{
 #'     Default `FALSE`. Passed to `Cache`.
 #'   }
@@ -211,6 +234,15 @@
 #'     load the cached copy from the repository.
 #'     This may help diagnosing some problems that may occur.
 #'   }
+#'   \item{`digestV3`}{
+#'     Default: `TRUE`. This uses a digest approach that includes the names of
+#'     list elements and several other tweaks that were created for `reproducible 3.x`.
+#'     Set this to `FALSE` to use *some of* the previous cache digesting to
+#'     achieve some backwards compatibility with the digest algorithms of `reproducible (<3.x)`.
+#'     It will not be possible to get it exact for all classes of objects, particularly
+#'     those with file-backing.
+#'   }
+#'
 #' }
 #'
 #' @section Advanced:
@@ -235,18 +267,21 @@
 reproducibleOptions <- function() {
   list( # nolint
     reproducible.ask = TRUE,
+    reproducible.cacheChaining = FALSE,
     reproducible.cachePath = file.path(tempdir(), "reproducible", "cache"),
-    reproducible.cacheSaveFormat = "rds",
+    reproducible.cacheSaveFormat = .rdsFormat,
     reproducible.cacheSpeed = "slow",
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
     reproducible.drv = NULL, # RSQLite::SQLite(),
+    reproducible.dryRun = FALSE,
     reproducible.futurePlan = FALSE, # future::plan("multisession"), #memoise
     reproducible.gdalwarp = FALSE,
     reproducible.gdalwarpThreads = 2L,
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
+    reproducible.leaveOnDisk = TRUE,
     reproducible.length = Inf,
     reproducible.memoisePersist = FALSE,
     reproducible.messageColourPrepInputs = "cyan",
@@ -268,19 +303,21 @@ reproducibleOptions <- function() {
     reproducible.testCharacterAsFile = FALSE,
     reproducible.timeout = 1200,
     reproducible.useCache = TRUE, # override Cache function
+    reproducible.useCacheV3 = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
     reproducible.useDBI = {
       getEnv("R_REPRODUCIBLE_USE_DBI",
       default = {
         useDBI(getOption("reproducible.useDBI", NULL),  # a user may have set it before this runs; keep setting
-                       verbose = interactive() - (useDBI() + 1), default = TRUE)
+                       verbose = interactive() - (useDBI() + 1), default = FALSE)
         }, # `FALSE` is useMultipleDBFiles now
       allowed = c("true", "false")
     ) |> as.logical()},
     reproducible.useGdown = FALSE,
     reproducible.useMemoise = FALSE, # memoise
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
-    reproducible.verbose = 1
+    reproducible.verbose = 1,
+    reproducible.digestV3 = TRUE
   )
 }
 
@@ -297,3 +334,4 @@ getEnv <- function(envvar, default = NULL, allowed = NULL) {
 
   return(val)
 }
+

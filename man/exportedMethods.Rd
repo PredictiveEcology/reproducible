@@ -55,8 +55,9 @@
 .cacheMessageObjectToRetrieve(
   functionName,
   fullCacheTableForObj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
+  cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
   verbose
 )
 
@@ -80,9 +81,9 @@
   verbose = getOption("reproducible.verbose", 1)
 )
 
-.prepareOutput(object, cachePath, ...)
+.prepareOutput(object, cachePath = getOption("reproducible.cachePath"), ...)
 
-\S4method{.prepareOutput}{ANY}(object, cachePath, ...)
+\S4method{.prepareOutput}{ANY}(object, cachePath = getOption("reproducible.cachePath"), ...)
 
 .addChangedAttr(object, preDigest, origArguments, ...)
 
@@ -130,12 +131,16 @@ this \code{cacheId}, e.g., via \code{showCache()}.}
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{cacheId}{Character string. If passed, this will override the calculated hash
-of the inputs, and return the result from this cacheId in the \code{cachePath}.
+of the inputs, and return the result from this \code{cacheId} in the \code{cachePath}.
 Setting this is equivalent to manually saving the output of this function, i.e.,
 the object will be on disk, and will be recovered in subsequent
 This may help in some particularly finicky situations
-where Cache is not correctly detecting unchanged inputs. This will guarantee
+where \code{Cache} is not correctly detecting unchanged inputs. This will guarantee
 the object will be identical each time; this may be useful in operational code.}
+
+\item{cacheSaveFormat}{Character string: currently either \code{qs} or \code{rds}. Defaults to
+\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} may be faster but appears to have
+narrower range of conditions that work; \code{rds} is safer, and may be slower.}
 
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}

@@ -247,8 +247,8 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     sn <- slotNames(object@legend)
     legendSlotsToDigest <- lapply(sn, function(s) slot(object@legend, s))
     dig2 <- .robustDigest(legendSlotsToDigest,
-      length = length, quick = quick,
-      algo = algo
+                          length = length, quick = quick,
+                          algo = algo
     ) # don't include object@data -- these are volatile
     dig <- c(dig, dig2)
 
@@ -256,8 +256,8 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     sn <- sn[!(sn %in% c("name"))]
     fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
     digFile <- .robustDigest(asPath(fileSlotsToDigest),
-      length = length, quick = quick,
-      algo = algo
+                             length = length, quick = quick,
+                             algo = algo
     ) # don't include object@file -- these are volatile
 
     dig <- c(dig, digFile)
@@ -322,10 +322,10 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 
   if (is.character(namesObj)) {
     namesObj <- gsub(namesObj, pattern = "\\.|_", replacement = "aa")
-    allLower <- tolower(namesObj) == namesObj
+    allLower <- (tolower(namesObj) == namesObj) %in% TRUE
     namesObj[allLower] <- paste0("abALLLOWER", namesObj[allLower])
 
-    onesChanged <- startsWith(namesObj, prefix = "a")
+    onesChanged <- startsWith(namesObj, prefix = "a") %in% TRUE
     namesObj[!onesChanged] <- paste0("ZZZZZZZZZ", namesObj[!onesChanged])
 
     out <- order(namesObj)
@@ -342,56 +342,23 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #'
 #' @param obj  An arbitrary R object.
 #' @param preDigest  A list of hashes.
-#' @param ...  Dots passed from Cache
+#' @param ...  Dots passed from `Cache`
+#' @param fullCall The original call to `Cache`
 #'
 #' @return The same object as `obj`, but with 2 attributes set.
 #'
 #' @author Eliot McIntire
 #' @rdname debugCache
-.debugCache <- function(obj, preDigest, ...) {
-  attr(obj, "debugCache1") <- list(...)
+.debugCache <- function(obj, preDigest, ..., fullCall) {
+  if (missing(fullCall))
+    attr(obj, "debugCache1") <- list(...)
+  else
+    attr(obj, "debugCache1") <- fullCall
   attr(obj, "debugCache2") <- preDigest
   obj
 }
 
 #' @keywords internal
-.getOtherFnNamesAndTags <- function(scalls) {
-  if (is.null(scalls)) {
-    scalls <- sys.calls()
-  }
-
-  patt <- paste(.defaultOtherFunctionsOmit, collapse = ")|(")
-  otherFns <- .grepSysCalls(
-    scalls,
-    pattern = patt
-  )
-  if (length(otherFns)) {
-    otherFns <- unlist(lapply(scalls[-otherFns], function(x) {
-      tryCatch(as.character(x[[1]]), error = function(y) "")
-    }))
-    otherFns <- otherFns[nzchar(otherFns)]
-    otherFns <- otherFns[!startsWith(otherFns, prefix = ".")]
-    otherFns <- paste0("otherFunctions:", otherFns)
-  } else {
-    otherFns <- character()
-  }
-
-  # Figure out if it is in SpaDES.core call, which could be either a .parseModule or .runModuleInputObjects call...
-  #   , if yes, then extract the module
-  doEventFrameNum <- .grepSysCalls(scalls, "\\.parseModule|\\.runModuleInputObjects")
-  if (length(doEventFrameNum)) {
-    module <- get0("m", envir = sys.frame(tail(doEventFrameNum, 1)))
-    if (is.null(module)) { # this block should cover any other cases, though is likely unnecessary
-      # This whole mechanism is predicated on the module name being called "m" in the above 2 functions
-      moduleEnv <- whereInStack("m")
-      module <- get0("m", envir = moduleEnv)
-    }
-
-    # module <- get("m", envir = sys.frame(doEventFrameNum[2])) # always 2
-    otherFns <- c(paste0("module:", module), otherFns)
-  }
-  unique(otherFns)
-}
 
 #' @keywords internal
 nextNumericName <- function(string) {
@@ -408,7 +375,7 @@ nextNumericName <- function(string) {
   if (isTRUE(any(alreadyHasNumeric))) {
     splits <- strsplit(allSimilarFilesInDirSansExt[alreadyHasNumeric], split = "_")
     highestNumber <- max(unlist(lapply(splits, function(split) as.numeric(tail(split, 1)))),
-      na.rm = TRUE
+                         na.rm = TRUE
     )
     preNumeric <- unique(unlist(lapply(splits, function(spl) paste(spl[-length(spl)], collapse = "_")))) # nolint
     ## keep rndstr in here (below), so that both streams keep same rnd number state
@@ -461,12 +428,13 @@ list2envAttempts <- function(x, envir) {
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
                                      drv = getDrv(getOption("reproducible.drv", NULL)),
                                      conn = getOption("reproducible.conn", NULL),
+                                     verbose = getOption("reproducible.verbose"),
                                      ...) {
   fnsAll <- Filenames(obj)
   fnsShort <- Filenames(obj, FALSE)
   if (!all(nchar(fnsAll) == 0)) {
     repoDir <- checkPath(repoDir, create = TRUE)
-    isRepo <- CacheIsACache(cachePath = repoDir, drv = drv, conn = conn)
+    isRepo <- CacheIsACache(cachePath = repoDir, drv = drv, conn = conn, verbose = verbose)
     # thoseWithGRI <- endsWith(fnsAll, "gri")
     fns <- fnsAll
     FB <- nchar(fns) > 0
@@ -543,29 +511,48 @@ withoutFinalNumeric <- function(string) {
 setClass("PackedSpatExtent2")
 
 wrapSpatVector <- function(obj) {
-  obj <- terra::wrap(obj)
-  if (FALSE) {
-    geom1 <- terra::geom(obj)
-    geom1 <- list(
-      cols125 = matrix(as.integer(geom1[, c(1, 2, 5)]), ncol = 3),
-      cols34 = matrix(as.integer(geom1[, c(3, 4)]), ncol = 2)
-    )
-    geomtype1 <- terra::geomtype(obj)
-    dat1 <- terra::values(obj)
-    crs1 <- terra::crs(obj)
-    obj <- list(geom1, geomtype1, dat1, crs1)
-    names(obj) <- spatVectorNamesForCache
-  }
+
+  # stopifnot(inherits(obj, "SpatVector"))
+  if (FALSE) # old; stable but slow
+    stWrap <- system.time(obj2 <- terra::wrap(obj))
+
+
+  # stWrapSpecial <- system.time(
+    obj <- list(
+    geometry = terra::geom(obj),                      # matrix of coordinates
+    attributes = as.data.frame(obj),           # attribute table
+    crs = terra::crs(obj),                             # coordinate reference system
+    extent = .wrap(terra::ext(obj)),                          # bounding box
+    geom_type = terra::geomtype(obj),                  # "points", "lines", "polygons", etc.
+    n_features = terra::nrow(obj),
+    n_fields = terra::ncol(obj)
+  )
+  # )
+  attr(obj, "class") <- c("PackedSpatVector2", attr(obj, "class"))
+
+  # ss <- sample(1e8, 1)
+  # env <- reproducible:::memoiseEnv(cachePath = getOption("reproducible.cachePath"))
+  # if (!exists("wrapTimings", envir = env))
+  #   env$wrapTimings <- new.env(parent = emptyenv())
+  # assign(paste0("ss", ss), list(stWrap = stWrap, stWrapSpecial = stWrapSpecial), envir = env$wrapTimings)
+
   obj
 }
 
 unwrapSpatVector <- function(obj) {
-  obj <- terra::unwrap(obj)
-  if (FALSE) {
-    obj$x <- cbind(obj$x$cols125[, 1:2, drop = FALSE], obj$x$cols34[, 1:2, drop = FALSE], obj$x$cols125[, 3, drop = FALSE])
-    do.call(terra::vect, obj)
-  }
-  obj
+  if (NROW(obj$geometry) == 0)
+    obj$geom_type <- "points"
+  sv <- terra::vect(obj$geometry, type = obj$geom_type, crs = obj$crs)
+
+  # Attach attributes
+  terra::values(sv) <- obj$attributes
+
+  # obj <- terra::unwrap(obj)
+  # obj$x <- cbind(obj$x$cols125[, 1:2, drop = FALSE], obj$x$cols34[, 1:2, drop = FALSE], obj$x$cols125[, 3, drop = FALSE])
+  # do.call(terra::vect, obj)
+  # obj
+  sv
+
 }
 
 #' Has a cached object has been updated?

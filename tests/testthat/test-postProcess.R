@@ -12,7 +12,7 @@ test_that("prepInputs doesn't work (part 3)", {
     ) # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
   )
 
-  options("reproducible.cachePath" = tmpdir)
+  withr::local_options("reproducible.cachePath" = tmpdir)
 
   # Add a study area to Crop and Mask to
   # Create a "study area"
@@ -70,20 +70,20 @@ test_that("prepInputs doesn't work (part 3)", {
   b <- c(r1, r2)
   terra::crs(b) <- sf::st_crs(ncSmall)$input
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE)
-  expect_true(inherits(b1, "SpatRaster"))
+  expect_true(.isSpatRaster(b1))
 
   s <- c(r1, r2)
   crs(s) <- crs(nonLatLongProj)
   s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE)
-  expect_true(inherits(s1, "SpatRaster"))
+  expect_true(.isSpatRaster(s1))
   expect_equal(s1[], b1[], ignore_attr = TRUE)
 
   b <- writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, writeTo = tmpfile[2], overwrite = TRUE)
-  expect_true(inherits(b1, "SpatRaster"))
+  expect_true(.isSpatRaster(b1))
 
   s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, writeTo = tmpfile[2], overwrite = TRUE)
-  expect_true(inherits(s1, "SpatRaster"))
+  expect_true(.isSpatRaster(s1))
 
   # Test datatype setting
   dt1 <- "INT2U"
@@ -117,7 +117,7 @@ test_that("prepInputs doesn't work (part 3)", {
   skip_if_not_installed("terra")
   r1 <- terra::rasterize(terra::vect(nc1), r)
   r2 <- postProcess(r1, studyArea = ncSmall, filename2 = NULL)
-  expect_true(is(r2, "SpatRaster"))
+  expect_true(.isSpatRaster(r2))
   expect_true(terra::ncell(r2) < terra::ncell(r1))
   expect_true((terra::xmin(terra::ext(ncSmall)) - terra::xmin(r2)) < terra::res(r2)[1] * 2)
   expect_true((terra::ymin(terra::ext(ncSmall)) - terra::ymin(r2)) < terra::res(r2)[2] * 2)
@@ -239,6 +239,10 @@ test_that("cropInputs crops too closely when input projections are different", {
     "rgdal_show_exportToProj4_warnings" = "none" # https://gis.stackexchange.com/questions/390945/importing-raster-files-warning-and-extracting-covariates-error-with-raster-and
   ), needGoogleDriveAuth = TRUE)
 
+  oo <- capture.output(orig <- terra::terraOptions()$memfrac)
+  terra::terraOptions(memfrac = 0.6)
+  on.exit(terra::terraOptions(memfrac = orig))
+
   ext2 <- terra::ext(c(
     xmin = -3229772.32501426,
     xmax = 3680227.67498574,
@@ -338,30 +342,30 @@ test_that("maskInputs errors when x is Lat-Long", {
   expect_true(terra::ext(roads2) > terra::ext(roads1))
 })
 
-test_that("prepInputs doesn't work (part 3)", {
-  skip("The Google Drive url is dead")
-  if (interactive()) {
-    testInit(needGoogleDriveAuth = TRUE)
-
-    # Tati's reprex
-    # tmpdir <- "/mnt/d/temp/Cache"
-    wd <- checkPath(file.path(tmpdir, "reprex"), create = TRUE)
-    ranges <- prepInputs(
-      url = "https://drive.google.com/file/d/1AfGfRjaDsdq3JqcsidGRo3N66OUjRJnn",
-      destinationPath = wd,
-      fun = "terra::vect"
-    )
-    LCC05 <- prepInputs(
-      url = "https://drive.google.com/file/d/1g9jr0VrQxqxGjZ4ckF6ZkSMP-zuYzHQC",
-      targetFile = "LCC2005_V1_4a.tif",
-      studyArea = ranges,
-      fun = "terra::rast",
-      destinationPath = wd
-    )
-    sumNonNAs <- sum(!is.na(!LCC05[]))
-
-    # These are suitably vague that they will capture the mask if it gets it right
-    expect_true(sumNonNAs < 38000000)
-    expect_true(sumNonNAs > 37000000)
-  }
-})
+# test_that("prepInputs doesn't work (part 3)", {
+#   skip("The Google Drive url is dead")
+#   if (interactive()) {
+#     testInit(needGoogleDriveAuth = TRUE)
+#
+#     # Tati's reprex
+#     # tmpdir <- "/mnt/d/temp/Cache"
+#     wd <- checkPath(file.path(tmpdir, "reprex"), create = TRUE)
+#     ranges <- prepInputs(
+#       url = "https://drive.google.com/file/d/1AfGfRjaDsdq3JqcsidGRo3N66OUjRJnn",
+#       destinationPath = wd,
+#       fun = "terra::vect"
+#     )
+#     LCC05 <- prepInputs(
+#       url = "https://drive.google.com/file/d/1g9jr0VrQxqxGjZ4ckF6ZkSMP-zuYzHQC",
+#       targetFile = "LCC2005_V1_4a.tif",
+#       studyArea = ranges,
+#       fun = "terra::rast",
+#       destinationPath = wd
+#     )
+#     sumNonNAs <- sum(!is.na(!LCC05[]))
+#
+#     # These are suitably vague that they will capture the mask if it gets it right
+#     expect_true(sumNonNAs < 38000000)
+#     expect_true(sumNonNAs > 37000000)
+#   }
+# })

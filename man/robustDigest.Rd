@@ -6,6 +6,7 @@
 \alias{.robustDigest,function-method}
 \alias{.robustDigest,expression-method}
 \alias{.robustDigest,language-method}
+\alias{.robustDigest,call-method}
 \alias{.robustDigest,character-method}
 \alias{.robustDigest,Path-method}
 \alias{.robustDigest,environment-method}
@@ -34,6 +35,8 @@
 
 \S4method{.robustDigest}{language}(object, .objects, length, algo, quick, classOptions)
 
+\S4method{.robustDigest}{call}(object, .objects, length, algo, quick, classOptions)
+
 \S4method{.robustDigest}{character}(object, .objects, length, algo, quick, classOptions)
 
 \S4method{.robustDigest}{Path}(object, .objects, length, algo, quick, classOptions)
@@ -48,7 +51,15 @@
 
 \S4method{.robustDigest}{matrix}(object, .objects, length, algo, quick, classOptions)
 
-\S4method{.robustDigest}{integer}(object, .objects, length, algo, quick, classOptions)
+\S4method{.robustDigest}{integer}(
+  object,
+  .objects,
+  length,
+  algo,
+  quick,
+  classOptions,
+  cacheSaveFormat = getOption("reproducible.cacheSaveFormat")
+)
 }
 \arguments{
 \item{object}{an object to digest.}
@@ -67,11 +78,7 @@ passed to \code{digest::digest}, essentially limiting the number of bytes
 to digest (for speed). This will only be used if \code{quick = FALSE}.
 Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.}
 
-\item{algo}{The algorithms to be used; currently available choices are
-    \code{md5}, which is also the default, \code{sha1}, \code{crc32},
-    \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64},
-    \code{murmur32}, \code{spookyhash}, \code{blake3}, \code{crc32c},
-    \code{xxh3_64}, and \code{xxh3_128}.}
+\item{algo}{The digest algorithm to use. Default \code{xxhash64} (see \code{\link[digest:digest]{digest::digest()}} for others).}
 
 \item{quick}{Logical or character. If \code{TRUE},
 no disk-based information will be assessed, i.e., only
@@ -82,6 +89,10 @@ specific classes. Should be options that the \code{.robustDigest} knows what
 to do with.}
 
 \item{...}{Arguments passed to \code{FUN}, if \code{FUN} is not an expression.}
+
+\item{cacheSaveFormat}{Character string: currently either \code{qs} or \code{rds}. Defaults to
+\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} may be faster but appears to have
+narrower range of conditions that work; \code{rds} is safer, and may be slower.}
 
 \item{objects}{Optional character vector indicating which objects are to
 be considered while making digestible. This argument is not used

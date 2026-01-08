@@ -3,13 +3,13 @@
 \docType{data}
 \name{unrarPath}
 \alias{unrarPath}
-\alias{.unrarPath}
+\alias{.systemArchivePath}
 \title{The known path for unrar or 7z}
 \format{
 An object of class \code{NULL} of length 0.
 }
 \usage{
-.unrarPath
+.systemArchivePath
 }
 \description{
 The known path for unrar or 7z

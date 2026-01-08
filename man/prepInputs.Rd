@@ -77,13 +77,11 @@ as the file path to the file to load. See details and examples below.}
 \code{\link[=Cache]{Cache()}} (the quick argument). This results in faster, though
 less robust checking of inputs. See the respective functions.}
 
-\item{overwrite}{Logical. Should downloading and all the other actions occur
-even if they pass the checksums or the files are all there.}
+\item{overwrite}{Logical. Passed to \code{writeTo} (possibly inside \code{postProcess}) and \code{postProcess}.}
 
-\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing
-\code{CHECKSUMS.txt} file and
-\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
-\code{CHECKSUMS.txt} file. Other options, see details.}
+\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing \code{CHECKSUMS.txt} file and
+\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire \code{CHECKSUMS.txt} file.
+Other options, see details.}
 
 \item{useCache}{Passed to \code{Cache} in various places.
 Defaults to \code{getOption("reproducible.useCache", 2L)} in \code{prepInputs}, and
@@ -96,7 +94,7 @@ mean internal caching is more time consuming. We recommend caching the full
 \code{prepInputs} call instead (e.g. \code{prepInputs(...) |> Cache()}).}
 
 \item{.tempPath}{Optional temporary path for internal file intermediate steps.
-Will be cleared on.exit from this function.}
+Will be cleared \code{on.exit} from this function.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
@@ -240,8 +238,9 @@ If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
 \examples{
 \donttest{
 if (requireNamespace("terra", quietly = TRUE) &&
-  requireNamespace("sf", quietly = TRUE)) {
+  requireNamespace("withr", quietly = TRUE)) {
   library(reproducible)
+  withr::local_dir(withr::local_tempdir())
   # Make a dummy study area map -- user would supply this normally
   coords <- structure(c(-122.9, -116.1, -99.2, -106, -122.9, 59.9, 65.7, 63.6, 54.8, 59.9),
     .Dim = c(5L, 2L)
@@ -251,8 +250,8 @@ if (requireNamespace("terra", quietly = TRUE) &&
   # Make dummy "large" map that must be cropped to the study area
   outerSA <- terra::buffer(studyArea, 50000)
   terra::crs(outerSA) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  tf <- normPath(file.path(tempdir2("prepInputsEx"), "prepInputs2.shp"))
-  terra::writeVector(outerSA, tf, overwrite = TRUE)
+  tf <- normPath(file.path(tempdir2(), "prepInputs2.shp"))
+  terra::writeVector(outerSA, tf)
 
   # run prepInputs -- load file, postProcess it to the studyArea
 
@@ -339,6 +338,7 @@ if (requireNamespace("terra", quietly = TRUE) &&
       unlink(dPath)
     }
   }
+  withr::deferred_run()
 }
 }
 

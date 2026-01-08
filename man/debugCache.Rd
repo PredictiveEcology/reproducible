@@ -4,14 +4,16 @@
 \alias{.debugCache}
 \title{Attach debug info to return for Cache}
 \usage{
-.debugCache(obj, preDigest, ...)
+.debugCache(obj, preDigest, ..., fullCall)
 }
 \arguments{
 \item{obj}{An arbitrary R object.}
 
 \item{preDigest}{A list of hashes.}
 
-\item{...}{Dots passed from Cache}
+\item{...}{Dots passed from \code{Cache}}
+
+\item{fullCall}{The original call to \code{Cache}}
 }
 \value{
 The same object as \code{obj}, but with 2 attributes set.

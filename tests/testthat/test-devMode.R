@@ -23,7 +23,8 @@ test_that("test devMode", {
   #   never again be defined that way. Here, because of userTags being the same,
   #   it will replace the entry in the Cache, effetively overwriting it, even though
   #   it has a different cacheId
-  ranNumsD <- Cache(centralTendency, funnyData, cachePath = tmpCache, userTags = uniqueUserTags)
+  ranNumsD <- Cache(centralTendency, funnyData, cachePath = tmpCache, userTags = uniqueUserTags) |>
+    capture.output() -> oo
   a <- showCache(tmpCache) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b
   expect_true(NROW(unique(a[[.cacheTableHashColName()]])) == 1)
 
@@ -52,7 +53,8 @@ test_that("test devMode", {
   centralTendency <- function(x) {
     sort(table(x))[1]
   }
-  ranNumsH <- Cache(centralTendency, 1:11, cachePath = tmpCache, userTags = theTags)
+  ranNumsH <- Cache(centralTendency, 1:11, cachePath = tmpCache, userTags = theTags) |>
+    capture.output() -> oo
 
   a <- showCache(tmpCache) #
   expect_true(NROW(unique(a[[.cacheTableHashColName()]])) == 4)
@@ -64,8 +66,10 @@ test_that("test devMode", {
   centralTendency <- function(x) median(x)
   mess <- capture_messages({
     ranNumsG <- Cache(centralTendency, 1:12, cachePath = tmpCache, userTags = theTags, verbose = 3)
-  })
-  expect_true(any(grepl("not unique; defaulting", mess)))
+  }) |>
+    capture.output() -> oo
+  if (!getOption("reproducible.useCacheV3") %in% TRUE)
+    expect_true(any(grepl("not unique; defaulting", mess)))
 
   ### Test that vague userTags don't accidentally delete a non-similar entry
   clearCache(tmpCache, ask = FALSE)

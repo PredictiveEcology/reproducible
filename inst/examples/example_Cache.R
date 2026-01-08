@@ -1,5 +1,5 @@
 data.table::setDTthreads(2)
-tmpDir <- file.path(tempdir())
+tmpDir <- tempdir()
 opts <- options(reproducible.cachePath = tmpDir)
 
 # Usage -- All below are equivalent; even where args are missing or provided,
@@ -59,7 +59,7 @@ if (getRversion() >= "4.1") {
   b2a <- eval(parse(text = b2a))
   b2b <- eval(parse(text = b2b))
   all.equal(b1a, b1b) # Not TRUE because the sample is run first
-  all.equal(b2a, b2b) # TRUE because of {  }
+  all.equal(b2a, b2b) # TRUE because of {  }, sample is not run
 }
 
 #########################

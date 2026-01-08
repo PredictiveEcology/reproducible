@@ -6,6 +6,7 @@
 \usage{
 saveToCache(
   cachePath = getOption("reproducible.cachePath"),
+  cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   obj,
@@ -19,10 +20,14 @@ saveToCache(
 \item{cachePath}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
-\item{drv}{if using a database backend, drv must be an object that
-inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}
+\item{cacheSaveFormat}{Character string: currently either \code{qs} or \code{rds}. Defaults to
+\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} may be faster but appears to have
+narrower range of conditions that work; \code{rds} is safer, and may be slower.}
 
-\item{conn}{an optional DBIConnection object, as returned by dbConnect().}
+\item{drv}{If using a database backend, \code{drv} must be an object that
+inherits from \code{DBIDriver} (e.g., \code{RSQLite::SQLite}).}
+
+\item{conn}{an optional \code{DBIConnection} object, as returned by \code{dbConnect()}.}
 
 \item{obj}{The R object to save to the cache}
 

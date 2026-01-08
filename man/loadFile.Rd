@@ -4,13 +4,12 @@
 \alias{loadFile}
 \title{Load a file from the cache}
 \usage{
-loadFile(file, format = NULL)
+loadFile(file, ...)
 }
 \arguments{
 \item{file}{character specifying the path to the file}
 
-\item{format}{(optional) character string specifying file extension ("qs" or "rds") of \code{file};
-if not specified (i.e., NULL), will be deduced from the file extension of \code{file}.}
+\item{...}{Allows \code{format} for backward compatibility}
 }
 \value{
 the object loaded from \code{file}

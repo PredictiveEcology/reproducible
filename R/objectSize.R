@@ -19,6 +19,8 @@
 #' @param x An object
 #' @param quick Logical. If `FALSE`, then an attribute, "objSize" will be added to
 #'   the returned value, with each of the elements' object size returned also.
+#' @param recursive Logical. If `TRUE`, then, in addition to evaluating the whole object,
+#'   it will also return the recursive sizes of the elements of a list or environment.
 #' @param ...  Additional arguments (currently unused), enables backwards compatible use.
 #'
 #' @export
@@ -49,7 +51,7 @@
 #' not be included even though `enclosingEnvs = TRUE`.
 #'
 #' @export
-objSize <- function(x, quick = FALSE, ...) {
+objSize <- function(x, quick = FALSE, recursive = FALSE, ...) {
   UseMethod("objSize", x)
 }
 
@@ -57,27 +59,30 @@ objSize <- function(x, quick = FALSE, ...) {
 #' @importFrom lobstr obj_size
 objSize.default <- function(x, quick = FALSE, ...) {
   FNs <- Filenames(x)
-  if (!is.null(FNs) && length(FNs)) {
+  if (!is.null(FNs) && length(FNs) && !isTRUE(quick)) {
     if (any(nzchar(FNs))) {
       FNs <- asPath(FNs)
       out2 <- objSize(FNs, quick = FALSE)
     }
   }
-  if (is(x, "SpatRaster") || is(x, "SpatVector")) {
+  if (.isSpat(x)) {
     if (.requireNamespace("terra")) {
-      if (is(x, "SpatVector")) { # too slow for large SpatVectors
+      if (inherits(x, "SpatVector")) { # too slow for large SpatVectors
         x <- list(terra::geom(x), terra::values(x))
       } # approximate
       else {
-        x <- list(terra::wrap(x))
+        if (!isTRUE(quick))
+          x <- list(terra::wrap(x))
       }
     }
   }
-  out <- obj_size(x)
+  out <- object.size(x)
+  # out <- .objSizeWithTry(x)  # out <- try(obj_size(x), silent = TRUE) # Error in obj_size_(dots, env, size_node(), size_vector()) :
+  #                                        # bad binding access
   if (exists("out2", inherits = FALSE)) {
     out <- sum(out, out2)
-    class(out) <- "lobstr_bytes"
   }
+  class(out) <- "lobstr_bytes"
 
   if (!quick) {
     attr(out, "objSize") <- list(obj = out)
@@ -87,12 +92,13 @@ objSize.default <- function(x, quick = FALSE, ...) {
 
 #' @export
 #' @importFrom lobstr obj_size
-objSize.list <- function(x, quick = FALSE, ...) {
-  os <- obj_size(x) # need to get overall object size; not just elements;
+objSize.list <- function(x, quick = FALSE, recursive = FALSE, ...) {
+  os <- .objSizeWithTry(x)
+  # os <- try(obj_size(x), silent = TRUE) # need to get overall object size; not just elements;
   # but this doesn't work for e.g., terra
 
-  if (!quick) {
-    out <- lapply(x, objSize, quick = quick)
+  if (!quick && (isTRUE(recursive) || (is.numeric(recursive) && recursive > 0))) {
+    out <- Map(x = x, function(x) objSize(x, quick = quick, recursive = recursive - 1))
     os2 <- sum(unlist(out))
     os <- max(os2, os)
     class(os) <- "lobstr_bytes"
@@ -106,7 +112,7 @@ objSize.list <- function(x, quick = FALSE, ...) {
 #' @importFrom lobstr obj_size
 objSize.Path <- function(x, quick = FALSE, ...) {
   if (quick) {
-    os <- obj_size(x)
+    os <- .objSizeWithTry(x, FALSE)
   } else {
     os <- file.size(x)
   }
@@ -121,12 +127,21 @@ objSize.Path <- function(x, quick = FALSE, ...) {
 
 #' @export
 #' @importFrom lobstr obj_size
-objSize.environment <- function(x, quick = FALSE, ...) {
-  os <- obj_size(x)
+objSize.environment <- function(x, quick = FALSE, recursive = FALSE, ...) {
+  os <- .objSizeWithTry(x)
   if (!quick) {
     out <- lapply(as.list(x, all.names = TRUE), objSize, quick = quick)
     attr(os, "objSize") <- out
   }
+  os
+}
+
+#' @export
+#' @importFrom lobstr obj_size
+objSize.function <- function(x, quick = FALSE, ...) {
+  os <- .objSizeWithTry(x)
+  if (!quick)
+    attr(os, "objSize") <- os
   os
 }
 
@@ -148,4 +163,39 @@ objSize.environment <- function(x, quick = FALSE, ...) {
 #' @rdname objSize
 objSizeSession <- function(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = list()) {
   .Defunct("Please use lobstr::obj_size instead")
+}
+
+
+#' `lobstr::obj_size` with a `try` to address issue #72
+#'
+#' It is not clear why, but it appears that running `lobstr::obj_size` again, after
+#' a bad binding error, it will work.
+#' @export
+#' @importFrom lobstr obj_size
+#' @inheritParams objSize
+#' @param useTry Logical. If `TRUE`, the default, then it will use `try`. Can optionally
+#'   avoid this if set to `FALSE`. The `try` takes sufficient extra compute time
+#'   that it is worth avoiding it if possible.
+#' @return The size of an object, using `lobstr::obj_size` or `object.size` if the
+#'   first fails
+.objSizeWithTry <- function(x, useTry = TRUE) {
+  for (i in 1:2) {
+    if (isTRUE(useTry)) {
+      out <- try(obj_size(x), silent = TRUE)
+    } else {
+      out <- obj_size(x)
+    }
+
+    if (inherits(out, "try-error")) {
+      if (identical(i, 1L)) next
+    } else {
+      break
+    }
+    out <- try(length(serialize(x, NULL)), silent = TRUE)
+    if (inherits(out, "try-error")) {
+      out <- object.size(x)
+    }
+    class(out) <- "lobstr_bytes"
+  }
+  out
 }

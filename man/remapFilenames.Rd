@@ -4,7 +4,7 @@
 \alias{remapFilenames}
 \title{Remap file names}
 \usage{
-remapFilenames(obj, tags, cachePath, ...)
+remapFilenames(obj, tags, cachePath = getOption("reproducible.cachePath"), ...)
 }
 \arguments{
 \item{obj}{(optional) object whose file path metadata will be remapped}

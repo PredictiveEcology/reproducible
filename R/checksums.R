@@ -108,6 +108,7 @@ setMethod(
         pattern = makeRelative(checksumFile, path),
         value = TRUE, invert = TRUE
       )
+      # files <- fs::path_norm(files)
     } else {
       isAbs <- isAbsolutePath(files)
       if (any(!isAbs)) {
@@ -148,7 +149,7 @@ setMethod(
 
     stStart <- Sys.time()
     filesToCheck <- if (length(txt$file) & length(files)) {
-      inTxt <- makeRelative(files, path) %in% txt$file
+      inTxt <- makeRelative(files, path) %in% makeRelative(txt$file, path)
       if (isTRUE(any(inTxt)))
         files <- files[inTxt]
       else {
@@ -333,12 +334,12 @@ writeChecksumsTable <- function(out, checksumFile, dots) {
 
 #' Calculate the hashes of multiple files
 #'
-#' Internal function. Wrapper for [digest::digest()] using `xxhash64`.
+#' Internal function. Wrapper for [digest::digest()] using `algo = xxhash64`.
 #'
 #' @param file  Character vector of file paths.
 #' @param quickCheck Logical indicating whether to use a fast file size check as a heuristic
 #'                   for determining changes to a file.
-#' @param ...   Additional arguments to `digest::digest`.
+#' @param ...   Additional arguments to [digest::digest()].
 #'
 #' @return A character vector of hashes.
 #'
@@ -346,7 +347,7 @@ writeChecksumsTable <- function(out, checksumFile, dots) {
 #' @importFrom digest digest
 #' @keywords internal
 #' @rdname digest
-setGeneric(".digest", function(file, quickCheck, ...) {
+setGeneric(".digest", function(file, quickCheck = FALSE, ...) {
   standardGeneric(".digest")
 })
 
@@ -354,12 +355,13 @@ setGeneric(".digest", function(file, quickCheck, ...) {
 setMethod(
   ".digest",
   signature = c(file = "character"),
-  definition = function(file, quickCheck, algo = "xxhash64", ...) {
+  definition = function(file, quickCheck = FALSE, algo = "xxhash64", ...) {
+    fss <- file.size(file)
     if (quickCheck) {
-      fs <- file.size(file)
-      as.character(fs) # need as.character for empty case
+      as.character(fss) # need as.character for empty case
     } else {
-      as.character(
+      # fss <- file.size(file)
+      evalThis <- quote(as.character(
         unname(
           unlist(
             lapply(file, function(f) {
@@ -367,7 +369,24 @@ setMethod(
             })
           )
         )
-      ) # need as.character for empty case # nolint
+      )) # need as.character for empty case # nolint
+      nonZeroSize <- fss != 0
+
+      if (isTRUE(any(nonZeroSize))) {
+        # some zero length files fail digest::digest, others don't. Don't know the exact reason yet.
+        # BUT don't use `try` for all/any digests as it is too slow to run all/any time
+        fss2 <- try(eval(evalThis), silent = TRUE)
+        if (is(fss2, "try-error")) {
+          browser()
+          fss2 <- character(length(file))
+          file <- file[nonZeroSize]
+          fss2[nonZeroSize] <- eval(evalThis)
+        }
+      } else {
+        fss2 <- eval(evalThis)
+      }
+
+      fss2
     }
   }
 )

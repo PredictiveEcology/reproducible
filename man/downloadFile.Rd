@@ -21,6 +21,7 @@ downloadFile(
   verbose = getOption("reproducible.verbose", 1),
   purge = FALSE,
   .tempPath,
+  .callingEnv,
   ...
 )
 }
@@ -80,8 +81,8 @@ in subsequent calls to
 
 \item{preDigest}{The list of \code{preDigest} that comes from \code{CacheDigest} of an object}
 
-\item{overwrite}{Logical. Should downloading and all the other actions occur
-even if they pass the checksums or the files are all there.}
+\item{overwrite}{Logical. If \code{TRUE} then the download will overwrite an existing file
+if it exists.}
 
 \item{alsoExtract}{Optional character string naming files other than
 \code{targetFile} that must be extracted from the \code{archive}. If
@@ -97,13 +98,15 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing
-\code{CHECKSUMS.txt} file and
-\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
-\code{CHECKSUMS.txt} file. Other options, see details.}
+\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing \code{CHECKSUMS.txt} file and
+\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire \code{CHECKSUMS.txt} file.
+Other options, see details.}
 
 \item{.tempPath}{Optional temporary path for internal file intermediate steps.
-Will be cleared on.exit from this function.}
+Will be cleared \code{on.exit} from this function.}
+
+\item{.callingEnv}{The environment where the function was called from. Used to find
+objects, if necessary.}
 
 \item{...}{Passed to \code{dlFun}. Still experimental. Can be e.g., \code{type} for google docs.}
 }

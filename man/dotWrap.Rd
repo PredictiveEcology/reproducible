@@ -9,55 +9,64 @@
 \alias{.unwrap}
 \alias{.unwrap.environment}
 \alias{.unwrap.list}
+\alias{.unwrap.PackedSpatExtent2}
+\alias{.unwrap.PackedSpatVector2}
+\alias{.unwrap.data.table}
+\alias{.unwrap.PackedSpatVector}
 \title{Deal with class for saving to and loading from Cache or Disk}
 \usage{
 .wrap(
   obj,
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
+  cacheId = NULL,
   ...
 )
 
 \method{.wrap}{list}(
   obj,
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
+  cacheId = NULL,
   ...
 )
 
 \method{.wrap}{environment}(
   obj,
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
+  cacheId = NULL,
   ...
 )
 
 \method{.wrap}{default}(
   obj,
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
+  outputObjects = NULL,
+  cacheId = NULL,
   ...
 )
 
 \method{.unwrap}{default}(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -65,8 +74,8 @@
 
 .unwrap(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -74,8 +83,8 @@
 
 \method{.unwrap}{environment}(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -83,8 +92,44 @@
 
 \method{.unwrap}{list}(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
+  drv = getDrv(getOption("reproducible.drv", NULL)),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
+
+\method{.unwrap}{PackedSpatExtent2}(
+  obj,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
+  drv = getDrv(getOption("reproducible.drv", NULL)),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
+
+\method{.unwrap}{PackedSpatVector2}(
+  obj,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
+  drv = getDrv(getOption("reproducible.drv", NULL)),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
+
+\method{.unwrap}{data.table}(
+  obj,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
+  drv = getDrv(getOption("reproducible.drv", NULL)),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
+
+\method{.unwrap}{PackedSpatVector}(
+  obj,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -98,10 +143,10 @@ This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{preDigest}{The list of \code{preDigest} that comes from \code{CacheDigest} of an object}
 
-\item{drv}{if using a database backend, drv must be an object that
-inherits from DBIDriver e.g., from package RSQLite, e.g., SQLite}
+\item{drv}{If using a database backend, \code{drv} must be an object that
+inherits from \code{DBIDriver} (e.g., \code{RSQLite::SQLite}).}
 
-\item{conn}{an optional DBIConnection object, as returned by dbConnect().}
+\item{conn}{an optional \code{DBIConnection} object, as returned by \code{dbConnect()}.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
@@ -112,9 +157,10 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}
 
-\item{...}{Arguments passed to methods; default does not use anything in \code{...}.}
+\item{cacheId}{Used strictly for messaging. This should be the cacheId of the object being recovered.
+Default is \code{NULL}.}
 
-\item{cacheId}{Used strictly for messaging. This should be the cacheId of the object being recovered.}
+\item{...}{Arguments passed to methods; default does not use anything in \code{...}.}
 }
 \value{
 Returns an object that can be saved to disk e.g., via \code{saveRDS}.

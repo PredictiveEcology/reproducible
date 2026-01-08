@@ -1,50 +1,51 @@
 # Platform
 
-|field    |value                                   |
-|:--------|:---------------------------------------|
-|version  |R version 4.4.2 (2024-10-31)            |
-|os       |Ubuntu 22.04.5 LTS                      |
-|system   |x86_64, linux-gnu                       |
-|ui       |RStudio                                 |
-|language |(EN)                                    |
-|collate  |en_CA.UTF-8                             |
-|ctype    |en_CA.UTF-8                             |
-|tz       |America/Vancouver                       |
-|date     |2024-12-11                              |
-|rstudio  |2024.04.2+764 Chocolate Cosmos (server) |
-|pandoc   |2.9.2.1 @ /usr/bin/pandoc               |
+|field    |value                                                                                                                                                                                     |
+|:--------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|version  |R version 4.5.2 (2025-10-31 ucrt)                                                                                                                                                         |
+|os       |Windows 11 x64 (build 22631)                                                                                                                                                              |
+|system   |x86_64, mingw32                                                                                                                                                                           |
+|ui       |RStudio                                                                                                                                                                                   |
+|language |(EN)                                                                                                                                                                                      |
+|collate  |English_Canada.utf8                                                                                                                                                                       |
+|ctype    |English_Canada.utf8                                                                                                                                                                       |
+|tz       |America/Vancouver                                                                                                                                                                         |
+|date     |2026-01-07                                                                                                                                                                                |
+|rstudio  |2025.09.1+401 Cucumberleaf Sunflower (desktop)                                                                                                                                            |
+|pandoc   |NA                                                                                                                                                                                        |
+|quarto   |ERROR: Unknown command "TMPDIR=C:/Eliot/AppData/Local/Temp/RtmpUtpIpm/file8124108c343e". Did you mean command "install"? @ C:\Users\emcintir\AppData\Local\Programs\Quarto\bin\quarto.exe |
 
 # Dependencies
 
 |package      |old    |new    |Δ  |
 |:------------|:------|:------|:--|
-|reproducible |2.1.2  |2.1.2  |NA |
-|cli          |3.6.3  |3.6.3  |NA |
-|cpp11        |0.5.1  |0.5.1  |NA |
-|crayon       |1.5.3  |1.5.3  |NA |
-|data.table   |1.16.4 |1.16.4 |NA |
-|digest       |0.6.37 |0.6.37 |NA |
-|filelock     |1.0.3  |1.0.3  |NA |
-|fpCompare    |0.2.4  |0.2.4  |NA |
-|fs           |1.6.5  |1.6.5  |NA |
-|lobstr       |1.1.2  |1.1.2  |NA |
-|prettyunits  |1.2.0  |1.2.0  |NA |
-|rlang        |1.1.4  |1.1.4  |NA |
+|reproducible |2.1.2  |3.0.0  |*  |
+|cli          |3.6.5  |3.6.5  |   |
+|cpp11        |0.5.2  |0.5.2  |   |
+|crayon       |1.5.3  |1.5.3  |   |
+|data.table   |1.18.0 |1.18.0 |   |
+|digest       |0.6.39 |0.6.39 |   |
+|filelock     |1.0.3  |1.0.3  |   |
+|fpCompare    |0.2.4  |0.2.4  |   |
+|fs           |1.6.6  |1.6.6  |   |
+|lobstr       |1.1.3  |1.1.3  |   |
+|prettyunits  |1.2.0  |1.2.0  |   |
+|rlang        |1.1.6  |1.1.6  |   |
 
 # Revdeps
 
-## Failed to check (10)
+## Failed to check (2)
 
-|package           |version     |error |warning |note |
-|:-----------------|:-----------|:-----|:-------|:----|
-|CBMutils          |?           |      |        |     |
-|fireSenseUtils    |?           |      |        |     |
-|LandR             |?           |      |        |     |
-|LandWebUtils      |?           |      |        |     |
-|PSPclean          |?           |      |        |     |
-|scfmutils         |?           |      |        |     |
-|SpaDES            |2.0.11.9000 |1     |        |     |
-|SpaDES.config     |?           |      |        |     |
-|SpaDES.core       |?           |      |        |     |
-|SpaDES.experiment |?           |      |        |     |
+|package      |version |error     |warning |note |
+|:------------|:-------|:---------|:-------|:----|
+|[SpaDES.core](failures.md#spadescore)|2.1.8   |-1 __+1__ |        |     |
+|[SpaDES.tools](failures.md#spadestools)|2.0.9   |__+1__    |        |     |
+
+## All (3)
+
+|package      |version |error     |warning |note |
+|:------------|:-------|:---------|:-------|:----|
+|SpaDES       |2.0.11  |          |        |     |
+|[SpaDES.core](failures.md#spadescore)|2.1.8   |-1 __+1__ |        |     |
+|[SpaDES.tools](failures.md#spadestools)|2.0.9   |__+1__    |        |     |
 

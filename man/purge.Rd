@@ -17,10 +17,9 @@
 \arguments{
 \item{checkSums}{A checksums file, e.g., created by Checksums(..., write = TRUE)}
 
-\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing
-\code{CHECKSUMS.txt} file and
-\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
-\code{CHECKSUMS.txt} file. Other options, see details.}
+\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing \code{CHECKSUMS.txt} file and
+\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire \code{CHECKSUMS.txt} file.
+Other options, see details.}
 
 \item{targetFile}{Character string giving the filename (without relative or
 absolute path) to the eventual file

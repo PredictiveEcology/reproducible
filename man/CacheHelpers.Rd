@@ -25,7 +25,7 @@ loadFromCache(
   cacheId,
   preDigest,
   fullCacheTableForObj = NULL,
-  format = getOption("reproducible.cacheSaveFormat", "rds"),
+  cacheSaveFormat = getOption("reproducible.cacheSaveFormat", .rdsFormat),
   .functionName = NULL,
   .dotsFromCache = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
@@ -40,7 +40,9 @@ rmFromCache(
   cacheId,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  format = getOption("reproducible.cacheSaveFormat", "rds")
+  cacheSaveFormat = getOption("reproducible.cacheSaveFormat", .rdsFormat),
+  verbose,
+  ...
 )
 
 CacheDBFile(
@@ -54,8 +56,9 @@ CacheStorageDir(cachePath = getOption("reproducible.cachePath"))
 CacheStoredFile(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
-  format = NULL,
-  obj = NULL
+  cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
+  obj = NULL,
+  readOnly = FALSE
 )
 
 CacheDBTableName(
@@ -67,7 +70,8 @@ CacheIsACache(
   cachePath = getOption("reproducible.cachePath"),
   create = FALSE,
   drv = getDrv(getOption("reproducible.drv", NULL)),
-  conn = getOption("reproducible.conn", NULL)
+  conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose")
 )
 }
 \arguments{
@@ -76,7 +80,7 @@ the database file(s)}
 
 \item{drv}{A driver, passed to \code{dbConnect}}
 
-\item{conn}{an optional DBIConnection object, as returned by dbConnect().}
+\item{conn}{an optional \code{DBIConnection} object, as returned by \code{dbConnect()}.}
 
 \item{force}{Logical. Should it create a cache in the \code{cachePath},
 even if it already exists, overwriting.}
@@ -94,9 +98,9 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{fullCacheTableForObj}{The result of \code{showCache}, but subsetted for only
 the \code{cacheId} being loaded or selected}
 
-\item{format}{The text string representing the file extension used normally by
-different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
-to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
+\item{cacheSaveFormat}{The text string representing the file extension used normally by
+different save formats; currently only \code{"rds"} or \code{"qs"} (which now uses \code{qs2} package.
+Defaults to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 
 \item{.functionName}{Optional. Used for messaging when this function is called from \code{Cache}}
 
@@ -108,8 +112,16 @@ to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 
 \item{ifNot}{character (or NULL) specifying the return value to use if \code{elem} not matched}
 
+\item{...}{Arguments passed to \code{FUN}, if \code{FUN} is not an expression.}
+
 \item{obj}{The optional object that is of interest; it may have an attribute "saveRawFile"
 that would be important.}
+
+\item{readOnly}{Logical. Only relevant during transition from \code{qs} to \code{qs2}.
+Essentially, during transition, \code{qs} objects can be read, but not saved.
+If \code{TRUE} then the \code{CacheStoredFile} can return a \code{.qs} file; if \code{FALSE},
+then this will not be able to return \code{qs}; instead it will return \code{qs2}
+files.}
 
 \item{create}{Logical. Currently only affects non \pkg{RSQLite} default drivers.
 If \code{TRUE} and there is no Cache database, the function will create one.}

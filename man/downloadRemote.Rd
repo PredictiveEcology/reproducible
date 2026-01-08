@@ -19,6 +19,7 @@ downloadRemote(
   preDigest,
   alsoExtract = "similar",
   verbose = getOption("reproducible.verbose", 1),
+  .callingEnv = parent.frame(),
   ...
 )
 }
@@ -66,13 +67,12 @@ To prevent repeated downloads in different locations, the user can also set
 search for the file before attempting to download. Default for that option is
 \code{NULL} meaning do not search locally.}
 
-\item{overwrite}{Logical. Should downloading and all the other actions occur
-even if they pass the checksums or the files are all there.}
+\item{overwrite}{Logical. Passed to \code{writeTo} (possibly inside \code{postProcess}) and \code{postProcess}.}
 
 \item{needChecksums}{Logical indicating whether to generate checksums. ## TODO: add overwrite arg to the function?}
 
 \item{.tempPath}{Optional temporary path for internal file intermediate steps.
-Will be cleared on.exit from this function.}
+Will be cleared \code{on.exit} from this function.}
 
 \item{preDigest}{The list of \code{preDigest} that comes from \code{CacheDigest} of an object}
 
@@ -89,6 +89,9 @@ only those to be extracted. See table in \code{\link[=preProcess]{preProcess()}}
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{.callingEnv}{The environment where the function was called from. Used to find
+objects, if necessary.}
 
 \item{...}{Additional arguments passed to
 \code{\link[=postProcess]{postProcess()}} and \code{\link[=Cache]{Cache()}}.
