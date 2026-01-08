@@ -1,6 +1,6 @@
 #' Create a list with names from object names
 #'
-#' This is a convenience wrapper around `newList <- list(a = 1); names(newList) <- "a"`.
+#' This is a convenience wrapper around `a <- 1; newList <- list(a); names(newList) <- "a"`.
 #'
 #' @param ... Any elements to add to a list, as in `base::list`
 #' @details

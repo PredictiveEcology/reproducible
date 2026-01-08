@@ -218,7 +218,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
   if (isTRUE(verboseLevel <= verbose)) {
 
-    if (getOption("reproducible.useCli", TRUE)) {
+    # if (getOption("reproducible.useCli", TRUE)) {
       mess <- paste0(..., collapse = "")
       # if (grepl("cacheIdInCache", mess)) browser()
       indentNum <- indent
@@ -254,80 +254,80 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
       message(mess)
 
-    } else {
-
-      needCli <- FALSE
-      if (!is.null(colour)) {
-        if (is.character(colour)) {
-          needCli <- TRUE
-        }
-      }
-      mess <- paste0(..., collapse = "")
-      if (!is.null(indent)) {
-        mess <- paste0(indent, mess)
-      }
-
-      # do line wrap with hanging indent
-      maxLineLngth <- getOption("width") - 10 # 10 is a "buffer" for Rstudio miscalculations
-      chars <- nchar(mess)
-      if (chars > maxLineLngth) {
-        splitOnSlashN <- strsplit(mess, "\n")
-        newMess <- lapply(splitOnSlashN, function(m) {
-          anyOneLine <- any(nchar(m) > maxLineLngth)
-          if (anyOneLine) {
-            messSplit <- strsplit(mess, split = " ")
-            remainingChars <- chars
-            messBuild <- character()
-            while (remainingChars > maxLineLngth) {
-              whNewLine <- which(cumsum(nchar(messSplit[[1]]) + 1) >= maxLineLngth)[1] - 1
-              if (anyNA(whNewLine)) browser()
-
-              keepInd <- 1:whNewLine
-              newMess <- paste(messSplit[[1]][keepInd], collapse = " ")
-              messBuild <- c(messBuild, newMess)
-              if (is.null(indent)) {
-                # if it starts with a space -- that is the indent that is needed
-                if (startsWith(newMess, " ")) {
-                  indent <<- sub("^( +).+", "\\1", newMess)
-                  if (grepl("^ +\\.\\.\\.", newMess)) {
-                    indent <<- paste0(indent, " ")
-                  }
-                } else {
-                  indent <<- ""
-                }
-
-              }
-              messSplit[[1]] <- messSplit[[1]][-keepInd]
-              remainingChars <- remainingChars - nchar(newMess) - 1
-              hangingIndent <<- TRUE
-            }
-            newMess <- paste(messSplit[[1]], collapse = " ")
-            m <- c(messBuild, newMess)
-          }
-          m
-        })
-        mess <- unlist(newMess)
-        mess <- paste0(.addSlashNToAllButFinalElement(mess), collapse = "")
-      }
-      hi <- if (isTRUE(hangingIndent)) paste0(indent, .message$BecauseOfA) else indent
-      if (any(grepl("\n", mess))) {
-        mess <- gsub("\n *", paste0("\n", hi), mess)
-      }
-      if (any(grepl(.spaceTmpChar, mess)))
-        mess <- gsub(.spaceTmpChar, " ", mess)
-      if (needCli && requireNamespace("cli", quietly = TRUE)) {
-        mess <- lapply(strsplit(mess, "\n"), function(m)
-          paste0(cliCol(colour)(m)))[[1]]
-        mess <- .addSlashNToAllButFinalElement(mess)
-        message(mess, appendLF = appendLF)
-      } else {
-        if (needCli && !isTRUE(.pkgEnv$.checkedCli) && !.requireNamespace("cli")) {
-          message("To add colours to messages, install.packages('cli')", appendLF = appendLF)
-          .pkgEnv$.checkedCli <- TRUE
-        }
-        message(mess, appendLF = appendLF)
-      }
-    }
+    # } else {
+    #
+    #   needCli <- FALSE
+    #   if (!is.null(colour)) {
+    #     if (is.character(colour)) {
+    #       needCli <- TRUE
+    #     }
+    #   }
+    #   mess <- paste0(..., collapse = "")
+    #   if (!is.null(indent)) {
+    #     mess <- paste0(indent, mess)
+    #   }
+    #
+    #   # do line wrap with hanging indent
+    #   maxLineLngth <- getOption("width") - 10 # 10 is a "buffer" for Rstudio miscalculations
+    #   chars <- nchar(mess)
+    #   if (chars > maxLineLngth) {
+    #     splitOnSlashN <- strsplit(mess, "\n")
+    #     newMess <- lapply(splitOnSlashN, function(m) {
+    #       anyOneLine <- any(nchar(m) > maxLineLngth)
+    #       if (anyOneLine) {
+    #         messSplit <- strsplit(mess, split = " ")
+    #         remainingChars <- chars
+    #         messBuild <- character()
+    #         while (remainingChars > maxLineLngth) {
+    #           whNewLine <- which(cumsum(nchar(messSplit[[1]]) + 1) >= maxLineLngth)[1] - 1
+    #           if (anyNA(whNewLine)) browser()
+    #
+    #           keepInd <- 1:whNewLine
+    #           newMess <- paste(messSplit[[1]][keepInd], collapse = " ")
+    #           messBuild <- c(messBuild, newMess)
+    #           if (is.null(indent)) {
+    #             # if it starts with a space -- that is the indent that is needed
+    #             if (startsWith(newMess, " ")) {
+    #               indent <<- sub("^( +).+", "\\1", newMess)
+    #               if (grepl("^ +\\.\\.\\.", newMess)) {
+    #                 indent <<- paste0(indent, " ")
+    #               }
+    #             } else {
+    #               indent <<- ""
+    #             }
+    #
+    #           }
+    #           messSplit[[1]] <- messSplit[[1]][-keepInd]
+    #           remainingChars <- remainingChars - nchar(newMess) - 1
+    #           hangingIndent <<- TRUE
+    #         }
+    #         newMess <- paste(messSplit[[1]], collapse = " ")
+    #         m <- c(messBuild, newMess)
+    #       }
+    #       m
+    #     })
+    #     mess <- unlist(newMess)
+    #     mess <- paste0(.addSlashNToAllButFinalElement(mess), collapse = "")
+    #   }
+    #   hi <- if (isTRUE(hangingIndent)) paste0(indent, .message$BecauseOfA) else indent
+    #   if (any(grepl("\n", mess))) {
+    #     mess <- gsub("\n *", paste0("\n", hi), mess)
+    #   }
+    #   if (any(grepl(.spaceTmpChar, mess)))
+    #     mess <- gsub(.spaceTmpChar, " ", mess)
+    #   if (needCli && requireNamespace("cli", quietly = TRUE)) {
+    #     mess <- lapply(strsplit(mess, "\n"), function(m)
+    #       paste0(cliCol(colour)(m)))[[1]]
+    #     mess <- .addSlashNToAllButFinalElement(mess)
+    #     message(mess, appendLF = appendLF)
+    #   } else {
+    #     if (needCli && !isTRUE(.pkgEnv$.checkedCli) && !.requireNamespace("cli")) {
+    #       message("To add colours to messages, install.packages('cli')", appendLF = appendLF)
+    #       .pkgEnv$.checkedCli <- TRUE
+    #     }
+    #     message(mess, appendLF = appendLF)
+    #   }
+    # }
   }
 
 }
