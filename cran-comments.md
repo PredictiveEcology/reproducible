@@ -3,6 +3,9 @@
 This is major package update that includes a rewrite of the internals of a main function of the 
 package, Cache. This change improves maintainability going forward, and has many enhancements.
 
+It also deals with the soon-to-be removed package qs from CRAN. This was a Suggested 
+package.
+
 See `NEWS.md` for a full list of changes.
 
 ## Test environments
