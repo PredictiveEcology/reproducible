@@ -59,7 +59,7 @@ RCurlMess <- paste0(
   "of internet connection"
 )
 
-
+# This allows mocking in the tests; do not delete
 .readline <- function(prompt) {
   readline(prompt)
 }

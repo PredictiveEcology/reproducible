@@ -1,5 +1,22 @@
 # reproducible 3.0.0
 
+* the package `qs` removed as an option for `CacheSaveFormat`. The user can stay with 
+  declaring `options(reproducible.CacheSaveFormat = "qs")`, but it will use `qs2`. `qs`
+  is being removed from CRAN;
+* MacOS: key fixes for paths that have created longstanding failures;
+* clearing out of stale code due to Cache rewrite;
+* numerous Issues addressed;
+* fixes for vignettes on especially MacOS or older R with respect to `terra::project` issues;
+* improved handling of archives when e.g., `archive` package is not installed or is not
+  able to deal with the compression algorithm (e.g., Deflate64 from Windows);
+* `showCache` now uses a custom memoising internally. Large Cache repositories (>500GB) were
+  slow to `showCache`. Because it is memoised, this only affects 2nd and subsequent calls
+  in an R session. The first will still be slower.
+* `CacheGeo` handles a few more cases;
+* `isGoogleDriveDirectory` handles more cases correctly (i.e., works now if it is a Google ID);
+* minor methods changes e.g., .wrap and .unwrap get defaults for some arguments;
+* near complete rewrite of `Cache` so it is simpler and more robust. The main function is now 200 
+  lines, instead of almost 700; internals all cleaner and maintainable;
 * new option `reproducible.leaveOnDisk` which is only relevant for `postProcess` with 
   objects that are sometimes disk-backed and sometimes memory-based (like `SpatRaster` or `Raster`).
   The default `terra` and `raster` behaviour (which creates unpredictable behaviour, with 
@@ -11,8 +28,6 @@
   is much faster for large cache databases, after a first time called.
 * several formerly unexported functions have been converted to `dot` functions and are now exported
   e.g., for use in other packages;
-* near complete rewrite of `Cache` so it is simpler and more robust. The main function is now 200 
-  lines, instead of almost 700;
 * In addition to full rewrites, numerous simplifications throughout code that is still being used;
 * There are sufficient changes to the digesting that a user's Cache repository will likely
   be all or mostly rerun with these package changes. These changes to digesting were required
