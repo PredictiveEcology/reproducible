@@ -263,8 +263,14 @@ CacheGeo <- function(targetFile = NULL,
     }
     colnames(existingObj) <- cn
 
+    newCRS <- unique(existingObj[["crs"]])[[1]]
+    if (length(newCRS) > 1)
+      stop("The file on googledrive has more than one crs; currently this is not allowed.",
+           " You can try rebuilding the data.frame with a single crs, assigned as a list column ",
+           "in the data.frame")
     existingObjSF <- if (is(existingObj, "sf")) existingObj else sf::st_as_sf(existingObj)
     existingObjSF <- update_bbox(existingObjSF)
+    suppressWarnings(sf::st_crs(existingObjSF) <- newCRS)
     existingObjSFOrig <- existingObjSF
     if (!missing(domain)) {
       #must be sf for st_within
