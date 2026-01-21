@@ -1775,7 +1775,7 @@ currentFilesToChecksumsTable <- function(currentFiles, nonCurrentFiles = NULL, v
 }
 
 checkSFWebPage <- function(funPoss, fileExt, feKnown, verbose) {
-  if (requireNamespace("rvest")) {
+  if (.requireNamespace("rvest", stopOnFALSE = FALSE)) {
     sfURL <- "https://r-spatial.github.io/sf/articles/sf2.html#guessing-a-driver-for-output"
     tbls_ls <- try({rvest::read_html(sfURL) |>
         rvest::html_nodes("table")  |>
@@ -1796,8 +1796,10 @@ checkSFWebPage <- function(funPoss, fileExt, feKnown, verbose) {
 
   } else {
     messagePrepInputs("`reproducible` does not know the file type passed.\n",
-                      "Please run `install.packages('rvest')` to load other known ",
-                      "file types that the `sf` package can load.",
+                      "(see reproducible:::.fileExtsKnown() for `prepInputs` known types)\n",
+                      "Please run `install.packages('rvest')` to load a broader ",
+                      "set of file types that R knows how to read. ",
+
                       verbose = verbose + 1)
   }
   funPoss
