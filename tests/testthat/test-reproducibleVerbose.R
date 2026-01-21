@@ -6,15 +6,8 @@ test_that("test reproducible.verbose", {
   expect_is(.reproEnv$cacheTimings, "data.frame") ##
   colVals <- c("Hashing", "Running rnorm", "Saving to cachePath", "Whole Cache call")
   colNams <- c("functionName", "component", "elapsedTime", "units")
-  if (getRversion() >= "4.2") { # earlier testthat doesn't have expect_in
-    expect_in(.reproEnv$cacheTimings$component, colVals)
-    expect_in(names(.reproEnv$cacheTimings), colNams)
-  } # else { # earlier fails this test on GA; can't reproduce
-  #   if ((isMac() || isWindows())) { # isn't passing on linux on GA; can't test why
-  #     expect_true(NROW(.reproEnv$cacheTimings) == 4) # TODO -- doesn't pass on R 4.1.3
-  #     expect_true(NCOL(.reproEnv$cacheTimings) == 4) ##
-  #   }
-  # }
+  expect_in(.reproEnv$cacheTimings$component, colVals)
+  expect_in(names(.reproEnv$cacheTimings), colNams)
 
   # Test Path class objects
   a <- sample(1e4)

@@ -1131,7 +1131,6 @@ test_that("preProcess doesn't work", {
 
 test_that("prepInputs when fun = NA", {
   skip_on_cran()
-  skip_if_not(getRversion() > "3.3.0")
 
   testInit(
     c("sf", "terra"),
@@ -1597,7 +1596,6 @@ test_that("lightweight tests 2 for code coverage", {
 test_that("options inputPaths", {
   skip_on_cran()
   skip_if_not_installed("geodata")
-  skip_if_not(getRversion() > "4.1.3") ## geodata::gadm seems to time out on R <= 4.1.3
 
   testInit(
     c("terra", "geodata"),
@@ -1608,9 +1606,6 @@ test_that("options inputPaths", {
   f <- formals3(prepInputs)
   getDataFn <- getDataFn # not exported from reproducible; can access here, not in the dlFun
 
-  if (getRversion() <= "3.3.0") {
-    skip("Doesn't work on R 3.3.0")
-  } # Not sure why this fails on 3.3.0
   withr::local_options("reproducible.inputPaths" = NULL)
   withr::local_options("reproducible.inputPathsRecursive" = FALSE)
 
@@ -1928,7 +1923,7 @@ test_that("rasters aren't properly resampled", {
     )
   }) # about "raster layer has integer values"
 
-  if (getRversion() >= "4.1" || !isWindows()) {
+  if (!isWindows()) {
     expect_true(dataType2(out2) %in% c("INT2S")) # because of "bilinear", it can become negative
 
     rrr1 <- terra::rast(terra::ext(0, 20, 0, 20), resolution = 1, vals = runif(400, 0, 1))
