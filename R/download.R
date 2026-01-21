@@ -383,20 +383,23 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
     isLargeFile <- ifelse(is.null(fs), FALSE, fs > 1e6)
 
     # download_with_speed(url, local_path = destFile)
-    downloadCall <-
-      quote(
-        download_resumable_httr2(
-          url, local_path = destFile,
-          gdriveDetails = list(id = googledrive::as_id(url),
-                               drive_resource = attr(downloadFilename, "drive_resource"))))
-    # downloadCall <- quote(drive_downloadWProgress(url, local_path = destFile))
-    # downloadCall <- quote(
-    #   googledrive::drive_download(
-    #     googledrive::as_id(url),
-    #     path = destFile,
-    #     type = type,
-    #     overwrite = overwrite, verbose = TRUE)
-    # )
+    if (.requireNamespace("httr2", stopOnFALSE = FALSE)) {
+      downloadCall <-
+        quote(
+          download_resumable_httr2(
+            url, local_path = destFile,
+            gdriveDetails = list(id = googledrive::as_id(url),
+                                 drive_resource = attr(downloadFilename, "drive_resource"))))
+      # downloadCall <- quote(drive_downloadWProgress(url, local_path = destFile))
+    } else {
+      downloadCall <- quote(
+        googledrive::drive_download(
+          googledrive::as_id(url),
+          path = destFile,
+          type = type,
+          overwrite = overwrite, verbose = TRUE)
+      )
+    }
 
     if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&
         !isFALSE(getOption("reproducible.futurePlan"))) {

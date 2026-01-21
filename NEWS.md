@@ -1,3 +1,7 @@
+# reproducible 3.0.1
+
+* during download from googledrive, if httr2 is not installed, now does not fail (#456)
+
 # reproducible 3.0.0
 
 * the package `qs` removed as an option for `CacheSaveFormat`. The user can stay with 
