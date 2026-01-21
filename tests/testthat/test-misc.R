@@ -315,7 +315,6 @@ test_that("test miscellaneous fns (part 3)", {
 })
 
 test_that("test set.randomseed", {
-  skip_if(getRversion() < "4.2") # Can't figure out why this doesn't wok
   testInit()
 
   N <- 1e4

@@ -1280,7 +1280,6 @@ test_that("Cache the dots; .cacheExtra", {
 
 test_that("change to new capturing of FUN & base pipe", {
   testInit(opts = list(reproducible.verbose = 5))
-  skip_if(getRversion() < "4.2.0")
 
   Nrand2 <- Nrand <- 1e6
   mess0 <- capture_messages({
@@ -1430,17 +1429,13 @@ test_that("test cache with new approach to match.call", {
   a[[14]] <- Cache(rnorm(1, bbb - bbb, get("bbb", inherits = FALSE)))
   a[[15]] <- Cache(rnorm(sd = 1, 0, n = get("bbb", inherits = FALSE))) # change order
   a[[16]] <- Cache(rnorm(1, sd = get("ee", inherits = FALSE)$qq), mean = 0)
-  if (isTRUE(getRversion() >= "4.1.0")) {
-    a[[17]] <- eval(parse(text = "b$fun(1) |> Cache()"))
-  }
-  if (isTRUE(getRversion() >= "4.2.0")) {
-    ss <- '{"bbb" |>
+  a[[17]] <- eval(parse(text = "b$fun(1) |> Cache()"))
+  ss <- '{"bbb" |>
       parse(text = _) |>
       eval() |>
       rnorm()} |>
     Cache()'
-    a[[18]] <- eval(parse(text = ss))
-  }
+  a[[18]] <- eval(parse(text = ss))
   expect_identical(1L, length(unique(unlist(a))))
   # expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
   # for (i in 2:NROW(a)) {
@@ -1462,9 +1457,7 @@ test_that("test cache with new approach to match.call", {
     a[[9]] <- Cache(quote(fun(1)))
     # expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
 
-    if (isTRUE(getRversion() >= "4.1.0")) {
-      a[[9]] <- eval(parse(text = "b$fun(1) |> Cache()"))
-    }
+    a[[9]] <- eval(parse(text = "b$fun(1) |> Cache()"))
 
     expect_identical(1L, length(unique(unlist(a))))
 
@@ -1782,11 +1775,7 @@ test_that("cacheId = 'previous'", {
   b <- rnorm(3) |> Cache(.functionName = fnName)
   d <- rnorm(2) |> Cache(.functionName = fnName, cacheId = "previous")
   e <- rnorm(2) |> Cache(.functionName = fnName)
-  if (getRversion() >= "4.3.0") {
-    ## TODO: misc error on R 4.2 and 4.1:
-    ## Error: `all.equalWONewCache(b, d) is not TRUE`
-    expect_true(all.equalWONewCache(b, d))
-  }
+  expect_true(all.equalWONewCache(b, d))
   expect_false(isTRUE(all.equalWONewCache(e, d)))
 
   # cacheId = "previous" returns normal if there is no previous
@@ -1846,13 +1835,8 @@ test_that("simple userTags", {
   sc2 <- showCache(userTags = "sample")
   sc1Tags <- vapply(strsplit(ut2, split = ":"), tail, 1, FUN.VALUE = character(1))
   sc2Tags <- vapply(strsplit(ut3, split = ":"), tail, 1, FUN.VALUE = character(1))
-  if (getRversion() < "4.2") { # apparently expect_in was not available in testthat in R <= 4.1.3
-    expect_true(all(sc1Tags %in% sc1$tagValue))
-    expect_true(all(sc2Tags %in% sc2$tagValue))
-  } else {
-    expect_in(sc1Tags, sc1$tagValue)
-    expect_in(sc2Tags, sc2$tagValue)
-  }
+  expect_in(sc1Tags, sc1$tagValue)
+  expect_in(sc2Tags, sc2$tagValue)
 
 
 

@@ -106,24 +106,6 @@ test_that(
 
     testInit("terra", needInternet = TRUE)
 
-    # extractSystemCallPath <- .archiveExtractBinary()
-    #
-    # if (is.null(extractSystemCallPath)) {
-    #   noisyOutput <- capture.output({
-    #     warn <- capture_warnings({
-    #       expect_error({
-    #         testRar <- reproducible::prepInputs(
-    #           url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
-    #           destinationPath = tmpdir
-    #         )
-    #       })
-    #     })
-    #   })
-    # } else {
-
-    if (isWindows() && getRversion() < "4.3") {
-      skip("archive pkg on Windows 4.2.3 fails on rar")
-    }
     noisyOutput <- capture.output({
       testRar <- reproducible::prepInputs(
         url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
@@ -148,21 +130,6 @@ test_that(
     testInit("terra", needInternet = TRUE)
     url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
 
-    # extractSystemCallPath <- .archiveExtractBinary()
-    # if (is.null(extractSystemCallPath)) {
-    #   noisyOutput <- capture.output(
-    #     expect_error({
-    #       testRar2 <- reproducible::prepInputs(
-    #         url = url,
-    #         targetFile = "rasterTOtestRAR.tif",
-    #         destinationPath = tmpdir
-    #       )
-    #     })
-    #   )
-    # } else {
-    if (isWindows() && getRversion() < "4.3") {
-      skip("archive pkg on Windows 4.2.3 fails on rar")
-    }
     noisyOutput <- capture.output({
       testRar2 <- reproducible::prepInputs(
         url = url,
@@ -188,23 +155,6 @@ test_that(
     testInit("terra", needInternet = TRUE)
 
     url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
-
-    # extractSystemCallPath <- .archiveExtractBinary()
-    # if (is.null(extractSystemCallPath)) {
-    #   noisyOutput <- capture.output(
-    #     expect_error({
-    #       testRar3 <- reproducible::prepInputs(
-    #         url = url,
-    #         archive = "nestedRarTxtFiles.rar",
-    #         targetFile = "rasterTOtestRAR.tif",
-    #         destinationPath = tmpdir
-    #       )
-    #     })
-    #   )
-    # } else {
-    if (isWindows() && getRversion() < "4.3") {
-      skip("archive pkg on Windows 4.2.3 fails on rar")
-    }
 
     noisyOutput <- capture.output({
       testRar3 <- reproducible::prepInputs(

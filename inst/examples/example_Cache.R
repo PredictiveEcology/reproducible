@@ -39,28 +39,22 @@ usingPipe2 <-
       eval() |>
       rnorm()} |>
     Cache()'
-if (getRversion() >= "4.1") {
-  a[[9]] <- eval(parse(text = usingPipe1)) # recovers cached copy
-}
-if (getRversion() >= "4.2") { # uses the _ placeholder; only available in R >= 4.2
-  a[[18]] <- eval(parse(text = usingPipe2)) # recovers cached copy
-}
+a[[9]] <- eval(parse(text = usingPipe1)) # recovers cached copy
+a[[18]] <- eval(parse(text = usingPipe2)) # recovers cached copy
 
 length(unique(a)) == 1 #  all same
 
 ### Pipe -- have to use { } or else only final function is Cached
-if (getRversion() >= "4.1") {
-  b1a <- 'sample(1e5, 1) |> rnorm() |> Cache()'
-  b1b <- 'sample(1e5, 1) |> rnorm() |> Cache()'
-  b2a <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
-  b2b <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
-  b1a <- eval(parse(text = b1a))
-  b1b <- eval(parse(text = b1b))
-  b2a <- eval(parse(text = b2a))
-  b2b <- eval(parse(text = b2b))
-  all.equal(b1a, b1b) # Not TRUE because the sample is run first
-  all.equal(b2a, b2b) # TRUE because of {  }, sample is not run
-}
+b1a <- 'sample(1e5, 1) |> rnorm() |> Cache()'
+b1b <- 'sample(1e5, 1) |> rnorm() |> Cache()'
+b2a <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
+b2b <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
+b1a <- eval(parse(text = b1a))
+b1b <- eval(parse(text = b1b))
+b2a <- eval(parse(text = b2a))
+b2b <- eval(parse(text = b2b))
+all.equal(b1a, b1b) # Not TRUE because the sample is run first
+all.equal(b2a, b2b) # TRUE because of {  }, sample is not run
 
 #########################
 # Advanced examples

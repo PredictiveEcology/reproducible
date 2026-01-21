@@ -515,52 +515,28 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
   needDwnFl <- TRUE # this will try download.file if no httr2 or httr2 fails
   # R version 4.1.3 doesn't have httr2 that can do these steps; httr2 is too old, I believe
 
-  if (.requireNamespace("httr") && .requireNamespace("curl") && getRversion() < "4.2") {
-    ua <- httr::user_agent(getOption("reproducible.useragent"))
-    filesize <- as.numeric(httr::HEAD(url)$headers$`content-length`)
+  if (.requireNamespace("httr2") && .requireNamespace("curl")) {
     for (i in 1:2) {
-      request <- suppressWarnings(
-        ## TODO: GET is throwing warnings
-        httr::GET(
-          url, ua, httr::progress(),
-          httr::write_disk(destFile, overwrite = TRUE)
-        ) ## TODO: overwrite?
-      )
-      filesizeDownloaded <- file.size(destFile)
-      if ( (abs(filesizeDownloaded/filesize)) < 0.2) { # if it is <20% the size; consider it a fail
-        # There is only one example where this fails -- the presence of user_agent is the cause
-        #   prepInputs(url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
-        ua <- NULL
-      } else {
-        httr::stop_for_status(request)
+      req <- httr2::request(url)
+      if (i == 1) # only try on first run through, in case this is the cause of failure; which it is on some sites
+        req <- req |> httr2::req_user_agent(getOption("reproducible.useragent"))
+      if (verbose > 0) {
+        # req_progress is not in the binary httr2 available for R version 4.1.3; fails on CRAN checks
+        reqProgress <- get("req_progress", envir = asNamespace("httr2"))
+        req <- req |> reqProgress()
+      }
+
+      resp <- req |> httr2::req_url_query() |>
+        httr2::req_perform(path = destFile)
+      a <- httr2::resp_body_string(resp)
+      isRjcted <- grepl("Request Rejected", a)
+      if (!isTRUE(any(isRjcted)) && !httr2::resp_is_error(resp)) {
         needDwnFl <- FALSE
         break
       }
     }
   } else {
-    if (.requireNamespace("httr2") && .requireNamespace("curl") && getRversion() >= "4.2") {
-      for (i in 1:2) {
-        req <- httr2::request(url)
-        if (i == 1) # only try on first run through, in case this is the cause of failure; which it is on some sites
-          req <- req |> httr2::req_user_agent(getOption("reproducible.useragent"))
-        if (verbose > 0) {
-          # req_progress is not in the binary httr2 available for R version 4.1.3; fails on CRAN checks
-          reqProgress <- get("req_progress", envir = asNamespace("httr2"))
-          req <- req |> reqProgress()
-        }
-
-        resp <- req |> httr2::req_url_query() |>
-          httr2::req_perform(path = destFile)
-        a <- httr2::resp_body_string(resp)
-        isRjcted <- grepl("Request Rejected", a)
-        if (!isTRUE(any(isRjcted)) && !httr2::resp_is_error(resp)) {
-          needDwnFl <- FALSE
-          break
-        }
-      }
-    } else {
-      messagePreProcess("If downloads fail; please install httr2 and try again")
-    }
+    messagePreProcess("If downloads fail; please install httr2 and try again")
   }
 
   if (needDwnFl) {
