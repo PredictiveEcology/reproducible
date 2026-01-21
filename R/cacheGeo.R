@@ -270,7 +270,8 @@ CacheGeo <- function(targetFile = NULL,
            "in the data.frame")
     existingObjSF <- if (is(existingObj, "sf")) existingObj else sf::st_as_sf(existingObj)
     existingObjSF <- update_bbox(existingObjSF)
-    suppressWarnings(sf::st_crs(existingObjSF) <- newCRS)
+    if (!is.null(newCRS))
+      suppressWarnings(sf::st_crs(existingObjSF) <- newCRS)
     existingObjSFOrig <- existingObjSF
     if (!missing(domain)) {
       #must be sf for st_within
