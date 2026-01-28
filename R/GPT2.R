@@ -69,7 +69,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   if (is.null(cacheId) || is.na(cacheId)) {
     cacheChainDetails <- cacheChainingSetup(.cacheChaining, callList, omitArgs, verbose)
     toDigest <- doDigestPrepare(callList$new_call, cacheChainDetails$omitArgs, .cacheExtra)
-    keyFull <- try(doDigest(toDigest, callList$.functionName, .objects,
+    keyFull <- try2(doDigest(toDigest, callList$.functionName, .objects,
                             length, algo, quick, classOptions, times$CacheDigestStart,
                             verbose = verbose))
     if (is(keyFull, "try-error")) {
@@ -365,17 +365,16 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
   attr(matched_call, ".Cache")$method <- func
   attr(matched_call, ".Cache")$.functionName <- .functionName
 
-
   return(matched_call)
 }
 
 evaluate_args <- function(args, envir) {
   lapply(args, function(arg) {
     if (is.call(arg)) {
-      arg <- tryCatch(eval(arg, envir = envir), error = function(err) {
+      arg <- tryCatch2(eval(arg, envir = envir), error = function(err) {
         # If it's a call that cannot be evaluated, evaluate recursively
         fail <- "fail"
-        newPossArgMinus1 <- tryCatch(evaluate_args(as.list(arg[-1]), envir), error = function(err) {
+        newPossArgMinus1 <- tryCatch2(evaluate_args(as.list(arg[-1]), envir), error = function(err) {
           fail
         })
         if (!identical(newPossArgMinus1, fail)) {
@@ -781,7 +780,7 @@ userTagsListToDT <- function(cache_key, userTagsList) {
   theChars <- vapply(userTagsList, function(x) is.character(x) | is.logical(x), logical(1))
   if (any(!theChars)) {
     for (tc in which(!theChars))
-      userTagsList[[tc]] <- tryCatch(format(userTagsList[[tc]]), error = function(u) as.character())
+      userTagsList[[tc]] <- tryCatch2(format(userTagsList[[tc]]), error = function(u) as.character())
   }
   userTagsList <- utils::stack(userTagsList)
   metadataDT(cacheId = cache_key, tagKey = userTagsList$ind, tagValue = userTagsList$values)
@@ -1346,7 +1345,10 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
 
     cacheSaveFormatFail <- FALSE
     if (is.null(shownCache)) {
-      shownCache <- try(showCacheFast(cache_key, cachePath, dtFile = fe,
+      # shownCache <- showCacheFast(cache_key, cachePath, dtFile = fe,
+      #                                 # cacheSaveFormat = cacheSaveFormat,
+      #                                 drv = drv, conn = conn)
+      shownCache <- try2(showCacheFast(cache_key, cachePath, dtFile = fe,
                                       # cacheSaveFormat = cacheSaveFormat,
                                       drv = drv, conn = conn),
                         silent = TRUE)
@@ -1366,8 +1368,8 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     if (fromMemoise && !rerun) {
       output <- get(cache_key, envir = memoiseEnv(cachePath))
       # need to update the individual files in file-backed objects from the cache; can't use memoise
-      outputTestIntegrity <- try(output[1], silent = TRUE)
-      fns <- try(Filenames(output), silent = TRUE) # previous will only get some of the failures
+      outputTestIntegrity <- try2(output[1], silent = TRUE)
+      fns <- try2(Filenames(output), silent = TRUE) # previous will only get some of the failures
 
       if (isTRUE(is(outputTestIntegrity, "try-error")) || isTRUE(is(fns, "try-error"))) {
         # Some objects, especially Rcpp objects can get stale; rerun if this is the case
@@ -1383,7 +1385,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
         if (!is.null(fns) && length(fns) > 0) {
           fnsInOutputObjects <- intersect(names(fns), outputObjects)
           fns <- fns[fnsInOutputObjects]
-          fnsExistBefore <- try(file.exists(fns))
+          fnsExistBefore <- try2(file.exists(fns))
           fnsInCache <- file.path(CacheStorageDir(cachePath),
                                   basename(.prefix(fns, prefixCacheId(cacheId = cache_key))))
           hardLinkOrCopy(fnsInCache, fns, overwrite = TRUE, verbose = FALSE)
@@ -1396,13 +1398,18 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
 
     if (!fromMemoise || rerun || memoiseFail || cacheSaveFormatFail) {
       obj <- if (!is.null(cache_file)) {
-        try(loadFile(cache_file, cacheSaveFormat = cacheSaveFormat), silent = TRUE)
+        # loadFile(cache_file, cacheSaveFormat = cacheSaveFormat,
+        #              cacheId = cache_key, cachePath = cachePath, # in case it needs swapCacheFormat
+        #              drv = drv, conn = conn, verbose = verbose)
+        try2(loadFile(cache_file, cacheSaveFormat = cacheSaveFormat,
+                     cacheId = cache_key, cachePath = cachePath, # in case it needs swapCacheFormat
+                     drv = drv, conn = conn, verbose = verbose), silent = TRUE)
       } else {
         rerun <- TRUE
       }
-      output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
+
       if (isTRUE(changedSaveFormat)) {
-        swapTry <- try(swapCacheFileFormat(
+        swapTry <- try2(swapCacheFileFormat(
           wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
           cacheId = cache_key, sameCacheID = sameCacheID,
           userTags = paste0(shownCache$tagKey, ":", shownCache$tagValue),
@@ -1410,6 +1417,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
         cacheSaveFormat <- fileExt(cache_file_orig) # setdiff(.cacheSaveFormats, cacheSaveFormat)
         # rerun <- TRUE
       }
+      output <- try2(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
       if (is(obj, "try-error") || rerun || is(output, "try-error")) {
         messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
         otherFiles2 <- dir(CacheStorageDir(cachePath), pattern = cache_key, full.names = TRUE)
@@ -1684,7 +1692,7 @@ createSimilar <- function(similar, .functionName, verbose, devMode) {
 
 stopRcppError <- function(toDigest, .objects, length, algo, quick, classOptions) {
   ooo <- Map(obj = names(toDigest), function(obj)
-    try(.robustDigest(toDigest[[obj]], .objects = .objects,
+    try2(.robustDigest(toDigest[[obj]], .objects = .objects,
                       length, algo, quick, classOptions), silent = TRUE))
   ite <- Map(o = ooo, function(o) {
     is(o, "try-error")

@@ -460,7 +460,7 @@ setMethod(
       objsDT <- list()
       while(is(objsDT, "list")) {
         # filOutside <- character()
-        objsDT <- tryCatch(
+        objsDT <- tryCatch2(
           if (!is.null(cacheId)) {
             objsDT <- rbindlist(fill = TRUE, lapply(cacheId, function(fil) {
               # filOutside <<- fil
