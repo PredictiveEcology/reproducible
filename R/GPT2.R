@@ -1812,7 +1812,11 @@ cacheChainingPost <- function(detailed_key, outputFromEvaluate, cacheChainingOut
       fil <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheChainingFnDigest)
       needWrite <- TRUE
       if (file.exists(fil)) {
-        tmp <- loadFile(fil)
+        # browser() # what should 'cacheId' be --> detailed_key?
+        tmp <- loadFile(fil,
+                        # cacheId = cacheId, 
+                        cachePath = cachePath, # in case it needs swapCacheFormat
+                        drv = drv, conn = conn, verbose = verbose)
         userTags1 <- paste0(tmp$tagKey, ":", tmp$tagValue)
         userTags2 <- union(userTags, userTags1)
         if (identical(length(userTags2), length(userTags1))) {

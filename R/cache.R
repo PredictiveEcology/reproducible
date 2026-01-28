@@ -605,6 +605,7 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
         args[[1]] <- getMethodAll(args, envir)
       }
     } else {
+      # paths$inputPath comes here to be evaluated to its path
       args <- eval(args, envir)
     }
   } else {
@@ -1371,7 +1372,7 @@ evalTheFun <- function(FUNcaptured, isCapturedFUN, matchedCall, envir = parent.f
   out
 }
 
-searchInRepos <- function(cachePaths, outputHash, drv, conn) {
+searchInRepos <- function(cachePaths, outputHash, drv, conn, verbose = getOption("reproducible.verbose")) {
   dbTabNam <- NULL
   tries <- 1
   while (tries <= length(cachePaths)) {
@@ -1420,7 +1421,9 @@ searchInRepos <- function(cachePaths, outputHash, drv, conn) {
         }
 
         isInRepo <- if (!is.null(dtFile)) {
-          loadFile(dtFile)
+          loadFile(dtFile,
+                   cacheId = outputHash, cachePath = repo, # in case it needs swapCacheFormat
+                   drv = drv, conn = conn, verbose = verbose)
         } else {
           NULL
         }

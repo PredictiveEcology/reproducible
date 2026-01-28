@@ -328,7 +328,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
       # }
       # Need exclusive lock
 
-      obj <- loadFile(f)#, cacheSaveFormat = cacheSaveFormat)
+      obj <- loadFile(f, cacheId = cacheId, cachePath = cachePath,
+                      drv = drv, conn = conn, verbose = verbose)#, cacheSaveFormat = cacheSaveFormat)
       obj <- .unwrap(obj,
                      cachePath = cachePath,
                      cacheId = cacheId,
@@ -410,7 +411,8 @@ extractFromCache <- function(sc, elem, ifNot = NULL) {
 rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                         cacheId, drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL),
-                        cacheSaveFormat = getOption("reproducible.cacheSaveFormat", .rdsFormat), verbose, ...) {
+                        cacheSaveFormat = getOption("reproducible.cacheSaveFormat", .rdsFormat),
+                        verbose = getOption("reproducible.verbose"), ...) {
   # backwards compatibility
   if (!is.null(list(...)$format))
     cacheSaveFormat <- list(...)$format
@@ -509,7 +511,8 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
                          tagKey = character(), tagValue = character(),
                          cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                          drv = getDrv(getOption("reproducible.drv", NULL)),
-                         conn = getOption("reproducible.conn", NULL)) {
+                         conn = getOption("reproducible.conn", NULL),
+                         verbose = getOption("reproducible.verbose")) {
   if (length(cacheId) > 0) {
     if (length(cacheId) > 1) stop(".addTagsRepo can only handle appending 1 tag at a time")
     curTime <- as.character(Sys.time())
@@ -557,7 +560,9 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
       #   "createdDate" = as.character(Sys.time())
       # )
       dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, cacheSaveFormat = cacheSaveFormat)
-      dt2 <- loadFile(dtFile)#, cacheSaveFormat = cacheSaveFormat)
+      dt2 <- loadFile(dtFile,
+                      cacheId = cacheId, cachePath = cachePath, # in case it needs swapCacheFormat
+                      drv = drv, conn = conn, verbose = verbose)
       dt <- rbindlist(list(dt2, dt), fill = TRUE)
       saveFilesInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId,
                              cacheSaveFormat = cacheSaveFormat)
@@ -615,7 +620,8 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
                             add = TRUE,
                             cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                             drv = getDrv(getOption("reproducible.drv", NULL)),
-                            conn = getOption("reproducible.conn", NULL)) {
+                            conn = getOption("reproducible.conn", NULL),
+                            verbose = getOption("reproducible.verbose")) {
   if (length(cacheId) > 0) {
     curTime <- as.character(Sys.time())
     if (length(tagKey) < length(cacheId)) {
@@ -660,7 +666,9 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
         "createdDate" = as.character(Sys.time())
       )
       dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, cacheSaveFormat = cacheSaveFormat)
-      dt3 <- loadFile(dtFile)#, cacheSaveFormat = cacheSaveFormat)
+      dt3 <- loadFile(dtFile,
+                      cacheId = cacheId, cachePath = cachePath, # in case it needs swapCacheFormat
+                      drv = drv, conn = conn, verbose = verbose)
       tk <- tagKey
       alreadyThere <- sum(dt3$tagKey == tk & dt3$cacheId == cacheId)
       if (add && alreadyThere == 0) {
@@ -1037,22 +1045,59 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
 #' @return the object loaded from `file`
 #'
 #' @export
-loadFile <- function(file, ...) {
+loadFile <- function(file, cacheId, cachePath, # in case it needs swapCacheFormat
+                     drv, conn, verbose = getOption("reproducible.verbose"), ...) {
   if (!is.null(list(...)$format))
     cacheSaveFormat <- list(...)$format
-  else
+  else {
     # if (is.null(cacheSaveFormat)) {
-    cacheSaveFormat <- fileExt(file)
+    fe <- fileExt(file)
+    cacheSaveFormat <- fe
   # }
-  isQsAny <- cacheSaveFormat %in% c(.qsFormat, .qs2Format)
+  }
+  qsFormats <- c(.qsFormat, .qs2Format)
+  isQsAny <- cacheSaveFormat %in% qsFormats
   # isQs2 <- cacheSaveFormat %in% .qs2Format
   # isQsAny <- isQs | isQs2
 
   if (isQsAny) {
-    .requireNamespace(cacheSaveFormat, stopOnFALSE = TRUE)
-    funRead <- .fileExtsKnown()$fun[.fileExtsKnown()$extension == cacheSaveFormat]
-    funRead <- eval(parse(text = funRead))
-    obj <- funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
+    csfs <- unique(c(cacheSaveFormat, qsFormats))
+    for (csf in csfs) {# put in order by fileextension; but could be wrong
+      if (csf %in% c(.qs2Format))
+        .requireNamespace(.qs2Format, stopOnFALSE = TRUE)
+      else
+        .requireNamespace(.qsFormat, stopOnFALSE = TRUE)
+      # obj <- qs2::qs_read(file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
+      # if (FALSE) {
+        funRead <- .fileExtsKnown()$fun[.fileExtsKnown()$extension == csf]
+        funRead <- eval(parse(text = funRead))
+        # obj <- funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
+        # obj <- funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
+        obj <- try(funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1)), silent = TRUE)
+        # obj <- try2(funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1)), silent = TRUE)
+      # }
+      if (!is(obj, "try-error")) {
+        if (!identical(csf, fe)) {
+          if (missing(cachePath))
+            cachePath <- dirname(dirname(file))
+          newFile <- gsub(paste0(fe, "$"), csf, file)
+          if (missing(cacheId))
+            cacheId <- filePathSansExt(filePathSansExt(basename(file)))
+          
+          sameCacheID <- checkSameCacheId(newFile)
+          swapCacheFileFormat(wrappedObj = obj, cachePath = cachePath,
+                              cacheId = cacheId, sameCacheID = sameCacheID, newFile = newFile,
+                              drv = drv, conn = conn, verbose = verbose)
+          # saveFilesInCacheFolder(obj, ,
+          #                        cachePath = dirname(dirname(file)),
+          #                        cacheId = )
+        }
+        break
+      } else {
+        # if (csf %in% tail(csfs, 1))
+        browser()
+      }
+    }
     # obj <- qs2::qs_read(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
   } else {
     suppressWarningsSpecific(falseWarnings = "\\'package:stats\\' may not be available when loading",
@@ -1426,3 +1471,16 @@ usesPointer.environment <- function(x) {
 
 
 
+try2 <- function(..., silent = FALSE) {
+  if (getOption("reproducible.useTry", TRUE)) {
+    try(..., silent = silent)
+  } else
+    eval(...)
+}
+
+tryCatch2 <- function(..., silent = FALSE, error, finally) {
+  if (getOption("reproducible.useTry", TRUE)) {
+    tryCatch(..., silent = silent)
+  } else
+    eval(...)
+}

@@ -906,7 +906,7 @@ isTRUEorForce <- function(cond) {
 
 showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
                           dtFile, strict = TRUE, # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
-                          drv, conn) {
+                          drv, conn, verbose = getOption("reproducible.verbose")) {
 
   if (missing(dtFile)) {
     # dtFile <- CacheDBFileSingle(cachePath, cacheId, cacheSaveFormat = "check")
@@ -919,7 +919,9 @@ showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath
   if (fe || isFALSE(strict)) {
     dtFile <- if (any(fe)) dtFile[fe][1] else character()
     if (length(dtFile)) {
-      sc <- loadFile(dtFile) # , cacheSaveFormat = cacheSaveFormat)
+      sc <- loadFile(dtFile,
+                     cacheId = cacheId, cachePath = cachePath, # in case it needs swapCacheFormat
+                     drv = drv, conn = conn, verbose = verbose) # , cacheSaveFormat = cacheSaveFormat)
     } else {
       sc <- showCache(cachePath, userTags = cacheId, drv = drv, conn = conn, verbose = FALSE)[cacheId %in% cacheId]
     }
