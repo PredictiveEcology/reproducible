@@ -952,6 +952,8 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
   devMode <- isDevMode(useCache, userTags)  # don't use devMode if no userTags
   shownCache <- showCache(cachePath, Function = .functionName, userTags = userTags,
                           verbose = verbose - 2)
+  shownCache <- showCache(cachePath, Function = .functionName, # userTags = userTags,
+                          verbose = verbose - 2)
   # functionByDigest <- metadata[tagKey %in% "preDigest" & startsWith(tagValue, dotFunTxt)]$tagValue
   # shownCache <- shownCache[tagKey %in% "preDigest" & tagValue %in% functionByDigest]
   setorderv(shownCache, "createdDate", order = -1)
@@ -967,7 +969,7 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
       )
     }
 
-    rmTagKeys <- "otherFunction|elapsedTime|accessed"
+    rmTagKeys <- "otherFunction|elapsedTime|accessed|module:|eventType:|eventTime:|outerFunction:"
     shownCache <- shownCache[grep(x = tagKey, rmTagKeys, invert = TRUE)]
     metadataSmall <- metadata[grep(x = tagKey, rmTagKeys, invert = TRUE)]
     # Can only compare on tagKeys that are *not yet* in the metadata; e.g., object.size may
