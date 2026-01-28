@@ -585,7 +585,11 @@ undoDoCall <- function(call, .callingEnv) {
 
 # Helper function to get function defaults
 get_function_defaults <- function(func) {
-  formals_list <- formals(func)
+  if (is.primitive(func)) {
+    formals_list <- formals(args(list))
+  } else {
+    formals_list <- formals(func)
+  }
   return(as.list(formals_list))
 }
 
@@ -600,25 +604,54 @@ reorder_arguments <- function(formals, args) {
     args <- append(args2, args[[which(areDots)]])
   }
 
+  if (FALSE) {
+    # areDots <- names(args) %in% "..."
+    namesOfArgs <- names(args) %in% "..."
+    areDots <- any(names(formals) %in% "...") || any(namesOfArgs)
+    if (any(areDots)) {
+      if (length(namesOfArgs)) {
+        args2 <- args
+        for (wh in which(namesOfArgs)) {
+          args2[[wh]] <- NULL
+          args <- append(args2, args[[which(namesOfArgs)]])
+        }
 
-  combined_args <- modifyList(formals, args, keep.null = TRUE)
-  areDots <- names(combined_args) %in% "..."
-  if (any(areDots)) {
+      } else {
+        # these are unnamed args in the dots
+      }
+    }
 
-    argPlaceInsert <- which(!names(args) %in% names(formals))
 
-    needArgs <- !names(args) %in% names(combined_args)
-    combined_args[areDots] <- NULL
-    combined_args <- append(combined_args, args[needArgs])
-    areDots2 <- names(formals) %in% "..."
-    whNotDots <- which(!areDots2)
-    whDots <- which(areDots2)
-    first <- if (whDots > 1) seq(whDots - 1) else numeric()
-    anySeconds <- !whDots > whNotDots
-    second <- if (any(anySeconds)) whNotDots[anySeconds] else numeric()
-    ordered_args <- c(combined_args[first], args[argPlaceInsert], formals[second])
+  }
+
+  if (length(formals) == 1 && all(names(formals) %in% "...")) {
+    # This is case of things like `list`, `file.path`
+    ordered_args <- args
   } else {
-    ordered_args <- combined_args[union(names(formals), names(combined_args))]
+    # This will remove unnamed elements; which isn't right
+    combined_args <- modifyList(formals, args, keep.null = TRUE)
+    emptyNams <- names(args) %in% ""
+    if (any(emptyNams)) {
+      combined_args <- append(combined_args, args[emptyNams])
+    }
+    areDots <- names(combined_args) %in% "..."
+    if (any(areDots)) {
+
+      argPlaceInsert <- which(!names(args) %in% names(formals))
+
+      needArgs <- !names(args) %in% names(combined_args)
+      combined_args[areDots] <- NULL
+      combined_args <- append(combined_args, args[needArgs])
+      areDots2 <- names(formals) %in% "..."
+      whNotDots <- which(!areDots2)
+      whDots <- which(areDots2)
+      first <- if (whDots > 1) seq(whDots - 1) else numeric()
+      anySeconds <- !whDots > whNotDots
+      second <- if (any(anySeconds)) whNotDots[anySeconds] else numeric()
+      ordered_args <- c(combined_args[first], args[argPlaceInsert], formals[second])
+    } else {
+      ordered_args <- combined_args[union(names(formals), names(combined_args))]
+    }
   }
   # Preserve the order of the formals
 
