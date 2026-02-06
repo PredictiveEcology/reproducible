@@ -20,6 +20,12 @@
   .pkgEnv$SysInfo <- Sys.info() # record once at loading; repeatedly calling Sys.info is a waste
 
   .pkgEnv$runningOnMac <- isMac()
+  cp <- getOption("reproducible.cachePath")
+  if (!is.null(cp)) {
+    spawn_showCache_async(cp,#  name = paste0("showCache:", x),
+                           silent = TRUE, overwrite = FALSE)  
+  }
+  
   invisible()
 }
 

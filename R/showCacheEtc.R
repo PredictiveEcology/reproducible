@@ -451,16 +451,24 @@ setMethod(
 
     if (!useDBI()) {
       pkgEnv <- memoiseEnv(cachePath = x)
+      if (exists("aaaa", envir = .GlobalEnv)) browser()
       if (!exists("shownCache", envir = pkgEnv))
         pkgEnv[["shownCache"]] <- new.env()
       if (!exists(x, envir = pkgEnv[["shownCache"]]))
         pkgEnv[["shownCache"]][[x]] <- new.env()
+
+      sc <- collect_showCache_async(wait = TRUE)
       scEnv <- pkgEnv[["shownCache"]][[x]]
+
+      # spawn_showCache_async(x, # name = paste0("showCache:", x),
+      #                       silent = TRUE, overwrite = FALSE)
+      # rr <- collect_showCache_async(x, wait = FALSE, timeout = 0)
+
       # periodically, a cache entry is corrupt; this while, tryCatch will remove the corrupt file and restart
       objsDT <- list()
       while(is(objsDT, "list")) {
         # filOutside <- character()
-        objsDT <- tryCatch(
+        objsDT <- tryCatch2(
           if (!is.null(cacheId)) {
             objsDT <- rbindlist(fill = TRUE, lapply(cacheId, function(fil) {
               # filOutside <<- fil
@@ -486,20 +494,34 @@ setMethod(
               }
             }
             dd <- newOnes[["filename"]]
+            ddOrig <- dd
             scEnv$FileInfo <- curFileInfo
 
             keepDoing <- TRUE
             while(keepDoing) {
-              ret <- tryCatch(rbindlist(fill = TRUE, lapplyFun(dd, function(fil) {
-                out <- try(loadFile(fil), silent = TRUE)#, cacheSaveFormat = cacheSaveFormat))
+              allFilesLoaded <- lapplyFun(dd, function(fil) {
+
+                out <- loadFile(fil,
+                                cachePath = x, # in case it needs swapCacheFormat
+                                drv = drv, conn = conn, verbose = verbose)
+                # out <- try(loadFile(fil,
+                #                     # cacheId = cacheId,  # if don't need it, don't bother making it
+                #                     cachePath = x, # in case it needs swapCacheFormat
+                #                     drv = drv, conn = conn, verbose = verbose), silent = TRUE)#, cacheSaveFormat = cacheSaveFormat))
                 if (is(out, "try-error")) {
+                  browser()
                   cacheId <- gsub(paste0(CacheDBFileSingleExt()), "",
                                   basename(fil))
 
                   fileEx <- fileExt(fil)
                   fileExs <- setdiff(.cacheSaveFormats, fileEx)
                   for (fe in fileExs) {
-                    out <- try(loadFile(fil, format = fe), silent = TRUE)
+                    out <- loadFile(fil, format = fe,
+                                    cacheId = cacheId, cachePath = cachePath, # in case it needs swapCacheFormat
+                                    drv = drv, conn = conn, verbose = verbose)
+                    # out <- try(loadFile(fil, format = fe,
+                    #                     cacheId = cacheId, cachePath = cachePath, # in case it needs swapCacheFormat
+                    #                     drv = drv, conn = conn, verbose = verbose), silent = TRUE)
                     if (!is(out, "try-error")) {
                       if (identical(getOption("reproducible.cacheSaveFormat"), .qsFormat))
                         optForUndo <- options("reproducible.qsFormat" = .qsFormat)
@@ -510,20 +532,29 @@ setMethod(
                       return(out)
                     }
                   }
+                  browser()
                   filesToRm <- dir(dirname(fil), pattern = cacheId, full.names = TRUE)
                   messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
                                verbose = getOption("reproducible.verbose"))
                   unlink(filesToRm)
                 }
                 out
+              })
 
-              })), error = function(err) {
+
+              ret <- tryCatch(
+
+                rbindlist(fill = TRUE, allFilesLoaded), error = function(err) {
                 if (any(grepl("Item .+ is not a", err$message))) {
                   toDel <- gsub("Item ([[:digit:]]+) of.+", "\\1", err$message) |> as.numeric()
                   unlink(dd[toDel])
                   dd <- dd[-toDel]
                 }
-                next
+                browser()
+                if (any(grepl("use qs::qread", err$message))) {
+                  swapCacheFileFormat()
+                }
+                # next
               })
               if (is(ret, "try-error"))
                 browser()
@@ -906,7 +937,7 @@ isTRUEorForce <- function(cond) {
 
 showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
                           dtFile, strict = TRUE, # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
-                          drv, conn) {
+                          drv, conn, verbose = getOption("reproducible.verbose")) {
 
   if (missing(dtFile)) {
     # dtFile <- CacheDBFileSingle(cachePath, cacheId, cacheSaveFormat = "check")
@@ -919,7 +950,9 @@ showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath
   if (fe || isFALSE(strict)) {
     dtFile <- if (any(fe)) dtFile[fe][1] else character()
     if (length(dtFile)) {
-      sc <- loadFile(dtFile) # , cacheSaveFormat = cacheSaveFormat)
+      sc <- loadFile(dtFile,
+                     cacheId = cacheId, cachePath = cachePath, # in case it needs swapCacheFormat
+                     drv = drv, conn = conn, verbose = verbose) # , cacheSaveFormat = cacheSaveFormat)
     } else {
       sc <- showCache(cachePath, userTags = cacheId, drv = drv, conn = conn, verbose = FALSE)[cacheId %in% cacheId]
     }
@@ -928,3 +961,118 @@ showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath
 }
 
 sortedOrRegexp <- c("sorted", "regexp", "ask")
+
+
+
+
+# mcparallel is fork-based and not available on Windows
+# pkgEnv <- reproducible:::pkgEnv()  # internal environment for package objects [3](https://rdrr.io/cran/reproducible/man/pkgEnv.html)
+spawn_showCache_async <- function(
+    x = getOption("reproducible.cachePath"),
+    silent = TRUE,
+    overwrite = FALSE
+) {
+  if (.Platform$OS.type == "windows") {
+    return(NULL)
+  }
+
+  # Internal env for package state
+  pkgEnv <- memoiseEnv(cachePath = x)
+  if (!exists("shownCache", envir = pkgEnv))
+    pkgEnv[["shownCache"]] <- new.env()
+  if (!exists(x, envir = pkgEnv[["shownCache"]]))
+    pkgEnv[["shownCache"]][[x]] <- new.env()
+
+  if (is.null(pkgEnv[["shownCache"]]$shownCache_jobs)) pkgEnv[["shownCache"]]$shownCache_jobs <- new.env(parent = emptyenv())
+
+  # If job exists and not overwriting, reuse it
+  if (!overwrite && exists(x, envir = pkgEnv[["shownCache"]]$shownCache_jobs, inherits = FALSE)) {
+    return(invisible(get(x, envir = pkgEnv[["shownCache"]]$shownCache_jobs, inherits = FALSE)))
+  }
+
+  # Capture the function objects in the *parent*.
+  # This avoids any namespace loading inside the fork.
+  ns <- asNamespace("reproducible")
+  showCache_fun  <- get("showCache", envir = ns)
+  memoiseEnv_fun <- get("memoiseEnv", envir = ns)
+
+  # Build fork expression with injected function objects
+  expr <- substitute({
+    cp <- CP
+
+    # Run slow call (side effects stay in child; we return the memoised object)
+    SHOWCACHE(cp)
+
+    # Harvest the memoised object created by showCache
+    pkgEnv_child <- MEMOISEENV(cachePath = cp)
+    sc <- pkgEnv_child[["shownCache"]][[cp]]
+
+    # mcparallel/mccollect: NULL should not be returned (reserved as error signal) [1](https://www.r-bloggers.com/2023/06/dofuture-a-better-foreach-parallelization-operator-than-dopar/)
+    if (is.null(sc)) {
+      structure(list(error = "shownCache was NULL in child", cachePath = cp),
+                class = "shownCache_error")
+    } else {
+      sc
+    }
+  }, list(
+    CP = x,
+    SHOWCACHE = showCache_fun,
+    MEMOISEENV = memoiseEnv_fun
+  ))
+
+  job <- parallel::mcparallel(expr, name = paste0("showCache:", x), silent = silent)  # [1](https://www.r-bloggers.com/2023/06/dofuture-a-better-foreach-parallelization-operator-than-dopar/)
+  assign(x, job, envir = pkgEnv[["shownCache"]]$shownCache_jobs)
+
+  invisible(job)
+}
+
+
+collect_showCache_async <- function(
+    x = getOption("reproducible.cachePath"),
+    wait = FALSE,
+    timeout = 0
+) {
+  if (.Platform$OS.type == "windows") {
+    stop("parallel::mccollect is not available on Windows (forking backend).")
+  }
+
+  pkgEnv <- memoiseEnv(cachePath = x)
+  if (!exists("shownCache", envir = pkgEnv))
+    pkgEnv[["shownCache"]] <- new.env()
+  if (!exists(x, envir = pkgEnv[["shownCache"]]))
+    pkgEnv[["shownCache"]][[x]] <- new.env()
+  if (exists("aaaa", envir = .GlobalEnv)) browser()
+  if (is.null(pkgEnv[["shownCache"]]$shownCache_jobs) || !exists(x, envir = pkgEnv[["shownCache"]]$shownCache_jobs, inherits = FALSE)) {
+    return(invisible(NULL))  # nothing spawned for this cachePath
+  }
+
+  job <- get(x, envir = pkgEnv[["shownCache"]]$shownCache_jobs, inherits = FALSE)
+
+  # Poll or wait for results
+  res_list <- parallel::mccollect(job, wait = wait, timeout = timeout)  # collect async results [1](https://www.rdocumentation.org/packages/parallel/versions/3.4.1/topics/mcparallel)[2](https://stat.ethz.ch/R-manual/R-devel/library/parallel/html/mcparallel.html)
+
+  # If still running, mccollect returns NULL (per docs)
+  if (is.null(res_list)) {
+    return(invisible(NULL))
+  }
+
+  # Extract result (single job => first element)
+  sc <- res_list[[1]]
+
+  # If child reported an internal NULL issue, propagate as an error
+  if (inherits(sc, "shownCache_error")) {
+    rm(list = x, envir = pkgEnv[["shownCache"]]$shownCache_jobs)
+    stop(sc$error)
+  }
+
+  # Install recovered shownCache object into main session memoiseEnv location
+  # pkgEnv <- memoiseEnv(cachePath = x)
+  pkgEnv_main <- memoiseEnv(cachePath = x)
+  if (is.null(pkgEnv_main[["shownCache"]])) pkgEnv_main[["shownCache"]] <- list()
+  pkgEnv_main[["shownCache"]][[x]] <- sc
+
+  # Clear job handle after successful install
+  rm(list = x, envir = pkgEnv[["shownCache"]]$shownCache_jobs)
+
+  invisible(sc)
+}
