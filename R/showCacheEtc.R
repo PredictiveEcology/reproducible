@@ -509,7 +509,7 @@ setMethod(
                 #                     cachePath = x, # in case it needs swapCacheFormat
                 #                     drv = drv, conn = conn, verbose = verbose), silent = TRUE)#, cacheSaveFormat = cacheSaveFormat))
                 if (is(out, "try-error")) {
-                  browser()
+                  # browser()
                   cacheId <- gsub(paste0(CacheDBFileSingleExt()), "",
                                   basename(fil))
 
@@ -532,7 +532,7 @@ setMethod(
                       return(out)
                     }
                   }
-                  browser()
+                  # browser()
                   filesToRm <- dir(dirname(fil), pattern = cacheId, full.names = TRUE)
                   messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
                                verbose = getOption("reproducible.verbose"))
@@ -550,14 +550,14 @@ setMethod(
                   unlink(dd[toDel])
                   dd <- dd[-toDel]
                 }
-                browser()
+                # browser()
                 if (any(grepl("use qs::qread", err$message))) {
                   swapCacheFileFormat()
                 }
                 # next
               })
-              if (is(ret, "try-error"))
-                browser()
+              #if (is(ret, "try-error"))
+              #  browser()
               keepDoing <- FALSE
             }
 
@@ -998,11 +998,12 @@ spawn_showCache_async <- function(
 
   # Build fork expression with injected function objects
   expr <- substitute({
-    cp <- CP
-
+    data.table::setDTthreads(1L)
+    options(reproducible.nThreads = 1L)
+    
     # Run slow call (side effects stay in child; we return the memoised object)
-    SHOWCACHE(cp)
-
+    SHOWCACHE(cp, drv = NULL, conn = NULL)
+    
     # Harvest the memoised object created by showCache
     pkgEnv_child <- MEMOISEENV(cachePath = cp)
     sc <- pkgEnv_child[["shownCache"]][[cp]]
@@ -1015,7 +1016,7 @@ spawn_showCache_async <- function(
       sc
     }
   }, list(
-    CP = x,
+    cp = x,
     SHOWCACHE = showCache_fun,
     MEMOISEENV = memoiseEnv_fun
   ))
@@ -1030,10 +1031,11 @@ spawn_showCache_async <- function(
 collect_showCache_async <- function(
     x = getOption("reproducible.cachePath"),
     wait = FALSE,
-    timeout = 0
+    timeout = 10
 ) {
   if (.Platform$OS.type == "windows") {
-    stop("parallel::mccollect is not available on Windows (forking backend).")
+    return(NULL)
+    # stop("parallel::mccollect is not available on Windows (forking backend).")
   }
 
   pkgEnv <- memoiseEnv(cachePath = x)
@@ -1046,10 +1048,15 @@ collect_showCache_async <- function(
     return(invisible(NULL))  # nothing spawned for this cachePath
   }
 
+  if (exists("aaaa", envir = .GlobalEnv)) browser()
   job <- get(x, envir = pkgEnv[["shownCache"]]$shownCache_jobs, inherits = FALSE)
 
-  # Poll or wait for results
-  res_list <- parallel::mccollect(job, wait = wait, timeout = timeout)  # collect async results [1](https://www.rdocumentation.org/packages/parallel/versions/3.4.1/topics/mcparallel)[2](https://stat.ethz.ch/R-manual/R-devel/library/parallel/html/mcparallel.html)
+  
+  # The warning occurs if the pid has already be deleted e.g., manually
+  suppressWarnings(
+    # Poll or wait for results
+    res_list <- parallel::mccollect(job, wait = wait, timeout = timeout)  # collect async results [1](https://www.rdocumentation.org/packages/parallel/versions/3.4.1/topics/mcparallel)[2](https://stat.ethz.ch/R-manual/R-devel/library/parallel/html/mcparallel.html)
+  )
 
   # If still running, mccollect returns NULL (per docs)
   if (is.null(res_list)) {
