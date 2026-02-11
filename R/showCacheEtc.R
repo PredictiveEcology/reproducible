@@ -1048,7 +1048,6 @@ collect_showCache_async <- function(
     return(invisible(NULL))  # nothing spawned for this cachePath
   }
 
-  if (exists("aaaa", envir = .GlobalEnv)) browser()
   job <- get(x, envir = pkgEnv[["shownCache"]]$shownCache_jobs, inherits = FALSE)
 
   
