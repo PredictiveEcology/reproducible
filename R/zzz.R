@@ -18,12 +18,15 @@
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
   .pkgEnv$SysInfo <- Sys.info() # record once at loading; repeatedly calling Sys.info is a waste
-
+  
   .pkgEnv$runningOnMac <- isMac()
   cp <- getOption("reproducible.cachePath")
-  if (!is.null(cp)) {
-    spawn_showCache_async(cp,#  name = paste0("showCache:", x),
-                           silent = TRUE, overwrite = FALSE)  
+  if (!is.null(cp) && interactive()) {
+      # clear
+    if (requireNamespace("parallel", quietly = TRUE)) {
+      parallel::mccollect()
+      spawn_showCache_async(cp, silent = TRUE, overwrite = FALSE)  
+    }
   }
   
   invisible()
@@ -42,9 +45,16 @@
 
 .onUnload <- function(libpath) {
   ## unset reproducible options on unload
+  cp <- getOption("reproducible.cachePath")
+  if (!is.null(cp)) {
+    # clear
+    parallel::mccollect()
+  }
+  
   o <- options()
   o[startsWith(names(o), prefix = "reproducible.")] <- NULL
   options(o)
+  
 }
 
 .reproducibleTempPath <- function() getOption("reproducible.tempPath") # file.path(tempdir(), "reproducible")
