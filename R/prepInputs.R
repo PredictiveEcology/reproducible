@@ -1181,7 +1181,15 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 
       if (length(archive) > 0) {
         if (file.exists(archive[1])) {
-          needSystemCall <- needSystemCall || file.size(archive[1]) > 2e9
+          fsArch <- file.size(archive[1])
+          if (fsArch <= 10) {
+            # corrupted
+            unlink(archive[1])
+            message("archive (", archive[1], ") appears corrupted; deleting it; ",
+                    "you may have to manually delete it and the copy in `reproducible.inputPaths` if using ")
+            return(NULL)
+          } 
+          needSystemCall <- needSystemCall || fsArch > 2e9
         }
       }
 
