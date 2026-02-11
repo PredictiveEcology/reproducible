@@ -1069,14 +1069,14 @@ loadFile <- function(file, cacheId, cachePath, # in case it needs swapCacheForma
         .requireNamespace(.qsFormat, stopOnFALSE = TRUE)
       # obj <- qs2::qs_read(file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
       # if (FALSE) {
-        funRead <- .fileExtsKnown()$fun[.fileExtsKnown()$extension == csf]
-        funRead <- eval(parse(text = funRead))
+      funRead <- .fileExtsKnown()$fun[.fileExtsKnown()$extension == csf]
+      funRead <- eval(parse(text = funRead))
         # obj <- funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
         # obj <- funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
-        obj <- try(funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1)), silent = TRUE)
+      obj <- try(funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1)), silent = TRUE)
         # obj <- try2(funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1)), silent = TRUE)
       # }
-      if (!is(obj, "try-error")) {
+        if (!is(obj, "try-error")) {
         if (!identical(csf, fe)) {
           if (missing(cachePath))
             cachePath <- dirname(dirname(file))

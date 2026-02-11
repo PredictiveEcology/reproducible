@@ -388,7 +388,7 @@ nextNumericName <- function(string) {
 }
 
 list2envAttempts <- function(x, envir) {
-  attempt <- try2(list2env(x, envir), silent = TRUE)
+  attempt <- try(list2env(x, envir), silent = TRUE) # must be try; i.e., must always be `try`
   output <- NULL
   if (is(attempt, "try-error")) {
     attempt <- try(list2env(x, envir@.xData), silent = TRUE)

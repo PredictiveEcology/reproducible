@@ -69,7 +69,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   if (is.null(cacheId) || is.na(cacheId)) {
     cacheChainDetails <- cacheChainingSetup(.cacheChaining, callList, omitArgs, verbose)
     toDigest <- doDigestPrepare(callList$new_call, cacheChainDetails$omitArgs, .cacheExtra)
-    if (exists("aaaa", envir = .GlobalEnv)) browser()
+    # if (exists("aaaa", envir = .GlobalEnv)) browser()
     keyFull <- try2(doDigest(toDigest, callList$.functionName, .objects,
                             length, algo, quick, classOptions, times$CacheDigestStart,
                             verbose = verbose))
@@ -375,7 +375,7 @@ evaluate_args <- function(args, envir) {
       arg <- tryCatch(eval(arg, envir = envir), error = function(err) { # can't be tryCatch2 --> this must always be a tryCatch
         # If it's a call that cannot be evaluated, evaluate recursively
         fail <- "fail"
-        newPossArgMinus1 <- tryCatch2(evaluate_args(as.list(arg[-1]), envir), error = function(err) {
+        newPossArgMinus1 <- tryCatch(evaluate_args(as.list(arg[-1]), envir), error = function(err) {
           fail
         })
         if (!identical(newPossArgMinus1, fail)) {
@@ -1282,7 +1282,7 @@ matchCall2 <- function(definition, call, envir, envir2 = parent.frame(), FUN) {
 harmonizeCall <- function(callList, .callingEnv, .functionName = NULL) {
   callList$call <- callIsQuote(callList$call) # stip `quote`
 
-  if (exists("aaaa", envir = .GlobalEnv)) browser()
+  # if (exists("aaaa", envir = .GlobalEnv)) browser()
   isSquiggly <- isSquigglyCall(callList$FUNorig)
   # isSquiggly <- is(callList$FUNorig, "{")
   if (isTRUE(isSquiggly))
