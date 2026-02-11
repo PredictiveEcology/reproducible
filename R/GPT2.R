@@ -69,7 +69,6 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   if (is.null(cacheId) || is.na(cacheId)) {
     cacheChainDetails <- cacheChainingSetup(.cacheChaining, callList, omitArgs, verbose)
     toDigest <- doDigestPrepare(callList$new_call, cacheChainDetails$omitArgs, .cacheExtra)
-    # if (exists("aaaa", envir = .GlobalEnv)) browser()
     keyFull <- try2(doDigest(toDigest, callList$.functionName, .objects,
                             length, algo, quick, classOptions, times$CacheDigestStart,
                             verbose = verbose))
@@ -352,7 +351,6 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
     args <- as.list(matched_call)[-1]
     args <- evaluate_args(args, envir = .callingEnv)
   }
-
   combined_args <- combine_clean_args(func, args, .objects = NULL, .callingEnv)
 
   # Check for arguments that are in both Cache and the FUN
@@ -638,18 +636,19 @@ reorder_arguments <- function(formals, args) {
     areDots <- names(combined_args) %in% "..."
     if (any(areDots)) {
 
-      argPlaceInsert <- which(!names(args) %in% names(formals))
+      # argPlaceInsert <- which(!names(args) %in% names(formals))
 
-      needArgs <- !names(args) %in% names(combined_args)
+      # needArgs <- !names(args) %in% names(combined_args)
       combined_args[areDots] <- NULL
-      combined_args <- append(combined_args, args[needArgs])
-      areDots2 <- names(formals) %in% "..."
-      whNotDots <- which(!areDots2)
-      whDots <- which(areDots2)
-      first <- if (whDots > 1) seq(whDots - 1) else numeric()
-      anySeconds <- !whDots > whNotDots
-      second <- if (any(anySeconds)) whNotDots[anySeconds] else numeric()
-      ordered_args <- c(combined_args[first], args[argPlaceInsert], formals[second])
+      ordered_args <- combined_args
+      # combined_args <- append(combined_args, args[needArgs])
+      # areDots2 <- names(formals) %in% "..."
+      # whNotDots <- which(!areDots2)
+      # whDots <- which(areDots2)
+      # first <- if (whDots > 1) seq(whDots - 1) else numeric()
+      # anySeconds <- !whDots > whNotDots
+      # second <- if (any(anySeconds)) whNotDots[anySeconds] else numeric()
+      # ordered_args <- c(args[argPlaceInsert], formals[second])
     } else {
       ordered_args <- combined_args[union(names(formals), names(combined_args))]
     }
@@ -1282,7 +1281,6 @@ matchCall2 <- function(definition, call, envir, envir2 = parent.frame(), FUN) {
 harmonizeCall <- function(callList, .callingEnv, .functionName = NULL) {
   callList$call <- callIsQuote(callList$call) # stip `quote`
 
-  # if (exists("aaaa", envir = .GlobalEnv)) browser()
   isSquiggly <- isSquigglyCall(callList$FUNorig)
   # isSquiggly <- is(callList$FUNorig, "{")
   if (isTRUE(isSquiggly))
