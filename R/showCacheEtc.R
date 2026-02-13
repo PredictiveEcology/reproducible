@@ -1067,8 +1067,7 @@ collect_showCache_async <- function(
 
   # If child reported an internal NULL issue, propagate as an error
   if (inherits(sc, "shownCache_error")) {
-    rm(list = x, envir = pkgEnv[["shownCache"]]$shownCache_jobs)
-    stop(sc$error)
+    return(invisible(NULL))
   }
 
   # Install recovered shownCache object into main session memoiseEnv location
