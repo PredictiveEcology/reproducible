@@ -11,7 +11,7 @@ checkNameHasGeom <- function(existingObj) {
 
 extractPolygonIfWithin <- function(domain, existingObjSF, bufferOK, existingObj, verbose = TRUE) {
   wh <- sf::st_within(domain, existingObjSF, sparse = FALSE)
-  if (isTRUE(wh %in% FALSE) && isTRUE(bufferOK)) {
+  if (isTRUE(all(wh %in% FALSE)) && isTRUE(bufferOK)) {
     diffs <- mapply(minmax = list(c("xmin", "xmax"), c("ymin", "ymax")), function(minmax)
       round(abs(diff(sf::st_bbox(existingObjSF)[minmax])), 0))
     buff <- diffs * 0.025
