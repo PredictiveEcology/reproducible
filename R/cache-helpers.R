@@ -518,7 +518,7 @@ wrapSpatVector <- function(obj) {
 
 
   # stWrapSpecial <- system.time(
-    obj <- list(
+  obj <- list(
     geometry = terra::geom(obj),                      # matrix of coordinates
     attributes = as.data.frame(obj),           # attribute table
     crs = terra::crs(obj),                             # coordinate reference system
