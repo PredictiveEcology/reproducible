@@ -843,21 +843,25 @@ checkHaveCorrectHashedVersion <- function(targetFile, remoteHashFile, remoteMeta
 }
 
 getRemoteMetadata <- function(targetFile, isGDurl, url) {
-  if (missing(targetFile) && isGDurl) {
+  # browser()
+  if (missing(isGDurl))
+    isGDurl <- reproducible:::isGoogleDriveURL(url)
+  if (isGDurl) {
     file <- googledrive::drive_get(url) |>
       Cache(verbose = FALSE, notOlderThan = Sys.time() - 60*60) # refresh every hour
     fileSize <- file$drive_resource[[1]]$size
-    # file_id <- file$id
     remoteHash <- file$drive_resource[[1]]$md5Checksum
-    targetFile <- file$name
+    if (missing(targetFile)) {
+      targetFile <- file$name
+    }
     timestampOnline <- file$drive_resource[[1]]$modifiedTime
-
+  }
   }
 
   if (missing(targetFile)) {
     response <- httr2::request(url) |> httr2::req_method("HEAD") |> httr2::req_perform()
     remoteHash <- httr2::resp_headers(response)[["etag"]] |>
-      gsub(pattern = "^\"|\"$", replacement = "")
+      gsub(pattern = "^\"|\"", replacement = "")
 
     content_disposition <- httr2::resp_header(response, "content-disposition")
     fileSize <- httr2::resp_header(response, "content-length") |> as.numeric()
