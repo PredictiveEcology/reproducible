@@ -247,8 +247,15 @@ CacheGeo <- function(targetFile = NULL,
       purge = purge, # It isn't relevant if the file is different than the Checksums
       overwrite = overwrite
     ))
-    existingObj <- eval(aa) |>
-      Cache(.cacheExtra = cacheExtra, .functionName = paste0("prepInputs_", basename(targetFile))) # cacheExtra is the md5Checksum on GDrive
+    for (attempt in 1:2) {
+      # There were cases where the Cache recovered, but the file was not there.
+      existingObj <- eval(aa) |>
+        Cache(.cacheExtra = cacheExtra, .functionName = paste0("prepInputs_", basename(targetFile))) # cacheExtra is the md5Checksum on GDrive
+      if (file.exists(targetFileWithDP)) 
+        break
+      else
+        clearCache(cacheId = cacheId(existingObj), ask = FALSE)
+    }
 
     existingObjOrig <- existingObj
 
