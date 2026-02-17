@@ -4,7 +4,15 @@
 \alias{loadFile}
 \title{Load a file from the cache}
 \usage{
-loadFile(file, ...)
+loadFile(
+  file,
+  cacheId,
+  cachePath,
+  drv,
+  conn,
+  verbose = getOption("reproducible.verbose"),
+  ...
+)
 }
 \arguments{
 \item{file}{character specifying the path to the file}
