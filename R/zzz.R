@@ -21,10 +21,11 @@
   
   .pkgEnv$runningOnMac <- isMac()
   cp <- getOption("reproducible.cachePath")
-  if (!is.null(cp) && interactive()) {
-      # clear
+  if (!is.null(cp) && interactive() && !isWindows()) {
     if (requireNamespace("parallel", quietly = TRUE)) {
-      parallel::mccollect()
+      # on tmux and possibly others; this next line stalls
+      # clear any existing ones
+      suppressMessages(try(parallel::mccollect(timeout = 0.5, wait = FALSE), silent = TRUE))
       spawn_showCache_async(cp, silent = TRUE, overwrite = FALSE)  
     }
   }
@@ -48,7 +49,7 @@
   cp <- getOption("reproducible.cachePath")
   if (!is.null(cp)) {
     # clear
-    parallel::mccollect()
+    suppressMessages(parallel::mccollect())
   }
   
   o <- options()
