@@ -295,7 +295,11 @@ CacheGeo <- function(targetFile = NULL,
   }
   msgActionIsNothing <- "action was 'nothing'; nothing done"
   if ( (isFALSE(objExisted) || isFALSE(domainExisted) ) && !missing(FUN)) {
-    message(.message$cacheGeoDomainNotContained)
+    if (isFALSE(objExisted)) {
+      message(.message$cacheGeoNoRemoteExists)
+    } else {
+      message(.message$cacheGeoDomainNotContained)
+    }
     FUNcaptured <- substitute(FUN)
     env <- environment()
     list2env(list(...), envir = env) # need the ... to be "here"
