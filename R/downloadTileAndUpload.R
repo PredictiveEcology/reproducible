@@ -856,8 +856,7 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
     }
     timestampOnline <- file$drive_resource[[1]]$modifiedTime
   }
-  }
-
+  
   if (missing(targetFile)) {
     response <- httr2::request(url) |> httr2::req_method("HEAD") |> httr2::req_perform()
     remoteHash <- httr2::resp_headers(response)[["etag"]] |>
