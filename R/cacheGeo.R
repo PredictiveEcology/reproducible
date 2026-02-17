@@ -412,6 +412,9 @@ CacheGeo <- function(targetFile = NULL,
     }
     if (!alreadyOnRemote) {
       if (!any(grepl("^n", action[1], ignore.case = TRUE))) {
+        if (!dir.exists(tempdir())) {
+          dir.create(tempdir(), recursive = TRUE)
+        }
         out <- googledrive::drive_put(
           media = targetFileWithDP,
           path = googledrive::as_id(cloudFolderID)
