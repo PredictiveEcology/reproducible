@@ -365,7 +365,7 @@ CacheGeo <- function(targetFile = NULL,
       # Put it in order
       if (!is.null(existingObj[["polygonID"]])) {
         # if it has 2 sets of dots, like "4.2.1"
-        if (grepl("\\..+\\.", existingObj$polygonID)) {
+        if (isTRUE(any(grepl("\\..+\\.", existingObj$polygonID)))) {
           polygonIDforSorting <- as.package_version(existingObj$polygonID)
         } else {
           suppressWarnings(polygonIDforSorting <- as.numeric(gsub("(\\..)\\.", "\\1", existingObj$polygonID)))
