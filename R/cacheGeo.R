@@ -373,7 +373,8 @@ CacheGeo <- function(targetFile = NULL,
             polygonIDforSorting <- existingObj$polygonID
         }
         ord <- order(polygonIDforSorting)
-        existingObj <- existingObj[ord,]
+        existingObj <- existingObj[ord, ]
+        rownames(existingObj) <- seq_len(NROW(existingObj))
       }
       ## end of putting it in order
 
