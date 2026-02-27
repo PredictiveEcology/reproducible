@@ -1383,7 +1383,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       # shownCache <- showCacheFast(cache_key, cachePath, dtFile = fe,
       #                                 # cacheSaveFormat = cacheSaveFormat,
       #                                 drv = drv, conn = conn)
-      shownCache <- try2(showCacheFast(cache_key, cachePath, dtFile = fe,
+      shownCache <- try(showCacheFast(cache_key, cachePath, dtFile = fe,
                                       # cacheSaveFormat = cacheSaveFormat,
                                       drv = drv, conn = conn),
                         silent = TRUE)
