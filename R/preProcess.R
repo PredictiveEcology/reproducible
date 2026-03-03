@@ -187,14 +187,16 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   dlFunCaptured <- substitute(dlFun)
   prepInputsAssertions(environment())
 
+  # If the user passed a pre-quoted expression (e.g. dlFun = quote(fn(x = val, ...))),
+  # evaluate the quote() call to get the unevaluated call object. Otherwise, evaluate
+  # the lazy promise directly so ctx stores the actual value (function, NULL, string, etc.)
+  # and not an expression containing variables from the caller's environment that may be
+  # out of scope later (e.g. dlFun = dlFun1, or dlFun = if (useGADM) fn else NULL).
   isAlreadyQuoted <- any(grepl("quote", dlFunCaptured))
-  if (isAlreadyQuoted) dlFunCaptured <- eval(dlFunCaptured)
-
-  # If dlFun was passed as a simple variable name (e.g. dlFun = myFun or dlFun = NULL),
-  # evaluate it now so ctx stores the actual function/NULL value rather than an
-  # unresolvable symbol. Calls (e.g. dlFun = pkg::fn(...)) are preserved as-is.
-  if (is.name(dlFunCaptured)) {
-    dlFunCaptured <- dlFun  # evaluate the lazy promise in its original environment
+  if (isAlreadyQuoted) {
+    dlFunCaptured <- eval(dlFunCaptured)
+  } else {
+    dlFunCaptured <- dlFun  # evaluate lazy promise in its original environment
   }
 
   dots <- list(...)
