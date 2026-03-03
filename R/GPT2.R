@@ -1441,7 +1441,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
         # loadFile(cache_file, cacheSaveFormat = cacheSaveFormat,
         #              cacheId = cache_key, cachePath = cachePath, # in case it needs swapCacheFormat
         #              drv = drv, conn = conn, verbose = verbose)
-        try2(loadFile(cache_file, cacheSaveFormat = cacheSaveFormat,
+        try(loadFile(cache_file, cacheSaveFormat = cacheSaveFormat,
                      cacheId = cache_key, cachePath = cachePath, # in case it needs swapCacheFormat
                      drv = drv, conn = conn, verbose = verbose), silent = TRUE)
       } else {
@@ -1449,7 +1449,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       }
 
       if (isTRUE(changedSaveFormat)) {
-        swapTry <- try2(swapCacheFileFormat(
+        swapTry <- try(swapCacheFileFormat(
           wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
           cacheId = cache_key, sameCacheID = sameCacheID,
           userTags = paste0(shownCache$tagKey, ":", shownCache$tagValue),
@@ -1457,7 +1457,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
         cacheSaveFormat <- fileExt(cache_file_orig) # setdiff(.cacheSaveFormats, cacheSaveFormat)
         # rerun <- TRUE
       }
-      output <- try2(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
+      output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
       if (is(obj, "try-error") || rerun || is(output, "try-error")) {
         messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
         otherFiles2 <- dir(CacheStorageDir(cachePath), pattern = cache_key, full.names = TRUE)

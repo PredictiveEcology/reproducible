@@ -1095,7 +1095,7 @@ loadFile <- function(file, cacheId, cachePath, # in case it needs swapCacheForma
         break
       } else {
         # if (csf %in% tail(csfs, 1))
-        browser()
+        stop(obj) # this will be caught by most outer calls to loadFile
       }
     }
     # obj <- qs2::qs_read(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
