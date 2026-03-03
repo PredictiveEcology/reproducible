@@ -190,6 +190,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   isAlreadyQuoted <- any(grepl("quote", dlFunCaptured))
   if (isAlreadyQuoted) dlFunCaptured <- eval(dlFunCaptured)
 
+  # If dlFun was passed as a simple variable name (e.g. dlFun = myFun or dlFun = NULL),
+  # evaluate it now so ctx stores the actual function/NULL value rather than an
+  # unresolvable symbol. Calls (e.g. dlFun = pkg::fn(...)) are preserved as-is.
+  if (is.name(dlFunCaptured)) {
+    dlFunCaptured <- dlFun  # evaluate the lazy promise in its original environment
+  }
+
   dots <- list(...)
   fun  <- .checkFunInDots(fun = fun, dots = dots)
   dots <- .checkDeprecated(dots, verbose = verbose)
