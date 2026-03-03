@@ -45,6 +45,10 @@ jobs:
           Ncpus: 2
           use-public-rspm: false
 
+      - name: Install pak
+        run: install.packages("pak", repos = "https://r-lib.github.io/p/pak/stable/")
+        shell: Rscript {0}
+
       - name: Install dependencies
         run: |
           pak::pak(
