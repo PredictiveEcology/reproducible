@@ -158,7 +158,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
         message = function(m) {
           messOrig <<- c(messOrig, m$message)
         })
-        if (isTRUE(isDirectory(url, mustExist = FALSE))) {
+        if (isTRUE(isDirectory(url, mustExist = FALSE)) && !is(downloadResults, "try-error")) {
           fileToDownload <- downloadResults$destFile
           neededFiles <- downloadResults$destFile
         }
