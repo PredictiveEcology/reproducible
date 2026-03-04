@@ -484,6 +484,13 @@ pp_remote_hash_check <- function(ctx) {
 # Phase 7: Download
 # ---------------------------------------------------------------------------
 pp_download <- function(ctx) {
+  # dlFun may be a call/language object (e.g. quote(getDataFn(...))).
+  # do.call() EVALUATES language objects in its args list by calling eval() on
+  # each element — so passing a call object through do.call executes it
+  # immediately. Fix: capture dlFunCaptured as a local variable and call
+  # downloadFile via a closure, so dlFun is passed as a lazy promise (variable
+  # lookup) rather than being evaluated by do.call.
+  dlFunCaptured <- ctx$dlFunCaptured
   dlArgs <- c(
     list(
       archive        = if (isTRUE(is.na(ctx$archive))) NULL else ctx$archive,
@@ -492,7 +499,6 @@ pp_download <- function(ctx) {
       destinationPath = ctx$destinationPath,
       quick          = ctx$quick,
       checkSums      = ctx$checkSums,
-      dlFun          = ctx$dlFunCaptured,
       url            = ctx$url,
       checksumFile   = asPath(ctx$checkSumFilePath),
       needChecksums  = ctx$needChecksums,
@@ -505,7 +511,9 @@ pp_download <- function(ctx) {
     ),
     ctx$dots
   )
-  downloadFileResult <- do.call(downloadFile, dlArgs)
+  # The closure captures dlFunCaptured; do.call only sees non-language args.
+  downloadFile_wrapper <- function(...) downloadFile(dlFun = dlFunCaptured, ...)
+  downloadFileResult <- do.call(downloadFile_wrapper, dlArgs)
 
   downloadFileResult <- .fixNoFileExtension(
     downloadFileResult = downloadFileResult,
