@@ -173,7 +173,11 @@ setMethod(
         ) # don't include object@data -- these are volatile
         forDig <- list(out, dig)
       } else {
-        forDig <- terra::wrap(object)
+        warns <- withCallingHandlers(forDig <- terra::wrap(object),
+                                     warning = function(w) {
+                                       if (isTRUE(any(grepl("raster has no values", w[[1]]))))
+                                         invokeRestart("muffleWarning")
+                                     })
       }
     } else if (inherits(object, "SpatVector")) {
       if (!requireNamespace("terra", quietly = TRUE)) {
