@@ -918,7 +918,7 @@ lockFile <- function(cachePath, cache_key,
     repeat {
       ## If you still want a time cap on the *attempt*, make it transient and reset:
       setTimeLimit(elapsed = 3, transient = TRUE)
-      locked <- filelock::lock(lock_path, timeout = 2500)   # ~2.5 s wait, returns NULL on timeout
+      locked <- filelock::lock(lock_path, timeout = 250000)   # ~2.5 s wait, returns NULL on timeout
       setTimeLimit(elapsed = Inf, transient = TRUE)
 
       if (!is.null(locked)) break  # acquired
