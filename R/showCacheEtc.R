@@ -457,7 +457,7 @@ setMethod(
       if (!exists(x, envir = pkgEnv[["shownCache"]]))
         pkgEnv[["shownCache"]][[x]] <- new.env()
 
-      sc <- collect_showCache_async(wait = TRUE)
+      sc <- collect_showCache_async(x, wait = TRUE)
       scEnv <- pkgEnv[["shownCache"]][[x]]
 
       # spawn_showCache_async(x, # name = paste0("showCache:", x),

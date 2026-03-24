@@ -179,7 +179,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
     bk <- Cache(rnorm, 1, 3, 4, showSimilar = TRUE, cachePath = tmpCache, userTags = c("By")) # not similar
   })
 
-  expect_true(any(grepl("no similar item", kMess))) # shouldn't find b/c args are same
+  expect_false(any(grepl("no similar item", kMess))) # should find bj as similar (args differ: 1,2,3 vs 1,3,4)
 
   lMess <- capture_messages({
     bl <- Cache(rnorm, 1, 3, 4, showSimilar = TRUE, cachePath = tmpCache, userTags = c("Hi")) # same, recovered

@@ -950,7 +950,7 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
                         # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                         drv, conn, verbose) {
   devMode <- isDevMode(useCache, userTags)  # don't use devMode if no userTags
-  shownCache <- showCache(cachePath, Function = .functionName, userTags = userTags,
+  shownCacheUserTags <- showCache(cachePath, Function = .functionName, userTags = userTags,
                           verbose = verbose - 2)
   shownCache <- showCache(cachePath, Function = .functionName, # userTags = userTags,
                           verbose = verbose - 2)
@@ -1101,13 +1101,16 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
       }
 
       if (isDevMode(useCache, userTags)) {
-        messageCache("------ devMode -------", verbose = verbose)
-        messageCache("Previous call(s) exist in the cache with identical userTags (",
-                     paste0(userTags, collapse = ", "), ")", verbose = verbose)
-        messageCache("This call to cache will replace entry with cacheId(s): ",
-                     paste0(simi[["cacheId"]], collapse = ", "), verbose = verbose)
-        cacheIdsToClear <- unique(names(simi))
-        clearCache(cachePath, cacheId = cacheIdsToClear, ask = FALSE,  drv = drv, conn = conn, verbose = verbose - 2)
+        # Only replace entries that actually matched on userTags (not just function name)
+        cacheIdsToClear <- intersect(unique(names(simi)), unique(shownCacheUserTags$cacheId))
+        if (length(cacheIdsToClear)) {
+          messageCache("------ devMode -------", verbose = verbose)
+          messageCache("Previous call(s) exist in the cache with identical userTags (",
+                       paste0(userTags, collapse = ", "), ")", verbose = verbose)
+          messageCache("This call to cache will replace entry with cacheId(s): ",
+                       paste0(simi[["cacheId"]], collapse = ", "), verbose = verbose)
+          clearCache(cachePath, cacheId = cacheIdsToClear, ask = FALSE,  drv = drv, conn = conn, verbose = verbose - 2)
+        }
       }
       nShow <- min(numSmallest, 5)
       messageCache("with different elements (", nShow, " most recent at top):", verbose = verbose)
