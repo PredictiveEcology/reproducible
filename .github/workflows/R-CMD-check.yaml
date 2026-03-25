@@ -60,7 +60,6 @@ jobs:
           extra-packages: |
             any::rcmdcheck
             rspatial/geodata
-          pak-version: devel
 
       - uses: r-lib/actions/check-r-package@v2
         with:

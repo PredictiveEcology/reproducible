@@ -54,6 +54,7 @@ jobs:
           pak::pak(
             c("local::reproducible", "local::SpaDES.core", "local::SpaDES.project",
               "any::rcmdcheck", "any::knitr", "any::rmarkdown"),
+            dependencies = TRUE,
             ask = FALSE
           )
         shell: Rscript {0}
