@@ -10,11 +10,11 @@ if (wantMoreTests) { # this is for covr::package_coverage
 }
 
 opts <- options(
-  reproducible.runLargeFileTests = FALSE, # Set to TRUE to run the 2 long tests -- 20 minutes
+  reproducible.runLargeFileTests = isTRUE(getOption("reproducible.runLargeFileTests")), # Set to TRUE to run the 2 long tests -- 20 minutes
   warnPartialMatchArgs = TRUE, # This gives false positives for `raster::stack`
   warnPartialMatchAttr = TRUE,
   warnPartialMatchDollar = TRUE,
-  reproducible.useCacheV3 = TRUE#,
+  reproducible.useCacheV3 = !isFALSE(getOption("reproducible.useCacheV3"))#,
   #reproducible.useDBI = FALSE  # done TF  = c(691, 764.1), TT c(793,874), FF = c(875.5s, 876s), FT = c(1024.8,934)
 )
 

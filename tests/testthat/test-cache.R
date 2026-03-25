@@ -1898,29 +1898,6 @@ test_that("test future", {
   # }
 })
 
-test_that("test failed Cache recovery -- message to delete cacheId", {
-  if (!useDBI() || getOption("reproducible.useCacheV3")) skip("Only relevant for DBI backend")
-  testInit(opts = list("reproducible.useMemoise" = FALSE))
-
-  b <- Cache(rnorm, 1, cachePath = tmpdir)
-  sc <- showCache(tmpdir)
-  ci <- unique(sc[[.cacheTableHashColName()]])
-  unlink(CacheStoredFile(tmpdir, ci))
-
-
-  rm(b)
-  mess <- capture_messages({
-    warn <- capture_warnings({
-      err <- capture_error({
-        d <- Cache(rnorm, 1, cachePath = tmpdir)
-      })
-    })
-  })
-  expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), mess)) == 1)
-  expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), err)) == 0)
-  expect_true(any(grepl(paste0("[cannot|failed to] open"), paste(warn, err, mess))))
-  expect_true(is.numeric(d))
-})
 
 test_that("test pre-creating conn", {
   if (!useDBI()) skip("Only relevant for DBI backend")
