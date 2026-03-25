@@ -49,6 +49,10 @@ jobs:
         run: install.packages("pak", repos = "https://r-lib.github.io/p/pak/stable/")
         shell: Rscript {0}
 
+      - name: Install NLMR from GitHub (not on CRAN, needed by SpaDES.core Suggests)
+        run: pak::pak("ropensci/NLMR", ask = FALSE)
+        shell: Rscript {0}
+
       - name: Install dependencies
         run: |
           pak::pak(
