@@ -47,8 +47,8 @@
 .onUnload <- function(libpath) {
   ## unset reproducible options on unload
   cp <- getOption("reproducible.cachePath")
-  if (!is.null(cp)) {
-    # clear
+  if (!is.null(cp) && .Platform$OS.type != "windows") {
+    # mccollect is fork-based and not available on Windows
     suppressMessages(parallel::mccollect())
   }
   
