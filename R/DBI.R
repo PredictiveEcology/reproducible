@@ -1041,9 +1041,16 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
 
 #' Load a file from the cache
 #'
-#' @param file character specifying the path to the file
-#'
-#' @param ... Allows `format` for backward compatibility
+#' @param file `character(1)` specifying the path to the file to load.
+#' @param cacheId `character(1)` the unique cache identifier of the object.
+#' @param cachePath `character(1)` path to the cache directory.
+#' @param drv A DBI driver object (e.g., `RSQLite::SQLite()`). Used when
+#'   the cache format needs to be swapped.
+#' @param conn A DBI connection object. If `NULL`, a new connection is
+#'   created internally as needed.
+#' @param verbose `integer` or `logical`. If `> 0` or `TRUE`, print
+#'   informational messages. Defaults to `getOption("reproducible.verbose")`.
+#' @param ... Allows `format` for backward compatibility.
 #' @return the object loaded from `file`
 #'
 #' @export
