@@ -489,6 +489,8 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 #'   Format used for saving cache files. Defaults to `getOption("reproducible.cacheSaveFormat")`.
 #' @param drv A DBI driver object. Defaults to `getDrv(getOption("reproducible.drv", NULL))`.
 #' @param conn A DBI connection object. If `NULL`, a new connection is created internally.
+#' @param verbose `integer` or `logical`. If `> 0` or `TRUE`, print informational messages.
+#'   Defaults to `getOption("reproducible.verbose")`.
 #'
 #' @details
 #' This function is primarily used internally by the `reproducible` package to

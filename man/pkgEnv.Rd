@@ -6,7 +6,7 @@
 \alias{.pkgEnv}
 \title{The \code{reproducible} package environments}
 \format{
-An object of class \code{environment} of length 39.
+An object of class \code{environment} of length 40.
 
 An object of class \code{environment} of length 4.
 }
