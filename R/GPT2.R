@@ -914,26 +914,55 @@ lockFile <- function(cachePath, cache_key,
     first <- TRUE
     locked <- NULL
 
-    # Try repeatedly, but with bounded waits and backoff
-    repeat {
-      ## If you still want a time cap on the *attempt*, make it transient and reset:
-      setTimeLimit(elapsed = 3, transient = TRUE)
-      locked <- filelock::lock(lock_path, timeout = 250000)   # ~2.5 s wait, returns NULL on timeout
-      setTimeLimit(elapsed = Inf, transient = TRUE)
+    timeouts <- c(2500, Inf)   # milliseconds: short probe, then indefinite
+    
+    for (i in seq_along(timeouts)) {
 
-      if (!is.null(locked)) break  # acquired
+      locked <- filelock::lock(lock_path, timeout = timeouts[i])
 
-      if (isTRUE(first)) {
-        first <- FALSE
-        messageCache(
-          "The cache file (", lock_path, ") is locked due to a concurrent process; waiting... ",
-          "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
-          verbose = verbose + 2
-        )
+      if (!is.null(locked)) {
+        break  # success
       }
-      Sys.sleep(0.25)  # backoff
+
+      ## If we get here, the short timeout expired
+      ## Clean up the failed attempt deterministically
+      rm(locked)
+      gc(FALSE)
+
+      ## Emit the message exactly once, before the blocking attempt
+      messageCache(
+        "The cache file (", lock_path, ") is locked due to a concurrent process; waiting...",
+        "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
+        verbose = verbose + 2
+      )
     }
 
+    ## Safety check (should never fail unless interrupted)
+    if (is.null(locked)) {
+      stop("Failed to acquire lock (unexpected)")
+    }
+
+    # on.exit(filelock::unlock(locked), add = TRUE)
+    #
+    # # Try repeatedly, but with bounded waits and backoff
+    # repeat {
+    #   ## If you still want a time cap on the *attempt*, make it transient and reset:
+    #   setTimeLimit(elapsed = 3, transient = TRUE)
+    #   locked <- filelock::lock(lock_path, timeout = 250000)   # ~2.5 s wait, returns NULL on timeout
+    #   setTimeLimit(elapsed = Inf, transient = TRUE)
+    #
+    #   if (!is.null(locked)) break  # acquired
+    #
+    #   if (isTRUE(first)) {
+    #     first <- FALSE
+    #     messageCache(
+    #       "The cache file (", lock_path, ") is locked due to a concurrent process; waiting... ",
+    #       "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
+    #       verbose = verbose + 2
+    #     )
+    #   }
+    #   Sys.sleep(0.25)  # backoff
+    # }
     if (!first) {
       messageCache("  ... ", lock_path, " released, continuing ... ", verbose = verbose + 2)
     }
