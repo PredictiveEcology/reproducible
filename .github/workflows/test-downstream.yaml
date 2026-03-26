@@ -53,6 +53,10 @@ jobs:
         run: pak::pak("ropensci/NLMR", ask = FALSE)
         shell: Rscript {0}
 
+      - name: Install Require from GitHub development (fix for setLinuxBinaryRepo; remove once Require is on CRAN)
+        run: pak::pak("PredictiveEcology/Require@development", ask = FALSE)
+        shell: Rscript {0}
+
       - name: Install dependencies
         run: |
           pak::pak(
