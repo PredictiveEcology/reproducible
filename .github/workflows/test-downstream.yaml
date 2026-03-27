@@ -36,6 +36,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: PredictiveEcology/SpaDES.project
+          ref: development
           path: SpaDES.project
 
       - uses: PredictiveEcology/actions/install-spatial-deps@v0.2
