@@ -982,7 +982,7 @@ lockFile <- function(cachePath, cache_key,
       }
 
       Sys.sleep(sleep_secs)
-      sleep_secs <- min(sleep_secs * 2, 30)   # double up to 30 s cap
+      sleep_secs <- min(sleep_secs * 2, 120)  # double up to 120 s cap
     }
 
     if (waiting)
