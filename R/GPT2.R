@@ -896,11 +896,18 @@ callIsQuote <- function(call) {
 }
 
 releaseLockFile <- function(locked) {
-  lockFile <- locked[[2]]
   filelock::unlock(locked)
-  if (file.exists(lockFile)) {
-    unlink(lockFile)
-  }
+  ## Do NOT delete the lock file: the fcntl lock is what protects the critical
+  ## section, not the file's existence.  Deleting and recreating the file under
+  ## concurrent load creates two bugs:
+  ##   1. Workers that were blocked on fcntl(F_SETLKW) already have the old inode
+  ##      open; a fresh caller that arrives after the delete creates a *new* inode
+  ##      at the same path — both callers hold a "lock" on different inodes and
+  ##      the critical section is no longer protected.
+  ##   2. If a prior run was executed as root (or another user), a stale .lock file
+  ##      with wrong ownership is left behind; the next caller gets EACCES at
+  ##      open(O_RDWR|O_CREAT) — "Permission denied".
+  ## Leaving the (empty) .lock file in place is safe and correct.
 }
 
 lockFile <- function(cachePath, cache_key,
@@ -908,33 +915,51 @@ lockFile <- function(cachePath, cache_key,
                      verbose = getOption("reproducible.verbose")) {
   if (!useDBI()) {
     csd <- CacheStorageDir(cachePath)
-    if (!any(dir.exists(csd))) lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
+    dir.create(csd, showWarnings = FALSE, recursive = TRUE)
 
     lock_path <- file.path(csd, paste0(cache_key, suffixLockFile()))
-    first <- TRUE
     locked <- NULL
 
     timeouts <- c(2500, Inf)   # milliseconds: short probe, then indefinite
-    
+
     for (i in seq_along(timeouts)) {
 
-      locked <- filelock::lock(lock_path, timeout = timeouts[i])
+      locked <- tryCatch(
+        filelock::lock(lock_path, timeout = timeouts[i]),
+        error = function(e) {
+          if (grepl("Permission denied", conditionMessage(e), fixed = TRUE)) {
+            ## Stale lock file owned by another user (e.g., prior root run).
+            ## Remove it so the next iteration can create a fresh one.
+            messageCache(
+              "Lock file not accessible (Permission denied): ", lock_path,
+              "; removing stale lock file and retrying",
+              verbose = verbose + 1
+            )
+            tryCatch(file.remove(lock_path), error = function(e2) invisible(NULL))
+            return(NULL)
+          }
+          stop(e)
+        }
+      )
 
       if (!is.null(locked)) {
         break  # success
       }
 
-      ## If we get here, the short timeout expired
-      ## Clean up the failed attempt deterministically
+      ## If we get here, either the short timeout expired or a stale file was
+      ## removed — either way, re-ensure the directory exists and retry.
       rm(locked)
       gc(FALSE)
+      dir.create(csd, showWarnings = FALSE, recursive = TRUE)
 
-      ## Emit the message exactly once, before the blocking attempt
-      messageCache(
-        "The cache file (", lock_path, ") is locked due to a concurrent process; waiting...",
-        "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
-        verbose = verbose + 2
-      )
+      if (i < length(timeouts)) {
+        ## Emit the message exactly once, before the blocking attempt
+        messageCache(
+          "The cache file (", lock_path, ") is locked due to a concurrent process; waiting...",
+          "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
+          verbose = verbose + 2
+        )
+      }
     }
 
     ## Safety check (should never fail unless interrupted)
@@ -963,10 +988,6 @@ lockFile <- function(cachePath, cache_key,
     #   }
     #   Sys.sleep(0.25)  # backoff
     # }
-    if (!first) {
-      messageCache("  ... ", lock_path, " released, continuing ... ", verbose = verbose + 2)
-    }
-
     # Ensure release when the *outer* scope exits
     on.exit2(releaseLockFile(locked), envir = envir)
     locked
