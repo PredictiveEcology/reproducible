@@ -942,28 +942,32 @@ lockFile <- function(cachePath, cache_key,
         }
       )
       if (!is.null(locked)) break
-      rm(locked)
-      gc(FALSE)
       dir.create(csd, showWarnings = FALSE, recursive = TRUE)
     }
 
-    ## Phase 2 — if Phase 1 returned NULL it is lock contention (many concurrent
-    ## workers), not a broken file.  Emit the "waiting…" message once and block.
+    ## Phase 2 — lock contention.  Poll with short timeouts so that deleting the
+    ## lock file from another process causes the next attempt to succeed.
+    ## (timeout = Inf would block on the old kernel inode; deleting the path
+    ## would not release the flock, so the process would never recover.)
     if (is.null(locked)) {
       messageCache(
         "The cache file (", lock_path, ") is locked due to a concurrent process; waiting...",
         "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
         verbose = verbose + 2
       )
-      locked <- tryCatch(
-        filelock::lock(lock_path, timeout = Inf),   # blocks until released
-        error = function(e) {
-          if (grepl("Cannot open lock file", conditionMessage(e), fixed = TRUE)) {
-            tryCatch(file.remove(lock_path), error = function(e2) invisible(NULL))
+      repeat {
+        locked <- tryCatch(
+          filelock::lock(lock_path, timeout = 2500L),
+          error = function(e) {
+            if (grepl("Cannot open lock file", conditionMessage(e), fixed = TRUE)) {
+              tryCatch(file.remove(lock_path), error = function(e2) invisible(NULL))
+            }
+            stop(e)
           }
-          stop(e)
-        }
-      )
+        )
+        if (!is.null(locked)) break
+      }
+      messageCache("  ... ", lock_path, " released, continuing ... ", verbose = verbose + 2)
     }
 
     if (is.null(locked)) {
