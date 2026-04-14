@@ -918,64 +918,75 @@ lockFile <- function(cachePath, cache_key,
     dir.create(csd, showWarnings = FALSE, recursive = TRUE)
 
     lock_path <- file.path(csd, paste0(cache_key, suffixLockFile()))
-    locked <- NULL
 
-    ## Phase 1 — up to 5 short-timeout attempts, recovering from broken lock files
-    ## (e.g. stale files with wrong ownership that must be removed before locking).
-    ## Match on "Cannot open lock file" (C-level prefix from filelock), not on the
-    ## locale-dependent strerror text ("Permission denied" varies by LC_MESSAGES).
-    for (attempt in seq_len(5L)) {
+    ## Unified retry loop — handles three distinct outcomes from filelock::lock:
+    ##
+    ##   NULL    — timeout expired: lock is held by another process (contention).
+    ##             Show message once, keep polling every 2.5 s.  Deleting the file
+    ##             from another terminal causes the next attempt to create a fresh
+    ##             file and acquire immediately.  (timeout = Inf would block on the
+    ##             old kernel inode and never recover from a manual file deletion.)
+    ##
+    ##   EMFILE  — "Too many open files": process hit its fd limit.
+    ##             gc(FALSE) may close unused R connections; retry with backoff.
+    ##
+    ##   EACCES  — "Cannot open lock file: Permission denied": stale file owned by
+    ##             another user.  Remove it (requires directory write permission).
+    ##             If we cannot remove it, stop with a clear actionable message.
+    ##
+    ##   other   — unexpected error, re-thrown immediately.
+
+    locked  <- NULL
+    waiting <- FALSE
+    emfile_attempts <- 0L
+
+    repeat {
       locked <- tryCatch(
         filelock::lock(lock_path, timeout = 2500L),
         error = function(e) {
-          if (grepl("Cannot open lock file", conditionMessage(e), fixed = TRUE)) {
-            ## open() failed — EACCES (stale ownership), EMFILE, or similar.
-            ## Try to remove; if that also fails we cannot recover automatically.
-            removed <- suppressWarnings(file.remove(lock_path))
-            if (!isTRUE(removed)) {
-              stop(
-                "Cannot open lock file and cannot remove it (Permission Denied?).\n",
-                "Manually delete: ", lock_path, "\n",
-                "Original error: ", conditionMessage(e),
-                call. = FALSE
-              )
-            }
-            messageCache(
-              "Lock file not accessible (", conditionMessage(e), "); removed and retrying",
-              verbose = verbose + 1
-            )
-            Sys.sleep(runif(1L, 0, 0.05) * attempt)  # jitter to spread retries
+          msg <- conditionMessage(e)
+          if (!grepl("Cannot open lock file", msg, fixed = TRUE)) stop(e)
+
+          if (grepl("Too many open files", msg, fixed = TRUE)) {
+            ## EMFILE — gc to free unused file descriptors, then retry
+            emfile_attempts <<- emfile_attempts + 1L
+            if (emfile_attempts > 10L)
+              stop("Persistent 'Too many open files' acquiring lock: ", lock_path,
+                   "\nCheck for file descriptor leaks or raise ulimit -n",
+                   call. = FALSE)
+            gc(FALSE)
+            Sys.sleep(runif(1L, 0.1, 0.3) * emfile_attempts)
             return(NULL)
           }
-          stop(e)
+
+          ## EACCES or other open() failure — try removing the stale file
+          removed <- suppressWarnings(file.remove(lock_path))
+          if (!isTRUE(removed))
+            stop("Cannot open lock file and cannot remove it.\n",
+                 "Manually delete (may need sudo): ", lock_path, "\n",
+                 "Original error: ", msg, call. = FALSE)
+          messageCache("Lock file not accessible; removed and retrying",
+                       verbose = verbose + 1)
+          dir.create(csd, showWarnings = FALSE, recursive = TRUE)
+          return(NULL)
         }
       )
+
       if (!is.null(locked)) break
-      dir.create(csd, showWarnings = FALSE, recursive = TRUE)
-    }
 
-    ## Phase 2 — true lock contention (lock held by another process, returns NULL).
-    ## Poll with short timeouts so that deleting the lock file from another terminal
-    ## causes the next attempt to succeed.
-    ## (timeout = Inf would block on the old kernel inode; deleting the path would
-    ## not release the flock, so the process would hang forever.)
-    if (is.null(locked)) {
-      messageCache(
-        "The cache file (", lock_path, ") is locked due to a concurrent process; waiting...",
-        "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
-        verbose = verbose + 2
-      )
-      repeat {
-        locked <- filelock::lock(lock_path, timeout = 2500L)
-        if (!is.null(locked)) break
+      if (!waiting && emfile_attempts == 0L) {
+        ## First NULL from a genuine timeout — lock is held by another process
+        waiting <- TRUE
+        messageCache(
+          "The cache file (", lock_path, ") is locked due to a concurrent process; waiting...",
+          "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
+          verbose = verbose + 2
+        )
       }
-      messageCache("  ... ", lock_path, " released, continuing ... ", verbose = verbose + 2)
     }
 
-    if (is.null(locked)) {
-      stop("Failed to acquire lock for: ", lock_path,
-           "\nConsider deleting .lock files in: ", csd)
-    }
+    if (waiting)
+      messageCache("  ... ", lock_path, " released, continuing ... ", verbose = verbose + 2)
 
     # on.exit(filelock::unlock(locked), add = TRUE)
     #
