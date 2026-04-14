@@ -919,24 +919,18 @@ lockFile <- function(cachePath, cache_key,
 
     lock_path <- file.path(csd, paste0(cache_key, suffixLockFile()))
 
-    ## filelock::lock leaks one fd per call when it returns NULL (the C code
-    ## opens the file but does not close it on failure).  gc() cannot help
-    ## because no R object is created for the finalizer to clean up.
-    ## After ~1000 leaked calls the process hits ulimit -n (EMFILE).
-    ##
-    ## Workaround: exponential backoff between attempts (cap 30 s).
-    ## Over a 42-minute wait this yields ~87 calls instead of ~1008,
-    ## well within any reasonable fd limit.
-    ##
     ## Three outcomes from filelock::lock:
-    ##   NULL   — contention; sleep and retry with backoff
-    ##   EMFILE — fds from other sources accumulated; gc + small sleep
-    ##   EACCES — stale file, wrong owner; remove and retry
+    ##   NULL   — contention; sleep 2.5 s and retry
+    ##   EMFILE — process near fd limit from other sources; gc + small sleep
+    ##   EACCES — stale file owned by another user; remove and retry
     ##   other  — unexpected; re-throw immediately
+    ##
+    ## Note: PredictiveEcology/filelock >= 1.0.3.9001 fixes a bug in the
+    ## upstream package where every failed non-blocking attempt leaked one fd
+    ## (close()/CloseHandle() missing on the NULL return path in C).
 
-    locked       <- NULL
-    waiting      <- FALSE
-    sleep_secs   <- 2.5          # starting backoff interval
+    locked          <- NULL
+    waiting         <- FALSE
     emfile_attempts <- 0L
 
     repeat {
@@ -981,8 +975,7 @@ lockFile <- function(cachePath, cache_key,
         )
       }
 
-      Sys.sleep(sleep_secs)
-      sleep_secs <- min(sleep_secs * 2, 120)  # double up to 120 s cap
+      Sys.sleep(2.5)
     }
 
     if (waiting)
