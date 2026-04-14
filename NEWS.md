@@ -3,12 +3,14 @@
 ## bug fixes
 
 * Fix `filelock::lock()` "Permission denied" error under high parallelism (30+ workers).
-  Two root causes: (1) deleting the `.lock` file after `unlock()` broke mutex correctness —
+  Three root causes: (1) deleting the `.lock` file after `unlock()` broke mutex correctness —
   workers blocked on `fcntl(F_SETLKW)` held the old inode's lock while a fresh caller
   created a new inode and acquired its own "lock" simultaneously; (2) stale `.lock` files
-  owned by root (from a prior sudo/root run) caused `EACCES` at `open(O_RDWR|O_CREAT)`.
-  Fix: stop deleting lock files after release; wrap `filelock::lock()` in `tryCatch` to
-  remove stale files and retry on Permission denied.
+  owned by root (from a prior sudo/root run) caused `EACCES` at `open(O_RDWR|O_CREAT)`;
+  (3) the `tryCatch` matched on "Permission denied" which is locale-dependent (varies with
+  `LC_MESSAGES`) — now matches on "Cannot open lock file" (filelock's fixed C-level prefix).
+  Fix: stop deleting lock files after release; wrap `filelock::lock()` in `tryCatch` with
+  a 5-attempt retry loop; match on the locale-independent error prefix.
 * during download from googledrive, if httr2 is not installed, now does not fail (#456)
 
 # reproducible 3.0.0
