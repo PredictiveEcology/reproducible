@@ -921,14 +921,19 @@ lockFile <- function(cachePath, cache_key,
 
     ## Unified retry loop — handles three distinct outcomes from filelock::lock:
     ##
-    ##   NULL    — timeout expired: lock is held by another process (contention).
-    ##             Show message once, keep polling every 2.5 s.  Deleting the file
-    ##             from another terminal causes the next attempt to create a fresh
-    ##             file and acquire immediately.  (timeout = Inf would block on the
-    ##             old kernel inode and never recover from a manual file deletion.)
+    ##   NULL    — lock is held by another process (contention).
+    ##             Show message once, keep polling.  Deleting the file from another
+    ##             terminal causes the next attempt to create a fresh file and acquire
+    ##             immediately.
+    ##             We use timeout = 0 (non-blocking) + our own Sys.sleep(2.5) rather
+    ##             than timeout = 2500 because filelock leaks one fd per timed-out
+    ##             attempt on Linux; after ~1000 polls (~42 min) the process hits
+    ##             ulimit -n and gets EMFILE.  timeout = 0 has a simpler fd lifecycle
+    ##             (open → try → close immediately) and does not leak.
     ##
-    ##   EMFILE  — "Too many open files": process hit its fd limit.
+    ##   EMFILE  — "Too many open files": process already near its fd limit.
     ##             gc(FALSE) may close unused R connections; retry with backoff.
+    ##             (Should not happen with timeout = 0, but kept as safety net.)
     ##
     ##   EACCES  — "Cannot open lock file: Permission denied": stale file owned by
     ##             another user.  Remove it (requires directory write permission).
@@ -942,7 +947,7 @@ lockFile <- function(cachePath, cache_key,
 
     repeat {
       locked <- tryCatch(
-        filelock::lock(lock_path, timeout = 2500L),
+        filelock::lock(lock_path, timeout = 0L),   # non-blocking; no fd leak on NULL
         error = function(e) {
           msg <- conditionMessage(e)
           if (!grepl("Cannot open lock file", msg, fixed = TRUE)) stop(e)
@@ -975,7 +980,7 @@ lockFile <- function(cachePath, cache_key,
       if (!is.null(locked)) break
 
       if (!waiting && emfile_attempts == 0L) {
-        ## First NULL from a genuine timeout — lock is held by another process
+        ## First NULL — lock is held by another process
         waiting <- TRUE
         messageCache(
           "The cache file (", lock_path, ") is locked due to a concurrent process; waiting...",
@@ -983,6 +988,8 @@ lockFile <- function(cachePath, cache_key,
           verbose = verbose + 2
         )
       }
+
+      Sys.sleep(2.5)   # wait before next non-blocking attempt
     }
 
     if (waiting)
