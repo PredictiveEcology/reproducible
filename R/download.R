@@ -517,7 +517,10 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 
   if (.requireNamespace("httr2") && .requireNamespace("curl")) {
     for (i in 1:2) {
-      req <- httr2::request(url)
+      totalTimeout <- getOption("reproducible.timeout", 1200)
+      req <- httr2::request(url) |>
+        httr2::req_timeout(totalTimeout) |>
+        httr2::req_options(connecttimeout = totalTimeout)
       if (i == 1) # only try on first run through, in case this is the cause of failure; which it is on some sites
         req <- req |> httr2::req_user_agent(getOption("reproducible.useragent"))
       if (verbose > 0) {
