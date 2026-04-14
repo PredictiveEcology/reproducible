@@ -919,52 +919,45 @@ lockFile <- function(cachePath, cache_key,
 
     lock_path <- file.path(csd, paste0(cache_key, suffixLockFile()))
 
-    ## Unified retry loop — handles three distinct outcomes from filelock::lock:
+    ## filelock::lock leaks one fd per call when it returns NULL (the C code
+    ## opens the file but does not close it on failure).  gc() cannot help
+    ## because no R object is created for the finalizer to clean up.
+    ## After ~1000 leaked calls the process hits ulimit -n (EMFILE).
     ##
-    ##   NULL    — lock is held by another process (contention).
-    ##             Show message once, keep polling.  Deleting the file from another
-    ##             terminal causes the next attempt to create a fresh file and acquire
-    ##             immediately.
-    ##             We use timeout = 0 (non-blocking) + our own Sys.sleep(2.5) rather
-    ##             than timeout = 2500 because filelock leaks one fd per timed-out
-    ##             attempt on Linux; after ~1000 polls (~42 min) the process hits
-    ##             ulimit -n and gets EMFILE.  timeout = 0 has a simpler fd lifecycle
-    ##             (open → try → close immediately) and does not leak.
+    ## Workaround: exponential backoff between attempts (cap 30 s).
+    ## Over a 42-minute wait this yields ~87 calls instead of ~1008,
+    ## well within any reasonable fd limit.
     ##
-    ##   EMFILE  — "Too many open files": process already near its fd limit.
-    ##             gc(FALSE) may close unused R connections; retry with backoff.
-    ##             (Should not happen with timeout = 0, but kept as safety net.)
-    ##
-    ##   EACCES  — "Cannot open lock file: Permission denied": stale file owned by
-    ##             another user.  Remove it (requires directory write permission).
-    ##             If we cannot remove it, stop with a clear actionable message.
-    ##
-    ##   other   — unexpected error, re-thrown immediately.
+    ## Three outcomes from filelock::lock:
+    ##   NULL   — contention; sleep and retry with backoff
+    ##   EMFILE — fds from other sources accumulated; gc + small sleep
+    ##   EACCES — stale file, wrong owner; remove and retry
+    ##   other  — unexpected; re-throw immediately
 
-    locked  <- NULL
-    waiting <- FALSE
+    locked       <- NULL
+    waiting      <- FALSE
+    sleep_secs   <- 2.5          # starting backoff interval
     emfile_attempts <- 0L
 
     repeat {
       locked <- tryCatch(
-        filelock::lock(lock_path, timeout = 0L),   # non-blocking; no fd leak on NULL
+        filelock::lock(lock_path, timeout = 0L),
         error = function(e) {
           msg <- conditionMessage(e)
           if (!grepl("Cannot open lock file", msg, fixed = TRUE)) stop(e)
 
           if (grepl("Too many open files", msg, fixed = TRUE)) {
-            ## EMFILE — gc to free unused file descriptors, then retry
             emfile_attempts <<- emfile_attempts + 1L
             if (emfile_attempts > 10L)
               stop("Persistent 'Too many open files' acquiring lock: ", lock_path,
-                   "\nCheck for file descriptor leaks or raise ulimit -n",
+                   "\nRaise ulimit -n or report a filelock fd-leak bug",
                    call. = FALSE)
             gc(FALSE)
             Sys.sleep(runif(1L, 0.1, 0.3) * emfile_attempts)
             return(NULL)
           }
 
-          ## EACCES or other open() failure — try removing the stale file
+          ## EACCES or similar — remove stale file and retry
           removed <- suppressWarnings(file.remove(lock_path))
           if (!isTRUE(removed))
             stop("Cannot open lock file and cannot remove it.\n",
@@ -979,8 +972,7 @@ lockFile <- function(cachePath, cache_key,
 
       if (!is.null(locked)) break
 
-      if (!waiting && emfile_attempts == 0L) {
-        ## First NULL — lock is held by another process
+      if (!waiting) {
         waiting <- TRUE
         messageCache(
           "The cache file (", lock_path, ") is locked due to a concurrent process; waiting...",
@@ -989,7 +981,8 @@ lockFile <- function(cachePath, cache_key,
         )
       }
 
-      Sys.sleep(2.5)   # wait before next non-blocking attempt
+      Sys.sleep(sleep_secs)
+      sleep_secs <- min(sleep_secs * 2, 30)   # double up to 30 s cap
     }
 
     if (waiting)
