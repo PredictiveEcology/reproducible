@@ -920,21 +920,30 @@ lockFile <- function(cachePath, cache_key,
     lock_path <- file.path(csd, paste0(cache_key, suffixLockFile()))
     locked <- NULL
 
-    ## Phase 1 — up to 5 short-timeout attempts, recovering from broken lock files.
-    ## Match on "Cannot open lock file" (the C-level prefix from filelock), NOT on the
-    ## locale-dependent strerror text ("Permission denied" varies by LC_MESSAGES locale).
+    ## Phase 1 — up to 5 short-timeout attempts, recovering from broken lock files
+    ## (e.g. stale files with wrong ownership that must be removed before locking).
+    ## Match on "Cannot open lock file" (C-level prefix from filelock), not on the
+    ## locale-dependent strerror text ("Permission denied" varies by LC_MESSAGES).
     for (attempt in seq_len(5L)) {
       locked <- tryCatch(
         filelock::lock(lock_path, timeout = 2500L),
         error = function(e) {
           if (grepl("Cannot open lock file", conditionMessage(e), fixed = TRUE)) {
             ## open() failed — EACCES (stale ownership), EMFILE, or similar.
-            ## Removing the file only needs directory write-permission, which we have.
+            ## Try to remove; if that also fails we cannot recover automatically.
+            removed <- suppressWarnings(file.remove(lock_path))
+            if (!isTRUE(removed)) {
+              stop(
+                "Cannot open lock file and cannot remove it (Permission Denied?).\n",
+                "Manually delete: ", lock_path, "\n",
+                "Original error: ", conditionMessage(e),
+                call. = FALSE
+              )
+            }
             messageCache(
-              "Lock file not accessible (", conditionMessage(e), "); removing and retrying",
+              "Lock file not accessible (", conditionMessage(e), "); removed and retrying",
               verbose = verbose + 1
             )
-            tryCatch(file.remove(lock_path), error = function(e2) invisible(NULL))
             Sys.sleep(runif(1L, 0, 0.05) * attempt)  # jitter to spread retries
             return(NULL)
           }
@@ -945,10 +954,11 @@ lockFile <- function(cachePath, cache_key,
       dir.create(csd, showWarnings = FALSE, recursive = TRUE)
     }
 
-    ## Phase 2 — lock contention.  Poll with short timeouts so that deleting the
-    ## lock file from another process causes the next attempt to succeed.
-    ## (timeout = Inf would block on the old kernel inode; deleting the path
-    ## would not release the flock, so the process would never recover.)
+    ## Phase 2 — true lock contention (lock held by another process, returns NULL).
+    ## Poll with short timeouts so that deleting the lock file from another terminal
+    ## causes the next attempt to succeed.
+    ## (timeout = Inf would block on the old kernel inode; deleting the path would
+    ## not release the flock, so the process would hang forever.)
     if (is.null(locked)) {
       messageCache(
         "The cache file (", lock_path, ") is locked due to a concurrent process; waiting...",
@@ -956,15 +966,7 @@ lockFile <- function(cachePath, cache_key,
         verbose = verbose + 2
       )
       repeat {
-        locked <- tryCatch(
-          filelock::lock(lock_path, timeout = 2500L),
-          error = function(e) {
-            if (grepl("Cannot open lock file", conditionMessage(e), fixed = TRUE)) {
-              tryCatch(file.remove(lock_path), error = function(e2) invisible(NULL))
-            }
-            stop(e)
-          }
-        )
+        locked <- filelock::lock(lock_path, timeout = 2500L)
         if (!is.null(locked)) break
       }
       messageCache("  ... ", lock_path, " released, continuing ... ", verbose = verbose + 2)
