@@ -357,6 +357,14 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     )
   }
   funCaptured <- substitute(fun)
+  ## If fun was passed as a bare variable name (e.g. fun = myFun inside another
+  ## function), substitute() captures the symbol rather than the value.
+  ## Resolve it now while .callingEnv still points to the user's frame; otherwise
+  ## process() later tries eval(as.name("fun"), envir = .callingEnv) from within
+  ## Cache's environment where that variable no longer exists.
+  if (is.name(funCaptured))
+    funCaptured <- tryCatch(eval(funCaptured, envir = .callingEnv),
+                            error = function(e) funCaptured)
   prepInputsAssertions(environment())
 
   rpiut <- getOption("reproducible.prepInputsUrlTiles")
