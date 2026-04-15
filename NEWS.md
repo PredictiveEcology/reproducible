@@ -1,5 +1,36 @@
 # reproducible 3.0.1
 
+## bug fixes
+
+* Fix spurious `preProcess could not extract the files from the archive` error
+  when files were already present on disk (e.g. extracted earlier in the same
+  call or found via `reproducible.inputPaths`). In `extractFromArchive`, `result`
+  was computed from the checkSums table *before* `.checkSumsUpdate()` was called,
+  so freshly-extracted files had no prior entry and `NROW(result) == 0` forced the
+  re-extraction branch even though `all(isOK)` was TRUE. Fix: compute `result`
+  after `.checkSumsUpdate()` so it reflects current disk state. The error was
+  non-fatal (caught by the surrounding `try()`) but printed an alarming message
+  and wasted effort attempting a zero-file extraction.
+* Fix `Google Drive download failed: HTTP 401 Unauthorized` error that occurred
+  mid-session when downloading multiple tiles via `prepInputsWithTiles`. The raw
+  `access_token` string extracted from the `gargle`/`googledrive` token expired
+  (1-hour TTL) while tiles were being downloaded. Fix: force a gargle token
+  refresh (via `Token2.0$refresh()`) before each `download_resumable_httr2` call,
+  and retry once on 401 with a fresh token for both the httr2 and curl code paths.
+* Fix `object 'fun' not found` error when `Cache(prepInputs, ..., fun = fun, ...)` is called
+  with `fun` as a local variable name. `substitute(fun)` captured the symbol rather than
+  the value; the symbol was then evaluated in the wrong frame (Cache's internal frame, not the
+  user's). Fix: force the R promise directly (`funCaptured <- fun`) so resolution happens in
+  the frame where the promise was created (the user's frame), regardless of call depth.
+* Fix `filelock::lock()` "Permission denied" error under high parallelism (30+ workers).
+  Three root causes: (1) deleting the `.lock` file after `unlock()` broke mutex correctness —
+  workers blocked on `fcntl(F_SETLKW)` held the old inode's lock while a fresh caller
+  created a new inode and acquired its own "lock" simultaneously; (2) stale `.lock` files
+  owned by root (from a prior sudo/root run) caused `EACCES` at `open(O_RDWR|O_CREAT)`;
+  (3) the `tryCatch` matched on "Permission denied" which is locale-dependent (varies with
+  `LC_MESSAGES`) — now matches on "Cannot open lock file" (filelock's fixed C-level prefix).
+  Fix: stop deleting lock files after release; wrap `filelock::lock()` in `tryCatch` with
+  a 5-attempt retry loop; match on the locale-independent error prefix.
 * during download from googledrive, if httr2 is not installed, now does not fail (#456)
 * postProcess: when 2 large polygon datasets were provded (from and to), the pre-cropping step
   failed as the buffer was not applied. This has been fixed and the buffer now scales with

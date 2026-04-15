@@ -896,11 +896,18 @@ callIsQuote <- function(call) {
 }
 
 releaseLockFile <- function(locked) {
-  lockFile <- locked[[2]]
   filelock::unlock(locked)
-  if (file.exists(lockFile)) {
-    unlink(lockFile)
-  }
+  ## Do NOT delete the lock file: the fcntl lock is what protects the critical
+  ## section, not the file's existence.  Deleting and recreating the file under
+  ## concurrent load creates two bugs:
+  ##   1. Workers that were blocked on fcntl(F_SETLKW) already have the old inode
+  ##      open; a fresh caller that arrives after the delete creates a *new* inode
+  ##      at the same path — both callers hold a "lock" on different inodes and
+  ##      the critical section is no longer protected.
+  ##   2. If a prior run was executed as root (or another user), a stale .lock file
+  ##      with wrong ownership is left behind; the next caller gets EACCES at
+  ##      open(O_RDWR|O_CREAT) — "Permission denied".
+  ## Leaving the (empty) .lock file in place is safe and correct.
 }
 
 lockFile <- function(cachePath, cache_key,
@@ -908,39 +915,71 @@ lockFile <- function(cachePath, cache_key,
                      verbose = getOption("reproducible.verbose")) {
   if (!useDBI()) {
     csd <- CacheStorageDir(cachePath)
-    if (!any(dir.exists(csd))) lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
+    dir.create(csd, showWarnings = FALSE, recursive = TRUE)
 
     lock_path <- file.path(csd, paste0(cache_key, suffixLockFile()))
-    first <- TRUE
-    locked <- NULL
 
-    timeouts <- c(2500, Inf)   # milliseconds: short probe, then indefinite
-    
-    for (i in seq_along(timeouts)) {
+    ## Three outcomes from filelock::lock:
+    ##   NULL   — contention; sleep 2.5 s and retry
+    ##   EMFILE — process near fd limit from other sources; gc + small sleep
+    ##   EACCES — stale file owned by another user; remove and retry
+    ##   other  — unexpected; re-throw immediately
+    ##
+    ## Note: PredictiveEcology/filelock >= 1.0.3.9001 fixes a bug in the
+    ## upstream package where every failed non-blocking attempt leaked one fd
+    ## (close()/CloseHandle() missing on the NULL return path in C).
 
-      locked <- filelock::lock(lock_path, timeout = timeouts[i])
+    locked          <- NULL
+    waiting         <- FALSE
+    emfile_attempts <- 0L
 
-      if (!is.null(locked)) {
-        break  # success
+    repeat {
+      locked <- tryCatch(
+        filelock::lock(lock_path, timeout = 0L),
+        error = function(e) {
+          msg <- conditionMessage(e)
+          if (!grepl("Cannot open lock file", msg, fixed = TRUE)) stop(e)
+
+          if (grepl("Too many open files", msg, fixed = TRUE)) {
+            emfile_attempts <<- emfile_attempts + 1L
+            if (emfile_attempts > 10L)
+              stop("Persistent 'Too many open files' acquiring lock: ", lock_path,
+                   "\nRaise ulimit -n or report a filelock fd-leak bug",
+                   call. = FALSE)
+            gc(FALSE)
+            Sys.sleep(runif(1L, 0.1, 0.3) * emfile_attempts)
+            return(NULL)
+          }
+
+          ## EACCES or similar — remove stale file and retry
+          removed <- suppressWarnings(file.remove(lock_path))
+          if (!isTRUE(removed))
+            stop("Cannot open lock file and cannot remove it.\n",
+                 "Manually delete (may need sudo): ", lock_path, "\n",
+                 "Original error: ", msg, call. = FALSE)
+          messageCache("Lock file not accessible; removed and retrying",
+                       verbose = verbose + 1)
+          dir.create(csd, showWarnings = FALSE, recursive = TRUE)
+          return(NULL)
+        }
+      )
+
+      if (!is.null(locked)) break
+
+      if (!waiting) {
+        waiting <- TRUE
+        messageCache(
+          "The cache file (", lock_path, ") is locked due to a concurrent process; waiting...",
+          "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
+          verbose = verbose + 2
+        )
       }
 
-      ## If we get here, the short timeout expired
-      ## Clean up the failed attempt deterministically
-      rm(locked)
-      gc(FALSE)
-
-      ## Emit the message exactly once, before the blocking attempt
-      messageCache(
-        "The cache file (", lock_path, ") is locked due to a concurrent process; waiting...",
-        "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
-        verbose = verbose + 2
-      )
+      Sys.sleep(2.5)
     }
 
-    ## Safety check (should never fail unless interrupted)
-    if (is.null(locked)) {
-      stop("Failed to acquire lock (unexpected)")
-    }
+    if (waiting)
+      messageCache("  ... ", lock_path, " released, continuing ... ", verbose = verbose + 2)
 
     # on.exit(filelock::unlock(locked), add = TRUE)
     #
@@ -963,10 +1002,6 @@ lockFile <- function(cachePath, cache_key,
     #   }
     #   Sys.sleep(0.25)  # backoff
     # }
-    if (!first) {
-      messageCache("  ... ", lock_path, " released, continuing ... ", verbose = verbose + 2)
-    }
-
     # Ensure release when the *outer* scope exits
     on.exit2(releaseLockFile(locked), envir = envir)
     locked

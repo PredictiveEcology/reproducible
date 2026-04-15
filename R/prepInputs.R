@@ -357,6 +357,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     )
   }
   funCaptured <- substitute(fun)
+  ## When fun is a bare variable name (e.g. fun = myFun), substitute() captures
+  ## the symbol rather than the value. Force the R promise directly: this resolves
+  ## the symbol in the frame where the promise was created (the caller's frame),
+  ## which works correctly even when prepInputs is invoked via Cache's call chain.
+  if (is.name(funCaptured))
+    funCaptured <- fun
   prepInputsAssertions(environment())
 
   rpiut <- getOption("reproducible.prepInputsUrlTiles")
@@ -514,11 +520,6 @@ extractFromArchive <- function(archive,
           neededFiles <- checkRelative(neededFiles, absolutePrefix = destinationPath, filesInArchive)
           neededFilesRel <- makeRelative(neededFiles, destinationPath) # neededFiles may have been changed
           neededFiles <- makeAbsolute(neededFiles, destinationPath)
-          result <- if (NROW(checkSums)) {
-            checkSums[checkSums$expectedFile %in% neededFilesRel, ]$result
-          } else {
-            logical(0)
-          }
           # need to re-Checksums because
           checkSums <- .checkSumsUpdate(
             destinationPath = destinationPath,
@@ -526,6 +527,14 @@ extractFromArchive <- function(archive,
             checkSums = checkSums,
             checkSumFilePath = checkSumFilePath
           )
+          # Compute result AFTER the update so it reflects current disk state.
+          # Previously computed before .checkSumsUpdate, so files just extracted
+          # would show NROW(result) == 0, forcing a spurious re-extraction attempt.
+          result <- if (NROW(checkSums)) {
+            checkSums[checkSums$expectedFile %in% neededFilesRel, ]$result
+          } else {
+            logical(0)
+          }
 
           # isOK will have "directories" so it will be longer than neededFiles
           isOK <- if (!is.null(checkSums)) {
