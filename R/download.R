@@ -525,8 +525,11 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
         req <- req |> httr2::req_user_agent(getOption("reproducible.useragent"))
       if (verbose > 0) {
         # req_progress is not in the binary httr2 available for R version 4.1.3; fails on CRAN checks
-        reqProgress <- get("req_progress", envir = asNamespace("httr2"))
-        req <- req |> reqProgress()
+        # Also wrap in tryCatch: cli's app$styles can be NULL/NA in parallel/non-interactive contexts
+        req <- tryCatch({
+          reqProgress <- get("req_progress", envir = asNamespace("httr2"))
+          req |> reqProgress()
+        }, error = function(e) req)
       }
 
       resp <- req |> httr2::req_url_query() |>
@@ -1210,7 +1213,7 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
     for (.attempt in 1:2) {
       req <- httr2::request(file_name)
       if (isGD) req <- req |> httr2::req_auth_bearer_token(bearer)
-      req <- req |> httr2::req_progress()
+      req <- tryCatch(req |> httr2::req_progress(), error = function(e) req)
 
       err <- tryCatch({
         resp <- httr2::req_perform(req)
