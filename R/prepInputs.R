@@ -357,14 +357,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     )
   }
   funCaptured <- substitute(fun)
-  ## If fun was passed as a bare variable name (e.g. fun = myFun inside another
-  ## function), substitute() captures the symbol rather than the value.
-  ## Resolve it now while .callingEnv still points to the user's frame; otherwise
-  ## process() later tries eval(as.name("fun"), envir = .callingEnv) from within
-  ## Cache's environment where that variable no longer exists.
+  ## When fun is a bare variable name (e.g. fun = myFun), substitute() captures
+  ## the symbol rather than the value. Force the R promise directly: this resolves
+  ## the symbol in the frame where the promise was created (the caller's frame),
+  ## which works correctly even when prepInputs is invoked via Cache's call chain.
   if (is.name(funCaptured))
-    funCaptured <- tryCatch(eval(funCaptured, envir = .callingEnv),
-                            error = function(e) funCaptured)
+    funCaptured <- fun
   prepInputsAssertions(environment())
 
   rpiut <- getOption("reproducible.prepInputsUrlTiles")

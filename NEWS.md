@@ -2,6 +2,11 @@
 
 ## bug fixes
 
+* Fix `object 'fun' not found` error when `Cache(prepInputs, ..., fun = fun, ...)` is called
+  with `fun` as a local variable name. `substitute(fun)` captured the symbol rather than
+  the value; the symbol was then evaluated in the wrong frame (Cache's internal frame, not the
+  user's). Fix: force the R promise directly (`funCaptured <- fun`) so resolution happens in
+  the frame where the promise was created (the user's frame), regardless of call depth.
 * Fix `filelock::lock()` "Permission denied" error under high parallelism (30+ workers).
   Three root causes: (1) deleting the `.lock` file after `unlock()` broke mutex correctness —
   workers blocked on `fcntl(F_SETLKW)` held the old inode's lock while a fresh caller
