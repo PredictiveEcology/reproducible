@@ -2,6 +2,15 @@
 
 ## bug fixes
 
+* Fix spurious `preProcess could not extract the files from the archive` error
+  when files were already present on disk (e.g. extracted earlier in the same
+  call or found via `reproducible.inputPaths`). In `extractFromArchive`, `result`
+  was computed from the checkSums table *before* `.checkSumsUpdate()` was called,
+  so freshly-extracted files had no prior entry and `NROW(result) == 0` forced the
+  re-extraction branch even though `all(isOK)` was TRUE. Fix: compute `result`
+  after `.checkSumsUpdate()` so it reflects current disk state. The error was
+  non-fatal (caught by the surrounding `try()`) but printed an alarming message
+  and wasted effort attempting a zero-file extraction.
 * Fix `Google Drive download failed: HTTP 401 Unauthorized` error that occurred
   mid-session when downloading multiple tiles via `prepInputsWithTiles`. The raw
   `access_token` string extracted from the `gargle`/`googledrive` token expired

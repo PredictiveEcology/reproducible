@@ -520,11 +520,6 @@ extractFromArchive <- function(archive,
           neededFiles <- checkRelative(neededFiles, absolutePrefix = destinationPath, filesInArchive)
           neededFilesRel <- makeRelative(neededFiles, destinationPath) # neededFiles may have been changed
           neededFiles <- makeAbsolute(neededFiles, destinationPath)
-          result <- if (NROW(checkSums)) {
-            checkSums[checkSums$expectedFile %in% neededFilesRel, ]$result
-          } else {
-            logical(0)
-          }
           # need to re-Checksums because
           checkSums <- .checkSumsUpdate(
             destinationPath = destinationPath,
@@ -532,6 +527,14 @@ extractFromArchive <- function(archive,
             checkSums = checkSums,
             checkSumFilePath = checkSumFilePath
           )
+          # Compute result AFTER the update so it reflects current disk state.
+          # Previously computed before .checkSumsUpdate, so files just extracted
+          # would show NROW(result) == 0, forcing a spurious re-extraction attempt.
+          result <- if (NROW(checkSums)) {
+            checkSums[checkSums$expectedFile %in% neededFilesRel, ]$result
+          } else {
+            logical(0)
+          }
 
           # isOK will have "directories" so it will be longer than neededFiles
           isOK <- if (!is.null(checkSums)) {
