@@ -12,6 +12,18 @@
   lives in `options("reproducible.inputPaths")` but has not yet been checksummed
   for the current run-specific `destinationPath`.
 
+  **Design note — two-layer caching strategy:** The remote hash check and the
+  local `CHECKSUMS.txt` are complementary, not competing. Remote metadata (ETags,
+  `content-length`, Google Drive `md5Checksum`) solves the *bootstrapping* problem
+  — confirming a file is correct before it has ever been checksummed locally.
+  `CHECKSUMS.txt` then takes over for all subsequent runs: it requires no network
+  round-trip, works on compute nodes without internet access, and is
+  content-addressable (survives URL changes). Note that HTTP ETags are *not*
+  universally content-hash-based — many servers derive them from inode + mtime,
+  making cross-server or post-migration comparisons unreliable — so the remote
+  check is intentionally a best-effort shortcut rather than a replacement for the
+  local checksum record.
+
 ## bug fixes
 
 * Fix spurious `preProcess could not extract the files from the archive` error
