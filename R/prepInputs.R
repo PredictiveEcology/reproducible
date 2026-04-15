@@ -147,7 +147,12 @@ utils::globalVariables(c(
 #'   `"similar"` will extract all files with the same filename without
 #'   file extension as `targetFile`. `NA` will extract nothing other
 #'   than `targetFile`. A character string of specific file names will cause
-#'   only those to be extracted. See table in [preProcess()].
+#'   only those to be extracted. Each element may also be a regular expression:
+#'   if an element does not match any archive member literally (by relative path
+#'   or basename), it is passed to `grep()` against the archive's file list and
+#'   all matching members are extracted. For example,
+#'   `alsoExtract = "CMD_sm|CMD_sp"` extracts every file whose name contains
+#'   `CMD_sm` or `CMD_sp`. See table in [preProcess()].
 #'
 #' @param destinationPath Character string of a directory in which to download
 #'   and save the file that comes from `url` and is also where the function
