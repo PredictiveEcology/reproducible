@@ -1227,7 +1227,7 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
       if (.attempt < 2L && is401 && isGD) {
         messagePreProcess("Google Drive token expired (HTTP 401); refreshing and retrying...",
                           verbose = verbose)
-        bearer <- .get_fresh_gd_bearer()
+        bearer <- .get_fresh_gd_bearer(force_refresh = TRUE)
       } else {
         stop("Google Drive download failed: ", conditionMessage(err))
       }
@@ -1263,7 +1263,7 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
         if (.attempt < 2L && is401 && isGD) {
           messagePreProcess("Google Drive token expired (HTTP 401); refreshing and retrying...",
                             verbose = verbose)
-          bearer <- .get_fresh_gd_bearer()
+          bearer <- .get_fresh_gd_bearer(force_refresh = TRUE)
         } else {
           stop("Non-Google Drive download failed: ", conditionMessage(err))
         }
@@ -1327,15 +1327,15 @@ googledriveIDtoDownloadURL <- function(id) {
   paste0("https://www.googleapis.com/drive/v3/files/", id, "?alt=media")
 }
 
-## Fetch a fresh Google Drive bearer token, refreshing via gargle if the
-## current token is expired or near expiry.  Bypassing httr's auto-refresh by
-## extracting the raw access_token string means we must do this ourselves.
-.get_fresh_gd_bearer <- function() {
+## Fetch a Google Drive bearer token.  When force_refresh = TRUE, trigger
+## gargle's auto-refresh by making a lightweight drive_user() API call through
+## httr — this is the safe way to refresh without calling Token2.0$refresh()
+## directly (which writes to the gargle cache and can fail on read-only mounts).
+.get_fresh_gd_bearer <- function(force_refresh = FALSE) {
   if (!googledrive::drive_has_token())
     stop("no googledrive token discovered; run drive_auth() to authenticate.")
-  tok <- googledrive::drive_token()$auth_token
-  if (inherits(tok, "Token2.0") && isTRUE(tok$can_refresh()))
-    tok$refresh()
+  if (force_refresh)
+    tryCatch(googledrive::drive_user(), error = function(e) NULL)
   googledrive::drive_token()$auth_token$credentials$access_token
 }
 
