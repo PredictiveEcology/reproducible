@@ -1,5 +1,17 @@
 # reproducible 3.0.1
 
+## enhancements
+
+* `preProcess` now skips downloading when a local copy already exists and
+  matches the remote version, even if it was never recorded in `CHECKSUMS.txt`
+  for the current `destinationPath`. The new `pp_remote_hash_check` stage fetches
+  remote metadata (ETag / content-length for HTTP; md5Checksum / size for Google
+  Drive) and compares against the local file. A stored `.hash` file is checked
+  first; if absent, file-size equality is used as a fast proxy and the hash is
+  persisted for future runs. This fixes the common cluster pattern where an archive
+  lives in `options("reproducible.inputPaths")` but has not yet been checksummed
+  for the current run-specific `destinationPath`.
+
 ## bug fixes
 
 * Fix spurious `preProcess could not extract the files from the archive` error

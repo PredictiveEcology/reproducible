@@ -254,6 +254,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     reproducible.inputPaths = NULL, successfulDir = NULL,
     successfulCheckSumFilePath = NULL,
     downloadResult = NULL, funChar = NULL,
+    skipDownload = FALSE, remoteMetadata = NULL,
     verboseCFS = verbose
   )
 }
@@ -472,11 +473,85 @@ pp_check_local_sources <- function(ctx) {
 }
 
 # ---------------------------------------------------------------------------
-# Phase 6: Remote hash check (stub — to be implemented)
+# Phase 6: Remote hash check
 # ---------------------------------------------------------------------------
+# If a local copy of the archive/target already exists, fetch remote metadata
+# (ETag / content-length for HTTP; md5Checksum / size for Google Drive) and
+# compare to what we have locally.  When they match we can skip the download
+# entirely — even if the file never made it into CHECKSUMS.txt for this
+# particular destinationPath (common on shared cluster mounts where the file
+# lives in reproducible.inputPaths but the run-specific CHECKSUMS.txt is empty).
+#
+# Comparison strategy (in order):
+#   1. A stored .hash file in destinationPath matches the remote hash  → skip
+#   2. Remote content-length == local file size (fast proxy)           → skip
+#      and write the .hash file for future runs
+# Any network/package error causes a silent fall-through to the normal download.
 pp_remote_hash_check <- function(ctx) {
-  # TODO: fetch remote ETag / Content-MD5 / Google Drive md5Checksum and compare
-  # to stored archive hash. If matching, mark download as unnecessary.
+  if (is.null(ctx$url)) return(ctx)
+
+  # Identify the local file that would be the download target
+  localFile <- if (!is.null(ctx$archive) && !isTRUE(is.na(ctx$archive)) &&
+                    file.exists(ctx$archive)) {
+    ctx$archive
+  } else {
+    nf <- ctx$neededFiles
+    if (!is.null(nf) && length(nf) > 0L) {
+      nf <- nf[file.exists(nf)]
+      if (length(nf)) nf[[1L]] else NULL
+    }
+  }
+  if (is.null(localFile)) return(ctx)   # nothing local yet — let download proceed
+
+  # Fetch remote metadata; bail silently on any error
+  remoteMetadata <- tryCatch(
+    getRemoteMetadata(url = ctx$url),
+    error = function(e) NULL
+  )
+  if (is.null(remoteMetadata)) return(ctx)
+
+  # ------------------------------------------------------------------
+  # Check 1: stored .hash file
+  # ------------------------------------------------------------------
+  remoteHashFile <- makeRemoteHashFile(
+    ctx$url, ctx$destinationPath,
+    remoteMetadata$targetFile, remoteMetadata$remoteHash
+  )
+  localMatchesRemote <- if (file.exists(remoteHashFile)) {
+    identical(readLines(remoteHashFile, warn = FALSE), remoteMetadata$remoteHash)
+  } else {
+    FALSE
+  }
+
+  # ------------------------------------------------------------------
+  # Check 2: file-size fallback
+  # ------------------------------------------------------------------
+  if (!localMatchesRemote && !is.null(remoteMetadata$fileSize)) {
+    remoteSize <- suppressWarnings(as.numeric(remoteMetadata$fileSize))
+    localSize  <- file.size(localFile)
+    if (!is.na(remoteSize) && !is.na(localSize) && localSize == remoteSize) {
+      localMatchesRemote <- TRUE
+      # Persist the hash so future runs use check 1
+      makeRemoteHashFile(
+        ctx$url, ctx$destinationPath,
+        remoteMetadata$targetFile, remoteMetadata$remoteHash,
+        write = TRUE
+      )
+    }
+  }
+
+  if (localMatchesRemote) {
+    messagePreProcess(
+      "Local file matches remote version; skipping download: ",
+      .messageFunctionFn(basename(localFile)), verbose = ctx$verbose
+    )
+    ctx$skipDownload   <- TRUE
+    ctx$remoteMetadata <- remoteMetadata
+    # Ensure archive is populated so pp_download / pp_extract find the file
+    if (is.null(ctx$archive) || isTRUE(is.na(ctx$archive)))
+      ctx$archive <- localFile
+  }
+
   ctx
 }
 
@@ -484,6 +559,24 @@ pp_remote_hash_check <- function(ctx) {
 # Phase 7: Download
 # ---------------------------------------------------------------------------
 pp_download <- function(ctx) {
+  # ------------------------------------------------------------------
+  # Fast path: pp_remote_hash_check confirmed local file == remote.
+  # Skip downloadFile() entirely; synthesise a minimal result so the
+  # .checkForSimilar / filesToChecksum logic below works unchanged.
+  # ------------------------------------------------------------------
+  if (isTRUE(ctx$skipDownload)) {
+    downloadFileResult <- list(
+      downloaded    = ctx$archive,
+      archive       = ctx$archive,
+      neededFiles   = ctx$neededFiles,
+      checkSums     = ctx$checkSums,
+      needChecksums = ctx$needChecksums,
+      targetFilePath = NULL,
+      out           = NULL
+    )
+  } else {
+  # ------------------------------------------------------------------
+  # Normal path: call downloadFile()
   # dlFun may be a call/language object (e.g. quote(getDataFn(...))).
   # do.call() EVALUATES language objects in its args list by calling eval() on
   # each element — so passing a call object through do.call executes it
@@ -514,12 +607,14 @@ pp_download <- function(ctx) {
   # The closure captures dlFunCaptured; do.call only sees non-language args.
   downloadFile_wrapper <- function(...) downloadFile(dlFun = dlFunCaptured, ...)
   downloadFileResult <- do.call(downloadFile_wrapper, dlArgs)
+  } # end normal path
 
-  downloadFileResult <- .fixNoFileExtension(
-    downloadFileResult = downloadFileResult,
-    targetFile = ctx$targetFile, archive = ctx$archive,
-    destinationPath = ctx$destinationPath, verbose = ctx$verbose
-  )
+  if (!isTRUE(ctx$skipDownload))
+    downloadFileResult <- .fixNoFileExtension(
+      downloadFileResult = downloadFileResult,
+      targetFile = ctx$targetFile, archive = ctx$archive,
+      destinationPath = ctx$destinationPath, verbose = ctx$verbose
+    )
 
   if (!is.null(downloadFileResult$targetFilePath))
     ctx$targetFilePath <- makeAbsolute(downloadFileResult$neededFiles, ctx$destinationPath)
