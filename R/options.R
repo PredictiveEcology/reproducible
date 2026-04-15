@@ -63,17 +63,16 @@
 #'     uploading cached elements via `googledrive` in `cloudCache`.
 #'   }
 #'   \item{`gdalwarp`}{
-#'     Default: `FALSE`. Experimental. During `postProcessTo` the standard approach
-#'     is to use `terra` functions directly, with several strategic uses of `sf`. However,
-#'     in the special case when `from` is a `SpatRaster` or `Raster`, `maskTo` is a
-#'     `SpatVector` or `SFC_POLYGON` and `projectTo` is a `SpatRaster` or `Raster`, setting
-#'     this option to `TRUE` will use `sf::gdal_utils("warp")`. In many test cases,
-#'     this is much faster than the `terra` sequence. The resulting `SpatRaster` is
-#'     not identical, but it is very similar.
+#'     **Deprecated — do not use.** Default: `FALSE`. This option previously
+#'     switched `postProcessTo` to use `sf::gdal_utils("warp")` for a specific
+#'     combination of raster/vector inputs. It is no longer needed: current
+#'     versions of `terra` handle this case well and produce equivalent results
+#'     without the GDAL detour. The option is retained only for backwards
+#'     compatibility and will be removed in a future release.
 #'   }
 #'   \item{`gdalwarpThreads`}{
-#'     Default: `2`. This will set `-wo NUM_THREADS=` to this number. Default is now `2`, meaning
-#'     `gdalwarp` will use 2 threads with `gdalProject`. To turn off threading, set to `0`, `1` or `NA`.
+#'     **Deprecated — do not use** (see `gdalwarp` above). Default: `2`.
+#'     Previously set `-wo NUM_THREADS=` for `gdalProject`.
 #'   }
 #'   \item{`inputPaths`}{
 #'     Default: `NULL`. Used in [prepInputs()] and [preProcess()].
