@@ -361,6 +361,16 @@ pp_resolve_needed_files <- function(ctx) {
   ctx$checkSums <- archiveOut$checkSums
   ctx$archive   <- archiveOut$archive
 
+  # Expand any regex patterns in alsoExtract while the archive is already on
+  # disk.  Doing this BEFORE makeAbsolute() prevents fake absolute paths like
+  # "/dest/CMD_sm|CMD_sp" from entering neededFiles.
+  if (!isNULLorNA(ctx$alsoExtract) &&
+      !isNULLorNA(ctx$archive) && any(file.exists(ctx$archive))) {
+    fia <- makeRelative(.listFilesInArchive(ctx$archive), ctx$destinationPath)
+    if (length(fia))
+      ctx$alsoExtract <- .expandAlsoExtractPatterns(ctx$alsoExtract, fia)
+  }
+
   neededFiles <- c(ctx$targetFile, makeAbsolute(ctx$alsoExtract, ctx$destinationPath))
   if (is.null(neededFiles)) neededFiles <- makeAbsolute(ctx$archive)
   if (any(is.na(neededFiles)))  neededFiles <- na.omit(neededFiles)
@@ -659,6 +669,24 @@ pp_download <- function(ctx) {
 # Phase 8: Extract from archive (single consolidated call)
 # ---------------------------------------------------------------------------
 pp_extract <- function(ctx) {
+  # Expand any regex patterns in alsoExtract now that the archive is on disk
+  # (covers the download path where expansion in pp_resolve_needed_files was
+  # skipped because the archive didn't exist yet).  If the expansion changes
+  # alsoExtract we also patch ctx$neededFiles: remove the fake absolute paths
+  # that makeAbsolute() created from the unresolved pattern strings and replace
+  # them with the real expanded paths.
+  if (!isNULLorNA(ctx$alsoExtract) &&
+      !isNULLorNA(ctx$archive) && any(file.exists(ctx$archive))) {
+    fia <- makeRelative(.listFilesInArchive(ctx$archive), ctx$destinationPath)
+    if (length(fia)) {
+      oldAbs <- makeAbsolute(ctx$alsoExtract, ctx$destinationPath)
+      ctx$alsoExtract <- .expandAlsoExtractPatterns(ctx$alsoExtract, fia)
+      newAbs <- makeAbsolute(ctx$alsoExtract, ctx$destinationPath)
+      if (!identical(oldAbs, newAbs))
+        ctx$neededFiles <- unique(c(setdiff(ctx$neededFiles, oldAbs), newAbs))
+    }
+  }
+
   filesToChecksum <- unique(c(ctx$filesToChecksum, ctx$neededFiles))
   isOK <- .compareChecksumsAndFilesAddDirs(ctx$checkSums, filesToChecksum, ctx$destinationPath)
 
@@ -1092,6 +1120,45 @@ isGoogleDriveURL <- function(url) {
   } else {
     FALSE
   }
+}
+
+#' Expand regex patterns in `alsoExtract` against a known list of archive files.
+#'
+#' For each element of `alsoExtract` that is not a literal match in
+#' `filesInArchive` (by relative path or basename), the element is treated as a
+#' regular expression and `grep()`-ed against `filesInArchive`.  Matched names
+#' replace the pattern; unmatched patterns are kept as-is so that downstream
+#' code can emit a useful "file not found" error.  Special sentinel values
+#' (`"similar"`, `"none"`, `NA`) are passed through unchanged.
+#'
+#' This lets users write e.g.
+#' `alsoExtract = "CMD_sm|CMD_sp"` to select all archive members whose name
+#' contains `CMD_sm` or `CMD_sp`.
+#'
+#' @param alsoExtract Character vector (or `NULL`).
+#' @param filesInArchive Character vector of files inside the archive, as
+#'   returned by `makeRelative(.listFilesInArchive(archive), destinationPath)`.
+#' @return A character vector with pattern elements replaced by their matches.
+#' @keywords internal
+.expandAlsoExtractPatterns <- function(alsoExtract, filesInArchive) {
+  if (is.null(alsoExtract) || length(alsoExtract) == 0L ||
+      length(filesInArchive) == 0L) return(alsoExtract)
+  out <- character(0L)
+  for (pat in alsoExtract) {
+    if (is.na(pat) || pat %in% c("similar", "none")) {
+      out <- c(out, pat)
+      next
+    }
+    # Literal match by relative path or basename → keep as-is
+    if (pat %in% filesInArchive || pat %in% basename2(filesInArchive)) {
+      out <- c(out, pat)
+    } else {
+      # Treat as regex pattern; grep against archive member names
+      matched <- grep(pat, filesInArchive, value = TRUE)
+      out <- c(out, if (length(matched)) matched else pat)
+    }
+  }
+  out
 }
 
 #' @keywords internal

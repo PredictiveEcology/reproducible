@@ -2,6 +2,15 @@
 
 ## enhancements
 
+* `alsoExtract` in `prepInputs`/`preProcess` now accepts regex patterns in
+  addition to exact filenames. For example,
+  `alsoExtract = "CMD_sm|CMD_sp"` will extract all archive members whose
+  name matches that regular expression. The expansion is performed against the
+  archive's file listing using `grep()`: if an element is a literal match it is
+  kept as-is; otherwise it is treated as a pattern. Special sentinel values
+  (`"similar"`, `"none"`, `NA`) are not affected. The expansion happens before
+  file extraction whether or not the archive was already present before the call.
+
 * `preProcess` now skips downloading when a local copy already exists and
   matches the remote version, even if it was never recorded in `CHECKSUMS.txt`
   for the current `destinationPath`. The new `pp_remote_hash_check` stage fetches
