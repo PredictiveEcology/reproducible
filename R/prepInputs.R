@@ -693,6 +693,8 @@ extractFromArchive <- function(archive,
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  filesExtracted, fun = NULL, verbose = getOption("reproducible.verbose", 1)) {
+  # fun = NA means "don't load anything" — skip all guessing and messaging
+  if (isTRUE(is.na(fun))) return(list(targetFilePath = targetFilePath, fun = fun))
   if (all(!is.na(targetFilePath))) {
     possibleFiles <- unique(c(targetFilePath, filesExtracted))
     whichPossFile <- possibleFiles %in% targetFilePath

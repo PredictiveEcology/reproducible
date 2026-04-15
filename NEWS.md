@@ -35,6 +35,11 @@
 
 ## bug fixes
 
+* Fix spurious "More than one possible files to load" message (and "Picking the
+  last one") printed by `preProcess` even when `fun = NA`. When the user
+  explicitly passes `fun = NA` (meaning: do not load the file into R),
+  `.guessAtTargetAndFun` now returns immediately without inspecting or
+  messaging about the extracted file list.
 * Fix `pp_remote_hash_check` incorrectly treating a direct `.tif` (or other
   non-archive) download as an archive when the remote hash matched. The stage
   was unconditionally setting `ctx$archive <- localFile`, which caused
