@@ -283,8 +283,6 @@ postProcessTo <- function(from, to,
     } # else {
 
     if (stillNeed) {
-      if (couldDoGDAL)
-        message("Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm")
       #############################################################
       # crop project mask sequence ################################
       #############################################################
