@@ -1,6 +1,9 @@
 # reproducible 3.0.1
 
 * during download from googledrive, if httr2 is not installed, now does not fail (#456)
+* postProcess: when 2 large polygon datasets were provded (from and to), the pre-cropping step
+  failed as the buffer was not applied. This has been fixed and the buffer now scales with
+  the size of the polygons.
 
 # reproducible 3.0.0
 
