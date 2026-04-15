@@ -19,7 +19,7 @@ URL:
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
 Date: 2026-03-26
-Version: 3.0.0.9024
+Version: 3.0.0.9025
 Authors@R: 
     c(person(given = "Eliot J B",
              family = "McIntire",

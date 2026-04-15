@@ -26,6 +26,11 @@
 
 ## bug fixes
 
+* Fix `pp_remote_hash_check` incorrectly treating a direct `.tif` (or other
+  non-archive) download as an archive when the remote hash matched. The stage
+  was unconditionally setting `ctx$archive <- localFile`, which caused
+  downstream `pp_extract` to run `7z`/`unzip` on the plain raster file.
+  Fix: only set `ctx$archive` when `.isArchive(localFile)` is non-NULL.
 * Fix spurious `preProcess could not extract the files from the archive` error
   when files were already present on disk (e.g. extracted earlier in the same
   call or found via `reproducible.inputPaths`). In `extractFromArchive`, `result`
