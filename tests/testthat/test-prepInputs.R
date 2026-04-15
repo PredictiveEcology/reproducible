@@ -37,12 +37,14 @@ test_that("prepInputs doesn't work (part 1)", {
     expect_true(is(shpEcozone, vectorType()))
 
     # test sf::st_read vs "sf::st_read" -- sf::st_read didn't work before Oc 29, 2024
-    out <- prepInputs(
-      targetFile = "Ecozones/ecozones.shp",
-      destinationPath = dPath,
-      fun = sf::st_read
-    )
-    expect_is(out, "sf")
+    if (.requireNamespace("sf")) {
+      out <- prepInputs(
+        targetFile = "Ecozones/ecozones.shp",
+        destinationPath = dPath,
+        fun = sf::st_read
+      )
+      expect_is(out, "sf")
+    }
 
     # Robust to partial file deletions:
     unlink(dir(dPath, full.names = TRUE)[1:3])
@@ -2023,6 +2025,8 @@ test_that("rasters aren't properly resampled", {
 
 test_that("test prepInputs url when a directory", {
   skip_on_cran()
+  skip_if_not_installed("httr")
+  skip_if_not_installed("curl")
 
   testInit("terra", opts = list(reproducible.inputPaths = NULL, reproducible.overwrite = TRUE))
   withr::local_options(destinationPath = tmpdir)
