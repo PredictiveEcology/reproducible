@@ -2,6 +2,12 @@
 
 ## bug fixes
 
+* Fix `Google Drive download failed: HTTP 401 Unauthorized` error that occurred
+  mid-session when downloading multiple tiles via `prepInputsWithTiles`. The raw
+  `access_token` string extracted from the `gargle`/`googledrive` token expired
+  (1-hour TTL) while tiles were being downloaded. Fix: force a gargle token
+  refresh (via `Token2.0$refresh()`) before each `download_resumable_httr2` call,
+  and retry once on 401 with a fresh token for both the httr2 and curl code paths.
 * Fix `object 'fun' not found` error when `Cache(prepInputs, ..., fun = fun, ...)` is called
   with `fun` as a local variable name. `substitute(fun)` captured the symbol rather than
   the value; the symbol was then evaluated in the wrong frame (Cache's internal frame, not the

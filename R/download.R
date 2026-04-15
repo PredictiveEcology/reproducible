@@ -1193,12 +1193,7 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
     file_id <- gdriveDetails$id
     fileSize <- as.numeric(gdriveDetails$drive_resource[[1]]$size)
     file_name <- googledriveIDtoDownloadURL(file_id)
-    token <- googledrive::drive_token()
-    if (googledrive::drive_has_token()) {
-      bearer <- token$auth_token$credentials$access_token
-    } else {
-      stop("no googledrive token discovered; run drive_auth() to authenticate.")
-    }
+    bearer <- .get_fresh_gd_bearer()  # refresh token via gargle before use
   } else {
     if (is.null(fileSize)) {
       fileSize <- getRemoteFileSize(isGD, url)
@@ -1208,48 +1203,71 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
   if ( (isGD &&  (.Platform$OS.type == "windows")) || nzchar(Sys.which("curl")) %in% FALSE ||
       fileSize < 1e9) { # i.e., < 1GB can just use the simpler httr2 progress
     ## Google Drive download using httr2 (no resume support)
-    req <- httr2::request(file_name)
-    if (isGD) {
-      req <- req |> httr2::req_auth_bearer_token(bearer)
-    }
-    req <- req |> httr2::req_progress()
-
+    ## Retry once on 401: the token may have expired mid-session; refresh and retry.
     con <- file(local_path_expanded, open = "wb")
     on.exit(try(close(con), silent = TRUE), add = TRUE)
 
-    tryCatch({
-      resp <- httr2::req_perform(req)
-      body <- httr2::resp_body_raw(resp)
-      writeBin(body, con)
-      completed <- TRUE
-    }, error = function(e) {
-      stop("Google Drive download failed: ", e$message)
-    })
+    for (.attempt in 1:2) {
+      req <- httr2::request(file_name)
+      if (isGD) req <- req |> httr2::req_auth_bearer_token(bearer)
+      req <- req |> httr2::req_progress()
+
+      err <- tryCatch({
+        resp <- httr2::req_perform(req)
+        body <- httr2::resp_body_raw(resp)
+        writeBin(body, con)
+        completed <- TRUE
+        NULL
+      }, error = function(e) e)
+
+      if (is.null(err)) break  # success
+
+      is401 <- inherits(err, "httr2_http_401") ||
+        grepl("401", conditionMessage(err), fixed = TRUE)
+      if (.attempt < 2L && is401 && isGD) {
+        messagePreProcess("Google Drive token expired (HTTP 401); refreshing and retrying...",
+                          verbose = verbose)
+        bearer <- .get_fresh_gd_bearer()
+      } else {
+        stop("Google Drive download failed: ", conditionMessage(err))
+      }
+    }
 
   } else {
     if (.Platform$OS.type != "windows" && nzchar(Sys.which("curl"))) {
       # Use download.file with curl on Linux/macOS
       method <- "curl"
-      if (isGD) {
-        extra_args <- paste("-L -H", shQuote(paste("Authorization: Bearer", bearer)))
-      } else {
+      if (!isGD) {
         extra_args <- "-C -"
         messagePreProcess("Using 'curl' with resume support on Linux/macOS.", verbose = verbose)
       }
 
-      tryCatch({
-        utils::download.file(
-          url = file_name,
-          destfile = local_path_expanded,
-          method = method,
-          quiet = verbose < 1,
-          extra = extra_args
-        )
-        completed <- TRUE
-        # message("Download completed using download.file with curl.")
-      }, error = function(e) {
-        stop("Non-Google Drive download failed: ", e$message)
-      })
+      for (.attempt in 1:2) {
+        if (isGD)
+          extra_args <- paste("-L -H", shQuote(paste("Authorization: Bearer", bearer)))
+        err <- tryCatch({
+          utils::download.file(
+            url = file_name,
+            destfile = local_path_expanded,
+            method = method,
+            quiet = verbose < 1,
+            extra = extra_args
+          )
+          completed <- TRUE
+          NULL
+        }, error = function(e) e)
+
+        if (is.null(err)) break
+
+        is401 <- grepl("401", conditionMessage(err), fixed = TRUE)
+        if (.attempt < 2L && is401 && isGD) {
+          messagePreProcess("Google Drive token expired (HTTP 401); refreshing and retrying...",
+                            verbose = verbose)
+          bearer <- .get_fresh_gd_bearer()
+        } else {
+          stop("Non-Google Drive download failed: ", conditionMessage(err))
+        }
+      }
 
     } # else {
       # # Use httr2 for non-Google Drive downloads on Windows or if curl is unavailable
@@ -1307,6 +1325,18 @@ messageAboutFilesize <- function(fileSize, verbose, msgMiddle = " on Google Driv
 
 googledriveIDtoDownloadURL <- function(id) {
   paste0("https://www.googleapis.com/drive/v3/files/", id, "?alt=media")
+}
+
+## Fetch a fresh Google Drive bearer token, refreshing via gargle if the
+## current token is expired or near expiry.  Bypassing httr's auto-refresh by
+## extracting the raw access_token string means we must do this ourselves.
+.get_fresh_gd_bearer <- function() {
+  if (!googledrive::drive_has_token())
+    stop("no googledrive token discovered; run drive_auth() to authenticate.")
+  tok <- googledrive::drive_token()$auth_token
+  if (inherits(tok, "Token2.0") && isTRUE(tok$can_refresh()))
+    tok$refresh()
+  googledrive::drive_token()$auth_token$credentials$access_token
 }
 
 googledriveIDtoHumanURL <- function(id) {
