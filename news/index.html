@@ -64,7 +64,7 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="3.0.0" id="reproducible-300">reproducible 3.0.0<a class="anchor" aria-label="anchor" href="#reproducible-300"></a></h2>
+<h2 class="page-header" data-toc-text="3.0.0" id="reproducible-300">reproducible 3.0.0<small>2026-01-08</small><a class="anchor" aria-label="anchor" href="#reproducible-300"></a></h2>
 <ul><li>the package <code>qs</code> removed as an option for <code>CacheSaveFormat</code>. The user can stay with declaring <code>options(reproducible.CacheSaveFormat = "qs")</code>, but it will use <code>qs2</code>. <code>qs</code> is being removed from CRAN;</li>
 <li>MacOS: key fixes for paths that have created longstanding failures;</li>
 <li>clearing out of stale code due to Cache rewrite;</li>
@@ -314,7 +314,7 @@
 <code>reproducible.useFuture</code> now defaults to <code>"multisession"</code>
 </li>
 <li>updated tests to deal with <code>data.table</code> development branch (<a href="https://github.com/PredictiveEcology/reproducible/issues/314" class="external-link">#314</a>)</li>
-<li>removed all use of <code><a href="https://rdatatable.gitlab.io/data.table/reference/setattr.html" class="external-link">data.table::setattr</a></code> to deal with “modified compiler constants” issue that was detected during CRAN checks</li>
+<li>removed all use of <code><a href="https://rdrr.io/pkg/data.table/man/setattr.html" class="external-link">data.table::setattr</a></code> to deal with “modified compiler constants” issue that was detected during CRAN checks</li>
 <li>Improvements with testing using GitHub Actions</li>
 </ul></div>
 <div class="section level3">
@@ -498,7 +498,7 @@
 <ul><li>
 <code>.robustDigest</code> was removing Cache attributes from objects under many conditions, when it should have left them there. It is unclear what the issues were, as this would likely not have impacted <code>Cache</code>. Now these attributes are left on.</li>
 <li>
-<code>data.table</code> objects appear to not be recovered correctly from disk (e.g., from Cache repository. We have added <code><a href="https://rdatatable.gitlab.io/data.table/reference/copy.html" class="external-link">data.table::copy</a></code> when recovering from Cache repository</li>
+<code>data.table</code> objects appear to not be recovered correctly from disk (e.g., from Cache repository. We have added <code><a href="https://rdrr.io/pkg/data.table/man/copy.html" class="external-link">data.table::copy</a></code> when recovering from Cache repository</li>
 <li>
 <code>clearCache</code> and <code>cc</code> did not correctly remove file-backed raster files (when not clearing whole CacheRepo); this may have resulted in a proliferation of files, each a filename with an underscore and a new higher number. This fix should eliminate this problem.</li>
 <li>deal with development versions of GDAL in <code>getGDALVersion()</code> (<a href="https://github.com/PredictiveEcology/reproducible/issues/239" class="external-link">#239</a>)</li>
@@ -894,7 +894,7 @@
 <code>prepInputs</code> on GIS objects that don’t use <code><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster::raster</a></code> to load object were skipping <code>postProcess</code>. Fixed.</li>
 <li>under some circumstances, the <code>prepInputs</code> would cause virtually all entries in <code>CHECKSUMS.txt</code> to be deleted. 2 cases where this happened were identified and corrected.</li>
 <li>
-<code>data.table</code> class objects would give an error sometimes due to use of <code>attr(DT)</code>. Internally, attributes are now added with <code><a href="https://rdatatable.gitlab.io/data.table/reference/setattr.html" class="external-link">data.table::setattr</a></code> to deal with this.</li>
+<code>data.table</code> class objects would give an error sometimes due to use of <code>attr(DT)</code>. Internally, attributes are now added with <code><a href="https://rdrr.io/pkg/data.table/man/setattr.html" class="external-link">data.table::setattr</a></code> to deal with this.</li>
 <li>calling <code>gdalwarp</code> from <code>prostProcess</code> now correctly matches extent (<a href="https://github.com/PredictiveEcology/reproducible/issues/73" class="external-link">#73</a>, <a href="https://github.com/tati-micheletti" class="external-link">@tati-micheletti</a>)</li>
 <li>files from url that have unknown extension are now guessed with by <code>preProcess</code> (<a href="https://github.com/PredictiveEcology/reproducible/issues/92" class="external-link">#92</a>, <a href="https://github.com/tati-micheletti" class="external-link">@tati-micheletti</a>)</li>
 </ul></div>
