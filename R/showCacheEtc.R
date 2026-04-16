@@ -451,18 +451,17 @@ setMethod(
 
     if (!useDBI()) {
       pkgEnv <- memoiseEnv(cachePath = x)
-      if (exists("aaaa", envir = .GlobalEnv)) browser()
       if (!exists("shownCache", envir = pkgEnv))
         pkgEnv[["shownCache"]] <- new.env()
       if (!exists(x, envir = pkgEnv[["shownCache"]]))
         pkgEnv[["shownCache"]][[x]] <- new.env()
 
-      sc <- collect_showCache_async(x, wait = TRUE)
+      # Non-blocking poll: if the async pre-load job has already finished,
+      # harvest it; otherwise proceed synchronously.  Never block here — for
+      # large caches the fork can take minutes, and blocking would defeat the
+      # purpose of having the incremental-update mechanism below.
+      collect_showCache_async(x, wait = FALSE, timeout = 0)
       scEnv <- pkgEnv[["shownCache"]][[x]]
-
-      # spawn_showCache_async(x, # name = paste0("showCache:", x),
-      #                       silent = TRUE, overwrite = FALSE)
-      # rr <- collect_showCache_async(x, wait = FALSE, timeout = 0)
 
       # periodically, a cache entry is corrupt; this while, tryCatch will remove the corrupt file and restart
       objsDT <- list()
@@ -471,8 +470,7 @@ setMethod(
         objsDT <- tryCatch2(
           if (!is.null(cacheId)) {
             objsDT <- rbindlist(fill = TRUE, lapply(cacheId, function(fil) {
-              # filOutside <<- fil
-              showCacheFast(fil, cachePath = x, # cacheSaveFormat = cacheSaveFormat,
+              showCacheFast(fil, cachePath = x,
                             drv = drv, conn = conn)
             }))
           } else {
@@ -482,13 +480,19 @@ setMethod(
             )
             lapplyFun <- lapply
             curFileInfo <- file.info(dd) |> setDT(keep.rownames = "filename")
+
+            # Compare only on stable, content-relevant columns.
+            # Joining on all file.info columns (including atime) caused every
+            # file to appear "new" on every call because loadFile() updates atime.
+            stableCols <- c("filename", "mtime", "size")
+
             if (is.null(scEnv$FileInfo)) {
               newOnes <- curFileInfo
             } else {
-              newOnes <- curFileInfo[!scEnv$FileInfo, on = colnames(curFileInfo)]
-              removeOnes <- scEnv$FileInfo[!curFileInfo, on = colnames(curFileInfo)]
+              newOnes  <- curFileInfo[!scEnv$FileInfo,  on = stableCols]
+              removeOnes <- scEnv$FileInfo[!curFileInfo, on = "filename"]
               if (NROW(removeOnes)) {
-                scEnv$FileInfo <- scEnv$FileInfo[!removeOnes, on = colnames(curFileInfo)]
+                scEnv$FileInfo <- scEnv$FileInfo[!removeOnes, on = "filename"]
                 cis <- filePathSansExt(filePathSansExt(basename(removeOnes$filename)))
                 scEnv$sc <- scEnv$sc[!cacheId %in% cis]
               }
@@ -1043,7 +1047,6 @@ collect_showCache_async <- function(
     pkgEnv[["shownCache"]] <- new.env()
   if (!exists(x, envir = pkgEnv[["shownCache"]]))
     pkgEnv[["shownCache"]][[x]] <- new.env()
-  if (exists("aaaa", envir = .GlobalEnv)) browser()
   if (is.null(pkgEnv[["shownCache"]]$shownCache_jobs) || !exists(x, envir = pkgEnv[["shownCache"]]$shownCache_jobs, inherits = FALSE)) {
     return(invisible(NULL))  # nothing spawned for this cachePath
   }
