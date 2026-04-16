@@ -35,6 +35,18 @@
 
 ## bug fixes
 
+* Fix `showCache` in-memory cache (the `scEnv` incremental-update mechanism)
+  which was non-functional due to three bugs: (1) the file-change detection
+  joined on all `file.info` columns including `atime`; since `loadFile()`
+  reads each cache file, `atime` updated on every `showCache` call, making
+  every file appear "new" and forcing a full disk reload every time; fixed by
+  joining only on `filename`, `mtime`, and `size`. (2) `collect_showCache_async`
+  was called with `wait = TRUE` inside `showCache`, blocking for up to 10 s;
+  for large caches the background fork takes minutes so the timeout always
+  expired and `scEnv` was left empty; fixed by switching to a non-blocking
+  poll — if the async result is ready it is used, otherwise the synchronous
+  path runs and populates `scEnv` for subsequent calls. (3) leftover
+  `browser()` debug guards removed.
 * Fix spurious "More than one possible files to load" message (and "Picking the
   last one") printed by `preProcess` even when `fun = NA`. When the user
   explicitly passes `fun = NA` (meaning: do not load the file into R),
