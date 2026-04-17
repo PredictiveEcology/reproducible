@@ -48,4 +48,4 @@ VEG_COMP_LYR_L1_POLY_2015.gdb.zip
 config.yml
 cache
 covr-tmp
-.vscode/settings.json
+.vscode/*

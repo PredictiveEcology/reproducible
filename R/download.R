@@ -694,8 +694,9 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
       }
 
       if (is.null(out) && !is.null(url)) { # if url is NULL and out is NULL; means dlFun did all the work
-        isGID <- all(isTRUE(grepl("^[A-Za-z0-9_-]{33}$", url)), # Has 33 characters as letters, numbers or - or _
-                     isTRUE(!grepl("\\.[^\\.]+$", url))) # doesn't have an extension --> GDrive ID's as url
+        isGID <- isGoogleDriveURL(url)
+        # isGID <- all(isTRUE(grepl("^[A-Za-z0-9_-]{33}$", url)), # Has 33 characters as letters, numbers or - or _
+        #              isTRUE(!grepl("\\.[^\\.]+$", url))) # doesn't have an extension --> GDrive ID's as url
         if (any(isGID, grepl("d.+.google.com", url))) {
           if (!requireNamespace("googledrive", quietly = TRUE)) {
             stop(.message$RequireNamespaceFn("googledrive", "to use google drive files"))
