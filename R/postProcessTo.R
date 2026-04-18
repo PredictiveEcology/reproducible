@@ -942,7 +942,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
 
       # This is only needed if crop happens before a projection... need to cells beyond edges so projection is accurate
       if (needBuffer) {
-        if (.isGridded(from) || .isGridded(cropTo)) {
+        # if (.isGridded(from) || .isGridded(cropTo)) {
           if (.isGridded(from)) {
             res <- terra::res(from)
           } else if (.isGridded(cropTo)) {
@@ -953,11 +953,22 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
             terra::crs(ext) <- terra::crs(from)
           }
           extTmp <- terra::ext(ext)
-          extFrom <- terra::ext(from)
-          extOrder <- c("xmin", "ymin", "xmax", "ymax")
-          extNum <- extFrom[][extOrder]
-          if (isTRUE(suppressWarnings(terra::is.lonlat(ext)))) { # warning is about "crs not defined"
-            extTmp2 <- terra::extend(extTmp, 0.1) # hard code 0.1 lat/long, as long as it isn't past the from extent
+
+          if (!exists("res", inherits = FALSE)) { # means neither is a gridded obj
+            extFrom <- terra::ext(from)
+            extOrder <- c("xmin", "ymin", "xmax", "ymax")
+            extNum <- extFrom[][extOrder]
+            ranges <- c(abs(terra::xmin(extTmp) - terra::xmax(extTmp)),
+                        abs(terra::ymin(extTmp) - terra::ymax(extTmp)))
+            extendBy <- min(0.2, max(0.05, (max(ranges) - 20)/20 * 0.5))
+            extendBy <- max(ranges) * extendBy
+            # if (isTRUE(suppressWarnings(terra::is.lonlat(ext)))) { # warning is about "crs not defined"
+
+            # Eliot added this Apr 6, 2026 to cope with pre-crop that is too tight.
+            #  This should scale ... as the range of longlat becomes larger, the error can get bigger
+            #  This is fairly conservative and works for 22 degrees of longitude, north of 60 N latitude
+            # extendBy <- 0.1
+            extTmp2 <- terra::extend(extTmp, extendBy) # hard code 0.1 lat/long, as long as it isn't past the from extent
             exts <- c(
               xmin = max(terra::xmin(extTmp2), terra::xmin(extFrom)),
               ymin = max(terra::ymin(extTmp2), terra::ymin(extFrom)),
@@ -970,15 +981,17 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
               terra::ext(xy = TRUE, exts)
             }
           } else {
-            ext <- terra::extend(extTmp, res[1] * 2)
+            # was * 2 ; seems like that isn't enough; April 9, 2026 Eliot;
+            #  this was changed when the above branch was changed to `extendBy` instead of `0.1`
+            ext <- terra::extend(extTmp, res[1] * 15)
           }
 
           exts <- ext[][extOrder]
           # This won't work if the the ext is tight with the from i.e., if they are the same;
           #   test and skip cropping with needBuffer =TRUE if it is too tight
-          if (isTRUE(any(extNum == exts)))
+          if (isTRUE(any(extNum == exts)) && .isGridded(from))
             return(from)
-        }
+        # }
       }
 
       attempt <- 1
