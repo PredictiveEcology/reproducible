@@ -51,3 +51,4 @@ covr-tmp
 .vscode/*
 reproducible.Rcheck/
 reproducible_*.tar.gz
+.claude
