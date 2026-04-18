@@ -955,11 +955,11 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
             terra::crs(ext) <- terra::crs(from)
           }
           extTmp <- terra::ext(ext)
+          extFrom <- terra::ext(from)
+          extOrder <- c("xmin", "ymin", "xmax", "ymax")
+          extNum <- extFrom[][extOrder]
 
           if (!exists("res", inherits = FALSE)) { # means neither is a gridded obj
-            extFrom <- terra::ext(from)
-            extOrder <- c("xmin", "ymin", "xmax", "ymax")
-            extNum <- extFrom[][extOrder]
             ranges <- c(abs(terra::xmin(extTmp) - terra::xmax(extTmp)),
                         abs(terra::ymin(extTmp) - terra::ymax(extTmp)))
             extendBy <- min(0.2, max(0.05, (max(ranges) - 20)/20 * 0.5))
