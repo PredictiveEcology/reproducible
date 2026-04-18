@@ -54,7 +54,7 @@ Imports:
     cli,
     data.table (>= 1.10.4),
     digest,
-    filelock (>= 1.0.3.9001),
+    filelock (>= 1.0.3),
     fpCompare,
     fs,
     lobstr,
