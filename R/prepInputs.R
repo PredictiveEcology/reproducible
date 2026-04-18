@@ -158,9 +158,11 @@ utils::globalVariables(c(
 #'   and save the file that comes from `url` and is also where the function
 #'   will look for `archive` or `targetFile`. NOTE (still experimental):
 #'   To prevent repeated downloads in different locations, the user can also set
-#'   `options("reproducible.inputPaths")` to one or more local file paths to
+#'   `options("reproducible.dataPath")` to one or more local file paths to
 #'   search for the file before attempting to download. Default for that option is
-#'   `NULL` meaning do not search locally.
+#'   `NULL` meaning do not search locally. The previous name
+#'   `options("reproducible.inputPaths")` is still accepted as a backwards-compatible
+#'   alias.
 #'
 #' @param fun Optional. If specified, this will attempt to load whatever
 #'   file was downloaded during `preProcess` via `dlFun`. This can be either a
@@ -1162,7 +1164,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     )
   })
 
-  rip <- getOption("reproducible.inputPaths")
+  rip <- .getDataPath()
   checkSumFilePaths <- if (!is.null(rip)) {
     unique(c(checkSumFilePath, file.path(rip, basename(checkSumFilePath))))
   } else {
@@ -1202,9 +1204,9 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
             # corrupted
             unlink(archive[1])
             message("archive (", archive[1], ") appears corrupted; deleting it; ",
-                    "you may have to manually delete it and the copy in `reproducible.inputPaths` if using ")
+                    "you may have to manually delete it and the copy in `reproducible.dataPath` if using ")
             return(NULL)
-          } 
+          }
           needSystemCall <- needSystemCall || fsArch > 2e9
         }
       }
@@ -1231,7 +1233,16 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
               filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
             } else if ("path" %in% nams) {
               # from archive::archive
-              filesInArchive <- filesInArchive[filesInArchive$size != 0, ]$path
+              # Some zip files (e.g. Deflate64) cause archive::archive() to
+              # report size = 0 for every entry even though the archive is valid
+              # and non-empty.  Detect this and keep all paths rather than
+              # incorrectly filtering everything out.
+              allZeroSize <- all(filesInArchive$size == 0L) && file.size(archive[1]) > 0
+              filesInArchive <- if (allZeroSize) {
+                filesInArchive$path
+              } else {
+                filesInArchive[filesInArchive$size != 0, ]$path
+              }
             } else {
               # untar & archive::archive
               filesInArchive

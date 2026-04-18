@@ -499,6 +499,15 @@ setMethod(
             }
             dd <- newOnes[["filename"]]
             ddOrig <- dd
+            # If a file's mtime changed (e.g. a cache hit rewrote the accessed
+            # tag), it appears in newOnes even though it still exists.  Without
+            # this purge, the old entry and the freshly-loaded one would both be
+            # present in scEnv$sc, causing duplicate cacheIds and a cartesian
+            # join error in the userTags filter below.
+            if (!is.null(scEnv$sc) && length(dd) > 0) {
+              cisToRemove <- filePathSansExt(filePathSansExt(basename(dd)))
+              scEnv$sc <- scEnv$sc[!cacheId %in% cisToRemove]
+            }
             scEnv$FileInfo <- curFileInfo
 
             keepDoing <- TRUE
@@ -521,7 +530,7 @@ setMethod(
                   fileExs <- setdiff(.cacheSaveFormats, fileEx)
                   for (fe in fileExs) {
                     out <- loadFile(fil, format = fe,
-                                    cacheId = cacheId, cachePath = cachePath, # in case it needs swapCacheFormat
+                                    cacheId = cacheId, cachePath = x, # in case it needs swapCacheFormat
                                     drv = drv, conn = conn, verbose = verbose)
                     # out <- try(loadFile(fil, format = fe,
                     #                     cacheId = cacheId, cachePath = cachePath, # in case it needs swapCacheFormat

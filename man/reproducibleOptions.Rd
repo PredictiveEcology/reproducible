@@ -68,19 +68,18 @@ They may, however, be very effective in speeding up some things, specifically,
 uploading cached elements via \code{googledrive} in \code{cloudCache}.
 }
 \item{\code{gdalwarp}}{
-Default: \code{FALSE}. Experimental. During \code{postProcessTo} the standard approach
-is to use \code{terra} functions directly, with several strategic uses of \code{sf}. However,
-in the special case when \code{from} is a \code{SpatRaster} or \code{Raster}, \code{maskTo} is a
-\code{SpatVector} or \code{SFC_POLYGON} and \code{projectTo} is a \code{SpatRaster} or \code{Raster}, setting
-this option to \code{TRUE} will use \code{sf::gdal_utils("warp")}. In many test cases,
-this is much faster than the \code{terra} sequence. The resulting \code{SpatRaster} is
-not identical, but it is very similar.
+\strong{Deprecated — do not use.} Default: \code{FALSE}. This option previously
+switched \code{postProcessTo} to use \code{sf::gdal_utils("warp")} for a specific
+combination of raster/vector inputs. It is no longer needed: current
+versions of \code{terra} handle this case well and produce equivalent results
+without the GDAL detour. The option is retained only for backwards
+compatibility and will be removed in a future release.
 }
 \item{\code{gdalwarpThreads}}{
-Default: \code{2}. This will set \verb{-wo NUM_THREADS=} to this number. Default is now \code{2}, meaning
-\code{gdalwarp} will use 2 threads with \code{gdalProject}. To turn off threading, set to \code{0}, \code{1} or \code{NA}.
+\strong{Deprecated — do not use} (see \code{gdalwarp} above). Default: \code{2}.
+Previously set \verb{-wo NUM_THREADS=} for \code{gdalProject}.
 }
-\item{\code{inputPaths}}{
+\item{\code{dataPath}}{
 Default: \code{NULL}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
 If set to a path, this will cause these functions to save their downloaded and preprocessed
 file to this location, with a hardlink (via \code{file.link}) to the file created in the
@@ -90,10 +89,30 @@ modularity (by placing downloaded objects in their \code{destinationPath}, but a
 re-downloading the same (perhaps large) file over and over for each project.
 Because the files are hardlinks, there is no extra space taken up by the apparently
 duplicated files.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{**Note:** the previous name for this option was `reproducible.inputPaths`; the old
+name is still accepted and will continue to work, but `reproducible.dataPath` is
+preferred going forward.
+}\if{html}{\out{</div>}}
+
+}
+\item{\code{dataPathRecursive}}{
+Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
+Should \code{reproducible.dataPath} be searched recursively for existence of a file?
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{**Note:** the previous name for this option was `reproducible.inputPathsRecursive`;
+the old name is still accepted but `reproducible.dataPathRecursive` is preferred.
+}\if{html}{\out{</div>}}
+
+}
+\item{\code{inputPaths}}{
+\strong{Deprecated} — use \code{reproducible.dataPath} instead.
+Retained for backwards compatibility; if set and \code{reproducible.dataPath} is \code{NULL},
+the value of \code{reproducible.inputPaths} is used automatically.
 }
 \item{\code{inputPathsRecursive}}{
-Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
-Should the \code{reproducible.inputPaths} be searched recursively for existence of a file?
+\strong{Deprecated} — use \code{reproducible.dataPathRecursive} instead.
+Retained for backwards compatibility.
 }
 \item{\code{leaveOnDisk}}{
 Default: \code{TRUE}. Used in \code{\link[=postProcess]{postProcess()}}.

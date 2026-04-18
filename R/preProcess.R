@@ -1243,11 +1243,7 @@ isGoogleDriveURL <- function(url) {
     neededFilesRel <- makeRelative(neededFiles, destinationPath)
     if (!all(neededFilesRel %in% filesInHand)) {
       for (op in otherPaths) {
-        recursively <- if (!is.null(getOption("reproducible.inputPathsRecursive"))) {
-          getOption("reproducible.inputPathsRecursive")
-        } else {
-          FALSE
-        }
+        recursively <- .getDataPathRecursive()
         opFiles <- dir(op, recursive = recursively, full.names = TRUE)
         if (any(neededFilesRel %in% basename2(opFiles))) {
           isNeeded <- basename2(opFiles) %in% neededFilesRel
@@ -1305,7 +1301,7 @@ isGoogleDriveURL <- function(url) {
     }
     # do a check here that destinationPath is already the inputPaths
     #   need to emulate the above behaviour
-    reproducible.inputPaths <- getOption("reproducible.inputPaths", NULL)
+    reproducible.inputPaths <- .getDataPath()
     if (!is.null(reproducible.inputPaths)) {
       reproducible.inputPaths <- normPath(reproducible.inputPaths)
     }
@@ -1947,7 +1943,7 @@ setupArchive <- function(archive, destinationPath) {
 }
 
 runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbose) {
-  reproducible.inputPaths <- getOption("reproducible.inputPaths", NULL)
+  reproducible.inputPaths <- .getDataPath()
   if (!is.null(reproducible.inputPaths)) {
     reproducible.inputPaths <- checkPath(reproducible.inputPaths, create = TRUE)
   }

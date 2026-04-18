@@ -2,6 +2,14 @@
 
 ## enhancements
 
+* The options `reproducible.inputPaths` and `reproducible.inputPathsRecursive`
+  have been renamed to `reproducible.dataPath` and `reproducible.dataPathRecursive`
+  respectively. The old names remain fully functional as backwards-compatible
+  aliases: if `reproducible.dataPath` is `NULL` and `reproducible.inputPaths` is
+  set, the old value is used automatically (with a deprecation message). Update
+  your code by replacing `options(reproducible.inputPaths = ...)` with
+  `options(reproducible.dataPath = ...)` at your convenience.
+
 * `alsoExtract` in `prepInputs`/`preProcess` now accepts regex patterns in
   addition to exact filenames. For example,
   `alsoExtract = "CMD_sm|CMD_sp"` will extract all archive members whose
@@ -34,6 +42,12 @@
   local checksum record.
 
 ## bug fixes
+
+* Fix `.listFilesInArchive` incorrectly returning an empty file list for zip
+  archives where `archive::archive()` reports `size = 0` for every entry
+  (a known metadata-reading issue with certain compression variants such as
+  Deflate64). When all reported sizes are zero but the archive file itself is
+  non-empty, all paths are now included rather than being filtered out.
 
 * Fix `showCache` in-memory cache (the `scEnv` incremental-update mechanism)
   which was non-functional due to three bugs: (1) the file-change detection

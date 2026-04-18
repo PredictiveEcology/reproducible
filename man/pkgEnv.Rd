@@ -8,7 +8,7 @@
 \format{
 An object of class \code{environment} of length 40.
 
-An object of class \code{environment} of length 4.
+An object of class \code{environment} of length 3.
 }
 \usage{
 .message

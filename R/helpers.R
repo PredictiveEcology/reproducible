@@ -751,3 +751,40 @@ detectActiveCores <- function(pattern = "", minCPU = 50) {
     message("Does not work on Windows")
   }
 }
+
+# ---------------------------------------------------------------------------
+# Backwards-compatible accessors for the dataPath / inputPaths option pair.
+# The canonical names are reproducible.dataPath and reproducible.dataPathRecursive.
+# The old names (reproducible.inputPaths, reproducible.inputPathsRecursive) are
+# still accepted: if the new name is NULL but the old name is set, the old value
+# is used and a one-time deprecation message is emitted.
+# ---------------------------------------------------------------------------
+
+#' @keywords internal
+.getDataPath <- function() {
+  newVal <- getOption("reproducible.dataPath", NULL)
+  if (!is.null(newVal)) return(newVal)
+  oldVal <- getOption("reproducible.inputPaths", NULL)
+  if (!is.null(oldVal)) {
+    message(
+      "Option 'reproducible.inputPaths' is deprecated; ",
+      "please use 'reproducible.dataPath' instead."
+    )
+  }
+  oldVal
+}
+
+#' @keywords internal
+.getDataPathRecursive <- function() {
+  newVal <- getOption("reproducible.dataPathRecursive", NULL)
+  if (!is.null(newVal)) return(newVal)
+  oldVal <- getOption("reproducible.inputPathsRecursive", NULL)
+  if (!is.null(oldVal)) {
+    message(
+      "Option 'reproducible.inputPathsRecursive' is deprecated; ",
+      "please use 'reproducible.dataPathRecursive' instead."
+    )
+  }
+  # Default is FALSE when neither is set
+  if (is.null(oldVal)) FALSE else oldVal
+}

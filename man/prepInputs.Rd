@@ -53,15 +53,22 @@ is expecting an archive directly.}
 \code{"similar"} will extract all files with the same filename without
 file extension as \code{targetFile}. \code{NA} will extract nothing other
 than \code{targetFile}. A character string of specific file names will cause
-only those to be extracted. See table in \code{\link[=preProcess]{preProcess()}}.}
+only those to be extracted. Each element may also be a regular expression:
+if an element does not match any archive member literally (by relative path
+or basename), it is passed to \code{grep()} against the archive's file list and
+all matching members are extracted. For example,
+\code{alsoExtract = "CMD_sm|CMD_sp"} extracts every file whose name contains
+\code{CMD_sm} or \code{CMD_sp}. See table in \code{\link[=preProcess]{preProcess()}}.}
 
 \item{destinationPath}{Character string of a directory in which to download
 and save the file that comes from \code{url} and is also where the function
 will look for \code{archive} or \code{targetFile}. NOTE (still experimental):
 To prevent repeated downloads in different locations, the user can also set
-\code{options("reproducible.inputPaths")} to one or more local file paths to
+\code{options("reproducible.dataPath")} to one or more local file paths to
 search for the file before attempting to download. Default for that option is
-\code{NULL} meaning do not search locally.}
+\code{NULL} meaning do not search locally. The previous name
+\code{options("reproducible.inputPaths")} is still accepted as a backwards-compatible
+alias.}
 
 \item{fun}{Optional. If specified, this will attempt to load whatever
 file was downloaded during \code{preProcess} via \code{dlFun}. This can be either a

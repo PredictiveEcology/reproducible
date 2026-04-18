@@ -13,9 +13,11 @@ dlGeneric(url, destinationPath, verbose = getOption("reproducible.verbose", 1))
 and save the file that comes from \code{url} and is also where the function
 will look for \code{archive} or \code{targetFile}. NOTE (still experimental):
 To prevent repeated downloads in different locations, the user can also set
-\code{options("reproducible.inputPaths")} to one or more local file paths to
+\code{options("reproducible.dataPath")} to one or more local file paths to
 search for the file before attempting to download. Default for that option is
-\code{NULL} meaning do not search locally.}
+\code{NULL} meaning do not search locally. The previous name
+\code{options("reproducible.inputPaths")} is still accepted as a backwards-compatible
+alias.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.

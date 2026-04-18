@@ -910,6 +910,7 @@ releaseLockFile <- function(locked) {
   ## Leaving the (empty) .lock file in place is safe and correct.
 }
 
+#' @importFrom stats runif
 lockFile <- function(cachePath, cache_key,
                      envir   = parent.frame(),
                      verbose = getOption("reproducible.verbose")) {

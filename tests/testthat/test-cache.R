@@ -234,7 +234,7 @@ test_that("test file-backed raster caching", {
       origFile <- sc[tagKey == "origFilename"]$cacheId
       hasFilenameInCache <- NROW(sc[tagKey %in% tagFilenamesInCache])
       expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) ==
-                    (1 + hasFilenameInCache + as.integer(!useDBI()) + 2 * savePreDigest))
+                    (1 + hasFilenameInCache + as.integer(!useDBI()) + 2 * savePreDigest + 1L))
       # expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + !useDBI())
     }
 

@@ -74,7 +74,7 @@
 #'     **Deprecated — do not use** (see `gdalwarp` above). Default: `2`.
 #'     Previously set `-wo NUM_THREADS=` for `gdalProject`.
 #'   }
-#'   \item{`inputPaths`}{
+#'   \item{`dataPath`}{
 #'     Default: `NULL`. Used in [prepInputs()] and [preProcess()].
 #'     If set to a path, this will cause these functions to save their downloaded and preprocessed
 #'     file to this location, with a hardlink (via `file.link`) to the file created in the
@@ -84,10 +84,26 @@
 #'     re-downloading the same (perhaps large) file over and over for each project.
 #'     Because the files are hardlinks, there is no extra space taken up by the apparently
 #'     duplicated files.
+#'
+#'     **Note:** the previous name for this option was `reproducible.inputPaths`; the old
+#'     name is still accepted and will continue to work, but `reproducible.dataPath` is
+#'     preferred going forward.
+#'   }
+#'   \item{`dataPathRecursive`}{
+#'     Default: `FALSE`. Used in [prepInputs()] and [preProcess()].
+#'     Should `reproducible.dataPath` be searched recursively for existence of a file?
+#'
+#'     **Note:** the previous name for this option was `reproducible.inputPathsRecursive`;
+#'     the old name is still accepted but `reproducible.dataPathRecursive` is preferred.
+#'   }
+#'   \item{`inputPaths`}{
+#'     **Deprecated** — use `reproducible.dataPath` instead.
+#'     Retained for backwards compatibility; if set and `reproducible.dataPath` is `NULL`,
+#'     the value of `reproducible.inputPaths` is used automatically.
 #'   }
 #'   \item{`inputPathsRecursive`}{
-#'     Default: `FALSE`. Used in [prepInputs()] and [preProcess()].
-#'     Should the `reproducible.inputPaths` be searched recursively for existence of a file?
+#'     **Deprecated** — use `reproducible.dataPathRecursive` instead.
+#'     Retained for backwards compatibility.
 #'   }
 #'   \item{`leaveOnDisk`}{
 #'     Default: `TRUE`. Used in [postProcess()].
@@ -278,8 +294,10 @@ reproducibleOptions <- function() {
     reproducible.gdalwarp = FALSE,
     reproducible.gdalwarpThreads = 2L,
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
-    reproducible.inputPaths = NULL,
-    reproducible.inputPathsRecursive = FALSE,
+    reproducible.dataPath = NULL,
+    reproducible.dataPathRecursive = FALSE,
+    reproducible.inputPaths = NULL,           # deprecated alias for reproducible.dataPath
+    reproducible.inputPathsRecursive = FALSE, # deprecated alias for reproducible.dataPathRecursive
     reproducible.leaveOnDisk = TRUE,
     reproducible.length = Inf,
     reproducible.memoisePersist = FALSE,

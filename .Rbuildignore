@@ -22,3 +22,4 @@
 ^vignettes/.*\.log$
 ^[.]?air[.]toml$
 ^\.vscode$
+^\.claude$
