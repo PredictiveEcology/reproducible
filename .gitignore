@@ -49,3 +49,5 @@ config.yml
 cache
 covr-tmp
 .vscode/*
+reproducible.Rcheck/
+reproducible_*.tar.gz
