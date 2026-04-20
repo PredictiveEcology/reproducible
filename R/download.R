@@ -427,7 +427,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
           retry(retries = 2, downloadCall)
         },
         globals = list(
-          goc = getOption("gargle_oauth_cache"),
+          goc = normalizePath(getOption("gargle_oauth_cache"), mustWork = FALSE),
           goe = getOption("gargle_oauth_email"),
           downloadCall = downloadCall,
           downloadFilename = downloadFilename,
