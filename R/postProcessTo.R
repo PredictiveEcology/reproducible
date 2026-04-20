@@ -873,7 +873,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
       )
       st <- Sys.time()
 
-      if (.requireNamespace("sf")) {
+      if (.requireNamespace("sf") && (.isSF(cropTo) || .isSF(from)) ) {
         ext <- sf::st_as_sfc(sf::st_bbox(cropTo)) # create extent as an object; keeps crs correctly
         sameCRS <- sf::st_crs(from) == sf::st_crs(ext) # This is sf way of comparing CRS -- raster::compareCRS doesn't work for newer CRS
       } else {
