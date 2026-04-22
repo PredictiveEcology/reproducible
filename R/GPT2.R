@@ -916,7 +916,7 @@ lockFile <- function(cachePath, cache_key,
                      verbose = getOption("reproducible.verbose")) {
   if (!useDBI()) {
     csd <- CacheStorageDir(cachePath)
-    dir.create(csd, showWarnings = FALSE, recursive = TRUE)
+    checkPath(csd, create = TRUE)
 
     lock_path <- file.path(csd, paste0(cache_key, suffixLockFile()))
 
@@ -971,7 +971,13 @@ lockFile <- function(cachePath, cache_key,
         waiting <- TRUE
         messageCache(
           "The cache file (", lock_path, ") is locked due to a concurrent process; waiting...",
-          "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
+          "\nTo diagnose the holding process (works on Linux/macOS):",
+          "\n  system(\"fuser '", lock_path, "'\")",
+          "\n  system(\"lsof '", lock_path, "'\")",
+          "\nOn a network filesystem (NFS/CIFS), unlink() will NOT remove the file while",
+          "\na process holds it open -- kill the holding process first, then the lock releases.",
+          "\nIf no process is found (stale lock on a local filesystem), then delete the lockfile:",
+          "\n  unlink('", lock_path, "', force = TRUE)",
           verbose = verbose + 2
         )
       }

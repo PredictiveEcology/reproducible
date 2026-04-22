@@ -319,6 +319,7 @@ reproducibleOptions <- function() {
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
     reproducible.testCharacterAsFile = FALSE,
     reproducible.timeout = 1200,
+    reproducible.useCOG = TRUE,
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCacheV3 = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #

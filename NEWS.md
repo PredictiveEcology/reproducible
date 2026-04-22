@@ -1,5 +1,22 @@
 # reproducible 3.0.1
 
+## new features
+
+* `prepInputsCOG`: new fast-path inside `prepInputs` for remote Cloud Optimized
+  GeoTiff (COG) files. When the `url` is HTTP(S), the file is confirmed as a COG
+  (via a lightweight `LAYOUT=COG` check using GDAL's `/vsicurl/`), and at least
+  one of `to`, `cropTo`, or `maskTo` is supplied, only the spatial window of
+  interest is fetched — no full-file download. The windowed `SpatRaster` is
+  returned to the normal `postProcess` pipeline for crop/reproject/mask/write.
+  The fast-path can be disabled with `options(reproducible.useCOG = FALSE)`.
+
+## bug fixes
+
+* `lockFile` now uses `checkPath(..., create = TRUE)` instead of a silent
+  `dir.create(..., showWarnings = FALSE)` when creating the lock-file directory,
+  so a missing or unwritable cache directory (e.g., on a network filesystem)
+  produces a clear error rather than a confusing `filelock` failure.
+
 ## enhancements
 
 * The options `reproducible.inputPaths` and `reproducible.inputPathsRecursive`

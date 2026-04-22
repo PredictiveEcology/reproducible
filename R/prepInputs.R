@@ -372,9 +372,24 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     funCaptured <- fun
   prepInputsAssertions(environment())
 
-  rpiut <- getOption("reproducible.prepInputsUrlTiles")
   runNormalPreProcess <- TRUE
-  if (!(isNULLorNA(rpiut) || rpiut %in% FALSE) && (
+
+  # COG fast-path: triggered when url is HTTP(S), a spatial subsetting arg is
+  # present, and the remote file is confirmed as a Cloud Optimized GeoTiff.
+  if (isTRUE(getOption("reproducible.useCOG", TRUE)) &&
+      !is.null(url) && !isNULLorNA(url) &&
+      grepl("^https?://", url) &&
+      (!is.null(list(...)$to) || !is.null(list(...)$cropTo) || !is.null(list(...)$maskTo))) {
+    x_cog <- prepInputsCOG(url = url, verbose = verbose, ...)
+    if (!identical(x_cog, "NULL")) {
+      x <- x_cog
+      runNormalPreProcess <- FALSE
+    }
+  }
+
+  rpiut <- getOption("reproducible.prepInputsUrlTiles")
+  if (runNormalPreProcess &&
+      !(isNULLorNA(rpiut) || rpiut %in% FALSE) && (
     !is.null(list(...)$to) || !is.null(list(...)$cropTo) || !is.null(list(...)$maskTo)
   )) {
     if (!is.null(url) && isGoogleDriveDirectory(rpiut)) {
