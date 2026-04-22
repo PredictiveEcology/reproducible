@@ -43,12 +43,6 @@ prepInputsCOG <- function(url,
 
   vsicurl_path <- paste0("/vsicurl/", url)
 
-  messagePreProcess(
-    "Using prepInputsCOG fast-path because `to` is supplied and\n",
-    "  url points to a Cloud Optimized GeoTiff (COG)",
-    verbose = verbose
-  )
-
   # ---- Open metadata-only remote connection --------------------------------
   r_meta <- tryCatch(
     terra::rast(vsicurl_path),
@@ -77,7 +71,7 @@ prepInputsCOG <- function(url,
     return("NULL")
 
   messagePreProcess(
-    "prepInputsCOG: windowed COG read complete; full postProcess will follow",
+    "prepInputsCOG: windowed remote read complete (tiled GeoTiff); full postProcess will follow",
     verbose = verbose
   )
 
