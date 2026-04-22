@@ -125,6 +125,7 @@ Collate:
     'postProcessTo.R'
     'preProcess.R'
     'prepInputs.R'
+    'prepInputsCOG.R'
     'reproducible-deprecated.R'
     'reproducible-package.R'
     'search.R'
