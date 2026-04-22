@@ -2,13 +2,13 @@
 
 ## new features
 
-* `prepInputsCOG`: new fast-path inside `prepInputs` for remote Cloud Optimized
-  GeoTiff (COG) files. When the `url` is HTTP(S), the file is confirmed as a COG
-  (via a lightweight `LAYOUT=COG` check using GDAL's `/vsicurl/`), and at least
-  one of `to`, `cropTo`, or `maskTo` is supplied, only the spatial window of
-  interest is fetched — no full-file download. The windowed `SpatRaster` is
-  returned to the normal `postProcess` pipeline for crop/reproject/mask/write.
-  The fast-path can be disabled with `options(reproducible.useCOG = FALSE)`.
+* `prepInputsCOG`: new fast-path inside `prepInputs` for remote tiled GeoTiff
+  files (including Cloud Optimized GeoTiffs). When the `url` is HTTP(S) and at
+  least one of `to`, `cropTo`, or `maskTo` is supplied, only the spatial window
+  of interest is fetched via GDAL's `/vsicurl/` — no full-file download. The
+  windowed `SpatRaster` is returned to the normal `postProcess` pipeline for
+  crop/mask/write. The fast-path can be disabled with
+  `options(reproducible.useCOG = FALSE)`.
 
 ## bug fixes
 
