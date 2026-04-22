@@ -50,7 +50,7 @@ prepInputsCOG <- function(url,
     ),
     error = function(e) NULL
   )
-  if (is.null(desc_lines) || !any(grepl("LAYOUT=COG", desc_lines, fixed = TRUE)))
+  if (is.null(desc_lines))
     return("NULL")
 
   messagePreProcess(

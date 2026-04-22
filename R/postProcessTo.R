@@ -959,18 +959,15 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
           extOrder <- c("xmin", "ymin", "xmax", "ymax")
           extNum <- extFrom[][extOrder]
 
-          if (!exists("res", inherits = FALSE)) { # means neither is a gridded obj
+          if (isTRUE(suppressWarnings(terra::is.lonlat(from)))) {
+            # Lonlat: scale buffer with polygon extent size, then cap at extFrom.
+            # Scaling ensures large polygons at high latitudes get sufficient buffer (original fix from da48ec76).
+            # Capping ensures we skip the pre-crop when it would be a no-op (buffer reaches raster edge).
             ranges <- c(abs(terra::xmin(extTmp) - terra::xmax(extTmp)),
                         abs(terra::ymin(extTmp) - terra::ymax(extTmp)))
             extendBy <- min(0.2, max(0.05, (max(ranges) - 20)/20 * 0.5))
             extendBy <- max(ranges) * extendBy
-            # if (isTRUE(suppressWarnings(terra::is.lonlat(ext)))) { # warning is about "crs not defined"
-
-            # Eliot added this Apr 6, 2026 to cope with pre-crop that is too tight.
-            #  This should scale ... as the range of longlat becomes larger, the error can get bigger
-            #  This is fairly conservative and works for 22 degrees of longitude, north of 60 N latitude
-            # extendBy <- 0.1
-            extTmp2 <- terra::extend(extTmp, extendBy) # hard code 0.1 lat/long, as long as it isn't past the from extent
+            extTmp2 <- terra::extend(extTmp, extendBy)
             exts <- c(
               xmin = max(terra::xmin(extTmp2), terra::xmin(extFrom)),
               ymin = max(terra::ymin(extTmp2), terra::ymin(extFrom)),
@@ -983,8 +980,6 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
               terra::ext(xy = TRUE, exts)
             }
           } else {
-            # was * 2 ; seems like that isn't enough; April 9, 2026 Eliot;
-            #  this was changed when the above branch was changed to `extendBy` instead of `0.1`
             ext <- terra::extend(extTmp, res[1] * 15)
           }
 
