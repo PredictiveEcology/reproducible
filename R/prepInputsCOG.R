@@ -18,7 +18,7 @@
 #'
 #' @return A `SpatRaster` windowed to the bounding box of the `to`/`cropTo`/`maskTo`
 #'   object (in the COG's own CRS), or the character string `"NULL"` if any
-#'   pre-condition fails (not HTTP, not a COG, no spatial arg, network error, etc.).
+#'   pre-condition fails (not HTTP, no spatial arg, network error, empty window, etc.).
 #'
 #' @seealso [prepInputs()], [prepInputsWithTiles()]
 #' @export
@@ -41,17 +41,7 @@ prepInputsCOG <- function(url,
   if (!internetExists())
     return("NULL")
 
-  # ---- COG detection: costs only a small HTTP Range request ----------------
   vsicurl_path <- paste0("/vsicurl/", url)
-  desc_lines <- tryCatch(
-    suppressWarningsSpecific(
-      terra::describe(vsicurl_path),
-      falseWarnings = "HTTP response code"
-    ),
-    error = function(e) NULL
-  )
-  if (is.null(desc_lines))
-    return("NULL")
 
   messagePreProcess(
     "Using prepInputsCOG fast-path because `to` is supplied and\n",

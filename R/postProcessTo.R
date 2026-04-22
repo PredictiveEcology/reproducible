@@ -959,7 +959,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
           extOrder <- c("xmin", "ymin", "xmax", "ymax")
           extNum <- extFrom[][extOrder]
 
-          if (isTRUE(suppressWarnings(terra::is.lonlat(from)))) {
+          if (isTRUE(suppressWarnings(terra::is.lonlat(ext)))) {
             # Lonlat: scale buffer with polygon extent size, then cap at extFrom.
             # Scaling ensures large polygons at high latitudes get sufficient buffer (original fix from da48ec76).
             # Capping ensures we skip the pre-crop when it would be a no-op (buffer reaches raster edge).
