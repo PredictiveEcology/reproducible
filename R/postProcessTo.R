@@ -959,10 +959,10 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
           extOrder <- c("xmin", "ymin", "xmax", "ymax")
           extNum <- extFrom[][extOrder]
 
-          if (isTRUE(suppressWarnings(terra::is.lonlat(ext)))) {
-            # Lonlat: scale buffer with polygon extent size, then cap at extFrom.
+          if (!exists("res", inherits = FALSE) || isTRUE(suppressWarnings(terra::is.lonlat(ext)))) {
+            # No gridded object (both vectors) OR lonlat CRS: scale buffer with extent size, cap at extFrom.
             # Scaling ensures large polygons at high latitudes get sufficient buffer (original fix from da48ec76).
-            # Capping ensures we skip the pre-crop when it would be a no-op (buffer reaches raster edge).
+            # Capping ensures we skip the pre-crop when the buffer reaches the raster edge (no-op crop).
             ranges <- c(abs(terra::xmin(extTmp) - terra::xmax(extTmp)),
                         abs(terra::ymin(extTmp) - terra::ymax(extTmp)))
             extendBy <- min(0.2, max(0.05, (max(ranges) - 20)/20 * 0.5))
