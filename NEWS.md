@@ -12,6 +12,13 @@
 
 ## bug fixes
 
+* `prepInputsCOG` now requires a GeoTiff-style URL extension (`.tif`, `.tiff`,
+  `.cog`, `.gtiff`) before attempting a `/vsicurl/` read. Previously, any
+  HTTP(S) URL combined with a spatial subsetting argument would trigger the
+  fast-path, producing a confusing `GDAL Error 4 ... not recognized as being
+  in a supported file format` warning when the URL pointed to an archive
+  (e.g. `.zip`, `.tar.gz`).
+
 * `lockFile` now uses `checkPath(..., create = TRUE)` instead of a silent
   `dir.create(..., showWarnings = FALSE)` when creating the lock-file directory,
   so a missing or unwritable cache directory (e.g., on a network filesystem)

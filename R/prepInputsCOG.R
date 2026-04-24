@@ -30,6 +30,13 @@ prepInputsCOG <- function(url,
   if (is.null(url) || !grepl("^https?://", url))
     return("NULL")
 
+  # Strip query/fragment, then require a GeoTiff-style extension. This avoids
+  # firing `/vsicurl/` reads against archives (.zip, .tar, .gz, ...) or other
+  # non-raster URLs, which would emit a GDAL warning before failing.
+  url_path <- sub("[?#].*$", "", url)
+  if (!grepl("\\.(tif|tiff|cog|gtiff)$", url_path, ignore.case = TRUE))
+    return("NULL")
+
   dots   <- list(...)
   to_obj <- if (!is.null(dots$to)) dots$to else if (!is.null(dots$cropTo)) dots$cropTo else dots$maskTo
   if (is.null(to_obj))

@@ -14,6 +14,22 @@ test_that("prepInputsCOG returns NULL for invalid pre-conditions", {
   expect_identical(prepInputsCOG(NULL,        cropTo = studyAreaBC()), "NULL")
   expect_identical(prepInputsCOG("not-a-url", cropTo = studyAreaBC()), "NULL")
   expect_identical(prepInputsCOG(templateURL),                         "NULL") # no to/cropTo/maskTo
+
+  # Non-GeoTiff URLs (archives etc.) must short-circuit before any /vsicurl/ read.
+  expect_identical(
+    prepInputsCOG("https://geodata.ucdavis.edu/geodata/elv/CAN_elv_msk.zip",
+                  cropTo = studyAreaBC()),
+    "NULL"
+  )
+  expect_identical(
+    prepInputsCOG("https://example.com/data.tar.gz", cropTo = studyAreaBC()),
+    "NULL"
+  )
+  # Query/fragment after a .tif must still be recognized as a tif.
+  expect_identical(
+    prepInputsCOG("https://example.com/x.zip?foo=bar", cropTo = studyAreaBC()),
+    "NULL"
+  )
 })
 
 test_that("prepInputsCOG returns a windowed SpatRaster for the SCANFI tif", {
