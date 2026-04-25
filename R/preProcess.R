@@ -187,17 +187,16 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   dlFunCaptured <- substitute(dlFun)
   prepInputsAssertions(environment())
 
-  # If the user passed a pre-quoted expression (e.g. dlFun = quote(fn(x = val, ...))),
-  # evaluate the quote() call to get the unevaluated call object. Otherwise, evaluate
-  # the lazy promise directly so ctx stores the actual value (function, NULL, string, etc.)
-  # and not an expression containing variables from the caller's environment that may be
-  # out of scope later (e.g. dlFun = dlFun1, or dlFun = if (useGADM) fn else NULL).
-  isAlreadyQuoted <- any(grepl("quote", dlFunCaptured))
-  if (isAlreadyQuoted) {
-    dlFunCaptured <- eval(dlFunCaptured)
-  } else {
-    dlFunCaptured <- dlFun  # evaluate lazy promise in its original environment
-  }
+  # Three cases for the captured expression:
+  #   (a) quote(fn(...))            -> unwrap with eval to get the inner call
+  #   (b) fn(...) or pkg::fn(...)   -> keep as a deferred call object (the
+  #                                    canonical dlFun usage; evaluated later
+  #                                    inside downloadFile in the caller env)
+  #   (c) anything else (symbol,    -> force the lazy promise so ctx stores the
+  #       NULL, control-flow like   -- actual value (function/NULL/string), not
+  #       `if (x) fn else NULL`)    -- an expression referencing caller-frame
+  #                                    variables that may be out of scope later
+  dlFunCaptured <- .resolveDlFunCaptured(dlFunCaptured, dlFun)
 
   dots <- list(...)
   fun  <- .checkFunInDots(fun = fun, dots = dots)
@@ -971,6 +970,33 @@ pp_finalize <- function(ctx) {
   filesize = character(),
   algorithm = character()
 )
+
+#' Decide how to materialize a captured `dlFun` expression
+#'
+#' `captured` is the result of `substitute(dlFun)`; `lazy` is the (still-promise)
+#' formal `dlFun` argument. See preProcess() for the three cases this handles.
+#' @keywords internal
+#' @noRd
+.resolveDlFunCaptured <- function(captured, lazy) {
+  if (is.call(captured)) {
+    head <- captured[[1L]]
+    # quote(...) / bquote(...) — unwrap to the inner call
+    if (is.symbol(head) && as.character(head) %in% c("quote", "bquote"))
+      return(eval(captured))
+    # pkg::fn(...) or pkg:::fn(...) — a namespaced function call to defer
+    if (is.call(head) && is.symbol(head[[1L]]) &&
+        as.character(head[[1L]]) %in% c("::", ":::"))
+      return(captured)
+    # fn(...) — a plain function call to defer, unless `fn` is a control-flow
+    # / special-form name (in which case the expression must be evaluated now)
+    controlFlow <- c("if", "for", "while", "repeat", "{", "(",
+                     "&&", "||", "<-", "<<-", "=", "function", "~", "@",
+                     "$", "[", "[[", "::", ":::")
+    if (is.symbol(head) && !(as.character(head) %in% controlFlow))
+      return(captured)
+  }
+  lazy  # symbol, literal, or control-flow call: force the promise
+}
 
 #' @keywords internal
 #' @importFrom utils getFromNamespace

@@ -12,6 +12,14 @@
 
 ## bug fixes
 
+* `prepInputs`/`preProcess`: `dlFun = pkg::fn(args)` (a function call passed
+  directly, without `quote()`-wrapping) is once again kept as a deferred call
+  object instead of being eagerly evaluated. The previous fix for
+  `dlFun = if (cond) fn else NULL` broke this canonical usage by forcing the
+  lazy promise for *all* non-`quote()` expressions. The new logic keeps
+  function-call expressions (`fn(args)`, `pkg::fn(args)`, `pkg:::fn(args)`)
+  deferred while still evaluating control-flow expressions and bare symbols.
+
 * `prepInputsCOG` now requires a GeoTiff-style URL extension (`.tif`, `.tiff`,
   `.cog`, `.gtiff`) before attempting a `/vsicurl/` read. Previously, any
   HTTP(S) URL combined with a spatial subsetting argument would trigger the

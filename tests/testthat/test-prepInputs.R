@@ -1131,6 +1131,42 @@ test_that("preProcess doesn't work", {
   })
 })
 
+test_that(".resolveDlFunCaptured handles all dlFun forms without eager eval", {
+  cap <- function(dlFun) reproducible:::.resolveDlFunCaptured(substitute(dlFun), dlFun)
+
+  # Symbol -> resolves to the function value
+  myFn <- function() 42
+  expect_true(is.function(cap(myFn)))
+
+  # NULL literal -> NULL
+  expect_null(cap(NULL))
+
+  # quote(fn(...)) -> unwraps to inner call
+  q <- cap(quote(myFn(x = 1)))
+  expect_true(is.call(q))
+  expect_identical(deparse(q), "myFn(x = 1)")
+
+  # pkg::fn(args) -> kept as a deferred call; side effect must NOT fire
+  ran <- FALSE
+  fakePkg <- list(fakeFn = function(...) { ran <<- TRUE; "value" })
+  attach(fakePkg, name = "fakePkg", warn.conflicts = FALSE)
+  on.exit(detach("fakePkg"), add = TRUE)
+  d <- cap(fakePkg::fakeFn(country = "LUX"))
+  expect_false(ran)
+  expect_true(is.call(d))
+
+  # bare fn(args) -> kept as a deferred call; side effect must NOT fire
+  ran2 <- FALSE
+  side <- function() { ran2 <<- TRUE; 7 }
+  d2 <- cap(side())
+  expect_false(ran2)
+  expect_true(is.call(d2))
+
+  # Control-flow expression -> evaluated (e.g., if/else)
+  useFn <- TRUE
+  expect_true(is.function(cap(if (useFn) myFn else NULL)))
+})
+
 test_that("prepInputs when fun = NA", {
   skip_on_cran()
 
