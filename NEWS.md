@@ -1,5 +1,17 @@
 # reproducible 3.0.1
 
+## bug fixes
+
+* `prepInputs`/`preProcess`: when called with `dlFun` only (no `url`,
+  `targetFile`, or `archive`), the file produced by `dlFun` is now treated as
+  the source of truth. Previously, `runChecksums` would still scan
+  `getOption("reproducible.inputPaths")` and, with no canonical filename to
+  look up, `Checksums()` listed every file in the stash and matched any of
+  them against the stash's `CHECKSUMS.txt`. A non-empty match silently
+  redirected `destinationPath` to the stash and caused `prepInputs` to load
+  an unrelated file (e.g., a previously stashed shapefile instead of the
+  GADM `.rds` produced by `geodata::gadm()`).
+
 ## new features
 
 * `prepInputsCOG`: new fast-path inside `prepInputs` for remote tiled GeoTiff
