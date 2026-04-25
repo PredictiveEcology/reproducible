@@ -1978,7 +1978,15 @@ runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbos
   }
 
   destinationPathUser <- NULL
-  possDirs <- unique(c(destinationPath, reproducible.inputPaths))
+  # When filesToCheck is empty (e.g., dlFun-only call with no url/targetFile/
+  # archive), do not consult reproducible.inputPaths: there is no canonical
+  # filename to look up there, and Checksums() with files = NULL would match
+  # arbitrary unrelated files in the stash.
+  possDirs <- if (length(filesToCheck) == 0L) {
+    destinationPath
+  } else {
+    unique(c(destinationPath, reproducible.inputPaths))
+  }
   csfps <- vapply(possDirs, function(dp) identifyCHECKSUMStxtFile(dp), character(1))
   allDone <- FALSE
   for (dp in possDirs) {
