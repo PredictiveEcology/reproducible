@@ -2,6 +2,17 @@
 
 ## bug fixes
 
+* `downloadRemote` (`dlFun` branch): the "before" snapshot of `destinationPath`
+  taken before evaluating `dlFun` now uses `recursive = TRUE` to match the
+  "after" snapshot. Previously, the non-recursive snapshot omitted files
+  that were already present in subdirectories of `destinationPath`, so the
+  `setdiff()` of after vs. before classified those pre-existing subdirectory
+  files as newly created. They then propagated as `downloadResults$destFile`,
+  triggered the "already exists at <path>. Use overwrite = TRUE?" stop later
+  in the function, and surfaced as a confusing error mentioning unrelated
+  stashed files (e.g. shapefile pieces extracted by an earlier `prepInputs`
+  call into the same `reproducible.inputPaths`/`reproducible.dataPath`).
+
 * `prepInputs`/`preProcess`: when called with `dlFun` only (no `url`,
   `targetFile`, or `archive`), the file produced by `dlFun` is now treated as
   the source of truth. Previously, `runChecksums` would still scan

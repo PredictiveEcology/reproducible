@@ -626,7 +626,15 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         }
         args <- args[!names(args) %in% forms]
         if (noTargetFile) {
-          fileInfo <- file.info(dir(destinationPath, full.names = TRUE))
+          # Must mirror the `recursive = TRUE` snapshot below; otherwise files
+          # that were already in subdirectories of destinationPath (e.g. files
+          # extracted there by an earlier prepInputs() call into the same
+          # `reproducible.inputPaths` stash) are absent from the "before" set
+          # and the setdiff() at the post-dlFun snapshot incorrectly classifies
+          # them as newly created. They then propagate as `downloadResults$destFile`
+          # and trip "already exists at <stash path>" in the desiredPath check.
+          fileInfo <- file.info(dir(destinationPath, recursive = TRUE,
+                                    full.names = TRUE))
         }
 
         if (is.call(dlFun)) {
