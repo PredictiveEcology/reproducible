@@ -27,7 +27,7 @@ makeFixture <- function(dir, name = "foo.csv", content = "a,b\n1,2\n3,4\n") {
     path = normPath(p),
     hash = digest::digest(file = p, algo = "xxhash64"),
     size = file.info(p)$size,
-    url  = paste0("file://", normPath(p))
+    url  = toFileUrl(p)
   )
 }
 
@@ -41,12 +41,13 @@ writeChecksumsFor <- function(dir, fixture, name = basename(fixture$path)) {
   csf
 }
 
-# Inode of a file via `stat -c %i`. POSIX-only; returns NA on failure.
-# Used to detect hardlinks (same inode = same physical file).
+# Inode of a file. POSIX-only; returns NA on failure or non-POSIX OS.
+# GNU stat (Linux) uses `-c %i`; BSD stat (macOS) uses `-f %i`.
 inoOf <- function(p) {
   if (.Platform$OS.type != "unix") return(NA_integer_)
+  args <- if (Sys.info()[["sysname"]] == "Darwin") c("-f", "%i") else c("-c", "%i")
   out <- suppressWarnings(
-    system2("stat", c("-c", "%i", shQuote(p)), stdout = TRUE, stderr = FALSE)
+    system2("stat", c(args, shQuote(p)), stdout = TRUE, stderr = FALSE)
   )
   if (length(out) == 0L || !grepl("^[0-9]+$", out[[1L]])) return(NA_integer_)
   as.integer(out[[1L]])
@@ -64,6 +65,15 @@ getInternalOrNull <- function(name) {
   tryCatch(getFromNamespace(name, "reproducible"), error = function(e) NULL)
 }
 `%||%` <- function(a, b) if (!is.null(a)) a else b
+
+# Build a portable file:// URL. RFC 8089 says file:///<path>, with empty
+# host. On POSIX, normPath returns "/home/x" → "file:///home/x".
+# On Windows, normPath returns "C:\\path" or "C:/path" → "file:///C:/path".
+toFileUrl <- function(p) {
+  p <- gsub("\\\\", "/", normPath(p))
+  if (substr(p, 1L, 1L) != "/") p <- paste0("/", p)   # Windows drive letter
+  paste0("file://", p)
+}
 
 getSharedInputsFn <- function() {
   getInternalOrNull(".getSharedInputs") %||% getInternalOrNull(".getDataPath")
