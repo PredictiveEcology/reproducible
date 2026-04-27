@@ -1167,6 +1167,57 @@ test_that(".resolveDlFunCaptured handles all dlFun forms without eager eval", {
   expect_true(is.function(cap(if (useFn) myFn else NULL)))
 })
 
+test_that("prepInputs(dlFun = ...) ignores pre-existing files in destinationPath subdirs", {
+  # Regression test for a bug where downloadRemote()'s noTargetFile branch
+  # took the "before dlFun" snapshot of destinationPath with
+  # `dir(destinationPath, full.names = TRUE)` (non-recursive) and the "after
+  # dlFun" snapshot with `dir(..., recursive = TRUE, full.names = TRUE)`.
+  # The setdiff() of those mismatched listings classified files that were
+  # already present in subdirectories of destinationPath as "newly created
+  # by dlFun". They then propagated as `downloadResults$destFile` and tripped
+  # a spurious "already exists at ..." stop later in the function.
+  #
+  # Real-world trigger: a user sets `reproducible.inputPaths` to a shared
+  # data stash, then calls `prepInputs(url = some_archive.zip, ...)` whose
+  # archive payload extracts into a subdirectory of the stash. A subsequent
+  # `prepInputs(dlFun = some_function(...))` for an unrelated dataset would
+  # fail with an error mentioning the previous archive's stashed files.
+  testInit(
+    opts = list(
+      reproducible.interactiveOnDownloadFail = FALSE,
+      reproducible.inputPaths = NULL,
+      reproducible.overwrite = FALSE
+    )
+  )
+
+  destPath <- file.path(tmpdir, "destSubdir")
+  dir.create(destPath, recursive = TRUE)
+  preExistingDir <- file.path(destPath, "preExisting")
+  dir.create(preExistingDir)
+  # Two files whose basenames collide between the subdir and top-level.
+  # The collision is what makes the bug surface as an "already exists"
+  # stop; without it, the buggy code still mis-identifies the subdir file
+  # as new but the desiredPath check happens to pass.
+  writeLines("subdir-content",   file.path(preExistingDir, "junk.txt"))
+  writeLines("toplevel-content", file.path(destPath, "junk.txt"))
+
+  # dlFun returns a small in-memory object; no network, no side effects on
+  # destinationPath. The bug manifests purely from the snapshot logic.
+  res <- expect_no_error(
+    prepInputs(
+      destinationPath = destPath,
+      dlFun = function() data.frame(x = 1:3)
+    )
+  )
+
+  # Sanity: prepInputs returned the dlFun's value, and the pre-existing
+  # files are untouched.
+  expect_s3_class(res, "data.frame")
+  expect_identical(res$x, 1:3)
+  expect_identical(readLines(file.path(preExistingDir, "junk.txt")), "subdir-content")
+  expect_identical(readLines(file.path(destPath, "junk.txt")), "toplevel-content")
+})
+
 test_that("prepInputs when fun = NA", {
   skip_on_cran()
 
