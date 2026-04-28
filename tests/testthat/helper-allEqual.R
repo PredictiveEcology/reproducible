@@ -15,6 +15,34 @@ skip_if_service_account <- function() {
                         message =  "Using service account")
 }
 
+## Run `expr` and convert transient upstream HTTP/network errors into a skip
+## so flaky CDN behaviour (e.g. GitHub raw returning 5xx during a request)
+## does not surface as a test FAIL. Non-transient errors propagate unchanged.
+## Evaluated in the caller's frame so any assignments inside `expr` are
+## visible to the rest of the test.
+.transientNetworkPattern <- paste(
+  "HTTP 5\\d\\d", "Bad Gateway", "Service Unavailable", "Gateway Timeout",
+  "Could(?:n't| not) resolve host", "Empty reply from server",
+  "Timeout was reached", "Operation timed out",
+  "Connection reset by peer", "Connection refused",
+  "TLS connect error", "SSL connect error",
+  "Recv failure", "Resolving timed out",
+  sep = "|"
+)
+
+skip_on_transient_http <- function(expr) {
+  expr <- substitute(expr)
+  pf <- parent.frame()
+  result <- tryCatch(eval(expr, envir = pf), error = identity)
+  if (!inherits(result, "error")) return(invisible(result))
+  msg <- paste(conditionMessage(result), collapse = "\n")
+  if (grepl(.transientNetworkPattern, msg, perl = TRUE)) {
+    testthat::skip(paste0("transient upstream HTTP/network error: ",
+                          substring(msg, 1L, 240L)))
+  }
+  stop(result)
+}
+
 skip_if_service_account_releaseVer_NotLinux <- function() {
   ## service accounts cannot upload to standard drive folders (no quota)
 
