@@ -48,6 +48,19 @@ jobs:
 
       - uses: PredictiveEcology/actions/install-spatial-deps@v0.2
 
+      - name: Export PROJ data dir on macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          PROJ_DATA_DIR="$(brew --prefix proj)/share/proj"
+          if [[ ! -f "$PROJ_DATA_DIR/proj.db" ]]; then
+            echo "ERROR: proj.db not found in $PROJ_DATA_DIR"
+            ls -la "$(brew --prefix proj)/share" || true
+            exit 1
+          fi
+          echo "PROJ_LIB=$PROJ_DATA_DIR" >> "$GITHUB_ENV"
+          echo "PROJ_DATA=$PROJ_DATA_DIR" >> "$GITHUB_ENV"
+
       - uses: r-lib/actions/setup-r@v2
         with:
           http-user-agent: ${{ matrix.config.http-user-agent }}
