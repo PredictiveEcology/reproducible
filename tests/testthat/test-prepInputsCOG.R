@@ -36,7 +36,9 @@ test_that("prepInputsCOG returns a windowed SpatRaster for the SCANFI tif", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE, verbose = FALSE)
 
-  result <- prepInputsCOG(templateURL, cropTo = studyAreaBC())
+  result <- skip_if_transient_stream_warnings(
+    prepInputsCOG(templateURL, cropTo = studyAreaBC())
+  )
 
   expect_true(.isSpatRaster(result))
   expect_gt(terra::ncell(result), 0L)
@@ -46,8 +48,10 @@ test_that("prepInputs COG fast-path works with cropTo/maskTo (stays in native CR
   skip_on_cran()
   testInit("terra", needInternet = TRUE, verbose = FALSE)
 
-  result <- prepInputs(url = templateURL, cropTo = studyAreaBC(), maskTo = studyAreaBC(),
-                       destinationPath = tmpdir)
+  result <- skip_if_transient_stream_warnings(
+    prepInputs(url = templateURL, cropTo = studyAreaBC(), maskTo = studyAreaBC(),
+               destinationPath = tmpdir)
+  )
 
   expect_true(.isSpatRaster(result))
   expect_gt(terra::ncell(result), 0L)

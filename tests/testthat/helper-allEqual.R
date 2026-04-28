@@ -43,6 +43,37 @@ skip_on_transient_http <- function(expr) {
   stop(result)
 }
 
+## Run `expr` and skip if any GDAL streaming-failure warning is emitted
+## (truncated TIFF tile reads, IReadBlock failures, etc., or HTTP 5xx mid-
+## stream). Returns the result of `expr` so the caller can chain assertions
+## on it. Non-transient warnings are re-emitted so they remain visible in
+## test output instead of being silently muffled.
+.transientStreamPattern <- paste(
+  "TIFFFillTile", "TIFFReadEncodedTile", "IReadBlock failed",
+  "GDAL error", "HTTP 5\\d\\d", "Bad Gateway",
+  "Service Unavailable", "Gateway Timeout",
+  sep = "|"
+)
+
+skip_if_transient_stream_warnings <- function(expr) {
+  expr <- substitute(expr)
+  pf <- parent.frame()
+  warns <- character()
+  result <- withCallingHandlers(
+    eval(expr, envir = pf),
+    warning = function(w) {
+      warns <<- c(warns, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  if (any(grepl(.transientStreamPattern, warns, perl = TRUE))) {
+    testthat::skip(paste0("transient upstream streaming failure: ",
+                          substring(paste(warns, collapse = "; "), 1L, 240L)))
+  }
+  for (w in warns) warning(w, call. = FALSE)
+  invisible(result)
+}
+
 skip_if_service_account_releaseVer_NotLinux <- function() {
   ## service accounts cannot upload to standard drive folders (no quota)
 
