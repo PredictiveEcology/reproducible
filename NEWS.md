@@ -2,6 +2,12 @@
 
 ## bug fixes
 
+* `pp_remote_hash_check`: now skips URLs that are not `http://` or `https://`.
+  Previously, `file://` URLs would attempt a HEAD-style metadata fetch and then
+  call `makeRemoteHashFile`, whose URL-to-filename mapping only strips the
+  `https?://` prefix; on Windows the resulting `.hash` filename retained `file:`
+  and the drive-letter colon, which is not a legal Windows path character.
+
 * `downloadRemote` (`dlFun` branch): the "before" snapshot of `destinationPath`
   taken before evaluating `dlFun` now uses `recursive = TRUE` to match the
   "after" snapshot. Previously, the non-recursive snapshot omitted files

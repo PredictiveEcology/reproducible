@@ -498,6 +498,7 @@ pp_check_local_sources <- function(ctx) {
 # Any network/package error causes a silent fall-through to the normal download.
 pp_remote_hash_check <- function(ctx) {
   if (is.null(ctx$url)) return(ctx)
+  if (!grepl("^https?://", ctx$url)) return(ctx)
 
   # Identify the local file that would be the download target
   localFile <- if (!is.null(ctx$archive) && !isTRUE(is.na(ctx$archive)) &&
