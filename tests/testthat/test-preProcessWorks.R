@@ -333,15 +333,19 @@ test_that("message when file is a shapefile", {
   )
 })
 
-test_that("message when doesn't know the targetFile extension", {
+test_that("preProcess succeeds when targetFile extension is unknown", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/unknownTargetFile.zip"
+  # preProcess does not load the object, so an unrecognised extension should
+  # not error; funChar is left NULL and the file is still extracted.
   noisyOutput <- capture.output(
-    ccc <- testthat::capture_output(testthat::expect_error(regexp = "guess at which function to use to read", {
-      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-    }))
+    ccc <- testthat::capture_output({
+      out <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+    })
   )
+  expect_null(out$funChar)
+  expect_true(!is.null(out$targetFilePath))
 })
 
 test_that("When supplying two files without archive, when archive and files have different names", {

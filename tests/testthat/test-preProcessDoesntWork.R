@@ -149,7 +149,7 @@ test_that("preProcess fails if user provides non-existing file", {
   })
 })
 
-test_that("preProcess fails if user provides a directory as a targetFile", {
+test_that("preProcess does not load when fun cannot be guessed", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
   co <- capture.output({
@@ -158,9 +158,15 @@ test_that("preProcess fails if user provides a directory as a targetFile", {
     })
   })
   testthat::expect_is(object = pre, class = "list")
-  testthat::expect_error({
-    ras <- reproducible::preProcess(targetFile = tmpdir)
+  # Passing a directory as targetFile: no recognised extension means fun
+  # cannot be guessed. preProcess does not load the object, so this should
+  # succeed quietly with funChar = NULL rather than erroring.
+  co <- capture.output({
+    co <- capture.output(type = "message", {
+      ras <- reproducible::preProcess(targetFile = tmpdir)
+    })
   })
+  expect_null(ras$funChar)
 })
 
 ## 2022-11-03 this no longer fails on Ubuntu 20.04

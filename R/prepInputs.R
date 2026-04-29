@@ -769,7 +769,10 @@ extractFromArchive <- function(archive,
           )
         }
       }
-      if (length(fun) == 0) stop("Can't guess at which function to use to read in the object; please supply 'fun'")
+      # If we can't guess `fun`, leave it NULL. preProcess() does not load the
+      # object, so this is fine when called directly. prepInputs()'s process()
+      # already handles a NULL fun gracefully by returning targetFilePath.
+      if (length(fun) == 0) fun <- NULL
     }
     if (is.null(targetFilePath) || length(targetFilePath) == 0) {
       secondPartOfMess <- if (any(isShapefile)) {

@@ -1192,6 +1192,12 @@ isGoogleDriveURL <- function(url) {
 .checkForSimilar <- function(neededFiles, alsoExtract, archive, targetFile,
                              destinationPath, checkSums, checkSumFilePath,
                              url, verbose = getOption("reproducible.verbose", 1)) {
+  # No archive => the alsoExtract / "files in archive" messaging below is not
+  # meaningful; return inputs unchanged so callers (e.g. archive = NA) don't
+  # see spurious "alsoExtract is unspecified" / "Checksumming all files in
+  # archive" output.
+  if (isNULLorNA(archive))
+    return(list(neededFiles = neededFiles, checkSums = checkSums))
   lookForSimilar <- FALSE
   if (is.null(alsoExtract) || length(alsoExtract) == 0) {
     messagePreProcess("alsoExtract is unspecified; assuming that all files must be extracted",
