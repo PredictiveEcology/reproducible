@@ -498,7 +498,13 @@ pp_check_local_sources <- function(ctx) {
 # Any network/package error causes a silent fall-through to the normal download.
 pp_remote_hash_check <- function(ctx) {
   if (is.null(ctx$url)) return(ctx)
-  if (!grepl("^https?://", ctx$url)) return(ctx)
+  # Skip file:// URLs only: they are local (no remote to compare against),
+  # and makeRemoteHashFile's URL-to-filename mapping only strips ^https?://,
+  # so file:// leaves a colon in the path and fails on Windows. For any
+  # other scheme, attempt the metadata fetch — getRemoteMetadata is wrapped
+  # in tryCatch below, so unsupported schemes (s3://, gs://, ...) silently
+  # fall through to the normal download.
+  if (grepl("^file://", ctx$url)) return(ctx)
 
   # Identify the local file that would be the download target
   localFile <- if (!is.null(ctx$archive) && !isTRUE(is.na(ctx$archive)) &&

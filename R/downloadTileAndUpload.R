@@ -845,7 +845,7 @@ checkHaveCorrectHashedVersion <- function(targetFile, remoteHashFile, remoteMeta
 getRemoteMetadata <- function(targetFile, isGDurl, url) {
   # browser()
   if (missing(isGDurl))
-    isGDurl <- isGoogleDriveURL(url)
+    isGDurl <- isGoogleDriveURL(url) || isGoogleID(url)
   if (isGDurl) {
     file <- googledrive::drive_get(url) |>
       Cache(verbose = FALSE, notOlderThan = Sys.time() - 60*60) # refresh every hour
