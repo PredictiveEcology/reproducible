@@ -924,10 +924,15 @@ pp_finalize <- function(ctx) {
          "Possibly, it does not exist in the specified archive, ",
          "or the file doesn't exist in destinationPath")
 
-  archiveInChecksums <- ctx$checkSums$actualFile %in%
-    makeRelative(ctx$archive, ctx$destinationPath)
-  if (any(archiveInChecksums))
-    ctx$checkSums[which(archiveInChecksums), result := "ArchiveOK"]
+  # Only mark rows as "ArchiveOK" when there is actually an archive. With
+  # archive = NA, makeRelative(NA, ...) is NA and `%in% NA` matches any
+  # NA actualFile rows, producing a spurious assignment.
+  if (!isNULLorNA(ctx$archive)) {
+    archiveInChecksums <- ctx$checkSums$actualFile %in%
+      makeRelative(ctx$archive, ctx$destinationPath)
+    if (any(archiveInChecksums))
+      ctx$checkSums[which(archiveInChecksums), result := "ArchiveOK"]
+  }
 
   list(
     checkSums       = ctx$checkSums,
